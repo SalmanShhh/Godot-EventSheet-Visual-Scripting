@@ -217,6 +217,48 @@ static func secret_counter_template() -> String:
 	return ""
 
 
+# ── Y16. The door event an object marked "needs key" is offered on drop ───────────────────────
+# A body the reader named a key for has exactly one event worth writing: when the player walks into
+# it, try it - and the shipped Try Door row is the whole of trying it, because it opens the door when
+# the key fits and tells the door it was refused when it does not. Built here rather than in the dock
+# so it is pure and a test can pin what the offer would add without opening a canvas.
+
+## The list every keycard row reads, and the name the shipped rows' own defaults already use - so a
+## sheet that has this variable and a sheet that took it from the Keycard Door starter are the same
+## sheet.
+const KEYS_VARIABLE := "keys"
+
+
+## The variable declaration a sheet needs before it can carry keys, in the sheet's own
+## variables-dictionary shape. Only added when the sheet does not declare it already.
+static func keys_variable_entry() -> Dictionary:
+	return {"type": "Array", "default": [], "exported": false,
+		"attributes": {"tooltip": "Every keycard picked up so far, by name. The door rows read this list."}}
+
+
+## The event a body marked with a key offers: its own walked-into trigger with the shipped Try Door
+## row already in the action lane, pointed at the door that was dropped.
+static func locked_door_event(object_label: String, host_class: String = "StaticBody3D") -> EventRow:
+	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
+	event.trigger_source_path = object_label
+	var try_it: ACEAction = ACEAction.new()
+	try_it.provider_id = "Core"
+	try_it.ace_id = "TryDoor"
+	try_it.codegen_template = locked_door_template()
+	try_it.params = {"door": "$%s" % object_label, "keys": KEYS_VARIABLE}
+	event.actions.append(try_it)
+	return event
+
+
+## The template the shipped Try Door row writes, taken from the registry rather than re-typed here -
+## the same no-drift rule the starter sheets follow.
+static func locked_door_template() -> String:
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if str(descriptor.ace_id) == "TryDoor":
+			return str(descriptor.codegen_template)
+	return ""
+
+
 ## `{"name": ..., "args": [...]}` for a signal the host class itself declares, or {} when the class
 ## does not have one by that name (which is what makes it a signal the sheet declares).
 static func _native_signal(host_class: String, signal_name: String) -> Dictionary:

@@ -456,6 +456,17 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var spatial: Dictionary = spatial_words_statement(text, context)
 	if not spatial.is_empty():
 		return _with_indent(spatial, indent)
+	# ── Y16 / Y17 ───────────────────────────────────────────────────────────────────────────────
+	# The keycard picked up, and the three lines a first-person game's FEEL is written as. Every one
+	# of them is an append or arithmetic on a property, so they go ahead of the compound / assignment
+	# split that would describe the property instead of the thing the line is for. Each is gated on
+	# what the line is ABOUT (see the readings themselves), so nothing that is not one of them moves.
+	var keycard: Dictionary = keys_doors_statement(text, context)
+	if not keycard.is_empty():
+		return _with_indent(keycard, indent)
+	var feel: Dictionary = movement_feel_statement(text, context)
+	if not feel.is_empty():
+		return _with_indent(feel, indent)
 	var compound: Dictionary = _compound_statement(text, context)
 	if not compound.is_empty():
 		return _with_indent(compound, indent)
@@ -489,6 +500,14 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var systems: Dictionary = godot_systems_condition(text, context)
 	if not systems.is_empty():
 		return systems
+	# ── Y16 ─────────────────────────────────────────────────────────────────────────────────────
+	# Whether the player is carrying a keycard, and its negation. An `in` test and a `.has()` are the
+	# most general questions a list is asked, so the reading is gated on the list being NAMED for
+	# keys with a key beside it - and sits here, ahead of every reading that would answer the
+	# narrower "is this value in that list".
+	var keycard: Dictionary = keys_doors_condition(text, context)
+	if not keycard.is_empty():
+		return keycard
 	# ── T1 / T3 ─────────────────────────────────────────────────────────────────────────────────
 	# A projectile's distance travelled and a glide's arrival are ONE question each, and the readings
 	# below would describe them as the operator they happen to be written with.
@@ -13849,3 +13868,223 @@ static func spatial_words_call(call: Dictionary, text: String, context: Dictiona
 	if not everywhere.is_empty():
 		return everywhere
 	return world_space_input_call(traced, context)
+
+
+# ── Y16 / Y17: the keycard, the door and the feel layer ───────────────────────────────────────────
+# Every reading below is DISPLAY ONLY - not one of them moves a byte of what the file compiles to.
+# They exist because the lines they read are the most general lines in GDScript (an append, an `in`
+# test, a lerp, a sine) and the general reading of them says nothing about what the file is doing.
+# Which is exactly why each one is gated on what the line is ABOUT rather than on its shape: a list
+# named for keys with a key going into it, a lerp on a VELOCITY component against a per-second rate,
+# a sine driving a HEIGHT. An `inventory.append(sword)` is still a push back, a lerp on a colour is
+# still a lerp, and a sine anywhere but a position stays the arithmetic it is.
+
+
+## Y16. The names a list of keycards goes by. `keys` is the one the vocabulary's own rows default to;
+## `red_keys` and the like are what a project that separates them writes. Nothing else counts, which
+## is what stops the reading claiming every list in every project.
+static func is_key_list(text: String) -> bool:
+	var bare: String = text.strip_edges()
+	if not is_identifier(bare):
+		return false
+	return bare == "keys" or bare.ends_with("_keys")
+
+
+## Y16. The key a piece of text names, as [word, tone], or [] when it names no key. A quoted
+## `"red_key"` reads as the colour a player would say - `red` - because the `_key` suffix is there
+## for the programmer, not for the reader. A door's own `needs_key` keeps its name.
+static func key_name_parts(text: String) -> Array:
+	var bare: String = text.strip_edges()
+	if bare.begins_with("\"") and bare.ends_with("\"") and bare.length() > 2:
+		var inner: String = bare.substr(1, bare.length() - 2)
+		if not inner.ends_with("_key") or inner.length() <= 4:
+			return []
+		return ["\"%s\"" % inner.substr(0, inner.length() - 4).replace("_", " "), "value"]
+	if bare == "needs_key" or bare.ends_with(".needs_key"):
+		return [translate("the key it needs"), "name"]
+	if bare.begins_with("str(") and bare.ends_with(")") and bare.contains("needs_key"):
+		return [translate("the key it needs"), "name"]
+	return []
+
+
+## Y16. `"red_key" in keys` / `keys.has("red_key")`, and both of them negated. The whole keycard
+## question in one place, so the two spellings a project picks between read as the same sentence.
+## {} for every `in` test and every `.has()` that is not about keys.
+static func keys_doors_condition(text: String, context: Dictionary) -> Dictionary:
+	# Every condition in every sheet reaches this, so the two substrings a keycard question CANNOT
+	# be written without are checked before anything allocates.
+	if not text.contains(" in ") and not text.contains(".has("):
+		return {}
+	var bare: String = stripped_parens(text)
+	var negated: bool = false
+	if bare.begins_with("not "):
+		negated = true
+		bare = stripped_parens(bare.substr(4).strip_edges())
+	var key_text: String = ""
+	var list_text: String = ""
+	var in_at: int = top_level_index(bare, " in ")
+	if in_at > 0:
+		key_text = bare.substr(0, in_at).strip_edges()
+		list_text = bare.substr(in_at + 4).strip_edges()
+	elif bare.ends_with(")") and bare.contains(".has("):
+		var call_at: int = bare.rfind(".has(")
+		list_text = bare.substr(0, call_at).strip_edges()
+		key_text = bare.substr(call_at + 5, bare.length() - call_at - 6).strip_edges()
+	if key_text.is_empty() or not is_key_list(list_text):
+		return {}
+	var key: Array = key_name_parts(key_text)
+	if key.is_empty():
+		return {}
+	var reading: Dictionary = _sentence(str(context.get("self_object", OBJECT_SYSTEM)),
+		"Needs key {key}" if negated else "Has key {key}", {"key": [str(key[0]), str(key[1])]})
+	return _with_pattern(reading, "keys_doors", text)
+
+
+## Y16. `keys.append("red_key")` - the one line a keycard pickup is. Gated exactly as the question
+## above: the list is named for keys and a key is going into it, so an `inventory.append(potion)` is
+## still the push back it always read as.
+static func keys_doors_statement(text: String, context: Dictionary) -> Dictionary:
+	if not text.ends_with(")") or not text.contains(".append("):
+		return {}
+	var call_at: int = text.rfind(".append(")
+	var list_text: String = text.substr(0, call_at).strip_edges()
+	if not is_key_list(list_text):
+		return {}
+	var key_text: String = text.substr(call_at + 8, text.length() - call_at - 9).strip_edges()
+	var key: Array = key_name_parts(key_text)
+	if key.is_empty():
+		return {}
+	var reading: Dictionary = _sentence(str(context.get("self_object", OBJECT_SYSTEM)),
+		"Pick up key {key}", {"key": [str(key[0]), str(key[1])]})
+	return _with_pattern(reading, "keys_doors", text)
+
+
+## Y17. The three lines the feel layer of a first-person game is made of, each of which the readings
+## below this one would describe as the arithmetic it is written with: steering a jump, bobbing a
+## weapon as you run, and letting it lag behind the view. {} for anything that is not one of them.
+static func movement_feel_statement(text: String, context: Dictionary) -> Dictionary:
+	# Every statement in every sheet reaches this, so the two calls all three shapes are built out of
+	# are checked ONCE, with a substring search, before any of them starts scanning for operators.
+	var lerped: bool = text.contains("lerp")
+	var sined: bool = text.contains("sin(")
+	if not lerped and not sined:
+		return {}
+	if lerped:
+		var steered: Dictionary = _air_control_statement(text, context)
+		if not steered.is_empty():
+			return steered
+		var swayed: Dictionary = _weapon_sway_statement(text, context)
+		if not swayed.is_empty():
+			return swayed
+	return _weapon_bob_statement(text, context) if sined else {}
+
+
+## The arguments of a `lerp(...)` / `lerpf(...)` that is the WHOLE of `value`, as three texts, or []
+## when the value is not one. Split at top level, so a lerp whose own arguments hold commas survives.
+static func _lerp_arguments(value: String) -> Array:
+	var bare: String = stripped_parens(value)
+	var open_at: int = -1
+	for spelling: String in ["lerpf(", "lerp("]:
+		if bare.begins_with(spelling):
+			open_at = spelling.length() - 1
+			break
+	if open_at < 0 or closing_paren(bare, open_at) != bare.length() - 1:
+		return []
+	var inside: String = bare.substr(open_at + 1, bare.length() - open_at - 2)
+	var parts: PackedStringArray = split_top_level(inside, ",")
+	if parts.size() != 3:
+		return []
+	return [parts[0].strip_edges(), parts[1].strip_edges(), parts[2].strip_edges()]
+
+
+## Y17. `velocity.x = lerp(velocity.x, wish * speed, air_control * delta)` - an airborne run being
+## STEERED rather than replaced. The three things that make it that and not a lerp: the target is a
+## velocity component, the lerp starts from that same component, and the rate is per second.
+static func _air_control_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	if not is_simple_target(target) or not _trailing_member(target) in ["x", "z"]:
+		return {}
+	var owner_text: String = _owner_of(target)
+	if _trailing_member(owner_text) != "velocity":
+		return {}
+	var arguments: Array = _lerp_arguments(text.substr(at + 3).strip_edges())
+	if arguments.is_empty() or str(arguments[0]).strip_edges() != target:
+		return {}
+	var rate: String = _per_second_step(str(arguments[2]))
+	if rate.is_empty():
+		return {}
+	var reading: Dictionary = _sentence(_receiver_object(_owner_of(owner_text), context),
+		"Air control {share}", {"share": [rate, "value"]})
+	(reading["segments"] as Array).append({
+		"text": " (%s)" % translate("steers the run in the air, keeps the rest"), "tone": "muted"})
+	return _with_pattern(reading, "movement", text)
+
+
+## Y17. `weapon.rotation.y = lerp(weapon.rotation.y, -mouse_delta.x * 0.002, 10.0 * delta)` - a
+## weapon lagging behind the view. A lerp on a ROTATION, starting from itself, whose destination is
+## the look movement; a lerp on a rotation toward anything else stays the arithmetic it is.
+static func _weapon_sway_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	if not is_simple_target(target):
+		return {}
+	var owner_text: String = _owner_of(target)
+	var rotates: bool = _trailing_member(target) == "rotation" \
+		or (_trailing_member(target) in ["x", "y"] and _trailing_member(owner_text) == "rotation")
+	if not rotates:
+		return {}
+	var arguments: Array = _lerp_arguments(text.substr(at + 3).strip_edges())
+	if arguments.is_empty() or str(arguments[0]).strip_edges() != target:
+		return {}
+	if not _names_look_movement(str(arguments[1])):
+		return {}
+	var swaying: String = owner_text if _trailing_member(target) == "rotation" else _owner_of(owner_text)
+	var reading: Dictionary = _sentence(_receiver_object(swaying, context), "Sway with the mouse", {})
+	(reading["segments"] as Array).append({
+		"text": " (%s %s)" % [translate("catching up at"), str(arguments[2])], "tone": "muted"})
+	return _with_pattern(reading, "movement", text)
+
+
+## Y17. Whether a lerp's destination is the LOOK MOVEMENT - the mouse delta, or the sway a controller
+## kept of it. Nothing else counts, so a weapon lerped toward a fixed angle keeps reading as the turn
+## it is.
+static func _names_look_movement(text: String) -> bool:
+	var lowered: String = text.to_lower()
+	for token: String in ["mouse_delta", "mouse_motion", "_sway_x", "_sway_y", "sway_x", "sway_y",
+			"look_delta", ".relative"]:
+		if lowered.contains(token):
+			return true
+	return false
+
+
+## Y17. `bob.position.y = base + sin(time * 10.0) * 2.0` - a weapon bobbing as you run. A sine
+## driving a HEIGHT is a bob in every game there is; a sine driving anything else keeps its
+## arithmetic, because there is no one thing it means.
+static func _weapon_bob_statement(text: String, context: Dictionary) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	var target: String = text.substr(0, at).strip_edges()
+	if not is_simple_target(target) or _trailing_member(target) != "y":
+		return {}
+	var owner_text: String = _owner_of(target)
+	if not _trailing_member(owner_text) in ["position", "global_position"]:
+		return {}
+	# The bob a weapon does is a bob on ANOTHER node's height - the thing in your hands, the torch,
+	# the hat. A sine on the script's OWN position is the shipped Bob row's exact spelling, and it
+	# says more than this reading could (the magnitude and the rate), so it keeps that line.
+	if _owner_of(owner_text).is_empty():
+		return {}
+	var value: String = text.substr(at + 3).strip_edges()
+	if not value.begins_with("sin(") and top_level_index(value, "sin(") < 0:
+		return {}
+	var reading: Dictionary = _sentence(_receiver_object(_owner_of(owner_text), context),
+		"Bob up and down", {})
+	(reading["segments"] as Array).append({
+		"text": " (%s)" % translate("a sine wave, as you move"), "tone": "muted"})
+	return _with_pattern(reading, "movement", text)

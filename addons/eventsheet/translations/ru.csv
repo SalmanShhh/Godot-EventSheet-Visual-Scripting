@@ -4130,3 +4130,22 @@ moving right,движется вправо
 Mirror the view,Отразить вид
 Set tile at {coords} flipped,Отразить клетку {coords}
 Set tile at {coords} flipped to {value},"Отразить клетку {coords}, если {value}"
+Needs key,Нужен ключ
+Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.,"Назовите ключ, и при перетаскивании на холст будет предложено событие двери. Оставьте пустым для незапертой двери."
+Try This Door,Попробовать эту дверь
+Add the door event,Добавить событие двери
+%s wants the %s key. Add the event that tries it when the player walks in?,"%s требует ключ %s. Добавить событие, которое пробует её, когда игрок входит?"
+Trying %s when the player walks in.,"%s пробуется, когда игрок входит."
+Keycard Door (3D),Дверь с ключ-картой (3D)
+Has key {key},Есть ключ {key}
+Needs key {key},Нужен ключ {key}
+Pick up key {key},Подобрать ключ {key}
+the key it needs,нужный ей ключ
+Air control {share},Управление в воздухе {share}
+"steers the run in the air, keeps the rest","направляет бег в воздухе, сохраняя остальное"
+Sway with the mouse,Покачивание за мышью
+catching up at,догоняет со скоростью
+Bob up and down,Покачивание вверх-вниз
+"a sine wave, as you move","синусоида, пока вы двигаетесь"
+Keys and the doors that want them,"Ключи и двери, которым они нужны"
+"Enemies noticing you, and each other",Враги замечают вас и друг друга

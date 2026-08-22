@@ -356,6 +356,49 @@ static func run() -> bool:
 	passed = _check_scene("inspector_playground scene has Body + Emblem + Info",
 		"res://demo/showcase/inspector_playground/inspector_playground.tscn", ["Body", "Emblem", "Info"]) and passed
 
+	# Boomer Level - the shooter kit end to end, as four sheets: the level, the door, a grunt and the
+	# pickup. The tokens below are the SPELLINGS the keycard, feel and enemy readings recognise, so a
+	# reading that stops matching one and a builder that starts writing a different one both land here.
+	passed = _check_sheet("boomer_level", "res://demo/showcase/boomer_level/boomer_level.gd", [
+		"class_name BoomerLevel",
+		"\tkeys.append(\"red_key\")",
+		"\tvar __door_level = $RedDoor",
+		"\tif str(__door_level.needs_key) in keys:",
+		"\t\t__door_level.locked_door_tried(str(__door_level.needs_key))",
+		"\t$Player/FPSController.bob_with_movement($Player/Head/Weapon)",
+		"\t$Player/FPSController.sway_with_mouse($Player/Head/Weapon)",
+		"\tif not \"SecretRoom\" in secrets_found:",
+		"\tkills += 1",
+	]) and passed
+	passed = _check_sheet("boomer_door", "res://demo/showcase/boomer_level/keycard_door.gd", [
+		"class_name BoomerLevelDoor",
+		"func locked_door_tried(key: Variant) -> void:",
+		"func open_door() -> void:",
+		"\tif not door_open:",
+	]) and passed
+	passed = _check_sheet("boomer_grunt", "res://demo/showcase/boomer_level/grunt.gd", [
+		"class_name BoomerLevelGrunt",
+		"func alerted(who: Variant) -> void:",
+		"\tif who.is_in_group(\"enemies\"):",
+		"\t\tif __alerted_hurt != self and __alerted_hurt.global_position.distance_to(global_position) < shout_radius:",
+	]) and passed
+	passed = _check_sheet("boomer_pickup", "res://demo/showcase/boomer_level/health_pickup.gd", [
+		"class_name BoomerLevelPickup",
+		"\tawait get_tree().create_timer(respawn_seconds).timeout",
+		"\tset_deferred(\"monitoring\", true)",
+	]) and passed
+	passed = _check("boomer_level bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/boomer_level/boomer_level.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("boomer_level scene wires the player rig, the card, the door and the grunts",
+		"res://demo/showcase/boomer_level/boomer_level.tscn",
+		["Player", "FPSController", "Head", "Weapon", "RedCard", "RedDoor", "DoorTrigger",
+			"Grunt1", "Grunt2", "HealthPickup", "SecretRoom", "Exit", "Tally"]) and passed
+	# The alert row walks a GROUP, so a group that did not survive packing makes the whole item a
+	# silent no-op - which is exactly what an unpersisted add_to_group produces.
+	passed = _check("both grunts keep their group in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/boomer_level/boomer_level.tscn").count("groups=[\"enemies\"]"),
+		2) and passed
+
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/carousel/showcase_carousel.tscn") and passed

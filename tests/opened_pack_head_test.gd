@@ -46,8 +46,10 @@ static func run() -> bool:
 	var include_bar: EventRowData = _row_at(rows, 0)
 	ok = _check("the sheet opens on the Include bar",
 		include_bar != null and include_bar.row_uid.begins_with("pack_include_bar_"), true) and ok
+	# Two patterns since the feel layer landed: the pack's airborne run is now READ as air control,
+	# which claims movement beside the look shape the pack already claimed.
 	ok = _check("the Include bar reads as the pack's identity",
-		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 1 pattern · 1 adoptable ▸") and ok
+		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 2 patterns · 2 adoptable ▸") and ok
 	ok = _check("it wears the identity bar's presence",
 		include_bar != null and is_equal_approx(include_bar.height_scale, 1.5), true) and ok
 	ok = _check("the Class setup strip folded into it", _has_uid_prefix(rows, "scaffolding_strip_"), false) and ok
@@ -65,7 +67,7 @@ static func run() -> bool:
 	# ── 3. The group bars, in file order, closed ──
 	ok = _check("the head bars read in file order",
 		_head_bar_titles(rows),
-		"Triggers | AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Instance variables") and ok
+		"Triggers | AI Driver | Camera | Crouch & Slide | Jump | Look | Movement | Wall Tech | Weapon Feel | Instance variables") and ok
 	var triggers_bar: EventRowData = _bar_titled(rows, "Triggers")
 	ok = _check("the Triggers bar says what it holds", _texts(triggers_bar), "Triggers | this pack fires - 11") and ok
 	ok = _check("its children are the pack's trigger rows", triggers_bar.children.size() if triggers_bar != null else -1, 11) and ok
@@ -103,7 +105,7 @@ static func run() -> bool:
 	# ── A verb reads as a trigger: its name in the condition lane, its first step beside it ──
 	var verb_header: EventRowData = _verb_row(rows, "define_fn_add_look")
 	ok = _check("a verb reads as the trigger it is, with its first step beside it",
-		_texts(verb_header), "ƒ | On Add Look | x | y | Set yaw to wrapf(yaw - x * Mouse Sensitivity, -180, 180) | Set pitch to pitch - y * Mouse Sensitivity kept between Pitch Min and Pitch Max") and ok
+		_texts(verb_header), "ƒ | On Add Look | x | y | Set yaw to wrapf(yaw - x * Mouse Sensitivity, -180, 180) | Set pitch to pitch - y * Mouse Sensitivity kept between Pitch Min and Pitch Max | Sway reads the RAW look delta: a weapon lags behind how far the hands moved. | Set sway x to x | Set sway y to y") and ok
 	ok = _check("a verb with a step in its right lane is an ordinary two-lane event",
 		verb_header != null and not verb_header.full_width_lanes, true) and ok
 	# A verb whose first step asks a question of its own keeps that step as a row - only a step that

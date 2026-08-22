@@ -387,6 +387,54 @@ Arsenal (3D) wires firing, switching, ammo and secrets together to start from:
 
 ![The boomer arsenal starter: fire, switch, spend ammo, count secrets](../images/boomer-arsenal-starter.png)
 
+### Keys and doors
+
+A keycard is a name in a list, and a door is a body that wants one of those names. **Pick Up Key**
+adds one to the list the player carries, **Has Key** is true while it is in there, **Needs Key** is
+the other half of that question (so a locked-door hint reads as a sentence rather than as a negated
+test), and **Keys Held** is the number a row of HUD key icons counts up to. All four are the ordinary
+list words said about keys, so the same file round-trips whether you typed the `in` test or dropped
+the row.
+
+The door half is a pair. **Try Door** is the whole gesture in one row: it reads the key the door
+wants off the door itself, and either opens it or tells it it was refused. **Open Door** is what a
+door does about it - the door stops blocking, slides out of the way, and stays open, because the
+flag it sets is what makes the slide happen once however many times the door is walked into.
+**On Locked Door Tried** is the door's own trigger, with the key it wanted, and it is where the
+thud, the red flash and the "you need the red keycard" line go.
+
+A door, in full, is any node carrying three things: a `needs_key` text property, an `open_door()`
+function, and the `locked_door_tried(key)` handler that trigger compiles into. New Sheet ▸ Keycard
+Door (3D) writes all three, so taking the starter means never typing one. And a door object you name
+a key for in its Object properties panel OFFERS the event that tries it the moment you drop it on the
+canvas - an offer, so dismissing it still drops the row you asked for.
+
+![Naming the key a door wants, in its Object properties](../images/keycard-door-mark.png)
+
+### Enemies, pickups and the way out
+
+**Alert Enemies Within** is the noise words aimed at somebody: every member of the group close enough
+to the point is told who to come for, and each one answers with **On Alerted**. Nobody is alerted
+about themselves, so a hurt enemy shouting to the room never goes looking for itself.
+
+**Retaliate Against Attacker** is the one line in a hurt handler that makes a room interesting: this
+one turns on whoever hurt it, but only when the attacker is one of its own kind - so a rocket that
+splashes two of them starts a fight, and a rocket from you does not make them attack you twice. Put
+it under On Alerted with the alert's own argument and a blast becomes infighting.
+
+**Respawn After** takes a pickup away, waits, and puts it back. It stops being collectable while it
+is gone, so nothing walks off with an invisible one. Drop it on the pickup's own walked-into event -
+coming back is something the pickup does, not something the level does to it.
+
+The way out is the Level Stats Screen starter's job: kills, secrets and time, with the time in the
+minutes-and-seconds words a player reads. `Secrets Found` against your own total and `Format Time`
+against par are the whole tally, and both are shipped rows.
+
+The **Boomer Level** showcase (`demo/showcase/boomer_level/`) is all of this in one small room: a red
+keycard, the door that wants it, two grunts that turn on each other, a health pickup that comes back,
+a secret and the exit tally - four sheets, because three of those verbs are things an object does
+about itself.
+
 ## Tips and common mistakes
 
 - **Up is positive Y in 3D.** Copying a 2D jump straight across gives you a jump that drives into the

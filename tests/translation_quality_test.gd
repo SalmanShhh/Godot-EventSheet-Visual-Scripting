@@ -543,6 +543,7 @@ static func _test_doctor_gate() -> bool:
 	accused.sort()
 	ok = _check("the accusations over this repo are exactly the one-language showcases",
 		"\n".join(accused), "\n".join(PackedStringArray([
+			"res://demo/showcase/boomer_level/boomer_level.gd",
 			"res://demo/showcase/family_arena/family_arena.gd",
 			"res://demo/showcase/hierarchy_playground/hierarchy_playground.gd",
 			"res://demo/showcase/input_rebind/input_rebind.gd",

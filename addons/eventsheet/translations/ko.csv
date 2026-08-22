@@ -4130,3 +4130,22 @@ moving right,오른쪽으로 이동 중
 Mirror the view,화면을 좌우 반전
 Set tile at {coords} flipped,{coords} 타일을 좌우 반전
 Set tile at {coords} flipped to {value},{coords} 타일의 좌우 반전을 {value} 로
+Needs key,필요한 열쇠
+Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.,열쇠 이름을 지정하면 캔버스에 놓을 때 문 이벤트를 제안합니다. 잠겨 있지 않은 문은 비워 두세요.
+Try This Door,이 문 열어보기
+Add the door event,문 이벤트 추가
+%s wants the %s key. Add the event that tries it when the player walks in?,%s은(는) %s 열쇠가 필요합니다. 플레이어가 들어올 때 문을 열어보는 이벤트를 추가할까요?
+Trying %s when the player walks in.,플레이어가 들어오면 %s을(를) 열어봅니다.
+Keycard Door (3D),키카드 문 (3D)
+Has key {key},열쇠 {key} 보유
+Needs key {key},열쇠 {key} 필요
+Pick up key {key},열쇠 {key} 줍기
+the key it needs,필요한 열쇠
+Air control {share},공중 제어 {share}
+"steers the run in the air, keeps the rest",공중에서 달리기 방향만 바꾸고 나머지는 유지
+Sway with the mouse,마우스에 따라 흔들리기
+catching up at,따라잡는 속도
+Bob up and down,위아래로 흔들리기
+"a sine wave, as you move",이동에 맞춘 사인파
+Keys and the doors that want them,열쇠와 그것을 요구하는 문
+"Enemies noticing you, and each other","적이 당신을, 그리고 서로를 알아채기"

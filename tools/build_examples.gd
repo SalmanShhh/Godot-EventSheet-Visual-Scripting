@@ -33,6 +33,7 @@ func _init() -> void:
 	all_ok = _build_raycast_lab_3d() and all_ok
 	all_ok = _build_hierarchy_playground() and all_ok
 	all_ok = _build_mirror_and_flip() and all_ok
+	all_ok = _build_boomer_level() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -68,6 +69,14 @@ func _ace_template(ace_id: String, uid: String = "") -> String:
 			return str(descriptor.codegen_template).replace("{uid}", uid)
 	push_error("[build_examples] no builtin ACE named %s" % ace_id)
 	return ""
+
+
+## The LINE a shipped ACE writes, with its parameters already filled in - the same substitution the
+## compiler runs, so a function body written with this and a row dropped from the picker are the same
+## bytes. Function bodies take raw code rather than rows (a function is a body, not an event lane),
+## and `_compile`'s reverse lift turns the result back into rows where it re-emits byte for byte.
+func _ace_line(ace_id: String, uid: String, params: Dictionary) -> String:
+	return ActionCodegen._apply_template(_ace_template(ace_id, uid), params)
 
 
 func _condition(provider: String, ace_id: String, template: String, params: Dictionary,
@@ -3488,6 +3497,466 @@ func _save_hierarchy_scene() -> bool:
 	readout.owner = root
 
 	return _save_scene(root, "%s/hierarchy_playground.tscn" % HIERARCHY_DIR)
+
+
+# ── 20. Boomer Level - the shooter kit end to end ───────────────────────────────────────────
+
+const BOOMER_DIR := "res://demo/showcase/boomer_level"
+
+
+## A small 3D level built out of the shooter vocabulary and nothing else: a red keycard, the door
+## that wants it, two grunts that shout to each other and turn on whoever hurt them, a health pickup
+## that comes back, a secret, and an exit that reads the tally out. Four sheets - the level, the
+## door, a grunt and the pickup - because three of those verbs are things an OBJECT does about
+## itself, and a level sheet that reached into them would be exactly the tangle the rows exist to
+## avoid. The player is the FPS Controller pack with the feel knobs turned on, and the weapon under
+## the Head bobs and sways through the pack's own two rows.
+func _build_boomer_level() -> bool:
+	if not _build_boomer_door_sheet():
+		return false
+	if not _build_boomer_grunt_sheet():
+		return false
+	if not _build_boomer_pickup_sheet():
+		return false
+	if not _build_boomer_level_sheet():
+		return false
+	return _save_boomer_scene()
+
+
+## The door: it knows the key it wants, how it opens, and what it does when it is tried without one.
+func _build_boomer_door_sheet() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "StaticBody3D"
+	sheet.custom_class_name = "BoomerLevelDoor"
+	sheet.class_description = "The red keycard door. Try Door on the level's sheet opens it when the key fits and tells it here when it does not."
+	sheet.variables = {
+		"needs_key": {"type": "String", "default": "red_key", "exported": true,
+			"attributes": {"tooltip": "The key this door wants. Try Door reads it off the door itself."}},
+		"door_open": {"type": "bool", "default": false, "exported": false,
+			"attributes": {"tooltip": "True once the door has opened - what makes the slide happen once."}},
+		"slide_height": {"type": "float", "default": 3.2, "exported": true,
+			"attributes": {"tooltip": "How far the door rises out of the way, in metres."}},
+		"slide_seconds": {"type": "float", "default": 0.6, "exported": true,
+			"attributes": {"tooltip": "How long the door takes to open."}},
+		"locked_hint": {"type": "String", "default": "", "exported": false,
+			"attributes": {"tooltip": "What to tell the player when the door refuses. The level's HUD reads it."}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Keycard door: it opens when the key fits and says so when it does not."
+	sheet.events.append(about)
+	var open_door: EventFunction = EventFunction.new()
+	open_door.function_name = "open_door"
+	open_door.description = "Opens the door and leaves it open. Try Door calls this when the key fits."
+	open_door.events.append(_raw(_ace_line("OpenDoor", "door", {
+		"door": "self", "opened": "door_open",
+		"slide": "Vector3(0.0, slide_height, 0.0)", "seconds": "slide_seconds"})))
+	sheet.functions.append(open_door)
+	var refused: EventRow = EventRow.new()
+	refused.trigger_provider_id = "Core"
+	refused.trigger_id = "OnLockedDoorTried"
+	refused.actions.append(_action("Core", "SetVar", _ace_template("SetVar"), {
+		"var_name": "locked_hint", "value": "\"Locked. You need the %s keycard.\" % str(key)"}))
+	sheet.events.append(refused)
+	return _compile(sheet, "%s/keycard_door.tres" % BOOMER_DIR, "%s/keycard_door.gd" % BOOMER_DIR)
+
+
+## A grunt: it can be told who to go for, it turns on whoever hurt it, and it walks at its target.
+func _build_boomer_grunt_sheet() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "CharacterBody3D"
+	sheet.custom_class_name = "BoomerLevelGrunt"
+	sheet.class_description = "One grunt. Alert Enemies Within tells it who to go for, and being hurt makes it shout - which is what turns a room of them on each other."
+	sheet.variables = {
+		"hp": {"type": "float", "default": 40.0, "exported": true,
+			"attributes": {"tooltip": "How much damage this grunt takes before it falls."}},
+		"walk_speed": {"type": "float", "default": 2.4, "exported": true,
+			"attributes": {"tooltip": "How fast it walks at whatever it is going for."}},
+		"shout_radius": {"type": "float", "default": 9.0, "exported": true,
+			"attributes": {"tooltip": "How far its shout carries when something hurts it."}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "A grunt: told who to go for by Alert Enemies Within, and shouting to the room when it is hurt."
+	sheet.events.append(about)
+	# `target` is a NODE, which the variables table has no spelling for, so it is declared here -
+	# the same reason the FPS Controller pack declares its gravity direction as a class-level line.
+	var member: RawCodeRow = RawCodeRow.new()
+	member.code = "## Whoever this grunt is going for right now.\nvar target: Node3D = null"
+	sheet.events.append(member)
+	# Told who to go for. The shipped Retaliate row is the whole rule: only its own kind counts, so a
+	# shout from the player never makes two grunts fight each other over you.
+	var alerted: EventRow = EventRow.new()
+	alerted.trigger_provider_id = "Core"
+	alerted.trigger_id = "OnAlerted"
+	alerted.actions.append(_action("Core", "RetaliateAgainstAttacker",
+		_ace_template("RetaliateAgainstAttacker", "grunt"),
+		{"attacker": "who", "group": "\"enemies\"", "target": "target"}))
+	sheet.events.append(alerted)
+	# Walking at it. One tick row, so the whole of what a grunt does is three events.
+	var walk: EventRow = EventRow.new()
+	walk.trigger_provider_id = "Core"
+	walk.trigger_id = "OnPhysicsProcess"
+	walk.actions.append(_raw("\n".join(PackedStringArray([
+		"if target != null and is_instance_valid(target):",
+		"\tvar toward := (target.global_position - global_position)",
+		"\tvelocity.x = toward.normalized().x * walk_speed",
+		"\tvelocity.z = toward.normalized().z * walk_speed",
+		"move_and_slide()"
+	]))))
+	sheet.events.append(walk)
+	var take_damage: EventFunction = EventFunction.new()
+	take_damage.function_name = "take_damage"
+	take_damage.description = "Takes a hit. The blast rows call this by name; the shout is what makes the room turn."
+	var amount: ACEParam = ACEParam.new()
+	amount.id = "amount"
+	amount.type_name = "float"
+	take_damage.params.append(amount)
+	take_damage.events.append(_raw("hp -= amount"))
+	take_damage.events.append(_raw(_ace_line("AlertEnemiesWithin", "hurt",
+		{"at": "global_position", "radius": "shout_radius", "target": "self", "group": "\"enemies\""})))
+	take_damage.events.append(_raw("\n".join(PackedStringArray([
+		"if hp <= 0.0:",
+		"\tget_parent().count_kill()",
+		"\tqueue_free()"
+	]))))
+	sheet.functions.append(take_damage)
+	return _compile(sheet, "%s/grunt.tres" % BOOMER_DIR, "%s/grunt.gd" % BOOMER_DIR)
+
+
+## The health pickup: one row, on the pickup itself, because coming back is something it does.
+func _build_boomer_pickup_sheet() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Area3D"
+	sheet.custom_class_name = "BoomerLevelPickup"
+	sheet.class_description = "A health pickup that comes back. Walking into it takes it away and the Respawn After row puts it back."
+	sheet.variables = {
+		"respawn_seconds": {"type": "float", "default": 3.0, "exported": true,
+			"attributes": {"tooltip": "How long the pickup stays gone before it comes back."}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "A health pickup: taken, then back after its own timer."
+	sheet.events.append(about)
+	var taken: EventRow = EventRow.new()
+	taken.trigger_provider_id = "Core"
+	taken.trigger_id = "OnBodyEntered"
+	taken.actions.append(_action("Core", "RespawnAfter", _ace_template("RespawnAfter", "pickup"),
+		{"seconds": "respawn_seconds"}))
+	sheet.events.append(taken)
+	return _compile(sheet, "%s/health_pickup.tres" % BOOMER_DIR, "%s/health_pickup.gd" % BOOMER_DIR)
+
+
+## The level: the keys, the door, the secret, the rocket and the tally at the exit.
+func _build_boomer_level_sheet() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "BoomerLevel"
+	sheet.class_description = "A small shooter level: a red keycard, the door that wants it, two grunts that turn on each other, a respawning pickup, a secret and the exit tally."
+	sheet.variables = {
+		"keys": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "Every keycard picked up so far, by name. The door rows read this list."}},
+		"secrets_found": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "Every secret counted so far. Each one goes in once."}},
+		"secrets_total": {"type": "int", "default": 1, "exported": true,
+			"attributes": {"tooltip": "How many secrets this level hides."}},
+		"kills": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "How many grunts have fallen."}},
+		"enemies_total": {"type": "int", "default": 2, "exported": true,
+			"attributes": {"tooltip": "How many grunts the level started with."}},
+		"level_seconds": {"type": "float", "default": 0.0, "exported": false,
+			"attributes": {"tooltip": "How long the level has been running."}},
+		"par_seconds": {"type": "float", "default": 60.0, "exported": true,
+			"attributes": {"tooltip": "The time to beat, shown beside your own."}},
+		"level_over": {"type": "bool", "default": false, "exported": false,
+			"attributes": {"tooltip": "True once the exit is reached - the clock stops and the tally is written."}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit."
+	sheet.events.append(about)
+
+	var ready_event: EventRow = EventRow.new()
+	ready_event.trigger_provider_id = "Core"
+	ready_event.trigger_id = "OnReady"
+	ready_event.actions.append(_action("Core", "PrintLog", "print({message})", {
+		"message": "\"Boomer Level - WASD/arrows move, mouse looks, Space jumps (hold it on landing to bunny hop), Tab throws a rocket, Esc frees the mouse.\""}))
+	sheet.events.append(ready_event)
+
+	# The clock, which runs while the level is not over.
+	var clock: EventRow = EventRow.new()
+	clock.trigger_provider_id = "Core"
+	clock.trigger_id = "OnPhysicsProcess"
+	clock.conditions.append(_condition("Core", "CompareVar", _ace_template("CompareVar"),
+		{"var_name": "level_over", "op": "==", "value": "false"}))
+	clock.actions.append(_action("Core", "AddVar", _ace_template("AddVar"),
+		{"var_name": "level_seconds", "amount": "delta"}))
+	sheet.events.append(clock)
+
+	# The feel layer: the weapon under the Head bobs as you run and lags as you turn. Two rows.
+	var feel: EventRow = EventRow.new()
+	feel.trigger_provider_id = "Core"
+	feel.trigger_id = "OnProcess"
+	feel.actions.append(_raw("$Player/FPSController.bob_with_movement($Player/Head/Weapon)"))
+	feel.actions.append(_raw("$Player/FPSController.sway_with_mouse($Player/Head/Weapon)"))
+	sheet.events.append(feel)
+
+	# The rocket. Explode At pushes bodies away from the point, so standing in your own blast throws
+	# you - which is the whole of rocket jumping, and is why the grunts start shouting at each other.
+	var rocket: EventRow = EventRow.new()
+	rocket.trigger_provider_id = "Core"
+	rocket.trigger_id = "OnProcess"
+	rocket.conditions.append(_condition("Core", "IsActionJustPressed",
+		_ace_template("IsActionJustPressed"), {"action": "\"ui_focus_next\""}))
+	rocket.actions.append(_action("Core", "ExplodeAt", _ace_template("ExplodeAt", "rocket"), {
+		"point": "$Grunt1.global_position", "radius": "6.0", "damage": "35", "push": "10.0", "mask": "1"}))
+	sheet.events.append(rocket)
+
+	# The keycard. Pick Up Key is the list word, said about keys.
+	var card: EventRow = EventRow.new()
+	card.trigger_provider_id = "Core"
+	card.trigger_id = "OnBodyEntered"
+	card.trigger_source_path = "RedCard"
+	card.actions.append(_action("Core", "PickUpKey", _ace_template("PickUpKey"),
+		{"key": "\"red_key\"", "keys": "keys"}))
+	card.actions.append(_raw("$RedCard.hide()"))
+	card.actions.append(_raw("$RedCard.set_deferred(\"monitoring\", false)"))
+	sheet.events.append(card)
+
+	# The door. One row does the whole of trying it: it opens, or it says it is locked.
+	var door: EventRow = EventRow.new()
+	door.trigger_provider_id = "Core"
+	door.trigger_id = "OnBodyEntered"
+	door.trigger_source_path = "DoorTrigger"
+	door.actions.append(_action("Core", "TryDoor", _ace_template("TryDoor", "level"),
+		{"door": "$RedDoor", "keys": "keys"}))
+	sheet.events.append(door)
+
+	# The secret, counted once however many times you walk back through it.
+	var secret: EventRow = EventRow.new()
+	secret.trigger_provider_id = "Core"
+	secret.trigger_id = "OnBodyEntered"
+	secret.trigger_source_path = "SecretRoom"
+	secret.actions.append(_action("Core", "MarkSecretFound", _ace_template("MarkSecretFound"),
+		{"name": "\"SecretRoom\"", "found": "secrets_found"}))
+	sheet.events.append(secret)
+
+	# The exit: the clock stops and the tally is written, in the shipped words for every number in it.
+	var exit_event: EventRow = EventRow.new()
+	exit_event.trigger_provider_id = "Core"
+	exit_event.trigger_id = "OnBodyEntered"
+	exit_event.trigger_source_path = "Exit"
+	exit_event.actions.append(_action("Core", "SetVar", _ace_template("SetVar"),
+		{"var_name": "level_over", "value": "true"}))
+	# Built by concatenation rather than by formatting: the line it writes is ITSELF a `%` format
+	# string, and running one through another would eat the emitted `%d`s.
+	exit_event.actions.append(_raw("$HudLayer/Tally.text = \"Kills %d of %d   Secrets %d of %d   Time %s of %s\" % [kills, enemies_total, " \
+		+ _ace_template("SecretsFoundCount").format({"found": "secrets_found"}) + ", secrets_total, " \
+		+ _ace_template("FormatTime").format({"seconds": "level_seconds"}) + ", " \
+		+ _ace_template("FormatTime").format({"seconds": "par_seconds"}) + "]"))
+	sheet.events.append(exit_event)
+
+	# The HUD line the door and the keys write to, refreshed every tick.
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"
+	hud.trigger_id = "OnProcess"
+	hud.actions.append(_raw("$HudLayer/Hud.text = \"Keys %d   Secrets %d of %d   %s\" % [" \
+		+ _ace_template("KeysHeld").format({"keys": "keys"}) + ", " \
+		+ _ace_template("SecretsFoundCount").format({"found": "secrets_found"}) \
+		+ ", secrets_total, $RedDoor.locked_hint]"))
+	sheet.events.append(hud)
+
+	var count_kill: EventFunction = EventFunction.new()
+	count_kill.function_name = "count_kill"
+	count_kill.description = "Counts a grunt that fell. Each grunt calls this by name as it goes."
+	count_kill.events.append(_raw(_ace_line("AddVar", "", {"var_name": "kills", "amount": "1"})))
+	sheet.functions.append(count_kill)
+	return _compile(sheet, "%s/boomer_level.tres" % BOOMER_DIR, "%s/boomer_level.gd" % BOOMER_DIR)
+
+
+## The level itself: a floor, the player rig with a weapon under the Head, the card, the door and
+## its trigger, two grunts in the enemies group, a pickup, a secret and the exit.
+func _save_boomer_scene() -> bool:
+	var root: Node3D = Node3D.new()
+	root.name = "BoomerLevel"
+	root.set_script(load("%s/boomer_level.gd" % BOOMER_DIR))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-52.0, -34.0, 0.0)
+	sun.shadow_enabled = true
+	root.add_child(sun); sun.owner = root
+
+	_boomer_floor(root)
+
+	var player: CharacterBody3D = CharacterBody3D.new()
+	player.name = "Player"
+	player.position = Vector3(0.0, 1.2, 10.0)
+	root.add_child(player); player.owner = root
+	var player_shape: CollisionShape3D = CollisionShape3D.new()
+	var capsule: CapsuleShape3D = CapsuleShape3D.new()
+	capsule.height = 1.8
+	capsule.radius = 0.4
+	player_shape.shape = capsule
+	player.add_child(player_shape); player_shape.owner = root
+	var head: Node3D = Node3D.new()
+	head.name = "Head"
+	head.position = Vector3(0.0, 0.6, 0.0)
+	player.add_child(head); head.owner = root
+	# The weapon the feel rows drive. It hangs off the Head, so looking around moves it and the sway
+	# row is the only thing that makes it lag.
+	var weapon: MeshInstance3D = MeshInstance3D.new()
+	weapon.name = "Weapon"
+	weapon.position = Vector3(0.28, -0.24, -0.55)
+	var weapon_mesh: BoxMesh = BoxMesh.new()
+	weapon_mesh.size = Vector3(0.12, 0.12, 0.6)
+	var weapon_material: StandardMaterial3D = StandardMaterial3D.new()
+	weapon_material.albedo_color = Color(0.22, 0.24, 0.3, 1.0)
+	weapon_mesh.material = weapon_material
+	weapon.mesh = weapon_mesh
+	head.add_child(weapon); weapon.owner = root
+	var arm: SpringArm3D = SpringArm3D.new()
+	arm.name = "Arm"
+	arm.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	arm.spring_length = 0.05
+	head.add_child(arm); arm.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera3D"
+	camera.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	camera.current = true
+	arm.add_child(camera); camera.owner = root
+	# The feel knobs the mockup names, set here so the showcase reads as its own settings rather than
+	# as the pack's defaults: a shooter's air control, the bunny hop on, a visible bob and a soft sway.
+	_attach_behavior(player, "FPSController", FPS_CONTROLLER, root, {
+		"air_control": 0.35, "keep_momentum": true,
+		"bob_amount": 0.05, "bob_period": 0.55, "sway_amount": 0.0025, "sway_speed": 9.0})
+
+	var card: Area3D = _boomer_area(root, "RedCard", Vector3(-6.0, 0.8, 0.0), Vector3(0.6, 0.6, 0.1))
+	_boomer_mesh(card, root, Vector3(0.6, 0.6, 0.1), Color(0.9, 0.2, 0.24, 1.0))
+
+	var red_door: StaticBody3D = StaticBody3D.new()
+	red_door.name = "RedDoor"
+	red_door.position = Vector3(0.0, 1.6, -8.0)
+	red_door.set_script(load("%s/keycard_door.gd" % BOOMER_DIR))
+	root.add_child(red_door); red_door.owner = root
+	var door_shape: CollisionShape3D = CollisionShape3D.new()
+	var door_box: BoxShape3D = BoxShape3D.new()
+	door_box.size = Vector3(3.0, 3.2, 0.4)
+	door_shape.shape = door_box
+	red_door.add_child(door_shape); door_shape.owner = root
+	_boomer_mesh(red_door, root, Vector3(3.0, 3.2, 0.4), Color(0.72, 0.18, 0.2, 1.0))
+
+	# Every trigger box sits clear of the floor. An Area3D reports a StaticBody3D the same way it
+	# reports the player, so a box whose bottom face grazes the ground counts the floor as a visitor
+	# the moment the level loads - which counted the secret before anybody had walked anywhere.
+	var door_trigger: Area3D = _boomer_area(root, "DoorTrigger", Vector3(0.0, 1.3, -6.4),
+		Vector3(3.0, 2.0, 1.6))
+
+	_boomer_grunt(root, "Grunt1", Vector3(-2.5, 1.0, -3.0), Color(0.86, 0.45, 0.16, 1.0))
+	_boomer_grunt(root, "Grunt2", Vector3(2.5, 1.0, -3.0), Color(0.7, 0.35, 0.5, 1.0))
+
+	var pickup: Area3D = _boomer_area(root, "HealthPickup", Vector3(5.0, 0.7, 2.0),
+		Vector3(0.7, 0.7, 0.7))
+	pickup.set_script(load("%s/health_pickup.gd" % BOOMER_DIR))
+	_boomer_mesh(pickup, root, Vector3(0.7, 0.7, 0.7), Color(0.25, 0.8, 0.4, 1.0))
+
+	var secret: Area3D = _boomer_area(root, "SecretRoom", Vector3(-8.5, 1.3, 5.0),
+		Vector3(2.4, 2.0, 2.4))
+	var exit_area: Area3D = _boomer_area(root, "Exit", Vector3(0.0, 1.3, -11.0),
+		Vector3(3.0, 2.0, 1.2))
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer); hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 20.0)
+	hud.add_theme_font_size_override("font_size", 19)
+	hud.text = "Keys 0   Secrets 0 of 1"
+	hud_layer.add_child(hud); hud.owner = root
+	var tally: Label = Label.new()
+	tally.name = "Tally"
+	tally.position = Vector2(24.0, 52.0)
+	tally.add_theme_font_size_override("font_size", 19)
+	tally.text = ""
+	hud_layer.add_child(tally); tally.owner = root
+	# Every node named above is reached by path from the sheet, so a rename here is a broken row -
+	# which is what the showcase test's node-name list is for.
+	return _save_scene(root, "%s/boomer_level.tscn" % BOOMER_DIR) \
+		and door_trigger != null and secret != null and exit_area != null
+
+
+## The floor everything in the level stands on.
+func _boomer_floor(root: Node3D) -> void:
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	floor_body.name = "Floor"
+	root.add_child(floor_body); floor_body.owner = root
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	var floor_box: BoxShape3D = BoxShape3D.new()
+	floor_box.size = Vector3(30.0, 1.0, 30.0)
+	floor_shape.shape = floor_box
+	floor_shape.position = Vector3(0.0, -0.5, 0.0)
+	floor_body.add_child(floor_shape); floor_shape.owner = root
+	var floor_mesh: MeshInstance3D = MeshInstance3D.new()
+	var floor_box_mesh: BoxMesh = BoxMesh.new()
+	floor_box_mesh.size = Vector3(30.0, 1.0, 30.0)
+	var floor_material: StandardMaterial3D = StandardMaterial3D.new()
+	floor_material.albedo_color = Color(0.3, 0.33, 0.38, 1.0)
+	floor_box_mesh.material = floor_material
+	floor_mesh.mesh = floor_box_mesh
+	floor_mesh.position = Vector3(0.0, -0.5, 0.0)
+	floor_body.add_child(floor_mesh); floor_mesh.owner = root
+
+
+## One Area3D with a box shape, which is what a card, a door trigger, a pickup, a secret and an exit
+## all are in this level - so all five are built the same way and none of them can drift.
+func _boomer_area(root: Node3D, node_name: String, at: Vector3, box_size: Vector3) -> Area3D:
+	var area: Area3D = Area3D.new()
+	area.name = node_name
+	area.position = at
+	root.add_child(area); area.owner = root
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = box_size
+	shape.shape = box
+	area.add_child(shape); shape.owner = root
+	return area
+
+
+## A coloured box hung under a node, for the things a player has to be able to see.
+func _boomer_mesh(parent: Node3D, root: Node3D, box_size: Vector3, tint: Color) -> void:
+	var mesh_node: MeshInstance3D = MeshInstance3D.new()
+	mesh_node.name = "Mesh"
+	var box_mesh: BoxMesh = BoxMesh.new()
+	box_mesh.size = box_size
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	box_mesh.material = material
+	mesh_node.mesh = box_mesh
+	parent.add_child(mesh_node); mesh_node.owner = root
+
+
+## One grunt, in the `enemies` group PERSISTENTLY - a group added without that flag is not saved into
+## the packed scene, and the alert row walks that group, so the whole item would silently do nothing.
+func _boomer_grunt(root: Node3D, node_name: String, at: Vector3, tint: Color) -> void:
+	var grunt: CharacterBody3D = CharacterBody3D.new()
+	grunt.name = node_name
+	grunt.position = at
+	grunt.set_script(load("%s/grunt.gd" % BOOMER_DIR))
+	root.add_child(grunt); grunt.owner = root
+	grunt.add_to_group("enemies", true)
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	var capsule: CapsuleShape3D = CapsuleShape3D.new()
+	capsule.height = 1.8
+	capsule.radius = 0.4
+	shape.shape = capsule
+	grunt.add_child(shape); shape.owner = root
+	var mesh_node: MeshInstance3D = MeshInstance3D.new()
+	mesh_node.name = "Mesh"
+	var capsule_mesh: CapsuleMesh = CapsuleMesh.new()
+	capsule_mesh.height = 1.8
+	capsule_mesh.radius = 0.4
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	capsule_mesh.material = material
+	mesh_node.mesh = capsule_mesh
+	grunt.add_child(mesh_node); mesh_node.owner = root
 
 
 ## One coloured box, parented and owned in the one step every node in this room needs.

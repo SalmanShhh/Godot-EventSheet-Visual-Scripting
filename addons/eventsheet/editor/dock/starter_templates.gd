@@ -49,6 +49,7 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Boomer Arsenal (3D)", 30)
 	_template_menu.add_item("Game Options", 31)
 	_template_menu.add_item("Level Stats Screen", 32)
+	_template_menu.add_item("Keycard Door (3D)", 33)
 	_template_menu.add_separator("Behaviours - attach under a node")
 	_template_menu.add_item("Behavior Component (signal-driven)", 8)
 	_template_menu.add_separator("Autoloads - project-wide singletons")
@@ -958,6 +959,61 @@ static func _build_level_stats_screen_starter() -> EventSheetResource:
 	return sheet
 
 
+## Y16. A KEYCARD DOOR starter: the whole of a coloured door, attached to the door itself. It keeps
+## the three things the Try Door row calls for - the key it wants, the opening, and what it does when
+## it is tried without one - so a level sheet never has to know how a door works, only that it is one.
+## The HUD half is a row of icons named after the keys, lit through the shipped Keys Held count.
+static func _build_keycard_door_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "StaticBody3D"
+	sheet.custom_class_name = "KeycardDoor"
+	sheet.class_description = "A door that wants a keycard. Try Door on your player's sheet opens it when the key fits and tells it here when it does not, so the refusal - the thud, the flash, the line on the HUD - is the door's own event rather than the level's."
+	sheet.variables = {
+		"needs_key": {"type": "String", "default": "red_key", "exported": true,
+			"attributes": {"tooltip": "The key this door wants, by name. The Try Door row reads it off the door, so a blue door is this one field."}},
+		"door_open": {"type": "bool", "default": false, "exported": false,
+			"attributes": {"tooltip": "True once the door has opened. It is what makes the slide happen once however many times the door is walked into."}},
+		"slide_height": {"type": "float", "default": 3.2, "exported": true,
+			"attributes": {"tooltip": "How far the door rises out of the way, in metres. Make it taller than the door and the doorway is clear."}},
+		"slide_seconds": {"type": "float", "default": 0.6, "exported": true,
+			"attributes": {"tooltip": "How long the door takes to open."}},
+		"locked_hint": {"type": "String", "default": "", "exported": false,
+			"attributes": {"tooltip": "The line to show the player when the door refuses. Bind a HUD label to it, or read it from your own row."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Keycard door[/b] - attach this to the door body itself.\nName the key it wants in [code]needs_key[/code]. On the sheet that runs your player, drop [b]Try Door[/b] on the door's walked-into event with your [code]keys[/code] list: the key fits and the door opens, or it does not and the event below runs. Pick keys up with [b]Pick Up Key[/b], and show how many are carried with [b]Keys Held[/b]."
+	sheet.events.append(note)
+
+	# Opening. A published function rather than an event, because `open_door` is the NAME Try Door
+	# calls - the door contract's own half - and a function is the only thing a name can reach.
+	var open_door: EventFunction = EventFunction.new()
+	open_door.function_name = "open_door"
+	open_door.description = "Opens the door and leaves it open. Try Door calls this when the key fits; call it yourself for a door a switch opens."
+	# A function is a BODY, not an event lane, so its contents are lines rather than rows - which is
+	# why the shipped row's template is filled in here and handed over as one. Same substitution the
+	# compiler runs, so this and a dropped Open Door row are the same bytes.
+	var open_body: RawCodeRow = RawCodeRow.new()
+	open_body.code = ActionCodegen._apply_template(_shipped_template("OpenDoor", "keycard_door"),
+		{"door": "self", "opened": "door_open",
+			"slide": "Vector3(0.0, slide_height, 0.0)", "seconds": "slide_seconds"})
+	open_door.events.append(open_body)
+	sheet.functions.append(open_door)
+
+	# The refusal. Its own trigger, so the thud and the line the player reads are rows rather than
+	# something buried in whatever tried the door.
+	var refused: EventRow = EventRow.new()
+	refused.trigger_provider_id = "Core"
+	refused.trigger_id = "OnLockedDoorTried"
+	var say_so: ACEAction = ACEAction.new()
+	say_so.provider_id = "Core"
+	say_so.ace_id = "SetVar"
+	say_so.codegen_template = _shipped_template("SetVar")
+	say_so.params = {"var_name": "locked_hint", "value": "\"Locked. You need the %s keycard.\" % str(key)"}
+	refused.actions.append(say_so)
+	sheet.events.append(refused)
+	return sheet
+
+
 ## One "compare variable" condition, built from the shipped word rather than a typed-out `a == b`.
 static func _compare(variable_name: String, operator: String, value: String) -> ACECondition:
 	var comparison: ACECondition = ACECondition.new()
@@ -1131,6 +1187,8 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		31: return _build_game_options_starter()
 		# X25 - the end-of-level screen the arsenal starter's counters feed.
 		32: return _build_level_stats_screen_starter()
+		# Y16 - the coloured door the level's keys open.
+		33: return _build_keycard_door_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 

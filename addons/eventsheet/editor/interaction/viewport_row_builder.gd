@@ -12623,6 +12623,14 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Secrets found",
 		"ace_ids": ["Core/MarkSecretFound", "Core/SecretsFoundCount", "Core/SecretAlreadyFound"]
 	},
+	# Y16. A keycard is a name in a list and a door is a body that wants one. No `adoptable`: there is
+	# no behaviour to attach for it and there should not be - what a hand-written keycard should
+	# become is six rows and the Keycard Door starter, which is vocabulary, not an addon.
+	"keys_doors": {
+		"words": "Keys and the doors that want them",
+		"ace_ids": ["Core/PickUpKey", "Core/HasKey", "Core/NeedsKey", "Core/KeysHeld",
+			"Core/TryDoor", "Core/OpenDoor"]
+	},
 	"qte": {
 		"words": "Timed input windows",
 		"ace_ids": ["Core/OpenInputWindow", "Core/CloseInputWindow", "Core/PressedInInputWindow",

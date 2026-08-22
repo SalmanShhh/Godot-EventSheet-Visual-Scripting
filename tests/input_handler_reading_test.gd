@@ -50,8 +50,9 @@ static func run() -> bool:
 		_anchor_triggers(fps), PackedStringArray(["OnReady", "OnPhysicsProcess", "OnUnhandledInput"])) and ok
 	ok = _check("the anchored _unhandled_input holds one event per branch",
 		_anchor_row_count(fps, "OnUnhandledInput"), 2) and ok
-	# 31 + 2: the leftovers parcel added Set Move Speed While Firing and Is Firing.
-	ok = _check("the anchors did not cost the pack a verb", _exposed_verbs(fps), 31 + 2) and ok
+	# 31 + 2: the leftovers parcel added Set Move Speed While Firing and Is Firing; + 4 for the
+	# feel layer's Bob With Movement, Sway With Mouse, Set Air Control and Is Bunny Hopping.
+	ok = _check("the anchors did not cost the pack a verb", _exposed_verbs(fps), 31 + 2 + 4) and ok
 	ok = _check("the opened FPS pack recompiles byte-identically",
 		str(SheetCompiler.compile(fps, FPS_PACK).get("output", "")), FileAccess.get_file_as_string(FPS_PACK)) and ok
 

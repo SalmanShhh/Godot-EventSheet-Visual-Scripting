@@ -1,0 +1,220 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/boomer_level/boomer_level.gd" id="1_r6rvy"]
+[ext_resource type="Script" path="res://eventsheet_addons/fps_controller/fps_controller_behavior.gd" id="2_ewxtr"]
+[ext_resource type="Script" path="res://demo/showcase/boomer_level/keycard_door.gd" id="3_y5vkh"]
+[ext_resource type="Script" path="res://demo/showcase/boomer_level/grunt.gd" id="4_pxb3l"]
+[ext_resource type="Script" path="res://demo/showcase/boomer_level/health_pickup.gd" id="5_71yu5"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e8j3p"]
+size = Vector3(30, 1, 30)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kxaq5"]
+albedo_color = Color(0.3, 0.33, 0.38, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ythe1"]
+material = SubResource("StandardMaterial3D_kxaq5")
+size = Vector3(30, 1, 30)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cnqxd"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hjx3g"]
+albedo_color = Color(0.22, 0.24, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rpqyh"]
+material = SubResource("StandardMaterial3D_hjx3g")
+size = Vector3(0.12, 0.12, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_03m70"]
+size = Vector3(0.6, 0.6, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5oq4c"]
+albedo_color = Color(0.9, 0.2, 0.24, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_goq8m"]
+material = SubResource("StandardMaterial3D_5oq4c")
+size = Vector3(0.6, 0.6, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cttrp"]
+size = Vector3(3, 3.2, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s1r8x"]
+albedo_color = Color(0.72, 0.18, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qqigi"]
+material = SubResource("StandardMaterial3D_s1r8x")
+size = Vector3(3, 3.2, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0am27"]
+size = Vector3(3, 2, 1.6)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_q5yl4"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7xovk"]
+albedo_color = Color(0.86, 0.45, 0.16, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_vllig"]
+material = SubResource("StandardMaterial3D_7xovk")
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xj6ry"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a44eq"]
+albedo_color = Color(0.7, 0.35, 0.5, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_55xxa"]
+material = SubResource("StandardMaterial3D_a44eq")
+radius = 0.4
+height = 1.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wncbe"]
+size = Vector3(0.7, 0.7, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dnggn"]
+albedo_color = Color(0.25, 0.8, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pgo6l"]
+material = SubResource("StandardMaterial3D_dnggn")
+size = Vector3(0.7, 0.7, 0.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vhgdf"]
+size = Vector3(2.4, 2, 2.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yxvhk"]
+size = Vector3(3, 2, 1.2)
+
+[node name="BoomerLevel" type="Node3D"]
+script = ExtResource("1_r6rvy")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8290376, 0.44065, -0.34427354, 0, 0.6156615, 0.7880107, 0.5591929, -0.6532905, 0.51040655, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="@CollisionShape3D@24" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_e8j3p")
+
+[node name="@MeshInstance3D@25" type="MeshInstance3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_ythe1")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 10)
+
+[node name="@CollisionShape3D@26" type="CollisionShape3D" parent="Player"]
+shape = SubResource("CapsuleShape3D_cnqxd")
+
+[node name="Head" type="Node3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Weapon" type="MeshInstance3D" parent="Player/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, -0.24, -0.55)
+mesh = SubResource("BoxMesh_rpqyh")
+
+[node name="Arm" type="SpringArm3D" parent="Player/Head"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+spring_length = 0.05
+
+[node name="Camera3D" type="Camera3D" parent="Player/Head/Arm"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+current = true
+
+[node name="FPSController" type="Node" parent="Player"]
+script = ExtResource("2_ewxtr")
+bob_amount = 0.05
+bob_period = 0.55
+sway_amount = 0.0025
+sway_speed = 9.0
+
+[node name="RedCard" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.8, 0)
+
+[node name="@CollisionShape3D@27" type="CollisionShape3D" parent="RedCard"]
+shape = SubResource("BoxShape3D_03m70")
+
+[node name="Mesh" type="MeshInstance3D" parent="RedCard"]
+mesh = SubResource("BoxMesh_goq8m")
+
+[node name="RedDoor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -8)
+script = ExtResource("3_y5vkh")
+
+[node name="@CollisionShape3D@28" type="CollisionShape3D" parent="RedDoor"]
+shape = SubResource("BoxShape3D_cttrp")
+
+[node name="Mesh" type="MeshInstance3D" parent="RedDoor"]
+mesh = SubResource("BoxMesh_qqigi")
+
+[node name="DoorTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -6.4)
+
+[node name="@CollisionShape3D@29" type="CollisionShape3D" parent="DoorTrigger"]
+shape = SubResource("BoxShape3D_0am27")
+
+[node name="Grunt1" type="CharacterBody3D" parent="." groups=["enemies"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1, -3)
+script = ExtResource("4_pxb3l")
+
+[node name="@CollisionShape3D@30" type="CollisionShape3D" parent="Grunt1"]
+shape = SubResource("CapsuleShape3D_q5yl4")
+
+[node name="Mesh" type="MeshInstance3D" parent="Grunt1"]
+mesh = SubResource("CapsuleMesh_vllig")
+
+[node name="Grunt2" type="CharacterBody3D" parent="." groups=["enemies"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1, -3)
+script = ExtResource("4_pxb3l")
+
+[node name="@CollisionShape3D@31" type="CollisionShape3D" parent="Grunt2"]
+shape = SubResource("CapsuleShape3D_xj6ry")
+
+[node name="Mesh" type="MeshInstance3D" parent="Grunt2"]
+mesh = SubResource("CapsuleMesh_55xxa")
+
+[node name="HealthPickup" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.7, 2)
+script = ExtResource("5_71yu5")
+
+[node name="@CollisionShape3D@32" type="CollisionShape3D" parent="HealthPickup"]
+shape = SubResource("BoxShape3D_wncbe")
+
+[node name="Mesh" type="MeshInstance3D" parent="HealthPickup"]
+mesh = SubResource("BoxMesh_pgo6l")
+
+[node name="SecretRoom" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 1.3, 5)
+
+[node name="@CollisionShape3D@33" type="CollisionShape3D" parent="SecretRoom"]
+shape = SubResource("BoxShape3D_vhgdf")
+
+[node name="Exit" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -11)
+
+[node name="@CollisionShape3D@34" type="CollisionShape3D" parent="Exit"]
+shape = SubResource("BoxShape3D_yxvhk")
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 24.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 19
+text = "Keys 0   Secrets 0 of 1"
+
+[node name="Tally" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 52.0
+offset_right = 24.0
+offset_bottom = 52.0
+theme_override_font_sizes/font_size = 19

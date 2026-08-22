@@ -59,9 +59,14 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
+var _bob_base_y: float = 0.0
+var _bob_captured: bool = false
+var _bob_time: float = 0.0
 var _coyote_timer: float = 0.0
 var _firing_timer: float = 0.0
 var _jumps_left: int = 0
+var _sway_x: float = 0.0
+var _sway_y: float = 0.0
 var ai_move_x: float = 0.0
 var ai_move_z: float = 0.0
 var crouching: bool = false
@@ -122,11 +127,15 @@ var yaw: float = 0.0
 @export var pitch_max: float = 80.0
 ## Lowest look angle in degrees (how far you can look down).
 @export var pitch_min: float = -80.0
-## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
+## How much of the run you keep in mid-air, as a share: 1 turns on a coin the way you do on the ground, 0.35 lets you steer a jump without redirecting it, 0 is pure momentum. It is the difference between a floaty platformer and a shooter that rewards a good launch.
 @export_group("Movement")
+@export var air_control: float = 0.35
+## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
 @export var firing_move_speed: float = 2.5
 ## Downward acceleration pulling the host to the floor, in metres per second squared.
 @export var gravity: float = 9.8
+## Landing with jump still held hops straight back off without ever planting a foot, and the landing frame keeps the speed it came in with - the bunny hop. Off, every landing settles to walking pace first.
+@export var keep_momentum: bool = true
 ## Base walking speed in metres per second.
 @export var move_speed: float = 5.0
 ## Multiplies move speed while the sprint key (Shift) is held.
@@ -144,6 +153,15 @@ var yaw: float = 0.0
 @export var wall_ride_max_time: float = 1.5
 ## Minimum horizontal speed needed to start or keep a wall ride.
 @export var wall_ride_min_speed: float = 3.0
+## How far a bobbing weapon rises and falls, in metres, at full running speed. Walk slower and the bob shrinks with you.
+@export_group("Weapon Feel")
+@export var bob_amount: float = 0.045
+## Seconds for one full bob cycle - a footstep down and back up. Shorter is a jog, longer is a trudge.
+@export var bob_period: float = 0.6
+## How far a swaying weapon lags behind the view, in radians per mouse pixel. The weight of the thing in your hands.
+@export var sway_amount: float = 0.002
+## How quickly a swaying weapon catches back up, per second. Higher is a pistol, lower is a rocket launcher.
+@export var sway_speed: float = 10.0
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it lives
 # here). Designed for vertical flips - DOWN and UP are exact (walk on ceilings); a
@@ -194,6 +212,10 @@ func _physics_process(delta: float) -> void:
 		stand_up()
 	# The standard AI drive seam: a driver (a 3D navigator, a cutscene) writes ai_move_x/z
 	# and flips ai_controlled on; off (the default) this is exactly the keyboard read.
+	# Bunny hop: the frame the feet touch down with jump STILL HELD is not a landing, it is the
+	# bottom of the next hop. Held here as one fact so the speed write below and the jump read
+	# further down cannot disagree about which frame it was.
+	var hopping := keep_momentum and on_floor and not was_on_floor and Input.is_action_pressed("ui_accept")
 	var input_vec := Vector2(ai_move_x, ai_move_z).limit_length(1.0) if ai_controlled else Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var direction := host.transform.basis * Vector3(input_vec.x, 0.0, input_vec.y)
 	if direction.length() > 1.0:
@@ -214,10 +236,24 @@ func _physics_process(delta: float) -> void:
 		var speed := base_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)
 		# push_x/z is the decaying wall-jump kick - without it the every-frame velocity
 		# assignment would erase the push after a single physics tick.
-		host.velocity.x = direction.x * speed + push_x
-		host.velocity.z = direction.z * speed + push_z
+		if (not on_floor or hopping) and air_control < 1.0:
+			# Air control: off the ground the wish direction STEERS the speed you already have
+			# instead of replacing it, so a jump keeps its launch and a bunny hop keeps its run.
+			# The share is a per-second rate, hence the delta - at 1.0 it is the ground write.
+			var steer := clampf(air_control, 0.0, 1.0) * 12.0 * delta
+			host.velocity.x = lerpf(host.velocity.x, direction.x * speed + push_x, steer)
+			host.velocity.z = lerpf(host.velocity.z, direction.z * speed + push_z, steer)
+		else:
+			host.velocity.x = direction.x * speed + push_x
+			host.velocity.z = direction.z * speed + push_z
 	# The firing window closes on its own, so a weapon only has to say it fired once.
 	_firing_timer = maxf(_firing_timer - delta, 0.0)
+	# The sway is the LAST mouse movement, bleeding away - so a weapon that lags the view
+	# catches up when the view stops. Decayed here rather than in Sway With Mouse so it
+	# settles at the same rate whether or not anything is asking to sway this frame.
+	var sway_decay := minf(sway_speed * delta, 1.0)
+	_sway_x = lerpf(_sway_x, 0.0, sway_decay)
+	_sway_y = lerpf(_sway_y, 0.0, sway_decay)
 	var push_fade := wall_jump_push * 2.0 * delta
 	push_x = move_toward(push_x, 0.0, push_fade)
 	push_z = move_toward(push_z, 0.0, push_fade)
@@ -242,7 +278,7 @@ func _physics_process(delta: float) -> void:
 		_coyote_timer = coyote_time
 	else:
 		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
-	if Input.is_action_just_pressed("ui_accept"):
+	if Input.is_action_just_pressed("ui_accept") or hopping:
 		if on_floor or _coyote_timer > 0.0:
 			if sliding:
 				stop_sliding()
@@ -298,6 +334,9 @@ func do_air_jump() -> void:
 func add_look(x: float, y: float) -> void:
 	yaw = wrapf(yaw - x * mouse_sensitivity, -180.0, 180.0)
 	pitch = clampf(pitch - y * mouse_sensitivity, pitch_min, pitch_max)
+	# Sway reads the RAW look delta: a weapon lags behind how far the hands moved.
+	_sway_x = x
+	_sway_y = y
 	if host != null:
 		host.rotation_degrees.y = yaw
 	var head := _head()
@@ -540,6 +579,53 @@ func set_move_speed_while_firing(speed: float, seconds: float) -> void:
 ## @ace_codegen_template("$FPSController.is_firing()")
 func is_firing() -> bool:
 	return _firing_timer > 0.0
+
+## @ace_action
+## @ace_name("Bob With Movement")
+## @ace_category("FPS Controller")
+## @ace_description("Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every tick on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.bob_with_movement({weapon})")
+func bob_with_movement(weapon: Node3D) -> void:
+	if weapon == null:
+		return
+	if not _bob_captured:
+		_bob_captured = true
+		_bob_base_y = weapon.position.y
+	var pace := clampf(current_speed() / maxf(move_speed, 0.001), 0.0, 1.0)
+	_bob_time += get_process_delta_time()
+	weapon.position.y = _bob_base_y + sin(_bob_time * TAU / maxf(bob_period, 0.001)) * bob_amount * pace
+
+## @ace_action
+## @ace_name("Sway With Mouse")
+## @ace_category("FPS Controller")
+## @ace_description("Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every tick on the node you want swaying.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.sway_with_mouse({weapon})")
+func sway_with_mouse(weapon: Node3D) -> void:
+	if weapon == null:
+		return
+	var catch_up := minf(sway_speed * get_process_delta_time(), 1.0)
+	weapon.rotation.y = lerpf(weapon.rotation.y, -_sway_x * sway_amount, catch_up)
+	weapon.rotation.x = lerpf(weapon.rotation.x, -_sway_y * sway_amount, catch_up)
+
+## @ace_action
+## @ace_name("Set Air Control")
+## @ace_category("FPS Controller")
+## @ace_description("Changes how much of the run the host keeps in mid-air, as a share (1 = full ground control, 0 = pure momentum). An ice level, a slow-fall power-up and a hard mode are all this one knob.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.set_air_control({share})")
+func set_air_control(share: float) -> void:
+	air_control = clampf(share, 0.0, 1.0)
+
+## @ace_condition
+## @ace_name("Is Bunny Hopping")
+## @ace_category("FPS Controller")
+## @ace_description("True on the frame a landing became the next hop instead - jump was still held as the feet touched down. The cue for a chained-hop sound, a speed streak, or the counter a speedrun HUD shows.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.is_bunny_hopping()")
+func is_bunny_hopping() -> bool:
+	return keep_momentum and host != null and host.is_on_floor() and Input.is_action_pressed("ui_accept")
 
 ## @ace_action
 ## @ace_name("Reset Jumps")

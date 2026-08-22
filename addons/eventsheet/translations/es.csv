@@ -4130,3 +4130,22 @@ moving right,se mueve a la derecha
 Mirror the view,Reflejar la vista
 Set tile at {coords} flipped,Reflejar el tile en {coords}
 Set tile at {coords} flipped to {value},Reflejar el tile en {coords} según {value}
+Needs key,Necesita llave
+Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.,"Nombra la llave y, al soltarla en el lienzo, se ofrecerá el evento de la puerta. Déjalo en blanco para una puerta que no está cerrada."
+Try This Door,Probar esta puerta
+Add the door event,Añadir el evento de la puerta
+%s wants the %s key. Add the event that tries it when the player walks in?,%s pide la llave %s. ¿Añadir el evento que la prueba cuando el jugador entra?
+Trying %s when the player walks in.,Se prueba %s cuando el jugador entra.
+Keycard Door (3D),Puerta con tarjeta (3D)
+Has key {key},Tiene la llave {key}
+Needs key {key},Necesita la llave {key}
+Pick up key {key},Recoger la llave {key}
+the key it needs,la llave que necesita
+Air control {share},Control aéreo {share}
+"steers the run in the air, keeps the rest",dirige la carrera en el aire y conserva el resto
+Sway with the mouse,Balancear con el ratón
+catching up at,se recupera a
+Bob up and down,Balancearse arriba y abajo
+"a sine wave, as you move",una onda senoidal mientras te mueves
+Keys and the doors that want them,Llaves y las puertas que las piden
+"Enemies noticing you, and each other",Enemigos que te notan a ti y entre ellos

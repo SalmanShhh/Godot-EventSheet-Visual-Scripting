@@ -4130,3 +4130,22 @@ moving right,nach rechts unterwegs
 Mirror the view,Sicht spiegeln
 Set tile at {coords} flipped,Kachel bei {coords} spiegeln
 Set tile at {coords} flipped to {value},"Kachel bei {coords} spiegeln, wenn {value}"
+Needs key,Braucht Schlüssel
+Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.,"Benenne den Schlüssel, und beim Ablegen auf der Arbeitsfläche wird das Tür-Ereignis angeboten. Leer lassen für eine Tür, die nicht verschlossen ist."
+Try This Door,Diese Tür versuchen
+Add the door event,Tür-Ereignis hinzufügen
+%s wants the %s key. Add the event that tries it when the player walks in?,"%s verlangt den Schlüssel %s. Das Ereignis hinzufügen, das die Tür versucht, wenn der Spieler hineingeht?"
+Trying %s when the player walks in.,"%s wird versucht, wenn der Spieler hineingeht."
+Keycard Door (3D),Schlüsselkartentür (3D)
+Has key {key},Hat Schlüssel {key}
+Needs key {key},Braucht Schlüssel {key}
+Pick up key {key},Schlüssel {key} aufnehmen
+the key it needs,"der Schlüssel, den sie braucht"
+Air control {share},Luftkontrolle {share}
+"steers the run in the air, keeps the rest","lenkt den Lauf in der Luft, behält den Rest"
+Sway with the mouse,Mit der Maus schwenken
+catching up at,holt auf mit
+Bob up and down,Auf und ab wippen
+"a sine wave, as you move","eine Sinuswelle, während du dich bewegst"
+Keys and the doors that want them,"Schlüssel und die Türen, die sie verlangen"
+"Enemies noticing you, and each other","Gegner, die dich und einander bemerken"

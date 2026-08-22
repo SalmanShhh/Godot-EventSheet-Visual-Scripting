@@ -121,6 +121,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/raycast_lab/` | **Raycast Lab** - all six kinds of cast at once (RayCast2D node, ShapeCast2D, Cast Ray Into + Ray Result readers, circle overlap, point query under the mouse, motion cast), each drawn live |
 | `showcase/raycast_lab_3d/` | **Raycast Lab 3D** - the six casts in 3D, including the two that only exist there: camera picking (click-to-select) and the mesh-triangle face index |
 | `showcase/hierarchy_playground/` | **Hierarchy Playground** - mounting, equipping with follow-flags, healing a squad per child, a bar that ignores movement, a camera orbiting its pivot, crates snapped to the ground |
+| `showcase/boomer_level/` | **Boomer Level** - the shooter kit end to end: a red keycard and the door that wants it, two grunts that shout to each other and turn on whoever hurt them, a health pickup that comes back, a secret, an exit tally, and a weapon that bobs and sways off the FPS Controller's feel knobs |
 | `showcase/draw_lab/` | **Draw Lab** - four Drawing Canvases at work: your live line-of-sight fan (walls carve it), an enemy telegraph cone, a comet ribbon, a persistent paint trail, and target-marker DRAWING PREFABS stamped from one .tres (Space stamps one where you stand) |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |

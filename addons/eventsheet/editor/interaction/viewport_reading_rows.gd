@@ -629,8 +629,25 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 	],
 	# X25. The counter every level of this shape keeps. `secret` is the word the Area itself is marked
 	# with, which is why the claim asks for it beside a count rather than for a count alone.
+	# Y18 adds the end-of-level tally's own lines: the kills, the par and the flag that says the
+	# level is over are what turn a counter into a scoreboard, and a stats screen that lifted whole
+	# would otherwise claim nothing at all.
 	"secrets": [
-		"secrets_found", "is_in_group(\"secret\")", "secrets_total"
+		"secrets_found", "is_in_group(\"secret\")", "secrets_total",
+		"level_over", "par_seconds", "level_seconds"
+	],
+	# Y16. The keycard shape, and every fragment of it names a KEY. A list called `keys` is not enough
+	# on its own - plenty of dictionaries are keyed - so the claim wants a key going into it, a door
+	# saying which one it wants, or one of the two calls the door contract is made of.
+	"keys_doors": [
+		"needs_key", "locked_door_tried(", "open_door()", "_key\" in keys", "keys.append(\""
+	],
+	# Y18. An alert is the noise words aimed at somebody: one enemy shouts and the room answers.
+	# Only the two halves of that call are evidence. The infighting row is deliberately NOT here -
+	# its lines are a group test and an assignment, which every project writes about everything, so
+	# it counts through the row's own ace_id below and never through a fragment of text.
+	"detection": [
+		".alerted(", "func alerted("
 	],
 	# X29. The options screen: the live Input Map being rewritten, the settings the packs read, and
 	# the spoken text. Each fragment is a line only an options screen writes.
@@ -652,6 +669,8 @@ const SYSTEMS_PATTERN_WORDS: Dictionary = {
 	"swipe": "Swipes and drawn shapes",
 	"hitscan": "Shots, blasts and an arsenal",
 	"secrets": "Secrets found",
+	"keys_doors": "Keys and the doors that want them",
+	"detection": "Enemies noticing you, and each other",
 	"accessibility_options": "An accessibility options screen"
 }
 
@@ -673,7 +692,9 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 	"swipe": [],
 	"hitscan": ["FireHitscan", "ExplodeAt", "SwitchToNextWeapon", "SwitchToPreviousWeapon",
 		"CurrentWeapon"],
-	"secrets": ["MarkSecretFound", "SecretsFoundCount", "SecretAlreadyFound"],
+	"secrets": ["MarkSecretFound", "SecretsFoundCount", "SecretAlreadyFound", "FormatTime"],
+	"keys_doors": ["PickUpKey", "HasKey", "NeedsKey", "KeysHeld", "TryDoor", "OpenDoor"],
+	"detection": ["AlertEnemiesWithin", "RetaliateAgainstAttacker", "MakeNoise"],
 	# The rebinding rows that already shipped belong to this pattern too: a remap screen written with
 	# Clear The Bindings Of and Bind Control To IS the shape, and an event whose whole block lifted
 	# would otherwise claim nothing at all.

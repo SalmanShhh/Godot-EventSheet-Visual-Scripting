@@ -187,6 +187,11 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Stealth": "AudioStreamPlayer",
 	"Boss": "GuiRadioUnchecked",
 	"Missions": "Timer",
+	# Y16 / Y18. The rest of a level of that shape: the doors that gate it, the things in it that
+	# come for you, and the things lying around that you pick up.
+	"Keys & Doors": "Key",
+	"Enemies 3D": "CharacterBody3D",
+	"Pickups": "Area3D",
 	"Collisions": "CollisionShape2D",
 	"Color": "Color",
 	# The one entry the five "Compare: …" sub-categories all inherit. Nothing derivable here: the name

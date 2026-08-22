@@ -158,6 +158,16 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# come and go with the level. Plain GDScript on both sides, so a compiled guard has zero
 			# plugin dependency and simply never runs when nothing makes a noise.
 			return _lifecycle("hear", "at: Variant")
+		"OnAlerted":
+			# Y18. The receiving half of Alert Enemies Within, built exactly like On Noise Heard above
+			# and for the same reason: the alerter walks the group and CALLS this by name, because the
+			# enemies of a level are not connected to anything and come and go with it.
+			return _lifecycle("alerted", "who: Variant")
+		"OnLockedDoorTried":
+			# Y16. The door's own answer to being tried without its key. Try Door calls it by name on
+			# the door, so the handler is a plain function taking the key that was wanted - no signal
+			# to connect, and a door with no such event simply has nothing to run.
+			return _lifecycle("locked_door_tried", "key: Variant")
 		"OnPluginEnabled":
 			# R30. An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
 			# switched on, which is when a plugin hangs its dock and adds its menu items. Same function

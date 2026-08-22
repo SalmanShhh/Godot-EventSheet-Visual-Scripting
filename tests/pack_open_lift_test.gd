@@ -68,16 +68,18 @@ static func run() -> bool:
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
 	# The leftovers parcel: +2 FPS Controller verbs (the firing slowdown and its question).
 	# The colour-palette pack adds none - it is a data asset and publishes no verbs.
-	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19 + 2) and all_passed
+	# The boomer parcel: +4 more FPS Controller verbs (the feel layer).
+	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19 + 2 + 4) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
 	for function: Variant in fps.functions:
 		if function is EventFunction and (function as EventFunction).expose_as_ace:
 			fps_exposed += 1
-	# The leftovers parcel gave the pack Set Move Speed While Firing and Is Firing: 31 + 2.
-	all_passed = _check("FPS Controller opens with all 33 published verbs", fps_exposed, 31 + 2) and all_passed
-	all_passed = _check("FPS Controller's hidden helpers lift too (40 functions in all)", fps.functions.size(), 38 + 2) and all_passed
+	# The leftovers parcel gave the pack Set Move Speed While Firing and Is Firing (31 + 2), and the
+	# feel layer four more: Bob With Movement, Sway With Mouse, Set Air Control, Is Bunny Hopping.
+	all_passed = _check("FPS Controller opens with all 37 published verbs", fps_exposed, 31 + 2 + 4) and all_passed
+	all_passed = _check("FPS Controller's hidden helpers lift too (44 functions in all)", fps.functions.size(), 38 + 2 + 4) and all_passed
 	return all_passed
 
 

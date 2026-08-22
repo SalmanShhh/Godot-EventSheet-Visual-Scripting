@@ -38,7 +38,9 @@ const PATTERN_IDS: PackedStringArray = [
 	# X22 / X23 / X25 / X28 / X29 - the sensor, touch, shooter, timed-input and options shapes.
 	"gyro_controls", "swipe", "hitscan", "secrets", "qte", "accessibility_options",
 	# Y19 / Y20 / Y21 - which way a thing faces, and everything that has to turn with it.
-	"facing"
+	"facing",
+	# Y16 - the coloured keycard and the door that wants it.
+	"keys_doors"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

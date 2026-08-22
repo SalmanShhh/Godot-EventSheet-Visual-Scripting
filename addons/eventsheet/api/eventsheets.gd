@@ -1637,6 +1637,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	"audio": "Sound-And-Music",
 	"behavior_shape": "Making-Things-Move-In-2D",
 	"boomer_weapons": "Working-In-3D",
+	# Y16. Keys and doors are documented beside the shots and the secrets, because they are the same
+	# reader's question - "how do I build a level of this shape" - asked one room later.
+	"keys_doors": "Working-In-3D",
 	"audio_server": "Sound-And-Music",
 	"camera_fov": "Cameras-Graphics-And-Screenshots",
 	"clipboard": "Copying-Sharing-And-Remembering-Values",

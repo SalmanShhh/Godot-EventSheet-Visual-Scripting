@@ -4130,3 +4130,22 @@ moving right,正在向右移动
 Mirror the view,镜像画面
 Set tile at {coords} flipped,镜像 {coords} 处的瓦片
 Set tile at {coords} flipped to {value},按 {value} 镜像 {coords} 处的瓦片
+Needs key,需要钥匙
+Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.,为钥匙命名后，将其拖到画布上时会提议门的事件。若门未上锁，请留空。
+Try This Door,尝试这扇门
+Add the door event,添加门的事件
+%s wants the %s key. Add the event that tries it when the player walks in?,%s 需要 %s 钥匙。是否添加玩家走入时尝试开门的事件？
+Trying %s when the player walks in.,玩家走入时尝试 %s。
+Keycard Door (3D),门禁卡门 (3D)
+Has key {key},持有钥匙 {key}
+Needs key {key},需要钥匙 {key}
+Pick up key {key},拾取钥匙 {key}
+the key it needs,它需要的钥匙
+Air control {share},空中操控 {share}
+"steers the run in the air, keeps the rest",在空中改变奔跑方向，其余保持不变
+Sway with the mouse,随鼠标摆动
+catching up at,跟上速度
+Bob up and down,上下起伏
+"a sine wave, as you move",随移动而起伏的正弦波
+Keys and the doors that want them,钥匙与需要它们的门
+"Enemies noticing you, and each other",敌人注意到你，也注意到彼此

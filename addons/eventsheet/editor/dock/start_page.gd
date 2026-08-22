@@ -40,6 +40,7 @@ const SHOWCASE_PITCHES: Dictionary = {
 	"family_arena": ["Arcade", "One rule that drives every enemy at once, through a family."],
 	"path_chase": ["Top-down", "A chaser that finds its way around walls."],
 	"fps_arena": ["First person", "A first-person controller with a weapon and targets."],
+	"boomer_level": ["First person", "A keycard, a locked door, grunts that fight each other, and an exit tally."],
 	"swarm": ["Arcade", "Hundreds of things moving at once, and still readable."],
 	"draw_lab": ["Toy", "Draw shapes from events - a sandbox for the Drawing pack."],
 	"input_rebind": ["Systems", "A rebinding screen that saves what the player chose."],

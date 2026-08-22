@@ -52,6 +52,11 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	# X24. The half of Make Noise that RECEIVES. A guard's `hear` is a handler the noise maker calls
 	# by name, so an opened stealth script reads it as the reaction it is rather than as a helper.
 	"func hear(at: Variant) -> void:": "OnNoiseHeard",
+	# Y18 / Y16. The same seam, twice more: an enemy told who to come for, and a door tried without
+	# its key. Both are handlers something else calls by name, so an opened level reads them as the
+	# reactions they are rather than as two helpers nobody can see the caller of.
+	"func alerted(who: Variant) -> void:": "OnAlerted",
+	"func locked_door_tried(key: Variant) -> void:": "OnLockedDoorTried",
 	# R30 / R34. The editor's own callbacks. An opened plugin or gizmo script is one of the least
 	# readable files there is until these read as what the editor calls them for: an object was
 	# selected, the 2D overlay is being painted, input landed in the viewport, a gizmo is redrawing.
@@ -2886,6 +2891,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# the single lines the reverse index is asked about, so the tail widens nothing.)
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
+	# Y16. The keycard rows, out for exactly the reason the secrets rows above are: `list.append(x)`,
+	# `(a in b)` and `(not a in b)` are the list operations every project writes, and a keycard row
+	# admitted to the index would speak for all of them. They author the same bytes either way; which
+	# WORDS a line reads in is settled by the reading, which asks what the line is about (a list named
+	# for keys, a key name beside it) before it says the word "key" at all.
+	"PickUpKey", "HasKey", "NeedsKey",
 	# W6. Add Item authors one line of a menu; `x.add_item("y", 1)` is written by dropdowns, lists
 	# and trees as well, and the whole point of the menu reading is that the RUN of those lines is
 	# one bar naming the menu's items in order. Admitted to the reverse index the row would claim
@@ -3037,8 +3048,39 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# `{var_name} {op} {value}` says what `i == 1` actually asks. Same bytes either way.
 		if str((entry as Dictionary).get("ace_id", "")) == "IsSameObject" and not _reads_as_object_identity(params):
 			continue
+		# Y16. A keycard is a name in a list, so `keys.append("red_key")` is Push Back's spelling
+		# exactly. Push Back steps aside for the one shape that is unmistakably about keys - a list
+		# named for keys, with a key name going into it - which leaves the line for the reading that
+		# says "Pick up key". Every other append in every project still reads as Push Back, and the
+		# bytes are the same line either way, so nothing about what the file compiles to moves.
+		if KEYCARD_SHADOWED_ACES.has(str((entry as Dictionary).get("ace_id", ""))) and _reads_as_keycard(params):
+			continue
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
+
+
+## Y16. The generic list rows that must NOT claim a keycard line, because the reading has better
+## words for it. Frozen alongside the keycard reading: dropping an id back out here would silently
+## swap those rows' words back to the list spelling.
+const KEYCARD_SHADOWED_ACES: Dictionary = {"ArrayAppend": true}
+
+
+## Y16. Whether a matched row is about KEYS rather than about a list: it names a list called `keys`
+## (or `<colour>_keys`) AND a key beside it - a quoted name ending `_key`, or the `needs_key` a door
+## carries. Both halves are required, so a `keys.append(score)` is still a plain push back and an
+## `inventory.append("red_key")` still reads as the inventory line it is.
+static func _reads_as_keycard(params: Dictionary) -> bool:
+	var names_a_list: bool = false
+	var names_a_key: bool = false
+	for value: Variant in params.values():
+		var text: String = str(value).strip_edges()
+		if _is_bare_identifier(text) and (text == "keys" or text.ends_with("_keys")):
+			names_a_list = true
+		elif text.begins_with("\"") and text.ends_with("_key\""):
+			names_a_key = true
+		elif text == "needs_key" or text.ends_with(".needs_key"):
+			names_a_key = true
+	return names_a_list and names_a_key
 
 
 ## True when brackets and quotes balance across the text - the shape any complete GDScript expression

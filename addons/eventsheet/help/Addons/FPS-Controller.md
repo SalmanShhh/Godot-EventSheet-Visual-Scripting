@@ -12,7 +12,9 @@ sprinting), **wall ride** (hold forward against a wall mid-air to glide along it
 **wall jump** (press jump mid-air against any wall) - each with its own triggers, so a camera
 lean or a sound is one row away.
 The bundled **FPS Arena** showcase (`demo/showcase/fps_arena/`) is the reference setup - open it,
-press play, and walk around before wiring your own.
+press play, and walk around before wiring your own. **Boomer Level** (`demo/showcase/boomer_level/`)
+is the same rig with the feel knobs turned up: a weapon under the Head that bobs and sways, air
+control and the bunny hop on, and a keycard, a locked door and two grunts to use them on.
 
 It ships as the **`FPSController`** behavior: add it as a child of your player and the pack's
 vocabulary appears in every sheet's picker, node-targeted at that player.
@@ -92,6 +94,10 @@ the behavior finds them by name and quietly skips what's missing.
 | Trigger | On Wall Ride Started / On Wall Ride Ended | Wall contact glide begins/ends - lean the camera here. |
 | Trigger | On Wall Jumped | A wall jump launched. |
 | Trigger | On Air Jumped | A mid-air (double / triple) jump launched - fire dust or a sound here. |
+| Action | Bob With Movement (weapon) | Bobs a node up and down as the host runs, Bob Amount tall and Bob Period long, scaled by how fast you are actually moving - so it fades to nothing when you stop. Run it every tick on your weapon node. |
+| Action | Sway With Mouse (weapon) | Lets a node lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. Run it every tick on the same node. |
+| Action | Set Air Control (share) | Retunes how much of the run the host keeps in mid-air (1 = full ground control, 0 = pure momentum). |
+| Condition | Is Bunny Hopping | True on the frame a landing became the next hop instead - jump was still held as the feet touched down. |
 | Condition | Is Sprinting | True while Shift is held. |
 | Condition | Is First Person | True in first-person mode. |
 | Condition | Is Crouching / Is Sliding / Is Wall Riding | The movement-tech states. |
@@ -107,6 +113,10 @@ Coyote Time (the grace window, 0.1 s by default, in which the GROUND jump still 
 walking off a ledge - it is the floor jump, so it never spends the air-jump budget, and taking it
 closes the window so a coyote jump can never chain into a second ground jump; 0 turns it off),
 Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
+Feel knobs: Air Control (how much of the run survives into the air, as a share - 0.35 by default),
+Keep Momentum (the bunny hop: landing with jump still held hops straight back off and the landing
+frame keeps the speed it came in with), Bob Amount + Bob Period (the weapon bob), Sway Amount +
+Sway Speed (how far a weapon lags behind the view and how fast it catches up).
 Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
 Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so
 only a sprint-crouch slides) + Slide Duration; Wall Ride Enabled + Wall Ride Gravity Scale +
@@ -202,6 +212,26 @@ dock, the section grounds to that node's actual children before you even press R
 18. **Hard mode / floaty power-up.** `On Setting Changed "hard_mode" → Set Coyote Time 0` and
    `On feather pickup → Set Coyote Time 0.25` + `Every 10 seconds → Set Coyote Time 0.1` to
    wear off - the same knob a designer tunes, driven by rows at runtime.
+
+19. **A weapon with weight.** `Every tick → Bob With Movement $Head/Weapon` and
+    `Every tick → Sway With Mouse $Head/Weapon` - two rows, and the thing in your hands starts
+    behaving like an object rather than a decal on the camera. Bob Period is the footstep rhythm and
+    Sway Speed is the weight: a pistol at 14 flicks, a rocket launcher at 5 wallows.
+20. **Bunny hopping.** Keep Momentum is on by default: land with jump still held and the host hops
+    straight back off, keeping the speed it came in with. `Is Bunny Hopping → play the chain sound`
+    gives it a voice, and a counter on the same condition is a speedrun HUD.
+21. **Ice level.** `On entering the ice zone → Set Air Control 0.05`, and back to `0.35` on the way
+    out - the same run, with the steering taken away, which is what ice feels like.
+22. **Rocket jumping that lands well.** Explode At throws the host with a real impulse, and Air
+    Control decides whether the launch is preserved or steered away in the first half second. Leave
+    it low for an arc a player has to commit to, raise it for a forgiving one.
+23. **Grounded shooter.** Air Control 0.15, Keep Momentum off, Bob Amount up and Bob Period long -
+    the parkour knobs untouched and the same controller reads as a heavy, planted soldier.
+24. **Aim-down-sights that steadies the weapon.** While aim is held, `Set Sway Amount 0.0005` and
+    `Set Bob Amount 0.01`; on release put them back. The weapon settles when you brace it, which is
+    the whole visual grammar of aiming without a second animation.
+25. **Sprint bob.** Bob Amount and Bob Period are ordinary knobs, so `Is Sprinting → Set Bob Period
+    0.4` (and back to 0.6 otherwise) makes the run read faster in the hands as well as on the floor.
 
 ### Other use cases
 

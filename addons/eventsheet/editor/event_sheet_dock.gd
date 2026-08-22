@@ -5061,6 +5061,11 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	if EventSheetObjectProperties.is_secret(_source_path_for_secrets(), object_label):
 		_open_secret_counter_offer(object_label, on_action_lane)
 		return
+	# Y16 - the same offer for a door: a body the reader named a key for wants the event that TRIES
+	# it when the player walks in, which is the one row that both opens it and refuses it.
+	if not EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label).is_empty():
+		_open_locked_door_offer(object_label, on_action_lane)
+		return
 	add_row_for_object(object_label, on_action_lane)
 
 
@@ -5120,6 +5125,57 @@ func _on_secret_counter_offer_accepted() -> void:
 		return
 	_refresh_after_edit()
 	_mark_dirty(EventSheetL10n.translate("Counting %s as a secret.") % object_label)
+
+
+var _door_offer_dialog: ConfirmationDialog = null
+var _door_offer_line: Label = null
+var _door_offer_label: String = ""
+var _door_offer_on_action_lane: bool = false
+
+
+## Y16. The offer a locked door's drop opens, built exactly like the secret one above: one sentence
+## naming the key it wants, "Add the door event" to write it, and Cancel to get the ordinary drop.
+func _open_locked_door_offer(object_label: String, on_action_lane: bool) -> void:
+	_door_offer_label = object_label
+	_door_offer_on_action_lane = on_action_lane
+	if _door_offer_dialog == null:
+		_door_offer_dialog = ConfirmationDialog.new()
+		_door_offer_dialog.title = EventSheetL10n.translate("Try This Door")
+		_door_offer_dialog.ok_button_text = EventSheetL10n.translate("Add the door event")
+		_door_offer_dialog.get_cancel_button().text = EventSheetL10n.translate("Just add a row")
+		_door_offer_dialog.confirmed.connect(_on_locked_door_offer_accepted)
+		_door_offer_dialog.canceled.connect(func() -> void:
+			add_row_for_object(_door_offer_label, _door_offer_on_action_lane))
+		var body: VBoxContainer = EventSheetPopupUI.form_box()
+		_door_offer_line = EventSheetPopupUI.hint_label("")
+		body.add_child(_door_offer_line)
+		_door_offer_dialog.add_child(EventSheetPopupUI.margined(body))
+		add_child(_door_offer_dialog)
+		EventSheetL10n.apply_to(_door_offer_dialog)
+	# The dialog is built once and reused, so the door it is about is written on it EVERY open.
+	_door_offer_line.text = EventSheetL10n.translate(
+		"%s wants the %s key. Add the event that tries it when the player walks in?") \
+		% [object_label, EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label)]
+	_door_offer_dialog.popup_centered(Vector2i(460, 150))
+
+
+## "Add the door event": the door's own walked-into event with the shipped Try Door row in it, plus
+## the key list it reads when the sheet does not declare one yet. One undo step.
+func _on_locked_door_offer_accepted() -> void:
+	var object_label: String = _door_offer_label
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var host_class: String = str(entry.get("class", "")).strip_edges()
+	var changed: bool = _perform_undoable_sheet_edit("Add Door Event", func() -> bool:
+		if not _current_sheet.variables.has(EventSheetStarterEvents.KEYS_VARIABLE):
+			_current_sheet.variables[EventSheetStarterEvents.KEYS_VARIABLE] = \
+				EventSheetStarterEvents.keys_variable_entry()
+		_current_sheet.events.append(EventSheetStarterEvents.locked_door_event(
+			object_label, host_class if not host_class.is_empty() else "StaticBody3D"))
+		return true)
+	if not changed:
+		return
+	_refresh_after_edit()
+	_mark_dirty(EventSheetL10n.translate("Trying %s when the player walks in.") % object_label)
 
 
 ## T13 - something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what

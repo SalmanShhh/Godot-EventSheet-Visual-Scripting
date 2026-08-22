@@ -105,11 +105,81 @@ static func can_be_secret(entry: Dictionary) -> bool:
 	return false
 
 
+# ── Y16. The second thing this panel writes: which key does this door want? ──────────────────
+# The secret mark above is a yes or no; a door's is a NAME, because red and blue doors are the whole
+# point of having any. It lives in the same per-project editor store and for the same reason: the
+# mark is how the SHEET treats the object, and a fact that changed the emitted bytes would break the
+# round-trip contract for something the game never reads. The game reads the door's own `needs_key`.
+const NEEDS_KEY_META_KEY := "object_needs_key"
+
+static var _needs_key: Dictionary = {}
+static var _needs_key_loaded: bool = false
+
+
+## The key the reader said this door wants, or "" when they have not said. The canvas drop reads it
+## before it offers the door event, and it is what that event is written with.
+static func needs_key_of(source_path: String, object_label: String) -> String:
+	_ensure_needs_key()
+	return str(_needs_key.get(secret_key(source_path, object_label), ""))
+
+
+## Records (or clears, with an empty name) the key a door wants, and remembers it for the project.
+static func set_needs_key(source_path: String, object_label: String, key_name: String) -> void:
+	_ensure_needs_key()
+	var key: String = secret_key(source_path, object_label)
+	var wanted: String = key_name.strip_edges()
+	if wanted.is_empty():
+		_needs_key.erase(key)
+	else:
+		_needs_key[key] = wanted
+	var settings: Object = _editor_settings()
+	if settings != null:
+		settings.call("set_project_metadata", SECRET_META_SECTION, NEEDS_KEY_META_KEY, _needs_key)
+
+
+## Tests only: a clean slate (also marks the store loaded so persistence stays untouched).
+static func reset_needs_key_for_tests() -> void:
+	_needs_key = {}
+	_needs_key_loaded = true
+
+
+static func _ensure_needs_key() -> void:
+	if _needs_key_loaded:
+		return
+	_needs_key_loaded = true
+	var settings: Object = _editor_settings()
+	if settings == null:
+		return
+	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, NEEDS_KEY_META_KEY, {})
+	if stored is Dictionary:
+		_needs_key = (stored as Dictionary).duplicate()
+
+
+## True when "needs a key" is a sensible thing to say about this object at all. A door is a BODY -
+## something that blocks you until it does not - so the question is asked of bodies and of nothing
+## else, rather than cluttering every label and timer with a field that has no meaning for them.
+static func can_need_key(entry: Dictionary) -> bool:
+	if entry.is_empty() or str(entry.get("kind", "")) in ["group", "scene", "autoload"]:
+		return false
+	var class_name_text: String = str(entry.get("class", "")).strip_edges()
+	if class_name_text.is_empty():
+		return false
+	var cursor: String = class_name_text
+	while not cursor.is_empty():
+		if cursor in ["StaticBody2D", "StaticBody3D", "AnimatableBody2D", "AnimatableBody3D",
+				"CharacterBody2D", "CharacterBody3D", "RigidBody2D", "RigidBody3D"]:
+			return true
+		if not ClassDB.class_exists(cursor):
+			return false
+		cursor = ClassDB.get_parent_class(cursor)
+	return false
+
+
 ## Rows shown above the buttons, in order. Kept as data so a caller (and a test) reads exactly what
 ## an object answers, and so the panel builder has one loop instead of five hand-placed rows.
 ## Each entry: {"label": String, "value": String, "form": String} - form is "text" (a plain value),
-## "code" (a monospace card), "chips" (a badge list) or "check" (the one WRITABLE form, a tick box
-## whose state rides along as "checked").
+## "code" (a monospace card), "chips" (a badge list), "check" (a WRITABLE tick box whose state rides
+## along as "checked") or "key" (a WRITABLE name field whose text rides along as "value").
 static func property_rows(entry: Dictionary, scene_name: String = "",
 		source_path: String = "") -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
@@ -136,6 +206,16 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 			"object": object_label,
 			"source": source_path,
 			"note": EventSheetL10n.translate("Dropping it on the canvas offers the secrets counter.")
+		})
+	if can_need_key(entry):
+		var door_label: String = str(entry.get("label", ""))
+		rows.append({
+			"label": EventSheetL10n.translate("Needs key"),
+			"value": needs_key_of(source_path, door_label),
+			"form": "key",
+			"object": door_label,
+			"source": source_path,
+			"note": EventSheetL10n.translate("Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.")
 		})
 	return rows
 
@@ -373,6 +453,8 @@ static func _field_for(row: Dictionary) -> Control:
 		return _chip_field(row)
 	if form == "check":
 		return _check_field(row)
+	if form == "key":
+		return _key_field(row)
 	var label: Label = Label.new()
 	label.text = value
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -396,6 +478,32 @@ static func _check_field(row: Dictionary) -> Control:
 		tick.text = EventSheetL10n.translate("Counts as a secret") if pressed \
 			else EventSheetL10n.translate("Not a secret"))
 	column.add_child(tick)
+	var note_text: String = str(row.get("note", ""))
+	if not note_text.is_empty():
+		var muted: Label = Label.new()
+		muted.text = note_text
+		muted.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		muted.add_theme_color_override("font_color", EventSheetActiveTheme.reading().muted_text_color)
+		column.add_child(muted)
+	return column
+
+
+## Y16. The second WRITABLE field: the key a door wants, by name. Written on every keystroke through
+## the same static store the tick box uses, so the panel needs no handler threaded in from the dock
+## and a reader's answer survives closing the popup. Blank is a door that is not locked.
+static func _key_field(row: Dictionary) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
+	var field: LineEdit = LineEdit.new()
+	field.text = str(row.get("value", ""))
+	# The placeholder is an example key NAME, not a word: it is the text the row would carry, so it
+	# stays the same in every language exactly as a node name would.
+	field.placeholder_text = "red_key"
+	var source_path: String = str(row.get("source", ""))
+	var object_label: String = str(row.get("object", ""))
+	field.text_changed.connect(func(typed: String) -> void:
+		set_needs_key(source_path, object_label, typed))
+	column.add_child(field)
 	var note_text: String = str(row.get("note", ""))
 	if not note_text.is_empty():
 		var muted: Label = Label.new()

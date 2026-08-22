@@ -23,6 +23,12 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const WEAPONS := "Weapons 3D"
 
+## Y18. The other half of a level of this shape: what the things IN it do. Filed apart from the
+## weapons because a reader looking for "why did the second guard come running" is not looking on
+## the same page as one looking for the shotgun.
+const ENEMIES := "Enemies 3D"
+const PICKUPS := "Pickups"
+
 ## The middle of the screen, which is where a shooter's crosshair is and therefore where the shot
 ## comes from. One constant so the ray origin and the ray direction can never aim at two points.
 const SCREEN_CENTRE := "get_viewport().get_visible_rect().size * 0.5"
@@ -33,6 +39,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	_shooting(descriptors)
 	_arsenal(descriptors)
 	_secrets(descriptors)
+	_enemies(descriptors)
+	_pickups(descriptors)
 	return descriptors
 
 
@@ -103,7 +111,64 @@ static func _secrets(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when this secret has already been counted - the guard on the chime and the pop-up."))
 
 
+## Y18. What a room full of enemies does. Alerting is the noise words aimed at somebody: a noise says
+## "something happened over there", an alert says "it was HIM, go". Infighting is the one line in a
+## hurt handler that turns a rocket splashed across a corridor into a brawl, and it is the reason a
+## blast that catches two enemies is more interesting than one that catches one.
+static func _enemies(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "AlertEnemiesWithin", "Alert Enemies Within",
+		ACEDescriptor.ACEType.ACTION, "\n".join(PackedStringArray([
+		# Dispatched BY NAME on each member rather than through a signal, exactly as Make Noise
+		# dispatches `hear`: the enemies of a level come and go with the level and nothing is
+		# connected to them, so a name is the only spelling that keeps working.
+		"for __alerted_{uid} in get_tree().get_nodes_in_group({group}):",
+		# Nobody is alerted about themselves: a hurt enemy shouting to the room would otherwise hear
+		# its own shout and go looking for itself, which is a bug that reads as a very stupid enemy.
+		"\tif __alerted_{uid} != {target} and __alerted_{uid}.global_position.distance_to({at}) < {radius}:",
+		"\t\t__alerted_{uid}.alerted({target})"
+	])), "", [
+		F.make_param("at", "String", "global_position", "Around", "Where the alert goes out from (a position expression).", "expression"),
+		F.make_param("radius", "String", "400.0", "Within", "How far the alert carries.", "expression"),
+		F.make_param("target", "String", "self", "About", "Who they should be looking for.", "expression"),
+		F.make_param("group", "String", "\"enemies\"", "Alerts", "The group whose members can be alerted - each one needs an On Alerted event.", "group_reference")
+	], ENEMIES, "Alert enemies within [b]{radius}[/b] of [b]{at}[/b] to [i]{target}[/i]", "Node3D")
+		.described("Tells every enemy close enough who to come for. The one that saw you shouts, and the room answers - the difference between fighting one guard and fighting a room.").featured())
+	descriptors.append(F.make_descriptor("Core", "OnAlerted", "On Alerted", ACEDescriptor.ACEType.TRIGGER,
+		"", "alerted", [], ENEMIES, "On alerted to")
+		.described("Runs when an Alert Enemies Within action reaches this one, with who to go for. Put this object in the alerted group first (Add To Group, on created)."))
+	descriptors.append(F.make_descriptor("Core", "RetaliateAgainstAttacker", "Retaliate Against Attacker",
+		ACEDescriptor.ACEType.ACTION, "\n".join(PackedStringArray([
+		"if {attacker}.is_in_group({group}):",
+		"\t{target} = {attacker}"
+	])), "", [
+		F.make_param("attacker", "String", "attacker", "Attacker", "Whoever did the damage - the argument the hurt event was given.", "variable_reference"),
+		F.make_param("group", "String", "\"enemies\"", "Who counts as one of them", "The group that turns on its own.", "group_reference"),
+		F.make_param("target", "String", "target", "Target variable", "The variable holding who this one is going for.", "variable_reference")
+	], ENEMIES, "Retaliate against [i]{attacker}[/i] (infighting)")
+		.described("Makes this one turn on whoever hurt it, but only when the attacker is one of its own kind - so a rocket that splashes two of them starts a fight, and a rocket from you does not make them attack you twice.").featured())
+
+
+## Y18. A pickup that comes back. Hiding it, waiting and showing it again is three lines and a state
+## nobody enjoys getting right twice; here it is the row it always meant to be.
+static func _pickups(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "RespawnAfter", "Respawn After",
+		ACEDescriptor.ACEType.ACTION, "\n".join(PackedStringArray([
+		"hide()",
+		# Deferred on purpose: this row runs from inside the pickup's own walked-into callback, and
+		# the physics server refuses a monitoring change while it is flushing its queries.
+		"set_deferred(\"monitoring\", false)",
+		"await get_tree().create_timer({seconds}).timeout",
+		"show()",
+		"set_deferred(\"monitoring\", true)"
+	])), "", [
+		F.make_param("seconds", "String", "30.0", "After seconds", "How long before it comes back.", "expression")
+	], PICKUPS, "Respawn after [b]{seconds}[/b] seconds", "Area3D")
+		.described("Takes the pickup away, waits, and puts it back - the health and ammo that keep a level playable on the way out. It stops being collectable while it is gone, so nothing picks up an invisible one.").featured())
+
+
 static func section_descriptions() -> Dictionary:
 	return {
 		WEAPONS: "The shots, blasts and weapon switching a fast 3D shooter is made of. Movement is the FPS Controller behaviour's job.",
+		ENEMIES: "What a room of enemies does about you: who they hear about, and who they turn on.",
+		PICKUPS: "The health, ammo and armour lying around a level, and the clock that brings them back.",
 	}

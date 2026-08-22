@@ -40,6 +40,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
 | `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
+| `alerted` | [Alert Enemies Within](ace:Core/AlertEnemiesWithin) | Enemies 3D | Vocabulary |
 | `all` | [All Match](ace:Core/ArrayAll) | Variables: Array | Vocabulary |
 | `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
 | `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
@@ -485,6 +486,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |
 | `load_threaded_request` | [Load Layout In The Background](ace:Core/LoadLayoutInBackground) | Scene | Vocabulary |
 | `local_to_map` | [Position To Tile](ace:Core/TileMapLocalToMap) | Tilemap | Vocabulary |
+| `locked_door_tried` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
 | `look_at` | [Look At](ace:Core/LookAt3D) | General Actions | Vocabulary |
 | `looking_at` | [Facing Along](ace:Core/FacingAlong3D) | 3D: Move & Turn | Vocabulary |
 | `loop` | [Set Looping](ace:Core/SetPathLooping) | Follow a Path | Vocabulary |
@@ -527,6 +529,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
 | `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
+| `needs_key` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
 | `new` | [Make Gradient](ace:Core/MakeGradient) | Gradients & Curves | Vocabulary |
 | `no_depth_test` | [Set Show Through Walls](ace:Core/SetShowThroughWalls) | World-space UI | Vocabulary |
 | `node_b` | [Break Joint](ace:Core/BreakJoint) | Joints | Vocabulary |
@@ -536,6 +539,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `offset` | [Set Offset](ace:Core/SetCameraOffset) | Camera | Vocabulary |
 | `one_shot` | [Set One-Shot](ace:Core/SetOneShot) | Particles | Vocabulary |
 | `open` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
+| `open_door` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
 | `open_scene_from_path` | [Open Scene In Editor](ace:Core/OpenSceneInEditor) | Editor Tools | Vocabulary |
 | `or` | [Is Nothing](ace:Core/IsNothing) | Compare: Types | Vocabulary |
 | `origin` | [Canvas X (2D)](ace:Core/CanvasX2D) | Canvas | Vocabulary |
