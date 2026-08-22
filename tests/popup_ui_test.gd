@@ -120,6 +120,73 @@ static func _test_reference_primitives() -> bool:
 	all_passed = _check("labelled_card heads itself with a small-caps label",
 		(card_body.get_child(0) as Label).text, "ABOUT QUEST") and all_passed
 	card.free()
+
+	# ── P4: the ONE help strip every dialog wears at its foot ──
+	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(
+		"Scope · Instance", "One per Player.", "Instance whole number  hp = 100", "var hp: int = 100")
+	all_passed = _check("the strip's heading is small-caps", strip.heading_label.text, "SCOPE · INSTANCE") and all_passed
+	all_passed = _check("the strip carries the paragraph", strip.body_label.text, "One per Player.") and all_passed
+	all_passed = _check("READS AS shows the row",
+		strip.reads_as_value.text, "Instance whole number  hp = 100") and all_passed
+	all_passed = _check("IN CODE shows the line", strip.in_code_value.text, "var hp: int = 100") and all_passed
+	all_passed = _check("both reading lines are shown when both are filled",
+		strip.reads_as_row.visible and strip.in_code_row.visible, true) and all_passed
+	# A dialog with no code behind it (the Sheet type dialog) never shows an empty IN CODE caption.
+	strip.set_reading("autoload Game", "")
+	all_passed = _check("IN CODE hides when there is no code", strip.in_code_row.visible, false) and all_passed
+	all_passed = _check("READS AS stays", strip.reads_as_row.visible, true) and all_passed
+
+	# The strip FOLLOWS FOCUS: it says whatever the reader is standing on.
+	var followed: LineEdit = LineEdit.new()
+	strip.follow(followed, "Name", "What the row will call it.")
+	followed.focus_entered.emit()
+	all_passed = _check("focusing a field swaps the heading", strip.heading_label.text, "NAME") and all_passed
+	all_passed = _check("…and its paragraph", strip.body_label.text, "What the row will call it.") and all_passed
+
+	# ...and per ITEM of a dropdown, so an option is described before it is picked.
+	var options: OptionButton = OptionButton.new()
+	options.add_item("Instance")
+	options.add_separator("Also")
+	options.add_item("Local")
+	strip.follow_option(options, func(index: int) -> Dictionary:
+		if index == 0:
+			return {"heading": "Scope · Instance", "body": "one per Player"}
+		if index == 2:
+			return {"heading": "Scope · Local", "body": "gone when the event ends"}
+		return {})
+	options.select(2)
+	options.item_selected.emit(2)
+	all_passed = _check("picking an option describes it", strip.heading_label.text, "SCOPE · LOCAL") and all_passed
+	# A separator says nothing, and saying nothing must not blank the strip.
+	options.item_selected.emit(1)
+	all_passed = _check("a separator leaves the strip alone", strip.heading_label.text, "SCOPE · LOCAL") and all_passed
+	options.free()
+	followed.free()
+	strip.free()
+
+	# ── K1: a dropdown whose words differ from the token it inserts shows that token, muted ──
+	var operators: OptionButton = OptionButton.new()
+	for option: Dictionary in EventForgeACEFactory.COMPARISON_OPTIONS:
+		operators.add_item(str(option["label"]))
+		operators.set_item_metadata(operators.item_count - 1, str(option["key"]))
+	operators.select(3)
+	var noted: Control = EventSheetPopupUI.code_noted_option(operators)
+	all_passed = _check("the dropdown is wrapped with its code note", noted == operators, false) and all_passed
+	all_passed = _check("the note shows the GDScript form",
+		(operators.get_meta("code_note") as Label).text, "<=") and all_passed
+	operators.select(1)
+	operators.item_selected.emit(1)
+	all_passed = _check("the note follows the choice",
+		(operators.get_meta("code_note") as Label).text, "!=") and all_passed
+	noted.free()
+
+	# A list whose labels ARE its values gains nothing from a note that repeats them.
+	var plain: OptionButton = OptionButton.new()
+	plain.add_item("left")
+	plain.set_item_metadata(0, "left")
+	all_passed = _check("a plain list is returned untouched",
+		EventSheetPopupUI.code_noted_option(plain) == plain, true) and all_passed
+	plain.free()
 	return all_passed
 
 

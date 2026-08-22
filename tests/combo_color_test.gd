@@ -77,9 +77,14 @@ static func run() -> bool:
 	var dialog: ACEParamsDialog = ACEParamsDialog.new()
 	dialog.set_lint_context_provider(func() -> EventSheetResource: return sheet)
 	var enum_field: Control = dialog._create_enum_reference_field("mode", "State.IDLE", "State")
-	all_passed = _check("enum hints render dropdowns of members", enum_field is OptionButton, true) and all_passed
+	# K1 - the dropdown shows the member name and the qualified value it inserts, muted, beside it, so
+	# the field is the dropdown WRAPPED rather than the dropdown itself.
+	var enum_dropdown: OptionButton = dialog._fields["mode"] as OptionButton
+	all_passed = _check("enum hints render dropdowns of members", enum_dropdown != null, true) and all_passed
 	all_passed = _check("enum dropdown stores qualified values",
-		(enum_field as OptionButton).get_item_metadata(0), "State.IDLE") and all_passed
+		enum_dropdown.get_item_metadata(0), "State.IDLE") and all_passed
+	all_passed = _check("…and shows that qualified value muted beside the choice",
+		(enum_dropdown.get_meta("code_note") as Label).text, "State.IDLE") and all_passed
 	enum_field.free()
 	var color_field: Control = dialog._create_color_field("tint", "Color(1, 0, 0, 1)")
 	all_passed = _check("color params render a picker", color_field is ColorPickerButton, true) and all_passed

@@ -47,16 +47,16 @@ static func run() -> bool:
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
 	ok = _check("the preview is the row the sheet will show",
 		dialog.row_preview_text(), "Instance whole number  hp = 100") and ok
-	ok = _check("the Instance chip is the lit one", _lit_chip(dialog), "Instance") and ok
+	ok = _check("Instance is the chosen scope", _chosen_scope(dialog), "Instance") and ok
 	dialog.open_for_edit("global", {}, "MAX_HP", "int", "100", false, "Add variable", true)
 	ok = _check("a constant previews as a Constant row",
 		dialog.row_preview_text(), "Constant whole number  MAX_HP = 100") and ok
-	ok = _check("…and the Constant chip lights instead", _lit_chip(dialog), "Constant") and ok
+	ok = _check("…and the Scope dropdown says Constant instead", _chosen_scope(dialog), "Constant") and ok
 	dialog.open_for_edit("local", {}, "remaining", "float", "0", false, "Add variable")
 	ok = _check("a local previews as a Local row",
 		dialog.row_preview_text(), "Local number  remaining = 0") and ok
-	# Pressing a chip moves the scope, and the preview follows in the same breath.
-	dialog._on_scope_chip_pressed(EventSheetVariableSentence.SCOPE_INSTANCE)
+	# Choosing a scope moves it, and the preview follows in the same breath.
+	dialog._apply_scope_key(EventSheetVariableSentence.SCOPE_INSTANCE)
 	ok = _check("pressing Instance moves the row back to the object",
 		dialog.row_preview_text(), "Instance number  remaining = 0") and ok
 	dialog.open_for_edit("global", {}, "nickname", "String", "", false, "Add variable")
@@ -67,13 +67,10 @@ static func run() -> bool:
 	return ok
 
 
-## The lit scope chip's word, "" when none is.
-static func _lit_chip(dialog: VariableDialog) -> String:
-	for scope_key: String in dialog._scope_chips:
-		var chip: Button = dialog._scope_chips[scope_key]
-		if chip.button_pressed:
-			return chip.text
-	return ""
+## The word the Scope dropdown is showing, "" when it shows nothing.
+static func _chosen_scope(dialog: VariableDialog) -> String:
+	var option: OptionButton = dialog._scope_option
+	return option.get_item_text(option.selected) if option != null and option.selected >= 0 else ""
 
 
 ## The words a condition reads with, joined - the sentence a reader actually sees.

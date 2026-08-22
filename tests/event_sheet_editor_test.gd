@@ -1300,7 +1300,7 @@ static func run() -> bool:
     dock._variable_dlg._dialog.title = ""
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_ADD_VARIABLE)
     # Detached: the variable dialog can't popup(); its configured title proves open() ran.
-    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.title, "Create Variable") and all_passed
+    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.title, "Add variable") and all_passed
     all_passed = _check("empty context menu add variable defaults to global scope", dock._variable_dlg._scope, "global") and all_passed
     dock._variable_dlg._dialog.hide()
     var box_sheet := EventSheetResource.new()
@@ -1430,7 +1430,7 @@ static func run() -> bool:
     dock._variable_dlg._dialog.title = ""
     dock_viewport._handle_mouse_button(variable_double_click)
     # Detached: the dialog can't popup(); its configured edit title proves open() ran.
-    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.title, "Edit Variable") and all_passed
+    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.title, "Edit variable") and all_passed
     all_passed = _check("variable double-click keeps scope for editing", dock._variable_dlg._scope, "global") and all_passed
     all_passed = _check("variable double-click populates current variable name", dock._variable_dlg.get_last_name_text(), "ammo") and all_passed
     dock._variable_dlg._dialog.hide()

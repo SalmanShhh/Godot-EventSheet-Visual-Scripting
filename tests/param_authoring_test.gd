@@ -46,7 +46,7 @@ static func run() -> bool:
 	# is what pushed earlier packs into word-token workarounds plus a symbol-mapper.
 	ok = _check("and labels them in plain English",
 		_option_labels(compares, "op"),
-		["= (equal to)", "!= (not equal to)", "< (less than)", "<= (at most)", "> (greater than)", ">= (at least)"]) and ok
+		["=  equal to", "≠  not equal to", "<  less than", "≤  at most", ">  greater than", "≥  at least"]) and ok
 	ok = _check("it seeds == so the row reads as a sentence on drop", _default(compares, "op"), "==") and ok
 
 	# ---- 4. Labeled options survive the trip THROUGH an emitted pack ----
@@ -61,10 +61,10 @@ static func run() -> bool:
 	# The operators are the hard case: the key CONTAINS the `=` the grammar splits on, so it ships
 	# quoted. Without this `>=` came back as `>` - which is a wrong comparison, not a cosmetic bug.
 	ok = _check("an operator key ships quoted so it cannot cut itself in half",
-		emitted.contains("\">=\"=>= (at least)"), true) and ok
+		emitted.contains("\">=\"=≥  at least"), true) and ok
 	var scanned: Dictionary = analyzer._build_overrides([
 		"@ace_action",
-		"@ace_param_options(op \"=\"== (equal to), \"!=\"=!= (not equal to), <=< (less than), \"<=\"=<= (at most), >=> (greater than), \">=\"=>= (at least))"
+		"@ace_param_options(op \"=\"==  equal to, \"!=\"=≠  not equal to, <=<  less than, \"<=\"=≤  at most, >=>  greater than, \">=\"=≥  at least)"
 	])
 	var scanned_options: Array = (scanned.get("param_options", {}) as Dictionary).get("op", [])
 	var scanned_keys: Array = []
@@ -75,7 +75,7 @@ static func run() -> bool:
 	ok = _check("and the scanner reads all six operators back intact",
 		scanned_keys, ["=", "!=", "<", "<=", ">", ">="]) and ok
 	ok = _check("with their labels", scanned_labels,
-		["= (equal to)", "!= (not equal to)", "< (less than)", "<= (at most)", "> (greater than)", ">= (at least)"]) and ok
+		["=  equal to", "≠  not equal to", "<  less than", "≤  at most", ">  greater than", "≥  at least"]) and ok
 
 	# ---- 5. One canonical operator list, not a copy per surface ----
 	# The analyzer's shorthand, the builtin Compare conditions and any pack builder all resolve to
@@ -117,7 +117,7 @@ static func run() -> bool:
 		"params": [{"id": "op", "hint": "comparison"}]})
 	ok = _check("simple_ace runs its params through it",
 		str(((built.parameters[0] as Dictionary).get("options", [])[0] as Dictionary).get("label", "")),
-		"= (equal to)") and ok
+		"=  equal to") and ok
 
 	# ---- 7. …and the CUSTOM BLOCK dialog has to speak the normalized shape back ----
 	# Normalizing simple_block_kind's fields through param_spec turned every authored dropdown into
