@@ -34,6 +34,7 @@ Node script extending `CharacterBody2D`.
 - **Has Stacks Available** (`id: String`)
 - **Ability Has Tag** (`id: String, tag: String`)
 - **Current Ability Is** (`id: String`)
+- **Is Skill Ready** (`id: String`) - The same readiness question in the skill words. A game whose active skills and whose passive tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to remember that one of them is spelled "ability".
 
 #### Actions
 - **Create Ability** (`id: String`) - Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new.
@@ -44,6 +45,7 @@ Node script extending `CharacterBody2D`.
 - **Remove Ability** (`id: String`) - Deletes an ability and all its data. Fires On Ability Removed.
 - **Clear All Abilities** - Removes every ability. Fires On Ability Removed for each.
 - **Activate Ability** (`id: String`) - Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.
+- **Use Skill** (`id: String`) - Uses a skill: consumes a charge, starts its cooldown and fires On Ability Activated. The skill wording for Activate Ability, so active skills and an Upgrades tree read alike.
 - **Set Ability Cooldown** (`id: String, seconds: float`) - Puts an ability on cooldown (scaled by the global cooldown multiplier).
 - **Reset Cooldown** (`id: String`) - Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.
 - **Set Max Stacks** (`id: String, max_stacks: int`) - Changes max charges (current stacks clamp down).
@@ -67,6 +69,7 @@ Node script extending `CharacterBody2D`.
 - **Cooldown Remaining** (`id: String`)
 - **Cooldown Progress** (`id: String`)
 - **Stacks** (`id: String`)
+- **Skill Charges** (`id: String`) - A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.
 - **Max Stacks** (`id: String`)
 - **Stack Cooldown Remaining** (`id: String`)
 - **Stack Progress** (`id: String`)
@@ -2266,16 +2269,22 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Scorer Value** (`scorer_id: String`)
 
 ### UpgradesAddon (`res://eventsheet_addons/upgrades/upgrades_addon.gd`)
-@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades") @ace_version(1.0.0)
+@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades") @ace_requires(SkillTreeResource) @ace_version(1.0.0)
 
 #### Triggers
 - **On Upgrade Bought**
 - **On Purchase Failed**
+- **On Skill Unlocked**
+- **On Unlock Refused**
 
 #### Conditions
 - **Is Maxed** (`id: String`) - Whether an upgrade is at its max level.
 - **Owns** (`id: String`) - Whether an upgrade has at least one level.
 - **Purchase Succeeded** - Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).
+- **Is Unlocked** (`id: String`) - Whether a skill has been taken at least once - the perk test a game asks wherever the perk matters.
+- **Can Unlock** (`id: String`) - Whether every skill this one requires is unlocked, it is not already capped, and the points are there.
+- **Can Afford** (`id: String`) - Whether the unspent points cover this skill's cost, ignoring its prerequisites.
+- **Requires** (`id: String, required_id: String`) - Whether the tree says this skill needs that one unlocked first.
 
 #### Actions
 - **Define Upgrade** (`id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String`) - Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.
@@ -2284,6 +2293,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Grant Level** (`id: String`) - Adds one free level (a reward), up to the max. No cost, no budget check.
 - **Set Level** (`id: String, level: int`) - Forces an upgrade's level (for a load or cheat), clamped to 0 and the max.
 - **Reset** - Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe.
+- **Load Skill Tree** (`tree: Resource`) - Points the tree words at a SkillTreeResource (.tres). Clears whatever was unlocked and hands the asset's Starting Points to the points counter, so one row opens a fresh tree.
+- **Set Skill Points** (`points: int`) - Forces the unspent skill points to a value (for a load or a cheat). Clamped at 0.
+- **Earn Skill Points** (`points: int`) - Adds skill points - the level-up reward. Goes into the Currency Ledger account when one was named.
+- **Use Points Account** (`account_id: String`) - Keeps skill points in a Currency Ledger account of this id instead of here, so the HUD, the save file and the shop all read one balance. Blank goes back to the built-in counter.
+- **Apply Grants To** (`stats: Node`) - Names the node whose StatForge stack an unlocked skill's grants are applied to, and re-applies everything already unlocked. Without it a tree still unlocks - it just grants nothing.
+- **Unlock** (`id: String`) - Takes one level of a skill: spends its cost, records the level, applies its grants and fires On Skill Unlocked. Refuses (On Unlock Refused) when a required skill is still locked, the skill is capped, or the points are short.
+- **Respec** - Refunds every point spent on the tree, clears every unlock and takes back every grant it applied - one action, so a respec button is one row.
 
 #### Expressions
 - **Cost Of** (`id: String`) - The next level's price (-1 if maxed or undefined).
@@ -2295,6 +2311,21 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Cost** - What the last Try Purchase cost - Spend this from your wallet.
 - **Last Upgrade** - The id of the last upgrade bought or failed (read in the trigger).
 - **Upgrade Count** - How many upgrades are defined.
+- **Skill Points** - The unspent skill points - the number a tree screen's "points left" label shows.
+- **Skill Cost** (`id: String`) - What one level of a skill costs in points (0 when the id is not in the tree).
+- **Skill Level** (`id: String`) - How many levels of a skill are unlocked (0 = locked).
+- **Skill Max Level** (`id: String`) - How many levels a skill can take (1 for a one-off perk).
+- **Skill Name** (`id: String`) - A skill's readable name from the asset ("" when the id is not in the tree).
+- **Skill Requires** (`id: String`) - The ids a skill needs first, comma-separated as the asset wrote them ("" for a root skill).
+- **Skill Grants** (`id: String`) - What a skill grants, as the asset's own words - the line a tree screen shows on hover.
+- **Skill Column** (`id: String`) - A skill's column on a tree screen, or -1 when the asset leaves the layout to the screen.
+- **Skill Row** (`id: String`) - A skill's row on a tree screen, or -1 when the asset leaves the layout to the screen.
+- **Skill Depth** (`id: String`) - How many prerequisites deep a skill sits - 0 for a root, 1 for its children, and so on. A screen with no column/row in its asset lays the tree out by this.
+- **Skill Id At** (`index: int`) - The skill id at a position in the asset's own order ("" out of range) - what a screen walks to build its nodes.
+- **Skill Count** - How many skills the loaded tree holds (0 when none is loaded).
+- **Unlocked Count** - How many skills have at least one level - the "12 of 30" a tree screen prints.
+- **Last Skill** - The skill Unlock last touched - read it inside On Skill Unlocked or On Unlock Refused.
+- **Tree Name** - The loaded tree's readable name ("" when none is loaded) - a tree screen's title.
 
 ### UtilityBrain (`res://eventsheet_addons/utility_ai/utility_ai_addon.gd`)
 @ace_tags(ai, decision) @ace_category("Utility AI") @ace_version(1.0.0)
