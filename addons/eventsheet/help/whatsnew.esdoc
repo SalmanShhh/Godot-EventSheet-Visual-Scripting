@@ -41,6 +41,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
   and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
   sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+
 ### Added - a board keeps its speed, a rail is a curve you ride, and both read back
 
 - **Momentum is its own movement model, and it has a pack.** A platformer controller chases a top
