@@ -169,6 +169,36 @@
   new pack. Measured over 360 physics frames: the rope's length never exceeds its 90 px and drops to
   63.8 px of slack, the bar holds 70.000 px at both ends of the run, and the soft pin trails up to
   68.7 px behind its anchor.
+### Added - the traversal verbs a platformer grows after jumping, in 2D and 3D
+
+- **Traversal Kit, and Traversal Kit 3D.** Two new behavior packs (host `CharacterBody2D` and
+  `CharacterBody3D`) carrying the moves every platformer adds once jumping works: **Is At A Ledge**
+  (the two-probe test - a wall ahead at chest height and nothing above it), **Grab Ledge**, **Is
+  Hanging**, **Climb Up** (with no duration it lets go and jumps; with one it is a mantle that
+  carries the body over the lip), **Drop**, **Slide Down Wall**, **Wall Jump** (the push follows the
+  wall's own normal, so it always leaves the wall it was on), **Wall Run** (a gravity percentage and
+  a minimum speed, with a time budget), **Is On Ladder** / **Climb Ladder**, **Is At A Vaultable
+  Obstacle** / **Vault Over**, **Crouch** / **Stand** (the collider is swapped for a shrunk copy, so
+  the shape in your scene is never edited), and the water words - **Is In Water**, **Swim**, **Is
+  Above The Surface**, **Water Depth**, plus **Float** on the 3D twin. Five triggers: On Ledge
+  Grabbed, On Climbed, On Vaulted, On Entered Water, On Left Water. Neither kit moves the body: it
+  writes velocity and leaves the moving to the mover you already have, so it stacks on top of
+  Platformer movement, the FPS Controller, or two rows of your own. The Platformer pack's coyote
+  time and jump buffering were already there and are untouched.
+- **Ladders and water are marked, not wired.** An `Area2D`/`Area3D` in the `ladder` or `water` group
+  is the ladder or the pool - no signals to connect, no code in the volume. Marking an Area **water**
+  in Object properties offers the two rows that raise and lower the flag when you drop it on a sheet.
+- **Three shapes the reader already writes now have names.** The two-ray ledge test claims **Ledge
+  grab**, the moves built on a wall the body is touching claim **Wall moves**, and a volume that
+  raises a water flag with gravity traded for drag under it claims **Swimming** - each offering the
+  kit that ships the same rows. Each is gated on the thing that makes it that shape rather than on
+  the velocity write it ends in: a lone ray is not a ledge, a velocity write in a file that never
+  touches a wall is not a wall move, and `velocity *= 0.9` on its own is a slowdown, not a swim.
+- **Two new showcases.** `demo/showcase/traversal_course/` puts one station behind each move - a
+  tower to hang from, a shaft to wall-jump up, a ladder, a low block, and a pool - with four actors
+  demonstrating them on a loop with no input at all. `demo/showcase/traversal_course_3d/` does the
+  same in metres with no controller pack anywhere: the sheet writes gravity and the move, the kit
+  writes everything in between.
 
 ### Added - a board keeps its speed, a rail is a curve you ride, and both read back
 
