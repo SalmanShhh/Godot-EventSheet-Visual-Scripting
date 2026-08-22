@@ -136,7 +136,7 @@ The `hint` picks the field's editor:
 Two more optional arguments make a dropdown or a suggest box:
 
 - `options` - a fixed dropdown, either plain strings `["left", "right"]` or `{"key": <inserted>, "label": <shown>}` dicts so the menu can read "Warning" while inserting `push_warning`. For the six comparison
-  operators use the factory's own list - `F.COMPARISON_OPTIONS` (labeled: `>=` reads ">= (at least)"),
+  operators use the factory's own list - `F.COMPARISON_OPTIONS` (labeled: `>=` reads "≥  at least", and the dialog shows the `>=` it inserts muted beside the choice),
   or `F.comparison_options("=")` when your runtime stores and matches a single `=`. Every operator
   picker in the plugin resolves there, so a wording change lands everywhere at once instead of
   drifting between copies.

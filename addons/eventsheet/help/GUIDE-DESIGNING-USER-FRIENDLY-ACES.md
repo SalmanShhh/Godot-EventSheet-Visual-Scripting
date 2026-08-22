@@ -129,7 +129,7 @@ Every parameter is a chance to go wrong. Spend design effort here:
 | an existing input action | hint `input_action` (a LIVE picker of the project's Input Map) |
 | a keyboard key | hint `key_capture` (press-a-key capture, no keycode tables) |
 | one of a fixed set | `options` (a dropdown; `{"key": ..., "label": ...}` entries let the menu read friendly while inserting real code - on a provider script, write them as `value=Label`) |
-| a comparison operator | hint `comparison` - the six operators, labeled ("`>=` (at least)") and seeded to `==`, in one word: `@ace_param(op, hint: comparison)` on a provider, `F.COMPARISON_OPTIONS` in a module. Never hand-type the six, and never smuggle them through as word tokens |
+| a comparison operator | hint `comparison` - the six operators, labeled with the symbol the row shows and the words for it ("`≥`  at least") and seeded to `==`, in one word: `@ace_param(op, hint: comparison)` on a provider, `F.COMPARISON_OPTIONS` in a module. Never hand-type the six, and never smuggle them through as word tokens |
 | a suggestion, but free text allowed | `autocomplete` (an editable filter-combo) |
 | a sheet variable / signal / enum member | hint `variable_reference` / `signal_reference` / `enum:Name` |
 | a node's method / property / animation | hint `method_reference` / `property_reference` / `animation_reference` (reflected pickers) |

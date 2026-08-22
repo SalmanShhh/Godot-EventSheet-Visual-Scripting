@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### Changed - the Add variable dialog asks for the row in the order the row reads
+
+- **Scope comes first, as a dropdown, with a line under each choice.** Instance / Local / Global /
+  Constant / Static, in the sheet's own order, each carrying the one line that says what it means and
+  naming the object while it does it ("one per Player - each copy in the scene has its own"). The
+  scope is the row's first word, and everything else in the dialog is gated by it, so it is the first
+  thing the dialog asks. The row of scope switches it replaces is gone.
+- **One help strip at the foot, following focus.** `EventSheetPopupUI.help_strip(heading, body,
+  reads_as, in_code)` is a component now, so the dialogs that want the same foot cannot drift apart:
+  a heading naming the focused thing, a paragraph, a **READS AS** line and an **IN CODE** line. Open
+  the Type list and it describes each type before you pick it. READS AS is the row itself, composed
+  through `EventSheetVariableSentence` like every other surface; IN CODE is the compiler's OWN
+  emitted declaration, so the dialog can never promise a line the compiled sheet would not write.
+- **The type list reads in words, and shows the GDScript spelling muted beside the field.** Number,
+  Text, Boolean, then Vector, Color, List and Table, then the Godot types under their own names. The
+  stored type rides as each item's metadata rather than as its text, so the words are free to read
+  plainly while `.gd` round-trips unchanged.
+- **"Initial value", not "Default"** - it is the value the variable starts at, and "default" is
+  Godot's word for something else. Static joins Constant as a checkbox with its explanation muted
+  beside it, and the Inspector polish (range, drawer, grouping) folds behind **More options
+  (Inspector, range, drawer, group…)**.
+- **Global reveals the write-into picker instead of handing the gesture away.** Picking Global asks
+  the one extra question a global has - which autoload it lands on - and confirming writes it there
+  through the same writer the Add global variable dialog uses, in one undo step. Local greys the
+  Inspector tick (a local is never a property); Constant greys Static with it (GDScript has no
+  `static const`).
+- **A name already taken here is flagged under the field as you type**, not on OK, and a fresh
+  variable opens on the scope the last one used.
+
+### Changed - the operator list says the symbol, the words, and the code
+
+- **`≤  at most`, not `<= (at most)`.** `COMPARISON_OPTIONS` - the one list every operator picker in
+  the plugin resolves through - now leads with the symbol a reader sees on the row (≥ ≤ ≠, and `=`
+  for equality) and says it in words after. The inserted tokens, the templates and the emitted code
+  are untouched: a dialog showing the list now shows that token muted beside the choice, so the
+  friendly wording teaches the spelling instead of hiding it. Every options dropdown whose words
+  differ from the value it inserts gains the same muted note.
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for

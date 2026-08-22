@@ -786,7 +786,8 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 ![The Add Child (existing node) parameter dialog with the Child field's picker open, listing the nodes of the layout currently open in the editor: self first, then the scene-unique %Score, then $Player, $UI and $UI/Score](images/scene-node-param-picker.png)
 
 Factory helpers cover the common dropdowns, so nobody re-types them: `F.COMPARISON_OPTIONS` is the
-canonical labeled operator list (`==` reads "= (equal to)", `>=` reads ">= (at least)"), and
+canonical labeled operator list (`==` reads "=  equal to", `>=` reads "≥  at least", with the GDScript
+form shown muted beside the choice in every dialog), and
 `F.comparison_options(equal_token)` returns the same six with the equality token swapped for a runtime
 that stores a single `=`. `F.COMPARISON_OPERATORS` is the same six as bare tokens for callers that
 only need the values, and `F.input_action_options()` is every InputMap action plus the `ui_*`

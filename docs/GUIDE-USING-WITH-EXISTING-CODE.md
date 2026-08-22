@@ -1383,6 +1383,17 @@ is instantiated to answer a question.
   the Properties bar whenever that object is selected, so a run of variables can be added, retyped
   and described without opening anything. Every edit writes the same `var` / `@export var` line the
   Add variable dialog writes, in one undo step, and leaves every other line of the file untouched.
+- **The Add variable dialog asks for the row in the order the row reads.** **Scope** first - a
+  dropdown of Instance / Local / Global / Constant / Static, each with the line that says what it
+  means - then **Name**, **Type** (Number, Text, Boolean, then Vector, Color, List, Table and the
+  Godot types, with the GDScript spelling muted beside the field), **Initial value**, and
+  **Description**. Godot-only polish (the Inspector tick's range, drawer and grouping) stays folded
+  behind **More options**. One help strip at the foot describes whatever you are standing on - open
+  the Type list and it describes each type before you pick it - and it always ends with **READS AS**,
+  the row the sheet will show, over **IN CODE**, the exact line the compiler will write. Choosing
+  **Global** reveals the *write into* picker, because a global lives on an autoload rather than in
+  this file; choosing **Local** greys the Inspector tick, and **Constant** greys Static with it. A
+  name already used here is flagged under the field as you type, not on OK.
 - **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
   SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
   THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and
