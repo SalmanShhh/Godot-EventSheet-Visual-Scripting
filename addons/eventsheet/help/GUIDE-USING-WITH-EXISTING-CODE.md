@@ -417,13 +417,34 @@ That is the order this section is in.
   table, object or the class the author named, scene, any - with Godot's own spelling (`float`, `int`,
   `String`, `Array[String]`, `Dictionary`) one hover away. A declared `int` reads "whole number"
   because the author said they wanted no fractions; an undeclared `100` still reads "number". Variables
-  a designer can edit wear a small **Inspector** chip, and the head gathers them all in one
-  **Instance variables** folder with those first, rather than a Settings / Internal state split.
+  a designer can edit wear a small **sliders mark** beside the name (hover: "Editable in the
+  Inspector"), and the head gathers them all in one **Instance variables** folder with those first,
+  rather than a Settings / Internal state split. Scope and type are WORDS on the row, never pills:
+  the only boxes a variable row wears are its `x` kind badge and that sliders mark.
 - **A `static var` says who shares it.** `static var spawned: int = 0` reads
   `Static number  spawned = 0  shared by every Player` - the scope word leads the type chip, and the
   muted tail names the object the value belongs to (the script's `class_name`, else its scene root,
   else its file). One value on the class, not one per object, is exactly the thing a reader has to be
-  told; on an authored sheet the same fact reads as a `static` badge beside `const`.
+  told, and it is the scope word that tells it - `const` and `static` fold INTO that word rather
+  than riding beside it as separate pills.
+
+- **The declaration echoes at the right edge.** Beside every variable row, muted, sits the exact line
+  the compiler emits for it - `@export var speed: float = 200.0`, `const MAX_HP := 100`,
+  `static var spawned := 0`, and `Game.Score` for a global read here. It is the emitter's own string,
+  so it can never drift from the file, and it is coloured with the script editor's token colours read
+  from your Editor Settings, so it matches whatever GDScript theme you use. It comes up to full
+  strength on the row under the pointer, steps aside on a narrow canvas, and opens the code panel at
+  that line when you activate it. **View ▸ Variable rows** dials how much is drawn: **sentence** (the
+  beginner reading), **both** (the default) or **code** (the row IS the line, still washed, still
+  badged, still one undo funnel). Simple Mode keeps it on **sentence**.
+
+- **Variable rows are rows of their own kind, in the order you wrote them.** A flat lilac wash and a
+  2px rule down the left edge say "this is a declaration" before a word is read; the order is the
+  file's, not the alphabet's. Drag one past another and the drop writes the new order; **Sort A-Z**
+  on the row's menu writes alphabetical when you ask for it. Variables never fold as a block - the
+  only fold in the list is a folder you made yourself, an **Inspector group**, which draws as a slim
+  labelled strip over its rows with the rows themselves left exactly where they were (a bracket
+  around rows must never push them sideways).
 - **A colour is always a live swatch.** `var tint := Color.WHITE` reads `Instance color tint =`
   swatch `white  #ffffff`; a colour nobody has a word for reads its hex. Click the swatch, anywhere
   it appears - a variable row, an action's colour parameter, the Add variable dialog - and the sheet's

@@ -6,6 +6,41 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Changed - a variable row is one sentence, with its declaration beside it
+
+- **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every
+  variable row - authored or opened, sheet member, tree declaration or event local - now reads
+  `<scope> <type> <name> = <value>`, through one branch of one builder. The declaration grammar
+  survives where it belongs, on the name's hover and in the code panel.
+- **Scope and type are words, not pills.** The scope word leads in the theme's own lilac, the type
+  word follows in plain text, and the `const` / `static` pills fold INTO the scope word (\"Constant
+  number MAX_HP = 100\", \"Static number spawned = 0\"). The scope is DERIVED, never stored: an
+  autoload sheet says Global, a node script Instance, a Resource script Field, a `static var`
+  Static, a `const` Constant, an event's own declaration Local. `sheet.variables` is unchanged.
+- **The Inspector chip became a mark.** A value a designer can edit wears a 15px sliders glyph
+  beside its name, hovering \"Editable in the Inspector\" - a cue, not a word. The per-row Inspector
+  GROUP chip is gone too: the folder draws once, as a slim labelled strip over the rows it holds,
+  with the rows themselves left unindented (a bracket around rows never pushes them sideways) and
+  the strip carrying the only fold in the list.
+- **Variable rows are rows of their own kind, in the order you wrote them.** A flat lilac wash and a
+  2px left rule mark every declaration - three new theme colours (`variable_row_wash_color`,
+  `variable_row_rule_color`, and `variable_row_wash_end_color` for an optional fade, which every
+  bundled preset ships equal to the wash, so they stay flat). The view stopped name-sorting the
+  list: dragging one declaration past another WRITES the new order through the undo funnel, and
+  **Sort A-Z** on the row menu writes alphabetical when it is asked for.
+- **Every variable row echoes its own line.** At the right edge, muted, sits the exact declaration
+  the compiler emits for that row - the emitter's own string, so it cannot drift from the file -
+  coloured by a small tokeniser (keyword / annotation / type / member / number / string / symbol /
+  comment) reading the script editor's colours from Editor Settings, with the sheet theme as the
+  fallback. It comes up to full colour on the row under the pointer, is dropped on a canvas too
+  narrow for it, and opens the code panel at that line when activated. **View ▸ Variable rows**
+  dials sentence / both / code (default both; Simple Mode pins sentence) - a toolbar setting, never
+  a row on the sheet.
+- **What a row does while you work on it.** The value edits in place with the type word as its guide
+  rail, turning amber the moment the literal cannot fit and refusing to write it; the Live Values
+  chip now reads `now 73` after the initial value instead of a second `= 73` that read like the
+  declaration; selection is the same blue wash every other row uses, laid over the lilac.
+
 ### Changed - the Add variable dialog asks for the row in the order the row reads
 
 - **Scope comes first, as a dropdown, with a line under each choice.** Instance / Local / Global /

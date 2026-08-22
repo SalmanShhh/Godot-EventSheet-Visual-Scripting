@@ -54,8 +54,11 @@ sections:
   how often an event runs, the three text tones, the tints on text and true/false values,
   the error and live-fire stripes, the disabled scrim, the breakpoint dot, the bookmark
   pennant, the event-number margin's rail, the indent stops and the tree connector, the drop
-  line and the refusal bubble, the swatch outline, the text-selection band, and how strongly
-  a hovered variable lights up its other uses.
+  line and the refusal bubble, the swatch outline, the text-selection band, the flat wash and
+  left rule every variable row wears (`variable_row_wash_color`, `variable_row_rule_color`, and
+  `variable_row_wash_end_color` for a theme that wants the wash to fade across the row - equal to
+  the wash means flat, which is what every bundled preset ships), and how strongly a hovered
+  variable lights up its other uses.
 - **Bars around the sheet - Object bar, status strip, tab title** (`EventSheetChromeStyle`):
   the Object bar's section headings, its ⚠ on a flagged entry, the wash it throws over the
   rows that use the object you point at and the grab dots on them, the status message and the

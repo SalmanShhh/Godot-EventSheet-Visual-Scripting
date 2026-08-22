@@ -14,7 +14,7 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | Plugin / Behavior ACEs | engine API | **ACE** (Action / Condition / Expression) | The vocabulary you pick from. 920+ builtin, plus your addons. |
 | Trigger (e.g. *On start of layout*) | signal / `_ready` / `_process` | **Trigger** | The green "On …" row that starts an event (On Ready, Every Frame, On Pressed, On Input, signals…). |
 | Behavior (Platformer, 8-Direction…) | a script/node component | **Behavior pack** | A reusable event-sheet pack you attach as a child node. 95 bundled. |
-| Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). Tick **Editable in the Inspector** for a designer knob (an **Inspector chip** shows on the row + in the Inspector); organize knobs with **`@export_group` / `@export_subgroup`** ("Group › Subgroup" chips); typed vars get live Inspector **drawers**. Lossless `.gd` round-trip. |
+| Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). Tick **Editable in the Inspector** for a designer knob (a **sliders mark** shows on the row + the value shows in the Inspector); organize knobs with **`@export_group` / `@export_subgroup`** (a labelled folder strip over the rows); typed vars get live Inspector **drawers**. Lossless `.gd` round-trip. |
 | Local variable | local `var` | **Local variable** | Scoped to one event body. |
 | Family | (no direct equal) | **Family** / Group / Include | Declare a sheet as a **Family** for family-scoped iteration (see the **Family Arena** showcase). Groups organize rows; Includes are shared library sheets. |
 | Layout | Scene (`.tscn`) | Scene | Use Godot scenes directly. |
