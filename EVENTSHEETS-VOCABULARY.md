@@ -34,6 +34,7 @@ Node script extending `CharacterBody2D`.
 - **Has Stacks Available** (`id: String`)
 - **Ability Has Tag** (`id: String, tag: String`)
 - **Current Ability Is** (`id: String`)
+- **Is Skill Ready** (`id: String`) - The same readiness question in the skill words. A game whose active skills and whose passive tree are one vocabulary asks Is Skill Ready beside Upgrades' Is Unlocked and never has to remember that one of them is spelled "ability".
 
 #### Actions
 - **Create Ability** (`id: String`) - Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new.
@@ -44,6 +45,7 @@ Node script extending `CharacterBody2D`.
 - **Remove Ability** (`id: String`) - Deletes an ability and all its data. Fires On Ability Removed.
 - **Clear All Abilities** - Removes every ability. Fires On Ability Removed for each.
 - **Activate Ability** (`id: String`) - Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.
+- **Use Skill** (`id: String`) - Uses a skill: consumes a charge, starts its cooldown and fires On Ability Activated. The skill wording for Activate Ability, so active skills and an Upgrades tree read alike.
 - **Set Ability Cooldown** (`id: String, seconds: float`) - Puts an ability on cooldown (scaled by the global cooldown multiplier).
 - **Reset Cooldown** (`id: String`) - Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.
 - **Set Max Stacks** (`id: String, max_stacks: int`) - Changes max charges (current stacks clamp down).
@@ -67,6 +69,7 @@ Node script extending `CharacterBody2D`.
 - **Cooldown Remaining** (`id: String`)
 - **Cooldown Progress** (`id: String`)
 - **Stacks** (`id: String`)
+- **Skill Charges** (`id: String`) - A skill's remaining charges, in the skill words - the number a hotbar prints on the icon.
 - **Max Stacks** (`id: String`)
 - **Stack Cooldown Remaining** (`id: String`)
 - **Stack Progress** (`id: String`)
@@ -698,6 +701,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is First Person** - True in first-person camera mode.
 - **Can Jump** - True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.
 - **Is Firing** - True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.
+- **Is Bunny Hopping** - True on the frame a landing became the next hop instead - jump was still held as the feet touched down. The cue for a chained-hop sound, a speed streak, or the counter a speedrun HUD shows.
 - **Is Crouching** - True while crouched (including during a crouch slide).
 - **Is Sliding** - True during a crouch slide.
 - **Is Wall Riding** - True while riding a wall (airborne, glued to it, gravity softened).
@@ -721,6 +725,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
 - **Set Coyote Time** (`seconds: float`) - Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.
 - **Set Move Speed While Firing** (`speed: float, seconds: float`) - Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.
+- **Bob With Movement** (`weapon: Node3D`) - Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every tick on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.
+- **Sway With Mouse** (`weapon: Node3D`) - Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every tick on the node you want swaying.
+- **Set Air Control** (`share: float`) - Changes how much of the run the host keeps in mid-air, as a share (1 = full ground control, 0 = pure momentum). An ice level, a slow-fall power-up and a hard mode are all this one knob.
 - **Reset Jumps** - Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.
@@ -1335,17 +1342,64 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Pinned** - True while the host is riding another object.
+- **Is Taut** - True while a rope or bar pin is stretched out to its full length - the frame a swing starts pulling. Always false in the other modes, which have no length to be stretched to.
 
 #### Actions
-- **Pin To** (`target: Node2D`) - Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it.
+- **Pin To** (`target: Node2D`) - Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent - this is the first of those two.
 - **Pin To At Offset** (`target: Node2D, offset_x: float, offset_y: float`) - Sticks the host to an object at a chosen distance from it, in pixels, instead of wherever it happens to be standing.
 - **Set Pin Offset** (`offset_x: float, offset_y: float`) - Moves the host to a new distance from the object it is riding, in pixels.
+- **Pin To Rope** (`target: Node2D, max_length: float`) - Hangs the host off an object on a rope of the given length. Inside that length it moves freely; past it the rope goes taut and pulls it back - a lantern on a stick, a leash, a wrecking ball.
+- **Pin To Bar** (`target: Node2D, length: float`) - Holds the host at exactly the given distance from an object, every tick, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.
+- **Pin To Softly** (`target: Node2D, speed: float`) - Follows an object with a lag instead of snapping onto it. The speed is how much of the gap is closed each second - low numbers trail a long way behind, which is what makes a camera target or a pet feel alive.
+- **Pin To With Spring** (`target: Node2D, stiffness: float, damping: float`) - Follows an object on a spring: it overshoots, wobbles and settles instead of arriving flat. Stiffness is the pull, damping is how fast the wobble dies (0 never settles, 1 never overshoots) - the same pair of numbers the Spring pack's own integrator takes.
+- **Pin X Position To** (`target: Node2D`) - Follows an object's column and nothing else: the host keeps its own height. A shadow under a jumper, a rail-mounted turret.
+- **Pin Y Position To** (`target: Node2D`) - Follows an object's height and nothing else: the host keeps its own column. A side bar that rides a lift, a depth marker.
+- **Pin Size To** (`target: Node2D`) - Copies an object's scale and nothing else, so the host grows and shrinks with it - a shadow that swells as its owner lands, a selection ring around a resizing token.
+- **Pin To Point** (`target: Node2D, point_name: String`) - Rides a NAMED child of an object rather than the object itself - a Bone2D, a Marker2D, the hand a weapon hangs off. The gap the two are standing at right now is remembered, exactly as Pin To does.
+- **Pin To Path** (`path_node: Node2D`) - Rides a point that travels a curve. Pass a PathFollow2D and the host rides that one; pass a Path2D and the pack makes the follower once and rides it. Set Path Progress then drives the host along the curve.
+- **Set Path Progress** (`ratio: float`) - Moves a path pin along its curve, 0 at the start and 1 at the end. Does nothing when the pin is not riding a path.
 - **Unpin** - Lets go. The host stays exactly where it was and moves on its own again.
-- **Set Pin Mode** (`mode: String`) - Chooses what the host copies from its anchor.
+- **Set Pin Mode** (`mode: String`) - Chooses what the host copies from its anchor, and how it travels there. Option labels carry no commas on purpose - the picker splits the list on them, so a comma inside a label would offer half a sentence as a ninth mode nothing answers to.
+- **Set Pin Axes** (`axes: String`) - Chooses which axes of the place follow: both of them, the column only, or the height only.
 
 #### Expressions
 - **PinOffsetX** - How far the host sits from its anchor along X, in pixels.
 - **PinOffsetY** - How far the host sits from its anchor along Y, in pixels.
+- **PinDistance** - How far the host currently is from the object it rides, in pixels.
+- **PinPathProgress** - How far along its path a path pin has travelled, 0 to 1. Zero when the pin is not riding a path.
+
+### Pin3DBehavior (`res://eventsheet_addons/pin_3d/pin_3d_behavior.gd`)
+@ace_tags(movement, attachment, 3d) @ace_category("Pin 3D") @ace_version(1.0.0)
+
+#### Conditions
+- **Is Pinned** - True while the host is riding another object.
+- **Is Taut** - True while a rope or bar pin is stretched out to its full length - the frame a swing starts pulling. Always false in the other modes, which have no length to be stretched to.
+
+#### Actions
+- **Pin To** (`target: Node3D`) - Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent - this is the first of those two.
+- **Pin To At Offset** (`target: Node3D, offset_x: float, offset_y: float, offset_z: float`) - Sticks the host to an object at a chosen distance from it, in world units, instead of wherever it happens to be standing.
+- **Set Pin Offset** (`offset_x: float, offset_y: float, offset_z: float`) - Moves the host to a new distance from the object it is riding, in world units.
+- **Pin To Rope** (`target: Node3D, max_length: float`) - Hangs the host off an object on a rope of the given length. Inside that length it moves freely; past it the rope goes taut and pulls it back - a lantern on a pole, a leash, a wrecking ball.
+- **Pin To Bar** (`target: Node3D, length: float`) - Holds the host at exactly the given distance from an object, every tick, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.
+- **Pin To Softly** (`target: Node3D, speed: float`) - Follows an object with a lag instead of snapping onto it. The speed is how much of the gap is closed each second - low numbers trail a long way behind, which is what makes a chase camera feel alive.
+- **Pin To With Spring** (`target: Node3D, stiffness: float, damping: float`) - Follows an object on a spring: it overshoots, wobbles and settles instead of arriving flat. Stiffness is the pull, damping is how fast the wobble dies (0 never settles, 1 never overshoots) - the same pair of numbers the Spring pack's own integrator takes.
+- **Pin X Position To** (`target: Node3D`) - Follows an object along X and nothing else: the host keeps its own height and depth.
+- **Pin Y Position To** (`target: Node3D`) - Follows an object's height and nothing else: the host keeps its own place on the floor. A marker that rides a lift, a water line.
+- **Pin Z Position To** (`target: Node3D`) - Follows an object along Z and nothing else: the host keeps its own X and height.
+- **Pin Size To** (`target: Node3D`) - Copies an object's scale and nothing else, so the host grows and shrinks with it - a shadow decal that swells as its owner lands, a selection ring around a resizing prop.
+- **Pin To Point** (`target: Node3D, point_name: String`) - Rides a NAMED child of an object rather than the object itself - usually the BoneAttachment3D a skeleton keeps on a bone, so "pin the sword to the hand" is one name. The gap the two are standing at right now is remembered, exactly as Pin To does.
+- **Pin To Path** (`path_node: Node3D`) - Rides a point that travels a curve. Pass a PathFollow3D and the host rides that one; pass a Path3D and the pack makes the follower once and rides it. Set Path Progress then drives the host along the curve.
+- **Set Path Progress** (`ratio: float`) - Moves a path pin along its curve, 0 at the start and 1 at the end. Does nothing when the pin is not riding a path.
+- **Unpin** - Lets go. The host stays exactly where it was and moves on its own again.
+- **Set Pin Mode** (`mode: String`) - Chooses what the host copies from its anchor, and how it travels there. Option labels carry no commas on purpose - the picker splits the list on them, so a comma inside a label would offer half a sentence as a ninth mode nothing answers to.
+- **Set Pin Axes** (`axes: String`) - Chooses which axes of the place follow: all of them, or one line of the world only.
+
+#### Expressions
+- **PinOffsetX** - How far the host sits from its anchor along X, in world units.
+- **PinOffsetY** - How far the host sits from its anchor along Y, in world units.
+- **PinOffsetZ** - How far the host sits from its anchor along Z, in world units.
+- **PinDistance** - How far the host currently is from the object it rides, in world units.
+- **PinPathProgress** - How far along its path a path pin has travelled, 0 to 1. Zero when the pin is not riding a path.
 
 ### PlatformInfoAddon (`res://eventsheet_addons/platform_info/platform_info_addon.gd`)
 @ace_tags(platform, device, screen, system) @ace_category("Platform Info") @ace_version(1.0.0)
@@ -2290,16 +2344,22 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Scorer Value** (`scorer_id: String`)
 
 ### UpgradesAddon (`res://eventsheet_addons/upgrades/upgrades_addon.gd`)
-@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades") @ace_version(1.0.0)
+@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades") @ace_requires(SkillTreeResource) @ace_version(1.0.0)
 
 #### Triggers
 - **On Upgrade Bought**
 - **On Purchase Failed**
+- **On Skill Unlocked**
+- **On Unlock Refused**
 
 #### Conditions
 - **Is Maxed** (`id: String`) - Whether an upgrade is at its max level.
 - **Owns** (`id: String`) - Whether an upgrade has at least one level.
 - **Purchase Succeeded** - Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).
+- **Is Unlocked** (`id: String`) - Whether a skill has been taken at least once - the perk test a game asks wherever the perk matters.
+- **Can Unlock** (`id: String`) - Whether every skill this one requires is unlocked, it is not already capped, and the points are there.
+- **Can Afford** (`id: String`) - Whether the unspent points cover this skill's cost, ignoring its prerequisites.
+- **Requires** (`id: String, required_id: String`) - Whether the tree says this skill needs that one unlocked first.
 
 #### Actions
 - **Define Upgrade** (`id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String`) - Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.
@@ -2308,6 +2368,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Grant Level** (`id: String`) - Adds one free level (a reward), up to the max. No cost, no budget check.
 - **Set Level** (`id: String, level: int`) - Forces an upgrade's level (for a load or cheat), clamped to 0 and the max.
 - **Reset** - Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe.
+- **Load Skill Tree** (`tree: Resource`) - Points the tree words at a SkillTreeResource (.tres). Clears whatever was unlocked and hands the asset's Starting Points to the points counter, so one row opens a fresh tree.
+- **Set Skill Points** (`points: int`) - Forces the unspent skill points to a value (for a load or a cheat). Clamped at 0.
+- **Earn Skill Points** (`points: int`) - Adds skill points - the level-up reward. Goes into the Currency Ledger account when one was named.
+- **Use Points Account** (`account_id: String`) - Keeps skill points in a Currency Ledger account of this id instead of here, so the HUD, the save file and the shop all read one balance. Blank goes back to the built-in counter.
+- **Apply Grants To** (`stats: Node`) - Names the node whose StatForge stack an unlocked skill's grants are applied to, and re-applies everything already unlocked. Without it a tree still unlocks - it just grants nothing.
+- **Unlock** (`id: String`) - Takes one level of a skill: spends its cost, records the level, applies its grants and fires On Skill Unlocked. Refuses (On Unlock Refused) when a required skill is still locked, the skill is capped, or the points are short.
+- **Respec** - Refunds every point spent on the tree, clears every unlock and takes back every grant it applied - one action, so a respec button is one row.
 
 #### Expressions
 - **Cost Of** (`id: String`) - The next level's price (-1 if maxed or undefined).
@@ -2319,6 +2386,21 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Cost** - What the last Try Purchase cost - Spend this from your wallet.
 - **Last Upgrade** - The id of the last upgrade bought or failed (read in the trigger).
 - **Upgrade Count** - How many upgrades are defined.
+- **Skill Points** - The unspent skill points - the number a tree screen's "points left" label shows.
+- **Skill Cost** (`id: String`) - What one level of a skill costs in points (0 when the id is not in the tree).
+- **Skill Level** (`id: String`) - How many levels of a skill are unlocked (0 = locked).
+- **Skill Max Level** (`id: String`) - How many levels a skill can take (1 for a one-off perk).
+- **Skill Name** (`id: String`) - A skill's readable name from the asset ("" when the id is not in the tree).
+- **Skill Requires** (`id: String`) - The ids a skill needs first, comma-separated as the asset wrote them ("" for a root skill).
+- **Skill Grants** (`id: String`) - What a skill grants, as the asset's own words - the line a tree screen shows on hover.
+- **Skill Column** (`id: String`) - A skill's column on a tree screen, or -1 when the asset leaves the layout to the screen.
+- **Skill Row** (`id: String`) - A skill's row on a tree screen, or -1 when the asset leaves the layout to the screen.
+- **Skill Depth** (`id: String`) - How many prerequisites deep a skill sits - 0 for a root, 1 for its children, and so on. A screen with no column/row in its asset lays the tree out by this.
+- **Skill Id At** (`index: int`) - The skill id at a position in the asset's own order ("" out of range) - what a screen walks to build its nodes.
+- **Skill Count** - How many skills the loaded tree holds (0 when none is loaded).
+- **Unlocked Count** - How many skills have at least one level - the "12 of 30" a tree screen prints.
+- **Last Skill** - The skill Unlock last touched - read it inside On Skill Unlocked or On Unlock Refused.
+- **Tree Name** - The loaded tree's readable name ("" when none is loaded) - a tree screen's title.
 
 ### UtilityBrain (`res://eventsheet_addons/utility_ai/utility_ai_addon.gd`)
 @ace_tags(ai, decision) @ace_category("Utility AI") @ace_version(1.0.0)
@@ -2642,11 +2724,16 @@ the behavior SHAPES as free actions (T1 / T3 / T4).
 - **Wrap Around Layout Horizontally** (`low: String, high: String`) - Sends the object off one side of the layout and back in the other - the arcade wrap.
 - **Wrap Around Layout Vertically** (`low: String, high: String`) - Sends the object off the top of the layout and back in at the bottom, or the other way round.
 - **Bound To Layout** (`low: String, high: String`) - Holds the object inside the layout's edges instead of letting it leave - the arcade fence.
-- **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.
+- **Pin To** (`anchor: String, offset: String`) - Puts the object at another object's place, offset by however far apart you want them.  Pin or child? A pin follows at runtime and can let go; a child is structure and is destroyed with its parent. Reach for Add Child when the two are one thing that lives and dies together, and for a pin when one thing rides another for a while.
 - **Pin Angle To** (`anchor: String`) - Turns the object to match another object's angle, so the two stay aligned.
+- **Pin To (Rope)** (`anchor: String, length: String`) - Hangs the object off another on a rope: free to move inside the length, pulled back the moment the line goes taut. A lantern on a stick, a leash, a wrecking ball.  A pin follows at runtime and can let go; a child is structure and is destroyed with its parent.
+- **Pin To (Bar)** (`anchor: String, length: String`) - Holds the object at exactly one distance from another, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.  A pin follows at runtime and can let go; a child is structure and is destroyed with its parent.
 
 ### Boomer Weapons (`res://addons/eventforge/registration/modules/boomer_weapons_aces.gd`)
 Weapons in 3D (X25): hitscan, explosions, an arsenal and the secrets counter.
+
+#### Triggers
+- **On Alerted** - Runs when an Alert Enemies Within action reaches this one, with who to go for. Put this object in the alerted group first (Add To Group, on created).
 
 #### Conditions
 - **Secret Already Found** (`name: String, found: String`) - True when this secret has already been counted - the guard on the chime and the pop-up.
@@ -2657,6 +2744,9 @@ Weapons in 3D (X25): hitscan, explosions, an arsenal and the secrets counter.
 - **Switch To Next Weapon** (`index: String, weapons: String`) - Moves to the next weapon in the list, wrapping round to the first after the last - the mouse wheel up.
 - **Switch To Previous Weapon** (`index: String, weapons: String`) - Moves to the weapon before this one, wrapping round to the last after the first - the mouse wheel down.
 - **Mark Secret Found** (`name: String, found: String`) - Records a secret the first time it is found and never again, so walking back through the room does not count twice.
+- **Alert Enemies Within** (`at: String, radius: String, target: String, group: String`) - Tells every enemy close enough who to come for. The one that saw you shouts, and the room answers - the difference between fighting one guard and fighting a room.
+- **Retaliate Against Attacker** (`attacker: String, group: String, target: String`) - Makes this one turn on whoever hurt it, but only when the attacker is one of its own kind - so a rocket that splashes two of them starts a fight, and a rocket from you does not make them attack you twice.
+- **Respawn After** (`seconds: String`) - Takes the pickup away, waits, and puts it back - the health and ammo that keep a level playable on the way out. It stops being collectable while it is gone, so nothing picks up an invisible one.
 
 #### Expressions
 - **Current Weapon** (`weapons: String, index: String`) - The weapon that is out right now - the name to look ammo up by and to show on the HUD.
@@ -3625,6 +3715,24 @@ JSON (serialize, parse, validate, and save / load JSON files).
 - **To JSON Text** (`value: String`) - Turns a value like a dictionary or array into compact JSON text for saving or sending.
 - **To JSON Text (pretty)** (`value: String`) - Turns a value into neatly indented JSON text that's easy for humans to read.
 - **From JSON Text** (`text: String`) - Reads JSON text back into a usable value, returning nothing if the text is invalid.
+
+### Keys Doors (`res://addons/eventforge/registration/modules/keys_doors_aces.gd`)
+Keys and doors (Y16): the coloured keycard, said as the sheet's list words.
+
+#### Triggers
+- **On Locked Door Tried** - Runs on a door that was tried without its key, with the key it wanted. The thud, the red flash, the "you need the red keycard" line - all of them go here.
+
+#### Conditions
+- **Has Key** (`key: String, keys: String`) - True while this key is in the list. The prompt on the door, the lit-up icon on the HUD, the shortcut only a keyholder may take.
+- **Needs Key** (`key: String, keys: String`) - True while this key is still missing - the other half of Has Key, so a locked-door hint reads as the sentence it is rather than as a negated test.
+
+#### Actions
+- **Pick Up Key** (`key: String, keys: String`) - Adds a key to the list the player carries. Drop it on the keycard's walked-into trigger, beside the row that takes the card off the floor.
+- **Try Door** (`door: String, keys: String`) - Opens the door when its key is in the list, and tells the door it was refused when it is not. The door decides what refusing looks like - that is its On Locked Door Tried event.
+- **Open Door** (`door: String, opened: String, slide: String, seconds: String`) - Slides the door out of the way, stops it blocking, and leaves it open. The flag is what makes it happen once - walking back through an open door does not re-run the slide.
+
+#### Expressions
+- **Keys Held** (`keys: String`) - How many keys the player is carrying - the number a row of HUD key icons counts up to.
 
 ### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
 lights, layer tint and the world's ambient light.
