@@ -280,6 +280,46 @@ static func run() -> bool:
 	passed = _check("the squad keeps its group in the packed scene",
 		FileAccess.get_file_as_string("res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn").contains("groups=[\"soldier\"]"), true) and passed
 
+	# Y1 / Y2 / Y3 - Combo Fighter: three combos driving three animations, a cancel window, a
+	# buffered punch, and a hit frame the uppercut's OWN animation calls. Every shape in it is one
+	# the reading recognises, which is why the tokens below are spelled exactly as the readings
+	# expect them: a builder that starts writing a different spelling lands here first.
+	#
+	# The RUNTIME behaviour was verified by a NON-headless harness, for the same reason the room
+	# above needed one - this suite has no scene tree and no physics. What it saw:
+	#     press("punch") x2 then press("kick")  -> current_animation == "uppercut", combo emptied
+	#     the method track at 0.35 s            -> hits == 1 (the animation really called the sheet)
+	#     the hit frame's Hitstop row           -> time_scale left 1.0 and was back at 1.0 after
+	#     seek(0.45) then try_cancel()          -> true  (inside the 0.3 - 0.6 window)
+	#     seek(0.75) then try_cancel()          -> false (outside it)
+	passed = _check_sheet("combo_fighter", "res://demo/showcase/combo_fighter/combo_fighter.gd", [
+		"class_name ComboFighter",
+		"combo.append(button)",
+		"combo_timer = 0.5",
+		"match \",\".join(combo):",
+		"\t\t\t$AnimationPlayer.play(\"uppercut\")",
+		"punch_input = Engine.get_physics_frames() + 6",
+		"if (Engine.get_physics_frames() <= punch_input):",
+		"punch_input = Engine.get_physics_frames() - 1",
+		"$AnimationPlayer.current_animation == \"uppercut\" and $AnimationPlayer.current_animation_position > 0.3",
+		"func _on_hit_frame() -> void:",
+		"await get_tree().create_timer(0.05, true, false, true).timeout",
+	]) and passed
+	passed = _check("combo_fighter bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/combo_fighter/combo_fighter.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("combo_fighter scene wires the body, the player and the two labels",
+		"res://demo/showcase/combo_fighter/combo_fighter.tscn",
+		["Body", "AnimationPlayer", "Info", "Moves"]) and passed
+	# The animation side of the contract: the clip is NAMED in the file (AnimationLibrary keys are
+	# not written as resource names on their own), and its method track calls the function the sheet
+	# defines. Without the name, nothing reading the scene could say which clip the hit frame is on.
+	passed = _check("the uppercut clip is named in the scene and calls the hit frame",
+		FileAccess.get_file_as_string("res://demo/showcase/combo_fighter/combo_fighter.tscn")
+			.contains("resource_name = \"uppercut\""), true) and passed
+	passed = _check("the method track names the function the sheet defines",
+		FileAccess.get_file_as_string("res://demo/showcase/combo_fighter/combo_fighter.tscn")
+			.contains("\"method\": &\"_on_hit_frame\""), true) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

@@ -92,6 +92,8 @@ that line with the node you picked.
 | Animation Position | How many seconds into the current animation the play head is. | `current_animation_position` |
 | Animation Length | The current animation's total length in seconds. | `current_animation_length` |
 | Animation Speed | The player's current speed scale (1 = normal). | `speed_scale` |
+| Is Between | True while the play head sits inside a slice of one named clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on. | `current_animation == {animation} and current_animation_position > {from_time} and current_animation_position < {to_time}` |
+| Pause For | Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop. The wait ignores the game's time scale, so it un-pauses even during a slow-motion. | `pause()`, then a real-time `create_timer` wait, then `play()` |
 
 ### AnimatedSprite2D - sprite frames
 
@@ -111,6 +113,8 @@ row's On node cell.
 | Set Image | Shows a different image on the sprite. | `texture = load({path})` |
 | Is Playing (AnimationPlayer) | True while this animation player is running an animation. | `is_playing()` |
 | Current Animation | Returns the name of the animation the sprite is currently using. | `animation` |
+| Is Animation Frame | True when the sprite is showing one particular frame of one particular clip. | `animation == {animation} and frame == {frame}` |
+| On Animation Frame | Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. | the `frame_changed` signal, with the clip-and-frame question added as a condition |
 
 ### Mirror and flip
 
@@ -157,6 +161,22 @@ with no player is a no-op rather than an error.
 | Is In State | True when the state machine is sitting in the named state. | `get("parameters/playback").get_current_node() == {state}` |
 | Current State | Returns the state-machine node the tree is currently in. | `get("parameters/playback").get_current_node()` |
 | Tree Parameter | Returns the current value of an AnimationTree parameter. | `get({path})` |
+
+### Animations that call back - method tracks
+
+An animation can call a function on the animated node: that is a **method track**, and it is the only
+contract in Godot that both sides can honour without either side saying so. **On Animation Event** is
+that function, written as an event.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On Animation Event | Runs when an animation's method track reaches its key. Name the event in plain words and call the same name from the track. | a plain function - `"hit frame"` becomes `func _on_hit_frame() -> void:` |
+
+Name the event **hit frame** here and the track's method must be `_on_hit_frame`. Open a script whose
+functions an animation calls and the sheet says so out loud: the row reads
+*On animation event "hit frame" of "punch"*, because the `.tscn` or `.tres` holding the animation names
+the function and the sheet reads it. **Project Doctor** warns when a method track calls a function no
+script defines - the bug where the key plays, nothing happens, and nothing is reported.
 
 ## Use cases
 
@@ -232,6 +252,40 @@ On hit landed
   -> Pause Animation
   -> Wait  0.08 seconds
   -> Play Animation  (resume)
+```
+
+**7a. The same hit-pause as one row.** Pause For is the three lines above written once, and its wait
+ignores the game's time scale - so the pose un-freezes even if a slow-motion is running.
+
+```
+On hit landed
+  -> Pause For  0.08 s
+```
+
+**7b. A cancel window.** Between 0.3 s and 0.6 s of the uppercut, the next move may interrupt it. Is
+Between is that slice as one question, and the row says which clip the clock belongs to.
+
+```
+On punch pressed
+  Condition: Is Between  0.3 s and 0.6 s of "uppercut"
+    -> Play Animation  "punch"
+```
+
+**7c. The hit frame itself.** On Animation Frame fires the moment the sprite reaches frame 3 of the
+punch, which is where the hitbox belongs - not on a timer that guesses at it.
+
+```
+On Animation Frame  "punch" frame 3
+  -> Set node enabled  $Hitbox = true
+```
+
+**7d. The same thing from the animation's side.** A method track on the punch clip calls
+`_on_hit_frame`, and On Animation Event IS that function. Use this when the timing lives with the
+animator rather than with the programmer.
+
+```
+On Animation Event  "hit frame"
+  -> Set node enabled  $Hitbox = true
 ```
 
 **8. Scrub to a beat.** Seek Animation jumps the play head and refreshes the pose in the same frame, so

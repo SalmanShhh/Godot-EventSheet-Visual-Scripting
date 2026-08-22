@@ -87,7 +87,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set dir to up",
 	"System ▸ Set reading to π / 2",
 	# M40 - the sprite / audio / visibility verbs, by the object's own class
-	"sprite ▸ Set animation to \"run\" (play)",
+	"sprite ▸ Set animation to \"run\" (play from beginning)",
 	"sprite ▸ Stop animation",
 	"sfx ▸ Play sound",
 	"sprite ▸ Set mirrored",
@@ -224,7 +224,7 @@ static func _constant_values() -> bool:
 static func _verb_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play)"],
+		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play from beginning)"],
 		["sprite.stop()", "sprite ▸ Stop animation"],
 		["sfx.play()", "sfx ▸ Play sound"],
 		["sfx.stop()", "sfx ▸ Stop sound"],
@@ -439,7 +439,7 @@ static func _picked_matches_typed() -> bool:
 	sheet.events.append(event_row)
 	var readings: PackedStringArray = _render(sheet)
 	for expected: String in [
-		"sprite ▸ Set animation to \"run\" (play)",
+		"sprite ▸ Set animation to \"run\" (play from beginning)",
 		"sprite ▸ Stop animation",
 		"sfx ▸ Play sound",
 		"sprite ▸ Set mirrored",

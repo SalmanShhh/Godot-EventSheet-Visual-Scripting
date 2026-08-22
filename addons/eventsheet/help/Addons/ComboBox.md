@@ -91,6 +91,7 @@ On the canvas these rows read as styled sentences - parameter values in **bold**
 
 - Register combo **id**: **sequence** within **timing_window** s
 - Press input **token**
+- Set animation **animation** for combo **id**
 
 Every name below is exactly what appears in the picker. Parameters are listed in order.
 
@@ -130,6 +131,8 @@ On Combo Matched -> Player | ComboBox: Add hit  ComboBox.Matched Id, 100
 On Finisher      -> Player | ComboBox: Bank the chain
 On Player Hit    -> Player | ComboBox: Drop the chain
 ```
+| **Set Animation For Combo** | `id`, `player`, `animation` | Wires a registered combo to an animation: when that combo matches, the player you name plays that clip, and On Combo Matched still fires for everything else the move does. One row per move - the whole move list is a table. |
+| **Clear Animation For Combo** | `id` | Unwires a combo from its animation. The combo keeps matching and keeps firing its trigger; it simply stops playing a clip of its own. |
 
 ### Conditions
 
@@ -139,6 +142,7 @@ On Player Hit    -> Player | ComboBox: Drop the chain
 | **Is Combo Enabled** | `id` | Whether a combo is registered and enabled. |
 | **Is Buffer Empty** | (none) | Whether the input buffer has no tokens. |
 | **Combo Has Tag** | `id`, `tag` | Whether a combo carries a tag. |
+| **Combo Has Animation** | `id` | Whether a combo has been wired to an animation. |
 
 ### Expressions
 
@@ -163,6 +167,7 @@ On Player Hit    -> Player | ComboBox: Drop the chain
 | **Partial Length** | `index` | int | The total length of the part-way combo at an index (pair with Partial Progress for a fill bar). |
 | **Combo Count** | (none) | int | How many combos are registered. |
 | **Combo Id At** | `index` | String | The registered combo id at an index (use with Combo Count to list them). |
+| **Animation For Combo** | `id` | String | The animation a combo is wired to play; `""` when it is wired to none. |
 
 ### Triggers
 
@@ -477,6 +482,51 @@ On practice mode disabled
 ```
 
 Only combos registered with a `timing_window` of `-1` follow **Set Default Timing**, so register the movelist with `-1` and this one toggle retunes every move at once.
+
+### 16. The move list as a table
+
+**Scenario:** A fighter with twenty moves. "This input sequence plays this animation" is the whole
+character, and writing twenty events that each say it is twenty chances to say it slightly differently.
+Set Animation For Combo is the one gesture that joins the two halves, so the move list becomes a table
+of rows you can read down.
+
+```
+On Ready
+  -> ComboBox: Register Combo  "uppercut", "punch,punch,kick", 0.5
+  -> ComboBox: Set Animation For Combo  "uppercut", $AnimationPlayer, "uppercut"
+  -> ComboBox: Register Combo  "sweep", "kick,kick", 0.5
+  -> ComboBox: Set Animation For Combo  "sweep", $AnimationPlayer, "sweep"
+```
+
+The trigger still fires for everything else the move does - damage, sound, the hit spark - so wiring
+the animation here takes nothing away:
+
+```
+On Combo Matched
+  -> Hitstop  0.05 s
+  -> Play Sound  "swing"
+```
+
+A combo with no animation wired plays nothing and still fires its trigger, and a player that has left
+the tree is skipped rather than erroring: the pack's job is detecting, and a missing clip must never
+stop a move coming out.
+
+### 17. Opening a cancel window on the move you just played
+
+**Scenario:** A follow-up move may only interrupt the uppercut between 0.3 s and 0.6 s into it. Is
+Between (Animation) is that slice as one question, and it pairs with this pack directly - the combo
+says WHICH move, the window says WHEN it may be cancelled.
+
+```
+On Combo Matched
+  Condition: Matched Id = "uppercut"
+    -> ComboBox: Disable Combos By Tag  "ground_move"
+
+On punch pressed
+  Condition: Is Between  0.3 s and 0.6 s of "uppercut"
+    -> ComboBox: Enable Combos By Tag  "ground_move"
+    -> ComboBox: Press Input  "punch"
+```
 
 ### Other use cases
 

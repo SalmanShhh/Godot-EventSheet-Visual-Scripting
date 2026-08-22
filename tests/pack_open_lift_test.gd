@@ -72,9 +72,11 @@ static func run() -> bool:
 	# The colour-palette pack adds none - it is a data asset and publishes no verbs.
 	# The boomer parcel: +4 FPS Controller verbs; pins: +14 Pin, +24 Pin 3D; skills: +26 Upgrades,
 	# +3 Abilities; skateboard: +32 Skateboard, +34 Skateboard 3D, +7 Combo Box chain rows, +1 HUD
-	# Kit needle. Recomputed as base + every delta at merge.
+	# Kit needle; combos: +4 more Combo Box rows - the move table (Set / Clear Animation For Combo)
+	# and the two that read it back (Combo Has Animation, Animation For Combo). Recomputed as base
+	# + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
-		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1) and all_passed
+		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 4) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
