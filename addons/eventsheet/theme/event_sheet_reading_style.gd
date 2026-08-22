@@ -113,6 +113,17 @@ extends Resource
 ## The plate a chip sits on when it brought no colour of its own.
 @export var default_chip_plate_color: Color = Color(1.0, 1.0, 1.0, 0.035)
 
+# ── Variable rows ─────────────────────────────────────────────────────────────────────────────
+## The flat wash behind every variable row and the 2px rule down its left edge - the lilac that
+## makes a declaration unmistakable at a glance, so a `var` line never reads as an event. The wash
+## is ONE colour at one alpha; the bundled presets stay flat.
+@export var variable_row_wash_color: Color = Color(0.55, 0.47, 0.85, 0.10)
+@export var variable_row_rule_color: Color = Color(0.62, 0.54, 0.92, 0.85)
+## The right-edge colour of an OPTIONAL fade across the wash. Defaults to the wash itself, which is
+## what keeps every bundled preset flat; a theme that wants a fade to the row's right edge states a
+## different colour here and gets one, with no other token to keep in step.
+@export var variable_row_wash_end_color: Color = Color(0.55, 0.47, 0.85, 0.10)
+
 # ── Small marks ───────────────────────────────────────────────────────────────────────────────
 ## The outline stroked around a colour value's swatch, so a pale colour still reads as a swatch.
 @export var color_swatch_border_color: Color = Color(0.0, 0.0, 0.0, 0.55)

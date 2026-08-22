@@ -178,6 +178,9 @@ drag_bubble_background_color = Color(0.4855, 0.4445, 0.7720001, 0.30299997)
 drag_bubble_text_color = Color(0.91679996, 0.92679995, 0.94720006, 1)
 text_selection_color = Color(0.55, 0.5, 0.88, 0.3)
 default_chip_plate_color = Color(0.95, 0.96, 0.98, 0.035)
+variable_row_wash_color = Color(0.55, 0.5, 0.88, 0.1)
+variable_row_rule_color = Color(0.55, 0.5, 0.88, 0.85)
+variable_row_wash_end_color = Color(0.55, 0.5, 0.88, 0.1)
 color_swatch_border_color = Color(0.95, 0.96, 0.98, 0.55)
 
 [resource]

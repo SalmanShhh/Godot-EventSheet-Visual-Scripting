@@ -302,6 +302,9 @@ const _TOKEN_DESCRIPTIONS := {
 	"drag_bubble_text_color": "The words in that bubble.",
 	"text_selection_color": "The band behind selected text while you are editing a cell.",
 	"default_chip_plate_color": "The plate a chip sits on when it brought no colour of its own.",
+	"variable_row_wash_color": "The flat tint behind every variable row, so a declaration never reads as an event.",
+	"variable_row_rule_color": "The 2px rule down the left edge of a variable row, and the ink its scope word wears.",
+	"variable_row_wash_end_color": "The right-edge colour of an optional fade across that wash. Same as the wash means flat.",
 	"color_swatch_border_color": "The outline around a colour value's swatch, so a pale colour still reads as a swatch.",
 	"name_highlight_strength": "How strongly every other use of a hovered variable lights up, inside that variable's own scope.",
 	# ── Bars around the sheet ────────────────────────────────────────────────────────────────

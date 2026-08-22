@@ -79,6 +79,14 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	reading.bookmark_color = _warning_for(background)
 	reading.event_number_rail_color = event_style.row_border_color
 
+	# ── Variable rows: the theme's own accent, laid on flat ──
+	# A declaration is not an event, and the wash is what says so before a single word is read. It
+	# takes the preset's accent rather than one fixed lilac, so a green theme washes its variables
+	# green; the fade end starts equal to the wash, which is what keeps every bundled preset flat.
+	reading.variable_row_wash_color = Color(accent.r, accent.g, accent.b, 0.13 if pale else 0.10)
+	reading.variable_row_rule_color = Color(accent.r, accent.g, accent.b, 0.85)
+	reading.variable_row_wash_end_color = reading.variable_row_wash_color
+
 	# ── Guides and gestures ──
 	reading.indent_guide_color = Color(ink.r, ink.g, ink.b, 0.08)
 	reading.tree_guide_color = Color(ink.r, ink.g, ink.b, 0.20)
