@@ -56,7 +56,10 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# The PATTERNS this file writes - the numbers counted down by a delta and asked about against
 	# zero, the lists used as object pools. No single line can answer either question, so both are
 	# answered from one walk of the file here and handed to the grammar as ordinary context.
-	var patterns: Dictionary = EventSheetPatternReadings.facts(ordered_code_lines(sheet))
+	# The file's lines in row order, walked ONCE per rebuild: three of the hooks below read them,
+	# and joining a whole sheet's statements is not free at the sizes the perf gate measures.
+	var file_lines: PackedStringArray = ordered_code_lines(sheet)
+	var patterns: Dictionary = EventSheetPatternReadings.facts(file_lines)
 	var extras: Dictionary = {
 		"script_object": script_object_name(sheet),
 		"engine_properties": engine_property_set(sheet),
@@ -126,7 +129,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# lines) while a prerequisite walk stays verbatim inside a function (so it is only in the
 	# ordered ones), and the shape is exactly the two of them together.
 	var owned_lines: PackedStringArray = input_lines.duplicate()
-	owned_lines.append_array(ordered_code_lines(sheet))
+	owned_lines.append_array(file_lines)
 	extras.merge(EventSheetPatternReadings.skill_tree_facts(owned_lines), true)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
@@ -140,7 +143,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# flag says it is running, which object a place is copied from, and which tween fades to nothing.
 	# Not one of those questions can be answered from a single line, so all of them are answered from
 	# one walk here and handed to the grammar as ordinary context.
-	extras.merge(EventSheetBehaviorShapes.facts(ordered_code_lines(sheet)), true)
+	extras.merge(EventSheetBehaviorShapes.facts(file_lines), true)
 	# ── T10 lens hook ──────────────────────────────────────────────────────────────────────────
 	# Whether each object's Z order counts from its parent or from the layer. The file states it on a
 	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
