@@ -173,6 +173,51 @@ What changed in the build you have installed (v0.17.0), in the words the release
   new pack. Measured over 360 physics frames: the rope's length never exceeds its 90 px and drops to
   63.8 px of slack, the bar holds 70.000 px at both ends of the run, and the soft pin trails up to
   68.7 px behind its anchor.
+### Added - a fighting game's three timing tricks, and the animations that call back
+
+- **The combo detector everybody writes by hand reads as the behaviour it is.** A list appended to,
+  a countdown that empties it, and a `match` on the joined list is not three unrelated shapes: it is
+  the Combo Box behaviour, spelled out. The push and the window beneath it read as one
+  `Combo Box ▸ Press input \"punch\"` row with the window as its note, and every arm of the match reads
+  as its own TRIGGER - `➜ Combo Box ▸ On combo \"punch punch kick\"` - with the clip it plays under it
+  as the Set animation row the sheet already had. Emptying the buffer inside an arm leaves the action
+  lane, because the trigger above already stands for it. Nothing about the file moves: it still saves
+  every byte it opened with.
+- **Which end of a clip a play starts from is now said out loud.** `play(\"x\")` reads *(play from
+  beginning)* and the four-argument `play(\"x\", -1, 1.0, true)` reads *(play from end)*, a difference
+  the single word \"(play)\" used to hide; `queue(\"x\")` reads *Set animation to \"x\" after the current
+  one*, which is what a combo chain is made of.
+- **The move list is a table.** Combo Box gained **Set Animation For Combo** - one row per move,
+  wiring a registered sequence to the clip it plays - plus **Clear Animation For Combo**, **Combo Has
+  Animation** and the **Animation For Combo** expression. On Combo Matched still fires for everything
+  else the move does, so a twenty-move character is twenty table rows rather than twenty events that
+  each say the same thing.
+- **Cancel windows have a name.** `Animation ▸ Is Between` is the slice of one named clip another
+  move is allowed to interrupt it in, and the clip is part of the question on purpose - a window that
+  also opened during idle would not be a window. Two hand-written comparisons on one play head read
+  back as that one row.
+- **Hit-stop reads as one row rather than three.** The time scale down, the REAL-TIME wait and the
+  time scale back read as the shipped `Hitstop` row, with a note saying the whole game freezes and
+  how far. The tell is the ignore-time-scale flag on the wait: a freeze that waits on the clock it
+  just stopped never lifts, so a run missing that flag keeps reading as the three assignments it is.
+  For the per-object twin - one character held still while the world runs on - `Animation ▸ Pause For`
+  is new, and reads back the same way.
+- **Input buffering, counted in frames.** **Buffer Input**, **Is Input Buffered** and **Consume
+  Buffered Input** are the three rows behind the jump pressed just before landing and the punch
+  pressed during the last move. Frames rather than seconds, because that is the unit the genre thinks
+  in, and the variable holds the frame the memory expires on, so nothing has to be counted down.
+- **Animations can raise events.** **On Animation Frame** fires the moment a sprite reaches one frame
+  of one clip, adding the clip-and-frame question as a condition you can see and edit; **On Animation
+  Event** IS the function an AnimationPlayer's METHOD TRACK calls, so the animator can move the hit
+  frame without anybody touching the sheet. Open a script whose functions an animation calls and the
+  sheet says so - *On animation event \"hit frame\" of \"punch\"* - because the scene or resource holding
+  the animation names the function and the sheet now reads it.
+- **The Doctor catches the silent-nothing bug.** A method track that calls a function no script in
+  the project defines is the one failure with no symptom at all: the key plays, nothing is called,
+  and nothing is reported. It is now a warning naming the file, the clip and the function.
+- **A new showcase, `demo/showcase/combo_fighter/`.** Three combos driving three animations, a cancel
+  window, a buffered punch, and a hit frame the uppercut's own method track calls. Every shape in it
+  is one the reading recognises, so the showcase is also the fixture.
 
 ### Added - a board keeps its speed, a rail is a curve you ride, and both read back
 
