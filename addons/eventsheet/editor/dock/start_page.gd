@@ -43,6 +43,8 @@ const SHOWCASE_PITCHES: Dictionary = {
 	"swarm": ["Arcade", "Hundreds of things moving at once, and still readable."],
 	"draw_lab": ["Toy", "Draw shapes from events - a sandbox for the Drawing pack."],
 	"input_rebind": ["Systems", "A rebinding screen that saves what the player chose."],
+	"skate_park": ["Sports", "A board that keeps its speed, a rail to grind and a chain to bank."],
+	"skate_park_3d": ["Sports", "The same run in three dimensions, with a bank you launch off."],
 }
 
 const SHOWCASE_DIR: String = "res://demo/showcase"

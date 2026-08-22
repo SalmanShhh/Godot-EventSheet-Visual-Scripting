@@ -379,6 +379,83 @@ already writes keep that row (**Add To Variable** for the acceleration, **Apply 
 To**, **Is Within Distance**) rather than gaining a duplicate. Where a pack covers the whole shape,
 attaching it is the tidier answer, and that is what the pattern chip offers first.
 
+## Momentum movement, and riding a rail
+
+Two shapes that keep turning up in games that have nothing to do with each other, and both are
+worth naming because the alternative is arithmetic nobody can read back.
+
+### Momentum is not acceleration
+
+A run-and-jump controller has a speed it *wants* to be at: it accelerates toward that speed while
+you hold a direction and decelerates the moment you let go. That is the right model for legs.
+
+A board, a sled, a trolley, a downhill bike has no target speed. It has whatever it has, and only
+four things change it:
+
+- **a push**, which adds a fixed amount once (holding the button is worth nothing);
+- **the slope**, which adds or removes speed continuously and is the only continuous source;
+- **friction**, which removes a little, slowly;
+- **a brake**, which removes a lot, on demand.
+
+The slope is the interesting one, and it is one row: **Roll With The Slope** takes the floor normal
+under the body and projects gravity along the surface. Called every physics tick while on the
+ground, that single line is pumping, bowl carving, and a halfpipe that returns you to the coping,
+with no curve anywhere in your sheet. In 3D the same row projects gravity onto the surface normal,
+which is what makes a bank carve.
+
+```
+Every tick (physics)
+  Condition: Player | Platform: Is on floor
+    -> Player | Skateboard: Roll with the slope
+On push pressed -> Player | Skateboard: Push toward max speed by 40
+```
+
+The rest of the model follows from it. Leaving the ground keeps the horizontal speed exactly as it
+was, so a gap either clears or does not at the moment you left the lip. A trick is rotation in the
+air with a landing test - the board within so many degrees of the floor is a clean landing, and
+anything crookeder is a bail. And a trick chain multiplies every trick landed without touching
+down, which is what turns "one more" into a decision.
+
+Both packs are called **Skateboard** and **Skateboard 3D**, and the words are the same on either.
+
+### A grind is an attachment, not a movement
+
+Riding a rail is not the body moving; it is the body *stopping being a body that falls* and
+becoming a point on a curve. That is three questions, and any drawn `Path2D` or `Path3D` answers
+all three:
+
+- **Where on this curve am I closest to?** `get_closest_offset` on the curve, compared against a
+  distance, is the whole of **Is Near Rail**.
+- **Am I locked to it?** **Start Grinding** remembers the rail and the offset.
+- **How far along am I now?** **Grind Along Rail** walks the offset forward by a speed times delta
+  and puts the body on the point the curve bakes there.
+
+```
+Every tick (physics)
+  ✕ Player | Grind: Is grinding
+  Condition: Player | Platform: Is falling
+  Condition: Player | Grind: Is near rail  Rail, 12
+    -> Player | Grind: Start grinding  Rail
+Every tick (physics)
+  Condition: Player | Grind: Is grinding
+    -> Player | Grind: Grind along the rail at 320
+Player | Grind: Has reached the end
+  -> Player | Grind: Hop off the rail at 260
+```
+
+**Keep Momentum** rides at the speed you arrived with instead of a fixed one, and **Ride Zipline**
+is the same lock-on with the line's own slope driving the speed. While a grind runs, gravity,
+friction and the landing test all stand down - the rail owns the position - and **Hop Off** hands
+the body back with an upward kick and whatever speed the ride had built.
+
+Nothing about either shape is specific to skating. Ziplines, cable cars, monorails, balance beams
+and freight on a drawn line are the same six rows in a game that never mentions a board.
+
+Both shapes are also **read**: open a hand-written file that projects gravity along the floor
+normal, or that snaps to a curve by closest offset and walks it by baked sample, and the rows come
+back in these words rather than as the arithmetic they are written with. Nothing is rewritten -
+the file saves back byte for byte.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into

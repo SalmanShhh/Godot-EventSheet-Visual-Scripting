@@ -78,6 +78,7 @@ Attach to a node to move it.
 - [Move To](Move-To.md) - move a node to a point or along a path.
 - [Follow Path](Follow-Path.md) - walk a drawn Path2D at a real speed, once, looping or ping-pong, with On Path Finished at the end.
 - [Follow](Follow.md) - chase or trail another node with easing.
+- [Skateboard](Skateboard.md) - momentum movement on a board: a push you keep, gravity projected along the slope so halfpipes work, ollies, manuals, spins and flips judged on landing, rail and zipline grinds, and a trick chain that multiplies until you bank it.
 - [Pin](Pin.md) - stick one object to another: position, angle or both, with the offset remembered.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
 - [Sine](Sine.md) - oscillate a property (position, size, angle) on a sine wave.
@@ -90,6 +91,7 @@ Attach to a node to move it.
 - [Bullet 3D](Bullet-3D.md) - fire a 3D node in a straight line.
 - [Sine 3D](Sine-3D.md) - oscillate a 3D property on a sine wave.
 - [Orbit 3D](Orbit-3D.md) - circle a 3D node around a centre.
+- [Skateboard 3D](Skateboard-3D.md) - the board on a surface: gravity projected onto the floor normal so bowls carve, the board kept flat on ramps, a named moment for leaving a halfpipe lip, Path3D grinds, and landings judged by the board's up against the surface.
 
 ## AI and logic
 

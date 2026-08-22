@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/skate_park/skate_park.gd" id="1_e1swh"]
+[ext_resource type="Script" path="res://eventsheet_addons/skateboard/skateboard_behavior.gd" id="2_1lx77"]
+[ext_resource type="Script" path="res://eventsheet_addons/checkpoint/checkpoint_behavior.gd" id="3_gsbxv"]
+[ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="4_ff6t2"]
+
+[sub_resource type="Curve2D" id="Curve2D_nv2uu"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 500, 552, 0, 0, 0, 0, 800, 552)
+}
+point_count = 2
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u44wp"]
+size = Vector2(24, 28)
+
+[node name="SkatePark" type="Node2D"]
+script = ExtResource("1_e1swh")
+
+[node name="Slope" type="StaticBody2D" parent="."]
+
+[node name="Collider" type="CollisionPolygon2D" parent="Slope"]
+polygon = PackedVector2Array(0, 300, 360, 580, 0, 580)
+
+[node name="Fill" type="Polygon2D" parent="Slope"]
+color = Color(0.3, 0.36, 0.48, 1)
+polygon = PackedVector2Array(0, 300, 360, 580, 0, 580)
+
+[node name="Ground" type="StaticBody2D" parent="."]
+
+[node name="Collider" type="CollisionPolygon2D" parent="Ground"]
+polygon = PackedVector2Array(0, 580, 1152, 580, 1152, 648, 0, 648)
+
+[node name="Fill" type="Polygon2D" parent="Ground"]
+color = Color(0.22, 0.26, 0.34, 1)
+polygon = PackedVector2Array(0, 580, 1152, 580, 1152, 648, 0, 648)
+
+[node name="Quarterpipe" type="StaticBody2D" parent="."]
+
+[node name="Collider" type="CollisionPolygon2D" parent="Quarterpipe"]
+polygon = PackedVector2Array(940, 580, 963.4947, 578.4601, 986.5874, 573.86664, 1008.883, 566.29834, 1030, 555.8846, 1049.577, 542.8036, 1067.2792, 527.27924, 1082.8036, 509.57706, 1095.8845, 490, 1106.2983, 468.88303, 1113.8667, 446.58743, 1118.4601, 423.49472, 1120, 400, 1152, 648, 940, 648)
+
+[node name="Fill" type="Polygon2D" parent="Quarterpipe"]
+color = Color(0.3, 0.36, 0.48, 1)
+polygon = PackedVector2Array(940, 580, 963.4947, 578.4601, 986.5874, 573.86664, 1008.883, 566.29834, 1030, 555.8846, 1049.577, 542.8036, 1067.2792, 527.27924, 1082.8036, 509.57706, 1095.8845, 490, 1106.2983, 468.88303, 1113.8667, 446.58743, 1118.4601, 423.49472, 1120, 400, 1152, 648, 940, 648)
+
+[node name="Rail" type="Path2D" parent="."]
+curve = SubResource("Curve2D_nv2uu")
+
+[node name="RailMark" type="Line2D" parent="."]
+points = PackedVector2Array(500, 552, 800, 552)
+width = 4.0
+default_color = Color(0.66, 0.8, 1, 1)
+
+[node name="Skater" type="CharacterBody2D" parent="."]
+position = Vector2(110, 300)
+
+[node name="Collider" type="CollisionShape2D" parent="Skater"]
+shape = SubResource("RectangleShape2D_u44wp")
+
+[node name="Board" type="ColorRect" parent="Skater"]
+offset_left = -12.0
+offset_top = -14.0
+offset_right = 12.0
+offset_bottom = 14.0
+color = Color(1, 0.78, 0.32, 1)
+
+[node name="Skateboard" type="Node" parent="Skater"]
+script = ExtResource("2_1lx77")
+balance_drift = 0.5
+friction = 40.0
+
+[node name="Checkpoint" type="Node" parent="Skater"]
+script = ExtResource("3_gsbxv")
+
+[node name="Hud" type="Label" parent="."]
+offset_left = 28.0
+offset_top = 22.0
+offset_right = 28.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 24
+text = "Score 0   chain 0 x1   Space push / Up ollie / Right spin"
+
+[node name="HudKit" type="Node" parent="Hud"]
+script = ExtResource("4_ff6t2")
+auto_connect_buttons = false
+
+[node name="BalanceMeter" type="Control" parent="Hud"]
+anchors_preset = 0
+offset_top = 40.0
+offset_right = 220.0
+offset_bottom = 54.0
+mouse_filter = 2
+
+[node name="Backing" type="ColorRect" parent="Hud/BalanceMeter"]
+layout_mode = 0
+offset_right = 220.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.35)
