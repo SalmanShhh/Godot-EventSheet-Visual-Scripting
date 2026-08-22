@@ -4196,3 +4196,11 @@ Momentum movement on a board,ボードの勢いで進む移動
 "speed is kept rather than chased, and the slope under you is where it comes from",速度は追いかけるものではなく保つもので、足元の斜面から生まれる
 Skateboard,スケートボード
 Skateboard ▸ Brake by {amount},スケートボード ▸ {amount} だけブレーキ
+Water,水
+Counts as water,水として扱う
+Not water,水ではない
+Going in and coming out raise and lower a flag the sheet can test.,入るとフラグが立ち、出ると下がります。シートはそれを判定できます。
+Add The Water Rows,水の行を追加
+Add them,追加する
+%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s は水として印が付いています。入るときにフラグを立て、出るときに下げる 2 行を追加しますか？
+Marking %s as water.,%s を水として印を付けます。

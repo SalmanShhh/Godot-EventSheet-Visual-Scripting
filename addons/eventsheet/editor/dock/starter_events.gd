@@ -259,6 +259,56 @@ static func locked_door_template() -> String:
 	return ""
 
 
+# ── Y11. The water rows one area marked `water` is offered on drop ────────────────────────────
+# A volume the reader calls water has two events, not one: the way in and the way out. Together they
+# hold a flag that says "I am in the water", which is the fact every swimming rule is then written
+# against - the sheet can test it in any condition, and the swim reading recognises the pair.
+
+## The flag the two rows raise and lower. One name, so a sheet that took the rows from a drop and a
+## sheet that took them from a traversal starter are the same sheet.
+const WATER_VARIABLE := "in_water"
+
+
+## The flag declaration a sheet needs before the water rows mean anything, in the sheet's own
+## variables-dictionary shape. Only added when the sheet does not declare it already.
+static func water_variable_entry() -> Dictionary:
+	return {"type": "bool", "default": false, "exported": false,
+		"attributes": {"tooltip": "True while the body is inside a volume marked water. Every swimming rule is written against this."}}
+
+
+## The two events an object marked `water` offers: its own walked-in trigger raising the flag, and
+## its walked-out trigger lowering it, in that order.
+static func water_volume_events(object_label: String, host_class: String = "Area3D") -> Array:
+	return [
+		water_flag_event(object_label, host_class, "body_entered", "true"),
+		water_flag_event(object_label, host_class, "body_exited", "false")
+	]
+
+
+## One half of the pair: the area's own trigger with a Set value row in the action lane, writing the
+## flag literally - `in_water = true` on the way in, `in_water = false` on the way out.
+static func water_flag_event(object_label: String, host_class: String, signal_name: String,
+		value: String) -> EventRow:
+	var event: EventRow = build_event(entry_for("signal:%s" % signal_name, host_class))
+	event.trigger_source_path = object_label
+	var write_flag: ACEAction = ACEAction.new()
+	write_flag.provider_id = "Core"
+	write_flag.ace_id = "SetVar"
+	write_flag.codegen_template = set_value_template()
+	write_flag.params = {"var_name": WATER_VARIABLE, "value": value}
+	event.actions.append(write_flag)
+	return event
+
+
+## The template the shipped Set value row writes, taken from the registry rather than re-typed here
+## - the same no-drift rule the secrets counter follows.
+static func set_value_template() -> String:
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if str(descriptor.ace_id) == "SetVar":
+			return str(descriptor.codegen_template)
+	return ""
+
+
 ## `{"name": ..., "args": [...]}` for a signal the host class itself declares, or {} when the class
 ## does not have one by that name (which is what makes it a signal the sheet declares).
 static func _native_signal(host_class: String, signal_name: String) -> Dictionary:

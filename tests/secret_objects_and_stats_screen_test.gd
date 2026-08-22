@@ -103,10 +103,11 @@ static func _secret_mark() -> bool:
 		EventSheetObjectProperties.is_secret("res://level.gd", "SecretRoom"), true) and ok
 	ok = _check("the mark belongs to the file that made it",
 		EventSheetObjectProperties.is_secret("res://other.gd", "SecretRoom"), false) and ok
-	# The panel offers the mark as the one WRITABLE row, and says what ticking it does.
+	# The panel offers the mark as a WRITABLE row, and says what ticking it does. An area carries a
+	# second tick beside it (Y11's water mark), so the row is picked by the mark it writes.
 	var secret_row: Dictionary = {}
 	for row: Dictionary in EventSheetObjectProperties.property_rows(area, "", "res://level.gd"):
-		if str(row.get("form", "")) == "check":
+		if str(row.get("mark", "")) == "secret":
 			secret_row = row
 	ok = _check("the popup offers the mark as a tick box",
 		str(secret_row.get("label", "")), "Secret") and ok

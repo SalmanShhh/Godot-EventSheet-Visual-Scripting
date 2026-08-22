@@ -4196,3 +4196,11 @@ Momentum movement on a board,靠惯性推进的滑板移动
 "speed is kept rather than chased, and the slope under you is where it comes from",速度是保住的而不是追出来的，它来自脚下的坡度
 Skateboard,滑板
 Skateboard ▸ Brake by {amount},滑板 ▸ 刹车 {amount}
+Water,水
+Counts as water,计为水
+Not water,不是水
+Going in and coming out raise and lower a flag the sheet can test.,进入时标记被置为真，离开时置为假，事件表可以检查它。
+Add The Water Rows,添加水的行
+Add them,添加
+%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 已标记为水。是否添加在进入时置真、离开时置假的两行？
+Marking %s as water.,将 %s 标记为水。

@@ -5066,6 +5066,11 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 	if not EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label).is_empty():
 		_open_locked_door_offer(object_label, on_action_lane)
 		return
+	# Y11 - the same offer for the second mark: an area marked `water` has two events worth writing,
+	# the way in and the way out, and dropping it offers the pair before the picker.
+	if EventSheetObjectProperties.is_water(_source_path_for_secrets(), object_label):
+		_open_water_rows_offer(object_label, on_action_lane)
+		return
 	add_row_for_object(object_label, on_action_lane)
 
 
@@ -5176,6 +5181,59 @@ func _on_locked_door_offer_accepted() -> void:
 		return
 	_refresh_after_edit()
 	_mark_dirty(EventSheetL10n.translate("Trying %s when the player walks in.") % object_label)
+
+
+var _water_offer_dialog: ConfirmationDialog = null
+var _water_offer_line: Label = null
+var _water_offer_label: String = ""
+var _water_offer_on_action_lane: bool = false
+
+
+## Y11. The offer a water volume's drop opens: one sentence saying what the two rows would be, "Add
+## them" to write the pair, and Cancel to get the ordinary drop instead. Same shape as the secret
+## offer, built with the shared popup helpers.
+func _open_water_rows_offer(object_label: String, on_action_lane: bool) -> void:
+	_water_offer_label = object_label
+	_water_offer_on_action_lane = on_action_lane
+	if _water_offer_dialog == null:
+		_water_offer_dialog = ConfirmationDialog.new()
+		_water_offer_dialog.title = EventSheetL10n.translate("Add The Water Rows")
+		_water_offer_dialog.ok_button_text = EventSheetL10n.translate("Add them")
+		_water_offer_dialog.get_cancel_button().text = EventSheetL10n.translate("Just add a row")
+		_water_offer_dialog.confirmed.connect(_on_water_rows_offer_accepted)
+		_water_offer_dialog.canceled.connect(func() -> void:
+			add_row_for_object(_water_offer_label, _water_offer_on_action_lane))
+		var body: VBoxContainer = EventSheetPopupUI.form_box()
+		_water_offer_line = EventSheetPopupUI.hint_label("")
+		body.add_child(_water_offer_line)
+		_water_offer_dialog.add_child(EventSheetPopupUI.margined(body))
+		add_child(_water_offer_dialog)
+		EventSheetL10n.apply_to(_water_offer_dialog)
+	# The dialog is built once and reused, so the object it is about is written on it EVERY open.
+	_water_offer_line.text = EventSheetL10n.translate(
+		"%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?") \
+		% object_label
+	_water_offer_dialog.popup_centered(Vector2i(460, 150))
+
+
+## "Add them": the two events that hold the sheet's in-water flag, plus the flag itself when the
+## sheet does not declare one yet. One undo step.
+func _on_water_rows_offer_accepted() -> void:
+	var object_label: String = _water_offer_label
+	var entry: Dictionary = EventSheetObjectProperties.find_entry(_current_sheet, object_label)
+	var host_class: String = str(entry.get("class", "")).strip_edges()
+	var changed: bool = _perform_undoable_sheet_edit("Add Water Rows", func() -> bool:
+		if not _current_sheet.variables.has(EventSheetStarterEvents.WATER_VARIABLE):
+			_current_sheet.variables[EventSheetStarterEvents.WATER_VARIABLE] = \
+				EventSheetStarterEvents.water_variable_entry()
+		for event: EventRow in EventSheetStarterEvents.water_volume_events(
+				object_label, host_class if not host_class.is_empty() else "Area3D"):
+			_current_sheet.events.append(event)
+		return true)
+	if not changed:
+		return
+	_refresh_after_edit()
+	_mark_dirty(EventSheetL10n.translate("Marking %s as water.") % object_label)
 
 
 ## T13 - something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what

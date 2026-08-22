@@ -4196,3 +4196,11 @@ Momentum movement on a board,Движение на доске по инерци�
 "speed is kept rather than chased, and the slope under you is where it comes from","Скорость сохраняется, а не набирается заново, и приходит от склона под тобой"
 Skateboard,Скейтборд
 Skateboard ▸ Brake by {amount},Скейтборд ▸ Тормозить на {amount}
+Water,Вода
+Counts as water,Считается водой
+Not water,Не вода
+Going in and coming out raise and lower a flag the sheet can test.,"Вход поднимает флаг, а выход опускает его. Лист может его проверить."
+Add The Water Rows,Добавить строки воды
+Add them,Добавить
+%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,"%s отмечен как вода. Добавить две строки, которые поднимают флаг на входе и опускают его на выходе?"
+Marking %s as water.,%s отмечается как вода.

@@ -18,9 +18,9 @@ extends RefCounted
 # with the rest of the editor about what it is showing.
 
 
-# ── X25. The one thing this panel WRITES: is this object a secret? ───────────────────────────
-# Every other row here answers a question about the object; the secret mark is the reader's own
-# answer, so it is a checkbox rather than a value. It is authoring metadata about how the sheet
+# ── X25 / Y11. The things this panel WRITES: the marks the reader puts on an object ──────────
+# Every other row here answers a question about the object; a mark is the reader's own answer, so it
+# is a checkbox rather than a value. Two of them ship - "this is a secret" and "this is water". It is authoring metadata about how the sheet
 # treats the object, not game data the object carries, which is why it lives in the same
 # per-project editor store the sheet map's layout and the saved views already use rather than in
 # the sheet file (a sheet is emitted GDScript, and a mark that changed the emitted bytes would
@@ -28,8 +28,15 @@ extends RefCounted
 const SECRET_META_SECTION := "eventsheets"
 const SECRET_META_KEY := "object_secret_flags"
 
+## Y11. The second mark, kept in its own store beside the first: this area is WATER. Same reasoning,
+## same place - it says how the sheet treats the object, and the game never reads it, so it must not
+## reach the emitted bytes.
+const WATER_META_KEY := "object_water_flags"
+
 static var _secret_flags: Dictionary = {}
 static var _secret_flags_loaded: bool = false
+static var _water_flags: Dictionary = {}
+static var _water_flags_loaded: bool = false
 
 
 ## The store key for one object: the file that names it plus its label, so two sheets with an
@@ -74,6 +81,45 @@ static func _ensure_secret_flags() -> void:
 	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, SECRET_META_KEY, {})
 	if stored is Dictionary:
 		_secret_flags = (stored as Dictionary).duplicate()
+
+
+## Y11. True when the reader has marked this area water - the flag the canvas drop reads before it
+## offers the two rows that raise and lower the sheet's own in-water flag.
+static func is_water(source_path: String, object_label: String) -> bool:
+	_ensure_water_flags()
+	return bool(_water_flags.get(secret_key(source_path, object_label), false))
+
+
+## Y11. Marks (or unmarks) an area water and remembers it for the project. The key shape is the
+## secret mark's - file plus label - so two sheets naming the same area mark their own.
+static func set_water(source_path: String, object_label: String, marked: bool) -> void:
+	_ensure_water_flags()
+	var key: String = secret_key(source_path, object_label)
+	if marked:
+		_water_flags[key] = true
+	else:
+		_water_flags.erase(key)
+	var settings: Object = _editor_settings()
+	if settings != null:
+		settings.call("set_project_metadata", SECRET_META_SECTION, WATER_META_KEY, _water_flags)
+
+
+## Tests only: a clean slate (also marks the store loaded so persistence stays untouched).
+static func reset_water_flags_for_tests() -> void:
+	_water_flags = {}
+	_water_flags_loaded = true
+
+
+static func _ensure_water_flags() -> void:
+	if _water_flags_loaded:
+		return
+	_water_flags_loaded = true
+	var settings: Object = _editor_settings()
+	if settings == null:
+		return
+	var stored: Variant = settings.call("get_project_metadata", SECRET_META_SECTION, WATER_META_KEY, {})
+	if stored is Dictionary:
+		_water_flags = (stored as Dictionary).duplicate()
 
 
 ## Export-safe editor access (the palette's pattern): never NAME the editor-only class.
@@ -175,6 +221,23 @@ static func can_need_key(entry: Dictionary) -> bool:
 	return false
 
 
+## Y11. True when "water" is a sensible thing to say about this object: only an area IS a volume you
+## can be inside, so unlike the secret mark - which any node in a room can carry - this one is
+## offered on Area2D and Area3D and on nothing else.
+static func can_be_water(entry: Dictionary) -> bool:
+	if entry.is_empty() or str(entry.get("kind", "")) in ["group", "scene", "autoload"]:
+		return false
+	var class_name_text: String = str(entry.get("class", "")).strip_edges()
+	var cursor: String = class_name_text
+	while not cursor.is_empty():
+		if cursor in ["Area2D", "Area3D"]:
+			return true
+		if not ClassDB.class_exists(cursor):
+			return false
+		cursor = ClassDB.get_parent_class(cursor)
+	return false
+
+
 ## Rows shown above the buttons, in order. Kept as data so a caller (and a test) reads exactly what
 ## an object answers, and so the panel builder has one loop instead of five hand-placed rows.
 ## Each entry: {"label": String, "value": String, "form": String} - form is "text" (a plain value),
@@ -202,7 +265,10 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 			"value": EventSheetL10n.translate("Counts as a secret") if marked \
 				else EventSheetL10n.translate("Not a secret"),
 			"form": "check",
+			"mark": "secret",
 			"checked": marked,
+			"checked_text": EventSheetL10n.translate("Counts as a secret"),
+			"unchecked_text": EventSheetL10n.translate("Not a secret"),
 			"object": object_label,
 			"source": source_path,
 			"note": EventSheetL10n.translate("Dropping it on the canvas offers the secrets counter.")
@@ -216,6 +282,25 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 			"object": door_label,
 			"source": source_path,
 			"note": EventSheetL10n.translate("Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.")
+		})
+	# Y11 - the second mark, beside the first: an area the reader calls water. Only an area gets it,
+	# so a secret room that is not a pool is asked one question and a pool is asked two.
+	if can_be_water(entry):
+		var water_label: String = str(entry.get("label", ""))
+		var is_wet: bool = is_water(source_path, water_label)
+		rows.append({
+			"label": EventSheetL10n.translate("Water"),
+			"value": EventSheetL10n.translate("Counts as water") if is_wet \
+				else EventSheetL10n.translate("Not water"),
+			"form": "check",
+			"mark": "water",
+			"checked": is_wet,
+			"checked_text": EventSheetL10n.translate("Counts as water"),
+			"unchecked_text": EventSheetL10n.translate("Not water"),
+			"object": water_label,
+			"source": source_path,
+			"note": EventSheetL10n.translate(
+				"Going in and coming out raise and lower a flag the sheet can test.")
 		})
 	return rows
 
@@ -462,9 +547,18 @@ static func _field_for(row: Dictionary) -> Control:
 	return label
 
 
-## X25. The one WRITABLE field: the secret tick box, with the muted line saying what ticking it
-## does. Ticking writes straight through the static store, so the panel needs no handler threaded
-## in from the dock and a reader's answer survives closing the popup.
+## One tick's answer written into the store its row names. Kept as one door so the panel builder
+## stays a loop over rows rather than a branch per mark.
+static func write_mark(mark: String, source_path: String, object_label: String, marked: bool) -> void:
+	if mark == "water":
+		set_water(source_path, object_label, marked)
+		return
+	set_secret(source_path, object_label, marked)
+
+
+## X25 / Y11. The WRITABLE fields: a mark's tick box, with the muted line saying what ticking it
+## does. Ticking writes straight through the static store the row names, so the panel needs no
+## handler threaded in from the dock and a reader's answer survives closing the popup.
 static func _check_field(row: Dictionary) -> Control:
 	var column: VBoxContainer = VBoxContainer.new()
 	column.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(240.0), 0.0)
@@ -473,10 +567,12 @@ static func _check_field(row: Dictionary) -> Control:
 	tick.button_pressed = bool(row.get("checked", false))
 	var source_path: String = str(row.get("source", ""))
 	var object_label: String = str(row.get("object", ""))
+	var mark: String = str(row.get("mark", "secret"))
+	var checked_text: String = str(row.get("checked_text", ""))
+	var unchecked_text: String = str(row.get("unchecked_text", ""))
 	tick.toggled.connect(func(pressed: bool) -> void:
-		set_secret(source_path, object_label, pressed)
-		tick.text = EventSheetL10n.translate("Counts as a secret") if pressed \
-			else EventSheetL10n.translate("Not a secret"))
+		write_mark(mark, source_path, object_label, pressed)
+		tick.text = checked_text if pressed else unchecked_text)
 	column.add_child(tick)
 	var note_text: String = str(row.get("note", ""))
 	if not note_text.is_empty():

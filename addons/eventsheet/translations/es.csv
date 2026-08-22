@@ -4196,3 +4196,11 @@ Momentum movement on a board,Movimiento por inercia sobre una tabla
 "speed is kept rather than chased, and the slope under you is where it comes from","La velocidad se conserva en vez de perseguirse, y viene de la pendiente que tienes debajo"
 Skateboard,Monopatín
 Skateboard ▸ Brake by {amount},Monopatín ▸ Frenar {amount}
+Water,Agua
+Counts as water,Cuenta como agua
+Not water,No es agua
+Going in and coming out raise and lower a flag the sheet can test.,Entrar activa un indicador y salir lo desactiva. La hoja puede consultarlo.
+Add The Water Rows,Añadir las filas de agua
+Add them,Añadirlas
+%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s está marcado como agua. ¿Añadir las dos filas que activan el indicador al entrar y lo desactivan al salir?
+Marking %s as water.,Marcando %s como agua.

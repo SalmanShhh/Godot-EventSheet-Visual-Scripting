@@ -4196,3 +4196,11 @@ Momentum movement on a board,Schwungbewegung auf einem Brett
 "speed is kept rather than chased, and the slope under you is where it comes from","Geschwindigkeit wird behalten statt angestrebt, und sie kommt aus dem Gefälle unter dir"
 Skateboard,Skateboard
 Skateboard ▸ Brake by {amount},Skateboard ▸ Um {amount} bremsen
+Water,Wasser
+Counts as water,Zählt als Wasser
+Not water,Kein Wasser
+Going in and coming out raise and lower a flag the sheet can test.,"Beim Betreten wird ein Merker gesetzt, beim Verlassen gelöscht. Das Blatt kann ihn abfragen."
+Add The Water Rows,Die Wasserzeilen hinzufügen
+Add them,Hinzufügen
+%s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,"%s ist als Wasser markiert. Die beiden Zeilen hinzufügen, die den Merker beim Betreten setzen und beim Verlassen löschen?"
+Marking %s as water.,%s wird als Wasser markiert.
