@@ -4174,3 +4174,25 @@ Is not unlocked {id},No está desbloqueado {id}
 {base} +{amount} per level,{base} +{amount} por nivel
 "A skill tree - prerequisites, points and unlocks","Un árbol de habilidades - requisitos, puntos y desbloqueos"
 Skill Tree Screen,Pantalla del árbol de habilidades
+Skateboard ▸ Roll with the slope,Monopatín ▸ Rodar con la pendiente
+gravity along the floor,gravedad a lo largo del suelo
+Skateboard ▸ Push toward max speed by {amount},Monopatín ▸ Impulsar {amount} hacia la velocidad máxima
+Skateboard ▸ Ollie {strength},Monopatín ▸ Ollie {strength}
+Skateboard ▸ Spin one turn per second,Monopatín ▸ Girar una vuelta por segundo
+Skateboard ▸ Spin {turns} turns per second,Monopatín ▸ Girar {turns} vueltas por segundo
+Skateboard ▸ Flip one turn per second,Monopatín ▸ Voltear una vuelta por segundo
+Skateboard ▸ Flip {turns} turns per second,Monopatín ▸ Voltear {turns} vueltas por segundo
+Grind ▸ Is near rail {rail} within {distance},Grind ▸ Está cerca del riel {rail} a menos de {distance}
+Grind ▸ Has reached the end,Grind ▸ Ha llegado al final
+Grind ▸ Is grinding,Grind ▸ Está haciendo grind
+Grind ▸ Is not grinding,Grind ▸ No está haciendo grind
+Grind ▸ Start grinding {rail},Grind ▸ Empezar a hacer grind en {rail}
+Grind ▸ Hop off,Grind ▸ Saltar fuera
+Grind ▸ Grind along rail at {speed},Grind ▸ Hacer grind por el riel a {speed}
+"on {rail}, at the point the curve bakes","en {rail}, en el punto que da la curva"
+Riding a rail,Deslizarse por un riel
+a body snaps to the nearest point on a drawn curve and is walked along it,Un cuerpo se ajusta al punto más cercano de una curva dibujada y avanza por ella
+Momentum movement on a board,Movimiento por inercia sobre una tabla
+"speed is kept rather than chased, and the slope under you is where it comes from","La velocidad se conserva en vez de perseguirse, y viene de la pendiente que tienes debajo"
+Skateboard,Monopatín
+Skateboard ▸ Brake by {amount},Monopatín ▸ Frenar {amount}

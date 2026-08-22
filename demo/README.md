@@ -8,7 +8,7 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from another event-sheet editor:** events read exactly like home - two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **95 behavior packs** ship in the box - the classics (Platformer,
+pickers with swatches. **98 behavior packs** ship in the box - the classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
 with follow-speed, direction lock, throw and snapping - drivable by the **Virtual Cursor**
@@ -81,6 +81,20 @@ plugin's discovery) opens the flagship; the others are right there in the folder
   and park on whatever it found.
 
   ![Hierarchy Playground](../docs/images/hierarchy-playground.png)
+
+- **`skate_park/` - Skate Park (momentum instead of acceleration).** A board that keeps whatever
+  speed it has. The slope on the left hands it over (**Roll With The Slope** projects gravity along
+  the floor, which is the whole of why halfpipes work), the rail across the middle is an ordinary
+  **Path2D** the board snaps to by closest offset, and the quarterpipe at the far end gives back
+  what the drop gave it. **Space** pushes, **Up** ollies, holding **Right** in the air spins, and
+  the chain in the HUD multiplies every trick until a clean landing banks it or a bail drops it.
+  Not one line of the sheet does skating math - every row is a Skateboard row.
+
+- **`skate_park_3d/` - Skate Park 3D (the same run, one dimension up).** Gravity is projected onto
+  the **surface normal** so the bank at the end carves, the board is kept flat on it, and leaving
+  the bank steeper than the lip angle fires **On Launched Off The Lip** - a named moment instead of
+  a guess about velocity signs. The rail is a **Path3D**, and the landing is judged by the board's
+  own up-vector against the surface it touched down on.
 - **`swarm.tscn` - Swarm (frame-spreading made visible).** 800 sprites spawn into a group; one **Budgeted
   For Each** (90/frame) wobbles them, so the colour refresh *sweeps* through the crowd - that visible wave
   **is** the frame-spreading, while the FPS stays pinned. Tick `frame_spread_count` on any For Each and a
@@ -123,6 +137,8 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/hierarchy_playground/` | **Hierarchy Playground** - mounting, equipping with follow-flags, healing a squad per child, a bar that ignores movement, a camera orbiting its pivot, crates snapped to the ground |
 | `showcase/boomer_level/` | **Boomer Level** - the shooter kit end to end: a red keycard and the door that wants it, two grunts that shout to each other and turn on whoever hurt them, a health pickup that comes back, a secret, an exit tally, and a weapon that bobs and sways off the FPS Controller's feel knobs |
 | `showcase/draw_lab/` | **Draw Lab** - four Drawing Canvases at work: your live line-of-sight fan (walls carve it), an enemy telegraph cone, a comet ribbon, a persistent paint trail, and target-marker DRAWING PREFABS stamped from one .tres (Space stamps one where you stand) |
+| `showcase/skate_park/` | **Skate Park** - momentum movement on a board: a slope that hands you speed, a Path2D rail you snap to and ride, a quarterpipe, and a trick chain that multiplies until you bank it |
+| `showcase/skate_park_3d/` | **Skate Park 3D** - the same run on a surface: gravity projected onto the floor normal, the board kept flat on it, a named moment for leaving the bank, and a Path3D rail |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

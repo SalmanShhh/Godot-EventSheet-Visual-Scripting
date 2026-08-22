@@ -42,7 +42,10 @@ const PATTERN_IDS: PackedStringArray = [
 	# Y16 - the coloured keycard and the door that wants it.
 	"keys_doors",
 	# Y12 / Y13 - the skill tree: an unlocked table, a points number and a requires list.
-	"skill_tree"
+	"skill_tree",
+	# Y9 / Y22 - the rail ride and the board. Two ids rather than one because snapping to a curve
+	# and riding it is a general shape a traversal pack owns as readily as a skateboard does.
+	"grind", "skateboard"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

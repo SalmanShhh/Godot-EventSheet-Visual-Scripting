@@ -45,6 +45,8 @@ The pack has a small, consistent mental model. Learn these ideas and every ACE r
 
 **Switch Screen is the menu mover.** Switch Screen shows the named panel and hides its siblings - every other panel that shares the same parent. That is the one-call way to flip a menu from the Play screen to the Options screen: put your screens as siblings under one container, and Switch Screen `"OptionsScreen"` reveals it while hiding the rest. Show and Hide Panel touch only the one panel you name; Switch Screen touches the whole sibling group.
 
+**A needle is a bar with a middle.** Some values are not a fill from empty to full - balance on a rail or in a manual, a tug-of-war, a lean, a tuning dial. What matters is how far from dead centre the value has drifted and which side it is on, which is a thing a bar physically cannot show. **Set Needle** takes a value from -1 to 1 and draws it as a needle inside any named Control, with a mark at the middle and a warning colour past the mark you name. The needle and the mark are built inside that Control the first time the row runs, so all the scene has to contain is an empty box of the right size. `needle_colour` and `needle_warning_colour` in the Inspector are the two colours it uses.
+
 **Bars are any Range.** Set Bar and Bar Value work on `ProgressBar`, `TextureProgressBar`, or any other `Range` node. Set Bar writes the current value, and if you pass a `max_value` greater than zero it sets the maximum too - pass `0` for the max when you only want to move the fill and leave the range alone. Bar Value reads the current value back out (it returns `0` if the name is not a Range).
 
 **Text targets are any node with a text property.** Set Text writes to a named `Label`, `RichTextLabel`, `Button`, or `LineEdit` - anything with a `text` property. One action covers captions, buttons, and input fields.
@@ -103,6 +105,7 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | Connect Buttons | (none) | Wires every descendant Button's pressed signal into On Button Pressed. Idempotent (already-connected buttons are skipped) - re-run it after spawning new buttons. Runs automatically at startup when `auto_connect_buttons` is on. |
 | Set Text | `control_name` (String), `text` (String) | Sets the text of a named Label, RichTextLabel, Button, or LineEdit. |
 | Set Bar | `bar_name` (String), `value` (float), `max_value` (float) | Sets a named ProgressBar / TextureProgressBar (any Range) value. Also sets its max when `max_value` is greater than 0; pass 0 to leave the range untouched. |
+| Set Needle | `needle_name` (String), `value` (float), `warn_at` (float) | Shows a value from -1 to 1 as a needle inside a named Control, with a mark at dead centre. The needle is built the first time this runs, so the scene only needs an empty box of the right size. Past the warning mark the needle turns `needle_warning_colour`. |
 | Show Panel | `panel_name` (String) | Makes a named panel (any CanvasItem) visible. |
 | Hide Panel | `panel_name` (String) | Hides a named panel (any CanvasItem). |
 | Toggle Panel | `panel_name` (String) | Flips a named panel's visibility on or off. |

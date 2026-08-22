@@ -1,0 +1,39 @@
+keys,fr,es,de,it,ko,ja,ru,zh_CN
+Skateboard,Skateboard,Monopatín,Skateboard,Skateboard,스케이트보드,スケートボード,Скейтборд,滑板
+Grind,Grind,Grind,Grinden,Grind,그라인드,グラインド,Грайнд,磨杆
+Push,Pousser,Impulsar,Abstoßen,Spingere,밀기,プッシュ,Оттолкнуться,蹬地
+Roll With The Slope,Rouler avec la pente,Rodar con la pendiente,Mit dem Gefälle rollen,Rotolare con la pendenza,경사를 따라 굴러가기,斜面に沿って転がる,Катиться по склону,顺着坡度滑行
+Ollie,Ollie,Ollie,Ollie,Ollie,알리,オーリー,Олли,豚跳
+Manual,Manual,Manual,Manual,Manual,매뉴얼,マニュアル,Мануал,翘头滑行
+Stop The Manual,Arrêter le manual,Terminar el manual,Manual beenden,Terminare il manual,매뉴얼 끝내기,マニュアルをやめる,Закончить мануал,结束翘头滑行
+Brake,Freiner,Frenar,Bremsen,Frenare,브레이크,ブレーキ,Тормозить,刹车
+Reverse,Faire demi-tour,Invertir,Umkehren,Invertire,방향 바꾸기,逆走する,Развернуться,反向滑行
+Spin Trick,Figure en rotation,Truco de giro,Drehtrick,Trucco in rotazione,스핀 트릭,スピントリック,Трюк с вращением,旋转特技
+Flip Trick,Figure en flip,Truco de flip,Flip-Trick,Trucco flip,플립 트릭,フリップトリック,Трюк с флипом,翻板特技
+Land The Trick,Réceptionner la figure,Aterrizar el truco,Trick landen,Atterrare il trucco,트릭 착지하기,トリックを着地する,Приземлить трюк,落地完成特技
+Bail,Chuter,Caerse,Stürzen,Cadere,넘어지기,転倒する,Упасть,摔倒
+Add To Chain,Ajouter à la série,Añadir a la cadena,Zur Kette hinzufügen,Aggiungere alla catena,체인에 추가,チェーンに追加,Добавить в серию,加入连招
+Bank Chain,Encaisser la série,Cobrar la cadena,Kette einlösen,Incassare la catena,체인 확정,チェーンを確定する,Забрать серию,结算连招
+Drop Chain,Perdre la série,Perder la cadena,Kette verlieren,Perdere la catena,체인 잃기,チェーンを失う,Потерять серию,断掉连招
+Start Balancing,Commencer à tenir l'équilibre,Empezar a hacer equilibrio,Balance beginnen,Iniziare a bilanciare,균형 잡기 시작,バランスを取り始める,Начать удерживать равновесие,开始保持平衡
+Steer The Balance,Corriger l'équilibre,Corregir el equilibrio,Balance ausgleichen,Correggere l'equilibrio,균형 잡기,バランスを立て直す,Выравнивать равновесие,调整平衡
+Is Rolling,Roule,Está rodando,Rollt,Sta rotolando,굴러가는 중,転がっている,Катится,正在滑行
+Is Airborne,Est en l'air,Está en el aire,Ist in der Luft,È in aria,공중에 있음,空中にいる,В воздухе,在空中
+Is In A Manual,Est en manual,Está en manual,Ist im Manual,È in manual,매뉴얼 중,マニュアル中,В мануале,正在翘头滑行
+Is Losing Balance,Perd l'équilibre,Está perdiendo el equilibrio,Verliert die Balance,Sta perdendo l'equilibrio,균형을 잃는 중,バランスを崩している,Теряет равновесие,正在失去平衡
+Balance,Équilibre,Equilibrio,Balance,Equilibrio,균형,バランス,Равновесие,平衡
+Chain Score,Points de la série,Puntos de la cadena,Kettenpunkte,Punti della catena,체인 점수,チェーン得点,Очки серии,连招分数
+Multiplier,Multiplicateur,Multiplicador,Multiplikator,Moltiplicatore,배수,倍率,Множитель,倍数
+Banked Score,Points encaissés,Puntos cobrados,Eingelöste Punkte,Punti incassati,확정 점수,確定得点,Забранные очки,已结算分数
+Spin Turns,Tours effectués,Vueltas giradas,Gedrehte Umdrehungen,Giri effettuati,회전 수,回転数,Число оборотов,旋转圈数
+On Ollie,À l'ollie,Al hacer ollie,Beim Ollie,All'ollie,알리할 때,オーリー時,При олли,豚跳时
+On Landed Clean,À la réception propre,Al aterrizar limpio,Bei sauberer Landung,All'atterraggio pulito,깔끔하게 착지하면,きれいに着地した時,При чистом приземлении,干净落地时
+On Bailed,À la chute,Al caerse,Beim Sturz,Alla caduta,넘어지면,転倒時,При падении,摔倒时
+On Trick Done,À la figure réussie,Al completar el truco,Beim geschafften Trick,Al trucco riuscito,트릭을 끝내면,トリック成立時,При выполнении трюка,完成特技时
+Is Near Rail,Est près du rail,Está cerca del riel,Ist bei der Schiene,È vicino al corrimano,레일 근처에 있음,レールの近くにいる,Рядом с перилами,靠近栏杆
+Start Grinding,Commencer à grinder,Empezar a hacer grind,Grinden beginnen,Iniziare a grindare,그라인드 시작,グラインドを始める,Начать грайнд,开始磨杆
+Grind Along Rail,Grinder le long du rail,Hacer grind por el riel,An der Schiene entlang grinden,Grindare lungo il corrimano,레일을 따라 그라인드,レールに沿ってグラインド,Скользить по перилам,沿栏杆磨行
+Has Reached The End,A atteint la fin,Ha llegado al final,Hat das Ende erreicht,Ha raggiunto la fine,끝에 도달함,終点に着いた,Достиг конца,已到达尽头
+Hop Off,Sauter du rail,Saltar fuera,Abspringen,Saltare giù,뛰어내리기,飛び降りる,Спрыгнуть,跳离
+Ride Zipline,Prendre la tyrolienne,Usar la tirolina,Seilrutsche fahren,Usare la teleferica,집라인 타기,ジップラインに乗る,Ехать по тросу,滑索滑行
+Is Grinding,Grinde,Está haciendo grind,Grindet,Sta grindando,그라인드 중,グラインド中,Скользит по перилам,正在磨杆

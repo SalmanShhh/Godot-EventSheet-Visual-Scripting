@@ -4174,3 +4174,25 @@ Is not unlocked {id},{id} 해제되지 않음
 {base} +{amount} per level,{base} +{amount} (레벨당)
 "A skill tree - prerequisites, points and unlocks","스킬 트리 - 선행 조건, 포인트, 해제"
 Skill Tree Screen,스킬 트리 화면
+Skateboard ▸ Roll with the slope,스케이트보드 ▸ 경사를 따라 굴러가기
+gravity along the floor,바닥을 따라 작용하는 중력
+Skateboard ▸ Push toward max speed by {amount},스케이트보드 ▸ 최고 속도를 향해 {amount} 만큼 밀기
+Skateboard ▸ Ollie {strength},스케이트보드 ▸ 알리 {strength}
+Skateboard ▸ Spin one turn per second,스케이트보드 ▸ 초당 한 바퀴 스핀
+Skateboard ▸ Spin {turns} turns per second,스케이트보드 ▸ 초당 {turns} 바퀴 스핀
+Skateboard ▸ Flip one turn per second,스케이트보드 ▸ 초당 한 바퀴 플립
+Skateboard ▸ Flip {turns} turns per second,스케이트보드 ▸ 초당 {turns} 바퀴 플립
+Grind ▸ Is near rail {rail} within {distance},그라인드 ▸ 레일 {rail} 에서 {distance} 이내에 있음
+Grind ▸ Has reached the end,그라인드 ▸ 끝에 도달함
+Grind ▸ Is grinding,그라인드 ▸ 그라인드 중
+Grind ▸ Is not grinding,그라인드 ▸ 그라인드 중이 아님
+Grind ▸ Start grinding {rail},그라인드 ▸ {rail} 에서 그라인드 시작
+Grind ▸ Hop off,그라인드 ▸ 뛰어내리기
+Grind ▸ Grind along rail at {speed},그라인드 ▸ 레일을 따라 {speed} 로 그라인드
+"on {rail}, at the point the curve bakes","{rail} 위, 커브가 내놓는 지점에서"
+Riding a rail,레일 타기
+a body snaps to the nearest point on a drawn curve and is walked along it,그려 둔 커브에서 가장 가까운 지점에 붙어 그 위를 따라 이동한다
+Momentum movement on a board,보드의 관성으로 움직이는 이동
+"speed is kept rather than chased, and the slope under you is where it comes from","속도는 쥗는 것이 아니라 유지하는 것이며, 발밑의 경사에서 나온다"
+Skateboard,스케이트보드
+Skateboard ▸ Brake by {amount},스케이트보드 ▸ {amount} 만큼 브레이크

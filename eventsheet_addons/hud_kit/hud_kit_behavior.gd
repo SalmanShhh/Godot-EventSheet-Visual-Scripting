@@ -21,6 +21,10 @@ signal on_button_pressed
 ## On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI.
 @export var auto_connect_buttons: bool = true
 var last_button_name: String = ""
+## The colour a Set Needle needle is drawn in while the value is inside its warning mark.
+@export var needle_colour: Color = Color(0.66000002622604, 0.80000001192093, 1.0, 1.0)
+## The colour a Set Needle needle turns once the value has drifted past its warning mark.
+@export var needle_warning_colour: Color = Color(1.0, 0.44999998807907, 0.37999999523163, 1.0)
 ## How long a toast stays before fading (seconds).
 @export_range(0.2, 10, 0.1) var toast_seconds: float = 2.0
 var ui_cache: Dictionary = {}
@@ -178,6 +182,39 @@ func pop_floating_text(text: String, at: Vector2, color: Color) -> void:
 	pop.tween_property(label, "modulate:a", 0.0, 0.7)
 	pop.set_parallel(false)
 	pop.tween_callback(label.queue_free)
+
+## @ace_action
+## @ace_name("Set Needle")
+## @ace_category("UI")
+## @ace_description("Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.")
+## @ace_display_template("Set needle [b]{needle_name}[/b] to [b]{value}[/b], warning past [b]{warn_at}[/b]")
+## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
+## @ace_codegen_template("$HudKitBehavior.set_needle({needle_name}, {value}, {warn_at})")
+func set_needle(needle_name: String, value: float, warn_at: float) -> void:
+	var frame: Node = _ui(needle_name)
+	if not frame is Control:
+		return
+	var box: Control = frame as Control
+	var centre_mark: ColorRect = box.get_node_or_null("__needle_centre") as ColorRect
+	if centre_mark == null:
+		centre_mark = ColorRect.new()
+		centre_mark.name = "__needle_centre"
+		centre_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		centre_mark.color = Color(1.0, 1.0, 1.0, 0.25)
+		box.add_child(centre_mark)
+	var needle: ColorRect = box.get_node_or_null("__needle") as ColorRect
+	if needle == null:
+		needle = ColorRect.new()
+		needle.name = "__needle"
+		needle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(needle)
+	var width: float = maxf(box.size.x, 1.0)
+	var height: float = maxf(box.size.y, 1.0)
+	centre_mark.size = Vector2(2.0, height)
+	centre_mark.position = Vector2(width * 0.5 - 1.0, 0.0)
+	needle.size = Vector2(4.0, height)
+	needle.position = Vector2((clampf(value, -1.0, 1.0) * 0.5 + 0.5) * width - 2.0, 0.0)
+	needle.color = needle_warning_colour if absf(value) >= warn_at else needle_colour
 
 ## @ace_condition
 ## @ace_name("Button Is")

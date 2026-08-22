@@ -131,6 +131,20 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	var owned_lines: PackedStringArray = input_lines.duplicate()
 	owned_lines.append_array(file_lines)
 	extras.merge(EventSheetPatternReadings.skill_tree_facts(owned_lines), true)
+	# ── Y9 / Y22 lens hook ─────────────────────────────────────────────────────────────────────
+	# The two board shapes, both whole-file questions. A rail ride is a closest offset, a baked
+	# sample and a flag spread over three lines that share only their locals' names; and a board is
+	# told apart from a runner by ONE line elsewhere in the file - gravity projected along the floor
+	# normal - which is what licenses reading its jump as an ollie and its top speed as a push. Asked
+	# once here so no single-line reading has to guess, and so a file with neither shape is untouched.
+	# Both line walks, because the two shapes live in different halves of the file: the knobs a board
+	# is tuned with are declarations (which only the behaviour walk lists) and the ride is compound
+	# arithmetic inside an event (which only the ordered walk renders back). Either alone would
+	# recognise half a board and call it a whole one.
+	var board_lines: PackedStringArray = input_lines.duplicate()
+	board_lines.append_array(file_lines)
+	extras["grind"] = EventSheetPatternReadings.grind_facts(board_lines)
+	extras["skate"] = EventSheetPatternReadings.skate_facts(board_lines)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
@@ -410,7 +424,7 @@ static func claim_patterns(sheet: EventSheetResource) -> void:
 			continue
 		var event_row: EventRow = event_entry
 		var body: PackedStringArray = PackedStringArray()
-		_append_ordered_lines(event_row, body, 0)
+		_append_file_lines(event_row, body, 0)
 		_claim_body(sheet, event_row.event_uid, event_row.event_uid, body, file_facts)
 	for function_entry: Variant in sheet.functions:
 		if not (function_entry is EventFunction):
@@ -418,7 +432,7 @@ static func claim_patterns(sheet: EventSheetResource) -> void:
 		var event_function: EventFunction = function_entry
 		var function_body: PackedStringArray = PackedStringArray()
 		for owned: Variant in event_function.events:
-			_append_ordered_lines(owned, function_body, 0)
+			_append_file_lines(owned, function_body, 0)
 		var function_uid: String = "function:%s" % event_function.function_name
 		_claim_body(sheet, function_uid, function_uid, function_body, file_facts)
 
@@ -466,7 +480,7 @@ static func claim_behavior_shape_patterns(sheet: EventSheetResource) -> void:
 			continue
 		var event_row: EventRow = entry
 		var body: PackedStringArray = PackedStringArray()
-		_append_ordered_lines(event_row, body, 0)
+		_append_file_lines(event_row, body, 0)
 		_claim_turret_runs(sheet, event_row.event_uid, body)
 	for entry: Variant in sheet.functions:
 		if not (entry is EventFunction):
@@ -474,7 +488,7 @@ static func claim_behavior_shape_patterns(sheet: EventSheetResource) -> void:
 		var event_function: EventFunction = entry
 		var body: PackedStringArray = PackedStringArray()
 		for owned: Variant in event_function.events:
-			_append_ordered_lines(owned, body, 0)
+			_append_file_lines(owned, body, 0)
 		_claim_turret_runs(sheet, "function:%s" % event_function.function_name, body)
 
 
@@ -1337,11 +1351,11 @@ static func ordered_code_lines(sheet: EventSheetResource) -> PackedStringArray:
 	if sheet == null:
 		return lines
 	for event_entry: Variant in sheet.events:
-		_append_ordered_lines(event_entry, lines, 0)
+		_append_file_lines(event_entry, lines, 0)
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
 			for event_entry: Variant in (function_entry as EventFunction).events:
-				_append_ordered_lines(event_entry, lines, 0)
+				_append_file_lines(event_entry, lines, 0)
 	return _joined_continuation_lines(lines)
 
 
@@ -1370,10 +1384,10 @@ static func _joined_continuation_lines(lines: PackedStringArray) -> PackedString
 ## The public door onto the shared walk below, for the pattern readings, which ask what a single
 ## owning row says rather than what the whole sheet says.
 static func append_body_lines(entry: Variant, lines: PackedStringArray) -> void:
-	_append_ordered_lines(entry, lines, 0)
+	_append_file_lines(entry, lines, 0)
 
 
-static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
+static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
 	if depth > 64:
 		return
 	if entry is RawCodeRow:
@@ -1456,9 +1470,9 @@ static func _append_ordered_lines(entry: Variant, lines: PackedStringArray, dept
 		if not run_line.is_empty():
 			lines.append(run_line)
 		for action_entry: Variant in (entry as EventRow).actions:
-			_append_ordered_lines(action_entry, lines, depth + 1)
+			_append_file_lines(action_entry, lines, depth + 1)
 		for sub_entry: Variant in (entry as EventRow).sub_events:
-			_append_ordered_lines(sub_entry, lines, depth + 1)
+			_append_file_lines(sub_entry, lines, depth + 1)
 
 
 ## X21 / X26. The `if ...:` a row's CONDITION RUN stands for, or "" when the row has no run to

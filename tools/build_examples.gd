@@ -36,6 +36,8 @@ func _init() -> void:
 	all_ok = _build_boomer_level() and all_ok
 	all_ok = _build_pin_modes() and all_ok
 	all_ok = _build_skill_tree() and all_ok
+	all_ok = _build_skate_park() and all_ok
+	all_ok = _build_skate_park_3d() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -3962,6 +3964,34 @@ func _boomer_grunt(root: Node3D, node_name: String, at: Vector3, tint: Color) ->
 
 
 ## One coloured box, parented and owned in the one step every node in this room needs.
+func _add_block_shape(parent: Node, root: Node, node_name: String, at: Vector3, box_size: Vector3,
+		tint: Color) -> StaticBody3D:
+	var body: StaticBody3D = StaticBody3D.new()
+	body.name = node_name
+	body.position = at
+	parent.add_child(body)
+	body.owner = root
+	var mesh_node: MeshInstance3D = MeshInstance3D.new()
+	mesh_node.name = "Mesh"
+	var mesh: BoxMesh = BoxMesh.new()
+	mesh.size = box_size
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = tint
+	mesh.material = material
+	mesh_node.mesh = mesh
+	body.add_child(mesh_node)
+	mesh_node.owner = root
+	var collider: CollisionShape3D = CollisionShape3D.new()
+	collider.name = "Collider"
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = box_size
+	collider.shape = shape
+	body.add_child(collider)
+	collider.owner = root
+	return body
+
+
+## One coloured box, parented and owned in the one step every node in this room needs.
 func _add_block(parent: Node, root: Node, node_name: String, at: Vector3, box_size: Vector3,
 		tint: Color) -> MeshInstance3D:
 	var block: MeshInstance3D = MeshInstance3D.new()
@@ -4816,3 +4846,507 @@ func _showcase_function(function_name: String, body: String, params: Array = [])
 	body_row.code = body
 	built.events.append(body_row)
 	return built
+
+
+# ── 21. Skate Park (2D) ─────────────────────────────────────────────────────
+#
+# Y22 / Y9 / Y24. The Skateboard pack playable: a slope that hands you speed, a rail across the
+# middle, a quarterpipe at the end, and a HUD that shows the chain climbing until you land it.
+# Every row is the pack's own vocabulary - there is no skating math in the sheet at all.
+
+const SKATE_PARK_DIR := "res://demo/showcase/skate_park"
+const SKATE_PARK_3D_DIR := "res://demo/showcase/skate_park_3d"
+const SKATEBOARD := "res://eventsheet_addons/skateboard/skateboard_behavior.gd"
+const SKATEBOARD_3D := "res://eventsheet_addons/skateboard_3d/skateboard_3d_behavior.gd"
+const CHECKPOINT := "res://eventsheet_addons/checkpoint/checkpoint_behavior.gd"
+
+
+func _build_skate_park() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "SkatePark"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row."
+	sheet.events.append(about)
+
+	sheet.variables = {
+		"score": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Everything banked so far this run."}}
+	}
+
+	var wire: EventRow = EventRow.new()
+	wire.trigger_provider_id = "Core"
+	wire.trigger_id = "OnReady"
+	wire.actions.append(_raw("\n".join(PackedStringArray([
+		"$Skater/Skateboard.landed_clean.connect(_on_landed_clean)",
+		"$Skater/Skateboard.bailed.connect(_on_bailed)"
+	]))))
+	sheet.events.append(wire)
+
+	var rolling: EventRow = EventRow.new()
+	rolling.trigger_provider_id = "Core"
+	rolling.trigger_id = "OnPhysicsProcess"
+	rolling.conditions.append(_condition("Core", "IsOnFloor", "{target}.is_on_floor()",
+		{"target": "$Skater"}))
+	rolling.actions.append(_skate_action("roll_with_slope", "{target}.roll_with_slope()", {}))
+	sheet.events.append(rolling)
+
+	var pushing: EventRow = EventRow.new()
+	pushing.trigger_provider_id = "Core"
+	pushing.trigger_id = "OnPhysicsProcess"
+	pushing.conditions.append(_condition("Core", "IsActionJustPressed",
+		"Input.is_action_just_pressed(&{action})", {"action": "\"ui_accept\""}))
+	pushing.actions.append(_skate_action("push", "{target}.push({amount})", {"amount": "40.0"}))
+	sheet.events.append(pushing)
+
+	var ollieing: EventRow = EventRow.new()
+	ollieing.trigger_provider_id = "Core"
+	ollieing.trigger_id = "OnPhysicsProcess"
+	ollieing.conditions.append(_condition("Core", "IsActionJustPressed",
+		"Input.is_action_just_pressed(&{action})", {"action": "\"ui_up\""}))
+	ollieing.actions.append(_skate_action("ollie", "{target}.ollie({strength})",
+		{"strength": "420.0"}))
+	sheet.events.append(ollieing)
+
+	var spinning: EventRow = EventRow.new()
+	spinning.trigger_provider_id = "Core"
+	spinning.trigger_id = "OnPhysicsProcess"
+	spinning.conditions.append(_skate_condition("is_airborne", "{target}.is_airborne()", {}))
+	spinning.conditions.append(_condition("Core", "IsActionPressed",
+		"Input.is_action_pressed(&{action})", {"action": "\"ui_right\""}))
+	spinning.actions.append(_skate_action("spin_trick", "{target}.spin_trick({turns})",
+		{"turns": "1.0"}))
+	sheet.events.append(spinning)
+
+	var catching: EventRow = EventRow.new()
+	catching.trigger_provider_id = "Core"
+	catching.trigger_id = "OnPhysicsProcess"
+	catching.conditions.append(_skate_condition("is_grinding", "not {target}.is_grinding()", {}))
+	catching.conditions.append(_skate_condition("is_near_rail",
+		"{target}.is_near_rail({rail}, {distance})", {"rail": "$Rail", "distance": "16.0"}))
+	catching.actions.append(_skate_action("start_grinding", "{target}.start_grinding({rail})",
+		{"rail": "$Rail"}))
+	sheet.events.append(catching)
+
+	var riding: EventRow = EventRow.new()
+	riding.trigger_provider_id = "Core"
+	riding.trigger_id = "OnPhysicsProcess"
+	riding.conditions.append(_skate_condition("is_grinding", "{target}.is_grinding()", {}))
+	riding.actions.append(_skate_action("grind_along_rail",
+		"{target}.grind_along_rail({speed}, {keep_momentum})",
+		{"speed": "320.0", "keep_momentum": "false"}))
+	riding.actions.append(_skate_action("steer_balance", "{target}.steer_balance({amount})",
+		{"amount": "Input.get_axis(\"ui_left\", \"ui_right\")"}))
+	sheet.events.append(riding)
+
+	var leaving: EventRow = EventRow.new()
+	leaving.trigger_provider_id = "Core"
+	leaving.trigger_id = "OnPhysicsProcess"
+	leaving.conditions.append(_skate_condition("has_reached_the_end",
+		"{target}.has_reached_the_end()", {}))
+	leaving.actions.append(_skate_action("add_to_chain",
+		"{target}.add_to_chain({trick}, {points})", {"trick": "\"grind\"", "points": "250.0"}))
+	leaving.actions.append(_skate_action("hop_off", "{target}.hop_off({hop})", {"hop": "260.0"}))
+	sheet.events.append(leaving)
+
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"
+	hud.trigger_id = "OnPhysicsProcess"
+	hud.actions.append(_raw("$Hud.text = \"Score %d   chain %d x%d   Space push / Up ollie / Right spin\" % [score, int($Skater/Skateboard.chain_score()), $Skater/Skateboard.multiplier()]"))
+	# The balance meter has a MIDDLE, which a bar cannot show, so the HUD pack draws it as a needle.
+	hud.actions.append(_action("HudKitBehavior", "method:set_needle",
+		"{target}.set_needle({needle_name}, {value}, {warn_at})",
+		{"target": "$Hud/HudKit", "needle_name": "\"BalanceMeter\"",
+		"value": "$Skater/Skateboard.balance()", "warn_at": "0.6"}))
+	sheet.events.append(hud)
+
+	var landed: EventFunction = EventFunction.new()
+	landed.function_name = "_on_landed_clean"
+	landed.enabled = true
+	landed.description = "A clean landing banks the chain: the multiplier goes back to one and the run's total is finally safe."
+	landed.events = [_raw("\n".join(PackedStringArray([
+		"if $Skater/Skateboard.spin_turns() >= 0.5:",
+		"\t$Skater/Skateboard.add_to_chain(\"spin\", 150.0)",
+		"$Skater/Skateboard.bank_chain()",
+		"score = int($Skater/Skateboard.banked_score())"
+	])))]
+	sheet.functions.append(landed)
+
+	var bailed: EventFunction = EventFunction.new()
+	bailed.function_name = "_on_bailed"
+	bailed.enabled = true
+	bailed.description = "A bail costs the chain and nothing else - the banked total is untouched, and the Checkpoint pack puts the board back where the run started. This pack owns the wipeout moment and nothing after it, which is why the recovery is somebody else's row."
+	bailed.events = [_raw("\n".join(PackedStringArray([
+		"$Skater/Checkpoint.respawn()",
+		"$Skater.velocity = Vector2.ZERO",
+		"$Skater.rotation = 0.0"
+	])))]
+	sheet.functions.append(bailed)
+
+	if not _compile(sheet, "%s/skate_park.tres" % SKATE_PARK_DIR, "%s/skate_park.gd" % SKATE_PARK_DIR):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("%s/skate_park.gd" % SKATE_PARK_DIR)
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("%s/skate_park.gd" % SKATE_PARK_DIR, FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	var root: Node2D = Node2D.new()
+	root.name = "SkatePark"
+	root.set_script(load("%s/skate_park.gd" % SKATE_PARK_DIR))
+
+	# The park, as three collision polygons: the slope that starts the run, the flat with the rail
+	# over it, and the quarterpipe that gives the speed back at the far end.
+	_add_skate_solid(root, "Slope", PackedVector2Array([
+		Vector2(0.0, 300.0), Vector2(360.0, 580.0), Vector2(0.0, 580.0)]),
+		Color(0.30, 0.36, 0.48, 1.0))
+	_add_skate_solid(root, "Ground", PackedVector2Array([
+		Vector2(0.0, 580.0), Vector2(1152.0, 580.0), Vector2(1152.0, 648.0), Vector2(0.0, 648.0)]),
+		Color(0.22, 0.26, 0.34, 1.0))
+	var pipe: PackedVector2Array = _skate_arc(Vector2(940.0, 400.0), 180.0, 90.0, 0.0, 12)
+	pipe.append(Vector2(1152.0, 648.0))
+	pipe.append(Vector2(940.0, 648.0))
+	_add_skate_solid(root, "Quarterpipe", pipe, Color(0.30, 0.36, 0.48, 1.0))
+
+	var rail: Path2D = Path2D.new()
+	rail.name = "Rail"
+	var curve: Curve2D = Curve2D.new()
+	curve.add_point(Vector2(500.0, 552.0))
+	curve.add_point(Vector2(800.0, 552.0))
+	rail.curve = curve
+	root.add_child(rail)
+	rail.owner = root
+
+	var rail_mark: Line2D = Line2D.new()
+	rail_mark.name = "RailMark"
+	rail_mark.width = 4.0
+	rail_mark.default_color = Color(0.66, 0.80, 1.0, 1.0)
+	rail_mark.points = PackedVector2Array([Vector2(500.0, 552.0), Vector2(800.0, 552.0)])
+	root.add_child(rail_mark)
+	rail_mark.owner = root
+
+	var skater: CharacterBody2D = CharacterBody2D.new()
+	skater.name = "Skater"
+	skater.position = Vector2(110.0, 300.0)
+	root.add_child(skater)
+	skater.owner = root
+	var collider: CollisionShape2D = CollisionShape2D.new()
+	collider.name = "Collider"
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = Vector2(24.0, 28.0)
+	collider.shape = shape
+	skater.add_child(collider)
+	collider.owner = root
+	var board: ColorRect = ColorRect.new()
+	board.name = "Board"
+	board.color = Color(1.0, 0.78, 0.32, 1.0)
+	board.position = Vector2(-12.0, -14.0)
+	board.size = Vector2(24.0, 28.0)
+	skater.add_child(board)
+	board.owner = root
+	_attach_behavior(skater, "Skateboard", SKATEBOARD, root,
+		{"push_speed": 40.0, "max_speed": 600.0, "ollie_speed": 420.0, "slope_grip": 1.0,
+		"friction": 40.0, "balance_drift": 0.5})
+	# The wipeout's recovery is the Checkpoint pack's job, not the board's: the board fires
+	# On Bailed and stops, and something else decides what a bail costs.
+	_attach_behavior(skater, "Checkpoint", CHECKPOINT, root, {"capture_on_ready": true})
+
+	var label: Label = Label.new()
+	label.name = "Hud"
+	label.position = Vector2(28.0, 22.0)
+	label.add_theme_font_size_override("font_size", 24)
+	label.text = "Score 0   chain 0 x1   Space push / Up ollie / Right spin"
+	root.add_child(label)
+	label.owner = root
+	_attach_behavior(label, "HudKit", HUD_KIT, root, {"auto_connect_buttons": false})
+	var meter: Control = Control.new()
+	meter.name = "BalanceMeter"
+	meter.position = Vector2(0.0, 40.0)
+	meter.size = Vector2(220.0, 14.0)
+	meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_child(meter)
+	meter.owner = root
+	var meter_back: ColorRect = ColorRect.new()
+	meter_back.name = "Backing"
+	meter_back.color = Color(0.0, 0.0, 0.0, 0.35)
+	meter_back.size = Vector2(220.0, 14.0)
+	meter_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	meter.add_child(meter_back)
+	meter_back.owner = root
+
+	return _save_scene(root, "%s/skate_park.tscn" % SKATE_PARK_DIR)
+
+
+## One Skateboard verb, addressed at the board on the Skater. The provider id is the pack's class
+## name, which is what makes the row read as the pack's own sentence rather than as a call.
+func _skate_action(verb: String, template: String, params: Dictionary) -> ACEAction:
+	var full: Dictionary = params.duplicate()
+	full["target"] = "$Skater/Skateboard"
+	return _action("SkateboardMovement", "method:%s" % verb, template, full)
+
+
+func _skate_condition(verb: String, template: String, params: Dictionary) -> ACECondition:
+	var full: Dictionary = params.duplicate()
+	full["target"] = "$Skater/Skateboard"
+	return _condition("SkateboardMovement", "method:%s" % verb, template, full)
+
+
+func _skate_action_3d(verb: String, template: String, params: Dictionary) -> ACEAction:
+	var full: Dictionary = params.duplicate()
+	full["target"] = "$Skater/Skateboard"
+	return _action("Skateboard3DMovement", "method:%s" % verb, template, full)
+
+
+func _skate_condition_3d(verb: String, template: String, params: Dictionary) -> ACECondition:
+	var full: Dictionary = params.duplicate()
+	full["target"] = "$Skater/Skateboard"
+	return _condition("Skateboard3DMovement", "method:%s" % verb, template, full)
+
+
+## One static collision polygon with a matching filled shape, so the park is both solid and visible.
+func _add_skate_solid(root: Node2D, node_name: String, points: PackedVector2Array,
+		tint: Color) -> StaticBody2D:
+	var body: StaticBody2D = StaticBody2D.new()
+	body.name = node_name
+	root.add_child(body)
+	body.owner = root
+	var collider: CollisionPolygon2D = CollisionPolygon2D.new()
+	collider.name = "Collider"
+	collider.polygon = points
+	body.add_child(collider)
+	collider.owner = root
+	var fill: Polygon2D = Polygon2D.new()
+	fill.name = "Fill"
+	fill.polygon = points
+	fill.color = tint
+	body.add_child(fill)
+	fill.owner = root
+	return body
+
+
+## An arc of a circle as a point run, used for the quarterpipe's transition. Degrees, clockwise on
+## screen because Y grows downward.
+func _skate_arc(centre: Vector2, radius: float, from_degrees: float, to_degrees: float,
+		steps: int) -> PackedVector2Array:
+	var points: PackedVector2Array = PackedVector2Array()
+	for step: int in range(steps + 1):
+		var t: float = float(step) / float(steps)
+		var angle: float = deg_to_rad(lerpf(from_degrees, to_degrees, t))
+		points.append(Vector2(centre.x + cos(angle) * radius, centre.y + sin(angle) * radius))
+	return points
+
+
+func _build_skate_park_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "SkatePark3D"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air."
+	sheet.events.append(about)
+
+	sheet.variables = {
+		"score": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Everything banked so far this run."}}
+	}
+
+	var wire: EventRow = EventRow.new()
+	wire.trigger_provider_id = "Core"
+	wire.trigger_id = "OnReady"
+	wire.actions.append(_raw("\n".join(PackedStringArray([
+		"$Skater/Skateboard.landed_clean.connect(_on_landed_clean)",
+		"$Skater/Skateboard.launched_off_the_lip.connect(_on_launched)",
+		"$Skater/Skateboard.bailed.connect(_on_bailed)"
+	]))))
+	sheet.events.append(wire)
+
+	var rolling: EventRow = EventRow.new()
+	rolling.trigger_provider_id = "Core"
+	rolling.trigger_id = "OnPhysicsProcess"
+	rolling.conditions.append(_condition("Core", "IsOnFloor3D", "{target}.is_on_floor()",
+		{"target": "$Skater"}))
+	rolling.actions.append(_skate_action_3d("roll_with_slope", "{target}.roll_with_slope()", {}))
+	sheet.events.append(rolling)
+
+	var aligning: EventRow = EventRow.new()
+	aligning.trigger_provider_id = "Core"
+	aligning.trigger_id = "OnPhysicsProcess"
+	aligning.actions.append(_skate_action_3d("align_board_to_surface",
+		"{target}.align_board_to_surface()", {}))
+	sheet.events.append(aligning)
+
+	var pushing: EventRow = EventRow.new()
+	pushing.trigger_provider_id = "Core"
+	pushing.trigger_id = "OnPhysicsProcess"
+	pushing.conditions.append(_condition("Core", "IsActionJustPressed",
+		"Input.is_action_just_pressed(&{action})", {"action": "\"ui_accept\""}))
+	pushing.actions.append(_skate_action_3d("push", "{target}.push({amount})", {"amount": "2.0"}))
+	sheet.events.append(pushing)
+
+	var ollieing: EventRow = EventRow.new()
+	ollieing.trigger_provider_id = "Core"
+	ollieing.trigger_id = "OnPhysicsProcess"
+	ollieing.conditions.append(_condition("Core", "IsActionJustPressed",
+		"Input.is_action_just_pressed(&{action})", {"action": "\"ui_up\""}))
+	ollieing.actions.append(_skate_action_3d("ollie", "{target}.ollie({strength})",
+		{"strength": "6.0"}))
+	sheet.events.append(ollieing)
+
+	var spinning: EventRow = EventRow.new()
+	spinning.trigger_provider_id = "Core"
+	spinning.trigger_id = "OnPhysicsProcess"
+	spinning.conditions.append(_skate_condition_3d("is_airborne", "{target}.is_airborne()", {}))
+	spinning.conditions.append(_condition("Core", "IsActionPressed",
+		"Input.is_action_pressed(&{action})", {"action": "\"ui_right\""}))
+	spinning.actions.append(_skate_action_3d("spin_trick", "{target}.spin_trick({turns})",
+		{"turns": "1.0"}))
+	sheet.events.append(spinning)
+
+	var catching: EventRow = EventRow.new()
+	catching.trigger_provider_id = "Core"
+	catching.trigger_id = "OnPhysicsProcess"
+	catching.conditions.append(_skate_condition_3d("is_grinding", "not {target}.is_grinding()", {}))
+	catching.conditions.append(_skate_condition_3d("is_near_rail",
+		"{target}.is_near_rail({rail}, {distance})", {"rail": "$Rail", "distance": "0.8"}))
+	catching.actions.append(_skate_action_3d("start_grinding", "{target}.start_grinding({rail})",
+		{"rail": "$Rail"}))
+	sheet.events.append(catching)
+
+	var riding: EventRow = EventRow.new()
+	riding.trigger_provider_id = "Core"
+	riding.trigger_id = "OnPhysicsProcess"
+	riding.conditions.append(_skate_condition_3d("is_grinding", "{target}.is_grinding()", {}))
+	riding.actions.append(_skate_action_3d("grind_along_rail",
+		"{target}.grind_along_rail({speed}, {keep_momentum})",
+		{"speed": "10.0", "keep_momentum": "false"}))
+	sheet.events.append(riding)
+
+	var leaving: EventRow = EventRow.new()
+	leaving.trigger_provider_id = "Core"
+	leaving.trigger_id = "OnPhysicsProcess"
+	leaving.conditions.append(_skate_condition_3d("has_reached_the_end",
+		"{target}.has_reached_the_end()", {}))
+	leaving.actions.append(_skate_action_3d("add_to_chain",
+		"{target}.add_to_chain({trick}, {points})", {"trick": "\"grind\"", "points": "250.0"}))
+	leaving.actions.append(_skate_action_3d("hop_off", "{target}.hop_off({hop})", {"hop": "4.5"}))
+	sheet.events.append(leaving)
+
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"
+	hud.trigger_id = "OnPhysicsProcess"
+	hud.actions.append(_raw("$Overlay/Hud.text = \"Score %d   chain %d x%d   Space push / Up ollie / Right spin\" % [score, int($Skater/Skateboard.chain_score()), $Skater/Skateboard.multiplier()]"))
+	sheet.events.append(hud)
+
+	var landed: EventFunction = EventFunction.new()
+	landed.function_name = "_on_landed_clean"
+	landed.enabled = true
+	landed.description = "A clean landing banks the chain: the multiplier goes back to one and the run's total is finally safe."
+	landed.events = [_raw("\n".join(PackedStringArray([
+		"if $Skater/Skateboard.spin_turns() >= 0.5:",
+		"\t$Skater/Skateboard.add_to_chain(\"spin\", 150.0)",
+		"$Skater/Skateboard.bank_chain()",
+		"score = int($Skater/Skateboard.banked_score())"
+	])))]
+	sheet.functions.append(landed)
+
+	var launched: EventFunction = EventFunction.new()
+	launched.function_name = "_on_launched"
+	launched.enabled = true
+	launched.description = "Leaving the bank steeper than the lip angle is its own moment, and this is where a camera pull or a slow-motion dip belongs."
+	launched.events = [_raw("$Skater/Skateboard.add_to_chain(\"air\", 100.0)")]
+	sheet.functions.append(launched)
+
+	var bailed: EventFunction = EventFunction.new()
+	bailed.function_name = "_on_bailed"
+	bailed.enabled = true
+	bailed.description = "A bail costs the chain and nothing else - the banked total is untouched, and the board is put back at the top of the run."
+	bailed.events = [_raw("\n".join(PackedStringArray([
+		"$Skater.global_position = Vector3(-9.0, 1.0, 0.0)",
+		"$Skater.velocity = Vector3.ZERO"
+	])))]
+	sheet.functions.append(bailed)
+
+	if not _compile(sheet, "%s/skate_park_3d.tres" % SKATE_PARK_3D_DIR,
+			"%s/skate_park_3d.gd" % SKATE_PARK_3D_DIR):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("%s/skate_park_3d.gd" % SKATE_PARK_3D_DIR)
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("%s/skate_park_3d.gd" % SKATE_PARK_3D_DIR, FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	var root: Node3D = Node3D.new()
+	root.name = "SkatePark3D"
+	root.set_script(load("%s/skate_park_3d.gd" % SKATE_PARK_3D_DIR))
+
+	# The run, left to right: a tilted slab that hands you speed, a flat with a rail over it, and a
+	# bank steep enough at the end that leaving it counts as a lip launch rather than a fall.
+	var slope: StaticBody3D = _add_block_shape(root, root, "Slope", Vector3(-9.0, -0.6, 0.0),
+		Vector3(10.0, 0.5, 6.0), Color(0.30, 0.36, 0.48, 1.0))
+	slope.rotation.z = deg_to_rad(-14.0)
+	_add_block_shape(root, root, "Ground", Vector3(4.0, -1.85, 0.0), Vector3(18.0, 0.5, 6.0),
+		Color(0.22, 0.26, 0.34, 1.0))
+	var bank: StaticBody3D = _add_block_shape(root, root, "Bank", Vector3(13.6, -0.6, 0.0),
+		Vector3(6.0, 0.5, 6.0), Color(0.30, 0.36, 0.48, 1.0))
+	bank.rotation.z = deg_to_rad(-58.0)
+
+	var rail: Path3D = Path3D.new()
+	rail.name = "Rail"
+	var curve: Curve3D = Curve3D.new()
+	curve.add_point(Vector3(0.0, -1.0, 0.0))
+	curve.add_point(Vector3(7.0, -1.0, 0.0))
+	rail.curve = curve
+	root.add_child(rail)
+	rail.owner = root
+	_add_block(rail, root, "RailMark", Vector3(3.5, -1.0, 0.0), Vector3(7.0, 0.12, 0.12),
+		Color(0.66, 0.80, 1.0, 1.0))
+
+	var skater: CharacterBody3D = CharacterBody3D.new()
+	skater.name = "Skater"
+	skater.position = Vector3(-9.0, 1.0, 0.0)
+	root.add_child(skater)
+	skater.owner = root
+	var collider: CollisionShape3D = CollisionShape3D.new()
+	collider.name = "Collider"
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = Vector3(1.0, 0.5, 0.5)
+	collider.shape = shape
+	skater.add_child(collider)
+	collider.owner = root
+	_add_block(skater, root, "Board", Vector3.ZERO, Vector3(1.0, 0.12, 0.4),
+		Color(1.0, 0.78, 0.32, 1.0))
+	_attach_behavior(skater, "Skateboard", SKATEBOARD_3D, root,
+		{"push_speed": 2.0, "max_speed": 18.0, "ollie_speed": 6.0, "slope_grip": 1.0,
+		"friction": 0.8, "balance_drift": 0.5, "lip_angle_degrees": 45.0})
+
+	var light: DirectionalLight3D = DirectionalLight3D.new()
+	light.name = "Sun"
+	light.rotation = Vector3(deg_to_rad(-52.0), deg_to_rad(-38.0), 0.0)
+	root.add_child(light)
+	light.owner = root
+
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera"
+	camera.position = Vector3(2.0, 6.0, 18.0)
+	camera.rotation = Vector3(deg_to_rad(-14.0), 0.0, 0.0)
+	root.add_child(camera)
+	camera.owner = root
+
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.name = "Overlay"
+	root.add_child(layer)
+	layer.owner = root
+	var label: Label = Label.new()
+	label.name = "Hud"
+	label.position = Vector2(28.0, 22.0)
+	label.add_theme_font_size_override("font_size", 24)
+	label.text = "Score 0   chain 0 x1   Space push / Up ollie / Right spin"
+	layer.add_child(label)
+	label.owner = root
+
+	return _save_scene(root, "%s/skate_park_3d.tscn" % SKATE_PARK_3D_DIR)

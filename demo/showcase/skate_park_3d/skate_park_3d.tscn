@@ -1,0 +1,126 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/skate_park_3d/skate_park_3d.gd" id="1_iubdv"]
+[ext_resource type="Script" path="res://eventsheet_addons/skateboard_3d/skateboard_3d_behavior.gd" id="2_w442w"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oqii8"]
+albedo_color = Color(0.3, 0.36, 0.48, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_iekf5"]
+material = SubResource("StandardMaterial3D_oqii8")
+size = Vector3(10, 0.5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r52tn"]
+size = Vector3(10, 0.5, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5kvo3"]
+albedo_color = Color(0.22, 0.26, 0.34, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_om567"]
+material = SubResource("StandardMaterial3D_5kvo3")
+size = Vector3(18, 0.5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rnrdw"]
+size = Vector3(18, 0.5, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0x6gg"]
+albedo_color = Color(0.3, 0.36, 0.48, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kskbs"]
+material = SubResource("StandardMaterial3D_0x6gg")
+size = Vector3(6, 0.5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_colg4"]
+size = Vector3(6, 0.5, 6)
+
+[sub_resource type="Curve3D" id="Curve3D_5ffym"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 7, -1, 0),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mxlag"]
+albedo_color = Color(0.66, 0.8, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xtqpl"]
+material = SubResource("StandardMaterial3D_mxlag")
+size = Vector3(7, 0.12, 0.12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kh1nr"]
+size = Vector3(1, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_he4qx"]
+albedo_color = Color(1, 0.78, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vnk5y"]
+material = SubResource("StandardMaterial3D_he4qx")
+size = Vector3(1, 0.12, 0.4)
+
+[node name="SkatePark3D" type="Node3D"]
+script = ExtResource("1_iubdv")
+
+[node name="Slope" type="StaticBody3D" parent="."]
+transform = Transform3D(0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0, 1, -9, -0.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Slope"]
+mesh = SubResource("BoxMesh_iekf5")
+
+[node name="Collider" type="CollisionShape3D" parent="Slope"]
+shape = SubResource("BoxShape3D_r52tn")
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1.85, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_om567")
+
+[node name="Collider" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_rnrdw")
+
+[node name="Bank" type="StaticBody3D" parent="."]
+transform = Transform3D(0.52991927, 0.8480481, 0, -0.8480481, 0.52991927, 0, 0, 0, 1, 13.6, -0.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Bank"]
+mesh = SubResource("BoxMesh_kskbs")
+
+[node name="Collider" type="CollisionShape3D" parent="Bank"]
+shape = SubResource("BoxShape3D_colg4")
+
+[node name="Rail" type="Path3D" parent="."]
+curve = SubResource("Curve3D_5ffym")
+
+[node name="RailMark" type="MeshInstance3D" parent="Rail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -1, 0)
+mesh = SubResource("BoxMesh_xtqpl")
+
+[node name="Skater" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Skater"]
+shape = SubResource("BoxShape3D_kh1nr")
+
+[node name="Board" type="MeshInstance3D" parent="Skater"]
+mesh = SubResource("BoxMesh_vnk5y")
+
+[node name="Skateboard" type="Node" parent="Skater"]
+script = ExtResource("2_w442w")
+balance_drift = 0.5
+friction = 0.8
+lip_angle_degrees = 45.0
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7880108, 0.48514786, -0.37903908, 0, 0.6156615, 0.7880107, 0.6156615, -0.62096095, 0.4851479, 0, 0, 0)
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 2, 6, 18)
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="Overlay"]
+offset_left = 28.0
+offset_top = 22.0
+offset_right = 28.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 24
+text = "Score 0   chain 0 x1   Space push / Up ollie / Right spin"

@@ -48,6 +48,16 @@ const GYROSCOPE := "Input.get_gyroscope()"
 ## The engine clock in seconds, spelled the way an ordinary Godot script spells it.
 const WINDOW_CLOCK := "Time.get_ticks_msec() / 1000.0"
 
+## Y9. The two curve calls a rail ride is written with: the one that finds where on the line you
+## are, and the one that reads the point back off it. Both, or the file is measuring a path rather
+## than riding one.
+const CURVE_CLOSEST_OFFSET := "get_closest_offset("
+const CURVE_SAMPLE_BAKED := "sample_baked("
+
+## Y22. The way a body asks which way the ground under it faces - the only honest source of a
+## slope, and the mark that tells a board apart from a runner.
+const FLOOR_NORMAL := "get_floor_normal()"
+
 
 ## Everything the sentence grammar needs to know about the patterns THIS sheet writes, merged into
 ## the row builder's sentence context once per rebuild:
@@ -1726,3 +1736,163 @@ static func _unlocked_table_write(text: String) -> String:
 		return ""
 	var table: String = target.substr(0, open_at).strip_edges()
 	return table if EventSheetSentence.is_identifier(table) else ""
+
+
+## The rail-riding facts this file writes, as {rail, offset, riding, speed, points}, or {} when it rides
+## none. Y9. Three marks together and nothing less: an offset taken off a curve with
+## `get_closest_offset`, that offset used to `sample_baked` a point back off the same curve, and a
+## flag the file both raises and lowers beside them. Two of the three is somebody measuring a path,
+## not riding one - and a reading that fired on the measurement alone would rename every project's
+## path arithmetic.
+##
+## Nothing here can move a byte: the facts only decide which WORDS the rows are drawn with.
+static func grind_facts(lines: PackedStringArray) -> Dictionary:
+	var rail: String = ""
+	var snap: String = ""
+	var stepped: String = ""
+	var riding: String = ""
+	var speed: String = ""
+	var sampled: Dictionary = {}
+	var walked: Dictionary = {}
+	var points: Dictionary = {}
+	var raised: Dictionary = {}
+	var lowered: Dictionary = {}
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var parts: Dictionary = _assigned_parts(text)
+		var name_text: String = str(parts.get("name", ""))
+		var value: String = str(parts.get("value", ""))
+		if snap.is_empty() and not name_text.is_empty() and value.contains(CURVE_CLOSEST_OFFSET):
+			snap = name_text
+			rail = _curve_owner(value, CURVE_CLOSEST_OFFSET)
+		if text.contains(CURVE_SAMPLE_BAKED):
+			var read_back: String = _sampled_name(text)
+			if not read_back.is_empty():
+				sampled[read_back] = true
+			if rail.is_empty():
+				rail = _curve_owner(text, CURVE_SAMPLE_BAKED)
+			# The LOCAL a point on the line is read back into. A distance measured against one of
+			# these is the "am I near the rail" question; a distance against anything else is not,
+			# and a write straight onto the body's own position is the ride rather than the question.
+			if text.begins_with("var ") and not name_text.is_empty():
+				points[name_text] = true
+		if not name_text.is_empty() and value == "true":
+			raised[name_text] = true
+		elif not name_text.is_empty() and value == "false":
+			lowered[name_text] = true
+		var walk: Dictionary = _grind_step(text)
+		if not walk.is_empty():
+			walked[str(walk.get("name", ""))] = str(walk.get("speed", ""))
+	# The offset the RIDE walks is the one the file both steps by a delta AND samples the curve with.
+	# Every delta-step in the file is a candidate, because a board steps several things per frame and
+	# only one of them is a place on a line; a file that only ever snaps is measuring the line, and
+	# the local it measured into is the offset every other row hangs off.
+	for name_text: Variant in walked:
+		if sampled.has(name_text):
+			stepped = str(name_text)
+			speed = str(walked[name_text])
+			break
+	var offset: String = stepped if not stepped.is_empty() else snap
+	if offset.is_empty() or rail.is_empty() or sampled.is_empty():
+		return {}
+	# The flag is the one this file BOTH raises and lowers - a boolean that is only ever switched on
+	# is a one-way trip, and reading a plain `ready = true` as somebody starting a grind would be a
+	# guess. Missing entirely is fine: the ride still reads, it just has no start and stop rows.
+	for flag: Variant in raised:
+		if lowered.has(flag):
+			riding = str(flag)
+			break
+	return {"rail": rail, "offset": offset, "snap": snap, "riding": riding, "speed": speed,
+		"points": points}
+
+
+## The board facts this file writes, as {slope, gravity, ollie, top_speed, push}, or {} when it
+## writes none. Y22. The one mark that has to be there is the SLOPE: gravity projected along the
+## floor normal, which is what a board does and a runner never does. Every other name is only read
+## in the board's words BECAUSE that line is in the same file - `velocity.y = -jump_speed` is a
+## jump in every other script in the world, and stays one.
+static func skate_facts(lines: PackedStringArray) -> Dictionary:
+	var slope: String = ""
+	var gravity: String = ""
+	var ollie: String = ""
+	var top_speed: String = ""
+	var push: String = ""
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var parts: Dictionary = _assigned_parts(text)
+		var name_text: String = str(parts.get("name", ""))
+		var value: String = str(parts.get("value", ""))
+		if slope.is_empty() and not name_text.is_empty() and value.contains(FLOOR_NORMAL):
+			slope = name_text
+		if top_speed.is_empty():
+			top_speed = _named_like(name_text, "max_speed")
+		if top_speed.is_empty():
+			top_speed = _named_like(name_text, "top_speed")
+		if ollie.is_empty():
+			ollie = _named_like(name_text, "ollie")
+		if push.is_empty():
+			push = _named_like(name_text, "push")
+		if gravity.is_empty():
+			gravity = _named_like(name_text, "gravity")
+	if slope.is_empty():
+		return {}
+	return {"slope": slope, "gravity": gravity, "ollie": ollie, "top_speed": top_speed,
+		"push": push}
+
+
+## `rail.curve.get_closest_offset(...)` - the object the curve hangs off, or "" when the call is
+## not written on a named object's curve.
+static func _curve_owner(value: String, call_name: String) -> String:
+	var at: int = value.find(".curve." + call_name)
+	if at <= 0:
+		return ""
+	var head: String = value.substr(0, at).strip_edges()
+	var cut: int = maxi(head.rfind("("), head.rfind(" "))
+	if cut >= 0:
+		head = head.substr(cut + 1).strip_edges()
+	return head if EventSheetSentence.is_identifier(head) else ""
+
+
+## `rail_offset += grind_speed * delta` - as {name, speed}, or {} when the line steps something by
+## anything other than a per-frame delta. The delta is what makes it a ride rather than a jump to a
+## place on the line.
+static func _grind_step(text: String) -> Dictionary:
+	var at: int = EventSheetSentence.top_level_index(text, " += ")
+	if at <= 0:
+		return {}
+	var name_text: String = text.substr(0, at).strip_edges()
+	if not EventSheetSentence.is_identifier(name_text):
+		return {}
+	var value: String = text.substr(at + 4).strip_edges()
+	var times_at: int = EventSheetSentence.top_level_index(value, " * ")
+	if times_at <= 0:
+		return {}
+	if not DELTA_WORDS.has(value.substr(times_at + 3).strip_edges()):
+		return {}
+	return {"name": name_text, "speed": value.substr(0, times_at).strip_edges()}
+
+
+## `rail.curve.sample_baked(rail_offset)` - the name the curve was sampled at, or "" when the call
+## is handed something that is not a plain name.
+static func _sampled_name(text: String) -> String:
+	var at: int = text.find(CURVE_SAMPLE_BAKED)
+	if at < 0:
+		return ""
+	var rest: String = text.substr(at + CURVE_SAMPLE_BAKED.length())
+	var close_at: int = rest.find(")")
+	if close_at < 0:
+		return ""
+	var inner: String = rest.substr(0, close_at).strip_edges()
+	return inner if EventSheetSentence.is_identifier(inner) else ""
+
+
+## The name, when it reads like the given word - `ollie_speed` and `_ollie` both answer "ollie".
+## "" for anything else, including an empty name.
+static func _named_like(name_text: String, word: String) -> String:
+	if name_text.is_empty() or not name_text.to_lower().contains(word):
+		return ""
+	return name_text

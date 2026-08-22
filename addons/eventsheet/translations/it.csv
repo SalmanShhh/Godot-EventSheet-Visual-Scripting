@@ -4174,3 +4174,25 @@ Is not unlocked {id},Non è sbloccato {id}
 {base} +{amount} per level,{base} +{amount} per livello
 "A skill tree - prerequisites, points and unlocks","Un albero delle abilità - prerequisiti, punti e sblocchi"
 Skill Tree Screen,Schermata dell'albero delle abilità
+Skateboard ▸ Roll with the slope,Skateboard ▸ Rotolare con la pendenza
+gravity along the floor,gravità lungo il pavimento
+Skateboard ▸ Push toward max speed by {amount},Skateboard ▸ Spingere di {amount} verso la velocità massima
+Skateboard ▸ Ollie {strength},Skateboard ▸ Ollie {strength}
+Skateboard ▸ Spin one turn per second,Skateboard ▸ Ruotare di un giro al secondo
+Skateboard ▸ Spin {turns} turns per second,Skateboard ▸ Ruotare di {turns} giri al secondo
+Skateboard ▸ Flip one turn per second,Skateboard ▸ Capovolgere di un giro al secondo
+Skateboard ▸ Flip {turns} turns per second,Skateboard ▸ Capovolgere di {turns} giri al secondo
+Grind ▸ Is near rail {rail} within {distance},Grind ▸ È vicino al corrimano {rail} entro {distance}
+Grind ▸ Has reached the end,Grind ▸ Ha raggiunto la fine
+Grind ▸ Is grinding,Grind ▸ Sta grindando
+Grind ▸ Is not grinding,Grind ▸ Non sta grindando
+Grind ▸ Start grinding {rail},Grind ▸ Iniziare a grindare su {rail}
+Grind ▸ Hop off,Grind ▸ Saltare giù
+Grind ▸ Grind along rail at {speed},Grind ▸ Grindare lungo il corrimano a {speed}
+"on {rail}, at the point the curve bakes","su {rail}, nel punto fornito dalla curva"
+Riding a rail,Scivolare su un corrimano
+a body snaps to the nearest point on a drawn curve and is walked along it,Un corpo si aggancia al punto più vicino di una curva disegnata e la percorre
+Momentum movement on a board,Movimento di slancio su una tavola
+"speed is kept rather than chased, and the slope under you is where it comes from","La velocità si conserva invece di essere inseguita, e viene dalla pendenza sotto di te"
+Skateboard,Skateboard
+Skateboard ▸ Brake by {amount},Skateboard ▸ Frenare di {amount}

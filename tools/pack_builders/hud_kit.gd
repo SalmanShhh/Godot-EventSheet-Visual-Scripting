@@ -19,6 +19,8 @@ static func build() -> bool:
 	sheet.variables = {
 		"auto_connect_buttons": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI."}},
 		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
+		"needle_colour": {"type": "Color", "default": Color(0.66, 0.80, 1.0, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle is drawn in while the value is inside its warning mark."}},
+		"needle_warning_colour": {"type": "Color", "default": Color(1.0, 0.45, 0.38, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle turns once the value has drifted past its warning mark."}},
 		"last_button_name": {"type": "String", "default": "", "exported": false},
 		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false}
 	}
@@ -197,8 +199,44 @@ static func build() -> bool:
 	])))
 	_default(sheet, "color", "Color.WHITE")
 
+	# Y24. A meter with a CENTRE rather than a floor: balance on a rail or in a manual, a tug-of-war
+	# bar, a lean, a tuning dial. A bar cannot show it - what matters is how far from the middle the
+	# needle has drifted and which side it is on - so this builds the needle itself the first time it
+	# is asked, inside whatever named Control the sheet points it at.
+	Lib.append_function(sheet, "set_needle", "Set Needle", "UI",
+		"Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.",
+		[["needle_name", "String"], ["value", "float"], ["warn_at", "float"]],
+		"\n".join(PackedStringArray([
+		"var frame: Node = _ui(needle_name)",
+		"if not frame is Control:",
+		"\treturn",
+		"var box: Control = frame as Control",
+		"var centre_mark: ColorRect = box.get_node_or_null(\"__needle_centre\") as ColorRect",
+		"if centre_mark == null:",
+		"\tcentre_mark = ColorRect.new()",
+		"\tcentre_mark.name = \"__needle_centre\"",
+		"\tcentre_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\tcentre_mark.color = Color(1.0, 1.0, 1.0, 0.25)",
+		"\tbox.add_child(centre_mark)",
+		"var needle: ColorRect = box.get_node_or_null(\"__needle\") as ColorRect",
+		"if needle == null:",
+		"\tneedle = ColorRect.new()",
+		"\tneedle.name = \"__needle\"",
+		"\tneedle.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\tbox.add_child(needle)",
+		"var width: float = maxf(box.size.x, 1.0)",
+		"var height: float = maxf(box.size.y, 1.0)",
+		"centre_mark.size = Vector2(2.0, height)",
+		"centre_mark.position = Vector2(width * 0.5 - 1.0, 0.0)",
+		"needle.size = Vector2(4.0, height)",
+		"needle.position = Vector2((clampf(value, -1.0, 1.0) * 0.5 + 0.5) * width - 2.0, 0.0)",
+		"needle.color = needle_warning_colour if absf(value) >= warn_at else needle_colour"
+	])))
+	_default(sheet, "warn_at", "0.6")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
+		"set_needle": "Set needle [b]{needle_name}[/b] to [b]{value}[/b], warning past [b]{warn_at}[/b]",
 		"set_bar": "Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]",
 		"set_text": "Set text of [b]{control_name}[/b] to [b]{text}[/b]",
 		"show_toast": "Show toast [b]{text}[/b]",

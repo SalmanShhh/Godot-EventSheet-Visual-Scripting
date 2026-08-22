@@ -4174,3 +4174,25 @@ Is not unlocked {id},Не открыто {id}
 {base} +{amount} per level,{base} +{amount} за уровень
 "A skill tree - prerequisites, points and unlocks","Дерево навыков - требования, очки и открытия"
 Skill Tree Screen,Экран дерева навыков
+Skateboard ▸ Roll with the slope,Скейтборд ▸ Катиться по склону
+gravity along the floor,гравитация вдоль пола
+Skateboard ▸ Push toward max speed by {amount},Скейтборд ▸ Оттолкнуться на {amount} к максимальной скорости
+Skateboard ▸ Ollie {strength},Скейтборд ▸ Олли {strength}
+Skateboard ▸ Spin one turn per second,Скейтборд ▸ Вращение на один оборот в секунду
+Skateboard ▸ Spin {turns} turns per second,Скейтборд ▸ Вращение на {turns} оборотов в секунду
+Skateboard ▸ Flip one turn per second,Скейтборд ▸ Флип на один оборот в секунду
+Skateboard ▸ Flip {turns} turns per second,Скейтборд ▸ Флип на {turns} оборотов в секунду
+Grind ▸ Is near rail {rail} within {distance},Грайнд ▸ Рядом с перилами {rail} в пределах {distance}
+Grind ▸ Has reached the end,Грайнд ▸ Достиг конца
+Grind ▸ Is grinding,Грайнд ▸ Скользит по перилам
+Grind ▸ Is not grinding,Грайнд ▸ Не скользит по перилам
+Grind ▸ Start grinding {rail},Грайнд ▸ Начать скользить по {rail}
+Grind ▸ Hop off,Грайнд ▸ Спрыгнуть
+Grind ▸ Grind along rail at {speed},Грайнд ▸ Скользить по перилам со скоростью {speed}
+"on {rail}, at the point the curve bakes","на {rail}, в точке, которую даёт кривая"
+Riding a rail,Скольжение по перилам
+a body snaps to the nearest point on a drawn curve and is walked along it,Тело прилипает к ближайшей точке нарисованной кривой и движется вдоль неё
+Momentum movement on a board,Движение на доске по инерции
+"speed is kept rather than chased, and the slope under you is where it comes from","Скорость сохраняется, а не набирается заново, и приходит от склона под тобой"
+Skateboard,Скейтборд
+Skateboard ▸ Brake by {amount},Скейтборд ▸ Тормозить на {amount}

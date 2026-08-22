@@ -75,6 +75,13 @@ static func build() -> bool:
 		"var _failed_id: String = \"\"",
 		"var _fail_index: int = 0",
 		"var _cleared_count: int = 0",
+		"# Y24. The hit chain: what the run of moves landed so far is worth, what the next one will",
+		"# be multiplied by, and the total that is already safe. The same three numbers a board's",
+		"# trick chain keeps, in the same words.",
+		"var _chain_score: float = 0.0",
+		"var _chain_multiplier: int = 1",
+		"var _banked_score: float = 0.0",
+		"var _chain_last: String = \"\"",
 		"",
 		"# A registered token pattern matches an input if it is the wildcard \"*\" or the exact token.",
 		"func _token_matches(pattern: String, token: String) -> bool:",
@@ -246,6 +253,32 @@ static func build() -> bool:
 		[["id", "String"]],
 		"_combos.erase(id)\n_progress.erase(id)")
 
+	# --- The hit chain (Y24) ---
+	# A run of moves landed without a break is worth more than the moves apart, and that is as true
+	# of a fighter's combo as it is of a skater's line. The rows are deliberately the SAME words the
+	# board pack uses, so a reader who has met one has met both, and nothing is safe until it is
+	# banked - which is what makes "one more hit" a decision rather than a formality.
+	Lib.append_function(sheet, "add_to_chain", "Add To Chain", "ComboBox",
+		"Scores a hit into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Nothing is safe until the chain is banked.",
+		[["hit", "String"], ["points", "float"]], "\n".join(PackedStringArray([
+		"_chain_score += points * float(_chain_multiplier)",
+		"_chain_last = hit",
+		"_chain_multiplier += 1"
+	])), "Add hit [b]{hit}[/b] to the chain for [b]{points}[/b]")
+	Lib.append_function(sheet, "bank_chain", "Bank Chain", "ComboBox",
+		"Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is what landing the finisher is worth.",
+		[], "\n".join(PackedStringArray([
+		"_banked_score += _chain_score",
+		"_chain_score = 0.0",
+		"_chain_multiplier = 1"
+	])), "[b]Bank[/b] the chain")
+	Lib.append_function(sheet, "drop_chain", "Drop Chain", "ComboBox",
+		"Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what dropping the combo costs.",
+		[], "\n".join(PackedStringArray([
+		"_chain_score = 0.0",
+		"_chain_multiplier = 1"
+	])), "[b]Drop[/b] the chain")
+
 	# --- Conditions ---
 	_condition(sheet, "has_combo", "Has Combo", "ComboBox", "Whether a combo id is registered.", [["id", "String"]],
 		"return _combos.has(id)")
@@ -277,6 +310,16 @@ static func build() -> bool:
 		"return float(_buffer[index].time) if index >= 0 and index < _buffer.size() else 0.0", TYPE_FLOAT)
 	_expr(sheet, "cleared_count", "Cleared Count", "ComboBox", "How many tokens were in the buffer when it was last cleared (inside On Buffer Cleared).", [],
 		"return _cleared_count", TYPE_INT)
+
+	# --- Expressions: the hit chain ---
+	_expr(sheet, "chain_score", "Chain Score", "ComboBox", "What the chain running right now is worth. Banking it moves this into the total and resets it.", [],
+		"return _chain_score", TYPE_FLOAT)
+	_expr(sheet, "multiplier", "Multiplier", "ComboBox", "What the next hit in the chain will be multiplied by. Starts at 1 and climbs by one per hit.", [],
+		"return _chain_multiplier", TYPE_INT)
+	_expr(sheet, "banked_score", "Banked Score", "ComboBox", "Everything banked so far this fight. A dropped chain never reaches it.", [],
+		"return _banked_score", TYPE_FLOAT)
+	_expr(sheet, "chain_last_hit", "Chain Last Hit", "ComboBox", "The name of the last hit added to the chain, or \"\" before the first one.", [],
+		"return _chain_last", TYPE_STRING)
 
 	# --- Expressions: partial matches ---
 	_expr(sheet, "partial_count", "Partial Count", "ComboBox", "How many combos are part-way matched after the last input (inside On Partial Progress).", [],

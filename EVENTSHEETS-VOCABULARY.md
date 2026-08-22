@@ -323,6 +323,9 @@ Node script extending `CharacterBody2D`.
 - **Enable Combos By Tag** (`tag: String`) - Enables every combo carrying a tag (for example all "air_move" combos).
 - **Disable Combos By Tag** (`tag: String`) - Disables every combo carrying a tag.
 - **Remove Combo** (`id: String`) - Permanently removes a combo from the registry.
+- **Add To Chain** (`hit: String, points: float`) - Scores a hit into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Nothing is safe until the chain is banked.
+- **Bank Chain** - Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is what landing the finisher is worth.
+- **Drop Chain** - Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what dropping the combo costs.
 
 #### Expressions
 - **Matched Id** - The id of the combo that just matched (inside On Combo Matched).
@@ -334,6 +337,10 @@ Node script extending `CharacterBody2D`.
 - **Buffer Token** (`index: int`) - The token at a buffer index (0 = oldest); "" if out of range.
 - **Buffer Time** (`index: int`) - The clock time in seconds of the token at a buffer index (0 if out of range).
 - **Cleared Count** - How many tokens were in the buffer when it was last cleared (inside On Buffer Cleared).
+- **Chain Score** - What the chain running right now is worth. Banking it moves this into the total and resets it.
+- **Multiplier** - What the next hit in the chain will be multiplied by. Starts at 1 and climbs by one per hit.
+- **Banked Score** - Everything banked so far this fight. A dropped chain never reaches it.
+- **Chain Last Hit** - The name of the last hit added to the chain, or "" before the first one.
 - **Partial Count** - How many combos are part-way matched after the last input (inside On Partial Progress).
 - **Partial Id** (`index: int`) - The id of the part-way combo at an index (use with Partial Count to loop).
 - **Partial Progress** (`index: int`) - How many inputs of the part-way combo at an index are matched so far.
@@ -690,6 +697,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Sprinting** - True while the sprint key (Shift) is held.
 - **Is First Person** - True in first-person camera mode.
 - **Can Jump** - True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.
+- **Is Firing** - True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.
 - **Is Crouching** - True while crouched (including during a crouch slide).
 - **Is Sliding** - True during a crouch slide.
 - **Is Wall Riding** - True while riding a wall (airborne, glued to it, gravity softened).
@@ -712,6 +720,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Sliding** - Ends a crouch slide early (you stay crouched). Fires On Slide Ended.
 - **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
 - **Set Coyote Time** (`seconds: float`) - Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.
+- **Set Move Speed While Firing** (`speed: float, seconds: float`) - Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.
 - **Reset Jumps** - Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.
@@ -872,6 +881,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Switch Screen** (`panel_name: String`) - Shows the named panel and hides its sibling panels - one call flips a whole menu screen.
 - **Show Toast** (`text: String`) - Pops a bottom-centre message that fades out after toast_seconds.
 - **Pop Floating Text** (`text: String, at: Vector2, color: Color`) - Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.
+- **Set Needle** (`needle_name: String, value: float, warn_at: float`) - Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.
 
 #### Expressions
 - **Last Button Name**
@@ -1738,6 +1748,103 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Sine 3D Active** (`is_active: bool`) - Pauses or resumes the oscillation.
 - **Set Phase** (`degrees: float`) - Phase offset in degrees.
 - **Reset Sine 3D** - Restarts the wave from the current state.
+
+### SkateboardMovement (`res://eventsheet_addons/skateboard/skateboard_behavior.gd`)
+@ace_tags(movement, skateboard, momentum, grind) @ace_category("Skateboard") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Ollie**
+- **On Landed Clean**
+- **On Bailed**
+- **On Trick Done** (`trick: String, points: float`)
+
+#### Conditions
+- **Is Near Rail** (`rail: Node2D, distance: float`) - True when the board is within the given distance of the nearest point on the rail's curve. This is the whole of what "near a rail" means - the closest offset on the curve, and how far off it you are.
+- **Is Rolling** - True while the board is on the ground and actually moving.
+- **Is Airborne** - True while the board is off the ground and not on a rail - the window every trick lives in.
+- **Is In A Manual** - True while the board is riding on its back wheels.
+- **Is Losing Balance** - True while balance has drifted past the warning mark and has not been steered back. This is the row a HUD needle flashes on.
+- **Is Grinding** - True while the board is locked to a rail and riding it.
+- **Has Reached The End** - True when the ride has run off either end of the rail's curve. Pair it with Hop Off so the board leaves under its own momentum.
+
+#### Actions
+- **Push** (`amount: float`) - One kick: nudges the board toward its top speed in the direction it is already going, and the board keeps it. Unlike a platformer's acceleration this is a one-shot gain, so pushing twice is faster than pushing once and holding nothing is still fast.
+- **Roll With The Slope** - Projects gravity along the floor the board is standing on, so a downhill gains speed and an uphill loses it. This one row is what makes ramps, bowls and halfpipes work - call it every physics tick while on the floor.
+- **Ollie** (`strength: float`) - Pops the board off the ground at the given speed and starts a fresh spin count, then fires On Ollie. Whatever horizontal speed the board had, it keeps.
+- **Manual** - Tips the board onto its back wheels and starts the balance meter drifting. Hold it with Steer The Balance; let it reach an edge and the board bails.
+- **Stop The Manual** - Sets the board back down on all four wheels and stops the balance meter. Nothing is scored and nothing is lost - use Bank The Chain first if the manual was worth points.
+- **Brake** (`amount: float`) - Drags speed off the board toward a standstill, by the given amount this call. Foot down.
+- **Reverse** - Turns the board around and rolls the way it came, keeping the speed it had. A fakie out of a bowl is this row.
+- **Spin Trick** (`turns: float`) - Turns the board through the air at the given turns per second and counts the turns as it goes. Nothing happens on the ground - a spin is an air row.
+- **Flip Trick** (`turns: float`) - The same turn the other way, so a sheet can tell a spin and a flip apart on the canvas and in the chain. Nothing happens on the ground.
+- **Land The Trick** - Judges the landing now instead of waiting for the board to touch down: square enough with the floor and it snaps flat and fires On Landed Clean, crookeder than the tolerance and it bails. The tick calls this for you on every touchdown, so you only need it to end a grind or a scripted landing.
+- **Bail** - Wipes out: the manual, the grind and the balance meter all stop, the trick chain is dropped, and On Bailed fires. This is where a ragdoll, a stumble animation, or a checkpoint respawn hangs.
+- **Add To Chain** (`trick: String, points: float`) - Scores a trick into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Fires On Trick Done with the name and what it actually scored. Nothing is safe until the chain is banked.
+- **Bank Chain** - Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is the clean landing's reward.
+- **Drop Chain** - Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what a bail costs you.
+- **Start Balancing** (`drift: float`) - Puts the balance meter at dead centre and starts it drifting at the given speed per second. Steer it back with Steer The Balance; let it reach either edge and the board bails.
+- **Steer The Balance** (`amount: float`) - Pushes balance back toward the middle by the steer strength times this amount. Feed it the left/right axis: -1 leans one way, 1 the other, 0 lets the drift have it.
+- **Start Grinding** (`rail: Node2D`) - Locks the board onto the rail at the nearest point on its curve and starts riding, in whichever direction the board was already travelling. The balance meter starts with it, so a long rail is a held breath.
+- **Grind Along Rail** (`speed: float, keep_momentum: bool`) - Rides one tick further along the rail and puts the board on the curve, facing the way the rail runs. Keep Momentum rides at whatever speed the board arrived with instead of the given speed - a fast approach is a fast grind.
+- **Hop Off** (`hop: float`) - Lets the rail go and gives the board an upward kick, keeping whatever speed the grind had built along the line. The balance meter stops with it.
+- **Ride Zipline** (`rail: Node2D`) - The same lock-on as a grind, but the line's slope drives the speed instead of a knob: a steep zipline accelerates, a level one coasts. Hop Off ends it exactly the same way.
+
+#### Expressions
+- **Balance** - Where balance sits, from -1 (fallen one way) through 0 (dead centre) to 1 (fallen the other). A needle reads this straight.
+- **Chain Score** - What the chain running right now is worth. Banking it moves this into the total and resets it.
+- **Multiplier** - What the next trick in the chain will be multiplied by. Starts at 1 and climbs by one per trick.
+- **Banked Score** - Everything banked so far this run. A dropped chain never reaches it.
+- **Spin Turns** - How many whole turns the board has spun since it left the ground - what a 540 is counted with.
+
+### Skateboard3DMovement (`res://eventsheet_addons/skateboard_3d/skateboard_3d_behavior.gd`)
+@ace_tags(movement, skateboard, momentum, grind, 3d) @ace_category("Skateboard 3D") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Ollie**
+- **On Launched Off The Lip**
+- **On Landed Clean**
+- **On Bailed**
+- **On Trick Done** (`trick: String, points: float`)
+
+#### Conditions
+- **Is Near Rail** (`rail: Node3D, distance: float`) - True when the board is within the given distance of the nearest point on the rail's curve. This is the whole of what "near a rail" means - the closest offset on the curve, and how far off it you are.
+- **Is Rolling** - True while the board is on the ground and actually moving.
+- **Is Airborne** - True while the board is off the ground and not on a rail - the window every trick lives in.
+- **Is In A Manual** - True while the board is riding on its back wheels.
+- **Is Losing Balance** - True while balance has drifted past the warning mark and has not been steered back. This is the row a HUD needle flashes on.
+- **Is Grinding** - True while the board is locked to a rail and riding it.
+- **Has Reached The End** - True when the ride has run off either end of the rail's curve. Pair it with Hop Off so the board leaves under its own momentum.
+
+#### Actions
+- **Push** (`amount: float`) - One kick: nudges the board toward its top speed along the way it is facing, and the board keeps it. Unlike a character controller's acceleration this is a one-shot gain, so pushing twice is faster than pushing once.
+- **Roll With The Slope** - Projects gravity onto the surface the board is standing on, so a downhill gains speed and an uphill loses it. This one row is what makes ramps, bowls and quarterpipes work - call it every physics tick while on the floor.
+- **Align The Board To The Surface** - Swings the board flat onto whatever it is standing on, at the align speed, keeping the way it was facing. Off the ground it settles back level, so a drop lands on its wheels rather than on the shape of the last ramp.
+- **Ollie** (`strength: float`) - Pops the board off the ground at the given speed and starts a fresh spin count, then fires On Ollie. Whatever ground speed the board had, it keeps.
+- **Manual** - Tips the board onto its back wheels and starts the balance meter drifting. Hold it with Steer The Balance; let it reach an edge and the board bails.
+- **Stop The Manual** - Sets the board back down on all four wheels and stops the balance meter. Nothing is scored and nothing is lost - use Bank Chain first if the manual was worth points.
+- **Brake** (`amount: float`) - Drags speed off the board toward a standstill, by the given amount this call. Foot down.
+- **Reverse** - Turns the board around and rolls the way it came, keeping the speed it had. A fakie out of a bowl is this row.
+- **Spin Trick** (`turns: float`) - Turns the board about its own up through the air at the given turns per second and counts the turns as it goes - the shove-it half of a trick. Nothing happens on the ground.
+- **Flip Trick** (`turns: float`) - Rolls the board about its own length through the air at the given turns per second - the kickflip half of a trick. Nothing happens on the ground.
+- **Land The Trick** - Judges the landing now instead of waiting for the board to touch down: the board's up within the tolerance of the surface normal snaps it flat and fires On Landed Clean, crookeder than that bails. The tick calls this for you on every touchdown, so you only need it to end a grind or a scripted landing.
+- **Bail** - Wipes out: the manual, the grind and the balance meter all stop, the trick chain is dropped, and On Bailed fires. Hang the ragdoll, the stumble animation, or the checkpoint respawn on that trigger - this pack deliberately does not own the wipeout.
+- **Add To Chain** (`trick: String, points: float`) - Scores a trick into the chain running right now: the points are multiplied by the current multiplier, then the multiplier climbs by one. Fires On Trick Done with the name and what it actually scored. Nothing is safe until the chain is banked.
+- **Bank Chain** - Cashes the chain in: everything it is worth moves into the banked total and the multiplier goes back to one. This is the clean landing's reward.
+- **Drop Chain** - Throws the running chain away and puts the multiplier back to one. The banked total is untouched - this is what a bail costs you.
+- **Start Balancing** (`drift: float`) - Puts the balance meter at dead centre and starts it drifting at the given speed per second. Steer it back with Steer The Balance; let it reach either edge and the board bails.
+- **Steer The Balance** (`amount: float`) - Pushes balance back toward the middle by the steer strength times this amount. Feed it the left/right axis: -1 leans one way, 1 the other, 0 lets the drift have it.
+- **Start Grinding** (`rail: Node3D`) - Locks the board onto the rail at the nearest point on its curve and starts riding, in whichever direction the board was already travelling. The balance meter starts with it, so a long rail is a held breath.
+- **Grind Along Rail** (`speed: float, keep_momentum: bool`) - Rides one tick further along the rail and puts the board on the curve, facing the way the rail runs. Keep Momentum rides at whatever speed the board arrived with instead of the given speed - a fast approach is a fast grind.
+- **Hop Off** (`hop: float`) - Lets the rail go and gives the board an upward kick, keeping whatever speed the grind had built along the line. The balance meter stops with it.
+- **Ride Zipline** (`rail: Node3D`) - The same lock-on as a grind, but the line's slope drives the speed instead of a knob: a steep zipline accelerates, a level one coasts. Hop Off ends it exactly the same way.
+
+#### Expressions
+- **Balance** - Where balance sits, from -1 (fallen one way) through 0 (dead centre) to 1 (fallen the other). A needle reads this straight.
+- **Chain Score** - What the chain running right now is worth. Banking it moves this into the total and resets it.
+- **Multiplier** - What the next trick in the chain will be multiplied by. Starts at 1 and climbs by one per trick.
+- **Banked Score** - Everything banked so far this run. A dropped chain never reaches it.
+- **Spin Turns** - How many whole turns the board has spun since it left the ground - what a 540 is counted with.
+- **Surface Normal** - The way the surface under the board faces, or the way the last one faced while the board is in the air. This is what the landing is judged against.
 
 ### SkinVaultAddon (`res://eventsheet_addons/skin_vault/skin_vault_addon.gd`)
 @ace_tags(cosmetics, gacha) @ace_category("SkinVault") @ace_version(1.0.0)
@@ -3201,6 +3308,42 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.
 - **Undo History** - The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed.
 
+### Facing (`res://addons/eventforge/registration/modules/facing_aces.gd`)
+Facing: mirror and flip, on every host that can do it
+
+#### Conditions
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this object is mirrored, read off its own X scale.
+- **Is Mirrored** (`target: String`) - True while this 3D object is mirrored along X.
+- **Is Mirrored** (`target: String`) - True while this UI element is mirrored.
+
+#### Actions
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Mirrored (whole object)** (`mirrored: String, target: String`) - Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.
+- **Set Mirrored** (`mirrored: String`) - Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.
+- **Set Mirrored** (`mirrored: String`) - Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.
+- **Turn Around** (`target: String`) - Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.
+- **Face Direction Of Movement** (`velocity: String, target: String`) - Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.
+- **Face Object** (`object: String, target: String`) - Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.
+- **Keep Upright** (`target: String`) - Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.
+- **Mirror The View** (`mirrored: String`) - Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.
+- **Mirror The View** (`mirrored: String, target: String`) - Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.
+- **Set Tile Flipped** (`coords: String, mirrored: String, target: String`) - Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.
+- **Mirror Path** - Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.
+
 ### File (`res://addons/eventforge/registration/modules/file_aces.gd`)
 File management (read / write / JSON, plus directory + file operations).
 
@@ -4249,8 +4392,8 @@ Timed inputs (X28): input windows, mashes, prompts and graded timing.
 - **Mashed In Time** (`counter: String, count: String, started: String, seconds: String`) - True once the presses arrive quickly enough - breaking free, cranking a winch, shaking off a grab.
 
 #### Actions
-- **Open Input Window** (`open_flag: String, deadline: String, seconds: String`) - Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.
-- **Close Input Window** (`open_flag: String`) - Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice.
+- **Open Input Window** (`open_flag: String, deadline: String, seconds: String, prompt: String`) - Opens a window the player has a moment to answer. Measured on the engine clock, which keeps running while the game is paused.
+- **Close Input Window** (`open_flag: String, prompt: String`) - Shuts the window whether or not the player answered - put it after the graded branches so one press cannot count twice.
 - **Start Mash Count** (`counter: String, started: String`) - Resets the press count and stamps the moment the mash began, so the question below can be asked about this attempt only.
 - **Count Mash Press** (`counter: String`) - Adds one press to the mash. Put it under the control's own pressed event.
 - **Show Prompt** (`label: String, action: String`) - Puts the control's real key or button on a label, so the prompt is right on every keyboard and after every rebind.
