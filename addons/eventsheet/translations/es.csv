@@ -4130,3 +4130,22 @@ moving right,se mueve a la derecha
 Mirror the view,Reflejar la vista
 Set tile at {coords} flipped,Reflejar el tile en {coords}
 Set tile at {coords} flipped to {value},Reflejar el tile en {coords} según {value}
+"Pin to {anchor} (rope, max length {length})","Fijar a {anchor} (cuerda, longitud máx. {length})"
+"Pin to {anchor} (bar, length {length})","Fijar a {anchor} (barra, longitud {length})"
+Pin to {anchor} softly (speed {speed}),Fijar a {anchor} suavemente (velocidad {speed})
+Pin to {owner}'s {point},Fijar a {point} de {owner}
+Pin to {owner}'s {point} (offset {offset}),Fijar a {point} de {owner} (desfase {offset})
+Pin to {owner}'s path position,Fijar a la posición en la ruta de {owner}
+Pin X position to {anchor},Fijar la posición X a {anchor}
+Pin Y position to {anchor},Fijar la posición Y a {anchor}
+Pin size to {anchor},Fijar el tamaño a {anchor}
+path,ruta
+Pins,Fijaciones
+pinned to,fijado a
+"what this object rides, and can let go of",sobre qué viaja este objeto y de qué puede soltarse
+position and angle,posición y ángulo
+rope,cuerda
+bar,barra
+soft,suave
+x only,solo X
+y only,solo Y

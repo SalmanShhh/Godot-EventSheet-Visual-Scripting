@@ -4130,3 +4130,22 @@ moving right,오른쪽으로 이동 중
 Mirror the view,화면을 좌우 반전
 Set tile at {coords} flipped,{coords} 타일을 좌우 반전
 Set tile at {coords} flipped to {value},{coords} 타일의 좌우 반전을 {value} 로
+"Pin to {anchor} (rope, max length {length})","{anchor}에 고정 (로프, 최대 길이 {length})"
+"Pin to {anchor} (bar, length {length})","{anchor}에 고정 (바, 길이 {length})"
+Pin to {anchor} softly (speed {speed}),{anchor}에 부드럽게 고정 (속도 {speed})
+Pin to {owner}'s {point},{owner}의 {point}에 고정
+Pin to {owner}'s {point} (offset {offset}),{owner}의 {point}에 고정 (오프셋 {offset})
+Pin to {owner}'s path position,{owner}의 경로 위치에 고정
+Pin X position to {anchor},X 위치를 {anchor}에 고정
+Pin Y position to {anchor},Y 위치를 {anchor}에 고정
+Pin size to {anchor},크기를 {anchor}에 고정
+path,경로
+Pins,고정
+pinned to,고정 대상
+"what this object rides, and can let go of","이 오브젝트가 올라타 있는 대상, 그리고 놓을 수 있는 대상"
+position and angle,위치와 각도
+rope,로프
+bar,바
+soft,부드럽게
+x only,X만
+y only,Y만

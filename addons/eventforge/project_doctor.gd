@@ -2931,6 +2931,140 @@ static func menu_id_notes(lines: PackedStringArray) -> Array[Dictionary]:
 	return notes
 
 
+## Y6. The verbs the Pin behavior packs are started with - the pack half of "this object rides that
+## one". The arithmetic half is the shape reader's answer, so the two together are every spelling a
+## pin has.
+const _PIN_VERBS: PackedStringArray = [
+	".pin_to(", ".pin_to_at(", ".pin_rope(", ".pin_bar(", ".pin_soft(", ".pin_spring(",
+	".pin_x_to(", ".pin_y_to(", ".pin_z_to(", ".pin_size_to(", ".pin_to_point(", ".pin_to_path("
+]
+
+
+## Y6. Every object this file pins itself to, however the pin is written - the arithmetic (a place or
+## an angle copied off another object) and the Pin pack's own verbs. Sorted, so a note reads the same
+## on every machine. Pure and static, so a test pins the answer without a project to walk.
+static func pinned_anchors(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var text: String = _without_comment_lines(source)
+	# The shape reader already owns the grammar of a hand-written pin, and its summary already
+	# applies every gate the ROWS apply - so asking it is what keeps the Doctor, the head bar and
+	# the canvas agreeing about what a pin is, instead of three copies of the same grammar drifting.
+	for summary: Variant in EventSheetBehaviorShapes.pin_summaries(text.split("\n")):
+		var anchor: String = str((summary as Dictionary).get("anchor", ""))
+		if not anchor.is_empty() and not found.has(anchor):
+			found.append(anchor)
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges()
+		for verb: String in _PIN_VERBS:
+			var at: int = stripped.find(verb)
+			if at < 0:
+				continue
+			var argument: String = stripped.substr(at + verb.length()) \
+				.get_slice(",", 0).get_slice(")", 0).strip_edges()
+			if _is_plain_name(argument) and not found.has(argument):
+				found.append(argument)
+	found.sort()
+	return found
+
+
+## Y6. The objects this file BOTH parents itself to AND pins itself to. Being a child already carries
+## the object; the pin then writes its place a second time from the same source, and the two fight
+## every frame - which is what "it drifts twice as fast" is.
+## `known_pins` is `pinned_anchors(source)` where the caller already has it - the walk behind it is a
+## full pass of the shape grammar, and the check below asks for it twice.
+static func double_follow_anchors(source: String,
+		known_pins: PackedStringArray = PackedStringArray()) -> PackedStringArray:
+	var pinned: PackedStringArray = known_pins if not known_pins.is_empty() \
+		else pinned_anchors(source)
+	if pinned.is_empty():
+		return PackedStringArray()
+	var parents: Dictionary = _self_parent_names(_without_comment_lines(source))
+	var found: PackedStringArray = PackedStringArray()
+	for anchor: String in pinned:
+		if parents.has(anchor) and not found.has(anchor):
+			found.append(anchor)
+	return found
+
+
+## Y6. A pin whose anchor this file frees, with no Unpin and no validity question anywhere. The pin
+## goes on reading a place off a node that is gone.
+##
+## The bail-outs are deliberately WHOLE-FILE and deliberately generous: a file that unpins anything,
+## asks `is_instance_valid` about anything, or drops this anchor is left alone. A note that fires on
+## a file whose author is plainly already thinking about lifetimes is worth less than no note, and
+## this is advisory - a missed one costs nothing, a wrong one costs trust.
+static func freed_pin_anchors(source: String,
+		known_pins: PackedStringArray = PackedStringArray()) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var text: String = _without_comment_lines(source)
+	if text.contains("is_instance_valid(") or text.contains(".unpin()"):
+		return found
+	var pinned: PackedStringArray = known_pins if not known_pins.is_empty() \
+		else pinned_anchors(source)
+	if pinned.is_empty():
+		return found
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges()
+		var at: int = stripped.find(".queue_free()")
+		if at < 0:
+			continue
+		var freed: String = _node_name_of(stripped.substr(0, at))
+		if freed.is_empty() or not pinned.has(freed) or found.has(freed):
+			continue
+		# Letting go of the anchor by hand is the fix written out, so a file that does it is done.
+		if text.contains("%s = null" % freed):
+			continue
+		found.append(freed)
+	return found
+
+
+## The names this file calls its own PARENT: a variable filled from `get_parent()`, an object it
+## hands itself to with `add_child(self)`, and the target of a `reparent`.
+static func _self_parent_names(text: String) -> Dictionary:
+	var parents: Dictionary = {}
+	for line: String in text.split("\n"):
+		var stripped: String = line.strip_edges().trim_prefix("@onready ")
+		if stripped.begins_with("var ") and stripped.contains("get_parent()"):
+			# The VALUE has to be the parent itself. `get_parent().get_node("Player")` is a sibling
+			# and `get_parent().get_parent()` is a grandparent, and pinning to a sibling is the most
+			# ordinary thing in the world - naming either of those a double follow would be a note
+			# about nothing, on the most common shape there is.
+			var assign_at: int = stripped.find("=")
+			if assign_at < 0:
+				continue
+			var value_text: String = stripped.substr(assign_at + 1).strip_edges()
+			if not value_text in ["get_parent()", "self.get_parent()"] \
+					and not value_text.begins_with("get_parent() as "):
+				continue
+			var declared: String = stripped.substr(4, assign_at - 4).strip_edges()
+			var name_text: String = declared.get_slice(":", 0).strip_edges()
+			if _is_plain_name(name_text):
+				parents[name_text] = true
+			continue
+		const ADD_CHILD := ".add_child("
+		var add_at: int = stripped.find(ADD_CHILD)
+		if add_at > 0 and stripped.substr(add_at + ADD_CHILD.length()) \
+				.get_slice(",", 0).get_slice(")", 0).strip_edges() == "self":
+			var owner_name: String = _node_name_of(stripped.substr(0, add_at))
+			if not owner_name.is_empty():
+				parents[owner_name] = true
+			continue
+		for verb: String in ["reparent(", "self.reparent("]:
+			if not stripped.begins_with(verb):
+				continue
+			var target: String = stripped.substr(verb.length()) \
+				.get_slice(",", 0).get_slice(")", 0).strip_edges()
+			if _is_plain_name(target):
+				parents[target] = true
+	return parents
+
+
+## A bare identifier - the only thing these notes will name out loud, because half an expression in
+## a message is worse than no message.
+static func _is_plain_name(text: String) -> bool:
+	return text.is_valid_identifier() and text != "self"
+
+
 static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
 		var source: String = FileAccess.get_file_as_string(script_path)
@@ -2951,6 +3085,21 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 				"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
 					% [held, held])
 			(findings[findings.size() - 1] as Dictionary)["subject"] = held
+		# Y6. The two ways the pin words and the child words get crossed. Notes, never warnings:
+		# both mechanisms are honest and both files run - they just do a thing the author did not
+		# mean, and there is nowhere else a person would be told.
+		# One grammar walk for both notes: each of them would otherwise ask for the same answer.
+		var pins: PackedStringArray = pinned_anchors(source)
+		for anchor: String in double_follow_anchors(source, pins):
+			_add(findings, "info", "double-follow", script_path,
+				"This object is BOTH a child of %s and pinned to it. Being a child already carries it, so the pin writes its place a second time from the same source and the two fight every frame - the classic \"it drifts twice as fast\" bug. Keep one: Unpin, or take it out of %s and let the pin do the carrying."
+					% [anchor, anchor])
+			(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
+		for anchor: String in freed_pin_anchors(source, pins):
+			_add(findings, "info", "pin-to-freed-object", script_path,
+				"This object is pinned to %s and this file frees %s without ever unpinning. The pin keeps reading a place off a node that is gone, and the first frame after the free is a \"previously freed instance\" crash. Unpin before the free, or ask whether %s is still there."
+					% [anchor, anchor, anchor])
+			(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
 
 
 # ── Y20: what mirroring has to drag along ────────────────────────────────────────

@@ -56,8 +56,29 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "BoundToLayout", "Bound To Layout", ACEDescriptor.ACEType.ACTION, "{host.}position = {host.}position.clamp({low}, {high})", "", [F.make_param("low", "String", "Vector2.ZERO", "Top left", "The top-left corner the object is kept inside.", "expression"), F.make_param("high", "String", "Vector2(1152, 648)", "Bottom right", "The bottom-right corner the object is kept inside.", "expression")], CAT_LAYOUT, "Bound to layout (inside {low} - {high})", "Node2D")
 		.described("Holds the object inside the layout's edges instead of letting it leave - the arcade fence."))
 	descriptors.append(F.make_descriptor("Core", "PinToObject", "Pin To", ACEDescriptor.ACEType.ACTION, "{host.}global_position = {anchor}.global_position + {offset}", "", [F.make_param("anchor", "String", "self", "Object", "The object to ride.", "expression"), F.make_param("offset", "String", "Vector2(0, 0)", "Offset", "How far from it to sit, in pixels.", "expression")], CAT_PIN, "Pin to {anchor} (position · offset {offset})", "Node2D")
-		.described("Puts the object at another object's place, offset by however far apart you want them."))
+		.described("Puts the object at another object's place, offset by however far apart you want them.\n\nPin or child? A pin follows at runtime and can let go; a child is structure and is destroyed with its parent. Reach for Add Child when the two are one thing that lives and dies together, and for a pin when one thing rides another for a while."))
 	descriptors.append(F.make_descriptor("Core", "PinAngleToObject", "Pin Angle To", ACEDescriptor.ACEType.ACTION, "{host.}rotation = {anchor}.rotation", "", [F.make_param("anchor", "String", "self", "Object", "The object whose angle to copy.", "expression")], CAT_PIN, "Pin to {anchor} (angle)", "Node2D")
 		.described("Turns the object to match another object's angle, so the two stay aligned."))
+
+	# ── Y4: the two DISTANCE pin modes, one line each ─────────────────────────────────────────
+	# The Pin behavior pack owns the whole family - a mode dropdown, a remembered offset, an Unpin
+	# and an Is Pinned - and the pattern chip offers it first. These two rows are for the projects
+	# that want the one line: a rope, and a bar.
+	#
+	# The other four modes Y5 shipped are pack rows ONLY, and that is the same rule the acceleration
+	# step above is left out under. `global_position.x = a.global_position.x`, `scale = a.scale` and
+	# `p = p.lerp(a.p, k * delta)` are three of the most general lines in the language - the last of
+	# them is byte-for-byte how a CAMERA scrolls toward a target, which the sheet has had its own
+	# words for since S18. A picker row is not just a row: its template is what the IMPORTER matches,
+	# so shipping one would silently re-file every such line in every project as a pin, whatever the
+	# reading's own gates say. So those four are authored as Pin ▸ Pin To Softly / Pin X Position To
+	# / Pin Y Position To / Pin Size To on the pack, and the hand-written shapes only READ as pins in
+	# a file that has already pinned that anchor another way. Spring is a pack row for a different
+	# reason: it carries velocity between frames, and a row that needs somewhere to keep a number is
+	# a behavior, not a one-liner.
+	descriptors.append(F.make_descriptor("Core", "PinToObjectRope", "Pin To (Rope)", ACEDescriptor.ACEType.ACTION, "{host.}global_position = {anchor}.global_position + ({host.}global_position - {anchor}.global_position).limit_length({length})", "", [F.make_param("anchor", "String", "self", "Object", "The object the rope hangs from.", "expression"), F.make_param("length", "String", "80.0", "Max length", "How long the rope is, in pixels. Inside that the object hangs free.", "expression")], CAT_PIN, "Pin to {anchor} (rope, max length {length})", "Node2D")
+		.described("Hangs the object off another on a rope: free to move inside the length, pulled back the moment the line goes taut. A lantern on a stick, a leash, a wrecking ball.\n\nA pin follows at runtime and can let go; a child is structure and is destroyed with its parent."))
+	descriptors.append(F.make_descriptor("Core", "PinToObjectBar", "Pin To (Bar)", ACEDescriptor.ACEType.ACTION, "{host.}global_position = {anchor}.global_position + ({host.}global_position - {anchor}.global_position).normalized() * {length}", "", [F.make_param("anchor", "String", "self", "Object", "The object the bar is fixed to.", "expression"), F.make_param("length", "String", "80.0", "Length", "The distance the object is held at, in pixels, every tick.", "expression")], CAT_PIN, "Pin to {anchor} (bar, length {length})", "Node2D")
+		.described("Holds the object at exactly one distance from another, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.\n\nA pin follows at runtime and can let go; a child is structure and is destroyed with its parent."))
 
 	return descriptors

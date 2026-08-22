@@ -39,8 +39,10 @@ static func run() -> bool:
 		"platformer_movement") and all_passed
 	all_passed = _check("Solid has no pack to attach",
 		str(EventSheetDocBehaviorIndex.entry("solid").get("pack", "")), "") and all_passed
-	all_passed = _check("Pin has no pack to attach",
-		str(EventSheetDocBehaviorIndex.entry("pin").get("pack", "")), "") and all_passed
+	# Batch 14 gave the Pin pack the five modes that were missing, so the row that used to say
+	# "no pack needed" now points at the pack that does the whole job.
+	all_passed = _check("Pin points at the pin pack",
+		str(EventSheetDocBehaviorIndex.entry("pin").get("pack", "")), "pin") and all_passed
 	all_passed = _check("No save is the remembering pack's opt-out",
 		str(EventSheetDocBehaviorIndex.entry("no-save").get("pack", "")), "save_system") and all_passed
 	all_passed = _check("an unknown key answers with nothing",

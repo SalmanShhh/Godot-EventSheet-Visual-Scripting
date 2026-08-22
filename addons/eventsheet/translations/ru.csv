@@ -4130,3 +4130,22 @@ moving right,движется вправо
 Mirror the view,Отразить вид
 Set tile at {coords} flipped,Отразить клетку {coords}
 Set tile at {coords} flipped to {value},"Отразить клетку {coords}, если {value}"
+"Pin to {anchor} (rope, max length {length})","Прикрепить к {anchor} (верёвка, макс. длина {length})"
+"Pin to {anchor} (bar, length {length})","Прикрепить к {anchor} (штанга, длина {length})"
+Pin to {anchor} softly (speed {speed}),Мягко прикрепить к {anchor} (скорость {speed})
+Pin to {owner}'s {point},Прикрепить к {point} объекта {owner}
+Pin to {owner}'s {point} (offset {offset}),Прикрепить к {point} объекта {owner} (смещение {offset})
+Pin to {owner}'s path position,Прикрепить к позиции на пути объекта {owner}
+Pin X position to {anchor},Прикрепить позицию X к {anchor}
+Pin Y position to {anchor},Прикрепить позицию Y к {anchor}
+Pin size to {anchor},Прикрепить размер к {anchor}
+path,путь
+Pins,Прикрепления
+pinned to,прикреплён к
+"what this object rides, and can let go of",на чём едет этот объект и что он может отпустить
+position and angle,позиция и угол
+rope,верёвка
+bar,штанга
+soft,мягко
+x only,только X
+y only,только Y

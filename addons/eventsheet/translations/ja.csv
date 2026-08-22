@@ -4130,3 +4130,22 @@ moving right,右に動いている
 Mirror the view,映像を左右反転する
 Set tile at {coords} flipped,{coords} のタイルを左右反転する
 Set tile at {coords} flipped to {value},{coords} のタイルの左右反転を {value} にする
+"Pin to {anchor} (rope, max length {length})","{anchor} に固定 (ロープ, 最大長 {length})"
+"Pin to {anchor} (bar, length {length})","{anchor} に固定 (バー, 長さ {length})"
+Pin to {anchor} softly (speed {speed}),{anchor} にゆるやかに固定 (速さ {speed})
+Pin to {owner}'s {point},{owner} の {point} に固定
+Pin to {owner}'s {point} (offset {offset}),{owner} の {point} に固定 (オフセット {offset})
+Pin to {owner}'s path position,{owner} のパス位置に固定
+Pin X position to {anchor},X 位置を {anchor} に固定
+Pin Y position to {anchor},Y 位置を {anchor} に固定
+Pin size to {anchor},サイズを {anchor} に固定
+path,パス
+Pins,固定
+pinned to,固定先
+"what this object rides, and can let go of",このオブジェクトが乗っているもの、そして離せるもの
+position and angle,位置と角度
+rope,ロープ
+bar,バー
+soft,ゆるやか
+x only,X のみ
+y only,Y のみ

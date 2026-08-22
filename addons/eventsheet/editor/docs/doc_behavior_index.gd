@@ -67,9 +67,9 @@ const BEHAVIORS: Array[Dictionary] = [
 	{
 		"key": "pin",
 		"name": "Pin",
-		"here": "No pack needed: parent the node, or copy the other node's position each tick. Pin to is one action.",
-		"pack": "",
-		"reading": "A tick that copies another node's position (and optionally its rotation) reads as Pin to, on one row.",
+		"here": "The Pin pack, in eight modes: position, angle, both, a rope that only pulls when taut, a bar that holds its length, a soft follow that lags, a spring that settles, and the anchor's size. Pin 3D is its twin on a Node3D. A pin follows at runtime and can let go; parenting is the other answer, and is structure.",
+		"pack": "pin",
+		"reading": "A tick that copies another node's position (and optionally its rotation, its size, one axis, or a distance) reads as Pin to, on one row, in the mode's own word.",
 	},
 	{
 		"key": "wrap",

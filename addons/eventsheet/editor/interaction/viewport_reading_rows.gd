@@ -131,6 +131,17 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	# Not one of those questions can be answered from a single line, so all of them are answered from
 	# one walk here and handed to the grammar as ordinary context.
 	extras.merge(EventSheetBehaviorShapes.facts(ordered_code_lines(sheet)), true)
+	# ── Y5 lens hook ───────────────────────────────────────────────────────────────────────────
+	# The same seat question asked of the sheet's DECLARATIONS as well as of its lines. A variable
+	# typed as a marker, a bone or a path follower is what turns "pin to hand" into "pin to Player's
+	# hand", and the importer lifts that declaration into a variable row - so in an opened file the
+	# type is no longer on any line the walk above can see. Declarations win where both answer,
+	# because a lifted row is the same declaration said more precisely.
+	var declared_seats: Dictionary = pin_seat_map(sheet)
+	if not declared_seats.is_empty():
+		var seats: Dictionary = (extras.get("pin_seats", {}) as Dictionary).duplicate()
+		seats.merge(declared_seats, true)
+		extras["pin_seats"] = seats
 	# ── T10 lens hook ──────────────────────────────────────────────────────────────────────────
 	# Whether each object's Z order counts from its parent or from the layer. The file states it on a
 	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
@@ -1516,6 +1527,26 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 		if _is_fraction_range(variable.export_hint):
 			percent_members[variable.name] = true
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+
+
+## Y5. The variables this sheet DECLARES as a point on another object - a Marker2D, a Bone2D, the
+## BoneAttachment3D a skeleton keeps on a bone, a path follower - as {name: {owner, point, path}}.
+## The type and the node path are both on the declaration, which is the only place either is said,
+## and pinning to one of them is "pin to Player's hand" rather than "pin to hand".
+static func pin_seat_map(sheet: EventSheetResource) -> Dictionary:
+	var seats: Dictionary = {}
+	if sheet == null:
+		return seats
+	for entry: Variant in sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable == null:
+			continue
+		var seat: Dictionary = EventSheetBehaviorShapes.pin_seat_entry(
+			variable.name.strip_edges(), variable.type_name.strip_edges(),
+			str(variable.default_value))
+		if not seat.is_empty():
+			seats[variable.name.strip_edges()] = seat
+	return seats
 
 
 ## Q5. True when an export hint says the value runs from 0 to 1 - the range the engine itself treats
