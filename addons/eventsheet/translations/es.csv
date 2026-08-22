@@ -762,12 +762,12 @@ Clipboard Text Is,El texto del portapapeles es
 clipboard text {op} [b]{value}[/b],texto del portapapeles {op} [b]{value}[/b]
 Operator,Operador
 Comparison.,Comparación.
-= (equal to),= (igual a)
-!= (not equal to),!= (distinto de)
-< (less than),< (menor que)
-<= (at most),<= (como mucho)
-> (greater than),> (mayor que)
->= (at least),>= (al menos)
+=  equal to,=  igual a
+≠  not equal to,≠  distinto de
+<  less than,<  menor que
+≤  at most,≤  como mucho
+>  greater than,>  mayor que
+≥  at least,≥  al menos
 Text to compare the clipboard against.,Texto con el que se compara el portapapeles.
 Clone Into,Clonar en
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Copia un nodo vivo, añade la copia a un padre, la coloca y opcionalmente la mete en un grupo: la forma de una sola fila de Duplicar nodo más Añadir hijo más Fijar posición. Si partes de un archivo .tscn, usa Generar escena."

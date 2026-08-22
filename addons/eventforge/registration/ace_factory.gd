@@ -59,13 +59,18 @@ static func make_param(param_id: String, type_name: String, default_value: Varia
 ## the builtin Compare Variable / Compare Values conditions, the `hint: comparison` provider
 ## shorthand, and any pack builder that calls comparison_options(). One list, so a wording change
 ## lands everywhere at once instead of drifting between copies.
+##
+## The label leads with the SYMBOL a reader sees on the row (≤ ≥ ≠, and `=` for equality, matching
+## the sheet's own spelling), then says it in words. The GDScript form is the `key` and stays exactly
+## as it was - it is what the template inserts and what the compiler emits - so a dialog showing this
+## list shows that key muted beside the choice rather than baking it into the words.
 const COMPARISON_OPTIONS: Array = [
-	{"key": "==", "label": "= (equal to)"},
-	{"key": "!=", "label": "!= (not equal to)"},
-	{"key": "<", "label": "< (less than)"},
-	{"key": "<=", "label": "<= (at most)"},
-	{"key": ">", "label": "> (greater than)"},
-	{"key": ">=", "label": ">= (at least)"}
+	{"key": "==", "label": "=  equal to"},
+	{"key": "!=", "label": "≠  not equal to"},
+	{"key": "<", "label": "<  less than"},
+	{"key": "<=", "label": "≤  at most"},
+	{"key": ">", "label": ">  greater than"},
+	{"key": ">=", "label": "≥  at least"}
 ]
 
 ## The same six as bare inserted tokens, for callers that only need the values.

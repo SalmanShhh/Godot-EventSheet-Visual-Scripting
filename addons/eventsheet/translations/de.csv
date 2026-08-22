@@ -762,12 +762,12 @@ Clipboard Text Is,Zwischenablagetext ist
 clipboard text {op} [b]{value}[/b],Zwischenablagetext {op} [b]{value}[/b]
 Operator,Operator
 Comparison.,Vergleich.
-= (equal to),= (gleich)
-!= (not equal to),!= (ungleich)
-< (less than),< (kleiner als)
-<= (at most),<= (höchstens)
-> (greater than),> (größer als)
->= (at least),>= (mindestens)
+=  equal to,=  gleich
+≠  not equal to,≠  ungleich
+<  less than,<  kleiner als
+≤  at most,≤  höchstens
+>  greater than,>  größer als
+≥  at least,≥  mindestens
 Text to compare the clipboard against.,"Text, mit dem die Zwischenablage verglichen wird."
 Clone Into,Klonen in
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Kopiert einen lebenden Node, hängt die Kopie an einen Elternknoten, platziert sie und legt sie auf Wunsch in eine Gruppe - die Ein-Zeilen-Form von Node duplizieren plus Kind hinzufügen plus Position setzen. Wenn du von einer .tscn-Datei ausgehst, nimm stattdessen Szene erzeugen."

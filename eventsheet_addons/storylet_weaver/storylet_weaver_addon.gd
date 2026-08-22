@@ -164,7 +164,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_name("Add Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
-## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
+## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
 func add_requirement(id: String, quality_key: String, op: String, value: Variant) -> void:
@@ -183,7 +183,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_name("Add Choice Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.")
-## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
+## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, {op}, {value})")
 func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value: Variant) -> void:
@@ -226,7 +226,7 @@ func add_meta(id: String, key: String, value: Variant) -> void:
 ## @ace_name("Add Requirement (Key vs Key)")
 ## @ace_category("Storylets")
 ## @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.")
-## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
+## @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, {op}, {other_key})")
 func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:

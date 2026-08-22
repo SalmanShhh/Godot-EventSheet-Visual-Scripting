@@ -762,12 +762,12 @@ Clipboard Text Is,클립보드 텍스트가
 clipboard text {op} [b]{value}[/b],클립보드 텍스트 {op} [b]{value}[/b]
 Operator,연산자
 Comparison.,비교.
-= (equal to),= (같음)
-!= (not equal to),!= (같지 않음)
-< (less than),< (보다 작음)
-<= (at most),<= (이하)
-> (greater than),> (보다 큼)
->= (at least),>= (이상)
+=  equal to,=  같음
+≠  not equal to,≠  같지 않음
+<  less than,<  보다 작음
+≤  at most,≤  이하
+>  greater than,>  보다 큼
+≥  at least,≥  이상
 Text to compare the clipboard against.,클립보드와 비교할 텍스트.
 Clone Into,복제해 넣기
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","살아 있는 노드를 복사하고, 사본을 부모에 추가하고, 위치를 잡고, 원하면 그룹에도 넣습니다 - 노드 복제 + 자식 추가 + 위치 설정 을 한 줄로 만든 형태입니다. .tscn 파일에서 시작한다면 씬 생성 을 쓰세요."

@@ -288,10 +288,13 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	if EventSheetNumberScrub.is_scrubbable(EventSheetNumberScrub.read_value(field)):
 		var scrub_hint: String = "Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse)."
 		label.tooltip_text = scrub_hint if hover_text.is_empty() else "%s\n\n%s" % [hover_text, scrub_hint]
-	# Dropdowns clip long entries instead of forcing the dialog wider.
-	if field is OptionButton:
-		(field as OptionButton).clip_text = true
-		(field as OptionButton).custom_minimum_size = Vector2(220.0, 0.0)
+	# Dropdowns clip long entries instead of forcing the dialog wider. The field may BE the dropdown
+	# or be the dropdown wrapped with its muted code note (K1), so the value-bearing widget is asked
+	# for rather than assumed - a wrapped dropdown must clip exactly like a bare one.
+	var dropdown: OptionButton = _fields.get(key) as OptionButton
+	if dropdown != null:
+		dropdown.clip_text = true
+		dropdown.custom_minimum_size = Vector2(220.0, 0.0)
 
 	# Parameter description rendered below its control.
 	var description: String = str(param_dict.get("description", ""))
@@ -572,7 +575,10 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	if autocomplete is Array and not autocomplete.is_empty():
 		return _create_autocomplete_field(key, autocomplete, default_value)
 	if options is Array and not options.is_empty():
-		return _create_options_field(key, options, default_value)
+		# K1 - a dropdown whose words differ from the token it inserts shows that token muted beside
+		# it: "≤  at most" reads as the row will read, `<=` says what the line will say. A list whose
+		# labels ARE its values is returned untouched.
+		return EventSheetPopupUI.code_noted_option(_create_options_field(key, options, default_value))
 	if field_type == TYPE_BOOL:
 		var check: CheckBox = CheckBox.new()
 		check.button_pressed = _parse_bool(default_value)
@@ -1218,7 +1224,7 @@ func _create_enum_reference_field(key: String, default_value: Variant, enum_name
 		fallback.placeholder_text = "%s.MEMBER (enum not found in this sheet)" % enum_name
 		_fields[key] = fallback
 		return fallback
-	return _create_options_field(key, member_options, default_value)
+	return EventSheetPopupUI.code_noted_option(_create_options_field(key, member_options, default_value))
 
 
 ## Color picker param (hint "color" or a Color-typed param). The value round-trips as a

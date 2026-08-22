@@ -762,12 +762,12 @@ Clipboard Text Is,Il testo degli appunti è
 clipboard text {op} [b]{value}[/b],testo degli appunti {op} [b]{value}[/b]
 Operator,Operatore
 Comparison.,Confronto.
-= (equal to),= (uguale a)
-!= (not equal to),!= (diverso da)
-< (less than),< (minore di)
-<= (at most),<= (al massimo)
-> (greater than),> (maggiore di)
->= (at least),>= (almeno)
+=  equal to,=  uguale a
+≠  not equal to,≠  diverso da
+<  less than,<  minore di
+≤  at most,≤  al massimo
+>  greater than,>  maggiore di
+≥  at least,≥  almeno
 Text to compare the clipboard against.,Testo con cui confrontare gli appunti.
 Clone Into,Clona dentro
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Copia un nodo vivo, aggiunge la copia a un genitore, la posiziona e se vuoi la mette in un gruppo - la forma in una riga di Duplica nodo più Aggiungi figlio più Imposta posizione. Se parti da un file .tscn usa invece Genera scena."

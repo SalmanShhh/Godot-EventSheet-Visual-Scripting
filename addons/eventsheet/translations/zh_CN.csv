@@ -762,12 +762,12 @@ Clipboard Text Is,剪贴板文本为
 clipboard text {op} [b]{value}[/b],剪贴板文本 {op} [b]{value}[/b]
 Operator,运算符
 Comparison.,比较。
-= (equal to),= (等于)
-!= (not equal to),!= (不等于)
-< (less than),< (小于)
-<= (at most),<= (至多)
-> (greater than),> (大于)
->= (at least),>= (至少)
+=  equal to,=  等于
+≠  not equal to,≠  不等于
+<  less than,<  小于
+≤  at most,≤  至多
+>  greater than,>  大于
+≥  at least,≥  至少
 Text to compare the clipboard against.,用来与剪贴板比较的文本。
 Clone Into,克隆到
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.",复制一个活的节点，把副本加到某个父节点下，摆好位置，还可以顺便加入一个组 - 相当于 复制节点 加 添加子节点 加 设置位置 的一行写法。如果你是从 .tscn 文件出发，请改用 生成场景。

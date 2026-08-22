@@ -762,12 +762,12 @@ Clipboard Text Is,Текст буфера обмена
 clipboard text {op} [b]{value}[/b],текст буфера обмена {op} [b]{value}[/b]
 Operator,Оператор
 Comparison.,Сравнение.
-= (equal to),= (равно)
-!= (not equal to),!= (не равно)
-< (less than),< (меньше)
-<= (at most),<= (не больше)
-> (greater than),> (больше)
->= (at least),>= (не меньше)
+=  equal to,=  равно
+≠  not equal to,≠  не равно
+<  less than,<  меньше
+≤  at most,≤  не больше
+>  greater than,>  больше
+≥  at least,≥  не меньше
 Text to compare the clipboard against.,"Текст, с которым сравнивается буфер обмена."
 Clone Into,Клонировать в
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Копирует живой узел, добавляет копию к родителю, размещает её и при желании кладёт в группу - однострочная форма Дублировать узел плюс Добавить потомка плюс Задать позицию. Если вы начинаете с файла .tscn, возьмите Породить сцену."

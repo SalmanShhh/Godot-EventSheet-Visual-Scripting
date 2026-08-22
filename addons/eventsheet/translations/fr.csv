@@ -762,12 +762,12 @@ Clipboard Text Is,Le texte du presse-papiers est
 clipboard text {op} [b]{value}[/b],texte du presse-papiers {op} [b]{value}[/b]
 Operator,Opérateur
 Comparison.,Comparaison.
-= (equal to),= (égal à)
-!= (not equal to),!= (différent de)
-< (less than),< (inférieur à)
-<= (at most),<= (au plus)
-> (greater than),> (supérieur à)
->= (at least),>= (au moins)
+=  equal to,=  égal à
+≠  not equal to,≠  différent de
+<  less than,<  inférieur à
+≤  at most,≤  au plus
+>  greater than,>  supérieur à
+≥  at least,≥  au moins
 Text to compare the clipboard against.,Texte auquel comparer le presse-papiers.
 Clone Into,Cloner dans
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Copie un nœud vivant, ajoute la copie à un parent, la place et la met éventuellement dans un groupe - la forme en une ligne de Dupliquer le nœud plus Ajouter un enfant plus Définir la position. Si vous partez d'un fichier .tscn, utilisez plutôt Générer une scène."

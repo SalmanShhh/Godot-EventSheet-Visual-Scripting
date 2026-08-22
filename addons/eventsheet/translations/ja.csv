@@ -762,12 +762,12 @@ Clipboard Text Is,クリップボードのテキストが
 clipboard text {op} [b]{value}[/b],クリップボードのテキスト {op} [b]{value}[/b]
 Operator,演算子
 Comparison.,比較。
-= (equal to),= (等しい)
-!= (not equal to),!= (等しくない)
-< (less than),< (より小さい)
-<= (at most),<= (以下)
-> (greater than),> (より大きい)
->= (at least),>= (以上)
+=  equal to,=  等しい
+≠  not equal to,≠  等しくない
+<  less than,<  より小さい
+≤  at most,≤  以下
+>  greater than,>  より大きい
+≥  at least,≥  以上
 Text to compare the clipboard against.,クリップボードと比較するテキスト。
 Clone Into,複製して追加
 "Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.",生きているノードをコピーし、そのコピーを親に追加し、位置を決め、必要ならグループにも入れます - ノードを複製 + 子を追加 + 位置を設定 を 1 行にまとめた形です。.tscn ファイルから始める場合は シーンを生成 を使ってください。
