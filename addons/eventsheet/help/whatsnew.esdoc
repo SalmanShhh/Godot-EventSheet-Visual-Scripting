@@ -41,6 +41,62 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **A `Mirror and Flip` showcase.** A hero that faces the way it moves with its ray, its muzzle point
   and its dust coming along and its name plate staying readable, a mirrored UI panel, a mirrored
   sub-viewport, a flipped tile and a 3D twin that turns around instead of scaling itself inside out.
+### Added - a board keeps its speed, a rail is a curve you ride, and both read back
+
+- **Momentum is its own movement model, and it has a pack.** A platformer controller chases a top
+  speed every tick and stops the moment you let go, which is the right model for legs and the wrong
+  one for a board - and it is why a skating game built on a run-and-jump controller always feels
+  like it is fighting you. **Skateboard** (CharacterBody2D) and **Skateboard 3D** (CharacterBody3D)
+  are the other model: **Push** adds a fixed amount once and you keep it, **Roll With The Slope**
+  projects gravity along the floor normal so a downhill is free speed and an uphill is a tax, and
+  friction is low because a board coasts. That one slope row is pumping, bowl carving and a
+  halfpipe that returns you to the coping, with no curve anywhere in the sheet.
+- **Tricks are turns with a landing test.** **Ollie** leaves the ground, **Spin Trick** and **Flip
+  Trick** turn in the air and count the turns, and touching down is judged: within the landing
+  tolerance of the floor and you get **On Landed Clean**, crookeder and you get **On Bailed**. You
+  cannot bail a trick you never did, so rolling down a bank never wipes a beginner out on arrival.
+  **Manual**, **Brake** and **Reverse** fill in the rest, and **Is Rolling** / **Is Airborne** /
+  **Is In A Manual** are the questions a sheet asks about them.
+- **The rail words are their own section, so a traversal pack can adopt them rather than spell them
+  twice.** **Is Near Rail**, **Start Grinding**, **Grind Along Rail**, **Has Reached The End**,
+  **Hop Off** and **Ride Zipline** work on any `Path2D` or `Path3D` in the layout - no script, no
+  group, no marker, just a curve with two points. Keep Momentum rides at the speed you arrived
+  with, and a zipline is the same lock-on with the line's own slope driving it.
+- **The 3D twin is where the surface does the work.** Gravity is projected onto the floor normal,
+  **Align The Board To The Surface** keeps the board flat on ramps, and leaving a transition
+  steeper than the lip angle fires **On Launched Off The Lip** - a named moment a sheet can answer
+  instead of a guess about velocity signs. Landings compare the board's own up-vector against the
+  surface it touched down on. The pack deliberately owns nothing else: trick inputs are combos,
+  trick animations are animation-tree states, the wipeout is the physics rows, and the camera is an
+  orbit behaviour.
+- **A trick chain, and a meter with a middle.** **Add To Chain** scores at the running multiplier
+  and raises it, **Bank Chain** makes it real, **Drop Chain** is what a bail costs you - and the
+  same three rows are now offered on the **Combo Box** page, because a fighter's hit chain counts
+  the same way. **Start Balancing** and **Steer The Balance** are the tension every manual and
+  every long rail has, and **HUD Kit** gained **Set Needle**: a value from -1 to 1 drawn as a
+  needle with a mark at dead centre, which is a thing a bar cannot show.
+- **Two showcases you can play.** `demo/showcase/skate_park/` is a slope, a rail and a quarterpipe
+  with a chain in the HUD; `skate_park_3d/` is the same run on a surface with a bank you launch
+  off. Every row in both sheets is a pack row - there is no skating math in either.
+
+### Added - the two board shapes read back out of hand-written code
+
+- **Gravity along the floor normal is a board, and the file says so.** A script that writes
+  `velocity.x += slope * gravity * delta` off `get_floor_normal()` now reads **Roll with the
+  slope**, and - only because that line is in the same file - its `move_toward` toward a top speed
+  reads **Push toward max speed**, its `velocity.y = -ollie_speed` reads **Ollie**, and its
+  `rotation += TAU * delta` reads **Spin one turn per second**. Those last three are among the most
+  general lines in the language and belong to whoever wrote them in every project that is not
+  writing a board, which is exactly why the whole-file gate exists.
+- **The closest-offset snap reads as the rail words it is.** `get_closest_offset` into a
+  `sample_baked` point, a distance against it, and a flag the file both raises and lowers read as
+  **Is near rail** / **Start grinding** / **Is grinding** / **Has reached the end** / **Hop off**;
+  and the two lines a ride is really written as - the offset walked forward and the body put on the
+  curve - collapse into the single row **Grind along rail at**, with both lines on the hover. A
+  file that only measures a path is measuring a path, and is left alone.
+- **Both shapes are claimed.** `grind` and `skateboard` join the pattern registry with their words,
+  their why, and the pack a hand-written shape could be swapped for. Every reading is display-only:
+  opening one of these files and saving it untouched puts back every byte.
 
 ### Added - a menu built in code reads as the menu it is, item by item
 

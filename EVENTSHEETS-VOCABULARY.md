@@ -3308,6 +3308,42 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 - **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.
 - **Undo History** - The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed.
 
+### Facing (`res://addons/eventforge/registration/modules/facing_aces.gd`)
+Facing: mirror and flip, on every host that can do it
+
+#### Conditions
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this node's picture is mirrored - which way the character is facing.
+- **Is Flipped** (`target: String`) - True while this node's picture is upside down.
+- **Is Mirrored** (`target: String`) - True while this object is mirrored, read off its own X scale.
+- **Is Mirrored** (`target: String`) - True while this 3D object is mirrored along X.
+- **Is Mirrored** (`target: String`) - True while this UI element is mirrored.
+
+#### Actions
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors this node's picture left-to-right - the way a 2D character faces.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Flipped** (`flipped: String, target: String`) - Turns this node's picture upside down, or puts it back the right way up.
+- **Set Mirrored (whole object)** (`mirrored: String, target: String`) - Mirrors this object AND everything under it - the picture, the hitbox, the muzzle point and the ray all face the same way.
+- **Set Mirrored** (`mirrored: String`) - Mirrors a 3D object along X. Worth knowing: a negative scale flips the mesh's winding, so lighting and backface culling see it inside out - Turn Around is usually what you want instead.
+- **Set Mirrored** (`mirrored: String`) - Mirrors a 3D label along X - readable backwards, which is the point when it is a decal or a sign seen from behind.
+- **Turn Around** (`target: String`) - Turns a 3D object to face the other way - half a turn about its up axis. The honest 3D answer to mirroring: nothing is inside out afterwards.
+- **Face Direction Of Movement** (`velocity: String, target: String`) - Faces the way this object is moving, and leaves it facing that way when it stops - the one line every platformer writes by hand.
+- **Face Object** (`object: String, target: String`) - Turns this object to face another one - an enemy looking at the player, a shopkeeper looking at whoever walked in.
+- **Keep Upright** (`target: String`) - Re-negates a child's X scale so it does NOT come along when this object mirrors - what keeps a name plate readable instead of writing it backwards.
+- **Set Mirrored** (`mirrored: String, target: String`) - Mirrors a UI element in place. The pivot is moved to its middle first, which is the half everyone forgets - without it the panel mirrors AND jumps sideways.
+- **Mirror The View** (`mirrored: String`) - Mirrors everything this camera sees - a mirror world, a reflection, a level played backwards.
+- **Mirror The View** (`mirrored: String, target: String`) - Mirrors what a sub-viewport shows - the rear-view mirror, the security monitor, the reflection in the water.
+- **Set Tile Flipped** (`coords: String, mirrored: String, target: String`) - Mirrors the tile already sitting at a cell, keeping its tileset and its tile - how one wall art asset covers both sides of a corridor.
+- **Mirror Path** - Mirrors every point of this path about x = 0 - the second half of a symmetric level, or a patrol route reused facing the other way.
+
 ### File (`res://addons/eventforge/registration/modules/file_aces.gd`)
 File management (read / write / JSON, plus directory + file operations).
 

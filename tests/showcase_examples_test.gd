@@ -221,6 +221,56 @@ static func run() -> bool:
 	passed = _check_scene("the room holds a panel, a tile row, a mirrored view and a 3D twin",
 		"res://demo/showcase/mirror_and_flip/mirror_and_flip.tscn",
 		["Hero", "Tiles", "Panel", "PanelText", "Mirror", "View", "Twin", "TwinMesh", "Nose", "Eye", "Sun"]) and passed
+
+	# ── Y9 / Y22 / Y23 / Y24 - the two skate parks ──────────────────────────────────────────────
+	#
+	# Both sheets are pinned on the pack CALLS rather than on any arithmetic, because that is the
+	# claim: a skate park has no skating math in it. The physics was verified by a temp non-headless
+	# harness (this suite has no main loop, so nothing here can step a frame), and the numbers it
+	# produced, so anyone can repeat it:
+	#   2D  the board lands on the slope at frame 22, x speed 0.00 -> 93.61 over the next 40 frames,
+	#       carrying it from x 110.0 to x 153.7 (Roll With The Slope is the only thing pushing it);
+	#       ollie(420) sets velocity.y to -420.0 and Is Airborne is true three frames later;
+	#       is_near_rail is true 8 px off the line at 16 and false 52 px off it;
+	#       start_grinding puts the board at (560.0, 552.0), the curve's own point;
+	#       the chain reads 100, then 600 at x4, banks 600 and leaves 0 at x1;
+	#       Set Needle builds the needle on first use, at x 163.0 of a 220-wide box for balance 0.5,
+	#       moving to x 207.0 and turning the warning colour at 0.9;
+	#       a bail hands the board to the Checkpoint pack, back to (110.0, 300.0), chain 0, banked 600.
+	#   3D  ground speed 0.00 -> 2.90 m/s over 40 frames on the slope;
+	#       ollie(6) sets velocity.y to 6.00 and Is Airborne is true three frames later;
+	#       is_near_rail is true 0.3 m off the line at 0.8 and false 2.5 m off it;
+	#       start_grinding puts the board at (3.50, -1.00, 0.00).
+	passed = _check_sheet("skate_park", "res://demo/showcase/skate_park/skate_park.gd", [
+		"class_name SkatePark",
+		"$Skater/Skateboard.roll_with_slope()",
+		"$Skater/Skateboard.push(40.0)",
+		"$Skater/Skateboard.ollie(420.0)",
+		"$Skater/Skateboard.is_near_rail($Rail, 16.0)",
+		"$Skater/Skateboard.grind_along_rail(320.0, false)",
+		"$Hud/HudKit.set_needle(\"BalanceMeter\", $Skater/Skateboard.balance(), 0.6)",
+		"$Skater/Checkpoint.respawn()",
+	]) and passed
+	passed = _check_sheet("skate_park_3d", "res://demo/showcase/skate_park_3d/skate_park_3d.gd", [
+		"class_name SkatePark3D",
+		"$Skater/Skateboard.roll_with_slope()",
+		"$Skater/Skateboard.align_board_to_surface()",
+		"$Skater/Skateboard.launched_off_the_lip.connect(_on_launched)",
+		"$Skater/Skateboard.is_near_rail($Rail, 0.8)",
+		"$Skater/Skateboard.bank_chain()",
+	]) and passed
+	passed = _check("the skate parks bake every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/skate_park/skate_park.gd").contains("{uid}")
+			or FileAccess.get_file_as_string("res://demo/showcase/skate_park_3d/skate_park_3d.gd").contains("{uid}"),
+		false) and passed
+	passed = _check_scene("the park has a slope, a flat, a rail, a quarterpipe and a skater on a board",
+		"res://demo/showcase/skate_park/skate_park.tscn",
+		["Slope", "Ground", "Quarterpipe", "Rail", "RailMark", "Skater", "Skateboard", "Checkpoint",
+			"Hud", "HudKit", "BalanceMeter"]) and passed
+	passed = _check_scene("the 3D park has the same run on a surface, with a bank to launch off",
+		"res://demo/showcase/skate_park_3d/skate_park_3d.tscn",
+		["Slope", "Ground", "Bank", "Rail", "RailMark", "Skater", "Skateboard", "Board", "Camera",
+			"Sun", "Overlay", "Hud"]) and passed
 	# The rider survives being mounted only because it is addressed by its scene-unique name: the
 	# moment it moves under the saddle, a $Rider path points at nothing.
 	passed = _check("the rider, head, bar and hat keep their scene-unique names in the packed scene",
