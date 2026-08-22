@@ -38,7 +38,10 @@ const PATTERN_IDS: PackedStringArray = [
 	# X22 / X23 / X25 / X28 / X29 - the sensor, touch, shooter, timed-input and options shapes.
 	"gyro_controls", "swipe", "hitscan", "secrets", "qte", "accessibility_options",
 	# Y19 / Y20 / Y21 - which way a thing faces, and everything that has to turn with it.
-	"facing"
+	"facing",
+	# Y9 / Y22 - the rail ride and the board. Two ids rather than one because snapping to a curve
+	# and riding it is a general shape a traversal pack owns as readily as a skateboard does.
+	"grind", "skateboard"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

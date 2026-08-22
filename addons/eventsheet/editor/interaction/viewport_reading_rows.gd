@@ -118,6 +118,20 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	extras["tilt_variables"] = EventSheetPatternReadings.tilt_variables(input_lines)
 	extras["rate_variables"] = EventSheetPatternReadings.rate_variables(input_lines)
 	extras["input_window"] = EventSheetPatternReadings.input_window_facts(input_lines)
+	# ── Y9 / Y22 lens hook ─────────────────────────────────────────────────────────────────────
+	# The two board shapes, both whole-file questions. A rail ride is a closest offset, a baked
+	# sample and a flag spread over three lines that share only their locals' names; and a board is
+	# told apart from a runner by ONE line elsewhere in the file - gravity projected along the floor
+	# normal - which is what licenses reading its jump as an ollie and its top speed as a push. Asked
+	# once here so no single-line reading has to guess, and so a file with neither shape is untouched.
+	# Both line walks, because the two shapes live in different halves of the file: the knobs a board
+	# is tuned with are declarations (which only the behaviour walk lists) and the ride is compound
+	# arithmetic inside an event (which only the ordered walk renders back). Either alone would
+	# recognise half a board and call it a whole one.
+	var board_lines: PackedStringArray = input_lines.duplicate()
+	board_lines.append_array(ordered_code_lines(sheet))
+	extras["grind"] = EventSheetPatternReadings.grind_facts(board_lines)
+	extras["skate"] = EventSheetPatternReadings.skate_facts(board_lines)
 	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the

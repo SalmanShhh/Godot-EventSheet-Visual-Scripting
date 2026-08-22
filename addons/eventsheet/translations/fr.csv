@@ -4130,3 +4130,25 @@ moving right,se déplace vers la droite
 Mirror the view,Mettre la vue en miroir
 Set tile at {coords} flipped,Mettre la tuile en {coords} en miroir
 Set tile at {coords} flipped to {value},Mettre la tuile en {coords} en miroir selon {value}
+Skateboard ▸ Roll with the slope,Skateboard ▸ Rouler avec la pente
+gravity along the floor,gravité le long du sol
+Skateboard ▸ Push toward max speed by {amount},Skateboard ▸ Pousser de {amount} vers la vitesse maximale
+Skateboard ▸ Ollie {strength},Skateboard ▸ Ollie {strength}
+Skateboard ▸ Spin one turn per second,Skateboard ▸ Tourner d'un tour par seconde
+Skateboard ▸ Spin {turns} turns per second,Skateboard ▸ Tourner de {turns} tours par seconde
+Skateboard ▸ Flip one turn per second,Skateboard ▸ Faire un flip par seconde
+Skateboard ▸ Flip {turns} turns per second,Skateboard ▸ Faire {turns} flips par seconde
+Grind ▸ Is near rail {rail} within {distance},Grind ▸ Est près du rail {rail} à moins de {distance}
+Grind ▸ Has reached the end,Grind ▸ A atteint la fin
+Grind ▸ Is grinding,Grind ▸ Est en train de grinder
+Grind ▸ Is not grinding,Grind ▸ N'est pas en train de grinder
+Grind ▸ Start grinding {rail},Grind ▸ Commencer à grinder sur {rail}
+Grind ▸ Hop off,Grind ▸ Sauter du rail
+Grind ▸ Grind along rail at {speed},Grind ▸ Grinder le long du rail à {speed}
+"on {rail}, at the point the curve bakes","sur {rail}, au point que la courbe fournit"
+Riding a rail,Glisser sur un rail
+a body snaps to the nearest point on a drawn curve and is walked along it,Un corps s'accroche au point le plus proche d'une courbe dessinée et la parcourt
+Momentum movement on a board,Déplacement à l'élan sur une planche
+"speed is kept rather than chased, and the slope under you is where it comes from","La vitesse se conserve au lieu de se rechercher, et elle vient de la pente sous vos pieds"
+Skateboard,Skateboard
+Skateboard ▸ Brake by {amount},Skateboard ▸ Freiner de {amount}

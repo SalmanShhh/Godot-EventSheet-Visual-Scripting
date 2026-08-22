@@ -225,6 +225,18 @@ const ENTRIES: Dictionary = {
 		"why": "an object is mirrored to face the way it moves, and its ray, its spawn points and its particles turn with it",
 		"adoptable": "",
 		"rank": 33
+	},
+	"grind": {
+		"words": "Riding a rail",
+		"why": "a body snaps to the nearest point on a drawn curve and is walked along it",
+		"adoptable": "skateboard",
+		"rank": 34
+	},
+	"skateboard": {
+		"words": "Momentum movement on a board",
+		"why": "speed is kept rather than chased, and the slope under you is where it comes from",
+		"adoptable": "skateboard",
+		"rank": 35
 	}
 }
 
@@ -246,7 +258,8 @@ const PACK_LABELS: Dictionary = {
 	"advanced_random": "Advanced Random",
 	"line_of_sight": "Line Of Sight",
 	"touch_gestures": "Touch Gestures",
-	"fps_controller": "FPS Controller"
+	"fps_controller": "FPS Controller",
+	"skateboard": "Skateboard"
 }
 
 

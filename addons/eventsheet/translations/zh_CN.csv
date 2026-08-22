@@ -4130,3 +4130,25 @@ moving right,正在向右移动
 Mirror the view,镜像画面
 Set tile at {coords} flipped,镜像 {coords} 处的瓦片
 Set tile at {coords} flipped to {value},按 {value} 镜像 {coords} 处的瓦片
+Skateboard ▸ Roll with the slope,滑板 ▸ 顺着坡度滑行
+gravity along the floor,沿地面方向的重力
+Skateboard ▸ Push toward max speed by {amount},滑板 ▸ 蹬地 {amount} 接近最高速度
+Skateboard ▸ Ollie {strength},滑板 ▸ 豚跳 {strength}
+Skateboard ▸ Spin one turn per second,滑板 ▸ 每秒旋转一圈
+Skateboard ▸ Spin {turns} turns per second,滑板 ▸ 每秒旋转 {turns} 圈
+Skateboard ▸ Flip one turn per second,滑板 ▸ 每秒翻转一圈
+Skateboard ▸ Flip {turns} turns per second,滑板 ▸ 每秒翻转 {turns} 圈
+Grind ▸ Is near rail {rail} within {distance},磨杆 ▸ 距离栏杆 {rail} 在 {distance} 以内
+Grind ▸ Has reached the end,磨杆 ▸ 已到达尽头
+Grind ▸ Is grinding,磨杆 ▸ 正在磨杆
+Grind ▸ Is not grinding,磨杆 ▸ 没有在磨杆
+Grind ▸ Start grinding {rail},磨杆 ▸ 开始在 {rail} 上磨杆
+Grind ▸ Hop off,磨杆 ▸ 跳离
+Grind ▸ Grind along rail at {speed},磨杆 ▸ 以 {speed} 沿栏杆磨行
+"on {rail}, at the point the curve bakes",在 {rail} 上，曲线给出的那个点
+Riding a rail,沿栏杆滑行
+a body snaps to the nearest point on a drawn curve and is walked along it,物体吸附到所绘曲线上最近的点，并沿着它前进
+Momentum movement on a board,靠惯性推进的滑板移动
+"speed is kept rather than chased, and the slope under you is where it comes from",速度是保住的而不是追出来的，它来自脚下的坡度
+Skateboard,滑板
+Skateboard ▸ Brake by {amount},滑板 ▸ 刹车 {amount}

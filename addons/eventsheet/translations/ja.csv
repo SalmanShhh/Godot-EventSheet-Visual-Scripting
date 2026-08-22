@@ -4130,3 +4130,25 @@ moving right,右に動いている
 Mirror the view,映像を左右反転する
 Set tile at {coords} flipped,{coords} のタイルを左右反転する
 Set tile at {coords} flipped to {value},{coords} のタイルの左右反転を {value} にする
+Skateboard ▸ Roll with the slope,スケートボード ▸ 斜面に沿って転がる
+gravity along the floor,床に沿った重力
+Skateboard ▸ Push toward max speed by {amount},スケートボード ▸ 最高速度に向けて {amount} だけプッシュ
+Skateboard ▸ Ollie {strength},スケートボード ▸ オーリー {strength}
+Skateboard ▸ Spin one turn per second,スケートボード ▸ 毎秒1回転スピン
+Skateboard ▸ Spin {turns} turns per second,スケートボード ▸ 毎秒 {turns} 回転スピン
+Skateboard ▸ Flip one turn per second,スケートボード ▸ 毎秒1回転フリップ
+Skateboard ▸ Flip {turns} turns per second,スケートボード ▸ 毎秒 {turns} 回転フリップ
+Grind ▸ Is near rail {rail} within {distance},グラインド ▸ レール {rail} まで {distance} 以内にいる
+Grind ▸ Has reached the end,グラインド ▸ 終点に着いた
+Grind ▸ Is grinding,グラインド ▸ グラインド中
+Grind ▸ Is not grinding,グラインド ▸ グラインドしていない
+Grind ▸ Start grinding {rail},グラインド ▸ {rail} でグラインドを始める
+Grind ▸ Hop off,グラインド ▸ 飛び降りる
+Grind ▸ Grind along rail at {speed},グラインド ▸ レールに沿って {speed} でグラインド
+"on {rail}, at the point the curve bakes",{rail} 上、カーブが返す位置で
+Riding a rail,レールに乗る
+a body snaps to the nearest point on a drawn curve and is walked along it,描いたカーブの最も近い点に吸い付き、その上を進んでいく
+Momentum movement on a board,ボードの勢いで進む移動
+"speed is kept rather than chased, and the slope under you is where it comes from",速度は追いかけるものではなく保つもので、足元の斜面から生まれる
+Skateboard,スケートボード
+Skateboard ▸ Brake by {amount},スケートボード ▸ {amount} だけブレーキ

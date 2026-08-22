@@ -408,6 +408,14 @@ static func statement(code: String, context: Dictionary = {}) -> Dictionary:
 	var circled: Dictionary = orbit_placement_assignment_of(text, context)
 	if not circled.is_empty():
 		return _with_indent(circled, indent)
+	# ── Y9 / Y22 ────────────────────────────────────────────────────────────────────────────────
+	# The board and the rail, ahead of every behavior shape and every piece of arithmetic below. A
+	# ride is a position write and a push is a move_toward, both of which the readings under here
+	# would describe as the property they happen to touch; and both are gated on a whole-file fact,
+	# so a script that is not writing a board never reaches any of it.
+	var board: Dictionary = skate_statement(text, context)
+	if not board.is_empty():
+		return _with_indent(board, indent)
 	# ── T1 / T2 / T3 / T4 ───────────────────────────────────────────────────────────────────────
 	# The hand-rolled behavior shapes, in the shipped behavior's own words. AFTER the readings above
 	# so nothing already settled moves, and BEFORE the arithmetic below, which would describe one
@@ -489,6 +497,13 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var systems: Dictionary = godot_systems_condition(text, context)
 	if not systems.is_empty():
 		return systems
+	# ── Y9 ──────────────────────────────────────────────────────────────────────────────────────
+	# The rail's three questions - am I near it, am I on it, have I run out of it. Each is a
+	# comparison or a bare flag on paper, so they go ahead of every reading below that would answer
+	# the narrower question the operator asks. Gated on the file having ridden a curve at all.
+	var board: Dictionary = skate_condition(text, context)
+	if not board.is_empty():
+		return board
 	# ── T1 / T3 ─────────────────────────────────────────────────────────────────────────────────
 	# A projectile's distance travelled and a glide's arrival are ONE question each, and the readings
 	# below would describe them as the operator they happen to be written with.
@@ -12378,6 +12393,312 @@ static func spatial_words_condition(text: String, context: Dictionary) -> Dictio
 	if not facing.is_empty():
 		return facing
 	return _relative_side_condition(text, context)
+
+
+## Y9 / Y22. The two sections the board's rows sit in. The rail words are their own section on
+## purpose: snapping to a curve and riding it is a general shape - a rail, a zipline, a monorail -
+## and a traversal pack adopts those rows rather than spelling them a second time.
+const BEHAVIOR_SKATEBOARD := "Skateboard"
+const BEHAVIOR_GRIND := "Grind"
+
+## Y22. `rotation += TAU * delta` - one whole turn a second, the spelling a trick is written in
+## when nobody wanted to name a rate.
+const ONE_TURN_PER_SECOND := "TAU"
+
+
+## Y9 / Y22. The board's reading of ONE statement, or {} when this file is not writing a board.
+##
+## Every reading below is gated on a whole-file fact, and that gate is the whole point:
+## `velocity.y = -jump_speed` and `rotation += TAU * delta` are among the most general lines in the
+## language, and they belong to whoever wrote them until this same file has ALSO projected gravity
+## along the floor normal (the board's one unmistakable mark) or ridden a curve by its closest
+## offset. Nothing here moves a byte - the file is untouched and only the words change.
+static func skate_statement(text: String, context: Dictionary) -> Dictionary:
+	var ridden: Dictionary = _grind_statement(text, context)
+	if not ridden.is_empty():
+		return ridden
+	var facts: Dictionary = context.get("skate", {})
+	if facts.is_empty():
+		return {}
+	var object_name: String = script_object(context)
+	var rolled: Dictionary = _roll_with_slope_statement(text, facts, object_name)
+	if not rolled.is_empty():
+		return _with_pattern(rolled, "skateboard", text.strip_edges())
+	var pushed: Dictionary = _push_statement(text, facts, object_name)
+	if not pushed.is_empty():
+		return _with_pattern(pushed, "skateboard", text.strip_edges())
+	var braked: Dictionary = _brake_statement(text, object_name)
+	if not braked.is_empty():
+		return _with_pattern(braked, "skateboard", text.strip_edges())
+	var popped: Dictionary = _ollie_statement(text, facts, object_name)
+	if not popped.is_empty():
+		return _with_pattern(popped, "skateboard", text.strip_edges())
+	var turned: Dictionary = _trick_turn_statement(text, object_name)
+	if not turned.is_empty():
+		return _with_pattern(turned, "skateboard", text.strip_edges())
+	return {}
+
+
+## Y9 / Y22. The board's reading of ONE condition, or {} when this file is not writing a board.
+static func skate_condition(text: String, context: Dictionary) -> Dictionary:
+	var facts: Dictionary = context.get("grind", {})
+	if facts.is_empty():
+		return {}
+	var object_name: String = script_object(context)
+	var near: Dictionary = _near_rail_condition(text, facts, object_name)
+	if not near.is_empty():
+		return _with_pattern(near, "grind", text.strip_edges())
+	var ended: Dictionary = _rail_end_condition(text, facts, object_name)
+	if not ended.is_empty():
+		return _with_pattern(ended, "grind", text.strip_edges())
+	var riding: String = str(facts.get("riding", ""))
+	if riding.is_empty():
+		return {}
+	if text == riding:
+		return _with_pattern(_sentence(object_name, "%s ▸ Is grinding" % BEHAVIOR_GRIND, {}),
+			"grind", text)
+	if text == "not " + riding:
+		return _with_pattern(_sentence(object_name, "%s ▸ Is not grinding" % BEHAVIOR_GRIND, {}),
+			"grind", text)
+	return {}
+
+
+## Y9. The rail rows: locking on, riding one step, and letting go. Each is claimed only for the
+## names THIS file proved are part of a ride, so an ordinary boolean is never dressed up as a grind.
+static func _grind_statement(text: String, context: Dictionary) -> Dictionary:
+	var facts: Dictionary = context.get("grind", {})
+	if facts.is_empty():
+		return {}
+	var object_name: String = script_object(context)
+	var offset: String = str(facts.get("offset", ""))
+	var rail: String = str(facts.get("rail", ""))
+	var riding: String = str(facts.get("riding", ""))
+	var stepped: String = _grind_step_of(text, offset)
+	if not stepped.is_empty():
+		return _with_pattern(_sentence(object_name,
+			"%s ▸ Grind along rail at {speed}" % BEHAVIOR_GRIND, {"speed": [stepped, "value"]}),
+			"grind", text.strip_edges())
+	if riding.is_empty():
+		return {}
+	if text == riding + " = true":
+		return _with_pattern(_sentence(object_name,
+			"%s ▸ Start grinding {rail}" % BEHAVIOR_GRIND, {"rail": [rail, "name"]}),
+			"grind", text.strip_edges())
+	if text == riding + " = false":
+		return _with_pattern(_sentence(object_name, "%s ▸ Hop off" % BEHAVIOR_GRIND, {}),
+			"grind", text.strip_edges())
+	return {}
+
+
+## Y9. The public form of the ride step, for the run grouper: `rail_offset += grind_speed * delta`
+## answers "grind_speed", and anything else answers "".
+static func grind_step_speed(text: String, offset: String) -> String:
+	return _grind_step_of(text.strip_edges(), offset)
+
+
+## Y9. `global_position = rail.to_global(rail.curve.sample_baked(rail_offset))` - the half of a ride
+## that puts the body on the curve. False for a sample read into a local, which is the question
+## "where on the line am I" rather than the ride itself.
+static func is_grind_sample_write(text: String, rail: String, offset: String) -> bool:
+	var line: String = text.strip_edges()
+	if rail.is_empty() or offset.is_empty() or line.begins_with("var "):
+		return false
+	var at: int = top_level_index(line, " = ")
+	if at <= 0:
+		return false
+	var value: String = line.substr(at + 3).strip_edges()
+	return value.contains(rail + ".curve." + EventSheetPatternReadings.CURVE_SAMPLE_BAKED + offset + ")")
+
+
+## Y9. The words the ride row is drawn with, and the muted half that names the line it is on.
+static func grind_ride_text(speed: String) -> String:
+	return translate("%s ▸ Grind along rail at {speed}" % BEHAVIOR_GRIND).replace("{speed}", speed)
+
+
+static func grind_ride_note(rail: String) -> String:
+	return translate("on {rail}, at the point the curve bakes").replace("{rail}", rail)
+
+
+## `rail_offset += grind_speed * delta` - the speed the ride steps forward at, or "" for any other
+## line. The delta is what makes it a ride rather than a jump to a place on the line.
+static func _grind_step_of(text: String, offset: String) -> String:
+	if offset.is_empty() or not text.begins_with(offset + " += "):
+		return ""
+	var value: String = text.substr(offset.length() + 4).strip_edges()
+	var times_at: int = top_level_index(value, " * ")
+	if times_at <= 0:
+		return ""
+	if not EventSheetPatternReadings.DELTA_WORDS.has(value.substr(times_at + 3).strip_edges()):
+		return ""
+	return value.substr(0, times_at).strip_edges()
+
+
+## Y9. `global_position.distance_to(point) < 12.0`, where `point` is a local this file read back off
+## the rail's curve. That is the closest-offset snap's question, and the reason it is gated on the
+## local rather than on the call is that a distance to anything else is simply a distance.
+static func _near_rail_condition(text: String, facts: Dictionary, object_name: String) -> Dictionary:
+	var less_at: int = top_level_index(text, " < ")
+	if less_at <= 0:
+		return {}
+	var measured: Dictionary = call_parts(text.substr(0, less_at).strip_edges())
+	if measured.is_empty() or str(measured.get("method", "")) != "distance_to":
+		return {}
+	var args: PackedStringArray = measured.get("args", PackedStringArray())
+	if args.size() != 1:
+		return {}
+	var points: Dictionary = facts.get("points", {})
+	if not points.has(args[0].strip_edges()):
+		return {}
+	return _sentence(object_name, "%s ▸ Is near rail {rail} within {distance}" % BEHAVIOR_GRIND, {
+		"rail": [str(facts.get("rail", "")), "name"],
+		"distance": [text.substr(less_at + 3).strip_edges(), "value"]})
+
+
+## Y9. `rail_offset >= rail.curve.get_baked_length()` - the end of the line, which is a comparison
+## on paper and one settled question in the sheet's words.
+static func _rail_end_condition(text: String, facts: Dictionary, object_name: String) -> Dictionary:
+	var offset: String = str(facts.get("offset", ""))
+	if offset.is_empty():
+		return {}
+	for operator: String in [" >= ", " > "]:
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		if text.substr(0, at).strip_edges() != offset:
+			continue
+		if not text.substr(at + operator.length()).strip_edges().contains("get_baked_length()"):
+			continue
+		return _sentence(object_name, "%s ▸ Has reached the end" % BEHAVIOR_GRIND, {})
+	return {}
+
+
+## Y22. `velocity.x += slope * gravity * delta` - gravity projected along the floor the board is
+## standing on. The one line that makes a halfpipe work, and the mark that tells a board apart from
+## a runner in the first place.
+static func _roll_with_slope_statement(text: String, facts: Dictionary,
+		object_name: String) -> Dictionary:
+	var at: int = top_level_index(text, " += ")
+	if at <= 0:
+		return {}
+	if not text.substr(0, at).strip_edges().begins_with("velocity"):
+		return {}
+	var value: String = text.substr(at + 4).strip_edges()
+	var slope: String = str(facts.get("slope", ""))
+	var names_slope: bool = value.contains(EventSheetPatternReadings.FLOOR_NORMAL) \
+		or (not slope.is_empty() and value.contains(slope))
+	if not names_slope:
+		return {}
+	var names_delta: bool = false
+	for word: String in EventSheetPatternReadings.DELTA_WORDS:
+		if value.ends_with(word):
+			names_delta = true
+	if not names_delta:
+		return {}
+	var reading: Dictionary = _sentence(object_name,
+		"%s ▸ Roll with the slope" % BEHAVIOR_SKATEBOARD, {})
+	_append_note(reading, translate("gravity along the floor"))
+	return reading
+
+
+## Y22. `velocity.x = move_toward(velocity.x, max_speed * sign(velocity.x), push_speed)` - one kick
+## toward the top speed, which the board then keeps. A move_toward against anything but this file's
+## own top-speed knob is left as the arithmetic it is.
+static func _push_statement(text: String, facts: Dictionary, object_name: String) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	if not text.substr(0, at).strip_edges().begins_with("velocity"):
+		return {}
+	var moved: Dictionary = call_parts(text.substr(at + 3).strip_edges())
+	if moved.is_empty() or str(moved.get("method", "")) != "move_toward":
+		return {}
+	var args: PackedStringArray = moved.get("args", PackedStringArray())
+	if args.size() != 3:
+		return {}
+	var top_speed: String = str(facts.get("top_speed", ""))
+	if top_speed.is_empty() or not args[1].contains(top_speed):
+		return {}
+	return _sentence(object_name,
+		"%s ▸ Push toward max speed by {amount}" % BEHAVIOR_SKATEBOARD,
+		{"amount": [args[2].strip_edges(), "value"]})
+
+
+## Y22. `velocity.x = move_toward(velocity.x, 0.0, amount)` - the foot going down. The same call as
+## a push, aimed at a standstill instead of at the top speed, which is the only difference between
+## the two and the reason they are read apart.
+static func _brake_statement(text: String, object_name: String) -> Dictionary:
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	if not text.substr(0, at).strip_edges().begins_with("velocity"):
+		return {}
+	var moved: Dictionary = call_parts(text.substr(at + 3).strip_edges())
+	if moved.is_empty() or str(moved.get("method", "")) != "move_toward":
+		return {}
+	var args: PackedStringArray = moved.get("args", PackedStringArray())
+	if args.size() != 3 or not ["0.0", "0"].has(args[1].strip_edges()):
+		return {}
+	return _sentence(object_name, "%s ▸ Brake by {amount}" % BEHAVIOR_SKATEBOARD,
+		{"amount": [args[2].strip_edges(), "value"]})
+
+
+## Y22. `velocity.y = -ollie_speed` - the pop off the ground. Claimed only when the file named the
+## number after the trick, which is the only thing that tells it apart from every jump ever written.
+static func _ollie_statement(text: String, facts: Dictionary, object_name: String) -> Dictionary:
+	var ollie: String = str(facts.get("ollie", ""))
+	if ollie.is_empty():
+		return {}
+	var at: int = top_level_index(text, " = ")
+	if at <= 0:
+		return {}
+	if not text.substr(0, at).strip_edges().begins_with("velocity"):
+		return {}
+	var value: String = text.substr(at + 3).strip_edges()
+	if value != "-" + ollie and value != ollie:
+		return {}
+	return _sentence(object_name, "%s ▸ Ollie {strength}" % BEHAVIOR_SKATEBOARD,
+		{"strength": [ollie, "value"]})
+
+
+## Y22. `rotation += TAU * delta` - a turn in the air. Written with a plus it is a spin and with a
+## minus it is a flip, which is the only difference a sheet needs between the two.
+static func _trick_turn_statement(text: String, object_name: String) -> Dictionary:
+	for operator: String in [" += ", " -= "]:
+		var at: int = top_level_index(text, operator)
+		if at <= 0:
+			continue
+		if text.substr(0, at).strip_edges() != "rotation":
+			continue
+		var turned: String = _turns_per_second_of(text.substr(at + operator.length()).strip_edges())
+		if turned.is_empty():
+			continue
+		var word: String = "Spin" if operator == " += " else "Flip"
+		if turned == ONE_TURN_PER_SECOND:
+			return _sentence(object_name,
+				"%s ▸ %s one turn per second" % [BEHAVIOR_SKATEBOARD, word], {})
+		return _sentence(object_name,
+			"%s ▸ %s {turns} turns per second" % [BEHAVIOR_SKATEBOARD, word],
+			{"turns": [turned, "value"]})
+	return {}
+
+
+## `TAU * delta` answers "TAU"; `3.0 * TAU * delta` answers "3.0". "" for anything that is not a
+## whole-turn rate, so an ordinary `rotation += speed * delta` stays the turn reading it has today.
+static func _turns_per_second_of(value: String) -> String:
+	# The LAST multiplication is the one that carries the delta - `3.0 * TAU * delta` splits after
+	# TAU, not after the 3.0 - so a rate written in front of the turn is read rather than refused.
+	var times_at: int = value.rfind(" * ")
+	if times_at <= 0:
+		return ""
+	if not EventSheetPatternReadings.DELTA_WORDS.has(value.substr(times_at + 3).strip_edges()):
+		return ""
+	var rate: String = value.substr(0, times_at).strip_edges()
+	if rate == ONE_TURN_PER_SECOND:
+		return ONE_TURN_PER_SECOND
+	var scaled_at: int = rate.rfind(" * ")
+	if scaled_at <= 0 or rate.substr(scaled_at + 3).strip_edges() != ONE_TURN_PER_SECOND:
+		return ""
+	return rate.substr(0, scaled_at).strip_edges()
 
 
 ## X3. `forward.dot(to_enemy) > cos(deg_to_rad(45.0))` - the one idiom every vision cone, backstab

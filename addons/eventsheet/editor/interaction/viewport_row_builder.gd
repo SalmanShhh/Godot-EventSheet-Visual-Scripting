@@ -6618,6 +6618,43 @@ func _input_window_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
+## Y9. The two lines a rail ride is written as - the offset walked forward by a speed, and the body
+## put on the point the curve bakes there - as the ONE row they are. Both halves or neither: an
+## offset stepped without the position write beside it is arithmetic on a number, and a position
+## write on its own is somebody placing an object on a path rather than riding it.
+##
+## Gated, like every reading in this shape, on the file's own grind facts: without a closest-offset
+## snap and a baked sample somewhere in the same file there is nothing here to recognise.
+func _grind_ride_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	var facts: Dictionary = sentence_context().get("grind", {})
+	if facts.is_empty():
+		return {"leads": leads, "consumed": consumed}
+	var offset: String = str(facts.get("offset", ""))
+	var rail: String = str(facts.get("rail", ""))
+	var index: int = 0
+	while index < actions.size() - 1:
+		var first: String = _group_line_text(actions[index])
+		var second: String = _group_line_text(actions[index + 1])
+		var stepped: String = EventSheetSentence.grind_step_speed(first, offset)
+		if stepped.is_empty() or not EventSheetSentence.is_grind_sample_write(second, rail, offset):
+			index += 1
+			continue
+		leads[index] = {
+			"text": EventSheetSentence.grind_ride_text(
+				EventSheetSentence.expression_text(stepped, sentence_context())),
+			"note": EventSheetSentence.grind_ride_note(rail),
+			"object": EventSheetSentence.script_object(sentence_context()),
+			"evidence": PackedStringArray([first, second]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
 ## The one line an action stands for, whichever shape it took in the sheet: the verbatim text of a
 ## raw line, or the line a LIFTED row compiles back to. A half-lifted file is the normal case - the
 ## importer turns one line of a run into a row while the line beside it stays verbatim - so a run
@@ -9405,6 +9442,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# X22 / X28 - the sensor shapes and the opened input window are one row each.
 		var gyro_groups: Dictionary = _gyro_groups(event_row.actions)
 		var window_groups: Dictionary = _input_window_groups(event_row.actions)
+		# Y9 - the offset walked forward and the body put on the curve are ONE ride, and read as one row.
+		var ride_groups: Dictionary = _grind_ride_groups(event_row.actions)
 		# W6 - the run of add_item calls that builds a menu is ONE menu, and reads as one bar.
 		var menu_groups: Dictionary = _menu_item_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
@@ -9457,6 +9496,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					or bool(range_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(gyro_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(window_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(ride_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(menu_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
@@ -9483,6 +9523,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if run_lead.is_empty():
 				run_lead = (window_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "qte"
+			# Y9 - the ride, as the one row the two lines add up to.
+			if run_lead.is_empty():
+				run_lead = (ride_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "grind"
 			# W6 - the menu the run above built, as the one bar it is.
 			if run_lead.is_empty():
 				run_lead = (menu_groups["leads"] as Dictionary).get(action_index, {})
@@ -12635,6 +12679,20 @@ const PATTERN_VOCABULARY: Dictionary = {
 			"Core/TreatControlAsToggle", "Core/SetEffectStrength", "Core/SetNoFlashing",
 			"Core/SetTextSizeScale", "Core/SetAimAssistRadius", "Core/SpeakText",
 			"Core/PlaySoundWithCaption"]
+	},
+	"grind": {
+		"words": "Riding a rail",
+		"adoptable": "skateboard",
+		"ace_ids": ["SkateboardMovement/is_near_rail", "SkateboardMovement/start_grinding",
+			"SkateboardMovement/grind_along_rail", "SkateboardMovement/has_reached_the_end",
+			"SkateboardMovement/hop_off", "SkateboardMovement/ride_zipline"]
+	},
+	"skateboard": {
+		"words": "Momentum movement on a board",
+		"adoptable": "skateboard",
+		"ace_ids": ["SkateboardMovement/push", "SkateboardMovement/roll_with_slope",
+			"SkateboardMovement/ollie", "SkateboardMovement/spin_trick",
+			"SkateboardMovement/flip_trick", "SkateboardMovement/land_trick"]
 	}
 }
 
@@ -13249,6 +13307,23 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	var shaped: Dictionary = behavior_shape_action_sentence(action.ace_id, params_dict, context)
 	if not shaped.is_empty():
 		return shaped
+	# ── Y9 / Y22 lens hook ─────────────────────────────────────────────────────────────────────
+	# A board's push and its ollie are ordinary property writes, so the importer files them as
+	# Set rows before any reading gets a look - and "Set velocity Y to -ollie speed" is a true
+	# sentence about a line and says nothing at all about what the player just did. Re-reading the
+	# line the row compiles to is what makes the picked row and the typed line say one thing. Safe
+	# for every other project by construction: the reading is gated on this file having projected
+	# gravity along the floor normal, or having ridden a curve by its closest offset.
+	# The facts are checked BEFORE the line is generated: generating a row's code is not free, and
+	# this runs for every action on every row of every sheet. A project with no board in it pays two
+	# dictionary lookups and nothing else.
+	if not (context.get("skate", {}) as Dictionary).is_empty() \
+			or not (context.get("grind", {}) as Dictionary).is_empty():
+		var board_line: String = ActionCodegen.generate_action(action)
+		if not board_line.is_empty() and not board_line.contains("\n"):
+			var board: Dictionary = EventSheetSentence.skate_statement(board_line.strip_edges(), context)
+			if not board.is_empty():
+				return board
 	# ── X4 / X7 / X8 / X9 / X19 ────────────────────────────────────────────────────────────────
 	# The batch-thirteen rows whose reading IS the grammar's reading of the line they compile to.
 	# Routing them here rather than letting each keep its descriptor's display template is what makes
