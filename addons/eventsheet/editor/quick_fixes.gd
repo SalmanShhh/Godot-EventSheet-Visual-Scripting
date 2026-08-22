@@ -67,6 +67,16 @@ const OFFERED := {
 	"label-under-a-mirrored-body": [
 		{"id": "keep_upright", "label": "Keep %s upright"},
 	],
+	# Y6 - pin or child. Both mechanisms are honest, so neither chip removes one on the reader's
+	# behalf: each says which of the two answers this file wanted and where to make the change.
+	"double-follow": [
+		{"id": "unpin_it", "label": "Unpin it from %s"},
+		{"id": "remove_from_parent", "label": "Take it out of %s"},
+	],
+	"pin-to-freed-object": [
+		{"id": "unpin_before_free", "label": "Unpin before %s goes"},
+		{"id": "guard_pin_anchor", "label": "Ask whether %s is still there"},
+	],
 }
 
 
@@ -165,6 +175,14 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Move %s under the node you mirror - a Set Mirrored (whole object) row turns everything beneath it, so the ray reaches the way the character faces." % subject}
 		"keep_upright":
 			return {"ok": true, "message": "Add a Facing ▸ Keep Upright row for %s under the same event that mirrors this object - it re-negates the child's scale so the text reads forwards either way." % subject}
+		"unpin_it":
+			return {"ok": true, "message": "Add Pin ▸ Unpin and let being a child of %s do the carrying. A child is structure and moves with its parent already." % subject}
+		"remove_from_parent":
+			return {"ok": true, "message": "Take this object out of %s and let the pin carry it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent." % subject}
+		"guard_pin_anchor":
+			return {"ok": true, "message": "Put the rows that use %s under Pin ▸ Is Pinned, or under a condition asking whether it is still there - a pin whose anchor is gone reads a place off nothing." % subject}
+		"unpin_before_free":
+			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
 
 

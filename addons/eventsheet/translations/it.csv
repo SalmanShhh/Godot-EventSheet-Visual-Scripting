@@ -4149,3 +4149,22 @@ Bob up and down,Ondeggia su e giù
 "a sine wave, as you move",un'onda sinusoidale mentre ti muovi
 Keys and the doors that want them,Chiavi e le porte che le richiedono
 "Enemies noticing you, and each other",Nemici che notano te e si notano tra loro
+"Pin to {anchor} (rope, max length {length})","Aggancia a {anchor} (fune, lunghezza max {length})"
+"Pin to {anchor} (bar, length {length})","Aggancia a {anchor} (barra, lunghezza {length})"
+Pin to {anchor} softly (speed {speed}),Aggancia a {anchor} dolcemente (velocità {speed})
+Pin to {owner}'s {point},Aggancia a {point} di {owner}
+Pin to {owner}'s {point} (offset {offset}),Aggancia a {point} di {owner} (scostamento {offset})
+Pin to {owner}'s path position,Aggancia alla posizione sul percorso di {owner}
+Pin X position to {anchor},Aggancia la posizione X a {anchor}
+Pin Y position to {anchor},Aggancia la posizione Y a {anchor}
+Pin size to {anchor},Aggancia la dimensione a {anchor}
+path,percorso
+Pins,Agganci
+pinned to,agganciato a
+"what this object rides, and can let go of",su cosa viaggia questo oggetto e da cosa può staccarsi
+position and angle,posizione e angolo
+rope,fune
+bar,barra
+soft,morbido
+x only,solo X
+y only,solo Y

@@ -1493,7 +1493,25 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 	if not written_machine.is_empty():
 		behaviors = behaviors.duplicate()
 		behaviors.append_array(written_machine)
-	if behaviors.is_empty() and facts.is_empty():
+	# Y6's pin bar is read off the FILE, not off a scene, so it is worked out before the early exit:
+	# a plain .gd with a pin in it has no scene facts at all and still has something to say.
+	#
+	# Its facts are worked out HERE rather than taken from `sentence_context()`, deliberately. The
+	# head bars are built at the very start of a rebuild, and asking for the sentence context that
+	# early builds and caches it before the walk has settled - which quietly changed what the ROWS
+	# further down then read. A bar is not worth a reading, so it pays for its own answers, and a
+	# one-pass look for a copied property keeps a sheet that pins nothing from paying at all.
+	var pins: Array = []
+	var pin_lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(sheet)
+	if _might_pin(pin_lines):
+		var pin_facts: Dictionary = EventSheetBehaviorShapes.pin_facts(pin_lines)
+		var declared_seats: Dictionary = EventSheetViewportReadingRows.pin_seat_map(sheet)
+		if not declared_seats.is_empty():
+			var seats: Dictionary = (pin_facts.get("pin_seats", {}) as Dictionary).duplicate()
+			seats.merge(declared_seats, true)
+			pin_facts["pin_seats"] = seats
+		pins = EventSheetBehaviorShapes.pin_summaries(pin_lines, pin_facts)
+	if behaviors.is_empty() and facts.is_empty() and pins.is_empty():
 		return bars
 	if not behaviors.is_empty():
 		var names: PackedStringArray = PackedStringArray()
@@ -1530,6 +1548,31 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			sheet, "object_followers", EventSheetL10n.translate("Follows"),
 			"%s - %s" % [EventSheetL10n.translate("places this object copies onto others"),
 				" · ".join(followed)], follows))
+	# ── Y6 ─────────────────────────────────────────────────────────────────────────────────────
+	# Pin or child? Both words ship, both mean "this goes where that goes", and which one is in use
+	# decides what happens when the other object is destroyed - a pin follows at runtime and can let
+	# go; a child is structure and is destroyed with its parent. So the object states which it uses,
+	# here, beside the parenting, where a reader meets both at once. Derived from the file's own pin
+	# lines through the same gates the rows use, so the bar can never announce a pin the canvas does
+	# not show.
+	if not pins.is_empty():
+		var pin_rows: Array[EventRowData] = []
+		var ridden: PackedStringArray = PackedStringArray()
+		for index in range(pins.size()):
+			var pin: Dictionary = pins[index]
+			var pin_name: String = str(pin.get("name", ""))
+			var modes: PackedStringArray = PackedStringArray()
+			for mode: String in (pin.get("modes", PackedStringArray()) as PackedStringArray):
+				modes.append(EventSheetL10n.translate(mode))
+			ridden.append(pin_name)
+			pin_rows.append(_build_object_fact_row(
+				sheet, "object_pin_%d" % index, pin_name,
+				"%s %s (%s)" % [EventSheetL10n.translate("pinned to"), pin_name,
+					" · ".join(modes)]))
+		bars.append(_build_head_group_row(
+			sheet, "object_pins", EventSheetL10n.translate("Pins"),
+			"%s - %s" % [EventSheetL10n.translate("what this object rides, and can let go of"),
+				" · ".join(ridden)], pin_rows))
 	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
 	# ── T9 ──────────────────────────────────────────────────────────────────────────────────────
 	# The inheritance set this object is part of: the scripts that extend its class, shown as the
@@ -1552,6 +1595,19 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 		bars.append(_build_head_group_row(
 			sheet, "object_families", EventSheetFamilyFacts.plural(familiar), summary, family_rows))
 	return bars
+
+
+## Y6. The cheap look before the expensive one: every spelling of a pin copies a place, an angle or a
+## size OFF another object, so a file with none of those on any line cannot be pinning and never pays
+## for the grammar walk behind the Pins bar. One `contains` per line against a handful of literals,
+## against ~eight parsers per line for the walk it stands in front of.
+func _might_pin(lines: PackedStringArray) -> bool:
+	for line: String in lines:
+		if line.contains(".global_position") or line.contains(".position") \
+				or line.contains(".transform.origin") or line.contains(".rotation") \
+				or line.contains(".scale"):
+			return true
+	return false
 
 
 ## T9. One row per script that extends this sheet's own class, plus, when a Godot group of the same
@@ -12456,7 +12512,8 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"pin": {
 		"words": "One object's place copied from another's",
 		"adoptable": "pin",
-		"ace_ids": ["Core/PinToObject", "Core/PinAngleToObject"]
+		"ace_ids": ["Core/PinToObject", "Core/PinAngleToObject", "Core/PinToObjectRope",
+			"Core/PinToObjectBar"]
 	},
 	# A fade is a tween chain rather than one line, so the pack is the whole answer and there is no
 	# single free action to name beside it.

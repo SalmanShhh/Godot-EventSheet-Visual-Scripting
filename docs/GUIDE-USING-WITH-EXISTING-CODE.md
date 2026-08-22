@@ -1110,6 +1110,60 @@ the point it is measured from, and a flag only reads as a glide's state when the
 lowers it. And a line the importer lifted to a shipped row is read back through the same shape, so an
 opened file says the same thing before and after the lift.
 
+#### Every way of pinning, in the mode's own word
+
+Pinning is the most-written relationship in a game, and it is written in more spellings than any
+other shape - so each one reads as the mode it is, and each one is authorable as the same line from
+the Pin section of the picker:
+
+| The line you wrote | How it reads |
+|---|---|
+| `global_position = a.global_position + offset` | `Pin to a (position · offset offset)` |
+| `rotation = a.rotation` | `Pin to a (angle)` |
+| `global_position = a.global_position + (global_position - a.global_position).limit_length(80.0)` | `Pin to a (rope, max length 80.0)` |
+| `global_position = a.global_position + (global_position - a.global_position).normalized() * 80.0` | `Pin to a (bar, length 80.0)` |
+| `global_position = global_position.lerp(a.global_position, 10.0 * delta)` | `Pin to a softly (speed 10.0)` |
+| `global_position.x = a.global_position.x` | `Pin X position to a` |
+| `scale = a.scale` | `Pin size to a` |
+
+The difference between the rope and the bar is one call, and it is the whole difference between the
+two behaviours: a rope CLAMPS the gap, so the host hangs free inside the length and is only pulled
+once the line goes taut; a bar throws the gap's length away and multiplies the direction back out,
+so the host is held at exactly that distance every tick.
+
+A variable the file *declares* as a point on somebody else - `@onready var hand: Marker2D =
+$Player/Hand`, a `Bone2D`, the `BoneAttachment3D` a skeleton keeps on a bone - changes the sentence
+rather than the line: `global_position = hand.global_position` reads `Pin to Player's hand`. A
+`PathFollow2D` or `PathFollow3D` reads `Pin to Track's path position`.
+
+Three rows of that table are **gated hard**, and this is the case where the gating matters most.
+`scale = x.scale`, `position.x = x.position.x` and the per-second `lerp` are among the most general
+spellings in the language - a parallax layer, a UI element, a solver step and a health bar all write
+them, and the lerp is byte for byte how a **camera** scrolls toward a target - so they read as a pin
+only in a file that has ALREADY pinned that anchor another way, copies both axes from it, or
+declared it as a point on somebody. A lone axis copy stays a lone axis copy, everywhere, and a
+camera keeps the words it has had since it got them.
+
+The same rule decides which shapes get a picker row. Only the rope and the bar do, because their
+spellings belong to nothing else. A row's template is not just what the row writes - it is what the
+IMPORTER matches - so a picker row for one of the general spellings would re-file every such line in
+every project as a pin, whatever the reading's own gates said. The other four modes are authored by
+attaching the Pin pack.
+
+![A hand-written pin file opened as a sheet: the head bar reads Pins, what this object rides and can let go of, listing anchor, hitch, lead, Player's hand, Track's path and ground, with one line each saying pinned to anchor (rope), pinned to hitch (bar), pinned to lead (soft and angle), pinned to Player's hand (position), pinned to Track's path (position) and pinned to ground (x only and y only)](images/opened-script-pin-modes.png)
+
+![The same file's tick event: nine action rows reading Pin to anchor (rope, max length Rope Length), Pin to hitch (bar, length Bar Length), Pin to lead softly (speed Follow Speed), Pin to lead (angle), Pin to Player's hand (offset pin_offset), Pin to Track's path position, Pin X position to ground, Pin Y position to ground and Pin size to anchor](images/opened-script-pin-rows.png)
+
+An object that pins reports it on its head bar too, under **Pins**: `pinned to anchor (rope)`, in
+the same mode words the pack's own knob uses. That bar is derived from the file's pin lines through
+the same gates, so it can never announce a pin the canvas does not show.
+
+Two Doctor notes come with the words. **Double follow** names an object that is BOTH a child of X
+and pinned to X - being a child already carries it, so the pin writes its place a second time from
+the same source and the two fight every frame. **Pin to a freed object** names a pin whose anchor
+the file destroys with no Unpin and no validity question anywhere. Both are notes, never warnings:
+each file runs, it just does something its author did not mean.
+
 ![A projectile script read as an event sheet: Set speed to speed accelerating by accel, Set angle of motion to angle, Set gravity to gravity and Move under one tick event, with Distance travelled greater than range px as the condition that destroys it](images/opened-script-behaviors.png)
 
 ![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around layout horizontally, Bound to layout, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)

@@ -180,7 +180,13 @@ static var AUTHORING_PARITY: Dictionary = {
 		"Coin ▸ Bound To  Bound to layout (inside (0, 0) - screen)"],
 	"PinToObject": [{"anchor": "anchor", "offset": "pin_offset"},
 		"Coin ▸ Pin  Pin to anchor (position · offset pin_offset)"],
-	"PinAngleToObject": [{"anchor": "anchor"}, "Coin ▸ Pin  Pin to anchor (angle)"]
+	"PinAngleToObject": [{"anchor": "anchor"}, "Coin ▸ Pin  Pin to anchor (angle)"],
+	# Y4. The two DISTANCE pin modes, the only two of the six that got picker rows - the other four
+	# spellings are too general to hand the importer a template for, and are pack rows instead.
+	"PinToObjectRope": [{"anchor": "anchor", "length": "range_px"},
+		"Coin ▸ Pin  Pin to anchor (rope, max length range_px)"],
+	"PinToObjectBar": [{"anchor": "anchor", "length": "range_px"},
+		"Coin ▸ Pin  Pin to anchor (bar, length range_px)"]
 }
 
 ## T27. The shapes whose AUTHORING is a row that already shipped, so adding a second entry with the

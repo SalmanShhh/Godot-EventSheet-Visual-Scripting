@@ -1,0 +1,158 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/pin_modes/pin_modes_3d.gd" id="1_xlpwj"]
+[ext_resource type="Script" path="res://eventsheet_addons/pin_3d/pin_3d_behavior.gd" id="2_tx6oi"]
+
+[sub_resource type="Environment" id="Environment_225pt"]
+background_mode = 1
+background_color = Color(0.07, 0.08, 0.11, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.5, 0.62, 1)
+ambient_light_energy = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2t4bs"]
+albedo_color = Color(0.62, 0.66, 0.78, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fvpc5"]
+material = SubResource("StandardMaterial3D_2t4bs")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n0pfh"]
+albedo_color = Color(1, 0.82, 0.35, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5un5l"]
+material = SubResource("StandardMaterial3D_n0pfh")
+size = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aior0"]
+albedo_color = Color(0.5, 0.78, 0.95, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r2220"]
+material = SubResource("StandardMaterial3D_aior0")
+size = Vector3(1.2, 0.8, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h45hg"]
+albedo_color = Color(0.75, 0.85, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yje2r"]
+material = SubResource("StandardMaterial3D_h45hg")
+size = Vector3(1, 0.7, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_psdhx"]
+albedo_color = Color(0.95, 0.55, 0.45, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hb07f"]
+material = SubResource("StandardMaterial3D_psdhx")
+size = Vector3(0.8, 1.6, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6avnn"]
+albedo_color = Color(0.85, 0.88, 0.95, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dj1ax"]
+material = SubResource("StandardMaterial3D_6avnn")
+size = Vector3(0.12, 1.1, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nqe3d"]
+albedo_color = Color(0.7, 0.5, 0.9, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i5s7b"]
+material = SubResource("StandardMaterial3D_nqe3d")
+size = Vector3(0.9, 0.25, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ctgg0"]
+albedo_color = Color(0.4, 0.95, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3v0xc"]
+material = SubResource("StandardMaterial3D_ctgg0")
+size = Vector3(0.4, 0.4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyc4h"]
+albedo_color = Color(0.1, 0.12, 0.16, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5t3xt"]
+material = SubResource("StandardMaterial3D_jyc4h")
+size = Vector3(1.2, 0.04, 1.2)
+
+[node name="PinModes3D" type="Node3D"]
+script = ExtResource("1_xlpwj")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
+shadow_enabled = true
+
+[node name="World" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_225pt")
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.92718387, 0.37460658, 0, -0.37460658, 0.92718387, 0, 7, 16)
+
+[node name="Post" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4, 0)
+mesh = SubResource("BoxMesh_fvpc5")
+
+[node name="Lantern" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, 0)
+mesh = SubResource("BoxMesh_5un5l")
+
+[node name="Pin" type="Node" parent="Lantern"]
+script = ExtResource("2_tx6oi")
+
+[node name="Engine" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.5, 6)
+mesh = SubResource("BoxMesh_r2220")
+
+[node name="Cart" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.5, 6)
+mesh = SubResource("BoxMesh_yje2r")
+
+[node name="Pin" type="Node" parent="Cart"]
+script = ExtResource("2_tx6oi")
+
+[node name="Player" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_hb07f")
+
+[node name="Hand" type="Marker3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.2, 0)
+
+[node name="Head" type="Marker3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="Sword" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.2, 0)
+mesh = SubResource("BoxMesh_dj1ax")
+
+[node name="Pin" type="Node" parent="Sword"]
+script = ExtResource("2_tx6oi")
+
+[node name="Hat" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+mesh = SubResource("BoxMesh_i5s7b")
+
+[node name="Pin" type="Node" parent="Hat"]
+script = ExtResource("2_tx6oi")
+
+[node name="CamTarget" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_3v0xc")
+
+[node name="Pin" type="Node" parent="CamTarget"]
+script = ExtResource("2_tx6oi")
+
+[node name="Shadow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+mesh = SubResource("BoxMesh_5t3xt")
+
+[node name="Pin" type="Node" parent="Shadow"]
+script = ExtResource("2_tx6oi")
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Readout" type="Label" parent="HudLayer"]
+modulate = Color(0.92, 0.94, 1, 1)
+offset_left = 32.0
+offset_top = 26.0
+offset_right = 32.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 22
+text = "PIN MODES 3D"

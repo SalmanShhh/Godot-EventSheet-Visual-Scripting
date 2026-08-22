@@ -62,14 +62,16 @@ static func run() -> bool:
 			all_passed = _check("%s reopened sheet compiles back byte-identically" % file_name, reopened == source, true) and all_passed
 	# Batch 13 added two packs (Touch Gestures and its shape-library data asset): 93 + 2.
 	# The leftovers parcel added the colour-palette data asset: + 1. Recomputed as base + deltas.
-	all_passed = _check("the fleet was scanned (96 packs)", packs, 93 + 2 + 1) and all_passed
+	# Batch 14's pins parcel added the Pin 3D pack (the 2D pack's twin on a Node3D host): + 1.
+	all_passed = _check("the fleet was scanned (97 packs)", packs, 93 + 2 + 1 + 1) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
 	# The leftovers parcel: +2 FPS Controller verbs (the firing slowdown and its question).
 	# The colour-palette pack adds none - it is a data asset and publishes no verbs.
-	# The boomer parcel: +4 more FPS Controller verbs (the feel layer).
-	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19 + 2 + 4) and all_passed
+	# The boomer parcel: +4 more FPS Controller verbs (the feel layer). Batch 14 pins: +14 on the Pin
+	# pack and +24 for the Pin 3D twin. Recomputed as base + every delta at merge.
+	all_passed = _check("fleet-wide declared verbs count", total_verbs, 1283 + 3 + 19 + 2 + 4 + 38) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

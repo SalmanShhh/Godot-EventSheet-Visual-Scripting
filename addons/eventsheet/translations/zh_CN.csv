@@ -4149,3 +4149,22 @@ Bob up and down,上下起伏
 "a sine wave, as you move",随移动而起伏的正弦波
 Keys and the doors that want them,钥匙与需要它们的门
 "Enemies noticing you, and each other",敌人注意到你，也注意到彼此
+"Pin to {anchor} (rope, max length {length})",固定到 {anchor}（绳索，最大长度 {length}）
+"Pin to {anchor} (bar, length {length})",固定到 {anchor}（连杆，长度 {length}）
+Pin to {anchor} softly (speed {speed}),柔和固定到 {anchor}（速度 {speed}）
+Pin to {owner}'s {point},固定到 {owner} 的 {point}
+Pin to {owner}'s {point} (offset {offset}),固定到 {owner} 的 {point}（偏移 {offset}）
+Pin to {owner}'s path position,固定到 {owner} 的路径位置
+Pin X position to {anchor},把 X 位置固定到 {anchor}
+Pin Y position to {anchor},把 Y 位置固定到 {anchor}
+Pin size to {anchor},把大小固定到 {anchor}
+path,路径
+Pins,固定
+pinned to,固定到
+"what this object rides, and can let go of",此对象搭乘的目标，以及它可以放开的目标
+position and angle,位置和角度
+rope,绳索
+bar,连杆
+soft,柔和
+x only,仅 X
+y only,仅 Y

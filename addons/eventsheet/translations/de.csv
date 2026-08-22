@@ -4149,3 +4149,22 @@ Bob up and down,Auf und ab wippen
 "a sine wave, as you move","eine Sinuswelle, während du dich bewegst"
 Keys and the doors that want them,"Schlüssel und die Türen, die sie verlangen"
 "Enemies noticing you, and each other","Gegner, die dich und einander bemerken"
+"Pin to {anchor} (rope, max length {length})","An {anchor} heften (Seil, max. Länge {length})"
+"Pin to {anchor} (bar, length {length})","An {anchor} heften (Stange, Länge {length})"
+Pin to {anchor} softly (speed {speed}),Weich an {anchor} heften (Tempo {speed})
+Pin to {owner}'s {point},An {point} von {owner} heften
+Pin to {owner}'s {point} (offset {offset}),An {point} von {owner} heften (Versatz {offset})
+Pin to {owner}'s path position,An die Pfadposition von {owner} heften
+Pin X position to {anchor},X-Position an {anchor} heften
+Pin Y position to {anchor},Y-Position an {anchor} heften
+Pin size to {anchor},Größe an {anchor} heften
+path,Pfad
+Pins,Heftungen
+pinned to,geheftet an
+"what this object rides, and can let go of",worauf dieses Objekt mitfährt und wovon es sich lösen kann
+position and angle,Position und Winkel
+rope,Seil
+bar,Stange
+soft,weich
+x only,nur X
+y only,nur Y

@@ -59,6 +59,16 @@ const COMPARISON_SIGNS: Dictionary = {" >= ": "≥", " <= ": "≤", " > ": ">", 
 ## it a fade would be a guess.
 const FADE_PROPERTY := "modulate:a"
 
+## Y5. The declared types that mean "a POINT on another object rather than the object itself" - the
+## marker a weapon hangs off, a rigged bone, the attachment Godot keeps glued to a Skeleton3D bone.
+## A place copied from one of these is not "pin to hand", it is "pin to the Player's hand", which is
+## what the author meant and what no line of the arithmetic says out loud.
+const SEAT_TYPES: PackedStringArray = ["Marker2D", "Marker3D", "Bone2D", "BoneAttachment3D"]
+
+## Y5. The declared types that mean "a point travelling a curve". Same idea, different sentence: the
+## host rides where the path has got to, so the reading says the path rather than the follower.
+const PATH_SEAT_TYPES: PackedStringArray = ["PathFollow2D", "PathFollow3D"]
+
 ## T27. The line each shipped ACTION row stands for - both the rows the importer lifts a shape to and
 ## the rows the picker writes it as. One table, read by the fact walk (so the file can tell it is a
 ## projectile even when every line of it was claimed) and by the row builder (so a picked row reads in
@@ -82,7 +92,14 @@ const ACE_LINES: Dictionary = {
 	"WrapAroundLayoutY": "position.y = wrapf(position.y, {low}, {high})",
 	"BoundToLayout": "position = position.clamp({low}, {high})",
 	"PinToObject": "global_position = {anchor}.global_position + {offset}",
-	"PinAngleToObject": "rotation = {anchor}.rotation"
+	"PinAngleToObject": "rotation = {anchor}.rotation",
+	# Y4. The two DISTANCE pin modes, which are still ONE line each, so the picker can author them
+	# and a hand-written file reads as the same sentence. Rope and bar differ by one call - a rope
+	# CLAMPS the gap and so hangs slack below its length, a bar normalises it and so is held rigid at
+	# it. Neither spelling belongs to anything else, which is why these two got picker rows and the
+	# other four modes Y5 shipped did not.
+	"PinToObjectRope": "global_position = {anchor}.global_position + (global_position - {anchor}.global_position).limit_length({length})",
+	"PinToObjectBar": "global_position = {anchor}.global_position + (global_position - {anchor}.global_position).normalized() * {length}"
 }
 
 ## T27. The same for the CONDITION rows a shape is asked with.
@@ -127,6 +144,14 @@ static func line_for(ace_id: String, params: Dictionary, conditions: bool = fals
 ##   move_to_speeds       {destination: the speed expression its glide uses}
 ##   move_to_flags        {name: true} - the booleans that say a glide is running
 ##   pin_anchors          {name: true} - the objects a place is copied from
+##   pin_shown_anchors    {name: true} - those of them some line actually READS as a pin to. Not the
+##                        same set: a bare `me = you.global_position` with nothing to corroborate it
+##                        fills pin_anchors and reads as plain code, and the two over-general
+##                        spellings must lean on the set the canvas shows, not on the set of
+##                        candidates - or a Pin chip appears next to a line that has none
+##   pin_axis_anchors     {name: {axis: true}} - the objects ONE axis of a place is copied from
+##   pin_seats            {name: {owner, point, path}} - the variables declared as a point ON an
+##                        object (a marker, a bone, a path follower) rather than as the object
 ##   fade_locals          {local: seconds} - the tweens that fade alpha to nothing
 ##   fade_destroys        {local: true} - those of them that destroy the object afterwards
 static func facts(lines: PackedStringArray) -> Dictionary:
@@ -134,8 +159,6 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	var stepped: bool = false
 	var move_destinations: Dictionary = {}
 	var move_speeds: Dictionary = {}
-	var pin_anchors: Dictionary = {}
-	var pin_angle_anchors: Dictionary = {}
 	for line: String in lines:
 		var text: String = line.strip_edges()
 		if text.is_empty() or text.begins_with("#"):
@@ -149,23 +172,84 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		if not glide.is_empty():
 			move_destinations[str(glide.get("destination", ""))] = true
 			move_speeds[str(glide.get("destination", ""))] = str(glide.get("speed", ""))
-		var pinned: Dictionary = pin_parts(text)
-		if not pinned.is_empty():
-			pin_anchors[str(pinned.get("anchor", ""))] = true
-		var turned: String = pin_angle_anchor(text)
-		if not turned.is_empty():
-			pin_angle_anchors[turned] = true
-	return {
+	var answers: Dictionary = {
 		"bullet_motion": stepped and not bullet_speeds.is_empty(),
 		"bullet_speeds": bullet_speeds,
 		"turret_targets": turret_target_names(lines),
 		"move_to_destinations": move_destinations,
 		"move_to_speeds": move_speeds,
 		"move_to_flags": move_to_flag_names(lines, move_destinations),
-		"pin_anchors": pin_anchors,
-		"pin_angle_anchors": pin_angle_anchors,
 		"fade_locals": fade_facts(lines).get("seconds", {}),
 		"fade_destroys": fade_facts(lines).get("destroys", {})
+	}
+	answers.merge(pin_facts(lines), true)
+	return answers
+
+
+## Y4 / Y5 / Y6. The PIN half of the walk above, split out because it has a second caller that wants
+## nothing else: the head bar's Pins folder. Running the whole of `facts()` for it would pay for the
+## projectile walk, both fade passes and the nearest-in-family scan to answer one question about
+## pinning, and on a long sheet that showed up in the rebuild budget.
+##
+## Returns the five pin maps documented on `facts()`.
+static func pin_facts(lines: PackedStringArray) -> Dictionary:
+	var pin_anchors: Dictionary = {}
+	var pin_angle_anchors: Dictionary = {}
+	var pin_axis_anchors: Dictionary = {}
+	var pin_shown_anchors: Dictionary = {}
+	var bare_place_anchors: Dictionary = {}
+	var seats: Dictionary = pin_seat_names(lines)
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var pinned: Dictionary = pin_parts(text)
+		if not pinned.is_empty():
+			pin_anchors[str(pinned.get("anchor", ""))] = true
+			# A place copied WITH an offset reads on its own; a bare one needs corroborating, and
+			# whether it gets any is only known once the whole file has been walked.
+			if not str(pinned.get("offset", "")).is_empty():
+				pin_shown_anchors[str(pinned.get("anchor", ""))] = true
+			else:
+				bare_place_anchors[str(pinned.get("anchor", ""))] = true
+		# Y4/Y5. A rope, a bar and a soft follow are all pins to the object they name, and each of
+		# them reads on its own - the spellings are specific enough that nothing else writes them -
+		# so they corroborate an axis lock or a size copy beside them.
+		var reached: Dictionary = pin_reach_parts(text)
+		if not reached.is_empty():
+			pin_anchors[str(reached.get("anchor", ""))] = true
+			pin_shown_anchors[str(reached.get("anchor", ""))] = true
+		# A soft follow is a CANDIDATE, not a reading on its own - see `_pin_soft_statement`.
+		var softened: Dictionary = pin_soft_parts(text)
+		if not softened.is_empty():
+			pin_anchors[str(softened.get("anchor", ""))] = true
+			bare_place_anchors[str(softened.get("anchor", ""))] = true
+		var axis_pinned: Dictionary = pin_axis_parts(text)
+		if not axis_pinned.is_empty():
+			var axis_anchor: String = str(axis_pinned.get("anchor", ""))
+			var axes: Dictionary = pin_axis_anchors.get(axis_anchor, {})
+			axes[str(axis_pinned.get("axis", ""))] = true
+			pin_axis_anchors[axis_anchor] = axes
+		var turned: String = pin_angle_anchor(text)
+		if not turned.is_empty():
+			pin_angle_anchors[turned] = true
+	# The second pass, which is why this is a FILE fact and not a line one. A bare place copy reads
+	# as a pin when the file declared its anchor as a point on somebody (a marker, a bone, a path
+	# follower) or copies that anchor's angle too, and the angle copy reads when a place copy names
+	# the same anchor - the two corroborate each other, which is the shipped rule. Only what comes
+	# out of this pass may gate the over-general spellings.
+	for anchor: Variant in bare_place_anchors:
+		if seats.has(anchor) or pin_angle_anchors.has(anchor):
+			pin_shown_anchors[anchor] = true
+	for anchor: Variant in pin_angle_anchors:
+		if pin_anchors.has(anchor):
+			pin_shown_anchors[anchor] = true
+	return {
+		"pin_anchors": pin_anchors,
+		"pin_shown_anchors": pin_shown_anchors,
+		"pin_angle_anchors": pin_angle_anchors,
+		"pin_axis_anchors": pin_axis_anchors,
+		"pin_seats": seats
 	}
 
 
@@ -455,6 +539,311 @@ static func pin_angle_anchor(text: String) -> String:
 		return ""
 	var anchor: String = value.substr(0, dot_at).strip_edges()
 	return anchor if EventSheetSentence.is_identifier(anchor) and anchor != "self" else ""
+
+
+## Y4. The two DISTANCE pins, which are one shape with one call's difference:
+##
+##   rope  global_position = a.global_position + (global_position - a.global_position).limit_length(80.0)
+##   bar   global_position = a.global_position + (global_position - a.global_position).normalized() * 80.0
+##
+## A rope CLAMPS the gap, so the host hangs free inside the length and is only pulled when the line
+## goes taut; a bar throws the gap's length away and multiplies the direction back out, so the host
+## is held at exactly that distance every tick. Returns {anchor, length, mode} - mode being "rope"
+## or "bar" - or {}.
+static func pin_reach_parts(text: String) -> Dictionary:
+	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if assign_at <= 0:
+		return {}
+	if not OWN_PLACE_NAMES.has(text.substr(0, assign_at).strip_edges().trim_prefix("self.")):
+		return {}
+	var value: String = text.substr(assign_at + 3).strip_edges()
+	var plus_at: int = EventSheetSentence.top_level_index(value, " + ")
+	if plus_at <= 0:
+		return {}
+	var anchor: String = _place_owner(value.substr(0, plus_at))
+	if anchor.is_empty():
+		return {}
+	var reach: String = value.substr(plus_at + 3).strip_edges()
+	const ROPE_TAIL := ".limit_length("
+	var rope_at: int = reach.rfind(ROPE_TAIL)
+	if rope_at > 0 and reach.ends_with(")"):
+		var rope_length: String = reach.substr(rope_at + ROPE_TAIL.length(),
+			reach.length() - rope_at - ROPE_TAIL.length() - 1).strip_edges()
+		if rope_length.is_empty() or not _is_gap_from(reach.substr(0, rope_at), anchor):
+			return {}
+		return {"anchor": anchor, "length": rope_length, "mode": "rope"}
+	var times_at: int = EventSheetSentence.top_level_index(reach, " * ")
+	if times_at <= 0:
+		return {}
+	const BAR_TAIL := ".normalized()"
+	var head: String = reach.substr(0, times_at).strip_edges()
+	if not head.ends_with(BAR_TAIL):
+		return {}
+	if not _is_gap_from(head.substr(0, head.length() - BAR_TAIL.length()), anchor):
+		return {}
+	var bar_length: String = reach.substr(times_at + 3).strip_edges()
+	return {} if bar_length.is_empty() \
+		else {"anchor": anchor, "length": bar_length, "mode": "bar"}
+
+
+## Y5. `global_position = global_position.lerp(anchor.global_position, 10 * delta)` - the follow that
+## LAGS, which is what makes a camera target or a pet feel alive rather than welded on. Returns
+## {anchor, speed} or {}. Only a lerp of the object's OWN place toward another's counts; a lerp
+## between two other points is arithmetic and reads as arithmetic.
+static func pin_soft_parts(text: String) -> Dictionary:
+	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if assign_at <= 0:
+		return {}
+	if not OWN_PLACE_NAMES.has(text.substr(0, assign_at).strip_edges().trim_prefix("self.")):
+		return {}
+	var call: Dictionary = EventSheetSentence.call_parts(text.substr(assign_at + 3).strip_edges())
+	if call.is_empty() or str(call.get("method", "")) != "lerp":
+		return {}
+	if not OWN_PLACE_NAMES.has(str(call.get("target", "")).strip_edges().trim_prefix("self.")):
+		return {}
+	var args: PackedStringArray = call.get("args", PackedStringArray())
+	if args.size() != 2:
+		return {}
+	var anchor: String = _place_owner(args[0])
+	if anchor.is_empty():
+		return {}
+	# The weight has to be a per-second speed taken over the frame, or the line is a fixed-fraction
+	# lerp - a different thing, and one nobody calls a pin.
+	var weight: String = args[1].strip_edges()
+	var times_at: int = EventSheetSentence.top_level_index(weight, " * ")
+	if times_at <= 0 or weight.substr(times_at + 3).strip_edges() != "delta":
+		return {}
+	var speed: String = weight.substr(0, times_at).strip_edges()
+	return {} if speed.is_empty() else {"anchor": anchor, "speed": speed}
+
+
+## Y5. `global_position.x = anchor.global_position.x` - ONE axis of a place copied, which is a
+## shadow under a jumper or a bar that rides a lift. Returns {anchor, axis} or {}.
+##
+## Deliberately NOT a reading on its own: see `_pin_axis_statement` for the gate. The spelling is
+## far too general to claim - half the projects in the world write one axis from another object for
+## reasons that have nothing to do with pinning.
+static func pin_axis_parts(text: String) -> Dictionary:
+	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if assign_at <= 0:
+		return {}
+	var target: String = text.substr(0, assign_at).strip_edges().trim_prefix("self.")
+	var dot_at: int = target.rfind(".")
+	if dot_at <= 0:
+		return {}
+	var axis: String = target.substr(dot_at + 1).strip_edges()
+	if not axis in ["x", "y"] or not OWN_PLACE_NAMES.has(target.substr(0, dot_at)):
+		return {}
+	var value: String = text.substr(assign_at + 3).strip_edges()
+	if not value.ends_with("." + axis):
+		return {}
+	var anchor: String = _place_owner(value.substr(0, value.length() - axis.length() - 1))
+	return {} if anchor.is_empty() else {"anchor": anchor, "axis": axis}
+
+
+## Y5. `scale = anchor.scale` - the SIZE half of a pin, so a shadow swells as its owner lands.
+## Returns the anchor or "". Gated in `_pin_size_statement` for the same reason the axis copy is:
+## one object's scale set from another's is not, on its own, evidence of anything.
+static func pin_size_anchor(text: String) -> String:
+	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+	if assign_at <= 0:
+		return ""
+	if text.substr(0, assign_at).strip_edges().trim_prefix("self.") != "scale":
+		return ""
+	var value: String = text.substr(assign_at + 3).strip_edges()
+	var dot_at: int = value.rfind(".")
+	if dot_at <= 0 or value.substr(dot_at + 1).strip_edges() != "scale":
+		return ""
+	var anchor: String = value.substr(0, dot_at).strip_edges()
+	return anchor if EventSheetSentence.is_identifier(anchor) and anchor != "self" else ""
+
+
+## Y5. The variables a file declares as a POINT ON another object rather than as the object - the
+## marker a weapon hangs off, a rigged bone, the attachment a skeleton keeps on one, a follower
+## walking a curve. The TYPE is the evidence and the node path is the owner, so
+## `@onready var hand: Marker2D = $Player/Hand` turns `global_position = hand.global_position` from
+## "pin to hand" into "pin to Player's hand" - the sentence the author had in their head.
+##
+## Returns {name: {"owner": String, "point": String, "path": bool}}.
+static func pin_seat_names(lines: PackedStringArray) -> Dictionary:
+	var seats: Dictionary = {}
+	for line: String in lines:
+		var text: String = line.strip_edges().trim_prefix("@onready ")
+		if not text.begins_with("var "):
+			continue
+		var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
+		if assign_at <= 0:
+			continue
+		var declared: String = text.substr(4, assign_at - 4).strip_edges()
+		var colon_at: int = declared.find(":")
+		if colon_at <= 0:
+			continue
+		var name_text: String = declared.substr(0, colon_at).strip_edges()
+		if not EventSheetSentence.is_identifier(name_text):
+			continue
+		var type_text: String = declared.substr(colon_at + 1).strip_edges()
+		var seat: Dictionary = pin_seat_entry(name_text, type_text, text.substr(assign_at + 3))
+		if not seat.is_empty():
+			seats[name_text] = seat
+	return seats
+
+
+## Y5. One declaration read as a seat, or {} when it is not one. Shared by the line walk above and by
+## the sheet walk beside it, because the importer LIFTS `@onready var hand: Marker2D = $Player/Hand`
+## into a variable row - so in an opened file the type is no longer on any line the walk can see, and
+## a reading that only worked on files the importer left alone would be one nobody ever met.
+static func pin_seat_entry(name_text: String, type_text: String, value_text: String) -> Dictionary:
+	if not EventSheetSentence.is_identifier(name_text):
+		return {}
+	var is_path: bool = PATH_SEAT_TYPES.has(type_text)
+	if not is_path and not SEAT_TYPES.has(type_text):
+		return {}
+	var owner_name: String = _node_path_owner(value_text)
+	if owner_name.is_empty():
+		return {}
+	return {
+		"owner": _member_words(owner_name), "point": _member_words(name_text), "path": is_path
+	}
+
+
+## Y6. What this file says the object RIDES, as [{anchor, name, modes}] in file order - the fact
+## behind the head bar's "pinned to X (rope)". One entry per anchor however many lines pin to it, so
+## a file that copies a place and an angle from one object is pinned to it ONCE, in both.
+##
+## Every mode goes through the SAME gate its reading does. An axis copy or a size copy only counts
+## when the file has already pinned that anchor another way, because on its own neither is evidence
+## of anything - and a head bar that announced a pin the rows do not show would be worse than no
+## head bar at all.
+## `known_facts` is the caller's already-merged sentence context where it has one: the row builder
+## keeps that per sheet, and walking the file a second time for the same answers would cost a
+## rebuild what the whole reading costs. Empty means "work them out here", which is what a test does.
+static func pin_summaries(lines: PackedStringArray, known_facts: Dictionary = {}) -> Array:
+	var file_facts: Dictionary = known_facts if known_facts.has("pin_anchors") else pin_facts(lines)
+	var modes_by_anchor: Dictionary = {}
+	var order: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		var text: String = line.strip_edges()
+		if text.is_empty() or text.begins_with("#"):
+			continue
+		var found: Dictionary = _pin_summary_of(text, file_facts)
+		if found.is_empty():
+			continue
+		var anchor: String = str(found.get("anchor", ""))
+		if not modes_by_anchor.has(anchor):
+			modes_by_anchor[anchor] = PackedStringArray()
+			order.append(anchor)
+		var modes: PackedStringArray = modes_by_anchor[anchor]
+		var mode: String = str(found.get("mode", ""))
+		if not modes.has(mode):
+			modes.append(mode)
+		modes_by_anchor[anchor] = modes
+	var summaries: Array = []
+	for anchor: String in order:
+		summaries.append({
+			"anchor": anchor,
+			"name": _pin_anchor_words(anchor, file_facts),
+			"modes": _merged_pin_modes(modes_by_anchor[anchor])
+		})
+	return summaries
+
+
+## Y6. The one pin a line is, as {anchor, mode}, or {} for a line that pins nothing. The order is the
+## reading's own: the distance modes before the plain copy, because a rope is also written as "the
+## anchor's place plus something".
+static func _pin_summary_of(text: String, file_facts: Dictionary) -> Dictionary:
+	var reached: Dictionary = pin_reach_parts(text)
+	if not reached.is_empty():
+		return {"anchor": str(reached.get("anchor", "")), "mode": str(reached.get("mode", ""))}
+	var softened: Dictionary = pin_soft_parts(text)
+	if not softened.is_empty():
+		var soft_anchor: String = str(softened.get("anchor", ""))
+		if not _pinned_in_file(soft_anchor, file_facts) \
+				and not (file_facts.get("pin_seats", {}) as Dictionary).has(soft_anchor):
+			return {}
+		return {"anchor": soft_anchor, "mode": "soft"}
+	var pinned: Dictionary = pin_parts(text)
+	if not pinned.is_empty():
+		var anchor: String = str(pinned.get("anchor", ""))
+		var seated: bool = (file_facts.get("pin_seats", {}) as Dictionary).has(anchor)
+		if seated or not str(pinned.get("offset", "")).is_empty() \
+				or (file_facts.get("pin_angle_anchors", {}) as Dictionary).has(anchor):
+			return {"anchor": anchor, "mode": "position"}
+		return {}
+	var turned: String = pin_angle_anchor(text)
+	if not turned.is_empty():
+		return {} if not (file_facts.get("pin_anchors", {}) as Dictionary).has(turned) \
+			else {"anchor": turned, "mode": "angle"}
+	var axis_pinned: Dictionary = pin_axis_parts(text)
+	if not axis_pinned.is_empty():
+		var axis_anchor: String = str(axis_pinned.get("anchor", ""))
+		var axes: Dictionary = (file_facts.get("pin_axis_anchors", {}) as Dictionary).get(axis_anchor, {})
+		if not (axes.has("x") and axes.has("y")) and not _pinned_in_file(axis_anchor, file_facts):
+			return {}
+		return {"anchor": axis_anchor, "mode": "%s only" % str(axis_pinned.get("axis", ""))}
+	var sized: String = pin_size_anchor(text)
+	if sized.is_empty() or not _pinned_in_file(sized, file_facts):
+		return {}
+	return {"anchor": sized, "mode": "size"}
+
+
+## Y6. "position" and "angle" from one anchor are not two pins, they are the one pin the pack calls
+## "position and angle" - so the head bar says that, and the row's words and the knob's words match.
+static func _merged_pin_modes(modes: PackedStringArray) -> PackedStringArray:
+	if not (modes.has("position") and modes.has("angle")):
+		return modes
+	var merged: PackedStringArray = PackedStringArray()
+	for mode: String in modes:
+		if mode == "position":
+			merged.append("position and angle")
+		elif mode != "angle":
+			merged.append(mode)
+	return merged
+
+
+## The object a `$Player/Hand` style path hangs off - its FIRST segment, which is the thing a reader
+## would name. "" for anything that is not a node path with an owner to NAME: `$"../Player/Hand"` is
+## a perfectly ordinary spelling whose first segment is `..`, and a row reading "pin to ..'s hand"
+## would be worse than the plain one, so it degrades instead.
+static func _node_path_owner(value_text: String) -> String:
+	var text: String = value_text.strip_edges()
+	if not text.begins_with("$"):
+		return ""
+	text = text.substr(1).strip_edges().trim_prefix("\"").trim_suffix("\"")
+	var segments: PackedStringArray = text.split("/", false)
+	if segments.size() < 2:
+		return ""
+	var owner_name: String = segments[0].strip_edges()
+	return owner_name if EventSheetSentence.is_identifier(owner_name) else ""
+
+
+## The object whose place `anchor.global_position` names, or "" when the text is not one object's
+## place. `self` is refused for the same reason the pin recogniser refuses it: an object put at its
+## own place is not riding anything.
+static func _place_owner(place_text: String) -> String:
+	var text: String = place_text.strip_edges()
+	var dot_at: int = text.rfind(".")
+	if dot_at <= 0 or not OWN_PLACE_NAMES.has(text.substr(dot_at + 1).strip_edges()):
+		return ""
+	var owner_name: String = text.substr(0, dot_at).strip_edges()
+	return owner_name if EventSheetSentence.is_identifier(owner_name) and owner_name != "self" \
+		else ""
+
+
+## Whether `(global_position - anchor.global_position)` is the gap between this object and the named
+## anchor - the half of a rope or a bar that says which way the line runs. One layer of wrapping
+## brackets comes off, and only when the subtraction is not itself top level (so `(a) - (b)` is left
+## alone rather than being read as `a) - (b`).
+static func _is_gap_from(gap_text: String, anchor: String) -> bool:
+	var text: String = gap_text.strip_edges()
+	if text.begins_with("(") and text.ends_with(")") \
+			and EventSheetSentence.top_level_index(text, " - ") <= 0:
+		text = text.substr(1, text.length() - 2).strip_edges()
+	var minus_at: int = EventSheetSentence.top_level_index(text, " - ")
+	if minus_at <= 0:
+		return false
+	if not OWN_PLACE_NAMES.has(text.substr(0, minus_at).strip_edges().trim_prefix("self.")):
+		return false
+	return _place_owner(text.substr(minus_at + 3)) == anchor
 
 
 ## T4. The tweens that fade alpha to nothing, as {"seconds": {local: the duration}, "destroys":
@@ -816,28 +1205,154 @@ static func _bound_statement(object_name: String, target: String, value: String,
 	})
 
 
-## T4. `global_position = anchor.global_position + offset` and the angle copy beside it.
+## T4 / Y4 / Y5. `global_position = anchor.global_position + offset`, the angle copy beside it, and
+## the six modes Y4 and Y5 added around them. Order matters: a rope and a bar are ALSO written as
+## "the anchor's place plus something", so the distance modes get their say before the plain copy
+## claims the line as an offset nobody would recognise.
 static func _pin_statement(object_name: String, text: String, context: Dictionary) -> Dictionary:
+	var reached: Dictionary = pin_reach_parts(text)
+	if not reached.is_empty():
+		var rope: bool = str(reached.get("mode", "")) == "rope"
+		var template: String = "Pin to {anchor} (rope, max length {length})" if rope \
+			else "Pin to {anchor} (bar, length {length})"
+		return _shape(object_name, CHIP_PIN, "pin", template, {
+			"anchor": [_pin_anchor_words(str(reached.get("anchor", "")), context), "name"],
+			"length": [EventSheetSentence.expression_text(str(reached.get("length", "")), context), "value"]
+		})
+	var soft: Dictionary = _pin_soft_statement(object_name, text, context)
+	if not soft.is_empty():
+		return soft
 	var pinned: Dictionary = pin_parts(text)
 	if not pinned.is_empty():
-		var offset: String = str(pinned.get("offset", ""))
+		return _pin_place_statement(object_name, pinned, context)
+	var angle_anchor: String = pin_angle_anchor(text)
+	if not angle_anchor.is_empty():
+		if not (context.get("pin_anchors", {}) as Dictionary).has(angle_anchor):
+			return {}
+		return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (angle)",
+			{"anchor": [_pin_anchor_words(angle_anchor, context), "name"]})
+	var axis_pinned: Dictionary = _pin_axis_statement(object_name, text, context)
+	if not axis_pinned.is_empty():
+		return axis_pinned
+	return _pin_size_statement(object_name, text, context)
+
+
+## Y5. The plain place copy, said in whichever of three sentences fits: riding a POINT on an object
+## (a marker, a bone, a hand), riding where a PATH has got to, or riding the object itself.
+static func _pin_place_statement(object_name: String, pinned: Dictionary,
+		context: Dictionary) -> Dictionary:
+	var anchor: String = str(pinned.get("anchor", ""))
+	var offset: String = str(pinned.get("offset", ""))
+	var seat: Dictionary = (context.get("pin_seats", {}) as Dictionary).get(anchor, {})
+	if not seat.is_empty():
+		# A variable DECLARED as a marker, a bone or a path follower is evidence in its own right -
+		# stronger than the angle copy the bare form has to lean on - so a seat pin reads without it.
+		if bool(seat.get("path", false)):
+			return _shape(object_name, CHIP_PIN, "pin", "Pin to {owner}'s path position",
+				{"owner": [str(seat.get("owner", "")), "name"]})
+		var seat_values: Dictionary = {
+			"owner": [str(seat.get("owner", "")), "name"],
+			"point": [str(seat.get("point", "")), "name"]
+		}
 		if offset.is_empty():
-			# A place copied with NO offset is only a pin when the file copies the anchor's angle too:
-			# on its own, `n.position = other.position` is one object put where another one is, and
-			# calling that a behavior would be a guess.
-			if not (context.get("pin_angle_anchors", {}) as Dictionary).has(str(pinned.get("anchor", ""))):
-				return {}
-			return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position)",
-				{"anchor": [_member_words(str(pinned.get("anchor", ""))), "name"]})
-		return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position · offset {offset})", {
-			"anchor": [_member_words(str(pinned.get("anchor", ""))), "name"],
-			"offset": [EventSheetSentence.expression_text(offset, context), "value"]
-		})
-	var anchor: String = pin_angle_anchor(text)
-	if anchor.is_empty() or not (context.get("pin_anchors", {}) as Dictionary).has(anchor):
+			return _shape(object_name, CHIP_PIN, "pin", "Pin to {owner}'s {point}", seat_values)
+		seat_values["offset"] = [EventSheetSentence.expression_text(offset, context), "value"]
+		return _shape(object_name, CHIP_PIN, "pin", "Pin to {owner}'s {point} (offset {offset})",
+			seat_values)
+	if offset.is_empty():
+		# A place copied with NO offset is only a pin when the file copies the anchor's angle too:
+		# on its own, `n.position = other.position` is one object put where another one is, and
+		# calling that a behavior would be a guess.
+		if not (context.get("pin_angle_anchors", {}) as Dictionary).has(anchor):
+			return {}
+		return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position)",
+			{"anchor": [_member_words(anchor), "name"]})
+	return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (position · offset {offset})", {
+		"anchor": [_member_words(anchor), "name"],
+		"offset": [EventSheetSentence.expression_text(offset, context), "value"]
+	})
+
+
+## Y5. `global_position = global_position.lerp(other.global_position, 10 * delta)` - the follow that
+## LAGS.
+##
+## GATED, and this one cost a shipped reading to learn. A CAMERA closing on a target is written with
+## exactly these bytes, and the sheet has had words for that since S18 - `Scroll toward target at 5
+## (per second)` - so an ungated soft pin quietly took the camera's row away from it. The line simply
+## does not say which of the two it is; the FILE does, by pinning that same anchor somewhere else or
+## by declaring it as a point on somebody. Everything else keeps the reading it had.
+static func _pin_soft_statement(object_name: String, text: String,
+		context: Dictionary) -> Dictionary:
+	var softened: Dictionary = pin_soft_parts(text)
+	if softened.is_empty():
 		return {}
-	return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} (angle)",
-		{"anchor": [_member_words(anchor), "name"]})
+	var anchor: String = str(softened.get("anchor", ""))
+	if not _pinned_in_file(anchor, context) \
+			and not (context.get("pin_seats", {}) as Dictionary).has(anchor):
+		return {}
+	return _shape(object_name, CHIP_PIN, "pin", "Pin to {anchor} softly (speed {speed})", {
+		"anchor": [_pin_anchor_words(anchor, context), "name"],
+		"speed": [EventSheetSentence.expression_text(str(softened.get("speed", "")), context), "value"]
+	})
+
+
+## Y5. One axis of a place copied from another object - `global_position.x = anchor.global_position.x`.
+##
+## GATED, hard. That spelling is one of the most general in the language: a health bar tracking a
+## column, a parallax layer, a UI element, a solver step all write it, and a reading that claimed
+## every one of them would put a Pin chip on half the lines in half the projects in the world. So it
+## only reads as a pin when the FILE has already said so - the same anchor is pinned by place, by
+## angle, by rope or bar or soft follow, or the other axis is copied from it too, which together is
+## a whole pin written a line at a time.
+static func _pin_axis_statement(object_name: String, text: String,
+		context: Dictionary) -> Dictionary:
+	var axis_pinned: Dictionary = pin_axis_parts(text)
+	if axis_pinned.is_empty():
+		return {}
+	var anchor: String = str(axis_pinned.get("anchor", ""))
+	var axis: String = str(axis_pinned.get("axis", ""))
+	var axes: Dictionary = (context.get("pin_axis_anchors", {}) as Dictionary).get(anchor, {})
+	var both_axes: bool = axes.has("x") and axes.has("y")
+	if not both_axes and not _pinned_in_file(anchor, context):
+		return {}
+	var template: String = "Pin X position to {anchor}" if axis == "x" \
+		else "Pin Y position to {anchor}"
+	return _shape(object_name, CHIP_PIN, "pin", template,
+		{"anchor": [_pin_anchor_words(anchor, context), "name"]})
+
+
+## Y5. `scale = anchor.scale`. Gated exactly as the axis copy is, and for the same reason: one
+## object's scale set from another's is a hundred ordinary things, and is only a pin in a file that
+## has already pinned that anchor some other way.
+static func _pin_size_statement(object_name: String, text: String,
+		context: Dictionary) -> Dictionary:
+	var anchor: String = pin_size_anchor(text)
+	if anchor.is_empty() or not _pinned_in_file(anchor, context):
+		return {}
+	return _shape(object_name, CHIP_PIN, "pin", "Pin size to {anchor}",
+		{"anchor": [_pin_anchor_words(anchor, context), "name"]})
+
+
+## Whether some line of the FILE actually READS as a pin to this anchor - the gate the two
+## over-general spellings lean on.
+##
+## Deliberately NOT `pin_anchors`: that set holds every CANDIDATE, including the bare
+## `me = you.global_position` the reading refuses on its own. Gating on candidates would put a Pin
+## chip on `scale = you.scale` in a file whose only other pin line has no chip either, which is a
+## worse answer than none. `pin_shown_anchors` is the set the canvas actually shows.
+static func _pinned_in_file(anchor: String, context: Dictionary) -> bool:
+	return (context.get("pin_shown_anchors", {}) as Dictionary).has(anchor)
+
+
+## An anchor as a row shows it: the owner and point words when the file declared it as a point ON
+## something ("Player's hand"), and the plain member words otherwise.
+static func _pin_anchor_words(anchor: String, context: Dictionary) -> String:
+	var seat: Dictionary = (context.get("pin_seats", {}) as Dictionary).get(anchor, {})
+	if seat.is_empty():
+		return _member_words(anchor)
+	if bool(seat.get("path", false)):
+		return "%s's %s" % [str(seat.get("owner", "")), EventSheetSentence.translate("path")]
+	return "%s's %s" % [str(seat.get("owner", "")), str(seat.get("point", ""))]
 
 
 ## T4. The alpha step a fade out is written as, with the destroy the callback promises said out loud.
