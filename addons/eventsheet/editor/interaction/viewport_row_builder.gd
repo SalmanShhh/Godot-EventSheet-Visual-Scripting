@@ -6818,6 +6818,14 @@ func _grind_ride_groups(actions: Array) -> Dictionary:
 			"note": EventSheetSentence.grind_ride_note(rail),
 			"object": EventSheetSentence.script_object(sentence_context()),
 			"evidence": PackedStringArray([first, second]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
 ## Y2. The two three-line runs a combo game freezes with, each folded into the one row it is: the
 ## whole game stopped for a few frames (a hit-stop), and one animation player held still while
 ## everything else keeps running. Both are written as a stop, a REAL-TIME wait and a start, and the
