@@ -1844,7 +1844,6 @@ Set flipped,Capovolgi
 Set not flipped,Togli capovolgimento
 Set opacity to {value},Imposta opacità a {value}
 Set size to {value},Imposta dimensione a {value}
-Set animation to {name} (play),Imposta animazione a {name} (riproduci)
 Stop animation,Ferma animazione
 Play,Riproduci
 Stop,Ferma
@@ -4204,3 +4203,59 @@ Add The Water Rows,Aggiungi le righe dell'acqua
 Add them,Aggiungile
 %s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s è contrassegnato come acqua. Aggiungere le due righe che alzano l'indicatore all'ingresso e lo abbassano all'uscita?
 Marking %s as water.,%s viene contrassegnato come acqua.
+Set animation to {name} (play from beginning),Imposta animazione a {name} (riproduci dall'inizio)
+Is Between,È compreso tra
+"True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.","Vero finché la testina di riproduzione si trova in una fetta di una clip: la finestra di annullamento in cui è permessa la mossa successiva, o i fotogrammi attivi in cui un colpo conta."
+Is between {from_time} s and {to_time} s of {animation},È compreso tra {from_time} s e {to_time} s di {animation}
+The clip whose clock the window lives on.,La clip sul cui orologio vive la finestra.
+Seconds into the clip the window opens.,Secondi dall'inizio della clip in cui la finestra si apre.
+Seconds into the clip the window shuts.,Secondi dall'inizio della clip in cui la finestra si chiude.
+Ask another AnimationPlayer instead of this one. Leave blank for this node.,Chiedi a un altro AnimationPlayer invece che a questo. Lascia vuoto per questo nodo.
+Pause For,Metti in pausa per
+"Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.","Ferma SOLO questa animazione per un istante e poi la lascia proseguire: l'hit-stop per singolo oggetto, per quando devono sentirlo solo i due personaggi che si colpiscono. L'attesa ignora la scala temporale del gioco, quindi riparte anche durante un rallentatore."
+Pause for {seconds} s,Metti in pausa per {seconds} s
+"How long the animation holds still, in real time.","Per quanto tempo l'animazione resta ferma, in tempo reale."
+Pause another AnimationPlayer instead of this one. Leave blank for this node.,Metti in pausa un altro AnimationPlayer invece di questo. Lascia vuoto per questo nodo.
+On Animation Frame,Al fotogramma dell'animazione
+"Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.","Si esegue nell'istante in cui un'animazione di sprite raggiunge un fotogramma di una clip: il fotogramma del colpo, il passo, il fotogramma in cui cade il bossolo. Applicandolo, la domanda su clip e fotogramma viene aggiunta come condizione visibile e modificabile."
+On animation {animation} frame {frame},"All'animazione {animation}, fotogramma {frame}"
+The clip the frame belongs to.,La clip a cui appartiene il fotogramma.
+Frame,Fotogramma
+Which frame of that clip to answer.,A quale fotogramma di quella clip rispondere.
+Is Animation Frame,È il fotogramma dell'animazione
+"True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.","Vero quando uno sprite mostra un fotogramma preciso di una clip precisa: la domanda che sta sotto Al fotogramma dell'animazione, da sola per un controllo a ogni tick."
+animation is {animation} frame {frame},"l'animazione è {animation}, fotogramma {frame}"
+The clip to ask about.,La clip su cui chiedere.
+The frame index to ask about.,L'indice del fotogramma su cui chiedere.
+Ask another AnimatedSprite2D instead of this one. Leave blank for this node.,Chiedi a un altro AnimatedSprite2D invece che a questo. Lascia vuoto per questo nodo.
+On Animation Event,All'evento dell'animazione
+"Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.","Si esegue quando la traccia di metodo di un'animazione raggiunge la sua chiave. La traccia chiama una funzione per nome e questo evento È quella funzione, quindi animazione e foglio si incontrano senza alcun segnale in mezzo: dai qui il nome all'evento e chiama lo stesso nome dalla traccia."
+On animation event {event_name},All'evento dell'animazione {event_name}
+Event,Evento
+"The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Il nome che la traccia di metodo dell'animazione chiama, in parole semplici (""hit frame"" diventa la funzione _on_hit_frame)."
+Buffer Input,Ricorda input
+"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Ricorda una pressione per qualche fotogramma, così un input dato un po' troppo presto esce comunque: il salto premuto poco prima di atterrare, il pugno premuto durante la mossa precedente. Mettilo sotto l'evento di pressione del comando stesso."
+Timed Input,Input a tempo
+Buffer {input} for {frames} frames,Ricorda {input} per {frames} fotogrammi
+Buffered input,Input ricordato
+"The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","La variabile numerica che ricorda la pressione. Chiamala come l'input - punch_input, jump_input - e la riga si rilegge con quel nome dentro."
+Frames,Fotogrammi
+How many physics frames the press stays remembered for.,Per quanti fotogrammi di fisica la pressione resta ricordata.
+Is Input Buffered,Input ricordato?
+"True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Vero finché una pressione ricordata è ancora fresca. Chiedilo nel momento in cui la mossa diventa lecita e consumalo nello stesso gesto, così una pressione non esce due volte."
+{input} is buffered,{input} è ricordato
+The number variable remembering the press.,La variabile numerica che ricorda la pressione.
+Consume Buffered Input,Consuma input ricordato
+"Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Dimentica la pressione ricordata, così la mossa che ha lasciato passare non esce una seconda volta. Mettilo subito sotto la mossa che ha avviato."
+Consume {input},Consuma {input}
+Combo Box ▸ Press input {token},Combo Box ▸ Premi input {token}
+Combo Box ▸ On combo {combo},Combo Box ▸ Alla combo {combo}
+within {seconds} s,entro {seconds} s
+Hitstop for {seconds} seconds,Hit-stop per {seconds} secondi
+the whole game freezes at {scale} - hit-stop,tutto il gioco si congela a {scale} - hit-stop
+"real time, so it un-pauses even in slow motion","tempo reale, quindi riparte anche al rallentatore"
+Is between {from} s and {to} s of the current animation,È compreso tra {from} s e {to} s dell'animazione corrente
+Set animation to {name} (play from end),Imposta animazione a {name} (riproduci dalla fine)
+Set animation to {name} after the current one,Imposta animazione a {name} dopo quella corrente
+On animation event {event},All'evento dell'animazione {event}
+On animation event {event} of {animation},All'evento dell'animazione {event} di {animation}

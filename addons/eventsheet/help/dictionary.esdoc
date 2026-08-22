@@ -309,6 +309,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
 | `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
 | `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
+| `get_physics_frames` | [Buffer Input](ace:Core/BufferInput) | Timed Input | Vocabulary |
 | `get_physics_interpolation_fraction` | [Physics Interpolation Fraction](ace:Core/PhysicsInterpolationFraction) | Physics Server | Vocabulary |
 | `get_playback_position` | [Playback Position](ace:Core/AudioGetPosition) | Audio | Vocabulary |
 | `get_point_position` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |

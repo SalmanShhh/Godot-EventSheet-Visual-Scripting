@@ -55,7 +55,7 @@ static var ROOT_READINGS: PackedStringArray = PackedStringArray([
 	# P11 - named chips on an emit, on one of the sheet's own functions, and on the optional
 	# engine argument that had none
 	"System ▸ Signal On Hit   damage = 3",
-	"sprite ▸ Set animation to \"burst\" (play)   speed = 2"
+	"sprite ▸ Set animation to \"burst\" (play from beginning)   speed = 2"
 ])
 
 ## And the PART file, which sits on a child node of the same scene: its _ready is that object being
@@ -136,8 +136,8 @@ static func _statement_values() -> bool:
 			"Player ▸ Draw circle at (4, 4), radius 2, green"],
 		["queue_redraw()", "Player ▸ Redraw"],
 		# P11 - the optional engine argument that used to have no name
-		["sprite.play(\"run\", 2.0)", "sprite ▸ Set animation to \"run\" (play)   speed = 2"],
-		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play)"]
+		["sprite.play(\"run\", 2.0)", "sprite ▸ Set animation to \"run\" (play from beginning)   speed = 2"],
+		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play from beginning)"]
 	]:
 		ok = _check("\"%s\" reads \"%s\"" % [str(pair[0]), str(pair[1])], _read(str(pair[0])), str(pair[1])) and ok
 	return ok

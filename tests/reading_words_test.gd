@@ -232,7 +232,7 @@ static func _condition_values() -> bool:
 static func _call_readings() -> bool:
 	var ok: bool = true
 	for entry: Array in [
-		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Set animation to \"run\" (play)"],
+		["$AnimatedSprite2D.play(\"run\")", PackedStringArray(["name"]), "AnimatedSprite2D ▸ Set animation to \"run\" (play from beginning)"],
 		["$Path/To/Label.set_text(str(score))", PackedStringArray(["text"]), "Label ▸ Set text to score"],
 		["print(\"ready\")", PackedStringArray(), "System ▸ Print   \"ready\""],
 		["self.take_damage(3)", PackedStringArray(), "Player ▸ Take damage   3"],
@@ -363,7 +363,7 @@ static func _picked_matches_typed() -> bool:
 	for expected: String in [
 		"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 		"ReadingWordsPlayer ▸ Set X to 100",
-		"AnimatedSprite2D ▸ Set animation to \"run\" (play)"
+		"AnimatedSprite2D ▸ Set animation to \"run\" (play from beginning)"
 	]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok

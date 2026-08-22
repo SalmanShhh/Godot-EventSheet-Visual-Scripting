@@ -689,6 +689,38 @@ A hand-written window reads back as the same row, and the note says which clock 
 
 ![A flag and a deadline read as one Open input window row](../images/input-window-reading.png)
 
+## Input buffering, counted in frames
+
+A window asks "was it pressed while I was listening". A **buffer** asks the other way round: the
+player pressed a moment too early, and the game remembers the press for a few frames so the move still
+comes out when it becomes legal. The jump pressed just before landing, the punch pressed during the
+last move, the dodge pressed mid-recovery - all the same three rows.
+
+**Buffer Input** remembers a press for N frames. **Is Input Buffered** asks whether the memory is
+still fresh. **Consume Buffered Input** forgets it, so one press cannot come out twice.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Buffer Input | Remembers a press for a few frames. Put it under the control's own pressed event. | `{input} = Engine.get_physics_frames() + {frames}` |
+| Is Input Buffered | True while a remembered press is still fresh. | `(Engine.get_physics_frames() <= {input})` |
+| Consume Buffered Input | Forgets the remembered press. | `{input} = Engine.get_physics_frames() - 1` |
+
+Counted in FRAMES rather than seconds, because that is the unit the genre thinks in ("six frames of
+buffer") and because the physics frame is the tick the move actually becomes legal on. The variable
+holds the frame the memory expires ON, so nothing has to be counted down every tick, and it needs no
+per-frame row at all.
+
+Name the variable after the input it remembers - `punch_input`, `jump_input` - and the row reads back
+with that name in it. Ask and consume in the same breath:
+
+```
+Every Physics Tick
+  Condition: Is On Floor
+  Condition: Is Input Buffered  jump_input
+    -> Consume Buffered Input  jump_input
+    -> Jump
+```
+
 ## Tips and common mistakes
 
 - **Every X Seconds under a one-shot trigger never fires.** It counts frame time from inside the event

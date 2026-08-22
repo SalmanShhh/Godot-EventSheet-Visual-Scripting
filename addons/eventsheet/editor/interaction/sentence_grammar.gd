@@ -3166,9 +3166,16 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 		"play":
 			# P11. `play("run", 2.0)` hands over a SPEED as its second argument, and the engine's own
 			# name for it is what makes the value legible - a bare "2" beside the clip name says nothing.
-			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() >= 1 and arguments.size() <= 2:
-				var played: Dictionary = _sentence(object_name, "Set animation to {name} (play)", {
-					"name": [expression_text(arguments[0], context), "value"]})
+			# Y1. WHERE the clip starts is half of what a combo author is asking about: the plain call
+			# restarts from the top, and the four-argument form with `from_end` set plays it backwards
+			# from the tail. Both were one word before, which hid the difference the code makes.
+			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() >= 1 \
+					and (arguments.size() <= 2 or _plays_from_end(arguments)):
+				var from_end: bool = arguments.size() > 2
+				var played: Dictionary = _sentence(object_name,
+					"Set animation to {name} (play from end)" if from_end
+					else "Set animation to {name} (play from beginning)", {
+						"name": [expression_text(arguments[0], context), "value"]})
 				if arguments.size() == 2:
 					var speed_chip: String = "%s = %s" % [translate("speed"), expression_text(arguments[1], context)]
 					(played["segments"] as Array).append({"text": "   ", "tone": "plain"})
@@ -3180,6 +3187,12 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 			if _class_is_any(object_class, AUDIO_CLASSES):
 				return _with_pattern(_sentence(object_name, "Play sound", {}), "sound",
 					"%s.play()" % receiver)
+		"queue":
+			# Y1. Lining a clip up to run when this one ends is what a combo chain is made of, and it
+			# is a different sentence from playing one now.
+			if _class_is_any(object_class, ANIMATION_CLASSES) and arguments.size() == 1:
+				return _sentence(object_name, "Set animation to {name} after the current one", {
+					"name": [expression_text(arguments[0], context), "value"]})
 		"stop":
 			if not arguments.is_empty():
 				return {}
@@ -9191,6 +9204,243 @@ static func input_window_note(perfect: String, prompt: String = "") -> String:
 			{"seconds": perfect.strip_edges()}))
 	parts.append(translate("on the engine clock, which keeps running while paused"))
 	return " · ".join(parts)
+
+
+## ── Y1 / Y2 - the combo shapes ──────────────────────────────────────────────────────────────────
+##
+## A fighting game's input handler is three shapes stacked on one another, and each of them is a row
+## the sheet already has a name for:
+##
+##   combo.append(button)        the pressed input pushed onto the rolling buffer, with the window
+##   combo_timer = 0.5           it has to be finished inside stamped beside it - ONE thing happened
+##   match ",".join(combo):      the buffer asked whether it spells a move - a trigger per arm
+##   Engine.time_scale = 0.05    the freeze on a connecting blow, three lines that are one row
+##
+## The pack that does the first two with state of its own is Combo Box, so these readings say its
+## words: a hand-written detector and a dropped behaviour describe the same game in the same terms.
+
+
+## Y1. `play("x", -1, 1.0, true)` - the four-argument call whose last argument is the `from_end` flag
+## set. Only the full four-argument form counts: the flag is positional, so a call that stops short of
+## it never plays backwards however it is spelled.
+static func _plays_from_end(arguments: PackedStringArray) -> bool:
+	return arguments.size() == 4 and arguments[3].strip_edges() == "true"
+
+
+## Y1. The pressed input pushed onto a combo buffer with its window stamped beneath it, as
+## {"text", "note"} - or {} when the two lines are not that pair. The file's own facts decide: the
+## list has to be one the file appends to, empties on a countdown, and asks about, and the second
+## line has to stamp that list's own countdown. Anything less is an append and an assignment.
+static func combo_press_parts(first: String, second: String, context: Dictionary) -> Dictionary:
+	var lists: Dictionary = context.get("combo_lists", {})
+	if lists.is_empty():
+		return {}
+	var pushed: Dictionary = _combo_append_parts(first)
+	var list_name: String = str(pushed.get("list", ""))
+	if list_name.is_empty() or not lists.has(list_name):
+		return {}
+	var facts: Dictionary = lists[list_name]
+	var bare: String = second.strip_edges()
+	var stamped: int = top_level_index(bare, " = ")
+	if stamped <= 0 or bare.substr(0, stamped).strip_edges() != str(facts.get("timer", "")):
+		return {}
+	return {
+		"text": _fill(translate("Combo Box ▸ Press input {token}"),
+			{"token": expression_text(str(pushed.get("token", "")), context)}),
+		"note": combo_window_note(str(facts.get("window", "")))
+	}
+
+
+## Y1. `combo.append(button)` as {list, token}, or {} for any other line.
+static func _combo_append_parts(line: String) -> Dictionary:
+	var text: String = line.strip_edges()
+	if not text.ends_with(")"):
+		return {}
+	var at: int = text.find(".append(")
+	if at <= 0:
+		return {}
+	var list_name: String = text.substr(0, at).strip_edges()
+	if not is_identifier(list_name):
+		return {}
+	return {"list": list_name, "token": text.substr(at + 8, text.length() - at - 9).strip_edges()}
+
+
+## Y1. The muted note a combo row carries: how long the player has between inputs. "" for a detector
+## whose window the file never states, which is a combo with no time limit at all.
+static func combo_window_note(window: String) -> String:
+	if window.strip_edges().is_empty():
+		return ""
+	return _fill(translate("within {seconds} s"), {"seconds": window.strip_edges()})
+
+
+## Y1. One arm of a `match` on a joined combo buffer, as the trigger it is: {"text", "note"}, or {}
+## for the catch-all arm (which is "no combo", not a combo). The pattern is the file's own joined
+## spelling - "punch,punch,kick" - and the words put the inputs back in the order they are pressed.
+static func combo_arm_words(pattern_text: String, separator: String, window: String) -> Dictionary:
+	var bare: String = pattern_text.strip_edges()
+	if bare == "_" or not _is_string_literal(bare):
+		return {}
+	var joined: String = _unquote(bare)
+	if joined.is_empty():
+		return {}
+	var tokens: PackedStringArray = PackedStringArray()
+	for token: String in joined.split(separator if not separator.is_empty() else ",", false):
+		var trimmed: String = token.strip_edges()
+		if not trimmed.is_empty():
+			tokens.append(trimmed)
+	if tokens.is_empty():
+		return {}
+	return {
+		"text": _fill(translate("Combo Box ▸ On combo {combo}"),
+			{"combo": "\"%s\"" % " ".join(tokens)}),
+		"note": combo_window_note(window)
+	}
+
+
+## Y1. The separator a `match "<sep>".join(<list>):` subject joins the buffer with, plus the list it
+## joins - {"list", "separator"} - or {} when the subject is not a joined buffer at all. The join is
+## what turns a list of presses into one string a move can be spelled as, so it is the whole tell.
+static func combo_match_subject(subject: String) -> Dictionary:
+	var text: String = subject.strip_edges()
+	if not text.ends_with(")"):
+		return {}
+	var at: int = text.find(".join(")
+	if at <= 0:
+		return {}
+	var separator_literal: String = text.substr(0, at).strip_edges()
+	if not _is_string_literal(separator_literal):
+		return {}
+	var list_name: String = text.substr(at + 6, text.length() - at - 7).strip_edges()
+	if not is_identifier(list_name):
+		return {}
+	return {"list": list_name, "separator": _unquote(separator_literal)}
+
+
+## Y2. The three lines a hit-stop is written as, folded into the one thing that happened, as
+## {"text", "note"} - or {} when the run is not a hit-stop. The tell is the LAST argument of the
+## timer: `true` for ignore-time-scale, which is the only way a wait can end while the clock it would
+## otherwise be measured on is stopped. Without it the freeze never lifts, so a run missing it is not
+## this shape and must keep reading as the three assignments it is.
+static func freeze_time_parts(first: String, second: String, third: String, context: Dictionary) -> Dictionary:
+	var frozen: String = _time_scale_assignment(first)
+	if frozen.is_empty() or frozen == "1.0" or frozen == "1":
+		return {}
+	if _time_scale_assignment(third) != "1.0":
+		return {}
+	var seconds: String = _real_time_wait_seconds(second)
+	if seconds.is_empty():
+		return {}
+	return {
+		"text": _fill(translate("Hitstop for {seconds} seconds"),
+			{"seconds": expression_text(seconds, context)}),
+		"note": _fill(translate("the whole game freezes at {scale} - hit-stop"),
+			{"scale": expression_text(frozen, context)})
+	}
+
+
+## Y2. The per-object twin of the freeze above: one animation player held still and let go again.
+## Same real-time wait in the middle, and the same player on both sides - a pause on one player and a
+## play on another are two different things and stay two rows.
+static func animation_pause_parts(first: String, second: String, third: String, context: Dictionary) -> Dictionary:
+	var paused: String = _animation_call_receiver(first, "pause")
+	if paused.is_empty() or _animation_call_receiver(third, "play") != paused:
+		return {}
+	var seconds: String = _real_time_wait_seconds(second)
+	if seconds.is_empty():
+		return {}
+	return {
+		"object": _receiver_object(paused, context),
+		"text": _fill(translate("Pause for {seconds} s"),
+			{"seconds": expression_text(seconds, context)}),
+		"note": translate("real time, so it un-pauses even in slow motion")
+	}
+
+
+## `Engine.time_scale = <value>` as the value, "" for any other line.
+static func _time_scale_assignment(line: String) -> String:
+	var bare: String = line.strip_edges()
+	var at: int = top_level_index(bare, " = ")
+	if at <= 0 or bare.substr(0, at).strip_edges().trim_prefix("self.") != "Engine.time_scale":
+		return ""
+	return bare.substr(at + 3).strip_edges()
+
+
+## `<receiver>.pause()` / `pause()` as the receiver ("" is the host itself, spelled as "self" so the
+## two sides of the pair can be compared), or "" when the line is not that call.
+static func _animation_call_receiver(line: String, method: String) -> String:
+	var bare: String = line.strip_edges()
+	var suffix: String = "%s()" % method
+	if bare == suffix:
+		return "self"
+	if not bare.ends_with(".%s" % suffix):
+		return ""
+	var receiver: String = bare.substr(0, bare.length() - suffix.length() - 1).strip_edges()
+	return receiver if is_simple_target(receiver) else ""
+
+
+## `await get_tree().create_timer(<seconds>, true, false, true).timeout` as the seconds, "" for
+## anything else. The fourth argument is the one that matters and it must be `true`: that is the
+## ignore-time-scale flag, without which a wait started by a freeze would never end.
+static func _real_time_wait_seconds(line: String) -> String:
+	var bare: String = line.strip_edges()
+	if not bare.begins_with("await get_tree().create_timer(") or not bare.ends_with(").timeout"):
+		return ""
+	var inner: String = bare.substr(30, bare.length() - 39)
+	var arguments: PackedStringArray = _split_arguments(inner)
+	if arguments.size() != 4:
+		return ""
+	if arguments[3].strip_edges() != "true":
+		return ""
+	return arguments[0].strip_edges()
+
+
+## Y2. Two comparisons on ONE animation's play head, read as the slice of the clip they fence off -
+## the cancel window a follow-up move is allowed in. {} when the pair is not that: a window needs a
+## floor and a ceiling on the SAME player's clock, in that order.
+static func animation_window_pieces(run: String, context: Dictionary) -> Dictionary:
+	var and_at: int = top_level_index(run, " and ")
+	if and_at <= 0:
+		return {}
+	var lower: Dictionary = _animation_position_comparison(run.substr(0, and_at))
+	var upper: Dictionary = _animation_position_comparison(run.substr(and_at + 5))
+	if lower.is_empty() or upper.is_empty():
+		return {}
+	if str(lower.get("player", "")) != str(upper.get("player", "")):
+		return {}
+	if str(lower.get("operator", "")) != ">" or str(upper.get("operator", "")) != "<":
+		return {}
+	var object_name: String = _receiver_object(str(lower.get("player", "")), context)
+	return {
+		"object": object_name,
+		"pattern": "animation_combo",
+		"pieces": [[_fill(translate("Is between {from} s and {to} s of the current animation"), {
+			"from": expression_text(str(lower.get("time", "")), context),
+			"to": expression_text(str(upper.get("time", "")), context)}), "plain"]]
+	}
+
+
+## `<player>.current_animation_position > 0.3` as {player, operator, time}, or {} for anything else.
+## The player is spelled "self" when the line reads the host's own play head, so the two halves of a
+## window can be compared without caring which spelling the file used.
+static func _animation_position_comparison(text: String) -> Dictionary:
+	var bare: String = text.strip_edges()
+	for operator: String in [" > ", " < "]:
+		var at: int = top_level_index(bare, operator)
+		if at <= 0:
+			continue
+		var left: String = bare.substr(0, at).strip_edges().trim_prefix("self.")
+		var member: String = "current_animation_position"
+		if left == member:
+			return {"player": "self", "operator": operator.strip_edges(),
+				"time": bare.substr(at + operator.length()).strip_edges()}
+		if not left.ends_with(".%s" % member):
+			continue
+		var player: String = left.substr(0, left.length() - member.length() - 1).strip_edges()
+		if not is_simple_target(player):
+			continue
+		return {"player": player, "operator": operator.strip_edges(),
+			"time": bare.substr(at + operator.length()).strip_edges()}
+	return {}
 
 
 ## `name = <value>` as the name, when the value is exactly the one asked for, else "". The narrow

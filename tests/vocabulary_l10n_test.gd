@@ -102,6 +102,16 @@ const EXTENDED_MODULES: Dictionary = {
 	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
 		"MenuAddItem", "OnMenuItemChosen",
 	],
+	# Y2 / Y3 - the combo wave: the slice of a clip a move may be cancelled in, the per-object
+	# freeze, and the two ways an animation tells the game when something happens.
+	"res://addons/eventforge/registration/modules/animation_player_aces.gd": [
+		"AnimationIsBetween", "PauseAnimationFor",
+		"OnAnimationFrame", "SpriteAnimationFrameIs", "OnAnimationEvent",
+	],
+	# Y2 - the press remembered for a few frames so an input made slightly too early still lands.
+	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [
+		"BufferInput", "IsInputBuffered", "ConsumeBufferedInput",
+	],
 }
 
 ## One pinned translation per language, chosen from a string whose translation differs from its

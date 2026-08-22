@@ -533,7 +533,8 @@ static func _test_doctor_gate() -> bool:
 	# away from: quietly starting to accuse working scripts. The suite's own fixtures and the build
 	# tools embed emitted GDScript as string literals, so they are expected here and excluded by
 	# path; everything else must be exactly the seven showcase games, which really are written in one
-	# language on purpose. A regression names the script it broke on instead of moving a number.
+	# language on purpose (batch fourteen's Combo Fighter is the ninth). A regression names the
+	# script it broke on instead of moving a number.
 	var accused: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in unmarked_findings:
 		var path: String = str(finding.get("path"))
@@ -544,6 +545,7 @@ static func _test_doctor_gate() -> bool:
 	ok = _check("the accusations over this repo are exactly the one-language showcases",
 		"\n".join(accused), "\n".join(PackedStringArray([
 			"res://demo/showcase/boomer_level/boomer_level.gd",
+			"res://demo/showcase/combo_fighter/combo_fighter.gd",
 			"res://demo/showcase/family_arena/family_arena.gd",
 			"res://demo/showcase/hierarchy_playground/hierarchy_playground.gd",
 			"res://demo/showcase/input_rebind/input_rebind.gd",

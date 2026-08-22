@@ -2678,6 +2678,34 @@ func _check_row_verdict(check_label: String) -> Variant:
 	return EventSheetEditorToolBar.check_verdict(_viewport._sheet.external_source_path, check_label)
 
 
+## Y3. The sentence a function reads as when one of the project's ANIMATIONS calls it, "" when no
+## animation does. The animation's own clip name rides in the sentence, because "which animation" is
+## the first thing a reader of a hit frame wants and the script cannot say it.
+##
+## Only ever asked about a function whose name is spelled like a handler, so an ordinary sheet full of
+## verbs never pays for the scan at all - and a sheet that IS full of handlers pays for it once.
+func _animation_event_sentence(event_function: EventFunction) -> String:
+	if event_function == null:
+		return ""
+	var name: String = event_function.function_name.strip_edges()
+	if not name.begins_with("_on_"):
+		return ""
+	var tracks: Dictionary = EventSheetAnimationTrackFacts.by_method()
+	if not tracks.has(name):
+		return ""
+	var track: Dictionary = tracks[name]
+	var words: String = EventSheetAnimationTrackFacts.event_words(name)
+	var clip: String = str(track.get("animation", "")).strip_edges()
+	_note_pattern("sprite_animation", "%s -> %s" % [clip, name])
+	# Translated HERE, where the pattern is still a pattern: what leaves this function is the finished
+	# line, which the span builder then hands to the catalog again and gets back unchanged.
+	if clip.is_empty():
+		return EventSheetL10n.translate("On animation event {event}").replace(
+			"{event}", "\"%s\"" % words)
+	return EventSheetL10n.translate("On animation event {event} of {animation}").replace(
+		"{event}", "\"%s\"" % words).replace("{animation}", "\"%s\"" % clip)
+
+
 ## W9 / W10. Which object a function reads its trigger under. A test's `run` and a command tool's
 ## `_init` are what the file EXISTS to do and the runner calls them by name, so they belong to Test
 ## and to Command tool. Every other function is a helper this sheet calls, and stays under Functions.
@@ -2737,6 +2765,14 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		_editor_plugin_class(), event_function.function_name)
 	if not editor_callback.is_empty():
 		return _build_editor_callback_spans(event_function, str(editor_callback.get("text", "")))
+	# ── Y3 ──────────────────────────────────────────────────────────────────────────────────────
+	# A function an ANIMATION calls is not a helper this sheet calls itself, it is an event: the
+	# animation's method track names it, and the moment the play head reaches that key the engine
+	# calls it. Nothing in the script says so - which is exactly why the sheet has to.
+	var animation_event: String = _animation_event_sentence(event_function)
+	if not animation_event.is_empty():
+		return _build_editor_callback_spans(event_function, animation_event,
+			EventSheetSentence.script_object(sentence_context()))
 	var badge_colors: Array = _define_role_colors(role)
 	var name_color: Color = _define_role_name_color(role)
 	var spans: Array[SemanticSpan] = [
@@ -2861,7 +2897,11 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 ## question and a chip repeating them would print the same words twice. A sentence that names none
 ## ("On workspace shown") keeps them as the trigger payload chips every other event wears, which is
 ## how `visible` stays visible without the sentence having to mention it.
-func _build_editor_callback_spans(event_function: EventFunction, sentence: String) -> Array[SemanticSpan]:
+## `object_word` names the object the row files under; blank means the editor object this was first
+## written for. Y3's animation events borrow the whole shape - a badge, a sentence, the parameter
+## chips - and differ only in whose event it is.
+func _build_editor_callback_spans(event_function: EventFunction, sentence: String,
+		object_word: String = "") -> Array[SemanticSpan]:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var chip_bg: Color = _verb_chip_colors()[0]
 	var spans: Array[SemanticSpan] = [
@@ -2893,7 +2933,8 @@ func _build_editor_callback_spans(event_function: EventFunction, sentence: Strin
 		# The object column keeps the object's NAME as the sheet spells it, untranslated - the same
 		# rule the Editor object has followed since it was introduced, so one sheet never shows two
 		# spellings of the same object.
-		"object_label": EventSheetEditorPluginWords.object_for(_editor_plugin_class()),
+		"object_label": object_word if not object_word.is_empty() \
+			else EventSheetEditorPluginWords.object_for(_editor_plugin_class()),
 		"text_color": name_color
 	}
 	if EventSheetBBCodeLite.has_markup(marked_up):
@@ -5615,6 +5656,64 @@ func _menu_context_key(event_row: EventRow) -> String:
 	return EventSheetMenuFacts.handler_menu(sentence_context(), _current_verb_function.function_name)
 
 
+## Y1. The combo detector a `match` is asking on behalf of, as {list, separator, window, object} - or
+## {} when the match is an ordinary switch. Three facts have to line up: the subject joins a list into
+## one string, that list is one the FILE fills with pressed inputs inside a time window, and the
+## window is that list's own. Nothing here looks at the arms; what the arms spell is their business.
+func _combo_of_match(match_row: MatchRow) -> Dictionary:
+	var context: Dictionary = sentence_context()
+	var lists: Dictionary = context.get("combo_lists", {})
+	if lists.is_empty():
+		return {}
+	var subject: Dictionary = EventSheetSentence.combo_match_subject(match_row.match_expression)
+	var list_name: String = str(subject.get("list", ""))
+	if list_name.is_empty() or not lists.has(list_name):
+		return {}
+	return {
+		"list": list_name,
+		"separator": str(subject.get("separator", ",")),
+		"window": str((lists[list_name] as Dictionary).get("window", "")),
+		"object": EventSheetSentence.script_object(context)
+	}
+
+
+## Y1. One arm of a combo match, in the condition lane as the TRIGGER it is: the move the inputs
+## spell, with the window the player had to press them in as the muted note. The catch-all arm gets
+## no spans at all, so a `_` keeps reading as the plain Else it is.
+func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Array[SemanticSpan]:
+	var spans: Array[SemanticSpan] = []
+	var words: Dictionary = EventSheetSentence.combo_arm_words(pattern_text,
+		str(combo.get("separator", ",")), str(combo.get("window", "")))
+	if words.is_empty():
+		return spans
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
+	badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
+	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	badge_meta["line_index"] = 0
+	badge_meta["badge_style"] = "trigger"
+	badge_meta["lane"] = "condition"
+	spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, badge_meta))
+	var arm_meta: Dictionary = {
+		"lane": "condition",
+		"kind": "trigger",
+		"ace_index": -1,
+		"chip": true,
+		"editable": false,
+		"line_index": 0,
+		"object_label": str(combo.get("object", ""))
+	}.merged(condition_style_meta, true)
+	spans.append(_make_span(str(words.get("text", "")), SemanticSpan.SpanType.CONDITION, arm_meta))
+	if not str(words.get("note", "")).is_empty():
+		spans.append(_make_span(" %s" % str(words.get("note", "")), SemanticSpan.SpanType.VALUE,
+			arm_meta.duplicate().merged({
+				"text_color": _viewport._get_reading_style().muted_text_color,
+				"object_label": "", "chip": false
+			}, true)))
+	return spans
+
+
 ## W6. One `match` arm of a menu handler as the trigger it is: the ➜ badge, the menu in the object
 ## column, and `On <item> chosen` with the id resolved back to the words the user clicks. An id no
 ## item declared keeps the number and wears the warning colour - the branch is real, and nothing in
@@ -5710,6 +5809,12 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			state_shaped = false
 			else_if_chain = false
 			_claim_menu_pattern(event_row, menu)
+		# Y1 - a `match ",".join(combo):` is not a switch on a string, it is the combo detector
+		# answering: every arm is a move the player just spelled, so every arm is a trigger.
+		var combo: Dictionary = _combo_of_match(match_row)
+		if not combo.is_empty():
+			state_shaped = false
+			else_if_chain = false
 		var chain_index: int = 0
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
@@ -5728,7 +5833,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 						transition_children.append(guard_row)
 						continue
 					for case_line: String in case_lines:
-						body.append(_friendly_statement_text(case_line))
+						# Y1 - emptying the buffer is the detector's own bookkeeping: the trigger head
+						# above already stands for it, and repeating it as a step would tell a reader
+						# the move clears the combo, which is backwards.
+						if not combo.is_empty() \
+								and case_line.strip_edges() == "%s.clear()" % str(combo.get("list", "")):
+							continue
+						body.append(_friendly_statement_text(case_line, not combo.is_empty()))
 				elif case_item is ACEAction:
 					body.append(_format_action_descriptor(case_item as ACEAction))
 				elif case_item is CommentRow:
@@ -5745,6 +5856,10 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			var chain_spans: Array[SemanticSpan] = []
 			if not menu.is_empty():
 				chain_spans = _menu_arm_condition_spans(menu, pattern_text)
+			if not combo.is_empty():
+				chain_spans = _combo_arm_condition_spans(combo, pattern_text)
+				if not chain_spans.is_empty():
+					_note_pattern("animation_combo", "%s: %s" % [match_row.match_expression, pattern_text])
 			if else_if_chain:
 				chain_spans = _match_else_if_condition_spans(match_row.match_expression, pattern_text, chain_index)
 				chain_index += 1
@@ -6711,6 +6826,127 @@ func _grind_ride_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
+## Y2. The two three-line runs a combo game freezes with, each folded into the one row it is: the
+## whole game stopped for a few frames (a hit-stop), and one animation player held still while
+## everything else keeps running. Both are written as a stop, a REAL-TIME wait and a start, and the
+## real-time flag on the wait is what tells them apart from an ordinary pause somebody forgot to
+## undo - a wait measured on a stopped clock never ends.
+func _freeze_time_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	# This pass runs on every event of every sheet, and the overwhelmingly common answer is
+	# "nothing here freezes anything". Asking that question must not cost a codegen pass over the
+	# event's actions, which is exactly what reading their lines back would be.
+	if not _actions_might_freeze(actions):
+		return {"leads": leads, "consumed": consumed}
+	var context: Dictionary = sentence_context()
+	var index: int = 0
+	while index < actions.size() - 2:
+		var first: String = _group_line_text(actions[index])
+		# The overwhelmingly common answer is "these three lines are not a freeze", and it must cost a
+		# substring test rather than three parses.
+		if first.is_empty() or not (first.contains("time_scale") or first.contains("pause()")):
+			index += 1
+			continue
+		var second: String = _group_line_text(actions[index + 1])
+		var third: String = _group_line_text(actions[index + 2])
+		var frozen: Dictionary = EventSheetSentence.freeze_time_parts(first, second, third, context)
+		if frozen.is_empty():
+			frozen = EventSheetSentence.animation_pause_parts(first, second, third, context)
+		if frozen.is_empty():
+			index += 1
+			continue
+		leads[index] = {
+			"text": str(frozen.get("text", "")),
+			"note": str(frozen.get("note", "")),
+			"object": str(frozen.get("object", EventSheetSentence.OBJECT_SYSTEM)),
+			"evidence": PackedStringArray([first, second, third]),
+			"line_count": 3,
+			"indices": [index, index + 1, index + 2]
+		}
+		consumed[index + 1] = true
+		consumed[index + 2] = true
+		# Both freezes are the same combo-game trick at two scales, so both claim the one pattern.
+		_note_pattern("animation_combo", first)
+		index += 3
+	return {"leads": leads, "consumed": consumed}
+
+
+## Could any of these actions be part of a freeze? A verbatim line that mentions the time scale or a
+## pause, or a lifted row whose ID is one of the three a freeze is built from. Deliberately
+## generous - it decides whether to LOOK, not what the run is - and deliberately free: it reads
+## resources rather than compiling them.
+const FREEZE_ACE_IDS: PackedStringArray = ["SetTimeScale", "PauseAnimation", "Wait",
+	"PlayAnimation", "Hitstop", "PauseAnimationFor"]
+
+
+func _actions_might_freeze(actions: Array) -> bool:
+	if actions.size() < 3:
+		return false
+	for action_resource: Variant in actions:
+		var raw: RawCodeRow = action_resource as RawCodeRow
+		if raw != null:
+			if raw.code.contains("time_scale") or raw.code.contains("pause()"):
+				return true
+			continue
+		var action: ACEAction = action_resource as ACEAction
+		if action != null and FREEZE_ACE_IDS.has(action.ace_id):
+			return true
+	return false
+
+
+## Could any of these actions push something onto a list? Read off the resources rather than
+## compiled from them, for the same reason the freeze pre-check is.
+func _actions_might_push(actions: Array) -> bool:
+	for action_resource: Variant in actions:
+		var raw: RawCodeRow = action_resource as RawCodeRow
+		if raw != null:
+			if raw.code.contains(".append("):
+				return true
+			continue
+		var action: ACEAction = action_resource as ACEAction
+		if action != null and action.ace_id == "ArrayAppend":
+			return true
+	return false
+
+
+## Y1. The pressed input pushed onto a combo buffer with the window stamped beneath it - two lines
+## that are one thing the player did, in the Combo Box behaviour's own words.
+func _combo_press_groups(actions: Array) -> Dictionary:
+	var leads: Dictionary = {}
+	var consumed: Dictionary = {}
+	# Same discipline as the freeze above: the cheap question first. An event with nothing pushed
+	# onto a list cannot be a combo press, and asking the sheet for its facts to find that out
+	# would cost more than the answer is worth on the hundreds of events that are not one.
+	if actions.size() < 2 or not _actions_might_push(actions):
+		return {"leads": leads, "consumed": consumed}
+	var context: Dictionary = sentence_context()
+	if (context.get("combo_lists", {}) as Dictionary).is_empty():
+		return {"leads": leads, "consumed": consumed}
+	var index: int = 0
+	while index < actions.size() - 1:
+		var first: String = _group_line_text(actions[index])
+		if first.is_empty() or not first.contains(".append("):
+			index += 1
+			continue
+		var pressed: Dictionary = EventSheetSentence.combo_press_parts(first,
+			_group_line_text(actions[index + 1]), context)
+		if pressed.is_empty():
+			index += 1
+			continue
+		leads[index] = {
+			"text": str(pressed.get("text", "")),
+			"note": str(pressed.get("note", "")),
+			"object": EventSheetSentence.script_object(context),
+			"evidence": PackedStringArray([first, _group_line_text(actions[index + 1])]),
+			"line_count": 2,
+			"indices": [index, index + 1]
+		}
+		consumed[index + 1] = true
+		index += 2
+	return {"leads": leads, "consumed": consumed}
+
+
 ## The one line an action stands for, whichever shape it took in the sheet: the verbatim text of a
 ## raw line, or the line a LIFTED row compiles back to. A half-lifted file is the normal case - the
 ## importer turns one line of a run into a row while the line beside it stays verbatim - so a run
@@ -6735,6 +6971,10 @@ func _group_line_text(action_resource: Variant) -> String:
 ## The one thing a second condition must mention before the pair is worth reading as one question.
 const JOINED_CONDITION_MARK := ".get_custom_data("
 
+## Y2. The other thing a second condition can mention that makes the pair one question: an animation's
+## play head. Two comparisons on it fence off a cancel window, and neither half means anything alone.
+const ANIMATION_CLOCK_MARK := "current_animation_position"
+
 
 func _joined_condition_groups(conditions: Array, joiner: String = " and ") -> Dictionary:
 	var leads: Dictionary = {}
@@ -6753,10 +6993,24 @@ func _joined_condition_groups(conditions: Array, joiner: String = " and ") -> Di
 		# This pass runs on every event of every sheet, so the overwhelmingly common answer - "these
 		# two questions are not one question" - must cost a substring search, not a parse.
 		if first.is_empty() or second.is_empty() \
-				or not (writes_runs or second.contains(JOINED_CONDITION_MARK)):
+				or not (writes_runs or second.contains(JOINED_CONDITION_MARK)
+					or second.contains(ANIMATION_CLOCK_MARK)):
 			index += 1
 			continue
 		var run: String = "%s%s%s" % [first, joiner, second]
+		# Y2. A floor and a ceiling on ONE animation's play head are not two questions, they are a
+		# cancel window - the slice of a move another move is allowed to interrupt it in. Asked first
+		# because the general grammar below would answer the pair as two comparisons and stop.
+		var window: Dictionary = EventSheetSentence.animation_window_pieces(run, context)
+		if not window.is_empty():
+			var window_text: String = ""
+			for window_piece: Variant in (window.get("pieces", []) as Array):
+				window_text += str((window_piece as Array)[0])
+			leads[index] = {"text": window_text.strip_edges(), "object": str(window.get("object", ""))}
+			consumed[index + 1] = true
+			_note_pattern(str(window.get("pattern", "")), run)
+			index += 2
+			continue
 		var reading: Dictionary = EventSheetSentence.condition_pieces(run, context)
 		if str(reading.get("pattern", "")).is_empty():
 			index += 1
@@ -7275,9 +7529,15 @@ func _say_equals_once(span: SemanticSpan) -> void:
 ## The friendly one-line reading of a case-body statement: a sentence when the statement
 ## grammar knows it ("Set state to State.CHASE"), Object ▸ Verb for a call
 ## ("Patrol Step ( delta )"), the code text verbatim otherwise. Text-only, display-only.
-func _friendly_statement_text(line: String) -> String:
+## `with_file_facts` hands the grammar what the FILE knows - which variable is which class, which
+## list is a combo buffer - so a line inside a branch reads with the same knowledge a line in an
+## ordinary action lane does. Opt-in rather than the default because most branch bodies are read for
+## their shape alone, and asking the sheet for its facts on every line of every branch of every
+## switch is a cost nothing else there needs to pay.
+func _friendly_statement_text(line: String, with_file_facts: bool = false) -> String:
 	var text: String = line.strip_edges()
-	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(text)
+	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(text,
+		sentence_context() if with_file_facts else {})
 	if not sentence.is_empty() and sentence.get("segments") is Array:
 		var spoken: String = ""
 		for segment: Variant in (sentence.get("segments") as Array):
@@ -9500,6 +9760,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var window_groups: Dictionary = _input_window_groups(event_row.actions)
 		# Y9 - the offset walked forward and the body put on the curve are ONE ride, and read as one row.
 		var ride_groups: Dictionary = _grind_ride_groups(event_row.actions)
+		# Y1 / Y2 - the combo shapes: the pressed input with its window, and the two freezes.
+		var press_groups: Dictionary = _combo_press_groups(event_row.actions)
+		var freeze_groups: Dictionary = _freeze_time_groups(event_row.actions)
 		# W6 - the run of add_item calls that builds a menu is ONE menu, and reads as one bar.
 		var menu_groups: Dictionary = _menu_item_groups(event_row.actions)
 		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
@@ -9553,6 +9816,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					or bool(gyro_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(window_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(ride_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(press_groups.get("consumed", {}).get(action_index, false)) \
+					or bool(freeze_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(menu_groups.get("consumed", {}).get(action_index, false)):
 				continue
 			var run_lead: Dictionary = (look_groups["leads"] as Dictionary).get(action_index, {})
@@ -9583,6 +9848,15 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if run_lead.is_empty():
 				run_lead = (ride_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "grind"
+			# Y1 / Y2 - batch fourteen's two runs. The freeze already claimed its own pattern inside
+			# the group pass (it is the only run whose two shapes claim differently), so the arm here
+			# only has to draw it.
+			if run_lead.is_empty():
+				run_lead = (press_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "animation_combo"
+			if run_lead.is_empty():
+				run_lead = (freeze_groups["leads"] as Dictionary).get(action_index, {})
+				run_pattern = "animation_combo"
 			# W6 - the menu the run above built, as the one bar it is.
 			if run_lead.is_empty():
 				run_lead = (menu_groups["leads"] as Dictionary).get(action_index, {})

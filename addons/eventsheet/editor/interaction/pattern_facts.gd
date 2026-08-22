@@ -48,7 +48,9 @@ const PATTERN_IDS: PackedStringArray = [
 	"grind", "skateboard",
 	# Y7 / Y8 / Y11 - the traversal shapes: the ledge a two-probe test finds, the three moves
 	# built on the wall a body is touching, and the water volume that swaps gravity for drag.
-	"ledge", "wall_move", "swim"
+	"ledge", "wall_move", "swim",
+	# Y1 / Y2 - the input sequence a fighting game is made of, and the two timing tricks around it.
+	"animation_combo"
 ]
 
 ## sheet instance id -> Array[Dictionary] of claims. A claim is

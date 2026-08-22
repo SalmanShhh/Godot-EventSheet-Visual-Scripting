@@ -1844,7 +1844,6 @@ Set flipped,상하 반전
 Set not flipped,상하 반전 해제
 Set opacity to {value},불투명도를 {value} 로 설정
 Set size to {value},크기를 {value} 로 설정
-Set animation to {name} (play),애니메이션을 {name} 로 설정 (재생)
 Stop animation,애니메이션 정지
 Play,재생
 Stop,정지
@@ -4204,3 +4203,59 @@ Add The Water Rows,물 행 추가하기
 Add them,추가하기
 %s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 은(는) 물로 표시되어 있습니다. 들어갈 때 플래그를 켜고 나올 때 끄는 두 행을 추가할까요?
 Marking %s as water.,%s 을(를) 물로 표시합니다.
+Set animation to {name} (play from beginning),애니메이션을 {name} 로 설정 (처음부터 재생)
+Is Between,사이에 있음
+"True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.",재생 헤드가 한 클립의 특정 구간에 있는 동안 참입니다. 다음 기술로 캔슬할 수 있는 구간이나 타격 판정이 살아 있는 구간을 뜻합니다.
+Is between {from_time} s and {to_time} s of {animation},{animation} 의 {from_time} 초와 {to_time} 초 사이
+The clip whose clock the window lives on.,이 구간의 기준이 되는 클립입니다.
+Seconds into the clip the window opens.,클립 시작 후 몇 초에 구간이 열리는지.
+Seconds into the clip the window shuts.,클립 시작 후 몇 초에 구간이 닫히는지.
+Ask another AnimationPlayer instead of this one. Leave blank for this node.,이 노드 대신 다른 AnimationPlayer 에 묻습니다. 비워 두면 이 노드입니다.
+Pause For,잠시 멈춤
+"Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.",이 애니메이션만 잠깐 멈췄다가 다시 진행시킵니다. 주고받는 두 캐릭터에게만 느끼게 하고 싶을 때 쓰는 오브젝트 단위 히트스톱입니다. 대기 시간은 게임의 시간 배율을 무시하므로 슬로모션 중에도 반드시 풀립니다.
+Pause for {seconds} s,{seconds} 초 멈춤
+"How long the animation holds still, in real time.",애니메이션이 멈춰 있는 시간(실시간).
+Pause another AnimationPlayer instead of this one. Leave blank for this node.,이 노드 대신 다른 AnimationPlayer 를 멈춥니다. 비워 두면 이 노드입니다.
+On Animation Frame,애니메이션 프레임에서
+"Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.","스프라이트 애니메이션이 어떤 클립의 특정 프레임에 도달하는 순간 실행됩니다. 타격 프레임, 발소리, 탄피가 떨어지는 프레임 같은 것들입니다. 적용하면 클립과 프레임을 묻는 조건이 눈에 보이고 편집 가능한 형태로 추가됩니다."
+On animation {animation} frame {frame},애니메이션 {animation} 의 {frame} 프레임에서
+The clip the frame belongs to.,그 프레임이 속한 클립입니다.
+Frame,프레임
+Which frame of that clip to answer.,그 클립의 어느 프레임에 반응할지.
+Is Animation Frame,애니메이션 프레임임
+"True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.","스프라이트가 특정 클립의 특정 프레임을 보여 주고 있을 때 참입니다. 「애니메이션 프레임에서」 아래에 붙는 그 질문을, 매 틱 확인용으로 따로 쓰는 것입니다."
+animation is {animation} frame {frame},애니메이션이 {animation} 의 {frame} 프레임
+The clip to ask about.,물어볼 클립입니다.
+The frame index to ask about.,물어볼 프레임 번호입니다.
+Ask another AnimatedSprite2D instead of this one. Leave blank for this node.,이 노드 대신 다른 AnimatedSprite2D 에 묻습니다. 비워 두면 이 노드입니다.
+On Animation Event,애니메이션 이벤트에서
+"Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.","애니메이션의 메서드 트랙이 키에 도달할 때 실행됩니다. 트랙은 함수를 이름으로 호출하고 이 이벤트가 바로 그 함수이므로, 시그널을 거치지 않고 애니메이션과 시트가 직접 만납니다. 여기서 이벤트 이름을 정하고 트랙에서 같은 이름을 호출하세요."
+On animation event {event_name},애니메이션 이벤트 {event_name} 에서
+Event,이벤트
+"The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","애니메이션의 메서드 트랙이 호출하는 이름을 평범한 말로 적습니다(""hit frame"" 은 함수 _on_hit_frame 이 됩니다)."
+Buffer Input,입력 버퍼에 담기
+"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","누른 입력을 몇 프레임 동안 기억해 두어, 조금 이르게 넣은 입력도 제대로 나가게 합니다. 착지 직전에 누른 점프, 이전 기술 도중에 누른 펀치 같은 것들입니다. 해당 조작의 눌림 이벤트 아래에 두세요."
+Timed Input,타이밍 입력
+Buffer {input} for {frames} frames,{input} 을 {frames} 프레임 동안 버퍼에 담기
+Buffered input,버퍼에 담긴 입력
+"The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","누름을 기억해 두는 숫자 변수입니다. 입력 이름을 따서 지으면(punch_input, jump_input) 그 이름이 그대로 행에 읽혀 나옵니다."
+Frames,프레임 수
+How many physics frames the press stays remembered for.,누름을 몇 물리 프레임 동안 기억할지.
+Is Input Buffered,입력이 버퍼에 있음
+"True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","기억해 둔 입력이 아직 유효한 동안 참입니다. 기술이 나갈 수 있게 된 순간에 묻고, 같은 자리에서 소비하세요. 그러지 않으면 한 번 누른 것이 두 번 나갑니다."
+{input} is buffered,{input} 이 버퍼에 있음
+The number variable remembering the press.,누름을 기억해 두는 숫자 변수입니다.
+Consume Buffered Input,버퍼 입력 소비
+"Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.",기억해 둔 입력을 잊습니다. 그 덕에 나간 기술이 두 번 나가지 않게 하기 위해서입니다. 시작시킨 기술 바로 아래에 두세요.
+Consume {input},{input} 소비
+Combo Box ▸ Press input {token},Combo Box ▸ 입력 {token} 누르기
+Combo Box ▸ On combo {combo},Combo Box ▸ 콤보 {combo} 성립 시
+within {seconds} s,{seconds} 초 이내
+Hitstop for {seconds} seconds,{seconds} 초 동안 히트스톱
+the whole game freezes at {scale} - hit-stop,게임 전체가 {scale} 로 멈춤 - 히트스톱
+"real time, so it un-pauses even in slow motion",실시간이라 슬로모션 중에도 풀림
+Is between {from} s and {to} s of the current animation,현재 애니메이션의 {from} 초와 {to} 초 사이
+Set animation to {name} (play from end),애니메이션을 {name} 로 설정 (끝에서부터 재생)
+Set animation to {name} after the current one,현재 애니메이션 다음에 {name} 로 설정
+On animation event {event},애니메이션 이벤트 {event} 에서
+On animation event {event} of {animation},{animation} 의 애니메이션 이벤트 {event} 에서

@@ -1844,7 +1844,6 @@ Set flipped,上下反転する
 Set not flipped,上下反転を解除
 Set opacity to {value},不透明度を {value} にする
 Set size to {value},サイズを {value} にする
-Set animation to {name} (play),アニメーションを {name} にする (再生)
 Stop animation,アニメーションを停止
 Play,再生
 Stop,停止
@@ -4204,3 +4203,59 @@ Add The Water Rows,水の行を追加
 Add them,追加する
 %s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s は水として印が付いています。入るときにフラグを立て、出るときに下げる 2 行を追加しますか？
 Marking %s as water.,%s を水として印を付けます。
+Set animation to {name} (play from beginning),アニメーションを {name} にする (最初から再生)
+Is Between,この範囲にある
+"True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.",再生ヘッドが 1 つのクリップの一区間にある間は真になります。次の技でキャンセルできる区間や、攻撃判定が有効な区間のことです。
+Is between {from_time} s and {to_time} s of {animation},{animation} の {from_time} 秒から {to_time} 秒の間
+The clip whose clock the window lives on.,この区間の基準となるクリップです。
+Seconds into the clip the window opens.,クリップ開始から何秒で区間が始まるか。
+Seconds into the clip the window shuts.,クリップ開始から何秒で区間が終わるか。
+Ask another AnimationPlayer instead of this one. Leave blank for this node.,このノードではなく別の AnimationPlayer に問い合わせます。空欄ならこのノードです。
+Pause For,一時停止する時間
+"Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.",このアニメーションだけを一瞬止めてから再開します。殴り合う 2 体だけに効かせたいときのオブジェクト単位のヒットストップです。待ち時間はゲームの時間スケールを無視するため、スローモーション中でも必ず解除されます。
+Pause for {seconds} s,{seconds} 秒 一時停止
+"How long the animation holds still, in real time.",アニメーションが止まっている長さ（実時間）。
+Pause another AnimationPlayer instead of this one. Leave blank for this node.,このノードではなく別の AnimationPlayer を止めます。空欄ならこのノードです。
+On Animation Frame,アニメーションのコマになったとき
+"Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.",スプライトアニメーションがあるクリップの特定のコマに達した瞬間に実行されます。当たりのコマ、足音のコマ、薬莢が落ちるコマなどです。適用するとクリップとコマの判定が、目に見えて編集できる条件として追加されます。
+On animation {animation} frame {frame},アニメーション {animation} の {frame} コマ目で
+The clip the frame belongs to.,そのコマが属するクリップです。
+Frame,コマ
+Which frame of that clip to answer.,そのクリップのどのコマに反応するか。
+Is Animation Frame,アニメーションのコマである
+"True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.",スプライトが特定のクリップの特定のコマを表示しているときに真になります。「アニメーションのコマになったとき」の下にある判定を、毎ティックの確認用に単独で使うものです。
+animation is {animation} frame {frame},アニメーションが {animation} の {frame} コマ目
+The clip to ask about.,問い合わせるクリップです。
+The frame index to ask about.,問い合わせるコマ番号です。
+Ask another AnimatedSprite2D instead of this one. Leave blank for this node.,このノードではなく別の AnimatedSprite2D に問い合わせます。空欄ならこのノードです。
+On Animation Event,アニメーションイベントで
+"Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.",アニメーションのメソッドトラックがキーに達したときに実行されます。トラックは関数を名前で呼び出し、このイベントがまさにその関数なので、シグナルを挟まずにアニメーションとシートが直接つながります。ここでイベント名を決め、トラックからは同じ名前を呼んでください。
+On animation event {event_name},アニメーションイベント {event_name} で
+Event,イベント
+"The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","アニメーションのメソッドトラックが呼び出す名前を、普通の言葉で書きます（""hit frame"" は関数 _on_hit_frame になります）。"
+Buffer Input,入力を先行入力する
+"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.",押した入力を数コマだけ覚えておき、少し早すぎた入力でもちゃんと出るようにします。着地直前に押したジャンプ、前の技の最中に押したパンチなどです。その操作の「押された」イベントの下に置いてください。
+Timed Input,タイミング入力
+Buffer {input} for {frames} frames,{input} を {frames} コマ先行入力する
+Buffered input,先行入力
+"The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.",押されたことを覚えておく数値変数です。入力の名前を付ける（punch_input、jump_input）と、その名前がそのまま行に読み戻されます。
+Frames,コマ数
+How many physics frames the press stays remembered for.,押したことを何物理コマのあいだ覚えておくか。
+Is Input Buffered,先行入力が残っている
+"True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.",覚えている入力がまだ有効なあいだ真になります。技が出せるようになった瞬間に問い合わせ、同時に消費してください。そうしないと 1 回の入力が二度出てしまいます。
+{input} is buffered,{input} が先行入力されている
+The number variable remembering the press.,押されたことを覚えておく数値変数です。
+Consume Buffered Input,先行入力を消費する
+"Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.",覚えていた入力を忘れます。そのおかげで出た技が二度出ないようにするためです。開始した技のすぐ下に置いてください。
+Consume {input},{input} を消費する
+Combo Box ▸ Press input {token},Combo Box ▸ 入力 {token} を押す
+Combo Box ▸ On combo {combo},Combo Box ▸ コンボ {combo} が成立したとき
+within {seconds} s,{seconds} 秒以内
+Hitstop for {seconds} seconds,{seconds} 秒間ヒットストップ
+the whole game freezes at {scale} - hit-stop,ゲーム全体が {scale} で止まる - ヒットストップ
+"real time, so it un-pauses even in slow motion",実時間なのでスローモーション中でも解除される
+Is between {from} s and {to} s of the current animation,現在のアニメーションの {from} 秒から {to} 秒の間
+Set animation to {name} (play from end),アニメーションを {name} にする (終端から再生)
+Set animation to {name} after the current one,現在のアニメーションの後に {name} を再生する
+On animation event {event},アニメーションイベント {event} で
+On animation event {event} of {animation},{animation} のアニメーションイベント {event} で

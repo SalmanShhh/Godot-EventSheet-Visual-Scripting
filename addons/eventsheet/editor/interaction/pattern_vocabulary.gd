@@ -255,6 +255,12 @@ const ENTRIES: Dictionary = {
 		"why": "a marked volume that raises a flag on the way in and lowers it on the way out, and gravity traded for drag while it is up",
 		"adoptable": "traversal_kit",
 		"rank": 38
+	},
+	"animation_combo": {
+		"words": "Animation combo",
+		"why": "pressed inputs collect into a list inside a time window, and the move the list spells plays its animation",
+		"adoptable": "combo_box",
+		"rank": 39
 	}
 }
 
@@ -280,7 +286,8 @@ const PACK_LABELS: Dictionary = {
 	"upgrades": "Upgrades",
 	"skateboard": "Skateboard",
 	"traversal_kit": "Traversal Kit",
-	"traversal_kit_3d": "Traversal Kit 3D"
+	"traversal_kit_3d": "Traversal Kit 3D",
+	"combo_box": "Combo Box"
 }
 
 

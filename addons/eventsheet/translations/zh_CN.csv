@@ -1844,7 +1844,6 @@ Set flipped,设为翻转
 Set not flipped,取消翻转
 Set opacity to {value},将不透明度设为 {value}
 Set size to {value},将大小设为 {value}
-Set animation to {name} (play),将动画设为 {name}（播放）
 Stop animation,停止动画
 Play,播放
 Stop,停止
@@ -4204,3 +4203,59 @@ Add The Water Rows,添加水的行
 Add them,添加
 %s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,%s 已标记为水。是否添加在进入时置真、离开时置假的两行？
 Marking %s as water.,将 %s 标记为水。
+Set animation to {name} (play from beginning),将动画设为 {name}（从头播放）
+Is Between,介于之间
+"True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.",当播放头位于某个片段的一段区间内时为真 - 允许后续招式取消的窗口，或命中生效的活动帧。
+Is between {from_time} s and {to_time} s of {animation},处于 {animation} 的 {from_time} 秒到 {to_time} 秒之间
+The clip whose clock the window lives on.,该窗口所依据的动画片段。
+Seconds into the clip the window opens.,从片段开头起，窗口在第几秒打开。
+Seconds into the clip the window shuts.,从片段开头起，窗口在第几秒关闭。
+Ask another AnimationPlayer instead of this one. Leave blank for this node.,改为询问另一个 AnimationPlayer。留空表示本节点。
+Pause For,暂停一段时间
+"Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.",只把这一个动画定住片刻再放行 - 逐对象的打击顿帧，适合只让互殴的两个角色感受到。等待会忽略游戏的时间缩放，因此即使在慢动作中也一定会解除。
+Pause for {seconds} s,暂停 {seconds} 秒
+"How long the animation holds still, in real time.",动画静止多久（按真实时间计）。
+Pause another AnimationPlayer instead of this one. Leave blank for this node.,改为暂停另一个 AnimationPlayer。留空表示本节点。
+On Animation Frame,当动画到达某帧
+"Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.",在精灵动画到达某个片段的某一帧时立刻执行 - 命中帧、脚步帧、弹壳落地的那一帧。应用它会把「哪个片段、第几帧」作为一条看得见也改得动的条件加进来。
+On animation {animation} frame {frame},当动画 {animation} 到达第 {frame} 帧
+The clip the frame belongs to.,该帧所属的动画片段。
+Frame,帧
+Which frame of that clip to answer.,响应该片段的第几帧。
+Is Animation Frame,处于动画某帧
+"True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.",当精灵正显示某个片段的某一帧时为真 - 就是「当动画到达某帧」下面那条判断，单独拿出来做逐帧检查。
+animation is {animation} frame {frame},动画为 {animation} 第 {frame} 帧
+The clip to ask about.,要询问的动画片段。
+The frame index to ask about.,要询问的帧序号。
+Ask another AnimatedSprite2D instead of this one. Leave blank for this node.,改为询问另一个 AnimatedSprite2D。留空表示本节点。
+On Animation Event,当动画事件触发
+"Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.",当动画的方法轨到达关键帧时执行。方法轨按名字调用一个函数，而这个事件就是那个函数，所以动画和事件表之间不需要任何信号 - 在这里给事件起名，再从轨道上调用同一个名字。
+On animation event {event_name},当动画事件 {event_name} 触发
+Event,事件
+"The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","动画方法轨要调用的名字，用平常的说法写（""hit frame"" 会变成函数 _on_hit_frame）。"
+Buffer Input,缓存输入
+"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.",把按键记住几帧，让稍微按早了的输入照样出得来 - 落地前一刻按下的跳跃，上一招还没结束就按下的拳。放在该操作自己的按下事件下面。
+Timed Input,限时输入
+Buffer {input} for {frames} frames,把 {input} 缓存 {frames} 帧
+Buffered input,被缓存的输入
+"The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.",记住这次按键的数字变量。用输入的名字来命名（punch_input、jump_input），这一行读回来时就会带着那个名字。
+Frames,帧数
+How many physics frames the press stays remembered for.,按键会被记住多少个物理帧。
+Is Input Buffered,输入是否已缓存
+"True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.",只要记住的按键还新鲜就为真。在招式变得可用的那一刻询问，并在同一处消耗掉，免得一次按键出两下。
+{input} is buffered,{input} 已被缓存
+The number variable remembering the press.,记住这次按键的数字变量。
+Consume Buffered Input,消耗已缓存的输入
+"Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.",忘掉记住的按键，免得它放行的那一招再出一次。放在它启动的那一招正下方。
+Consume {input},消耗 {input}
+Combo Box ▸ Press input {token},Combo Box ▸ 按下输入 {token}
+Combo Box ▸ On combo {combo},Combo Box ▸ 当连招 {combo} 成立
+within {seconds} s,在 {seconds} 秒内
+Hitstop for {seconds} seconds,顿帧 {seconds} 秒
+the whole game freezes at {scale} - hit-stop,整个游戏在 {scale} 处冻结 - 顿帧
+"real time, so it un-pauses even in slow motion",按真实时间计，所以慢动作中也会解除
+Is between {from} s and {to} s of the current animation,处于当前动画的 {from} 秒到 {to} 秒之间
+Set animation to {name} (play from end),将动画设为 {name}（从末尾播放）
+Set animation to {name} after the current one,在当前动画之后将动画设为 {name}
+On animation event {event},当动画事件 {event} 触发
+On animation event {event} of {animation},当 {animation} 的动画事件 {event} 触发

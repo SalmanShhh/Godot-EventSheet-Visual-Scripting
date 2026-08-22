@@ -1844,7 +1844,6 @@ Set flipped,Перевернуть
 Set not flipped,Убрать переворот
 Set opacity to {value},Задать непрозрачность {value}
 Set size to {value},Задать размер {value}
-Set animation to {name} (play),Задать анимацию {name} (играть)
 Stop animation,Остановить анимацию
 Play,Играть
 Stop,Стоп
@@ -4204,3 +4203,59 @@ Add The Water Rows,Добавить строки воды
 Add them,Добавить
 %s is marked water. Add the two rows that raise the flag on the way in and lower it on the way out?,"%s отмечен как вода. Добавить две строки, которые поднимают флаг на входе и опускают его на выходе?"
 Marking %s as water.,%s отмечается как вода.
+Set animation to {name} (play from beginning),Задать анимацию {name} (играть с начала)
+Is Between,Находится между
+"True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.","Истина, пока указатель воспроизведения находится внутри отрезка клипа - окно отмены, в котором разрешён следующий приём, или активные кадры, в которых засчитывается удар."
+Is between {from_time} s and {to_time} s of {animation},Между {from_time} с и {to_time} с анимации {animation}
+The clip whose clock the window lives on.,"Клип, по времени которого отсчитывается окно."
+Seconds into the clip the window opens.,Через сколько секунд от начала клипа окно открывается.
+Seconds into the clip the window shuts.,Через сколько секунд от начала клипа окно закрывается.
+Ask another AnimationPlayer instead of this one. Leave blank for this node.,Спросить другой AnimationPlayer вместо этого. Оставьте пустым для этого узла.
+Pause For,Приостановить на
+"Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.","Останавливает ТОЛЬКО эту анимацию на мгновение и затем даёт ей идти дальше - пообъектная остановка удара, когда её должны почувствовать лишь двое дерущихся. Ожидание игнорирует масштаб времени игры, поэтому снимается даже во время замедления."
+Pause for {seconds} s,Пауза на {seconds} с
+"How long the animation holds still, in real time.","Сколько анимация стоит на месте, в реальном времени."
+Pause another AnimationPlayer instead of this one. Leave blank for this node.,Приостановить другой AnimationPlayer вместо этого. Оставьте пустым для этого узла.
+On Animation Frame,На кадре анимации
+"Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit.","Выполняется в момент, когда анимация спрайта доходит до определённого кадра клипа - кадра удара, шага, кадра, на котором падает гильза. При применении вопрос о клипе и кадре добавляется как видимое и редактируемое условие."
+On animation {animation} frame {frame},На кадре {frame} анимации {animation}
+The clip the frame belongs to.,"Клип, которому принадлежит кадр."
+Frame,Кадр
+Which frame of that clip to answer.,На какой кадр этого клипа реагировать.
+Is Animation Frame,Кадр анимации равен
+"True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.","Истина, когда спрайт показывает конкретный кадр конкретного клипа - тот же вопрос, что стоит под «На кадре анимации», отдельно для проверки каждый тик."
+animation is {animation} frame {frame},"анимация {animation}, кадр {frame}"
+The clip to ask about.,"Клип, о котором спрашиваем."
+The frame index to ask about.,"Номер кадра, о котором спрашиваем."
+Ask another AnimatedSprite2D instead of this one. Leave blank for this node.,Спросить другой AnimatedSprite2D вместо этого. Оставьте пустым для этого узла.
+On Animation Event,На событии анимации
+"Runs when an animation's method track reaches its key. The track calls a function by name and this event IS that function, so the animation and the sheet meet without a signal in between - name the event here and call the same name from the track.","Выполняется, когда дорожка методов анимации доходит до своего ключа. Дорожка вызывает функцию по имени, а это событие И ЕСТЬ та функция, так что анимация и лист встречаются без сигнала посередине: назовите событие здесь и вызывайте то же имя из дорожки."
+On animation event {event_name},На событии анимации {event_name}
+Event,Событие
+"The name the animation's method track calls, in plain words (""hit frame"" becomes the function _on_hit_frame).","Имя, которое вызывает дорожка методов анимации, обычными словами (""hit frame"" превращается в функцию _on_hit_frame)."
+Buffer Input,Запомнить нажатие
+"Remembers a press for a few frames so an input made slightly too early still comes out - the jump pressed just before landing, the punch pressed during the last move. Put it under the control's own pressed event.","Запоминает нажатие на несколько кадров, чтобы чуть преждевременный ввод всё равно сработал - прыжок, нажатый прямо перед приземлением, удар, нажатый во время предыдущего приёма. Ставьте под событием нажатия самой кнопки."
+Timed Input,Ввод по времени
+Buffer {input} for {frames} frames,Запомнить {input} на {frames} кадров
+Buffered input,Запомненное нажатие
+"The number variable remembering the press. Name it after the input - punch_input, jump_input - and the row reads back with that name in it.","Числовая переменная, помнящая нажатие. Назовите её по имени ввода - punch_input, jump_input - и строка прочитается обратно с этим именем."
+Frames,Кадры
+How many physics frames the press stays remembered for.,Сколько физических кадров нажатие остаётся запомненным.
+Is Input Buffered,Нажатие запомнено
+"True while a remembered press is still fresh. Ask it the moment the move becomes legal, and consume it in the same breath so one press cannot come out twice.","Истина, пока запомненное нажатие ещё свежее. Спрашивайте в момент, когда приём становится разрешён, и тут же расходуйте его, чтобы одно нажатие не сработало дважды."
+{input} is buffered,{input} запомнено
+The number variable remembering the press.,"Числовая переменная, помнящая нажатие."
+Consume Buffered Input,Израсходовать запомненное нажатие
+"Forgets the remembered press, so the move it let through cannot come out a second time. Put it directly under the move it started.","Забывает запомненное нажатие, чтобы пропущенный им приём не вышел во второй раз. Ставьте прямо под тем приёмом, который он начал."
+Consume {input},Израсходовать {input}
+Combo Box ▸ Press input {token},Combo Box ▸ Нажать ввод {token}
+Combo Box ▸ On combo {combo},Combo Box ▸ При комбо {combo}
+within {seconds} s,в течение {seconds} с
+Hitstop for {seconds} seconds,Остановка удара на {seconds} секунд
+the whole game freezes at {scale} - hit-stop,вся игра замирает на {scale} - остановка удара
+"real time, so it un-pauses even in slow motion","реальное время, поэтому снимается даже в замедлении"
+Is between {from} s and {to} s of the current animation,Между {from} с и {to} с текущей анимации
+Set animation to {name} (play from end),Задать анимацию {name} (играть с конца)
+Set animation to {name} after the current one,Задать анимацию {name} после текущей
+On animation event {event},На событии анимации {event}
+On animation event {event} of {animation},На событии анимации {event} клипа {animation}

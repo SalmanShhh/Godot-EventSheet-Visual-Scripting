@@ -82,6 +82,10 @@ static func build() -> bool:
 		"var _chain_multiplier: int = 1",
 		"var _banked_score: float = 0.0",
 		"var _chain_last: String = \"\"",
+		"# Y1 - combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.",
+		"# Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it",
+		"# here makes those twenty one table rather than twenty copies of the same event.",
+		"var _animations: Dictionary = {}",
 		"",
 		"# A registered token pattern matches an input if it is the wildcard \"*\" or the exact token.",
 		"func _token_matches(pattern: String, token: String) -> bool:",
@@ -176,9 +180,23 @@ static func build() -> bool:
 		"\t\t_match_time = _clock",
 		"\t\tif debug_logging:",
 		"\t\t\tprint(\"[ComboBox] matched \", best_full)",
+		"\t\t# Y1 - the move this combo was wired to, played before the trigger fires so the",
+		"\t\t# animation and everything the trigger does start on the same frame.",
+		"\t\t_play_combo_animation(best_full)",
 		"\t\ton_combo_matched.emit()",
 		"\tif partial_changed:",
 		"\t\ton_partial_progress.emit()",
+		"",
+		"# Y1. Plays the animation a combo was wired to, when it was wired to one and the player it",
+		"# names is still alive. A combo with no animation, or one whose player has gone, plays nothing:",
+		"# detecting is this pack's job, and a missing animation must never stop the trigger firing.",
+		"func _play_combo_animation(id: String) -> void:",
+		"\tif not _animations.has(id):",
+		"\t\treturn",
+		"\tvar wired: Dictionary = _animations[id]",
+		"\tvar player: AnimationPlayer = wired.player as AnimationPlayer",
+		"\tif is_instance_valid(player) and player.has_animation(str(wired.animation)):",
+		"\t\tplayer.play(str(wired.animation))",
 		"",
 		"# Ticks the clock and expires any partial whose timing window elapsed with no further input,",
 		"# firing On Combo Failed so a stalled motion can be reset in the UI. Driven by OnProcess.",
@@ -279,6 +297,19 @@ static func build() -> bool:
 		"_chain_multiplier = 1"
 	])), "[b]Drop[/b] the chain")
 
+	# --- Y1: one row per combo -> animation ---
+	#
+	# "This input sequence plays this animation" is the whole of a fighting game, and both halves
+	# already shipped separately: the sequences here, the animation rows on the sprite. This is the
+	# one gesture that joins them, so a twenty-move character is a table of twenty rows rather than
+	# twenty events that each say the same thing.
+	Lib.append_function(sheet, "set_animation_for_combo", "Set Animation For Combo", "ComboBox", "Wires a registered combo to an animation: when that combo matches, the player you name plays that clip, and On Combo Matched still fires for everything else the move does. One row per move - the whole move list is a table.",
+		[["id", "String"], ["player", "AnimationPlayer"], ["animation", "String"]],
+		"_animations[id] = {\"player\": player, \"animation\": animation}")
+	Lib.append_function(sheet, "clear_animation_for_combo", "Clear Animation For Combo", "ComboBox", "Unwires a combo from its animation. The combo keeps matching and keeps firing its trigger; it simply stops playing a clip of its own.",
+		[["id", "String"]],
+		"_animations.erase(id)")
+
 	# --- Conditions ---
 	_condition(sheet, "has_combo", "Has Combo", "ComboBox", "Whether a combo id is registered.", [["id", "String"]],
 		"return _combos.has(id)")
@@ -288,6 +319,8 @@ static func build() -> bool:
 		"return _buffer.is_empty()")
 	_condition(sheet, "combo_has_tag", "Combo Has Tag", "ComboBox", "Whether a combo carries a tag.", [["id", "String"], ["tag", "String"]],
 		"return _combos.has(id) and tag in (_combos[id].tags as PackedStringArray)")
+	_condition(sheet, "combo_has_animation", "Combo Has Animation", "ComboBox", "Whether a combo has been wired to an animation.", [["id", "String"]],
+		"return _animations.has(id)")
 
 	# --- Expressions: match context ---
 	_expr(sheet, "matched_id", "Matched Id", "ComboBox", "The id of the combo that just matched (inside On Combo Matched).", [],
@@ -336,13 +369,16 @@ static func build() -> bool:
 		"return _combos.size()", TYPE_INT)
 	_expr(sheet, "combo_id_at", "Combo Id At", "ComboBox", "The registered combo id at an index (use with Combo Count to list them).", [["index", "int"]],
 		"return str(_combos.keys()[index]) if index >= 0 and index < _combos.size() else \"\"", TYPE_STRING)
+	_expr(sheet, "animation_for_combo", "Animation For Combo", "ComboBox", "The animation a combo is wired to play; \"\" when it is wired to none.", [["id", "String"]],
+		"return str(_animations[id].animation) if _animations.has(id) else \"\"", TYPE_STRING)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"press_input": "Press input [b]{token}[/b]",
 		"register_combo": "Register combo [b]{id}[/b]: [b]{sequence}[/b] within [b]{timing_window}[/b] s",
+		"set_animation_for_combo": "Set animation [b]{animation}[/b] for combo [b]{id}[/b]",
 	})
-	Lib.feature_verbs(sheet, ["register_combo", "press_input"])
+	Lib.feature_verbs(sheet, ["register_combo", "press_input", "set_animation_for_combo"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/combo_box/combo_box_addon")
 
 
