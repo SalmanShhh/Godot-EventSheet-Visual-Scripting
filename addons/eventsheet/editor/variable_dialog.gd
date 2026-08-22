@@ -1,6 +1,15 @@
-# EventSheet - Variable creation dialog component
-# Provides a reusable form for creating global or local variables.
-# Connect to variable_confirmed to receive the result.
+# EventSheet - the Add variable dialog.
+#
+# V5. The dialog writes ONE row, so it asks for that row in the order the row is read: the scope
+# first (it is the row's first word), then the name, then the type, then the value. Every choice
+# list carries what its options mean, and ONE help strip at the foot describes whatever is focused -
+# the strip replaces the per-field hint labels, because ten explanations shown at once is the same
+# as none. The strip's READS AS line is the row itself, composed through EventSheetVariableSentence
+# like every other surface, and its IN CODE line is the compiler's own emitted declaration, so the
+# dialog can never promise a line the compiler would not write.
+#
+# Connect to variable_confirmed to receive the result; a Global lands through
+# project_global_requested instead, because a global belongs to an autoload rather than to this file.
 @tool
 class_name VariableDialog
 extends RefCounted
@@ -10,39 +19,47 @@ extends RefCounted
 ## (@export var) vs. private (var).
 signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool, is_static: bool)
 
-## R42 - the Global chip was pressed. A global lives on an autoload, not in this file, so the
-## dialog hands the gesture over rather than writing a member that only looks global.
-signal global_scope_requested()
+## V5 - the Scope dropdown says Global and the dialog was confirmed. A global lives on an autoload,
+## not in this file, so the dialog hands over the answers it collected (with the autoload the "Write
+## into" picker chose) rather than writing a member that only looks global.
+signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
-## R42 - the Scope chip row, and the chip per scope key (the sheet's own order).
-var _scope_chip_row: HBoxContainer = null
-var _scope_chips: Dictionary = {}
-## R42 - the live preview of the EXACT row this dialog will write, in the R37 shape.
+## V5 - the Scope DROPDOWN (never a row of switches): the sheet's own order, one description line
+## per choice, and the whole dialog re-gates itself the moment it changes.
+var _scope_option: OptionButton = null
+## V5 - "to Player": whose variable this will be, said once at the top instead of repeated per field.
+var _owner_label: Label = null
+## V5 - the write-into picker, revealed only for a Global: the autoload the value will live on.
+var _global_target_option: OptionButton = null
+var _global_target_row: Control = null
+## P4 - the ONE help strip at the foot. Everything focusable in the dialog wires into it.
+var _help_strip: EventSheetPopupUI.HelpStrip = null
+## R42 - the live preview of the EXACT row this dialog will write, in the R37 shape (the strip's
+## READS AS line).
 var _row_preview_label: Label = null
 ## R42 - `static var`: one value on the CLASS, shared by every copy of the object. Orthogonal to
 ## WHERE the variable is stored, exactly like Constant, so it is a flag rather than a scope - and
 ## exclusive with Constant, because a `static const` is not a thing GDScript has.
 var _is_static: bool = false
+## V5 - the scope the dialog last opened or wrote with, so re-opening it lands where the last one
+## did instead of resetting to Instance every time.
+var _last_scope_key: String = ""
+## V5 - true while the Scope dropdown says Global: the variable belongs to an autoload, so the
+## confirm hands it to the global writer instead of emitting a member of this file.
+var _writes_project_global: bool = false
 
-## The scopes the dialog offers, in the sheet's own order. Global is a ROUTE rather than a scope the
-## dialog writes: a global lives on an autoload, so pressing it hands the whole gesture to the Add
-## global variable dialog instead of quietly writing a member that only looks global.
-const CHOOSABLE_SCOPES: PackedStringArray = ["instance", "local", "global", "constant", "static"]
+## The scopes the dialog offers, in the sheet's own order (EventSheetVariableSentence.SCOPE_ORDER).
+const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
 
-## What each scope word means, in one line, for the chip's hover.
-const SCOPE_HINTS: Dictionary = {
-	"instance": "One per object - every copy of this object keeps its own.",
-	"local": "Lives inside one event and is gone when it ends.",
-	"global": "One value the whole project shares - lives on an autoload.",
-	"constant": "Set once and never changes while the game runs.",
-	"static": "One value shared by every copy of this object, not one each."
-}
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
 var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
+## The Type dropdown wrapped with its muted GDScript-spelling note - the control @onready mode hides,
+## so hiding the dropdown never strands the note beside an empty gap.
+var _type_field: Control = null
 # "Whole numbers only" - shown only when the friendly "number" type is selected; ticked stores int,
 # unticked stores float. The dialog's display is friendly; the stored type stays a real Godot type.
 var _whole_numbers_check: CheckBox = null
@@ -52,6 +69,9 @@ var _items_button: Button = null
 var _items_window: Window = null
 var _items_edit: TextEdit = null
 var _const_check: CheckBox = null
+## V5 - `static var` as a checkbox beside Constant, since that is what it is: a flag on the
+## declaration, not a place the variable lives.
+var _static_check: CheckBox = null
 var _exported_check: CheckBox = null
 # "@onready" toggle - tree-placed variables only (class-level). When on, the variable compiles to
 # `@onready var` and the Default field is a verbatim GDScript expression (a node ref like $Player).
@@ -73,6 +93,9 @@ var _options_row: HBoxContainer = null
 var _enum_fill_menu: MenuButton = null
 var _enum_provider: Callable = Callable()
 var _attr_toggle: Button = null
+## The "More options" toggle and its card as ONE block, so the form can put them last (under the
+## fields the row is actually made of) while their contents are still built where they read best.
+var _attr_block: VBoxContainer = null
 var _attr_section: VBoxContainer = null
 var _attr_section_card: PanelContainer = null  # themed inset card wrapping _attr_section (matches the picker's panels)
 # A second, nested disclosure inside _attr_section: the "Advanced" tier holds the wiring/organizational
@@ -172,6 +195,29 @@ const TYPE_HINTS: Dictionary = {
 	"Dictionary[String, Variant]": "Named anything (by text key) - a flexible data bag.",
 }
 
+## V5 - the type list as a reader meets it: the three everybody needs, a divider, then the rest.
+## `stored` is the real Godot type the choice writes (NUMBER_CHOICE is the one exception - it stores
+## int or float depending on the "Whole numbers only" tick beside it), `description` is the line
+## under the option, and the GDScript spelling rides muted at the right of the field. The tail of the
+## list is DERIVED from TYPE_OPTIONS rather than repeated here, so a type added there appears in the
+## dialog without a second edit.
+const NUMBER_CHOICE: String = "number"
+const TYPE_CHOICES: Array = [
+	{"label": "Number", "stored": NUMBER_CHOICE, "code": "float", "description": "200, 0.5, -3 - or whole counts with the tick below"},
+	{"label": "Text", "stored": "String", "code": "String", "description": "words in quotes, \"hello\""},
+	{"label": "Boolean", "stored": "bool", "code": "bool", "description": "true or false"},
+	{"separator": "Also"},
+	{"label": "Vector", "stored": "Vector2", "code": "Vector2", "description": "an x and a y"},
+	{"label": "Color", "stored": "Color", "code": "Color", "description": "a colour with transparency"},
+	{"label": "List", "stored": "Array", "code": "Array", "description": "many values in order"},
+	{"label": "Table", "stored": "Dictionary", "code": "Dictionary", "description": "values looked up by a key"},
+	{"separator": "Object · Scene · Any"}
+]
+## The stored types the friendly half of the list already covers - the tail skips these.
+const FRIENDLY_STORED_TYPES: PackedStringArray = [
+	"int", "float", "bool", "String", "Vector2", "Color", "Array", "Dictionary"
+]
+
 
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
@@ -179,7 +225,8 @@ func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Create Variable"
+	_dialog.title = "Add variable"
+	_dialog.ok_button_text = "Add"
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
 	_dialog.close_requested.connect(_close)
@@ -193,23 +240,26 @@ func init_dialog(parent_node: Node) -> void:
 	form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dialog.add_child(EventSheetPopupUI.margined(form))
 
-	# R42 - the scope reads as CHIPS, first, in the sheet's own order. The dialog's job is to write
-	# one row, and the row starts with its scope word, so that is what the dialog asks for first.
-	_scope_chip_row = HBoxContainer.new()
-	var scope_caption: Label = Label.new()
-	scope_caption.text = "Scope"
-	scope_caption.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
-	_scope_chip_row.add_child(scope_caption)
+	# V5 - whose variable this is, said once at the top. The window title stays "Add variable"; this
+	# line is the "to Player" half of it, which a Window title bar has nowhere to put.
+	_owner_label = EventSheetPopupUI.hint_label("")
+	form.add_child(_owner_label)
+
+	# V5 - the scope is a DROPDOWN, and it comes first: it is the row's first word, and every other
+	# field in the dialog is gated by it. Each option carries the one line that says what it means.
+	_scope_option = OptionButton.new()
 	for scope_key: String in CHOOSABLE_SCOPES:
-		var chip: Button = Button.new()
-		chip.toggle_mode = true
-		chip.focus_mode = Control.FOCUS_NONE
-		chip.text = EventSheetVariableSentence.scope_word(scope_key)
-		chip.tooltip_text = str(SCOPE_HINTS.get(scope_key, ""))
-		chip.pressed.connect(_on_scope_chip_pressed.bind(scope_key))
-		_scope_chip_row.add_child(chip)
-		_scope_chips[scope_key] = chip
-	form.add_child(_scope_chip_row)
+		_scope_option.add_item(EventSheetVariableSentence.scope_word(scope_key))
+		_scope_option.set_item_metadata(_scope_option.item_count - 1, scope_key)
+	_scope_option.item_selected.connect(func(index: int) -> void:
+		_apply_scope_key(str(_scope_option.get_item_metadata(index))))
+	form.add_child(EventSheetPopupUI.form_row("Scope", _scope_option))
+	# V5 - "write into: Game": which autoload a Global lands on. Hidden until Global is the scope,
+	# because it is the only scope for which the question has an answer.
+	_global_target_option = OptionButton.new()
+	_global_target_row = EventSheetPopupUI.form_row("Write into", _global_target_option)
+	_global_target_row.visible = false
+	form.add_child(_global_target_row)
 	_scope_label = Label.new()
 	_scope_label.visible = false
 	form.add_child(_scope_label)
@@ -240,20 +290,24 @@ func init_dialog(parent_node: Node) -> void:
 	type_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
-	# Friendly labels first (Number / Text / Yes-No), then a separator, then the advanced Godot types
-	# under their own names. Only the DISPLAY changes - _selected_stored_type() always returns a real
-	# Godot type (int/float/String/bool/…), so the stored type_name and the .gd round-trip are unchanged.
-	for friendly: String in ["number", "text", "boolean"]:
-		_type_option.add_item(friendly)
-		_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[friendly]))
-	_type_option.add_separator("Advanced types")
+	# V5 - Number / Text / Boolean, a divider, then Vector / Color / List / Table, then the Godot
+	# types under their own names. Every entry carries the stored type as its METADATA (never as its
+	# text), so the display can read as plainly as it likes while _selected_stored_type() still
+	# returns a real Godot type and the .gd round-trip is unchanged.
+	for choice: Dictionary in TYPE_CHOICES:
+		if choice.has("separator"):
+			_type_option.add_separator(str(choice["separator"]))
+			continue
+		_type_option.add_item(str(choice["label"]))
+		_type_option.set_item_metadata(_type_option.item_count - 1, str(choice["stored"]))
+		_type_option.set_item_tooltip(_type_option.item_count - 1, type_description(str(choice["stored"])))
 	for option: String in TYPE_OPTIONS:
-		# int / float collapse into "number" + a "Whole numbers only" tick; bool → boolean; String → text.
-		if option == "int" or option == "float" or option == "bool" or option == "String":
+		# The friendly half already covers these under plainer words.
+		if FRIENDLY_STORED_TYPES.has(option):
 			continue
 		_type_option.add_item(option)
-		if TYPE_HINTS.has(option):
-			_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[option]))
+		_type_option.set_item_metadata(_type_option.item_count - 1, option)
+		_type_option.set_item_tooltip(_type_option.item_count - 1, type_description(option))
 	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		_refresh_whole_numbers_row()
@@ -262,7 +316,11 @@ func init_dialog(parent_node: Node) -> void:
 		_refresh_contextual_rows()
 		_refresh_items_button()
 	)
-	type_row.add_child(_type_option)
+	# The GDScript spelling, muted, at the right of the field: the friendly word teaches the type
+	# instead of hiding it. Number resolves through the tick beside it, so it needs the override.
+	_type_field = EventSheetPopupUI.code_noted_option(_type_option,
+		func(_index: int) -> String: return _selected_stored_type())
+	type_row.add_child(_type_field)
 	# @onready mode swaps the dropdown for this free-text field (the dropdown can't name node classes). Hidden
 	# until onready is ticked; _apply_onready_state toggles it, _selected_stored_type() reads it.
 	_onready_type_edit = LineEdit.new()
@@ -290,7 +348,9 @@ func init_dialog(parent_node: Node) -> void:
 
 	var default_row: HBoxContainer = HBoxContainer.new()
 	var default_label: Label = Label.new()
-	default_label.text = "Default"
+	# V5 - "Initial value", not "Default": it is the value the variable STARTS at, and "default" is
+	# the word Godot uses for a property's fallback, which this is not.
+	default_label.text = "Initial value"
 	default_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	default_row.add_child(default_label)
 	_default_edit = LineEdit.new()
@@ -307,6 +367,13 @@ func init_dialog(parent_node: Node) -> void:
 	default_row.add_child(_items_button)
 	_refresh_items_button()
 	form.add_child(default_row)
+	# The literal ✓/✗ note belongs under the field it judges, not at the far end of the form.
+	_default_help = Label.new()
+	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
+	_default_help.visible = false
+	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
+	form.add_child(_default_help)
 	_options_row = HBoxContainer.new()
 	var options_label: Label = Label.new()
 	options_label.text = "Options (combo)"
@@ -339,18 +406,20 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_toggle.flat = true
 	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_attr_toggle.toggle_mode = true
-	_attr_toggle.text = "▸  More options (range, drawer, grouping…)"
+	_attr_toggle.text = "▸  More options (Inspector, range, drawer, group…)"
 	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals - everything compiles to plain Godot annotations."
 	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
 		_attr_section_card.visible = expanded)
-	form.add_child(_attr_toggle)
+	_attr_block = VBoxContainer.new()
+	_attr_block.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+	_attr_block.add_child(_attr_toggle)
 	_attr_section = VBoxContainer.new()
 	# Themed inset card (the same sunken-panel surface the ACE picker uses), so the optional-attributes
 	# block reads as a distinct panel instead of flat form rows floating on the dialog background.
 	_attr_section_card = EventSheetPopupUI.panel_section(_attr_section)
 	_attr_section_card.visible = false
-	form.add_child(_attr_section_card)
+	_attr_block.add_child(_attr_section_card)
 	# ── BASIC tier: the friendly polish a designer reaches for first (Description is promoted to
 	# the always-visible form above; range / drawer / look controls live here) ──
 	_attr_range_edit = LineEdit.new()
@@ -529,22 +598,22 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_getter_edit.custom_minimum_size = Vector2(0.0, 54.0)
 	_attr_getter_edit.tooltip_text = "The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter."
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Getter body", _attr_getter_edit))
-	_default_help = Label.new()
-	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
-	_default_help.visible = false
-	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
-	form.add_child(_default_help)
-
-	var const_row: HBoxContainer = HBoxContainer.new()
-	var const_label: Label = Label.new()
-	const_label.text = "Flags"
-	const_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
-	const_row.add_child(const_label)
+	# V5 - Static and Constant are CHECKBOXES with their explanation muted beside them, the way the
+	# other two flags in the dialog read. They are not scopes (they say nothing about where the
+	# variable lives), but picking either in the Scope dropdown ticks the matching box, so the two
+	# spellings of the same fact can never disagree.
+	var flags_box: VBoxContainer = VBoxContainer.new()
+	flags_box.add_theme_constant_override("separation", 2)
+	_static_check = CheckBox.new()
+	_static_check.text = "Static"
+	_static_check.toggled.connect(func(pressed: bool) -> void: _on_static_toggled(pressed))
+	flags_box.add_child(_static_check)
+	flags_box.add_child(_flag_note("One value shared by every copy, not one each - and readable without a copy at all."))
 	_const_check = CheckBox.new()
-	_const_check.text = "Constant (can't change at runtime)"
-	const_row.add_child(_const_check)
-	form.add_child(const_row)
+	_const_check.text = "Constant"
+	flags_box.add_child(_const_check)
+	flags_box.add_child(_flag_note("Set here and never changed while the game runs."))
+	form.add_child(EventSheetPopupUI.form_row("Flags", flags_box))
 
 	var access_row: HBoxContainer = HBoxContainer.new()
 	var access_label: Label = Label.new()
@@ -585,18 +654,172 @@ func init_dialog(parent_node: Node) -> void:
 	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_type_help)
 
-	# R42 - the exact row this dialog will write, live as you type. It sits last, where the eye
-	# lands after the fields, and it is the row the sheet will actually show.
-	var preview_box: VBoxContainer = VBoxContainer.new()
-	preview_box.add_child(EventSheetPopupUI.section_header("The row you will get"))
-	_row_preview_label = Label.new()
-	_row_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	preview_box.add_child(_row_preview_label)
-	form.add_child(EventSheetPopupUI.panel_section(preview_box))
+	# "More options" and its card sit LAST, under everything the row itself is made of - so they are
+	# parented here rather than where their fields are built, which keeps the long attribute block in
+	# one readable place above without putting it in the middle of the form.
+	form.add_child(_attr_block)
+
+	# P4 - the ONE help strip. Everything focusable above wires into it, and it carries the row this
+	# dialog will write (READS AS) with the line the compiler will emit under it (IN CODE).
+	_help_strip = EventSheetPopupUI.help_strip()
+	form.add_child(_help_strip)
+	_row_preview_label = _help_strip.reads_as_value
+	_wire_help_strip()
 	_default_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
 	_const_check.toggled.connect(func(_on: bool) -> void:
-		refresh_scope_chips()
+		_on_constant_toggled(_const_check.button_pressed)
+		refresh_scope_selection()
 		_refresh_ships_as())
+
+
+## What a scope means, in the one line that sits under its option. `owner` names the object when
+## naming it helps ("one per Player" beats "one per object").
+static func scope_description(scope_key: String, owner: String) -> String:
+	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else "this object"
+	match scope_key:
+		EventSheetVariableSentence.SCOPE_INSTANCE:
+			return "one per %s - each copy in the scene has its own" % who
+		EventSheetVariableSentence.SCOPE_LOCAL:
+			return "lives inside the event it sits in, and is gone when it ends"
+		EventSheetVariableSentence.SCOPE_GLOBAL:
+			return "one value the whole project shares - written into an autoload"
+		EventSheetVariableSentence.SCOPE_CONSTANT:
+			return "never changes while the game runs"
+		EventSheetVariableSentence.SCOPE_STATIC:
+			return "one value shared by every %s, kept between scenes" % who
+	return ""
+
+
+## The help strip's paragraph for a scope - the same fact as the option line, said long enough to
+## answer "and when would I pick another one?".
+static func scope_help(scope_key: String, owner: String) -> String:
+	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else "this object"
+	match scope_key:
+		EventSheetVariableSentence.SCOPE_INSTANCE:
+			return ("One per %s. Every %s in the scene gets its own; change it on one and the others keep theirs. "
+				+ "Pick Global for a value the whole game shares, Local for a value only this event needs.") % [who, who]
+		EventSheetVariableSentence.SCOPE_LOCAL:
+			return ("Lives inside one event. It is made when the event runs and gone when it ends, so nothing "
+				+ "else in the sheet can read it - which is exactly what you want for a working total.")
+		EventSheetVariableSentence.SCOPE_GLOBAL:
+			return ("One value the whole project shares. It lives on an autoload, so every sheet reads it as "
+				+ "Game.Score; \"Write into\" says which autoload gets it.")
+		EventSheetVariableSentence.SCOPE_CONSTANT:
+			return ("Set here and never changed while the game runs. Use it for the numbers a reader should be "
+				+ "able to find in one place - a top speed, a maximum. A constant is never a Static and never "
+				+ "an Inspector property.")
+		EventSheetVariableSentence.SCOPE_STATIC:
+			return ("One value shared by every %s rather than one each - a count of how many exist, a high "
+				+ "score kept while the scene changes. Reading it needs no copy of the object at all.") % who
+	return ""
+
+
+## The line under a type's option, and the paragraph the help strip shows for it: the plain-language
+## hint the dialog already held, with the GDScript spelling on the end so the friendly word teaches
+## the type instead of replacing it.
+static func type_description(stored_type: String) -> String:
+	for choice: Dictionary in TYPE_CHOICES:
+		if choice.has("separator") or str(choice.get("stored", "")) != stored_type:
+			continue
+		return "%s · %s" % [str(choice.get("description", "")), str(choice.get("code", stored_type))]
+	if TYPE_HINTS.has(stored_type):
+		return str(TYPE_HINTS[stored_type])
+	return stored_type
+
+
+## P4 - every field says what it is THROUGH THE STRIP, so the form itself stays a list of questions.
+## The two dropdowns describe each option as it is arrowed over, before it is picked.
+func _wire_help_strip() -> void:
+	if _help_strip == null:
+		return
+	_help_strip.follow_option(_scope_option, _describe_scope_index)
+	_help_strip.follow_option(_type_option, _describe_type_index)
+	_help_strip.follow(_name_edit, "Name",
+		"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. "
+		+ "A name already taken in this scope is flagged under the field as you type.")
+	_help_strip.follow(_default_edit, "Initial value",
+		"The value it starts at, written the way the row will show it. Left empty it starts at nothing - 0 "
+		+ "for a number, \"\" for text, false for a boolean.")
+	_help_strip.follow(_whole_numbers_check, "Whole numbers only",
+		"Counts - lives, ammo, a score - can never be a half. Ticked the variable stores an int and the "
+		+ "sheet refuses a decimal; unticked it stores a float.")
+	_help_strip.follow(_attr_tooltip_edit, "Description",
+		"One line saying what the variable is for. It compiles to a ## comment above the declaration, which "
+		+ "IS the description Godot shows in the Inspector - so it is never written twice.")
+	_help_strip.follow(_static_check, "Static",
+		"One value shared by every copy of the object rather than one each, and readable without a copy at "
+		+ "all. Never combined with Constant - GDScript has no static const.")
+	_help_strip.follow(_const_check, "Constant",
+		"Set here and never changed while the game runs. A constant is neither Static nor an Inspector "
+		+ "property, so both grey out when it is ticked.")
+	_help_strip.follow(_exported_check, "Editable in the Inspector",
+		"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state "
+		+ "only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.")
+	_help_strip.follow(_global_target_option, "Write into",
+		"The autoload the global will live on - every sheet then reads it as Game.Score. \"New global "
+		+ "sheet…\" makes one and registers it for you.")
+
+
+## The one line under each scope option. Refreshed on open rather than baked at build time, because
+## the line names the object ("one per Player") and the object is whatever sheet is in front.
+func _refresh_scope_descriptions() -> void:
+	if _scope_option == null:
+		return
+	var owner: String = _owner_name()
+	for index: int in range(_scope_option.item_count):
+		_scope_option.set_item_tooltip(index,
+			scope_description(str(_scope_option.get_item_metadata(index)), owner))
+
+
+## The dialog's fields, top to bottom, by the word each row leads with - the order V5 pins: the
+## scope first (it is the row's first word), then the name, the type, the value. `visible_only`
+## answers what the reader can actually see for the scope in front of them.
+func field_order(visible_only: bool = false) -> PackedStringArray:
+	var order: PackedStringArray = PackedStringArray()
+	if _scope_option == null or _scope_option.get_parent() == null:
+		return order
+	var form: Node = _scope_option.get_parent().get_parent()
+	for row: Node in form.get_children():
+		if not (row is HBoxContainer):
+			continue
+		if visible_only and not (row as Control).visible:
+			continue
+		var leader: String = ""
+		for cell: Node in (row as Control).get_children():
+			if cell is Label:
+				leader = (cell as Label).text
+				break
+			if cell is Button:
+				leader = (cell as Button).text
+				break
+		if not leader.strip_edges().is_empty():
+			order.append(leader)
+	return order
+
+
+## The strip's text for the scope at `index` of the Scope dropdown.
+func _describe_scope_index(index: int) -> Dictionary:
+	if _scope_option == null or index < 0 or index >= _scope_option.item_count:
+		return {}
+	var scope_key: String = str(_scope_option.get_item_metadata(index))
+	return {
+		"heading": "Scope · %s" % EventSheetVariableSentence.scope_word(scope_key),
+		"body": scope_help(scope_key, _owner_name())
+	}
+
+
+## The strip's text for the type at `index` of the Type dropdown.
+func _describe_type_index(index: int) -> Dictionary:
+	if _type_option == null or index < 0 or index >= _type_option.item_count:
+		return {}
+	var meta: Variant = _type_option.get_item_metadata(index)
+	if meta == null:
+		return {}
+	var stored: String = str(meta)
+	return {
+		"heading": "Type · %s" % _type_option.get_item_text(index),
+		"body": type_description(stored)
+	}
 
 
 ## A 130px-label + expanding-field row, matching the main form's columns, so the optional
@@ -613,48 +836,50 @@ func _selected_stored_type() -> String:
 		return typed_name if not typed_name.is_empty() else "Variant"
 	if _type_option == null or _type_option.selected < 0:
 		return "int"
-	var label: String = _type_option.get_item_text(_type_option.selected)
-	match label:
-		"number":
-			return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
-		"text":
-			return "String"
-		"boolean":
-			return "bool"
-		_:
-			return label
+	var stored: String = str(_type_option.get_item_metadata(_type_option.selected))
+	if stored == NUMBER_CHOICE:
+		return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
+	return stored
 
 
 ## Selects the dropdown entry (+ the Whole-numbers tick) that stores `type_name` - the reverse of
-## _selected_stored_type, used to prefill the dialog when editing an existing variable.
+## _selected_stored_type, used to prefill the dialog when editing an existing variable. Matching is
+## by METADATA, never by the words on the item, so the list can be relabelled freely.
 func _select_stored_type(type_name: String) -> void:
 	var target: String = type_name
 	match type_name:
 		"int":
-			target = "number"
+			target = NUMBER_CHOICE
 			if _whole_numbers_check != null:
 				_whole_numbers_check.button_pressed = true
 		"float":
-			target = "number"
+			target = NUMBER_CHOICE
 			if _whole_numbers_check != null:
 				_whole_numbers_check.button_pressed = false
-		"String":
-			target = "text"
-		"bool":
-			target = "boolean"
 	for index: int in range(_type_option.item_count):
-		if _type_option.get_item_text(index) == target:
+		if str(_type_option.get_item_metadata(index)) == target:
 			_type_option.select(index)
 			break
 	_refresh_whole_numbers_row()
+	_refresh_type_code_note()
 
 
-## Shows the "Whole numbers only" tick only while the friendly "number" type is selected.
+## Shows the "Whole numbers only" tick only while the friendly Number type is selected.
 func _refresh_whole_numbers_row() -> void:
 	if _whole_numbers_row == null:
 		return
-	var label: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
-	_whole_numbers_row.visible = label == "number"
+	var stored: String = str(_type_option.get_item_metadata(_type_option.selected)) if _type_option != null and _type_option.selected >= 0 else ""
+	_whole_numbers_row.visible = stored == NUMBER_CHOICE
+
+
+## The muted GDScript spelling beside the Type field. Number reads int or float depending on the
+## tick, so the note is refreshed by the tick as well as by the dropdown.
+func _refresh_type_code_note() -> void:
+	if _type_option == null or not _type_option.has_meta("code_note"):
+		return
+	var note: Label = _type_option.get_meta("code_note") as Label
+	if note != null:
+		note.text = _selected_stored_type()
 
 
 ## ── Structured data editor (Array/Dictionary "Edit items…") ──────────────────
@@ -777,6 +1002,11 @@ func open(scope: String) -> void:
 	# A new variable is internal script state by DEFAULT (a plain private var) - the user opts into
 	# "Designer-tweakable (@export)" deliberately, instead of every global leaking onto the Inspector.
 	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, false)
+	# V5 - a fresh variable opens on the scope the last one used: somebody adding five instance
+	# variables should answer the scope question once, not five times. An EDIT never moves - the
+	# variable already has a scope, and it is not the dialog's to change behind the reader's back.
+	if not _last_scope_key.is_empty():
+		_apply_scope_key(_last_scope_key)
 
 
 ## Inspector attributes (range, group, show-if…) only mean anything on an @export var, so their
@@ -839,8 +1069,9 @@ func _apply_onready_state(pressed: bool) -> void:
 	# Swap the Type control: free-text in onready mode, the friendly dropdown otherwise.
 	if _onready_type_edit != null:
 		_onready_type_edit.visible = pressed
-	if _type_option != null:
-		_type_option.visible = not pressed
+	if _type_field != null:
+		# The whole field, so the muted GDScript spelling goes with the dropdown it belongs to.
+		_type_field.visible = not pressed
 	if _whole_numbers_row != null and pressed:
 		_whole_numbers_row.visible = false
 	elif not pressed:
@@ -870,11 +1101,23 @@ func open_for_edit(
 		return
 	_is_static = is_static and not is_constant
 	_scope = scope
+	# V5 - a Global written from HERE is a member of an autoload, never of this file, so the flag
+	# starts clear and only the Scope dropdown sets it.
+	_writes_project_global = false
 	if scope != "local":
 		_member_scope = scope
 	_context = context.duplicate(true)
 	_scope_label.text = "Scope: %s" % scope.capitalize()
-	_dialog.title = title
+	# V5 - "Add variable" / "to Player". The window title says the gesture, the line under it says
+	# whose variable this will be; `title` stays in the signature for callers that still pass one.
+	var is_editing: bool = bool(context.get("editing", false))
+	_dialog.title = "Edit variable" if is_editing else "Add variable"
+	_dialog.ok_button_text = "Save" if is_editing else "Add"
+	var owner: String = _owner_name()
+	_owner_label.text = ("to %s" % owner) if not owner.is_empty() else ""
+	_owner_label.visible = not owner.is_empty()
+	_refresh_scope_descriptions()
+	_refresh_global_targets()
 	_name_edit.text = name
 	_refresh_name_warning()
 	_default_edit.text = _default_display_text(default_value)
@@ -992,8 +1235,13 @@ func open_for_edit(
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
-	# R42 - the chips and the row preview open agreeing with everything above.
-	refresh_scope_chips()
+	# R42 - the scope dropdown and the row preview open agreeing with everything above.
+	_apply_scope_gating()
+	refresh_scope_selection()
+	# P4 - the strip opens on the scope, because that is the field the reader meets first.
+	if _help_strip != null:
+		var opening: Dictionary = _describe_scope_index(_scope_option.selected)
+		_help_strip.describe(str(opening.get("heading", "")), str(opening.get("body", "")))
 	_refresh_ships_as()
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered(Vector2i(468, 248))
@@ -1022,7 +1270,14 @@ func _on_confirmed() -> void:
 		if _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
+	_last_scope_key = current_scope_word()
 	var type_name: String = _selected_stored_type()
+	# V5 - a Global is not a member of this file. The dialog collected the answers; the autoload the
+	# "Write into" picker names is where they land, through the same writer the Add global variable
+	# dialog uses, so the row that appears is the row that dialog would have written.
+	if _writes_project_global:
+		project_global_requested.emit(var_name, type_name, _default_edit.text.strip_edges(), selected_global_target())
+		return
 	# @onready (tree scope): the Default is a verbatim GDScript expression (a node ref / call), NOT a literal -
 	# so skip the literal validation/coercion and the combo/attribute machinery a deferred node handle never
 	# uses. const/@export are emitted false (the compiler emits only `@onready var`).
@@ -1505,11 +1760,13 @@ static func _look_labels_text(entries: Array) -> String:
 	return ", ".join(parts)
 
 
-## R42 - the scope word the chips are showing right now: `const` wins, then a local, then the
-## member scope the dialog was opened in.
+## R42 - the scope word the dialog is showing right now: `const` wins, then a global, then a local,
+## then the member scope the dialog was opened in.
 func current_scope_word() -> String:
 	if _const_check != null and _const_check.button_pressed:
 		return EventSheetVariableSentence.SCOPE_CONSTANT
+	if _writes_project_global:
+		return EventSheetVariableSentence.SCOPE_GLOBAL
 	if _scope == "local":
 		return EventSheetVariableSentence.SCOPE_LOCAL
 	if _is_static:
@@ -1517,19 +1774,17 @@ func current_scope_word() -> String:
 	return EventSheetVariableSentence.SCOPE_INSTANCE
 
 
-## Pressing a scope chip. Constant is orthogonal to WHERE the variable is stored, so it only sets
-## the const flag; Instance and Local move the storage, and clear it.
-func _on_scope_chip_pressed(scope_key: String) -> void:
+## Choosing a scope. Constant and Static say nothing about WHERE the variable lives, so they only
+## set their flag; Instance, Local and Global move the storage, and clear both flags. Global also
+## reveals the write-into picker, because that is the one question a global adds.
+func _apply_scope_key(scope_key: String) -> void:
+	_writes_project_global = scope_key == EventSheetVariableSentence.SCOPE_GLOBAL
 	match scope_key:
 		EventSheetVariableSentence.SCOPE_GLOBAL:
-			# Not a scope this dialog can write: a global belongs to an autoload, and inventing a
-			# member here that reads "Global" would be a second variable system with none of the
-			# reach. Hand the whole gesture over instead, with nothing written on the way out.
-			refresh_scope_chips()
-			if _dialog != null:
-				_dialog.hide()
-			global_scope_requested.emit()
-			return
+			_is_static = false
+			if _const_check != null:
+				_const_check.button_pressed = false
+			_refresh_global_targets()
 		EventSheetVariableSentence.SCOPE_STATIC:
 			_is_static = true
 			if _const_check != null:
@@ -1550,31 +1805,116 @@ func _on_scope_chip_pressed(scope_key: String) -> void:
 			_scope = _member_scope if _member_scope != "local" else "global"
 			if _const_check != null:
 				_const_check.button_pressed = false
+	if scope_key != EventSheetVariableSentence.SCOPE_LOCAL and _scope == "local" and not _writes_project_global:
+		_scope = _member_scope if _member_scope != "local" else "global"
+	_last_scope_key = scope_key
 	_apply_scope_gating()
-	refresh_scope_chips()
+	refresh_scope_selection()
+	_refresh_name_warning()
 	_refresh_ships_as()
 
 
-## Lights the chip that matches the current scope, and dims the rest.
-func refresh_scope_chips() -> void:
+## Selects the dropdown entry that matches the current scope, and re-gates the form around it. The
+## dropdown is the display; current_scope_word() stays the truth, derived from the flags.
+func refresh_scope_selection() -> void:
+	if _scope_option == null:
+		return
 	var active: String = current_scope_word()
-	for scope_key: String in _scope_chips:
-		var chip: Button = _scope_chips[scope_key]
-		chip.button_pressed = scope_key == active
+	for index: int in range(_scope_option.item_count):
+		if str(_scope_option.get_item_metadata(index)) == active:
+			_scope_option.select(index)
+			break
+	if _global_target_row != null:
+		_global_target_row.visible = active == EventSheetVariableSentence.SCOPE_GLOBAL
+	_refresh_type_code_note()
 
 
-## The one thing the storage scope changes elsewhere in the form: a local variable is private to
-## the script body, so it can never be an Inspector property.
+## What each scope changes elsewhere in the form. A Local is private to the script body, so it can
+## never be an Inspector property; a Constant is neither Static nor a property, so both grey out.
 func _apply_scope_gating() -> void:
 	if _exported_check == null:
 		return
-	var is_local: bool = _scope == "local"
-	if is_local:
+	var is_local: bool = _scope == "local" and not _writes_project_global
+	var is_constant: bool = _const_check != null and _const_check.button_pressed
+	if is_local or is_constant:
 		_exported_check.button_pressed = false
-	_exported_check.disabled = is_local
+	_exported_check.disabled = is_local or is_constant
+	if _static_check != null:
+		_static_check.disabled = is_constant
+		_static_check.set_pressed_no_signal(_is_static and not is_constant)
 	if _onready_check != null:
 		_onready_check.visible = not is_local
 	_update_attr_gating()
+
+
+## Ticking Static in the flags row is the same gesture as picking Static in the Scope dropdown - one
+## fact, so the two spellings move together (and Static and Constant stay mutually exclusive).
+func _on_static_toggled(pressed: bool) -> void:
+	_is_static = pressed
+	if pressed and _const_check != null and _const_check.button_pressed:
+		_const_check.button_pressed = false
+	_apply_scope_gating()
+	refresh_scope_selection()
+	_refresh_ships_as()
+
+
+## Ticking Constant clears Static: GDScript has no `static const`.
+func _on_constant_toggled(pressed: bool) -> void:
+	if pressed:
+		_is_static = false
+	_apply_scope_gating()
+
+
+## A flag's explanation, muted and tucked under its checkbox - the one place a per-field hint is
+## still worth its space, because a checkbox has room for two words and no more.
+func _flag_note(text: String) -> Label:
+	var note: Label = EventSheetPopupUI.hint_label(text, 320.0)
+	note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	return note
+
+
+## The object this variable will belong to - "Player" for a sheet that names itself, otherwise what
+## the sheet calls itself. The title's second half, and the word every scope description leans on.
+func _owner_name() -> String:
+	if not _sheet_provider.is_valid():
+		return ""
+	var sheet: EventSheetResource = _sheet_provider.call() as EventSheetResource
+	if sheet == null:
+		return ""
+	if sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty():
+		return sheet.autoload_name.strip_edges()
+	return EventSheetArrangement.self_object_of(sheet)
+
+
+## Refills the write-into picker with the project's autoloads (plus "New global sheet…", which makes
+## one). Walked per open, because Project Settings can register an autoload at any moment.
+func _refresh_global_targets() -> void:
+	if _global_target_option == null:
+		return
+	var previous: String = ""
+	if _global_target_option.selected >= 0:
+		var previous_meta: Variant = _global_target_option.get_item_metadata(_global_target_option.selected)
+		previous = str((previous_meta as Dictionary).get("name", "")) if previous_meta is Dictionary else ""
+	_global_target_option.clear()
+	for entry: Dictionary in EventSheetGlobalVariables.autoload_sheets():
+		_global_target_option.add_item("%s  (%s)" % [str(entry.get("name", "")), str(entry.get("path", "")).get_file()])
+		_global_target_option.set_item_metadata(_global_target_option.item_count - 1, entry)
+	_global_target_option.add_item("New global sheet…")
+	_global_target_option.set_item_metadata(_global_target_option.item_count - 1, {})
+	_global_target_option.select(0)
+	for index: int in range(_global_target_option.item_count):
+		var meta: Variant = _global_target_option.get_item_metadata(index)
+		if meta is Dictionary and str((meta as Dictionary).get("name", "")) == previous and not previous.is_empty():
+			_global_target_option.select(index)
+			break
+
+
+## The autoload a Global will be written into ({} = "make me one").
+func selected_global_target() -> Dictionary:
+	if _global_target_option == null or _global_target_option.selected < 0:
+		return {}
+	var meta: Variant = _global_target_option.get_item_metadata(_global_target_option.selected)
+	return meta as Dictionary if meta is Dictionary else {}
 
 
 ## R42 - the EXACT row this dialog will write, in the R37 shape, live as you type:
@@ -1595,6 +1935,33 @@ func row_preview_text() -> String:
 	]
 
 
+## P4 - the strip's IN CODE line: the declaration the compiler will emit for these choices, built by
+## THE COMPILER'S OWN EMITTER over a throwaway variable, so the dialog can never promise a line the
+## compiled sheet would not write. A global reads as its autoload member, which is how every other
+## sheet will address it.
+func code_line_text() -> String:
+	var preview: LocalVariable = LocalVariable.new()
+	preview.name = _name_edit.text.strip_edges() if _name_edit != null else ""
+	if preview.name.is_empty():
+		preview.name = "value"
+	var stored_type: String = _selected_stored_type()
+	preview.type_name = stored_type
+	preview.default_value = _parse_default(stored_type, _default_edit.text if _default_edit != null else "")
+	preview.is_constant = _const_check != null and _const_check.button_pressed and _supports_constant(stored_type)
+	preview.is_static = _is_static and not preview.is_constant
+	preview.exported = _exported_check != null and _exported_check.button_pressed and not _exported_check.disabled
+	preview.onready = _onready_check != null and _onready_check.button_pressed and _scope == "tree"
+	if preview.onready:
+		preview.default_value = _default_edit.text.strip_edges()
+	var line: String = SheetCompiler._emit_tree_variable_line(preview)
+	if _writes_project_global:
+		var target: Dictionary = selected_global_target()
+		var autoload_name: String = str(target.get("name", "")).strip_edges()
+		if not autoload_name.is_empty():
+			return "%s    # read elsewhere as %s.%s" % [line, autoload_name, preview.name]
+	return line
+
+
 ## What a value field left empty will actually hold, said the way the row will say it.
 func _default_placeholder_for(stored_type: String) -> String:
 	match stored_type:
@@ -1612,7 +1979,11 @@ func _default_placeholder_for(stored_type: String) -> String:
 ## "Ships as:" - renders the EXACT annotation the current choices compile to, using the
 ## compiler's own prefix builder as the single source of truth (the ACE Studio pattern).
 func _refresh_ships_as() -> void:
-	if _row_preview_label != null:
+	_refresh_type_code_note()
+	if _help_strip != null:
+		# P4 - the row the sheet will show, and under it the line the compiler will write for it.
+		_help_strip.set_reading(row_preview_text(), code_line_text())
+	elif _row_preview_label != null:
 		_row_preview_label.text = row_preview_text()
 	if _ships_as_label == null:
 		return
@@ -1976,16 +2347,43 @@ func _shadow_owner(var_name: String) -> String:
 	return EventSheetProjectDoctor.shadowed_member_class(sheet, var_name.strip_edges())
 
 
-## Live feedback: shows/hides the shadow warning as the user types the name.
+## Live feedback: shows/hides the name warnings as the user types. V5 - a name already taken in this
+## scope is shown INLINE, under the field, while it is being typed; finding out on OK is finding out
+## too late.
 func _refresh_name_warning() -> void:
 	if _name_warning == null:
 		return
-	var owner: String = _shadow_owner(_name_edit.text)
-	if owner.is_empty():
-		_name_warning.visible = false
-	else:
+	var typed: String = _name_edit.text.strip_edges()
+	var owner: String = _shadow_owner(typed)
+	if not owner.is_empty():
 		_name_warning.visible = true
-		_name_warning.text = "⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [_name_edit.text.strip_edges(), owner]
+		_name_warning.text = "⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [typed, owner]
+		return
+	if name_clashes(typed):
+		_name_warning.visible = true
+		_name_warning.text = "⚠ \"%s\" is already a variable here - pick another name." % typed
+		return
+	_name_warning.visible = false
+
+
+## True when the sheet already declares `candidate` - a sheet variable or a row-placed one - and it
+## is not the variable this dialog opened on. The clash the field shows while you type.
+func name_clashes(candidate: String) -> bool:
+	var typed: String = candidate.strip_edges()
+	if typed.is_empty() or not _sheet_provider.is_valid():
+		return false
+	if typed == str(_context.get("original_name", "")).strip_edges():
+		return false
+	var sheet: EventSheetResource = _sheet_provider.call() as EventSheetResource
+	if sheet == null:
+		return false
+	for key: Variant in sheet.variables.keys():
+		if str(key) == typed:
+			return true
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name.strip_edges() == typed:
+			return true
+	return false
 
 
 func set_enum_provider(provider: Callable) -> void:

@@ -413,6 +413,192 @@ static func labelled_card(label_text: String, content: Control, pad: float = PAN
 	return panel_section(box, pad)
 
 
+## THE HELP STRIP - the one explanatory foot every dialog wears.
+##
+## A dialog used to answer "what is this field?" with a hint label under each field, so ten fields
+## meant ten paragraphs on screen at once and the reader had to find the one that mattered. This is
+## the other way round: ONE strip at the foot, and it describes whatever is FOCUSED right now. It
+## replaces the tooltip rather than joining it - a tooltip only appears if you already suspected the
+## field needed explaining.
+##
+## Four parts, in reading order: a heading naming the focused thing ("Scope · Instance"), a
+## paragraph, a READS AS line showing the row the choices will write, and an IN CODE line showing
+## the line the compiler will emit. Either line hides when its text is empty - a dialog with no code
+## behind it (the Sheet type dialog) simply never fills one.
+##
+## `follow()` wires a control to the strip: focusing it (or hovering it) swaps the heading and the
+## paragraph. `follow_option()` does the same per ITEM of a dropdown, so arrowing down an option list
+## describes each choice BEFORE it is picked. The reading lines are set by the dialog itself, live,
+## because only the dialog knows what its fields currently add up to.
+class HelpStrip extends PanelContainer:
+
+	## The accent rule down the left edge, in px before display scaling.
+	const ACCENT_RULE_WIDTH := 3
+
+	var heading_label: Label = null
+	var body_label: Label = null
+	var reads_as_row: HBoxContainer = null
+	var reads_as_value: Label = null
+	var in_code_row: HBoxContainer = null
+	var in_code_value: Label = null
+
+
+	func _init(wrap_width: float = EventSheetPopupUI.HINT_WRAP_WIDTH) -> void:
+		var style: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+		style.set_content_margin_all(EventSheetPalette.scaled_f(8.0))
+		style.content_margin_left = EventSheetPalette.scaled_f(12.0)
+		style.border_width_left = EventSheetPalette.scaled(ACCENT_RULE_WIDTH)
+		style.border_color = EventSheetPopupUI.accent_color()
+		add_theme_stylebox_override("panel", style)
+		var box: VBoxContainer = VBoxContainer.new()
+		box.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+		add_child(box)
+		heading_label = EventSheetPopupUI.small_caps_label("")
+		box.add_child(heading_label)
+		body_label = Label.new()
+		body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body_label.custom_minimum_size = Vector2(wrap_width, 0.0)
+		body_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_PRIMARY)
+		box.add_child(body_label)
+		reads_as_row = _reading_row("READS AS")
+		reads_as_value = reads_as_row.get_child(1) as Label
+		box.add_child(reads_as_row)
+		in_code_row = _reading_row("IN CODE")
+		in_code_value = in_code_row.get_child(1) as Label
+		var mono: Font = EventSheetPopupUI.editor_font("doc_source")
+		if mono != null:
+			in_code_value.add_theme_font_override("font", mono)
+		box.add_child(in_code_row)
+
+
+	## One reading line: a muted small-caps caption and the value beside it. Hidden until filled.
+	func _reading_row(caption: String) -> HBoxContainer:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
+		row.visible = false
+		var label: Label = EventSheetPopupUI.small_caps_label(caption, EventSheetPalette.TEXT_MUTED)
+		row.add_child(label)
+		var value: Label = Label.new()
+		value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		value.add_theme_color_override("font_color", EventSheetPalette.TEXT_PRIMARY)
+		row.add_child(value)
+		return row
+
+
+	## Says what the focused thing is. The heading names it, the paragraph explains it.
+	func describe(heading: String, body: String) -> void:
+		heading_label.text = heading.to_upper()
+		body_label.text = body
+
+
+	## The two reading lines, set by the dialog whenever its values change. An empty line hides,
+	## so a dialog with no code behind it never shows an empty IN CODE caption.
+	func set_reading(reads_as: String, in_code: String = "") -> void:
+		reads_as_value.text = reads_as
+		reads_as_row.visible = not reads_as.strip_edges().is_empty()
+		in_code_value.text = in_code
+		in_code_row.visible = not in_code.strip_edges().is_empty()
+
+
+	## Wires a control: focusing or hovering it makes the strip describe it. Note the mouse_filter -
+	## a Label ignores the mouse by default, so a caption wired here would never fire without it.
+	func follow(control: Control, heading: String, body: String) -> void:
+		if control == null:
+			return
+		if control.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+			control.mouse_filter = Control.MOUSE_FILTER_PASS
+		control.focus_entered.connect(func() -> void: describe(heading, body))
+		control.mouse_entered.connect(func() -> void: describe(heading, body))
+
+
+	## Wires a dropdown per ITEM: `describer.call(index)` returns {"heading": …, "body": …} for the
+	## item at `index`. Arrowing or hovering the open list describes the choice before it is picked
+	## (PopupMenu.id_focused), and picking one leaves that description standing.
+	func follow_option(option: OptionButton, describer: Callable) -> void:
+		if option == null or not describer.is_valid():
+			return
+		var apply: Callable = func(index: int) -> void:
+			var told: Variant = describer.call(index)
+			# An empty answer means "nothing to say about this one" (a separator): the strip keeps
+			# whatever it was showing rather than blanking itself as the list is arrowed past one.
+			if told is Dictionary and not (told as Dictionary).is_empty():
+				describe(str((told as Dictionary).get("heading", "")), str((told as Dictionary).get("body", "")))
+		option.item_selected.connect(apply)
+		option.focus_entered.connect(func() -> void: apply.call(option.selected))
+		var popup: PopupMenu = option.get_popup()
+		if popup != null:
+			popup.id_focused.connect(apply)
+
+
+## The help strip, ready to parent at the foot of a dialog. Exactly ONE per dialog: the strip's whole
+## point is that there is one place the reader looks for an explanation.
+static func help_strip(heading: String = "", body: String = "", reads_as: String = "",
+		in_code: String = "", wrap_width: float = HINT_WRAP_WIDTH) -> HelpStrip:
+	var strip: HelpStrip = HelpStrip.new(wrap_width)
+	strip.describe(heading, body)
+	strip.set_reading(reads_as, in_code)
+	return strip
+
+
+## A dropdown that shows the GDScript form of its current choice, muted, beside it: the operator list
+## reads "≤  at most" and the code form `<=` sits quietly at the right, so the friendly wording
+## teaches the spelling instead of hiding it. Returns the dropdown UNCHANGED when every item already
+## shows its own code form (an ordinary list of plain values gains nothing from a note that repeats
+## it), so callers can wrap unconditionally.
+##
+## `code_for_index` overrides where the code text comes from (default: the item's metadata); pass one
+## when the stored value is not the whole truth - a "Number" type that stores int or float depending
+## on a tick beside it. The note is reachable as the dropdown's "code_note" meta.
+static func code_noted_option(dropdown: OptionButton, code_for_index: Callable = Callable()) -> Control:
+	if dropdown == null:
+		return dropdown
+	if not code_for_index.is_valid() and not _has_option_code_notes(dropdown):
+		return dropdown
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(dropdown)
+	var note: Label = Label.new()
+	note.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var mono: Font = editor_font("doc_source")
+	if mono != null:
+		note.add_theme_font_override("font", mono)
+	row.add_child(note)
+	dropdown.set_meta("code_note", note)
+	var refresh: Callable = func(_index: int = -1) -> void:
+		note.text = option_code_text(dropdown, code_for_index)
+	dropdown.item_selected.connect(refresh)
+	refresh.call(dropdown.selected)
+	return row
+
+
+## The code form of the dropdown's current choice - the note's text, computed apart from the widget
+## so a test can pin it without a tree.
+static func option_code_text(dropdown: OptionButton, code_for_index: Callable = Callable()) -> String:
+	if dropdown == null or dropdown.selected < 0:
+		return ""
+	if code_for_index.is_valid():
+		return str(code_for_index.call(dropdown.selected))
+	var meta: Variant = dropdown.get_item_metadata(dropdown.selected)
+	var code: String = str(meta) if meta != null else ""
+	return "" if code == dropdown.get_item_text(dropdown.selected) else code
+
+
+## True when at least one item's stored value differs from the words it shows - the case where a
+## muted code note tells the reader something the label does not.
+static func _has_option_code_notes(dropdown: OptionButton) -> bool:
+	for index: int in range(dropdown.item_count):
+		var meta: Variant = dropdown.get_item_metadata(index)
+		if meta == null:
+			continue
+		var code: String = str(meta)
+		if not code.is_empty() and code != dropdown.get_item_text(index):
+			return true
+	return false
+
+
 ## An editor icon by name, or null outside the editor / when the theme has no such icon.
 static func _editor_icon(icon_name: String) -> Texture2D:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):

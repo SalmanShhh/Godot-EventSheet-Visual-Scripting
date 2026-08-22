@@ -217,19 +217,26 @@ func _refresh_preview() -> void:
 
 
 func _on_confirmed() -> void:
-	var variable_name: String = EventSheetIdentifierRules.sanitize(_name_edit.text)
+	var picked: Dictionary = _target_picker.get_item_metadata(_target_picker.selected)
+	add_global(_name_edit.text, str(_type_picker.get_item_metadata(_type_picker.selected)), _value_edit.text, picked)
+
+
+## Writes one global into `target` ({} = "make me a global sheet"), the only path that puts a global
+## anywhere. THIS dialog calls it with what its fields hold; the Add variable dialog (V5) calls it
+## with what ITS fields hold when its Scope dropdown says Global - so a global written from either
+## place lands as the same line, in the same file, under the same one undo step.
+func add_global(raw_name: String, type_name: String, value_text: String, target: Dictionary) -> void:
+	var variable_name: String = EventSheetIdentifierRules.sanitize(raw_name)
 	if variable_name.is_empty() or not EventSheetIdentifierRules.is_valid(variable_name):
-		_dock._set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % _name_edit.text, true)
+		_dock._set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % raw_name, true)
 		return
-	var target: Dictionary = _target_picker.get_item_metadata(_target_picker.selected)
 	if target.is_empty():
 		# "New global sheet…". The project has no autoload to write into yet (or the reader wants a
 		# second one), so make it here rather than sending them away to make it and come back.
 		target = _create_global_sheet(variable_name)
 		if target.is_empty():
 			return
-	var type_name: String = str(_type_picker.get_item_metadata(_type_picker.selected))
-	var value: Variant = VariableDialog._parse_default(type_name, _value_edit.text)
+	var value: Variant = VariableDialog._parse_default(type_name, value_text)
 	var path: String = str(target.get("path", ""))
 	# Open (or focus) the autoload as a sheet FIRST, then write into it through the ordinary funnel:
 	# the user sees where their global went, and the undo step lands on the tab that owns the file.

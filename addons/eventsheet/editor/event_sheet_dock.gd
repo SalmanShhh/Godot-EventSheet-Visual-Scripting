@@ -2142,6 +2142,12 @@ func _on_add_project_global_requested() -> void:  # Add ▸ Global Variable… (
 	_global_variables.open()
 
 
+## V5 - the Add variable dialog was confirmed with Scope ▸ Global: the answers it collected go to the
+## global writer, which opens the chosen autoload and adds the line there in one undo step.
+func _on_variable_dialog_global_requested(var_name: String, type_name: String, value_text: String, target: Dictionary) -> void:  # _variable_dlg.project_global_requested
+	_global_variables.add_global(var_name, type_name, value_text, target)
+
+
 func _on_add_local_variable_requested() -> void:
 	_variables._on_add_local_variable_requested()
 
