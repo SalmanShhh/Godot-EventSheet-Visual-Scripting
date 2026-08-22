@@ -50,6 +50,7 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Game Options", 31)
 	_template_menu.add_item("Level Stats Screen", 32)
 	_template_menu.add_item("Keycard Door (3D)", 33)
+	_template_menu.add_item("Skill Tree Screen", 34)
 	_template_menu.add_separator("Behaviours - attach under a node")
 	_template_menu.add_item("Behavior Component (signal-driven)", 8)
 	_template_menu.add_separator("Autoloads - project-wide singletons")
@@ -852,6 +853,9 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 ## template lookups below cannot point at a moved or renamed pack without failing loudly.
 const HUD_KIT_PACK := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
 
+## Y15. The Upgrades autoload pack, whose skill-tree words the skill tree screen is written in.
+const UPGRADES_PACK := "res://eventsheet_addons/upgrades/upgrades_addon.gd"
+
 ## X25. The node names the stats screen drives, as {label node, what it shows}. The starter's own
 ## comment row and its Set Text rows both read this table, so the panel a reader is told to build
 ## and the rows that fill it can never name two different things.
@@ -1012,6 +1016,206 @@ static func _build_keycard_door_starter() -> EventSheetResource:
 	refused.actions.append(say_so)
 	sheet.events.append(refused)
 	return sheet
+
+
+## Y15. THE SKILL TREE SCREEN: a Control that lays a Skill Tree data asset out as nodes with lines
+## between prerequisites, in the three states the tree words themselves answer.
+##
+## Everything on the screen is read from the SAME conditions the reading uses - locked is "a
+## prerequisite is still missing", affordable is Can Unlock, unlocked is Is Unlocked - so the
+## picture and the rules can never disagree. A click is one Unlock row, a hover shows the asset's
+## own Grants cell, and the points-left label is one HUD Kit Set Text. Changing the asset re-lays
+## the screen on the next frame, which is what makes filling the .tres in worth doing.
+static func _build_skill_tree_screen_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "SkillTreeScreen"
+	sheet.class_description = "Lays a Skill Tree data asset out as clickable nodes with prerequisite lines, colours each node locked, affordable or unlocked from the Upgrades tree words, and spends a point when one is clicked."
+	sheet.variables = {
+		"tree": {"type": "Resource", "default": null, "exported": true,
+			"attributes": {"required": true,
+				"tooltip": "The Skill Tree data asset (.tres) this screen draws. Drop a SkillTreeResource here; changing it re-lays the screen on the next frame."}},
+		"nodes_parent": {"type": "String", "default": "TreeNodes", "exported": true,
+			"attributes": {"tooltip": "The name of the Control the skill buttons are spawned under. Leave it missing and they are parented to this screen itself."}},
+		"points_label": {"type": "String", "default": "PointsValue", "exported": true,
+			"attributes": {"tooltip": "The name of the Label that shows how many skill points are left."}},
+		"grants_label": {"type": "String", "default": "GrantsValue", "exported": true,
+			"attributes": {"tooltip": "The name of the Label that shows what the hovered skill grants."}},
+		"node_size": {"type": "Vector2", "default": Vector2(140.0, 44.0), "exported": true,
+			"attributes": {"tooltip": "How big one skill button is."}},
+		"spacing": {"type": "Vector2", "default": Vector2(190.0, 76.0), "exported": true,
+			"attributes": {"tooltip": "The distance between neighbouring skills - x across a tier, y down one."}},
+		"locked_tint": {"type": "Color", "default": Color(0.45, 0.45, 0.5), "exported": true,
+			"attributes": {"tooltip": "A skill whose prerequisites are not met yet."}},
+		"affordable_tint": {"type": "Color", "default": Color(1.0, 0.86, 0.4), "exported": true,
+			"attributes": {"tooltip": "A skill that can be unlocked right now."}},
+		"unlocked_tint": {"type": "Color", "default": Color(0.55, 0.9, 0.6), "exported": true,
+			"attributes": {"tooltip": "A skill already taken."}},
+		"line_color": {"type": "Color", "default": Color(0.5, 0.62, 0.78), "exported": true,
+			"attributes": {"tooltip": "The colour of the lines drawn from a skill to the ones it requires."}},
+		"built_for": {"type": "Resource", "default": null, "exported": false,
+			"attributes": {"tooltip": "The asset the screen was last laid out for, so a swapped asset re-lays itself."}},
+		"buttons": {"type": "Dictionary", "default": {}, "exported": false,
+			"attributes": {"tooltip": "Skill id to the button that stands for it."}}
+	}
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Skill tree screen[/b] - the picture of a Skill Tree data asset.\nBuild a panel holding a Control named [code]TreeNodes[/code] (the buttons are spawned under it), a [code]PointsValue[/code] label and a [code]GrantsValue[/code] label. Drop the HUD Kit behaviour under the same root as a child named [code]HudKitBehavior[/code], attach this script to the screen, and drop your [code].tres[/code] on [code]tree[/code]. Every state on screen is read from the tree's own words, so nothing here can disagree with what an unlock actually does."
+	sheet.events.append(note)
+
+	# On Ready: point the Upgrades autoload at the asset, then draw it.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	ready_row.actions.append(_upgrades_action("load_skill_tree", {"tree": "tree"}))
+	var lay_out_call: RawCodeRow = RawCodeRow.new()
+	lay_out_call.code = "lay_out()"
+	ready_row.actions.append(lay_out_call)
+	sheet.events.append(ready_row)
+
+	# Every frame: re-lay when the asset was swapped, keep the states honest, and print what is left.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var relay: RawCodeRow = RawCodeRow.new()
+	relay.code = "\n".join(PackedStringArray([
+		"if built_for != tree:",
+		"\tUpgrades.load_skill_tree(tree)",
+		"\tlay_out()"
+	]))
+	tick.actions.append(relay)
+	var refresh: RawCodeRow = RawCodeRow.new()
+	refresh.code = "refresh_states()"
+	tick.actions.append(refresh)
+	tick.actions.append(_hud_action("set_text", {"control_name": "points_label",
+		"text": "str(%s)" % _pack_call(UPGRADES_PACK, "skill_points_left", {})}))
+	sheet.events.append(tick)
+
+	# A click IS the unlock. HUD Kit wires every spawned button into its one trigger, and the button
+	# carries the skill's id as its name, so the row that answers needs no per-skill wiring at all.
+	var clicked: EventRow = EventRow.new()
+	clicked.trigger_provider_id = "HudKitBehavior"
+	clicked.trigger_id = "signal:on_button_pressed"
+	clicked.trigger_source_path = "HudKitBehavior"
+	clicked.actions.append(_upgrades_action("unlock_skill",
+		{"id": _pack_call(HUD_KIT_PACK, "last_button_name_value", {})}))
+	var redraw_after_click: RawCodeRow = RawCodeRow.new()
+	redraw_after_click.code = "refresh_states()"
+	clicked.actions.append(redraw_after_click)
+	sheet.events.append(clicked)
+
+	sheet.functions.append(_starter_function("lay_out",
+		"Spawns one button per skill in the asset, at the place the asset asks for or, when it leaves the layout blank, at its own depth in the tree.", "\n".join(PackedStringArray([
+			"built_for = tree",
+			"var parent: Node = find_child(nodes_parent, true, false)",
+			"if parent == null:",
+			"\tparent = self",
+			"for child: Node in parent.get_children():",
+			"\tif child is Button:",
+			"\t\tchild.queue_free()",
+			"buttons.clear()",
+			"if tree == null:",
+			"\tqueue_redraw()",
+			"\treturn",
+			"var filled: Dictionary = {}",
+			"for index: int in range(Upgrades.skill_count()):",
+			"\tvar id: String = Upgrades.skill_id_at(index)",
+			"\tif id.is_empty():",
+			"\t\tcontinue",
+			"\tvar column: int = Upgrades.skill_column_of(id)",
+			"\tif column < 0:",
+			"\t\tcolumn = Upgrades.skill_depth_of(id)",
+			"\tvar line: int = Upgrades.skill_row_of(id)",
+			"\tif line < 0:",
+			"\t\tline = int(filled.get(column, 0))",
+			"\tfilled[column] = line + 1",
+			"\tvar button: Button = Button.new()",
+			"\tbutton.name = id",
+			"\tvar label: String = Upgrades.skill_name_of(id)",
+			"\tbutton.text = label if not label.is_empty() else id",
+			"\tbutton.custom_minimum_size = node_size",
+			"\tbutton.size = node_size",
+			"\tbutton.position = Vector2(float(column) * spacing.x, float(line) * spacing.y)",
+			"\tbutton.mouse_entered.connect(show_grants.bind(id))",
+			"\tparent.add_child(button)",
+			"\tbuttons[id] = button",
+			"# The buttons were spawned, so the HUD Kit is asked to wire the new ones in.",
+			"$HudKitBehavior.connect_buttons()",
+			"refresh_states()",
+			"queue_redraw()"
+		]))))
+	sheet.functions.append(_starter_function("refresh_states",
+		"Colours every node from the tree's own three questions - taken, takeable, or still waiting on a prerequisite - and greys out the ones a click could not do anything with.", "\n".join(PackedStringArray([
+			"for id: String in buttons:",
+			"\tvar button: Variant = buttons[id]",
+			"\tif not (button is Button) or not is_instance_valid(button):",
+			"\t\tcontinue",
+			"\tvar takeable: bool = Upgrades.can_unlock_skill(id)",
+			"\tif Upgrades.is_skill_unlocked(id):",
+			"\t\t(button as Button).modulate = unlocked_tint",
+			"\telif takeable:",
+			"\t\t(button as Button).modulate = affordable_tint",
+			"\telse:",
+			"\t\t(button as Button).modulate = locked_tint",
+			"\t(button as Button).disabled = not takeable"
+		]))))
+	sheet.functions.append(_starter_function("show_grants",
+		"Puts what a hovered skill grants into the grants label, in the asset's own words.", "\n".join(PackedStringArray([
+			"var grants: String = Upgrades.skill_grants_text(id)",
+			"$HudKitBehavior.set_text(grants_label, grants if not grants.is_empty() else Upgrades.skill_name_of(id))"
+		])), [["id", "String"]]))
+	sheet.functions.append(_starter_function("_draw",
+		"Draws a line from every skill to each one it requires, so the shape of the tree is visible rather than implied.", "\n".join(PackedStringArray([
+			"for id: String in buttons:",
+			"\tvar button: Variant = buttons[id]",
+			"\tif not (button is Button) or not is_instance_valid(button):",
+			"\t\tcontinue",
+			"\tfor part: String in Upgrades.skill_requires_text(id).split(\",\", false):",
+			"\t\tvar earlier: Variant = buttons.get(part.strip_edges())",
+			"\t\tif not (earlier is Button) or not is_instance_valid(earlier):",
+			"\t\t\tcontinue",
+			"\t\tvar earlier_box: Rect2 = (earlier as Button).get_global_rect()",
+			"\t\tvar box: Rect2 = (button as Button).get_global_rect()",
+			"\t\t# Edge to edge rather than centre to centre, so a line never crosses a node's own name.",
+			"\t\tvar from: Vector2 = Vector2(earlier_box.end.x, earlier_box.get_center().y) - global_position",
+			"\t\tvar to: Vector2 = Vector2(box.position.x, box.get_center().y) - global_position",
+			"\t\tdraw_line(from, to, line_color, 2.0)"
+		]))))
+	return sheet
+
+
+## One plain (unpublished) function on a starter sheet: a name, a help line, a body and, optionally,
+## the parameters it takes. The starters that grew a handful of these all built them the same way.
+static func _starter_function(function_name: String, description: String, body: String,
+		params: Array = []) -> EventFunction:
+	var built: EventFunction = EventFunction.new()
+	built.function_name = function_name
+	built.description = description
+	for pair: Array in params:
+		var parameter: ACEParam = ACEParam.new()
+		parameter.id = str(pair[0])
+		parameter.type_name = str(pair[1])
+		built.params.append(parameter)
+	var body_row: RawCodeRow = RawCodeRow.new()
+	body_row.code = body
+	built.events.append(body_row)
+	return built
+
+
+## One Upgrades row, with its template read off the shipped pack instead of typed here.
+static func _upgrades_action(method_name: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "UpgradesAddon"
+	action.ace_id = method_name
+	action.codegen_template = _pack_template(UPGRADES_PACK, method_name)
+	action.params = params
+	return action
+
+
+## A pack EXPRESSION as the call text it compiles to - what a row that needs a value inside another
+## row's parameter writes. Same source as `_pack_template`, so the words and the code cannot drift.
+static func _pack_call(pack_path: String, method_name: String, params: Dictionary) -> String:
+	var template: String = _pack_template(pack_path, method_name)
+	return template.format(params) if not params.is_empty() else template
 
 
 ## One "compare variable" condition, built from the shipped word rather than a typed-out `a == b`.
@@ -1189,6 +1393,8 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		32: return _build_level_stats_screen_starter()
 		# Y16 - the coloured door the level's keys open.
 		33: return _build_keycard_door_starter()
+		# Y15 - the picture of a Skill Tree data asset.
+		34: return _build_skill_tree_screen_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 
@@ -1206,6 +1412,7 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 27, "label": "Stealth Guard"},
 		{"id": 28, "label": "Boss Fight"},
 		{"id": 29, "label": "Mission Timer"},
+		{"id": 34, "label": "Skill Tree Screen"},
 	]
 	# W17. Every editor shape, in the same order and the same words as the New-Sheet submenu - the
 	# FileSystem dialog is a flat list, so the "what it is" note rides along in the label.
@@ -1238,35 +1445,14 @@ func _new_sheet_from_template(template_id: int) -> void:
 		_dock._clear_undo_history()
 		_dock._set_status("New sheet from project template - Save As… to keep it.")
 		return
-	var sheet: EventSheetResource = EventSheetResource.new()
-	# W17. Every editor shape resolves through the one dock-free builder, so the New-Sheet submenu,
-	# the FileSystem Create New dialog and the round-trip gate all adopt the SAME sheet.
-	for shape: Dictionary in EDITOR_TOOL_SHAPES:
-		if int(shape["id"]) == template_id:
-			sheet = build_starter(template_id)
+	# Every starter the dock-free builder knows resolves THROUGH it, so the New-Sheet menu, the
+	# FileSystem Create New dialog and the round-trip gate always adopt the SAME sheet. An id it
+	# does not know comes back as a blank sheet, which is exactly what the five autoload and 3D
+	# shapes below then fill in: they are the only starters this menu builds and the dialog does
+	# not offer, so they stay written here. (Before this, the arms below shadowed the loop and two
+	# editor shapes adopted the wrong sheet while seven game shapes adopted a blank one.)
+	var sheet: EventSheetResource = build_starter(template_id)
 	match template_id:
-		1:
-			sheet = _build_platformer_starter()
-		2:
-			sheet = _build_topdown_starter()
-		8:
-			sheet = _build_behavior_component_starter()
-		9:
-			sheet = _build_custom_resource_starter()
-		10:
-			sheet = _build_editor_tool_starter()
-		11:
-			sheet = _build_system_starter()
-		12:
-			sheet = _build_editor_plugin_starter()
-		13:
-			sheet = _build_import_tool_starter()
-		14:
-			sheet = _build_export_hook_starter()
-		15:
-			sheet = _build_boomer_arsenal_starter()
-		16:
-			sheet = _build_game_options_starter()
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()
