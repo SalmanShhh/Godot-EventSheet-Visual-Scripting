@@ -308,6 +308,7 @@ The right-click menu on a variable row:
 |---|---|
 | Edit Variable | the dialog above |
 | Rename Everywhere… (**F2**) | renames the declaration and every use, in one undo step. The key does it in place on the row |
+| Find all references | lists every row that reads or writes it, in a results bar under the sheet, grouped by sheet with event numbers. Nothing is changed - it is the answer the rename count is counting |
 | Change Type Everywhere… | retypes it and rewrites every row that sets or compares it |
 | Convert Scope | moves it between Global, Local and Instance |
 | Toggle Constant | `var` to `const` and back |
@@ -621,6 +622,10 @@ The group's menu:
 | Turn Into Region | with the reason in the item itself when it cannot |
 | Ungroup - Keep The Rows | drops the folder, keeps everything in it |
 
+Duplicate and Delete are not repeated here: they are the universal items further down the same menu,
+and they act on a group head the way they act on any row. `Ctrl+D` on a selected head duplicates the
+group and everything in it, which is the same thing the menu's **Duplicate** does.
+
 **A group's own variables are rows.** Its local variables render as Local rows at the top of its
 body, in the same one sentence, each echoing the `var` line the compiler writes for it.
 
@@ -699,9 +704,10 @@ the last row before the next group or fence. A closer with no opener says "#endr
 compiles.
 
 **A block kind can ask for that look.** `EventSheetBlockKind.row_style(entry)` returns `"section"`
-(the default flat block row), `"group"` or `"region"`, so a kind of your own that stands for
+(the default flat block row) or `"region"` (the fold mark), so a kind of your own that stands for
 STRUCTURE gets a shape the sheet already has, through a public path rather than a special case in
-the renderer.
+the renderer. Such a row reads with your kind's own words: its `summary()` is the title and the last
+line it emits is the echo.
 
 ## Tips and common mistakes
 

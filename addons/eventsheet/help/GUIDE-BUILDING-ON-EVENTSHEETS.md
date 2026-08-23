@@ -97,6 +97,42 @@ EventSheets.register_asset_drop_handler(PackedStringArray(["dialogue"]),
 
 Two helpers do the heavy lifting inside a builder: `builtin_action(ace_id, params)` builds a picker-identical action from any built-in Core descriptor (`{uid}` baked fresh), and `preload_block_for(asset_path)` builds a `const Name := preload("res://...")` Custom Block row with a safe constant name.
 
+### The dialog toolkit
+
+A dialog your pack opens should look like a dialog the plugin opens. `EventSheetPopupUI` is the one place that shape lives: `titled_card(title, content)`, `panel_section(content)` and `form_row(label_text, field)` build the chrome, and these four build the parts that explain themselves.
+
+| Helper | What it is |
+|---|---|
+| `help_strip(heading, body, reads_as := "", in_code := "") -> HelpStrip` | THE explanatory foot. Exactly one per dialog: it describes whatever is focused right now, instead of a hint label under every field. Parent it last |
+| `code_noted_option(dropdown, code_for_index := Callable()) -> Control` | wraps an `OptionButton` so the GDScript form of the current choice sits muted beside it (`≤  at most` shows `<=`). Returns the dropdown UNCHANGED when every item already shows its own value, so you can wrap unconditionally. Pass `code_for_index` when the stored value is not the whole truth |
+| `option_code_text(dropdown, code_for_index := Callable()) -> String` | that note's text, computed without a widget tree - what a test pins |
+| `autocomplete_combo(edit, suggestions_provider, note_provider := Callable()) -> MenuButton` | the ▾ picker beside a free-text field. `note_provider(suggestion) -> String` adds the line that explains each choice (an input action's keys, how many nodes are in a group); the pick still inserts the bare value. `suggestion_item_text(suggestion, note_provider)` composes one such line |
+
+The strip is four parts in reading order: a heading naming the focused thing, a paragraph, a **READS AS** line showing the row the choices will write, and an **IN CODE** line showing the line the compiler will emit. Either reading line hides when its text is empty, so a dialog with no code behind it never shows an empty caption.
+
+```gdscript
+var strip := EventSheetPopupUI.help_strip()
+dialog_body.add_child(strip)
+
+# Focusing (or hovering) a control makes the strip describe it.
+strip.follow(name_edit, "Name", "What the row will call this. Letters, digits and _.")
+
+# A dropdown describes each choice BEFORE it is picked - arrowing the open list is enough.
+strip.follow_option(scope_option, func(index: int) -> Dictionary:
+	if index == 0:
+		return {"heading": "Scope · Instance", "body": "One per Player, saved with the scene."}
+	return {})   # an empty answer (a separator) leaves the strip as it is
+
+# The dialog owns the reading lines, because only it knows what its fields add up to.
+strip.set_reading("Instance whole number hp = 100", EventSheets.code_line(preview_variable))
+
+# And when something is wrong, the strip says so in its own voice, with the answer beside it.
+strip.show_note("Unknown variable", "This sheet has no hpp.", EventSheetPopupUI.HelpStrip.TONE_ERROR,
+	[{"text": "Use hp", "pressed": func() -> void: name_edit.text = "hp"}])
+```
+
+`show_note(heading, body, tone := TONE_NORMAL, fixes := [])` is the shape to call: it sets the heading, the paragraph, the tone (`TONE_NORMAL` / `TONE_WARNING` / `TONE_ERROR`, which recolour the rule down the left edge) and the one-click fixes together, so a red rule from the last field can never stand over this field's description. The strip's current `tone` is readable, so a test pins the state without sampling a colour.
+
 ## 5. Codegen Services
 
 The compiler and importer as plain services, dock-free, usable from tests and CI:
@@ -126,14 +162,19 @@ my_panel.add_child(EventSheets.build_inspector_preview("armour", "int", "10", at
 # The same choices as one sentence (tooltips, logs, docs):
 print(EventSheets.describe_inspector("int", attrs))
 
-# The exact GDScript a variable compiles to - its "Ships as:" truth - and the one line of it that
-# declares something (what the row's code echo shows; the rest is a doc comment or a section header):
+# The exact GDScript a variable compiles to - its "Ships as:" truth, every line of it:
 print(EventSheets.variable_code(my_local_variable))
-print(EventSheets.variable_declaration_line(my_local_variable))
 
-# The line each event GROUP declares itself on, keyed by the group - what a group head echoes at
-# its right edge, and what the importer reads back to rebuild the nesting. One walk, so a caller
-# with many heads to draw asks once.
+# THE line a row stands for - what the sheet echoes at that row's right edge. One call for any row
+# an extension draws: a variable answers its declaration (never the doc comment or the
+# @export_group header above it), a Custom Block row the last line its kind emits, a group the
+# `## @ace_group(...)` line it declares itself on - and a group's line names its parent, so pass
+# the sheet for one.
+print(EventSheets.code_line(my_local_variable))     # var hp: int = 100
+print(EventSheets.code_line(my_block_row))          # #region Movement
+print(EventSheets.code_line(my_group, sheet))       # ## @ace_group(uid="combat", name="Combat")
+
+# Drawing MANY group heads asks for the whole map once instead - the same walk, done once.
 var group_lines := EventSheets.group_declaration_lines(sheet)
 for group in group_lines:
 	print(group_lines[group])  # ## @ace_group(uid="combat", name="Combat")
@@ -249,11 +290,11 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
-| Codegen | `variable_declaration_line(variable: LocalVariable)` - the one line of `variable_code` that declares something; the doc comment, the `@export_group` header and a Static local's marker are true of the file but are not the declaration | `String` | no |
+| Codegen | `code_line(row: Resource, sheet := null)` - THE line of the emitted file a row stands for, and what the sheet echoes at its right edge: a `LocalVariable`'s declaration (not the doc comment, the `@export_group` header or a Static local's marker written above it), a `CustomBlockRow`'s last emitted line, an `EventGroup`'s `## @ace_group(...)` line (pass `sheet` - a group's line names its parent). `""` for every other row: those three are the rows the sheet draws an echo on | `String` | no |
 | Codegen | `group_declaration_lines(sheet)` - the `## @ace_group(...)` line the compiler writes for each of the sheet's event groups, keyed by the `EventGroup` (uid, name, parent, description, colour and the two flags). What a group head echoes, and what the importer reads back | `Dictionary` | no |
 | Rows | `sheet_variables(sheet)` - every variable the sheet can name and who owns each, in reading order (this object's, then the globals it reaches for, then the locals in scope). Entries carry `name`, `type_name`, `type_word`, `value`, `scope`, `owner`, `group`, `inspector`, `description`, `insert_text`, `resource`, `autoload` | `Array[Dictionary]` | no |
 | Rows | `variable_owner(variables, variable_name)` - the object column a row naming that variable reads with (the sheet's object, an autoload, or `System` for a local), `""` when the sheet declares no such variable. Takes the list `sheet_variables()` returned | `String` | no |
-| Rows | `variable_sentence(variable)` - one entry written the way its row reads it, minus the owner (`Instance whole number hp = 100`) | `String` | no |
+| Rows | `variable_sentence(entry)` - one entry of `sheet_variables()` written the way its row reads it, minus the owner (`Instance whole number hp = 100`) | `String` | no |
 | Codegen | `comparison_glyph(operator)` - the glyph a ROW shows for an operator (`<=` reads ≤, `==` reads a single `=`); anything that is not one of the six comes back unchanged | `String` | no |
 | Codegen | `opposite_operator(operator)` - the operator that is true exactly when this one is false (`<=` ↔ `>`), or `""` when the text is not one of the six | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
@@ -284,7 +325,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Vocabulary | `exclude_class(class_id, excluded := true)` - hides (or restores) a whole reflected class: its card and everything it publishes | `void` | no |
 | Vocabulary | `bake_overrides(script_path, class_id)` - writes that class's catalog overrides INTO its script as `## @ace_*` comments (backed up first, comment lines only, no signature or body touched, idempotent), then drops the ones it actually wrote from the catalog. Returns `curate_provider`'s result plus `baked`: how many were written. Members the writer could not find are reported in `skipped` and their overrides are KEPT | `Dictionary` | no |
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
-| Seams | `register_param_help(hint: String, paragraph: String)` / `param_help(hint)` - what the Parameters dialog's help strip says about a field carrying that hint, under the parameter's own description. A registration overrides the builtin wording; one paragraph per hint, last registration wins | `void` / `String` | no |
+| Seams | `register_param_help(hint: String, paragraph: String)` / `param_help_for(hint)` - what the Parameters dialog's help strip says about a field carrying that hint, under the parameter's own description. A registration overrides the builtin wording; one paragraph per hint, last registration wins | `void` / `String` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
 | Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
 | Seams | `register_starter({label, build})` / `registered_starters()` | `void` / `Array[Dictionary]` | no |

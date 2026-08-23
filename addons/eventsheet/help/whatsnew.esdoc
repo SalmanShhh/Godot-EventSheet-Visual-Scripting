@@ -6,6 +6,14 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Tooling
+
+- The test suite can run sharded across several Godot processes (`tools/run_tests_parallel.ps1`; `EVENTFORGE_TEST_SHARD` in `tests/run_tests.gd`): the parallel-safe tests split by file, the timing-budget and teardown tests run serially afterwards, and the launcher prints the serial runner's own verdict line. About three times faster on an eight-core machine.
+- The canvas-rebuild backstop is re-measured rather than nudged. The variable sentence took the sample pack's sheet from 389 rows to 414 (the globals it borrows, and the folder strips over them), and on a quiet machine those rows rebuild in 950-1117 ms across five runs, one of them inside the full suite - so the budget moves 1600 to 1800, the same near-doubled margin every earlier figure carried over its own measurement. A budget sized while the machine is loaded is a budget everyone learns to ignore.
+- The editor's translation gate reads every spelling of the call. `EventSheetSentence.translate` and `EventSheets.translate` are one-line aliases of `EventSheetL10n.translate`, and a sweep keyed to the first class name alone walked past ten of the row grammar's own words (\"angle\", \"the file's text\", \"runs headless\"). It matches the call by its tail now, so an alias nobody has written yet is covered too: all 725 literals the editor asks to translate carry a `TEMPLATE.csv` row, and the eight shipped locales carry all 4,412 keys with no cell left blank.
+- The project-templates test sweeps its own scratch directory before it scans. It SAVES templates into `user://tpl_dir`, and Save as Template suffixes rather than overwrites, so a run that ended between the saves and the cleanup left a `boss_fight-N.tres` behind that every later run found - the scan then reported the machine's history instead of what the test wrote, and two assertions failed on a tree with nothing wrong with it.
+- README's test figures are measured off this tree rather than carried over: 17,590 assertions across 623 test files, counted the way the README's own figures always are - `[PASS]` lines from one full serial suite run, and `tests/*_test.gd`.
+
 ### Changed - Variables: one sentence, one dialog, one owner
 
 - **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every
@@ -351,10 +359,12 @@ What changed in the build you have installed (v0.17.0), in the words the release
   whose only text is `#endregion`; the old \"end region\" prose is gone. Folded, the head says how
   much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
 - **A block kind can ask for that look.** `EventSheetBlockKind.row_style(entry)` is a new Custom
-  Block API hook returning `\"section\"` (the default flat block row), `\"group\"` or `\"region\"`, so a
-  kind that stands for STRUCTURE gets a shape the sheet already has through a public, reusable path
-  instead of a special case in the renderer. The built-in Region kind renders through it. Display
-  only - emission, the lift and the byte round-trip are untouched.
+  Block API hook returning `\"section\"` (the default flat block row) or `\"region\"` (the fold mark),
+  so a kind that stands for STRUCTURE gets a shape the sheet already has through a public, reusable
+  path instead of a special case in the renderer. The built-in Region kind renders through it, and
+  a kind of your own that asks for it reads with ITS OWN words - `summary()` is the title, the last
+  line `emit()` writes is the echo. Display only - emission, the lift and the byte round-trip are
+  untouched.
 - **Turn a region into a group, and a group into a region.** `Turn Into Group` on a region's
   opening fence wraps the fenced rows in an `EventGroup` and drops both fences, carrying the name,
   description and colour across; `Turn Into Region` on a group head does the reverse. One undo step
@@ -377,6 +387,51 @@ What changed in the build you have installed (v0.17.0), in the words the release
   after row N** button that writes the missing fence after the last row before the next group or
   fence - the same guess a script editor's fold would make. Amber, never red: the file still
   compiles, and the wart-not-error covenant is unchanged.
+
+### Added - the API this design opened
+
+Everything the new rows and dialogs read through is a public call, so a pack can say the same things
+the same way instead of re-deriving them. All of it is documented in
+**docs/GUIDE-BUILDING-ON-EVENTSHEETS.md** (the Custom Block hook in **docs/GUIDE-CUSTOM-BLOCKS.md**)
+and each has a test that calls it.
+
+- **`EventSheets.code_line(row, sheet := null)`** - THE line of the emitted file a row stands for,
+  which is what the sheet echoes at that row's right edge. One call for any row an extension draws:
+  a variable answers its declaration (never the doc comment, the `@export_group` header or a Static
+  local's marker written above it), a Custom Block row the last line its kind emits, and an event
+  group the `## @ace_group(...)` line it declares itself on. Every other row answers `\"\"`: those
+  three are the rows the sheet draws an echo on. Drawing many group heads still asks `group_declaration_lines(sheet)` once.
+- **`EventSheets.group_declaration_lines(sheet)`** - that whole map in one walk, keyed by the
+  `EventGroup`: uid, name, parent, description, colour and the two flags, exactly as emitted and
+  read back.
+- **`EventSheets.sheet_variables(sheet)`**, **`variable_owner(variables, name)`** and
+  **`variable_sentence(variable)`** - every variable a sheet can name and who owns each, in reading
+  order (this object's own, then the globals it reaches for, then the locals in scope), the object
+  column a row naming one belongs in, and one entry written the way its row reads it
+  (`Instance whole number hp = 100`). The rows, the picker, the Anatomy rail and the expression
+  picker are all this one list.
+- **`EventSheets.comparison_glyph(operator)`** and **`opposite_operator(operator)`** - the glyph a
+  row shows for an operator (`<=` reads ≤, `==` reads a single `=`) and the operator that is true
+  exactly when this one is false. The same table the sheet's own rows and its invert read through;
+  anything that is not one of the six comes back unchanged.
+- **`EventSheets.register_param_help(hint, paragraph)`** / **`param_help_for(hint)`** - what the
+  Parameters dialog's help strip says about a field carrying a pack's own hint, so a pack describes
+  the box only it knows instead of leaving the strip generic on the very field that needed
+  explaining. A registration outranks the builtin wording.
+- **An option can carry its own second line.** `EventSheets.param_spec` options accept
+  `{\"key\", \"label\", \"note\"}`, and `combo_options()` carries the `note` through - the line that reads
+  under a choice in the dialog (\"double speed, keeps momentum\"). Optional per option; display only.
+- **`EventSheetPopupUI.help_strip(...)`** - the one explanatory foot a dialog wears, now a shared
+  component rather than per-dialog scaffolding: `follow(control, heading, body)` wires a field,
+  `follow_option(dropdown, describer)` describes each choice before it is picked, `set_reading()`
+  fills the READS AS and IN CODE lines, and `show_note(heading, body, tone, fixes)` says something
+  is wrong in its own colour with the one-click answer beside it.
+- **`EventSheetPopupUI.code_noted_option(dropdown)`** / **`option_code_text(dropdown)`** - the muted
+  GDScript form beside a dropdown's friendly wording, and that text computed without a widget tree.
+  A list whose labels already ARE its values is returned untouched.
+- **`EventSheetPopupUI.autocomplete_combo(edit, suggestions, note_provider)`** - the ▾ picker beside
+  a free-text field takes an optional `note_provider(suggestion) -> String`, so a suggestion list
+  can explain each choice; the pick still inserts the bare value.
 
 ### Changed - Theme: the variable row's wash and rule are tokens
 
