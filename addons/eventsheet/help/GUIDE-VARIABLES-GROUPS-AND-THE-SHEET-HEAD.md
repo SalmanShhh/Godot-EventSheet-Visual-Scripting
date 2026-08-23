@@ -13,21 +13,22 @@ row shown here comes with the code it compiles to, so you can check.
 
 1. [The variable sentence](#the-variable-sentence)
 2. [Scope words: where a variable lives](#scope-words-where-a-variable-lives)
-3. [Type words, and the GDScript they write](#type-words-and-the-gdscript-they-write)
-4. [The code echo and the View dial](#the-code-echo-and-the-view-dial)
-5. [Adding a variable](#adding-a-variable)
-6. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
-7. [Who owns a variable](#who-owns-a-variable)
-8. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
-9. [The Compare dialog](#the-compare-dialog)
-10. [Invert, or, and else](#invert-or-and-else)
-11. [Picking with a test](#picking-with-a-test)
-12. [The parameters dialog](#the-parameters-dialog)
-13. [The sheet head, band by band](#the-sheet-head-band-by-band)
-14. [The Sheet Type dialog](#the-sheet-type-dialog)
-15. [Groups](#groups)
-16. [Regions](#regions)
-17. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [Static locals: a local that remembers](#static-locals-a-local-that-remembers)
+4. [Type words, and the GDScript they write](#type-words-and-the-gdscript-they-write)
+5. [The code echo and the View dial](#the-code-echo-and-the-view-dial)
+6. [Adding a variable](#adding-a-variable)
+7. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
+8. [Who owns a variable](#who-owns-a-variable)
+9. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
+10. [The Compare dialog](#the-compare-dialog)
+11. [Invert, or, and else](#invert-or-and-else)
+12. [Picking with a test](#picking-with-a-test)
+13. [The parameters dialog](#the-parameters-dialog)
+14. [The sheet head, band by band](#the-sheet-head-band-by-band)
+15. [The Sheet Type dialog](#the-sheet-type-dialog)
+16. [Groups](#groups)
+17. [Regions](#regions)
+18. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## The variable sentence
 
@@ -92,6 +93,7 @@ looks at what the declaration is and at what the file is, and says the word.
 | Global | One value the whole project shares. | a member of an autoload's script |
 | Instance | One per object - each copy in the scene has its own. | a member of an ordinary node script |
 | Local | Lives inside the event or function it sits in. | a declaration inside an event body |
+| Static local | Only this event reads it, and it keeps its value between runs. | a Local row with **Static local** ticked |
 | Constant | Never changes once the game runs. | `const` |
 | Static | One value shared by every copy of this object. | `static var` |
 | Field | Saved in every resource made from this - a data field, not a live value. | a member of a script extending `Resource` |
@@ -110,6 +112,42 @@ and kept where it is real code - inside expressions, and in the echo:
 
 That echo is deliberately a reference and not a declaration: the declaration lives on the autoload's
 own sheet, and echoing it here would claim a line this file does not have.
+
+## Static locals: a local that remembers
+
+A **Local** is made when its event runs and gone when the event ends - which is exactly what you want
+for a working total, and exactly what you do not want for a hit counter. Tick **Static local** in the
+Add variable dialog (offered for the Local scope, and only there) and the row keeps its place under
+the event while the value survives from one run of that event to the next:
+
+| The row | The lines it stands for |
+|---|---|
+| `x` Static local whole number **hits_taken** = 0 | `var _hits_taken := 0` at class level, and `_hits_taken` wherever the event names it |
+
+GDScript has no `static` inside a function, so there is nowhere narrower to keep such a value than
+the class. The compiler hoists the declaration to a private member - the leading underscore is what
+"nothing outside this event should reach for it" looks like in Godot code - and rewrites the event's
+uses onto it. Words inside a printed sentence are left exactly as written: `print("hits: ", hits_taken)`
+compiles to `print("hits: ", _hits_taken)`, the sentence untouched and the value read from the member.
+
+A `# @static_local:hits_taken` comment above the member says which row it belongs to. That marker is
+what lets the file open as the row again: reopen the `.gd` and the member comes back as a Static local
+row, and saving it untouched reproduces the file byte for byte. A private member somebody wrote by
+hand, with no marker, stays what it always was - an ordinary variable row.
+
+Two rules the sheet holds you to:
+
+- **The tick is offered for the Local scope only.** A member variable wears *Static* instead (one
+  value for every copy of the object); a local can never be a `static var`, so the two are never on
+  screen together.
+- **One event owns the name.** Two events each declaring `hits_taken` would hoist to the same
+  `_hits_taken`, so the sheet declares it once and says so in a compile warning rather than writing a
+  file that will not parse.
+
+**Moving a local.** Drag a Local row onto another event and it re-scopes there - the declaration
+moves, and nothing else does. Drag it onto the sheet head and it is promoted: the Add variable dialog
+opens on Instance with everything the local already said filled in, so what you confirm is the new
+sentence, and the local is dropped only once you do.
 
 ## Type words, and the GDScript they write
 
@@ -201,7 +239,8 @@ would not write.
 Three gates worth knowing:
 
 - **Global** reveals *Write into* and confirms straight into that autoload, in one undo step.
-- **Local** greys the Inspector tick - a local is never a property.
+- **Local** greys the Inspector tick - a local is never a property - and offers *Static local*,
+  the one flag a local can wear.
 - **Constant** greys Static with it - GDScript has no `static const`.
 
 A fresh variable opens on the scope the last one used, so a run of instance variables answers the

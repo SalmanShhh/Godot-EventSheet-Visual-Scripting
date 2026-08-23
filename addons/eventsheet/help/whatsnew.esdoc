@@ -102,6 +102,32 @@ What changed in the build you have installed (v0.17.0), in the words the release
   an amber note instead (\"nickname is text - Add to wants a number. Set value fits.\"), because that
   line compiles and only misbehaves.
 
+### Added - Static local: the local that keeps its value between runs
+
+- **A local can now remember.** Tick **Static local** in the Add variable dialog - offered for the
+  Local scope, and only there - and the row stays under its event reading \"Static local whole number
+  hits_taken = 0\" while the value survives from one run of that event to the next. GDScript has no
+  `static` inside a function, so the compiler hoists the declaration to a private class member beside
+  the group locals (`var _hits_taken := 0`) and rewrites the event's uses - its condition header and
+  its sub-events included - onto that member. Words inside a printed sentence are left exactly as
+  written: only code is rewritten, never displayed text.
+- **The file opens as the row again.** A `# @static_local:<name>` comment above the member says which
+  row it belongs to, so reopening the `.gd` gives the Static local row back under its own name, and
+  saving it untouched reproduces the file byte for byte. A private member written by hand carries no
+  marker and stays exactly what it was - an ordinary variable row.
+- **One event owns the name.** Two events declaring the same static local would hoist to one member,
+  so the sheet declares it once and says so in a compile warning instead of writing a file that will
+  not parse. A `float` default keeps its fraction (`var _cooldown := 0.0`), or `:=` would infer an int
+  and refuse the first fractional assignment.
+- **Dragging a Local row moves the LOCAL.** Dropped on another event it re-scopes there - the
+  declaration moves and nothing else does, where before the drag moved the whole event it was drawn
+  from. Dropped on the sheet head it is promoted: the Add variable dialog opens on Instance with
+  everything the local already said filled in, so what you confirm is the new sentence, and the local
+  is dropped only once you do - in the same undo step that writes the variable it became.
+- **The flags row shows the flag that applies.** A local can never be a `static var`, so *Static* and
+  *Static local* are never on screen together; the help strip carries the paragraph for whichever one
+  is there, and the strip's IN CODE line is the member the tick will write.
+
 ### Changed - Comparisons: the symbol, one Compare dialog, and an invert that flips
 
 - **`≤  at most`, not `<= (at most)`.** `COMPARISON_OPTIONS` - the one list every operator picker in
