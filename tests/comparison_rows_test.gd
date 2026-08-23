@@ -10,6 +10,8 @@
 #   4. THE "or" DIVIDER, and the Else row that says what it follows.
 #   5. THE PICK. A filter that narrows a family reads as the pick it is, with the family in the
 #      object column.
+#   6. THE FILING. In the picker, the comparison family is one entry plus one sub-folder, not
+#      twelve rows scattered across three categories - and every one of the twelve is still there.
 @tool
 class_name ComparisonRowsTest
 extends RefCounted
@@ -26,6 +28,7 @@ static func run() -> bool:
 	all_passed = _test_flip() and all_passed
 	all_passed = _test_or_and_else() and all_passed
 	all_passed = _test_pick_sentence() and all_passed
+	all_passed = _test_picker_filing() and all_passed
 	if all_passed:
 		print("[PASS] comparison_rows: a comparison reads as the question it is.")
 	return all_passed
@@ -434,6 +437,46 @@ static func _span_with(row_data: EventRowData, key: String, value: Variant) -> S
 		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).get(key) == value:
 			return span
 	return null
+
+
+# ── 6. Where the picker files a comparison ──
+
+
+## K2. One question, one entry: the owner's group keeps Compare variable (and Is boolean set beside
+## it), and every other comparison the dialog can write goes under one sub-folder. Nothing is
+## deregistered and nothing is renamed - all twelve ids still resolve, so a sheet that already uses
+## one still opens, and searching still finds each by its own name.
+static func _test_picker_filing() -> bool:
+	var passed: bool = true
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var filed: Dictionary = {}
+	for ace_id: String in COMPARE.COMPARE_ACE_IDS:
+		var definition: ACEDefinition = registry.find_definition(COMPARE.PROVIDER, ace_id)
+		if definition == null:
+			passed = _check("%s is still registered" % ace_id, false, true)
+			continue
+		var key: String = ACEPickerDialog.comparison_group_key(definition)
+		filed[ace_id] = key if not key.is_empty() else definition.category
+	passed = _check("the lead comparison stays in the owner's own group",
+		str(filed.get(COMPARE.ACE_COMPARE_VAR, "")), ACEPickerDialog.VARIABLES_CATEGORY) and passed
+	passed = _check("and Is boolean set is filed there with it",
+		registry.find_definition(COMPARE.PROVIDER, "IsBoolSet").category,
+		ACEPickerDialog.VARIABLES_CATEGORY) and passed
+	var elsewhere: PackedStringArray = PackedStringArray()
+	for ace_id: String in COMPARE.COMPARE_ACE_IDS:
+		if ace_id != COMPARE.ACE_COMPARE_VAR and str(filed.get(ace_id, "")) != ACEPickerDialog.COMPARISONS_GROUP:
+			elsewhere.append(ace_id)
+	passed = _check("every other comparison files under the one sub-folder",
+		elsewhere, PackedStringArray()) and passed
+	passed = _check("which is a sub-folder OF the owner's group",
+		ACEPickerDialog.split_subcategory(ACEPickerDialog.COMPARISONS_GROUP),
+		PackedStringArray([ACEPickerDialog.VARIABLES_CATEGORY, "All comparisons"])) and passed
+	passed = _check("a verb that is not a comparison is filed by its own category",
+		ACEPickerDialog.comparison_group_key(registry.find_definition(COMPARE.PROVIDER, "SetVar")), "") and passed
+	# The count is the feature: twelve comparisons registered, one of them led with.
+	passed = _check("the family is still twelve rows", COMPARE.COMPARE_ACE_IDS.size(), 12) and passed
+	return passed
 
 
 ## The one condition cell's text on the sheet's first event.

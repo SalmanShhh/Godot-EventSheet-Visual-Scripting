@@ -582,6 +582,25 @@ const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 ## The picker category the variable verbs are filed under. Frozen with their descriptors.
 const VARIABLES_CATEGORY := "Variables"
 
+## K2. Where the picker files every comparison the Compare dialog owns EXCEPT the lead one: a single
+## sub-folder under Variables, so "how do I compare something" is one entry rather than twelve rows
+## scattered across General Conditions, Text and Numbers. The DESCRIPTORS keep their own categories
+## (their ids, templates and their place in the vocabulary doc are untouched) - this is only where
+## the picker puts them, and searching still finds each by its own name.
+const COMPARISONS_GROUP := VARIABLES_CATEGORY + SUBCATEGORY_SEPARATOR + "All comparisons"
+
+
+## K2. The picker group a comparison belongs in, or "" for anything that is not one. The lead
+## comparison (Compare variable) stays in the owner's own group beside Set value and Is boolean set,
+## because comparing a variable is the question people come to that group for; every other
+## comparison files under the one sub-folder. Pure + static, so the filing is pinned without a tree.
+static func comparison_group_key(definition: ACEDefinition) -> String:
+	if definition == null or definition.provider_id != EventSheetCompareConditionDialog.PROVIDER:
+		return ""
+	if definition.id == EventSheetCompareConditionDialog.ACE_COMPARE_VAR:
+		return ""
+	return COMPARISONS_GROUP if EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id) else ""
+
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -1359,6 +1378,13 @@ func _refresh_tree() -> void:
 		var paged: bool = _category_of(definition).begins_with(SPATIAL_PAGE_PREFIX)
 		var is_node_type_group: bool = not node_type.is_empty() and not paged
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
+		# K2 - every comparison but the lead one files under Variables ▸ All comparisons, wherever
+		# its descriptor's own category puts it. Outranks the node-type filing for the same reason
+		# the page prefix does: what a row IS beats where it happens to have been filed.
+		var comparison_key: String = comparison_group_key(definition)
+		if not comparison_key.is_empty():
+			group_key = comparison_key
+			is_node_type_group = false
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)
 		var featured: bool = _is_featured(definition)

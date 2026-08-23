@@ -388,6 +388,12 @@ so the friendly wording teaches the spelling instead of hiding it.
 Between Values, Is Outside Range, Values Are Near, or one of the text tests), or edit a comparison
 row that is already on the sheet. All of them open the one **Compare** dialog.
 
+The picker files them the way the dialog treats them: **Compare variable** sits in the Variables
+group beside Set value and Is boolean set, because comparing a variable is the question that group
+is for, and the other eleven live together under **Variables ▸ All comparisons**. Every one of the
+twelve is still registered under its own name, so typing "begins with" or "within" finds that row
+directly.
+
 It asks the three things a comparison actually decides:
 
 | Box | What it takes |

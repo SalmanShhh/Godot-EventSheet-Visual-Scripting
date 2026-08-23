@@ -171,6 +171,12 @@
   two for a range, or a value and a give-or-take). The operator you choose decides which of the
   existing conditions the row becomes - no ace_id changed, no template changed. Editing a comparison
   row reopens it in the same dialog, so turning `hp ≤ 0` into `hp between 1 and 50` is one edit.
+- **And the picker files them that way too.** The Variables group now shows the one entry a reader
+  comes to it for - **Compare variable**, beside Set value and Is boolean set - and the other eleven
+  comparisons sit together under **Variables ▸ All comparisons** instead of being spread across
+  General Conditions, Text and Numbers. Nothing was deregistered or renamed: all twelve ids, their
+  templates and their place in the vocabulary doc are exactly as they were, a sheet that already
+  uses one opens unchanged, and typing "begins with" still finds that row by its own name.
 - **Text comparisons are the same dialog, with the words text uses.** When the left side is text the
   operator list becomes is / is not / begins with / ends with / contains / is one of / matches / is
   empty, with an **Ignore case** tick beside it. Ticking it writes `to_lower()` on both sides, which
