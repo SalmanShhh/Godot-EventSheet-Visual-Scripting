@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (16,103 CI-gated assertions across 604 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (17,590 CI-gated assertions across 623 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -119,7 +119,7 @@ Opening the FPS Controller pack as a sheet went from 6.8 s to 0.9 s and the edit
 
 **The editor reads itself** - the plugin's own source opens as event sheets in its own repository: **628 files, 626 of them at zero script blocks (9 block lines in 145,101 rows), and 89% of those rows in the sheet's own words**. A rotating sample is round-tripped byte-exact and held under a measured per-group ceiling on every run (`tests/plugin_reads_itself_test.gd`), and Tools ▸ Project Doctor reports the same numbers per group.
 
-**Quality** - 16,103 assertions across 604 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; the save backend is pinned across all 18 seams and six formats; showcases are live-verified on camera. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply time, and output is performance-identical to hand-written GDScript - all test-enforced.
+**Quality** - 17,590 assertions across 623 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; the save backend is pinned across all 18 seams and six formats; showcases are live-verified on camera. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply time, and output is performance-identical to hand-written GDScript - all test-enforced.
 
 ## Milestones
 
