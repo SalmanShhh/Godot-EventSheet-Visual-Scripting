@@ -5,6 +5,7 @@
 ### Tooling
 
 - The test suite can run sharded across several Godot processes (`tools/run_tests_parallel.ps1`; `EVENTFORGE_TEST_SHARD` in `tests/run_tests.gd`): the parallel-safe tests split by file, the timing-budget and teardown tests run serially afterwards, and the launcher prints the serial runner's own verdict line. About three times faster on an eight-core machine.
+- The canvas-rebuild backstop is re-measured rather than nudged. The variable sentence took the sample pack's sheet from 389 rows to 414 (the globals it borrows, and the folder strips over them), and on a quiet machine those rows rebuild in 950-1117 ms across five runs, one of them inside the full suite - so the budget moves 1600 to 1800, the same near-doubled margin every earlier figure carried over its own measurement. A budget sized while the machine is loaded is a budget everyone learns to ignore.
 
 ### Changed - Variables: one sentence, one dialog, one owner
 

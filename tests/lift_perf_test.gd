@@ -26,18 +26,17 @@ const LIFT_BUDGET_MS: int = 4000
 ## A pack script that extends an ENGINE class, so the block-kind scan can answer "not a block kind"
 ## off its text and never load it. Every shipped pack but one has this shape.
 const ENGINE_BASE_PACK: String = "res://eventsheet_addons/health/health_behavior.gd"
-## Rebuilding the canvas rows of the sample pack. Measured 268 ms once the behaviour-pack index
-## stopped re-asking the addon scanner (1718 ms before).
+## Rebuilding the canvas rows of the sample pack - what the canvas pays after every edit, and the
+## number a per-function rescan of the addon folders was once buried in (1718 ms of it).
 ##
-## Raised from 1400 when the FPS Controller grew its feel layer (the FIXTURE went from 352 rows to
-## 389), then parked at 2400 because every machine measuring it that week was loaded. Re-measured
-## quiet at the close of batch 14: 852 ms on the same 389-row sheet, three runs inside 60 ms of each
-## other. 1600 is that figure with the same near-doubled margin the original 1400 carried over its
-## 852-class measurement, because a backstop that trips on a busy machine teaches everyone to ignore
-## it. The pin's job is to catch a rebuild that got ALGORITHMICALLY slower - the 1718 ms it was
-## written for was a per-function rescan, and a regression of that kind lands far outside this band
-## rather than just inside it.
-const REBUILD_BUDGET_MS: int = 1600
+## Re-measured on a QUIET machine every time the FIXTURE grows, and set at the near-doubled margin
+## each earlier figure carried over its own measurement. The variable sentence took the sheet from
+## 389 rows to 414 (the globals it borrows, and the folder strips over them), and those 414 rebuild
+## in 950-1117 ms across five runs, one of them inside the full suite - so 1800. A budget sized
+## while the machine is loaded is a budget everyone learns to ignore, so the load is taken away
+## rather than paid for. What the pin is for is a rebuild that got ALGORITHMICALLY slower, and a
+## regression of that kind lands far outside this band rather than just inside it.
+const REBUILD_BUDGET_MS: int = 1800
 ## A warm warm_registries() must be a no-op. Measured 0.1 ms; 50 catches a re-run without flapping.
 const WARM_REPEAT_BUDGET_MS: int = 50
 ## 200 mouse-motion events inside one cell. Measured 0.3 ms once a repeat is recognised as already
