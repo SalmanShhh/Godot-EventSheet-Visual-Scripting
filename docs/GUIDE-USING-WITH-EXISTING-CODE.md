@@ -828,7 +828,7 @@ to the function it names, the same jump the Outline panel makes.
   params dialog still puts the author's own GDScript in front of you.
 - **Ranges, angles, distances, areas and "about" are ONE condition each.** `x >= 0 and x <= width`,
   `0 < hp and hp < max_hp`, `level in range(3, 6)` and the inverted `not (t >= 0.2 and t <= 0.8)` all
-  read as one `is between` row - the ✕ carrying the inversion - and a strict end says which one it is
+  read as one `is between` row - the `not` mark carrying the inversion - and a strict end says which one it is
   (`(exclusive)`, `(exclusive top)`, `(exclusive bottom)`). `in range(3, 6)` reads `between 3 and 5`,
   because Godot's range stops before its second number. The same idea covers every kind of value the
   sheet already has a word for: `abs(angle_difference(rotation, target)) < deg_to_rad(10)` reads
@@ -1231,7 +1231,7 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read
   as words (`_coyote_timer` -> `coyote timer`, a knob with its Inspector capitalisation), property chains
-  read possessively (`host's velocity X`), NOT is the red ✕ in the icon column, the host and any `$Node` /
+  read possessively (`host's velocity X`), NOT is the red `not` mark in the icon column, the host and any `$Node` /
   `%Node` / `@onready` reference show their class icon, sub-events hang off tree guide lines, a call to one
   of the sheet's own functions reads `Functions ▸ Call Add Look  x = mouse's ΔX  y = mouse's ΔY`, and code
   that could not lift is one collapsed card with a line count. **View > Humanized Names** turns the name

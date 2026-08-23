@@ -432,7 +432,7 @@ all three:
 
 ```
 Every tick (physics)
-  ✕ Player | Grind: Is grinding
+  not Player | Grind: Is grinding
   Condition: Player | Platform: Is falling
   Condition: Player | Grind: Is near rail  Rail, 12
     -> Player | Grind: Start grinding  Rail

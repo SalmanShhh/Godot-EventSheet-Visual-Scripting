@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+### Changed - a comparison reads as the question it is
+
+- **The row shows the symbol, the file keeps the spelling.** An authored comparison now renders the
+  glyph a reader means - `hp ≤ 0`, `score ≥ Game.HighScore`, `state ≠ "idle"` - and equality reads
+  as a single `=`, which is what a sheet row is asking. This is the same rewriting an opened script's
+  readings already did; authored rows had been showing the two-character GDScript form. Templates,
+  parameters and every emitted line are unchanged: `if hp <= 0:` is still exactly what compiles.
+- **One Compare dialog instead of five.** Compare variable, Compare Values, Is Between Values, Is
+  Outside Range and Values Are Near were five picker entries with five dialogs. They are now one
+  **Compare** dialog with the three boxes the question actually has: *Compare* (this sheet's
+  variables, each with its type word and what it starts at, or any expression you type), *Is* (the
+  operator list, with a **ranges** group for between / not between / within ±), and *To* (one value,
+  two for a range, or a value and a give-or-take). The operator you choose decides which of the
+  existing conditions the row becomes - no ace_id changed, no template changed. Editing a comparison
+  row reopens it in the same dialog, so turning `hp ≤ 0` into `hp between 1 and 50` is one edit.
+- **Text comparisons are the same dialog, with the words text uses.** When the left side is text the
+  operator list becomes is / is not / begins with / ends with / contains / is one of / matches / is
+  empty, with an **Ignore case** tick beside it. Ticking it writes `to_lower()` on both sides, which
+  is what a hand-written check does; the eight existing text conditions are what it writes.
+- **The help strip says both halves.** One strip at the foot of the dialog describes whatever is
+  focused, and shows READS AS (the row you will get) and IN CODE (the line the compiler will write).
+  The code line is produced BY the compiler from a throwaway condition, so the dialog cannot promise
+  a spelling the emitter would not use.
+- **Inverting a comparison flips it instead of denying it.** A condition marked Invert used to
+  compile to `not (hp <= 0)` and show a mark a reader had to unwrap. When the operator has a clean
+  opposite the row now simply says - and emits - `hp > 0`. Same truth table, one fewer pair of
+  brackets. The importer lifts both spellings to that one row. A condition with no clean opposite
+  (begins with, is on floor) is unchanged except that its mark is now the word **not** in the badge
+  column rather than a symbol.
+- **An OR block says "or".** Two conditions that are OR'd are separated by a small ruled `or`
+  between them, in place of the OR badge each condition after the first used to wear: "or" is what
+  sits between two questions, not a property of one. Right-clicking still toggles AND / OR.
+- **An Else says what it follows.** An Else row now carries "neither of 9" - the number of the event
+  its chain starts at - because an Else several sub-events below its `if` is the classic reading
+  mistake.
+- **A pick that narrows reads as a pick.** A For Each over a group with a test, an order or a limit
+  now reads `Pick where hp < 10 · nearest to Player first · top 3`, with the family (Enemy) in the
+  object column. A plain walk over everything is still a For each. Display only - the loop compiles
+  exactly as it did.
+
+
 ### Changed - a region reads as the fold mark it is, and can trade places with a group
 
 - **A region has its own look.** A `#region` fence stopped borrowing the group bar. The opening

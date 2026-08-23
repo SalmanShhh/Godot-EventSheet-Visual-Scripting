@@ -50,7 +50,8 @@ sections:
 
 - **Reading marks - chips, badges, guides, stripes** (`EventSheetReadingStyle`): the plain
   chip and its word, the picker-category chip, the Inspector chip, the const/static badge,
-  the setup and Script block and ⚠ code badges, the OR badge, the ⟳ / ⌨ / ▶ badges that say
+  the setup and Script block and ⚠ code badges, the "or" divider between OR'd conditions,
+  the ⟳ / ⌨ / ▶ badges that say
   how often an event runs, the three text tones, the tints on text and true/false values,
   the error and live-fire stripes, the disabled scrim, the breakpoint dot, the bookmark
   pennant, the event-number margin's rail, the indent stops and the tree connector, the drop
@@ -80,8 +81,8 @@ Every Manual token starts with **no opinion** (alpha zero), which means "follow 
 A reader who never picks a theme keeps help that looks like the rest of their Godot editor;
 give a token an alpha and it takes over.
 
-Two surfaces stayed as they were on purpose. A negated condition's ✕ already had its own
-token (`invert_marker_color`) - one red for "this condition is turned around", wherever it
+Two surfaces stayed as they were on purpose. A negated condition's `not` mark already had its
+own token (`invert_marker_color`) - one red for "this condition is turned around", wherever it
 appears. And the debugger's hit-count chips in the event-number margin are lens chrome
 rather than sheet paint: they are drawn over whatever the row is and deliberately do not
 follow the theme.

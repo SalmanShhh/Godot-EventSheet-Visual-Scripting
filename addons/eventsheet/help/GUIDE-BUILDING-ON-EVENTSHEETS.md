@@ -128,6 +128,11 @@ print(EventSheets.describe_inspector("int", attrs))
 
 # The exact GDScript a variable compiles to - its "Ships as:" truth:
 print(EventSheets.variable_code(my_local_variable))
+
+# The operator table the sheet's own comparison rows read through, so a pack's rows can say the
+# question the same way: the glyph a reader sees, and the opposite an invert would write.
+print(EventSheets.comparison_glyph("<="))        # ≤
+print(EventSheets.opposite_operator("<="))       # >
 ```
 
 ## 6. Project Health Services
@@ -228,6 +233,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
+| Codegen | `comparison_glyph(operator)` - the glyph a ROW shows for an operator (`<=` reads ≤, `==` reads a single `=`); anything that is not one of the six comes back unchanged | `String` | no |
+| Codegen | `opposite_operator(operator)` - the operator that is true exactly when this one is false (`<=` ↔ `>`), or `""` when the text is not one of the six | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
 | Codegen | `publish_pack(sheet, base_path, icon_path := "")` - the whole pack pipeline (icon detect, de-coding lifts, stable uids, banner-less compile); shared by the bundled builders and Export Addon | `Dictionary` | no |
