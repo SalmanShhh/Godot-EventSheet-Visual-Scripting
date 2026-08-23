@@ -66,6 +66,8 @@ static func run() -> Dictionary:
 	check_rotated_gravity_pathfinding(findings)
 	check_param_type_mismatches(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
+	check_variable_notes(sheet_paths, findings)
+	check_region_fences(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_unmarked_player_text(sheet_paths, findings)
 	check_stale_translated_labels(sheet_paths, findings)
@@ -1292,6 +1294,83 @@ static func check_param_type_mismatches(sheet_paths: PackedStringArray, findings
 		for entry: Variant in sheet.events:
 			if entry is EventRow:
 				_scan_param_types(entry as EventRow, sheet_path, findings)
+
+
+## V12 - the two notes a variable row grows on the canvas, said again where a whole project is
+## audited: a `variable_reference` naming something this sheet does not declare (an error, because
+## the emitted line names an identifier that is not there) and a variable handed to a verb that wants
+## another kind (a warning, because it compiles and only misbehaves).
+##
+## The sentences are the ROWS' own, word for word - unknown_note and variable_mismatch_note are the
+## same two calls the canvas makes - so somebody who met one on a row meets the same wording in the
+## report rather than two descriptions of one problem.
+static func check_variable_notes(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		var entries: Array[Dictionary] = EventSheetVariableOwners.own_entries(sheet)
+		if entries.is_empty():
+			continue
+		_scan_variable_notes(sheet.events, sheet_path, entries,
+			EventSheetVariableOwners.owner_of_sheet(sheet), findings)
+
+
+static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array[Dictionary],
+		owner: String, findings: Array[Dictionary]) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			_scan_variable_notes(EventSheetGroupFacts.children(entry as EventGroup), sheet_path,
+				entries, owner, findings)
+			continue
+		if not (entry is EventRow):
+			continue
+		var event: EventRow = entry as EventRow
+		for ace: Variant in (event.conditions + event.actions):
+			if not (ace is ACECondition or ace is ACEAction):
+				continue
+			var ace_id: String = str(ace.get("ace_id"))
+			var descriptor: ACEDescriptor = ACERegistry.find_descriptor(str(ace.get("provider_id")), ace_id)
+			if descriptor == null:
+				continue
+			var params: Dictionary = ace.get("params") if ace.get("params") is Dictionary else {}
+			for name_text: String in EventSheetVariableOwners.variable_reference_values(descriptor.params, params):
+				# A qualified spelling (`Game.Score`) is somebody else's declaration, and this sheet's
+				# own list is the wrong place to look for it - the same guard the row makes.
+				if not EventSheetIdentifierRules.is_valid(name_text):
+					continue
+				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
+				if not unknown.is_empty():
+					_add(findings, "error", "unknown-variable", sheet_path, str(unknown.get("note", "")))
+					continue
+				var mismatch: Dictionary = ViewportRowBuilder.variable_mismatch_note(
+					EventSheetVariableOwners.find(entries, name_text), ace_id)
+				if not mismatch.is_empty():
+					_add(findings, "warning", "variable-type-mismatch", sheet_path, str(mismatch.get("note", "")))
+		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings)
+
+
+## R3 - a `#region` fence with no partner, in the same words the row shows under the orphan itself.
+## A warning, never an error: the file still compiles, and the fence only fails to fold.
+static func check_region_fences(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet != null:
+			_scan_region_fences(sheet.events, sheet_path, findings)
+
+
+## Fences pair WITHIN one container, which is why every group body is walked as its own list - the
+## same walk the canvas folds by, so the Doctor and the row can never disagree about what is orphaned.
+static func _scan_region_fences(container: Array, sheet_path: String, findings: Array[Dictionary]) -> void:
+	var pairing: Dictionary = EventSheetRegionFacts.pairing(container)
+	for opener_index: int in (pairing.get("orphan_openers", []) as Array):
+		_add(findings, "warning", "region-fence", sheet_path,
+			EventSheetRegionFacts.unclosed_note(container[opener_index]))
+	for _closer_index: int in (pairing.get("orphan_closers", []) as Array):
+		_add(findings, "warning", "region-fence", sheet_path, EventSheetRegionFacts.unopened_note())
+	for entry: Variant in container:
+		if entry is EventGroup:
+			_scan_region_fences(EventSheetGroupFacts.children(entry as EventGroup), sheet_path, findings)
 
 
 static func _scan_param_types(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:

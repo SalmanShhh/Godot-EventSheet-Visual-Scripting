@@ -25,6 +25,76 @@ static func run() -> bool:
 	ok = _test_expression_picker_leaves() and ok
 	ok = _test_inspector_census() and ok
 	ok = _test_row_owner_and_notes() and ok
+	ok = _test_the_doctor_says_what_the_rows_say() and ok
+	return ok
+
+
+## V12/R3. The Doctor's three new findings are the ROWS' own sentences, word for word: a name this
+## sheet does not declare, a variable handed to a verb that wants another kind, and a `#region` fence
+## with no partner. Pinned by comparing against the very calls the canvas makes - a report that
+## worded a problem differently would read as a second problem.
+static func _test_the_doctor_says_what_the_rows_say() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = _sheet()
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var typo: ACEAction = ACEAction.new()
+	typo.provider_id = "Core"
+	typo.ace_id = "SubtractVar"
+	typo.params = {"var_name": "hpp", "amount": "1"}
+	var mismatched: ACEAction = ACEAction.new()
+	mismatched.provider_id = "Core"
+	mismatched.ace_id = "AddVar"
+	mismatched.params = {"var_name": "nickname", "amount": "1"}
+	# A qualified global is somebody else's declaration - it must NOT be reported as missing here.
+	var borrowed: ACEAction = ACEAction.new()
+	borrowed.provider_id = "Core"
+	borrowed.ace_id = "SetVar"
+	borrowed.params = {"var_name": "Game.Score", "value": "0"}
+	event.actions.append(typo)
+	event.actions.append(mismatched)
+	event.actions.append(borrowed)
+	sheet.events.append(event)
+	var opener := CustomBlockRow.new()
+	opener.kind_id = EventSheetRegionFacts.KIND_ID
+	opener.fields = {"label": "Debug helpers", "is_end": false}
+	sheet.events.append(opener)
+	var sheet_path: String = "user://eventsheets_doctor_notes_test.tres"
+	ResourceSaver.save(sheet, sheet_path)
+
+	var findings: Array[Dictionary] = []
+	EventSheetProjectDoctor.check_variable_notes(PackedStringArray([sheet_path]), findings)
+	EventSheetProjectDoctor.check_region_fences(PackedStringArray([sheet_path]), findings)
+	var entries: Array[Dictionary] = EventSheetVariableOwners.own_entries(sheet)
+	ok = _check("three findings, one per problem the canvas draws a note for", findings.size(), 3) and ok
+	if findings.size() != 3:
+		for finding: Dictionary in findings:
+			print("   %s: %s" % [str(finding.get("check", "")), str(finding.get("message", ""))])
+		return false
+	ok = _check("the unknown name is an error, in the row's own words",
+		[str(findings[0].get("severity", "")), str(findings[0].get("check", "")), str(findings[0].get("message", ""))],
+		["error", "unknown-variable",
+			str(EventSheetVariableOwners.unknown_note(entries, "hpp", "Player").get("note", ""))]) and ok
+	ok = _check("the wrong kind is a warning, in the row's own words",
+		[str(findings[1].get("severity", "")), str(findings[1].get("check", "")), str(findings[1].get("message", ""))],
+		["warning", "variable-type-mismatch",
+			str(ViewportRowBuilder.variable_mismatch_note(
+				EventSheetVariableOwners.find(entries, "nickname"), "AddVar").get("note", ""))]) and ok
+	ok = _check("the unclosed fence is a warning, in the row's own words",
+		[str(findings[2].get("severity", "")), str(findings[2].get("check", "")), str(findings[2].get("message", ""))],
+		["warning", "region-fence", EventSheetRegionFacts.unclosed_note(opener)]) and ok
+
+	# A sheet with nothing wrong grows nothing at all - the checks are silent by default.
+	var clean: EventSheetResource = _sheet()
+	var clean_path: String = "user://eventsheets_doctor_notes_clean_test.tres"
+	ResourceSaver.save(clean, clean_path)
+	var clean_findings: Array[Dictionary] = []
+	EventSheetProjectDoctor.check_variable_notes(PackedStringArray([clean_path]), clean_findings)
+	EventSheetProjectDoctor.check_region_fences(PackedStringArray([clean_path]), clean_findings)
+	ok = _check("a sheet with nothing wrong reports nothing", clean_findings.size(), 0) and ok
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(sheet_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(clean_path))
 	return ok
 
 

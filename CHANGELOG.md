@@ -362,6 +362,11 @@
   switch, no Ungroup: a region is two lines of a file, and it now offers only what that can do. The
   colour picker is the group's, widened - a fence stores its colour as the `#rrggbb` its marker
   line carries.
+- **The Project Doctor says the same three things the rows do.** Three new findings -
+  `unknown-variable` (an error), `variable-type-mismatch` (a warning) and `region-fence` (a warning)
+  - report for every sheet the project scan can see what a row already says under the event it is
+  on. The sentences are produced by the very calls the canvas makes, so a problem met on a row and a
+  line in the report can never read as two different problems.
 - **An unmatched fence says so, with the fix on the row.** An opener with no closer (or a closer
   with no opener) gets an amber note directly under it: "Debug helpers never closes, so it cannot
   fold. Add #endregion after the last row you want inside." An opener's note carries a **Close

@@ -306,6 +306,30 @@ static func fits(entry: Dictionary, wanted_type: String) -> bool:
 	return numbers.has(have) and numbers.has(wanted)
 
 
+## The values of one picked row's parameters that NAME a variable, given the parameter list its
+## definition carries. BOTH shapes are accepted - a live ACEDefinition's parameters are plain
+## Dictionaries, a shipped ACEDescriptor's are ACEParam resources - because the canvas asks the
+## editor's registry and the Doctor asks the shipped vocabulary, and a note that differed between
+## them would be a note the reader could not act on.
+static func variable_reference_values(parameters: Array, params: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for entry: Variant in parameters:
+		var param_id: String = ""
+		var hint: String = ""
+		if entry is Dictionary:
+			param_id = str((entry as Dictionary).get("id", ""))
+			hint = str((entry as Dictionary).get("hint", ""))
+		elif entry is ACEParam:
+			param_id = (entry as ACEParam).id
+			hint = (entry as ACEParam).hint
+		if not hint.begins_with(ACEParamsDialog.VARIABLE_REFERENCE_HINT):
+			continue
+		var value: String = str(params.get(param_id, "")).strip_edges()
+		if not value.is_empty():
+			found.append(value)
+	return found
+
+
 ## The reason a name cannot be used, as the note the sheet shows under the row: "" when the name IS a
 ## variable of this sheet. The nearest spelled name rides in `suggestion` so the fix button can offer
 ## it - a typo is the usual cause, and the fix is one click when the sheet can guess.

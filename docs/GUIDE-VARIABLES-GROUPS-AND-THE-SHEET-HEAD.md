@@ -358,6 +358,12 @@ instead ("nickname is text - Add to wants a number. Set value fits."), because t
 only misbehaves - and it carries a **Change to Set value** button that swaps the verb for the one
 that fits, carrying what was typed across to whatever the new verb calls it.
 
+**And the Project Doctor says the same two things, in the same words.** `unknown-variable` (an error)
+and `variable-type-mismatch` (a warning) are the row notes above, reported for every sheet the
+project scan can see rather than only the one that is open - the sentences come from the same call
+the canvas makes, so a problem you met on a row and a line in the report are never two problems.
+`region-fence` does it for an unmatched `#region`, in the wording its own orphan note uses.
+
 ## Asking a question: the comparison rows
 
 A comparison row shows the symbol a reader means, and the file keeps the spelling GDScript needs:

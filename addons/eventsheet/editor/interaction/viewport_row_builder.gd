@@ -8576,22 +8576,13 @@ func _ace_params_of(ace: Resource) -> Dictionary:
 	return parameters as Dictionary if parameters is Dictionary else {}
 
 
-## The value of every `variable_reference` parameter one row carries.
+## The value of every `variable_reference` parameter one row carries, off the editor's own registry.
+## The picking-apart is shared with the Doctor, which asks the shipped vocabulary the same question.
 func _variable_reference_values(provider_id: String, ace_id: String, params: Dictionary) -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	if definition == null:
-		return found
-	for entry: Variant in definition.parameters:
-		if not (entry is Dictionary):
-			continue
-		var param: Dictionary = entry as Dictionary
-		if not str(param.get("hint", "")).begins_with(ACEParamsDialog.VARIABLE_REFERENCE_HINT):
-			continue
-		var value: String = str(params.get(str(param.get("id", "")), "")).strip_edges()
-		if not value.is_empty():
-			found.append(value)
-	return found
+		return PackedStringArray()
+	return EventSheetVariableOwners.variable_reference_values(definition.parameters, params)
 
 
 ## One variable note, through the shared note row: red when the name cannot work at all, amber when
