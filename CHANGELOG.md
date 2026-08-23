@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Tooling
+
+- The test suite can run sharded across several Godot processes (`tools/run_tests_parallel.ps1`; `EVENTFORGE_TEST_SHARD` in `tests/run_tests.gd`): the parallel-safe tests split by file, the timing-budget and teardown tests run serially afterwards, and the launcher prints the serial runner's own verdict line. About three times faster on an eight-core machine.
+
 ### Changed - Variables: one sentence, one dialog, one owner
 
 - **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every

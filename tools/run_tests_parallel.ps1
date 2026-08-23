@@ -23,48 +23,40 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $logDir = Join-Path $root ".godot\test_logs"
 New-Item -ItemType Directory -Force $logDir | Out-Null
 
+function Count-Of([string]$text, [string]$needle) { ([regex]::Matches($text, [regex]::Escape($needle))).Count }
+
 # One import up front so the shards never race each other on a cold .godot/ cache.
 & $Godot --headless --path $root --import 2>&1 | Out-Null
 
-$procs = @()
+$jobs = @()
 for ($k = 0; $k -lt $Shards; $k++) {
 	$log = Join-Path $logDir ("shard-$k.txt")
-	$psi = New-Object System.Diagnostics.ProcessStartInfo
-	$psi.FileName = $Godot
-	$psi.Arguments = "--headless --path `"$root`" --script tests/run_tests.gd"
-	$psi.UseShellExecute = $false
-	$psi.RedirectStandardOutput = $true
-	$psi.RedirectStandardError = $true
-	$psi.EnvironmentVariables["EVENTFORGE_TEST_SHARD"] = "$k/$Shards"
-	$p = New-Object System.Diagnostics.Process
-	$p.StartInfo = $psi
-	$null = $p.Start()
-	$procs += @{ Process = $p; Log = $log; Name = "shard $k/$Shards" }
+	$err = Join-Path $logDir ("shard-$k.err.txt")
+	$env:EVENTFORGE_TEST_SHARD = "$k/$Shards"
+	$p = Start-Process -FilePath $Godot -ArgumentList @("--headless", "--path", "`"$root`"", "--script", "tests/run_tests.gd") `
+		-RedirectStandardOutput $log -RedirectStandardError $err -PassThru -WindowStyle Hidden
+	$jobs += @{ Process = $p; Log = $log; Err = $err; Name = "shard $k/$Shards" }
+	Start-Sleep -Seconds 2   # stagger the starts so no two processes open the project cache at once
 }
-foreach ($entry in $procs) {
-	$out = $entry.Process.StandardOutput.ReadToEnd() + $entry.Process.StandardError.ReadToEnd()
-	$entry.Process.WaitForExit()
-	[IO.File]::WriteAllText($entry.Log, $out)
-	$entry.Verdict = if ($out.Contains("All tests passed.")) { "green" } else { "RED" }
-	$entry.Fails = ([regex]::Matches($out, "\[FAIL\]")).Count
-	$entry.Passes = ([regex]::Matches($out, "\[PASS\]")).Count
-}
+Remove-Item Env:\EVENTFORGE_TEST_SHARD -ErrorAction SilentlyContinue
+foreach ($job in $jobs) { $job.Process.WaitForExit() }
 
 $tailLog = Join-Path $logDir "tail.txt"
+$tailErr = Join-Path $logDir "tail.err.txt"
 $env:EVENTFORGE_TEST_SHARD = "tail"
-$tailOut = & $Godot --headless --path $root --script tests/run_tests.gd 2>&1 | Out-String
-Remove-Item Env:\EVENTFORGE_TEST_SHARD
-[IO.File]::WriteAllText($tailLog, $tailOut)
-$tailVerdict = if ($tailOut.Contains("All tests passed.")) { "green" } else { "RED" }
+$tail = Start-Process -FilePath $Godot -ArgumentList @("--headless", "--path", "`"$root`"", "--script", "tests/run_tests.gd") `
+	-RedirectStandardOutput $tailLog -RedirectStandardError $tailErr -PassThru -WindowStyle Hidden -Wait
+Remove-Item Env:\EVENTFORGE_TEST_SHARD -ErrorAction SilentlyContinue
 
-$allGreen = $tailVerdict -eq "green"
-$passes = ([regex]::Matches($tailOut, "\[PASS\]")).Count
-$fails = ([regex]::Matches($tailOut, "\[FAIL\]")).Count
-foreach ($entry in $procs) {
-	"{0,-12} {1,-6} {2,6} pass {3,4} fail  {4}" -f $entry.Name, $entry.Verdict, $entry.Passes, $entry.Fails, $entry.Log
-	$passes += $entry.Passes; $fails += $entry.Fails
-	if ($entry.Verdict -ne "green") { $allGreen = $false }
+$allGreen = $true
+$passes = 0; $fails = 0
+foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))) {
+	$out = (Get-Content $job.Log -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $job.Err -Raw -ErrorAction SilentlyContinue)
+	$verdict = if ($out -and $out.Contains("All tests passed.")) { "green" } else { "RED" }
+	$p = Count-Of $out "[PASS]"; $f = Count-Of $out "[FAIL]"
+	"{0,-12} {1,-6} {2,6} pass {3,4} fail  {4}" -f $job.Name, $verdict, $p, $f, $job.Log
+	$passes += $p; $fails += $f
+	if ($verdict -ne "green") { $allGreen = $false }
 }
-"{0,-12} {1,-6} {2,6} pass {3,4} fail  {4}" -f "tail", $tailVerdict, ([regex]::Matches($tailOut, "\[PASS\]")).Count, ([regex]::Matches($tailOut, "\[FAIL\]")).Count, $tailLog
 "total: $passes pass, $fails fail across $Shards shards + tail"
 if ($allGreen) { "All tests passed."; exit 0 } else { "Some tests failed."; exit 1 }

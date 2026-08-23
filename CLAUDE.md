@@ -20,6 +20,7 @@ GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 - Full test suite (auto-discovers `tests/*_test.gd` with `static func run() -> bool`):
   `"$GODOT" --headless --path . --script tests/run_tests.gd`
 - Fast gate: `"$GODOT" --headless --path . --script tests/run_perf.gd`
+- Full suite in ~5 minutes instead of 10-20 (Windows): `$env:GODOT = "<binary>"; powershell -File tools/run_tests_parallel.ps1` - shards the parallel-safe tests across processes and runs the perf-budget and teardown tests serially afterwards; prints the same `All tests passed.` / `Some tests failed.` verdict; per-shard logs in `.godot/test_logs/`. A single shard by hand: `EVENTFORGE_TEST_SHARD=k/n` (or `tail`) in the environment of the normal command.
 - Single test: there is no filter flag; run a scratch SceneTree script that calls `MyTest.run()` then `quit(0)`, or just run the full suite and grep for the test's name.
 - Pack drift gate (must print `drifted=0`): `"$GODOT" --headless --path . --script tools/audit_addons.gd`
 - Rebuild all packs after touching `tools/pack_builders/`: `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd` - then `--check-only --script` the emitted pack (the build + drift gates do NOT parse-check output).
