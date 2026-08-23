@@ -85,6 +85,13 @@ static func animation_event_handler_name(event_name: String) -> String:
 		safe = safe.replace("__", "_")
 	return "_on_%s" % (safe if not safe.is_empty() else "event")
 
+## E1. The trigger source path the five connection triggers carry, expanded by the emitter into the
+## `multiplayer.` prefix of their `_ready` connect line. A global source like "@tree" / "@window"
+## rather than a node path, because `multiplayer` is the scene tree's own MultiplayerAPI and there is
+## no node to look up.
+const MULTIPLAYER_SOURCE: String = "@multiplayer"
+
+
 ## The `member:` source-path prefix a menu handler is connected through. A menu is a VARIABLE of the
 ## script, not a node the sheet looked up by path, so the `_ready` line that wires it reads
 ## `sheet_popup.id_pressed.connect(...)` - the spelling every hand-written menu already uses.
@@ -252,6 +259,21 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# The window's close button (X) / an app-quit request - for save-on-quit or a confirm dialog.
 			# Connected on the root window (the "@window" global source), not self.
 			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
+		"OnPlayerJoined":
+			# E1. The five things the connection itself says, off MultiplayerAPI's own signals. They
+			# connect on the "@multiplayer" global source (`multiplayer.` in the emitted line), not on
+			# self and not on a node: `multiplayer` is a property every node already has, and it is the
+			# spelling every hand-written multiplayer script uses - which is what lets the importer read
+			# one back as this trigger instead of as a nameless helper.
+			return _signal_backed("_on_player_joined", "id: int", "peer_connected", MULTIPLAYER_SOURCE)
+		"OnPlayerLeft":
+			return _signal_backed("_on_player_left", "id: int", "peer_disconnected", MULTIPLAYER_SOURCE)
+		"OnJoinedTheHost":
+			return _signal_backed("_on_joined_the_host", "", "connected_to_server", MULTIPLAYER_SOURCE)
+		"OnJoinFailed":
+			return _signal_backed("_on_join_failed", "", "connection_failed", MULTIPLAYER_SOURCE)
+		"OnTheHostLeft":
+			return _signal_backed("_on_the_host_left", "", "server_disconnected", MULTIPLAYER_SOURCE)
 		"OnBodyEntered":
 			return _signal_backed("_on%s_body_entered" % source_token, "body: Node", "body_entered", source_path)
 		"OnAreaEntered":
