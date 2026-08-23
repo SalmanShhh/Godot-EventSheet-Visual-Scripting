@@ -55,11 +55,18 @@ func _init() -> void:
 ## drives it). The variable is read once, here:
 ##   unset      - every test, in one process, exactly as before;
 ##   "k/n"      - shard k of n (0-based) of the PARALLEL-SAFE tests: the alphabetical list minus the
-##                shared-state tests and the timing-budget tests, taking every n-th file from k;
-##   "tail"     - only what a shard skipped: the perf budgets (a loaded machine fails them for the
+##                shared-state tests and the timing tests, taking every n-th file from k;
+##   "tail"     - only what a shard skipped: the timing tests (a loaded machine fails them for the
 ##                wrong reason) and then DEFERRED_LAST, serially, after every shard has finished.
 ## Any test suite verdict is per process; the launcher is what turns N verdicts into one.
 const SHARD_VARIABLE := "EVENTFORGE_TEST_SHARD"
+
+## What makes a test a TIMING test, asked of its own source rather than of its file name: any
+## `*BUDGET_MS*` constant (an absolute budget) or a `PARALLEL_UNSAFE` constant (a relative
+## measurement, or any other reason a test must have the machine to itself). A name-based rule missed
+## `doc_library_test.gd`'s 12-second parse budget for exactly as long as it existed, which is the one
+## failure that costs the most to diagnose: a red verdict with nothing wrong in the tree.
+const TIMING_MARKER_PATTERN := "(?m)^const\\s+[A-Za-z_]*(BUDGET_MS|PARALLEL_UNSAFE)\\b"
 
 
 ## Test .gd files in a stable order: sorted alphabetically, with the shared-state DEFERRED_LAST tests
@@ -79,18 +86,34 @@ func _test_files() -> PackedStringArray:
 	for deferred_file: String in DEFERRED_LAST:
 		if deferred.has(deferred_file):
 			files.append(deferred_file)
-	return _shard_of(files, OS.get_environment(SHARD_VARIABLE).strip_edges())
+	return _shard_of(files, OS.get_environment(SHARD_VARIABLE).strip_edges(), timing_files(files))
 
 
-## The slice of `files` a process should run for `shard` (see SHARD_VARIABLE). Pure, so the split
-## itself is testable: every file lands in exactly one of the n shards or the tail, never in two.
-static func _shard_of(files: PackedStringArray, shard: String) -> PackedStringArray:
+## The tests that must have the machine to themselves, out of `files`: the ones whose own source
+## declares a timing marker (see TIMING_MARKER_PATTERN). Reading the file is what keeps the rule
+## honest - a budget lives in the test, not in its name.
+static func timing_files(files: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var marker: RegEx = RegEx.new()
+	if marker.compile(TIMING_MARKER_PATTERN) != OK:
+		return found
+	for file: String in files:
+		if marker.search(FileAccess.get_file_as_string(TESTS_DIR + file)) != null:
+			found.append(file)
+	return found
+
+
+## The slice of `files` a process should run for `shard` (see SHARD_VARIABLE), given the timing tests
+## that belong in the serial tail. Pure, so the split itself is testable: every file lands in exactly
+## one of the n shards or the tail, never in two and never in neither.
+static func _shard_of(files: PackedStringArray, shard: String,
+		serial_files: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	if shard.is_empty():
 		return files
 	var tail: PackedStringArray = PackedStringArray()
 	var parallel_safe: PackedStringArray = PackedStringArray()
 	for file: String in files:
-		if DEFERRED_LAST.has(file) or file.contains("_perf_") or file.begins_with("perf_"):
+		if DEFERRED_LAST.has(file) or serial_files.has(file):
 			tail.append(file)
 		else:
 			parallel_safe.append(file)

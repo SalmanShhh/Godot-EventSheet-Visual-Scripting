@@ -2,10 +2,11 @@
 #
 # The suite is ~600 independent test files that one process walks in 10-20 minutes. This splits
 # the parallel-safe files into N shards (tests/run_tests.gd reads EVENTFORGE_TEST_SHARD), runs the
-# shards concurrently, then runs the "tail" - the timing-budget tests and the shared-state teardown
-# tests - alone, because a loaded machine fails a budget for the wrong reason and a teardown test
-# must not pull state from under a neighbour. The verdict is the AND of every process's verdict,
-# printed as the same literal line the serial runner prints, so existing greps keep working.
+# shards concurrently, then runs the "tail" - the timing tests and the shared-state teardown tests -
+# alone, because a loaded machine fails a budget for the wrong reason and a teardown test must not
+# pull state from under a neighbour. A test joins the tail by DECLARING it (a `*BUDGET_MS*` or
+# `PARALLEL_UNSAFE` constant), never by what its file is called. The verdict is the AND of every
+# process's verdict, printed as the same literal line the serial runner prints, so greps keep working.
 #
 # Usage (from the repo root):
 #   $env:GODOT = "<path to the Godot 4.7 console binary>"

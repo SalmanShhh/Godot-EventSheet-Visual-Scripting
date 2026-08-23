@@ -11,6 +11,10 @@
 class_name DrawingPrefabPerfTest
 extends RefCounted
 
+## This test MEASURES (the cached path against the re-parsing one), so it has to have the machine to
+## itself: the sharded runner reads this marker and keeps the file out of every parallel shard.
+const PARALLEL_UNSAFE := true
+
 
 static func run() -> bool:
 	var ok: bool = true
