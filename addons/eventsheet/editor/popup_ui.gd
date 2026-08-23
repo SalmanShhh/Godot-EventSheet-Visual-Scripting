@@ -567,13 +567,20 @@ class HelpStrip extends PanelContainer:
 
 	## Wires a control: focusing or hovering it makes the strip describe it. Note the mouse_filter -
 	## a Label ignores the mouse by default, so a caption wired here would never fire without it.
-	func follow(control: Control, heading: String, body: String) -> void:
+	##
+	## `body_provider` (a Callable returning String) overrides `body` at the moment the control is
+	## reached, for the field whose explanation depends on the state the dialog is in - a tick that
+	## is greyed out has to be able to say WHY, and a greyed tick is exactly what the reader asks
+	## the strip about.
+	func follow(control: Control, heading: String, body: String, body_provider: Callable = Callable()) -> void:
 		if control == null:
 			return
 		if control.mouse_filter == Control.MOUSE_FILTER_IGNORE:
 			control.mouse_filter = Control.MOUSE_FILTER_PASS
-		control.focus_entered.connect(func() -> void: show_note(heading, body))
-		control.mouse_entered.connect(func() -> void: show_note(heading, body))
+		var describe_now: Callable = func() -> void:
+			show_note(heading, str(body_provider.call()) if body_provider.is_valid() else body)
+		control.focus_entered.connect(describe_now)
+		control.mouse_entered.connect(describe_now)
 
 
 	## Wires a dropdown per ITEM: `describer.call(index)` returns {"heading": …, "body": …} for the

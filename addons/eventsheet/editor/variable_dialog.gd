@@ -25,7 +25,6 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
 var _dialog: ConfirmationDialog = null
-var _scope_label: Label = null
 ## V5 - the Scope DROPDOWN (never a row of switches): the sheet's own order, one description line
 ## per choice, and the whole dialog re-gates itself the moment it changes.
 var _scope_option: OptionButton = null
@@ -52,6 +51,35 @@ var _writes_project_global: bool = false
 
 ## The scopes the dialog offers, in the sheet's own order (EventSheetVariableSentence.SCOPE_ORDER).
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
+
+## P4 - what each field of the dialog is, one paragraph each, keyed by the word the strip heads it
+## with. ONE table: the strip shows an entry when the field is focused, and puts the same entry back
+## when a refusal about that field is answered. The two dropdowns describe themselves per OPTION
+## instead (_describe_scope_index / _describe_type_index), so they are not in here.
+const FIELD_HELP: Dictionary = {
+	"Name": "What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. "
+		+ "A name already taken in this scope is flagged under the field as you type.",
+	"Initial value": "The value it starts at, written the way the row will show it. Left empty it starts at nothing - 0 "
+		+ "for a number, \"\" for text, false for a boolean.",
+	"Whole numbers only": "Counts - lives, ammo, a score - can never be a half. Ticked the variable stores an int and the "
+		+ "sheet refuses a decimal; unticked it stores a float.",
+	"Description": "One line saying what the variable is for. It compiles to a ## comment above the declaration, which "
+		+ "IS the description Godot shows in the Inspector - so it is never written twice.",
+	"Static": "One value shared by every copy of the object rather than one each, and readable without a copy at "
+		+ "all. Never combined with Constant - GDScript has no static const.",
+	"Constant": "Set here and never changed while the game runs. A constant is neither Static nor an Inspector "
+		+ "property, so both grey out when it is ticked.",
+	"Editable in the Inspector": "A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state "
+		+ "only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.",
+	"Write into": "The autoload the global will live on - every sheet then reads it as Game.Score. \"New global "
+		+ "sheet…\" makes one and registers it for you.",
+	"Type": "What the variable holds. It decides which rows can set it, and which literal the Initial value "
+		+ "field will accept.",
+}
+
+## Which field the strip is currently refusing to write, "" while it is merely describing one. The
+## refusal is taken back only by the field it was about, so editing an unrelated one cannot clear it.
+var _refusal_field: String = ""
 
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
@@ -80,14 +108,11 @@ var _onready_row: HBoxContainer = null
 # Free-text type shown IN PLACE of the dropdown while @onready is on - so node classes the dropdown can't
 # list (Sprite2D, Label, CharacterBody2D…) are authorable. _selected_stored_type() reads it when onready.
 var _onready_type_edit: LineEdit = null
-var _const_help: Label = null
-var _type_help: Label = null
 var _scope: String = "global"
 ## R42 - the MEMBER spelling the dialog opened with ("global" or "tree"), so the Instance chip can
 ## put a variable back exactly where it came from after a trip through Local.
 var _member_scope: String = "global"
 var _context: Dictionary = {}
-var _default_help: Label = null
 var _options_edit: LineEdit = null
 var _options_row: HBoxContainer = null
 var _enum_fill_menu: MenuButton = null
@@ -260,9 +285,6 @@ func init_dialog(parent_node: Node) -> void:
 	_global_target_row = EventSheetPopupUI.form_row("Write into", _global_target_option)
 	_global_target_row.visible = false
 	form.add_child(_global_target_row)
-	_scope_label = Label.new()
-	_scope_label.visible = false
-	form.add_child(_scope_label)
 
 	var name_row: HBoxContainer = HBoxContainer.new()
 	var name_label: Label = Label.new()
@@ -338,7 +360,6 @@ func init_dialog(parent_node: Node) -> void:
 	_whole_numbers_row.add_child(whole_spacer)
 	_whole_numbers_check = CheckBox.new()
 	_whole_numbers_check.text = "Whole numbers only"
-	_whole_numbers_check.tooltip_text = "A whole number (no decimals) - stored as an int. Unticked stores a float."
 	_whole_numbers_check.toggled.connect(func(_on: bool) -> void:
 		_refresh_default_hint()
 		_refresh_contextual_rows())
@@ -367,13 +388,6 @@ func init_dialog(parent_node: Node) -> void:
 	default_row.add_child(_items_button)
 	_refresh_items_button()
 	form.add_child(default_row)
-	# The literal ✓/✗ note belongs under the field it judges, not at the far end of the form.
-	_default_help = Label.new()
-	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
-	_default_help.visible = false
-	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
-	form.add_child(_default_help)
 	_options_row = HBoxContainer.new()
 	var options_label: Label = Label.new()
 	options_label.text = "Options (combo)"
@@ -632,20 +646,6 @@ func init_dialog(parent_node: Node) -> void:
 	_onready_row.add_child(_onready_check)
 	form.add_child(_onready_row)
 
-	_const_help = Label.new()
-	_const_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_const_help.custom_minimum_size = Vector2(380.0, 0.0)
-	_const_help.visible = false
-	_const_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
-	form.add_child(_const_help)
-
-	_type_help = Label.new()
-	_type_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_type_help.custom_minimum_size = Vector2(380.0, 0.0)
-	_type_help.visible = false
-	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
-	form.add_child(_type_help)
-
 	# "More options" and its card sit LAST, under everything the row itself is made of - so they are
 	# parented here rather than where their fields are built, which keeps the long attribute block in
 	# one readable place above without putting it in the middle of the form.
@@ -726,30 +726,59 @@ func _wire_help_strip() -> void:
 		return
 	_help_strip.follow_option(_scope_option, _describe_scope_index)
 	_help_strip.follow_option(_type_option, _describe_type_index)
-	_help_strip.follow(_name_edit, "Name",
-		"What the row will call it. Letters, digits and underscores, and not a word GDScript already uses. "
-		+ "A name already taken in this scope is flagged under the field as you type.")
-	_help_strip.follow(_default_edit, "Initial value",
-		"The value it starts at, written the way the row will show it. Left empty it starts at nothing - 0 "
-		+ "for a number, \"\" for text, false for a boolean.")
-	_help_strip.follow(_whole_numbers_check, "Whole numbers only",
-		"Counts - lives, ammo, a score - can never be a half. Ticked the variable stores an int and the "
-		+ "sheet refuses a decimal; unticked it stores a float.")
-	_help_strip.follow(_attr_tooltip_edit, "Description",
-		"One line saying what the variable is for. It compiles to a ## comment above the declaration, which "
-		+ "IS the description Godot shows in the Inspector - so it is never written twice.")
-	_help_strip.follow(_static_check, "Static",
-		"One value shared by every copy of the object rather than one each, and readable without a copy at "
-		+ "all. Never combined with Constant - GDScript has no static const.")
-	_help_strip.follow(_const_check, "Constant",
-		"Set here and never changed while the game runs. A constant is neither Static nor an Inspector "
-		+ "property, so both grey out when it is ticked.")
-	_help_strip.follow(_exported_check, "Editable in the Inspector",
-		"A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state "
-		+ "only the sheet touches. A Local is never a property - it is gone before the Inspector could show it.")
-	_help_strip.follow(_global_target_option, "Write into",
-		"The autoload the global will live on - every sheet then reads it as Game.Score. \"New global "
-		+ "sheet…\" makes one and registers it for you.")
+	for wired: Array in [
+		[_name_edit, "Name"],
+		[_default_edit, "Initial value"],
+		[_whole_numbers_check, "Whole numbers only"],
+		[_attr_tooltip_edit, "Description"],
+		[_static_check, "Static"],
+		[_exported_check, "Editable in the Inspector"],
+		[_global_target_option, "Write into"],
+	]:
+		_help_strip.follow(wired[0] as Control, str(wired[1]), field_help(str(wired[1])))
+	# The Constant tick is greyed for a type that cannot have one, and a greyed tick with no reason
+	# is exactly the question the strip exists to answer - so its paragraph is asked for on hover.
+	_help_strip.follow(_const_check, "Constant", field_help("Constant"), _constant_help)
+
+
+## The paragraph the strip shows for a field, "" for one the table does not carry.
+static func field_help(field: String) -> String:
+	return str(FIELD_HELP.get(field, ""))
+
+
+## The Constant tick's paragraph, which says why it is greyed when the chosen type cannot be frozen.
+func _constant_help() -> String:
+	if _const_check != null and _const_check.disabled and not _supports_constant(_selected_stored_type()):
+		return "Const is unavailable for Variant variables - GDScript needs a known type to freeze one."
+	return field_help("Constant")
+
+
+## P3 - a refusal, said in the ONE strip: the reason replaces the paragraph and the rule turns red,
+## and the dialog comes back with everything the reader typed still in it.
+func _refuse(field: String, reason: String, size: Vector2i = Vector2i(440, 260)) -> void:
+	_say_refusal(field, reason)
+	if _dialog.is_inside_tree():
+		_dialog.call_deferred("popup_centered", size)
+
+
+## The refusal without the reopen - what the live checks use while the reader is still typing.
+func _say_refusal(field: String, reason: String) -> void:
+	if _help_strip == null:
+		return
+	_refusal_field = field
+	_help_strip.show_note(field, reason, EventSheetPopupUI.HelpStrip.TONE_ERROR)
+
+
+## Takes a refusal back once the field it was about is fixed: that field's own description returns
+## and the rule goes back to the ordinary accent. A no-op for any other field, and while the strip is
+## merely describing something - so an ordinary keystroke never blanks what the reader is reading.
+func _clear_refusal(field: String) -> void:
+	if _help_strip == null or _refusal_field != field:
+		return
+	if _help_strip.tone != EventSheetPopupUI.HelpStrip.TONE_ERROR:
+		return
+	_refusal_field = ""
+	_help_strip.show_note(field, field_help(field))
 
 
 ## The one line under each scope option. Refreshed on open rather than baked at build time, because
@@ -1074,10 +1103,6 @@ func _apply_onready_state(pressed: bool) -> void:
 		_whole_numbers_row.visible = false
 	elif not pressed:
 		_refresh_whole_numbers_row()
-	# In onready mode const is already disabled (not a per-type story), so the "const unavailable for <type>"
-	# hint is redundant + can read stale against the free-text type - hide it.
-	if _const_help != null and pressed:
-		_const_help.visible = false
 	_update_attr_gating()
 
 
@@ -1105,7 +1130,6 @@ func open_for_edit(
 	if scope != "local":
 		_member_scope = scope
 	_context = context.duplicate(true)
-	_scope_label.text = "Scope: %s" % scope.capitalize()
 	# V5 - "Add variable" / "to Player". The window title says the gesture, the line under it says
 	# whose variable this will be; `title` stays in the signature for callers that still pass one.
 	var is_editing: bool = bool(context.get("editing", false))
@@ -1133,11 +1157,6 @@ func open_for_edit(
 	var is_local: bool = scope == "local"
 	_exported_check.button_pressed = exported and not is_local
 	_exported_check.disabled = is_local
-	_exported_check.tooltip_text = (
-		"Local variables are always private to the script."
-		if is_local
-		else "On: a designer tweaks this per-instance in the Inspector (@export var).\nOff: internal script state - a plain private var."
-	)
 	# @onready is a tree-placed (class-level) concept only - hidden for global/local scopes. Applying the
 	# toggle also (re)sets the const/@export disabling to a consistent state for the current scope.
 	var is_tree: bool = scope == "tree"
@@ -1239,15 +1258,20 @@ func open_for_edit(
 		_select_drawer_kind(existing_drawer)
 		_refresh_drawer_preview()
 	_type_option.disabled = lock_type
-	_type_help.visible = lock_type
-	_type_help.text = "Type is locked because this variable is already in use."
 	# R42 - the scope dropdown and the row preview open agreeing with everything above.
 	_apply_scope_gating()
 	refresh_scope_selection()
-	# P4 - the strip opens on the scope, because that is the field the reader meets first.
+	# P4 - the strip opens on the scope, because that is the field the reader meets first - unless
+	# the type is locked, which is the one thing in front of the reader that cannot be acted on and
+	# would otherwise have to be guessed at.
 	if _help_strip != null:
-		var opening: Dictionary = _describe_scope_index(_scope_option.selected)
-		_help_strip.describe(str(opening.get("heading", "")), str(opening.get("body", "")))
+		_refusal_field = ""
+		if lock_type:
+			_help_strip.show_note("Type", "Type is locked because this variable is already in use.",
+				EventSheetPopupUI.HelpStrip.TONE_WARNING)
+		else:
+			var opening: Dictionary = _describe_scope_index(_scope_option.selected)
+			_help_strip.show_note(str(opening.get("heading", "")), str(opening.get("body", "")))
 	_refresh_ships_as()
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered(Vector2i(468, 248))
@@ -1292,11 +1316,8 @@ func _on_confirmed() -> void:
 		# Block it (event-sheet-style: reopen with the text intact) instead of committing broken GDScript.
 		var onready_expr: String = _default_edit.text.strip_edges()
 		if onready_expr.is_empty():
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ @onready needs an expression (e.g. $Player or get_node(\"UI/Score\"))."
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(460, 260))
+			_refuse("Initial value", "@onready needs an expression (e.g. $Player or get_node(\"UI/Score\")).",
+				Vector2i(460, 260))
 			return
 		# type_name is _selected_stored_type() = the @onready free-text type: a node class the user typed
 		# (Sprite2D, Label…) or Variant (safe for any node ref). const/@export are false - the compiler
@@ -1307,11 +1328,7 @@ func _on_confirmed() -> void:
 	# reopens with the text intact so the user fixes or cancels deliberately.
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
 	if not bool(verdict.get("ok", true)):
-		if _default_help != null:
-			_default_help.visible = true
-			_default_help.text = "✗ %s" % str(verdict.get("error", ""))
-		if _dialog.is_inside_tree():
-			_dialog.call_deferred("popup_centered", Vector2i(440, 240))
+		_refuse("Initial value", str(verdict.get("error", "")), Vector2i(440, 240))
 		return
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
 	# Combo guardrail (event sheet): a String with options must default to one of them.
@@ -1320,11 +1337,7 @@ func _on_confirmed() -> void:
 		if str(default_value).strip_edges().is_empty():
 			default_value = combo_options[0]
 		elif not combo_options.has(str(default_value)):
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ Default must be one of the options (%s)." % ", ".join(combo_options)
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			_refuse("Initial value", "The initial value must be one of the options (%s)." % ", ".join(combo_options))
 			return
 	# Keep this defensive check in case stale UI state emits a checked const flag
 	# for a type that does not support const.
@@ -1355,11 +1368,7 @@ func _on_confirmed() -> void:
 		var range_parts: PackedStringArray = range_text.split(",")
 		var parsed_range: Dictionary = _parse_range_parts(range_parts)
 		if parsed_range.is_empty():
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ Range is a max (e.g. 200), or min, max, step (e.g. 0, 100, 1)."
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			_refuse("Range", "Range is a max (e.g. 200), or min, max, step (e.g. 0, 100, 1).")
 			return
 		attributes["range"] = parsed_range
 	if _attr_multiline_check.button_pressed and type_name == "String":
@@ -1377,21 +1386,14 @@ func _on_confirmed() -> void:
 		if conditional_value.is_empty():
 			continue
 		if not EventSheetIdentifierRules.is_valid(conditional_value):
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ %s must be a single identifier (a variable/function name)." % str(conditional[0]).capitalize()
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			_refuse(str(conditional[0]).capitalize(),
+				"%s must be a single identifier (a variable/function name)." % str(conditional[0]).capitalize())
 			return
 		attributes[conditional[0]] = conditional_value
 	# Clamp/drawer are numeric-only and hidden otherwise: inert when not numeric.
 	if _attr_clamp_check.button_pressed and is_numeric:
 		if not attributes.has("range"):
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ Clamp needs a Range (min, max, step) to clamp to."
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			_refuse("Clamp", "Clamp needs a Range (min, max, step) to clamp to.")
 			return
 		attributes["clamp"] = true
 	if _attr_read_only_check.button_pressed:
@@ -2404,34 +2406,33 @@ func _populate_enum_fill_menu() -> void:
 		popup.set_item_metadata(popup.item_count - 1, ", ".join(members))
 
 
+## P3 - the collection literal, judged as it is typed. One that does not parse says why in the strip,
+## in red; the moment it parses (or the type stops being a collection) the field's own description
+## comes back. Nothing is written under the field itself - the strip is the one place to look.
 func _refresh_default_hint() -> void:
-	if _default_help == null or _type_option == null or _default_edit == null:
+	if _type_option == null or _default_edit == null:
 		return
 	var type_name: String = _selected_stored_type()
 	if not is_collection_type(type_name):
-		_default_help.visible = false
 		# Resource-typed exports have no literal default (they're assigned in the Inspector), so don't suggest "0".
 		_default_edit.placeholder_text = "(none)" if type_name in ["Texture2D", "Curve"] else "0"
+		_clear_refusal("Initial value")
 		return
 	_default_edit.placeholder_text = "{\"key\": 1}" if type_name.begins_with("Dictionary") else "[1, 2, 3]"
-	if _default_edit.text.strip_edges().is_empty():
-		_default_help.visible = false
-		return
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
-	_default_help.visible = true
-	_default_help.text = "✓ literal OK" if bool(verdict.get("ok", false)) else "✗ %s" % str(verdict.get("error", ""))
+	if _default_edit.text.strip_edges().is_empty() or bool(verdict.get("ok", false)):
+		_clear_refusal("Initial value")
+		return
+	_say_refusal("Initial value", str(verdict.get("error", "")))
 
 
 func _refresh_const_ui() -> void:
-	if _const_check == null or _const_help == null or _type_option == null:
+	if _const_check == null or _type_option == null:
 		return
-	var type_name: String = _selected_stored_type()
-	var supports_const: bool = _supports_constant(type_name)
+	var supports_const: bool = _supports_constant(_selected_stored_type())
 	_const_check.disabled = not supports_const
 	if not supports_const:
 		_const_check.button_pressed = false
-	_const_help.visible = not supports_const
-	_const_help.text = "Const is unavailable for Variant variables."
 
 
 func _supports_constant(type_name: String) -> bool:
