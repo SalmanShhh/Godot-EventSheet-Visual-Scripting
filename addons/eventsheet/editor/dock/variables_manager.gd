@@ -206,20 +206,32 @@ func _toggle_context_variable_inspector() -> void:
 	if var_name.is_empty():
 		return
 	var wanted: bool = not context_variable_exported()
-	# Never held across the edit: the undo funnel replaces every resource on commit, so the write
-	# re-finds the variable by name inside the callback.
-	_dock._perform_undoable_sheet_edit(
+	# The funnel calls its operation with NO arguments and reads the bool back as "did anything
+	# change", so the sheet is fetched inside rather than taken as a parameter. Never held across
+	# the edit either: the commit replaces every resource, so the write re-finds the variable by
+	# name inside the callback.
+	var changed: bool = _dock._perform_undoable_sheet_edit(
 		EventSheetL10n.translate("Show %s in the Inspector") % var_name if wanted
 			else EventSheetL10n.translate("Hide %s from the Inspector") % var_name,
-		func(sheet: EventSheetResource) -> void:
+		func() -> bool:
+			var sheet: EventSheetResource = _dock._current_sheet
+			if sheet == null:
+				return false
 			for entry: Variant in sheet.events:
 				if entry is LocalVariable and (entry as LocalVariable).name == var_name:
 					(entry as LocalVariable).exported = wanted
-					return
+					return true
 			if sheet.variables is Dictionary and (sheet.variables as Dictionary).has(var_name):
 				var descriptor: Dictionary = (sheet.variables as Dictionary)[var_name]
 				descriptor["exported"] = wanted
-				(sheet.variables as Dictionary)[var_name] = descriptor)
+				(sheet.variables as Dictionary)[var_name] = descriptor
+				return true
+			return false
+	)
+	if changed:
+		_dock._mark_dirty(EventSheetL10n.translate("%s is in the Inspector now.") % var_name if wanted
+			else EventSheetL10n.translate("%s is out of the Inspector.") % var_name)
+		_context_variable["exported"] = wanted
 
 
 ## Whether the right-clicked variable is in the Inspector today - the tick the menu shows. A tree
