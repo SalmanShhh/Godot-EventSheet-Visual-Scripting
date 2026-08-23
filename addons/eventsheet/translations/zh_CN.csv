@@ -4322,3 +4322,106 @@ Did you mean %s?,你是指 %s 吗？
 Copied %s.,已复制 %s。
 Show %s in the Inspector,在检查器中显示 %s
 Hide %s from the Inspector,在检查器中隐藏 %s
+"""%s"" cannot be a class name.","""%s"" 不能作为类名。"
+%d nodes in this scene,此场景中有 %d 个节点
+%d rows over %d frames. Save it as a Test sheet to keep it.,%d 行，跨 %d 帧。保存为测试表即可保留。
+%s - %d to resolve,%s - 待解决 %d 处
+%s already exists.,%s 已存在。
+%s cannot be left blank - the row has nothing to write.,%s 不能留空 - 该行无内容可写。
+%s fits.,%s 是合适的。
+%s is %s - %s wants a %s. %s fits.,%s 是 %s - %s 需要 %s。%s 是合适的。
+%s is %s. This needs %s.,%s 是 %s。这里需要 %s。
+%s is a %s - it cannot hold %s.,%s 是 %s - 无法存放 %s。
+%s is empty,%s 为空
+%s is in the Inspector now.,%s 现在显示在检查器中。
+%s is out of the Inspector.,%s 已从检查器中移除。
+%s may not fit,%s 可能不合适
+%s now,当前 %s
+%s starts at %s.,%s 起始值为 %s。
+1 node in this scene,此场景中有 1 个节点
+Active on start.,启动时激活。
+Add %s…,添加 %s…
+An Inspector section. Double-click to rename it.,一个检查器分区。双击可重命名。
+"As a base class, the including script extends it and its events simply are that script's events. As a helper, the including script keeps one of it and forwards its triggers to it - use this when the script already has a base class it needs.",作为基类时，引入它的脚本会继承它，它的事件就是该脚本的事件。作为辅助对象时，引入它的脚本会保留一个实例并把触发器转发给它 - 当脚本已经需要别的基类时选这个。
+Can be switched at runtime - Set group active / Group is active.,可在运行时切换 - 设置分组激活 / 分组处于激活状态。
+Cannot be written,无法写入
+Create,创建
+Description updated.,描述已更新。
+Editable in the Inspector,可在检查器中编辑
+F2 renames this class everywhere.,按 F2 可在所有位置重命名此类。
+Gamepad,手柄
+Help for this %s,关于此 %s 的帮助
+Icon set to %s.,图标已设为 %s。
+"If you meant to join text, Set value can.",如果你想拼接文本，用“设置值”即可。
+Included %s %s.,已引入 %s %s。
+Input Map,输入映射
+Lives inside the event or function it sits in.,只存在于它所在的事件或函数中。
+Made %s - include it from any script with Add > Include sheet….,已创建 %s - 在任意脚本中通过“添加 > 引入事件表…”引入它。
+Make switchable,设为可切换
+Moved %s.,已移动 %s。
+Never changes once the game runs.,游戏运行后永不改变。
+Nothing to rename.,没有可重命名的内容。
+Off - this group and its rows compile out.,关闭 - 该分组及其行不会被编译。
+One per object - each copy in the scene has its own.,每个对象各一份 - 场景中的每个副本都有自己的。
+One value shared by every copy of this object.,该对象所有副本共享的一个值。
+One value the whole project shares.,整个项目共享的一个值。
+Project Settings ▸ Autoload is where this name lives - it is not in this file.,该名称位于“项目设置 ▸ 自动加载”中 - 不在此文件里。
+Read,读取
+Recording - %d rows so far.,正在录制 - 目前 %d 行。
+Renamed %s to %s.,已将 %s 重命名为 %s。
+Renamed to %s.,已重命名为 %s。
+Replay recording ON - save and run to record a take.,回放录制已开启 - 保存并运行即可录制一段。
+Resolved %s - the markers are gone and the rest of the file is untouched.,已解决 %s - 标记已移除，文件其余部分原封不动。
+Runs in the editor too.,在编辑器中也会运行。
+Save this sheet and ask the running game to reload it. The rows you changed pulse once so you can see them land.,保存此事件表，并让运行中的游戏重新加载它。改动过的行会闪烁一次，让你看到它们生效。
+"Saved %s - run it from Tools > Run Tests…, or headlessly with the rest.",已保存 %s - 可从“工具 > 运行测试…”运行，或与其余测试一起无头运行。
+"Saved in every resource made from this - a data field, not a live value.",会保存在由此创建的每个资源中 - 这是数据字段，不是运行时的值。
+Sheet head updated.,事件表表头已更新。
+Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed.,引入的事件表列在“事件表 ▸ 事件表类型… ▸ 更多”里。
+"Shows what this sheet would look like with the shipped behavior doing the work, before changing anything.",在改动任何内容之前，先展示由内置行为来完成这些工作时，这张事件表会是什么样子。
+Sorted the variables A-Z.,已按 A-Z 排序变量。
+Start a take. Every control the running game sees is recorded with the frame it happened on. Recording a second take throws the first one away.,开始一段录制。运行中的游戏收到的每一次操作都会连同发生的帧一起记录。录制第二段会丢弃第一段。
+"Stop recording. The take is kept, so you can still add checkpoints and save it.",停止录制。这段录制会保留，你仍可添加检查点并保存它。
+Stop the game and run it again - the only way to pick this change up.,停止游戏并重新运行 - 这是让此改动生效的唯一方式。
+The class icon. Click to pick another image.,类图标。点击可另选一张图片。
+The line this band stands for. Click to open it in the code panel.,此栏所代表的代码行。点击可在代码面板中打开。
+The line this row writes. Click to open it in the code panel.,此行写出的代码行。点击可在代码面板中打开。
+The take would not compile: %s,该录制无法编译：%s
+The variables are already in name order.,变量已按名称排序。
+"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.",此场景中还没有节点 %s - 若它在运行时生成则没问题，否则请检查路径。
+"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.",此场景中没有名为 %s 的节点 - 在场景树中右键单击它并选择“作为唯一名称访问”，也可能它是在运行时生成的。
+This is not an expression this sheet can compile.,这不是本事件表能编译的表达式。
+This sheet no longer runs in the editor.,此事件表不再在编辑器中运行。
+This sheet now extends %s.,此事件表现在继承 %s。
+This sheet runs in the editor too.,此事件表在编辑器中也会运行。
+"Turns on ""Can be switched at runtime"" for this group, so this row can reach it.",为该分组打开“可在运行时切换”，让此行能够操作它。
+Use %s,使用 %s
+Used %d× in this sheet,在本事件表中使用 %d×
+Variable rows: %s.,变量行：%s。
+What this group holds.,该分组包含的内容。
+Where this region ends.,此区域的结束位置。
+Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,去掉标记后把文件写回。冲突区域之外的每个字节都原样保留。
+"Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.",把这段录制写成一张普通的测试事件表 - 行是可读的，并由运行其他测试的同一个执行器回放。
+Writes the ## block · Enter commits.,写出 ## 块 · 回车确认。
+Writes the missing #endregion there.,在那里写出缺失的 #endregion。
+a number,一个数字
+a value,一个值
+check %s,检查 %s
+editing,正在编辑
+fix %s first,请先修正 %s
+in %d sheet,在 %d 张事件表中
+in %d sheets,在 %d 张事件表中
+needed,必填
+no such node,没有该节点
+none yet - added at runtime?,暂时没有 - 是在运行时添加的吗？
+not bound to anything yet,尚未绑定到任何按键
+not found,未找到
+one of a list,列表中的一项
+renames %d use,重命名 %d 处使用
+renames %d uses,重命名 %d 处使用
+renames nothing else - this name is used nowhere yet,不会改动其他地方 - 这个名字尚未在任何地方使用
+this object,此对象
+this will not compile,这段无法编译
+true or false,真或假
+wants %s,需要 %s
+will not compile,无法编译

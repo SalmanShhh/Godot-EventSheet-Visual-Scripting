@@ -4322,3 +4322,106 @@ Did you mean %s?,%s のことですか？
 Copied %s.,%s をコピーしました。
 Show %s in the Inspector,%s をインスペクターに表示
 Hide %s from the Inspector,%s をインスペクターから隠す
+"""%s"" cannot be a class name.","""%s"" はクラス名にできません。"
+%d nodes in this scene,このシーンに %d 個のノード
+%d rows over %d frames. Save it as a Test sheet to keep it.,%d 行 / %d フレーム。残すにはテストシートとして保存してください。
+%s - %d to resolve,%s - 未解決 %d 件
+%s already exists.,%s はすでに存在します。
+%s cannot be left blank - the row has nothing to write.,%s は空にできません - 行に書くものがありません。
+%s fits.,%s なら合います。
+%s is %s - %s wants a %s. %s fits.,%s は %s です - %s には %s が必要です。%s なら合います。
+%s is %s. This needs %s.,%s は %s です。ここには %s が必要です。
+%s is a %s - it cannot hold %s.,%s は %s です - %s を入れられません。
+%s is empty,%s が空です
+%s is in the Inspector now.,%s をインスペクターに表示しました。
+%s is out of the Inspector.,%s をインスペクターから外しました。
+%s may not fit,%s は合わないかもしれません
+%s now,現在 %s
+%s starts at %s.,%s は %s から始まります。
+1 node in this scene,このシーンに 1 個のノード
+Active on start.,開始時に有効。
+Add %s…,%s を追加…
+An Inspector section. Double-click to rename it.,インスペクターのセクションです。ダブルクリックで名前を変更できます。
+"As a base class, the including script extends it and its events simply are that script's events. As a helper, the including script keeps one of it and forwards its triggers to it - use this when the script already has a base class it needs.",基底クラスとして使うと、取り込む側のスクリプトがこれを継承し、そのイベントはそのままそのスクリプトのイベントになります。ヘルパーとして使うと、取り込む側がインスタンスを 1 つ保持し、トリガーを転送します - スクリプトにすでに別の基底クラスが必要な場合はこちらを選びます。
+Can be switched at runtime - Set group active / Group is active.,実行時に切り替え可能 - グループを有効にする / グループが有効。
+Cannot be written,書き込めません
+Create,作成
+Description updated.,説明を更新しました。
+Editable in the Inspector,インスペクターで編集可能
+F2 renames this class everywhere.,F2 でこのクラスをすべての場所で名前変更します。
+Gamepad,ゲームパッド
+Help for this %s,この %s のヘルプ
+Icon set to %s.,アイコンを %s に設定しました。
+"If you meant to join text, Set value can.",テキストを連結したい場合は「値を設定」で行えます。
+Included %s %s.,%s %s を取り込みました。
+Input Map,インプットマップ
+Lives inside the event or function it sits in.,置かれているイベントまたは関数の中だけで生きます。
+Made %s - include it from any script with Add > Include sheet….,%s を作成しました - 任意のスクリプトから「追加 > シートを取り込む…」で取り込めます。
+Make switchable,切り替え可能にする
+Moved %s.,%s を移動しました。
+Never changes once the game runs.,ゲームが動き出したら変わりません。
+Nothing to rename.,名前を変更するものがありません。
+Off - this group and its rows compile out.,オフ - このグループとその行はコンパイルされません。
+One per object - each copy in the scene has its own.,オブジェクトごとに 1 つ - シーン内の各コピーが自分のものを持ちます。
+One value shared by every copy of this object.,このオブジェクトのすべてのコピーで共有される 1 つの値。
+One value the whole project shares.,プロジェクト全体で共有される 1 つの値。
+Project Settings ▸ Autoload is where this name lives - it is not in this file.,この名前は「プロジェクト設定 ▸ 自動読み込み」にあります - このファイルにはありません。
+Read,読み取り
+Recording - %d rows so far.,記録中 - 現在 %d 行。
+Renamed %s to %s.,%s を %s に名前変更しました。
+Renamed to %s.,%s に名前変更しました。
+Replay recording ON - save and run to record a take.,リプレイ記録 ON - 保存して実行するとテイクを記録します。
+Resolved %s - the markers are gone and the rest of the file is untouched.,%s を解決しました - マーカーは消え、ファイルの他の部分はそのままです。
+Runs in the editor too.,エディター上でも実行されます。
+Save this sheet and ask the running game to reload it. The rows you changed pulse once so you can see them land.,このシートを保存し、実行中のゲームに再読み込みを依頼します。変更した行が一度光るので、反映されたことがわかります。
+"Saved %s - run it from Tools > Run Tests…, or headlessly with the rest.",%s を保存しました - 「ツール > テストを実行…」から、または他のテストと一緒にヘッドレスで実行できます。
+"Saved in every resource made from this - a data field, not a live value.",これから作られるすべてのリソースに保存されます - 実行時の値ではなくデータ項目です。
+Sheet head updated.,シートのヘッドを更新しました。
+Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed.,取り込んだシートは「シート ▸ シートの種類… ▸ その他」に並びます。
+"Shows what this sheet would look like with the shipped behavior doing the work, before changing anything.",同梱のビヘイビアに任せた場合にこのシートがどうなるかを、何も変更する前に見せます。
+Sorted the variables A-Z.,変数を A-Z 順に並べ替えました。
+Start a take. Every control the running game sees is recorded with the frame it happened on. Recording a second take throws the first one away.,テイクを開始します。実行中のゲームが受け取った入力は、発生したフレームとともに記録されます。2 回目のテイクを記録すると 1 回目は破棄されます。
+"Stop recording. The take is kept, so you can still add checkpoints and save it.",記録を停止します。テイクは保持されるので、チェックポイントを追加して保存できます。
+Stop the game and run it again - the only way to pick this change up.,ゲームを停止して再実行してください - この変更を反映する方法はこれだけです。
+The class icon. Click to pick another image.,クラスのアイコンです。クリックすると別の画像を選べます。
+The line this band stands for. Click to open it in the code panel.,この帯が表す行です。クリックするとコードパネルで開きます。
+The line this row writes. Click to open it in the code panel.,この行が書き出すコード行です。クリックするとコードパネルで開きます。
+The take would not compile: %s,このテイクはコンパイルできません: %s
+The variables are already in name order.,変数はすでに名前順です。
+"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.",このシーンにはまだノード %s がありません - 実行時に生成されるなら問題ありませんが、そうでなければパスを確認してください。
+"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.",このシーンに %s という名前のノードはありません - シーンツリーで右クリックして「一意の名前でアクセス」を選ぶか、実行時に生成される可能性があります。
+This is not an expression this sheet can compile.,これはこのシートがコンパイルできる式ではありません。
+This sheet no longer runs in the editor.,このシートはエディター上で実行されなくなりました。
+This sheet now extends %s.,このシートは %s を継承するようになりました。
+This sheet runs in the editor too.,このシートはエディター上でも実行されます。
+"Turns on ""Can be switched at runtime"" for this group, so this row can reach it.",このグループの「実行時に切り替え可能」を有効にして、この行から操作できるようにします。
+Use %s,%s を使う
+Used %d× in this sheet,このシートで %d× 使用
+Variable rows: %s.,変数行: %s。
+What this group holds.,このグループが持つもの。
+Where this region ends.,このリージョンが終わる場所。
+Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,マーカーを取り除いてファイルを書き戻します。競合部分の外側のバイトはそのまま残ります。
+"Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.",テイクを通常のテストシートとして書き出します - 読める行になり、他のテストと同じランナーで再生されます。
+Writes the ## block · Enter commits.,## ブロックを書きます · Enter で確定。
+Writes the missing #endregion there.,そこに欠けている #endregion を書きます。
+a number,数値
+a value,値
+check %s,%s を確認
+editing,編集中
+fix %s first,先に %s を直してください
+in %d sheet,%d 個のシートで
+in %d sheets,%d 個のシートで
+needed,必須
+no such node,そのノードはありません
+none yet - added at runtime?,まだありません - 実行時に追加されますか?
+not bound to anything yet,まだ何にも割り当てられていません
+not found,見つかりません
+one of a list,リストから 1 つ
+renames %d use,%d 箇所の使用箇所を変更
+renames %d uses,%d 箇所の使用箇所を変更
+renames nothing else - this name is used nowhere yet,他に変更するものはありません - この名前はまだどこでも使われていません
+this object,このオブジェクト
+this will not compile,これはコンパイルできません
+true or false,true か false
+wants %s,%s が必要
+will not compile,コンパイルできません

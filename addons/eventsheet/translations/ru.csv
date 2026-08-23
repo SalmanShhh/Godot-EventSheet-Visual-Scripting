@@ -4322,3 +4322,106 @@ Did you mean %s?,"Возможно, вы имели в виду %s?"
 Copied %s.,Скопировано: %s.
 Show %s in the Inspector,Показать %s в инспекторе
 Hide %s from the Inspector,Скрыть %s из инспектора
+"""%s"" cannot be a class name.","""%s"" не может быть именем класса."
+%d nodes in this scene,%d узлов в этой сцене
+%d rows over %d frames. Save it as a Test sheet to keep it.,"%d строк за %d кадров. Сохраните как тестовый лист, чтобы оставить запись."
+%s - %d to resolve,%s - осталось разрешить: %d
+%s already exists.,%s уже существует.
+%s cannot be left blank - the row has nothing to write.,%s нельзя оставить пустым - строке нечего записать.
+%s fits.,%s подходит.
+%s is %s - %s wants a %s. %s fits.,"%s - это %s, а %s требует %s. %s подходит."
+%s is %s. This needs %s.,%s - это %s. Здесь нужно %s.
+%s is a %s - it cannot hold %s.,"%s - это %s, в него нельзя положить %s."
+%s is empty,%s пусто
+%s is in the Inspector now.,%s теперь в инспекторе.
+%s is out of the Inspector.,%s больше не в инспекторе.
+%s may not fit,%s может не подойти
+%s now,сейчас %s
+%s starts at %s.,%s начинается со значения %s.
+1 node in this scene,1 узел в этой сцене
+Active on start.,Активна при старте.
+Add %s…,Добавить %s…
+An Inspector section. Double-click to rename it.,Раздел инспектора. Двойной щелчок переименовывает его.
+"As a base class, the including script extends it and its events simply are that script's events. As a helper, the including script keeps one of it and forwards its triggers to it - use this when the script already has a base class it needs.","Как базовый класс: включающий скрипт наследует его, и его события просто становятся событиями этого скрипта. Как помощник: включающий скрипт хранит его экземпляр и перенаправляет ему свои триггеры - выбирайте это, когда скрипту уже нужен другой базовый класс."
+Can be switched at runtime - Set group active / Group is active.,Переключается во время выполнения - Сделать группу активной / Группа активна.
+Cannot be written,Невозможно записать
+Create,Создать
+Description updated.,Описание обновлено.
+Editable in the Inspector,Редактируется в инспекторе
+F2 renames this class everywhere.,F2 переименовывает этот класс везде.
+Gamepad,Геймпад
+Help for this %s,Справка по элементу: %s
+Icon set to %s.,Значок установлен: %s.
+"If you meant to join text, Set value can.","Если вы хотели соединить текст, это умеет действие ""Задать значение""."
+Included %s %s.,Включено: %s %s.
+Input Map,Карта ввода
+Lives inside the event or function it sits in.,"Живёт внутри события или функции, в которой находится."
+Made %s - include it from any script with Add > Include sheet….,%s создан - подключите его из любого скрипта через Добавить > Включить лист….
+Make switchable,Сделать переключаемой
+Moved %s.,Перемещено: %s.
+Never changes once the game runs.,Никогда не меняется после запуска игры.
+Nothing to rename.,Нечего переименовывать.
+Off - this group and its rows compile out.,Выключено - эта группа и её строки не компилируются.
+One per object - each copy in the scene has its own.,По одной на объект - у каждой копии в сцене своя.
+One value shared by every copy of this object.,Одно значение на все копии этого объекта.
+One value the whole project shares.,Одно значение на весь проект.
+Project Settings ▸ Autoload is where this name lives - it is not in this file.,"Это имя живёт в Настройках проекта ▸ Автозагрузка, а не в этом файле."
+Read,Чтение
+Recording - %d rows so far.,Идёт запись - пока %d строк.
+Renamed %s to %s.,%s переименовано в %s.
+Renamed to %s.,Переименовано в %s.
+Replay recording ON - save and run to record a take.,"Запись реплея ВКЛ - сохраните и запустите, чтобы записать дубль."
+Resolved %s - the markers are gone and the rest of the file is untouched.,"%s разрешён - маркеры удалены, остальной файл не тронут."
+Runs in the editor too.,Выполняется и в редакторе.
+Save this sheet and ask the running game to reload it. The rows you changed pulse once so you can see them land.,"Сохраните этот лист и попросите запущенную игру перезагрузить его. Изменённые строки мигнут один раз, чтобы вы увидели, как они применились."
+"Saved %s - run it from Tools > Run Tests…, or headlessly with the rest.",%s сохранён - запустите его из Инструменты > Запустить тесты… или headless вместе с остальными.
+"Saved in every resource made from this - a data field, not a live value.","Сохраняется в каждом ресурсе, созданном из этого: это поле данных, а не живое значение."
+Sheet head updated.,Заголовок листа обновлён.
+Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed.,Подключённые листы перечислены в Лист ▸ Тип листа… ▸ Ещё.
+"Shows what this sheet would look like with the shipped behavior doing the work, before changing anything.","Показывает, как выглядел бы этот лист, если бы работу делало готовое поведение, - до того, как что-либо менять."
+Sorted the variables A-Z.,Переменные отсортированы от А до Я.
+Start a take. Every control the running game sees is recorded with the frame it happened on. Recording a second take throws the first one away.,"Начать дубль. Каждое управление, которое видит запущенная игра, записывается вместе с кадром, на котором оно произошло. Запись второго дубля стирает первый."
+"Stop recording. The take is kept, so you can still add checkpoints and save it.","Остановить запись. Дубль сохраняется, так что можно ещё добавить контрольные точки и сохранить его."
+Stop the game and run it again - the only way to pick this change up.,Остановите игру и запустите её заново - только так изменение подхватится.
+The class icon. Click to pick another image.,"Значок класса. Щёлкните, чтобы выбрать другое изображение."
+The line this band stands for. Click to open it in the code panel.,"Строка, которую представляет эта полоса. Щёлкните, чтобы открыть её в панели кода."
+The line this row writes. Click to open it in the code panel.,"Строка кода, которую пишет эта строка. Щёлкните, чтобы открыть её в панели кода."
+The take would not compile: %s,Дубль не скомпилируется: %s
+The variables are already in name order.,Переменные уже упорядочены по имени.
+"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.","В этой сцене пока нет узла %s - это нормально, если он создаётся во время выполнения, иначе проверьте путь."
+"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.","В этой сцене нет узла с именем %s - щёлкните по нему правой кнопкой в дереве сцены и выберите ""Доступ по уникальному имени"", либо он создаётся во время выполнения."
+This is not an expression this sheet can compile.,"Это не выражение, которое этот лист может скомпилировать."
+This sheet no longer runs in the editor.,Этот лист больше не выполняется в редакторе.
+This sheet now extends %s.,Теперь этот лист наследует %s.
+This sheet runs in the editor too.,Этот лист выполняется и в редакторе.
+"Turns on ""Can be switched at runtime"" for this group, so this row can reach it.","Включает для этой группы ""Переключаемая во время выполнения"", чтобы эта строка могла до неё дотянуться."
+Use %s,Использовать %s
+Used %d× in this sheet,Использовано %d× в этом листе
+Variable rows: %s.,Строки переменных: %s.
+What this group holds.,Что содержит эта группа.
+Where this region ends.,Где заканчивается эта область.
+Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,Записывает файл обратно без маркеров. Каждый байт за пределами конфликтной области остаётся ровно таким же.
+"Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","Записывает дубль как обычный тестовый лист: читаемые строки, воспроизводимые тем же запускателем, что и все остальные тесты."
+Writes the ## block · Enter commits.,Пишет блок ## · Enter подтверждает.
+Writes the missing #endregion there.,Пишет там недостающий #endregion.
+a number,число
+a value,значение
+check %s,проверьте %s
+editing,редактируется
+fix %s first,сначала исправьте %s
+in %d sheet,в %d листе
+in %d sheets,в %d листах
+needed,обязательно
+no such node,такого узла нет
+none yet - added at runtime?,пока ничего - добавляется во время выполнения?
+not bound to anything yet,пока ни с чем не связано
+not found,не найдено
+one of a list,один из списка
+renames %d use,переименует %d использование
+renames %d uses,переименует %d использований
+renames nothing else - this name is used nowhere yet,больше ничего не переименует - это имя пока нигде не используется
+this object,этот объект
+this will not compile,это не скомпилируется
+true or false,истина или ложь
+wants %s,требует %s
+will not compile,не скомпилируется

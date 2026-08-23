@@ -4322,3 +4322,106 @@ Did you mean %s?,Querias decir %s?
 Copied %s.,%s copiado.
 Show %s in the Inspector,Mostrar %s en el Inspector
 Hide %s from the Inspector,Ocultar %s del Inspector
+"""%s"" cannot be a class name.","""%s"" no puede ser un nombre de clase."
+%d nodes in this scene,%d nodos en esta escena
+%d rows over %d frames. Save it as a Test sheet to keep it.,%d filas a lo largo de %d fotogramas. Guárdalo como hoja de prueba para conservarlo.
+%s - %d to resolve,%s - %d por resolver
+%s already exists.,%s ya existe.
+%s cannot be left blank - the row has nothing to write.,%s no puede quedar vacío - la fila no tiene nada que escribir.
+%s fits.,%s encaja.
+%s is %s - %s wants a %s. %s fits.,%s es %s - %s espera %s. %s encaja.
+%s is %s. This needs %s.,%s es %s. Aquí se necesita %s.
+%s is a %s - it cannot hold %s.,%s es %s - no puede contener %s.
+%s is empty,%s está vacío
+%s is in the Inspector now.,%s ya está en el Inspector.
+%s is out of the Inspector.,%s ya no está en el Inspector.
+%s may not fit,%s puede no encajar
+%s now,ahora %s
+%s starts at %s.,%s empieza en %s.
+1 node in this scene,1 nodo en esta escena
+Active on start.,Activo al iniciar.
+Add %s…,Añadir %s…
+An Inspector section. Double-click to rename it.,Una sección del Inspector. Haz doble clic para renombrarla.
+"As a base class, the including script extends it and its events simply are that script's events. As a helper, the including script keeps one of it and forwards its triggers to it - use this when the script already has a base class it needs.","Como clase base, el script que la incluye la extiende y sus eventos son sencillamente los eventos de ese script. Como ayudante, el script que la incluye guarda una instancia y le reenvía sus disparadores - usa esto cuando el script ya necesita otra clase base."
+Can be switched at runtime - Set group active / Group is active.,Conmutable en ejecución - Activar grupo / El grupo está activo.
+Cannot be written,No se puede escribir
+Create,Crear
+Description updated.,Descripción actualizada.
+Editable in the Inspector,Editable en el Inspector
+F2 renames this class everywhere.,F2 renombra esta clase en todas partes.
+Gamepad,Mando
+Help for this %s,Ayuda sobre este %s
+Icon set to %s.,Icono establecido en %s.
+"If you meant to join text, Set value can.","Si querías unir texto, Establecer valor puede hacerlo."
+Included %s %s.,Se incluyó %s %s.
+Input Map,Mapa de entrada
+Lives inside the event or function it sits in.,Vive dentro del evento o la función en la que está.
+Made %s - include it from any script with Add > Include sheet….,%s creado - inclúyelo desde cualquier script con Añadir > Incluir hoja….
+Make switchable,Hacer conmutable
+Moved %s.,%s movido.
+Never changes once the game runs.,Nunca cambia una vez que el juego se ejecuta.
+Nothing to rename.,No hay nada que renombrar.
+Off - this group and its rows compile out.,Desactivado - este grupo y sus filas no se compilan.
+One per object - each copy in the scene has its own.,Una por objeto - cada copia en la escena tiene la suya.
+One value shared by every copy of this object.,Un valor compartido por todas las copias de este objeto.
+One value the whole project shares.,Un valor que comparte todo el proyecto.
+Project Settings ▸ Autoload is where this name lives - it is not in this file.,Este nombre vive en Configuración del proyecto ▸ Autoload - no está en este archivo.
+Read,Leer
+Recording - %d rows so far.,Grabando - %d filas hasta ahora.
+Renamed %s to %s.,Se renombró %s a %s.
+Renamed to %s.,Renombrado a %s.
+Replay recording ON - save and run to record a take.,Grabación de repetición ACTIVADA - guarda y ejecuta para grabar una toma.
+Resolved %s - the markers are gone and the rest of the file is untouched.,%s resuelto - los marcadores han desaparecido y el resto del archivo queda intacto.
+Runs in the editor too.,También se ejecuta en el editor.
+Save this sheet and ask the running game to reload it. The rows you changed pulse once so you can see them land.,Guarda esta hoja y pide al juego en ejecución que la recargue. Las filas que cambiaste parpadean una vez para que las veas llegar.
+"Saved %s - run it from Tools > Run Tests…, or headlessly with the rest.","%s guardado - ejecútalo desde Herramientas > Ejecutar pruebas…, o sin interfaz junto al resto."
+"Saved in every resource made from this - a data field, not a live value.","Se guarda en cada recurso creado a partir de esto - un campo de datos, no un valor en vivo."
+Sheet head updated.,Encabezado de la hoja actualizado.
+Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed.,Las hojas incluidas se listan en Hoja ▸ Tipo de hoja… ▸ Más.
+"Shows what this sheet would look like with the shipped behavior doing the work, before changing anything.","Muestra cómo se vería esta hoja si el comportamiento incluido hiciera el trabajo, antes de cambiar nada."
+Sorted the variables A-Z.,Variables ordenadas de la A a la Z.
+Start a take. Every control the running game sees is recorded with the frame it happened on. Recording a second take throws the first one away.,Inicia una toma. Cada control que ve el juego en ejecución se graba junto con el fotograma en que ocurrió. Grabar una segunda toma descarta la primera.
+"Stop recording. The take is kept, so you can still add checkpoints and save it.","Detener la grabación. La toma se conserva, así que aún puedes añadir puntos de control y guardarla."
+Stop the game and run it again - the only way to pick this change up.,Detén el juego y vuelve a ejecutarlo - es la única forma de que tome este cambio.
+The class icon. Click to pick another image.,El icono de la clase. Haz clic para elegir otra imagen.
+The line this band stands for. Click to open it in the code panel.,La línea que representa esta banda. Haz clic para abrirla en el panel de código.
+The line this row writes. Click to open it in the code panel.,La línea que escribe esta fila. Haz clic para abrirla en el panel de código.
+The take would not compile: %s,La toma no compilaría: %s
+The variables are already in name order.,Las variables ya están en orden de nombre.
+"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.","Todavía no hay ningún nodo %s en esta escena - está bien si se crea en ejecución; si no, revisa la ruta."
+"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.","No hay ningún nodo llamado %s en esta escena - haz clic derecho sobre él en el árbol de escena y elige ""Acceder como nombre único"", o quizá se cree en ejecución."
+This is not an expression this sheet can compile.,Esta no es una expresión que esta hoja pueda compilar.
+This sheet no longer runs in the editor.,Esta hoja ya no se ejecuta en el editor.
+This sheet now extends %s.,Esta hoja ahora extiende %s.
+This sheet runs in the editor too.,Esta hoja también se ejecuta en el editor.
+"Turns on ""Can be switched at runtime"" for this group, so this row can reach it.","Activa ""Conmutable en ejecución"" para este grupo, de modo que esta fila pueda alcanzarlo."
+Use %s,Usar %s
+Used %d× in this sheet,Usado %d× en esta hoja
+Variable rows: %s.,Filas de variables: %s.
+What this group holds.,Lo que contiene este grupo.
+Where this region ends.,Dónde termina esta región.
+Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,Reescribe el archivo sin los marcadores. Cada byte fuera de la región en conflicto queda exactamente igual.
+"Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","Escribe la toma como una hoja de prueba normal - filas legibles, reproducidas por el mismo ejecutor que el resto de pruebas."
+Writes the ## block · Enter commits.,Escribe el bloque ## · Enter confirma.
+Writes the missing #endregion there.,Escribe ahí el #endregion que falta.
+a number,un número
+a value,un valor
+check %s,revisa %s
+editing,editando
+fix %s first,corrige %s primero
+in %d sheet,en %d hoja
+in %d sheets,en %d hojas
+needed,obligatorio
+no such node,no existe ese nodo
+none yet - added at runtime?,ninguno todavía - ¿se añade en ejecución?
+not bound to anything yet,todavía no está asignado a nada
+not found,no encontrado
+one of a list,uno de una lista
+renames %d use,renombra %d uso
+renames %d uses,renombra %d usos
+renames nothing else - this name is used nowhere yet,no renombra nada más - este nombre aún no se usa en ninguna parte
+this object,este objeto
+this will not compile,esto no compilará
+true or false,verdadero o falso
+wants %s,espera %s
+will not compile,no compilará

@@ -4322,3 +4322,106 @@ Did you mean %s?,Vouliez-vous dire %s ?
 Copied %s.,%s copie.
 Show %s in the Inspector,Afficher %s dans l'Inspecteur
 Hide %s from the Inspector,Masquer %s de l'Inspecteur
+"""%s"" cannot be a class name.","""%s"" ne peut pas être un nom de classe."
+%d nodes in this scene,%d nœuds dans cette scène
+%d rows over %d frames. Save it as a Test sheet to keep it.,%d lignes sur %d frames. Enregistrez-le comme feuille de test pour le conserver.
+%s - %d to resolve,%s - %d à résoudre
+%s already exists.,%s existe déjà.
+%s cannot be left blank - the row has nothing to write.,%s ne peut pas rester vide - la ligne n'a rien à écrire.
+%s fits.,%s convient.
+%s is %s - %s wants a %s. %s fits.,%s est %s - %s attend %s. %s convient.
+%s is %s. This needs %s.,"%s est %s. Ici, il faut %s."
+%s is a %s - it cannot hold %s.,%s est %s - il ne peut pas contenir %s.
+%s is empty,%s est vide
+%s is in the Inspector now.,%s est maintenant dans l'Inspecteur.
+%s is out of the Inspector.,%s ne figure plus dans l'Inspecteur.
+%s may not fit,%s ne convient peut-être pas
+%s now,actuellement %s
+%s starts at %s.,%s commence à %s.
+1 node in this scene,1 nœud dans cette scène
+Active on start.,Actif au démarrage.
+Add %s…,Ajouter %s…
+An Inspector section. Double-click to rename it.,Une section de l'Inspecteur. Double-cliquez pour la renommer.
+"As a base class, the including script extends it and its events simply are that script's events. As a helper, the including script keeps one of it and forwards its triggers to it - use this when the script already has a base class it needs.","En classe de base, le script qui l'inclut l'étend et ses événements sont tout simplement les événements de ce script. En assistant, le script qui l'inclut en garde une instance et lui transmet ses déclencheurs - à utiliser quand le script a déjà besoin d'une autre classe de base."
+Can be switched at runtime - Set group active / Group is active.,Activable à l'exécution - Activer le groupe / Le groupe est actif.
+Cannot be written,Impossible à écrire
+Create,Créer
+Description updated.,Description mise à jour.
+Editable in the Inspector,Modifiable dans l'Inspecteur
+F2 renames this class everywhere.,F2 renomme cette classe partout.
+Gamepad,Manette
+Help for this %s,Aide sur ce %s
+Icon set to %s.,Icône définie sur %s.
+"If you meant to join text, Set value can.","Si vous vouliez assembler du texte, Définir la valeur le fait."
+Included %s %s.,%s %s inclus.
+Input Map,Correspondance des entrées
+Lives inside the event or function it sits in.,Vit dans l'événement ou la fonction où elle se trouve.
+Made %s - include it from any script with Add > Include sheet….,%s créé - incluez-le depuis n'importe quel script avec Ajouter > Inclure une feuille….
+Make switchable,Rendre activable
+Moved %s.,%s déplacé.
+Never changes once the game runs.,Ne change jamais une fois le jeu lancé.
+Nothing to rename.,Rien à renommer.
+Off - this group and its rows compile out.,Désactivé - ce groupe et ses lignes ne sont pas compilés.
+One per object - each copy in the scene has its own.,Une par objet - chaque copie dans la scène a la sienne.
+One value shared by every copy of this object.,Une valeur partagée par toutes les copies de cet objet.
+One value the whole project shares.,Une valeur partagée par tout le projet.
+Project Settings ▸ Autoload is where this name lives - it is not in this file.,Ce nom se trouve dans Paramètres du projet ▸ Autoload - pas dans ce fichier.
+Read,Lire
+Recording - %d rows so far.,Enregistrement - %d lignes pour l'instant.
+Renamed %s to %s.,%s renommé en %s.
+Renamed to %s.,Renommé en %s.
+Replay recording ON - save and run to record a take.,Enregistrement du replay ACTIVÉ - sauvegardez et lancez pour capturer une prise.
+Resolved %s - the markers are gone and the rest of the file is untouched.,%s résolu - les marqueurs ont disparu et le reste du fichier est intact.
+Runs in the editor too.,S'exécute aussi dans l'éditeur.
+Save this sheet and ask the running game to reload it. The rows you changed pulse once so you can see them land.,Enregistrez cette feuille et demandez au jeu en cours de la recharger. Les lignes modifiées clignotent une fois pour que vous les voyiez arriver.
+"Saved %s - run it from Tools > Run Tests…, or headlessly with the rest.","%s enregistré - lancez-le depuis Outils > Exécuter les tests…, ou en headless avec les autres."
+"Saved in every resource made from this - a data field, not a live value.","Enregistré dans chaque ressource créée à partir de ceci - un champ de données, pas une valeur vivante."
+Sheet head updated.,En-tête de la feuille mis à jour.
+Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed.,Les feuilles incluses sont listées dans Feuille ▸ Type de feuille… ▸ Plus.
+"Shows what this sheet would look like with the shipped behavior doing the work, before changing anything.","Montre à quoi ressemblerait cette feuille si le comportement fourni faisait le travail, avant de changer quoi que ce soit."
+Sorted the variables A-Z.,Variables triées de A à Z.
+Start a take. Every control the running game sees is recorded with the frame it happened on. Recording a second take throws the first one away.,Démarrer une prise. Chaque commande vue par le jeu en cours est enregistrée avec la frame où elle s'est produite. Enregistrer une seconde prise supprime la première.
+"Stop recording. The take is kept, so you can still add checkpoints and save it.","Arrêter l'enregistrement. La prise est conservée, vous pouvez encore ajouter des points de contrôle et l'enregistrer."
+Stop the game and run it again - the only way to pick this change up.,Arrêtez le jeu et relancez-le - c'est le seul moyen de prendre en compte ce changement.
+The class icon. Click to pick another image.,L'icône de la classe. Cliquez pour choisir une autre image.
+The line this band stands for. Click to open it in the code panel.,La ligne que représente cette bande. Cliquez pour l'ouvrir dans le panneau de code.
+The line this row writes. Click to open it in the code panel.,La ligne qu'écrit cette rangée. Cliquez pour l'ouvrir dans le panneau de code.
+The take would not compile: %s,La prise ne compilerait pas : %s
+The variables are already in name order.,Les variables sont déjà dans l'ordre des noms.
+"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.","Il n'y a pas encore de nœud %s dans cette scène - c'est normal s'il est créé à l'exécution, sinon vérifiez le chemin."
+"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.","Aucun nœud nommé %s dans cette scène - faites un clic droit dessus dans l'arbre de scène et choisissez ""Accéder comme nom unique"", ou bien il est créé à l'exécution."
+This is not an expression this sheet can compile.,Ce n'est pas une expression que cette feuille peut compiler.
+This sheet no longer runs in the editor.,Cette feuille ne s'exécute plus dans l'éditeur.
+This sheet now extends %s.,Cette feuille étend désormais %s.
+This sheet runs in the editor too.,Cette feuille s'exécute aussi dans l'éditeur.
+"Turns on ""Can be switched at runtime"" for this group, so this row can reach it.","Active ""Activable à l'exécution"" pour ce groupe, afin que cette ligne puisse l'atteindre."
+Use %s,Utiliser %s
+Used %d× in this sheet,Utilisé %d× dans cette feuille
+Variable rows: %s.,Lignes de variables : %s.
+What this group holds.,Ce que contient ce groupe.
+Where this region ends.,Où se termine cette région.
+Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.,Réécrit le fichier sans les marqueurs. Chaque octet hors de la zone en conflit reste exactement tel quel.
+"Write the take as an ordinary Test sheet - readable rows, replayed by the same runner as every other test.","Écrit la prise comme une feuille de test ordinaire - des lignes lisibles, rejouées par le même exécuteur que tous les autres tests."
+Writes the ## block · Enter commits.,Écrit le bloc ## · Entrée valide.
+Writes the missing #endregion there.,Écrit le #endregion manquant à cet endroit.
+a number,un nombre
+a value,une valeur
+check %s,vérifiez %s
+editing,en cours de modification
+fix %s first,corrigez d'abord %s
+in %d sheet,dans %d feuille
+in %d sheets,dans %d feuilles
+needed,obligatoire
+no such node,aucun nœud de ce nom
+none yet - added at runtime?,aucun pour l'instant - ajouté à l'exécution ?
+not bound to anything yet,pas encore associé à quoi que ce soit
+not found,introuvable
+one of a list,un élément d'une liste
+renames %d use,renomme %d utilisation
+renames %d uses,renomme %d utilisations
+renames nothing else - this name is used nowhere yet,ne renomme rien d'autre - ce nom n'est encore utilisé nulle part
+this object,cet objet
+this will not compile,ceci ne compilera pas
+true or false,vrai ou faux
+wants %s,attend %s
+will not compile,ne compilera pas
