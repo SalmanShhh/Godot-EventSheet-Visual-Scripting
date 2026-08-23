@@ -1879,11 +1879,7 @@ func _owner_name() -> String:
 	if not _sheet_provider.is_valid():
 		return ""
 	var sheet: EventSheetResource = _sheet_provider.call() as EventSheetResource
-	if sheet == null:
-		return ""
-	if sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty():
-		return sheet.autoload_name.strip_edges()
-	return EventSheetArrangement.self_object_of(sheet)
+	return "" if sheet == null else EventSheetVariableOwners.owner_of_sheet(sheet)
 
 
 ## Refills the write-into picker with the project's autoloads (plus "New global sheet…", which makes

@@ -3588,16 +3588,6 @@ func _ungroup_context_group() -> void:
 		_mark_dirty("Ungrouped \"%s\" - %d row(s) kept." % [group.group_name, moved])
 
 
-## Opt-in runtime toggling: the group compiles a guard member that Set Group Active
-## flips at runtime (feature flags, debug switches). Off = zero-cost organization.
-func _toggle_group_runtime() -> void:
-	var group: EventGroup = _context_group()
-	if group == null:
-		_set_status("Right-click a group to make it runtime-toggleable.", true)
-		return
-	_set_group_runtime_toggleable(group, not group.runtime_toggleable)
-
-
 ## G2 - the "Make switchable" offer in the Set/Is Group Active dialog: the row names a group of this
 ## sheet that cannot be switched yet, and one click makes it one. Takes the value the field holds
 ## (the quoted snake_case the template concatenates) and answers whether anything changed.
