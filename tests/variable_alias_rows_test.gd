@@ -28,7 +28,7 @@ static func run() -> bool:
 	ok = _check("the boolean question IS Compare variable",
 		"%s/%s" % [str(is_true.get("provider", "")), str(is_true.get("ace_id", ""))],
 		"Core/CompareVar") and ok
-	ok = _check("…asking == true, which ✕ then flips to == false",
+	ok = _check("…asking == true, which the invert mark then flips to == false",
 		is_true.get("prefill", {}), {"op": "==", "value": "true"}) and ok
 
 	# The whole point: no alias may name an id nothing ships, and none may invent one. Both ids are

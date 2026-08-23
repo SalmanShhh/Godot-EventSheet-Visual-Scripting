@@ -126,7 +126,7 @@ static func run() -> bool:
 	spot.code = "if not can_see_player():
 	state = State.PATROL"
 	var negated_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
-	# M12 - the inversion is the red ✕ in the badge column, the same mark an inverted ACE condition
+	# M12 - the inversion is the red `not` in the badge column, the same mark an inverted ACE condition
 	# wears, and the SENTENCE is the positive one. It used to read "Not Can See Player"; a word in
 	# the middle of a sentence is easy to skim past, and it meant the sheet had two ways of saying
 	# "inverted" depending on where the condition came from.
@@ -134,9 +134,10 @@ static func run() -> bool:
 	var negated_texts: PackedStringArray = PackedStringArray()
 	for span: SemanticSpan in negated_transition.spans:
 		negated_texts.append(span.text)
-	ok = _check("a negated guard draws the invert mark", negated_texts.has("✕"), true) and ok
+	ok = _check("a negated guard draws the invert mark",
+		negated_texts.has(ViewportRowBuilder.NEGATED_MARK), true) and ok
 	ok = _check("the invert mark is a badge span, not text",
-		bool((negated_transition.spans[negated_texts.find("✕")].metadata as Dictionary).get("badge", false)), true) and ok
+		bool((negated_transition.spans[negated_texts.find(ViewportRowBuilder.NEGATED_MARK)].metadata as Dictionary).get("badge", false)), true) and ok
 	ok = _check("a negated guard's sentence is the positive one",
 		negated_texts.has("Can See Player"), true) and ok
 	ok = _check("a negated guard never says the word Not",

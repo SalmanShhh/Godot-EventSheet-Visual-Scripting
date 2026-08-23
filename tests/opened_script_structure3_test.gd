@@ -177,9 +177,10 @@ static func _rows() -> bool:
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty = \"easy\""),
 		"i2 [System> difficulty = \"easy\" | Set reward to 10]") and ok
+	# K4 - the OR mark on each line became a rule drawn between them, so the words are just the tests.
 	ok = _check("a multi-value case is an Else with an OR block",
 		_row_containing(rows, "difficulty = \"normal\""),
-		"i2 [System> Else | OR | System> difficulty = \"normal\" | OR | System> difficulty = \"hard\" | Set reward to 25]") and ok
+		"i2 [System> Else | System> difficulty = \"normal\" | System> difficulty = \"hard\" | Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
 		"i2 [System> Else | Set reward to 0]") and ok

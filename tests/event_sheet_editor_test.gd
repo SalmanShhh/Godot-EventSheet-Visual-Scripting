@@ -328,22 +328,21 @@ static func run() -> bool:
     dock.setup(or_sheet)
     dock_viewport = dock.get_viewport_control()
     var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
-    all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
-    all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
+    # K4 - "or" is ruled BETWEEN two conditions, not badged onto the second: the row carries the
+    # lines a divider is drawn above, and no condition wears an OR mark any more.
+    all_passed = _check("or block badges no condition", _count_span_text(or_row_data, "OR"), 0) and all_passed
+    all_passed = _check("negated condition leads with the word not", _count_span_text(or_row_data, "not"), 1) and all_passed
     var condition_lines: Array[int] = []
-    var or_badge_lines: Array[int] = []
     for span in or_row_data.spans:
         if span == null or not (span.metadata is Dictionary):
             continue
         var metadata: Dictionary = span.metadata as Dictionary
         if str(metadata.get("kind", "")) == "condition":
             condition_lines.append(int(metadata.get("line_index", -1)))
-        if span.text == "OR":
-            or_badge_lines.append(int(metadata.get("line_index", -1)))
+    var expected_divider_lines: Array[int] = condition_lines.slice(1)
     all_passed = _check(
-        "or badges share the same stacked line indices as conditions",
-        or_badge_lines.size() == condition_lines.size() and or_badge_lines == condition_lines,
-        true
+        "or dividers sit above every condition line after the first",
+        Array(or_row_data.or_condition_lines), expected_divider_lines
     ) and all_passed
     dock_viewport.get_row_layout_for_test(0, 640.0)
     var first_condition_index: int = _find_span_index_by_kind(or_row_data, "condition")
@@ -356,14 +355,11 @@ static func run() -> bool:
     ) and all_passed
     # or_event uses the On Ready trigger, so its tempo badge is ▶ (once), not the signal ➜.
     var trigger_badge_index: int = _find_span_index_by_text(or_row_data, "▶")
-    var first_or_badge_index: int = _find_span_index_by_text(or_row_data, "OR")
-    var negated_badge_index: int = _find_span_index_by_text(or_row_data, "✕")
+    var negated_badge_index: int = _find_span_index_by_text(or_row_data, "not")
     all_passed = _check(
-        "trigger, invert, and OR badges share the primary badge column",
+        "trigger and invert marks share the primary badge column",
         trigger_badge_index >= 0
-            and first_or_badge_index >= 0
             and negated_badge_index >= 0
-            and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[first_or_badge_index].rect.position.x)
             and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[negated_badge_index].rect.position.x),
         true
     ) and all_passed

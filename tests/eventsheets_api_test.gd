@@ -60,6 +60,15 @@ static func run() -> bool:
 		EventSheets.variable_code(api_var),
 		"# @inspector_header Combat\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
 
+	# K1/K4 - the operator table a pack's own rows read through: the glyph a row shows, and the
+	# opposite an invert writes. Anything that is not one of the six passes straight through.
+	ok = _check("comparison_glyph is the row's spelling",
+		[EventSheets.comparison_glyph("<="), EventSheets.comparison_glyph("=="),
+			EventSheets.comparison_glyph("score + 1")], ["≤", "=", "score + 1"]) and ok
+	ok = _check("opposite_operator is the question turned around",
+		[EventSheets.opposite_operator("<="), EventSheets.opposite_operator("=="),
+			EventSheets.opposite_operator("begins with")], [">", "!=", ""]) and ok
+
 	# ── Custom Block API: the hover seam (kinds explain their rows on hover) ──
 	ok = _check("block kinds hover silently by default",
 		EventSheetBlockKind.new().hover_text(CustomBlockRow.new()), "") and ok

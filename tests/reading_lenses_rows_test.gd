@@ -81,7 +81,8 @@ static func _reading_rows() -> bool:
 		_any_row_contains(texts, "velocity X"), true) and passed
 
 	# M12 - the inverted condition shows the mark, and the sentence lost the word.
-	passed = _check("an inverted condition draws the mark", _any_row_contains(texts, "✕"), true) and passed
+	passed = _check("an inverted condition draws the mark",
+		_any_row_contains(texts, ViewportRowBuilder.NEGATED_MARK), true) and passed
 	passed = _check("an inverted condition's sentence drops the word not",
 		_any_row_contains(texts, "not is_on_floor"), false) and passed
 

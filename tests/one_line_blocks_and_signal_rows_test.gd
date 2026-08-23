@@ -125,8 +125,9 @@ static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArra
 	ok = _check("a ternary's `and` test stacks as two condition lines",
 		_reading_at(rows, "Return host's wall normal X"),
 		"host exists > host Is by wall | Return host's wall normal X") and ok
+	# K4 - the OR is ruled BETWEEN the two lines now, so neither of them carries a badge word.
 	ok = _check("a ternary's `or` test is the OR block",
-		_reading_at(rows, "Return \"gold\""), "ORhp > 100 > ORseconds left > 9 | Return \"gold\"") and ok
+		_reading_at(rows, "Return \"gold\""), "hp > 100 > seconds left > 9 | Return \"gold\"") and ok
 	ok = _check("no condition cell anywhere in the fixture spells `and`",
 		_conjunction_cells(view), PackedStringArray()) and ok
 	return ok
