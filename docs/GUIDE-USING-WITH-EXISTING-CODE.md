@@ -407,7 +407,7 @@ That is the order this section is in.
 
 #### Variables - one sentence each
 
-![An opened script's head: one Instance variables folder holding every member, each row reading scope word, plain type word, name, value - Instance number speed = 200 with an Inspector chip, Constant number MAX_HP = 100, Static number spawned = 0 shared by every Player, Instance color tint = white with its live swatch](images/variable-sentence-head.png)
+![Six variable rows in the one sentence, each washed lilac with an x badge and its own declaration echoed at the right edge: Instance whole number hp = 100 beside var hp: int = 100, a labelled Movement folder strip holding Instance number speed = 200 with a sliders mark beside @export var speed: float = 200.0 and jump_force under it, then Instance boolean alive = true, Constant whole number MAX_HP = 100 beside const MAX_HP: int = 100, Static whole number spawned = 0 reading shared by every Player, and inside event 1 a Local number dealt = 0](images/variable-sentence-head.png)
 
 - **Every variable reads as one sentence - `<scope> <type> <name> = <value>`.** The scope word leads:
   `Instance number speed = 200`, `Instance boolean alive = true`, `Constant number MAX_HP = 100`,
