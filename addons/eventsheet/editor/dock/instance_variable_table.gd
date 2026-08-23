@@ -26,9 +26,12 @@ extends RefCounted
 
 
 ## One entry per variable the object carries, in the order the sheet declares them. Each:
-## {"name", "type_name", "type_word", "value", "inspector", "description", "scope", "storage"}
+## {"name", "type_name", "type_word", "value", "inspector", "description", "scope", "storage",
+## "resource"}
 ## where `storage` is "tree" (a LocalVariable placed among the sheet's events) or "sheet" (an entry
-## in the sheet's variables descriptor) - the two shapes a member variable is stored in.
+## in the sheet's variables descriptor) - the two shapes a member variable is stored in. `resource`
+## is the LocalVariable a tree row came from (null for a descriptor entry, which has none), so a
+## reader that wants to jump to the row can.
 static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	if sheet == null:
@@ -49,7 +52,8 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"description": str(attributes.get("tooltip", "")),
 			"scope": EventSheetVariableSentence.member_scope(
 				variable.is_constant, variable.is_static, autoload, resource_host),
-			"storage": "tree"
+			"storage": "tree",
+			"resource": variable
 		})
 	var names: Array = sheet.variables.keys()
 	names.sort()
@@ -67,7 +71,8 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 			"scope": EventSheetVariableSentence.member_scope(
 				bool(descriptor.get("const", descriptor.get("is_constant", false))),
 				false, autoload, resource_host),
-			"storage": "sheet"
+			"storage": "sheet",
+			"resource": null
 		})
 	return rows
 

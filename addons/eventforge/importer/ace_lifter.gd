@@ -2902,6 +2902,10 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# reverse index would have them claim every assignment and every increment in every project, and
 	# the shipped countdown reading already says what those lines are.
 	"StartMissionTimer", "AddMissionTime",
+	# V7. The boolean pair. `x = y` is Set value's own template and `{var_name}` alone would claim
+	# every bare identifier in every file - both rows say a CLEARER sentence about a line that
+	# already lifts, so they author only and the general spellings keep their existing rows.
+	"SetBool", "IsBoolSet",
 	# X22 / X25 / X28 / X29. Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
 	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
 	# right for the row that writes it and hopelessly general for the index that reads lines BACK:

@@ -77,6 +77,9 @@ signal group_action_requested(action: String, group: EventGroup)
 ## where the note says. The note stands for no resource, so the dock resolves the orphan fence from
 ## the row's uid rather than from a source the row does not have.
 signal region_fix_requested(note_row: EventRowData)
+## V12 - the "Use hp" beside an unknown-variable note: one click renames every use of the
+## misspelled name on that event to the one the sheet actually declares.
+signal variable_note_fix_requested(note_row: EventRowData)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
@@ -2415,6 +2418,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	_row_builder._class_uid_counts.clear()
 	# V13 - and the code echo's token colours, so a theme change reaches the next sweep's echoes.
 	_row_builder._code_echo_palette.clear()
+	# V6 - and who owns each variable the sheet names, so a row that touches `hp` can lead with the
+	# object that HAS an hp. Derived once per sweep: it reads the autoloads' scripts.
+	_row_builder._variable_owner_catalog.clear()
 	if sheet == null:
 		return root_rows
 	# ── The pattern registry ──────────────────────────────────────────────────────────────────

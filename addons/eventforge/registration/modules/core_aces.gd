@@ -113,6 +113,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when this node belongs to the named group, for tagging and identifying objects."))
 	descriptors.append(F.make_descriptor("Core", "CompareVar", "Compare variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), F.make_param("op", "String", "==", "Operator", "Comparison operator.", "", F.COMPARISON_OPTIONS), F.make_param("value", "String", "0", "Value", "Comparison value.", "expression")], "Variables", "{var_name} {op} {value}")
 		.described("True when a variable compares against a value as you specify, for branching on game state."))
+	# V7. The boolean family's missing half. "Set boolean" / "Toggle boolean" / "Is boolean set" is
+	# the trio anyone who has driven an event sheet reaches for, and only the middle one existed:
+	# testing a flag meant Compare variable with `== true` beside it, which says the same thing in
+	# three more words. The template is the bare name, because a boolean IS the question.
+	descriptors.append(F.make_descriptor("Core", "IsBoolSet", "Is boolean set", ACEDescriptor.ACEType.CONDITION, "{var_name}", "", [F.make_param("var_name", "String", "enabled_flag", "Variable", "Boolean variable to test.", "variable_reference")], "Variables", "Is {var_name}")
+		.described("True while a boolean variable is true, the plain way to ask whether a flag is set."))
 	descriptors.append(F.make_descriptor("Core", "IsTimerStopped", "Is Timer Stopped", ACEDescriptor.ACEType.CONDITION, "is_stopped()", "", [], "General Conditions", "Is timer stopped", "Timer")
 		.described("True when the Timer is not currently running."))
 	descriptors.append(F.make_descriptor("Core", "IsAnimationPlaying", "Is Animation Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], "General Conditions", "Is animation playing", "AnimationPlayer")
@@ -121,6 +127,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Actions
 	descriptors.append(F.make_descriptor("Core", "SetVar", "Set value", ACEDescriptor.ACEType.ACTION, "{var_name} = {value}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to set.", "variable_reference"), F.make_param("value", "String", "0", "Value", "Value to assign.", "expression")], "Variables", "Set {var_name} to {value}")
 		.described("Sets a variable to a value you give, the basic way to store game state."))
+	# V7. Set value with the two answers a boolean has already in the list, so a flag is set by
+	# picking a word rather than by typing one. Same template as Set value, deliberately - the code
+	# is identical and only the ROW is clearer, which is why it stays out of the reverse index
+	# (ace_lifter.REVERSE_LIFT_EXCLUDED_ACE_IDS): `x = y` must keep lifting back to Set value.
+	descriptors.append(F.make_descriptor("Core", "SetBool", "Set boolean", ACEDescriptor.ACEType.ACTION, "{var_name} = {value}", "", [F.make_param("var_name", "String", "enabled_flag", "Variable", "Boolean variable to set.", "variable_reference"), F.make_param("value", "String", "true", "Value", "true or false.", "", [{"key": "true", "label": "true"}, {"key": "false", "label": "false"}])], "Variables", "Set boolean {var_name} to {value}")
+		.described("Sets a boolean variable to true or false, picked from the list instead of typed."))
 	descriptors.append(F.make_descriptor("Core", "AddVar", "Add to", ACEDescriptor.ACEType.ACTION, "{var_name} += {amount}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to increment.", "variable_reference"), F.make_param("amount", "String", "1", "Amount", "Amount to add.", "expression")], "Variables", "Add {amount} to {var_name}")
 		.described("Adds an amount to a variable, e.g. increasing score or health."))
 	# Compound-assign siblings to Add Variable (the -=/*=// gap that forced a raw block).

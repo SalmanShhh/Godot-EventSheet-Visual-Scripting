@@ -81,6 +81,10 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## R3. The mark an amber note leads with - the same warning glyph a line that would not lift wears,
 ## because it means the same thing: look here, nothing is broken.
 const REGION_WARNING_GLYPH := "⚠"
+## V12. The mark on a variable note - the same warning the region notes wear, because it is the same
+## kind of thing to say: something about this row does not add up. The COLOUR is what separates a
+## name that cannot work from a kind that only misbehaves.
+const VARIABLE_NOTE_MARK := "⚠"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -139,6 +143,11 @@ static var _event_cast_regex: RegEx = null
 # ("-2", "-3"); build order is stable, so a repeat maps to the same block next rebuild.
 # Reset by the viewport at the top of every _build_rows_from_sheet sweep.
 var _class_uid_counts: Dictionary = {}
+
+# V6. The sheet's variables and who owns each, keyed "entries" so an empty sheet still counts as
+# derived. Asked once per condition and once per action, and answering it reads the autoloads'
+# scripts off disk - so it is derived once per sweep and cleared beside the palette above.
+var _variable_owner_catalog: Dictionary = {}
 
 
 ## The uid scope for one class block: the class name for the first occurrence (uids unchanged
@@ -6119,6 +6128,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
+	# V12 - a name that is not a variable, and a verb handed the wrong kind of one, said UNDER the
+	# event that has the problem rather than in a panel somewhere else. Built here so the note sits
+	# above the sub-events, which is where the reader is already looking.
+	for note_row: EventRowData in _build_variable_note_rows(event_row, row_data.row_uid, indent + 1):
+		row_data.children.append(note_row)
 	# R41 - a `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
 	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
@@ -8399,6 +8413,156 @@ static func variable_group_runs(flat_rows: Array) -> Array:
 		current_group = group
 		run_start = index if not group.is_empty() else -1
 	return runs
+
+
+## V12. The notes under an event: a `variable_reference` naming something this sheet does not
+## declare (red, with the nearest name as a one-click fix), and one handed a variable of the wrong
+## kind (amber, with the verb that does fit). Both are readings of the ROWS - nothing is written, no
+## resource is held, and an event with neither problem grows no rows at all.
+##
+## Red for the unknown name because the line cannot work; amber for the mismatch because it compiles
+## and only misbehaves, which is a different thing to tell somebody.
+func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null or _viewport._sheet == null:
+		return rows
+	var entries: Array[Dictionary] = _variable_owner_entries()
+	if entries.is_empty():
+		return rows
+	var owner: String = EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
+	var aces: Array = []
+	aces.append_array(event_row.conditions)
+	aces.append_array(event_row.actions)
+	var seen: Dictionary = {}
+	for ace: Variant in aces:
+		if not (ace is Resource):
+			continue
+		var params: Dictionary = _ace_params_of(ace as Resource)
+		if params.is_empty():
+			continue
+		var ace_id: String = str((ace as Resource).get("ace_id"))
+		for name_text: String in _variable_reference_values(
+				str((ace as Resource).get("provider_id")), ace_id, params):
+			if seen.has(name_text) or not EventSheetIdentifierRules.is_valid(name_text):
+				continue
+			seen[name_text] = true
+			var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
+			if not unknown.is_empty():
+				var suggestion: String = str(unknown.get("suggestion", ""))
+				rows.append(_build_variable_note_row(
+					event_uid, indent, str(unknown.get("note", "")),
+					"" if suggestion.is_empty() else EventSheetL10n.translate("Use %s") % suggestion,
+					{"variable_note_name": name_text, "variable_note_to": suggestion,
+						"variable_note_fix": "rename"}, true))
+				continue
+			var mismatch: Dictionary = variable_mismatch_note(
+				EventSheetVariableOwners.find(entries, name_text), ace_id)
+			if not mismatch.is_empty():
+				# No fix button on the mismatch: swapping the verb rewrites the row's template and
+				# re-keys its parameters, which is the parameters dialog's job and not a one-click
+				# one. The note says which verb fits, and the row menu opens it.
+				rows.append(_build_variable_note_row(
+					event_uid, indent, str(mismatch.get("note", "")), "",
+					{"variable_note_name": name_text, "variable_note_to": str(mismatch.get("ace_id", "")),
+						"variable_note_fix": "retarget"}, false))
+	return rows
+
+
+## V12. The amber note when a verb is handed the wrong kind of variable, and the verb that does fit:
+## "nickname is text - Add to wants a number." {} when the pairing is fine, or when the variable's
+## type says nothing. Static + pure, so the wording is pinned without a canvas.
+static func variable_mismatch_note(entry: Dictionary, ace_id: String) -> Dictionary:
+	if entry.is_empty():
+		return {}
+	var wants: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(ace_id, ""))
+	if wants.is_empty():
+		return {}
+	var offered: Array[Dictionary] = []
+	offered.append(entry)
+	if not EventSheetVariableOwners.variables_for_verb(offered, ace_id).is_empty():
+		return {}
+	var type_word: String = str(entry.get("type_word", "")).strip_edges()
+	if type_word.is_empty():
+		return {}
+	return {
+		"note": EventSheetL10n.translate("%s is %s - %s wants a %s. %s fits.") % [
+			str(entry.get("name", "")), type_word, _variable_verb_name(ace_id),
+			EventSheetL10n.translate(wants), _variable_verb_name("SetVar")],
+		"fix_label": EventSheetL10n.translate("%s fits.") % _variable_verb_name("SetVar"),
+		"ace_id": "SetVar"
+	}
+
+
+## The display name of one of the variable verbs, for a note that names it. Read off the registry so
+## a renamed verb is named right, with the id as the honest fallback.
+static func _variable_verb_name(ace_id: String) -> String:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
+	return descriptor.display_name if descriptor != null else ace_id
+
+
+## The parameters one picked row carries, whichever of the two fields it stored them in.
+func _ace_params_of(ace: Resource) -> Dictionary:
+	var params: Variant = ace.get("params")
+	if params is Dictionary and not (params as Dictionary).is_empty():
+		return params as Dictionary
+	var parameters: Variant = ace.get("parameters")
+	return parameters as Dictionary if parameters is Dictionary else {}
+
+
+## The value of every `variable_reference` parameter one row carries.
+func _variable_reference_values(provider_id: String, ace_id: String, params: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
+	if definition == null:
+		return found
+	for entry: Variant in definition.parameters:
+		if not (entry is Dictionary):
+			continue
+		var param: Dictionary = entry as Dictionary
+		if not str(param.get("hint", "")).begins_with(ACEParamsDialog.VARIABLE_REFERENCE_HINT):
+			continue
+		var value: String = str(params.get(str(param.get("id", "")), "")).strip_edges()
+		if not value.is_empty():
+			found.append(value)
+	return found
+
+
+## One note row: the mark, the sentence, and the fix at the right edge. Inert (no source_resource),
+## exactly like the region orphan note beside it, so Delete and drag cannot reach a row through it.
+func _build_variable_note_row(event_uid: String, indent: int, message: String, fix_label: String,
+		fix_meta: Dictionary, severe: bool) -> EventRowData:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	# Red when the line cannot work at all, amber when it compiles and only misbehaves - the two
+	# colours the sheet already uses for exactly that difference, so no new token is minted.
+	var ink: Color = reading_style.error_text_color if severe else reading_style.lift_note_badge_foreground_color
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "variable_note_%s_%s" % [event_uid, str(fix_meta.get("variable_note_name", ""))]
+	var base_meta: Dictionary = fix_meta.duplicate()
+	base_meta["kind"] = "variable_note"
+	base_meta["editable"] = false
+	base_meta["line_index"] = 0
+	row_data.spans = [
+		_make_span(VARIABLE_NOTE_MARK, SemanticSpan.SpanType.KEYWORD, base_meta.merged({
+			"badge": true,
+			"badge_style": "scope",
+			"variable_note": "mark",
+			"badge_bg": reading_style.lift_note_badge_background_color,
+			"badge_fg": ink
+		}, true)),
+		_make_span(message, SemanticSpan.SpanType.COMMENT, base_meta.merged({
+			"variable_note": "message", "text_color": ink
+		}, true))
+	]
+	if not fix_label.is_empty():
+		row_data.spans.append(_make_span(fix_label, SemanticSpan.SpanType.VALUE, base_meta.merged({
+			"variable_note": "fix",
+			"align_right": true,
+			"text_color": reading_style.primary_text_color
+		}, true)))
+	return row_data
 
 
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
@@ -13008,6 +13172,10 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		params_dict, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
+	# V6 - and when nothing reached through an autoload, the variable the row NAMES still has an
+	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
+	if global_owner.is_empty():
+		global_owner = _variable_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
 	var read_condition: ACECondition = condition
 	if not global_read.is_empty():
@@ -13239,6 +13407,10 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		action_params, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
+	# V6 - the same rule the condition lane takes: a step that changes a variable belongs to whoever
+	# owns that variable, so "Player > Subtract 10 from health" leads with the object it changes.
+	if global_owner.is_empty():
+		global_owner = _variable_owner_label(action.provider_id, action.ace_id, action_params)
 	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
 	var read_action: ACEAction = action
 	if not global_read.is_empty():
@@ -15422,6 +15594,32 @@ func _reading_autoloads() -> Dictionary:
 ## grammar guessed. Otherwise the object the grammar named is offered to the attribution lens, which
 ## adds the "(global)" note to an autoload and hands a behaviour pack's rows back to the object the
 ## pack is mounted on, with the pack's name as the leading chip.
+func _variable_owner_entries() -> Array[Dictionary]:
+	if not _variable_owner_catalog.has("entries"):
+		_variable_owner_catalog["entries"] = EventSheetVariableOwners.own_entries(
+			_viewport._sheet if _viewport != null else null)
+	return _variable_owner_catalog["entries"]
+
+
+## V6. The object column a variable row belongs in: an instance variable is the sheet's own object's,
+## a global is its autoload's, and a local is System's - so "Player > Subtract 10 from health" reads
+## as the object it changes rather than as machinery. "" when the row names no variable this sheet
+## declares, which leaves the ordinary provider reading standing.
+##
+## Only a param the row's DEFINITION hints as a variable reference is consulted, and only a row the
+## registry has a definition for at all: an expression that happens to mention `hp` is arithmetic,
+## not ownership, and a line the reading layer recognised on its own already has an object rule of
+## its own that says more than this one could.
+func _variable_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
+	if params.is_empty():
+		return ""
+	for name_text: String in _variable_reference_values(provider_id, ace_id, params):
+		var owner: String = EventSheetVariableOwners.owner_for(_variable_owner_entries(), name_text)
+		if not owner.is_empty():
+			return owner
+	return ""
+
+
 func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionary:
 	if not global_owner.is_empty():
 		var owned: Dictionary = grammar.duplicate()
