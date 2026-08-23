@@ -104,6 +104,10 @@ var _region_occurrences: Dictionary = {}
 # V13 - the code echo's token colours for THIS sweep. Cleared with the other per-build caches, so a
 # theme or Editor Settings change is picked up on the next rebuild and never mid-build.
 var _code_echo_palette: Dictionary = {}
+# G1 - the `## @ace_group(...)` line the compiler writes for each group, {EventGroup: String}, asked
+# of the compiler ONCE per sweep: the walk that slugs them is a whole-tree walk, and every head on
+# the canvas wants one line out of it.
+var _group_declaration_lines: Dictionary = {}
 # R3 - the orphan-fence notes built in THIS sweep, so the fix label can be numbered once the flat
 # list has its gutter numbers. Empty on every sheet whose fences all pair, which is nearly all.
 var _region_fix_notes: Array[EventRowData] = []
@@ -5855,6 +5859,10 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
+	# G1 - the line this head IS, echoed in the script editor's own colours. It opens the
+	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
+	# edge where the pinned copy of this head also draws them.
+	_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
 	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style))
 	row_data.spans = spans
 	# G3 - the group's own locals are rows at the TOP of its body: they are declarations, and a
@@ -5872,6 +5880,17 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % EventSheetGroupFacts.display_name(group))
 		)
 	return row_data
+
+
+## G1. The `## @ace_group(...)` line the compiler writes for this group, asked of the compiler's own
+## emitter so the head can never claim a line the file does not have. "" for a group the open sheet
+## does not hold (a preview's, a function's), which simply draws no echo.
+func _group_declaration_line(group: EventGroup) -> String:
+	if group == null or _viewport == null or _viewport._sheet == null:
+		return ""
+	if not _group_declaration_lines.has("lines"):
+		_group_declaration_lines["lines"] = SheetCompiler.group_declaration_lines(_viewport._sheet.events)
+	return str((_group_declaration_lines["lines"] as Dictionary).get(group, ""))
 
 
 ## The folder mark a group head leads with: the file-manager idiom, in the badge column every other

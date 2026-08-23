@@ -147,7 +147,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# already merged in), so the `## @ace_group` declarations can emit after the class description and
 	# the per-row `# @group:` tags emit in the trigger sections. Fills _group_slugs read during emit.
 	var group_decls: Array = []
-	_collect_groups(all_events, group_decls, {})
+	_collect_groups(all_events, group_decls, {}, _group_slugs)
 
 	var lines: PackedStringArray = PackedStringArray()
 	if not omit_generated_banner:
@@ -732,7 +732,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	# grouped sheet would lose them on the next save).
 	_group_slugs = {}
 	_row_group_path = {}
-	_collect_groups(sheet.events, [], {})
+	_collect_groups(sheet.events, [], {}, _group_slugs)
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires - the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
@@ -1369,18 +1369,36 @@ static func _group_slug(group_name: String, used: Dictionary) -> String:
 	return candidate
 
 
-## Walks the event tree assigning every EventGroup a deterministic slug (filling _group_slugs) and
+## Walks the event tree assigning every EventGroup a deterministic slug (filling `slugs`) and
 ## appending an ordered {slug, parent, group} record to `decls` (parents before children, so the
 ## importer can rebuild nesting). Recurses into group bodies, mirroring _flatten_trigger_rows' walk.
-static func _collect_groups(rows: Array, decls: Array, used: Dictionary, parent_slug: String = "") -> void:
+## A compile hands it the per-compile `_group_slugs`; group_declaration_lines hands it a scratch
+## dictionary, so asking what a group's line says never disturbs a compile in flight.
+static func _collect_groups(rows: Array, decls: Array, used: Dictionary, slugs: Dictionary,
+		parent_slug: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			var group_name: String = group.group_name if not group.group_name.is_empty() else group.name
 			var slug: String = _group_slug(group_name, used)
-			_group_slugs[group] = slug
+			slugs[group] = slug
 			decls.append({"slug": slug, "parent": parent_slug, "group": group})
-			_collect_groups(group.events if not group.events.is_empty() else group.rows, decls, used, slug)
+			_collect_groups(group.events if not group.events.is_empty() else group.rows, decls, used, slugs, slug)
+
+
+## The `## @ace_group(...)` declaration line this compiler writes for every group in `rows`, keyed by
+## the EventGroup itself: {EventGroup: String}. PURE - it slugs the tree exactly the way a compile
+## does and writes through the same emitter, so a head echoing its group's line can never drift from
+## the file, and nothing a compile in flight holds is touched.
+static func group_declaration_lines(rows: Array) -> Dictionary:
+	var decls: Array = []
+	_collect_groups(rows, decls, {}, {})
+	var lines: PackedStringArray = PackedStringArray()
+	_emit_group_declarations(lines, decls)
+	var by_group: Dictionary = {}
+	for index: int in range(mini(decls.size(), lines.size())):
+		by_group[(decls[index] as Dictionary)["group"]] = lines[index]
+	return by_group
 
 
 ## True when free text can be written inside a double-quoted annotation field without breaking it.

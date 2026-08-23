@@ -471,6 +471,15 @@ static func variable_declaration_line(variable: LocalVariable) -> String:
 	return EventSheetCodeEcho.line_for(variable)
 
 
+## The `## @ace_group(...)` line the compiler writes for each of a sheet's event groups, keyed by the
+## EventGroup itself: `{EventGroup: String}`. A group head echoes its own line from here, so an
+## extension drawing groups says the same thing the file does - uid, name, parent, description,
+## colour and the two flags, exactly as they are emitted and read back. Derived in one walk, so a
+## caller with many heads to draw asks once.
+static func group_declaration_lines(sheet: EventSheetResource) -> Dictionary:
+	return SheetCompiler.group_declaration_lines(sheet.events) if sheet != null else {}
+
+
 ## Every variable a sheet can name, and who owns each - the ONE list the rows, the picker, the
 ## Anatomy rail and the expression picker read. Entries are
 ## `{"name", "type_name", "type_word", "value", "scope", "owner", "group", "inspector",

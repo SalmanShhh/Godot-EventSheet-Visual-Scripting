@@ -66,6 +66,16 @@ static func _test_head_spans() -> bool:
 		_span_text(head, "group_action", "toggleable"), ViewportRowBuilder.GROUP_TOGGLEABLE_GLYPH) and passed
 	passed = _check("and the switch says it is on",
 		_span_text(head, "group_action", "enabled"), ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
+	# G1 - the head echoes the very line the compiler declares this group on, character for
+	# character, so the row and the file cannot disagree about what the group is.
+	passed = _check("the head echoes its own declaration",
+		_span_text(head, "group_echo", true),
+		str(SheetCompiler.group_declaration_lines(sheet.events).get(group, ""))) and passed
+	passed = _check("...which is the @ace_group line itself",
+		_span_text(head, "group_echo", true),
+		"## @ace_group(uid=\"combat\", name=\"Combat\", description=\"Damage, hits and death.\", toggleable=true)") and passed
+	passed = _check("the echo joins the right-anchored run",
+		_span_flag(head, "group_echo", true, "align_right"), true) and passed
 	# The right-anchored run lays out left to right without landing on top of itself.
 	viewport.get_row_layout_for_test(_index_for(viewport, group))
 	var counts_span: SemanticSpan = _span_with(head, "group_counts", true)

@@ -269,6 +269,12 @@
   group holds and its switch. The description no longer costs a second line, so a group costs one
   row however much it says, and a FOLDED head keeps the description and adds the object names
   inside it, which is the sentence a reader needs to decide whether to open it.
+- **And the head echoes the line it is.** Beside what the group holds sits the exact
+  `## @ace_group(uid="combat", name="Combat", …)` declaration the compiler writes for that group,
+  in the script editor's own token colours, so the head says the same thing the file does - uid,
+  parent, description, colour and both flags. It comes from the compiler's own emitter through a
+  new `EventSheets.group_declaration_lines(sheet)` (`{EventGroup: String}`, one walk for the whole
+  sheet), so an extension that draws groups can echo them the same way and nothing here can drift.
 - **The body wears a bracket, and the rows do not move.** A 2px rule in the group's own colour (the
   Colour field, or the theme's group colour) runs down the LEFT EDGE of the body, from the head's
   bottom to its last row's bottom. Nested groups inset one step each, so where a group ends is

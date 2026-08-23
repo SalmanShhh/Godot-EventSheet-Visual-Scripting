@@ -71,6 +71,30 @@ static func run() -> bool:
 	ok = _check("…and a Static local's is the member it hoists to, never its marker",
 		EventSheets.variable_declaration_line(api_static_local), "var _hits_taken := 0") and ok
 
+	# G1 - the line a group declares itself on, keyed by the group, exactly as the compiler emits it
+	# (and as the head echoes it). A nested group carries its parent, which is how the importer
+	# rebuilds the nesting.
+	var group_sheet: EventSheetResource = EventSheetResource.new()
+	var outer_group: EventGroup = EventGroup.new()
+	outer_group.name = "Gameplay"
+	outer_group.group_name = "Gameplay"
+	var inner_group: EventGroup = EventGroup.new()
+	inner_group.name = "Combat"
+	inner_group.group_name = "Combat"
+	inner_group.color_tag = "#ff0000"
+	outer_group.events.append(inner_group)
+	group_sheet.events.append(outer_group)
+	var declaration_lines: Dictionary = EventSheets.group_declaration_lines(group_sheet)
+	ok = _check("group_declaration_lines answers per group",
+		str(declaration_lines.get(outer_group, "")),
+		"## @ace_group(uid=\"gameplay\", name=\"Gameplay\")") and ok
+	ok = _check("…and a nested group names its parent",
+		str(declaration_lines.get(inner_group, "")),
+		"## @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
+	ok = _check("…and it is the very line the compile writes",
+		str(EventSheets.compile(group_sheet).get("output", "")).contains(
+			str(declaration_lines.get(inner_group, ""))), true) and ok
+
 	# K1/K4 - the operator table a pack's own rows read through: the glyph a row shows, and the
 	# opposite an invert writes. Anything that is not one of the six passes straight through.
 	ok = _check("comparison_glyph is the row's spelling",
