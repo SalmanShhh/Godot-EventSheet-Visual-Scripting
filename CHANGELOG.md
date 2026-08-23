@@ -204,6 +204,17 @@
 
 ### Changed - The parameters dialog: the title IS the row
 
+- **A Set value that only adds to itself offers to say so.** With `hp = hp + 1` in the Value box the
+  strip offers **read as Add to**, and `hp = hp - damage * 2` offers **read as Subtract from** - one
+  press rewrites the row as that verb through the same replace the dialog's own OK takes, so it is
+  one undo step and the compiled line is unchanged. The offer is refused whenever it would change
+  what the row computes (`hp - a + b` is not `hp -= a + b`) or whenever the expression is somebody
+  else's arithmetic.
+- **The type-mismatch note has its own fix now.** The amber "nickname is text - Add to wants a
+  number. Set value fits." grew the button that says it: **Change to Set value** swaps the verb and
+  carries what was typed across to whatever the new verb calls it (`amount` becomes `value`),
+  through the very path the Parameters dialog writes with.
+
 - **The title IS the row.** The dialog every action and condition with a blank opens was titled
   "Subtract from Parameters"; it now reads **Player   Subtract damage * 2 from hp** - the object
   the row belongs to, then the ACE's own sentence with the values filled in live as they are typed,

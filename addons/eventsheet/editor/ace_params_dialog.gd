@@ -2958,8 +2958,10 @@ func _describe_field(key: String) -> void:
 	var param: Dictionary = _param_dicts.get(key, {})
 	var note: Dictionary = _note_for(key)
 	if note.is_empty():
+		# V6 - nothing is wrong, but there may still be a plainer way to read what was typed.
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
-			EventSheetParamFieldFactory.strip_body(param, _row_owner))
+			EventSheetParamFieldFactory.strip_body(param, _row_owner),
+			EventSheetPopupUI.HelpStrip.TONE_NORMAL, reading_offers())
 		return
 	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
 		str(note.get("level", "")), _fix_offers(key, note))
@@ -2974,6 +2976,46 @@ func _describe_dialog_itself() -> void:
 	var doing: String = _build_hint_text().strip_edges()
 	_help_strip.show_note(_definition.display_name,
 		doing if about.is_empty() else "%s  %s" % [about, doing])
+
+
+## V6. The plainer reading of what is already typed, as a button on the strip: a Set value whose
+## expression only adds to (or subtracts from) the variable it sets IS an Add to / Subtract from, and
+## the row says so in fewer words for the same emitted line. [] whenever the expression is anything
+## else, and [] when this editor's registry cannot name the verb it would write.
+##
+## Public so the reading can be pinned without a display server - the button is one press of it.
+func reading_offers() -> Array:
+	var reading: Dictionary = read_as(_definition, _current_values())
+	if reading.is_empty() or _registry == null:
+		return []
+	var target: ACEDefinition = _registry.find_definition(_definition.provider_id, str(reading["ace_id"]))
+	if target == null:
+		return []
+	var values: Dictionary = reading["params"]
+	return [{
+		"text": EventSheetL10n.translate("read as %s") % EventSheetL10n.translate(target.display_name),
+		"pressed": func() -> void: _confirm_as(target, values)
+	}]
+
+
+## The verb a row could be re-read as, {} when it reads best as itself: {"ace_id", "params"}. Static
+## + pure, and the ONE place the offer is decided, so the button and any caller asking "what would
+## this become" cannot disagree.
+static func read_as(definition: ACEDefinition, values: Dictionary) -> Dictionary:
+	if definition == null:
+		return {}
+	return EventSheetVariableOwners.compound_reading(str(definition.id), values)
+
+
+## Applies `definition` with `values` as if OK had been pressed on it, and closes. The row is
+## replaced through the very path this dialog's own OK takes (the context still names the slot being
+## edited), so re-reading a row is one undo step and one writer.
+func _confirm_as(definition: ACEDefinition, values: Dictionary) -> void:
+	var context: Dictionary = _context.duplicate(true)
+	_definition = null
+	_context.clear()
+	_close()
+	params_confirmed.emit(definition, values, context)
 
 
 ## The one-click answers a note offers, wired to this dialog's own fields.

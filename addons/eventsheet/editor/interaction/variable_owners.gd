@@ -353,6 +353,90 @@ const VARIABLE_VERB_TAKES: Dictionary = {
 }
 
 
+## The parameter each variable verb carries its VALUE in: Set value and the two questions call it
+## `value`, the arithmetic verbs call it `amount`. A table rather than a rule, because these are the
+## shipped parameter names and those are frozen - swapping one verb for another has to move what was
+## typed to whatever the new verb calls it, or the value is silently lost.
+const VARIABLE_VERB_VALUE_PARAM: Dictionary = {
+	"SetVar": "value", "SetBool": "value", "CompareVar": "value",
+	"AddVar": "amount", "SubtractVar": "amount", "MultiplyVar": "amount",
+	"DivideVar": "amount", "ModuloVar": "amount"
+}
+
+## The characters that open and close a bracketed run, so a `+` inside one is not a top-level sum.
+const _BRACKET_PAIRS: Dictionary = {"(": ")", "[": "]", "{": "}"}
+
+
+## V6/V12. One variable verb's parameters read as another's: the variable stays where it is and the
+## value moves to whatever the target calls it, so swapping Add to for Set value never loses what
+## was typed. Keys neither verb names are carried across untouched.
+static func rekeyed_params(params: Dictionary, from_ace_id: String, to_ace_id: String) -> Dictionary:
+	var from_key: String = str(VARIABLE_VERB_VALUE_PARAM.get(from_ace_id, ""))
+	var to_key: String = str(VARIABLE_VERB_VALUE_PARAM.get(to_ace_id, ""))
+	var rekeyed: Dictionary = params.duplicate(true)
+	if from_key.is_empty() or to_key.is_empty() or from_key == to_key:
+		return rekeyed
+	if rekeyed.has(from_key):
+		rekeyed[to_key] = rekeyed[from_key]
+		rekeyed.erase(from_key)
+	return rekeyed
+
+
+## V6. A Set value whose expression only adds to (or subtracts from) the very variable it is setting
+## IS an Add to / Subtract from, and reads better as one: `hp = hp + 1` is "Add 1 to hp". Returns
+## {"ace_id", "params"} - the row this one could be rewritten as - or {} when the expression is
+## anything else.
+##
+## The rest of the expression must carry no top-level `+` or `-` of its own: `hp = hp - a + b` is
+## NOT `hp -= a + b`, and an offer that changes what a row computes is worse than no offer.
+static func compound_reading(ace_id: String, params: Dictionary) -> Dictionary:
+	if ace_id != "SetVar":
+		return {}
+	var var_name: String = str(params.get("var_name", "")).strip_edges()
+	var expression: String = str(params.get("value", "")).strip_edges()
+	if var_name.is_empty() or not expression.begins_with(var_name):
+		return {}
+	var rest: String = expression.substr(var_name.length()).strip_edges()
+	if rest.length() < 2 or not (rest[0] == "+" or rest[0] == "-"):
+		return {}
+	var amount: String = rest.substr(1).strip_edges()
+	if amount.is_empty() or _has_top_level_sum(amount):
+		return {}
+	return {
+		"ace_id": "AddVar" if rest[0] == "+" else "SubtractVar",
+		"params": {"var_name": var_name, "amount": amount}
+	}
+
+
+## True when `text` adds or subtracts at its own top level - outside every bracket and every quoted
+## run. A leading sign is part of the first term, not a sum, so it does not count.
+static func _has_top_level_sum(text: String) -> bool:
+	var closers: Array[String] = []
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		index += 1
+		if not quote.is_empty():
+			if character == "\\":
+				index += 1
+			elif character == quote:
+				quote = ""
+			continue
+		if character == "\"" or character == "'":
+			quote = character
+			continue
+		if _BRACKET_PAIRS.has(character):
+			closers.append(str(_BRACKET_PAIRS[character]))
+			continue
+		if not closers.is_empty() and character == closers[closers.size() - 1]:
+			closers.pop_back()
+			continue
+		if closers.is_empty() and index > 1 and (character == "+" or character == "-"):
+			return true
+	return false
+
+
 ## The rank a variable verb sorts at, or a number past every named one for a verb the table does not
 ## name - so an unnamed verb keeps its registry order behind the seven.
 static func verb_rank(ace_id: String) -> int:

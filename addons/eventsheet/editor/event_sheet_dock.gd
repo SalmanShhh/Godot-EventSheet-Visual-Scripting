@@ -5274,20 +5274,28 @@ func open_object_properties(object_label: String) -> void:
 	_object_properties.open_for(object_label)
 
 
-## V12 - the "Use hp" beside an unknown-variable note. One undo step that rewrites every use of the
-## misspelled name in the sheet to the one it declares - the same rename the variable row's menu
-## does, aimed at a name that was never a variable in the first place.
+## V12 - the button on a variable note. An unknown name offers "Use hp", which rewrites every use of
+## the misspelling in the sheet to the one it declares; a variable of the wrong kind offers "Change
+## to Set value", which swaps the verb for the one that fits. One undo step either way.
 func _apply_variable_note_fix(note_row: EventRowData) -> void:
 	if note_row == null or _current_sheet == null:
 		return
 	var wrong: String = ""
 	var right: String = ""
+	var fix_kind: String = ""
+	var note_meta: Dictionary = {}
 	for span: SemanticSpan in note_row.spans:
 		if not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
 		wrong = str(metadata.get("variable_note_name", wrong))
 		right = str(metadata.get("variable_note_to", right))
+		fix_kind = str(metadata.get("variable_note_fix", fix_kind))
+		if metadata.has("variable_note_event"):
+			note_meta = metadata
+	if fix_kind == "retarget":
+		_retarget_variable_row(note_meta, right)
+		return
 	if wrong.is_empty() or right.is_empty() or wrong == right:
 		return
 	var counted: Dictionary = {"renamed": 0}
@@ -5298,6 +5306,33 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 		_set_status(EventSheetL10n.translate("Nothing to rename."))
 		return
 	_set_status(EventSheetL10n.translate("Renamed %s to %s.") % [wrong, right])
+
+
+## V12 - "Change to Set value" on a type-mismatch note. The row is replaced with the verb that fits,
+## carrying what was typed across to whatever that verb calls it, through the very path the
+## Parameters dialog's OK takes - so the swap is one undo step and one writer.
+func _retarget_variable_row(note_meta: Dictionary, to_ace_id: String) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var lane: String = str(note_meta.get("variable_note_lane", ""))
+	var slot: int = int(note_meta.get("variable_note_index", -1))
+	if event_row == null or to_ace_id.is_empty() or slot < 0:
+		return
+	var lane_rows: Array = event_row.conditions if lane == "condition" else event_row.actions
+	if slot >= lane_rows.size() or not (lane_rows[slot] is Resource):
+		return
+	var picked: Resource = lane_rows[slot] as Resource
+	var definition: ACEDefinition = _ace_registry.find_definition(str(picked.get("provider_id")), to_ace_id)
+	if definition == null:
+		_set_status(EventSheetL10n.translate("Couldn't find %s to write this row with.") % to_ace_id, true)
+		return
+	_ace_apply._apply_ace_definition(definition, EventSheetVariableOwners.rekeyed_params(
+		picked.get("params") if picked.get("params") is Dictionary else {},
+		str(picked.get("ace_id")), to_ace_id
+	), {
+		"mode": "replace_condition" if lane == "condition" else "replace_action",
+		"selected_resource": event_row,
+		"ace_index": slot
+	})
 
 
 ## V10 - the Inspector's "Instance variables · N" lands here: the open sheet's own object popup,

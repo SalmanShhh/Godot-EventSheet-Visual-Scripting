@@ -4428,3 +4428,6 @@ true or false,истина или ложь
 wants %s,требует %s
 will not compile,не скомпилируется
 from %s,из %s
+read as %s,читать как %s
+Change to %s,Заменить на %s
+Couldn't find %s to write this row with.,Не удалось найти %s для этой строки.

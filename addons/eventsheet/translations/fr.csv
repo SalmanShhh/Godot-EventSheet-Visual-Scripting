@@ -4428,3 +4428,6 @@ true or false,vrai ou faux
 wants %s,attend %s
 will not compile,ne compilera pas
 from %s,de %s
+read as %s,lire comme %s
+Change to %s,Changer en %s
+Couldn't find %s to write this row with.,Impossible de trouver %s pour écrire cette ligne.

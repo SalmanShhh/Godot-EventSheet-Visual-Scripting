@@ -8495,41 +8495,43 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	if entries.is_empty():
 		return rows
 	var owner: String = EventSheetVariableOwners.owner_of_sheet(_viewport._sheet)
-	var aces: Array = []
-	aces.append_array(event_row.conditions)
-	aces.append_array(event_row.actions)
 	var seen: Dictionary = {}
-	for ace: Variant in aces:
-		if not (ace is Resource):
-			continue
-		var params: Dictionary = _ace_params_of(ace as Resource)
-		if params.is_empty():
-			continue
-		var ace_id: String = str((ace as Resource).get("ace_id"))
-		for name_text: String in _variable_reference_values(
-				str((ace as Resource).get("provider_id")), ace_id, params):
-			if seen.has(name_text) or not EventSheetIdentifierRules.is_valid(name_text):
+	for lane: String in ["condition", "action"]:
+		var lane_rows: Array = event_row.conditions if lane == "condition" else event_row.actions
+		for index: int in range(lane_rows.size()):
+			var ace: Variant = lane_rows[index]
+			if not (ace is Resource):
 				continue
-			seen[name_text] = true
-			var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
-			if not unknown.is_empty():
-				var suggestion: String = str(unknown.get("suggestion", ""))
-				rows.append(_build_variable_note_row(
-					event_uid, indent, str(unknown.get("note", "")),
-					"" if suggestion.is_empty() else EventSheetL10n.translate("Use %s") % suggestion,
-					{"variable_note_name": name_text, "variable_note_to": suggestion,
-						"variable_note_fix": "rename"}, true))
+			var params: Dictionary = _ace_params_of(ace as Resource)
+			if params.is_empty():
 				continue
-			var mismatch: Dictionary = variable_mismatch_note(
-				EventSheetVariableOwners.find(entries, name_text), ace_id)
-			if not mismatch.is_empty():
-				# No fix button on the mismatch: swapping the verb rewrites the row's template and
-				# re-keys its parameters, which is the parameters dialog's job and not a one-click
-				# one. The note says which verb fits, and the row menu opens it.
-				rows.append(_build_variable_note_row(
-					event_uid, indent, str(mismatch.get("note", "")), "",
-					{"variable_note_name": name_text, "variable_note_to": str(mismatch.get("ace_id", "")),
-						"variable_note_fix": "retarget"}, false))
+			var ace_id: String = str((ace as Resource).get("ace_id"))
+			for name_text: String in _variable_reference_values(
+					str((ace as Resource).get("provider_id")), ace_id, params):
+				if seen.has(name_text) or not EventSheetIdentifierRules.is_valid(name_text):
+					continue
+				seen[name_text] = true
+				var unknown: Dictionary = EventSheetVariableOwners.unknown_note(entries, name_text, owner)
+				if not unknown.is_empty():
+					var suggestion: String = str(unknown.get("suggestion", ""))
+					rows.append(_build_variable_note_row(
+						event_uid, indent, str(unknown.get("note", "")),
+						"" if suggestion.is_empty() else EventSheetL10n.translate("Use %s") % suggestion,
+						{"variable_note_name": name_text, "variable_note_to": suggestion,
+							"variable_note_fix": "rename"}, true))
+					continue
+				var mismatch: Dictionary = variable_mismatch_note(
+					EventSheetVariableOwners.find(entries, name_text), ace_id)
+				if not mismatch.is_empty():
+					# V12 - the fix swaps the verb for the one that fits, carrying what was typed
+					# across to whatever the new verb calls it. The row it will rewrite is named by
+					# its LANE and SLOT, never by holding the picked resource: the fix runs through
+					# the undo funnel, and the funnel replaces resources as it commits.
+					rows.append(_build_variable_note_row(
+						event_uid, indent, str(mismatch.get("note", "")), str(mismatch.get("fix_label", "")),
+						{"variable_note_name": name_text, "variable_note_to": str(mismatch.get("ace_id", "")),
+							"variable_note_fix": "retarget", "variable_note_event": event_row,
+							"variable_note_lane": lane, "variable_note_index": index}, false))
 	return rows
 
 
@@ -8553,7 +8555,7 @@ static func variable_mismatch_note(entry: Dictionary, ace_id: String) -> Diction
 		"note": EventSheetL10n.translate("%s is %s - %s wants a %s. %s fits.") % [
 			str(entry.get("name", "")), type_word, _variable_verb_name(ace_id),
 			EventSheetL10n.translate(wants), _variable_verb_name("SetVar")],
-		"fix_label": EventSheetL10n.translate("%s fits.") % _variable_verb_name("SetVar"),
+		"fix_label": EventSheetL10n.translate("Change to %s") % _variable_verb_name("SetVar"),
 		"ace_id": "SetVar"
 	}
 

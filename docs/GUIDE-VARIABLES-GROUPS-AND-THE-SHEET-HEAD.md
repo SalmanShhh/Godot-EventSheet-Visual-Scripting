@@ -353,7 +353,8 @@ against `== true`. Both write exactly the GDScript the older rows write.
 event - "hpp is not a variable of Player. Did you mean hp?" - with a **Use hp** button that renames
 every use of it in one undo step. A verb handed the wrong KIND of variable grows an amber note
 instead ("nickname is text - Add to wants a number. Set value fits."), because that line compiles and
-only misbehaves.
+only misbehaves - and it carries a **Change to Set value** button that swaps the verb for the one
+that fits, carrying what was typed across to whatever the new verb calls it.
 
 ## Asking a question: the comparison rows
 
@@ -512,6 +513,13 @@ reason beside it rather than going grey without explanation:
 
 Coming back from **Add hpp…**, the list has it: the dialog re-reads its catalog when it regains
 focus.
+
+**And when nothing is wrong, the strip can still offer a plainer reading.** A **Set value** whose
+expression only adds to (or subtracts from) the very variable it is setting - `hp = hp + 1` - offers
+**read as Add to**; `hp = hp - damage * 2` offers **read as Subtract from**. One press rewrites the
+row as that verb, in one undo step, and the compiled line does not change. The offer is withheld
+whenever taking it would change what the row computes (`hp - a + b` is not `hp -= a + b`) or when
+the expression is somebody else's arithmetic.
 
 ## The sheet head, band by band
 

@@ -4428,3 +4428,6 @@ true or false,wahr oder falsch
 wants %s,erwartet %s
 will not compile,lässt sich nicht kompilieren
 from %s,von %s
+read as %s,lesen als %s
+Change to %s,In %s ändern
+Couldn't find %s to write this row with.,"%s konnte nicht gefunden werden, um diese Zeile zu schreiben."

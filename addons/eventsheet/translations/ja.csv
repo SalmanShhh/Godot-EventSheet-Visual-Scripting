@@ -4428,3 +4428,6 @@ true or false,true か false
 wants %s,%s が必要
 will not compile,コンパイルできません
 from %s,%s から
+read as %s,%s として読む
+Change to %s,%s に変更
+Couldn't find %s to write this row with.,この行を書く %s が見つかりませんでした。

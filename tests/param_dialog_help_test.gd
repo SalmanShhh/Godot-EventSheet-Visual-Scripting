@@ -20,7 +20,51 @@ static func run() -> bool:
 	all_passed = _test_option_second_lines() and all_passed
 	all_passed = _test_validation_states() and all_passed
 	all_passed = _test_strip_component() and all_passed
+	all_passed = _test_read_as() and all_passed
 	return all_passed
+
+
+## V6. A Set value whose expression only adds to (or subtracts from) the very variable it sets IS an
+## Add to / Subtract from. The strip offers it as a reading, and the offer never changes what the row
+## computes - which is why an expression with a top-level sum of its own is refused.
+static func _test_read_as() -> bool:
+	var passed: bool = true
+	var set_value: ACEDefinition = _definition("SetVar", "Set value",
+		"Set {var_name} to {value}", "{var_name} = {value}", ACEDefinition.ACEType.ACTION)
+	passed = _check("adding to itself reads as Add to",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "hp + 1"}),
+		{"ace_id": "AddVar", "params": {"var_name": "hp", "amount": "1"}}) and passed
+	passed = _check("and subtracting from itself as Subtract from",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "hp - damage * 2"}),
+		{"ace_id": "SubtractVar", "params": {"var_name": "hp", "amount": "damage * 2"}}) and passed
+	passed = _check("a bracketed sum is one amount, not two",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "hp - (a + b)"}),
+		{"ace_id": "SubtractVar", "params": {"var_name": "hp", "amount": "(a + b)"}}) and passed
+	# `hp - a + b` is NOT `hp -= a + b`, so the offer is refused rather than made wrongly.
+	passed = _check("a bare top-level sum is refused",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "hp - a + b"}), {}) and passed
+	passed = _check("so is another variable's arithmetic",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "shield + 1"}), {}) and passed
+	passed = _check("and a name that only starts the same way",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "hp_max + 1"}), {}) and passed
+	passed = _check("a plain value reads as itself",
+		ACEParamsDialog.read_as(set_value, {"var_name": "hp", "value": "100"}), {}) and passed
+	passed = _check("and no other verb offers a re-reading",
+		ACEParamsDialog.read_as(_definition("AddVar", "Add to", "Add {amount} to {var_name}",
+			"{var_name} += {amount}", ACEDefinition.ACEType.ACTION),
+			{"var_name": "hp", "amount": "hp + 1"}), {}) and passed
+	# V12's fix is the same move in reverse, so both go through one re-keying: the variable stays
+	# put and the value lands under whatever the new verb calls it.
+	passed = _check("re-keying moves the value to the new verb's own name",
+		EventSheetVariableOwners.rekeyed_params({"var_name": "nickname", "amount": "1"}, "AddVar", "SetVar"),
+		{"var_name": "nickname", "value": "1"}) and passed
+	passed = _check("and back again",
+		EventSheetVariableOwners.rekeyed_params({"var_name": "hp", "value": "1"}, "SetVar", "SubtractVar"),
+		{"var_name": "hp", "amount": "1"}) and passed
+	passed = _check("two verbs that spell it the same way change nothing",
+		EventSheetVariableOwners.rekeyed_params({"var_name": "hp", "amount": "1"}, "AddVar", "SubtractVar"),
+		{"var_name": "hp", "amount": "1"}) and passed
+	return passed
 
 
 ## P0. The title IS the row: the object it belongs to, then the ACE's sentence with the values as

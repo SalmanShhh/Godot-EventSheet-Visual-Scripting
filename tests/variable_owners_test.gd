@@ -349,12 +349,27 @@ static func _test_row_owner_and_notes() -> bool:
 			"hpp is not a variable of Player. Did you mean hp? Use hp") and ok
 		ok = _check("the wrong kind says which verb fits",
 			_note_text(notes[1]),
-			"nickname is text - Add to wants a number. Set value fits.") and ok
+			"nickname is text - Add to wants a number. Set value fits. Change to Set value") and ok
 		ok = _check("a note is inert - nothing can be deleted through it",
 			(notes[0] as EventRowData).source_resource == null, true) and ok
 	# The fix: one click renames every use of the misspelled name.
 	dock._apply_variable_note_fix(notes[0] if not notes.is_empty() else null)
 	ok = _check("the fix rewrote the row", str(wrong.params.get("var_name", "")), "hp") and ok
+
+	# V12 - and the mismatch's own fix swaps the verb for the one that fits, carrying what was typed
+	# across to whatever the new verb calls it. The row's SLOT is rewritten, so what stands there
+	# afterwards is a fresh Set value, not the Add to that was there.
+	dock._apply_variable_note_fix(_note_with_fix(_row_with_uid(dock, "typo"), "retarget"))
+	# Read the row back off the LIVE sheet: the undo funnel commits by replacing resources with
+	# snapshot duplicates, so the ACEAction this test built is not the one on the canvas any more.
+	var rewritten: Resource = _live_action(dock, "typo", 1)
+	ok = _check("the mismatch fix wrote the verb that fits", str(rewritten.get("ace_id")), "SetVar") and ok
+	ok = _check("carrying the variable and what was typed across",
+		rewritten.get("params"), {"var_name": "nickname", "value": "1"}) and ok
+	ok = _check("and the row now compiles as that verb",
+		str(rewritten.get("codegen_template")), "{var_name} = {value}") and ok
+	ok = _check("so the note it came from is gone",
+		_note_rows(_row_with_uid(dock, "typo")).size(), 0) and ok
 
 	# The mismatch note is a reading only - the sheet never moved.
 	var mismatch: Dictionary = ViewportRowBuilder.variable_mismatch_note(
@@ -379,6 +394,26 @@ static func _note_rows(event_row: EventRowData) -> Array:
 		if child.row_uid.begins_with("variable_note_"):
 			notes.append(child)
 	return notes
+
+
+## One action off the sheet the dock is actually holding, by the event's uid and the slot.
+static func _live_action(dock: EventSheetDock, event_uid: String, slot: int) -> Resource:
+	for entry: Variant in dock._current_sheet.events:
+		if entry is EventRow and (entry as EventRow).event_uid == event_uid:
+			var actions: Array = (entry as EventRow).actions
+			return actions[slot] as Resource if slot < actions.size() else null
+	return null
+
+
+## The note row offering one KIND of fix ("rename" / "retarget"), or null. Found by what the fix
+## does rather than by position: a fix that lands removes its own note, so the list renumbers.
+static func _note_with_fix(event_row: EventRowData, fix_kind: String) -> EventRowData:
+	for note: Variant in _note_rows(event_row):
+		for span: SemanticSpan in (note as EventRowData).spans:
+			var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			if str(metadata.get("variable_note_fix", "")) == fix_kind:
+				return note as EventRowData
+	return null
 
 
 static func _note_text(row: EventRowData) -> String:

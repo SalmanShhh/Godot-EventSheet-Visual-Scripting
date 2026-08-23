@@ -4428,3 +4428,6 @@ true or false,vero o falso
 wants %s,richiede %s
 will not compile,non compilerà
 from %s,da %s
+read as %s,leggi come %s
+Change to %s,Cambia in %s
+Couldn't find %s to write this row with.,Impossibile trovare %s per scrivere questa riga.

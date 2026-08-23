@@ -4428,3 +4428,6 @@ true or false,真或假
 wants %s,需要 %s
 will not compile,无法编译
 from %s,来自 %s
+read as %s,读作 %s
+Change to %s,改为 %s
+Couldn't find %s to write this row with.,找不到 %s 来写这一行。
