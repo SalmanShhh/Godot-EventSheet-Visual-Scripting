@@ -174,45 +174,124 @@ func _apply_breakpoint_condition() -> void:
 # ── Group editor popup (name + optional description) ──
 var _group_edit_dialog: ConfirmationDialog = null
 var _group_name_edit: LineEdit = null
-var _group_desc_edit: TextEdit = null
+var _group_desc_edit: LineEdit = null
+var _group_enabled_check: CheckBox = null
+var _group_runtime_check: CheckBox = null
+var _group_color_button: ColorPickerButton = null
+var _group_help_strip: EventSheetPopupUI.HelpStrip = null
 var _group_edit_target: EventGroup = null
 
+## The facts a group HAS, in the order the dialog asks for them. One table, so the dialog, its help
+## strip and the tests all read the same list.
+const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Active on start", "Can be switched at runtime", "Colour"]
 
-## Group editor popup: edit a group's name and (optional) description together. Replaces the old
-## inline title edit - the description renders only as a muted second header line once it is
-## non-empty, so an inline-only flow could never ADD one. Reached by double-click / slow-click /
-## Enter on a group header, and right after Add Group.
+
+## G4 - the ONE group dialog: name, description, active on start, switchable at runtime, colour.
+## Everything a group IS, in one place, instead of a name field plus three separate menu items.
+## Reached by double-click / slow-click / Enter on a group head, from Edit group..., and right
+## after Add Group.
 func on_group_edit_requested(group: EventGroup) -> void:
 	if group == null:
 		return
 	if _group_edit_dialog == null:
-		_group_edit_dialog = ConfirmationDialog.new()
-		_group_edit_dialog.title = "Edit Group"
-		_group_edit_dialog.ok_button_text = "Apply"
-		_group_edit_dialog.min_size = Vector2i(420, 0)
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
-		_group_name_edit = LineEdit.new()
-		_group_name_edit.placeholder_text = "Group name"
-		# Enter in the name field applies + closes (the LineEdit consumes Enter, so the dialog's
-		# own OK does not also fire); _apply_group_edit is one-shot-guarded regardless.
-		_group_name_edit.text_submitted.connect(func(_submitted: String) -> void:
-			_apply_group_edit()
-			_group_edit_dialog.hide()
-		)
-		box.add_child(EventSheetPopupUI.form_row("Name", _group_name_edit))
-		_group_desc_edit = TextEdit.new()
-		_group_desc_edit.custom_minimum_size = Vector2(0.0, 90.0)
-		_group_desc_edit.placeholder_text = "Shown as a muted second line on the group header."
-		box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
-		_group_edit_dialog.add_child(EventSheetPopupUI.margined(box))
-		_group_edit_dialog.confirmed.connect(_apply_group_edit)
-		_dock.add_child(_group_edit_dialog)
+		_build_group_edit_dialog()
 	_group_edit_target = group
 	_group_name_edit.text = group.group_name if not group.group_name.strip_edges().is_empty() else group.name
 	_group_desc_edit.text = group.description
+	_group_enabled_check.button_pressed = group.enabled
+	_group_runtime_check.button_pressed = group.runtime_toggleable
+	_group_color_button.color = group.custom_color if group.custom_color.a > 0.0 else Color(0.55, 0.45, 0.85, 1.0)
+	_refresh_group_reading()
 	_group_edit_dialog.popup_centered()
 	_group_name_edit.grab_focus()
 	_group_name_edit.select_all()
+
+
+func _build_group_edit_dialog() -> void:
+	_group_edit_dialog = ConfirmationDialog.new()
+	_group_edit_dialog.title = "Edit group"
+	_group_edit_dialog.ok_button_text = "Apply"
+	_group_edit_dialog.min_size = Vector2i(460, 0)
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	_group_help_strip = EventSheetPopupUI.help_strip(
+		GROUP_FIELD_ORDER[0], _group_field_help(GROUP_FIELD_ORDER[0]))
+	_group_name_edit = LineEdit.new()
+	_group_name_edit.placeholder_text = "Combat"
+	# Enter in the name field applies + closes (the LineEdit consumes Enter, so the dialog's
+	# own OK does not also fire); _apply_group_edit is one-shot-guarded regardless.
+	_group_name_edit.text_submitted.connect(func(_submitted: String) -> void:
+		_apply_group_edit()
+		_group_edit_dialog.hide()
+	)
+	_group_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row("Name", _group_name_edit))
+	_group_desc_edit = LineEdit.new()
+	_group_desc_edit.placeholder_text = "Damage, hits and death."
+	_group_desc_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
+	_group_enabled_check = CheckBox.new()
+	_group_enabled_check.text = GROUP_FIELD_ORDER[2]
+	_group_enabled_check.toggled.connect(func(_on: bool) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row("", _group_enabled_check))
+	_group_runtime_check = CheckBox.new()
+	_group_runtime_check.text = GROUP_FIELD_ORDER[3]
+	_group_runtime_check.toggled.connect(func(_on: bool) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row("", _group_runtime_check))
+	_group_color_button = ColorPickerButton.new()
+	_group_color_button.custom_minimum_size = Vector2(120.0, 0.0)
+	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[4], _group_color_button))
+	for followed: Array in [
+		[_group_name_edit, GROUP_FIELD_ORDER[0]],
+		[_group_desc_edit, GROUP_FIELD_ORDER[1]],
+		[_group_enabled_check, GROUP_FIELD_ORDER[2]],
+		[_group_runtime_check, GROUP_FIELD_ORDER[3]],
+		[_group_color_button, GROUP_FIELD_ORDER[4]],
+	]:
+		_group_help_strip.follow(followed[0] as Control, str(followed[1]), _group_field_help(str(followed[1])))
+	box.add_child(_group_help_strip)
+	_group_edit_dialog.add_child(EventSheetPopupUI.margined(box))
+	_group_edit_dialog.confirmed.connect(_apply_group_edit)
+	_dock.add_child(_group_edit_dialog)
+
+
+## What each field of the group dialog is, in one line. A table rather than five literals at the
+## call site, so the strip and any future caller say the same thing.
+static func _group_field_help(field: String) -> String:
+	match field:
+		"Name":
+			return "What the group head reads. It is also the name a Set group active row writes."
+		"Description":
+			return "One line beside the name, on the head itself - and still there when the group is folded."
+		"Active on start":
+			return "Off compiles the whole group out: nothing inside it runs, and nothing inside it is emitted."
+		"Can be switched at runtime":
+			return "Adds the flag Set group active flips, so this group can be turned on and off while the game runs."
+		"Colour":
+			return "Paints the bracket down the group's body, so a big sheet reads by colour."
+	return ""
+
+
+## The strip's READS AS line: the head this dialog is about to write, and - for a switchable group -
+## the row that can now reach it.
+func _refresh_group_reading() -> void:
+	if _group_help_strip == null:
+		return
+	var name_text: String = _group_name_edit.text.strip_edges()
+	if name_text.is_empty():
+		name_text = "Group"
+	var reads: String = name_text
+	var description: String = _group_desc_edit.text.strip_edges()
+	if not description.is_empty():
+		reads += "  %s" % description
+	if not _group_enabled_check.button_pressed:
+		reads += "  (off)"
+	var in_code: String = ""
+	if _group_runtime_check.button_pressed:
+		in_code = "var __group_%s_active: bool = %s" % [
+			SheetCompiler.guard_token(name_text),
+			"true" if _group_enabled_check.button_pressed else "false"
+		]
+	_group_help_strip.set_reading(reads, in_code)
 
 
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
@@ -221,16 +300,21 @@ func _apply_group_edit() -> void:
 		return
 	var target: EventGroup = _group_edit_target
 	_group_edit_target = null
-	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text)
+	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, {
+		"enabled": _group_enabled_check.button_pressed,
+		"runtime_toggleable": _group_runtime_check.button_pressed,
+		"custom_color": _group_color_button.color
+	})
 
 
-## Applies a group's name + description undoably. Wraps the pure static mutation so the popup's
-## Apply and tests share one code path.
-func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
+## Applies a group's fields undoably. Wraps the pure static mutation so the popup's Apply and tests
+## share one code path. `extras` carries whatever the caller wants changed beyond name/description;
+## anything it leaves out stays exactly as the group has it.
+func apply_group_edit(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> bool:
 	if group == null:
 		return false
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Group", func() -> bool:
-		set_group_fields(group, new_name, new_desc)
+		set_group_fields(group, new_name, new_desc, extras)
 		return true
 	)
 	if changed:
@@ -239,15 +323,22 @@ func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> 
 
 
 ## Pure mutation: trims + applies a group's name (mirrored to .name + .group_name) and its
-## description; a blank name falls back to "Group". Static so it is unit-testable without the
-## dialog or a display server. Returns the resolved name.
-static func set_group_fields(group: EventGroup, new_name: String, new_desc: String) -> String:
+## description; a blank name falls back to "Group". `extras` may carry "enabled",
+## "runtime_toggleable" and "custom_color"; a key it omits leaves that fact alone. Static so it is
+## unit-testable without the dialog or a display server. Returns the resolved name.
+static func set_group_fields(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> String:
 	var resolved_name: String = new_name.strip_edges()
 	if resolved_name.is_empty():
 		resolved_name = "Group"
 	group.name = resolved_name
 	group.group_name = resolved_name
 	group.description = new_desc.strip_edges()
+	if extras.has("enabled"):
+		group.enabled = bool(extras["enabled"])
+	if extras.has("runtime_toggleable"):
+		group.runtime_toggleable = bool(extras["runtime_toggleable"])
+	if extras.has("custom_color"):
+		group.custom_color = extras["custom_color"]
 	return resolved_name
 
 

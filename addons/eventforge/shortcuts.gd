@@ -77,7 +77,7 @@ const LABELS: Dictionary = {
 	"add_condition": "Add condition",
 	"add_action": "Add action",
 	"add_comment": "Add comment",
-	"add_group": "Add group",
+	"add_group": "Group the selection (or add an empty group)",
 	"toggle_enabled": "Toggle enabled / disabled",
 	"add_blank_subevent": "Add blank sub-event",
 	"add_sub_condition": "Add sub-event (picker)",

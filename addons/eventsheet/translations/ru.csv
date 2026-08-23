@@ -4270,3 +4270,8 @@ Set animation to {name} (play from end),Задать анимацию {name} (и
 Set animation to {name} after the current one,Задать анимацию {name} после текущей
 On animation event {event},На событии анимации {event}
 On animation event {event} of {animation},На событии анимации {event} клипа {animation}
+Edit Group…,Изменить группу…
+Active On Start,Активна при старте
+Open All / Close All Groups,Открыть / закрыть все группы
+Add Local Variable…,Добавить локальную переменную…
+Ungroup - Keep The Rows,Разгруппировать - строки оставить

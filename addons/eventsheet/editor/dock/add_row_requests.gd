@@ -58,6 +58,18 @@ func on_add_comment_requested() -> void:
 func on_add_group_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
+	# G4 - G is one key with one meaning: "make these a group". With rows selected it wraps THEM (the
+	# existing Group Selection command) and drops straight into naming it; with nothing selected there
+	# is nothing to wrap, so it adds an empty group at the cursor instead.
+	var selected: Array = _dock._top_level_selected_resources()
+	if not selected.is_empty():
+		var wrap_problem: String = _dock._bulk_group_rows(selected)
+		if not wrap_problem.is_empty():
+			_dock._set_status(wrap_problem, true)
+			return
+		if _dock._row_edit_ops.last_group_created != null:
+			call_deferred("_begin_group_rename", _dock._row_edit_ops.last_group_created)
+		return
 	# N1 authoring symmetry - on a .gd sheet the file is the truth, and the file's own way of
 	# grouping is `#region Name` / `#endregion`, which Godot folds in the script editor. So a Group
 	# added here is written as that fence pair; it reads back as the same bar, so a group made on the
@@ -125,8 +137,8 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_dock._quick_prompts.on_group_edit_requested(group)
 
 
-func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
-	return _dock._quick_prompts.apply_group_edit(group, new_name, new_desc)
+func apply_group_edit(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> bool:
+	return _dock._quick_prompts.apply_group_edit(group, new_name, new_desc, extras)
 
 
 func on_duplicate_requested() -> void:

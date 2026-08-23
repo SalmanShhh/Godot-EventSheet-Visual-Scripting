@@ -187,8 +187,16 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._set_status("Nothing identifiable to search for on this row.", true)
 			else:
 				_dock._open_project_find(usage_query)
-		_dock.ROW_MENU_GROUP_RUNTIME:
-			_dock._toggle_group_runtime()
+		_dock.ROW_MENU_GROUP_ENABLED:
+			_dock._toggle_group_enabled()
+		_dock.ROW_MENU_EDIT_GROUP:
+			_dock._open_group_editor_for_context()
+		_dock.ROW_MENU_FOLD_ALL_GROUPS:
+			_dock._toggle_all_group_folds()
+		_dock.ROW_MENU_GROUP_ADD_LOCAL:
+			_dock._add_group_local_variable()
+		_dock.ROW_MENU_UNGROUP:
+			_dock._ungroup_context_group()
 		_dock.ROW_MENU_GROUP_COLOR:
 			_dock._open_group_color_picker()
 		_dock.ROW_MENU_BULK_TOGGLE_ENABLED:
@@ -203,19 +211,6 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._open_save_snippet_dialog()
 		_dock.ROW_MENU_INSERT_SNIPPET:
 			_dock._open_insert_snippet()
-		_dock.ROW_MENU_EDIT_GROUP_DESC:
-			if _dock._context_row.source_resource is EventGroup:
-				var described_group: EventGroup = _dock._context_row.source_resource as EventGroup
-				if described_group.description.strip_edges().is_empty():
-					var seeded: bool = _dock._perform_undoable_sheet_edit("Add Group Description", func() -> bool:
-						described_group.description = "Description"
-						return true
-					)
-					if seeded:
-						_dock._refresh_after_edit()
-				_dock._set_status("Double-click the description line (or slow-double-click) to edit it.")
-			else:
-				_dock._set_status("Select a group to edit its description.", true)
 
 
 func unhandled_key_input(event: InputEvent) -> void:
@@ -307,9 +302,14 @@ func unhandled_key_input(event: InputEvent) -> void:
 			_dock._open_command_palette()
 			_dock.accept_event()
 		elif key_event.keycode == KEY_G:
-			# Ctrl+G: Go to event. The margin number is how two people name the same row, so
-			# jumping to one is grammar rather than a preference - fixed, like the zoom keys.
-			_dock._open_go_to_event_dialog()
+			if key_event.shift_pressed:
+				# G4 - Ctrl+Shift+G: open all groups, or close them all when any is open. One key for
+				# the whole sheet, beside the G that makes one.
+				_dock._toggle_all_group_folds()
+			else:
+				# Ctrl+G: Go to event. The margin number is how two people name the same row, so
+				# jumping to one is grammar rather than a preference - fixed, like the zoom keys.
+				_dock._open_go_to_event_dialog()
 			_dock.accept_event()
 		elif key_event.keycode == KEY_Y:
 			_dock._on_redo_requested()

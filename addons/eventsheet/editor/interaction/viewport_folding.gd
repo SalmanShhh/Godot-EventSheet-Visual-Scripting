@@ -66,6 +66,36 @@ func set_region_folds(folded: bool, include_groups: bool = false) -> void:
 	persist_region_folds()
 
 
+## G4 - Open all / Close all: true while ANY group on the sheet is open, which is what makes the one
+## gesture a toggle instead of two commands.
+func any_group_open() -> bool:
+	return _any_group_open_in(_viewport._root_rows)
+
+
+func _any_group_open_in(rows: Array[EventRowData]) -> bool:
+	for row_data: EventRowData in rows:
+		if row_data.source_resource is EventGroup and not row_data.children.is_empty() and not row_data.folded:
+			return true
+		if _any_group_open_in(row_data.children):
+			return true
+	return false
+
+
+## Folds or unfolds every event GROUP in one step, leaving regions and event blocks alone.
+func set_group_folds(folded: bool) -> void:
+	_set_group_folds_in(_viewport._root_rows, folded)
+	_viewport._refresh_rows()
+	persist_region_folds()
+
+
+func _set_group_folds_in(rows: Array[EventRowData], folded: bool) -> void:
+	for row_data: EventRowData in rows:
+		if row_data.source_resource is EventGroup and not row_data.children.is_empty():
+			row_data.folded = folded
+			_viewport._fold_state[row_data.row_uid] = folded
+		_set_group_folds_in(row_data.children, folded)
+
+
 func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool) -> void:
 	for row_data: EventRowData in rows:
 		if row_data.children.is_empty():

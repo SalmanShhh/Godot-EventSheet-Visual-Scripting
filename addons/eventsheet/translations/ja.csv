@@ -4270,3 +4270,8 @@ Set animation to {name} (play from end),アニメーションを {name} にす�
 Set animation to {name} after the current one,現在のアニメーションの後に {name} を再生する
 On animation event {event},アニメーションイベント {event} で
 On animation event {event} of {animation},{animation} のアニメーションイベント {event} で
+Edit Group…,グループを編集…
+Active On Start,開始時に有効
+Open All / Close All Groups,すべてのグループを開く / 閉じる
+Add Local Variable…,ローカル変数を追加…
+Ungroup - Keep The Rows,グループ解除 - 行は残す

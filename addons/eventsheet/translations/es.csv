@@ -4270,3 +4270,8 @@ Set animation to {name} (play from end),Poner animación a {name} (reproducir de
 Set animation to {name} after the current one,Poner animación a {name} después de la actual
 On animation event {event},En el evento de animación {event}
 On animation event {event} of {animation},En el evento de animación {event} de {animation}
+Edit Group…,Editar grupo…
+Active On Start,Activo al inicio
+Open All / Close All Groups,Abrir / cerrar todos los grupos
+Add Local Variable…,Añadir variable local…
+Ungroup - Keep The Rows,Desagrupar - conservar las filas

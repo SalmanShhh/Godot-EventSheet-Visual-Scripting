@@ -279,10 +279,17 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item("Add 'Else'", _dock.ROW_MENU_MAKE_ELSE)
 		menu.add_item("Add 'Else If'", _dock.ROW_MENU_MAKE_ELIF)
 	elif is_group:
+		# G4 - the group verbs in the order an author reaches for them: everything the group IS in one
+		# dialog, the on/off tick, the folds, then the things you do TO a group. Duplicate and Delete
+		# are the universal items below, so the group menu does not repeat them.
+		menu.add_item("Edit Group…", _dock.ROW_MENU_EDIT_GROUP)
+		menu.add_check_item("Active On Start", _dock.ROW_MENU_GROUP_ENABLED)
 		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
-		menu.add_item("Edit Description…", _dock.ROW_MENU_EDIT_GROUP_DESC)
+		menu.add_item("Open All / Close All Groups", _dock.ROW_MENU_FOLD_ALL_GROUPS)
+		menu.add_separator()
+		menu.add_item("Add Local Variable…", _dock.ROW_MENU_GROUP_ADD_LOCAL)
 		menu.add_item("Group Color…", _dock.ROW_MENU_GROUP_COLOR)
-		menu.add_item("Runtime Toggleable", _dock.ROW_MENU_GROUP_RUNTIME)
+		menu.add_item("Ungroup - Keep The Rows", _dock.ROW_MENU_UNGROUP)
 	elif is_comment:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)
@@ -538,6 +545,13 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					group_toggle_index,
 					"Open Group" if context_group.is_collapsed() else "Close Group"
 				)
+		# G4 - Active on start is a TICK, so the menu shows the group's live state rather than a verb
+		# that has to be read twice to work out which way it goes.
+		var group_enabled_index: int = menu.get_item_index(_dock.ROW_MENU_GROUP_ENABLED)
+		if group_enabled_index >= 0:
+			var switched_group: EventGroup = _dock._context_row.source_resource as EventGroup if _dock._context_row != null else null
+			menu.set_item_disabled(group_enabled_index, switched_group == null)
+			menu.set_item_checked(group_enabled_index, switched_group != null and switched_group.enabled)
 		var row_toggle_index: int = menu.get_item_index(_dock.ROW_MENU_TOGGLE_ENABLED)
 		if row_toggle_index >= 0:
 			menu.set_item_text(

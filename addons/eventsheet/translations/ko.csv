@@ -4270,3 +4270,8 @@ Set animation to {name} (play from end),애니메이션을 {name} 로 설정 (�
 Set animation to {name} after the current one,현재 애니메이션 다음에 {name} 로 설정
 On animation event {event},애니메이션 이벤트 {event} 에서
 On animation event {event} of {animation},{animation} 의 애니메이션 이벤트 {event} 에서
+Edit Group…,그룹 편집…
+Active On Start,시작 시 활성
+Open All / Close All Groups,모든 그룹 열기 / 닫기
+Add Local Variable…,지역 변수 추가…
+Ungroup - Keep The Rows,그룹 해제 - 행은 유지

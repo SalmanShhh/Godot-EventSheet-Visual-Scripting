@@ -4270,3 +4270,8 @@ Set animation to {name} (play from end),将动画设为 {name}（从末尾播放
 Set animation to {name} after the current one,在当前动画之后将动画设为 {name}
 On animation event {event},当动画事件 {event} 触发
 On animation event {event} of {animation},当 {animation} 的动画事件 {event} 触发
+Edit Group…,编辑组…
+Active On Start,启动时激活
+Open All / Close All Groups,展开 / 折叠所有组
+Add Local Variable…,添加局部变量…
+Ungroup - Keep The Rows,取消分组 - 保留行

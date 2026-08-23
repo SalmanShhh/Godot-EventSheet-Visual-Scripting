@@ -94,6 +94,11 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 		_dock._mark_dirty("Duplicated %d row(s)." % targets.size())
 
 
+## The group the last successful _bulk_group_rows made, so the caller can drop straight into naming
+## it (G4's G-with-rows-selected). Null when the last call refused or made a region instead.
+var last_group_created: EventGroup = null
+
+
 ## Wraps a same-parent selection in a fresh group (selection order preserved).
 ## Returns "" or the user-facing problem - mixed-parent selections are refused
 ## because silent cross-depth reparenting is how sheets get scrambled.
@@ -117,16 +122,19 @@ func _bulk_group_rows(targets: Array) -> String:
 	var ordered: Array = targets.duplicate()
 	ordered.sort_custom(func(a: Variant, b: Variant) -> bool:
 		return container.find(a) < container.find(b))
+	last_group_created = null
+	var made: EventGroup = EventGroup.new()
+	made.group_name = "Group"
+	made.name = made.group_name
 	var changed: bool = _dock._perform_undoable_sheet_edit("Group Selection", func() -> bool:
-		var group: EventGroup = EventGroup.new()
-		group.group_name = "Group"
 		var insert_at: int = container.find(ordered[0])
 		for resource: Variant in ordered:
 			container.erase(resource)
-			group.events.append(resource)
-		container.insert(mini(insert_at, container.size()), group)
+			made.events.append(resource)
+		container.insert(mini(insert_at, container.size()), made)
 		return true)
 	if changed:
+		last_group_created = made
 		_dock._mark_dirty("Grouped %d row(s)." % ordered.size())
 	return ""
 

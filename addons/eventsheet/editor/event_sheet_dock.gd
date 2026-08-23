@@ -86,6 +86,13 @@ const ROW_MENU_DATA_CLASS_REMOVE_FIELD := 51
 const ROW_MENU_ADD_TIMELINE_BELOW := 52
 ## Paste Special: paste the clipboard snippet retargeted (dock/paste_special_dialog.gd).
 const ROW_MENU_PASTE_SPECIAL := 53
+## G4 - the group head's own verbs: the one Edit group dialog, the Active-on-start tick, the
+## whole-sheet fold, a local variable of this group, and unwrapping the group off its rows.
+const ROW_MENU_EDIT_GROUP := 54
+const ROW_MENU_GROUP_ENABLED := 55
+const ROW_MENU_FOLD_ALL_GROUPS := 56
+const ROW_MENU_GROUP_ADD_LOCAL := 57
+const ROW_MENU_UNGROUP := 58
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1557,13 +1564,13 @@ func _on_group_edit_requested(group: EventGroup) -> void:
 
 
 
-func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
-	return _add_rows.apply_group_edit(group, new_name, new_desc)
+func apply_group_edit(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> bool:
+	return _add_rows.apply_group_edit(group, new_name, new_desc, extras)
 
 
 
-static func set_group_fields(group: EventGroup, new_name: String, new_desc: String) -> String:
-	return EventSheetQuickPromptDialogs.set_group_fields(group, new_name, new_desc)
+static func set_group_fields(group: EventGroup, new_name: String, new_desc: String, extras: Dictionary = {}) -> String:
+	return EventSheetQuickPromptDialogs.set_group_fields(group, new_name, new_desc, extras)
 
 
 func _on_duplicate_requested() -> void:
@@ -2144,6 +2151,13 @@ func _on_add_global_variable_requested() -> void:
 
 
 func _on_add_project_global_requested() -> void:  # Add ▸ Global Variable… (V)
+	# G3 - with a group head selected, V means what it means everywhere else: "declare something
+	# HERE". Here is the group, so the variable is one of its locals rather than a project global.
+	var selected: Resource = _active_view().get_selected_context().get("source_resource", null) if _active_view() != null else null
+	if selected is EventGroup:
+		_context_row = _active_view().get_selected_context().get("row_data", _context_row)
+		_add_group_local_variable_for(selected as EventGroup)
+		return
 	_global_variables.open()
 
 
@@ -3455,21 +3469,141 @@ var _group_color_picker: ColorPickerButton = null
 var _group_color_target: EventGroup = null
 
 
-## Opt-in runtime toggling: the group compiles a guard member that Set Group Active
-## flips at runtime (feature flags, debug switches). Off = zero-cost organization.
-func _toggle_group_runtime() -> void:
-	var target: Resource = _context_row.source_resource if _context_row != null else null
-	if not (target is EventGroup):
-		_set_status("Right-click a group to make it runtime-toggleable.", true)
+## G2 - a mark on a group head was clicked. The switch turns the group on and off; the ring before
+## it makes the group switchable at runtime, which is what Set group active needs to reach it.
+func _on_group_action_requested(action: String, group: EventGroup) -> void:  # _viewport.group_action_requested
+	if group == null:
 		return
-	var group: EventGroup = target
-	var changed: bool = _perform_undoable_sheet_edit("Runtime Toggleable", func() -> bool:
-		group.runtime_toggleable = not group.runtime_toggleable
+	match action:
+		"enabled":
+			_context_row = _active_view().get_selected_context().get("row_data", _context_row) if _active_view() != null else _context_row
+			_toggle_group_enabled()
+		"toggleable":
+			_set_group_runtime_toggleable(group, not group.runtime_toggleable)
+
+
+## The group the row menu is acting on, or null when the clicked row is not a group head.
+func _context_group() -> EventGroup:
+	return (_context_row.source_resource as EventGroup) if _context_row != null else null
+
+
+## G4 - Edit group…: everything a group is, in the one dialog.
+func _open_group_editor_for_context() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Select a group to edit it.", true)
+		return
+	_on_group_edit_requested(group)
+
+
+## G4 - Active on start, straight off the head's own switch. Off compiles the group out.
+func _toggle_group_enabled() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Select a group to switch it on or off.", true)
+		return
+	var switched_on: bool = not group.enabled
+	var changed: bool = _perform_undoable_sheet_edit("Active On Start", func() -> bool:
+		group.enabled = switched_on
 		return true
 	)
 	if changed:
 		_refresh_after_edit()
-		_mark_dirty("Group \"%s\" is %s - Set Group Active targets \"%s\"." % [group.group_name, "runtime-toggleable" if group.runtime_toggleable else "compile-time only again", group.group_name.to_snake_case()])
+		_mark_dirty("Group \"%s\" is %s." % [group.group_name, "active on start" if switched_on else "off - it and its rows compile out"])
+
+
+## G4 - Open all / Close all groups: one gesture for the whole sheet, folding when anything is open
+## and opening when everything is shut, so the key is a toggle rather than two commands.
+func _toggle_all_group_folds() -> void:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return
+	view.set_group_folds(view.any_group_open())
+	_set_status("Groups closed." if view.any_group_open() else "Groups opened.")
+
+
+## G3 - V (or Add local variable…) with a group head selected: a Local of THIS group, which the
+## compiler emits as a class member under the group's own header.
+func _add_group_local_variable() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Select a group to add a local variable to it.", true)
+		return
+	_add_group_local_variable_for(group)
+
+
+## Opens the Add variable dialog scoped to one group: the answers land in that group's
+## `local_variables`, which the compiler emits as class members under the group's own header.
+func _add_group_local_variable_for(group: EventGroup) -> void:
+	if group == null or not _ensure_sheet_for_editing():
+		return
+	_variable_dlg.open_for_edit("local", {"group": group}, "", "int", "0", false, "Add Variable")
+
+
+## G4 - Ungroup: the rows the group held move up into its place, in order, and the group itself
+## goes. One undo step, and nothing inside it changes.
+func _ungroup_context_group() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Select a group to ungroup it.", true)
+		return
+	var moved: int = EventSheetGroupFacts.children(group).size()
+	var location: Dictionary = _find_resource_location(group)
+	if location.is_empty():
+		_set_status("Couldn't locate that group.", true)
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Ungroup", func() -> bool:
+		var container: Array = location.get("container")
+		var at: int = container.find(group)
+		if at < 0:
+			return false
+		container.remove_at(at)
+		for entry: Variant in EventSheetGroupFacts.children(group):
+			container.insert(at, entry)
+			at += 1
+		return true
+	)
+	if changed:
+		_mark_dirty("Ungrouped \"%s\" - %d row(s) kept." % [group.group_name, moved])
+
+
+## Opt-in runtime toggling: the group compiles a guard member that Set Group Active
+## flips at runtime (feature flags, debug switches). Off = zero-cost organization.
+func _toggle_group_runtime() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Right-click a group to make it runtime-toggleable.", true)
+		return
+	_set_group_runtime_toggleable(group, not group.runtime_toggleable)
+
+
+## G2 - the "Make switchable" offer in the Set/Is Group Active dialog: the row names a group of this
+## sheet that cannot be switched yet, and one click makes it one. Takes the value the field holds
+## (the quoted snake_case the template concatenates) and answers whether anything changed.
+func _make_group_switchable(value: String) -> bool:
+	var group: EventGroup = EventSheetGroupFacts.group_for_value(_current_sheet, value)
+	if group == null or group.runtime_toggleable:
+		return false
+	return _set_group_runtime_toggleable(group, true)
+
+
+## The one writer for a group's runtime toggle: one undo step, one status line saying what the two
+## group rows can now reach.
+func _set_group_runtime_toggleable(group: EventGroup, switchable: bool) -> bool:
+	if group == null:
+		return false
+	var changed: bool = _perform_undoable_sheet_edit("Runtime Toggleable", func() -> bool:
+		group.runtime_toggleable = switchable
+		return true
+	)
+	if changed:
+		_refresh_after_edit()
+		_mark_dirty("Group \"%s\" is %s - Set Group Active targets %s." % [
+			group.group_name,
+			"switchable at runtime" if switchable else "compile-time only again",
+			EventSheetGroupFacts.guard_value(group)
+		])
+	return changed
 
 
 ## Event-sheet-style group colors: tint the selected group's accent/background (clear = theme).
