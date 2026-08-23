@@ -4356,6 +4356,8 @@ Icon set to %s.,Значок установлен: %s.
 Included %s %s.,Включено: %s %s.
 Input Map,Карта ввода
 Lives inside the event or function it sits in.,"Живёт внутри события или функции, в которой находится."
+Static local,Статическая локальная
+"Only this event reads it, and it keeps its value between runs.","Её читает только это событие, и она сохраняет значение между запусками."
 Made %s - include it from any script with Add > Include sheet….,%s создан - подключите его из любого скрипта через Добавить > Включить лист….
 Make switchable,Сделать переключаемой
 Moved %s.,Перемещено: %s.

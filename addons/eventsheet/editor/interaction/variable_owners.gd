@@ -170,7 +170,7 @@ static func local_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"type_name": descriptor.type_name,
 			"type_word": ViewportRowBuilder.friendly_type_word(descriptor.type_name),
 			"value": VariableDialog._default_display_text(descriptor.default_value),
-			"scope": EventSheetVariableSentence.SCOPE_LOCAL,
+			"scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 			"owner": OWNER_SYSTEM,
 			"group": GROUP_LOCAL,
 			"inspector": false,

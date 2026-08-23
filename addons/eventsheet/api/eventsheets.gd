@@ -456,7 +456,9 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 
 
 ## The exact GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip,
-## grouping, and the @export annotation included. Deterministic: same variable, same bytes.
+## grouping, and the @export annotation included. Deterministic: same variable, same bytes. More than
+## one line whenever the declaration needs one (a doc comment above it, a Static local's marker); the
+## declaration itself is the first line that is not a comment or an @export_group header.
 static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 

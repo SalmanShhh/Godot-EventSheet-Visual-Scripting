@@ -16,7 +16,8 @@ extends RefCounted
 
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
-## (@export var) vs. private (var).
+## (@export var) vs. private (var). `context` carries the placement answers - which event or group
+## owns a Local, which row is being edited, and V4's `static_local` tick.
 signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool, is_static: bool)
 
 ## V5 - the Scope dropdown says Global and the dialog was confirmed. A global lives on an autoload,
@@ -67,6 +68,9 @@ const FIELD_HELP: Dictionary = {
 		+ "IS the description Godot shows in the Inspector - so it is never written twice.",
 	"Static": "One value shared by every copy of the object rather than one each, and readable without a copy at "
 		+ "all. Never combined with Constant - GDScript has no static const.",
+	"Static local": "The local keeps its value between runs of its event - a hit counter, a cooldown - instead of "
+		+ "starting over each time. The row stays where it is; only the declaration moves, to a private "
+		+ "member the rest of the sheet cannot name.",
 	"Constant": "Set here and never changed while the game runs. A constant is neither Static nor an Inspector "
 		+ "property, so both grey out when it is ticked.",
 	"Editable in the Inspector": "A designer can tune this per copy in Godot's Inspector (@export var). Off, it is internal state "
@@ -100,6 +104,10 @@ var _const_check: CheckBox = null
 ## V5 - `static var` as a checkbox beside Constant, since that is what it is: a flag on the
 ## declaration, not a place the variable lives.
 var _static_check: CheckBox = null
+## V4 - "Static local", shown only while the scope is Local: the row stays under its event, and the
+## value survives from one run of that event to the next because the compiler hoists the declaration
+## to a private class member. Meaningless for every other scope, so it is not offered there.
+var _static_local_check: CheckBox = null
 var _exported_check: CheckBox = null
 # "@onready" toggle - tree-placed variables only (class-level). When on, the variable compiles to
 # `@onready var` and the Default field is a verbatim GDScript expression (a node ref like $Player).
@@ -628,6 +636,12 @@ func init_dialog(parent_node: Node) -> void:
 	_static_check.text = "Static"
 	_static_check.toggled.connect(func(pressed: bool) -> void: _on_static_toggled(pressed))
 	flags_box.add_child(_static_check)
+	# V4 - the Local scope's own flag, and the only scope it means anything in: a local cannot be a
+	# `static var`, so the two never show together (the gating swaps them).
+	_static_local_check = CheckBox.new()
+	_static_local_check.text = "Static local"
+	_static_local_check.toggled.connect(func(_pressed: bool) -> void: _refresh_ships_as())
+	flags_box.add_child(_static_local_check)
 	_const_check = CheckBox.new()
 	_const_check.text = "Constant"
 	flags_box.add_child(_const_check)
@@ -732,6 +746,7 @@ func _wire_help_strip() -> void:
 		[_whole_numbers_check, "Whole numbers only"],
 		[_attr_tooltip_edit, "Description"],
 		[_static_check, "Static"],
+		[_static_local_check, "Static local"],
 		[_exported_check, "Editable in the Inspector"],
 		[_global_target_option, "Write into"],
 	]:
@@ -1155,6 +1170,10 @@ func open_for_edit(
 	# Local variables are inherently private to the script body, so the export toggle only
 	# applies to global (sheet-level) variables.
 	var is_local: bool = scope == "local"
+	# V4 - reopening a Static local comes back ticked; the flag rides the context, because it is a
+	# fact about the LOCAL and only a local can have it.
+	if _static_local_check != null:
+		_static_local_check.set_pressed_no_signal(is_local and bool(context.get("static_local", false)))
 	_exported_check.button_pressed = exported and not is_local
 	_exported_check.disabled = is_local
 	# @onready is a tree-placed (class-level) concept only - hidden for global/local scopes. Applying the
@@ -1301,6 +1320,11 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	_last_scope_key = current_scope_word()
+	# V4 - "Static local" is a fact about WHERE the declaration ends up, not about the declaration, so
+	# it rides the context beside the other placement answers (which event, which group, which index)
+	# rather than widening the signal every surface already connects to. Answered once, here, so no
+	# path out of this dialog can carry a stale one.
+	_context["static_local"] = static_local_wanted()
 	var type_name: String = _selected_stored_type()
 	# V5 - a Global is not a member of this file. The dialog collected the answers; the autoload the
 	# "Write into" picker names is where they land, through the same writer the Add global variable
@@ -1776,10 +1800,17 @@ func current_scope_word() -> String:
 	if _writes_project_global:
 		return EventSheetVariableSentence.SCOPE_GLOBAL
 	if _scope == "local":
-		return EventSheetVariableSentence.SCOPE_LOCAL
+		return EventSheetVariableSentence.local_scope(static_local_wanted())
 	if _is_static:
 		return EventSheetVariableSentence.SCOPE_STATIC
 	return EventSheetVariableSentence.SCOPE_INSTANCE
+
+
+## V4 - true when the dialog will write a Static local: the tick, and only while the scope it belongs
+## to is the one showing. The row builder, the preview and the confirm all ask this one question.
+func static_local_wanted() -> bool:
+	return _scope == "local" and not _writes_project_global \
+		and _static_local_check != null and _static_local_check.button_pressed
 
 
 ## Choosing a scope. Constant and Static say nothing about WHERE the variable lives, so they only
@@ -1848,8 +1879,15 @@ func _apply_scope_gating() -> void:
 		_exported_check.button_pressed = false
 	_exported_check.disabled = is_local or is_constant
 	if _static_check != null:
+		# V4 - a local cannot be a `static var`, so out of the two "keeps its value" flags exactly one
+		# is ever on screen: Static for a member, Static local for a local.
+		_static_check.visible = not is_local
 		_static_check.disabled = is_constant
 		_static_check.set_pressed_no_signal(_is_static and not is_constant)
+	if _static_local_check != null:
+		_static_local_check.visible = is_local
+		if not is_local:
+			_static_local_check.set_pressed_no_signal(false)
 	if _onready_check != null:
 		_onready_check.visible = not is_local
 	_update_attr_gating()
@@ -1947,9 +1985,12 @@ func code_line_text() -> String:
 	preview.is_static = _is_static and not preview.is_constant
 	preview.exported = _exported_check != null and _exported_check.button_pressed and not _exported_check.disabled
 	preview.onready = _onready_check != null and _onready_check.button_pressed and _scope == "tree"
+	preview.static_local = static_local_wanted()
 	if preview.onready:
 		preview.default_value = _default_edit.text.strip_edges()
-	var line: String = SheetCompiler._emit_tree_variable_line(preview)
+	# The DECLARATION out of what the emitter wrote - the same reading the row's echo takes, so the
+	# strip shows the line and never the doc comment or the marker written above it.
+	var line: String = EventSheetCodeEcho.declaration_line(SheetCompiler._emit_tree_variable_line(preview))
 	if _writes_project_global:
 		var target: Dictionary = selected_global_target()
 		var autoload_name: String = str(target.get("name", "")).strip_edges()

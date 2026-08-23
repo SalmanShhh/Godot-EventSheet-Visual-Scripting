@@ -2390,6 +2390,10 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 ## autoload, Field on a Resource script, Instance otherwise.
 func _member_scope_key(variable: LocalVariable) -> String:
 	var sheet: EventSheetResource = _viewport._sheet
+	# V4 - a hoisted Static local is a member of the class only because GDScript has nowhere narrower
+	# to keep it; what it IS is the local of one event, and that is what the row says.
+	if variable.static_local:
+		return EventSheetVariableSentence.SCOPE_STATIC_LOCAL
 	# W5 - the same declaration, read where there are no copies to share it between.
 	if variable.is_static and not variable.is_constant and _is_shared_store():
 		return EventSheetVariableSentence.SCOPE_SHARED
@@ -8565,8 +8569,9 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
 					"owner_event": event_row,
 					"variable_index": rows.size(),
 					# V1/V3 - an event's own local reads in the one shape too: Local leads, and the
-					# echo is the `var` line the compiler writes inside the event body.
-					"reading_scope": EventSheetVariableSentence.SCOPE_LOCAL,
+					# echo is the `var` line the compiler writes for it. V4 - a Static local says so
+					# in the same word, and its echo is the class member the declaration hoists to.
+					"reading_scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 					"expression_default": descriptor.expression_default or descriptor.inferred_type,
 					"code_line": EventSheetCodeEcho.line_for(descriptor)
 				}

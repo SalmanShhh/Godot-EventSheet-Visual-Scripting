@@ -4356,6 +4356,8 @@ Icon set to %s.,Icono establecido en %s.
 Included %s %s.,Se incluyó %s %s.
 Input Map,Mapa de entrada
 Lives inside the event or function it sits in.,Vive dentro del evento o la función en la que está.
+Static local,Local estática
+"Only this event reads it, and it keeps its value between runs.","Solo este evento la lee, y conserva su valor entre ejecuciones."
 Made %s - include it from any script with Add > Include sheet….,%s creado - inclúyelo desde cualquier script con Añadir > Incluir hoja….
 Make switchable,Hacer conmutable
 Moved %s.,%s movido.

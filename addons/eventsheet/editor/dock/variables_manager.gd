@@ -104,6 +104,30 @@ func _on_add_local_variable_requested() -> void:
 	_dock._variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
 
 
+## V4. A Local dragged to the top of the sheet stops belonging to one event and becomes a variable of
+## the object. The Add variable dialog opens on Instance with everything the local already said filled
+## in, so what the reader confirms is the NEW SENTENCE - and the local is dropped only when they do,
+## in the same undo step that writes the variable it became (see the promote_from_event context key).
+func promote_local_to_instance(owner_event: EventRow, local_var: LocalVariable) -> void:
+	if owner_event == null or local_var == null or not _dock._ensure_sheet_for_editing():
+		return
+	if _dock._current_sheet.variables.has(local_var.name):
+		_dock._set_status("A variable named %s already belongs to this object." % local_var.name, true)
+		return
+	# "global" is where a variable of the object is STORED (the sheet's own variables); the dialog
+	# reads that storage back as the Instance scope, which is the word the reader will see.
+	_dock._variable_dlg.open_for_edit(
+		"global",
+		{"promote_from_event": owner_event, "promote_index": owner_event.local_variables.find(local_var)},
+		local_var.name,
+		local_var.type_name,
+		local_var.default_value,
+		false,
+		"Create Variable",
+		local_var.is_constant
+	)
+
+
 ## Opens the variable dialog to add a tree-placed variable directly below the right-clicked
 ## row (so variables can sit between/above/under events like comments do).
 func _add_tree_variable_below_context_row() -> void:
@@ -437,6 +461,14 @@ func _on_variable_dialog_confirmed(
 				"options": Array(combo_options),
 				"attributes": attributes
 			}
+			# V4 - a promoted Local: the declaration it was dragged out of goes in the same undo step
+			# that wrote the variable it became, so the value is never declared in two places at once.
+			var promoted_from: EventRow = context.get("promote_from_event") as EventRow
+			var promoted_index: int = int(context.get("promote_index", -1))
+			if promoted_from != null and promoted_index >= 0 and promoted_index < promoted_from.local_variables.size():
+				promoted_from.local_variables.remove_at(promoted_index)
+				message["text"] = "Promoted %s to a variable of this object." % var_name
+				return true
 			message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
 			return true
 		# G3 - a Local the dialog was opened FOR a group belongs to that group: the compiler emits it
@@ -482,6 +514,9 @@ func _on_variable_dialog_confirmed(
 		local_var.default_value = default_value
 		local_var.is_constant = resolved_constant
 		local_var.is_static = is_static and not resolved_constant
+		# V4 - the row stays a local; the flag only says the compiler must hoist its declaration to a
+		# private member so the value survives from one run of the event to the next.
+		local_var.static_local = bool(context.get("static_local", false))
 		message["text"] = "%s local variable %s." % [action_verb, var_name]
 		return true
 	)
@@ -525,6 +560,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 	var type_name: String = "Variant"
 	var default_value: Variant = null
 	var is_constant: bool = false
+	var static_local: bool = false
 	var attributes: Dictionary = {}
 	var index: int = int(metadata.get("variable_index", -1))
 	var owner_event: EventRow = null
@@ -568,6 +604,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		type_name = local_var.type_name
 		default_value = local_var.default_value
 		is_constant = local_var.is_constant
+		static_local = local_var.static_local
 		index = owner_event.local_variables.find(local_var)
 	else:
 		var descriptor: Dictionary = _dock._current_sheet.variables.get(var_name, {})
@@ -584,6 +621,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		"type": type_name,
 		"default": default_value,
 		"is_constant": is_constant,
+		"static_local": static_local,
 		"supports_const": _variable_type_supports_const(type_name),
 		"attributes": attributes,
 		"event_row": owner_event,
@@ -664,7 +702,8 @@ func _edit_context_variable() -> void:
 				"editing": true,
 				"original_name": str(_context_variable.get("name", "")),
 				"variable_index": int(_context_variable.get("index", -1)),
-				"selected_resource": owner_event
+				"selected_resource": owner_event,
+				"static_local": bool(_context_variable.get("static_local", false))
 			},
 			str(_context_variable.get("name", "")),
 			str(_context_variable.get("type", "Variant")),

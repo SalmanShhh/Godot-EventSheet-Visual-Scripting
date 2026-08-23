@@ -792,6 +792,57 @@ func _move_sheet_variable(source_row: EventRowData, target_row: EventRowData, dr
 	return true
 
 
+## V4 - one event's Local dropped somewhere else. Onto a row of another event it re-scopes: the
+## declaration moves to that event, which is the only thing "where a local lives" means. Onto the
+## sheet head it is promoted through the Add variable dialog, so what the reader confirms is the new
+## sentence rather than a silent move. True whenever the dragged row IS a local, move or not - a drop
+## that lands back inside its own event changes nothing, and must still not move the event instead.
+func _move_local_variable(source_row: EventRowData, target_row: EventRowData) -> bool:
+	var moved: LocalVariable = _row_local_variable(source_row)
+	if moved == null:
+		return false
+	var owner_event: EventRow = source_row.source_resource as EventRow
+	if str(target_row.row_uid).begins_with(ViewportRowBuilder.HEAD_BAND_UID_PREFIX):
+		_dock._variables.promote_local_to_instance(owner_event, moved)
+		return true
+	# Every row of an event - its head, its own locals - is drawn from that event, so the drop target
+	# is simply whichever event the row under the pointer belongs to.
+	var target_event: EventRow = target_row.source_resource as EventRow
+	if target_event == null or target_event == owner_event:
+		return true
+	var rescoped: bool = _dock._perform_undoable_sheet_edit("Re-scope Local Variable", func() -> bool:
+		var source_index: int = owner_event.local_variables.find(moved)
+		if source_index < 0:
+			return false
+		for existing: Variant in target_event.local_variables:
+			if existing is LocalVariable and (existing as LocalVariable).name == moved.name:
+				_dock._set_status("That event already has a local named %s." % moved.name, true)
+				return false
+		owner_event.local_variables.remove_at(source_index)
+		target_event.local_variables.append(moved)
+		return true
+	)
+	if rescoped:
+		_dock._mark_dirty(EventSheetL10n.translate("Moved %s.") % moved.name)
+	return true
+
+
+## The LocalVariable a row declares, null for every other row. A local's row is drawn from its owning
+## event, so the resource alone cannot answer - the row's own metadata says which of that event's
+## locals it is.
+func _row_local_variable(row_data: EventRowData) -> LocalVariable:
+	if row_data == null or row_data.spans.is_empty() or not (row_data.source_resource is EventRow):
+		return null
+	var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
+	if str(metadata.get("kind", "")) != "variable" or str(metadata.get("variable_scope", "")) != "local":
+		return null
+	var owner_event: EventRow = row_data.source_resource as EventRow
+	var index: int = int(metadata.get("variable_index", -1))
+	if index < 0 or index >= owner_event.local_variables.size():
+		return null
+	return owner_event.local_variables[index]
+
+
 ## The sheet-level variable a row declares, "" when the row declares no such variable (a tree
 ## variable, whose declaration is a resource in the events array, answers "" too).
 func _sheet_variable_name(row_data: EventRowData) -> String:
@@ -820,6 +871,13 @@ func _on_rows_drop_requested(
 
 func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
 	if target_row == null or _dock._current_sheet == null or source_rows.is_empty():
+		return
+	# V4 - a Local row is a declaration INSIDE an event, not a row of the events array: dropped on
+	# another event it re-scopes there, dropped on the sheet head it is promoted to a variable of the
+	# object. Neither move is one the resource walk below could make - and left to that walk, dragging
+	# a local would move its whole event - so a local answers here and never falls through.
+	if not copy_mode and source_rows.size() == 1 \
+			and _move_local_variable(source_rows[0] as EventRowData, target_row):
 		return
 	var target_resource: Resource = target_row.source_resource
 	if target_resource == null:

@@ -4356,6 +4356,8 @@ Icon set to %s.,Symbol auf %s gesetzt.
 Included %s %s.,%s %s eingebunden.
 Input Map,Eingabezuordnung
 Lives inside the event or function it sits in.,"Lebt in dem Ereignis oder der Funktion, in der sie steht."
+Static local,Statisch lokal
+"Only this event reads it, and it keeps its value between runs.","Nur dieses Ereignis liest sie, und sie behält ihren Wert zwischen den Durchläufen."
 Made %s - include it from any script with Add > Include sheet….,%s erstellt - binde es aus jedem Skript über Hinzufügen > Blatt einbinden… ein.
 Make switchable,Umschaltbar machen
 Moved %s.,%s verschoben.

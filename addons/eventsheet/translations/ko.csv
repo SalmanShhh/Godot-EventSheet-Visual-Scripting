@@ -4356,6 +4356,8 @@ Icon set to %s.,아이콘을 %s(으)로 설정했습니다.
 Included %s %s.,%s %s을(를) 포함했습니다.
 Input Map,입력 맵
 Lives inside the event or function it sits in.,자신이 놓인 이벤트나 함수 안에서만 삽니다.
+Static local,정적 로컬
+"Only this event reads it, and it keeps its value between runs.",이 이벤트만 읽고 실행 사이에도 값을 유지합니다.
 Made %s - include it from any script with Add > Include sheet….,%s을(를) 만들었습니다 - 추가 > 시트 포함…으로 어떤 스크립트에서든 포함할 수 있습니다.
 Make switchable,전환 가능하게 만들기
 Moved %s.,%s을(를) 옮겼습니다.

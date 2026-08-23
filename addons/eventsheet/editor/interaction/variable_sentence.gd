@@ -18,6 +18,9 @@ extends RefCounted
 const SCOPE_GLOBAL: String = "global"
 const SCOPE_INSTANCE: String = "instance"
 const SCOPE_LOCAL: String = "local"
+## V4 - a local by scope, a member in code: the row sits under its event like any other local, and the
+## compiler hoists the declaration so the value survives from one run of that event to the next.
+const SCOPE_STATIC_LOCAL: String = "static_local"
 const SCOPE_CONSTANT: String = "constant"
 const SCOPE_STATIC: String = "static"
 const SCOPE_FIELD: String = "field"
@@ -62,6 +65,8 @@ static func scope_word(scope: String) -> String:
 			return EventSheetL10n.translate("Instance")
 		SCOPE_LOCAL:
 			return EventSheetL10n.translate("Local")
+		SCOPE_STATIC_LOCAL:
+			return EventSheetL10n.translate("Static local")
 		SCOPE_CONSTANT:
 			return EventSheetL10n.translate("Constant")
 		SCOPE_STATIC:
@@ -83,6 +88,8 @@ static func scope_note(scope: String) -> String:
 			return EventSheetL10n.translate("One per object - each copy in the scene has its own.")
 		SCOPE_LOCAL:
 			return EventSheetL10n.translate("Lives inside the event or function it sits in.")
+		SCOPE_STATIC_LOCAL:
+			return EventSheetL10n.translate("Only this event reads it, and it keeps its value between runs.")
 		SCOPE_CONSTANT:
 			return EventSheetL10n.translate("Never changes once the game runs.")
 		SCOPE_STATIC:
@@ -139,6 +146,12 @@ static func chip_text(scope: String, type_word: String) -> String:
 	if type_word.strip_edges().is_empty():
 		return word
 	return "%s %s" % [word, type_word]
+
+
+## The scope word a LOCAL declaration reads with. A Static local is still a local - the row sits
+## under its event and nothing outside it can name the value - so the one word says both facts.
+static func local_scope(static_local: bool) -> String:
+	return SCOPE_STATIC_LOCAL if static_local else SCOPE_LOCAL
 
 
 ## The scope a MEMBER variable of a sheet has: `const` is a Constant, `static var` is Static, a

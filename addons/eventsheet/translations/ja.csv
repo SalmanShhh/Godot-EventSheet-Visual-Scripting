@@ -4356,6 +4356,8 @@ Icon set to %s.,アイコンを %s に設定しました。
 Included %s %s.,%s %s を取り込みました。
 Input Map,インプットマップ
 Lives inside the event or function it sits in.,置かれているイベントまたは関数の中だけで生きます。
+Static local,静的ローカル
+"Only this event reads it, and it keeps its value between runs.",このイベントだけが読み取り、実行のたびに値を保ち続けます。
 Made %s - include it from any script with Add > Include sheet….,%s を作成しました - 任意のスクリプトから「追加 > シートを取り込む…」で取り込めます。
 Make switchable,切り替え可能にする
 Moved %s.,%s を移動しました。

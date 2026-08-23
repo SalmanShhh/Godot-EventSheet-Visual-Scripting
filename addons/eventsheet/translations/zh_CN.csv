@@ -4356,6 +4356,8 @@ Icon set to %s.,图标已设为 %s。
 Included %s %s.,已引入 %s %s。
 Input Map,输入映射
 Lives inside the event or function it sits in.,只存在于它所在的事件或函数中。
+Static local,静态局部
+"Only this event reads it, and it keeps its value between runs.",只有这个事件会读取它，并且它在每次运行之间保留自己的值。
 Made %s - include it from any script with Add > Include sheet….,已创建 %s - 在任意脚本中通过“添加 > 引入事件表…”引入它。
 Make switchable,设为可切换
 Moved %s.,已移动 %s。

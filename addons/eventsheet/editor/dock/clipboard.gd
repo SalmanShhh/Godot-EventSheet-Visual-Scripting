@@ -148,7 +148,10 @@ func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, d
 	elif resource_entry is LocalVariable:
 		# The canonical declaration (const / @export var / @onready var / drawer prefixes), so copy-as-text is
 		# real pasteable GDScript that re-imports losslessly - a plain `var` would drop onready/const/@export.
-		lines.append(indent + SheetCompiler._emit_tree_variable_line(resource_entry as LocalVariable))
+		# A declaration can be more than one line (a doc comment above it, a Static local's marker), so each
+		# line takes the indent - one indented head over a flush tail would paste as broken code.
+		for declaration_line: String in SheetCompiler._emit_tree_variable_line(resource_entry as LocalVariable).split("\n"):
+			lines.append(indent + declaration_line)
 	else:
 		lines.append(indent + resource_entry.get_class())
 
