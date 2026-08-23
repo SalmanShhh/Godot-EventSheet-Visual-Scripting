@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Changed - the Parameters dialog says what the row will be
+
+- **The title IS the row.** The dialog every action and condition with a blank opens was titled
+  \"Subtract from Parameters\"; it now reads **Player   Subtract damage * 2 from hp** - the object
+  the row belongs to, then the ACE's own sentence with the values filled in live as they are typed,
+  in the sheet's own colours. The ACE's name sits muted at the right, where it belongs once the
+  sentence is doing the talking.
+- **One help strip, at the foot, for the focused parameter only.** The per-field descriptions in
+  11px and the tooltips repeating them are gone. The strip says what the parameter is for (the same
+  string), then what THIS KIND of box takes - a table of a paragraph per hint next to the control
+  each hint already builds - and then **IN CODE**: the line the compiler will write for the values
+  as typed, produced by the emitter rather than formatted by hand. Tab to the next field and the
+  text is replaced, never stacked, so a four-parameter dialog reads as four rows.
+- **A choice explains itself, from wherever the choice came from.** An Input Map action reads with
+  the keys bound to it (\"jump    Space - Gamepad A\"); a node group with how many nodes of the open
+  scene are in it (\"enemies    14 nodes in this scene\", or \"none yet - added at runtime?\"); a
+  variable with its type word and what it starts at; a true/false pair with the token it stands for.
+  A pack's own list can carry a line per option by declaring `note` beside `key` and `label`.
+- **Validation moved to keystroke time, into the strip.** A name that is not a variable turns the
+  strip red - \"hpp is not a variable of Player. Did you mean hp?\" - with a **Use hp** button and an
+  **Add hpp…** button that opens the Add variable dialog on that very name; coming back, the list
+  has it. A required field left blank is red. A literal of the wrong kind for the verb is amber
+  (`\"ten\"` is text. This needs a number. If you meant to join text, Set value can.). OK stays
+  where it is with the reason beside it rather than going grey without explanation.
+- **The \"+ var\" and \"Use …\" buttons that used to grow beside an expression field are gone**, folded
+  into the strip's fixes - one place a reader looks for a problem, one wording for it, whether it
+  came from the expression lint or from the parameter checks.
+
 ### Changed - a variable belongs to somebody, and every surface now says who
 
 - **The object column names the variable's owner.** A step that changes an instance variable used to

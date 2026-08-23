@@ -1415,6 +1415,22 @@ is instantiated to answer a question.
   **Global** reveals the *write into* picker, because a global lives on an autoload rather than in
   this file; choosing **Local** greys the Inspector tick, and **Constant** greys Static with it. A
   name already used here is flagged under the field as you type, not on OK.
+- **The Parameters dialog is titled with the row it is writing.** Every action and condition with a
+  blank opens it, and the title band reads **Player   Subtract damage * 2 from hp** - the object the
+  row belongs to, then the sentence with your values in it, filled in as you type. The ACE's own name
+  sits muted at the right. Under the fields is the same one help strip: the parameter's description,
+  then what THIS kind of box takes (an expression says what is in scope; a colour says a word, a hex
+  or `Color(r, g, b)`; an Input Map action says to prefer one over a raw key), then **IN CODE** - the
+  line the compiler will write for the values as typed. Only the focused parameter is described, so a
+  four-parameter dialog reads as four rows rather than four paragraphs.
+- **A choice explains itself in the list.** An Input Map action reads with the keys bound to it; a
+  node group with how many nodes of the open scene are in it; a variable with its type word and what
+  it starts at. A pack's own dropdown can carry a line per option.
+- **Mistakes are caught as you type, in the strip.** A name that is not a variable turns it red -
+  "hpp is not a variable of Player. Did you mean hp?" - with a **Use hp** button and an **Add hpp…**
+  button that opens the Add variable dialog on that name; come back and the list has it. A required
+  field left blank is red too. A literal of the wrong kind for the verb is amber, and names the verb
+  that would take it. OK stays where it is with the reason beside it rather than going grey.
 - **The Object bar is a list you glance at, filter, and drag from.** Three sections: **USED IN THIS
   SHEET** open, with a per-object count and behaviors nested under the object they ride on; **ALSO IN
   THE SCENE** collapsed (the rest of the scene, one line away, no counts because there are none); and

@@ -762,9 +762,15 @@ or `Vector2(0, 0)` is just text in the generated code).
 
 The `hint` chooses the input widget in the parameter dialog. `expression` is by far the most common.
 
+A hint also owns the paragraph the dialog's help strip says about that field, under the parameter's
+own `description` - what this kind of box takes and how to answer it. The bundled hints are described
+already; a hint your own pack invents (with `EventSheets.register_param_editor`) is described with
+`EventSheets.register_param_help(hint, paragraph)`, or the strip is generic on the very field that
+needed explaining.
+
 | Hint | Widget shown | Use for |
 |------|--------------|---------|
-| *(empty)* | Plain text field (or a dropdown if `options` is set) | Literals and fixed dropdowns. |
+| *(empty)* | Plain text field (or a dropdown if `options` is set) | Literals and fixed dropdowns. An option written as `{"key": …, "label": …, "note": …}` gets that note as the line reading under the choice in the dialog. |
 | `expression` | Text field with an `ƒx` button (Find Expressions - the floating Expressions dictionary; the same expressions also autocomplete as you type) | Any GDScript value or expression. The default choice. |
 | `variable_reference` | Dropdown of sheet variables | A sheet variable name. |
 | `variable_reference:Array` (or `:Dictionary`, etc.) | Dropdown filtered to that variable type | A typed variable; only matching (or Variant) variables show. |

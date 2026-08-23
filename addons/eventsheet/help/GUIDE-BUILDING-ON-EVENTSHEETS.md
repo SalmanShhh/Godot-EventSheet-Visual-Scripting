@@ -273,6 +273,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Vocabulary | `exclude_class(class_id, excluded := true)` - hides (or restores) a whole reflected class: its card and everything it publishes | `void` | no |
 | Vocabulary | `bake_overrides(script_path, class_id)` - writes that class's catalog overrides INTO its script as `## @ace_*` comments (backed up first, comment lines only, no signature or body touched, idempotent), then drops the ones it actually wrote from the catalog. Returns `curate_provider`'s result plus `baked`: how many were written. Members the writer could not find are reported in `skipped` and their overrides are KEPT | `Dictionary` | no |
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
+| Seams | `register_param_help(hint: String, paragraph: String)` / `param_help(hint)` - what the Parameters dialog's help strip says about a field carrying that hint, under the parameter's own description. A registration overrides the builtin wording; one paragraph per hint, last registration wins | `void` / `String` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
 | Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
 | Seams | `register_starter({label, build})` / `registered_starters()` | `void` / `Array[Dictionary]` | no |
@@ -569,6 +570,36 @@ EventSheets.register_param_editor("wave_id", func(param: Dictionary, initial_tex
 ```
 
 The dialog reads the final value from `.text`, so the control can be as rich as you like as long as it is a `LineEdit` subclass. This customises ACE parameters, not Custom Block schema fields.
+
+Describe it too, or the help strip at the foot of the dialog is generic on the very field that needed
+explaining:
+
+```gdscript
+EventSheets.register_param_help("wave_id",
+	"A wave from the campaign table. The list is what Waves.tres declares; picking one writes its id.")
+```
+
+The strip shows the parameter's own description first and this paragraph after it, for the focused
+field only.
+
+### 18b. A dropdown whose choices explain themselves
+
+**Scenario:** your action takes a movement mode, and `Walk` / `Run` / `Fly` say nothing about what
+each one does. An option may carry a `note` - the line that reads under it in the dialog's list.
+
+```gdscript
+EventSheets.param_spec({
+	"id": "mode", "display_name": "Mode", "type_name": "String", "default_value": "run",
+	"options": [
+		{"key": "walk", "label": "Walk", "note": "ground speed, no drift"},
+		{"key": "run", "label": "Run", "note": "double speed, keeps momentum"},
+		{"key": "fly", "label": "Fly", "note": "ignores gravity"},
+	],
+})
+```
+
+`note` is optional per option: one without it renders exactly as it always did. It is display only -
+the emitted value is still the `key`.
 
 ### 19. Ask before a parameter commits something destructive
 
