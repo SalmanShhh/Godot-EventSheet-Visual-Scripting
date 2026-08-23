@@ -335,6 +335,11 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
 
 ### Fixed - the variable slice's own review: the gestures that only looked like they landed
 
+- **\"Instance variable…\" writes a variable of the object.** The Add submenu's item and the
+  parameters dialog's \"Add hp…\" fix open the dialog on the scope word *Instance*, but the word is
+  a READING and the dialog files its answer by STORAGE - so both were filing an instance variable
+  as an event LOCAL, on whichever event happened to be selected. The dialog now reads the word as
+  the storage it means, and the two callers write the sheet's own variables again.
 - **\"Show in Inspector\" writes the flag.** The menu item handed the undo funnel a one-argument
   callback, and the funnel calls its operation with NONE - so the gesture aborted mid-frame and
   `@export` was never added or taken away. It goes through the funnel's own shape now (no
