@@ -358,6 +358,26 @@ func _on_variable_dialog_confirmed(
 			}
 			message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
 			return true
+		# G3 - a Local the dialog was opened FOR a group belongs to that group: the compiler emits it
+		# as a class member under the group's own "group locals" header, so it keeps its value for as
+		# long as the group is on screen rather than for one pass of one event.
+		var owner_group: EventGroup = context.get("group") as EventGroup
+		if owner_group != null:
+			var group_index: int = int(context.get("variable_index", -1))
+			var group_local: LocalVariable = null
+			if editing and group_index >= 0 and group_index < owner_group.local_variables.size():
+				group_local = owner_group.local_variables[group_index]
+			else:
+				group_local = LocalVariable.new()
+				owner_group.local_variables.append(group_local)
+			group_local.name = var_name
+			group_local.type_name = type_name
+			group_local.type = _dock._type_from_name(type_name)
+			group_local.default_value = default_value
+			group_local.is_constant = resolved_constant
+			group_local.is_static = is_static and not resolved_constant
+			message["text"] = "%s local variable %s in group %s." % [action_verb, var_name, owner_group.group_name]
+			return true
 		var target_event: EventRow = null
 		if selected is EventRow:
 			target_event = selected as EventRow
@@ -427,6 +447,31 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 	var attributes: Dictionary = {}
 	var index: int = int(metadata.get("variable_index", -1))
 	var owner_event: EventRow = null
+	# G3 - a Local declared by a GROUP is addressed through the group, not through an event: the row
+	# it draws on is the group's, so the edit path has to answer that shape too.
+	if scope == "local" and row_data.source_resource is EventGroup:
+		var owner_group: EventGroup = row_data.source_resource as EventGroup
+		var group_local: LocalVariable = null
+		if index >= 0 and index < owner_group.local_variables.size():
+			group_local = owner_group.local_variables[index] as LocalVariable
+		if group_local == null or group_local.name != var_name:
+			group_local = null
+			for entry: Variant in owner_group.local_variables:
+				if entry is LocalVariable and (entry as LocalVariable).name == var_name:
+					group_local = entry as LocalVariable
+		if group_local == null:
+			return {}
+		return {
+			"scope": "local",
+			"name": var_name,
+			"type": group_local.type_name,
+			"default": group_local.default_value,
+			"is_constant": group_local.is_constant,
+			"supports_const": _variable_type_supports_const(group_local.type_name),
+			"attributes": {},
+			"group": owner_group,
+			"index": owner_group.local_variables.find(group_local)
+		}
 	if scope == "local":
 		if row_data.source_resource is EventRow:
 			owner_event = row_data.source_resource as EventRow
@@ -509,6 +554,25 @@ func _edit_context_variable() -> void:
 		)
 		return
 	if scope == "local":
+		# G3 - a group's own local edits through its group, the same dialog, one branch earlier.
+		var owner_group: EventGroup = _context_variable.get("group", null)
+		if owner_group != null:
+			_dock._variable_dlg.open_for_edit(
+				"local",
+				{
+					"editing": true,
+					"original_name": str(_context_variable.get("name", "")),
+					"variable_index": int(_context_variable.get("index", -1)),
+					"group": owner_group
+				},
+				str(_context_variable.get("name", "")),
+				str(_context_variable.get("type", "Variant")),
+				_context_variable.get("default", null),
+				false,
+				"Edit Variable",
+				bool(_context_variable.get("is_constant", false))
+			)
+			return
 		var owner_event: EventRow = _context_variable.get("event_row", null)
 		if owner_event == null:
 			_dock._set_status("Select the owning event before editing this local variable.", true)

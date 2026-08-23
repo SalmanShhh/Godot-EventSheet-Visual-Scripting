@@ -1111,9 +1111,14 @@ func open_for_edit(
 	var is_editing: bool = bool(context.get("editing", false))
 	_dialog.title = "Edit variable" if is_editing else "Add variable"
 	_dialog.ok_button_text = "Save" if is_editing else "Add"
+	# G3 - a Local added from a group head says whose it is: "in group Combat", not the sheet's object.
+	var owner_group: EventGroup = _context.get("group") as EventGroup
 	var owner: String = _owner_name()
-	_owner_label.text = ("to %s" % owner) if not owner.is_empty() else ""
-	_owner_label.visible = not owner.is_empty()
+	if owner_group != null:
+		_owner_label.text = "in group %s" % EventSheetGroupFacts.display_name(owner_group)
+	else:
+		_owner_label.text = ("to %s" % owner) if not owner.is_empty() else ""
+	_owner_label.visible = not _owner_label.text.is_empty()
 	_refresh_scope_descriptions()
 	_refresh_global_targets()
 	_name_edit.text = name
