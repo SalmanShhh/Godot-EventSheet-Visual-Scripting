@@ -3,7 +3,7 @@
 # When sheet variables carry a group (or subgroup / category) attribute, the compiler clusters that
 # section's variables contiguously and writes its @export_group header ONCE, so the Godot Inspector
 # shows one collapsible fold per group instead of a header before every variable. A sheet with no
-# groups keeps the exact pure-alphabetical order (byte-identical to before this change).
+# sections is emitted in the order its variables were written, which is what V2's reorder writes.
 @tool
 class_name InspectorGroupEmitTest
 extends RefCounted
@@ -45,7 +45,8 @@ static func run() -> bool:
 		_count(nested_out, "@export_group(\"Combat\")") == 1 and _count(nested_out, "@export_subgroup(\"Melee\")") == 1
 		and nested_out.find("@export_group(\"Combat\")") < nested_out.find("@export_subgroup(\"Melee\")"), true) and ok
 
-	# The covenant: a sheet with NO groups is byte-identical to the pure-alphabetical order.
+	# V2 - the covenant: a sheet with no Inspector sections emits in the order it was WRITTEN, so a
+	# drag-reorder and Sort A-Z land in the file instead of being sorted away again here.
 	var flat: EventSheetResource = EventSheetResource.new()
 	flat.host_class = "Node"
 	flat.variables = {
@@ -54,11 +55,33 @@ static func run() -> bool:
 		"mike": {"type": "int", "default": 3, "exported": true},
 	}
 	var flat_out: String = str(SheetCompiler.compile(flat, "user://grp3.gd").get("output", ""))
-	ok = _check("ungrouped vars stay pure-alphabetical (alpha < mike < zulu)",
-		flat_out.find("var alpha") < flat_out.find("var mike") and flat_out.find("var mike") < flat_out.find("var zulu"), true) and ok
+	ok = _check("ungrouped vars emit in author order",
+		_exported_names(flat_out), PackedStringArray(["zulu", "alpha", "mike"])) and ok
 	ok = _check("no group header appears when nothing is grouped", flat_out.contains("@export_group"), false) and ok
+	# ...and name order in the sheet is name order in the file, which is what Sort A-Z writes.
+	var sorted_flat: EventSheetResource = EventSheetResource.new()
+	sorted_flat.host_class = "Node"
+	sorted_flat.variables = {
+		"alpha": {"type": "int", "default": 2, "exported": true},
+		"mike": {"type": "int", "default": 3, "exported": true},
+		"zulu": {"type": "int", "default": 1, "exported": true},
+	}
+	ok = _check("and a name-ordered sheet emits in name order",
+		_exported_names(str(SheetCompiler.compile(sorted_flat, "user://grp4.gd").get("output", ""))),
+		PackedStringArray(["alpha", "mike", "zulu"])) and ok
 
 	return ok
+
+
+## The variables an emitted file exports, in the order the lines stand in it.
+static func _exported_names(output: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for line: String in output.split("
+"):
+		var bare: String = line.strip_edges()
+		if bare.begins_with("@export var "):
+			names.append(bare.trim_prefix("@export var ").get_slice(":", 0).get_slice(" ", 0).strip_edges())
+	return names
 
 
 static func _count(haystack: String, needle: String) -> int:

@@ -62,12 +62,12 @@ static func run() -> bool:
 	generated.source_code = output
 	all_passed = _check("device output parses", generated.reload(true) == OK, true) and all_passed
 
-	# Dialog-width hygiene: long helper labels wrap instead of widening the window.
+	# Dialog-width hygiene: the one help strip wraps its paragraph instead of widening the window.
 	var vd: VariableDialog = VariableDialog.new()
 	var host: Node = Node.new()
 	vd.init_dialog(host)
-	all_passed = _check("variable-dialog helps autowrap",
-		vd._default_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and vd._const_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, true) and all_passed
+	all_passed = _check("the help strip wraps its paragraph",
+		vd._help_strip.body_label.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART) and all_passed
 	host.free()
 
 	# scene_path + animation_reference hints (the last two param-type gaps).

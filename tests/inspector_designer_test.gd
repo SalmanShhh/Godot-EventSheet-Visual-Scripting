@@ -1,6 +1,7 @@
 # Godot EventSheets - the Inspector Designer (whole-sheet Inspector view, P3 slice one).
 #
-# Pins the entry collection (dict variables alphabetical then tree variables in sheet order,
+# Pins the entry collection (dict variables in the order the compiler emits them, then tree
+# variables in sheet order,
 # EXPORTED only, combo options riding along) and the dialog's row build - both through the same
 # preview-card builders the Variable dialog uses, so the whole-sheet view cannot drift from the
 # per-variable one.
@@ -35,10 +36,12 @@ static func run() -> bool:
 	var entry_names: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in entries:
 		entry_names.append(str(entry.get("name")))
-	all_passed = _eq("dict vars come alphabetical, then tree vars; unexported ones are skipped",
-		entry_names, PackedStringArray(["difficulty", "speed", "loot"])) and all_passed
+	# V2 - the preview lists them in the order the compiler emits, which is the order they were
+	# WRITTEN: a preview in a different order than Godot will show is the wrong answer.
+	all_passed = _eq("dict vars come in author order, then tree vars; unexported ones are skipped",
+		entry_names, PackedStringArray(["speed", "difficulty", "loot"])) and all_passed
 	all_passed = _eq("combo options ride into the entry's attributes (the mock shows the dropdown)",
-		(entries[0].get("attributes") as Dictionary).get("options"), ["easy", "normal", "hard"]) and all_passed
+		(entries[1].get("attributes") as Dictionary).get("options"), ["easy", "normal", "hard"]) and all_passed
 	all_passed = _eq("a tree var's attributes carry through (the table's columns)",
 		((entries[2].get("attributes") as Dictionary).get("table_columns") as Array).size(), 1) and all_passed
 	all_passed = _eq("a null sheet collects nothing",

@@ -137,8 +137,56 @@ static func run() -> bool:
 		Array(EventForgeACEFactory.COMPARISON_OPERATORS)) and ok
 	ok = _check("a params dialog shows the GDScript form muted", _params_operator_note(), "<=") and ok
 
+	ok = _test_the_strip_is_the_only_explanation(dialog) and ok
 	host.free()
 	return ok
+
+
+## P4/P3 - ONE strip, and nothing beside a field. Every verdict the dialog reaches - a literal that
+## will not parse, a Constant the type cannot have, a locked type - is said THERE, in the strip's
+## own red or amber, and taken back from there when it is answered.
+static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> bool:
+	var ok: bool = _check("the form draws no hint label of its own",
+		_loose_labels(dialog), PackedStringArray(["owner line", "name clash"]))
+	dialog.open_for_edit("global", {}, "loot", "Array", "[1, 2, 3]", false, "Add variable")
+	ok = _check("a literal that parses says nothing extra",
+		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_NORMAL) and ok
+	dialog._default_edit.text = "[1, 2"
+	dialog._refresh_default_hint()
+	ok = _check("a literal that does not parse turns the strip red",
+		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_ERROR) and ok
+	ok = _check("and the strip is headed by the field it is about",
+		dialog._help_strip.heading_label.text, "INITIAL VALUE") and ok
+	dialog._default_edit.text = "[1, 2]"
+	dialog._refresh_default_hint()
+	ok = _check("fixing it puts the field's own description back",
+		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_NORMAL) and ok
+	ok = _check("which is the one the table carries",
+		dialog._help_strip.body_label.text, VariableDialog.field_help("Initial value")) and ok
+	dialog.open_for_edit("global", {}, "anything", "Variant", "", false, "Add variable")
+	ok = _check("a type that cannot be frozen greys the Constant tick",
+		dialog._const_check.disabled, true) and ok
+	ok = _check("and the tick says why, in the strip",
+		dialog._constant_help().begins_with("Const is unavailable"), true) and ok
+	dialog.open_for_edit("global", {}, "taken", "int", "0", true, "Edit variable")
+	ok = _check("a locked type opens the strip on the reason",
+		dialog._help_strip.body_label.text,
+		"Type is locked because this variable is already in use.") and ok
+	ok = _check("in the warning voice, not the ordinary one",
+		dialog._help_strip.tone, EventSheetPopupUI.HelpStrip.TONE_WARNING) and ok
+	return ok
+
+
+## What the form draws loose between its rows: the owner line under the title, and the inline name
+## clash. Anything else is a note beside a field - the very thing the one strip replaced - and it
+## comes back named by its text, so a regression says which label came back.
+static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
+	var known: Dictionary = {dialog._owner_label: "owner line", dialog._name_warning: "name clash"}
+	var found: PackedStringArray = PackedStringArray()
+	for child: Node in (dialog._scope_option.get_parent().get_parent() as Node).get_children():
+		if child is Label:
+			found.append(str(known.get(child, "hint: %s" % (child as Label).text)))
+	return found
 
 
 ## The scope keys the dropdown offers, in order.

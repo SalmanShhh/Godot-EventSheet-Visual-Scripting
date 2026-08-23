@@ -25,6 +25,8 @@ static func run() -> bool:
 	ok = _test_an_inspector_group_is_a_folder_strip_over_unindented_rows() and ok
 	ok = _test_a_literal_that_does_not_fit_its_type_is_refused() and ok
 	ok = _test_the_order_is_written_not_sorted_behind_your_back() and ok
+	ok = _test_the_order_reaches_the_file() and ok
+	ok = _test_show_in_inspector_writes_the_flag() and ok
 	return ok
 
 
@@ -57,6 +59,68 @@ static func _test_the_order_is_written_not_sorted_behind_your_back() -> bool:
 	ok = _check("Sort A-Z writes name order rather than sorting the view",
 		PackedStringArray(dock.get_current_sheet().variables.keys()),
 		PackedStringArray(["alive", "hp", "speed"])) and ok
+	dock.free()
+	return ok
+
+
+## V2 - and the file follows: what the rows show is the order the compiler writes, so the echo on a
+## row cannot claim a line the file does not have. Without this the reorder was a view-only gesture.
+static func _test_the_order_reaches_the_file() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.variables = {
+		"speed": {"type": "float", "default": 200.0, "exported": false},
+		"hp": {"type": "int", "default": 100, "exported": false},
+		"alive": {"type": "bool", "default": true, "exported": false},
+	}
+	ok = _check("the emitted file is in the order the rows are in",
+		_declared_names(sheet), PackedStringArray(["speed", "hp", "alive"])) and ok
+	sheet.variables = {
+		"alive": {"type": "bool", "default": true, "exported": false},
+		"hp": {"type": "int", "default": 100, "exported": false},
+		"speed": {"type": "float", "default": 200.0, "exported": false},
+	}
+	ok = _check("and Sort A-Z is a change to the file, not to the view",
+		_declared_names(sheet), PackedStringArray(["alive", "hp", "speed"])) and ok
+	return ok
+
+
+## The variables an emitted sheet declares, in file order.
+static func _declared_names(sheet: EventSheetResource) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var output: String = str(SheetCompiler.compile(sheet, "user://variable_row_order.gd").get("output", ""))
+	for line: String in output.split("
+"):
+		var bare: String = line.strip_edges()
+		if bare.begins_with("var ") and bare.contains(":"):
+			names.append(bare.trim_prefix("var ").get_slice(":", 0).strip_edges())
+	return names
+
+
+## V8 - "Show in Inspector" is the one gesture that adds `@export` to a variable, so it has to reach
+## the sheet: the flag is written, the edit is one undo step, and the menu's tick follows it.
+static func _test_show_in_inspector_writes_the_flag() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var manager: EventSheetVariablesManager = dock._variables
+	manager._context_variable = {"name": "hp", "scope": "global", "exported": false}
+	ok = _check("the tick starts where the descriptor says", manager.context_variable_exported(), false) and ok
+	manager._on_variable_context_menu_id_pressed(dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
+	ok = _check("the flag is written into the sheet",
+		bool((dock.get_current_sheet().variables["hp"] as Dictionary).get("exported", false)), true) and ok
+	ok = _check("and the row now emits an @export line",
+		str(SheetCompiler.compile(dock.get_current_sheet(), "user://variable_row_export.gd").get("output", "")).contains("@export var hp"),
+		true) and ok
+	ok = _check("the menu tick follows the write", manager.context_variable_exported(), true) and ok
+	dock._on_undo_requested()
+	ok = _check("and it is one undo step",
+		bool((dock.get_current_sheet().variables["hp"] as Dictionary).get("exported", true)), false) and ok
 	dock.free()
 	return ok
 

@@ -264,6 +264,38 @@ static func _test_inspector_census() -> bool:
 	ok = _check("nothing hidden, nothing said",
 		INSPECTOR_PLUGIN.hidden_variables_note(all_exported), "") and ok
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	# A hinted export carries SPACES inside its arguments - `@export_range(0, 100)` is the exact
+	# spelling the compiler emits - so the annotation has to be taken off by its brackets, not cut
+	# at the first space. Both spellings of it, on the line and above the line, are the same export.
+	var hinted_path: String = "user://variable_owners_census_hinted.gd"
+	var hinted: FileAccess = FileAccess.open(hinted_path, FileAccess.WRITE)
+	hinted.store_string("extends Node2D
+
+@export_range(0, 100) var speed: float = 200.0
+"
+		+ "@export_enum(\"Left\", \"Right\")
+var facing: int = 0
+"
+		+ "@export_file(\"*.png\") var art: String = \"\"
+"
+		+ "@export_group(\"Combat\")
+var hp: int = 100
+")
+	hinted.close()
+	var hinted_census: Array[Dictionary] = INSPECTOR_PLUGIN.member_variables(hinted_path)
+	var hinted_names: PackedStringArray = PackedStringArray()
+	var hinted_flags: Array[bool] = []
+	for entry: Dictionary in hinted_census:
+		hinted_names.append(str(entry.get("name", "")))
+		hinted_flags.append(bool(entry.get("exported", false)))
+	ok = _check("a hinted export is still a variable the census counts",
+		hinted_names, PackedStringArray(["speed", "facing", "art", "hp"])) and ok
+	ok = _check("and every hinted spelling is read as exported",
+		hinted_flags, [true, true, true, false]) and ok
+	ok = _check("so the note only names the one that really is not down there",
+		INSPECTOR_PLUGIN.hidden_variables_note(hinted_census),
+		"Not in the Inspector: hp - open the table to expose one.") and ok
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(hinted_path))
 	return ok
 
 

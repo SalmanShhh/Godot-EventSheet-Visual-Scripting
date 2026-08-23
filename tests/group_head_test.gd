@@ -27,6 +27,7 @@ static func run() -> bool:
 	all_passed = _test_group_locals() and all_passed
 	all_passed = _test_dialog_fields() and all_passed
 	all_passed = _test_pinned_head() and all_passed
+	all_passed = _test_open_all_close_all() and all_passed
 	if all_passed:
 		print("[PASS] group_head: the head reads in one line, and its body wears its bracket.")
 	return all_passed
@@ -215,6 +216,21 @@ static func _test_dialog_fields() -> bool:
 	# The token the dialog and the two group rows have to agree on.
 	passed = _check("the switchable flag is addressed by the compiler's own token",
 		EventSheetGroupFacts.guard_value(_group("Tutorial hints", "")), "\"tutorial_hints\"") and passed
+	# The swatch has to open on SOME colour, so Apply must not read "opened on lilac" as "asked for
+	# lilac" - a group that carries no colour stays uncoloured unless the swatch was actually moved.
+	var seeded: Color = Color(0.55, 0.45, 0.85, 1.0)
+	passed = _check("an untouched swatch writes no colour at all",
+		EventSheetQuickPromptDialogs.group_edit_extras(true, false, seeded, seeded).has("custom_color"),
+		false) and passed
+	var chosen: Color = Color(0.2, 0.7, 0.4, 1.0)
+	passed = _check("and a moved one writes the colour it was moved to",
+		EventSheetQuickPromptDialogs.group_edit_extras(true, false, chosen, seeded).get("custom_color"),
+		chosen) and passed
+	var uncoloured: EventGroup = _group("Quiet", "")
+	EventSheetDock.set_group_fields(uncoloured, "Quiet", "a new description",
+		EventSheetQuickPromptDialogs.group_edit_extras(true, false, seeded, seeded))
+	passed = _check("so editing only the description leaves the bracket uncoloured",
+		uncoloured.custom_color.a, 0.0) and passed
 	return passed
 
 
@@ -253,6 +269,37 @@ static func _test_pinned_head() -> bool:
 		str(parts.get("switch", "")), ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
 	passed = _check("a head with no row says nothing",
 		str((ViewportGroupBreadcrumb.head_parts(null) as Dictionary).get("counts", "")), "") and passed
+	editor.free()
+	return passed
+
+
+# ── 7. Open all / Close all ──
+
+
+## G4 - the one gesture that folds every group and unfolds them again. What it SAYS has to be what
+## it just did: the question "is anything open?" has a different answer after the fold than before,
+## so it is asked once, up front.
+static func _test_open_all_close_all() -> bool:
+	var passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var group: EventGroup = _group("Combat", "")
+	group.events.append(_event())
+	sheet.events.append(group)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	var dock: EventSheetDock = editor as EventSheetDock
+	var view: EventSheetViewport = editor.get_viewport_control()
+	passed = _check("the group starts open", view.any_group_open(), true)
+	passed = _check("and the dock has a status line to answer on", dock._status_label != null, true) and passed
+	if dock._status_label == null:
+		editor.free()
+		return false
+	dock._toggle_all_group_folds()
+	passed = _check("the first press closes them", view.any_group_open(), false) and passed
+	passed = _check("and says so", dock._status_label.text, "Groups closed.") and passed
+	dock._toggle_all_group_folds()
+	passed = _check("the second press opens them", view.any_group_open(), true) and passed
+	passed = _check("and says that", dock._status_label.text, "Groups opened.") and passed
 	editor.free()
 	return passed
 
