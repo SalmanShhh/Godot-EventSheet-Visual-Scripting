@@ -1327,9 +1327,20 @@ func _draw_editing_note(control: Control, row_data: EventRowData, editing_span_i
 	var field: SemanticSpan = row_data.spans[editing_span_index]
 	if field == null or field.rect.size.x <= 0.0:
 		return
+	# Past the whole left-flowing sentence and short of the right-anchored run: the note goes in the
+	# gap the row already has, so it never lands on top of the value or of the code echo.
+	var note_x: float = field.rect.end.x
+	var note_right: float = control.size.x - EventSheetPalette.ROW_HORIZONTAL_PADDING
+	for span: SemanticSpan in row_data.spans:
+		if span == null or span.rect.size.x <= 0.0 or not (span.metadata is Dictionary):
+			continue
+		if bool((span.metadata as Dictionary).get("align_right", false)):
+			note_right = minf(note_right, span.rect.position.x)
+		else:
+			note_x = maxf(note_x, span.rect.end.x)
 	var note_size: int = EventSheetPalette.resolve_font_size(font_size, -1)
-	var note_x: float = field.rect.end.x + EventSheetPalette.scaled_f(10.0)
-	var available: float = control.size.x - EventSheetPalette.ROW_HORIZONTAL_PADDING - note_x
+	note_x += EventSheetPalette.scaled_f(10.0)
+	var available: float = note_right - EventSheetPalette.scaled_f(10.0) - note_x
 	if available <= 0.0:
 		return
 	control.draw_string(font, Vector2(note_x, field.rect.position.y + field.rect.size.y * ROW_VERTICAL_CENTER_RATIO
