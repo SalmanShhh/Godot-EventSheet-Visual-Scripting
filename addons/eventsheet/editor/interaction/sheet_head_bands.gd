@@ -71,6 +71,20 @@ const ADD_LABELS: Dictionary = {
 	BAND_DESCRIPTION: "description",
 }
 
+## Band -> the LINE of the file it stands for: the `prefix` a line is recognised by, and the
+## `format` it is written with. One table, so the reader that finds a line, the parser that lifts
+## its value and the writer that replaces it can never disagree about which line a band is. `@tool`
+## matches whole (`exact`); the `##` description excludes `## @`, because an annotation is markup
+## and not the sheet's prose. A band with no row here has no line of its own - an autoload's name
+## lives in project.godot, an include is merged at compile time - and is never written by hand.
+const LINE_SHAPES: Dictionary = {
+	BAND_NAME: {"prefix": "class_name ", "format": "class_name %s"},
+	BAND_EXTENDS: {"prefix": "extends ", "format": "extends %s"},
+	BAND_ICON: {"prefix": "@icon", "format": "@icon(\"%s\")"},
+	BAND_TOOL: {"prefix": "@tool", "format": "@tool", "exact": true},
+	BAND_DESCRIPTION: {"prefix": "## ", "format": "## %s"},
+}
+
 ## The base classes whose sheets usually carry `@tool`, so an absent one shows as a switch in the
 ## off position (with its echo ghosted) rather than hiding under "+ add" - an editor script that
 ## does not run in the editor is a bug the head should make findable.
@@ -88,55 +102,74 @@ const TOOL_IS_EXPECTED_ON: PackedStringArray = [
 ## carries - whether a scene already runs this script - so the caller that can answer it passes it
 ## in, and the default is "yes" so nothing is asked of a sheet nobody asked about.
 static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bool = true) -> Dictionary:
-	var declared_class: String = ""
-	var extends_target: String = ""
-	var icon_path: String = ""
-	var has_tool: bool = false
 	var host_bound: bool = false
 	var description_lines: PackedStringArray = PackedStringArray()
+	# Every key answered, so a reader of the facts can address any of them whatever the sheet is.
+	var head: Dictionary = {
+		"class_name": "", "file_name": "", "extends": "", "icon": "", "tool": false,
+		"description": "", "autoload": "", "source_path": "", "host": "",
+		"remembered": PackedStringArray(), "includes": PackedStringArray(), "attached": attached,
+	}
 	for raw_line: String in scaffold_code.split("\n"):
 		var line: String = raw_line.strip_edges()
-		if line.begins_with("class_name ") and declared_class.is_empty():
-			declared_class = line.trim_prefix("class_name ").strip_edges()
-		elif line.begins_with("extends ") and extends_target.is_empty():
-			extends_target = line.trim_prefix("extends ").strip_edges()
-		elif line.begins_with("@icon") and icon_path.is_empty():
-			icon_path = _quoted_argument(line)
-		elif line == "@tool":
-			has_tool = true
+		if line_is(line, BAND_NAME) and str(head["class_name"]).is_empty():
+			head["class_name"] = line.trim_prefix("class_name ").strip_edges()
+		elif line_is(line, BAND_EXTENDS) and str(head["extends"]).is_empty():
+			head["extends"] = line.trim_prefix("extends ").strip_edges()
+		elif line_is(line, BAND_ICON) and str(head["icon"]).is_empty():
+			head["icon"] = _quoted_argument(line)
+		elif line_is(line, BAND_TOOL):
+			head["tool"] = true
 		elif line.begins_with("func _enter_tree") or line.begins_with("host = get_parent"):
 			host_bound = true
-		elif line.begins_with("## ") and not line.begins_with("## @"):
+		elif line_is(line, BAND_DESCRIPTION):
 			description_lines.append(line.trim_prefix("## ").strip_edges())
-	var described: String = " ".join(description_lines).strip_edges()
+	head["description"] = " ".join(description_lines).strip_edges()
 	if sheet == null:
-		return _facts_dictionary(declared_class, "", extends_target, icon_path, has_tool,
-			described, "", "", "", PackedStringArray(), PackedStringArray(), attached)
-	if declared_class.is_empty():
-		declared_class = sheet.custom_class_name.strip_edges()
-	if extends_target.is_empty():
-		extends_target = sheet.host_class.strip_edges()
-	if icon_path.is_empty():
-		icon_path = sheet.custom_class_icon.strip_edges()
-	has_tool = has_tool or sheet.tool_mode
-	if described.is_empty():
-		described = sheet.class_description.strip_edges()
+		return head
+	# The sheet's own fields answer for anything the prelude text did not say - a `.tres` sheet the
+	# compiler will write those lines for has no text to read them from.
+	if str(head["class_name"]).is_empty():
+		head["class_name"] = sheet.custom_class_name.strip_edges()
+	if str(head["extends"]).is_empty():
+		head["extends"] = sheet.host_class.strip_edges()
+	if str(head["icon"]).is_empty():
+		head["icon"] = sheet.custom_class_icon.strip_edges()
+	head["tool"] = bool(head["tool"]) or sheet.tool_mode
+	if str(head["description"]).is_empty():
+		head["description"] = sheet.class_description.strip_edges()
 	var source_path: String = str(sheet.external_source_path).strip_edges()
-	var host_class: String = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""
-	return _facts_dictionary(
-		declared_class,
-		source_path.get_file(),
-		extends_target,
-		icon_path,
-		has_tool,
-		described,
-		sheet.autoload_name.strip_edges() if sheet.autoload_mode else "",
-		source_path,
-		host_class,
-		remembered_variables(sheet),
-		PackedStringArray(sheet.includes),
-		attached
-	)
+	head["file_name"] = source_path.get_file()
+	head["source_path"] = source_path
+	head["autoload"] = sheet.autoload_name.strip_edges() if sheet.autoload_mode else ""
+	head["host"] = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""
+	head["remembered"] = remembered_variables(sheet)
+	head["includes"] = PackedStringArray(sheet.includes)
+	return head
+
+
+## True when one line of a file IS the line a band stands for.
+static func line_is(line: String, band_kind: String) -> bool:
+	var shape: Dictionary = LINE_SHAPES.get(band_kind, {})
+	if shape.is_empty():
+		return false
+	if bool(shape.get("exact", false)):
+		return line == str(shape["prefix"])
+	if band_kind == BAND_DESCRIPTION and line.begins_with("## @"):
+		return false
+	return line.begins_with(str(shape["prefix"]))
+
+
+## The exact line a band writes, "" when the band's value means "no such line" - an emptied field,
+## or the `@tool` switch turned off.
+static func line_text(band_kind: String, new_value: String) -> String:
+	var shape: Dictionary = LINE_SHAPES.get(band_kind, {})
+	if shape.is_empty():
+		return ""
+	var value: String = new_value.strip_edges()
+	if bool(shape.get("exact", false)):
+		return str(shape["format"]) if value == "true" else ""
+	return "" if value.is_empty() else str(shape["format"]) % value
 
 
 ## The variables this sheet keeps between runs, in declaration order - the fact the compiler's
@@ -327,27 +360,6 @@ static func _make(kind: String, value: String, echo: String) -> Dictionary:
 		"switch": false,
 		"switch_on": false,
 		"control": str(CONTROL_LABELS.get(kind, "")),
-	}
-
-
-## The facts dictionary, built in one place so every caller answers the same keys.
-static func _facts_dictionary(declared_class: String, file_name: String, extends_target: String,
-		icon_path: String, has_tool: bool, described: String, autoload_name: String,
-		source_path: String, host_class: String, remembered: PackedStringArray,
-		includes: PackedStringArray, attached: bool) -> Dictionary:
-	return {
-		"class_name": declared_class,
-		"file_name": file_name,
-		"extends": extends_target,
-		"icon": icon_path,
-		"tool": has_tool,
-		"description": described,
-		"autoload": autoload_name,
-		"source_path": source_path,
-		"host": host_class,
-		"remembered": remembered,
-		"includes": includes,
-		"attached": attached,
 	}
 
 

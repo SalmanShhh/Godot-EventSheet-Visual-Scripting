@@ -296,24 +296,8 @@ func _prelude_row_for(sheet: EventSheetResource, band_kind: String) -> RawCodeRo
 ## True when this block of prelude text already carries the line a band stands for.
 static func _block_carries(code: String, band_kind: String) -> bool:
 	for raw_line: String in code.split("\n"):
-		if _line_is(raw_line.strip_edges(), band_kind):
+		if EventSheetHeadBands.line_is(raw_line.strip_edges(), band_kind):
 			return true
-	return false
-
-
-## True when one prelude line IS the line a band stands for.
-static func _line_is(line: String, band_kind: String) -> bool:
-	match band_kind:
-		EventSheetHeadBands.BAND_NAME:
-			return line.begins_with("class_name ")
-		EventSheetHeadBands.BAND_EXTENDS:
-			return line.begins_with("extends ")
-		EventSheetHeadBands.BAND_ICON:
-			return line.begins_with("@icon")
-		EventSheetHeadBands.BAND_TOOL:
-			return line == "@tool"
-		EventSheetHeadBands.BAND_DESCRIPTION:
-			return line.begins_with("## ") and not line.begins_with("## @")
 	return false
 
 
@@ -321,12 +305,12 @@ static func _line_is(line: String, band_kind: String) -> bool:
 ## inserted where GDScript wants it when it is not, removed when the new value is empty (or "false"
 ## for the `@tool` switch). PURE - the whole head-writing contract, testable without a dock.
 static func rewrite_prelude(code: String, band_kind: String, new_value: String) -> String:
-	var wanted: String = _head_line_text(band_kind, new_value)
+	var wanted: String = EventSheetHeadBands.line_text(band_kind, new_value)
 	var lines: PackedStringArray = code.split("\n")
 	var kept: PackedStringArray = PackedStringArray()
 	var replaced: bool = false
 	for line: String in lines:
-		if not _line_is(line.strip_edges(), band_kind):
+		if not EventSheetHeadBands.line_is(line.strip_edges(), band_kind):
 			kept.append(line)
 			continue
 		if wanted.is_empty():
@@ -338,23 +322,6 @@ static func rewrite_prelude(code: String, band_kind: String, new_value: String) 
 	if wanted.is_empty() or replaced:
 		return "\n".join(kept)
 	return "\n".join(_insert_head_line(kept, band_kind, wanted))
-
-
-## The exact line a band writes, "" when the band's value means "no such line".
-static func _head_line_text(band_kind: String, new_value: String) -> String:
-	var value: String = new_value.strip_edges()
-	match band_kind:
-		EventSheetHeadBands.BAND_NAME:
-			return "" if value.is_empty() else "class_name %s" % value
-		EventSheetHeadBands.BAND_EXTENDS:
-			return "" if value.is_empty() else "extends %s" % value
-		EventSheetHeadBands.BAND_ICON:
-			return "" if value.is_empty() else "@icon(\"%s\")" % value
-		EventSheetHeadBands.BAND_TOOL:
-			return "@tool" if value == "true" else ""
-		EventSheetHeadBands.BAND_DESCRIPTION:
-			return "" if value.is_empty() else "## %s" % value
-	return ""
 
 
 ## Where a line GDScript has rules about goes when the file does not have it yet: `@tool` opens the
@@ -385,7 +352,7 @@ static func _insert_head_line(lines: PackedStringArray, band_kind: String, wante
 ## The index of the line a band stands for, or `fallback` when the block has no such line.
 static func _index_of_line(lines: PackedStringArray, band_kind: String, fallback: int) -> int:
 	for index: int in range(lines.size()):
-		if _line_is(lines[index].strip_edges(), band_kind):
+		if EventSheetHeadBands.line_is(lines[index].strip_edges(), band_kind):
 			return index
 	return fallback
 
