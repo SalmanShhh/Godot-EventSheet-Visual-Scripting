@@ -2154,6 +2154,17 @@ func _rename_variable_references(old_name: String, new_name: String) -> int:  # 
 	return _rename.rename_variable_references(old_name, new_name)
 
 
+## V8 - the muted line an inline rename shows before anything is written: what committing will
+## rewrite, counted across the open tabs and the project, and the two keys that finish or abandon it.
+## Asked once as the field opens (the count is of the OLD name, so typing cannot change it).
+func _variable_rename_note(variable_name: String) -> String:
+	if variable_name.strip_edges().is_empty():
+		return ""
+	return EventSheetFindReferences.inline_rename_note(
+		EventSheetFindReferences.find_in_project_rows(
+			variable_name, EventSheetFindReferences.open_sheets_of(self)))
+
+
 func _open_rename_dialog(old_name: String) -> void:  # variable context menu
 	_rename.open(old_name)
 
@@ -6177,6 +6188,12 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 	# say (the field already turned amber while it was being typed).
 	if edit_kind == "variable_value":
 		_apply_variable_value_edit(row_data, new_value)
+		return
+	# V8 - a variable's NAME, edited in place. Committing is Rename Everywhere: the declaration, every
+	# use of it in this sheet, and every sheet that includes this one - the same writer the row menu's
+	# dialog calls, so the inline field is that gesture without the dialog.
+	if edit_kind == "variable_rename":
+		_rename.rename_everywhere(old_value, new_value.strip_edges())
 		return
 	var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
 		match edit_kind:

@@ -81,6 +81,21 @@
   removes the `@export`. The canvas menu's Add entry is now a submenu naming the three scopes -
   Global variable, Local variable, Instance variable - because "add a variable" is really three
   different questions.
+- **F2 renames a variable where it lives, and says what that will cost first.** The name is a field
+  now: F2 on a variable row opens it in place with the count beside it - "renames 6 uses in 2
+  sheets · Enter to apply · Esc" - read from the same project walk the Find results bar uses, before
+  anything is written. Enter commits the full Rename Everywhere (the declaration, every row that
+  names it, and every sheet that includes this one) in one undo step; Esc leaves the file alone.
+  Nothing else about the row moved: Enter still edits the value, and a double-click still opens the
+  variable dialog - the name belongs to the one key that means "rename this".
+- **The menus say which key does the same thing.** Rename Everywhere… wears **F2**; the Add Variable
+  submenu wears **V** and **Ctrl+Shift+V** beside the two scopes that have a key. Read off the
+  shortcut table, so a rebound key hints as the key it was rebound to, and shown only as a hint -
+  the keys themselves stay routed where they always were.
+- **Dragging a variable row onto a parameter fills it in.** Let a declaration go on a condition or
+  action's value cell and that cell takes the spelling the field actually needs: bare for the
+  object's own variable or a local, `Game.Score` for a global, where the prefix is real code and
+  cannot be dropped. One undo step, no dialog.
 - **The Anatomy rail speaks the sheet's own sentences.** "Properties · N" and "State · N" - the code
   split, named after a flag nobody asked about - are now **Instance, of Player**, **Globals used
   here, from Game** and **Locals in view**, each line composed by the same call the rows make, so the

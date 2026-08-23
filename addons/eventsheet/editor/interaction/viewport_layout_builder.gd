@@ -68,6 +68,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		cached_layout["editing_buffer"] = _viewport._editing_buffer if index == _viewport._editing_row_index else ""
 		cached_layout["editing_caret"] = _viewport._editing_caret if index == _viewport._editing_row_index else -1
 		cached_layout["editing_select_anchor"] = _viewport._editing_select_anchor if index == _viewport._editing_row_index else -1
+		cached_layout["editing_note"] = _viewport._editing_note if index == _viewport._editing_row_index else ""
 		return cached_layout
 	var row_top: float = _viewport._get_row_top(index)
 	var row_height: float = _viewport._get_row_height(index)
@@ -416,6 +417,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"editing_buffer": _viewport._editing_buffer if index == _viewport._editing_row_index else "",
 		"editing_caret": _viewport._editing_caret if index == _viewport._editing_row_index else -1,
 		"editing_select_anchor": _viewport._editing_select_anchor if index == _viewport._editing_row_index else -1,
+		"editing_note": _viewport._editing_note if index == _viewport._editing_row_index else "",
 		"total_selected_spans": _viewport._get_selected_span_count(),
 		"selected_span_indices": _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate(),
 		"hovered_span_index": _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1,

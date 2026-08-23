@@ -643,6 +643,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
+	# V8 - what the open inline editor has to say before it is committed ("renames 6 uses in 2
+	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
+	# so it claims no layout: an editor's note is a hint, not a cell.
+	_draw_editing_note(control, row_data, editing_span_index, str(layout.get("editing_note", "")),
+		font, font_size, reading_style)
 	# K4 - drawn OVER the condition cells: the rule lands in the gap between two condition lines,
 	# and a cell's own plate is painted after the row's background, so a divider under it would be
 	# covered by the very cells it separates.
@@ -1310,6 +1315,26 @@ func _draw_spans(
 				1.0,
 				true
 			)
+
+
+## V8. The muted line beside an open inline editor, starting one gap past the field it belongs to
+## and clipped to the row. Nothing at all when no field is open or the field has nothing to say -
+## which is every edit but a rename.
+func _draw_editing_note(control: Control, row_data: EventRowData, editing_span_index: int,
+		note: String, font: Font, font_size: int, reading: EventSheetReadingStyle) -> void:
+	if note.strip_edges().is_empty() or editing_span_index < 0 or editing_span_index >= row_data.spans.size():
+		return
+	var field: SemanticSpan = row_data.spans[editing_span_index]
+	if field == null or field.rect.size.x <= 0.0:
+		return
+	var note_size: int = EventSheetPalette.resolve_font_size(font_size, -1)
+	var note_x: float = field.rect.end.x + EventSheetPalette.scaled_f(10.0)
+	var available: float = control.size.x - EventSheetPalette.ROW_HORIZONTAL_PADDING - note_x
+	if available <= 0.0:
+		return
+	control.draw_string(font, Vector2(note_x, field.rect.position.y + field.rect.size.y * ROW_VERTICAL_CENTER_RATIO
+		+ float(note_size) * FONT_BASELINE_OFFSET_RATIO), note,
+		HORIZONTAL_ALIGNMENT_LEFT, available, note_size, reading.muted_text_color)
 
 
 ## Rounded-rect fills share cached StyleBoxFlats (bounded: a handful of colors x radii),

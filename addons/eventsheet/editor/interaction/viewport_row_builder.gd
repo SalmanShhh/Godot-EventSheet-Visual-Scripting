@@ -8845,12 +8845,19 @@ func _build_variable_row(
 			)
 		# The name is what a reader came for, so it is the one bold word on the row - and its hover
 		# keeps the declaration grammar (`hp : int`) for anyone who wants it.
+		#
+		# V8 - it is also the row's rename field: F2 opens it in place, with the count of what
+		# committing will rewrite beside it. `edit_gesture` is what keeps it OUT of every other way
+		# in - Enter still edits the value, and a double-click anywhere on the row still opens the
+		# variable dialog, so the field belongs to the one key that means "rename this".
 		row_data.spans.append(
 			_make_span(
 				display_name,
 				SemanticSpan.SpanType.OBJECT,
 				variable_meta.merged({
-					"editable": false,
+					"editable": declared_in.is_empty(),
+					"edit_kind": "variable_rename",
+					"edit_gesture": "rename",
 					"variable_name_span": true,
 					"bbcode_segments": [{
 						"text": display_name,

@@ -235,6 +235,11 @@ var _editing_caret: int = 0
 # Inline text selection (Shift+arrows / Ctrl+A while editing): -1 = none, else the
 # selection spans anchor..caret. Comment rows get the floating BBCode format bar on it.
 var _editing_select_anchor: int = -1
+## V8. What an inline editor has to say before it is committed - "renames 6 uses in 2 sheets · Enter
+## to apply · Esc". Muted, drawn beside the field, claiming no layout: it is a hint, not a cell.
+## Settled ONCE when the edit begins (the count is of the OLD name, which does not change as the new
+## one is typed) and cleared with the edit.
+var _editing_note: String = ""
 var _inline_format_bar: Control = null
 var _drag_row_index: int = -1
 var _drag_row_indices: Array[int] = []
@@ -2196,6 +2201,12 @@ func _gui_input(event: InputEvent) -> void:
 # so cells with no jump target keep Ctrl+Click's multi-select meaning.
 var navigation_probe: Callable = Callable()
 
+# V8. The dock installs this too: (variable_name: String) -> String, the muted line an inline rename
+# shows before anything is written ("renames 6 uses in 2 sheets · Enter to apply · Esc"). A
+# project-wide walk, so it is asked ONCE as the field opens and never per keystroke; unwired, the
+# field opens without a count rather than not opening.
+var rename_note_provider: Callable = Callable()
+
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	_input_handlers.handle_mouse_motion(event)
@@ -3263,6 +3274,8 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 		return
 	_editing_row_index = row_index
 	_editing_span_index = resolved_span_index
+	# An ordinary edit has nothing to say before it commits; only a named gesture fills this in.
+	_editing_note = ""
 	# A placeholder span (an empty verb description / category showing "+ ...") starts the buffer EMPTY,
 	# not with the placeholder text - the user is filling in a blank field, not editing that prompt.
 	# W12 - a span whose TEXT is a reading edits the source it stands for: a table entry chip reads
@@ -3307,12 +3320,43 @@ func get_editing_context_for_test() -> Dictionary:
 	}
 
 
+## V8. F2 on a variable row: its NAME edits in place, with the muted count of what committing will
+## rewrite beside it. The count is a project-wide walk, so it comes from the dock through
+## `rename_note_provider`; without one the field still opens, just without the count. False when the
+## row is not a variable row (the key then means what it always meant - begin editing this cell).
+func begin_variable_rename(row_index: int) -> bool:
+	var row_data: EventRowData = _row_at(row_index)
+	if row_data == null:
+		return false
+	for index: int in range(row_data.spans.size()):
+		var span: SemanticSpan = row_data.spans[index]
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("edit_gesture", "")) != "rename":
+			continue
+		_begin_edit(row_index, index)
+		if _editing_row_index != row_index:
+			return false
+		var name_text: String = str(metadata.get("variable_name", span.text))
+		if rename_note_provider.is_valid():
+			_editing_note = str(rename_note_provider.call(name_text))
+		queue_redraw()
+		return true
+	return false
+
+
 func _find_first_editable_span(row_data: EventRowData) -> int:
 	for index in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[index]
 		if span == null or not (span.metadata is Dictionary):
 			continue
-		if bool((span.metadata as Dictionary).get("editable", false)):
+		var metadata: Dictionary = span.metadata as Dictionary
+		# A cell with a gesture of its own is never the row's DEFAULT edit: the name renames on F2,
+		# so Enter on a variable row keeps meaning "edit the value" the way it always did.
+		if not str(metadata.get("edit_gesture", "")).is_empty():
+			continue
+		if bool(metadata.get("editable", false)):
 			return index
 	return -1
 
@@ -3345,6 +3389,7 @@ func _commit_edit() -> void:
 	_editing_buffer = ""
 	_editing_caret = 0
 	_editing_select_anchor = -1
+	_editing_note = ""
 	_update_inline_format_bar()
 	_refresh_rows()
 
@@ -3355,6 +3400,7 @@ func _cancel_edit() -> void:
 	_editing_buffer = ""
 	_editing_caret = 0
 	_editing_select_anchor = -1
+	_editing_note = ""
 	_update_inline_format_bar()
 	queue_redraw()
 
@@ -4712,6 +4758,27 @@ static func _is_node_path_drag(data: Variant) -> bool:
 
 ## The {ace, param_id, current} under a logical position when it sits on an editable condition/action param
 ## VALUE, else {}. Shared by double-click-to-edit and the node-drop-onto-param gesture.
+## V8. What a parameter field must receive when this variable ROW is let go on it: bare for an
+## instance variable or a local, `Game.Score` for a global, because inside an expression the prefix
+## is real code and cannot be dropped. "" for any row that is not a variable declaration, which is
+## what keeps every other drag a reorder.
+func variable_insert_text(row_data: EventRowData) -> String:
+	if row_data == null or _sheet == null:
+		return ""
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if not bool(metadata.get("variable_name_span", false)):
+			continue
+		var name_text: String = str(metadata.get("variable_name", span.text)).strip_edges()
+		if name_text.is_empty():
+			return ""
+		var entry: Dictionary = EventSheetVariableOwners.find(EventSheets.sheet_variables(_sheet), name_text)
+		return str(entry.get("insert_text", name_text))
+	return ""
+
+
 func _param_value_at(local_position: Vector2) -> Dictionary:
 	var hit: Dictionary = _hit_test(local_position)
 	var span_index: int = int(hit.get("span_index", -1))

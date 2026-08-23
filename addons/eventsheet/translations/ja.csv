@@ -4431,3 +4431,6 @@ from %s,%s から
 read as %s,%s として読む
 Change to %s,%s に変更
 Couldn't find %s to write this row with.,この行を書く %s が見つかりませんでした。
+renames %d use%s in %d sheet%s,%d 件%s の使用を %d 枚%s のシートで変更
+Enter to apply · Esc,Enter で適用 · Esc
+used nowhere yet,まだどこにも使われていません

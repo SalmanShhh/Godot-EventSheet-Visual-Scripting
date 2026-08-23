@@ -4431,3 +4431,6 @@ from %s,来自 %s
 read as %s,读作 %s
 Change to %s,改为 %s
 Couldn't find %s to write this row with.,找不到 %s 来写这一行。
+renames %d use%s in %d sheet%s,重命名 %d 处%s 使用，涉及 %d 个%s 表
+Enter to apply · Esc,Enter 应用 · Esc
+used nowhere yet,尚未在任何地方使用

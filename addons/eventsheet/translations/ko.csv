@@ -4431,3 +4431,6 @@ from %s,%s 에서
 read as %s,%s 로 읽기
 Change to %s,%s 로 변경
 Couldn't find %s to write this row with.,이 행을 쓸 %s 을(를) 찾지 못했습니다.
+renames %d use%s in %d sheet%s,%d 곳%s 의 사용을 %d 개%s 시트에서 변경
+Enter to apply · Esc,Enter 로 적용 · Esc
+used nowhere yet,아직 어디에도 쓰이지 않음

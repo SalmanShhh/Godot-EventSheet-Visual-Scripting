@@ -4431,3 +4431,6 @@ from %s,von %s
 read as %s,lesen als %s
 Change to %s,In %s ändern
 Couldn't find %s to write this row with.,"%s konnte nicht gefunden werden, um diese Zeile zu schreiben."
+renames %d use%s in %d sheet%s,benennt %d Verwendung%s in %d Blatt%s um
+Enter to apply · Esc,Enter zum Anwenden · Esc
+used nowhere yet,noch nirgends verwendet

@@ -293,9 +293,11 @@ back: it opens on the scope the variable has.
 | double-click the value | edits in place, with the type word as the guide rail. A literal the type cannot hold turns amber and is refused |
 | double-click anywhere else on the row | opens the Edit variable dialog |
 | double-click the echo | opens the code panel at that line |
+| **F2** | renames the variable in place, with the count of what committing will rewrite beside the field ("renames 6 uses in 2 sheets · Enter to apply · Esc"). Enter is the full Rename Everywhere in one undo step; Esc leaves the file alone |
 | hover the name | every other use of it in the same scope lights up, so you can see what reads it |
 | Alt+Up / Alt+Down | reorders the declaration, writing the new order |
-| drag the row | the same, by hand; the drop writes the order |
+| drag the row onto another declaration | reorders it, or folds both into one Inspector folder; the drop writes it |
+| drag the row onto a parameter's value | fills that parameter with the spelling it needs - bare for this object's own variable or a local, `Game.Score` for a global |
 
 While the game runs, **Live Values** adds a green `now 73` chip after the initial value - after it,
 not instead of it, so the declaration still reads as a declaration.
@@ -305,7 +307,7 @@ The right-click menu on a variable row:
 | Item | What it does |
 |---|---|
 | Edit Variable | the dialog above |
-| Rename Everywhere… | renames the declaration and every use, in one undo step |
+| Rename Everywhere… (**F2**) | renames the declaration and every use, in one undo step. The key does it in place on the row |
 | Change Type Everywhere… | retypes it and rewrites every row that sets or compares it |
 | Convert Scope | moves it between Global, Local and Instance |
 | Toggle Constant | `var` to `const` and back |

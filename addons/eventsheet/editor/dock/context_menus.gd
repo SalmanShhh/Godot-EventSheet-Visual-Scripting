@@ -35,6 +35,31 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## V8. The key that does the same thing, shown at the right of a menu item, so the shortcut is
+## learned from the menu the reader is already in. `binding` is the shortcut table's own spelling
+## ("F2", "Ctrl+Shift+V") and goes through its parser, so passing binding_for(action) hints a REBOUND
+## key as the key it was bound to.
+##
+## A HINT: the shortcut is never registered as global. Every one of these keys is already routed
+## where it belongs (the viewport's own key handling), and a second listener living on a hidden
+## popup would run the same gesture twice.
+static func hint_key(menu: PopupMenu, item_id: int, binding: String) -> void:
+	var index: int = menu.get_item_index(item_id)
+	if index < 0 or binding.strip_edges().is_empty():
+		return
+	var parsed: Dictionary = EventSheetShortcuts.parse(binding)
+	if int(parsed.get("keycode", KEY_NONE)) == KEY_NONE:
+		return
+	var pressed := InputEventKey.new()
+	pressed.keycode = int(parsed["keycode"]) as Key
+	pressed.ctrl_pressed = bool(parsed.get("ctrl", false))
+	pressed.shift_pressed = bool(parsed.get("shift", false))
+	pressed.alt_pressed = bool(parsed.get("alt", false))
+	var shortcut := Shortcut.new()
+	shortcut.events = [pressed]
+	menu.set_item_shortcut(index, shortcut, false)
+
+
 ## Builds every right-click context menu once and assigns each back onto the dock (the members
 ## the dock + tests read by name). The row menu + its Insert/More submenus are created empty here;
 ## they're (re)populated per right-click by _build_row_context_menu / the submenu builders.
@@ -121,6 +146,8 @@ func build_all() -> void:
 	# can never overwrite each other.
 	_dock._variable_context_menu.add_item("Export Text for Translation…", _dock.VARIABLE_MENU_TEXT_EXPORT)
 	_dock._variable_context_menu.add_item("Import Translations…", _dock.VARIABLE_MENU_TEXT_IMPORT)
+	# V8 - the keys that do the same thing, at the right of the items that do it.
+	hint_key(_dock._variable_context_menu, _dock.VARIABLE_MENU_RENAME, "F2")
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
 
@@ -146,6 +173,12 @@ func build_all() -> void:
 	_dock._add_variable_submenu.add_item("Global variable…", _dock.EMPTY_MENU_ADD_VARIABLE)
 	_dock._add_variable_submenu.add_item("Local variable…", _dock.EMPTY_MENU_ADD_LOCAL_VARIABLE)
 	_dock._add_variable_submenu.add_item("Instance variable…", _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE)
+	# V8 - and the two of these three that have a key say which. Read off the shortcut table, so a
+	# rebound key hints as the key it was rebound to; Local has no key of its own to name.
+	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_VARIABLE,
+		EventSheetShortcuts.binding_for("add_variable"))
+	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE,
+		EventSheetShortcuts.binding_for("add_variable_chord"))
 	_dock._add_variable_submenu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("Add Variable", _dock._add_variable_submenu)
 	# R32 - the smallest editor tool there is, one menu item away: a button in the Inspector and the

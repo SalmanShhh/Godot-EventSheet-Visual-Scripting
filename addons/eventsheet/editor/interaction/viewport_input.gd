@@ -617,6 +617,22 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		_viewport._clear_ace_drag()
 		_viewport.queue_redraw()
 		return
+	# V8 - a variable row let go on a parameter VALUE writes what that field would need: bare for an
+	# instance variable or a local, `Game.Score` for a global, where the prefix is real code and
+	# cannot be dropped. Checked before the reorder below, because a variable dropped on a cell is an
+	# insertion into that cell and never a move of the declaration.
+	if _viewport._drag_row_index >= 0:
+		# The cheap question first: the catalog walk behind the insert text reads every autoload's
+		# script, and a drop that landed on no parameter has nothing to ask it.
+		var field: Dictionary = _viewport._param_value_at(local_position)
+		var dropped_text: String = "" if field.is_empty() \
+			else _viewport.variable_insert_text(_viewport._row_at(_viewport._drag_row_index))
+		if not dropped_text.is_empty():
+			_viewport.param_node_drop_requested.emit(
+				field.get("ace"), str(field.get("param_id", "")), dropped_text)
+			_viewport._clear_row_drag()
+			_viewport.queue_redraw()
+			return
 	if _viewport._drag_row_index >= 0 and _viewport._drag_target_index >= 0 and not _viewport._drag_row_indices.has(_viewport._drag_target_index):
 		var target_row: EventRowData = _viewport._row_at(_viewport._drag_target_index)
 		# A drop onto another reading of a statement already being dragged is the same no-op as a drop
@@ -760,11 +776,12 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport.handle_enter_key()
 		_viewport.accept_event()
 	elif event.keycode == KEY_F2:
-		# C4 - F2 on the head's name band renames the class everywhere, which is what F2 means on a
-		# name; everywhere else it stays the plain begin-edit escape hatch.
+		# C4 / V8 - F2 on a NAME renames it everywhere: the head's name band renames the class, a
+		# variable row's name renames the variable in place with the count of what that will rewrite.
+		# Everywhere else it stays the plain begin-edit escape hatch.
 		if not _selected_head_action().is_empty():
 			_viewport.sheet_head_action_requested.emit(_selected_head_action())
-		else:
+		elif not _viewport.begin_variable_rename(_viewport._selected_row_index):
 			_viewport._begin_edit(_viewport._selected_row_index, _viewport._selected_span_index)
 		_viewport.accept_event()
 	elif event.keycode == KEY_ESCAPE:

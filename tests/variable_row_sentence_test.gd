@@ -27,7 +27,148 @@ static func run() -> bool:
 	ok = _test_the_order_is_written_not_sorted_behind_your_back() and ok
 	ok = _test_the_order_reaches_the_file() and ok
 	ok = _test_show_in_inspector_writes_the_flag() and ok
+	ok = _test_f2_renames_the_name_in_place() and ok
+	ok = _test_a_dropped_row_writes_what_a_field_needs() and ok
 	return ok
+
+
+## V8. F2 (and a double-click on the name) opens the NAME as a field, with the count of what
+## committing will rewrite beside it. The row's default edit is untouched: Enter still means "edit
+## the value", which is what `edit_gesture` on the name keeps true.
+static func _test_f2_renames_the_name_in_place() -> bool:
+	var ok: bool = true
+	# The line the field shows, out of what the project walk found. Pure, so it is pinned first.
+	ok = _check("one use in one sheet reads singular",
+		EventSheetFindReferences.inline_rename_note([{"sheet": "a.gd", "count": 1}]),
+		"renames 1 use in 1 sheet · Enter to apply · Esc") and ok
+	ok = _check("and several read plural",
+		EventSheetFindReferences.inline_rename_note([{"sheet": "a.gd", "count": 6}, {"sheet": "b.gd", "count": 2}]),
+		"renames 8 uses in 2 sheets · Enter to apply · Esc") and ok
+	ok = _check("a name nothing uses yet says so rather than counting to zero",
+		EventSheetFindReferences.inline_rename_note([]),
+		"used nowhere yet · Enter to apply · Esc") and ok
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "SetVar"
+	action.codegen_template = "{var_name} = {value}"
+	action.params = {"var_name": "hp", "value": "50"}
+	event.actions.append(action)
+	sheet.events.append(event)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var view: EventSheetViewport = dock._active_view()
+	# …and the menu says which key does the same thing, read off the shortcut table so a rebound
+	# key hints as the key it was rebound to.
+	ok = _check("the row menu names the rename key",
+		_menu_key(dock._variable_context_menu, dock.VARIABLE_MENU_RENAME), "F2") and ok
+	ok = _check("and the Add submenu names the two that have one",
+		[_menu_key(dock._add_variable_submenu, dock.EMPTY_MENU_ADD_VARIABLE),
+			_menu_key(dock._add_variable_submenu, dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE),
+			_menu_key(dock._add_variable_submenu, dock.EMPTY_MENU_ADD_LOCAL_VARIABLE)],
+		["V", "Ctrl+Shift+V", ""]) and ok
+	var row: EventRowData = _row_named(view, "hp")
+	ok = _check("the row is on the canvas", row != null, true)
+	if row == null:
+		dock.free()
+		return false
+	var name_span: SemanticSpan = _span_flagged(row, "variable_name_span")
+	ok = _check("the name is a field, opened by its own gesture",
+		[bool((name_span.metadata as Dictionary).get("editable", false)),
+			str((name_span.metadata as Dictionary).get("edit_kind", "")),
+			str((name_span.metadata as Dictionary).get("edit_gesture", ""))],
+		[true, "variable_rename", "rename"]) and ok
+	var row_index: int = _index_of(view, row)
+	ok = _check("F2 opens the name, not the value",
+		[view.begin_variable_rename(row_index),
+			int(view.get_editing_context_for_test().get("span_index", -1))],
+		[true, row.spans.find(name_span)]) and ok
+	ok = _check("with the buffer on the name it is about",
+		str(view.get_editing_context_for_test().get("buffer", "")), "hp") and ok
+	ok = _check("and the count of what committing will rewrite beside it",
+		view._editing_note.ends_with("Enter to apply · Esc"), true) and ok
+	view._cancel_edit()
+	# The default edit is unchanged: Enter on the row still reaches the VALUE cell.
+	view._selected_row_index = row_index
+	view._selected_span_index = -1
+	ok = _check("Enter still edits the value",
+		[view.begin_edit_selected(),
+			str((row.spans[int(view.get_editing_context_for_test().get("span_index", -1))].metadata as Dictionary).get("edit_kind", ""))],
+		[true, "variable_value"]) and ok
+	view._cancel_edit()
+	# Committing the rename is Rename Everywhere: the declaration AND every row that names it.
+	view.begin_variable_rename(row_index)
+	view._editing_buffer = "health"
+	view._commit_edit()
+	ok = _check("committing renames the declaration",
+		PackedStringArray(dock.get_current_sheet().variables.keys()), PackedStringArray(["health"])) and ok
+	ok = _check("and every row that names it",
+		_first_action_param(dock.get_current_sheet(), "var_name"), "health") and ok
+	dock.free()
+	return ok
+
+
+## V8. A variable row let go on a parameter VALUE writes what that field needs: bare for the object's
+## own variable, `Game.Score` for a global, because inside an expression the prefix is real code.
+static func _test_a_dropped_row_writes_what_a_field_needs() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "Player"
+	sheet.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(sheet)
+	var view: EventSheetViewport = dock._active_view()
+	ok = _check("this object's own variable drops bare",
+		view.variable_insert_text(_row_named(view, "hp")), "hp") and ok
+	ok = _check("and a row that is not a declaration drops nothing at all",
+		view.variable_insert_text(EventRowData.new()), "") and ok
+	dock.free()
+	return ok
+
+
+## The key a menu item hints, as the reader sees it written; "" when the item names none.
+static func _menu_key(menu: PopupMenu, item_id: int) -> String:
+	var index: int = menu.get_item_index(item_id)
+	if index < 0:
+		return "<no item %d>" % item_id
+	var shortcut: Shortcut = menu.get_item_shortcut(index)
+	return shortcut.get_as_text() if shortcut != null else ""
+
+
+## One parameter off the first action of the sheet's first event - read from the LIVE sheet, since
+## the undo funnel commits by replacing resources with snapshot duplicates.
+static func _first_action_param(sheet: EventSheetResource, param_id: String) -> String:
+	for entry: Variant in sheet.events:
+		if entry is EventRow and not (entry as EventRow).actions.is_empty():
+			var params: Variant = (entry as EventRow).actions[0].get("params")
+			return str((params as Dictionary).get(param_id, "")) if params is Dictionary else ""
+	return ""
+
+
+## The first span carrying `flag` in its metadata, or null.
+static func _span_flagged(row_data: EventRowData, flag: String) -> SemanticSpan:
+	for span: SemanticSpan in row_data.spans:
+		if span != null and span.metadata is Dictionary and bool((span.metadata as Dictionary).get(flag, false)):
+			return span
+	return null
+
+
+## The flat index of a row on the canvas, -1 when it is not drawn.
+static func _index_of(view: EventSheetViewport, row_data: EventRowData) -> int:
+	var rows: Array[Dictionary] = view.get_flat_rows()
+	for index: int in range(rows.size()):
+		if rows[index].get("row") == row_data:
+			return index
+	return -1
 
 
 ## V2 - order is a fact about the file now, so the two gestures that change it WRITE it: Sort A-Z on

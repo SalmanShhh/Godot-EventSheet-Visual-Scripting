@@ -5,7 +5,7 @@ extends RefCounted
 #  - the regex whole-word VARIABLE rename (rename_variable_references + its row / param / template
 #    walkers) which rewrites every embedded GDScript surface (ACE params, code blocks, pick-filter
 #    expressions) so a variable rename never silently breaks compiled code; called by the variables tree.
-#  - the "Rename Everywhere" DIALOG (open / _perform_symbol_rename) which renames a symbol via the
+#  - the "Rename Everywhere" gesture (open / rename_everywhere) which renames a symbol via the
 #    EventSheetRefactor core in the open sheet AND every project sheet that includes it (rename_in_includers).
 # Extracted from event_sheet_dock.gd; the sheet + path state, the mutation funnel, status, and title-strip
 # refresh it needs stay on the dock, reached through _dock. The dock keeps thin _rename_variable_references /
@@ -138,15 +138,15 @@ func open(old_name: String) -> void:
 
 
 func _confirm_rename() -> void:
-	var renamed: bool = _perform_symbol_rename(_rename_old_name, _rename_edit.text.strip_edges())
-	if renamed:
+	if rename_everywhere(_rename_old_name, _rename_edit.text.strip_edges()):
 		_rename_window.hide()
 
 
 ## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
 ## whose `includes` lists this one (Replace-in-Project contract: closed sheets save directly, the status
-## names every touched file).
-func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
+## names every touched file). Public because the inline rename on a variable row is the same gesture
+## without the dialog, and two writers for one promise is how they come to disagree.
+func rename_everywhere(old_name: String, new_name: String) -> bool:
 	if _dock._current_sheet == null:
 		return false
 	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, old_name, new_name)

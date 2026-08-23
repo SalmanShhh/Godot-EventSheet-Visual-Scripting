@@ -4431,3 +4431,6 @@ from %s,из %s
 read as %s,читать как %s
 Change to %s,Заменить на %s
 Couldn't find %s to write this row with.,Не удалось найти %s для этой строки.
+renames %d use%s in %d sheet%s,переименует %d использован.%s в %d листах%s
+Enter to apply · Esc,Enter - применить · Esc
+used nowhere yet,пока нигде не используется

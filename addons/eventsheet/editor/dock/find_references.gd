@@ -209,6 +209,24 @@ static func find_in_project(symbol: String, extra_sheets: Dictionary = {}) -> Ar
 	return find_in_project_rows(symbol, extra_sheets)
 
 
+## V8. The line an INLINE rename shows before anything is written: what committing will rewrite, and
+## the two keys that commit or abandon it. Takes what find_in_project_rows returned, so the count in
+## the field and the list in the Find results bar are the same walk - a rename that says "6 uses"
+## and touches four would be worse than saying nothing.
+static func inline_rename_note(results: Array) -> String:
+	var uses: int = 0
+	for entry: Dictionary in results:
+		uses += int(entry.get("count", 0))
+	var keys: String = EventSheetL10n.translate("Enter to apply · Esc")
+	if uses == 0:
+		return "%s · %s" % [EventSheetL10n.translate("used nowhere yet"), keys]
+	return "%s · %s" % [
+		EventSheetL10n.translate("renames %d use%s in %d sheet%s") % [
+			uses, "" if uses == 1 else "s", results.size(), "" if results.size() == 1 else "s"],
+		keys
+	]
+
+
 ## Where `symbol` is DEFINED in this sheet: {kind, found}. kind ∈ variable / function /
 ## signal / local / "" (not defined here).
 static func find_definition(sheet: EventSheetResource, symbol: String) -> Dictionary:

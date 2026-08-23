@@ -4431,3 +4431,6 @@ from %s,da %s
 read as %s,leggi come %s
 Change to %s,Cambia in %s
 Couldn't find %s to write this row with.,Impossibile trovare %s per scrivere questa riga.
+renames %d use%s in %d sheet%s,rinomina %d uso%s in %d foglio%s
+Enter to apply · Esc,Invio per applicare · Esc
+used nowhere yet,non ancora usato da nessuna parte
