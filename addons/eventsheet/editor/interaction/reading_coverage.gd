@@ -28,7 +28,7 @@ extends RefCounted
 ## left never rounds up to 100%, because "100% reads as events, 1 script block" is a sentence a
 ## reader would rightly call a lie.
 static func measure(sheet: EventSheetResource) -> Dictionary:
-	var tally: Dictionary = {"block_lines": 0, "block_rows": 0, "total_lines": 0}
+	var tally: Dictionary = _new_tally()
 	if sheet == null:
 		return {"block_lines": 0, "block_rows": 0, "read_lines": 0, "total_lines": 0, "percent": 100}
 	_walk(sheet.events, true, tally)
@@ -50,6 +50,47 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 		"total_lines": total,
 		"percent": percent
 	}
+
+
+## E1. The same census, filtered to the NETWORKING lines: {"read", "blocked", "total", "percent"}.
+## The one number the owner of an existing multiplayer project wants on opening it - how much of what
+## this script says about the network arrived as rows, and how much of it the sheet can only show
+## them as code. Counted through the very same walk as `measure`, so the two can never disagree
+## about what a row is; only the filter differs.
+static func networking(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {"read": 0, "blocked": 0, "total": 0, "percent": 100}
+	var tally: Dictionary = _new_tally()
+	_walk(sheet.events, true, tally, true)
+	for function_entry: Variant in sheet.functions:
+		var event_function: EventFunction = function_entry as EventFunction
+		if event_function == null:
+			continue
+		# A function marked `@rpc` IS a networking line - the annotation is what makes it a message.
+		for annotation: String in event_function.annotation_lines:
+			if EventForgeMultiplayerLift.is_networking_line(annotation):
+				tally["net_lines"] = int(tally["net_lines"]) + 1
+				break
+		_walk(event_function.events, false, tally, true)
+	var total: int = int(tally["net_lines"])
+	var blocked: int = int(tally["net_block_lines"])
+	var percent: int = 100
+	if total > 0:
+		percent = int(floor(100.0 * float(total - blocked) / float(total)))
+	return {"read": total - blocked, "blocked": blocked, "total": total, "percent": percent}
+
+
+## E1. The networking count in words, for the head band and the Doctor's per-script line. "" when the
+## script says nothing about the network at all, because "0 of 0" is a number with nothing in it.
+static func networking_text(sheet: EventSheetResource) -> String:
+	var coverage: Dictionary = networking(sheet)
+	var total: int = int(coverage.get("total", 0))
+	if total <= 0:
+		return ""
+	var read: int = int(coverage.get("read", 0))
+	if read == total:
+		return EventSheetL10n.translate("every networking line reads as a row - %d of %d") % [read, total]
+	return EventSheetL10n.translate("%d of %d networking lines read as rows") % [read, total]
 
 
 ## The script blocks themselves, in file order - the walk targets the chip clicks through. Same
@@ -141,9 +182,14 @@ static func parse_error_text(sheet: EventSheetResource) -> String:
 ## gate and the chip share one definition. `items` is a row list, `top_level` says whether it is the
 ## sheet's own root list (where the Class setup strip folds instead of drawing).
 static func block_line_count(items: Array, top_level: bool) -> int:
-	var tally: Dictionary = {"block_lines": 0, "block_rows": 0, "total_lines": 0}
+	var tally: Dictionary = _new_tally()
 	_walk(items, top_level, tally)
 	return int(tally["block_lines"])
+
+
+## The counters one walk fills. `net_*` stay at zero unless the caller asked for them.
+static func _new_tally() -> Dictionary:
+	return {"block_lines": 0, "block_rows": 0, "total_lines": 0, "net_lines": 0, "net_block_lines": 0}
 
 
 ## True when a verbatim row falls through every structured view the canvas offers it.
@@ -172,28 +218,46 @@ static func renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
 ## per thing the file says: every non-blank line of a verbatim row, one per declaration, one per
 ## condition or action, one for the event line itself. It is a reading of the sheet rather than a
 ## re-read of the file, which is what keeps this cheap enough to run on every head build.
-static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
+static func _walk(items: Array, top_level: bool, tally: Dictionary, networking_too: bool = false) -> void:
 	for item: Variant in items:
 		if item is RawCodeRow:
 			var raw: RawCodeRow = item as RawCodeRow
 			var lines: int = 0
+			var networking_lines: int = 0
 			for line: String in raw.code.split("\n"):
-				if not line.strip_edges().is_empty():
-					lines += 1
+				if line.strip_edges().is_empty():
+					continue
+				lines += 1
+				if networking_too and EventForgeMultiplayerLift.is_networking_line(line):
+					networking_lines += 1
 			tally["total_lines"] = int(tally["total_lines"]) + lines
+			tally["net_lines"] = int(tally["net_lines"]) + networking_lines
 			if renders_as_block(raw, top_level):
 				tally["block_lines"] = int(tally["block_lines"]) + lines
 				tally["block_rows"] = int(tally["block_rows"]) + 1
+				tally["net_block_lines"] = int(tally["net_block_lines"]) + networking_lines
 		elif item is EventRow:
 			var event: EventRow = item as EventRow
 			tally["total_lines"] = int(tally["total_lines"]) + 1 + event.conditions.size()
-			_walk(event.actions, false, tally)
-			_walk(event.sub_events, false, tally)
+			if networking_too:
+				if _multiplayer_vocabulary(event.trigger_provider_id, event.trigger_id):
+					tally["net_lines"] = int(tally["net_lines"]) + 1
+				for condition: Variant in event.conditions:
+					if _networking_row(condition):
+						tally["net_lines"] = int(tally["net_lines"]) + 1
+			_walk(event.actions, false, tally, networking_too)
+			_walk(event.sub_events, false, tally, networking_too)
+		elif item is ACEAction:
+			# Split out of the catch-all below only so the networking filter can ask what this row is
+			# about; it counts as the one line it always counted as.
+			tally["total_lines"] = int(tally["total_lines"]) + 1
+			if networking_too and _networking_row(item):
+				tally["net_lines"] = int(tally["net_lines"]) + 1
 		elif item is EventFunction:
 			tally["total_lines"] = int(tally["total_lines"]) + 1
-			_walk((item as EventFunction).events, false, tally)
+			_walk((item as EventFunction).events, false, tally, networking_too)
 		elif item is EventGroup:
-			_walk((item as EventGroup).events, top_level, tally)
+			_walk((item as EventGroup).events, top_level, tally, networking_too)
 		elif item is CommentRow:
 			var comment_lines: int = 0
 			for line: String in (item as CommentRow).text.split("\n"):
@@ -202,6 +266,32 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary) -> void:
 			tally["total_lines"] = int(tally["total_lines"]) + maxi(comment_lines, 1)
 		elif item != null:
 			tally["total_lines"] = int(tally["total_lines"]) + 1
+
+
+## E1. Whether a row is part of the networking story: it is filed under the Multiplayer object, or
+## the LINE it compiles to answers the same question `is_networking_line` asks of a verbatim line. So
+## a `peer.create_server(…)` the sheet could only claim as a Call Method row still counts against the
+## number, and a row added to the Multiplayer object counts the moment it exists.
+static func _networking_row(row: Variant) -> bool:
+	if row is ACEAction:
+		var action: ACEAction = row as ACEAction
+		return _multiplayer_vocabulary(action.provider_id, action.ace_id) \
+			or EventForgeMultiplayerLift.is_networking_line(ActionCodegen.generate_action(action))
+	if row is ACECondition:
+		var condition: ACECondition = row as ACECondition
+		return _multiplayer_vocabulary(condition.provider_id, condition.ace_id) \
+			or EventForgeMultiplayerLift.is_networking_line(ConditionCodegen.generate_condition(condition))
+	return false
+
+
+## E1. Whether an id belongs to the Multiplayer object. Asked of the registry rather than kept as a
+## list here, and it is the only question a TRIGGER can be asked: a trigger names a signal, so there
+## is no inline template to read.
+static func _multiplayer_vocabulary(provider_id: String, ace_id: String) -> bool:
+	if ace_id.is_empty():
+		return false
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+	return descriptor != null and descriptor.category == EventForgeMultiplayerACEs.CATEGORY
 
 
 static func _collect(items: Array, top_level: bool, found: Array[RawCodeRow]) -> void:
