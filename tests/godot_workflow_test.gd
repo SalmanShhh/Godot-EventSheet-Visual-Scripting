@@ -490,7 +490,9 @@ static func run() -> bool:
 	variable_dialog.init_dialog(variable_host)
 	variable_dialog.set_enum_provider(func() -> Array:
 		return [{"name": "State", "members": PackedStringArray(["IDLE", "RUN", "HURT = 4"])}])
-	variable_dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Edit Variable", false, true)
+	# NOT exported: the Inspector checkbox now lives INSIDE the card, so an already-exported variable
+	# opens with the card unfurled. A plain variable is the one that starts collapsed.
+	variable_dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Edit Variable", false, false)
 	all_passed = _check("inspector options start collapsed for plain variables",
 		variable_dialog._attr_section_card.visible, false) and all_passed
 	all_passed = _check("combo options hide for non-String types",
@@ -500,7 +502,7 @@ static func run() -> bool:
 		variable_dialog._attr_section_card.visible and variable_dialog._options_row.visible, true) and all_passed
 	# Description (the promoted tooltip field) is always visible now, so a description-only variable
 	# must NOT unfurl More options - only genuinely-advanced attributes do.
-	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "note", "String", "\"x\"", false, "Edit Variable", false, true)
+	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "note", "String", "\"x\"", false, "Edit Variable", false, false)
 	all_passed = _check("a description-only variable keeps More options collapsed",
 		variable_dialog._attr_section_card.visible, false) and all_passed
 	variable_dialog._populate_enum_fill_menu()

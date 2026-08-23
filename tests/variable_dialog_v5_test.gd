@@ -114,9 +114,11 @@ static func run() -> bool:
 	# ── "Initial value", not "Default"; the Inspector polish stays behind "More options" ──
 	ok = _check("the value field is the Initial value",
 		Array(dialog.field_order()).has("Initial value"), true) and ok
-	ok = _check("the collapsed section names what is inside it",
-		dialog._attr_toggle.text, "▸  More options (Inspector, range, drawer, group…)") and ok
-	ok = _check("it opens collapsed", dialog._attr_section_card.visible, false) and ok
+	ok = _check("the section names what is inside it",
+		dialog._attr_toggle.text, "▾  More options (Inspector, range, drawer, group…)") and ok
+	# An ALREADY-exported variable opens with the card unfurled: the Inspector tick lives inside it,
+	# and a ticked box the reader cannot see would be a silent fact.
+	ok = _check("an exported variable opens with it unfurled", dialog._attr_section_card.visible, true) and ok
 
 	# ── V re-opens with the last scope; an edit never moves ──
 	dialog._apply_scope_key(EventSheetVariableSentence.SCOPE_LOCAL)

@@ -89,7 +89,10 @@ static func run() -> bool:
 	split_dialog.init_dialog(split_host)
 	split_dialog.open("global")
 	all_passed = _check("a new global is NOT exported by default", split_dialog._exported_check.button_pressed, false) and all_passed
-	all_passed = _check("attr disclosure hidden when not designer-tweakable", split_dialog._attr_toggle.visible, false) and all_passed
+	# The Inspector checkbox lives inside the disclosure now, so the disclosure itself is offered
+	# wherever the variable COULD be a property; what waits for the tick is everything under it.
+	all_passed = _check("attr disclosure is offered wherever the variable could be a property",
+		split_dialog._attr_toggle.visible, true) and all_passed
 	split_dialog._exported_check.button_pressed = true
 	split_dialog._update_attr_gating()
 	all_passed = _check("attr disclosure appears once designer-tweakable", split_dialog._attr_toggle.visible, true) and all_passed
