@@ -2552,13 +2552,6 @@ func _prefix_scene_row_uids(rows: Array[EventRowData], prefix: String) -> void:
 		_prefix_scene_row_uids(row_data.children, prefix)
 
 
-## The sheet's head as a stack of bands, one per line of class scaffolding the file opens with. Every
-## row is inert (null source) so selection / delete / drag skip them - a head band owns no resource of
-## its own - and nothing folds: the head is its lines, always in view, the way the file is.
-func _build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> Array[EventRowData]:
-	return _row_builder.build_head_band_rows(sheet, scaffold_rows)
-
-
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
 ## the source resource) treat it as inert; the owner travels in span metadata instead.

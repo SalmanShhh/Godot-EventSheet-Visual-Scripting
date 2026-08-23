@@ -343,15 +343,14 @@ static func _unquoted(value: String) -> String:
 # notes use, so the dialog and the row never disagree about what is wrong.
 
 
-## Nothing is wrong.
-const LEVEL_OK := ""
 ## It compiles, but it will surprise: a literal of the wrong kind for what the verb takes.
 const LEVEL_WARNING := "warning"
 ## It cannot be meant: a name that is not a variable, a required field left blank.
 const LEVEL_ERROR := "error"
 
 
-## What is wrong with `value` in `param`, or {} when nothing is. Keys: level, heading, body, reason
+## What is wrong with `value` in `param`, or {} when nothing is - {} IS "nothing is wrong", which is
+## why there is no third level for it. Keys: level, heading, body, reason
 ## (the short line that sits beside OK) and fixes ([{kind, name}] - "use" swaps in the nearest name,
 ## "add" offers to declare the one that was typed).
 ##

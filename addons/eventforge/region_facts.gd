@@ -139,15 +139,6 @@ static func closer_insert_index(container: Array, opener_index: int) -> int:
 	return container.size()
 
 
-## The rows a region holds, as the half-open [first, last) slice of its container between the two
-## fences. Empty when the opener never closes.
-static func body_range(container: Array, opener_index: int) -> Vector2i:
-	var paired: Dictionary = (pairing(container)["pairs"] as Dictionary)
-	if not paired.has(opener_index):
-		return Vector2i(opener_index + 1, opener_index + 1)
-	return Vector2i(opener_index + 1, int(paired[opener_index]))
-
-
 ## The amber sentence an unmatched OPENING fence wears: what is wrong, and what to write.
 static func unclosed_note(entry: Variant) -> String:
 	return "%s never closes, so it cannot fold. Add %s after the last row you want inside." % [

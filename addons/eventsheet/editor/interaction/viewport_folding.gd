@@ -61,7 +61,14 @@ func toggle_row_fold_by_uid(row_uid: String) -> bool:
 ## Regions / Unfold All Regions). include_groups extends the sweep to event
 ## groups for the whole-sheet Fold Everything command.
 func set_region_folds(folded: bool, include_groups: bool = false) -> void:
-	_set_folds_in(_viewport._root_rows, folded, include_groups)
+	_set_folds_in(_viewport._root_rows, SWEEP_BOTH if include_groups else SWEEP_REGIONS, folded)
+	_viewport._refresh_rows()
+	persist_region_folds()
+
+
+## Folds or unfolds every event GROUP in one step, leaving regions and event blocks alone.
+func set_group_folds(folded: bool) -> void:
+	_set_folds_in(_viewport._root_rows, SWEEP_GROUPS, folded)
 	_viewport._refresh_rows()
 	persist_region_folds()
 
@@ -69,59 +76,48 @@ func set_region_folds(folded: bool, include_groups: bool = false) -> void:
 ## G4 - Open all / Close all: true while ANY group on the sheet is open, which is what makes the one
 ## gesture a toggle instead of two commands.
 func any_group_open() -> bool:
-	return _any_group_open_in(_viewport._root_rows)
+	return _any_open_in(_viewport._root_rows, SWEEP_GROUPS)
 
 
 ## R2 - the same question for regions: true while any paired fence still shows its body, which is
 ## what makes Fold All / Unfold All one toggling item instead of two commands.
 func any_region_open() -> bool:
-	return _any_region_open_in(_viewport._root_rows)
+	return _any_open_in(_viewport._root_rows, SWEEP_REGIONS)
 
 
-func _any_region_open_in(rows: Array[EventRowData]) -> bool:
+## Which containers a sweep is about. Every sweep here is about ONE kind of container - the event
+## groups, the paired regions, or (the whole-sheet Fold Everything) both - so the walks below take
+## the kind rather than existing once per kind.
+const SWEEP_GROUPS := "groups"
+const SWEEP_REGIONS := "regions"
+const SWEEP_BOTH := "both"
+
+
+## True when a row is a container of the kind this sweep is about. A row holding nothing is never
+## one: folding it would mean nothing.
+func _sweeps(row_data: EventRowData, sweep: String) -> bool:
+	if row_data.children.is_empty():
+		return false
+	if sweep != SWEEP_GROUPS and _viewport._row_builder._is_region_row(row_data):
+		return true
+	return sweep != SWEEP_REGIONS and row_data.source_resource is EventGroup
+
+
+func _any_open_in(rows: Array[EventRowData], sweep: String) -> bool:
 	for row_data: EventRowData in rows:
-		if _viewport._row_builder._is_region_row(row_data) and not row_data.children.is_empty() \
-				and not row_data.folded:
+		if _sweeps(row_data, sweep) and not row_data.folded:
 			return true
-		if _any_region_open_in(row_data.children):
+		if _any_open_in(row_data.children, sweep):
 			return true
 	return false
 
 
-func _any_group_open_in(rows: Array[EventRowData]) -> bool:
+func _set_folds_in(rows: Array[EventRowData], sweep: String, folded: bool) -> void:
 	for row_data: EventRowData in rows:
-		if row_data.source_resource is EventGroup and not row_data.children.is_empty() and not row_data.folded:
-			return true
-		if _any_group_open_in(row_data.children):
-			return true
-	return false
-
-
-## Folds or unfolds every event GROUP in one step, leaving regions and event blocks alone.
-func set_group_folds(folded: bool) -> void:
-	_set_group_folds_in(_viewport._root_rows, folded)
-	_viewport._refresh_rows()
-	persist_region_folds()
-
-
-func _set_group_folds_in(rows: Array[EventRowData], folded: bool) -> void:
-	for row_data: EventRowData in rows:
-		if row_data.source_resource is EventGroup and not row_data.children.is_empty():
+		if _sweeps(row_data, sweep):
 			row_data.folded = folded
 			_viewport._fold_state[row_data.row_uid] = folded
-		_set_group_folds_in(row_data.children, folded)
-
-
-func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool) -> void:
-	for row_data: EventRowData in rows:
-		if row_data.children.is_empty():
-			continue
-		var foldable: bool = _viewport._row_builder._is_region_row(row_data) \
-			or (include_groups and row_data.source_resource is EventGroup)
-		if foldable:
-			row_data.folded = folded
-			_viewport._fold_state[row_data.row_uid] = folded
-		_set_folds_in(row_data.children, folded, include_groups)
+		_set_folds_in(row_data.children, sweep, folded)
 
 
 ## Collapses or expands EVERY row that holds other rows - the whole-sheet Collapse All /
