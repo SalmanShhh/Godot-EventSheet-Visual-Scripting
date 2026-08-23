@@ -606,9 +606,19 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 	}
 	var spans: Array[SemanticSpan] = []
 	if is_name_band:
-		spans.append(_head_band_badge_span(band_meta, str(head_facts.get("extends", ""))))
+		# The editor's own icon for the class this sheet extends - the same texture the Add Node
+		# dialog draws.
+		var extends_target: String = str(head_facts.get("extends", "")).strip_edges()
+		spans.append(_head_band_icon_span(band_meta, EventSheetHeadBands.BAND_NAME,
+			ACEPickerDialog.editor_icon(extends_target) if not extends_target.is_empty() else null,
+			EventSheetL10n.translate("F2 renames this class everywhere.")))
 	elif kind == EventSheetHeadBands.BAND_ICON:
-		spans.append(_head_band_swatch_span(band_meta, str(band["value"])))
+		# The image the `@icon` annotation names, drawn at badge size: the picture and the way to
+		# change it are the same thing.
+		var icon_path: String = str(band["value"])
+		spans.append(_head_band_icon_span(band_meta, EventSheetHeadBands.BAND_ICON,
+			load(icon_path) as Texture2D if ResourceLoader.exists(icon_path) else null,
+			EventSheetL10n.translate("The class icon. Click to pick another image.")))
 	elif band.get("switch", false):
 		spans.append(_head_band_switch_span(band_meta, bool(band["switch_on"])))
 	var leader: String = str(band["leader"])
@@ -634,15 +644,12 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			value_meta["head_raw_row"] = description_source
 			value_meta["hover_note"] = EventSheetL10n.translate("Writes the ## block · Enter commits.")
 		spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta))
-	var prompt: String = str(band["prompt"])
-	if not prompt.is_empty() and not sheet.read_only:
-		spans.append(_make_span(prompt, SemanticSpan.SpanType.COMMENT, band_meta.merged({
-			"head_action": kind,
-			"text_color": _viewport._get_event_style().behavior_accent_color
-		}, true)))
-	var control: String = str(band["control"])
-	if not control.is_empty() and not sheet.read_only:
-		spans.append(_make_span(control, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+	# The band's own words that ACT: the prompt a half-made sheet answers ("name it") and the control
+	# that opens the gesture ("change…"). Both are the band's action, so both read the same way.
+	for word: String in [str(band["prompt"]), str(band["control"])]:
+		if word.is_empty() or sheet.read_only:
+			continue
+		spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, band_meta.merged({
 			"head_action": kind,
 			"text_color": _viewport._get_event_style().behavior_accent_color
 		}, true)))
@@ -659,42 +666,24 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 	return row_data
 
 
-## The class icon in the badge column of the name band - the editor's own icon for the class this
-## sheet extends, the same texture the Add Node dialog draws.
-func _head_band_badge_span(band_meta: Dictionary, extends_target: String) -> SemanticSpan:
+## The badge on a band that HAS a picture - the class icon on the name band, the `@icon` image on
+## the icon band. One shape, because clicking the picture is the way to change what it shows in
+## both: only the image and the gesture behind it differ. A band whose picture cannot be loaded
+## still draws its badge, so the gesture stays reachable.
+func _head_band_icon_span(band_meta: Dictionary, action: String, art: Texture2D,
+		hover_note: String) -> SemanticSpan:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var badge_meta: Dictionary = band_meta.merged({
 		"badge": true,
 		"badge_style": "trigger",
 		"badge_bg": reading_style.setup_badge_background_color,
 		"badge_fg": reading_style.setup_badge_foreground_color,
-		"head_action": EventSheetHeadBands.BAND_NAME,
-		"hover_note": EventSheetL10n.translate("F2 renames this class everywhere.")
+		"head_action": action,
+		"hover_note": hover_note
 	}, true)
-	var class_icon: Texture2D = ACEPickerDialog.editor_icon(extends_target) \
-		if not extends_target.strip_edges().is_empty() else null
-	if class_icon != null:
-		badge_meta["badge_icon"] = class_icon
+	if art != null:
+		badge_meta["badge_icon"] = art
 	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)
-
-
-## The `@icon` band's swatch: the image the annotation names, drawn at badge size. Clicking it
-## opens the file dialog, so the picture and the way to change it are the same thing.
-func _head_band_swatch_span(band_meta: Dictionary, icon_path: String) -> SemanticSpan:
-	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
-	var swatch_meta: Dictionary = band_meta.merged({
-		"badge": true,
-		"badge_style": "trigger",
-		"badge_bg": reading_style.setup_badge_background_color,
-		"badge_fg": reading_style.setup_badge_foreground_color,
-		"head_action": EventSheetHeadBands.BAND_ICON,
-		"hover_note": EventSheetL10n.translate("The class icon. Click to pick another image.")
-	}, true)
-	if ResourceLoader.exists(icon_path):
-		var art: Texture2D = load(icon_path) as Texture2D
-		if art != null:
-			swatch_meta["badge_icon"] = art
-	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, swatch_meta)
 
 
 ## The `@tool` band's switch: a mark, never a word. Clicking it writes or removes the line.
@@ -8862,79 +8851,53 @@ func _build_variable_row(
 	# The limits and the choices, muted, straight after the value - the same slot the Inspector puts
 	# them in, and ahead of the knob's own sentence so the fact reads before the prose.
 	var hint_note: String = str(facts.get("note", "")).strip_edges() if not code_only else ""
-	if not hint_note.is_empty():
-		var note_meta: Dictionary = variable_meta.merged(
-			{"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true
-		)
-		row_data.spans.append(_make_span(hint_note, SemanticSpan.SpanType.COMMENT, note_meta))
+	_append_variable_note(row_data, variable_meta, hint_note)
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
 	# in the same slot the limits use - a fact about the variable, ahead of its prose.
+	var is_static: bool = bool(options.get("is_static", false))
+	# W5 - the rest of the sentence a shared value's note is the short form of.
+	var shared_hover: String = EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
+		if _is_shared_store() else ""
 	var scope_note: String = str(options.get("scope_note", "")).strip_edges() if not code_only else ""
-	if not scope_note.is_empty():
-		row_data.spans.append(
-			_make_span(
-				scope_note,
-				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({
-					"editable": false,
-					"text_color": _viewport._get_reading_style().muted_text_color,
-					# W5 - the rest of the sentence a shared value's note is the short form of.
-					"hover_note": EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
-						if bool(options.get("is_static", false)) and _is_shared_store() else ""
-				}, true)
-			)
-		)
+	_append_variable_note(row_data, variable_meta, scope_note, shared_hover if is_static else "")
 	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
 	# and writes the same one. Without the note "Static number spawned = 0" looks like an ordinary
 	# variable that happens to wear an extra word. A head row already carries the note as its
-	# scope_note (above), so it is only added here when nothing said it yet.
-	if bool(options.get("is_static", false)) and scope_note.is_empty() and not code_only:
-		# W5 - in a class nothing is ever made of, "shared by every X" names copies that do not exist.
-		# What the reader needs there is that this ONE value is the editor's, and it outlives the sheet
-		# they are looking at.
-		var shared_note: String = EventSheetL10n.translate("one for the whole editor") if _is_shared_store() \
-			else EventSheetL10n.translate("shared by every %s") % _static_owner_word()
-		if not shared_note.strip_edges().is_empty():
-			row_data.spans.append(
-				_make_span(
-					shared_note,
-					SemanticSpan.SpanType.COMMENT,
-					variable_meta.merged({
-						"editable": false,
-						"text_color": _viewport._get_reading_style().muted_text_color,
-						"hover_note": EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
-							if _is_shared_store() else ""
-					}, true)
-				)
-			)
+	# scope_note (above), so it is only added here when nothing said it yet. W5 - in a class nothing
+	# is ever made of, "shared by every X" names copies that do not exist; what the reader needs
+	# there is that this ONE value is the editor's, and it outlives the sheet they are looking at.
+	if is_static and scope_note.is_empty() and not code_only:
+		_append_variable_note(row_data, variable_meta,
+			EventSheetL10n.translate("one for the whole editor") if _is_shared_store() \
+				else EventSheetL10n.translate("shared by every %s") % _static_owner_word(),
+			shared_hover)
 	# W5 - a constant the file itself says must never change wears that promise where a reader meets
 	# it. The words come from the doc comment above the line, so nothing here decides what is frozen.
 	if is_constant and not code_only and _frozen_constants().has(var_name):
-		row_data.spans.append(
-			_make_span(
-				EventSheetL10n.translate("frozen"),
-				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({
-					"editable": false,
-					"text_color": _viewport._get_reading_style().muted_text_color,
-					"hover_note": EventSheetL10n.translate("Named elsewhere: add to it, never rename one.")
-				}, true)
-			)
-		)
+		_append_variable_note(row_data, variable_meta, EventSheetL10n.translate("frozen"),
+			EventSheetL10n.translate("Named elsewhere: add to it, never rename one."))
 	# The knob's own sentence, muted, trailing the value - the `##` doc comment the Inspector shows as
 	# its tooltip. A reader of an opened pack should never have to open the .gd to learn what a setting
 	# does. Reading shape only; an authored row keeps the tooltip in the variable dialog.
-	var variable_description: String = str(options.get("description", "")).strip_edges() if not code_only else ""
-	if not variable_description.is_empty():
-		row_data.spans.append(
-			_make_span(
-				variable_description,
-				SemanticSpan.SpanType.COMMENT,
-				variable_meta.merged({"editable": false, "text_color": _viewport._get_reading_style().muted_text_color}, true)
-			)
-		)
+	_append_variable_note(row_data, variable_meta,
+		str(options.get("description", "")).strip_edges() if not code_only else "")
 	_append_code_echo_span(row_data, variable_meta, code_line, view_mode)
 	return row_data
+
+
+## A muted note trailing the sentence: the limits a hint sets, what a scope adds beyond its word, a
+## frozen constant's promise, the knob's own `##` line. All the same slot and the same quiet voice,
+## so all of them are appended the same way. An empty note appends nothing, which is what lets the
+## caller compute one and hand it over without a guard of its own.
+func _append_variable_note(row_data: EventRowData, variable_meta: Dictionary, note: String,
+		hover_note: String = "") -> void:
+	if note.strip_edges().is_empty():
+		return
+	row_data.spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, variable_meta.merged({
+		"editable": false,
+		"text_color": _viewport._get_reading_style().muted_text_color,
+		"hover_note": hover_note
+	}, true)))
 
 
 ## V13 - the View dial this sheet is being read at (sentence / both / code). A viewport that has not
@@ -8965,10 +8928,6 @@ func _append_code_echo_span(row_data: EventRowData, variable_meta: Dictionary, c
 	))
 
 
-## What the sheet calls its own object, for the sentence a static variable ends with ("shared by every
-## Player"). The same three fallbacks the Include bar names the script with - the class name its author
-## gave it, else the scene root that carries it, else the file - so the two never disagree. "" when the
-## sheet has no object to name, which is when the note is dropped rather than left half-said.
 ## W5. True when the opened file is a class nothing is ever made of - the shared stores an editor
 ## keeps its memory in. False for every ordinary script, which is what keeps these words out of a
 ## game project.
@@ -8982,6 +8941,11 @@ func _frozen_constants() -> Dictionary:
 	return facts if facts is Dictionary else {}
 
 
+## What the sheet calls its own object, for the sentence a static variable ends with ("shared by
+## every Player"). The same three fallbacks the Include bar names the script with - the class name
+## its author gave it, else the scene root that carries it, else the file - so the two never
+## disagree. "" when the sheet has no object to name, which is when the note is dropped rather than
+## left half-said.
 func _static_owner_word() -> String:
 	var sheet: EventSheetResource = _viewport._sheet
 	if sheet == null:
