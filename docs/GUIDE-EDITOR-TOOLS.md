@@ -30,7 +30,7 @@ Three ingredients make a sheet an editor tool, and the starter sets all three fo
 
 Everything else is ordinary event-sheet authoring. Conditions gate, actions do, functions and variables work exactly as they do in a gameplay sheet. The difference is only *where* the code runs: in the editor process, on the scene you are editing, before the game ever starts.
 
-There is a second, softer flavor of editor tool that does not use `EditorScript` at all: a normal node or resource sheet with **Tool** enabled in the Sheet Type dialog. That gives you `@tool` on a script that lives in your scenes, which is what powers Inspector buttons and live validation (sections 5 and 6). Use the EditorScript flavor for one-click project chores; use the @tool-node flavor when the tool belongs to a specific node or resource.
+There is a second, softer flavor of editor tool that does not use `EditorScript` at all: a normal node or resource sheet with **Runs in the editor too** ticked in the Sheet Type dialog. That gives you `@tool` on a script that lives in your scenes, which is what powers Inspector buttons and live validation (sections 5 and 6). Use the EditorScript flavor for one-click project chores; use the @tool-node flavor when the tool belongs to a specific node or resource.
 
 ---
 
@@ -320,7 +320,7 @@ This is the beginner path to editor tools, and it shines on **@tool sheets that 
 
 Two rules:
 
-- **The sheet must be a Tool sheet.** `@export_tool_button` only runs its Callable in the editor when the script is `@tool`. The compiler warns you at save time if a function has a button label but the sheet is not tool mode: enable **Tool** in the Sheet Type dialog.
+- **The sheet must be a Tool sheet.** `@export_tool_button` only runs its Callable in the editor when the script is `@tool`. The compiler warns you at save time if a function has a button label but the sheet is not tool mode: tick **Runs in the editor too** in the Sheet Type dialog.
 - Leave the field empty and nothing is emitted - the button is strictly opt-in per function.
 
 ---
@@ -724,7 +724,7 @@ The mobile preset gets the low-quality settings resource; the release build lose
 - **The node my tool added disappeared when I saved the scene.** Its `owner` was never set, so the scene save skipped it. Use **Add Node To Edited Scene**, which parents the node AND sets its owner in one row.
 - **My tool wrote a file but the FileSystem dock does not show it.** The dock scans on its own schedule. End the tool with **Rescan Project Files**.
 - **The Inspector button does not appear (or does nothing).** The sheet must be a Tool sheet - `@export_tool_button` only runs in the editor under `@tool`. The compiler warns on save: "Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog." Also re-select the node after recompiling so the Inspector rebuilds.
-- **My validator never shows its message.** Same root cause: validate runs in-editor only on @tool sheets, and it is silent otherwise. Check Tool in the Sheet Type dialog, and make sure the function returns `""` (not nothing) for the valid case.
+- **My validator never shows its message.** Same root cause: validate runs in-editor only on @tool sheets, and it is silent otherwise. Tick Runs in the editor too in the Sheet Type dialog, and make sure the function returns `""` (not nothing) for the valid case.
 - **The Doctor flagged "editor-tool-undo" - do I have to fix it?** It is an info finding, not an error. For a one-off script you re-run freely, ignore it. For a tool other people click, wrap the scene edits in `EditorInterface.get_editor_undo_redo()` `create_action` / `commit_action` as shown in section 7, and the finding goes away.
 - **Editor Tools actions crash in the running game.** `EditorInterface` exists only in the editor process. Keep Editor Tools actions in Tool sheets; in a @tool node sheet that also runs in-game, gate editor-only rows behind the **Is In Editor** condition.
 - **Ctrl+Z after a run undoes nothing.** Direct mutations (plain `add_child`, plain property sets) bypass the editor's undo history by design. Only changes registered through `create_action` / `add_do_*` / `add_undo_*` / `commit_action` are undoable.

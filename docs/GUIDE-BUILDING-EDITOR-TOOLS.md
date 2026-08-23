@@ -401,7 +401,7 @@ Any sheet function can carry an **Inspector button** label (the field is in the 
 @export_tool_button("Recalculate") var _btn_recalculate: Callable = recalculate
 ```
 
-That is a real, clickable button in the Inspector (Godot 4.4+). Because the button runs in the editor, the sheet must be a Tool sheet (or otherwise `@tool`) - if you add an Inspector button label without turning on Tool mode, the compiler warns: "Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog." Turn on Tool in the Sheet Type dialog and the warning clears.
+That is a real, clickable button in the Inspector (Godot 4.4+). Because the button runs in the editor, the sheet must be a Tool sheet (or otherwise `@tool`) - if you add an Inspector button label without turning on Tool mode, the compiler warns: "Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog." Tick Runs in the editor too in the Sheet Type dialog and the warning clears.
 
 ### 13. Bake a thumbnail sheet for the level select (Tool sheet)
 

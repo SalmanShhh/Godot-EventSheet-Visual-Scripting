@@ -41,10 +41,10 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Object type | Godot node class (CharacterBody2D, Area2D, Timer…) - ACEs group under it |
 | Behavior (Platform, 8Direction…) | **Behavior sheet** → attachable Node component with a typed `host` accessor (samples: PlatformerMovement, EightDirectionMovement) |
 | Plugin / addon (JSON manifests) | **Zero-config addon**: a script in `res://eventsheet_addons/` with `@ace_*` annotations - no manifests |
-| Instance variables | Sheet variables (typed; `@export` ones appear in the Inspector per instance). Group with `@export_group`/`@export_subgroup`; typed vars (Vector2/Color/Texture2D/Curve…) get live Inspector **drawers** - a direction dial, colour swatch, texture preview, progress bar, or curve (see the **Inspector Playground** showcase) |
-| Local/temp variables | Variables placed inside the event flow → function locals |
-| Global variables | Sheet variables on a shared/autoload sheet, or any autoload - plain GDScript rules |
-| Groups | Groups (collapsible, nestable, with local variables) |
+| Instance variables | Sheet variables, each row reading as one sentence - `Instance number speed = 200` - with the declaration the compiler writes echoed at its right edge. `@export` ones appear in the Inspector per instance and wear a **sliders mark** on the row (hover: "Editable in the Inspector"); the Inspector carries **Instance variables · N** beside *Edit Event Sheet* to open the whole table. Group with `@export_group`/`@export_subgroup` (a labelled folder strip over the rows); typed vars (Vector2/Color/Texture2D/Curve…) get live Inspector **drawers** - a direction dial, colour swatch, texture preview, progress bar, or curve (see the **Inspector Playground** showcase) |
+| Local/temp variables | Variables placed inside the event flow → function locals. They read as `Local <type> <name> = <value>` rows at the top of the event they belong to, and their object column says **System**, because a local belongs to the event and to nothing you can select |
+| Global variables | Sheet variables on an autoload, or any autoload - plain GDScript rules. The row reads `Global number Score = 0`, the object column names the autoload (`Game`), and the name is bare on the row and qualified in an expression - **Copy as Expression** on the row's menu hands you the `Game.Score` spelling that runs |
+| Groups | Groups: one-line head (folder mark, title, description muted beside it, what it holds and its on/off switch at the right edge), a 2px bracket down the left edge of the body in the group's colour, collapsible, nestable, with local variables. One **Edit Group…** dialog holds name, description, Active on start, Can be switched at runtime and Colour. A `#region` fence of the file is the same idea with a dashed bracket, and the two convert into each other |
 | Comments (colored) | Comments - multiline, per-comment colors, attachable into an event's actions |
 | Sub-events | Sub-events (compile nested under the parent's conditions) |
 | Else | Else / Else-If events (compile to `elif` / `else`) |
@@ -67,7 +67,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | On start of layout | `On Ready` trigger (`_ready()`) - and when you OPEN a .gd file as a sheet it reads back under exactly this name: a `_ready` on the script the scene itself carries is **On start of layout**, a `_ready` on a script sitting on an object in the scene is that object's **On created**, and `_exit_tree` is **On end of layout** or **On destroyed** the same way round |
 | Compare variable | One **Compare** dialog with the same three boxes: *Compare* (this sheet's variables, each with its type word and starting value, or any expression you type), *Is* (the operator list - `≤ at most`, `≥ at least`…, plus a **ranges** group for between / not between / within ±), *To* (one value, two for a range, or a value and a give-or-take). The operator decides which condition the row becomes - Compare Variable, Compare Values, Is Between Values, Is Outside Range or Values Are Near - and an **Invert** tick turns the question around. Or just type the condition: `health < 50` (plain GDScript) |
 | Compare two strings | The same **Compare** dialog: pick a text variable and the operator list becomes is / is not / begins with / ends with / contains / is one of / matches / is empty, with an **Ignore case** tick that writes `to_lower()` on both sides |
-| Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
+| Set variable / Add to | The **Variables** group of the picker, in the order you reach for them: `Set value`, `Add to`, `Subtract from`, `Set boolean` (true / false already in the list), `Toggle boolean`, then the two questions `Compare variable` and `Is boolean set`. Each verb names the variables it can take. Or `health += 10` in ƒx |
 | On collision / overlap | `On Body Entered` / `On Area Entered` (Area2D) - connections are generated |
 | Destroy | `Queue Free` |
 | Set position / angle | `Set Position` / `Set Rotation` (Node2D) |
@@ -469,9 +469,10 @@ i18n (Godot translations).
   values you committed for that exact row-and-parameter across the whole project, offered
   from a small dropdown on the field's row - the third time an action needs `"jump"` or
   `res://sfx/hit.ogg`, it is a pick instead of a retype.
-- **You always know which group you are in.** On long sheets a slim breadcrumb strip
-  ("Gameplay ▸ Combat") stays pinned under the column header while you scroll inside a
-  group; click it to jump back to the group's own bar.
+- **You always know which group you are in.** On long sheets, scrolling inside a group pins
+  **that group's own head** under the column header - its title, description, what it holds and
+  its switch - so it can be folded, switched off or edited without scrolling back up. The parent
+  chain shortens to the last two names ("Gameplay ▸ Combat") and the whole chain is the hover.
 
   <img src="images/group-breadcrumb.png" alt="Scrolled deep inside a sheet: the slim Gameplay - Combat breadcrumb strip pinned above the rows, with events 8 and 9 visible beneath it." width="560">
 - **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same

@@ -40,7 +40,7 @@ Current additions on top of the model below:
 Until recently a theme stopped at the row shells and the chips in them. Everything the
 "an opened script reads like an event sheet" work added - the chips on an Include bar, the
 coverage chip, the badge that says how often an event runs, the Script block and ⚠ code
-badges, the Inspector chip on a variable, the guide lines, the stripe down a broken row,
+badges, the Inspector mark on a variable, the guide lines, the stripe down a broken row,
 the bubble that refuses a drop, the Object bar, the status strip, the Manual's pages - was
 painted from fixed constants. A pale preset kept the plugin's own dark marks on white
 paper, and the Theme Editor could not show them at all.
@@ -49,7 +49,9 @@ Three token groups now cover all of it, and they appear in the Theme Editor as t
 sections:
 
 - **Reading marks - chips, badges, guides, stripes** (`EventSheetReadingStyle`): the plain
-  chip and its word, the picker-category chip, the Inspector chip, the const/static badge,
+  chip and its word, the picker-category chip, the Inspector and constant badge plates (a
+  variable row's own Inspector cue is a sliders mark, and `const` / `static` fold into its
+  scope word),
   the setup and Script block and ⚠ code badges, the "or" divider between OR'd conditions,
   the ⟳ / ⌨ / ▶ badges that say
   how often an event runs, the three text tones, the tints on text and true/false values,

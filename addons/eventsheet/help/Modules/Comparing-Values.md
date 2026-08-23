@@ -76,8 +76,14 @@ compared, because the right question depends on the type:
 | Expression Is True | True when your own GDScript boolean expression is true - the advanced escape hatch. | `{expr}` |
 
 The **Operator** dropdown on Compare variable and Compare Values is the same six everywhere in the
-plugin: `=` (equal to), `!=` (not equal to), `<` (less than), `<=` (at most), `>` (greater than),
-`>=` (at least).
+plugin, and it leads with the symbol the row will show and says it in words after: `=  equal to`,
+`≠  not equal to`, `<  less than`, `≤  at most`, `>  greater than`, `≥  at least`. The token that is
+actually inserted (`==`, `!=`, `<`, `<=`, `>`, `>=`) sits muted beside the choice, so the wording
+teaches the spelling instead of hiding it, and the emitted code is unchanged.
+
+All six of these open the one **Compare** dialog, together with Is Between Values, Is Outside Range,
+Values Are Near and the text tests: pick what to compare, how, and to what, and the operator decides
+which of these conditions the row becomes.
 
 ### Compare: Text
 
