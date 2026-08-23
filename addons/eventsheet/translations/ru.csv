@@ -4306,3 +4306,19 @@ furthest from {object} first,самые дальние от {object} снача�
 highest {value} first,наибольшее {value} сначала
 lowest {value} first,наименьшее {value} сначала
 Ignore case,Игнорировать регистр
+Copy as Expression,Скопировать как выражение
+Show in Inspector,Показать в инспекторе
+Global variable…,Глобальная переменная…
+Local variable…,Локальная переменная…
+Instance variable…,Переменная экземпляра…
+Add Variable,Добавить переменную
+nothing of that kind yet,пока ничего такого нет
+Locals in scope,Локальные в области видимости
+%s - globals,%s - глобальные
+%s - instance variables,%s - переменные экземпляра
+Inserts %s,Вставляет %s
+%s is not a variable of %s.,%s не является переменной %s.
+Did you mean %s?,"Возможно, вы имели в виду %s?"
+Copied %s.,Скопировано: %s.
+Show %s in the Inspector,Показать %s в инспекторе
+Hide %s from the Inspector,Скрыть %s из инспектора

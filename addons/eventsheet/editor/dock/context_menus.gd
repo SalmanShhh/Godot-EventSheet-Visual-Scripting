@@ -102,6 +102,11 @@ func build_all() -> void:
 	# V2 - the list is in the order it was written; this is how you ask for alphabetical, and it
 	# WRITES that order rather than sorting the view behind your back.
 	_dock._variable_context_menu.add_item("Sort A-Z", _dock.VARIABLE_MENU_SORT_AZ)
+	# V8 - the two verbs the row menu was missing. "Copy as expression" hands over the name a
+	# parameter field or a script would need (a global as `Game.Score`, which is the spelling that
+	# runs); "Show in Inspector" is the one tick that turns a variable into a designer knob.
+	_dock._variable_context_menu.add_item("Copy as Expression", _dock.VARIABLE_MENU_COPY_EXPRESSION)
+	_dock._variable_context_menu.add_check_item("Show in Inspector", _dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
 	# R2 - the two accessor events. A setter fires when the value is set, so it reads as a trigger;
 	# a getter gives a value, so it reads as an expression. Enabled only on a sheet-level (tree)
 	# variable that does not already have that accessor.
@@ -133,7 +138,16 @@ func build_all() -> void:
 	_dock._new_function_submenu.add_item("Expression", _dock.NEW_FUNCTION_MENU_EXPRESSION)
 	_dock._new_function_submenu.id_pressed.connect(_dock._on_new_function_submenu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("New Function", _dock._new_function_submenu)
-	_dock._empty_space_context_menu.add_item("Add New Variable", _dock.EMPTY_MENU_ADD_VARIABLE)
+	# V8 - "add a variable" is three questions, so the submenu asks the one that matters: where does
+	# the declaration go. Global writes into an autoload, Local lives inside the event it sits in,
+	# Instance belongs to this object. Same dialog behind all three, opened on that scope.
+	_dock._add_variable_submenu = PopupMenu.new()
+	_dock._add_variable_submenu.name = "EventSheetAddVariableSubmenu"
+	_dock._add_variable_submenu.add_item("Global variable…", _dock.EMPTY_MENU_ADD_VARIABLE)
+	_dock._add_variable_submenu.add_item("Local variable…", _dock.EMPTY_MENU_ADD_LOCAL_VARIABLE)
+	_dock._add_variable_submenu.add_item("Instance variable…", _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE)
+	_dock._add_variable_submenu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
+	_dock._empty_space_context_menu.add_submenu_node_item("Add Variable", _dock._add_variable_submenu)
 	# R32 - the smallest editor tool there is, one menu item away: a button in the Inspector and the
 	# empty function it calls. It sits beside Add New Variable because that is what it adds - a knob,
 	# one you press instead of one you type into.
@@ -593,6 +607,19 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					convert_index,
 					"Convert to Global" if scope_label == "local" else "Convert to Local"
 				)
+		# V8 - the Inspector tick shows what is true right now, and a local can never be a property.
+		var inspector_index: int = menu.get_item_index(_dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
+		if inspector_index >= 0:
+			var can_export: bool = has_variable and str(
+				_dock._variables._context_variable.get("scope", "")) != "local"
+			menu.set_item_disabled(inspector_index, not can_export)
+			menu.set_item_checked(inspector_index,
+				can_export and _dock._variables.context_variable_exported())
+			menu.set_item_tooltip(inspector_index, "" if can_export
+				else "A local lives inside its event - it is never a property of the object.")
+		var copy_index: int = menu.get_item_index(_dock.VARIABLE_MENU_COPY_EXPRESSION)
+		if copy_index >= 0:
+			menu.set_item_disabled(copy_index, not has_variable)
 		var grid_variable: bool = has_variable and EventSheetGridCSVDialog.is_grid_variable(_dock._variables._context_variable)
 		for grid_id: int in [_dock.VARIABLE_MENU_GRID_EXPORT, _dock.VARIABLE_MENU_GRID_IMPORT,
 				_dock.VARIABLE_MENU_TEXT_EXPORT, _dock.VARIABLE_MENU_TEXT_IMPORT]:

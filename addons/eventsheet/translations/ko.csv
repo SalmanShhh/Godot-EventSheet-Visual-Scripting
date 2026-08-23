@@ -4306,3 +4306,19 @@ furthest from {object} first,{object} 에서 먼 순
 highest {value} first,{value} 높은 순
 lowest {value} first,{value} 낮은 순
 Ignore case,대소문자 무시
+Copy as Expression,표현식으로 복사
+Show in Inspector,인스펙터에 표시
+Global variable…,전역 변수…
+Local variable…,지역 변수…
+Instance variable…,인스턴스 변수…
+Add Variable,변수 추가
+nothing of that kind yet,아직 그런 종류가 없습니다
+Locals in scope,범위 내 지역 변수
+%s - globals,%s - 전역 변수
+%s - instance variables,%s - 인스턴스 변수
+Inserts %s,%s 삽입
+%s is not a variable of %s.,%s은(는) %s의 변수가 아닙니다.
+Did you mean %s?,%s을(를) 말씀하신 건가요?
+Copied %s.,%s을(를) 복사했습니다.
+Show %s in the Inspector,인스펙터에 %s 표시
+Hide %s from the Inspector,인스펙터에서 %s 숨기기

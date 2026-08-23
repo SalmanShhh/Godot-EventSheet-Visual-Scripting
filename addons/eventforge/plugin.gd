@@ -144,6 +144,15 @@ func _open_sheet_in_workspace(path: String) -> void:
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
 
+## V10 - the Inspector's "Instance variables · N": the sheet, opened on the very table that answers
+## the question the button was clicked with. Falls back to the plain open on a build whose workspace
+## does not offer the table, so the button is never a dead click.
+func _open_sheet_variables_in_workspace(path: String) -> void:
+	_open_sheet_in_workspace(path)
+	if _event_sheet_editor != null and _event_sheet_editor.has_method("open_instance_variables"):
+		_event_sheet_editor.call("open_instance_variables")
+
+
 ## V15 - the FileSystem's "Open its sheets": a scene opens as one named tab group holding the
 ## scene-as-sheet and every script in it, in tree order.
 func _open_scene_workspace(scene_path: String) -> void:
@@ -296,6 +305,8 @@ func _enter_tree() -> void:
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
 	_sheet_edit_button_plugin = EventSheetEditButtonPlugin.new()
 	_sheet_edit_button_plugin.open_sheet = _open_sheet_in_workspace
+	# V10 - and "Instance variables · N" beside it, which opens the same sheet on its variables.
+	_sheet_edit_button_plugin.open_variables = _open_sheet_variables_in_workspace
 	add_inspector_plugin(_sheet_edit_button_plugin)
 	# Export integrity: recompile every sheet when an export starts so stale generated
 	# scripts can never ship (see export_integrity_plugin.gd).

@@ -4306,3 +4306,19 @@ furthest from {object} first,先取离 {object} 最远的
 highest {value} first,先取 {value} 最大的
 lowest {value} first,先取 {value} 最小的
 Ignore case,忽略大小写
+Copy as Expression,复制为表达式
+Show in Inspector,在检查器中显示
+Global variable…,全局变量…
+Local variable…,局部变量…
+Instance variable…,实例变量…
+Add Variable,添加变量
+nothing of that kind yet,还没有这种变量
+Locals in scope,作用域内的局部变量
+%s - globals,%s - 全局变量
+%s - instance variables,%s - 实例变量
+Inserts %s,插入 %s
+%s is not a variable of %s.,%s 不是 %s 的变量。
+Did you mean %s?,你是指 %s 吗？
+Copied %s.,已复制 %s。
+Show %s in the Inspector,在检查器中显示 %s
+Hide %s from the Inspector,在检查器中隐藏 %s

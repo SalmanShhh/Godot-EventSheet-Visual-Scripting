@@ -125,12 +125,20 @@ const VARIABLE_MENU_ADD_GETTER := 13
 ## V2 - the variable list reads in AUTHOR order, so alphabetical is something you ask for. It writes
 ## the order rather than sorting the view, which is why it lands through the undo funnel.
 const VARIABLE_MENU_SORT_AZ := 14
+## V8. The two verbs the variable row menu was missing: the name as code, ready to paste into a
+## field or a script, and the one tick that puts a variable in the Inspector.
+const VARIABLE_MENU_COPY_EXPRESSION := 15
+const VARIABLE_MENU_SHOW_IN_INSPECTOR := 16
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
 const EMPTY_MENU_INSERT_SNIPPET := 4
 ## R32. An Inspector button and the empty function it calls, written in one step.
 const EMPTY_MENU_ADD_INSPECTOR_BUTTON := 5
+## V8. The Add submenu names the three scopes, because "add a variable" is really three different
+## questions and the answer decides where the declaration goes.
+const EMPTY_MENU_ADD_LOCAL_VARIABLE := 6
+const EMPTY_MENU_ADD_INSTANCE_VARIABLE := 7
 # The "New Function" submenu on the empty-space menu. Its items open the function dialog pre-set:
 # a plain (unpublished) helper, or a published Action / Condition / Expression.
 const NEW_FUNCTION_MENU_PLAIN := 0
@@ -319,6 +327,8 @@ var _row_more_submenu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
 var _new_function_submenu: PopupMenu = null
+## V8. The Add ▸ Variable submenu (Global / Local / Instance), on the canvas menu.
+var _add_variable_submenu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
@@ -2188,6 +2198,10 @@ func _on_variable_dialog_global_requested(var_name: String, type_name: String, v
 
 func _on_add_local_variable_requested() -> void:
 	_variables._on_add_local_variable_requested()
+
+
+func _on_add_instance_variable_requested() -> void:
+	_variables._on_add_instance_variable_requested()
 
 
 func _add_tree_variable_below_context_row() -> void:
@@ -4729,6 +4743,10 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_on_add_condition_requested()
 		EMPTY_MENU_ADD_VARIABLE:
 			_on_add_global_variable_requested()
+		EMPTY_MENU_ADD_LOCAL_VARIABLE:
+			_on_add_local_variable_requested()
+		EMPTY_MENU_ADD_INSTANCE_VARIABLE:
+			_on_add_instance_variable_requested()
 		EMPTY_MENU_ADD_INSPECTOR_BUTTON:
 			_quick_prompts.prompt_inspector_button(add_inspector_button)
 		EMPTY_MENU_INSERT_SNIPPET:
@@ -5276,6 +5294,39 @@ func open_verb_properties(event_function: Resource) -> void:
 ## N10 - a click on a row's object name opens that object's popup.
 func open_object_properties(object_label: String) -> void:
 	_object_properties.open_for(object_label)
+
+
+## V12 - the "Use hp" beside an unknown-variable note. One undo step that rewrites every use of the
+## misspelled name in the sheet to the one it declares - the same rename the variable row's menu
+## does, aimed at a name that was never a variable in the first place.
+func _apply_variable_note_fix(note_row: EventRowData) -> void:
+	if note_row == null or _current_sheet == null:
+		return
+	var wrong: String = ""
+	var right: String = ""
+	for span: SemanticSpan in note_row.spans:
+		if not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		wrong = str(metadata.get("variable_note_name", wrong))
+		right = str(metadata.get("variable_note_to", right))
+	if wrong.is_empty() or right.is_empty() or wrong == right:
+		return
+	var counted: Dictionary = {"renamed": 0}
+	# One undo step, through the funnel every other mutation takes - nothing is held across it.
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Use %s") % right, func() -> bool:
+			counted["renamed"] = _rename_variable_references(wrong, right)
+			return int(counted["renamed"]) > 0):
+		_set_status(EventSheetL10n.translate("Nothing to rename."))
+		return
+	_set_status(EventSheetL10n.translate("Renamed %s to %s.") % [wrong, right])
+
+
+## V10 - the Inspector's "Instance variables · N" lands here: the open sheet's own object popup,
+## which is where the instance-variable table lives. Named on the dock (not reached through the
+## popup helper) because the plugin calls it by name from outside the editor.
+func open_instance_variables() -> void:
+	open_object_properties(EventSheetVariableOwners.owner_of_sheet(_current_sheet))
 
 
 ## X15 - the four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test

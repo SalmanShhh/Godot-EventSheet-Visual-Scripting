@@ -4306,3 +4306,19 @@ furthest from {object} first,au plus loin de {object} d'abord
 highest {value} first,{value} le plus élevé d'abord
 lowest {value} first,{value} le plus bas d'abord
 Ignore case,Ignorer la casse
+Copy as Expression,Copier comme expression
+Show in Inspector,Afficher dans l'Inspecteur
+Global variable…,Variable globale…
+Local variable…,Variable locale…
+Instance variable…,Variable d'instance…
+Add Variable,Ajouter une variable
+nothing of that kind yet,rien de ce genre pour l'instant
+Locals in scope,Locales dans la portee
+%s - globals,%s - globales
+%s - instance variables,%s - variables d'instance
+Inserts %s,Insere %s
+%s is not a variable of %s.,%s n'est pas une variable de %s.
+Did you mean %s?,Vouliez-vous dire %s ?
+Copied %s.,%s copie.
+Show %s in the Inspector,Afficher %s dans l'Inspecteur
+Hide %s from the Inspector,Masquer %s de l'Inspecteur

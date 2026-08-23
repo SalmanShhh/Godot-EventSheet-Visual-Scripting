@@ -4306,3 +4306,19 @@ furthest from {object} first,{object} から遠い順
 highest {value} first,{value} が高い順
 lowest {value} first,{value} が低い順
 Ignore case,大文字小文字を無視
+Copy as Expression,式としてコピー
+Show in Inspector,インスペクターに表示
+Global variable…,グローバル変数…
+Local variable…,ローカル変数…
+Instance variable…,インスタンス変数…
+Add Variable,変数を追加
+nothing of that kind yet,その種のものはまだありません
+Locals in scope,スコープ内のローカル
+%s - globals,%s - グローバル
+%s - instance variables,%s - インスタンス変数
+Inserts %s,%s を挿入します
+%s is not a variable of %s.,%s は %s の変数ではありません。
+Did you mean %s?,%s のことですか？
+Copied %s.,%s をコピーしました。
+Show %s in the Inspector,%s をインスペクターに表示
+Hide %s from the Inspector,%s をインスペクターから隠す

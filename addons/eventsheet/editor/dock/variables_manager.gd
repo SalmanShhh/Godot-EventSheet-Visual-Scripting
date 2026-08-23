@@ -81,6 +81,14 @@ func _on_add_global_variable_requested() -> void:
 	_dock._variable_dlg.open("global")
 
 
+## V8. "Instance variable…" on the Add submenu: the dialog with the sheet's own scope pre-set, which
+## is the scope an author means nine times out of ten and had to pick by hand every time.
+func _on_add_instance_variable_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_dock._variable_dlg.open(EventSheetVariableSentence.SCOPE_INSTANCE)
+
+
 func _on_add_local_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
@@ -157,6 +165,63 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_add_context_variable_accessor("setter")
 		_dock.VARIABLE_MENU_ADD_GETTER:
 			_add_context_variable_accessor("getter")
+		_dock.VARIABLE_MENU_COPY_EXPRESSION:
+			_copy_context_variable_expression()
+		_dock.VARIABLE_MENU_SHOW_IN_INSPECTOR:
+			_toggle_context_variable_inspector()
+
+
+## V8. "Copy as expression" - the name a parameter field or a hand-written line would need, on the
+## clipboard. A global copies as `Game.Score`, because the bare name does not run anywhere else; an
+## instance variable and a local copy bare, because that is what runs where they live.
+func _copy_context_variable_expression() -> void:
+	var name_text: String = str(_context_variable.get("name", ""))
+	if name_text.is_empty():
+		return
+	var entry: Dictionary = EventSheetVariableOwners.find(
+		EventSheetVariableOwners.catalog(_dock._current_sheet), name_text)
+	var expression: String = str(entry.get("insert_text", name_text)) if not entry.is_empty() else name_text
+	DisplayServer.clipboard_set(expression)
+	_dock._set_status(EventSheetL10n.translate("Copied %s.") % expression)
+
+
+## V8. "Show in Inspector" - the one gesture that adds `@export` to a variable, and the one that
+## takes it away. Only a tree-placed variable carries the flag; a dict variable is exported through
+## its descriptor, which the instance-variable table already writes.
+func _toggle_context_variable_inspector() -> void:
+	if _context_variable.is_empty():
+		return
+	var var_name: String = str(_context_variable.get("name", ""))
+	if var_name.is_empty():
+		return
+	var wanted: bool = not context_variable_exported()
+	# Never held across the edit: the undo funnel replaces every resource on commit, so the write
+	# re-finds the variable by name inside the callback.
+	_dock._perform_undoable_sheet_edit(
+		EventSheetL10n.translate("Show %s in the Inspector") % var_name if wanted
+			else EventSheetL10n.translate("Hide %s from the Inspector") % var_name,
+		func(sheet: EventSheetResource) -> void:
+			for entry: Variant in sheet.events:
+				if entry is LocalVariable and (entry as LocalVariable).name == var_name:
+					(entry as LocalVariable).exported = wanted
+					return
+			if sheet.variables is Dictionary and (sheet.variables as Dictionary).has(var_name):
+				var descriptor: Dictionary = (sheet.variables as Dictionary)[var_name]
+				descriptor["exported"] = wanted
+				(sheet.variables as Dictionary)[var_name] = descriptor)
+
+
+## Whether the right-clicked variable is in the Inspector today - the tick the menu shows. A tree
+## variable carries the flag itself; a dict variable is exported unless its descriptor says
+## otherwise, which is the compiler's own default.
+func context_variable_exported() -> bool:
+	if _context_variable.has("exported"):
+		return bool(_context_variable.get("exported", false))
+	if str(_context_variable.get("scope", "")) == "local":
+		return false
+	var descriptor: Dictionary = _dock._current_sheet.variables.get(
+		str(_context_variable.get("name", "")), {}) if _dock._current_sheet != null else {}
+	return bool(descriptor.get("exported", descriptor.get("exposed", true)))
 
 
 ## R2. "Add setter" / "Add getter" on a sheet variable's menu. Writes exactly the GDScript the reading
