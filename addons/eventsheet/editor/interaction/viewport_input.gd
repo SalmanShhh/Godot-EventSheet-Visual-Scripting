@@ -358,6 +358,15 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# swatch, the `@tool` switch, the autoload band's Project Settings link, a new sheet's prompts
 		# and the "+ add" row. The name band is the exception - it renames on F2 or a double-click, so
 		# a single click there only selects, the way a click on a name anywhere else does.
+		# G2 - the two marks a group head ends with, read the same one-click way as the head bands':
+		# the switch turns the group on and off, the ring before it makes the group switchable at
+		# runtime. Both are marks, so a click on one is never a click on the title.
+		var group_action: String = str(metadata.get("group_action", ""))
+		if not event.double_click and not group_action.is_empty() and row_data != null 				and row_data.source_resource is EventGroup:
+			_viewport._select_from_click(row_index, span_index, false)
+			_viewport.group_action_requested.emit(group_action, row_data.source_resource as EventGroup)
+			_viewport.accept_event()
+			return
 		var head_action: String = str(metadata.get("head_action", ""))
 		if not event.double_click and not head_action.is_empty() and head_action != EventSheetHeadBands.BAND_NAME:
 			_viewport._select_from_click(row_index, span_index, false)

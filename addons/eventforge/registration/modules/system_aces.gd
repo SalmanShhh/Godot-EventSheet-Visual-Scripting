@@ -266,9 +266,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# Runtime group toggling (event-sheet Set Group Active): targets the opt-in "runtime
 	# toggleable" flag members. The group param is the snake-cased group name.
-	descriptors.append(F.make_descriptor("Core", "SetGroupActive", "Set Group Active", ACEDescriptor.ACEType.ACTION, "set(\"__group_\" + {group} + \"_active\", {active})", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name (runtime-toggleable groups only).", "expression"), F.make_param("active", "String", "true", "Active", "true / false.", "", ["true", "false"])], "General Actions", "Set group {group} active: {active}")
+	descriptors.append(F.make_descriptor("Core", "SetGroupActive", "Set Group Active", ACEDescriptor.ACEType.ACTION, "set(\"__group_\" + {group} + \"_active\", {active})", "", [_group_param(F), _group_state_param(F)], "General Actions", "Set group {group} {active}")
 		.described("Turns a runtime-toggleable group on or off to enable or disable its behaviour."))
-	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name.", "expression")], "General Conditions", "group {group} is active")
+	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [_group_param(F)], "General Conditions", "Group {group} is active")
 		.described("True when the named runtime group is currently switched on."))
 
 	# Shader materials (assign / swap / clear / read uniforms - completes the one-uniform
@@ -393,3 +393,26 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Clears an Only Once Per Node / Per Name memory so the row fires again for that node. Drop it in an Object Pool's reset seam and a recycled instance initialises like a fresh one."))
 
 	return descriptors
+
+
+## G2 - the group Set/Is Group Active name. Its hint is `group_reference`, but the value is one of
+## the SHEET's own groups rather than a node group: the params dialog decides which list to offer
+## from what the template does with the value, so nothing here has to declare it twice.
+static func _group_param(factory: Variant) -> ACEParam:
+	return factory.make_param(
+		"group", "String", "\"combat\"", "Group",
+		"The group to switch, picked from this sheet's runtime-toggleable groups.",
+		"group_reference"
+	)
+
+
+## The on/off half of Set Group Active. The value stays the GDScript `true` / `false` the template
+## emits; the LABELS are what the row reads with, so the sentence says "Set group Tutorial inactive"
+## instead of spelling a boolean out loud.
+static func _group_state_param(factory: Variant) -> ACEParam:
+	var parameter: ACEParam = factory.make_param(
+		"active", "String", "true", "Active", "Whether the group runs.", "",
+		[{"key": "true", "label": "active"}, {"key": "false", "label": "inactive"}]
+	)
+	parameter.display_option_labels = true
+	return parameter

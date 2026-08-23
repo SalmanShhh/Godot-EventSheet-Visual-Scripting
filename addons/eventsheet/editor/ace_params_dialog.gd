@@ -813,10 +813,51 @@ static func bbcode_wrap_selection(text: String, from: int, to: int, tag: String)
 ## when the dialog builds, so a group added a minute ago appears without a restart; free text
 ## stays allowed (expressions, variables, brand-new names).
 func _create_group_reference_field(key: String, default_value: Variant) -> Control:
+	# G2 - the same hint answers two questions. Set/Is Group Active name one of the SHEET's own
+	# groups (its template builds the very `"__group_<name>_active"` member the compiler emits for a
+	# runtime-toggleable group), so it gets the sheet's group list and the offer to make a group
+	# switchable; every other group param means a NODE group and keeps the scene's list.
+	if EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key):
+		return _create_sheet_group_field(key, default_value)
 	var scene_root: Node = animation_scene_root_override
 	if scene_root == null and Engine.is_editor_hint():
 		scene_root = EditorInterface.get_edited_scene_root()
 	return _create_autocomplete_field(key, group_choices(scene_root), default_value)
+
+
+## The codegen template of the ACE being edited, or "" when the dialog has no definition.
+func _definition_template() -> String:
+	return str(_definition.metadata.get("codegen_template", "")) if _definition != null else ""
+
+
+## The sheet-group picker: this sheet's own groups, switchable ones first, written as the quoted
+## snake_case the template concatenates. A group that is NOT switchable yet is still offered - with
+## the one-click offer to make it one, because "it is not in the list" teaches nobody why.
+func _create_sheet_group_field(key: String, default_value: Variant) -> Control:
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var offered: Array[Dictionary] = EventSheetGroupFacts.choices(sheet)
+	var suggestions: Array = []
+	for entry: Dictionary in offered:
+		suggestions.append(str(entry.get("value", "")))
+	var row: Control = _create_autocomplete_field(key, suggestions, default_value)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit == null:
+		return row
+	var offer: Button = Button.new()
+	offer.text = EventSheetL10n.translate("Make switchable")
+	offer.tooltip_text = EventSheetL10n.translate("Turns on \"Can be switched at runtime\" for this group, so this row can reach it.")
+	offer.visible = false
+	offer.pressed.connect(func() -> void:
+		if _group_toggle_requester.is_valid() and bool(_group_toggle_requester.call(edit.text)):
+			offer.visible = false
+	)
+	row.add_child(offer)
+	var refresh_offer: Callable = func(_text: String = "") -> void:
+		offer.visible = _group_toggle_requester.is_valid() \
+			and EventSheetGroupFacts.needs_switch(offered, edit.text)
+	edit.text_changed.connect(refresh_offer)
+	refresh_offer.call()
+	return row
 
 
 ## Every known node group, quoted: project-wide global groups first (they are the deliberate
@@ -2072,6 +2113,9 @@ static func open_class_docs(docs_class: String) -> String:
 # a one-click "+ var" button (cancel → Add Variable → retype, collapsed to one click).
 # The dialog stays dock-agnostic: the dock injects a creator Callable(name) -> bool.
 var _variable_creator: Callable = Callable()
+## G2 - what the "Make switchable" offer calls: the dock flips the named group's runtime toggle in
+## one undo step and answers whether it did. Left invalid (no offer shown) outside the dock.
+var _group_toggle_requester: Callable = Callable()
 var _quickfix_buttons: Dictionary = {}
 var _didyoumean_buttons: Dictionary = {}
 
@@ -2130,6 +2174,11 @@ static func _edit_distance(a: String, b: String) -> int:
 
 func set_variable_creator(creator: Callable) -> void:
 	_variable_creator = creator
+
+
+## Injects the "Make switchable" writer (see _group_toggle_requester).
+func set_group_toggle_requester(requester: Callable) -> void:
+	_group_toggle_requester = requester
 
 
 ## The probable culprit when an expression fails lint: the first plain identifier the
