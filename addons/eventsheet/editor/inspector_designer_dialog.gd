@@ -49,17 +49,17 @@ func _init() -> void:
 	scroll.add_child(_column)
 
 
-## Every Inspector-visible variable of the sheet, in Inspector order: sheet-level (dict)
-## variables first (alphabetical - the order the compiler emits them), then tree variables in
-## sheet order. Each entry carries the SAME keys the preview card reads. Static + UI-free so
-## the suite pins the collection without popping a dialog.
+## Every Inspector-visible variable of the sheet, in Inspector order: sheet-level (dict) variables
+## first, in the order the compiler emits them, then tree variables in sheet order. The order comes
+## from the compiler itself rather than being re-derived here - a preview that lists the properties
+## in an order Godot will not show them in answers the wrong question. Each entry carries the SAME
+## keys the preview card reads. Static + UI-free so the suite pins the collection without popping a
+## dialog.
 static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	if sheet == null:
 		return entries
-	var dict_names: Array = sheet.variables.keys()
-	dict_names.sort()
-	for var_name: Variant in dict_names:
+	for var_name: Variant in SheetCompiler.variable_emit_order(sheet.variables):
 		var descriptor: Variant = sheet.variables.get(var_name)
 		if not (descriptor is Dictionary) or not bool((descriptor as Dictionary).get("exported", true)):
 			continue
@@ -106,7 +106,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		_column.add_child(_empty_hint)
 		return
 	var intro: Label = Label.new()
-	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (top-level variables sort alphabetically)." if _edit_handler.is_valid() else "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
+	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (the list is in the order the file declares them)." if _edit_handler.is_valid() else "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	intro.modulate = Color(1.0, 1.0, 1.0, 0.65)

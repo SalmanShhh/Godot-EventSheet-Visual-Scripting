@@ -1,16 +1,16 @@
 class_name SkillTreeShowcase
 extends Control
 
-## A skill that can be unlocked right now.
-@export var affordable_tint: Color = Color(1.0, 0.86000001430511, 0.40000000596046, 1.0)
+## The Skill Tree data asset this screen draws.
+@export var tree: Resource = null
+var upgrades: Node = null
 var buttons: Dictionary = {}
 ## A skill whose prerequisites are not met yet.
 @export var locked_tint: Color = Color(0.44999998807907, 0.44999998807907, 0.5, 1.0)
-## The Skill Tree data asset this screen draws.
-@export var tree: Resource = null
+## A skill that can be unlocked right now.
+@export var affordable_tint: Color = Color(1.0, 0.86000001430511, 0.40000000596046, 1.0)
 ## A skill already taken.
 @export var unlocked_tint: Color = Color(0.55000001192093, 0.89999997615814, 0.60000002384186, 1.0)
-var upgrades: Node = null
 
 func _ready() -> void:
 	upgrades = $Upgrades

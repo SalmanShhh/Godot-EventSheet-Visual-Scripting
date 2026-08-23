@@ -4,10 +4,10 @@ class_name Enemy
 extends Sprite2D
 ## A falling enemy, marked as a Family so one rule can move or damage every Enemy at once.
 
-## How fast (px/sec) this enemy falls.
-@export var fall_speed: float = 90.0
 ## Hits this enemy survives before it dies.
 @export var health: int = 3
+## How fast (px/sec) this enemy falls.
+@export var fall_speed: float = 90.0
 
 func _ready() -> void:
 	self.add_to_group("family_enemy")

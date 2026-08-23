@@ -2540,34 +2540,63 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 	return ", ".join(parts)
 
 
+## The three Inspector section levels, outermost first - the order the headers are written in, and
+## the order a variable's section path is built in.
+const VARIABLE_SECTION_LEVELS: PackedStringArray = ["category", "group", "subgroup"]
+
+
+## V2 - the order the declarations are emitted in: the order they were WRITTEN, bucketed only as
+## far as the Inspector forces. `@export_group` applies to every property after it and no line
+## closes one, so a section's variables must emit CONTIGUOUSLY and the sectionless ones must come
+## first, or a plain variable written after a grouped one is swallowed into that group's fold. So a
+## variable sorts by WHERE ITS SECTION FIRST APPEARED (category, then group, then subgroup; "in no
+## section at this level" always ranks first) and, inside one section, by the order it was written
+## in. A sheet with no Inspector sections therefore emits exactly as authored, which is what lets a
+## drag-reorder and Sort A-Z reach the file instead of stopping at the canvas.
+##
+## Public because it is the ONE answer to "which variable comes first": the Inspector Designer
+## previews the properties in this order too, and a preview in a different order is a lie.
+static func variable_emit_order(variables: Dictionary) -> Array:
+	var ranks: Dictionary = {}
+	var sort_keys: Dictionary = {}
+	var author_index: int = 0
+	for key: Variant in variables.keys():
+		var descriptor: Variant = variables[key]
+		var exported: bool = descriptor is Dictionary and bool(descriptor.get("exported", true))
+		var attributes: Dictionary = descriptor.get("attributes") if (descriptor is Dictionary and descriptor.get("attributes") is Dictionary) else {}
+		var path: String = ""
+		var section_key: String = ""
+		for level: String in VARIABLE_SECTION_LEVELS:
+			var part: String = str(attributes.get(level, "")).strip_edges() if exported else ""
+			path += "%s" % part
+			section_key += "%04d" % _section_rank(ranks, path, part)
+		sort_keys[key] = "%s%06d" % [section_key, author_index]
+		author_index += 1
+	var order: Array = variables.keys()
+	order.sort_custom(func(a: Variant, b: Variant) -> bool:
+		return str(sort_keys[a]) < str(sort_keys[b]))
+	return order
+
+
+## Where one section level ranks: 0 for "in none at this level", which must emit before the sections
+## themselves, and otherwise the position that section was first written at. `path` is the whole
+## nesting path, so the same group name under two categories ranks as two sections.
+static func _section_rank(ranks: Dictionary, path: String, leaf: String) -> int:
+	if leaf.is_empty():
+		return 0
+	if not ranks.has(path):
+		ranks[path] = ranks.size() + 1
+	return int(ranks[path])
+
+
 ## Emits `@export var` lines from the sheet variables dictionary.
-## Compound sort key clustering a variable under its Inspector section: category, then group,
-## then subgroup, then name. The separator sorts before any normal character, so an EMPTY section
-## (ungrouped / uncategorized) sorts first - which means a sheet with no groups keeps the exact
-## pure-by-name order the compiler always used (byte-identical). Only sheets that opt into groups
-## get the clustered layout. Non-exported variables carry no section, so they stay among the
-## ungrouped, ordered by name, exactly as before.
-static func _variable_sort_key(variables: Dictionary, key: Variant) -> String:
-	var descriptor: Variant = variables[key]
-	var exported: bool = descriptor is Dictionary and bool(descriptor.get("exported", true))
-	var attributes: Dictionary = descriptor.get("attributes") if (descriptor is Dictionary and descriptor.get("attributes") is Dictionary) else {}
-	var category: String = str(attributes.get("category", "")).strip_edges() if exported else ""
-	var group: String = str(attributes.get("group", "")).strip_edges() if exported else ""
-	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges() if exported else ""
-	return "%s%s%s%s" % [category, group, subgroup, str(key)]
-
-
 static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
-	# Sort by (category, group, subgroup, name) so an Inspector section's variables emit
-	# CONTIGUOUSLY - the @export_group / @export_subgroup / @export_category header is then
-	# written ONCE per section (deduped below on change) instead of before every variable,
-	# which is what makes the Inspector collapse into clean folds rather than one section per
-	# var. Ungrouped/uncategorized variables sort first (empty keys), so a sheet with no groups
-	# emits byte-identically to the old pure-alphabetical order.
-	var keys: Array = variables.keys()
-	keys.sort_custom(func(a: Variant, b: Variant) -> bool:
-		return _variable_sort_key(variables, a) < _variable_sort_key(variables, b))
+	# Author order, with each Inspector section kept contiguous - the @export_group /
+	# @export_subgroup / @export_category header is then written ONCE per section (deduped below
+	# on change) instead of before every variable, which is what makes the Inspector collapse into
+	# clean folds rather than one section per var.
+	var keys: Array = variable_emit_order(variables)
 	var last_category: String = ""
 	var last_group: String = ""
 	var last_subgroup: String = ""

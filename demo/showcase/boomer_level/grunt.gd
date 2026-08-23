@@ -4,10 +4,10 @@ extends CharacterBody3D
 
 ## How much damage this grunt takes before it falls.
 @export var hp: float = 40.0
-## How far its shout carries when something hurts it.
-@export var shout_radius: float = 9.0
 ## How fast it walks at whatever it is going for.
 @export var walk_speed: float = 2.4
+## How far its shout carries when something hurts it.
+@export var shout_radius: float = 9.0
 
 ## Whoever this grunt is going for right now.
 var target: Node3D = null

@@ -1,10 +1,10 @@
 class_name DrawLabDemo
 extends Node2D
 
-var baked: bool = false
-var comet_angle: float = 0.0
 var facing_deg: float = 0.0
+var comet_angle: float = 0.0
 var paste_timer: float = 0.0
+var baked: bool = false
 var __every_paint: float = 0.0
 
 

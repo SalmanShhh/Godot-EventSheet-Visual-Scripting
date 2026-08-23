@@ -1,12 +1,12 @@
 class_name MirrorAndFlip
 extends Node2D
 
-## Flip the third tile, so one wall drawing covers both sides of the corridor.
-@export var flip_tile: bool = true
 ## Mirror the panel. The pivot moves to its middle first, which is why it mirrors in place instead of jumping sideways.
 @export var mirror_ui: bool = true
 ## Mirror what the sub-viewport shows - the rear-view-mirror trick.
 @export var mirror_view: bool = true
+## Flip the third tile, so one wall drawing covers both sides of the corridor.
+@export var flip_tile: bool = true
 var __every_turn: float = 0.0
 
 func _ready() -> void:

@@ -1,9 +1,9 @@
 class_name HierarchyPlayground
 extends Node3D
 
-var crates_settled: bool = false
-var mounted: bool = false
 var orbit_deg: float = 0.0
+var mounted: bool = false
+var crates_settled: bool = false
 var squad_hp: int = 0
 
 

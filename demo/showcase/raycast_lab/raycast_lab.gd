@@ -1,20 +1,20 @@
 class_name RaycastLabDemo
 extends Node2D
 
-var gate_count: int = 0
-var gate_travel: float = 1.0
+var sweep_deg: float = 0.0
+var radar_hit: bool = false
+var radar_end: Vector2 = Vector2(0.0, 0.0)
+var radar_normal: Vector2 = Vector2(0.0, 0.0)
 var hit: Dictionary = {}
 var laser_end: Vector2 = Vector2(0.0, 0.0)
 var laser_normal: Vector2 = Vector2(0.0, 0.0)
 var laser_on_target: bool = false
-var nearby: Array = []
 var picked: Array = []
-var probe_end: Vector2 = Vector2(0.0, 0.0)
-var radar_end: Vector2 = Vector2(0.0, 0.0)
-var radar_hit: bool = false
-var radar_normal: Vector2 = Vector2(0.0, 0.0)
-var sweep_deg: float = 0.0
+var nearby: Array = []
 var travel: float = 1.0
+var probe_end: Vector2 = Vector2(0.0, 0.0)
+var gate_count: int = 0
+var gate_travel: float = 1.0
 
 
 func _physics_process(delta: float) -> void:

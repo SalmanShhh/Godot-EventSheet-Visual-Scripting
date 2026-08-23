@@ -2,17 +2,17 @@ class_name BoomerLevel
 extends Node3D
 ## A small shooter level: a red keycard, the door that wants it, two grunts that turn on each other, a respawning pickup, a secret and the exit tally.
 
-## How many grunts the level started with.
-@export var enemies_total: int = 2
 var keys: Array = []
-var kills: int = 0
-var level_over: bool = false
-var level_seconds: float = 0.0
-## The time to beat, shown beside your own.
-@export var par_seconds: float = 60.0
 var secrets_found: Array = []
 ## How many secrets this level hides.
 @export var secrets_total: int = 1
+var kills: int = 0
+## How many grunts the level started with.
+@export var enemies_total: int = 2
+var level_seconds: float = 0.0
+## The time to beat, shown beside your own.
+@export var par_seconds: float = 60.0
+var level_over: bool = false
 
 func _ready() -> void:
 	get_node("RedCard").body_entered.connect(_on_redcard_body_entered)

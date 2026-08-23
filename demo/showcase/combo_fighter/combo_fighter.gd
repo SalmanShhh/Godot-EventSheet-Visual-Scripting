@@ -1,11 +1,11 @@
 class_name ComboFighter
 extends Node2D
 
-var cancels: int = 0
 var combo: Array = []
 var combo_timer: float = 0.0
-var hits: int = 0
 var punch_input: float = -1.0
+var hits: int = 0
+var cancels: int = 0
 
 func _process(delta: float) -> void:
 	combo_timer -= delta

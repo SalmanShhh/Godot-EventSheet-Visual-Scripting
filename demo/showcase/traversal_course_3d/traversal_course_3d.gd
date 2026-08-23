@@ -2,8 +2,8 @@ class_name TraversalCourse3DDemo
 extends Node3D
 
 var hang_time: float = 0.0
-var race_time: float = 0.0
 var wall_time: float = 0.0
+var race_time: float = 0.0
 
 func _physics_process(delta: float) -> void:
 	# The Climber: falls beside the tower, grabs the lip, hangs a second and mantles up.

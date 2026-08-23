@@ -2,8 +2,8 @@ class_name TraversalCourseDemo
 extends Node2D
 
 var hang_time: float = 0.0
-var race_time: float = 0.0
 var wall_time: float = 0.0
+var race_time: float = 0.0
 
 func _ready() -> void:
 	# The Jumper drives itself into the shaft: the movement pack's AI seam is held like a

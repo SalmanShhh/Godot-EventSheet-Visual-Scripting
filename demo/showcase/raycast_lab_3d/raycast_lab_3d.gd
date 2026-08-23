@@ -1,23 +1,23 @@
 class_name RaycastLab3DDemo
 extends Node3D
 
-var at_point: Array = []
-var in_box: Array = []
-var nearby: Array = []
+var turret_deg: float = 0.0
 var orbit_deg: float = 0.0
-var pick: Dictionary = {}
-var pick_face: int = -1
-var pick_normal: Vector3 = Vector3(0.0, 0.0, 0.0)
-var pick_on_target: bool = false
-var pick_point: Vector3 = Vector3(0.0, 0.0, 0.0)
-var probe_end: Vector3 = Vector3(0.0, 0.0, 0.0)
-var radar_end: Vector3 = Vector3(0.0, 0.0, 0.0)
 var radar_hit: bool = false
+var radar_end: Vector3 = Vector3(0.0, 0.0, 0.0)
 var radar_normal: Vector3 = Vector3(0.0, 0.0, 0.0)
+var pick: Dictionary = {}
+var pick_point: Vector3 = Vector3(0.0, 0.0, 0.0)
+var pick_normal: Vector3 = Vector3(0.0, 0.0, 0.0)
+var pick_face: int = -1
+var pick_on_target: bool = false
+var nearby: Array = []
+var in_box: Array = []
+var at_point: Array = []
+var travel: float = 1.0
+var probe_end: Vector3 = Vector3(0.0, 0.0, 0.0)
 var sweep_count: int = 0
 var sweep_travel: float = 1.0
-var travel: float = 1.0
-var turret_deg: float = 0.0
 
 
 func _physics_process(delta: float) -> void:

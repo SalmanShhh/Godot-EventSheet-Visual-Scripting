@@ -3,14 +3,14 @@ extends Node2D
 
 enum State { PLAYING, GAME_OVER }
 
-## Misses remaining.
-@export var lives: int = 3
 ## Stars caught.
 @export_range(0, 999, 1) var score: int = 0
-## Ship move speed (px/s).
-@export var ship_speed: float = 320.0
+## Misses remaining.
+@export var lives: int = 3
 ## 0=PLAYING, 1=GAME_OVER.
 @export var state: int = 0
+## Ship move speed (px/s).
+@export var ship_speed: float = 320.0
 var __every_spawn_sf: float = 0.0
 
 func _ready() -> void:

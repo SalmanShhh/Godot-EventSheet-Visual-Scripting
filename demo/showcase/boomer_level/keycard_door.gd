@@ -2,14 +2,14 @@ class_name BoomerLevelDoor
 extends StaticBody3D
 ## The red keycard door. Try Door on the level's sheet opens it when the key fits and tells it here when it does not.
 
-var door_open: bool = false
-var locked_hint: String = ""
 ## The key this door wants. Try Door reads it off the door itself.
 @export var needs_key: String = "red_key"
+var door_open: bool = false
 ## How far the door rises out of the way, in metres.
 @export var slide_height: float = 3.2
 ## How long the door takes to open.
 @export var slide_seconds: float = 0.6
+var locked_hint: String = ""
 
 func locked_door_tried(key: Variant) -> void:
 	locked_hint = "Locked. You need the %s keycard." % str(key)
