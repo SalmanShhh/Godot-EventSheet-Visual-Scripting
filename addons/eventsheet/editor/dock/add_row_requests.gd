@@ -145,6 +145,11 @@ func on_duplicate_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
+	# G4 - Ctrl+D on a GROUP head duplicates the group and everything in it, which is what the menu's
+	# own Duplicate already does; the key routes to the same writer rather than refusing.
+	if selected_resource is EventGroup:
+		_dock._bulk_duplicate_rows([selected_resource])
+		return
 	if not (selected_resource is EventRow):
 		_dock._set_status("Select an event row to duplicate.", true)
 		return
