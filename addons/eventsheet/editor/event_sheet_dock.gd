@@ -234,6 +234,7 @@ var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs
 var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
 var _docs: EventSheetDocWindow = EventSheetDocWindow.new()  # Tools ▸ Documentation… / F1 / "What does this do?" (docs/doc_window.gd)
 var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
+var _head_actions: EventSheetHeadActions = EventSheetHeadActions.new()  # the gestures on the sheet's head bands (dock/sheet_head_actions.gd)
 var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
 var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
 var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
@@ -338,6 +339,7 @@ func _init() -> void:
 	_code_panel_glue.init(self)
 	_providers_glue.init(self)
 	_sheet_type_glue.init(self)
+	_head_actions.init(self)
 	_queries.init(self)
 	_add_rows.init(self)
 	_extract_ops.init(self)
@@ -5754,9 +5756,16 @@ func _apply_variable_value_edit(row_data: EventRowData, new_value: String) -> vo
 
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
-	if row_data == null or row_data.source_resource == null:
+	if row_data == null:
 		return
 	if old_value == new_value:
+		return
+	# The head's `##` band is an inert row (a band owns no resource of its own), so it is
+	# answered BEFORE the source-resource guard: the block it rewrites travels in span metadata.
+	if edit_kind == "sheet_description":
+		_head_actions.apply_band_value(EventSheetHeadBands.BAND_DESCRIPTION, new_value)
+		return
+	if row_data.source_resource == null:
 		return
 	if edit_kind.begins_with("decl_entry_line:"):
 		var entry_updated: bool = _perform_undoable_sheet_edit("Edit Entry", func() -> bool:

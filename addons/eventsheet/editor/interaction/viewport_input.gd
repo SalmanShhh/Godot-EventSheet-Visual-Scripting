@@ -354,6 +354,16 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.this_editor_action_requested.emit(str(metadata.get("kind", "")))
 			_viewport.accept_event()
 			return
+		# The head's bands, read the same one-click way: the extends band's "change…", the icon
+		# swatch, the `@tool` switch, the autoload band's Project Settings link, a new sheet's prompts
+		# and the "+ add" row. The name band is the exception - it renames on F2 or a double-click, so
+		# a single click there only selects, the way a click on a name anywhere else does.
+		var head_action: String = str(metadata.get("head_action", ""))
+		if not event.double_click and not head_action.is_empty() and head_action != EventSheetHeadBands.BAND_NAME:
+			_viewport._select_from_click(row_index, span_index, false)
+			_viewport.sheet_head_action_requested.emit(str(metadata.get("head_action", "")))
+			_viewport.accept_event()
+			return
 		if bool(hit.get("fold", false)):
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport._toggle_row_fold(row_index)
@@ -500,6 +510,12 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			if bool(double_click_meta.get("group_chip", false)) \
 					and not str(double_click_meta.get("variable_group", "")).is_empty():
 				_viewport.variable_group_rename_requested.emit(str(double_click_meta.get("variable_group")))
+				_viewport.accept_event()
+				return
+			# C4 - a double-click on the head's name band is the rename gesture the file's name
+			# deserves: it renames the class everywhere, with the count said first.
+			if not str(double_click_meta.get("head_action", "")).is_empty():
+				_viewport.sheet_head_action_requested.emit(str(double_click_meta.get("head_action", "")))
 				_viewport.accept_event()
 				return
 			# V13 - the code echo is a door into the script: activating it opens the code panel at the
@@ -723,13 +739,30 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport.handle_enter_key()
 		_viewport.accept_event()
 	elif event.keycode == KEY_F2:
-		_viewport._begin_edit(_viewport._selected_row_index, _viewport._selected_span_index)
+		# C4 - F2 on the head's name band renames the class everywhere, which is what F2 means on a
+		# name; everywhere else it stays the plain begin-edit escape hatch.
+		if not _selected_head_action().is_empty():
+			_viewport.sheet_head_action_requested.emit(_selected_head_action())
+		else:
+			_viewport._begin_edit(_viewport._selected_row_index, _viewport._selected_span_index)
 		_viewport.accept_event()
 	elif event.keycode == KEY_ESCAPE:
 		# Esc from a focused cell drops back to row selection; with no cell focus the key
 		# passes through (lens clear, dialog close keep their meanings).
 		if _viewport.clear_cell_focus():
 			_viewport.accept_event()
+
+
+## The head-band action the SELECTED span offers, "" when the selection is anywhere else. Read for
+## F2, so the key means "rename this class" on the name band and "edit this cell" everywhere else.
+func _selected_head_action() -> String:
+	var row_data: EventRowData = _viewport._row_at(_viewport._selected_row_index)
+	if row_data == null or _viewport._selected_span_index < 0:
+		return ""
+	if _viewport._selected_span_index >= row_data.spans.size():
+		return ""
+	var metadata: Variant = row_data.spans[_viewport._selected_span_index].metadata
+	return str((metadata as Dictionary).get("head_action", "")) if metadata is Dictionary else ""
 
 
 func handle_editing_key(event: InputEventKey) -> void:

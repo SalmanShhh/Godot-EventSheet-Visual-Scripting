@@ -70,8 +70,8 @@ func _on_frame() -> void:
 		print("[preview] closed %dx%d" % [img.get_width(), img.get_height()])
 		_stage = 1
 		_frames = 0
-		# Open both folds: the strip and the enum flip to their list forms.
-		_viewport._fold_state["scaffolding_strip_%d" % _sheet.get_instance_id()] = false
+		# Open the folds that are left: the head is a band stack that never folds, so only the
+		# enum flips to its list form.
 		for row: Variant in _sheet.events:
 			if row is EnumRow:
 				_viewport._fold_state["enum_%s_0" % str((row as EnumRow).get_instance_id())] = false

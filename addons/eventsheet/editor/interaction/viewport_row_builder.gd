@@ -45,6 +45,18 @@ const MARK_RECURSION := "↻"
 const KIND_BADGE_WIDTH: float = 15.0
 const INSPECTOR_BADGE_GLYPH := "⚙"
 
+## The head's band rows all share this uid prefix, so anything that has to find the head - the
+## opened-pack reading, the fold guard, a test - asks one question instead of listing band kinds.
+const HEAD_BAND_UID_PREFIX := "sheet_head_"
+
+## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
+const HEAD_SWITCH_ON_GLYPH := "◍"
+const HEAD_SWITCH_OFF_GLYPH := "◌"
+
+## How loud the echo of a line the file does NOT have yet is (an unticked `@tool`): quieter than a
+## resting echo, so the band is findable without claiming the file says something it does not.
+const HEAD_ECHO_GHOST_ALPHA: float = 0.3
+
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
 # CONDITION or EXPRESSION verb read their `return` as "Set return value to x" rather than "Stop event",
@@ -228,145 +240,249 @@ func _bump_indent(row_data: EventRowData, delta: int) -> void:
 # ── Non-event row builders ──────────────────────────────────────────────────────────────────────
 
 
-func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
+## The sheet's HEAD: one band per line of the file, in reading order, always visible.
+##
+## The leading run of class scaffolding an opened `.gd` carries (`class_name`, `extends`, `@icon`,
+## `@tool`, the `##` description, a behaviour's host binding) used to fold into ONE crumb-trail
+## strip - `▣ Node ▸ CharacterBody2D ▸ Player` - hidden by default, with the rest of the facts in a
+## label/value dropdown behind it. It is now a STACK: one row per line, each with one fact, one
+## control and one code echo, and nothing folds. A long head means a long file, which is information
+## too.
+##
+## The band model is `EventSheetHeadBands` (pure + static); this only dresses it as rows. Diagnostics
+## survive: a prelude block carrying a compile-error marker is appended after the stack as its own
+## row rather than being swallowed, because problems are never hidden.
+func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if sheet == null:
+		return rows
+	var prelude_lines: PackedStringArray = PackedStringArray()
+	var description_source: Resource = null
+	for child: EventRowData in scaffold_rows:
+		if not (child.source_resource is RawCodeRow):
+			continue
+		var code: String = (child.source_resource as RawCodeRow).code
+		prelude_lines.append(code)
+		if description_source == null and _carries_class_description(code):
+			description_source = child.source_resource
+	var head_facts: Dictionary = EventSheetHeadBands.facts(sheet, "\n".join(prelude_lines))
+	head_facts["attached"] = _sheet_is_attached(sheet, str(head_facts.get("class_name", "")))
+	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
+		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
+	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
+	if not add_text.is_empty() and not sheet.read_only:
+		rows.append(_build_head_add_row(sheet, add_text))
+	for child: EventRowData in scaffold_rows:
+		if not child.error_message.strip_edges().is_empty():
+			child.indent = 0
+			rows.append(child)
+	return rows
+
+
+## One band: the leader word of its line, the fact, its control, and the line itself echoed at the
+## right edge. The name band leads with the class icon and a little more presence; the rest are slim.
+func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_facts: Dictionary,
+		description_source: Resource) -> EventRowData:
+	var kind: String = str(band["kind"])
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var row_data := EventRowData.new()
 	row_data.indent = 0
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
-	row_data.row_uid = "scaffolding_strip_%d" % sheet.get_instance_id()
-	row_data.children = scaffold_rows
-	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))  # hidden by default
-	var line_total: int = 0
-	for child: EventRowData in scaffold_rows:
-		line_total += child.line_count
-	# The strip is the sheet's IDENTITY, read like an event sheet's Includes bar: closed, just the
-	# inheritance breadcrumb (Node ▸ CharacterBody2D ▸ ExternalSample - the chain a beginner
-	# learns from); open, the secondary facts as a label+value LIST (never crammed inline on the
-	# bar), with the raw prelude lines as the last children, editable as before.
-	var extends_target: String = ""
-	var declared_class: String = ""
-	var has_tool: bool = false
-	for child: EventRowData in scaffold_rows:
-		if not (child.source_resource is RawCodeRow):
-			continue
-		for scaffold_line: String in (child.source_resource as RawCodeRow).code.split("\n"):
-			var trimmed: String = scaffold_line.strip_edges()
-			if trimmed.begins_with("extends ") and extends_target.is_empty():
-				extends_target = trimmed.trim_prefix("extends ").strip_edges()
-			elif trimmed.begins_with("class_name ") and declared_class.is_empty():
-				declared_class = trimmed.trim_prefix("class_name ").strip_edges()
-			elif trimmed == "@tool":
-				has_tool = true
-	# The breadcrumb: Node ▸ <base> ▸ <this sheet>. The chain stays short on purpose - the full
-	# ClassDB ladder (CanvasItem, CollisionObject2D, ...) is trivia; base and root are the lesson.
-	var leaf_name: String = declared_class
-	if leaf_name.is_empty() and sheet != null and not str(sheet.external_source_path).is_empty():
-		leaf_name = str(sheet.external_source_path).get_file().get_basename()
-	# ── V4 ──────────────────────────────────────────────────────────────────────────────────────
-	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
-	# .tres saved from it is one asset of that type. "Node ▸ Resource ▸" is the wrong ladder to walk
-	# a reader up (a data asset is not a node), so the bar says the two words instead and names the
-	# type the way a designer would say it out loud rather than in the identifier's own spelling.
-	var data_type: bool = EventSheetScriptIntent.is_resource_host(extends_target)
-	if data_type and not leaf_name.is_empty():
-		leaf_name = leaf_name.capitalize()
-	var crumbs: PackedStringArray = PackedStringArray()
-	if not data_type:
-		if not extends_target.is_empty() and extends_target != "Node" and not extends_target.begins_with("\""):
-			crumbs.append("Node")
-		if not extends_target.is_empty():
-			crumbs.append(extends_target)
-	var crumb_prefix: String = " ▸ ".join(crumbs)
-	var badge_meta: Dictionary = {
+	row_data.row_uid = "%s%s_%d" % [HEAD_BAND_UID_PREFIX, kind, sheet.get_instance_id()]
+	row_data.folded = false
+	var accent: Color = _viewport._get_event_style().behavior_accent_color
+	var is_name_band: bool = kind == EventSheetHeadBands.BAND_NAME
+	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22 if is_name_band else 0.10)
+	row_data.height_scale = 1.35 if is_name_band else 1.0
+	var band_meta: Dictionary = {
 		"editable": false,
-		"badge": true,
-		"badge_style": "trigger",
-		"badge_bg": _viewport._get_reading_style().setup_badge_background_color,
-		"badge_fg": _viewport._get_reading_style().setup_badge_foreground_color,
-		"kind": "scaffolding_strip",
+		"kind": "head_band_%s" % kind,
+		"head_band": kind,
 		"line_index": 0
 	}
-	var class_icon: Texture2D = ACEPickerDialog.editor_icon(extends_target) if not extends_target.is_empty() else null
-	if class_icon != null:
-		badge_meta["badge_icon"] = class_icon
-	# The bar wears the accent as an Includes-strip band - the sheet's identity should read as
-	# a BAR like a group header (and stand apart from every grey code row), not blend in.
-	var strip_accent: Color = _viewport._get_event_style().behavior_accent_color
-	row_data.custom_color = Color(strip_accent.r, strip_accent.g, strip_accent.b, 0.22)
-	row_data.height_scale = 1.5
-	var spans: Array[SemanticSpan] = [_make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)]
-	if crumb_prefix.is_empty() and leaf_name.is_empty():
-		spans.append(_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "scaffolding_strip",
-			"text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.8)
-		}))
-	else:
-		if not crumb_prefix.is_empty():
-			var crumb_text: String = crumb_prefix + (" ▸" if not leaf_name.is_empty() else "")
-			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().muted_text_color}))
-		if not leaf_name.is_empty():
-			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": _viewport._get_reading_style().primary_text_color}))
-	# V4 - the two words that say what this file is, in the chip slot the class ladder vacated.
-	if data_type:
-		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
-	# ── W9 / W10 / W11 lens hook ──────────────────────────────────────────────────────────────
-	# What this file is as a piece of TOOLING, said before its buttons: a test sheet and how many
-	# checks it makes, a command tool that runs headless, a pack recipe and the behavior it builds.
-	# The same chips the read-only Include bar states, because it is the same fact about the file.
-	spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
-	# R33 - a tool sheet's own buttons ride the identity strip too. This is the bar an opened editor
-	# script actually gets (the pack Include bar is for a pack), and a Run now that is not where the
-	# tool is written is a Run now nobody finds.
-	spans.append_array(_editor_tool_bar_spans(sheet))
-	spans.append_array(_this_editor_bar_spans(sheet))
+	var spans: Array[SemanticSpan] = []
+	if is_name_band:
+		spans.append(_head_band_badge_span(band_meta, str(head_facts.get("extends", ""))))
+	elif kind == EventSheetHeadBands.BAND_ICON:
+		spans.append(_head_band_swatch_span(band_meta, str(band["value"])))
+	elif band.get("switch", false):
+		spans.append(_head_band_switch_span(band_meta, bool(band["switch_on"])))
+	var leader: String = str(band["leader"])
+	if not leader.is_empty():
+		spans.append(_make_span(leader, SemanticSpan.SpanType.KEYWORD, band_meta.merged({
+			"text_color": reading_style.muted_text_color
+		}, true)))
+	var value_text: String = str(band["value"])
+	if not value_text.is_empty():
+		var value_meta: Dictionary = band_meta.merged({
+			"text_color": reading_style.muted_text_color if bool(band["value_muted"]) \
+				else reading_style.primary_text_color
+		}, true)
+		if is_name_band and not sheet.read_only:
+			# The name IS the rename control: F2 or a double-click renames the class everywhere.
+			value_meta["head_action"] = EventSheetHeadBands.BAND_NAME
+			value_meta["hover_note"] = EventSheetL10n.translate("F2 renames this class everywhere.")
+		if bool(band["editable"]) and description_source is RawCodeRow and not sheet.read_only:
+			# The `##` block edits in place, and the raw row it lives in travels in metadata so
+			# the write goes through the byte-gated lift rather than through a second store.
+			value_meta["editable"] = true
+			value_meta["edit_kind"] = "sheet_description"
+			value_meta["head_raw_row"] = description_source
+			value_meta["hover_note"] = EventSheetL10n.translate("Writes the ## block · Enter commits.")
+		spans.append(_make_span(value_text, SemanticSpan.SpanType.VALUE, value_meta))
+	var prompt: String = str(band["prompt"])
+	if not prompt.is_empty() and not sheet.read_only:
+		spans.append(_make_span(prompt, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+			"head_action": kind,
+			"text_color": _viewport._get_event_style().behavior_accent_color
+		}, true)))
+	var control: String = str(band["control"])
+	if not control.is_empty() and not sheet.read_only:
+		spans.append(_make_span(control, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+			"head_action": kind,
+			"text_color": _viewport._get_event_style().behavior_accent_color
+		}, true)))
+	if is_name_band:
+		# What this file is as a piece of TOOLING, and the buttons that run it: a test sheet and how
+		# many checks it makes, a command tool that runs headless, a pack recipe and the behavior it
+		# builds, Run now / Reload / Output for an editor script. Not lines of the file, so not bands
+		# of their own - they ride the leading band, which is the sheet's identity bar.
+		spans.append_array(_tool_file_chip_spans(sheet, str(sheet.external_source_path)))
+		spans.append_array(_editor_tool_bar_spans(sheet))
+		spans.append_array(_this_editor_bar_spans(sheet))
+	_append_head_band_echo(spans, band_meta, str(band["echo"]), bool(band["echo_ghosted"]))
 	row_data.spans = spans
-	# The dropdown facts, prepended above the raw prelude children. Label + value per row; only
-	# facts that exist get a row (no "@tool: no" noise).
-	var facts: Array[EventRowData] = []
-	if has_tool:
-		facts.append(_build_setup_fact_row(EventSheetL10n.translate("Runs in editor"), "@tool", 0))
-	var remembered_names: PackedStringArray = PackedStringArray()
-	if sheet != null:
-		for var_key: Variant in sheet.variables.keys():
-			var descriptor: Variant = sheet.variables.get(var_key)
-			if descriptor is Dictionary and (descriptor as Dictionary).get("attributes") is Dictionary \
-					and bool(((descriptor as Dictionary).get("attributes") as Dictionary).get("remember", false)):
-				remembered_names.append(str(var_key))
-	if not remembered_names.is_empty():
-		facts.append(_build_setup_fact_row(EventSheetL10n.translate("Remembered variables"), "%d ( %s )" % [remembered_names.size(), ", ".join(remembered_names)], 1))
-	var setup_lines_fact: EventRowData = _build_setup_fact_row(EventSheetL10n.translate("Setup lines"), "%d · %s" % [line_total, EventSheetL10n.translate("double-click to edit in code")], 2)
-	# The Setup lines row IS the door to the raw code: it carries the first prelude block as its
-	# resource, so double-click opens the code dialog exactly as the old visible rows did.
-	if not scaffold_rows.is_empty():
-		setup_lines_fact.source_resource = scaffold_rows[0].source_resource
-	facts.append(setup_lines_fact)
-	# The dropdown shows FACTS, not code: a clean prelude line stays behind "double-click to
-	# edit" (the mockup's whole point - no grey code wall inside the dropdown). A prelude row
-	# carrying a diagnostic still surfaces, error marker and all - problems are never hidden.
-	var all_children: Array[EventRowData] = []
-	all_children.append_array(facts)
-	for scaffold_child: EventRowData in scaffold_rows:
-		if not scaffold_child.error_message.strip_edges().is_empty():
-			all_children.append(scaffold_child)
-	row_data.children = all_children
 	return row_data
 
 
-## One fact of the Class setup dropdown: a muted label and its value, inert (no source
-## resource - selection, drag and delete all skip it, like the add-event footer).
-func _build_setup_fact_row(label: String, value: String, fact_index: int) -> EventRowData:
-	var row := EventRowData.new()
-	row.indent = 1
-	row.row_type = EventRowData.RowType.SECTION
-	row.source_resource = null
-	row.row_uid = "scaffold_fact_%d_%s" % [fact_index, label]
-	row.spans = [
-		_make_span(label, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffold_fact", "text_color": _viewport._get_reading_style().muted_text_color, "line_index": 0}),
-		# The VALUE is the readable half - full-strength text, never the muted code grey.
-		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0, "text_color": _viewport._get_reading_style().primary_text_color})
+## The class icon in the badge column of the name band - the editor's own icon for the class this
+## sheet extends, the same texture the Add Node dialog draws.
+func _head_band_badge_span(band_meta: Dictionary, extends_target: String) -> SemanticSpan:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var badge_meta: Dictionary = band_meta.merged({
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": reading_style.setup_badge_background_color,
+		"badge_fg": reading_style.setup_badge_foreground_color,
+		"head_action": EventSheetHeadBands.BAND_NAME,
+		"hover_note": EventSheetL10n.translate("F2 renames this class everywhere.")
+	}, true)
+	var class_icon: Texture2D = ACEPickerDialog.editor_icon(extends_target) \
+		if not extends_target.strip_edges().is_empty() else null
+	if class_icon != null:
+		badge_meta["badge_icon"] = class_icon
+	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)
+
+
+## The `@icon` band's swatch: the image the annotation names, drawn at badge size. Clicking it
+## opens the file dialog, so the picture and the way to change it are the same thing.
+func _head_band_swatch_span(band_meta: Dictionary, icon_path: String) -> SemanticSpan:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var swatch_meta: Dictionary = band_meta.merged({
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": reading_style.setup_badge_background_color,
+		"badge_fg": reading_style.setup_badge_foreground_color,
+		"head_action": EventSheetHeadBands.BAND_ICON,
+		"hover_note": EventSheetL10n.translate("The class icon. Click to pick another image.")
+	}, true)
+	if ResourceLoader.exists(icon_path):
+		var art: Texture2D = load(icon_path) as Texture2D
+		if art != null:
+			swatch_meta["badge_icon"] = art
+	return _make_span("▣", SemanticSpan.SpanType.KEYWORD, swatch_meta)
+
+
+## The `@tool` band's switch: a mark, never a word. Clicking it writes or removes the line.
+func _head_band_switch_span(band_meta: Dictionary, switched_on: bool) -> SemanticSpan:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	return _make_span(
+		HEAD_SWITCH_ON_GLYPH if switched_on else HEAD_SWITCH_OFF_GLYPH,
+		SemanticSpan.SpanType.KEYWORD,
+		band_meta.merged({
+			"badge": true,
+			"badge_style": "glyph",
+			"badge_natural_width": true,
+			"badge_fixed_width": KIND_BADGE_WIDTH,
+			"head_action": EventSheetHeadBands.BAND_TOOL,
+			"badge_bg": reading_style.plain_chip_background_color,
+			"badge_fg": reading_style.primary_text_color if switched_on else reading_style.muted_text_color,
+			"hover_note": EventSheetL10n.translate("Runs in the editor too.")
+		}, true)
+	)
+
+
+## The band's own line, echoed at the right edge in the script editor's token colours - the same
+## echo a variable row carries, so one grammar covers every declaration on the canvas. A line the
+## sheet does not have yet (an unticked `@tool`) echoes ghosted, so the control stays findable
+## without claiming the file says something it does not.
+func _append_head_band_echo(spans: Array[SemanticSpan], band_meta: Dictionary,
+		echo_line: String, ghosted: bool) -> void:
+	if echo_line.strip_edges().is_empty():
+		return
+	if _code_echo_palette.is_empty():
+		_code_echo_palette = EventSheetCodeEcho.palette(
+			_viewport._get_reading_style(), _viewport._get_event_style()
+		)
+	var alpha: float = HEAD_ECHO_GHOST_ALPHA if ghosted else EventSheetCodeEcho.REST_ALPHA
+	spans.append(_make_span(echo_line, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+		"code_echo": true,
+		"align_right": true,
+		"bbcode_segments": EventSheetCodeEcho.segments(echo_line, _code_echo_palette, alpha),
+		"hover_note": EventSheetL10n.translate("The line this band stands for. Click to open it in the code panel.")
+	}, true)))
+
+
+## The "+ add" row under the stack: the lines this sheet COULD have and does not, offered where the
+## reader is already looking. Never autoload or host - those come from choosing a kind.
+func _build_head_add_row(sheet: EventSheetResource, add_text: String) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "%sadd_%d" % [HEAD_BAND_UID_PREFIX, sheet.get_instance_id()]
+	row_data.folded = false
+	row_data.spans = [
+		_make_span(add_text, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "head_band_add",
+			"head_band": "add",
+			"head_action": "add",
+			"line_index": 0,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		})
 	]
-	return row
+	return row_data
+
+
+## True when a block of prelude code carries the file's own `##` prose (not just `## @ace_*`
+## annotations) - the block a description edit has to rewrite.
+func _carries_class_description(code: String) -> bool:
+	for raw_line: String in code.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("## ") and not line.begins_with("## @"):
+			return true
+	return false
+
+
+## Whether this sheet has already been placed - the one head fact no line of the file carries, and
+## the only thing the "attach to a node" prompt waits on. A kind that places itself (an autoload, a
+## behaviour, a data type, an editor tool), a class the project knows by name, and a file already on
+## disk have all been answered; what is left is the sheet that was made a minute ago.
+##
+## Deliberately answered from what the sheet already knows and NEVER from a walk of the project's
+## scenes: this runs inside the row build, and the head must not make a rebuild pay for a scan.
+func _sheet_is_attached(sheet: EventSheetResource, declared_class: String) -> bool:
+	if sheet == null or sheet.read_only:
+		return true
+	if sheet.autoload_mode or sheet.behavior_mode or sheet.tool_mode:
+		return true
+	if EventSheetScriptIntent.is_resource_host(sheet.host_class.strip_edges()):
+		return true
+	if not declared_class.strip_edges().is_empty():
+		return true
+	return not str(sheet.external_source_path).strip_edges().is_empty()
 
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
@@ -577,13 +693,14 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	for index in range(rows.size()):
 		var row_data: EventRowData = rows[index]
 		var source: Resource = row_data.source_resource
-		if row_data.row_uid.begins_with("scaffolding_strip_"):
+		if row_data.row_uid.begins_with(HEAD_BAND_UID_PREFIX):
 			identity_seen = true
 			# A hand-written script writes its doc block ABOVE `class_name`, where the importer's
 			# class-description rule (the block under `extends`) never sees it - so the sentence that
-			# says what the file IS would fold into the strip and disappear with it. Kept here as the
-			# comment bar's fallback, because the head is exactly where a reader looks for it.
-			strip_about = _scaffolding_about_text(row_data)
+			# says what the file IS would be folded away with the head. Kept here as the comment
+			# bar's fallback, because the head is exactly where a reader looks for it.
+			if strip_about.is_empty():
+				strip_about = head_band_value(row_data, EventSheetHeadBands.BAND_DESCRIPTION)
 			consumed = index + 1
 			continue
 		if source is RawCodeRow:
@@ -773,19 +890,18 @@ func _head_comment_text(code_lines: PackedStringArray) -> String:
 	return " ".join(parts).strip_edges()
 
 
-## The prose inside a folded Class setup strip - the `##` block a hand-written script opens with,
-## which sits ABOVE `class_name` and so is never the importer's "class description". "" when the
-## strip holds only code and annotations.
-func _scaffolding_about_text(strip_row: EventRowData) -> String:
-	for child: EventRowData in strip_row.children:
-		if not (child.source_resource is RawCodeRow):
+## The fact one head band states, "" when `head_row` is not that band. The bands are the one place
+## the head's facts are written down, so anything that needs one (the reading layer's about text, a
+## test) reads it from the band rather than parsing the prelude a second time.
+static func head_band_value(head_row: EventRowData, band_kind: String) -> String:
+	if head_row == null or not head_row.row_uid.begins_with(HEAD_BAND_UID_PREFIX):
+		return ""
+	for span: SemanticSpan in head_row.spans:
+		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if str(metadata.get("head_band", "")) != band_kind:
 			continue
-		var code_lines: PackedStringArray = (child.source_resource as RawCodeRow).code.split("\n")
-		if not is_comment_only_block(code_lines):
-			continue
-		var prose: String = _head_comment_text(code_lines)
-		if not prose.is_empty():
-			return prose
+		if span.type == SemanticSpan.SpanType.VALUE:
+			return span.text
 	return ""
 
 

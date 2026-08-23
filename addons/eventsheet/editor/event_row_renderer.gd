@@ -1481,6 +1481,10 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"▣": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><rect x=\"9.4\" y=\"9.4\" width=\"5.2\" height=\"5.2\" rx=\"1\" fill=\"#fff\"/></svg>",
 	# The sliders mark: a variable a designer can edit in the Inspector wears this instead of a word.
 	"⚙": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.6 8.4h16.8M3.6 15.6h16.8\" stroke=\"#fff\" stroke-width=\"2.1\" stroke-linecap=\"round\"/><circle cx=\"8.8\" cy=\"8.4\" r=\"2.9\" fill=\"#fff\"/><circle cx=\"15.6\" cy=\"15.6\" r=\"2.9\" fill=\"#fff\"/></svg>",
+	# The switch a head band wears for a line that is either written or not (`@tool`): a track with
+	# its knob at the right when the line is there, at the left and hollow when it is not.
+	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.4\" y=\"7.2\" width=\"19.2\" height=\"9.6\" rx=\"4.8\" fill=\"#fff\"/><circle cx=\"16.8\" cy=\"12\" r=\"3.1\" fill=\"#000\" fill-opacity=\"0.55\"/></svg>",
+	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3.5\" y=\"8.3\" width=\"17\" height=\"7.4\" rx=\"3.7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"7.9\" cy=\"12\" r=\"2.4\" fill=\"#fff\"/></svg>",
 }
 
 ## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.

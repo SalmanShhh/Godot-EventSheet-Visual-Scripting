@@ -64,6 +64,12 @@ signal editor_tool_action_requested(kind: String)
 ## Reload / Output / plugin.cfg / Edit anyway). Kept apart from the tool bar's signal above because
 ## the two Reloads mean different things and must never be routed to the same handler.
 signal this_editor_action_requested(kind: String)
+
+## C2. A control on one of the sheet's HEAD bands was used - the name band's rename, the extends
+## band's "change…", the icon swatch, the `@tool` switch, the autoload band's Project Settings link,
+## the "attach to a node" prompt, the "+ add" row. The viewport only names the band; the dock owns
+## every dialog and every undoable write.
+signal sheet_head_action_requested(action: String)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
@@ -2358,9 +2364,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	EventSheetViewportReadingRows.claim_behavior_patterns(sheet)
 	root_rows.append_array(_build_global_variable_rows(sheet))
-	# Blocks spec P1 - collapse the LEADING run of class scaffolding (prelude / annotations /
-	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
-	# boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
+	# C0 - read the LEADING run of class scaffolding (prelude / annotations / host-binding) as the
+	# sheet's HEAD: one band per line, so an opened .gd reads as its own first lines rather than as a
+	# wall of boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
 	# ONE multi-line RawCodeRow, so requiring ≥3 boilerplate lines (rather than ≥2 rows) is what makes the
 	# strip actually fire on real opened .gd files. The detector is conservative so real logic is never
 	# swept in. Pure editor view-state: the underlying RawCodeRows are unchanged + still selected/edited
@@ -2385,13 +2391,13 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if scaffold_lines >= 3 or (scaffold_has_identity and scaffold_lines >= 1):
 		var scaffold_rows: Array[EventRowData] = []
 		for scaffold_index in range(scaffold_end):
-			# Build children through the shared dispatcher (not _build_raw_code_row directly) so a
-			# compile-error marker on a prelude block survives into the strip instead of being dropped.
+			# Build through the shared dispatcher (not _build_raw_code_row directly) so a compile-error
+			# marker on a prelude block survives beside the head instead of being dropped.
 			var child: EventRowData = _build_row_from_resource(sheet.events[scaffold_index], 1)
 			if child != null:
 				scaffold_rows.append(child)
 		if not scaffold_rows.is_empty():
-			root_rows.append(_build_scaffolding_strip_row(sheet, scaffold_rows))
+			root_rows.append_array(_row_builder.build_head_band_rows(sheet, scaffold_rows))
 			event_start = scaffold_end
 	for entry_index in range(event_start, sheet.events.size()):
 		var entry: Resource = sheet.events[entry_index]
@@ -2478,21 +2484,11 @@ func _prefix_scene_row_uids(rows: Array[EventRowData], prefix: String) -> void:
 		_prefix_scene_row_uids(row_data.children, prefix)
 
 
-## A synthetic, foldable header that collapses a run of class-scaffolding rows (its children) into one
-## line. source_resource stays null so selection / delete / drag treat the header as inert (like the
-## add-event footer); the real RawCodeRows live on as its children and edit exactly as before. Folded by
-## default (boilerplate hidden) yet session-remembered via _fold_state, behind a clear "Class setup" label
-## with the line count - discoverable, one click to expand. The existing fold machinery (children +
-## _flatten_row + the fold arrow, all gated on `children`, not row_type) drives the collapse for free.
-func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
-	return _row_builder._build_scaffolding_strip_row(sheet, scaffold_rows)
-
-
-## True for the synthetic "Class setup" header built above: a null-source SECTION row whose uid marks it
-## as the scaffolding strip. Used to keep it inert for selection/delete (it owns no resource of its own -
-## its children do), while still allowing the fold arrow (which is gated only on `children`).
-func _is_synthetic_scaffolding_strip(row_data: EventRowData) -> bool:
-	return row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("scaffolding_strip_")
+## The sheet's head as a stack of bands, one per line of class scaffolding the file opens with. Every
+## row is inert (null source) so selection / delete / drag skip them - a head band owns no resource of
+## its own - and nothing folds: the head is its lines, always in view, the way the file is.
+func _build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> Array[EventRowData]:
+	return _row_builder.build_head_band_rows(sheet, scaffold_rows)
 
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
@@ -3084,11 +3080,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 			# so drop any span-only provenance - they must survive a later span on/off toggle.
 			_selected_row_uids[row_uid] = true
 			_span_only_row_uids.erase(row_uid)
-			# The synthetic "Class setup" strip is an inert view-only header (null source): selecting it
-			# must NOT cascade-select its prelude children, or pressing Delete would silently wipe
-			# class_name/extends/annotations (when expanded) or no-op confusingly (when folded). Expand it
-			# and select an individual block to act on the prelude.
-			if not row_data.children.is_empty() and not _is_synthetic_scaffolding_strip(row_data):
+			if not row_data.children.is_empty():
 				for descendant_uid in _collect_descendant_row_uids(row_data):
 					_selected_row_uids[str(descendant_uid)] = true
 					_span_only_row_uids.erase(str(descendant_uid))
