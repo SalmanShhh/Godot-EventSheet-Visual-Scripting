@@ -115,6 +115,13 @@ What changed in the build you have installed (v0.17.0), in the words the release
   nothing is added to the sheet, and the file still re-emits byte for byte. The autoload that
   declares them lists none (its globals are already its rows), and neither does a read-only preview,
   whose head gathers the same list into one folder.
+- **A global counts as used however the row that uses it is stored.** The list behind these rows -
+  and behind the `Global variables used here` folder an opened preview has carried since R40 - only
+  matched a qualified `Game.Score` string. A row that has been through the picker files the object
+  and the property in separate cells, so the most ordinary way to touch a global (`Game > Set Score
+  to 0`) counted as no use at all and the folder under-reported. The object column is now paired
+  with the cells beside it, and only when the autoload really declares that name, so a value cell
+  reading `0` or one naming a variable of this sheet can never be mistaken for a global.
 - **An `@export_group` in an opened `.gd` is a folder.** A run of consecutive member variables
   declared under one group now wears the same labelled, foldable strip the sheet's own variables
   wear, with the rows left at their own indent. The group carries forward exactly as it does in the

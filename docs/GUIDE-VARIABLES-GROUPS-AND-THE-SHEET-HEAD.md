@@ -136,6 +136,10 @@ x  Instance whole number hp = 100                     var hp: int = 100
 The hairline under the last of them is the whole point of the block: above it is what this file
 **borrows**, below it what this file **owns**.
 
+- **Both spellings of a use are found.** A hand-written or typed `Game.Score` is one string; a row
+  you PICKED files the object and the property in separate cells, and there is no `Game.Score`
+  anywhere in it. The second shape is paired only when the autoload really declares that name, so a
+  value cell reading `0`, or one naming a variable of this sheet, is never mistaken for a global.
 - **The type and the value come from the autoload's own script**, read straight off the file - so a
   global reads the same here as it does where it lives, and a name the autoload does not declare
   reads with no type and no value rather than with an invented one.

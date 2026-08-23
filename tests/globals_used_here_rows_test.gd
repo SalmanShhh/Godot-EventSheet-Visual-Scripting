@@ -24,7 +24,7 @@ const PROBE_NAME := "EventSheetsUsedHereGame"
 static func run() -> bool:
 	var ok: bool = true
 	var handle: FileAccess = FileAccess.open(PROBE_SCRIPT, FileAccess.WRITE)
-	handle.store_string("extends Node\n\nvar Score: int = 0\nvar Muted := false\n")
+	handle.store_string("extends Node\n\nvar Score: int = 0\nvar Muted := false\nvar Lives := 3\n")
 	handle.close()
 	var had_setting: bool = ProjectSettings.has_setting(PROBE_AUTOLOAD)
 	ProjectSettings.set_setting(PROBE_AUTOLOAD, "*" + PROBE_SCRIPT)
@@ -39,15 +39,24 @@ static func run() -> bool:
 		_texts(_row_at(rows, 1)),
 		"x | Global | boolean | Muted | = | false | from %s | %s.Muted" % [PROBE_NAME, PROBE_NAME]) and ok
 	ok = _check("the last of them closes the block with a hairline",
-		"%s|%s" % [_row_at(rows, 0).rule_below, _row_at(rows, 1).rule_below], "false|true") and ok
+		"%s|%s|%s" % [_row_at(rows, 0).rule_below, _row_at(rows, 1).rule_below,
+			_row_at(rows, 2).rule_below], "false|false|true") and ok
+	# A PICKED row files the object and the property in separate cells, which is how `Game.Score = 0`
+	# is stored once it has been through the picker - there is no `Game.Score` string anywhere in it.
+	# `Lives := 3` declares no type, so the type word is the one its VALUE settles.
+	ok = _check("a global named across two cells of one row is found too",
+		_texts(_row_at(rows, 2)),
+		"x | Global | number | Lives | = | 3 | from %s | %s.Lives" % [PROBE_NAME, PROBE_NAME]) and ok
+	ok = _check("...and only the cells the autoload actually declares are read that way",
+		_has_uid_prefix(rows, "variable_used_global_%s_hp" % PROBE_NAME), false) and ok
 	ok = _check("the sheet's own variable follows, below the line",
-		_texts(_row_at(rows, 2)), "x | Instance | whole number | hp | = | 100 | var hp: int = 100") and ok
+		_texts(_row_at(rows, 3)), "x | Instance | whole number | hp | = | 100 | var hp: int = 100") and ok
 
 	# ── The covenant: a reading, not a declaration ──
 	ok = _check("the row is inert - nothing addresses it, so nothing can write through it",
 		score_row.source_resource, null) and ok
 	ok = _check("nothing was added to the sheet",
-		_sheet_using_globals().events.size(), 1) and ok
+		_sheet_using_globals().events.size(), 2) and ok
 	ok = _check("no cell of it edits here",
 		_has_editable_span(score_row), false) and ok
 	ok = _check("it carries the file that declares it, so editing opens that file",
@@ -95,6 +104,15 @@ static func _sheet_using_globals() -> EventSheetResource:
 	action.params = {"target": "%s.Score" % PROBE_NAME, "value": "10 if %s.Muted else 20" % PROBE_NAME}
 	event.actions.append(action)
 	sheet.events.append(event)
+	# The picked shape: the object in one cell, the property in another, and two cells that must not
+	# be read as globals - a number, and a variable this sheet declares itself.
+	var picked_event := EventRow.new()
+	var picked := ACEAction.new()
+	picked.provider_id = "Core"
+	picked.ace_id = "Core/SetProperty"
+	picked.params = {"object": PROBE_NAME, "property": "Lives", "value": "3", "from": "hp"}
+	picked_event.actions.append(picked)
+	sheet.events.append(picked_event)
 	return sheet
 
 

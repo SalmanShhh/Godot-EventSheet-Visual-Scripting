@@ -42,34 +42,81 @@ static func autoload_sheets() -> Array[Dictionary]:
 
 
 ## The globals THIS sheet reads or writes: [{"autoload": "Game", "name": "Score"}], deduplicated and
-## in the order a reader meets them. Derived from what the rows actually say - `Game.Score` in a
-## parameter, an expression or a script block - so the list cannot claim a global the file does not
-## touch, and cannot miss one just because it was written by hand.
+## in the order a reader meets them. Derived from what the rows actually say, in the two spellings a
+## row can say it in:
+##
+##   `Game.Score` in a parameter, an expression or a script block - one qualified string, which is
+##   what a hand-written line and a typed expression both leave behind; and
+##   the OBJECT column holding `Game` while another cell holds `Score` - which is what a PICKED row
+##   stores, because the picker files the object and the property in separate parameters.
+##
+## The second spelling is only paired when the autoload actually declares that name, so a value cell
+## reading `0` or a variable of this sheet's own can never be mistaken for a global. The list
+## therefore cannot claim a global the file does not touch, and cannot miss one just because of how
+## the row that uses it happens to be stored.
 static func used_here(sheet: EventSheetResource) -> Array[Dictionary]:
 	var used: Array[Dictionary] = []
 	if sheet == null:
 		return used
+	var paths: Dictionary = {}
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in autoload_sheets():
+		paths[str(entry.get("name", ""))] = str(entry.get("path", ""))
 		names.append(str(entry.get("name", "")))
-	if names.is_empty():
+	if paths.is_empty():
 		return used
+	var fragments: Array = EventSheetFindReferences.text_fragments(sheet)
+	# row -> the autoload its object column names. Gathered first, because the property cell can be
+	# read before the object cell is.
+	var owner_of_row: Dictionary = {}
+	for fragment: Dictionary in fragments:
+		if str(fragment.get("kind", "")) != "param":
+			continue
+		var cell: String = str(fragment.get("text", "")).strip_edges()
+		if paths.has(cell):
+			owner_of_row[fragment.get("row")] = cell
+	var declared_by_owner: Dictionary = {}
 	var seen: Dictionary = {}
 	var pattern: RegEx = RegEx.new()
 	# Members only: `Game.Score`, never `Game.add_score()` - a call is the autoload's verb, and the
 	# folder is about VALUES. The trailing look-ahead is done by hand because RegEx has none here:
 	# the match keeps the character after the name so an opening bracket can be rejected.
 	pattern.compile("\\b(%s)\\.([A-Za-z_][A-Za-z0-9_]*)(.?)" % "|".join(names))
-	for fragment: Dictionary in EventSheetFindReferences.text_fragments(sheet):
-		for found: RegExMatch in pattern.search_all(str(fragment.get("text", ""))):
+	for fragment: Dictionary in fragments:
+		var text: String = str(fragment.get("text", ""))
+		for found: RegExMatch in pattern.search_all(text):
 			if found.get_string(3) == "(":
 				continue
-			var key: String = "%s.%s" % [found.get_string(1), found.get_string(2)]
-			if seen.has(key):
-				continue
-			seen[key] = true
-			used.append({"autoload": found.get_string(1), "name": found.get_string(2)})
+			_remember_global(used, seen, found.get_string(1), found.get_string(2))
+		var owner: String = str(owner_of_row.get(fragment.get("row"), ""))
+		if owner.is_empty() or str(fragment.get("kind", "")) != "param":
+			continue
+		var bare: String = text.strip_edges()
+		if bare == owner or not bare.is_valid_identifier():
+			continue
+		if not declared_by_owner.has(owner):
+			declared_by_owner[owner] = declared_names(str(paths[owner]))
+		if (declared_by_owner[owner] as PackedStringArray).has(bare):
+			_remember_global(used, seen, owner, bare)
 	return used
+
+
+## Appends one global to the running list unless it is already on it.
+static func _remember_global(used: Array[Dictionary], seen: Dictionary, autoload_name: String,
+		variable_name: String) -> void:
+	var key: String = "%s.%s" % [autoload_name, variable_name]
+	if seen.has(key):
+		return
+	seen[key] = true
+	used.append({"autoload": autoload_name, "name": variable_name})
+
+
+## Just the NAMES an autoload declares, for the membership test above.
+static func declared_names(script_path: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in declared_globals(script_path):
+		names.append(str(entry.get("name", "")))
+	return names
 
 
 ## The folded head folder's note: "Score · Lives  (from Game)", or "" when the file touches none.
