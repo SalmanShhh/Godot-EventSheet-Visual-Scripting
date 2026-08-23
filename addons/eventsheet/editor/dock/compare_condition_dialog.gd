@@ -99,6 +99,9 @@ var _help_strip: EventSheetPopupUI.HelpStrip = null
 var _context: Dictionary = {}
 ## The kind the operator list is currently built for, so it is only rebuilt when the answer changes.
 var _operator_kind: String = ""
+## The variables this sheet can name, read once when the dialog opens. The catalog every other
+## surface reads, so the list here and the row it writes agree about what a variable is called.
+var _variables: Array[Dictionary] = []
 ## The kind an EDITED row arrived as, which outranks what its left side looks like: a text condition
 ## on a typed expression (`save.get("name") begins with "a"`) is a text question however the
 ## expression is spelled, and rebuilding the list from the literal would throw the operator away.
@@ -359,43 +362,16 @@ static func kind_of(type_name: String, literal: String) -> String:
 	return KIND_TEXT if quoted else KIND_NUMBER
 
 
-## The sheet's own variables as [{name, type, value}], sheet members first and then the tree
-## declarations, in declaration order. Static and pure, so the list a test reads is the list the
-## dropdown shows.
-static func sheet_variables(sheet: EventSheetResource) -> Array:
-	var listed: Array = []
-	if sheet == null:
-		return listed
-	for key: Variant in sheet.variables.keys():
-		var descriptor: Dictionary = sheet.variables[key] if sheet.variables[key] is Dictionary else {}
-		listed.append({"name": str(key), "type": str(descriptor.get("type", "")),
-			"value": str(descriptor.get("default", ""))})
-	for entry: Variant in sheet.events:
-		if entry is LocalVariable:
-			listed.append({"name": (entry as LocalVariable).name,
-				"type": (entry as LocalVariable).type_name,
-				"value": str((entry as LocalVariable).default_value)})
-	return listed
-
-
 ## One line of the variable list: the name, its type in the sheet's own word, and what it starts at.
+## Reads the catalog entry as it stands - the type word is the one the row leads with, so the list
+## and the row it will write cannot spell a variable two ways.
 static func variable_label(entry: Dictionary) -> String:
-	var type_word: String = _type_word(str(entry.get("type", "")))
-	var value: String = str(entry.get("value", "")).strip_edges()
 	var parts: PackedStringArray = PackedStringArray([str(entry.get("name", ""))])
-	if not type_word.is_empty():
-		parts.append(type_word)
-	if not value.is_empty():
-		parts.append(value)
+	for key: String in ["type_word", "value"]:
+		var text: String = str(entry.get(key, "")).strip_edges()
+		if not text.is_empty():
+			parts.append(text)
 	return "   ·   ".join(parts)
-
-
-## The sheet's word for a stored Godot type, or "" when there is none to say.
-static func _type_word(stored_type: String) -> String:
-	for word: String in EventSheetVariableSentence.TYPE_WORD_ORDER:
-		if str(EventSheetVariableSentence.TYPE_WORD_TO_GDSCRIPT.get(word, "")) == stored_type:
-			return word
-	return ""
 
 
 # ── The dialog ───────────────────────────────────────────────────────────────────────────────
@@ -406,6 +382,9 @@ static func _type_word(stored_type: String) -> String:
 func open(context: Dictionary, ace_id: String = "", params: Dictionary = {}, negated: bool = false) -> void:
 	_ensure_dialog()
 	_context = context.duplicate(true)
+	# THE variable list every surface reads, taken once per open: a variable added since the last
+	# comparison must be offered, and re-deriving it on every keystroke would walk the project.
+	_variables = EventSheetVariableOwners.catalog(_sheet())
 	var boxes: Dictionary = boxes_for(ace_id, params, negated) if not ace_id.is_empty() else {}
 	_row_kind = str(boxes.get("kind", ""))
 	_fill_left_options(str(boxes.get("left", "")), bool(boxes.get("on_variable", false)))
@@ -513,9 +492,12 @@ func _ensure_dialog() -> void:
 ## last comparison must be offered). `selected_name` re-selects the row being edited.
 func _fill_left_options(selected_name: String, on_variable: bool) -> void:
 	_left_option.clear()
-	for entry: Variant in sheet_variables(_sheet()):
-		_left_option.add_item(variable_label(entry as Dictionary))
-		_left_option.set_item_metadata(_left_option.item_count - 1, str((entry as Dictionary).get("name", "")))
+	for entry: Dictionary in _variables:
+		_left_option.add_item(variable_label(entry))
+		# The INSERT text, not the bare name: inside a comparison a global's `Game.` prefix is real
+		# code, and the row would not compile without it.
+		_left_option.set_item_metadata(_left_option.item_count - 1,
+			str(entry.get("insert_text", entry.get("name", ""))))
 	_left_option.add_separator()
 	_left_option.add_item(EventSheetL10n.translate("Something else…"))
 	_left_option.set_item_metadata(_left_option.item_count - 1, SOMETHING_ELSE)
@@ -608,20 +590,18 @@ func _left_kind() -> String:
 	var variable: String = _selected_variable()
 	if variable.is_empty():
 		return kind_of("", _left_edit.text if _left_edit != null else "")
-	for entry: Variant in sheet_variables(_sheet()):
-		if str((entry as Dictionary).get("name", "")) == variable:
-			return kind_of(str((entry as Dictionary).get("type", "")), "")
-	return KIND_NUMBER
+	var found: Dictionary = EventSheetVariableOwners.find(_variables, variable)
+	return KIND_NUMBER if found.is_empty() else kind_of(str(found.get("type_name", "")), "")
 
 
 func _sheet() -> EventSheetResource:
 	return _dock._current_sheet if _dock != null else null
 
 
-## The object this comparison belongs to - the sheet's own object, which is what the row's object
-## column will say.
+## The object this comparison belongs to - the same owner the row's object column will say, asked of
+## the one place that answers it.
 func _owner_name() -> String:
-	return EventSheetArrangement.self_object_of(_sheet())
+	return EventSheetVariableOwners.owner_of_sheet(_sheet())
 
 
 func _owner_text() -> String:
