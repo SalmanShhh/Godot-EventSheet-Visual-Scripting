@@ -271,6 +271,23 @@ static func sentence(entry: Dictionary) -> String:
 	return text
 
 
+## The same entry read the other way round, NAME first: "hp   whole number = 100", with the
+## Inspector note when the value is a designer knob. The reading a LIST wants, where the name is
+## what the eye scans for and the scope is the heading above it - the expression picker's leaves and
+## the Compare dialog's variable list are both this line, so they cannot spell one two ways.
+static func leaf_text(entry: Dictionary) -> String:
+	var text: String = str(entry.get("name", ""))
+	var type_word: String = str(entry.get("type_word", "")).strip_edges()
+	var value_text: String = str(entry.get("value", "")).strip_edges()
+	if not type_word.is_empty():
+		text += "   %s" % type_word
+	if not value_text.is_empty():
+		text += " = %s" % value_text
+	if bool(entry.get("inspector", false)):
+		text += "  · " + EventSheetL10n.translate("Inspector")
+	return text
+
+
 ## True when a variable of this type can go where a parameter of `wanted_type` is asked for. An
 ## unsettled want takes anything, which is the honest answer: most parameters are plain expressions
 ## and never claimed to want a kind.

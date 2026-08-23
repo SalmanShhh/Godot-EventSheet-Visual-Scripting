@@ -418,7 +418,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 				group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
 				group_item.set_selectable(0, false)
 			var item: TreeItem = _expression_tree.create_item(group_item)
-			item.set_text(0, variable_leaf_text(entry))
+			item.set_text(0, EventSheetVariableOwners.leaf_text(entry))
 			var fits: bool = EventSheetVariableOwners.fits(entry, wanted)
 			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION if fits
 				else ACEPickerDialog.GROUP_COLOR_NEUTRAL)
@@ -436,22 +436,6 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 		if vtype.is_empty() or not ClassDB.class_exists(vtype):
 			continue
 		_add_variable_member_group(root, str(entry.get("name", "")), vtype, lowered)
-
-
-## V11. One variable's line in the picker: the name, then the type word and what it starts as, then
-## the Inspector note when the value is a designer knob. Static + pure, so the line is pinned without
-## a dialog.
-static func variable_leaf_text(entry: Dictionary) -> String:
-	var text: String = str(entry.get("name", ""))
-	var type_word: String = str(entry.get("type_word", "")).strip_edges()
-	var value_text: String = str(entry.get("value", "")).strip_edges()
-	if not type_word.is_empty():
-		text += "   %s" % type_word
-	if not value_text.is_empty():
-		text += " = %s" % value_text
-	if bool(entry.get("inspector", false)):
-		text += "  · " + EventSheetL10n.translate("Inspector")
-	return text
 
 
 ## The GDScript type the field that opened the picker is asking for, or "" when it asks for anything.

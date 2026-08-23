@@ -362,18 +362,6 @@ static func kind_of(type_name: String, literal: String) -> String:
 	return KIND_TEXT if quoted else KIND_NUMBER
 
 
-## One line of the variable list: the name, its type in the sheet's own word, and what it starts at.
-## Reads the catalog entry as it stands - the type word is the one the row leads with, so the list
-## and the row it will write cannot spell a variable two ways.
-static func variable_label(entry: Dictionary) -> String:
-	var parts: PackedStringArray = PackedStringArray([str(entry.get("name", ""))])
-	for key: String in ["type_word", "value"]:
-		var text: String = str(entry.get(key, "")).strip_edges()
-		if not text.is_empty():
-			parts.append(text)
-	return "   ·   ".join(parts)
-
-
 # ── The dialog ───────────────────────────────────────────────────────────────────────────────
 
 
@@ -493,7 +481,7 @@ func _ensure_dialog() -> void:
 func _fill_left_options(selected_name: String, on_variable: bool) -> void:
 	_left_option.clear()
 	for entry: Dictionary in _variables:
-		_left_option.add_item(variable_label(entry))
+		_left_option.add_item(EventSheetVariableOwners.leaf_text(entry))
 		# The INSERT text, not the bare name: inside a comparison a global's `Game.` prefix is real
 		# code, and the row would not compile without it.
 		_left_option.set_item_metadata(_left_option.item_count - 1,

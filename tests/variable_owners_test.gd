@@ -226,10 +226,10 @@ static func _test_expression_picker_leaves() -> bool:
 	var ok: bool = true
 	var entries: Array[Dictionary] = EventSheetVariableOwners.catalog(_sheet())
 	ok = _check("a leaf shows the type word and what it starts as",
-		EXPRESSION_PICKER.variable_leaf_text(EventSheetVariableOwners.find(entries, "hp")),
+		EventSheetVariableOwners.leaf_text(EventSheetVariableOwners.find(entries, "hp")),
 		"hp   whole number = 100") and ok
 	ok = _check("a designer knob says so",
-		EXPRESSION_PICKER.variable_leaf_text(EventSheetVariableOwners.find(entries, "speed")),
+		EventSheetVariableOwners.leaf_text(EventSheetVariableOwners.find(entries, "speed")),
 		"speed   number = 200.0  · Inspector") and ok
 	ok = _check("the footer says what will land in the field",
 		EXPRESSION_PICKER.inserts_note("Game.Score"), "Inserts Game.Score") and ok
