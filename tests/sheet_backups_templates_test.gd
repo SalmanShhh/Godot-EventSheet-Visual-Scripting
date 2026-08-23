@@ -136,6 +136,11 @@ static func run() -> bool:
 	# ── Project templates ─────────────────────────────────────────────────────────
 	ProjectSettings.set_setting("eventsheets/project/templates_dir", "user://tpl_dir")
 	DirAccess.make_dir_recursive_absolute("user://tpl_dir")
+	# The dir has to START empty. This test SAVES templates into it, and Save as Template suffixes
+	# rather than overwrites, so a run that ends between the saves and the cleanup leaves a
+	# boss_fight-N.tres behind for every later run to find - and the scan below then reports this
+	# machine's history instead of what the test wrote.
+	_sweep_template_dir()
 	var template: EventSheetResource = EventSheetResource.new()
 	template.host_class = "CharacterBody2D"
 	template.custom_class_name = "BossFight"
@@ -193,11 +198,20 @@ static func run() -> bool:
 	ProjectSettings.set_setting("eventsheets/project/templates_dir", null)
 	editor.free()
 	for cleanup_path: String in ["user://backup_fixture.tres", "user://backup_hook.tres",
-			"user://backup_ring_source.gd", "user://atomic_write_probe.gd",
-			"user://tpl_dir/boss_fight.tres", "user://tpl_dir/boss_fight-2.tres", "user://tpl_dir/boss_fight-3.tres"]:
+			"user://backup_ring_source.gd", "user://atomic_write_probe.gd"]:
 		if FileAccess.file_exists(cleanup_path):
 			DirAccess.remove_absolute(cleanup_path)
+	_sweep_template_dir()
 	return all_passed
+
+
+## Every file in the temporary templates dir, gone. Run before the templates are written and again
+## after, so neither this run nor the next one scans a leftover - naming the files to delete could
+## only ever list the ones a finished run made, and the stragglers come from the runs that did not
+## finish.
+static func _sweep_template_dir() -> void:
+	for file_name: String in DirAccess.get_files_at("user://tpl_dir"):
+		DirAccess.remove_absolute("user://tpl_dir/%s" % file_name)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
