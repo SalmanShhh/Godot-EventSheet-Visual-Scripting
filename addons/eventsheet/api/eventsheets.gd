@@ -463,6 +463,14 @@ static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
+## The ONE line a variable declares itself on, out of everything variable_code() writes for it: the
+## doc comment above it, the `@export_group` header that opens an Inspector section and a Static
+## local's marker are all true of the file, and none of them is the declaration. This is what a
+## variable row's code echo shows, so a pack echoing its own declarations says them the same way.
+static func variable_declaration_line(variable: LocalVariable) -> String:
+	return EventSheetCodeEcho.line_for(variable)
+
+
 ## Every variable a sheet can name, and who owns each - the ONE list the rows, the picker, the
 ## Anatomy rail and the expression picker read. Entries are
 ## `{"name", "type_name", "type_word", "value", "scope", "owner", "group", "inspector",

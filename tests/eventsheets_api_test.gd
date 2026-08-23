@@ -59,6 +59,17 @@ static func run() -> bool:
 	ok = _check("variable_code returns the exact Ships-as lines",
 		EventSheets.variable_code(api_var),
 		"# @inspector_header Combat\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
+	# …and the one line of those that DECLARES something, which is what a row's echo shows.
+	ok = _check("variable_declaration_line is the declaration alone",
+		EventSheets.variable_declaration_line(api_var),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
+	var api_static_local: LocalVariable = LocalVariable.new()
+	api_static_local.name = "hits_taken"
+	api_static_local.type_name = "int"
+	api_static_local.default_value = 0
+	api_static_local.static_local = true
+	ok = _check("…and a Static local's is the member it hoists to, never its marker",
+		EventSheets.variable_declaration_line(api_static_local), "var _hits_taken := 0") and ok
 
 	# K1/K4 - the operator table a pack's own rows read through: the glyph a row shows, and the
 	# opposite an invert writes. Anything that is not one of the six passes straight through.

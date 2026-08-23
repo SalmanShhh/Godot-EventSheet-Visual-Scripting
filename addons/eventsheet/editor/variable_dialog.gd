@@ -1990,7 +1990,7 @@ func code_line_text() -> String:
 		preview.default_value = _default_edit.text.strip_edges()
 	# The DECLARATION out of what the emitter wrote - the same reading the row's echo takes, so the
 	# strip shows the line and never the doc comment or the marker written above it.
-	var line: String = EventSheetCodeEcho.declaration_line(SheetCompiler._emit_tree_variable_line(preview))
+	var line: String = EventSheets.variable_declaration_line(preview)
 	if _writes_project_global:
 		var target: Dictionary = selected_global_target()
 		var autoload_name: String = str(target.get("name", "")).strip_edges()

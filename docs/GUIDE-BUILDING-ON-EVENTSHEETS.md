@@ -126,8 +126,10 @@ my_panel.add_child(EventSheets.build_inspector_preview("armour", "int", "10", at
 # The same choices as one sentence (tooltips, logs, docs):
 print(EventSheets.describe_inspector("int", attrs))
 
-# The exact GDScript a variable compiles to - its "Ships as:" truth:
+# The exact GDScript a variable compiles to - its "Ships as:" truth - and the one line of it that
+# declares something (what the row's code echo shows; the rest is a doc comment or a section header):
 print(EventSheets.variable_code(my_local_variable))
+print(EventSheets.variable_declaration_line(my_local_variable))
 
 # The operator table the sheet's own comparison rows read through, so a pack's rows can say the
 # question the same way: the glyph a reader sees, and the opposite an invert would write.
@@ -240,6 +242,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
+| Codegen | `variable_declaration_line(variable: LocalVariable)` - the one line of `variable_code` that declares something; the doc comment, the `@export_group` header and a Static local's marker are true of the file but are not the declaration | `String` | no |
 | Rows | `sheet_variables(sheet)` - every variable the sheet can name and who owns each, in reading order (this object's, then the globals it reaches for, then the locals in scope). Entries carry `name`, `type_name`, `type_word`, `value`, `scope`, `owner`, `group`, `inspector`, `description`, `insert_text`, `resource`, `autoload` | `Array[Dictionary]` | no |
 | Rows | `variable_owner(variables, variable_name)` - the object column a row naming that variable reads with (the sheet's object, an autoload, or `System` for a local), `""` when the sheet declares no such variable. Takes the list `sheet_variables()` returned | `String` | no |
 | Rows | `variable_sentence(variable)` - one entry written the way its row reads it, minus the owner (`Instance whole number hp = 100`) | `String` | no |
