@@ -78,7 +78,14 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 					option_key = str(option_dict.get("label", ""))
 				if option_key.is_empty():
 					continue
-				normalized_options.append({"key": option_key, "label": str(option_dict.get("label", option_key))})
+				# P1 - an option may declare the line that reads UNDER it in the dialog's list
+				# ("double speed, keeps momentum"). Optional, and empty for every option that
+				# does not carry one, so a list without notes renders exactly as it always did.
+				normalized_options.append({
+					"key": option_key,
+					"label": str(option_dict.get("label", option_key)),
+					"note": str(option_dict.get("note", "")),
+				})
 			else:
 				var option_text: String = str(option)
 				if option_text.is_empty():
@@ -99,6 +106,9 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 			"hint": param.hint,
 			"options": normalized_options,
 			"autocomplete": autocomplete_values,
+			# P3 - whether a blank is an answer. The dialog's strip says so at keystroke time
+			# rather than the commit failing later with nothing to point at.
+			"required": param.required,
 			# Display-only: the row sentence shows this param's option LABEL rather than the raw key
 			# it emits. Set only where the emitted value is always one of the options, so the label
 			# is a faithful reading (Part Of's named parts, never a comparison operator).

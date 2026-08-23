@@ -627,6 +627,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_params.init_dialog(_dock, _dock._ace_registry, _dock._collect_sheet_variable_names)
 	_dock._ace_params.set_lint_context_provider(func() -> EventSheetResource: return _dock._current_sheet)
 	_dock._ace_params.set_variable_creator(_dock._create_variable_quickfix)
+	_dock._ace_params.set_variable_adder(_dock._variables.open_add_variable_named)
 	_dock._ace_params.set_group_toggle_requester(_dock._make_group_switchable)
 	_dock._ace_params.params_confirmed.connect(_dock._on_ace_params_confirmed)
 	_dock._ace_params.back_requested.connect(_dock._on_ace_params_back_requested)

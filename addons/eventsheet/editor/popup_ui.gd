@@ -435,12 +435,28 @@ class HelpStrip extends PanelContainer:
 	## The accent rule down the left edge, in px before display scaling.
 	const ACCENT_RULE_WIDTH := 3
 
+	## The three tones the strip speaks in. "" is the ordinary describing voice; a warning is
+	## something that compiles but will surprise; an error is something that cannot be meant. The
+	## same two colours - and the same wording - the sheet's own row notes use, because the dialog
+	## and the row are one check run at two times.
+	const TONE_NORMAL := ""
+	const TONE_WARNING := "warning"
+	const TONE_ERROR := "error"
+
 	var heading_label: Label = null
 	var body_label: Label = null
 	var reads_as_row: HBoxContainer = null
 	var reads_as_value: Label = null
 	var in_code_row: HBoxContainer = null
 	var in_code_value: Label = null
+	## The one-click answers to whatever the strip is complaining about. Empty (and hidden) while
+	## the strip is merely describing something.
+	var fixes_row: HBoxContainer = null
+	## Which voice the strip is speaking in right now - readable, so a test can pin the state
+	## without sampling a colour.
+	var tone: String = TONE_NORMAL
+
+	var _panel_style: StyleBoxFlat = null
 
 
 	func _init(wrap_width: float = EventSheetPopupUI.HINT_WRAP_WIDTH) -> void:
@@ -450,6 +466,7 @@ class HelpStrip extends PanelContainer:
 		style.border_width_left = EventSheetPalette.scaled(ACCENT_RULE_WIDTH)
 		style.border_color = EventSheetPopupUI.accent_color()
 		add_theme_stylebox_override("panel", style)
+		_panel_style = style
 		var box: VBoxContainer = VBoxContainer.new()
 		box.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 		add_child(box)
@@ -460,6 +477,10 @@ class HelpStrip extends PanelContainer:
 		body_label.custom_minimum_size = Vector2(wrap_width, 0.0)
 		body_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_PRIMARY)
 		box.add_child(body_label)
+		fixes_row = HBoxContainer.new()
+		fixes_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+		fixes_row.visible = false
+		box.add_child(fixes_row)
 		reads_as_row = _reading_row("READS AS")
 		reads_as_value = reads_as_row.get_child(1) as Label
 		box.add_child(reads_as_row)
@@ -500,6 +521,50 @@ class HelpStrip extends PanelContainer:
 		in_code_row.visible = not in_code.strip_edges().is_empty()
 
 
+	## The voice the strip speaks in: the ordinary accent, amber for a warning, red for an error.
+	## Recolours the rule down the left edge and the heading together, so the tone is legible from
+	## the corner of the eye without reading a word.
+	func set_tone(level: String) -> void:
+		tone = level
+		var colour: Color = EventSheetPopupUI.accent_color()
+		match level:
+			TONE_WARNING:
+				colour = EventSheetPalette.COLOR_HEALTH_WARN
+			TONE_ERROR:
+				colour = EventSheetPalette.COLOR_ERROR_TEXT
+		if _panel_style != null:
+			_panel_style.border_color = colour
+		heading_label.add_theme_color_override("font_color", colour)
+
+
+	## The one-click answers offered under the paragraph. Each entry is {"text": String,
+	## "pressed": Callable}; an empty list hides the row. Rebuilt rather than reused, because the
+	## fixes on offer change with every keystroke and a stale button is a wrong answer.
+	func offer_fixes(fixes: Array) -> void:
+		for old_button: Node in fixes_row.get_children():
+			fixes_row.remove_child(old_button)
+			old_button.queue_free()
+		for fix: Variant in fixes:
+			if not (fix is Dictionary):
+				continue
+			var entry: Dictionary = fix
+			var button: Button = Button.new()
+			button.text = str(entry.get("text", ""))
+			var action: Variant = entry.get("pressed", null)
+			if action is Callable and (action as Callable).is_valid():
+				button.pressed.connect(action as Callable)
+			fixes_row.add_child(button)
+		fixes_row.visible = fixes_row.get_child_count() > 0
+
+
+	## Heading, paragraph, tone and fixes in one call - the shape every caller actually wants, and
+	## the one that cannot leave last field's red rule standing over this field's description.
+	func show_note(heading: String, body: String, level: String = TONE_NORMAL, fixes: Array = []) -> void:
+		describe(heading, body)
+		set_tone(level)
+		offer_fixes(fixes)
+
+
 	## Wires a control: focusing or hovering it makes the strip describe it. Note the mouse_filter -
 	## a Label ignores the mouse by default, so a caption wired here would never fire without it.
 	func follow(control: Control, heading: String, body: String) -> void:
@@ -507,8 +572,8 @@ class HelpStrip extends PanelContainer:
 			return
 		if control.mouse_filter == Control.MOUSE_FILTER_IGNORE:
 			control.mouse_filter = Control.MOUSE_FILTER_PASS
-		control.focus_entered.connect(func() -> void: describe(heading, body))
-		control.mouse_entered.connect(func() -> void: describe(heading, body))
+		control.focus_entered.connect(func() -> void: show_note(heading, body))
+		control.mouse_entered.connect(func() -> void: show_note(heading, body))
 
 
 	## Wires a dropdown per ITEM: `describer.call(index)` returns {"heading": …, "body": …} for the
@@ -522,7 +587,7 @@ class HelpStrip extends PanelContainer:
 			# An empty answer means "nothing to say about this one" (a separator): the strip keeps
 			# whatever it was showing rather than blanking itself as the list is arrowed past one.
 			if told is Dictionary and not (told as Dictionary).is_empty():
-				describe(str((told as Dictionary).get("heading", "")), str((told as Dictionary).get("body", "")))
+				show_note(str((told as Dictionary).get("heading", "")), str((told as Dictionary).get("body", "")))
 		option.item_selected.connect(apply)
 		option.focus_entered.connect(func() -> void: apply.call(option.selected))
 		var popup: PopupMenu = option.get_popup()
@@ -616,18 +681,31 @@ static func _editor_icon(icon_name: String) -> Texture2D:
 ## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
 ## back correctly even when filtered. The one shared filler behind every autocomplete
 ## combo (ACE params, Replace Object References, the match/switch case patterns).
-static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
+static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String,
+		note_provider: Callable = Callable()) -> void:
 	popup.clear()
 	var needle: String = filter_text.strip_edges().to_lower()
 	var any_added: bool = false
 	for index: int in range(suggestions.size()):
 		var suggestion: String = suggestions[index]
 		if needle.is_empty() or suggestion.to_lower().contains(needle):
-			popup.add_item(suggestion, index)
+			# P1 - a choice may carry the line that explains it (an input action's keys, how many
+			# nodes are in a group). The item's ID still indexes the POOL, so what a pick inserts is
+			# the bare value however much the item shows.
+			popup.add_item(suggestion_item_text(suggestion, note_provider), index)
 			any_added = true
 	if not any_added:
 		popup.add_item("(no match - keep typing)", -1)
 		popup.set_item_disabled(popup.item_count - 1, true)
+
+
+## What one suggestion READS as in the list: the value alone, or the value and the line that
+## explains it. Static and pure so a test can pin the composed line without opening a popup.
+static func suggestion_item_text(suggestion: String, note_provider: Callable = Callable()) -> String:
+	if not note_provider.is_valid():
+		return suggestion
+	var note: String = str(note_provider.call(suggestion)).strip_edges()
+	return suggestion if note.is_empty() else "%s    %s" % [suggestion, note]
 
 
 ## The editable autocomplete combo's ▾ picker, fully wired to `edit` (event-sheet-style
@@ -638,7 +716,11 @@ static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArr
 ## The caller parents the returned MenuButton beside its LineEdit. One implementation for
 ## every combo in the plugin - the ACE params dialog, the Replace Object References To
 ## field, and the match/switch case patterns all attach through here.
-static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable) -> MenuButton:
+##
+## `note_provider` (optional) maps one suggestion to the line that explains it, shown beside the
+## value in the list. The pick still inserts the bare value: item ids index the pool, never the text.
+static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
+		note_provider: Callable = Callable()) -> MenuButton:
 	var picker: MenuButton = MenuButton.new()
 	picker.text = "▾"
 	picker.tooltip_text = "Suggestions (you can still type any value)"
@@ -648,7 +730,7 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable) -
 	var shown: Dictionary = {"pool": PackedStringArray()}
 	popup.about_to_popup.connect(func() -> void:
 		shown["pool"] = PackedStringArray(suggestions_provider.call())
-		fill_suggestion_popup(popup, shown["pool"], edit.text))
+		fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider))
 	# Whenever the popup closes (pick, Escape, click-away), return the caret to the field
 	# so Enter still confirms the dialog and typing continues seamlessly.
 	popup.popup_hide.connect(func() -> void: edit.grab_focus())
@@ -663,7 +745,7 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable) -
 		var key_event: InputEventKey = event as InputEventKey
 		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
 			shown["pool"] = PackedStringArray(suggestions_provider.call())
-			fill_suggestion_popup(popup, shown["pool"], edit.text)
+			fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider)
 			# Don't pop a dead, disabled-only "(no match)" menu - keep the caret in the field.
 			if popup.item_count == 1 and popup.is_item_disabled(0):
 				edit.accept_event()

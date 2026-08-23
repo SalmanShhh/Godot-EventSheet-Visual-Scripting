@@ -31,9 +31,34 @@ static var _remembered_values: Dictionary = {}
 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
-var _hint: Label = null
+## P0 - the ONE help strip at the foot. It describes whatever parameter is focused, validates it as
+## it is typed, and shows the line of code the row becomes. It replaced the per-field description
+## labels and their tooltips: four parameters read as four rows now, not four paragraphs.
+var _help_strip: EventSheetPopupUI.HelpStrip = null
+## P0 - the title band: the row this dialog is writing, in the sheet's own colours, filled in live
+## from the fields. The window title carries the same sentence as plain text.
+var _title_label: RichTextLabel = null
+var _title_ace_label: Label = null
+## P3 - the reason OK is not the obvious next step, sitting beside it rather than replacing the
+## button with a grey rectangle that explains nothing.
+var _ok_reason: Label = null
 var _fields: Dictionary = {}
-var _field_hints: Dictionary = {}
+## The shipped descriptor dictionary per parameter id - what the strip describes and validates
+## against. Kept beside _fields because a built widget knows its value, never its parameter.
+var _param_dicts: Dictionary = {}
+## The muted lines beside the choice fields, as the callables that re-read them. A value written by
+## a fix (or by anything that is not a click on the list) reaches them through here: OptionButton's
+## select() deliberately does not emit item_selected, so a caption wired only to that signal goes
+## stale the moment the dialog writes into its own field.
+var _choice_captions: Array[Callable] = []
+## Which parameter the strip is currently speaking about ("" before anything is focused).
+var _focused_key: String = ""
+## The variable catalog the row can see, read ONCE per open. own_entries is the cheap half of the
+## catalog on purpose - the whole catalog walks every row and every autoload, which is not something
+## to do per keystroke.
+var _variable_entries: Array[Dictionary] = []
+## Who owns the variables in scope - the object this row belongs to, as the title leads with.
+var _row_owner: String = ""
 var _definition: ACEDefinition = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
@@ -85,17 +110,27 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	# append modes, where the target event is stable.
 	_add_another_button = _dialog.add_button("✚ Apply & Add Another", false, ADD_ANOTHER_ACTION)
 	_dialog.custom_action.connect(_on_custom_action)
+	# P3 - the "Add hpp…" fix opens the Add variable dialog over this one. Coming back, the variable
+	# may exist, so the catalog is re-read and every field re-checked the moment focus returns.
+	_dialog.focus_entered.connect(_refresh_variable_context)
 	parent_node.add_child(_dialog)
 
+	# One content child, laid out top to bottom: the row being written, the fields, the help strip.
+	# The strip lives OUTSIDE the scroll on purpose - it is the foot of the dialog, not the foot of
+	# the form, and scrolling to read why a field is red is exactly the friction it exists to remove.
+	var content: VBoxContainer = VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	_dialog.add_child(EventSheetPopupUI.margined(content))
+	content.add_child(_build_title_band())
+
 	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.custom_minimum_size = Vector2(520.0, 260.0)
+	scroll.custom_minimum_size = Vector2(520.0, 200.0)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# Fields fit the dialog width instead of growing a horizontal scrollbar (long
 	# enum defaults like DisplayServer.WINDOW_MODE_FULLSCREEN used to overflow).
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_dialog.add_child(scroll)
+	content.add_child(scroll)
 
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -106,6 +141,52 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	form_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(form_card)
+
+	_help_strip = EventSheetPopupUI.help_strip()
+	content.add_child(_help_strip)
+
+	# The reason OK will not do what you expect, beside OK. AcceptDialog lays its buttons out in one
+	# row, so the reason sits where the eye already is when the hand reaches for the button.
+	_ok_reason = _muted_label()
+	var button_row: Node = _dialog.get_ok_button().get_parent()
+	if button_row != null:
+		button_row.add_child(_ok_reason)
+		button_row.move_child(_ok_reason, _dialog.get_ok_button().get_index())
+
+
+## The band at the top: the object this row belongs to, then the sentence the row will read as, then
+## the ACE's own name at the right. It IS the row - what the sheet will show once OK is pressed -
+## which is the one thing the old "<name> Parameters" title could never say.
+func _build_title_band() -> Control:
+	var band: HBoxContainer = HBoxContainer.new()
+	band.add_theme_constant_override("separation", 8)
+	_title_label = RichTextLabel.new()
+	_title_label.bbcode_enabled = true
+	# One line, never wrapped, and NOT fit_content: a RichTextLabel asked to size itself to its
+	# content reports one glyph per line during the initial zero-width layout pass, and a sentence
+	# measured that way makes the whole dialog taller than the screen.
+	_title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_title_label.fit_content = false
+	_title_label.scroll_active = false
+	_title_label.clip_contents = true
+	_title_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH,
+		EventSheetPalette.scaled_f(22.0))
+	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	band.add_child(_title_label)
+	_title_ace_label = _muted_label()
+	band.add_child(_title_ace_label)
+	return band
+
+
+## A one-line muted caption - the ACE's own name beside the sentence, the reason beside OK. No
+## autowrap: both sit in a row that measures them, and a wrapped caption there collapses to a column
+## of single letters on the first zero-width layout pass.
+func _muted_label() -> Label:
+	var label: Label = Label.new()
+	label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return label
 
 
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -124,6 +205,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_definition = definition
 	_context = context.duplicate(true)
 	_variable_names = _resolve_variable_names()
+	_read_variable_context()
 	# Fresh add (no existing params, not a re-edit) prefills from session memory of
 	# the last values used for this ACE.
 	var form_values: Dictionary = initial_values
@@ -131,10 +213,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		form_values = (_remembered_values[definition.id] as Dictionary).duplicate(true)
 	_build_form(definition, form_values)
 	_attach_recent_value_combos()
-	_dialog.title = "%s Parameters%s" % [
-		definition.display_name,
-		" (Edit)" if _is_reedit_flow() else ""
-	]
+	_refresh_live_reading()
 	_dialog.get_ok_button().disabled = _apply_blocked
 	# Back returns to the picker - from the add flow OR a row edit (which opens in a replace_* mode),
 	# so editing any ACE (action/expression too, not just conditions) can go back and swap.
@@ -206,20 +285,16 @@ func _attach_recent_value_combos() -> void:
 
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
-	_field_hints.clear()
+	_param_dicts.clear()
+	_field_notes.clear()
+	_choice_captions.clear()
+	_focused_key = ""
 	_batch_apply_checks.clear()
 	_apply_blocked = false
 	_single_param_form = definition.parameters.size() == 1
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
-	_hint = Label.new()
-	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Width-bound so the autowrap label can't report a runaway one-glyph-per-line min height and
-	# balloon the dialog on the initial zero-width pass (it still wraps wider at runtime).
-	_hint.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
-	_hint.add_theme_color_override("font_color", Color(0.80, 0.85, 0.95, 0.95))
-	_form.add_child(_hint)
 	# Native-node ACEs link to the engine's own class reference - the vocabulary IS
 	# Godot, and the built-in docs are one click away.
 	var docs_class: String = str(definition.metadata.get("node_type", "")).strip_edges()
@@ -236,13 +311,13 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 			continue
 		_add_param_row(parameter as Dictionary, initial_values)
 
-	_hint.text = _build_hint_text()
+	_describe_dialog_itself()
 
 
 func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
 	var hint: String = str(param_dict.get("hint", ""))
-	_field_hints[key] = hint
+	_param_dicts[key] = param_dict
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -276,18 +351,11 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		row.add_child(apply_check)
 		_batch_apply_checks[key] = apply_check
 	_form.add_child(row)
-	# Hover the label OR the field for the parameter's purpose (descriptions also
-	# render below, but tooltips answer "what is this?" without scanning down).
-	var hover_text: String = str(param_dict.get("description", ""))
-	if not hover_text.is_empty():
-		label.tooltip_text = hover_text
-		field.tooltip_text = hover_text
+	# P0 - no description under the field and no tooltip on it. The strip at the foot says both, for
+	# the focused parameter only, and it is the one place a reader has to look.
 	# Drag the param's NAME to scrub its number (the Inspector gesture). Only arms while the field
 	# holds a plain number, so an expression can never be flattened into a literal by a stray drag.
 	EventSheetNumberScrub.attach(label, field)
-	if EventSheetNumberScrub.is_scrubbable(EventSheetNumberScrub.read_value(field)):
-		var scrub_hint: String = "Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse)."
-		label.tooltip_text = scrub_hint if hover_text.is_empty() else "%s\n\n%s" % [hover_text, scrub_hint]
 	# Dropdowns clip long entries instead of forcing the dialog wider. The field may BE the dropdown
 	# or be the dropdown wrapped with its muted code note (K1), so the value-bearing widget is asked
 	# for rather than assumed - a wrapped dropdown must clip exactly like a bare one.
@@ -295,18 +363,11 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	if dropdown != null:
 		dropdown.clip_text = true
 		dropdown.custom_minimum_size = Vector2(220.0, 0.0)
-
-	# Parameter description rendered below its control.
-	var description: String = str(param_dict.get("description", ""))
-	if not description.is_empty():
-		var description_label: Label = Label.new()
-		description_label.text = description
-		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		# Width-bound (no balloon on the zero-width pass) and a touch brighter for legibility.
-		description_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
-		description_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-		description_label.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
-		_form.add_child(description_label)
+	# P1 - the line under each choice, from whichever source the hint names.
+	_attach_option_notes(key, param_dict, row, _option_notes_for(param_dict))
+	if hint == "input_action" or (hint == "group_reference" and not EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key)):
+		_attach_typed_choice_note(key, row, hint)
+	_watch_field(key, label)
 
 ## Build a typed input widget for one parameter entry. The value-extraction node is
 ## registered in _fields[key]; the returned Control is what gets added to the row.
@@ -665,7 +726,8 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 ## user types into, plus a ▾ button whose popup lists the behavior-declared suggestions
 ## filtered by what's already typed. Picking inserts a suggestion verbatim; typing any
 ## other value is still allowed. The LineEdit IS the value-bearing field (read like text).
-func _create_autocomplete_field(key: String, suggestions: Array, default_value: Variant) -> Control:
+func _create_autocomplete_field(key: String, suggestions: Array, default_value: Variant,
+		note_provider: Callable = Callable()) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var edit: LineEdit = LineEdit.new()
@@ -694,7 +756,7 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 		for suggestion_text: String in suggestion_texts:
 			if not pool.has(suggestion_text):
 				pool.append(suggestion_text)
-		return pool))
+		return pool, note_provider))
 	_fields[key] = edit
 	return row
 
@@ -822,7 +884,9 @@ func _create_group_reference_field(key: String, default_value: Variant) -> Contr
 	var scene_root: Node = animation_scene_root_override
 	if scene_root == null and Engine.is_editor_hint():
 		scene_root = EditorInterface.get_edited_scene_root()
-	return _create_autocomplete_field(key, group_choices(scene_root), default_value)
+	return _create_autocomplete_field(key, group_choices(scene_root), default_value,
+		func(group_value: String) -> String:
+			return EventSheetParamFieldFactory.node_group_note(group_value, scene_root))
 
 
 ## The codegen template of the ACE being edited, or "" when the dialog has no definition.
@@ -896,7 +960,8 @@ static func group_choices(scene_root: Node) -> Array:
 ## Input Map's own facts (deadzone + an empty binding list - binding it is the Input Map's job) and
 ## refreshes the picker, so the name the row is about exists before the row does.
 func _create_input_action_field(key: String, default_value: Variant) -> Control:
-	var row: Control = _create_autocomplete_field(key, input_action_choices(), default_value)
+	var row: Control = _create_autocomplete_field(key, input_action_choices(), default_value,
+		EventSheetParamFieldFactory.input_action_note)
 	var edit: LineEdit = _fields.get(key) as LineEdit
 	if edit == null:
 		return row
@@ -1007,11 +1072,11 @@ static func project_setting_choices() -> Array:
 	return choices
 
 
-## Says something back in the dialog's own hint line - the one place this form already reports what
-## it thinks, so a New action… result does not need a surface of its own.
+## Says something back through the help strip - the one place this form reports what it thinks, so a
+## New action… result does not need a surface of its own.
 func _say(message: String) -> void:
-	if _hint != null:
-		_hint.text = message
+	if _help_strip != null:
+		_help_strip.show_note(EventSheetL10n.translate("Input Map"), message)
 
 
 ## Creates the action the field currently names. Refuses an empty or already-registered name rather
@@ -2062,6 +2127,8 @@ func _validate_expression_field(edit: Control) -> void:
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
+	var key: String = _key_of_field(edit)
+	var param: Dictionary = _param_dicts.get(key, {})
 	if bool(lint_result.get("ok", true)):
 		# Valid GDScript - but a literal $node / get_node("…") path that does NOT exist in the edited
 		# scene is almost always a typo. Flag it amber (a warning, not a red error: the node may be
@@ -2069,16 +2136,17 @@ func _validate_expression_field(edit: Control) -> void:
 		var unresolved: String = unresolved_node_reference(str(edit.get("text")), _validation_scene_root())
 		if unresolved.is_empty():
 			edit.remove_theme_color_override("font_color")
-			edit.tooltip_text = "Plain GDScript - anything valid in an expression works here."
+			_record_expression_note(edit, "", "", "", "", "")
 		else:
 			edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
-			if unresolved.begins_with("%"):
-				# Teach the unique-name idiom: % resolves only once a node is marked unique in the scene.
-				edit.tooltip_text = "⚠ No node named \"%s\" in this scene - right-click the node in the scene tree ▸ Access as Unique Name (or it may be spawned at runtime)." % unresolved
-			else:
-				edit.tooltip_text = "⚠ No node \"%s\" in this scene yet - fine if it is spawned at runtime, otherwise check the path." % unresolved
-		_update_quickfix_button(edit, "")
-		_update_didyoumean_button(edit, "", "")
+			# Teach the unique-name idiom: % resolves only once a node is marked unique in the scene.
+			var missing_node: String = EventSheetL10n.translate(
+				"There is no node named %s in this scene - right-click it in the scene tree and choose Access as Unique Name, or it may be spawned at runtime.") % unresolved \
+				if unresolved.begins_with("%") else EventSheetL10n.translate(
+				"There is no node %s in this scene yet - fine if it is spawned at runtime, otherwise check the path.") % unresolved
+			_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING,
+				EventSheetParamFieldFactory.strip_heading(param, EventSheetL10n.translate("no such node")),
+				missing_node, "", "")
 	else:
 		edit.add_theme_color_override("font_color", Color(0.96, 0.45, 0.45))
 		var undeclared: String = undeclared_identifier_in_expression(str(edit.get("text")), sheet)
@@ -2086,12 +2154,18 @@ func _validate_expression_field(edit: Control) -> void:
 		# DOES know, offer a one-click "Use it" before the create-new-variable fallback - far
 		# friendlier than a red squiggle for a non-coder who fat-fingered a name.
 		var suggestion: String = closest_known_identifier(undeclared, sheet)
-		if suggestion.is_empty():
-			edit.tooltip_text = "✗ Not a valid GDScript expression for this sheet."
-		else:
-			edit.tooltip_text = "✗ Unknown \"%s\". Did you mean \"%s\"?" % [undeclared, suggestion]
-		_update_quickfix_button(edit, undeclared)
-		_update_didyoumean_button(edit, undeclared, suggestion)
+		var body: String = EventSheetL10n.translate("This is not an expression this sheet can compile.")
+		if not undeclared.is_empty():
+			body = EventSheetL10n.translate("%s is not a variable of %s.") % [undeclared,
+				_row_owner if not _row_owner.strip_edges().is_empty() else EventSheetL10n.translate("this object")]
+			if not suggestion.is_empty():
+				body += " " + EventSheetL10n.translate("Did you mean %s?") % suggestion
+		_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_ERROR,
+			EventSheetParamFieldFactory.strip_heading(param, EventSheetL10n.translate("not found")
+				if not undeclared.is_empty() else EventSheetL10n.translate("will not compile")),
+			body, undeclared, suggestion)
+	if _dialog != null:
+		_refresh_live_reading()
 
 
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
@@ -2113,11 +2187,16 @@ static func open_class_docs(docs_class: String) -> String:
 # a one-click "+ var" button (cancel → Add Variable → retype, collapsed to one click).
 # The dialog stays dock-agnostic: the dock injects a creator Callable(name) -> bool.
 var _variable_creator: Callable = Callable()
+## P3 - what the "Add hpp…" fix calls: the dock opens the Add variable dialog with the name already
+## filled in. Left invalid outside the dock, where the fix declares the variable outright instead.
+var _variable_adder: Callable = Callable()
 ## G2 - what the "Make switchable" offer calls: the dock flips the named group's runtime toggle in
 ## one undo step and answers whether it did. Left invalid (no offer shown) outside the dock.
 var _group_toggle_requester: Callable = Callable()
-var _quickfix_buttons: Dictionary = {}
-var _didyoumean_buttons: Dictionary = {}
+## P3 - what the last check said about each field, as {param id -> note}. An expression field fills
+## its entry as it is typed (the lint runs there anyway); everything else is checked on demand. The
+## strip and the reason beside OK both read from here, so one keystroke costs one check.
+var _field_notes: Dictionary = {}
 
 
 ## The closest name the sheet already knows (variable / tree var / sheet function / host
@@ -2176,6 +2255,12 @@ func set_variable_creator(creator: Callable) -> void:
 	_variable_creator = creator
 
 
+## Injects the "Add hpp…" opener (see _variable_adder). With one, the fix opens the Add variable
+## dialog on the name that was typed; without one it declares the variable directly.
+func set_variable_adder(adder: Callable) -> void:
+	_variable_adder = adder
+
+
 ## Injects the "Make switchable" writer (see _group_toggle_requester).
 func set_group_toggle_requester(requester: Callable) -> void:
 	_group_toggle_requester = requester
@@ -2225,70 +2310,50 @@ static func undeclared_identifier_in_expression(expression: String, sheet: Event
 	return ""
 
 
-func _update_quickfix_button(edit: Control, identifier: String) -> void:
-	var button: Button = _quickfix_buttons.get(edit) as Button
-	if identifier.is_empty() or not _variable_creator.is_valid():
-		if button != null:
-			button.visible = false
+## P3 - what a failing expression field is complaining about, as the strip's note. The two buttons
+## that used to grow beside the field ("+ var hp", "Use hp") are the note's FIXES now: one place a
+## reader looks for a problem, one wording for it, and the same shape the parameter checks answer in.
+func _record_expression_note(edit: Control, level: String, heading: String, body: String,
+		unknown: String, suggestion: String) -> void:
+	var key: String = _key_of_field(edit)
+	if key.is_empty():
 		return
-	if button == null or not is_instance_valid(button):
-		button = Button.new()
-		button.pressed.connect(_on_quickfix_pressed.bind(edit))
-		var parent: Node = edit.get_parent()
-		if parent == null:
-			return
-		parent.add_child(button)
-		_quickfix_buttons[edit] = button
-	button.text = "+ var %s" % identifier
-	button.tooltip_text = "Create the sheet variable \"%s\" and re-check this expression." % identifier
-	button.set_meta("identifier", identifier)
-	button.visible = true
-
-
-func _on_quickfix_pressed(edit: Control) -> void:
-	var button: Button = _quickfix_buttons.get(edit) as Button
-	if button == null or not _variable_creator.is_valid():
+	if level.is_empty():
+		_field_notes.erase(key)
 		return
-	if bool(_variable_creator.call(str(button.get_meta("identifier", "")))):
-		_validate_expression_field(edit)
+	var fixes: Array = []
+	if not suggestion.is_empty():
+		fixes.append({"kind": "use", "name": suggestion})
+	if not unknown.is_empty() and (_variable_creator.is_valid() or _variable_adder.is_valid()):
+		fixes.append({"kind": "add", "name": unknown})
+	_field_notes[key] = {
+		"level": level,
+		"heading": heading,
+		"body": body,
+		"reason": EventSheetL10n.translate("fix %s first") % _param_label(key) if level == EventSheetParamFieldFactory.LEVEL_ERROR
+			else EventSheetL10n.translate("check %s") % _param_label(key),
+		"fixes": fixes,
+	}
 
 
-## "Did you mean …?" typo quick-fix: a one-click button that swaps the unknown identifier
-## for the closest name the sheet knows, then re-validates. Distinct from the create-var
-## button, which the user wants when the name is genuinely new.
-func _update_didyoumean_button(edit: Control, identifier: String, suggestion: String) -> void:
-	var button: Button = _didyoumean_buttons.get(edit) as Button
-	if identifier.is_empty() or suggestion.is_empty():
-		if button != null:
-			button.visible = false
-		return
-	if button == null or not is_instance_valid(button):
-		button = Button.new()
-		button.pressed.connect(_on_didyoumean_pressed.bind(edit))
-		var parent: Node = edit.get_parent()
-		if parent == null:
-			return
-		parent.add_child(button)
-		_didyoumean_buttons[edit] = button
-	button.text = "Use \"%s\"" % suggestion
-	button.tooltip_text = "Replace \"%s\" with \"%s\" in this expression." % [identifier, suggestion]
-	button.set_meta("identifier", identifier)
-	button.set_meta("suggestion", suggestion)
-	button.visible = true
+## The parameter id a built widget answers for, or "" for a widget this dialog did not build (the
+## Properties bar borrows the builders through the factory, with no form behind them).
+func _key_of_field(field: Control) -> String:
+	for key: Variant in _fields.keys():
+		if _fields[key] == field:
+			return str(key)
+	return ""
 
 
-func _on_didyoumean_pressed(edit: Control) -> void:
-	var button: Button = _didyoumean_buttons.get(edit) as Button
-	if button == null:
-		return
-	var identifier: String = str(button.get_meta("identifier", ""))
-	var suggestion: String = str(button.get_meta("suggestion", ""))
-	if identifier.is_empty() or suggestion.is_empty():
-		return
-	# Whole-word replace so "hp" inside "shparrow" is never touched.
-	var replaced: String = RegEx.create_from_string("\\b%s\\b" % RegEx.create_from_string("[^A-Za-z0-9_]").sub(identifier, "", true)).sub(str(edit.get("text")), suggestion, true)
-	edit.set("text", replaced)
-	_validate_expression_field(edit)
+## The hint one parameter carries, read off the shipped descriptor this dialog built it from.
+func _hint_of(key: String) -> String:
+	return str((_param_dicts.get(key, {}) as Dictionary).get("hint", ""))
+
+
+## A parameter as a sentence names it - its display name, or its id when it has none.
+func _param_label(key: String) -> String:
+	var param: Dictionary = _param_dicts.get(key, {})
+	return str(param.get("display_name", key)) if not param.is_empty() else key
 
 
 ## Fills the completion popup with sheet variables/functions + host members (same source
@@ -2492,8 +2557,11 @@ func _on_confirmed() -> void:
 	# blocks when the lint context is healthy.
 	var blocker: Dictionary = _blocking_expression_field()
 	if not blocker.is_empty():
-		if _hint != null:
-			_hint.text = str(blocker.get("message", ""))
+		if _help_strip != null:
+			_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
+				str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
+		if _ok_reason != null:
+			_ok_reason.text = EventSheetL10n.translate("this will not compile")
 		(blocker.get("field") as Control).grab_focus()
 		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(520, 380))
@@ -2546,7 +2614,7 @@ var _commit_validation_prompt: ConfirmationDialog = null
 ## ({} when every field passes). Validators see the raw committed String value.
 func _first_commit_validation_prompt(values: Dictionary) -> Dictionary:
 	for key: Variant in values.keys():
-		var validator: Callable = EventSheets.param_commit_validator_for(str(_field_hints.get(key, "")))
+		var validator: Callable = EventSheets.param_commit_validator_for(_hint_of(str(key)))
 		if not validator.is_valid():
 			continue
 		var prompt: Variant = validator.call(str(values[key]))
@@ -2599,8 +2667,9 @@ func _on_custom_action(action: StringName) -> void:
 			return
 		var blocker: Dictionary = _blocking_expression_field()
 		if not blocker.is_empty():
-			if _hint != null:
-				_hint.text = str(blocker.get("message", ""))
+			if _help_strip != null:
+				_help_strip.show_note(EventSheetL10n.translate("Cannot be written"),
+					str(blocker.get("message", "")), EventSheetParamFieldFactory.LEVEL_ERROR)
 			(blocker.get("field") as Control).grab_focus()
 			return
 		_commit(true)
@@ -2691,6 +2760,387 @@ func _close() -> void:
 func _is_reedit_flow() -> bool:
 	var mode: String = str(_context.get("mode", ""))
 	return mode.begins_with("replace")
+
+
+# ── The row this dialog writes, and the strip that explains it ───────────────────────────────
+#
+# P0. The dialog used to be titled "<ACE name> Parameters" and to print each parameter's
+# description under its field. It never said the one thing the author is actually deciding: what
+# the ROW will read as once OK is pressed. The title band says it, filled in from the fields as
+# they are typed, in the sheet's own colours - and the strip at the foot says what the FOCUSED
+# parameter takes, what is wrong with it, and the line of code the row becomes.
+
+
+## The sentence the row will read as: the object it belongs to, then the ACE's own display
+## template with the values filled in. Static and pure, so a test pins it without a window.
+static func title_sentence(definition: ACEDefinition, values: Dictionary, owner: String = "") -> String:
+	if definition == null:
+		return ""
+	var text: String = definition.format_display(values).strip_edges()
+	if text.is_empty():
+		text = definition.display_name
+	var named: String = owner.strip_edges()
+	return text if named.is_empty() else "%s   %s" % [named, text]
+
+
+## The same sentence in the sheet's colours: the owner in the object blue, every filled value in
+## the value green, the template's own words plain. Square brackets in a value are escaped, because
+## a value like `[1, 2]` is a list and not markup.
+static func title_bbcode(definition: ACEDefinition, values: Dictionary, owner: String = "") -> String:
+	if definition == null:
+		return ""
+	var template: String = str(definition.metadata.get("display_template", definition.display_name))
+	if template.strip_edges().is_empty():
+		template = definition.display_name
+	var text: String = _bbcode_escaped(template)
+	for index: int in range(definition.parameters.size()):
+		var parameter: Variant = definition.parameters[index]
+		if not (parameter is Dictionary):
+			continue
+		var parameter_dict: Dictionary = parameter
+		var key: String = str(parameter_dict.get("id", ""))
+		if key.is_empty():
+			continue
+		var fallback: Variant = parameter_dict.get("default_value", parameter_dict.get("default", ""))
+		var shown: String = ACEDefinition.display_value_for(parameter_dict, values.get(key, fallback))
+		var tinted: String = "[color=#%s]%s[/color]" % [
+			EventSheetPalette.COLOR_VALUE.to_html(false), _bbcode_escaped(shown)]
+		text = text.replace("{%d}" % index, tinted)
+		text = text.replace("{%s}" % key, tinted)
+	var named: String = owner.strip_edges()
+	if named.is_empty():
+		return text
+	return "[color=#%s]%s[/color]  %s" % [EventSheetPalette.COLOR_OBJECT.to_html(false),
+		_bbcode_escaped(named), text]
+
+
+## The line the compiler will write for this row, with the values as typed - produced BY the
+## emitter, from a throwaway row, so the dialog cannot promise a spelling the compiler would not
+## use. "" for a definition whose kind has no line of its own.
+static func row_code_line(definition: ACEDefinition, values: Dictionary) -> String:
+	if definition == null:
+		return ""
+	match definition.ace_type:
+		ACEDefinition.ACEType.CONDITION:
+			var condition: ACECondition = ACECondition.new()
+			condition.provider_id = definition.provider_id
+			condition.ace_id = definition.id
+			condition.params = values.duplicate()
+			var expression: String = ConditionCodegen.generate_condition(condition)
+			return "" if expression.strip_edges().is_empty() else "if %s:" % expression
+		ACEDefinition.ACEType.ACTION:
+			var action: ACEAction = ACEAction.new()
+			action.provider_id = definition.provider_id
+			action.ace_id = definition.id
+			action.params = values.duplicate()
+			return ActionCodegen.generate_action(action).strip_edges()
+	# An expression (and a trigger's parameters) has no statement of its own - the template with
+	# the values in it IS what the row contributes to whatever line encloses it.
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	if template.strip_edges().is_empty():
+		return ""
+	for key: Variant in values.keys():
+		template = template.replace("{%s}" % str(key), str(values[key]))
+	return template
+
+
+## Square brackets in a value are a list, a node path or an array index - never markup. Escaped
+## before anything is tinted, so the tint's own tags are the only markup in the string.
+static func _bbcode_escaped(text: String) -> String:
+	return text.replace("[", "[lb]")
+
+
+## Every field's value as the row would carry it - the same read the commit path does, so what the
+## title shows and what OK writes are one answer.
+func _current_values() -> Dictionary:
+	var values: Dictionary = {}
+	for key: Variant in _fields.keys():
+		if is_instance_valid(_fields[key]):
+			values[str(key)] = str(_extract_value(_fields[key]))
+	return values
+
+
+## The catalog of variables this row can see, read once per open. own_entries is the cheap half of
+## EventSheetVariableOwners on purpose: the whole catalog walks every row and reads every autoload's
+## script, which is not something to do while somebody is typing.
+func _read_variable_context() -> void:
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	_variable_entries = EventSheetVariableOwners.own_entries(sheet) if sheet != null else ([] as Array[Dictionary])
+	_row_owner = EventSheetVariableOwners.owner_of_sheet(sheet) if sheet != null else ""
+
+
+## Re-reads the catalog and re-checks every field. Runs when focus returns to this dialog, because
+## the variable a fix went off to add exists by then.
+func _refresh_variable_context() -> void:
+	if _definition == null:
+		return
+	_read_variable_context()
+	_refresh_live_reading()
+
+
+## The title band, the window title, the IN CODE line and the reason beside OK - everything that
+## reads the values rather than describing a field. Called on every change of every field.
+func _refresh_live_reading() -> void:
+	if _definition == null or _dialog == null:
+		return
+	var values: Dictionary = _current_values()
+	var sentence: String = title_sentence(_definition, values, _row_owner)
+	_dialog.title = sentence if not sentence.is_empty() else _definition.display_name
+	if _title_label != null:
+		_title_label.text = title_bbcode(_definition, values, _row_owner)
+	if _title_ace_label != null:
+		_title_ace_label.text = "%s (%s)" % [_definition.display_name,
+			EventSheetL10n.translate("editing")] if _is_reedit_flow() else _definition.display_name
+	if _help_strip != null:
+		_help_strip.set_reading("", row_code_line(_definition, values))
+	for caption: Callable in _choice_captions:
+		caption.call()
+	_refresh_notes()
+
+
+## The strip for whichever parameter is focused, and the reason beside OK: the strongest problem any
+## field has, so a red field is never hidden behind an amber one.
+func _refresh_notes() -> void:
+	if _help_strip != null and not _focused_key.is_empty():
+		_describe_field(_focused_key)
+	if _ok_reason == null:
+		return
+	var strongest: Dictionary = {}
+	for key: Variant in _fields.keys():
+		var note: Dictionary = _note_for(str(key))
+		_tint_field(_fields[key] as Control, str(note.get("level", "")))
+		if note.is_empty():
+			continue
+		if strongest.is_empty() or str(note.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR:
+			strongest = note
+	_ok_reason.text = str(strongest.get("reason", ""))
+	_ok_reason.add_theme_color_override("font_color",
+		EventSheetPalette.COLOR_ERROR_TEXT if str(strongest.get("level", "")) == EventSheetParamFieldFactory.LEVEL_ERROR
+		else EventSheetPalette.COLOR_HEALTH_WARN)
+
+
+## The field itself wears its note's colour, so the trouble is visible from the field the eye is
+## already on rather than only at the foot. A field with nothing wrong keeps the theme's own ink -
+## removed rather than set back to a guess at what the theme uses.
+func _tint_field(field: Control, level: String) -> void:
+	if field == null or not is_instance_valid(field):
+		return
+	match level:
+		EventSheetParamFieldFactory.LEVEL_ERROR:
+			field.add_theme_color_override("font_color", EventSheetPalette.COLOR_ERROR_TEXT)
+		EventSheetParamFieldFactory.LEVEL_WARNING:
+			field.add_theme_color_override("font_color", EventSheetPalette.COLOR_HEALTH_WARN)
+		_:
+			field.remove_theme_color_override("font_color")
+
+
+## What is wrong with one parameter's value, or {}. An expression field's own lint answer comes
+## first (it was computed as the field was typed and knows things a table cannot), then the shared
+## per-parameter checks.
+func _note_for(key: String) -> Dictionary:
+	var lint_note: Dictionary = _field_notes.get(key, {})
+	if not lint_note.is_empty():
+		return lint_note
+	var param: Dictionary = _param_dicts.get(key, {})
+	if param.is_empty() or not is_instance_valid(_fields.get(key, null)):
+		return {}
+	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
+	return EventSheetParamFieldFactory.validate(param, str(_extract_value(_fields[key])),
+		_variable_entries, _row_owner, takes)
+
+
+## Points the strip at one parameter: its description and what its kind of field takes, or - when
+## something is wrong with the value - the complaint, in the tone it deserves, with the fixes.
+func _describe_field(key: String) -> void:
+	if _help_strip == null:
+		return
+	_focused_key = key
+	var param: Dictionary = _param_dicts.get(key, {})
+	var note: Dictionary = _note_for(key)
+	if note.is_empty():
+		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
+			EventSheetParamFieldFactory.strip_body(param, _row_owner))
+		return
+	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
+		str(note.get("level", "")), _fix_offers(key, note))
+
+
+## The strip's own description before any field is focused: what the ACE is, and what this opening
+## of the dialog is doing (adding a condition, editing a cell, batch-editing a selection).
+func _describe_dialog_itself() -> void:
+	if _help_strip == null or _definition == null:
+		return
+	var about: String = _definition.description.strip_edges()
+	var doing: String = _build_hint_text().strip_edges()
+	_help_strip.show_note(_definition.display_name,
+		doing if about.is_empty() else "%s  %s" % [about, doing])
+
+
+## The one-click answers a note offers, wired to this dialog's own fields.
+func _fix_offers(key: String, note: Dictionary) -> Array:
+	var offers: Array = []
+	for fix: Variant in note.get("fixes", []):
+		if not (fix is Dictionary):
+			continue
+		var entry: Dictionary = fix
+		var name_text: String = str(entry.get("name", ""))
+		if name_text.is_empty():
+			continue
+		match str(entry.get("kind", "")):
+			"use":
+				offers.append({
+					"text": EventSheetL10n.translate("Use %s") % name_text,
+					"pressed": func() -> void: _write_field(key, name_text),
+				})
+			"add":
+				offers.append({
+					"text": EventSheetL10n.translate("Add %s…") % name_text,
+					"pressed": func() -> void: _add_variable_named(key, name_text),
+				})
+	return offers
+
+
+## Writes a value into a built field the way the user would have typed it, then re-reads the row.
+## Every widget kind the fixes can land on is named here; anything else is left alone rather than
+## being written to through a guess.
+func _write_field(key: String, value: String) -> void:
+	var field: Variant = _fields.get(key, null)
+	if not is_instance_valid(field):
+		return
+	if field is OptionButton:
+		var dropdown: OptionButton = field
+		for index: int in range(dropdown.item_count):
+			if str(dropdown.get_item_metadata(index)) == value:
+				dropdown.select(index)
+				break
+	elif field is LineEdit:
+		(field as LineEdit).text = value
+		(field as LineEdit).caret_column = value.length()
+	elif field is TextEdit:
+		(field as TextEdit).text = value
+		_validate_expression_field(field as Control)
+	_refresh_live_reading()
+	(field as Control).grab_focus()
+
+
+## The "Add hpp…" fix: the dock opens the Add variable dialog with the name already in it when it
+## has offered one, and declares it outright when it has not. Either way the catalog is re-read and
+## the field re-checked, so the red note answers itself.
+func _add_variable_named(key: String, variable_name: String) -> void:
+	if _variable_adder.is_valid():
+		_variable_adder.call(variable_name)
+		return
+	if _variable_creator.is_valid() and bool(_variable_creator.call(variable_name)):
+		_variable_names = _resolve_variable_names()
+		_read_variable_context()
+		_rebuild_variable_options(key, variable_name)
+		_refresh_live_reading()
+
+
+## Puts a newly declared variable into the dropdown that asked for it and selects it, so the fix
+## finishes the job instead of leaving the reader to reopen the list. A typed field is left exactly
+## as it is - the name the fix declared is the one already in the box.
+func _rebuild_variable_options(key: String, variable_name: String) -> void:
+	var dropdown: OptionButton = _fields.get(key) as OptionButton
+	if dropdown == null:
+		return
+	var found: int = -1
+	for index: int in range(dropdown.item_count):
+		if str(dropdown.get_item_metadata(index)) == variable_name:
+			found = index
+	if found < 0:
+		dropdown.add_item(variable_name)
+		found = dropdown.item_count - 1
+		dropdown.set_item_metadata(found, variable_name)
+	dropdown.select(found)
+
+
+## Wires one built field to the strip and the title: focusing or hovering it describes it, and every
+## change re-reads the row. The change SIGNAL is per widget kind on purpose - the factory's
+## `change_signal_of` names the signal that means "committed", and this wants "being typed".
+func _watch_field(key: String, label: Control) -> void:
+	var field: Control = _fields.get(key) as Control
+	if field == null:
+		return
+	var describe: Callable = func() -> void: _describe_field(key)
+	field.focus_entered.connect(describe)
+	field.mouse_entered.connect(describe)
+	if label != null:
+		label.mouse_filter = Control.MOUSE_FILTER_PASS
+		label.mouse_entered.connect(describe)
+	var changed: Callable = func(_ignored: Variant = null) -> void: _refresh_live_reading()
+	# An expression field re-lints on its own text_changed and finishes by re-reading the row, so it
+	# is deliberately absent here - a second connection would run the whole pass twice per keystroke.
+	if field is LineEdit:
+		(field as LineEdit).text_changed.connect(changed)
+	elif field is OptionButton:
+		(field as OptionButton).item_selected.connect(changed)
+	elif field is CheckBox:
+		(field as CheckBox).toggled.connect(changed)
+	elif field is SpinBox:
+		(field as SpinBox).value_changed.connect(changed)
+	elif field is ColorPickerButton:
+		(field as ColorPickerButton).color_changed.connect(changed)
+
+
+## P1 - the line under each choice of a dropdown, from wherever the choices came from. The muted
+## caption beside the list shows the chosen one's line; arrowing the open list describes each choice
+## in the strip BEFORE it is picked. A list with no lines is left exactly as it was.
+func _attach_option_notes(key: String, param_dict: Dictionary, row: HBoxContainer, notes: Dictionary) -> void:
+	var dropdown: OptionButton = _fields.get(key) as OptionButton
+	if dropdown == null or notes.is_empty():
+		return
+	var caption: Label = _muted_label()
+	row.add_child(caption)
+	var refresh: Callable = func(_index: int = -1) -> void:
+		caption.text = str(notes.get(str(_extract_value(dropdown)), ""))
+	dropdown.item_selected.connect(refresh)
+	_choice_captions.append(refresh)
+	refresh.call(dropdown.selected)
+	if _help_strip == null:
+		return
+	_help_strip.follow_option(dropdown, func(index: int) -> Dictionary:
+		if index < 0 or index >= dropdown.item_count:
+			return {}
+		var note: String = str(notes.get(str(dropdown.get_item_metadata(index)), ""))
+		if note.is_empty():
+			return {}
+		return {
+			"heading": EventSheetParamFieldFactory.strip_heading(param_dict),
+			"body": "%s - %s" % [dropdown.get_item_text(index), note],
+		})
+
+
+## P1 - the line beside a field whose choices are typed rather than picked: an Input Map action's
+## keys, how many nodes of the open scene are in a node group. Live, because both answers change
+## with what is in the box.
+func _attach_typed_choice_note(key: String, row: HBoxContainer, hint: String) -> void:
+	var field: LineEdit = _fields.get(key) as LineEdit
+	if field == null:
+		return
+	var caption: Label = _muted_label()
+	row.add_child(caption)
+	var scene_root: Node = _validation_scene_root()
+	var refresh: Callable = func(_text: String = "") -> void:
+		caption.text = EventSheetParamFieldFactory.input_action_note(field.text) if hint == "input_action" \
+			else EventSheetParamFieldFactory.node_group_note(field.text, scene_root)
+	field.text_changed.connect(refresh)
+	_choice_captions.append(refresh)
+	refresh.call()
+
+
+## The second lines a parameter's choices carry, from whichever source the hint names. A
+## variable_reference reads them off the catalog (each variable's type and value); every other
+## options list reads them off the descriptor.
+func _option_notes_for(param_dict: Dictionary) -> Dictionary:
+	if str(param_dict.get("hint", "")).begins_with(VARIABLE_REFERENCE_HINT):
+		var notes: Dictionary = {}
+		for entry: Dictionary in _variable_entries:
+			var line: String = EventSheetParamFieldFactory.variable_option_note(entry)
+			if not line.is_empty():
+				notes[str(entry.get("name", ""))] = line
+		return notes
+	return EventSheetParamFieldFactory.option_notes(param_dict)
 
 
 func _build_hint_text() -> String:

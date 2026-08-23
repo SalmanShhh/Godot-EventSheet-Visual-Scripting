@@ -1001,6 +1001,8 @@ static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
 static var _starters: Array[Dictionary] = []
 ## Param editors: hint or type_name -> Callable(param_dict, initial_text) -> LineEdit.
 static var _param_editors: Dictionary = {}
+## Param help strip paragraphs: hint -> the sentence the strip says about a field of that kind.
+static var _param_help: Dictionary = {}
 ## Welcome Preferences rows: Array[Callable() -> Control].
 static var _preference_builders: Array[Callable] = []
 ## Dictionary-defined ACEs live in the registry's extras (see register_simple_ace).
@@ -1200,7 +1202,13 @@ static func combo_options(source: Variant) -> Array:
 		for entry: Variant in source:
 			if entry is Dictionary:
 				var pair: Dictionary = entry as Dictionary
-				output.append({"key": str(pair.get("key", "")), "label": str(pair.get("label", pair.get("key", "")))})
+				# `note` is the line that reads UNDER the choice in the Parameters dialog ("double
+				# speed, keeps momentum"). Optional: an option without one renders as it always did.
+				output.append({
+					"key": str(pair.get("key", "")),
+					"label": str(pair.get("label", pair.get("key", ""))),
+					"note": str(pair.get("note", "")),
+				})
 			else:
 				output.append({"key": str(entry), "label": str(entry)})
 	return output
@@ -1251,6 +1259,23 @@ static func register_param_editor(tag: String, factory: Callable) -> void:
 
 static func param_editor_for(tag: String) -> Callable:
 	return _param_editors.get(tag, Callable())
+
+
+## What the Parameters dialog's help strip says about a parameter carrying this HINT - the
+## paragraph under the parameter's own description, telling the reader what THIS kind of box takes
+## and how to answer it. A pack that ships a new hint (with `register_param_editor`) describes it
+## here rather than leaving the strip generic on the very field that needed explaining.
+##
+## One paragraph per hint; last registration wins, and a registration overrides the builtin text.
+## Keep it to a sentence or two: the strip is a foot, not a manual.
+static func register_param_help(hint: String, paragraph: String) -> void:
+	_param_help[hint] = paragraph
+
+
+## The registered paragraph for a hint, or "" when nothing was registered for it (the builtin table
+## answers then).
+static func param_help(hint: String) -> String:
+	return str(_param_help.get(hint, ""))
 
 
 ## Commit-time validation for a param HINT (the generic seam the feature-tag nudge uses):
