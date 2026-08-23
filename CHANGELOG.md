@@ -464,6 +464,11 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   the one table all three read - and so does the row builder's search for the prelude block a
   description edit has to rewrite, which had hand-coded the same `## ` prefix and `## @` exclusion a
   fourth time.
+- **A group's child rows are asked for once.** `EventGroup.child_rows()` has answered the
+  `events`/`rows` alias pair since it was written, and the compiler still spelled the alias out by
+  hand at fourteen call sites; a function body's two spellings were spelled out at four more. Both
+  are one call now, so a pass cannot walk one spelling and silently miss the other - which is exactly
+  how the Static local under a function went undeclared.
 - **An unnamed region has one name.** The block kind called it `(unnamed)` and the region facts
   called it `(unnamed region)`, so the row on the canvas and the picker (and the amber note about an
   unclosed fence) named the same fence two different things. The kind asks the facts module, which

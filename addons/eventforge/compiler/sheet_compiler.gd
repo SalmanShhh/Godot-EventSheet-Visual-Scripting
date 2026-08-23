@@ -1326,7 +1326,7 @@ static func _count_event_rows(rows: Array) -> int:
 			total += 1
 		elif row is EventGroup:
 			var inner: EventGroup = row as EventGroup
-			total += _count_event_rows(inner.events if not inner.events.is_empty() else inner.rows)
+			total += _count_event_rows(inner.child_rows())
 	return total
 
 
@@ -1380,7 +1380,7 @@ static func _collect_groups(rows: Array, decls: Array, used: Dictionary, slugs: 
 			var slug: String = _group_slug(group_name, used)
 			slugs[group] = slug
 			decls.append({"slug": slug, "parent": parent_slug, "group": group})
-			_collect_groups(group.events if not group.events.is_empty() else group.rows, decls, used, slugs, slug)
+			_collect_groups(group.child_rows(), decls, used, slugs, slug)
 
 
 ## The `## @ace_group(...)` declaration line this compiler writes for every group in `rows`, keyed by
@@ -1458,12 +1458,12 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 							already_known = true
 					if not already_known:
 						_runtime_group_members.append([child_guard, group.enabled])
-				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""))
+				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""))
 			else:
 				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
 				# in the generated code. Disabling a group intentionally excludes its events (the
 				# editor's "Set Group Active" toggle), but vanishing them with no trace is a footgun.
-				var omitted: int = _count_event_rows(group.events if not group.events.is_empty() else group.rows)
+				var omitted: int = _count_event_rows(group.child_rows())
 				if omitted > 0:
 					var disabled_label: String = (group.group_name if not group.group_name.is_empty() else group.name).strip_edges()
 					if disabled_label.is_empty():
@@ -2904,7 +2904,7 @@ static func _collect_signal_rows(entries: Array, into: Array) -> void:
 			into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_signal_rows(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_signal_rows(group.child_rows(), into)
 
 
 ## True when the sheet already declares a signal by this name as a first-class row, so a
@@ -2927,7 +2927,7 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 			into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_enum_rows(group.child_rows(), into)
 
 
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
@@ -2938,7 +2938,7 @@ static func _collect_custom_blocks(entries: Array, into: Array) -> void:
 			into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_custom_blocks(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_custom_blocks(group.child_rows(), into)
 
 
 ## Gathers stateful-condition member declarations (deduped) from the event tree.
@@ -2953,7 +2953,7 @@ static func _collect_group_locals(entries: Array, into: Array) -> void:
 					locals.append(local_entry)
 			if not locals.is_empty():
 				into.append({"group": group.group_name if not group.group_name.is_empty() else group.name, "locals": locals})
-			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_group_locals(group.child_rows(), into)
 
 
 ## The rows one function's body is made of, across the `events` / `rows` alias pair. Every pass that
@@ -2987,7 +2987,7 @@ static func _collect_static_locals(entries: Array, into: Array, warnings: Array 
 	for entry: Variant in entries:
 		if entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_static_locals(group.events if not group.events.is_empty() else group.rows, into, warnings, seen)
+			_collect_static_locals(group.child_rows(), into, warnings, seen)
 		elif entry is EventRow:
 			var event_row: EventRow = entry as EventRow
 			for local_entry: Variant in event_row.local_variables:
@@ -3021,7 +3021,7 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 				if not already_known:
 					_runtime_group_members.append([guard_name, group.enabled])
 			if group.enabled:
-				_collect_runtime_group_members(group.events if not group.events.is_empty() else group.rows)
+				_collect_runtime_group_members(group.child_rows())
 
 
 static func _collect_stateful_members(entries: Array, into: Array) -> void:
@@ -3054,7 +3054,7 @@ static func _collect_stateful_members(entries: Array, into: Array) -> void:
 			_collect_stateful_members(event_row.sub_events, into)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_stateful_members(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_stateful_members(group.child_rows(), into)
 
 
 ## Substitutes {param} tokens with the row's param values (plain str(), like codegen).
@@ -3071,7 +3071,7 @@ static func _collect_class_level_raw_rows(entries: Array, into: Array) -> void:
 			into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_class_level_raw_rows(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_class_level_raw_rows(group.child_rows(), into)
 
 
 ## Recursively gathers tree-placed LocalVariable rows from the event tree (top level, groups
@@ -3082,7 +3082,7 @@ static func _collect_tree_variables(entries: Array, into: Array) -> void:
 			into.append(entry)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_tree_variables(group.events if not group.events.is_empty() else group.rows, into)
+			_collect_tree_variables(group.child_rows(), into)
 		elif entry is EventRow:
 			_collect_tree_variables((entry as EventRow).sub_events, into)
 
@@ -3094,7 +3094,7 @@ static func _collect_deprecated_aces(entries: Array, warnings: Array, seen: Dict
 	for entry: Variant in entries:
 		if entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			_collect_deprecated_aces(group.events if not group.events.is_empty() else group.rows, warnings, seen)
+			_collect_deprecated_aces(group.child_rows(), warnings, seen)
 		elif entry is EventRow:
 			var row: EventRow = entry as EventRow
 			_warn_if_deprecated(row.trigger_provider_id, row.trigger_id, warnings, seen)
