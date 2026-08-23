@@ -1286,7 +1286,12 @@ static func run() -> bool:
     all_passed = _check("the New Function submenu offers a plain helper + the three ACE kinds",
         [dock._new_function_submenu.get_item_text(0), dock._new_function_submenu.get_item_text(1), dock._new_function_submenu.get_item_text(2), dock._new_function_submenu.get_item_text(3)],
         ["Function", "Action", "Condition", "Expression"]) and all_passed
-    all_passed = _check("empty context menu fourth item is add variable", dock._empty_space_context_menu.get_item_text(3), "Add New Variable") and all_passed
+    all_passed = _check("empty context menu fourth item is the Add Variable submenu", dock._empty_space_context_menu.get_item_text(3), "Add Variable") and all_passed
+    # V8 - "add a variable" is three questions, so the submenu asks the one that matters.
+    all_passed = _check("the Add Variable submenu names the three scopes",
+        [dock._add_variable_submenu.get_item_text(0), dock._add_variable_submenu.get_item_text(1),
+            dock._add_variable_submenu.get_item_text(2)],
+        ["Global variable…", "Local variable…", "Instance variable…"]) and all_passed
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
     # "New Event" routes through the same ACE picker as the toolbar / double-click (new-event mode) now,
     # instead of dropping a blank event - so the event count holds until the user picks something.

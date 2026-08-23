@@ -102,9 +102,9 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	ok = _check("a one-line guard clause is a sub-event, not a code cell",
 		_reading_at(rows, "Stop event"), "host does not exist | Stop event") and ok
 	ok = _check("a one-line if calls its verb",
-		_reading_at(rows, "Call Die"), "hp ≤ 0 | Call Die") and ok
+		_reading_at(rows, "Call Die"), "OneLineBlocksFixture hp ≤ 0 | Call Die") and ok
 	ok = _check("a one-line elif is an Else with its own condition",
-		_reading_at(rows, "\"low\""), "Else > hp < 5 | Play from \"low\"s") and ok
+		_reading_at(rows, "\"low\""), "Else > OneLineBlocksFixture hp < 5 | Play from \"low\"s") and ok
 	ok = _check("a one-line else is the plain Else",
 		_reading_at(rows, "\"hurt\""), "Else | Play from \"hurt\"s") and ok
 	# `i == 1` is a COMPARISON, not an identity test. Is The Same Object's reverse template is the bare
@@ -170,7 +170,7 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 	# R9 re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
 	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
 	ok = _check("and the branch inside that lambda is a sub-event of it",
-		_reading_at(rows, "Stop"), "seconds left ≤ 0 | Stop timer \"Timer\"") and ok
+		_reading_at(rows, "Stop"), "OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
 	ok = _check("a connect handed a NAMED function is left exactly as it was",
 		_connect_parts("timer.timeout.connect(_on_timeout)"), "") and ok
 	ok = _check("a connect whose lambda body is empty is refused",

@@ -1,7 +1,8 @@
-# EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as eight
-# organs (Properties · State · Triggers · Actions · Conditions · Expressions · Editor Tools · Uses),
-# fed by a pure
-# static census. Pins: variables split by exported flag, SignalRow triggers with friendly names,
+# EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as nine
+# organs (the variables by scope - Instance · Globals used here · Locals in view - then Triggers ·
+# Actions · Conditions · Expressions · Editor Tools · Uses), fed by a pure
+# static census. Pins: variables grouped by scope and spelled as their rows' sentences (V9),
+# SignalRow triggers with friendly names,
 # exposed EventFunctions classified like the Studio cards (internal helpers excluded), opened-pack
 # annotation shells feeding the same organs, Uses listing outside providers only (never Core), the
 # dock wiring (refresh on tab activate; entry click reveals the row), and that the census never
@@ -52,8 +53,12 @@ static func run() -> bool:
 	sheet.functions.append(helper)
 
 	var organs: Dictionary = _by_id(BehaviourAnatomyPanel.collect_anatomy(sheet))
-	ok = _check("exported var → Properties", _labels(organs["properties"]), ["max_health : float"]) and ok
-	ok = _check("internal var → State", _labels(organs["state"]), ["cooldown_left : float"]) and ok
+	# V9 - the variables read by SCOPE, in the sentence their rows use, not split by an exported flag.
+	ok = _check("the object's variables read as their rows' sentences", _labels(organs["instance"]),
+		["Instance number cooldown_left = 0.0", "Instance number max_health = 100.0"]) and ok
+	ok = _check("a sheet that touches no global has an empty globals organ",
+		_labels(organs["global"]), []) and ok
+	ok = _check("and no locals in view either", _labels(organs["local"]), []) and ok
 	ok = _check("trigger signal listed by friendly name", _labels(organs["triggers"]), ["On Jumped"]) and ok
 	ok = _check("exposed void fn → Actions", _labels(organs["actions"]), ["Heal"]) and ok
 	ok = _check("exposed bool fn → Conditions (humanized)", _labels(organs["conditions"]), ["Is Dead"]) and ok
@@ -74,8 +79,8 @@ static func run() -> bool:
 	dock._load_sheet_from_path(pack_path)
 	var pack_organs: Dictionary = _by_id(BehaviourAnatomyPanel.collect_anatomy(dock.get_current_sheet()))
 	ok = _check("pack triggers found", (pack_organs["triggers"] as Array).size() > 0, true) and ok
-	ok = _check("pack knobs found (exported tree variables → Properties)",
-		(pack_organs["properties"] as Array).size() > 0, true) and ok
+	ok = _check("pack knobs found (tree variables → the object's own variables)",
+		(pack_organs["instance"] as Array).size() > 0, true) and ok
 	ok = _check("pack actions found via annotation shells", (pack_organs["actions"] as Array).size() > 10, true) and ok
 	ok = _check("pack expressions found", (pack_organs["expressions"] as Array).size() > 5, true) and ok
 	ok = _check("Take Damage is an Action entry", _labels(pack_organs["actions"]).has("Take Damage"), true) and ok
@@ -92,7 +97,8 @@ static func run() -> bool:
 		elif (row as Dictionary).get("resource") is Resource:
 			entry_with_resource += 1
 	# R35 added EDITOR TOOLS: what the sheet adds to the editor, beside what it adds to the game.
-	ok = _check("eight organ headers always visible", header_count, 8) and ok
+	# V9 split the one variables organ into the three scopes a reader knows them by.
+	ok = _check("nine organ headers always visible", header_count, 9) and ok
 	ok = _check("entries carry jumpable resources", entry_with_resource > 0, true) and ok
 	# Folding an organ hides its entries but keeps the header (view state only).
 	var before_rows: int = dock._anatomy_panel._rows.size()

@@ -69,6 +69,20 @@ static func run() -> bool:
 		[EventSheets.opposite_operator("<="), EventSheets.opposite_operator("=="),
 			EventSheets.opposite_operator("begins with")], [">", "!=", ""]) and ok
 
+	# V6 - who owns each variable a sheet can name, and how a row spells one.
+	var owned: EventSheetResource = EventSheetResource.new()
+	owned.custom_class_name = "Player"
+	owned.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
+	var catalog: Array[Dictionary] = EventSheets.sheet_variables(owned)
+	ok = _check("sheet_variables lists the object's own variables",
+		catalog.size(), 1) and ok
+	ok = _check("variable_owner names the object that HAS it",
+		EventSheets.variable_owner(catalog, "hp"), "Player") and ok
+	ok = _check("a name the sheet never declares has no owner",
+		EventSheets.variable_owner(catalog, "hpp"), "") and ok
+	ok = _check("variable_sentence is the row's own spelling",
+		EventSheets.variable_sentence(catalog[0]), "Instance whole number hp = 100") and ok
+
 	# ── Custom Block API: the hover seam (kinds explain their rows on hover) ──
 	ok = _check("block kinds hover silently by default",
 		EventSheetBlockKind.new().hover_text(CustomBlockRow.new()), "") and ok

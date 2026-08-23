@@ -58,8 +58,8 @@ static func run() -> bool:
 	# Empty search → the sheet's variables show as one-click leaves.
 	dlg2._expression_picker._expression_search.text = ""
 	dlg2._refresh_expression_tree()
-	all_passed = _check("sheet variable leaf 'enemy' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "enemy"), true) and all_passed
-	all_passed = _check("sheet variable leaf 'score' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "score"), true) and all_passed
+	all_passed = _check("sheet variable leaf 'enemy' inserts enemy", _tree_inserts(dlg2._expression_picker._expression_tree, "enemy"), true) and all_passed
+	all_passed = _check("sheet variable leaf 'score' inserts score", _tree_inserts(dlg2._expression_picker._expression_tree, "score"), true) and all_passed
 
 	# Searching 'velocity' → enemy.velocity is offered (CharacterBody2D reflection); score (int) adds nothing.
 	dlg2._expression_picker._expression_search.text = "velocity"
@@ -79,8 +79,8 @@ static func run() -> bool:
 	sheet.events.append(speed_var)
 	dlg2._expression_picker._expression_search.text = ""
 	dlg2._refresh_expression_tree()
-	all_passed = _check("tree variable 'host' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "host"), true) and all_passed
-	all_passed = _check("tree variable 'move_speed' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "move_speed"), true) and all_passed
+	all_passed = _check("tree variable 'host' inserts host", _tree_inserts(dlg2._expression_picker._expression_tree, "host"), true) and all_passed
+	all_passed = _check("tree variable 'move_speed' inserts move_speed", _tree_inserts(dlg2._expression_picker._expression_tree, "move_speed"), true) and all_passed
 	dlg2._expression_picker._expression_search.text = "velocity"
 	dlg2._refresh_expression_tree()
 	all_passed = _check("tree variable 'host' chains 'host.velocity'", _tree_has_item(dlg2._expression_picker._expression_tree, "host.velocity"), true) and all_passed
@@ -91,6 +91,23 @@ static func run() -> bool:
 ## Recursively true when the tree contains an item whose column-0 text equals `text`.
 static func _tree_has_item(tree: Tree, text: String) -> bool:
 	return tree != null and _walk_item(tree.get_root(), text)
+
+
+## V11. A leaf found by what it INSERTS rather than by what it says: a variable leaf now reads as its
+## sentence ("score   whole number = 0"), and the fragment in its metadata is what a caret receives.
+static func _tree_inserts(tree: Tree, fragment: String) -> bool:
+	return tree != null and _walk_insert(tree.get_root(), fragment)
+
+
+static func _walk_insert(item: TreeItem, fragment: String) -> bool:
+	if item == null:
+		return false
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		if str(child.get_metadata(0)) == fragment or _walk_insert(child, fragment):
+			return true
+		child = child.get_next()
+	return false
 
 
 static func _walk_item(item: TreeItem, text: String) -> bool:
