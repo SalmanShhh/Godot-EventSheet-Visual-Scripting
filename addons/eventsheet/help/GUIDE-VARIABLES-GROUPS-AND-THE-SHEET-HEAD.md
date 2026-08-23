@@ -293,9 +293,11 @@ back: it opens on the scope the variable has.
 | double-click the value | edits in place, with the type word as the guide rail. A literal the type cannot hold turns amber and is refused |
 | double-click anywhere else on the row | opens the Edit variable dialog |
 | double-click the echo | opens the code panel at that line |
+| **F2** | renames the variable in place, with the count of what committing will rewrite beside the field ("renames 6 uses in 2 sheets · Enter to apply · Esc"). Enter is the full Rename Everywhere in one undo step; Esc leaves the file alone |
 | hover the name | every other use of it in the same scope lights up, so you can see what reads it |
 | Alt+Up / Alt+Down | reorders the declaration, writing the new order |
-| drag the row | the same, by hand; the drop writes the order |
+| drag the row onto another declaration | reorders it, or folds both into one Inspector folder; the drop writes it |
+| drag the row onto a parameter's value | fills that parameter with the spelling it needs - bare for this object's own variable or a local, `Game.Score` for a global |
 
 While the game runs, **Live Values** adds a green `now 73` chip after the initial value - after it,
 not instead of it, so the declaration still reads as a declaration.
@@ -305,7 +307,7 @@ The right-click menu on a variable row:
 | Item | What it does |
 |---|---|
 | Edit Variable | the dialog above |
-| Rename Everywhere… | renames the declaration and every use, in one undo step |
+| Rename Everywhere… (**F2**) | renames the declaration and every use, in one undo step. The key does it in place on the row |
 | Change Type Everywhere… | retypes it and rewrites every row that sets or compares it |
 | Convert Scope | moves it between Global, Local and Instance |
 | Toggle Constant | `var` to `const` and back |
@@ -353,7 +355,14 @@ against `== true`. Both write exactly the GDScript the older rows write.
 event - "hpp is not a variable of Player. Did you mean hp?" - with a **Use hp** button that renames
 every use of it in one undo step. A verb handed the wrong KIND of variable grows an amber note
 instead ("nickname is text - Add to wants a number. Set value fits."), because that line compiles and
-only misbehaves.
+only misbehaves - and it carries a **Change to Set value** button that swaps the verb for the one
+that fits, carrying what was typed across to whatever the new verb calls it.
+
+**And the Project Doctor says the same two things, in the same words.** `unknown-variable` (an error)
+and `variable-type-mismatch` (a warning) are the row notes above, reported for every sheet the
+project scan can see rather than only the one that is open - the sentences come from the same call
+the canvas makes, so a problem you met on a row and a line in the report are never two problems.
+`region-fence` does it for an unmatched `#region`, in the wording its own orphan note uses.
 
 ## Asking a question: the comparison rows
 
@@ -387,6 +396,12 @@ so the friendly wording teaches the spelling instead of hiding it.
 **How you get there.** Pick any comparison from the picker (Compare variable, Compare Values, Is
 Between Values, Is Outside Range, Values Are Near, or one of the text tests), or edit a comparison
 row that is already on the sheet. All of them open the one **Compare** dialog.
+
+The picker files them the way the dialog treats them: **Compare variable** sits in the Variables
+group beside Set value and Is boolean set, because comparing a variable is the question that group
+is for, and the other eleven live together under **Variables ▸ All comparisons**. Every one of the
+twelve is still registered under its own name, so typing "begins with" or "within" finds that row
+directly.
 
 It asks the three things a comparison actually decides:
 
@@ -506,6 +521,13 @@ reason beside it rather than going grey without explanation:
 
 Coming back from **Add hpp…**, the list has it: the dialog re-reads its catalog when it regains
 focus.
+
+**And when nothing is wrong, the strip can still offer a plainer reading.** A **Set value** whose
+expression only adds to (or subtracts from) the very variable it is setting - `hp = hp + 1` - offers
+**read as Add to**; `hp = hp - damage * 2` offers **read as Subtract from**. One press rewrites the
+row as that verb, in one undo step, and the compiled line does not change. The offer is withheld
+whenever taking it would change what the row computes (`hp - a + b` is not `hp -= a + b`) or when
+the expression is somebody else's arithmetic.
 
 ## The sheet head, band by band
 

@@ -131,6 +131,13 @@ print(EventSheets.describe_inspector("int", attrs))
 print(EventSheets.variable_code(my_local_variable))
 print(EventSheets.variable_declaration_line(my_local_variable))
 
+# The line each event GROUP declares itself on, keyed by the group - what a group head echoes at
+# its right edge, and what the importer reads back to rebuild the nesting. One walk, so a caller
+# with many heads to draw asks once.
+var group_lines := EventSheets.group_declaration_lines(sheet)
+for group in group_lines:
+	print(group_lines[group])  # ## @ace_group(uid="combat", name="Combat")
+
 # The operator table the sheet's own comparison rows read through, so a pack's rows can say the
 # question the same way: the glyph a reader sees, and the opposite an invert would write.
 print(EventSheets.comparison_glyph("<="))        # ≤
@@ -243,6 +250,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
 | Codegen | `variable_declaration_line(variable: LocalVariable)` - the one line of `variable_code` that declares something; the doc comment, the `@export_group` header and a Static local's marker are true of the file but are not the declaration | `String` | no |
+| Codegen | `group_declaration_lines(sheet)` - the `## @ace_group(...)` line the compiler writes for each of the sheet's event groups, keyed by the `EventGroup` (uid, name, parent, description, colour and the two flags). What a group head echoes, and what the importer reads back | `Dictionary` | no |
 | Rows | `sheet_variables(sheet)` - every variable the sheet can name and who owns each, in reading order (this object's, then the globals it reaches for, then the locals in scope). Entries carry `name`, `type_name`, `type_word`, `value`, `scope`, `owner`, `group`, `inspector`, `description`, `insert_text`, `resource`, `autoload` | `Array[Dictionary]` | no |
 | Rows | `variable_owner(variables, variable_name)` - the object column a row naming that variable reads with (the sheet's object, an autoload, or `System` for a local), `""` when the sheet declares no such variable. Takes the list `sheet_variables()` returned | `String` | no |
 | Rows | `variable_sentence(variable)` - one entry written the way its row reads it, minus the owner (`Instance whole number hp = 100`) | `String` | no |
