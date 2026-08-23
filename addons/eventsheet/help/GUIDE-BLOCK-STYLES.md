@@ -52,17 +52,22 @@ number is what a bookmark, the Find bar and a Doctor finding all print.
 
 ## Identity bars - what this sheet IS
 
-![The head at rest: the enum as one sentence, with the Class setup breadcrumb above it](images/prelude-blocks-closed.png)
+![The head at rest: the enum as one sentence, with the sheet head's bands above it](images/prelude-blocks-closed.png)
 
-![The same head opened: one row per enum value with its number, and the Class setup facts listed out](images/prelude-blocks-open.png)
+![The same head opened: one row per enum value with its number, under the sheet head's bands](images/prelude-blocks-open.png)
 
 Three definition blocks wear the accent band, a left accent edge, and half again the height of
 a content row, so they can never be mistaken for one:
 
-- **Class setup**: the inheritance breadcrumb (`Node ▸ CharacterBody2D ▸ YourClass`) with the
-  base class's own editor icon. Open it for the facts as a list - `@tool`, remembered
-  variables, setup line count - with the raw prelude lines behind "double-click to edit in
-  code". A prelude line carrying an error still surfaces, marker and all.
+- **The head**: one band per line the file opens with, in reading order and always visible -
+  the name (bold, with the base class's own editor icon), `extends`, `@icon`, `@tool`, the `##`
+  description, an autoload's project entry, a behaviour's host binding, the variables kept
+  between runs. Each band states one fact, carries the one control that writes its line
+  (`change…` on `extends` is the host picker, the icon swatch a file dialog, `@tool` a switch,
+  the description edits in place) and echoes that line at its right edge. Nothing folds: the
+  head is its lines, the way the file is, and a `+ add` row under the stack offers only the
+  lines this sheet could have and does not. A prelude line carrying an error still surfaces,
+  marker and all.
 - **Host binding** (behavior sheets): the host class icon + "Host binding" + the class chip -
   the node this behavior acts on.
 - **Enum**: closed, a sentence - "State is one of PATROL, CHASE or FLEE" (long enums say
@@ -146,6 +151,6 @@ titled, tinted by their color tag, holding events as children.
 
 Real logic that stays code wears the bright **GDScript** chip and full-strength text - the one
 block style that says "this is verbatim code" (an amber ⚠ notes a line the lifter could not
-structure, with the reason on hover). Prelude scaffolding never wears the chip: it lives dimmed
-under the Class setup bar instead. If a block looks like code and is NOT marked this way,
+structure, with the reason on hover). Prelude scaffolding never wears the chip: it reads as the
+head's bands instead. If a block looks like code and is NOT marked this way,
 something is wrong - report it.

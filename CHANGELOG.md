@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Changed - the head of a sheet is the head of its file, one band per line
+
+- **The crumb trail is gone.** `▣ Node ▸ CharacterBody2D ▸ Player`, folded away by default with the
+  rest of the facts behind a label/value dropdown, is replaced by a STACK: one band per line the
+  file opens with, in reading order - the class name (bold, wearing the base class's own editor
+  icon), `extends`, `@icon`, `@tool`, the `##` description, an autoload's `project.godot` entry, a
+  behaviour's host binding, the variables kept between runs. One fact, one control and one code
+  echo per band, and nothing folds: the head is its lines, always in view, the way the file is.
+- **Every band matches a real line.** The echo at a band's right edge is the line itself, coloured
+  by the same tokeniser a variable row's echo uses - so an autoload, which usually has no
+  `class_name` at all, shows its file name muted and echoes `# no class_name - the name is the
+  autoload entry` rather than inventing a declaration. An `@tool` a kind usually carries but this
+  file does not shows its switch off with the echo ghosted, so the control stays findable.
+- **Each band carries the one control its line needs.** F2 or a double-click on the name renames the
+  class everywhere, saying "renames 9 uses in 4 sheets" before it writes anything; `change…` on
+  `extends` opens the host picker; the icon swatch opens an image file dialog; `@tool` is a switch;
+  the description edits in place and writes the `##` block; an autoload band points at Project
+  Settings, which is the only place its name can change. A muted **+ add** row under the stack
+  offers only the lines this sheet could have and does not (icon, `@tool`, description) - never
+  autoload or host, which come from choosing a kind.
+- **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
+  band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each
+  prompt is a muted link, not a wizard, and each disappears as it is answered.
+- **The Sheet Type dialog took the same shape.** Kind is a dropdown first, reading the six kinds most
+  sheets are, then a divider, then the kinds that make editor tooling - each described in the one
+  help strip at the foot of the dialog (no READS AS line: the head above it IS the preview). Then
+  Name, Extends, Icon, Description, Runs in the editor too, and More… for the composition fields.
+  Every type still carries its frozen index as its item id, so a saved sheet's kind is unchanged.
+
 ### Changed - a variable row is one sentence, with its declaration beside it
 
 - **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every

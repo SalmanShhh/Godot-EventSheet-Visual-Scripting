@@ -310,7 +310,7 @@ losslessly.
 Here is an ordinary hand-written helper from this plugin's own source - nothing was written or reformatted
 for the picture - opened as a sheet:
 
-<img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: a collapsed Class setup strip, an Expression verb named Parse with a source parameter and a gives back Dictionary badge, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
+<img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: the head's band stack, an Expression verb named Parse with a source parameter and a gives back Dictionary badge, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
 
 Note what the file became: the header comment, `@tool`, `class_name` and `extends` fold into one **Class
 setup** strip; the function becomes a real function row with a named parameter and a return badge; and its body
@@ -383,8 +383,8 @@ That is the order this section is in.
   fires - 11` folder, one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...),
   and `Instance variables  of FPSController` for everything the groups did not claim. Inside a folder a
   variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
-  sentence below, plus the knob's own description. On an editable sheet the head keeps its Class setup
-  strip and `@export` chips, because those are things you edit; the folders are for reading.
+  sentence below, plus the knob's own description. On an editable sheet the head keeps its band stack
+  and `@export` chips, because those are things you edit; the folders are for reading.
 
   ![A behaviour pack's head: the Include bar reading "Addon Pack FPSController v1.0.0 behaves on a CharacterBody3D", the class description as a comment bar, then folded Triggers, Input and one folder per setting group](images/opened-pack-head.png)
 
@@ -1680,11 +1680,11 @@ The lift does not require style-guide code. Beginner spellings round-trip byte-e
   rows that re-emit the walrus exactly as written.
 - **Untyped lifecycle headers** (`func _physics_process(delta):` - no return arrow) lift to their
   trigger events carrying the source spelling, so saving changes nothing.
-- **The prelude reads as the sheet's identity**: a Class setup bar showing the inheritance
-  breadcrumb (`Node ▸ CharacterBody2D ▸ YourClass`, with the base class's own editor icon), whose
-  dropdown lists the facts - `@tool`, remembered variables, setup line count - with the raw lines
-  behind a double-click, and an enum reads as a sentence ("State is one of PATROL, CHASE or FLEE")
-  that opens into one row per value.
+- **The prelude reads as the sheet's identity**: one band per line, always visible - the class
+  name (with the base class's own editor icon), `extends`, `@icon`, `@tool`, the `##` description,
+  an autoload's `project.godot` entry, a behaviour's host binding - each echoing its own line at
+  the right edge, and an enum reads as a sentence ("State is one of PATROL, CHASE or FLEE") that
+  opens into one row per value.
 
 And a hand-written `enum` + `match` state machine opens READING like a state machine: the tick
 event's lane says "decides by state - 3 states below", each case is a ◆ `Current state is "patrol"`
@@ -1726,7 +1726,7 @@ only: the file is untouched and it still re-emits byte for byte.
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:
 
-<img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: a folded Class setup strip, a one-row collapsed const KNOWN_ANNOTATIONS table reading 31 entries, and a function whose body is an Expression verb row with condition and action rows." width="720">
+<img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: the head's band stack, a one-row collapsed const KNOWN_ANNOTATIONS table reading 31 entries, and a function whose body is an Expression verb row with condition and action rows." width="720">
 
 ---
 
