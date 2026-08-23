@@ -89,19 +89,19 @@ static func _any_row_contains(texts: PackedStringArray, needle: String) -> bool:
 	return false
 
 
-## N1 - the two fence lines read as one group bar carrying the name and a count, and a region
-## written inside another region nests inside its bar.
+## N1 - the two fence lines read as a fold mark carrying the name and echoing the line the file
+## has, and a region written inside another region nests inside it.
 static func _region_groups() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open()
 	var texts: PackedStringArray = _row_texts(view)
-	passed = _check("a region reads as a named group bar with its count",
-		_any_row_contains(texts, "Movement | 2 events"), true) and passed
-	passed = _check("a one-event region counts in the singular",
-		_any_row_contains(texts, "Combat | 1 event"), true) and passed
+	passed = _check("a region reads as a named fold mark echoing its own fence",
+		_any_row_contains(texts, "# | Movement | #region Movement"), true) and passed
+	passed = _check("and the closing fence says only the line it is",
+		_any_row_contains(texts, "#endregion"), true) and passed
 	var movement: EventRowData = _first_row_containing(view, "Movement")
-	passed = _check("the bar wears the group row type",
-		movement != null and movement.row_type == EventRowData.RowType.GROUP, true) and passed
+	passed = _check("the fence wears the region row type",
+		movement != null and movement.row_type == EventRowData.RowType.REGION, true) and passed
 	# The nested region is a CHILD of the one around it, never a sibling.
 	var combat: EventRowData = _first_row_containing(view, "Combat")
 	var nested_found: bool = false

@@ -47,11 +47,11 @@ static func run() -> bool:
 		var folded_rows: Array = viewport._build_rows_from_sheet(sheet)
 		var folded_opener: EventRowData = _region_rows_in(folded_rows)[0]
 		ok = _check("fold state seeds the rebuilt opener", folded_opener.folded, true) and ok
-		var tail_span: SemanticSpan = folded_opener.spans[folded_opener.spans.size() - 1]
-		# The count names CONTENT rows; the closing fence is plumbing, not content. It is the group
-		# bar's own count now, so it reads the same open or folded - a bar should say how much it
-		# holds before you decide whether to open it.
-		ok = _check("a region bar names how much it holds", tail_span.text, "2 rows") and ok
+		# The count names CONTENT rows; the closing fence is plumbing, not content. R1 - it takes the
+		# description's place while the region is FOLDED, which is when "how much is in here" is the
+		# one thing worth knowing; open, the author's own description reads there instead.
+		ok = _check("a folded region names how much it holds",
+			_span_text(folded_opener, "region_note"), "2 rows") and ok
 		viewport._fold_state.clear()
 
 	# ── Unbalanced fences stay flat ──
@@ -201,6 +201,14 @@ static func run() -> bool:
 	dock.free()
 	viewport.free()
 	return ok
+
+
+## The text of the first span carrying `key` in its metadata, or a legible miss.
+static func _span_text(row_data: EventRowData, key: String) -> String:
+	for span: SemanticSpan in row_data.spans:
+		if span != null and span.metadata is Dictionary and (span.metadata as Dictionary).has(key):
+			return span.text
+	return "<no span %s>" % key
 
 
 static func _region_blocks_in(sheet: EventSheetResource) -> Array:
