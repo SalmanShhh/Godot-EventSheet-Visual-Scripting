@@ -140,9 +140,31 @@ static func run() -> bool:
 		Array(EventForgeACEFactory.COMPARISON_OPERATORS)) and ok
 	ok = _check("a params dialog shows the GDScript form muted", _params_operator_note(), "<=") and ok
 
+	# The dropdown speaks the sheet's READING words, but the dialog files its answer by STORAGE: a
+	# caller opening it on "instance" - the Add submenu's Instance variable…, the parameters dialog's
+	# Add-this-name fix - means the object's own variables, and had its answer filed as an event local.
+	ok = _check("opening on Instance files a variable of the object",
+		_confirmed_scope(host, EventSheetVariableSentence.SCOPE_INSTANCE), "global") and ok
+	ok = _check("opening on Local still files a local", _confirmed_scope(host, "local"), "local") and ok
+
 	ok = _test_the_strip_is_the_only_explanation(dialog) and ok
 	host.free()
 	return ok
+
+
+## The storage a confirm files its answer under when the dialog is opened on `opened_scope`. A fresh
+## dialog each time, because a used one deliberately reopens on the scope the last variable had.
+static func _confirmed_scope(host: Node, opened_scope: String) -> String:
+	var dialog: VariableDialog = VariableDialog.new()
+	dialog.init_dialog(host)
+	dialog.set_sheet_provider(func() -> Variant: return null)
+	var seen: Dictionary = {}
+	dialog.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, scope: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool, _st: bool) -> void:
+		seen["scope"] = scope)
+	dialog.open(opened_scope)
+	dialog._name_edit.text = "armour"
+	dialog._on_confirmed()
+	return str(seen.get("scope", ""))
 
 
 ## P4/P3 - ONE strip, and nothing beside a field. Every verdict the dialog reaches - a literal that

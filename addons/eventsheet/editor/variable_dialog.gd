@@ -678,46 +678,57 @@ func init_dialog(parent_node: Node) -> void:
 		_refresh_ships_as())
 
 
-## What a scope means, in the one line that sits under its option. `owner` names the object when
-## naming it helps ("one per Player" beats "one per object").
+## What each scope means, said twice: `short` is the line under its option in the dropdown, `long` is
+## the paragraph the help strip shows for it. ONE table, because they are one fact at two lengths -
+## kept apart, the two spellings drifted the moment either was edited. `{who}` is the object the
+## variable will belong to, named wherever naming it helps ("one per Player" beats "one per object").
+const SCOPE_FACTS: Dictionary = {
+	EventSheetVariableSentence.SCOPE_INSTANCE: {
+		"short": "one per {who} - each copy in the scene has its own",
+		"long": "One per {who}. Every {who} in the scene gets its own; change it on one and the others keep "
+			+ "theirs. Pick Global for a value the whole game shares, Local for a value only this event needs."
+	},
+	EventSheetVariableSentence.SCOPE_LOCAL: {
+		"short": "lives inside the event it sits in, and is gone when it ends",
+		"long": "Lives inside one event. It is made when the event runs and gone when it ends, so nothing "
+			+ "else in the sheet can read it - which is exactly what you want for a working total."
+	},
+	EventSheetVariableSentence.SCOPE_GLOBAL: {
+		"short": "one value the whole project shares - written into an autoload",
+		"long": "One value the whole project shares. It lives on an autoload, so every sheet reads it as "
+			+ "Game.Score; \"Write into\" says which autoload gets it."
+	},
+	EventSheetVariableSentence.SCOPE_CONSTANT: {
+		"short": "never changes while the game runs",
+		"long": "Set here and never changed while the game runs. Use it for the numbers a reader should be "
+			+ "able to find in one place - a top speed, a maximum. A constant is never a Static and never "
+			+ "an Inspector property."
+	},
+	EventSheetVariableSentence.SCOPE_STATIC: {
+		"short": "one value shared by every {who}, kept between scenes",
+		"long": "One value shared by every {who} rather than one each - a count of how many exist, a high "
+			+ "score kept while the scene changes. Reading it needs no copy of the object at all."
+	}
+}
+
+
+## What a scope means, in the one line that sits under its option.
 static func scope_description(scope_key: String, owner: String) -> String:
-	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else "this object"
-	match scope_key:
-		EventSheetVariableSentence.SCOPE_INSTANCE:
-			return "one per %s - each copy in the scene has its own" % who
-		EventSheetVariableSentence.SCOPE_LOCAL:
-			return "lives inside the event it sits in, and is gone when it ends"
-		EventSheetVariableSentence.SCOPE_GLOBAL:
-			return "one value the whole project shares - written into an autoload"
-		EventSheetVariableSentence.SCOPE_CONSTANT:
-			return "never changes while the game runs"
-		EventSheetVariableSentence.SCOPE_STATIC:
-			return "one value shared by every %s, kept between scenes" % who
-	return ""
+	return _scope_fact(scope_key, "short", owner)
 
 
 ## The help strip's paragraph for a scope - the same fact as the option line, said long enough to
 ## answer "and when would I pick another one?".
 static func scope_help(scope_key: String, owner: String) -> String:
+	return _scope_fact(scope_key, "long", owner)
+
+
+## One entry of SCOPE_FACTS with the object named in it, "" for a scope the table does not carry.
+static func _scope_fact(scope_key: String, length: String, owner: String) -> String:
+	if not (SCOPE_FACTS.get(scope_key) is Dictionary):
+		return ""
 	var who: String = owner.strip_edges() if not owner.strip_edges().is_empty() else "this object"
-	match scope_key:
-		EventSheetVariableSentence.SCOPE_INSTANCE:
-			return ("One per %s. Every %s in the scene gets its own; change it on one and the others keep theirs. "
-				+ "Pick Global for a value the whole game shares, Local for a value only this event needs.") % [who, who]
-		EventSheetVariableSentence.SCOPE_LOCAL:
-			return ("Lives inside one event. It is made when the event runs and gone when it ends, so nothing "
-				+ "else in the sheet can read it - which is exactly what you want for a working total.")
-		EventSheetVariableSentence.SCOPE_GLOBAL:
-			return ("One value the whole project shares. It lives on an autoload, so every sheet reads it as "
-				+ "Game.Score; \"Write into\" says which autoload gets it.")
-		EventSheetVariableSentence.SCOPE_CONSTANT:
-			return ("Set here and never changed while the game runs. Use it for the numbers a reader should be "
-				+ "able to find in one place - a top speed, a maximum. A constant is never a Static and never "
-				+ "an Inspector property.")
-		EventSheetVariableSentence.SCOPE_STATIC:
-			return ("One value shared by every %s rather than one each - a count of how many exist, a high "
-				+ "score kept while the scene changes. Reading it needs no copy of the object at all.") % who
-	return ""
+	return str((SCOPE_FACTS[scope_key] as Dictionary).get(length, "")).replace("{who}", who)
 
 
 ## The line under a type's option, and the paragraph the help strip shows for it: the plain-language
@@ -1138,12 +1149,16 @@ func open_for_edit(
 		push_error("VariableDialog.open() called before init_dialog().")
 		return
 	_is_static = is_static and not is_constant
-	_scope = scope
+	# The dropdown speaks the sheet's READING words; `_scope` is where the variable is STORED, and an
+	# Instance variable is stored in the sheet's own variables. A caller that opens the dialog on the
+	# reading word - the Add submenu's "Instance variable…", the parameters dialog's "Add hp…" fix -
+	# was otherwise having its answer filed as an event LOCAL, the one place it never belongs.
+	_scope = "global" if scope == EventSheetVariableSentence.SCOPE_INSTANCE else scope
 	# V5 - a Global written from HERE is a member of an autoload, never of this file, so the flag
 	# starts clear and only the Scope dropdown sets it.
 	_writes_project_global = false
-	if scope != "local":
-		_member_scope = scope
+	if _scope != "local":
+		_member_scope = _scope
 	_context = context.duplicate(true)
 	# V5 - "Add variable" / "to Player". The window title says the gesture, the line under it says
 	# whose variable this will be; `title` stays in the signature for callers that still pass one.
@@ -1169,7 +1184,7 @@ func open_for_edit(
 	_const_check.button_pressed = is_constant
 	# Local variables are inherently private to the script body, so the export toggle only
 	# applies to global (sheet-level) variables.
-	var is_local: bool = scope == "local"
+	var is_local: bool = _scope == "local"
 	# V4 - reopening a Static local comes back ticked; the flag rides the context, because it is a
 	# fact about the LOCAL and only a local can have it.
 	if _static_local_check != null:
@@ -1178,7 +1193,7 @@ func open_for_edit(
 	_exported_check.disabled = is_local
 	# @onready is a tree-placed (class-level) concept only - hidden for global/local scopes. Applying the
 	# toggle also (re)sets the const/@export disabling to a consistent state for the current scope.
-	var is_tree: bool = scope == "tree"
+	var is_tree: bool = _scope == "tree"
 	if _onready_row != null:
 		_onready_row.visible = is_tree
 	if _onready_check != null:
