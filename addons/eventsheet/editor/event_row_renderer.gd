@@ -39,6 +39,9 @@ const SWATCH_MIN_BOX := 8.0
 const SWATCH_FONT_RATIO := 0.7
 # The rule down the left edge of a variable row, in logical pixels.
 const VARIABLE_ROW_RULE_WIDTH := 2.0
+## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
+## lilac, so the break reads without competing with the rows it separates.
+const BLOCK_HAIRLINE_ALPHA := 0.45
 
 # R1 - how a region fence paints in its own colour: the faintest wash behind the opening head, a
 # firm rule at the left edge of both fences, and the dash rhythm the badge and the body rule share.
@@ -539,6 +542,16 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
 	if row_data.variable_row:
 		_draw_variable_row_wash(control, row_rect, reading_style)
+	if row_data.rule_below:
+		# V2 - the hairline that closes a block (the globals this sheet only uses, above the ones it
+		# declares). Drawn in the variable rule's own colour, quietly, so no theme has to dress a
+		# second token for a line one pixel tall.
+		var hairline: Color = reading_style.variable_row_rule_color
+		control.draw_rect(
+			Rect2(Vector2(row_rect.position.x, row_rect.end.y - 1.0), Vector2(row_rect.size.x, 1.0)),
+			Color(hairline.r, hairline.g, hairline.b, hairline.a * BLOCK_HAIRLINE_ALPHA),
+			true
+		)
 	if not is_event_row and (breakpoint_enabled or row_data.bookmark_enabled):
 		# The full-bleed bar just covered the gutter - re-stamp only the MARKERS so a
 		# bookmarked comment / breakpointed group keeps its pennant and dot visible.

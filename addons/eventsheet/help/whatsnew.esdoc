@@ -102,6 +102,25 @@ What changed in the build you have installed (v0.17.0), in the words the release
   an amber note instead (\"nickname is text - Add to wants a number. Set value fits.\"), because that
   line compiles and only misbehaves.
 
+### Added - the globals a sheet borrows, and folders in an opened file
+
+- **Globals used here.** A sheet that reads `Game.Score` anywhere - a parameter, an expression, a
+  script block - now opens with one row per global it names, above the variables it declares itself:
+  `Global number Score = 0`, `from Game` trailing it, and `Game.Score` echoed at the right edge,
+  which is the form you would type here rather than the declaration that lives on the autoload. The
+  type and the value are read off the autoload's own script, so a global reads the same here as
+  where it lives. A hairline under the last of them separates what the file BORROWS from what it
+  owns - a rule, not a row, so the block costs no height. Editing one opens the autoload sheet,
+  because the declaration can only change where it is written; nothing on these rows edits in place,
+  nothing is added to the sheet, and the file still re-emits byte for byte. The autoload that
+  declares them lists none (its globals are already its rows), and neither does a read-only preview,
+  whose head gathers the same list into one folder.
+- **An `@export_group` in an opened `.gd` is a folder.** A run of consecutive member variables
+  declared under one group now wears the same labelled, foldable strip the sheet's own variables
+  wear, with the rows left at their own indent. The group carries forward exactly as it does in the
+  Inspector - Godot records it on the first member of a run only - so every knob under a group line
+  lands in its folder rather than only the first.
+
 ### Added - Static local: the local that keeps its value between runs
 
 - **A local can now remember.** Tick **Static local** in the Add variable dialog - offered for the

@@ -2431,7 +2431,6 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	EventSheetViewportReadingRows.claim_behavior_patterns(sheet)
-	root_rows.append_array(_build_global_variable_rows(sheet))
 	# C0 - read the LEADING run of class scaffolding (prelude / annotations / host-binding) as the
 	# sheet's HEAD: one band per line, so an opened .gd reads as its own first lines rather than as a
 	# wall of boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
@@ -2467,6 +2466,11 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		if not scaffold_rows.is_empty():
 			root_rows.append_array(_row_builder.build_head_band_rows(sheet, scaffold_rows))
 			event_start = scaffold_end
+	# V2 - the declarations, under the head that names the file and above the events that use them:
+	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
+	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
+	root_rows.append_array(_row_builder.build_globals_used_here_rows(sheet))
+	root_rows.append_array(_build_global_variable_rows(sheet))
 	for entry_index in range(event_start, sheet.events.size()):
 		var entry: Resource = sheet.events[entry_index]
 		# A lifted MID-FILE function emits at its anchor slot, so the canvas splices the whole verb block
@@ -2492,6 +2496,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# data model and emission stay flat). Runs before the footer so the trailing
 	# "Add event…" row can never be swallowed by an unclosed fence.
 	root_rows = _row_builder._pair_region_fences(root_rows)
+	# V2 - a run of consecutive member variables sharing one `@export_group` wears the labelled,
+	# foldable strip the sheet's own variables wear. After the fence pairing and the read-only head,
+	# both of which walk a flat list of declarations and must not meet a strip in their place.
+	root_rows = _row_builder.group_variable_rows_by_folder(root_rows, sheet)
 	# The remaining verbs, in sheet.functions order - the compiler's trailing-functions section mirrored,
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.

@@ -4427,3 +4427,4 @@ this will not compile,это не скомпилируется
 true or false,истина или ложь
 wants %s,требует %s
 will not compile,не скомпилируется
+from %s,из %s

@@ -135,7 +135,97 @@ static func run() -> bool:
 		(nested_var.attributes as Dictionary).has("subgroup"), false) and ok
 
 	dock.free()
+	ok = _test_folders_in_an_opened_file() and ok
 	return ok
+
+
+## V2 - the folder strip over an OPENED `.gd`. An `@export_group("Movement")` is one folder whether
+## the sheet keeps its variables in the dictionary or as rows of the event tree, so a run of
+## consecutive member variables sharing one wears the same labelled, foldable strip - and the rows
+## keep their indent, because a folder never pushes what it holds sideways.
+static func _test_folders_in_an_opened_file() -> bool:
+	var ok: bool = true
+	var path: String = "user://eventforge_variable_folders_probe.gd"
+	var handle: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	handle.store_string("extends Node2D
+
+"
+		+ "@export_group(\"Movement\")
+"
+		+ "@export var speed: float = 200.0
+"
+		+ "@export var accel: float = 10.0
+"
+		+ "@export_group(\"Combat\")
+"
+		+ "@export var damage: int = 5
+"
+		+ "var hidden := 1
+")
+	handle.close()
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var style := EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var view := EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.set_sheet(sheet)
+	var strips: PackedStringArray = PackedStringArray()
+	var member_indents: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null:
+			continue
+		if row_data.row_uid.begins_with("variable_tree_group_"):
+			strips.append("%s@%d" % [_texts(row_data), row_data.indent])
+		elif row_data.source_resource is LocalVariable:
+			member_indents.append("%s@%d" % [(row_data.source_resource as LocalVariable).name, row_data.indent])
+	ok = _check("each run of one @export_group wears its own strip, at the rows' own indent",
+		" | ".join(strips), "Movement@0 | Combat@0") and ok
+	ok = _check("and the rows it holds are not pushed sideways",
+		" | ".join(member_indents), "speed@0 | accel@0 | damage@0 | hidden@0") and ok
+	ok = _check("a strip folds on its own uid",
+		_row_with_uid(view, "variable_tree_group_Movement_0") != null, true) and ok
+	# Godot records `@export_group` on the FIRST knob of a run only, so `accel` carries no group of
+	# its own: it lands in Movement because the strip carries the group forward, exactly as the
+	# Inspector does. Pinning the SECOND knob is what makes that the assertion.
+	ok = _check("the strip HOLDS its run - the rows are its children, so the fold reaches them",
+		_parent_strip_of(view, "accel"), "Movement") and ok
+	ok = _check("the ungrouped member stays out of every folder",
+		_parent_strip_of(view, "hidden"), "") and ok
+	ok = _check("and the file still re-emits byte for byte - the strip is a reading",
+		str(SheetCompiler.compile(sheet).get("output", "")), FileAccess.get_file_as_string(path)) and ok
+	view.free()
+	return ok
+
+
+static func _row_with_uid(view: EventSheetViewport, uid: String) -> EventRowData:
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.row_uid == uid:
+			return row_data
+	return null
+
+
+## The label of the folder strip a member variable is a child of, "" when it is in none.
+static func _parent_strip_of(view: EventSheetViewport, var_name: String) -> String:
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null or not row_data.row_uid.begins_with("variable_tree_group_"):
+			continue
+		for child: EventRowData in row_data.children:
+			if child.source_resource is LocalVariable 					and (child.source_resource as LocalVariable).name == var_name:
+				return _texts(row_data)
+	return ""
+
+
+static func _texts(row_data: EventRowData) -> String:
+	if row_data == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		parts.append(str(span.text))
+	return " | ".join(parts)
 
 
 static func _variable_row(view: EventSheetViewport, var_name: String) -> EventRowData:

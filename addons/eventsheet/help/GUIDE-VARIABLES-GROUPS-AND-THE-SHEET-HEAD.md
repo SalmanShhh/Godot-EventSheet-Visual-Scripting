@@ -13,22 +13,23 @@ row shown here comes with the code it compiles to, so you can check.
 
 1. [The variable sentence](#the-variable-sentence)
 2. [Scope words: where a variable lives](#scope-words-where-a-variable-lives)
-3. [Static locals: a local that remembers](#static-locals-a-local-that-remembers)
-4. [Type words, and the GDScript they write](#type-words-and-the-gdscript-they-write)
-5. [The code echo and the View dial](#the-code-echo-and-the-view-dial)
-6. [Adding a variable](#adding-a-variable)
-7. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
-8. [Who owns a variable](#who-owns-a-variable)
-9. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
-10. [The Compare dialog](#the-compare-dialog)
-11. [Invert, or, and else](#invert-or-and-else)
-12. [Picking with a test](#picking-with-a-test)
-13. [The parameters dialog](#the-parameters-dialog)
-14. [The sheet head, band by band](#the-sheet-head-band-by-band)
-15. [The Sheet Type dialog](#the-sheet-type-dialog)
-16. [Groups](#groups)
-17. [Regions](#regions)
-18. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [Globals used here](#globals-used-here)
+4. [Static locals: a local that remembers](#static-locals-a-local-that-remembers)
+5. [Type words, and the GDScript they write](#type-words-and-the-gdscript-they-write)
+6. [The code echo and the View dial](#the-code-echo-and-the-view-dial)
+7. [Adding a variable](#adding-a-variable)
+8. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
+9. [Who owns a variable](#who-owns-a-variable)
+10. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
+11. [The Compare dialog](#the-compare-dialog)
+12. [Invert, or, and else](#invert-or-and-else)
+13. [Picking with a test](#picking-with-a-test)
+14. [The parameters dialog](#the-parameters-dialog)
+15. [The sheet head, band by band](#the-sheet-head-band-by-band)
+16. [The Sheet Type dialog](#the-sheet-type-dialog)
+17. [Groups](#groups)
+18. [Regions](#regions)
+19. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## The variable sentence
 
@@ -83,6 +84,12 @@ writes alphabetical when you ask for it. Variables never fold as a block: the on
 is a folder you made yourself, an Inspector group, which draws as a slim labelled strip over its
 rows with the rows left exactly where they were.
 
+**A folder is a folder wherever the variables live.** An `@export_group("Movement")` in a `.gd` you
+opened wears the same labelled strip, over the run of members declared under it - and, exactly as in
+the Inspector, the group stays in force for every member after the line that opens it, not only the
+first. The rows keep their indent: a folder never pushes what it holds sideways, and the file
+re-emits byte for byte, because the strip is a reading rather than a line.
+
 ## Scope words: where a variable lives
 
 The scope is **derived**, never stored. Nothing in your sheet records "this is a Global"; the sheet
@@ -112,6 +119,34 @@ and kept where it is real code - inside expressions, and in the echo:
 
 That echo is deliberately a reference and not a declaration: the declaration lives on the autoload's
 own sheet, and echoing it here would claim a line this file does not have.
+
+## Globals used here
+
+A global is declared once, on an autoload, and read everywhere. So the sheet that reads one **shows
+it where it is used**: at the very top, above the variables the sheet declares itself, one row per
+`Game.X` the sheet names anywhere - in a parameter, in an expression, or in a script block.
+
+```
+x  Global  number  Score = 0     from Game            Game.Score
+x  Global  boolean Muted = false from Game            Game.Muted
+--------------------------------------------------------------- the hairline
+x  Instance whole number hp = 100                     var hp: int = 100
+```
+
+The hairline under the last of them is the whole point of the block: above it is what this file
+**borrows**, below it what this file **owns**.
+
+- **The type and the value come from the autoload's own script**, read straight off the file - so a
+  global reads the same here as it does where it lives, and a name the autoload does not declare
+  reads with no type and no value rather than with an invented one.
+- **The echo is a reference, not a declaration**: `Game.Score` is the form you would type in THIS
+  sheet. The `var Score: int = 0` line belongs to the autoload's own sheet.
+- **Editing one opens the autoload sheet**, because that is the only place the declaration can
+  change. Nothing on these rows edits in place, and none of them is added to your sheet: they are a
+  reading, so the file re-emits exactly as it was.
+- **Two places never show them.** The autoload that declares them (its own globals are already its
+  rows), and a read-only preview, whose head gathers the same list into one `Global variables used
+  here` folder instead.
 
 ## Static locals: a local that remembers
 

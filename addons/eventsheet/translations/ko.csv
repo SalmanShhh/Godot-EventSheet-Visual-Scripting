@@ -4427,3 +4427,4 @@ this will not compile,이건 컴파일되지 않습니다
 true or false,참 또는 거짓
 wants %s,%s이(가) 필요
 will not compile,컴파일되지 않습니다
+from %s,%s 에서

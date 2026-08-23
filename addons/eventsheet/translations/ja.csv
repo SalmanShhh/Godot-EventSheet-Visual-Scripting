@@ -4427,3 +4427,4 @@ this will not compile,これはコンパイルできません
 true or false,true か false
 wants %s,%s が必要
 will not compile,コンパイルできません
+from %s,%s から

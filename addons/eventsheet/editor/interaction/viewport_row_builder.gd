@@ -8274,6 +8274,59 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	return row
 
 
+## V2 - the globals this sheet USES, as rows of its own at the top of it: `Global number Score = 0`
+## with `from Game` trailing it and `Game.Score` echoed at the right edge, which is the form you
+## would type here. A global is declared once, on an autoload, and read everywhere; until these rows
+## the only way to see which ones a sheet touched was to read every parameter in it.
+##
+## The last of them carries the hairline that separates what this file BORROWS from what it declares.
+## Editing one opens the autoload sheet - the declaration lives there, and that is the only place it
+## can change.
+##
+## PURE VIEW: the rows are inert (null source), nothing is added to `sheet.events` and nothing is
+## emitted, so an opened file still re-emits byte for byte. Empty on the autoload that DECLARES them
+## (its own globals are already its rows) and on a read-only preview, whose head gathers the same
+## list into one folder instead of listing it twice.
+func build_globals_used_here_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if sheet == null or sheet.read_only or is_autoload(sheet):
+		return rows
+	for entry: Dictionary in EventSheetVariableOwners.global_entries(sheet):
+		var owner_name: String = str(entry.get("owner", ""))
+		var variable_name: String = str(entry.get("name", ""))
+		rows.append(_build_variable_row(
+			"used_global",
+			variable_name,
+			str(entry.get("type_name", "")),
+			str(entry.get("value", "")),
+			0,
+			{
+				"source_resource": null,
+				"row_uid": "variable_used_global_%s_%s" % [owner_name, variable_name],
+				"reading_scope": EventSheetVariableSentence.SCOPE_GLOBAL,
+				# The declared value arrives as the autoload's own SOURCE TEXT, so it is shown
+				# verbatim: quoting it would misread `Vector2.ZERO` as a string.
+				"expression_default": true,
+				"description": EventSheetL10n.translate("from %s") % owner_name,
+				"code_line": EventSheetCodeEcho.reference_line(owner_name, variable_name),
+				# Where the declaration actually lives - what the edit gesture opens, and what
+				# Ctrl+Click already knows how to jump to.
+				"declared_in": _autoload_script_path(owner_name)
+			}
+		))
+	if not rows.is_empty():
+		rows[rows.size() - 1].rule_below = true
+	return rows
+
+
+## The script an autoload is registered with, "" when the project has no such singleton.
+func _autoload_script_path(autoload_name: String) -> String:
+	for entry: Dictionary in EventSheetGlobalVariables.autoload_sheets():
+		if str(entry.get("name", "")) == autoload_name:
+			return str(entry.get("path", ""))
+	return ""
+
+
 func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	if sheet == null:
@@ -8356,7 +8409,8 @@ func _folder_strip_label(group_name: String, members: Array[EventRowData]) -> St
 ## the rows themselves left at the same indent as every other declaration. Rows are never pushed
 ## sideways by a bracket around them.
 func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource, group_name: String,
-		members: Array[EventRowData], group_runs: Dictionary) -> void:
+		members: Array[EventRowData], group_runs: Dictionary,
+		uid_prefix: String = "variable_group") -> void:
 	if group_name.is_empty() or members.is_empty():
 		members.clear()
 		return
@@ -8367,7 +8421,7 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 	strip.row_type = EventRowData.RowType.SECTION
 	strip.variable_row = true
 	strip.source_resource = sheet
-	strip.row_uid = "variable_group_%s_%d" % [group_name, run_index]
+	strip.row_uid = "%s_%s_%d" % [uid_prefix, group_name, run_index]
 	strip.children = members.duplicate()
 	strip.folded = bool(_viewport._fold_state.get(strip.row_uid, false))
 	strip.spans = [
@@ -8388,6 +8442,57 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 	]
 	rows.append(strip)
 	members.clear()
+
+
+## V2 - the same labelled, foldable strip over a run of consecutive MEMBER variables in an opened
+## `.gd`. An `@export_group("Movement")` is one folder whether the sheet stores its variables in the
+## dictionary or as rows of the event tree, so a reader meets one shape either way, and the rows keep
+## their indent: a folder never pushes what it holds sideways.
+##
+## A pure view pass over the already-built list, run after the fence pairing and the read-only head
+## (both of which walk a flat list of declarations and must not meet a strip in their place). Skipped
+## on a read-only preview, whose head already gathers the same knobs into its own group bars.
+func group_variable_rows_by_folder(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	if sheet == null or sheet.read_only:
+		return rows
+	var grouped: Array[EventRowData] = []
+	var members: Array[EventRowData] = []
+	var current_group: String = ""
+	# The @export_group in force. Godot's grouping runs until the NEXT group line, and the importer
+	# records it on the FIRST member of each run only - so it is carried forward here, or every
+	# member but the first would land outside its own folder.
+	var declared_group: String = ""
+	# One folder can appear in two runs (a plain member splits it, or the file comes back to it), and
+	# each run is its own strip - so the strips need their own uids or the two would share a fold.
+	var group_runs: Dictionary = {}
+	for row_data: EventRowData in rows:
+		var variable: LocalVariable = row_data.source_resource as LocalVariable
+		var is_member: bool = variable != null and row_data.variable_row and row_data.indent == 0
+		if is_member:
+			var declared: String = str((variable.attributes as Dictionary).get("group", "")).strip_edges() 				if variable.attributes is Dictionary else ""
+			if not declared.is_empty():
+				declared_group = declared
+		elif not _is_spacing_row(row_data):
+			# Past the declarations. A folder never leaps over the events below them - and a blank
+			# line between two knobs is spacing the round trip keeps, not the end of a group.
+			declared_group = ""
+		var group_name: String = declared_group if is_member and variable.exported else ""
+		if group_name != current_group:
+			_flush_variable_group(grouped, sheet, current_group, members, group_runs, "variable_tree_group")
+			current_group = group_name
+		if group_name.is_empty():
+			grouped.append(row_data)
+		else:
+			members.append(row_data)
+	_flush_variable_group(grouped, sheet, current_group, members, group_runs, "variable_tree_group")
+	return grouped
+
+
+## True for a row that is only the blank line the round trip keeps between two declarations - spacing,
+## which neither belongs to a folder nor ends one.
+static func _is_spacing_row(row_data: EventRowData) -> bool:
+	return row_data != null and row_data.source_resource is RawCodeRow 		and is_blank_block((row_data.source_resource as RawCodeRow).code.split("
+"))
 
 
 ## An exported global's Inspector group ("" when none/unexported) - the adjacency-sort key above.
@@ -8699,6 +8804,12 @@ func _build_variable_row(
 		"variable_group": str(options.get("group", "")).strip_edges(),
 		"variable_subgroup": str(options.get("subgroup", "")).strip_edges()
 	}
+	# V2 - a row standing for a declaration in ANOTHER file carries that file, under the key the
+	# navigation already reads: Ctrl+Click jumps there like any include, and the edit gesture opens
+	# it, because a declaration can only change where it is written.
+	var declared_in: String = str(options.get("declared_in", "")).strip_edges()
+	if not declared_in.is_empty():
+		variable_meta["include_path"] = declared_in
 	# V1 - ONE shape for every variable row, authored or opened. The `name : Type` code grammar is
 	# gone (it survives on the hover and in the code panel, where a declaration belongs): a row says
 	# its SCOPE, then its TYPE in plain words, then the name - "Instance whole number hp = 100". Both
@@ -8837,9 +8948,11 @@ func _build_variable_row(
 	# as the guide rail. The type it must fit rides on the span so the inline editor can say so
 	# without asking the sheet again.
 	var value_meta: Dictionary = variable_meta.merged({
-		"editable": not hide_value,
+		# A borrowed declaration is not this file's to change: nothing on such a row edits here, so
+		# the value is not a cell either - the row's one gesture is to open the file that declares it.
+		"editable": not hide_value and declared_in.is_empty(),
 		"edit_kind": "variable_value",
-		"variable_value_span": true,
+		"variable_value_span": declared_in.is_empty(),
 		"variable_type_word": type_word,
 		"variable_type_name": type_name
 	}, true)

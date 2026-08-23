@@ -56,6 +56,10 @@ var language_block: bool = false
 # variable tint and rules their left edge, so a declaration never reads as an event. View-only,
 # never serialized.
 var variable_row: bool = false
+# V2. True on the LAST row of a block that a hairline closes - the globals this sheet only uses,
+# separated from the variables it declares. A rule, not a row: it costs no height, so a block break
+# never pushes the sheet down a line. View-only, never serialized.
+var rule_below: bool = false
 # K4. The condition LINE INDICES an "or" divider is drawn above - every line after the first when the
 # event's conditions are OR'd. The word is drawn BETWEEN the two conditions rather than stamped on
 # either of them, because "or" is what sits between two questions, not a property of one. View-only,
