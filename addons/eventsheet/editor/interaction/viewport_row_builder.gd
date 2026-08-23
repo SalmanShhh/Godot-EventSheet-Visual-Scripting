@@ -64,6 +64,19 @@ const GROUP_TOGGLEABLE_GLYPH := "◎"
 ## resting echo, so the band is findable without claiming the file says something it does not.
 const HEAD_ECHO_GHOST_ALPHA: float = 0.3
 
+## R1. The closing fence is a TICK, not a row: its `#endregion` echo draws a size down and quieter
+## than a resting echo, so "the region ends here" costs a sliver of canvas instead of a full row.
+const REGION_CLOSER_FONT_DELTA: int = -2
+const REGION_CLOSER_ECHO_ALPHA: float = 0.4
+
+## R1. How tall the closing tick is against an ordinary row, before the echo's own line height
+## floors it. Slim enough to read as a rule with a label rather than as another row.
+const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
+
+## R3. The mark an amber note leads with - the same warning glyph a line that would not lift wears,
+## because it means the same thing: look here, nothing is broken.
+const REGION_WARNING_GLYPH := "⚠"
+
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
 # CONDITION or EXPRESSION verb read their `return` as "Set return value to x" rather than "Stop event",
@@ -85,6 +98,9 @@ var _region_occurrences: Dictionary = {}
 # V13 - the code echo's token colours for THIS sweep. Cleared with the other per-build caches, so a
 # theme or Editor Settings change is picked up on the next rebuild and never mid-build.
 var _code_echo_palette: Dictionary = {}
+# R3 - the orphan-fence notes built in THIS sweep, so the fix label can be numbered once the flat
+# list has its gutter numbers. Empty on every sheet whose fences all pair, which is nearly all.
+var _region_fix_notes: Array[EventRowData] = []
 
 ## S19 - the mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
 ## event is a known shape" once and then recognises it everywhere, the way ⟳ ➜ ƒ already work.
@@ -146,6 +162,7 @@ func init(viewport: Control) -> void:
 ## flat rows - the region block kind's wart-not-error contract holds in the view.
 func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
 	_region_occurrences.clear()
+	_region_fix_notes.clear()
 	return _pair_region_fences_walk(rows)
 
 
@@ -162,7 +179,12 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			continue
 		if _is_region_row(row_data) and _region_row_is_end(row_data):
 			if stack.is_empty():
+				# R3 - a closer with nothing above it closes nothing. The file still compiles, so
+				# the row stays flat and the note under it is amber, never red.
 				_append_to_sink(output, stack, row_data)
+				_append_to_sink(output, stack, _build_region_orphan_note_row(
+					row_data, EventSheetRegionFacts.unopened_note(), ""
+				))
 				continue
 			var frame: Dictionary = stack.pop_back()
 			var opener: EventRowData = frame.get("opener")
@@ -171,37 +193,43 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			for collected_row: EventRowData in collected:
 				_bump_indent(collected_row, 1)
 				region_children.append(collected_row)
-			# The closing fence rides as the LAST child: hidden while folded, still
-			# a real selectable row (its CustomBlockRow is untouched) when open.
-			# Once its opener is known, its marker names the range it closes.
+			# The closing fence rides as the LAST child: hidden while folded, still a real
+			# selectable row (its CustomBlockRow is untouched) when open. Its only text is the
+			# `#endregion` the file has - the tick that says the region ends here.
 			_bump_indent(row_data, 1)
-			var opener_label: String = str(((opener.source_resource as CustomBlockRow).fields as Dictionary).get("label", "")).strip_edges()
-			if not opener_label.is_empty() and not row_data.spans.is_empty():
-				row_data.spans[0].text = "end of %s" % opener_label
 			region_children.append(row_data)
 			opener.children = region_children
 			# Session fold state (row-uid keyed) wins; the persisted layer (stable
 			# label#occurrence keys) seeds the default so folds survive reopen.
+			var opener_label: String = EventSheetRegionFacts.label(opener.source_resource)
 			var occurrence: int = int(_region_occurrences.get(opener_label, 0))
 			_region_occurrences[opener_label] = occurrence + 1
 			var fold_key: String = "%s#%d" % [opener_label, occurrence]
 			opener.set_meta("region_fold_key", fold_key)
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
-			# N1 - the bar carries its muted count, open or folded: a group bar should say how much
-			# it holds before you decide whether to open it. The closing fence is plumbing, so it
-			# never counts.
-			opener.spans.append(_make_span(
-				_region_member_count_text(region_children),
-				SemanticSpan.SpanType.VALUE,
-				{"text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.75)}
-			))
+			# R1 - folded, the opener says how much it holds and echoes both fences, exactly the way
+			# a script editor draws a folded region on one line. Re-dressed rather than appended to,
+			# so open and folded are one description of the row instead of two.
+			_apply_region_opener_spans(opener, _region_member_count_text(region_children))
 			_append_to_sink(output, stack, opener)
 			continue
 		_append_to_sink(output, stack, row_data)
 	# Unclosed openers unwind flat, in document order: the opener row, then
 	# everything it had collected, exactly as they read in the source.
 	for frame: Dictionary in stack:
-		output.append(frame.get("opener"))
+		var unclosed: EventRowData = frame.get("opener")
+		# The rule on a fence that never closes turns amber, so the wart is visible at a glance and
+		# the note under it is the explanation rather than the only signal.
+		unclosed.custom_color = _viewport._get_reading_style().lift_note_badge_foreground_color
+		output.append(unclosed)
+		# R3 - the note rides directly under the fence it is about, with the fix beside it. The
+		# label names the row the closer would land after, which only the numbering pass knows, so
+		# the note is recorded here and the number filled in once the rows have theirs.
+		output.append(_build_region_orphan_note_row(
+			unclosed,
+			EventSheetRegionFacts.unclosed_note(unclosed.source_resource),
+			_region_close_after_uid(frame.get("collected"))
+		))
 		output.append_array(frame.get("collected"))
 	return output
 
@@ -213,9 +241,9 @@ func _append_to_sink(output: Array[EventRowData], stack: Array[Dictionary], row_
 		(stack[stack.size() - 1].get("collected") as Array[EventRowData]).append(row_data)
 
 
-## The muted count a region's group bar wears: how many EVENTS it holds when it holds any (the word
-## a group bar is read for), else how many rows. The closing fence rides as the last
-## child and is plumbing, so it is never counted.
+## The muted count a FOLDED region wears: how many EVENTS it holds when it holds any (the word
+## structure is read for), else how many rows. The closing fence rides as the last child and is
+## plumbing, so it is never counted.
 func _region_member_count_text(region_children: Array[EventRowData]) -> String:
 	var events: int = 0
 	var rows: int = 0
@@ -228,6 +256,199 @@ func _region_member_count_text(region_children: Array[EventRowData]) -> String:
 			else EventSheetL10n.translate("%d events") % events
 	return EventSheetL10n.translate("%d row") % rows if rows == 1 \
 		else EventSheetL10n.translate("%d rows") % rows
+
+
+# ── R1: a region's own look ────────────────────────────────────────────────────────────────────
+
+
+## R1 - the fold mark, in the shape the script editor draws it: a dashed `#` box in the badge
+## column, the name in the row's own ink, the description muted beside it, and the fence line
+## echoed at the right edge. No folder, no chapter-bar height, no "end region" prose - a region is
+## two lines of the file, and the row says exactly those two lines.
+func _dress_region_fence_row(row_data: EventRowData, block: CustomBlockRow) -> void:
+	row_data.row_type = EventRowData.RowType.REGION
+	# The accent travels on the row so the renderer's wash, the dashed badge and the dashed rule
+	# down the body all read the region's own colour without parsing its field three times.
+	row_data.custom_color = _region_accent(block)
+	if EventSheetRegionFacts.is_closing_fence(block):
+		row_data.spans = [_code_echo_span(
+			EventSheetRegionFacts.CLOSING_LINE,
+			{
+				"kind": "custom_block_row",
+				"region_fence": "close",
+				"font_size_delta": REGION_CLOSER_FONT_DELTA,
+				"hover_note": EventSheetL10n.translate("Where this region ends.")
+			},
+			REGION_CLOSER_ECHO_ALPHA,
+			false
+		)]
+		return
+	_apply_region_opener_spans(row_data, "")
+
+
+## The opening fence's spans, built from what the row knows right now. Called once while the row is
+## made (open, no count yet) and again by the pairing pass once the fold state and the member count
+## are known - one description of the row, never a second one bolted on.
+func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> void:
+	var block: CustomBlockRow = row_data.source_resource as CustomBlockRow
+	if block == null:
+		return
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var accent: Color = _region_accent(block)
+	var spans: Array[SemanticSpan] = [_make_span(
+		EventSheetRegionFacts.FENCE_GLYPH,
+		SemanticSpan.SpanType.KEYWORD,
+		{
+			"kind": "custom_block_row",
+			"region_badge": true,
+			"badge": true,
+			"badge_style": "outline",
+			"badge_dashed": true,
+			"badge_natural_width": true,
+			"badge_fixed_width": KIND_BADGE_WIDTH,
+			"line_index": 0,
+			"badge_bg": accent,
+			"badge_fg": accent
+		}
+	)]
+	var title: String = EventSheetRegionFacts.display_name(block)
+	spans.append(_make_span(
+		title,
+		SemanticSpan.SpanType.OBJECT,
+		{
+			"kind": "custom_block_row",
+			"region_title": true,
+			"editable": true,
+			"edit_kind": "region_name",
+			"line_index": 0,
+			"text_color": reading_style.primary_text_color,
+			"bbcode_segments": [{
+				"text": title,
+				"color": reading_style.primary_text_color,
+				"bold": true,
+				"italic": false
+			}]
+		}
+	))
+	# Open, the row carries the author's own description; folded, what it holds - the one thing
+	# worth knowing before deciding whether to open it.
+	var note: String = count_text if row_data.folded else EventSheetRegionFacts.description(block)
+	if not note.is_empty():
+		spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, {
+			"kind": "custom_block_row",
+			"region_note": true,
+			"line_index": 0,
+			"text_color": reading_style.muted_text_color
+		}))
+	var echo_line: String = EventSheetRegionFacts.folded_echo(block) if row_data.folded \
+		else EventSheetRegionFacts.fence_line(block)
+	spans.append(_code_echo_span(
+		echo_line,
+		{
+			"kind": "custom_block_row",
+			"region_fence": "open",
+			"hover_note": EventSheetL10n.translate("The line this row writes. Click to open it in the code panel.")
+		},
+		EventSheetCodeEcho.REST_ALPHA,
+		true
+	))
+	row_data.spans = spans
+	row_data.line_count = 1
+
+
+## The region's own colour, or the theme's behaviour accent when the fence carries none.
+func _region_accent(block: CustomBlockRow) -> Color:
+	var stored: String = EventSheetRegionFacts.accent_hex(block)
+	return Color.html(stored) if not stored.is_empty() else _viewport._get_event_style().behavior_accent_color
+
+
+# ── R3: a fence with no partner ────────────────────────────────────────────────────────────────
+
+
+## R3 - the amber note under an unmatched fence: the problem in a sentence, and (for an opener) the
+## fix that writes the missing `#endregion` after the last row before the next head. Amber, never
+## red: an unbalanced fence is a readability wart and the file still compiles.
+func _build_region_orphan_note_row(fence_row: EventRowData, message: String, close_after_uid: String) -> EventRowData:
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var row_data := EventRowData.new()
+	row_data.indent = fence_row.indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "region_orphan_%s" % str(fence_row.source_resource.get_instance_id())
+	row_data.spans = [
+		_make_span(REGION_WARNING_GLYPH, SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"kind": "region_orphan",
+			"region_orphan": "mark",
+			"line_index": 0,
+			"badge_bg": reading_style.lift_note_badge_background_color,
+			"badge_fg": reading_style.lift_note_badge_foreground_color
+		}),
+		_make_span(message, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "region_orphan",
+			"region_orphan": "message",
+			"line_index": 0,
+			"text_color": reading_style.lift_note_badge_foreground_color
+		})
+	]
+	if close_after_uid.is_empty():
+		return row_data
+	row_data.spans.append(_make_span("", SemanticSpan.SpanType.VALUE, {
+		"editable": false,
+		"kind": "region_orphan",
+		"region_orphan": "fix",
+		"region_fix": close_after_uid,
+		"align_right": true,
+		"line_index": 0,
+		"text_color": reading_style.primary_text_color,
+		"hover_note": EventSheetL10n.translate("Writes the missing #endregion there.")
+	}))
+	_region_fix_notes.append(row_data)
+	return row_data
+
+
+## Which row the missing `#endregion` would land after: the last row before the next structural
+## head (a group, or another fence) or the end of what the opener swallowed. "" when it swallowed
+## nothing, in which case there is no row to close after and the note carries no fix.
+func _region_close_after_uid(collected: Array[EventRowData]) -> String:
+	var last_uid: String = ""
+	for row_data: EventRowData in collected:
+		if row_data.row_type == EventRowData.RowType.GROUP or _is_region_row(row_data):
+			break
+		last_uid = row_data.row_uid
+	return last_uid
+
+
+## R3 - the fix names the row it writes the fence after, and the number it names is the one in the
+## gutter, which exists only once the flat list is numbered. Runs right after that pass, and does
+## nothing at all on a sheet with no unmatched fence - which is every healthy sheet.
+func apply_region_fix_labels(numbered_rows: Array) -> void:
+	if _region_fix_notes.is_empty():
+		return
+	var numbers: Dictionary = {}
+	for entry: Variant in numbered_rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data != null:
+			numbers[row_data.row_uid] = row_data.line_number
+	for note_row: EventRowData in _region_fix_notes:
+		if note_row.spans.is_empty():
+			continue
+		var fix_span: SemanticSpan = note_row.spans[note_row.spans.size() - 1]
+		var fix_meta: Dictionary = fix_span.metadata if fix_span.metadata is Dictionary else {}
+		# A re-flatten (a fold toggle) numbers the rows again without rebuilding them, so this can
+		# run twice over the same note: only ever touch the span that IS the fix.
+		if not fix_meta.has("region_fix"):
+			continue
+		var after_row: int = int(numbers.get(str(fix_meta["region_fix"]), 0))
+		if after_row <= 0:
+			# The row the fence would follow is not on the canvas (it is folded away inside
+			# something): offer no button rather than one naming a row nobody can see.
+			note_row.spans.remove_at(note_row.spans.size() - 1)
+			continue
+		fix_span.text = EventSheetRegionFacts.close_after_label(after_row)
 
 
 func _is_region_row(row_data: EventRowData) -> bool:
@@ -428,17 +649,32 @@ func _append_head_band_echo(spans: Array[SemanticSpan], band_meta: Dictionary,
 		echo_line: String, ghosted: bool) -> void:
 	if echo_line.strip_edges().is_empty():
 		return
+	spans.append(_code_echo_span(
+		echo_line,
+		band_meta.merged({
+			"hover_note": EventSheetL10n.translate("The line this band stands for. Click to open it in the code panel.")
+		}, true),
+		HEAD_ECHO_GHOST_ALPHA if ghosted else EventSheetCodeEcho.REST_ALPHA,
+		true
+	))
+
+
+## THE code echo: one line of the file, tokenised and coloured by the script editor's own theme,
+## resting at a fraction of it. Every echo on the canvas - a head band's, a declaration's, a region
+## fence's - is built here, so none of them can drift into formatting a line by hand. The palette is
+## resolved ONCE per sweep: asking Editor Settings for eight colours per row is exactly the
+## build-loop lookup this viewport does not do.
+func _code_echo_span(echo_line: String, meta: Dictionary, alpha: float, align_right: bool) -> SemanticSpan:
 	if _code_echo_palette.is_empty():
 		_code_echo_palette = EventSheetCodeEcho.palette(
 			_viewport._get_reading_style(), _viewport._get_event_style()
 		)
-	var alpha: float = HEAD_ECHO_GHOST_ALPHA if ghosted else EventSheetCodeEcho.REST_ALPHA
-	spans.append(_make_span(echo_line, SemanticSpan.SpanType.COMMENT, band_meta.merged({
+	return _make_span(echo_line, SemanticSpan.SpanType.COMMENT, meta.merged({
+		"editable": false,
 		"code_echo": true,
-		"align_right": true,
-		"bbcode_segments": EventSheetCodeEcho.segments(echo_line, _code_echo_palette, alpha),
-		"hover_note": EventSheetL10n.translate("The line this band stands for. Click to open it in the code panel.")
-	}, true)))
+		"align_right": align_right,
+		"bbcode_segments": EventSheetCodeEcho.segments(echo_line, _code_echo_palette, alpha)
+	}, true))
 
 
 ## The "+ add" row under the stack: the lines this sheet COULD have and does not, offered where the
@@ -3361,47 +3597,11 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	row_data.disabled = not block.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
-	# Regions carry NO kind pill: the fold arrow, the colored label, the bubble
-	# outline, and the inline description already say what the row is. The label
-	# wears the region's own color (shared with the bubble), defaulting to the
-	# behavior accent so region headers always stand apart from comments.
-	if block.kind_id == "region":
-		var region_color: String = str(block.fields.get("color", "")).strip_edges()
-		var accent: Color = Color.html(region_color) if Color.html_is_valid(region_color) else event_style.behavior_accent_color
-		if bool(block.fields.get("is_end", false)):
-			# The closing fence is plumbing: one dim marker line. The pairing pass
-			# refines this to "end of <label>" once its opener is known.
-			row_data.spans = [_make_span(
-				"end region",
-				SemanticSpan.SpanType.VALUE,
-				{"kind": "custom_block_row", "text_color": Color(_viewport._get_reading_style().muted_text_color.r, _viewport._get_reading_style().muted_text_color.g, _viewport._get_reading_style().muted_text_color.b, 0.7)}
-			)]
-			return row_data
-		# N1 - `#region Name` IS a Group: Godot folds a script with regions, an event sheet
-		# organises itself with groups, and they are the same idea said twice. So the opening fence
-		# wears the event-group BAR (folder icon, title, muted count, the group row's height and
-		# chrome) instead of a plain section line. Storage is untouched - the sheet still holds the two
-		# fence rows the file has, which is what keeps the byte round-trip free.
-		row_data.row_type = EventRowData.RowType.GROUP
-		row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.22)
-		var region_label: String = str(block.fields.get("label", "")).strip_edges()
-		row_data.spans = [_make_span(
-			region_label if not region_label.is_empty() else EventSheetL10n.translate("(unnamed region)"),
-			SemanticSpan.SpanType.OBJECT,
-			{
-				"kind": "custom_block_row",
-				"group_title": true,
-				"object_icon": _folder_icon() if _viewport.show_object_icons else null,
-				"text_color": event_style.group_title_color
-			}
-		)]
-		var region_description: String = str(block.fields.get("description", "")).strip_edges()
-		if not region_description.is_empty():
-			row_data.spans.append(_make_span(
-				region_description,
-				SemanticSpan.SpanType.VALUE,
-				{"text_color": Color(_viewport._get_reading_style().secondary_text_color.r, _viewport._get_reading_style().secondary_text_color.g, _viewport._get_reading_style().secondary_text_color.b, 0.8)}
-			))
+	# R1 - a region asks for its own look through the Custom Block API rather than borrowing the
+	# group bar's chrome: it is a FOLD MARK, the same thing the script editor draws, and it holds
+	# none of what a group holds. Any registered kind can ask for the same shape.
+	if kind != null and kind.row_style(block) == "region":
+		_dress_region_fence_row(row_data, block)
 		return row_data
 	# First-class display: a kind may describe variable-style spans (name / operator / value /
 	# keyword pills) and its rows read like the plugin's own variable rows - the built-in
@@ -8550,27 +8750,14 @@ func _append_code_echo_span(row_data: EventRowData, variable_meta: Dictionary, c
 	if code_line.strip_edges().is_empty() or view_mode == EventSheetCodeEcho.VIEW_SENTENCE:
 		return
 	var full_strength: bool = view_mode == EventSheetCodeEcho.VIEW_CODE
-	# Resolved ONCE per sweep, not per row: the token colours are constant across a build, and
-	# asking Editor Settings for eight of them on every declaration is exactly the build-loop
-	# lookup this viewport does not do.
-	if _code_echo_palette.is_empty():
-		_code_echo_palette = EventSheetCodeEcho.palette(
-			_viewport._get_reading_style(), _viewport._get_event_style()
-		)
-	var alpha: float = 1.0 if full_strength else EventSheetCodeEcho.REST_ALPHA
-	row_data.spans.append(
-		_make_span(
-			code_line,
-			SemanticSpan.SpanType.COMMENT,
-			variable_meta.merged({
-				"editable": false,
-				"code_echo": true,
-				"align_right": not full_strength,
-				"bbcode_segments": EventSheetCodeEcho.segments(code_line, _code_echo_palette, alpha),
-				"hover_note": EventSheetL10n.translate("The line this row writes. Click to open it in the code panel.")
-			}, true)
-		)
-	)
+	row_data.spans.append(_code_echo_span(
+		code_line,
+		variable_meta.merged({
+			"hover_note": EventSheetL10n.translate("The line this row writes. Click to open it in the code panel.")
+		}, true),
+		1.0 if full_strength else EventSheetCodeEcho.REST_ALPHA,
+		not full_strength
+	))
 
 
 ## What the sheet calls its own object, for the sentence a static variable ends with ("shared by every

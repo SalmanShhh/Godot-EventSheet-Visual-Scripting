@@ -67,7 +67,7 @@ static func _append_row(row: EventRowData, lines: PackedStringArray, include_num
 			for comment_line: String in _lane_lines(row, ""):
 				lines.append("%s%s# %s" % [number_gutter, indent, comment_line])
 				number_gutter = blank_gutter
-		EventRowData.RowType.GROUP, EventRowData.RowType.SECTION:
+		EventRowData.RowType.GROUP, EventRowData.RowType.SECTION, EventRowData.RowType.REGION:
 			for title_line: String in _lane_lines(row, ""):
 				lines.append("%s%s%s" % [number_gutter, indent, title_line])
 				number_gutter = blank_gutter

@@ -72,6 +72,22 @@ func any_group_open() -> bool:
 	return _any_group_open_in(_viewport._root_rows)
 
 
+## R2 - the same question for regions: true while any paired fence still shows its body, which is
+## what makes Fold All / Unfold All one toggling item instead of two commands.
+func any_region_open() -> bool:
+	return _any_region_open_in(_viewport._root_rows)
+
+
+func _any_region_open_in(rows: Array[EventRowData]) -> bool:
+	for row_data: EventRowData in rows:
+		if _viewport._row_builder._is_region_row(row_data) and not row_data.children.is_empty() \
+				and not row_data.folded:
+			return true
+		if _any_region_open_in(row_data.children):
+			return true
+	return false
+
+
 func _any_group_open_in(rows: Array[EventRowData]) -> bool:
 	for row_data: EventRowData in rows:
 		if row_data.source_resource is EventGroup and not row_data.children.is_empty() and not row_data.folded:

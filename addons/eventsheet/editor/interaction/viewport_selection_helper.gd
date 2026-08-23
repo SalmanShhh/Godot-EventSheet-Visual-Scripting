@@ -35,7 +35,9 @@ static func build_single_selection(
 		# statement all of its rows read. The SPAN set stays keyed on the clicked row's own uid - a span
 		# index only means anything against the spans it was measured on.
 		selected_row_uids[row_data.statement_uid()] = true
-		var is_group: bool = row_data.row_type == EventRowData.RowType.GROUP
+		var is_group: bool = row_data.row_type in [
+			EventRowData.RowType.GROUP, EventRowData.RowType.REGION
+		]
 		if span_index >= 0 and not is_group:
 			selected_span_indices[row_data.row_uid] = [span_index]
 		if not row_data.children.is_empty() and (span_index < 0 or is_group):

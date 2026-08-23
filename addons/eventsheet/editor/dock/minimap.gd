@@ -74,7 +74,7 @@ static func row_kind(row_data: EventRowData) -> String:
 		return KIND_EVENT
 	if row_data.disabled:
 		return KIND_DISABLED
-	if row_data.row_type == EventRowData.RowType.GROUP:
+	if row_data.row_type in [EventRowData.RowType.GROUP, EventRowData.RowType.REGION]:
 		return KIND_GROUP
 	if row_data.row_type == EventRowData.RowType.COMMENT:
 		return KIND_COMMENT
@@ -160,7 +160,9 @@ func _draw() -> void:
 func _draw_group_bands(row_count: int, scale: float, chrome: EventSheetChromeStyle) -> void:
 	for index: int in row_count:
 		var row_data: EventRowData = _viewport.get_row_data(index)
-		if row_data == null or row_data.row_type != EventRowData.RowType.GROUP:
+		if row_data == null or row_data.row_type not in [
+			EventRowData.RowType.GROUP, EventRowData.RowType.REGION
+		]:
 			continue
 		var last: int = index
 		for scan: int in range(index + 1, row_count):

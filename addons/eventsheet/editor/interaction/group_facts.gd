@@ -27,24 +27,15 @@ const BRACKET_LEFT: float = 3.0
 const FOLDED_OBJECT_LIMIT: int = 3
 
 
-## The rows a group holds, across the `events` / `rows` alias pair.
+## The rows a group holds, across the `events` / `rows` alias pair. The resource answers - the
+## alias pair is a fact about EventGroup, not about the canvas.
 static func children(group: EventGroup) -> Array[Resource]:
-	if group == null:
-		return []
-	if not group.events.is_empty():
-		return group.events
-	return group.rows
+	return group.child_rows() if group != null else [] as Array[Resource]
 
 
 ## The name a group reads with, across the `name` / `group_name` alias pair.
 static func display_name(group: EventGroup) -> String:
-	if group == null:
-		return "Group"
-	if not group.name.is_empty():
-		return group.name
-	if not group.group_name.is_empty():
-		return group.group_name
-	return "Group"
+	return group.display_name() if group != null else "Group"
 
 
 ## What a group holds: direct child groups, events (recursive - a reader folding the outer group

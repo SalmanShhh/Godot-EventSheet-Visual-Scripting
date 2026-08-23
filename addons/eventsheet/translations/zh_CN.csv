@@ -4275,3 +4275,10 @@ Active On Start,启动时激活
 Open All / Close All Groups,展开 / 折叠所有组
 Add Local Variable…,添加局部变量…
 Ungroup - Keep The Rows,取消分组 - 保留行
+Turn Into Region,转换为区域
+Rename Region…,重命名区域…
+Open / Close Region,展开 / 折叠区域
+Open All / Close All Regions,展开 / 折叠所有区域
+Turn Into Group,转换为组
+Region Color…,区域颜色…
+Remove Region - Keep The Rows,移除区域 - 保留行

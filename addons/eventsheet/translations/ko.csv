@@ -4275,3 +4275,10 @@ Active On Start,시작 시 활성
 Open All / Close All Groups,모든 그룹 열기 / 닫기
 Add Local Variable…,지역 변수 추가…
 Ungroup - Keep The Rows,그룹 해제 - 행은 유지
+Turn Into Region,리전으로 변환
+Rename Region…,리전 이름 바꾸기…
+Open / Close Region,리전 열기 / 닫기
+Open All / Close All Regions,모든 리전 열기 / 닫기
+Turn Into Group,그룹으로 변환
+Region Color…,리전 색상…
+Remove Region - Keep The Rows,리전 제거 - 행은 유지

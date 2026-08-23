@@ -280,6 +280,7 @@ func build_ui() -> void:
 	_dock._viewport.code_echo_activated.connect(_dock._code_panel_glue.open_at_row)
 	_dock._viewport.sheet_head_action_requested.connect(_dock._head_actions.handle)
 	_dock._viewport.group_action_requested.connect(_dock._on_group_action_requested)
+	_dock._viewport.region_fix_requested.connect(_dock._close_orphan_region)
 	_dock._viewport.variable_group_requested.connect(_dock._variable_grouping.on_group_requested)
 	_dock._viewport.variable_group_rename_requested.connect(_dock._variable_grouping.on_rename_requested)
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)

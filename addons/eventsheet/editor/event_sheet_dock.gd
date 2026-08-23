@@ -93,6 +93,16 @@ const ROW_MENU_GROUP_ENABLED := 55
 const ROW_MENU_FOLD_ALL_GROUPS := 56
 const ROW_MENU_GROUP_ADD_LOCAL := 57
 const ROW_MENU_UNGROUP := 58
+## R2 - the region verbs. A region is two lines of the file, so what it offers is its own list:
+## rename the fence, fold it, turn it into a group (or a group into it), colour it, or drop the
+## pair and keep the rows.
+const ROW_MENU_REGION_RENAME := 59
+const ROW_MENU_FOLD_ALL_REGIONS := 60
+const ROW_MENU_REGION_TO_GROUP := 61
+const ROW_MENU_REGION_REMOVE := 62
+const ROW_MENU_GROUP_TO_REGION := 63
+## What the colour picker opens on when a group or a region carries no colour of its own yet.
+const DEFAULT_STRUCTURE_COLOR := Color(0.55, 0.45, 0.85, 1.0)
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -3466,7 +3476,7 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 # ── Group color tags ──────────────────────────────────────────────────────────────────
 var _group_color_popup: PopupPanel = null
 var _group_color_picker: ColorPickerButton = null
-var _group_color_target: EventGroup = null
+var _group_color_target: Resource = null
 
 
 ## G2 - a mark on a group head was clicked. The switch turns the group on and off; the ring before
@@ -3607,10 +3617,13 @@ func _set_group_runtime_toggleable(group: EventGroup, switchable: bool) -> bool:
 
 
 ## Event-sheet-style group colors: tint the selected group's accent/background (clear = theme).
+## R2 - a region's colour comes through the same picker: it is the same gesture on the same kind of
+## row, and the only difference is that a fence stores its colour as the `#rrggbb` its marker line
+## carries rather than as a Color.
 func _open_group_color_picker() -> void:
 	var target: Resource = _context_row.source_resource if _context_row != null else null
-	if not (target is EventGroup):
-		_set_status("Right-click a group to color it.", true)
+	if not (target is EventGroup) and not EventSheetRegionFacts.is_opening_fence(target):
+		_set_status("Right-click a group or a region to color it.", true)
 		return
 	if _group_color_popup == null:
 		_group_color_popup = PopupPanel.new()
@@ -3629,23 +3642,193 @@ func _open_group_color_picker() -> void:
 		_group_color_popup.add_child(color_box)
 		add_child(_group_color_popup)
 	_group_color_target = target
-	_group_color_picker.color = target.custom_color if target.custom_color.a > 0.0 else Color(0.55, 0.45, 0.85, 1.0)
+	_group_color_picker.color = _structure_color_of(target)
 	_group_color_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(220, 42)))
+
+
+## What the picker opens on: the group's or fence's own colour, or the default tint when it carries
+## none (clearing writes a fully transparent colour, which both structures read as "use the theme").
+func _structure_color_of(target: Resource) -> Color:
+	if target is EventGroup and (target as EventGroup).custom_color.a > 0.0:
+		return (target as EventGroup).custom_color
+	var stored: String = EventSheetRegionFacts.accent_hex(target)
+	if not stored.is_empty():
+		return Color.html(stored)
+	return DEFAULT_STRUCTURE_COLOR
 
 
 func _apply_group_color(value: Color) -> void:
 	if _group_color_target == null:
 		return
-	var target: EventGroup = _group_color_target
+	var target: Resource = _group_color_target
 	var changed: bool = _perform_undoable_sheet_edit("Group Color", func() -> bool:
-		if target.custom_color == value:
+		if target is EventGroup:
+			if (target as EventGroup).custom_color == value:
+				return false
+			(target as EventGroup).custom_color = value
+			return true
+		var fence: CustomBlockRow = target as CustomBlockRow
+		var written: String = "" if value.a <= 0.0 else "#%s" % value.to_html(false)
+		if str(fence.fields.get("color", "")) == written:
 			return false
-		target.custom_color = value
+		fence.fields["color"] = written
 		return true
 	)
 	if changed:
 		_refresh_after_edit()
-		_mark_dirty("Group color updated.")
+		_mark_dirty("Color updated.")
+
+# ── R2/R3: the region verbs ────────────────────────────────────────────────────────────────────
+
+
+## The opening fence the row menu is acting on, or null when the clicked row is not one.
+func _context_region() -> CustomBlockRow:
+	if _context_row == null:
+		return null
+	var fence: CustomBlockRow = _context_row.source_resource as CustomBlockRow
+	return fence if EventSheetRegionFacts.is_opening_fence(fence) else null
+
+
+## R2 - Rename Region: the fence's own name, edited in place on the row (the same edit F2 reaches
+## once the title is selected). Only the label changes; the file gains no line and loses none.
+func _begin_region_rename() -> void:
+	var opener: CustomBlockRow = _context_region()
+	if opener == null:
+		_set_status("Right-click a region's opening fence to rename it.", true)
+		return
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return
+	view.select_resource(opener)
+	if not view.begin_edit_selected():
+		_set_status("Couldn't start renaming that region.", true)
+
+
+## R2 - Turn Into Group: the fenced rows become an EventGroup and the two fence lines go. One undo
+## step, and nothing inside moves.
+func _turn_region_into_group() -> void:
+	var opener: CustomBlockRow = _context_region()
+	if opener == null:
+		_set_status("Right-click a region's opening fence to turn it into a group.", true)
+		return
+	var location: Dictionary = _find_resource_location(opener)
+	if location.is_empty():
+		_set_status("Couldn't locate that region.", true)
+		return
+	var made: Array[EventGroup] = []
+	var changed: bool = _perform_undoable_sheet_edit("Turn Into Group", func() -> bool:
+		var group: EventGroup = EventSheetRefactor.region_to_group(location.get("container"), opener)
+		if group == null:
+			return false
+		made.append(group)
+		return true
+	)
+	if not changed:
+		_set_status("That region has no closing #endregion, so there is nothing to wrap.", true)
+		return
+	_mark_dirty("\"%s\" is a group now - the rows are unchanged." % made[0].display_name())
+
+
+## R2 - Turn Into Region: the group's header goes and its rows sit between two fences instead. The
+## menu item already said why it could not happen, so the refusal here is only a backstop.
+func _turn_group_into_region() -> void:
+	var group: EventGroup = _context_group()
+	if group == null:
+		_set_status("Select a group to turn it into a region.", true)
+		return
+	var problem: String = EventSheetRefactor.group_to_region_problem(group)
+	if not problem.is_empty():
+		_set_status("\"%s\" %s, and a region cannot carry that." % [group.display_name(), problem], true)
+		return
+	var location: Dictionary = _find_resource_location(group)
+	if location.is_empty():
+		_set_status("Couldn't locate that group.", true)
+		return
+	var name_before: String = group.display_name()
+	var changed: bool = _perform_undoable_sheet_edit("Turn Into Region", func() -> bool:
+		return EventSheetRefactor.group_to_region(location.get("container"), group)
+	)
+	if changed:
+		_mark_dirty("\"%s\" is a #region now - the rows are unchanged." % name_before)
+
+
+## R2 - Remove Region: both fences go, everything they held stays exactly where it was.
+func _remove_context_region() -> void:
+	var opener: CustomBlockRow = _context_region()
+	if opener == null:
+		_set_status("Right-click a region's opening fence to remove it.", true)
+		return
+	var location: Dictionary = _find_resource_location(opener)
+	if location.is_empty():
+		_set_status("Couldn't locate that region.", true)
+		return
+	var kept: Array[int] = []
+	var changed: bool = _perform_undoable_sheet_edit("Remove Region", func() -> bool:
+		var moved: int = EventSheetRefactor.remove_region_keep_rows(location.get("container"), opener)
+		if moved < 0:
+			return false
+		kept.append(moved)
+		return true
+	)
+	if not changed:
+		_set_status("That region has no closing #endregion, so there is no pair to remove.", true)
+		return
+	_mark_dirty("Region removed - %d row(s) kept." % kept[0])
+
+
+## R2 - Fold all / Unfold all regions: one gesture for the whole sheet, folding when anything is
+## open and opening when everything is shut, so the item is a toggle rather than two commands.
+func _toggle_all_region_folds() -> void:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return
+	var opening: bool = not view.any_region_open()
+	view.set_region_folds(not opening)
+	_set_status("Regions opened." if opening else "Regions closed.")
+
+
+## R3 - the fix on an unmatched opener's amber note: writes the missing `#endregion` after the last
+## row before the next head. The note stands for no resource of its own, so the fence it is about is
+## resolved from the row's uid - the same uid the note was built with.
+func _close_orphan_region(note_row: EventRowData) -> void:
+	if note_row == null or _current_sheet == null:
+		return
+	var opener: CustomBlockRow = _orphan_region_for(note_row.row_uid)
+	if opener == null:
+		_set_status("That fence is closed already.", true)
+		return
+	var location: Dictionary = _find_resource_location(opener)
+	if location.is_empty():
+		_set_status("Couldn't locate that region.", true)
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Close Region", func() -> bool:
+		var container: Array = location.get("container")
+		var at: int = EventSheetRegionFacts.closer_insert_index(container, container.find(opener))
+		if at < 0:
+			return false
+		var closer := CustomBlockRow.new()
+		closer.kind_id = EventSheetRegionFacts.KIND_ID
+		closer.fields = {"label": "", "is_end": true}
+		container.insert(at, closer)
+		return true
+	)
+	if changed:
+		_mark_dirty("\"%s\" closes now." % EventSheetRegionFacts.display_name(opener))
+
+
+## The unmatched opening fence one orphan note is about, found by the uid the note was built with.
+func _orphan_region_for(note_uid: String) -> CustomBlockRow:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return null
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null or not EventSheetRegionFacts.is_opening_fence(row_data.source_resource):
+			continue
+		if note_uid == "region_orphan_%s" % str(row_data.source_resource.get_instance_id()):
+			return row_data.source_resource as CustomBlockRow
+	return null
+
 
 # ── Autoload (Singleton) sheets ───────────────────────────────────────────────────────
 
@@ -5938,6 +6121,10 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 			"group_description":
 				if row_data.source_resource is EventGroup:
 					(row_data.source_resource as EventGroup).description = new_value
+					return true
+			"region_name":
+				if EventSheetRegionFacts.is_opening_fence(row_data.source_resource):
+					(row_data.source_resource as CustomBlockRow).fields["label"] = new_value.strip_edges()
 					return true
 			"event_comment":
 				if row_data.source_resource is EventRow:

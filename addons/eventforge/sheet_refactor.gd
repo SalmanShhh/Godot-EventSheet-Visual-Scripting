@@ -311,3 +311,101 @@ static func _string_literal_mask(text: String) -> PackedByteArray:
 				quote = ""
 		index += 1
 	return mask
+
+
+# ── R2: a region and a group are the same idea said two ways ───────────────────────────────────
+#
+# Both directions are ONE edit on the container the rows already live in, and nothing inside moves:
+# the byte change is the two fence lines against the one group. A group carries two things a region
+# cannot - local variables and the runtime switch - so the group-to-region direction refuses with a
+# reason instead of quietly dropping them.
+
+
+## Turns a matched `#region` / `#endregion` pair into an EventGroup holding the rows between them.
+## The fences go; the region's name, description and colour become the group's. Returns the new
+## group, or null when this row is not an opening fence that closes in the same container.
+static func region_to_group(container: Array, opener: CustomBlockRow) -> EventGroup:
+	var opener_index: int = container.find(opener)
+	if opener_index == -1 or not EventSheetRegionFacts.is_opening_fence(opener):
+		return null
+	var paired: Dictionary = EventSheetRegionFacts.pairing(container)["pairs"]
+	if not paired.has(opener_index):
+		return null
+	var closer_index: int = int(paired[opener_index])
+	var group := EventGroup.new()
+	group.group_name = EventSheetRegionFacts.label(opener)
+	if group.group_name.is_empty():
+		group.group_name = "Group"
+	group.name = group.group_name
+	group.description = EventSheetRegionFacts.description(opener)
+	var accent: String = EventSheetRegionFacts.accent_hex(opener)
+	if not accent.is_empty():
+		group.custom_color = Color.html(accent)
+	for index: int in range(opener_index + 1, closer_index):
+		group.events.append(container[index] as Resource)
+	for _removed: int in range(closer_index - opener_index + 1):
+		container.remove_at(opener_index)
+	container.insert(opener_index, group)
+	return group
+
+
+## "" when this group can become a region, else the reason it cannot - said in the words the menu
+## item itself wears, so the refusal is read BEFORE the click rather than after it.
+static func group_to_region_problem(group: EventGroup) -> String:
+	if group == null:
+		return "no group here"
+	var locals: int = 0
+	for entry: Variant in group.local_variables:
+		if entry is LocalVariable:
+			locals += 1
+	if locals > 0:
+		return "has %d local" % locals if locals == 1 else "has %d locals" % locals
+	if group.runtime_toggleable:
+		return "can be switched at runtime"
+	if not group.enabled:
+		return "is switched off"
+	return ""
+
+
+## Turns an EventGroup into a `#region` / `#endregion` pair around the rows it held. The group's
+## header goes; its name, description and colour ride the opening fence. False when the group is not
+## in this container or carries something a region cannot (see group_to_region_problem).
+static func group_to_region(container: Array, group: EventGroup) -> bool:
+	var at: int = container.find(group)
+	if at == -1 or not group_to_region_problem(group).is_empty():
+		return false
+	var opener := CustomBlockRow.new()
+	opener.kind_id = EventSheetRegionFacts.KIND_ID
+	opener.fields = {"label": group.display_name(), "is_end": false}
+	if not group.description.strip_edges().is_empty():
+		opener.fields["description"] = group.description.strip_edges()
+	if group.custom_color.a > 0.01:
+		opener.fields["color"] = "#%s" % group.custom_color.to_html(false)
+	var closer := CustomBlockRow.new()
+	closer.kind_id = EventSheetRegionFacts.KIND_ID
+	closer.fields = {"label": "", "is_end": true}
+	var held: Array[Resource] = group.child_rows()
+	container.remove_at(at)
+	var insert_at: int = at
+	container.insert(insert_at, opener)
+	insert_at += 1
+	for entry: Resource in held:
+		container.insert(insert_at, entry)
+		insert_at += 1
+	container.insert(insert_at, closer)
+	return true
+
+
+## Drops both fences and leaves everything they held exactly where it was. Returns how many rows
+## were kept, or -1 when this row is not an opening fence that closes in the same container.
+static func remove_region_keep_rows(container: Array, opener: CustomBlockRow) -> int:
+	var opener_index: int = container.find(opener)
+	if opener_index == -1 or not EventSheetRegionFacts.is_opening_fence(opener):
+		return -1
+	var paired: Dictionary = EventSheetRegionFacts.pairing(container)["pairs"]
+	if not paired.has(opener_index):
+		return -1
+	var closer_index: int = int(paired[opener_index])
+	container.remove_at(closer_index)
+	container.remove_at(opener_index)
+	return closer_index - opener_index - 1

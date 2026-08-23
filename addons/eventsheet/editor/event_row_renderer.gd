@@ -34,6 +34,13 @@ const SWATCH_FONT_RATIO := 0.7
 # The rule down the left edge of a variable row, in logical pixels.
 const VARIABLE_ROW_RULE_WIDTH := 2.0
 
+# R1 - how a region fence paints in its own colour: the faintest wash behind the opening head, a
+# firm rule at the left edge of both fences, and the dash rhythm the badge and the body rule share.
+# Alphas, not colours: the hue is always the region's own, so no theme token is involved.
+const REGION_ROW_WASH_ALPHA := 0.06
+const REGION_RULE_ALPHA := 0.75
+const REGION_DASH_LENGTH := 3.0
+
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
 static var _icon_plate_style: StyleBoxFlat = null
@@ -513,6 +520,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			# fence lines), so its accent arrives on the row itself.
 			group_tint = row_data.custom_color
 		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
+	elif row_data.row_type == EventRowData.RowType.REGION:
+		# R1 - a region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
+		# solid 2px rule on the head, and nothing but that rule on the closing tick, so the fences
+		# read as the two lines of the file they are.
+		_draw_region_row_chrome(control, row_rect, row_data.custom_color,
+			EventSheetRegionFacts.is_closing_fence(row_data.source_resource), event_style)
 	elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
 		var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
@@ -817,6 +830,38 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.end.y - 1.0, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.38), true)
 	if fold_rect.size != Vector2.ZERO:
 		control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
+
+
+## R1 - a region fence's chrome. The opener wears the faintest wash of the region's own colour and
+## a solid rule at its left edge; the closing tick wears the rule alone, over nothing, so it reads
+## as the end of the dashed rule running down the body rather than as another row.
+func _draw_region_row_chrome(control: Control, row_rect: Rect2, accent: Color, closing: bool,
+		event_style: EventSheetEventStyle = null) -> void:
+	var ink: Color = accent
+	if ink.a <= 0.01:
+		ink = event_style.behavior_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
+	if not closing:
+		control.draw_rect(row_rect, Color(ink.r, ink.g, ink.b, REGION_ROW_WASH_ALPHA), true)
+	control.draw_rect(
+		Rect2(row_rect.position.x, row_rect.position.y, EventSheetGroupFacts.BRACKET_WIDTH, row_rect.size.y),
+		Color(ink.r, ink.g, ink.b, REGION_RULE_ALPHA),
+		true
+	)
+
+
+## A dashed box around one badge, drawn as four dashed strokes. Godot's own dashed-line primitive
+## does the spacing, so the dashes here and the dashed rule down a region's body are the same mark.
+func _draw_dashed_outline(control: Control, rect: Rect2, ink: Color) -> void:
+	var corners: Array[Vector2] = [
+		rect.position,
+		Vector2(rect.end.x, rect.position.y),
+		rect.end,
+		Vector2(rect.position.x, rect.end.y)
+	]
+	for index: int in range(corners.size()):
+		control.draw_dashed_line(
+			corners[index], corners[(index + 1) % corners.size()], ink, 1.0, REGION_DASH_LENGTH
+		)
 
 
 func _draw_spans(
@@ -1419,14 +1464,19 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 			return
 	elif badge_style == "outline":
 		# The kind cue a variable row leads with: an outlined box around one glyph, so the badge
-		# column reads as a column without the weight of a filled chip on every declaration.
-		var outline := StyleBoxFlat.new()
-		outline.bg_color = Color(badge_bg.r, badge_bg.g, badge_bg.b, badge_bg.a * 0.35)
-		outline.border_color = badge_fg
-		outline.set_border_width_all(1)
-		outline.set_corner_radius_all(int(metadata.get("corner_radius", 4)))
-		outline.set_content_margin_all(0)
-		control.draw_style_box(outline, badge_rect)
+		# column reads as a column without the weight of a filled chip on every declaration. A
+		# region's `#` asks for the same box DASHED - the script editor's fold mark, and the same
+		# stroke its body wears - so the two cues read as one idea.
+		if bool(metadata.get("badge_dashed", false)):
+			_draw_dashed_outline(control, badge_rect, badge_fg)
+		else:
+			var outline := StyleBoxFlat.new()
+			outline.bg_color = Color(badge_bg.r, badge_bg.g, badge_bg.b, badge_bg.a * 0.35)
+			outline.border_color = badge_fg
+			outline.set_border_width_all(1)
+			outline.set_corner_radius_all(int(metadata.get("corner_radius", 4)))
+			outline.set_content_margin_all(0)
+			control.draw_style_box(outline, badge_rect)
 	elif badge_style in ["trigger", "negated"]:
 		var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
 		control.draw_circle(badge_rect.get_center(), radius, badge_bg, true, -1.0, true)

@@ -231,7 +231,9 @@ func _ensure_map() -> void:
 	for row_info: Dictionary in _viewport._flat_rows:
 		var row_data: EventRowData = row_info.get("row")
 		shape.append({
-			"group": row_data != null and row_data.row_type == EventRowData.RowType.GROUP,
+			"group": row_data != null and row_data.row_type in [
+				EventRowData.RowType.GROUP, EventRowData.RowType.REGION
+			],
 			"indent": row_data.indent if row_data != null else 0,
 		})
 	_map = enclosing_map(shape)

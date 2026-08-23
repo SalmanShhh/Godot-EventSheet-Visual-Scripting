@@ -73,6 +73,10 @@ signal sheet_head_action_requested(action: String)
 ## G2 - a mark on a GROUP head was clicked: "enabled" (the switch) or "toggleable" (the ring
 ## before it). The viewport only names the mark; the group is the sheet's, so the dock writes it.
 signal group_action_requested(action: String, group: EventGroup)
+## R3 - the fix on an unmatched fence's amber note was clicked: write the missing `#endregion`
+## where the note says. The note stands for no resource, so the dock resolves the orphan fence from
+## the row's uid rather than from a source the row does not have.
+signal region_fix_requested(note_row: EventRowData)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
@@ -1967,7 +1971,7 @@ func _draw() -> void:
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_variable_group_bubbles(width)
 	_draw_group_brackets(width)
-	_draw_region_bubbles(width)
+	_draw_region_drop_glow(width)
 	_draw_box_selection_overlay()
 	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
@@ -2027,16 +2031,20 @@ func _draw_variable_group_bubbles(width: float) -> void:
 			_draw_variable_group_label(str(run.get("group", "")), top)
 
 
-## G1 - the group brackets: a 2px rule in the group's own colour down the LEFT EDGE of its body,
-## from the head's bottom to its last row's bottom, so where a group ends is visible without reading
-## indents. Nested groups inset 2px each, and rows are never pushed sideways for one. A group that is
-## switched off fades its whole body here too, in the same pass that knows the body's range.
+## G1/R1 - the structure brackets: a 2px rule in the block's own colour down the LEFT EDGE of its
+## body, from the head's bottom to its last row's bottom, so where a group or a region ends is
+## visible without reading indents. Nested blocks inset 2px each, and rows are never pushed sideways
+## for one. A group is SOLID and a region DASHED - the script editor's own fold stroke - which is the
+## whole difference between the two on the canvas. A group that is switched off fades its body here
+## too, in the same pass that knows the body's range.
 func _draw_group_brackets(width: float) -> void:
 	var shape: Array = []
 	for index: int in range(_flat_rows.size()):
 		var row_data: EventRowData = _flat_rows[index].get("row")
 		shape.append({
-			"group": row_data != null and row_data.row_type == EventRowData.RowType.GROUP,
+			"group": row_data != null and row_data.row_type in [
+				EventRowData.RowType.GROUP, EventRowData.RowType.REGION
+			],
 			"indent": row_data.indent if row_data != null else 0,
 			"top": _get_row_top(index),
 			"height": _get_row_height(index)
@@ -2054,13 +2062,20 @@ func _draw_group_brackets(width: float) -> void:
 			accent = row_data.custom_color
 		var top: float = float(bracket["top"])
 		var height: float = float(bracket["bottom"]) - top
+		var left: float = float(bracket["x"])
 		if row_data.disabled:
-			draw_rect(Rect2(float(bracket["x"]), top, width - float(bracket["x"]), height), reading_style.disabled_row_color, true)
-		draw_rect(
-			Rect2(float(bracket["x"]), top, EventSheetGroupFacts.BRACKET_WIDTH, height),
-			Color(accent.r, accent.g, accent.b, 0.75),
-			true
-		)
+			draw_rect(Rect2(left, top, width - left, height), reading_style.disabled_row_color, true)
+		var ink: Color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
+		if row_data.row_type == EventRowData.RowType.REGION:
+			draw_dashed_line(
+				Vector2(left + EventSheetGroupFacts.BRACKET_WIDTH * 0.5, top),
+				Vector2(left + EventSheetGroupFacts.BRACKET_WIDTH * 0.5, top + height),
+				ink,
+				EventSheetGroupFacts.BRACKET_WIDTH,
+				EventRowRenderer.REGION_DASH_LENGTH
+			)
+			continue
+		draw_rect(Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), ink, true)
 
 
 ## True when the row at `index` IS the folder strip that names its run - the row the builder puts
@@ -2091,19 +2106,17 @@ func _draw_variable_group_label(group_name: String, run_top: float) -> void:
 	)
 
 
-## The region bubbles: a THIN rounded outline around each unfolded #region range
-## (the opening fence through the closing fence) - the same Discord-bubble look the
-## variable folders use, outline-only so the enclosed rows keep their own colors.
-## Nested regions draw nested bubbles (each opener draws its own), and the left edge
-## insets with the opener's indent so a region inside a group hugs its lane.
-func _draw_region_bubbles(width: float) -> void:
-	# While a row/ACE drag is live, the range the pointer would drop INTO glows so
-	# "this lands inside the region" is visible before the drop.
+## R1 - the drop glow: while a row/ACE drag is live, the region range the pointer would land INSIDE
+## is washed in its own colour, so "this drops into Debug helpers" is visible before the drop. The
+## range's own outline is the dashed rule the bracket pass draws; this is only the target cue.
+func _draw_region_drop_glow(width: float) -> void:
 	var drag_target: int = -1
 	if _drag_row_index >= 0 and _drag_target_index >= 0:
 		drag_target = _drag_target_index
 	elif not _drag_ace_entries.is_empty() and _drag_ace_target_row_index >= 0:
 		drag_target = _drag_ace_target_row_index
+	if drag_target < 0:
+		return
 	for index in range(_flat_rows.size()):
 		var row_data: EventRowData = _flat_rows[index].get("row")
 		if row_data == null or row_data.folded or row_data.children.is_empty():
@@ -2113,25 +2126,20 @@ func _draw_region_bubbles(width: float) -> void:
 		var last_index: int = index + _visible_descendant_count(row_data)
 		if last_index <= index or last_index >= _flat_rows.size():
 			continue
-		# The region's own color wins (editable via the fence's edit dialog);
-		# the theme's behavior accent is the default.
-		var accent: Color = _get_event_style().behavior_accent_color
-		var custom_color: String = str(((row_data.source_resource as CustomBlockRow).fields as Dictionary).get("color", "")).strip_edges()
-		if Color.html_is_valid(custom_color):
-			accent = Color.html(custom_color)
-		var glowing: bool = drag_target > index and drag_target <= last_index + 1
-		var bubble: StyleBoxFlat = StyleBoxFlat.new()
-		bubble.bg_color = Color(accent.r, accent.g, accent.b, 0.07) if glowing else Color(0.0, 0.0, 0.0, 0.0)
-		bubble.border_color = Color(accent.r, accent.g, accent.b, 1.0 if glowing else 0.65)
-		# Region border thickness + corner rounding are theme tokens; a drag target reads one pixel
-		# thicker. Defaults (width 1, radius 7) reproduce the previous hardcoded look.
-		var region_line: int = _get_event_style().region_line_width
-		bubble.set_border_width_all(region_line + 1 if glowing else region_line)
-		bubble.set_corner_radius_all(_get_event_style().region_corner_radius)
+		if drag_target <= index or drag_target > last_index + 1:
+			continue
+		var accent: Color = row_data.custom_color
+		if accent.a <= 0.01:
+			accent = _get_event_style().behavior_accent_color
+		var glow := StyleBoxFlat.new()
+		glow.bg_color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_ROW_WASH_ALPHA)
+		glow.border_color = Color(accent.r, accent.g, accent.b, EventRowRenderer.REGION_RULE_ALPHA)
+		glow.set_border_width_all(_get_event_style().region_line_width)
+		glow.set_corner_radius_all(_get_event_style().region_corner_radius)
 		var left: float = 3.0 + float(row_data.indent * INDENT_WIDTH)
 		var top: float = _get_row_top(index)
 		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)
-		bubble.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
+		glow.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
 
 
 ## Folds or unfolds every paired region in one step (Command Palette: Fold All
@@ -2149,6 +2157,10 @@ func set_group_folds(folded: bool) -> void:
 ## True while any group on the sheet is still open.
 func any_group_open() -> bool:
 	return _folding.any_group_open()
+
+
+func any_region_open() -> bool:
+	return _folding.any_region_open()
 
 
 func _enclosing_region_flat_index(flat_index: int) -> int:
@@ -2353,6 +2365,9 @@ func _refresh_rows() -> void:
 		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
 		if _row_disabled_state.has(state_uid):
 			line_row.disabled = bool(_row_disabled_state[state_uid])
+	# R3 - an unmatched fence's fix names the row it writes the `#endregion` after, and that number
+	# is the one the gutter shows, which only exists now. No-op on every sheet whose fences pair.
+	_row_builder.apply_region_fix_labels(_flat_rows)
 	if _selected_row_index >= _flat_rows.size():
 		_selected_row_index = _flat_rows.size() - 1
 	# Re-derive the caret from the SELECTION when they disagree: after a delete/undo/fold the
@@ -3801,7 +3816,8 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 		return "group"
 	var supports_inside_drop: bool = row_data.row_type in [
 		EventRowData.RowType.EVENT,
-		EventRowData.RowType.GROUP
+		EventRowData.RowType.GROUP,
+		EventRowData.RowType.REGION
 	]
 	if supports_inside_drop and is_in_inside_zone:
 		return "inside"

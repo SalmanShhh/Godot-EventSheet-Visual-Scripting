@@ -6,7 +6,12 @@ enum RowType {
 EVENT,
 GROUP,
 COMMENT,
-SECTION
+SECTION,
+## R1 - a `#region` fence. It is NOT a group: it holds no locals, it cannot be switched off, and
+## it is two plain lines of the file rather than a resource. So it reads as what it is in the
+## script editor - a fold mark: a dashed `#` badge, a dashed rule down its body, and a slim
+## closing tick whose only text is the `#endregion` the file really has.
+REGION
 }
 
 var indent: int = 0

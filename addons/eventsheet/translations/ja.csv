@@ -4275,3 +4275,10 @@ Active On Start,開始時に有効
 Open All / Close All Groups,すべてのグループを開く / 閉じる
 Add Local Variable…,ローカル変数を追加…
 Ungroup - Keep The Rows,グループ解除 - 行は残す
+Turn Into Region,リージョンに変換
+Rename Region…,リージョン名を変更…
+Open / Close Region,リージョンを開く / 閉じる
+Open All / Close All Regions,すべてのリージョンを開く / 閉じる
+Turn Into Group,グループに変換
+Region Color…,リージョンの色…
+Remove Region - Keep The Rows,リージョンを削除 - 行は残す

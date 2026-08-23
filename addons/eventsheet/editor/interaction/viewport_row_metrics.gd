@@ -48,6 +48,8 @@ func rebuild() -> void:
 			and (
 				row_data.row_type == EventRowData.RowType.EVENT
 				or row_data.row_type == EventRowData.RowType.GROUP
+				or (row_data.row_type == EventRowData.RowType.REGION
+					and not EventSheetRegionFacts.is_closing_fence(row_data.source_resource))
 				or row_data.attached_below
 			)
 		):
@@ -86,6 +88,19 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 		var text_height: float = float(maxi(row_data.line_count, 1)) \
 			* _viewport._get_event_line_height(_viewport._get_font_size())
 		return max(max(float(group_height), text_height), float(_viewport.ROW_HEIGHT))
+	if row_data.row_type == EventRowData.RowType.REGION:
+		# R1 - a region OPENER is an ordinary single-line row: a fold mark, never a chapter bar. Its
+		# closing fence is a TICK - as tall as the small echo it carries and no taller - so the mark
+		# that says "the region ends here" costs a sliver of canvas instead of another row.
+		if not EventSheetRegionFacts.is_closing_fence(row_data.source_resource):
+			return maxf(float(_viewport.ROW_HEIGHT), _viewport._get_event_line_height(_viewport._get_font_size()))
+		var tick_font: int = EventSheetPalette.resolve_font_size(
+			_viewport._get_font_size(), ViewportRowBuilder.REGION_CLOSER_FONT_DELTA
+		)
+		return maxf(
+			float(_viewport.ROW_HEIGHT) * ViewportRowBuilder.REGION_CLOSER_HEIGHT_RATIO,
+			_viewport._get_font().get_height(tick_font) + 2.0
+		)
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		# Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
 		if row_data.line_count > 1:
@@ -476,8 +491,11 @@ func natural_content_width() -> float:
 		var row_data: EventRowData = _viewport._row_at(index)
 		if row_data == null:
 			continue
-		# Comments and group bars wrap to whatever width they are given, so they never ask for one.
-		if row_data.row_type == EventRowData.RowType.COMMENT or row_data.row_type == EventRowData.RowType.GROUP:
+		# Comments, group bars and region fences fit whatever width they are given, so they never
+		# ask for one (their echo drops out entirely below the code-echo width floor).
+		if row_data.row_type in [
+			EventRowData.RowType.COMMENT, EventRowData.RowType.GROUP, EventRowData.RowType.REGION
+		]:
 			continue
 		var needs: Dictionary = _natural_lane_extents(row_data, probe_width, font, font_size)
 		if row_data.row_type == EventRowData.RowType.EVENT:

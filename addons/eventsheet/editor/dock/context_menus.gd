@@ -208,11 +208,12 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# A synthetic row (EVENT-typed but with no sheet resource - a data-class field row) must
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
-	# A `#region` bar READS as a group bar - it is one - but the sheet stores two
-	# fence rows, not an EventGroup - so the group menu, whose handlers cast to EventGroup, must not
-	# claim it. Its own block menu below still applies.
-	var is_group: bool = row_type == EventRowData.RowType.GROUP \
-		and not (row_data != null and row_data.source_resource is CustomBlockRow)
+	var is_group: bool = row_type == EventRowData.RowType.GROUP
+	# R1/R2 - a region is its own row type with its own verbs: it holds no locals, it cannot be
+	# switched off, and the two things it CAN become (a group, or nothing at all) are refactors the
+	# group menu has no item for. Only an OPENING fence gets them - a closer is the same region.
+	var is_region: bool = row_type == EventRowData.RowType.REGION \
+		and row_data != null and EventSheetRegionFacts.is_opening_fence(row_data.source_resource)
 	# A CAPTION row (a published verb's @ace_description, or any caption an extension builds through
 	# EventSheets.build_caption_row) renders as a COMMENT row but has NO CommentRow behind it, so it must
 	# not offer Edit Comment / Attach To Event Above - both handlers cast source_resource to CommentRow
@@ -289,7 +290,30 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 		menu.add_item("Add Local Variable…", _dock.ROW_MENU_GROUP_ADD_LOCAL)
 		menu.add_item("Group Color…", _dock.ROW_MENU_GROUP_COLOR)
+		# R2 - the way back to the file's own kind of grouping. A group carries two things a region
+		# cannot (locals, the runtime switch), so the item says WHY before the click rather than
+		# failing after it.
+		# A synthetic Arrange-by header reports as a group row but stands for no EventGroup, so it is
+		# offered nothing to convert.
+		if _dock._context_group() != null:
+			menu.add_item("Turn Into Region", _dock.ROW_MENU_GROUP_TO_REGION)
+			var region_problem: String = EventSheetRefactor.group_to_region_problem(_dock._context_group())
+			if not region_problem.is_empty():
+				menu.set_item_text(menu.item_count - 1, "%s - %s" % [
+					menu.get_item_text(menu.item_count - 1), region_problem
+				])
+				menu.set_item_disabled(menu.item_count - 1, true)
 		menu.add_item("Ungroup - Keep The Rows", _dock.ROW_MENU_UNGROUP)
+	elif is_region:
+		# R1/R2 - what a region offers: rename the fence, fold it, and the two things it can become.
+		# No locals, no on/off switch, no ungroup - a region holds none of that.
+		menu.add_item("Rename Region…", _dock.ROW_MENU_REGION_RENAME)
+		menu.add_item("Open / Close Region", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
+		menu.add_item("Open All / Close All Regions", _dock.ROW_MENU_FOLD_ALL_REGIONS)
+		menu.add_separator()
+		menu.add_item("Turn Into Group", _dock.ROW_MENU_REGION_TO_GROUP)
+		menu.add_item("Region Color…", _dock.ROW_MENU_GROUP_COLOR)
+		menu.add_item("Remove Region - Keep The Rows", _dock.ROW_MENU_REGION_REMOVE)
 	elif is_comment:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)

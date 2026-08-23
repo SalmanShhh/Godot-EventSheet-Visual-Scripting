@@ -517,6 +517,12 @@ class RegionBlockKind extends EventSheetBlockKind:
 		var label: String = str(block.fields.get("label", "")).strip_edges()
 		return label if not label.is_empty() else "(unnamed)"
 
+	# R1 - a region is a FOLD MARK, not a group: it holds no locals, it cannot be switched off, and
+	# it is two plain lines of the file rather than a resource. Asking for the region look through
+	# the public hook is what stopped it borrowing the group bar's chrome.
+	func row_style(_entry: Resource) -> String:
+		return "region"
+
 	static func _style_marker(block: CustomBlockRow) -> String:
 		var color: String = str(block.fields.get("color", "")).strip_edges()
 		var description: String = str(block.fields.get("description", "")).strip_edges()

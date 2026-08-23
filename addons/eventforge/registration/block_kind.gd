@@ -77,6 +77,18 @@ func display_spans(_entry: Resource) -> Array[Dictionary]:
 	return []
 
 
+## Optional ROW LOOK: which of the sheet's row shapes this kind's rows are drawn as. A kind that
+## stands for STRUCTURE - something that opens, holds rows and closes again - can ask for a shape
+## the sheet already has instead of the flat "badge + summary line" every block gets by default.
+## The answers are words, never renderer types, so the model layer never names an editor class:
+##   "section" (the default flat block row) · "group" (a chapter bar with a fold) ·
+##   "region" (a fold mark: dashed badge, dashed rule down the body, slim closing tick)
+## Display only - it never affects emission, the lift, or the byte round-trip. The built-in region
+## kind renders through this, so the hook is load-bearing rather than only an extension point.
+func row_style(_entry: Resource) -> String:
+	return "section"
+
+
 ## Optional hover tooltip for rows of this kind - what the block means, not just what it says
 ## (the viewport asks the kind before falling back to its generic tooltips). BBCode ([b]/[i]/
 ## [color]) renders styled. Return "" for the default behaviour.

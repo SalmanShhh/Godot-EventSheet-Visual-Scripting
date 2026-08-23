@@ -199,6 +199,16 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._ungroup_context_group()
 		_dock.ROW_MENU_GROUP_COLOR:
 			_dock._open_group_color_picker()
+		_dock.ROW_MENU_GROUP_TO_REGION:
+			_dock._turn_group_into_region()
+		_dock.ROW_MENU_REGION_RENAME:
+			_dock._begin_region_rename()
+		_dock.ROW_MENU_FOLD_ALL_REGIONS:
+			_dock._toggle_all_region_folds()
+		_dock.ROW_MENU_REGION_TO_GROUP:
+			_dock._turn_region_into_group()
+		_dock.ROW_MENU_REGION_REMOVE:
+			_dock._remove_context_region()
 		_dock.ROW_MENU_BULK_TOGGLE_ENABLED:
 			_dock._bulk_set_enabled_on(_dock._top_level_selected_resources())
 		_dock.ROW_MENU_BULK_DUPLICATE:

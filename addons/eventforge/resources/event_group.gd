@@ -39,6 +39,21 @@ func get_row_kind() -> String:
 	return "group"
 
 
+## The name this group reads with, across the `name` / `group_name` alias pair. The one answer -
+## the editor, the refactors and the compiler all ask here rather than choosing an alias each.
+func display_name() -> String:
+	if not name.is_empty():
+		return name
+	if not group_name.is_empty():
+		return group_name
+	return "Group"
+
+
+## The rows this group holds, across the `events` / `rows` alias pair.
+func child_rows() -> Array[Resource]:
+	return events if not events.is_empty() else rows
+
+
 ## Returns effective collapsed state across collapsed/expanded aliases.
 func is_collapsed() -> bool:
 	if collapsed:
