@@ -457,7 +457,9 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   head's name badge and its `@icon` swatch, and the fold layer's four near-identical sweeps.
 - **A head band's line lives in one table.** Which line of the file each band stands for was known
   in three places (the facts reader, the prelude writer, the line formatter); `LINE_SHAPES` is now
-  the one table all three read.
+  the one table all three read - and so does the row builder's search for the prelude block a
+  description edit has to rewrite, which had hand-coded the same `## ` prefix and `## @` exclusion a
+  fourth time.
 - **The variable panel nobody could open is gone.** The dock folded its global/local variable lists
   into the viewport's own rows long ago, but the ItemLists, the entry arrays and the two activation
   handlers stayed - and were the last place a variable was still spelled `name : Type = value`. With

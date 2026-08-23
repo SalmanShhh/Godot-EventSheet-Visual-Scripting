@@ -798,11 +798,12 @@ func _build_head_add_row(sheet: EventSheetResource, add_text: String) -> EventRo
 
 
 ## True when a block of prelude code carries the file's own `##` prose (not just `## @ace_*`
-## annotations) - the block a description edit has to rewrite.
+## annotations) - the block a description edit has to rewrite. Asked of the band model's own line
+## table, like the writer that rewrites the block, so the reader that finds the description's home
+## and the writer that edits it can never pick different blocks.
 func _carries_class_description(code: String) -> bool:
 	for raw_line: String in code.split("\n"):
-		var line: String = raw_line.strip_edges()
-		if line.begins_with("## ") and not line.begins_with("## @"):
+		if EventSheetHeadBands.line_is(raw_line.strip_edges(), EventSheetHeadBands.BAND_DESCRIPTION):
 			return true
 	return false
 
