@@ -2307,6 +2307,26 @@ static func insert_snippet(text: String, label: String = "Insert Snippet") -> bo
 	return _dock._paste_snippet_text(text, label)
 
 
+## How much of what a sheet says about the NETWORK arrived as rows:
+## `{"read": int, "blocked": int, "total": int, "percent": int}`. `total` counts the lines that
+## mention Godot's high-level multiplayer at all - the peer, the messages, the authority questions,
+## the connection's own signals - and `blocked` is how many of those the canvas can only show as a
+## script block. The census behind the head's "reads as" band, exposed so a pack that adds its own
+## networking (a lobby service, a relay) can report the same number about the same sheet instead of
+## inventing a second one. Pass null (or a sheet that says nothing about the network) and every
+## count is zero with `percent` 100.
+static func networking_coverage(sheet: EventSheetResource) -> Dictionary:
+	return EventSheetReadingCoverage.networking(sheet)
+
+
+## The same count in the words the sheet shows: "every networking line reads as a row - 9 of 9", or
+## "7 of 9 networking lines read as rows" when some of it stayed code. "" when the sheet says nothing
+## about the network, because "0 of 0" is a number with nothing in it. Translated through the editor
+## language like every other string the canvas draws.
+static func networking_coverage_text(sheet: EventSheetResource) -> String:
+	return EventSheetReadingCoverage.networking_text(sheet)
+
+
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────
 
 

@@ -1566,6 +1566,11 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		elif source_path == "@window":
 			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."
+		elif source_path == TriggerResolver.MULTIPLAYER_SOURCE:
+			# E1. The scene tree's own MultiplayerAPI (peer_connected, server_disconnected, …) - the
+			# five connection triggers connect here. `multiplayer` is a property of every node, which
+			# is why the line needs no lookup at all and reads exactly as a hand-written one does.
+			source_prefix = "multiplayer."
 		elif source_path.begins_with(TriggerResolver.MEMBER_SOURCE_PREFIX):
 			# W6. A menu is a variable of this script, not a node looked up by path: the line that
 			# wires it is `sheet_popup.id_pressed.connect(...)`, which is what every hand-written

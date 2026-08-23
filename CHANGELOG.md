@@ -570,6 +570,38 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   a hand-written block beyond the fact being edited. The band stands for the first `## ` line, echoes
   exactly that line, and the rewrite replaces that one line and leaves the block's other lines where
   their author put them (the sheet's own `class_description` field included).
+### Multiplayer - the networking you already wrote opens as rows
+
+- **Hosting, joining and leaving are rows now.** **Host a game on port 7777 for up to 4 players**,
+  **Join a game at 127.0.0.1 port 7777** and **Leave the game** sit on the Multiplayer object beside
+  the messages that were already there, and each writes exactly the Godot lines it names - a peer of
+  the kind you picked (ENet, WebSocket or WebRTC), its `create_server` / `create_client`, and
+  `multiplayer.multiplayer_peer`. Nothing here is a networking layer.
+- **The five things the connection tells you are five events.** **On player joined**, **On player
+  left**, **On joined the host**, **On join failed** and **On the host left** are ordinary signal
+  triggers, connected in `_ready` on `multiplayer` exactly as a hand-written script connects them.
+  **Spawn** is the MultiplayerSpawner's own call, with the node it belongs to in the object column.
+- **A multiplayer project you already wrote opens as those rows, without changing a byte.** The
+  importer learned the spellings people actually publish: `peer.create_server(PORT, 4)` followed by
+  `multiplayer.multiplayer_peer = peer` with a peer declared at the top of the file, the three-line
+  local-peer form Godot's own documentation uses, `peer.close()`, the `get_tree().get_multiplayer()`
+  spelling, `multiplayer.<signal>.connect(...)` for all five signals, `$Spawner.spawn(id)` and
+  `spawner.spawn({...})`, and the message sends nothing could read before - `rpc("f", 10)`,
+  `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)` and `$Other.rpc(&"f")`. Every
+  recogniser stores the spelling it matched ON the row and re-emits it, so the file that opened is
+  the file that saves.
+- **What no row can say stays code, and says so.** A `create_server` with channel and bandwidth
+  limits, ENet compression, packets put on the wire by hand and the error-returning `create_client`
+  Godot's docs use are all refused rather than guessed at, and a new per-script count -
+  *every networking line reads as a row - 9 of 9* - reports honestly how much of a script arrived as
+  rows. Who owns an object (`set_multiplayer_authority` in its three spellings) and who is allowed to
+  run a function (the early-return and whole-body guards, for the owner and for the host) are read
+  as facts about the script.
+- **Fixed: one plain helper between a `_ready` and its handlers no longer sinks the whole file.**
+  A lobby autoload that connects its signals in `_ready`, then defines a helper, then its handlers,
+  used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to
+  an event, and its connect line was then written twice - failing the byte-verify and reverting every
+  function in the file to a script block. Handlers now wait for the `_ready` that wires them.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

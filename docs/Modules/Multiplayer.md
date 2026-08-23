@@ -1,27 +1,32 @@
 # Multiplayer
 
 **Multiplayer** is the object a sheet talks to when several people are playing the same game over a
-network. It has three things to say. It sends a **message** - a function one peer runs on the
-others. It answers **Is host** - whether this copy of the game is the one that decides what is true.
-And it answers **Owns this object** - whether this copy is the one allowed to move the thing the
-sheet is attached to. The **MyID** expression rounds it out with this peer's own number.
+network. It opens the game - **Host a game**, **Join a game**, **Leave the game** - and it tells you
+what happened to the connection, as five events: **On player joined**, **On player left**, **On
+joined the host**, **On join failed**, **On the host left**. After that it has three things to say.
+It sends a **message** - a function one peer runs on the others. It answers **Is host** - whether
+this copy of the game is the one that decides what is true. And it answers **Owns this object** -
+whether this copy is the one allowed to move the thing the sheet is attached to. The **MyID**
+expression rounds it out with this peer's own number, and **Spawn** makes one copy of a scene on
+everybody at once.
 
-Godot calls these remote procedure calls, `@rpc` annotations, `multiplayer.is_server()` and
-`is_multiplayer_authority()`. The rows are those exact calls in the sheet's words, and nothing else:
-they compile to plain Godot with no runtime library behind them, and an existing networked script
-opened as a sheet reads back as these same rows.
+Godot calls these `ENetMultiplayerPeer`, `MultiplayerAPI`'s signals, remote procedure calls, `@rpc`
+annotations, `multiplayer.is_server()` and `is_multiplayer_authority()`. The rows are those exact
+calls in the sheet's words, and nothing else: they compile to plain Godot with no runtime library
+behind them, and an existing networked script opened as a sheet reads back as these same rows.
 
-This module does not set up the connection for you. Making a server, joining one and handing out peer
-ids is a handful of `ENetMultiplayerPeer` lines that belong in one place in your project - usually an
-autoload - and the rows here are what every sheet after that point uses.
+The connection still belongs in ONE place in your project - usually an autoload that hosts, joins and
+reacts to the five events - and every sheet after that point uses the messages and the two guards.
+That is a convention, not a rule the plugin enforces.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Reference tables](#reference-tables)
-4. [Use cases](#use-cases)
-5. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [Reading a project you already wrote](#reading-a-project-you-already-wrote)
+4. [Reference tables](#reference-tables)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -54,12 +59,61 @@ autoload - and the rows here are what every sheet after that point uses.
   showing what the driver did. **Owns this object** is how a movement sheet stays on the right one.
 - **MyID is a number, not a name.** The host is always 1; everyone else gets a number when they join.
   It is what you send when a message has to say who it came from.
+- **Hosting and joining are one row each, and three lines each.** A game needs a peer, an open
+  connection and the scene tree told about it. Those three lines are one decision, so they are one
+  row: a reader who splits them has a half-connected game. The peer kind is a dropdown - ENet for
+  desktop and mobile, WebSocket when the game runs in a browser, WebRTC for browser peer to peer.
+- **Joining is a question, not an answer.** **Join a game** only asks. Whether it worked arrives
+  later, as **On joined the host** or **On join failed**, which is why the lobby screen changes there
+  and not on the row that asked.
 - **Nothing here is magic.** Every row compiles to the call it names, so you can read the emitted
   `.gd`, hand it to somebody who has never used a sheet, and it is ordinary Godot networking code.
+- **A networked project you already wrote opens as these rows, unchanged.** Opening a `.gd` as a
+  sheet and saving it untouched reproduces the file byte for byte, so every reading below is a
+  recogniser that also re-emits the spelling it matched.
+
+## Reading a project you already wrote
+
+| What you wrote | Reads as |
+| --- | --- |
+| `peer.create_server(PORT, 4)` then `multiplayer.multiplayer_peer = peer`, with `peer` declared at the top of the file | **Host a game on port PORT for up to 4 players** |
+| `var peer := ENetMultiplayerPeer.new()` / `peer.create_server(PORT, MAX)` / `multiplayer.multiplayer_peer = peer` | the same row, with the local peer |
+| the `create_client(address, PORT)` twin of either | **Join a game at address port PORT** |
+| `multiplayer.multiplayer_peer = null`, `peer.close()`, or the `get_tree().get_multiplayer()` spelling | **Leave the game** |
+| `WebSocketMultiplayerPeer` / `WebRTCMultiplayerPeer` in the constructor | the same rows, with that peer kind |
+| `multiplayer.peer_connected.connect(_on_x)` and its four siblings | the five events, with your connect line re-emitted as you wrote it |
+| `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each keeping your own quoting |
+| `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
+| `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
+| `if not is_multiplayer_authority(): return`, and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
+
+And the honest other half. A `create_server` given channel or bandwidth limits, `peer.host.compress`,
+`put_packet` / `get_packet`, and the `var error = peer.create_client(...)` spelling that checks what
+the call answered all stay the code they are, because no row can say them without losing something.
+They still read line by line, and the head's **reads as** band counts them out loud.
 
 ## Reference tables
 
 Ships as is the template the row compiles to, so you can see exactly what lands in your `.gd`.
+
+### Multiplayer: opening and closing the game
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Host A Game | Opens this game to other players and makes this peer the host | `var __peer := {peer_kind}.new()` then `__peer.create_server({port}, {max_players})` then `multiplayer.multiplayer_peer = __peer` |
+| Join A Game | Asks a host to let this peer in | the same three lines with `create_client({address}, {port})` |
+| Leave The Game | Drops this peer's connection and puts the game back to single player | `multiplayer.multiplayer_peer = null` |
+| Spawn | Makes one copy of a scene on the host and on every peer at once | `{target}.spawn({data})` |
+
+### Multiplayer: what the connection tells you
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On Player Joined | Another peer connected, and its id is the event's chip | `multiplayer.peer_connected.connect(…)` |
+| On Player Left | A peer disconnected, however it went | `multiplayer.peer_disconnected.connect(…)` |
+| On Joined The Host | This peer was accepted by the host | `multiplayer.connected_to_server.connect(…)` |
+| On Join Failed | The host never answered, or refused | `multiplayer.connection_failed.connect(…)` |
+| On The Host Left | The host went away and the game is over for this peer | `multiplayer.server_disconnected.connect(…)` |
 
 ### Multiplayer: sending messages
 
@@ -130,6 +184,24 @@ confusion in a first networked build is not knowing which window you are looking
 **16. Doors and switches.** The interaction is sent to the host, the host opens the door, and the
 door state is sent to everyone - the same three steps as damage, and worth learning once.
 
+**17. A Host button and a Join button.** Two rows on a menu: **Host a game on port 7777 for up to 4
+players** under one button, **Join a game at the typed address port 7777** under the other. Nothing
+else changes about the menu, and the game is now networked.
+
+**18. A lobby that says who is here.** **On player joined** adds a name to the list, **On player
+left** removes it. The list itself lives on the host and is sent to everyone as one message whenever
+it changes.
+
+**19. Back to the menu when the host quits.** **On the host left** changes the scene. Without it the
+remaining players stand in a world nobody is answering for, which looks exactly like a freeze.
+
+**20. Spawn each player's character on the host.** **On player joined** with **Is host** under it,
+and a **Spawn** row on the MultiplayerSpawner carrying the new peer's id. The spawner makes the same
+copy on every peer, and the id is how its spawn function knows who it belongs to.
+
+**21. Say why the join failed.** **On join failed** puts a line on the menu. The address was wrong,
+the port was wrong, or nobody was hosting - all three arrive here and nowhere else.
+
 ### Other use cases
 
 **A ready check.** Each player sends a "ready" message to the host; the host counts them and sends "everyone is ready" back to everyone, which is the whole lobby handshake in three rows.
@@ -157,7 +229,15 @@ door state is sent to everyone - the same three steps as damage, and worth learn
   per peer, per object. Most bugs in a first networked build are one missing guard.
 - **`is_multiplayer_authority()` is per node.** It answers about the object the sheet is on, not
   about the peer in general, which is exactly why the row reads **Owns this object**.
-- **Set the connection up in one place.** These rows assume a peer already exists. Creating the
-  server, joining it and handling disconnects belongs in one autoload, not in every sheet.
+- **Set the connection up in one place.** Hosting, joining and reacting to the five events belongs in
+  one autoload, not in every sheet. The messages and the two guards are what every sheet after that
+  point uses.
+- **A port is a number both sides must agree on.** Anything from 1024 to 65535 is yours to pick.
+  127.0.0.1 is this same machine, which is how you test with two windows; a home network needs the
+  host's local address, and the open internet needs port forwarding or a relay.
+- **Max players does not count the host.** Four means the host plus four others, because that is what
+  `create_server`'s second argument means.
+- **A browser build cannot open a raw socket.** ENet does not work there. Pick WebSocket for both
+  sides, and remember that a desktop host with ENet cannot accept a browser client.
 - **Test with two windows before you test with two machines.** Run the project twice locally; almost
   every mistake above shows up immediately, and none of them need a network to reproduce.

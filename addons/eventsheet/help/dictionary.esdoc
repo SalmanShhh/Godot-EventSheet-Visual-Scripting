@@ -123,7 +123,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `cos` | [Cosine](ace:Core/CosValue) | Helpers | Vocabulary |
 | `count` | [Count Of](ace:Core/ArrayCount) | Variables: Array | Vocabulary |
 | `create` | [Cast Ray Into (2D)](ace:Core/CastRayInto2D) | Raycast 2D | Vocabulary |
+| `create_client` | [Join A Game](ace:Core/JoinGame) | Multiplayer | Vocabulary |
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
+| `create_server` | [Host A Game](ace:Core/HostGame) | Multiplayer | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
 | `create_tween` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
 | `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
@@ -527,6 +529,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `move_to_front` | [Move To Top Of Layer](ace:Core/MoveToTopOfLayer) | Layers | Vocabulary |
 | `move_toward` | [Move Toward](ace:Core/MoveTowardValue) | Helpers | Vocabulary |
 | `msaa_2d` | [Set Anti-aliasing](ace:Core/WindowSetAntiAliasing) | Game Window | Vocabulary |
+| `multiplayer_peer` | [Leave The Game](ace:Core/LeaveGame) | Multiplayer | Vocabulary |
 | `name` | [Set Node Name](ace:Core/SetNodeName) | Nodes | Vocabulary |
 | `naturalnocasecmp_to` | [Text Natural Order](ace:Core/TextNaturalOrder) | Compare: Text | Vocabulary |
 | `navigate_to_path` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
@@ -737,6 +740,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `sort` | [Sort Array](ace:Core/ArraySort) | Variables: Array | Vocabulary |
 | `space` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `space_set_active` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
+| `spawn` | [Spawn](ace:Core/Spawn) | Multiplayer | Vocabulary |
 | `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
 | `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |

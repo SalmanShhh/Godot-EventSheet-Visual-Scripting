@@ -299,6 +299,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `opposite_operator(operator)` - the operator that is true exactly when this one is false (`<=` ↔ `>`), or `""` when the text is not one of the six | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
+| Codegen | `networking_coverage(sheet)` - how much of what a sheet says about the network arrived as rows: `{read, blocked, total, percent}`, where `total` counts the lines that mention Godot's high-level multiplayer at all and `blocked` is how many of those the canvas can only show as a script block. A pack that adds its own networking reports the same number about the same sheet | `Dictionary` | no |
+| Codegen | `networking_coverage_text(sheet)` - the same count in the words the sheet shows ("every networking line reads as a row - 9 of 9"), translated through the editor language; `""` when the sheet says nothing about the network | `String` | no |
 | Codegen | `publish_pack(sheet, base_path, icon_path := "")` - the whole pack pipeline (icon detect, de-coding lifts, stable uids, banner-less compile); shared by the bundled builders and Export Addon | `Dictionary` | no |
 | Codegen | `stabilize_row_uids(sheet)` - deterministic row uids so regeneration is byte-stable | `void` | no |
 | Codegen | `resource_grid(columns, options := {})` - the Inspector-grid descriptor from plain column phrases (`"kind: coin\|gem\|key"` = a dropdown column; a choice written `key=Label` shows the label and stores the key) | `Dictionary` | no |
