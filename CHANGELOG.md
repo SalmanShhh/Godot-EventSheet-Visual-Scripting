@@ -279,6 +279,30 @@
   Theme Editor, and carried by the presets, so a custom theme that predates them is filled in
   rather than left with holes.
 
+### Changed - the design's second pass: one of everything it had grown two of
+
+The variable/head/group work above landed as several slices, and a few answers ended up written
+more than once. Nothing a row draws or a dialog writes has moved; there is simply one of each now.
+
+- **The Compare dialog reads the same variable list as everything else.** It had listed the sheet's
+  variables its own way, spelled their types through a second lookup, and named the owning object
+  through a third route. It asks the one catalog now, once per open rather than per keystroke - so a
+  global appears in the list, and picks as the `Game.Score` an expression actually needs. The
+  expression picker and the Compare list also compose a variable's line through the same call, so
+  the same variable cannot read two ways in two lists.
+- **One note row.** The unmatched-region note and the unknown-variable note were built by two
+  functions doing the same thing - a warning mark, a sentence, an optional fix at the right edge -
+  with the same glyph declared twice. Same for the five muted notes trailing a variable row, the
+  head's name badge and its `@icon` swatch, and the fold layer's four near-identical sweeps.
+- **A head band's line lives in one table.** Which line of the file each band stands for was known
+  in three places (the facts reader, the prelude writer, the line formatter); `LINE_SHAPES` is now
+  the one table all three read.
+- **The variable panel nobody could open is gone.** The dock folded its global/local variable lists
+  into the viewport's own rows long ago, but the ItemLists, the entry arrays and the two activation
+  handlers stayed - and were the last place a variable was still spelled `name : Type = value`. With
+  them go a group gesture no menu item reached, a viewport delegate with no caller, an unused
+  region helper and a constant nothing returned.
+
 ### Fixed - the variable slice's own review: the gestures that only looked like they landed
 
 - **"Show in Inspector" writes the flag.** The menu item handed the undo funnel a one-argument
