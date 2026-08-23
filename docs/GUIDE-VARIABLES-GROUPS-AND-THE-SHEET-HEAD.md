@@ -314,7 +314,7 @@ It asks the three things a comparison actually decides:
 
 | Box | What it takes |
 |---|---|
-| **Compare** | one of this sheet's variables, each with its type word and what it starts at - or *Something else…*, which turns the box into free text for any expression |
+| **Compare** | any variable this sheet can name - its own, the globals it reads and the locals in scope - each with its type word and what it starts at, or *Something else…*, which turns the box into free text for any expression. Picking a global writes the `Game.Score` spelling the expression needs |
 | **Is** | the operator list, with a **ranges** group at the foot |
 | **To** | what to compare against |
 | **And** | the other end of a range. Shown for between / not between |
