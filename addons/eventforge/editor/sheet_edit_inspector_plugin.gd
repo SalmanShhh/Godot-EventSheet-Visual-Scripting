@@ -82,11 +82,13 @@ static func member_variables(script_path: String) -> Array[Dictionary]:
 		# its own line marks the NEXT one. Both spellings are the same declaration, so the annotation
 		# is taken off the front and whatever is left is read as usual.
 		if bare.begins_with("@export"):
-			exported_next = true
-			var space_at: int = bare.find(" ")
-			if space_at < 0:
+			# A section annotation labels the Inspector band; it exports nothing by itself, so it
+			# must not vouch for the variable under it.
+			exported_next = not (bare.begins_with("@export_group") or bare.begins_with("@export_subgroup")
+				or bare.begins_with("@export_category"))
+			bare = _without_export_annotation(bare)
+			if bare.is_empty():
 				continue
-			bare = bare.substr(space_at + 1).strip_edges()
 		var found_match: RegExMatch = pattern.search(bare)
 		if found_match == null:
 			if not bare.is_empty() and not bare.begins_with("#"):
@@ -95,6 +97,39 @@ static func member_variables(script_path: String) -> Array[Dictionary]:
 		found.append({"name": found_match.get_string(1), "exported": exported_next})
 		exported_next = false
 	return found
+
+
+## What is left of a line once its leading `@export…` annotation is taken off: "" for an annotation
+## that stands alone on its line, and the declaration for one written in front of a `var`. The
+## argument list is walked by bracket depth (skipping quoted text) rather than cut at the first
+## space, because the arguments carry spaces of their own - `@export_range(0, 100) var speed: float`
+## is exactly the spelling the compiler emits, and cutting at a space leaves `100) var speed: float`.
+static func _without_export_annotation(bare: String) -> String:
+	var index: int = 0
+	while index < bare.length() and not " \t(".contains(bare[index]):
+		index += 1
+	if index >= bare.length() or bare[index] != "(":
+		return bare.substr(index).strip_edges()
+	var depth: int = 0
+	var quote: String = ""
+	while index < bare.length():
+		var glyph: String = bare[index]
+		if not quote.is_empty():
+			if glyph == "\\":
+				index += 1
+			elif glyph == quote:
+				quote = ""
+		elif glyph == "\"" or glyph == "'":
+			quote = glyph
+		elif glyph == "(":
+			depth += 1
+		elif glyph == ")":
+			depth -= 1
+			if depth == 0:
+				index += 1
+				break
+		index += 1
+	return bare.substr(index).strip_edges()
 
 
 ## V10. The muted line under the buttons: the variables that exist but are not down here, and the one
