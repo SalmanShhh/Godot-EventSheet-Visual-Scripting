@@ -1053,8 +1053,14 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
 ## these events, as text, with no side effects. The handler anchors only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
+## Both text emitters below clear _behavior_host_default first, exactly as compile() does. Their two
+## helpers are reached from _compile_external ONLY, where that default is always "" - so leaving a
+## previous BEHAVIOR compile's "host" standing would emit `host.velocity.y += …` for a line the file
+## spells `velocity.y += …`, the byte gate would refuse it, and every function in the opened file
+## would fall back to a verbatim block. The gate has to emit what the compile of this sheet emits.
 static func emit_anchored_trigger_text(events: Array) -> String:
 	_compile_mutex.lock()
+	_behavior_host_default = ""
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_anchored_trigger_function(events, lines, [], scratch)
@@ -1064,6 +1070,7 @@ static func emit_anchored_trigger_text(events: Array) -> String:
 
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
 	_compile_mutex.lock()
+	_behavior_host_default = ""
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], scratch)
