@@ -265,6 +265,17 @@ static func _rename_in_dictionary(values: Dictionary, regex: RegEx, new_name: St
 			_rename_in_dictionary(value, regex, new_name, counter)
 
 
+## One line of GDScript with every whole-word `old_name` rewritten to `new_name`, leaving anything
+## inside a string literal alone (a printed sentence is displayed text, not a reference). The
+## compiler rewrites a Static local's uses onto its hoisted member through here, and the importer
+## rewrites them back - one implementation, so the two directions cannot drift.
+static func rename_in_code(code: String, old_name: String, new_name: String) -> String:
+	if code.is_empty() or not old_name.is_valid_identifier() or old_name == new_name:
+		return code
+	return _rename_text(code, RegEx.create_from_string("\\b%s\\b" % old_name), new_name,
+		{"count": 0, "skip_string_literals": true})
+
+
 static func _rename_text(text: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
 	var found: Array[RegExMatch] = regex.search_all(text)
 	if found.is_empty():

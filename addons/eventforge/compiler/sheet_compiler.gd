@@ -31,6 +31,11 @@ const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"
 const POINT_CURSOR_HELPER: String = "__eventsheets_object_at_2d"
 const TILE_CURSOR_HELPER: String = "__eventsheets_tile_under"
 
+## V4. The comment written above a hoisted Static local, naming the ROW the member belongs to. A
+## cosmetic marker with zero runtime weight, exactly like the `# @group:` row tags: it is what lets an
+## opened file hand the member back to the row instead of reading it as an ordinary private member.
+const STATIC_LOCAL_MARKER: String = "# @static_local:%s"
+
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
@@ -349,6 +354,20 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 					lines.append(local_declaration_line)
 				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": local_var_start, "end": lines.size(), "kind": "variable"})
 
+	# V4 Static locals: class members for the locals whose rows sit under an event. GDScript has no
+	# function-scope `static`, so a local that must keep its value between runs of its event is
+	# hoisted here (beside the group locals, which solve the same problem one scope wider) and the
+	# event's uses are rewritten onto the member by _rewrite_static_local_uses.
+	var static_locals: Array = []
+	_collect_static_locals(all_events, static_locals, result["warnings"])
+	if not static_locals.is_empty():
+		lines.append("")
+		for static_entry: Variant in static_locals:
+			var static_start: int = lines.size() + 1
+			for static_line: String in _emit_tree_variable_line(static_entry as LocalVariable).split("\n"):
+				lines.append(static_line)
+			source_map.append({"uid": str((static_entry as LocalVariable).get_instance_id()), "start": static_start, "end": lines.size(), "kind": "variable"})
+
 	# Runtime-toggleable group flags (Set Group Active targets these members). Collected
 	# in a dedicated early pass - the flatten that ALSO maps guards runs later, in the
 	# trigger-section phase, after this member block has already emitted.
@@ -640,7 +659,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("")
 		lines.append(deferred)
 
-	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
+	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
@@ -842,7 +861,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for comment_line: String in deferred_comment_lines_external:
 		lines.append("")
 		lines.append("# %s" % comment_line)
-	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
+	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
@@ -1078,12 +1097,21 @@ static func _shift_source_map(source_map: Array, first_inserted_line: int, count
 			(entry as Dictionary)["end"] = int((entry as Dictionary)["end"]) + count
 
 
-static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array = []) -> void:
+## The class members a path did not write itself: the stateful-condition declarations (Every X
+## Seconds and friends), and the hoisted member of any Static local whose row is under an event on a
+## path that emits rows in file order. Each is inserted before the first function, and only when the
+## file does not already carry it - so an opened .gd, whose member lines are rows of their own,
+## comes back untouched.
+static func _insert_missing_member_declarations(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array = []) -> void:
 	var members: Array = []
 	_collect_stateful_members(sheet.events, members)
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
 			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, members)
+	var static_locals: Array = []
+	_collect_static_locals(sheet.events, static_locals)
+	for static_local: Variant in static_locals:
+		members.append(_emit_tree_variable_line(static_local as LocalVariable))
 	# A member may span several lines, so its identity is its FIRST line (the state var) - a plain
 	# `lines.has()` of the whole multi-line string never matches once it has been emitted one line per entry.
 	var missing: Array = []
@@ -2037,6 +2065,11 @@ static func _emit_event_body(
 				and lines.size() == block_header_line + 2:
 			lines[block_header_line] = "%s %s" % [lines[block_header_line], lines[block_header_line + 1].substr(body_indent.length())]
 			lines.remove_at(block_header_line + 1)
+		# V4. The row's Static locals live as class members, so every line this event just wrote -
+		# its condition header and its sub-events included, which is exactly the scope the local had -
+		# says the member's name instead of the row's. The rewrite happens on the emitted TEXT, never
+		# on the row model: what the author typed stays what the author typed.
+		_rewrite_static_local_uses(event_row, lines, event_start_line - 1)
 		if lines.size() >= event_start_line:
 			source_map.append({"uid": str(event_row.get_instance_id()), "start": event_start_line, "end": lines.size(), "kind": "event"})
 		# A bare `else:` ENDS the chain - nothing may follow it but a fresh `if`. Left open, a second
@@ -2044,6 +2077,19 @@ static func _emit_event_body(
 		# does not parse. An `elif` keeps the chain open, because more may still follow it.
 		chain_open = emitted_block and not (wants_chain and condition_texts.is_empty())
 	return had_body
+
+
+## V4. Rewrites an event's uses of its Static locals onto the members they were hoisted to, over the
+## lines the event emitted from `from_index` on. Whole-word and literal-safe (a printed sentence that
+## happens to contain the name is displayed text), through the one rename the refactors already use.
+static func _rewrite_static_local_uses(event_row: EventRow, lines: PackedStringArray, from_index: int) -> void:
+	for local_entry: Variant in event_row.local_variables:
+		if not (local_entry is LocalVariable) or not (local_entry as LocalVariable).static_local:
+			continue
+		var local_var: LocalVariable = local_entry as LocalVariable
+		var member: String = LocalVariable.static_local_member(local_var.name)
+		for index: int in range(maxi(from_index, 0), lines.size()):
+			lines[index] = EventSheetRefactor.rename_in_code(lines[index], local_var.name, member)
 
 
 ## Emits one structured match branch's body (the action-lane items of a MatchCase) at `indent`, reusing the
@@ -2892,6 +2938,32 @@ static func _collect_group_locals(entries: Array, into: Array) -> void:
 			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
 
 
+## V4. Gathers every Static local declared under an event, in reading order (nested events included),
+## de-duplicated by the member each would write: two events cannot both declare `hits_taken`, because
+## both hoist to `var _hits_taken`. The second one is a warning, not an error - it still compiles, it
+## just shares the first one's member, which is what the reader has to be told.
+static func _collect_static_locals(entries: Array, into: Array, warnings: Array = [], seen: Dictionary = {}) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_static_locals(group.events if not group.events.is_empty() else group.rows, into, warnings, seen)
+		elif entry is EventRow:
+			var event_row: EventRow = entry as EventRow
+			for local_entry: Variant in event_row.local_variables:
+				if not (local_entry is LocalVariable) or not (local_entry as LocalVariable).static_local:
+					continue
+				var local_var: LocalVariable = local_entry as LocalVariable
+				if local_var.name.strip_edges().is_empty():
+					continue
+				var member: String = LocalVariable.static_local_member(local_var.name)
+				if seen.has(member):
+					warnings.append("Static local '%s' is declared on more than one event - they share the one %s member." % [local_var.name, member])
+					continue
+				seen[member] = true
+				into.append(local_var)
+			_collect_static_locals(event_row.sub_events, into, warnings, seen)
+
+
 ## Early pass for the flag members of runtime-toggleable groups (nested included).
 static func _collect_runtime_group_members(rows: Array) -> void:
 	for row: Variant in rows:
@@ -3129,6 +3201,11 @@ static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
+	# V4. A Static local is written as a local and lives as a member: two lines, the marker that says
+	# which row the member belongs to and the member itself. Every other branch below is about how a
+	# declaration is spelled; this one is about WHERE the declaration ended up, so it answers first.
+	if local_var.static_local:
+		return "%s\n%s" % [STATIC_LOCAL_MARKER % local_var.name, static_local_declaration(local_var)]
 	# Tier 3 custom-drawer prefix (if any): a structured @export_custom marker, computed once so it can both
 	# gate its branch and fill it. Empty for non-drawer vars, so their emission stays byte-unchanged.
 	var drawer_prefix: String = ""
@@ -3210,6 +3287,20 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
+
+
+## V4. The member line a Static local compiles to: `var _hits_taken := 0`. Private (the row is a
+## local, so nothing outside its event should reach it) and inferred, because the row already says
+## the type in words and the literal carries it. A float whose literal reads as a whole number spells
+## the fraction out, or `:=` would infer int and refuse the first fractional assignment.
+static func static_local_declaration(local_var: LocalVariable) -> String:
+	if local_var == null or local_var.name.strip_edges().is_empty():
+		return ""
+	var literal: String = str(local_var.default_value) if local_var.expression_default \
+		else _to_code_literal(local_var.default_value)
+	if local_var.type_name.strip_edges() == "float" and literal.is_valid_int():
+		literal = "%s.0" % literal
+	return "var %s := %s" % [LocalVariable.static_local_member(local_var.name), literal]
 
 
 ## Appends `set(param):` / `get:` accessor blocks under a property declaration. The declaration gains a

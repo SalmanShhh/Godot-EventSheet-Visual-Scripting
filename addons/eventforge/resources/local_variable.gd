@@ -14,6 +14,13 @@ extends Resource
 ## Mutually exclusive with @export / @onready / const. Set on lift from a `static var` line and byte-gated,
 ## so a hand-written static var opens as an editable row instead of a verbatim block.
 @export var is_static: bool = false
+## V4 - a Local by scope, a member in code. The row stays under the event that declares it and reads
+## "Static local number hits_taken = 0", but GDScript has no function-scope `static`, so the value can
+## only survive between runs of the event as a class member: the compiler hoists the declaration to
+## `var _hits_taken := 0` and rewrites the event's uses of the bare name to it. Byte-gated on lift
+## (the marker comment above the member says which row it belongs to), so a hand-written private
+## member never opens as one of these.
+@export var static_local: bool = false
 ## When true and placed in the event tree, compiles to `@export var` (usable outside the
 ## script); otherwise a plain private `var`.
 @export var exported: bool = false
@@ -58,6 +65,19 @@ extends Resource
 ## Stable row-kind identifier so the compiler/editor can treat tree-placed variables uniformly.
 func get_row_kind() -> String:
 	return "variable"
+
+
+## The class member a Static local compiles to: the row's own name, made private with a leading
+## underscore. ONE rule, read by the compiler that writes the member, the importer that reads it back
+## and the row echo that shows it, so the three can never disagree about the spelling.
+static func static_local_member(local_name: String) -> String:
+	return "_%s" % local_name.strip_edges()
+
+
+## The row name a Static local member reads back as - the exact inverse of static_local_member().
+static func static_local_name(member_name: String) -> String:
+	var bare: String = member_name.strip_edges()
+	return bare.substr(1) if bare.begins_with("_") else bare
 
 
 ## True when this variable is a PROPERTY (a setter and/or getter body is set).

@@ -643,6 +643,10 @@ static func _is_variable_doc_line(line: String) -> bool:
 ## becomes a clean grouped variable instead of a stray @export_group GDScript block - without ever risking
 ## the byte-exact round-trip. (Order matches _emit_variables: @export_group then @export_subgroup.)
 func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> void:
+	# V4. A Static local's member answers first and alone: it is a private local's hoisted half, so
+	# there is no Inspector grouping below to look for.
+	if _absorb_static_local_marker(lifted, pending, var_line):
+		return
 	var subgroup_value: String = ""
 	var group_value: String = ""
 	var meta_count: int = 0
@@ -776,6 +780,32 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)
+
+
+## V4. A `# @static_local:<row name>` marker directly above a member says the member is the hoisted
+## half of a Local row: the variable takes the row's own name back and carries the flag, so the file
+## opens as the Static local it was written from instead of an ordinary private member. Byte-gated
+## like every other absorb - the canonical re-emission must reproduce the marker AND the declaration
+## exactly, or nothing is taken and both lines stay as they are. Returns true when it absorbed.
+func _absorb_static_local_marker(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> bool:
+	if pending.is_empty():
+		return false
+	var marker_line: String = pending[pending.size() - 1]
+	var prefix: String = SheetCompiler.STATIC_LOCAL_MARKER % ""
+	if not marker_line.begins_with(prefix):
+		return false
+	var row_name: String = marker_line.substr(prefix.length()).strip_edges()
+	if not row_name.is_valid_identifier() or LocalVariable.static_local_member(row_name) != lifted.name:
+		return false
+	var saved_name: String = lifted.name
+	lifted.name = row_name
+	lifted.static_local = true
+	if SheetCompiler._emit_tree_variable_line(lifted) != "%s\n%s" % [marker_line, var_line]:
+		lifted.name = saved_name
+		lifted.static_local = false
+		return false
+	pending.remove_at(pending.size() - 1)
+	return true
 
 
 ## Upgrades a verbatim export hint to structured, dialog-editable attributes for the wider
