@@ -124,7 +124,7 @@ strip.follow_option(scope_option, func(index: int) -> Dictionary:
 	return {})   # an empty answer (a separator) leaves the strip as it is
 
 # The dialog owns the reading lines, because only it knows what its fields add up to.
-strip.set_reading("Instance whole number hp = 100", EventSheets.code_line(preview_variable))
+strip.set_reading("Instance whole number hp = 100", EventSheets.row_code_line(preview_variable))
 
 # And when something is wrong, the strip says so in its own voice, with the answer beside it.
 strip.show_note("Unknown variable", "This sheet has no hpp.", EventSheetPopupUI.HelpStrip.TONE_ERROR,
@@ -162,17 +162,17 @@ my_panel.add_child(EventSheets.build_inspector_preview("armour", "int", "10", at
 # The same choices as one sentence (tooltips, logs, docs):
 print(EventSheets.describe_inspector("int", attrs))
 
-# The exact GDScript a variable compiles to - its "Ships as:" truth, every line of it:
+# ALL the GDScript a variable compiles to - its "Ships as:" truth, every line of it:
 print(EventSheets.variable_code(my_local_variable))
 
-# THE line a row stands for - what the sheet echoes at that row's right edge. One call for any row
+# ONE line of it - the line a row stands for, which the sheet echoes at that row's right edge. One call for any row
 # an extension draws: a variable answers its declaration (never the doc comment or the
 # @export_group header above it), a Custom Block row the last line its kind emits, a group the
 # `## @ace_group(...)` line it declares itself on - and a group's line names its parent, so pass
 # the sheet for one.
-print(EventSheets.code_line(my_local_variable))     # var hp: int = 100
-print(EventSheets.code_line(my_block_row))          # #region Movement
-print(EventSheets.code_line(my_group, sheet))       # ## @ace_group(uid="combat", name="Combat")
+print(EventSheets.row_code_line(my_local_variable))     # var hp: int = 100
+print(EventSheets.row_code_line(my_block_row))          # #region Movement
+print(EventSheets.row_code_line(my_group, sheet))       # ## @ace_group(uid="combat", name="Combat")
 
 # Drawing MANY group heads asks for the whole map once instead - the same walk, done once.
 var group_lines := EventSheets.group_declaration_lines(sheet)
@@ -289,8 +289,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Rows | `collection_decl(variable_name, entries, dictionary := true)` - a structured multi-line collection declaration (`var waves := { ... }`), the row an opened `.gd`'s canonical literal lifts into. `entries` is `[key, value]` pairs for a dictionary (keys carry their own quotes) or plain values for an array. Append it to an `EventRow`'s actions, or to `sheet.events` for a file-scope table; entries stay individually editable rows. Returns `null` when the name is not an identifier or an entry is refused | `CollectionDeclRow` | no |
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
-| Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
-| Codegen | `code_line(row: Resource, sheet := null)` - THE line of the emitted file a row stands for, and what the sheet echoes at its right edge: a `LocalVariable`'s declaration (not the doc comment, the `@export_group` header or a Static local's marker written above it), a `CustomBlockRow`'s last emitted line, an `EventGroup`'s `## @ace_group(...)` line (pass `sheet` - a group's line names its parent). `""` for every other row: those three are the rows the sheet draws an echo on | `String` | no |
+| Codegen | `variable_code(variable: LocalVariable)` - ALL the GDScript a variable compiles to, decor comments and Inspector grouping included. For the one line out of it that declares, ask `row_code_line()` | `String` | no |
+| Codegen | `row_code_line(row: Resource, sheet := null)` - THE line of the emitted file a row stands for, and what the sheet echoes at its right edge: a `LocalVariable`'s declaration (not the doc comment, the `@export_group` header or a Static local's marker written above it), a `CustomBlockRow`'s last emitted line, an `EventGroup`'s `## @ace_group(...)` line (pass `sheet` - a group's line names its parent). `""` for every other row: those three are the rows the sheet draws an echo on | `String` | no |
 | Codegen | `group_declaration_lines(sheet)` - the `## @ace_group(...)` line the compiler writes for each of the sheet's event groups, keyed by the `EventGroup` (uid, name, parent, description, colour and the two flags). What a group head echoes, and what the importer reads back | `Dictionary` | no |
 | Rows | `sheet_variables(sheet)` - every variable the sheet can name and who owns each, in reading order (this object's, then the globals it reaches for, then the locals in scope). Entries carry `name`, `type_name`, `type_word`, `value`, `scope`, `owner`, `group`, `inspector`, `description`, `insert_text`, `resource`, `autoload` | `Array[Dictionary]` | no |
 | Rows | `variable_owner(variables, variable_name)` - the object column a row naming that variable reads with (the sheet's object, an autoload, or `System` for a local), `""` when the sheet declares no such variable. Takes the list `sheet_variables()` returned | `String` | no |

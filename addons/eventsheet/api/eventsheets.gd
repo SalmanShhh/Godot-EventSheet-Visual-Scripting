@@ -457,16 +457,17 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	return SheetCompiler.compile(sheet, output_path)
 
 
-## The exact GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip,
-## grouping, and the @export annotation included. Deterministic: same variable, same bytes. More than
-## one line whenever the declaration needs one (a doc comment above it, a Static local's marker); the
-## declaration itself is the first line that is not a comment or an @export_group header.
+## ALL the GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip, grouping
+## and the @export annotation included. Deterministic: same variable, same bytes. More than one line
+## whenever the declaration needs one (a doc comment above it, a Static local's marker). For the ONE
+## line out of that which declares the variable - the line a row echoes - ask `row_code_line()`.
 static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
-## THE line of the emitted file a ROW stands for - what the sheet echoes at that row's right edge,
-## for any row an extension might draw:
+## ONE line of the emitted file - the line a ROW stands for, which is what the sheet echoes at that
+## row's right edge, for any row an extension might draw. `variable_code()` is the other half of the
+## pair: everything a variable compiles to, where this is the single line out of it that declares.
 ##   * a variable  -> its declaration, out of everything `variable_code()` writes for it. The doc
 ##     comment above it, the `@export_group` header that opens an Inspector section and a Static
 ##     local's marker are all true of the file, and none of them is the declaration.
@@ -477,7 +478,7 @@ static func variable_code(variable: LocalVariable) -> String:
 ##     not steal the echo. A kind that emits nothing has no line.
 ## Every other row answers "": those three are the rows the sheet draws an echo on, and an event is
 ## not one of them in any case - it compiles to a block, not to a line.
-static func code_line(row: Resource, sheet: EventSheetResource = null) -> String:
+static func row_code_line(row: Resource, sheet: EventSheetResource = null) -> String:
 	if row is LocalVariable:
 		return EventSheetCodeEcho.line_for(row as LocalVariable)
 	if row is EventGroup:

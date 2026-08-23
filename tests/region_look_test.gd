@@ -124,7 +124,7 @@ static func _test_look_is_reusable() -> bool:
 	passed = _check("which is the line the compile really writes",
 		str(SheetCompiler.compile(sheet).get("output", "")).contains("# --- Movement ---"), true) and passed
 	passed = _check("and the API answers the same line for that row",
-		EventSheets.code_line(block), "# --- Movement ---") and passed
+		EventSheets.row_code_line(block), "# --- Movement ---") and passed
 	viewport.free()
 	return passed
 

@@ -391,8 +391,10 @@ the same way instead of re-deriving them. All of it is documented in
 **docs/GUIDE-BUILDING-ON-EVENTSHEETS.md** (the Custom Block hook in **docs/GUIDE-CUSTOM-BLOCKS.md**)
 and each has a test that calls it.
 
-- **`EventSheets.code_line(row, sheet := null)`** - THE line of the emitted file a row stands for,
-  which is what the sheet echoes at that row's right edge. One call for any row an extension draws:
+- **`EventSheets.row_code_line(row, sheet := null)`** - ONE line of the emitted file: the line a row
+  stands for, which is what the sheet echoes at that row's right edge (the name says which half of
+  the pair it is - `variable_code(variable)` is all the code a variable compiles to, this is the
+  single line out of it that declares). One call for any row an extension draws:
   a variable answers its declaration (never the doc comment, the `@export_group` header or a Static
   local's marker written above it), a Custom Block row the last line its kind emits, and an event
   group the `## @ace_group(...)` line it declares itself on. Every other row answers `""`: those

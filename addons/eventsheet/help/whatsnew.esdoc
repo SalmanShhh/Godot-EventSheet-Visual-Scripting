@@ -395,8 +395,10 @@ the same way instead of re-deriving them. All of it is documented in
 **docs/GUIDE-BUILDING-ON-EVENTSHEETS.md** (the Custom Block hook in **docs/GUIDE-CUSTOM-BLOCKS.md**)
 and each has a test that calls it.
 
-- **`EventSheets.code_line(row, sheet := null)`** - THE line of the emitted file a row stands for,
-  which is what the sheet echoes at that row's right edge. One call for any row an extension draws:
+- **`EventSheets.row_code_line(row, sheet := null)`** - ONE line of the emitted file: the line a row
+  stands for, which is what the sheet echoes at that row's right edge (the name says which half of
+  the pair it is - `variable_code(variable)` is all the code a variable compiles to, this is the
+  single line out of it that declares). One call for any row an extension draws:
   a variable answers its declaration (never the doc comment, the `@export_group` header or a Static
   local's marker written above it), a Custom Block row the last line its kind emits, and an event
   group the `## @ace_group(...)` line it declares itself on. Every other row answers `\"\"`: those
@@ -461,7 +463,20 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   head's name badge and its `@icon` swatch, and the fold layer's four near-identical sweeps.
 - **A head band's line lives in one table.** Which line of the file each band stands for was known
   in three places (the facts reader, the prelude writer, the line formatter); `LINE_SHAPES` is now
-  the one table all three read.
+  the one table all three read - and so does the row builder's search for the prelude block a
+  description edit has to rewrite, which had hand-coded the same `## ` prefix and `## @` exclusion a
+  fourth time.
+- **An unnamed region has one name.** The block kind called it `(unnamed)` and the region facts
+  called it `(unnamed region)`, so the row on the canvas and the picker (and the amber note about an
+  unclosed fence) named the same fence two different things. The kind asks the facts module, which
+  the row, the refactors, the menu and the tests already ask.
+- **\"Is this sheet an autoload?\" is one question.** Three predicates answered it - one on the name
+  alone, two on the kind and the name - so a sheet given a name without the kind (which
+  `EventSheets.new_sheet` allows, the two being separate keys) had its variables scoped *Global* by
+  the catalog that feeds the picker, the rail and the Doctor notes, and *Instance* by the row itself.
+  `EventSheetResource.autoload_singleton_name()` is the one answer, and the six places that asked -
+  the catalog, the instance-variable table, the row builder's two, the head band and the compiler's
+  call prefix - read it.
 - **The variable panel nobody could open is gone.** The dock folded its global/local variable lists
   into the viewport's own rows long ago, but the ItemLists, the entry arrays and the two activation
   handlers stayed - and were the last place a variable was still spelled `name : Type = value`. With
