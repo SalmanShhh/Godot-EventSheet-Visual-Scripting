@@ -218,16 +218,17 @@ const CRUMB_SEPARATOR: String = " ▸ "
 const CRUMB_ELLIPSIS: String = "…"
 
 
-## The pinned head's parent trail: the last two names, with the full chain kept for the hover. The
-## innermost name is the head itself and is NOT part of the trail - the pinned row IS that group.
+## The pinned head's parent trail, as the names it is DRAWN from: `crumbs` is [{"text", "index"}] in
+## reading order, where `index` is that name's position in `titles` and -1 for the elision, which
+## stands for names rather than being one. Only the last two parents are shown; the whole chain is
+## kept as `full` for the hover, and the innermost name is the head itself (`title`), never a crumb -
+## the pinned row IS that group.
 ##
-## `crumbs` is the trail broken back into the names it is made of - [{"text", "index"}], where
-## `index` is that name's position in `titles` and -1 for the elision, which stands for names rather
-## than being one. G5 - the strip arms a click zone per crumb from these, so clicking a parent name
-## scrolls to that head; the joined `trail` string is what it draws when it has nothing to arm.
+## G5 - the strip draws one name at a time and arms a click zone per crumb from these, so clicking a
+## parent name scrolls to that head.
 static func pinned_trail(titles: PackedStringArray) -> Dictionary:
 	if titles.size() <= 1:
-		return {"title": titles[0] if titles.size() == 1 else "", "trail": "", "crumbs": [],
+		return {"title": titles[0] if titles.size() == 1 else "", "crumbs": [],
 			"full": CRUMB_SEPARATOR.join(titles)}
 	var crumbs: Array[Dictionary] = []
 	var first_shown: int = maxi(0, titles.size() - 3)
@@ -235,12 +236,8 @@ static func pinned_trail(titles: PackedStringArray) -> Dictionary:
 		crumbs.append({"text": CRUMB_ELLIPSIS, "index": -1})
 	for index: int in range(first_shown, titles.size() - 1):
 		crumbs.append({"text": titles[index], "index": index})
-	var shown: PackedStringArray = PackedStringArray()
-	for crumb: Dictionary in crumbs:
-		shown.append(str(crumb["text"]))
 	return {
 		"title": titles[titles.size() - 1],
-		"trail": "%s ▸" % CRUMB_SEPARATOR.join(shown),
 		"crumbs": crumbs,
 		"full": CRUMB_SEPARATOR.join(titles)
 	}

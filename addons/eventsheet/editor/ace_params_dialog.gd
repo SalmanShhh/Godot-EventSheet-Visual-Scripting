@@ -2985,8 +2985,10 @@ func _describe_dialog_itself() -> void:
 ##
 ## Public so the reading can be pinned without a display server - the button is one press of it.
 func reading_offers() -> Array:
-	var reading: Dictionary = read_as(_definition, _current_values())
-	if reading.is_empty() or _registry == null:
+	if _definition == null or _registry == null:
+		return []
+	var reading: Dictionary = EventSheetVariableOwners.compound_reading(str(_definition.id), _current_values())
+	if reading.is_empty():
 		return []
 	var target: ACEDefinition = _registry.find_definition(_definition.provider_id, str(reading["ace_id"]))
 	if target == null:
@@ -2996,15 +2998,6 @@ func reading_offers() -> Array:
 		"text": EventSheetL10n.translate("read as %s") % EventSheetL10n.translate(target.display_name),
 		"pressed": func() -> void: _confirm_as(target, values)
 	}]
-
-
-## The verb a row could be re-read as, {} when it reads best as itself: {"ace_id", "params"}. Static
-## + pure, and the ONE place the offer is decided, so the button and any caller asking "what would
-## this become" cannot disagree.
-static func read_as(definition: ACEDefinition, values: Dictionary) -> Dictionary:
-	if definition == null:
-		return {}
-	return EventSheetVariableOwners.compound_reading(str(definition.id), values)
 
 
 ## Applies `definition` with `values` as if OK had been pressed on it, and closes. The row is

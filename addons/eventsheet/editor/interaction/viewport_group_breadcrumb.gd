@@ -230,7 +230,7 @@ func handle_click(local_position: Vector2) -> bool:
 	var width: float = _viewport._get_logical_canvas_width()
 	if canvas_x <= FOLD_ZONE_WIDTH:
 		_viewport._toggle_row_fold(_jump_index)
-		_scroll_to_pinned_head(zoom)
+		_scroll_to_row(_jump_index, zoom)
 		return true
 	# G5 - a parent name is a door back out to that group: clicking it scrolls to its own head,
 	# which is the row the reader wanted when they read the name.
@@ -244,7 +244,7 @@ func handle_click(local_position: Vector2) -> bool:
 	if group != null:
 		_viewport.group_edit_requested.emit(group)
 		return true
-	_scroll_to_pinned_head(zoom)
+	_scroll_to_row(_jump_index, zoom)
 	return true
 
 
@@ -271,10 +271,6 @@ static func crumb_at(zones: Array[Dictionary], canvas_x: float) -> int:
 		if canvas_x >= left and canvas_x <= left + float(zone.get("width", 0.0)):
 			return int(zone.get("index", -1))
 	return -1
-
-
-func _scroll_to_pinned_head(zoom: float) -> void:
-	_scroll_to_row(_jump_index, zoom)
 
 
 func _scroll_to_row(row_index: int, zoom: float) -> void:

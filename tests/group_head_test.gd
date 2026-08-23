@@ -250,14 +250,14 @@ static func _test_dialog_fields() -> bool:
 static func _test_pinned_head() -> bool:
 	var passed: bool = true
 	var one: Dictionary = EventSheetGroupFacts.pinned_trail(PackedStringArray(["Combat"]))
-	passed = _check("a top-level group pins with no trail", str(one.get("trail", "")), "") and passed
+	passed = _check("a top-level group pins with no trail", _trail_line(one), "") and passed
 	passed = _check("and names itself", str(one.get("title", "")), "Combat") and passed
 	var two: Dictionary = EventSheetGroupFacts.pinned_trail(PackedStringArray(["Gameplay", "Combat"]))
-	passed = _check("one parent shows as one crumb", str(two.get("trail", "")), "Gameplay ▸") and passed
+	passed = _check("one parent shows as one crumb", _trail_line(two), "Gameplay") and passed
 	var deep: Dictionary = EventSheetGroupFacts.pinned_trail(
 		PackedStringArray(["Level", "Gameplay", "Enemies", "Combat"]))
 	passed = _check("a deep chain shortens to the last two parents",
-		str(deep.get("trail", "")), "… ▸ Gameplay ▸ Enemies ▸") and passed
+		_trail_line(deep), "… ▸ Gameplay ▸ Enemies") and passed
 	passed = _check("the whole chain is kept for the hover",
 		str(deep.get("full", "")), "Level ▸ Gameplay ▸ Enemies ▸ Combat") and passed
 	passed = _check("the innermost name is the title, not a crumb",
@@ -368,6 +368,15 @@ static func _local(local_name: String, type_name: String, value: Variant) -> Loc
 	local.type_name = type_name
 	local.default_value = value
 	return local
+
+
+## The parent trail as the strip draws it: the crumb names, in order, with the separator between
+## them. Read off the crumbs rather than off a second string, because the crumbs are what is drawn.
+static func _trail_line(trail: Dictionary) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for crumb: Dictionary in (trail.get("crumbs", []) as Array):
+		names.append(str(crumb.get("text", "")))
+	return EventSheetGroupFacts.CRUMB_SEPARATOR.join(names)
 
 
 static func _index_for(viewport: EventSheetViewport, resource: Resource) -> int:

@@ -51,6 +51,17 @@ func _init() -> void:
 		quit(1)
 
 
+## Sharding, for running the suite across several Godot processes at once (tools/run_tests_parallel.ps1
+## drives it). The variable is read once, here:
+##   unset      - every test, in one process, exactly as before;
+##   "k/n"      - shard k of n (0-based) of the PARALLEL-SAFE tests: the alphabetical list minus the
+##                shared-state tests and the timing-budget tests, taking every n-th file from k;
+##   "tail"     - only what a shard skipped: the perf budgets (a loaded machine fails them for the
+##                wrong reason) and then DEFERRED_LAST, serially, after every shard has finished.
+## Any test suite verdict is per process; the launcher is what turns N verdicts into one.
+const SHARD_VARIABLE := "EVENTFORGE_TEST_SHARD"
+
+
 ## Test .gd files in a stable order: sorted alphabetically, with the shared-state DEFERRED_LAST tests
 ## appended last (in their listed order, not alphabetical). run_tests.gd excludes itself; the
 ## tests/fixtures/ subfolder is excluded automatically (get_files_at is non-recursive).
@@ -68,7 +79,31 @@ func _test_files() -> PackedStringArray:
 	for deferred_file: String in DEFERRED_LAST:
 		if deferred.has(deferred_file):
 			files.append(deferred_file)
-	return files
+	return _shard_of(files, OS.get_environment(SHARD_VARIABLE).strip_edges())
+
+
+## The slice of `files` a process should run for `shard` (see SHARD_VARIABLE). Pure, so the split
+## itself is testable: every file lands in exactly one of the n shards or the tail, never in two.
+static func _shard_of(files: PackedStringArray, shard: String) -> PackedStringArray:
+	if shard.is_empty():
+		return files
+	var tail: PackedStringArray = PackedStringArray()
+	var parallel_safe: PackedStringArray = PackedStringArray()
+	for file: String in files:
+		if DEFERRED_LAST.has(file) or file.contains("_perf_") or file.begins_with("perf_"):
+			tail.append(file)
+		else:
+			parallel_safe.append(file)
+	if shard == "tail":
+		return tail
+	var parts: PackedStringArray = shard.split("/")
+	var index: int = int(parts[0]) if parts.size() == 2 else 0
+	var count: int = maxi(int(parts[1]) if parts.size() == 2 else 1, 1)
+	var picked: PackedStringArray = PackedStringArray()
+	for position: int in range(parallel_safe.size()):
+		if position % count == index:
+			picked.append(parallel_safe[position])
+	return picked
 
 
 ## True when the loaded script declares a run method (the test contract: static func run() -> bool).
