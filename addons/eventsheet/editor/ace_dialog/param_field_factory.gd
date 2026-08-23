@@ -180,7 +180,7 @@ static func hint_paragraph(hint: String, owner: String = "") -> String:
 	var key: String = hint.get_slice(":", 0) if hint.contains(":") else hint
 	# A pack that ships a hint of its own describes it through EventSheets.register_param_help, and
 	# its wording wins - it knows what its field takes and this table cannot.
-	var text: String = EventSheets.param_help(key)
+	var text: String = EventSheets.param_help_for(key)
 	if text.is_empty():
 		text = str(HINT_PARAGRAPHS.get(key, ""))
 	if text.is_empty():

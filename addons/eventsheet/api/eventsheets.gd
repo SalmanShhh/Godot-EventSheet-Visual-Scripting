@@ -463,12 +463,30 @@ static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
-## The ONE line a variable declares itself on, out of everything variable_code() writes for it: the
-## doc comment above it, the `@export_group` header that opens an Inspector section and a Static
-## local's marker are all true of the file, and none of them is the declaration. This is what a
-## variable row's code echo shows, so a pack echoing its own declarations says them the same way.
-static func variable_declaration_line(variable: LocalVariable) -> String:
-	return EventSheetCodeEcho.line_for(variable)
+## THE line of the emitted file a ROW stands for - what the sheet echoes at that row's right edge,
+## for any row an extension might draw:
+##   * a variable  -> its declaration, out of everything `variable_code()` writes for it. The doc
+##     comment above it, the `@export_group` header that opens an Inspector section and a Static
+##     local's marker are all true of the file, and none of them is the declaration.
+##   * an event group -> the `## @ace_group(...)` line it declares itself on. A group's line names
+##     its parent, which only the whole sheet knows, so pass `sheet` for one; drawing MANY heads
+##     asks `group_declaration_lines(sheet)` once instead, which is the same walk done once.
+##   * a Custom Block row -> the last line its kind emits, so a marker written above the line does
+##     not steal the echo. A kind that emits nothing has no line.
+## Every other row answers "": those three are the rows the sheet draws an echo on, and an event is
+## not one of them in any case - it compiles to a block, not to a line.
+static func code_line(row: Resource, sheet: EventSheetResource = null) -> String:
+	if row is LocalVariable:
+		return EventSheetCodeEcho.line_for(row as LocalVariable)
+	if row is EventGroup:
+		return str(group_declaration_lines(sheet).get(row, ""))
+	if row is CustomBlockRow:
+		var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind((row as CustomBlockRow).kind_id)
+		if kind == null:
+			return ""
+		var emitted: PackedStringArray = kind.emit_lines(row)
+		return emitted[emitted.size() - 1] if not emitted.is_empty() else ""
+	return ""
 
 
 ## The `## @ace_group(...)` line the compiler writes for each of a sheet's event groups, keyed by the
@@ -501,11 +519,11 @@ static func variable_owner(variables: Array[Dictionary], variable_name: String) 
 	return EventSheetVariableOwners.owner_for(variables, variable_name)
 
 
-## One variable written the way its ROW reads it, minus the owner: "Instance whole number hp = 100".
-## Composed through the same call the canvas makes, so a pack's own panel and the sheet can never
-## disagree about how a variable is spelled.
-static func variable_sentence(variable: Dictionary) -> String:
-	return EventSheetVariableOwners.sentence(variable)
+## One ENTRY of `sheet_variables()` written the way its ROW reads it, minus the owner:
+## "Instance whole number hp = 100". Composed through the same call the canvas makes, so a pack's
+## own panel and the sheet can never disagree about how a variable is spelled.
+static func variable_sentence(entry: Dictionary) -> String:
+	return EventSheetVariableOwners.sentence(entry)
 
 
 ## The glyph a ROW shows for a comparison operator: `<=` reads ≤, `>=` reads ≥, `!=` reads ≠ and
@@ -1212,6 +1230,10 @@ static func keep_old_verb_working(script_path: String, old_member: String, new_m
 ## `options` wants: {"key": <what gets inserted>, "label": <what the author reads>}. A dropdown
 ## should read as English while still inserting the real token, and hand-building the pair dicts
 ## at every call site is how half the packs ended up shipping raw tokens as their own labels.
+##
+## An entry given as a Dictionary may also carry `note`: the line that reads UNDER that choice in
+## the Parameters dialog ("double speed, keeps momentum"). Optional per option, display only - the
+## emitted value is still the key.
 static func combo_options(source: Variant) -> Array:
 	var output: Array = []
 	if source is Dictionary:
@@ -1293,7 +1315,7 @@ static func register_param_help(hint: String, paragraph: String) -> void:
 
 ## The registered paragraph for a hint, or "" when nothing was registered for it (the builtin table
 ## answers then).
-static func param_help(hint: String) -> String:
+static func param_help_for(hint: String) -> String:
 	return str(_param_help.get(hint, ""))
 
 

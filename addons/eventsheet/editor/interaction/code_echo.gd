@@ -210,7 +210,7 @@ static func line_for_descriptor(var_name: String, descriptor: Dictionary) -> Str
 	preview.options = PackedStringArray(descriptor.get("options", []))
 	if descriptor.get("attributes") is Dictionary:
 		preview.attributes = (descriptor["attributes"] as Dictionary).duplicate(true)
-	return declaration_line(SheetCompiler._emit_tree_variable_line(preview))
+	return line_for(preview)
 
 
 ## The DECLARATION out of what the emitter wrote for a variable. The emitter also writes the doc
