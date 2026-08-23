@@ -6,6 +6,39 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Changed - a region reads as the fold mark it is, and can trade places with a group
+
+- **A region has its own look.** A `#region` fence stopped borrowing the group bar. The opening
+  fence is one ordinary-height row: a dashed `#` badge in the badge column, the name in bold, the
+  description muted beside it, and the line the file really has echoed at its right edge
+  (`#region Movement`), coloured by the script editor's own token colours. Everything it holds sits
+  under a **dashed** 2px rule down the left edge in the region's own colour - the dashed twin of a
+  group's solid bracket, and no row is pushed sideways for it. The closing fence is a slim tick
+  whose only text is `#endregion`; the old \"end region\" prose is gone. Folded, the head says how
+  much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
+- **A block kind can ask for that look.** `EventSheetBlockKind.row_style(entry)` is a new Custom
+  Block API hook returning `\"section\"` (the default flat block row), `\"group\"` or `\"region\"`, so a
+  kind that stands for STRUCTURE gets a shape the sheet already has through a public, reusable path
+  instead of a special case in the renderer. The built-in Region kind renders through it. Display
+  only - emission, the lift and the byte round-trip are untouched.
+- **Turn a region into a group, and a group into a region.** `Turn Into Group` on a region's
+  opening fence wraps the fenced rows in an `EventGroup` and drops both fences, carrying the name,
+  description and colour across; `Turn Into Region` on a group head does the reverse. One undo step
+  each, nothing inside moves, and the round trip is byte-identical. A group that holds local
+  variables or can be switched at runtime says so **in the menu item itself** (\"Turn Into Region -
+  has 2 locals\") and is greyed, because a region can carry neither.
+- **A region's own menu.** Rename Region… (also F2), Open / Close Region, Open All / Close All
+  Regions, Turn Into Group, Region Color… and Remove Region - Keep The Rows. No locals, no on/off
+  switch, no Ungroup: a region is two lines of a file, and it now offers only what that can do. The
+  colour picker is the group's, widened - a fence stores its colour as the `#rrggbb` its marker
+  line carries.
+- **An unmatched fence says so, with the fix on the row.** An opener with no closer (or a closer
+  with no opener) gets an amber note directly under it: \"Debug helpers never closes, so it cannot
+  fold. Add #endregion after the last row you want inside.\" An opener's note carries a **Close
+  after row N** button that writes the missing fence after the last row before the next group or
+  fence - the same guess a script editor's fold would make. Amber, never red: the file still
+  compiles, and the wart-not-error covenant is unchanged.
+
 ### Changed - a group reads in one line, and its body wears its bracket
 
 - **The head is one line.** A group head now carries a folder mark in the badge column, its title,

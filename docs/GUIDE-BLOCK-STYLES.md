@@ -144,7 +144,20 @@ so the symbol teaches once.
 ## Comments, regions, groups
 
 Comments are their own full-width rows (Reading Mode restyles body comments as italic intent
-captions). Regions collapse a named, colored span of rows.
+captions).
+
+A **region** is a `#region` / `#endregion` fence pair, and it reads as what it is in the script
+editor - a fold mark. The opening fence wears a dashed `#` badge, its name in bold, its description
+muted beside it, and the line the file really has echoed at the right edge (`#region Movement`).
+Everything it holds sits under a **dashed** 2px rule down the left edge in the region's own colour -
+the same stroke as its badge, and the dashed twin of a group's solid bracket - and no row is pushed
+sideways for it. The closing fence is a slim tick whose only text is `#endregion`. Folded, the head
+says how much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
+
+A region holds no local variables and has no on/off switch: it is two plain lines of a file, not a
+resource. When you want those, **Turn Into Group** on its right-click menu wraps the fenced rows in a
+group and drops the fences; **Turn Into Region** on a group head does the reverse. A fence with no
+partner gets an amber note under it saying so, with a button that writes the missing one.
 
 A **group** is the sheet's chapter bar, and it reads in one line: a folder mark, the title, the
 description muted right beside it, and at the right edge what the group holds ("3 events · 1 local")

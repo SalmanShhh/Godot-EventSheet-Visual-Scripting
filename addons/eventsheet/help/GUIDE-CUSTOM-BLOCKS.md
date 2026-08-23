@@ -182,6 +182,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `summary(block) -> String` | schema | The row's one-line display next to the badge. |
 | `display_spans(entry) -> Array[Dictionary]` | both | Optional FIRST-CLASS display: return `{text, role}` descriptors (roles `name` / `operator` / `type` / `value` / `badge`, a badge may add `badge_style: "const"` or `"scope"`) and the row renders with the plugin's variable-row styling instead of badge + summary. The built-in preload kind renders through this, reading `Name : Type [preload] = res://path` - the resource type is inferred from the file extension. Display only - never affects emission. |
 | `hover_text(entry) -> String` | both | Optional hover tooltip: what the block *means*. BBCode renders styled; `""` keeps the default. |
+| `row_style(entry) -> String` | both | Optional ROW LOOK: which of the sheet's row shapes your rows draw as. `"section"` (the default flat block row), `"group"` (a chapter bar with a fold) or `"region"` (a fold mark: a dashed `#` badge, a dashed rule down the body, a slim closing tick). For a kind that stands for STRUCTURE - something that opens, holds rows and closes again - this is how it gets the shape the sheet already has instead of a flat line. The built-in Region kind renders through it. Display only - never affects emission or the round-trip. |
 | `handles(entry) -> bool` | resource | Claims a dedicated Resource class (`entry is EnumRow`). |
 | `emit_lines(entry) -> PackedStringArray` | resource | Emission for a handled Resource instance. |
 | `summary_for(entry) -> String` | resource | Display for a handled Resource instance. |
@@ -232,7 +233,7 @@ The practical consequence: you cannot break a user's file with a bad kind. The w
 | Kind | `kind_id` | Emits | Notes |
 |------|-----------|-------|-------|
 | Preload Resource | `preload` | `const Name := preload("res://path")` in constant mode, or `var Name := load("res://path")` in dynamic mode | Schema kind; THREE fields (`name`, `path`, `mode`). It implements `display_spans()`, so the row reads `Name : Type ⟨preload⟩ = res://path` with no kind badge. |
-| Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. Matched pairs collapse in the editor with a thin colored bubble around the range; the color and description edit in the fence's dialog. |
+| Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. It answers `row_style()` with `"region"`, so a matched pair reads as a fold mark - dashed `#` badge, dashed rule down the body, slim closing tick - and collapses like the script editor's fold. The color and description edit in the fence's dialog, or from the row's own **Region Color…**. |
 | Enum row | `enum` | `enum Name { A, B }` | Resource kind over `EnumRow`; dedicated dialog; not in Add surfaces. |
 | Signal row | `signal` | `signal name(params)` | Resource kind over `SignalRow`; the trigger-annotation fold stays with the importer. |
 | Note (demo) | `demo.note` | `## NOTE: text` | The shipped pack-kind example (`eventsheet_addons/demo_note_block.gd`). |
@@ -313,7 +314,9 @@ Add ▾ → Region…  → "Movement"
 Add ▾ → Region…  → tick "Closing fence (#endregion)"
 ```
 
-Note: fences are independent blocks on purpose; an unbalanced pair is a readability wart, never a parse error.
+Note: fences are independent blocks on purpose; an unbalanced pair is a readability wart, never a parse error - the row stays flat, the file still compiles, and an amber note under the lonely fence says what to write, with a **Close after row N** button that writes it for you.
+
+Right-click an opening fence for the region's own verbs: **Rename Region…** (also F2), **Open / Close Region**, **Open All / Close All Regions**, **Turn Into Group**, **Region Color…** and **Remove Region - Keep The Rows**. A group's menu carries the trip back, **Turn Into Region** - greyed with the reason beside it when the group holds local variables or can be switched at runtime, since a region can carry neither. Both refactors are one undo step, and nothing inside moves: the whole byte change is the two fence lines against the one group.
 
 ### 5. Preloads that designers manage
 
