@@ -6,6 +6,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Changed - a variable belongs to somebody, and every surface now says who
+
+- **The object column names the variable's owner.** A step that changes an instance variable used to
+  read \"System > Subtract 10 from health\"; it now reads \"Player > Subtract 10 from health\", because
+  the object that HAS the variable is what a reader looks for. A row reaching through an autoload
+  already read as that autoload; a local still reads as System, because a local belongs to the event
+  it sits in and to nothing you can select. Only the label moved: no ace_id, template or emitted line
+  changed.
+- **The boolean family is complete.** Two new verbs: **Set boolean** (Core/SetBool - Set value with
+  true / false already in the list, so a flag is picked rather than typed) and **Is boolean set**
+  (Core/IsBoolSet - the plain question, in place of comparing against `== true`). Both write exactly
+  the GDScript the older rows write, so neither speaks for a line the importer already lifts.
+- **The Variables group reads in the order you look for it.** Set value, Add to, Subtract from, Set
+  boolean, Toggle boolean, then the two questions - and each verb names the variables it can take
+  (\"Add to · hp, speed\"), so a verb with nothing of that kind in scope says so before you click it.
+  The description panel underneath lists each of those variables in the sentence its own row reads
+  with.
+- **The right-click menu on a variable row gained the two verbs it was missing.** **Copy as
+  Expression** puts the name a field or a hand-written line would need on the clipboard (a global as
+  `Game.Score`, which is the spelling that runs), and **Show in Inspector** is one tick that adds or
+  removes the `@export`. The canvas menu's Add entry is now a submenu naming the three scopes -
+  Global variable, Local variable, Instance variable - because \"add a variable\" is really three
+  different questions.
+- **The Anatomy rail speaks the sheet's own sentences.** \"Properties · N\" and \"State · N\" - the code
+  split, named after a flag nobody asked about - are now **Instance, of Player**, **Globals used
+  here, from Game** and **Locals in view**, each line composed by the same call the rows make, so the
+  rail and the canvas can never disagree about how a variable is spelled.
+- **The expression picker groups variables by owner.** This object's variables first, then each
+  autoload's globals, then the locals in scope, each showing its type word and what it starts at. An
+  entry whose type cannot go where the parameter is asking is greyed with the reason rather than
+  hidden, and a line under the tree says exactly what picking it inserts (\"Inserts Game.Score\").
+- **The Inspector shows an object's variables.** Beside Edit Event Sheet there is now **Instance
+  variables · N**, which opens the same table the sheet has, and under it a muted line naming the
+  variables that are NOT in the Inspector and the one gesture that puts one there.
+- **A row that names a variable the sheet does not have says so in place.** An unknown name grows a
+  red note under its event - \"hpp is not a variable of Player. Did you mean hp?\" - with a **Use hp**
+  fix that renames every use of it in one undo step. A verb handed the wrong kind of variable grows
+  an amber note instead (\"nickname is text - Add to wants a number. Set value fits.\"), because that
+  line compiles and only misbehaves.
+
 ### Changed - a comparison reads as the question it is
 
 - **The row shows the symbol, the file keeps the spelling.** An authored comparison now renders the

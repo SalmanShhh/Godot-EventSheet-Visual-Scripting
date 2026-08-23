@@ -15,7 +15,7 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | Trigger (e.g. *On start of layout*) | signal / `_ready` / `_process` | **Trigger** | The green "On …" row that starts an event (On Ready, Every Frame, On Pressed, On Input, signals…). |
 | Behavior (Platformer, 8-Direction…) | a script/node component | **Behavior pack** | A reusable event-sheet pack you attach as a child node. 95 bundled. |
 | Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). Tick **Editable in the Inspector** for a designer knob (a **sliders mark** shows on the row + the value shows in the Inspector); organize knobs with **`@export_group` / `@export_subgroup`** (a labelled folder strip over the rows); typed vars get live Inspector **drawers**. Lossless `.gd` round-trip. |
-| Local variable | local `var` | **Local variable** | Scoped to one event body. |
+| Local variable | local `var` | **Local variable** | Scoped to one event body. Reads under **System**, because a local belongs to the event it sits in and to nothing you can select. |
 | Family | (no direct equal) | **Family** / Group / Include | Declare a sheet as a **Family** for family-scoped iteration (see the **Family Arena** showcase). Groups organize rows; Includes are shared library sheets. |
 | Layout | Scene (`.tscn`) | Scene | Use Godot scenes directly. |
 | Layer | CanvasLayer / Z-index | CanvasLayer / Z-index | Native Godot. |
@@ -54,12 +54,21 @@ the same in the picker and in the reading, so what you pick is what you read.
 | **Set value** | `hp = 100` | Set Variable |
 | **Add to** | `score += 10` | Add Variable |
 | **Subtract from** | `hp -= dmg` | Subtract From Variable |
+| **Set boolean** | `alive = false` | (new) |
 | **Toggle boolean** | `alive = not alive` | Toggle |
 | **Compare variable** | `if hp <= 0:` | Compare Variable |
+| **Is boolean set** | `if alive:` | (new) |
 
-Setting a boolean is **Set value** with `true` or `false`; asking about one is **Compare variable**.
-They have no entries of their own because their emitted line would be byte-identical, and an opened
-file is read back by the line it holds.
+That is the order the picker lists them in, under the object that OWNS the variable: your sheet's
+own object for an instance variable, the autoload for a global, System for a local. Each entry names
+the variables it can take ("Add to · hp, speed"), so a verb with nothing of that kind in scope says
+so before you click it, and the panel underneath describes each of them in the sentence its row
+reads with.
+
+**Set boolean** and **Is boolean set** write exactly what **Set value** and **Compare variable**
+write - `alive = false`, `if alive:` - and exist because those are the words a reader looks for. An
+opened file is read back by the line it holds, so a hand-written `alive = false` still lifts to Set
+value; the boolean pair are authoring words, not new code.
 
 A boolean condition still reads as the plain sentence `alive is true` / `muted is false`, never as
 "Is alive set". The ids behind all of these are frozen: only the names you see changed, so every

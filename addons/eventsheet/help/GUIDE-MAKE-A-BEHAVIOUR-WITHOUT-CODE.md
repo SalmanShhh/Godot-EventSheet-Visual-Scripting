@@ -2,7 +2,7 @@
 
 You can build a whole reusable **behaviour** - the kind you attach under a node and reuse across a project, like Construct 3's behaviours - using **only event-sheet rows**. No GDScript blocks. This guide maps the vocabulary so you can find every piece: variables and designer knobs, triggers, conditions, actions, loops, and functions that publish as your behaviour's own ACEs - plus the honest line where a GDScript block is still the right tool.
 
-![The Anatomy panel showing a behaviour sheet as seven organs - Properties, State, Triggers, Actions, Conditions, Expressions, and Uses - each row click-to-jump](images/anatomy-panel.png)
+![The Anatomy panel showing a behaviour sheet as organs - the variables by scope (Instance, Globals used here, Locals in view), then Triggers, Actions, Conditions, Expressions and Uses - each row click-to-jump](images/anatomy-panel.png)
 
 ## Table of Contents
 
@@ -117,9 +117,9 @@ A function's parameters render as condition-style cells beneath its name: click 
 
 <img src="images/published-verb-rows.png" alt="A published verb on the canvas: its description as a caption above it, the Action badge and name on the left with a clickable parameter cell per input (id: text, seconds: number, reset instantly: true/false), the featured star on the right, and its body open beneath as ordinary event rows starting from Always." width="580">
 
-Functions appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
+Functions appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ. Its first three organs are the sheet's variables, grouped the way the rows read them - **Instance, of Player**, **Globals used here, from Game**, **Locals in view** - and every line is the same sentence its row shows (`Instance whole number hp = 100`), so the rail and the canvas can never disagree about how a variable is spelled:
 
-<img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's Properties, State, Triggers, and Actions listed as organs with role pills - the Health pack showing 3 knobs, 9 state values, 8 triggers, and 16 actions." width="340">
+<img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's variables by scope, Triggers, and Actions listed as organs with role pills - the Health pack showing its knobs and state values as Instance variables, 8 triggers, and 16 actions." width="340">
 
 Below the Anatomy panel, the collapsible **Picker preview** answers the question the census
 cannot: *how will my vocabulary actually read in the picker?* It renders every published entry

@@ -133,6 +133,13 @@ print(EventSheets.variable_code(my_local_variable))
 # question the same way: the glyph a reader sees, and the opposite an invert would write.
 print(EventSheets.comparison_glyph("<="))        # ≤
 print(EventSheets.opposite_operator("<="))       # >
+
+# Who owns each variable the sheet can name, and how a row spells it. One list, derived once:
+# this object's own variables first, then the globals it reaches for, then the locals in scope.
+var variables := EventSheets.sheet_variables(sheet)
+print(EventSheets.variable_owner(variables, "hp"))          # Player
+print(EventSheets.variable_owner(variables, "Game.Score"))  # Game
+print(EventSheets.variable_sentence(variables[0]))          # Instance whole number hp = 100
 ```
 
 ## 6. Project Health Services
@@ -233,6 +240,9 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
+| Rows | `sheet_variables(sheet)` - every variable the sheet can name and who owns each, in reading order (this object's, then the globals it reaches for, then the locals in scope). Entries carry `name`, `type_name`, `type_word`, `value`, `scope`, `owner`, `group`, `inspector`, `description`, `insert_text`, `resource`, `autoload` | `Array[Dictionary]` | no |
+| Rows | `variable_owner(variables, variable_name)` - the object column a row naming that variable reads with (the sheet's object, an autoload, or `System` for a local), `""` when the sheet declares no such variable. Takes the list `sheet_variables()` returned | `String` | no |
+| Rows | `variable_sentence(variable)` - one entry written the way its row reads it, minus the owner (`Instance whole number hp = 100`) | `String` | no |
 | Codegen | `comparison_glyph(operator)` - the glyph a ROW shows for an operator (`<=` reads ≤, `==` reads a single `=`); anything that is not one of the six comes back unchanged | `String` | no |
 | Codegen | `opposite_operator(operator)` - the operator that is true exactly when this one is false (`<=` ↔ `>`), or `""` when the text is not one of the six | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
