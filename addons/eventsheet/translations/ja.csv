@@ -4282,3 +4282,27 @@ Open All / Close All Regions,すべてのリージョンを開く / 閉じる
 Turn Into Group,グループに変換
 Region Color…,リージョンの色…
 Remove Region - Keep The Rows,リージョンを削除 - 行は残す
+neither of {n},{n} のいずれでもない
+ranges,範囲
+between   two values,2 つの値の   あいだ
+not between,あいだにない
+within ±   of a value,値の ±   以内
+is,＝
+is not,≠
+begins with,で始まる
+ends with,で終わる
+contains,を含む
+is one of   a list,リストのいずれか
+matches   a pattern,パターンに一致
+is empty,空である
+Something else…,その他…
+Compare,比較
+on {object},{object} で
+top {count},上位 {count}
+Pick,選ぶ
+where,条件
+nearest to {object} first,{object} に近い順
+furthest from {object} first,{object} から遠い順
+highest {value} first,{value} が高い順
+lowest {value} first,{value} が低い順
+Ignore case,大文字小文字を無視

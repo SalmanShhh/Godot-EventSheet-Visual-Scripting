@@ -42,8 +42,37 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 		_apply_ace_definition(definition, {}, context)
 		return
 	var initial_values: Dictionary = context.get("existing_params", {})
+	# K2 - every comparison goes to the ONE Compare dialog, whichever of the five the picker offered:
+	# what an author decides is what to compare, how, and to what, and the ACE that gets written is a
+	# consequence of the middle answer rather than a choice of its own.
+	if _opens_compare(definition):
+		_dock._compare.open(context, definition.id, initial_values, false)
+		return
 	context["from_picker"] = true
 	_dock._ace_params.open_with_values(definition, context, initial_values)
+
+
+## True when this ACE is one of the comparisons the Compare dialog owns. One list (the dialog's own),
+## so the picker route and the row-edit route can never disagree about which rows open where.
+static func _opens_compare(definition: ACEDefinition) -> bool:
+	if definition == null or definition.provider_id != EventSheetCompareConditionDialog.PROVIDER:
+		return false
+	return EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id)
+
+
+## K2 - the Compare dialog's answer, applied through the ordinary route. The dialog names an ACE ID
+## because choosing the operator IS choosing the condition; the definition is resolved here so
+## everything downstream (undo, replace-in-place, the {uid} bake) behaves exactly as it does for a
+## row applied from the picker.
+func _on_compare_confirmed(ace_id: String, params: Dictionary, negated: bool, context: Dictionary) -> void:
+	var definition: ACEDefinition = _dock._ace_registry.find_definition(
+		EventSheetCompareConditionDialog.PROVIDER, ace_id)
+	if definition == null:
+		_dock._set_status("Couldn't find the %s condition to write this comparison with." % ace_id, true)
+		return
+	var applied: Dictionary = context.duplicate(true)
+	applied["negated"] = negated
+	_apply_ace_definition(definition, params, applied)
 
 
 ## Re-opens the ACE picker when the params dialog requests Back.
@@ -116,6 +145,15 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 	if definition.parameters.is_empty() or str(edit_context.get("mode", "")) == "replace_trigger":
 		edit_context["preselect_ace_id"] = definition.id
 		_dock._ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
+		return
+	# K2 - a comparison row opens in the Compare dialog it was written in, inversion and all, so
+	# changing `hp <= 0` into `hp between 1 and 50` is one edit rather than a delete and a re-pick.
+	if _opens_compare(definition):
+		var condition_index: int = int(edit_context.get("ace_index", -1))
+		var edited: Variant = event_row.conditions[condition_index] if condition_index >= 0 \
+			and condition_index < event_row.conditions.size() else null
+		var inverted: bool = edited is ACECondition and (edited as ACECondition).negated
+		_dock._compare.open(edit_context, definition.id, edit_context.get("existing_params", {}), inverted)
 		return
 	_dock._ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 
@@ -243,7 +281,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					condition_event.trigger = _create_condition_from_definition(definition, params)
 					_bake_trigger_signature(condition_event, definition)
 				else:
-					_append_condition_entry(condition_event, definition, params)
+					_append_condition_entry(condition_event, definition, params, _context_negated(context))
 				var insert_into: Variant = context.get("insert_into", null)
 				if insert_into is EventGroup:
 					_group_children_array(insert_into as EventGroup).append(condition_event)
@@ -274,7 +312,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						child_condition_event.trigger = _create_condition_from_definition(definition, params)
 						_bake_trigger_signature(child_condition_event, definition)
 					else:
-						_append_condition_entry(child_condition_event, definition, params)
+						_append_condition_entry(child_condition_event, definition, params, _context_negated(context))
 					(selected_resource as EventRow).sub_events.append(child_condition_event)
 					message["text"] = "Added sub-condition."
 					# ── Wrap in Condition… (editor/wrap_unwrap.gd) ────────────────────────────
@@ -294,7 +332,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						target_event.pick_filters.append(_create_pick_filter_from_definition(definition, params))
 						message["text"] = "Added loop."
 						return true
-					var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
+					var condition_entry: ACECondition = _create_condition_from_definition(definition, params, _context_negated(context))
 					# Only use the trigger slot when the event has no trigger yet; otherwise
 					# append as a normal condition so an existing trigger (e.g. "Every tick")
 					# is never overwritten by adding a condition.
@@ -332,7 +370,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 							replace_row.pick_filters.append(_create_pick_filter_from_definition(definition, params))
 							message["text"] = "Replaced condition with a loop."
 							return true
-						replace_row.conditions[condition_index] = _create_condition_from_definition(definition, params)
+						replace_row.conditions[condition_index] = _create_condition_from_definition(definition, params, _context_negated(context))
 						message["text"] = "Updated condition."
 						return true
 			"replace_action":
@@ -523,11 +561,19 @@ func clear_baked_trigger(event_row: EventRow) -> void:
 
 ## Routes a picked condition into the event: a LOOPING condition (@ace_looping) lands as a
 ## pick filter (the event's actions run once per returned item), a plain one as an if-condition.
-func _append_condition_entry(event_row: EventRow, definition: ACEDefinition, params: Dictionary) -> void:
+func _append_condition_entry(event_row: EventRow, definition: ACEDefinition, params: Dictionary,
+		negated: bool = false) -> void:
 	if _is_looping_condition(definition):
 		event_row.pick_filters.append(_create_pick_filter_from_definition(definition, params))
 	else:
-		event_row.conditions.append(_create_condition_from_definition(definition, params))
+		event_row.conditions.append(_create_condition_from_definition(definition, params, negated))
+
+
+## The Invert tick a Compare dialog confirmed with. Absent for every other route, and absent means
+## uninverted - never "keep whatever was there", because a params dialog that cannot show the tick
+## must not silently carry one.
+static func _context_negated(context: Dictionary) -> bool:
+	return bool(context.get("negated", false))
 
 
 func _is_looping_condition(definition: ACEDefinition) -> bool:
@@ -556,10 +602,13 @@ static func build_looping_collection(definition: ACEDefinition, resolved_params:
 	return template
 
 
-func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
+## `negated` is the Compare dialog's Invert tick (and nothing else's): every other caller leaves it
+## alone, so a condition is created uninverted exactly as it always was.
+func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary, negated: bool = false) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = definition.provider_id
 	condition.ace_id = definition.id
+	condition.negated = negated
 	condition.params = _resolve_definition_params(definition, params)
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	condition.codegen_template = _baked_template_for(definition)

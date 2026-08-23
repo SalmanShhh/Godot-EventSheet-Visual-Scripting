@@ -6619,7 +6619,7 @@ static func _on_screen_condition(text: String, context: Dictionary) -> Dictionar
 
 ## R11. `not get_viewport_rect().has_point(position)` is not a mark on a reading: an event sheet has
 ## its own Is Outside Layout condition, and that is the row a reader wants to see. {} for anything
-## else, which lets the general negation carry on drawing its ✕.
+## else, which lets the general negation carry on drawing its mark.
 static func outside_layout_reading(text: String, context: Dictionary) -> Dictionary:
 	if not text.begins_with("not "):
 		return {}
@@ -8351,7 +8351,7 @@ static func web_call(call: Dictionary, context: Dictionary) -> Dictionary:
 
 ## U6. `result != HTTPRequest.RESULT_SUCCESS` is the sheet's request-succeeded question asked the
 ## other way round, so it reads as that question with `not` in front of it - which the canvas draws as
-## the ✕ every inverted condition already carries. Only a bare name on the left is claimed: a result
+## the denial mark every inverted condition already carries. Only a bare name on the left is claimed: a result
 ## worked out from something else is not the answer this question is about.
 static func web_condition(text: String, context: Dictionary) -> Dictionary:
 	var bare: String = text.strip_edges()

@@ -76,6 +76,62 @@ const COMPARISON_OPTIONS: Array = [
 ## The same six as bare inserted tokens, for callers that only need the values.
 const COMPARISON_OPERATORS: Array[String] = ["==", "!=", "<", "<=", ">", ">="]
 
+## The glyph a ROW shows for each operator. `==` reads `=` because a sheet row is a question, not an
+## assignment, so there is nothing for the doubled character to disambiguate. The two-character forms
+## stay the truth everywhere else: templates insert the key, the compiler emits the key.
+const COMPARISON_GLYPHS: Dictionary = {
+	"==": "=", "!=": "≠", "<": "<", "<=": "≤", ">": ">", ">=": "≥"
+}
+
+## Each operator's clean opposite - the question that is true exactly when this one is false. A pair
+## per line so the table reads as the six answers it is. Every one of the six HAS an opposite, which
+## is what lets an inverted comparison say itself the short way (`hp > 0`) instead of wearing a
+## `not (...)` a reader has to unwrap.
+const COMPARISON_OPPOSITES: Dictionary = {
+	"==": "!=", "!=": "==", "<": ">=", ">=": "<", "<=": ">", ">": "<="
+}
+
+
+## The row glyph for an operator token, or the text unchanged when it is not one of the six. Safe to
+## call on any param value: only a value that IS an operator changes.
+static func comparison_glyph(operator: String) -> String:
+	return str(COMPARISON_GLYPHS.get(operator.strip_edges(), operator))
+
+
+## The opposite of an operator token, or "" when the text is not one of the six.
+static func opposite_operator(operator: String) -> String:
+	return str(COMPARISON_OPPOSITES.get(operator.strip_edges(), ""))
+
+
+## The param id holding the operator of a template that is EXACTLY one binary comparison - three
+## slots, `{a} {op} {b}`, and nothing around them. "" for every other template, deliberately: a
+## comparison buried in a larger expression (`absf({a} - {b}) <= {t}`, `Input.get_joy_axis(...) * 100
+## {op} {v}`) is still cleanly invertible on paper, but claiming it here would flip operators inside
+## expressions this table has never seen. The narrow shape is the one the sheet's own Compare rows
+## use, and it is the one an inverted row can be rewritten as without changing anything else.
+static func comparison_operator_param(template: String, params: Dictionary) -> String:
+	var parts: PackedStringArray = template.strip_edges().split(" ")
+	if parts.size() != 3:
+		return ""
+	for part: String in parts:
+		if not (part.begins_with("{") and part.ends_with("}") and part.length() > 2):
+			return ""
+	var key: String = parts[1].substr(1, parts[1].length() - 2)
+	return key if COMPARISON_OPERATORS.has(str(params.get(key, ""))) else ""
+
+
+## This condition's params with the operator flipped to its opposite, or {} when the template is not
+## the plain binary comparison above. ONE answer for the compiler (what to emit for an inverted row),
+## the importer (what `not (...)` around a comparison lifts to) and the editor (what the row shows) -
+## three readers that must never disagree about which rows flip.
+static func flipped_comparison_params(template: String, params: Dictionary) -> Dictionary:
+	var key: String = comparison_operator_param(template, params)
+	if key.is_empty():
+		return {}
+	var flipped: Dictionary = params.duplicate(true)
+	flipped[key] = opposite_operator(str(params[key]))
+	return flipped
+
 
 ## The labeled comparison dropdown, with the equality token swapped for callers whose runtime
 ## matches on something other than `==`. A data-driven pack that stores the operator and compares

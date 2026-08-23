@@ -4282,3 +4282,27 @@ Open All / Close All Regions,展开 / 折叠所有区域
 Turn Into Group,转换为组
 Region Color…,区域颜色…
 Remove Region - Keep The Rows,移除区域 - 保留行
+neither of {n},都不是 {n}
+ranges,范围
+between   two values,介于   两个值之间
+not between,不介于
+within ±   of a value,在某值的 ±   之内
+is,是
+is not,不是
+begins with,开头是
+ends with,结尾是
+contains,包含
+is one of   a list,是列表中之一
+matches   a pattern,匹配某个模式
+is empty,为空
+Something else…,其他…
+Compare,比较
+on {object},在 {object} 上
+top {count},前 {count} 个
+Pick,选取
+where,其中
+nearest to {object} first,先取离 {object} 最近的
+furthest from {object} first,先取离 {object} 最远的
+highest {value} first,先取 {value} 最大的
+lowest {value} first,先取 {value} 最小的
+Ignore case,忽略大小写

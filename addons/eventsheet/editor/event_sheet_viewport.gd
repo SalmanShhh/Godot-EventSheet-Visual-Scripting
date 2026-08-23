@@ -146,14 +146,10 @@ const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
-# The OR and ✕ badges carry no colour of their own: the builder fills badge_bg / badge_fg from the
-# live theme (the condition lane's badge pair, the reading style's OR pair, and the event style's
-# invert marker for the ✕), so a preset dresses them like every other badge in the lane.
-const BADGE_OR_METADATA := {
-	"lane": "condition",
-	"hoverable": false,
-	"badge": true
-}
+# The `not` badge carries no colour of its own: the builder fills badge_bg / badge_fg from the live
+# theme (the condition lane's badge pair and the event style's invert marker), so a preset dresses it
+# like every other badge in the lane. The reading style's OR pair now dresses the "or" DIVIDER the
+# renderer rules between two OR'd conditions - there is no OR badge any more.
 const BADGE_NEGATED_METADATA := {
 	"lane": "condition",
 	"hoverable": false,
@@ -2365,9 +2361,10 @@ func _refresh_rows() -> void:
 		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
 		if _row_disabled_state.has(state_uid):
 			line_row.disabled = bool(_row_disabled_state[state_uid])
-	# R3 - an unmatched fence's fix names the row it writes the `#endregion` after, and that number
-	# is the one the gutter shows, which only exists now. No-op on every sheet whose fences pair.
-	_row_builder.apply_region_fix_labels(_flat_rows)
+	# The two notes that name a GUTTER NUMBER, filled now that the numbers exist: an unmatched
+	# fence's "close after row N" (R3), and an Else row's "neither of N" (K4). Both are no-ops on a
+	# sheet that has neither, and both are safe to run again after a fold re-numbers the rows.
+	_row_builder.apply_numbered_labels(_flat_rows)
 	if _selected_row_index >= _flat_rows.size():
 		_selected_row_index = _flat_rows.size() - 1
 	# Re-derive the caret from the SELECTION when they disagree: after a delete/undo/fold the

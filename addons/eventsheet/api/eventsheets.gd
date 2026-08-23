@@ -461,6 +461,23 @@ static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
+## The glyph a ROW shows for a comparison operator: `<=` reads ≤, `>=` reads ≥, `!=` reads ≠ and
+## `==` reads a single `=` (a row is a question, so there is nothing for the doubled character to
+## disambiguate). Anything that is not one of the six operators comes back unchanged, so a pack can
+## call this on any param value it is about to draw. The two-character forms stay the truth in
+## templates and in every emitted line.
+static func comparison_glyph(operator: String) -> String:
+	return EventForgeACEFactory.comparison_glyph(operator)
+
+
+## The operator that is true exactly when this one is false - `<=` ↔ `>`, `==` ↔ `!=`. "" when the
+## text is not one of the six. This is the same table the sheet uses to write an inverted comparison
+## as the opposite question rather than as a `not (...)`, so a pack that offers its own invert reads
+## and writes the row the same way the built-in one does.
+static func opposite_operator(operator: String) -> String:
+	return EventForgeACEFactory.opposite_operator(operator)
+
+
 ## Builds one Inspector-GRID variable descriptor (the `"drawer": "table"` payload) from plain
 ## column phrases, so nobody hand-assembles the column-hint syntax: this is the ONE owner of
 ## it - the Custom Resource wizard, pack builders, and extensions all converge here.

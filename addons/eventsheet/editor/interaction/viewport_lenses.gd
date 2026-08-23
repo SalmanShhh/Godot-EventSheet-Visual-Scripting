@@ -353,7 +353,7 @@ static func dt_words(text: String) -> String:
 static var _dt_regex: RegEx = null
 
 
-## M12. The leading NOT of a condition sentence, removed so the red ✕ in the badge column can
+## M12. The leading NOT of a condition sentence, removed so the `not` mark in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw
 ## the mark: { "text": String, "negated": bool }.

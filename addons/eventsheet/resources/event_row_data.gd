@@ -56,6 +56,11 @@ var language_block: bool = false
 # variable tint and rules their left edge, so a declaration never reads as an event. View-only,
 # never serialized.
 var variable_row: bool = false
+# K4. The condition LINE INDICES an "or" divider is drawn above - every line after the first when the
+# event's conditions are OR'd. The word is drawn BETWEEN the two conditions rather than stamped on
+# either of them, because "or" is what sits between two questions, not a property of one. View-only,
+# never serialized; empty on an AND event, which is every event by default.
+var or_condition_lines: PackedInt32Array = PackedInt32Array()
 
 ## Vertical presence multiplier (1.0 = normal). Header-like rows (state headers, the Class
 ## setup bar, Host binding) reserve extra height so they read as BARS, the way an event sheet's

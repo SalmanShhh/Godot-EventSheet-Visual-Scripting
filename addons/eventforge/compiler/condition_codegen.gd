@@ -31,5 +31,12 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 	# (the compiler also warns). Keyed on the member - Trigger Once has no on-true rebase, but every
 	# stateful condition owns a member declaration.
 	if condition.negated and condition.member_declaration.is_empty() and not output.is_empty():
+		# An inverted COMPARISON says itself the short way: the opposite of `hp <= 0` is `hp > 0`,
+		# same truth table and one fewer pair of brackets to unwrap. Only the plain `{a} {op} {b}`
+		# shape qualifies (EventForgeACEFactory decides), so every other inverted condition still
+		# emits the `not (...)` wrap it always did.
+		var flipped: Dictionary = EventForgeACEFactory.flipped_comparison_params(template, params)
+		if not flipped.is_empty():
+			return ActionCodegen._apply_template(template, flipped)
 		return "not (%s)" % output
 	return output

@@ -16,6 +16,12 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
+# K4. The "or" divider between two OR'd conditions: the rule sits this far above the line it divides
+# from the one before (the same 3px pad the layout gives a line's spans, so the rule lands in the
+# middle of the gap), inset from the lane's edges, with this much air between the word and its rule.
+const OR_DIVIDER_GAP := 3.0
+const OR_DIVIDER_INSET := 4.0
+const OR_DIVIDER_WORD_GAP := 6.0
 # Object icon drawn before the object label in ACE cells (event-sheet grammar). Event-sheet
 # framing: the icon sits centred on a subtle rounded plate (the "{my}" icon chip), so icons
 # read as a tidy column instead of loose glyphs. The advance must stay in sync with
@@ -639,6 +645,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
+	# K4 - drawn OVER the condition cells: the rule lands in the gap between two condition lines,
+	# and a cell's own plate is painted after the row's background, so a divider under it would be
+	# covered by the very cells it separates.
+	_draw_or_dividers(control, row_data, condition_lane_rect, font, font_size, reading_style)
 	_draw_collapsed_summary(control, row_rect, row_data, font, font_size)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
@@ -663,6 +673,65 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, reading_style.disabled_row_color, true)
 	if not debug_text.is_empty():
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
+
+
+## K4. Where an "or" divider sits on a row: the y of the rule, and the x range it may use. Measured
+## from the TOP of the first span on the line being divided, so the rule lands in the gap between two
+## conditions instead of on either of them. {} when that line has no condition span on this row (a
+## sliced row, a fold) - nothing is ever ruled across an empty lane. Static and pure: the geometry is
+## a fact about the laid-out row, so a test pins the same numbers the draw uses.
+static func or_divider_geometry(row_data: EventRowData, line_index: int, lane_rect: Rect2) -> Dictionary:
+	if row_data == null or lane_rect.size.x <= 0.0:
+		return {}
+	var top: float = -1.0
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata
+		if str(metadata.get("lane", "")) != "condition":
+			continue
+		if int(metadata.get("line_index", -1)) != line_index:
+			continue
+		if top < 0.0 or span.rect.position.y < top:
+			top = span.rect.position.y
+	if top < 0.0:
+		return {}
+	return {
+		"y": top - OR_DIVIDER_GAP,
+		"from_x": lane_rect.position.x + OR_DIVIDER_INSET,
+		"to_x": lane_rect.position.x + lane_rect.size.x - OR_DIVIDER_INSET
+	}
+
+
+## K4. The word "or" and a hairline, drawn between each pair of OR'd conditions. It replaces the badge
+## the second condition used to wear: a badge says something about the row it is on, and "or" is
+## about the pair. The theme's OR pair dresses it, so a preset that restyled the badge restyles this
+## without knowing it changed.
+func _draw_or_dividers(control: Control, row_data: EventRowData, lane_rect: Rect2, font: Font,
+		font_size: int, reading_style: EventSheetReadingStyle = null) -> void:
+	if row_data == null or row_data.or_condition_lines.is_empty() or font == null:
+		return
+	var reading: EventSheetReadingStyle = reading_style if reading_style != null else _fallback_reading_style()
+	var word: String = EventSheetL10n.translate("or")
+	var draw_size: int = maxi(font_size - 2, 8)
+	var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_size).x
+	var ink: Color = reading.or_badge_foreground_color
+	# The rule is the OR pair mixed: its own plate colour carries the theme's intent, and enough of
+	# the word's ink to stay a visible hairline on a preset that made the plate nearly the row.
+	var rule: Color = reading.or_badge_background_color.lerp(ink, 0.55)
+	rule.a = maxf(rule.a, 0.5)
+	for line_index: int in row_data.or_condition_lines:
+		var geometry: Dictionary = or_divider_geometry(row_data, line_index, lane_rect)
+		if geometry.is_empty():
+			continue
+		var y: float = float(geometry["y"])
+		var from_x: float = float(geometry["from_x"])
+		var to_x: float = float(geometry["to_x"])
+		var baseline: float = y + (font.get_ascent(draw_size) - font.get_descent(draw_size)) * 0.5
+		control.draw_string(font, Vector2(from_x, baseline), word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_size, ink)
+		var rule_start: float = from_x + word_width + OR_DIVIDER_WORD_GAP
+		if rule_start < to_x:
+			control.draw_line(Vector2(rule_start, y), Vector2(to_x, y), rule, 1.0)
 
 
 func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null, hit_uid: String = "", reading_style: EventSheetReadingStyle = null) -> void:

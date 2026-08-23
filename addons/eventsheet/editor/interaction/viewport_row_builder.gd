@@ -39,6 +39,11 @@ const VERB_KIND_TINT_ALPHA: float = 0.16
 ## the hover help and the Manual's legend can never draw two different glyphs for the same fact.
 const MARK_RECURSION := "↻"
 
+## M12/K4. What an inverted condition wears in the badge column when there is no opposite operator to
+## show instead. A word, because "not begins with" is the sentence, and one constant so the row, the
+## text listing and the Manual can never teach two spellings of the same denial.
+const NEGATED_MARK := "not"
+
 ## V1/V2. The marks a variable row wears, and the box they draw in. Both are 15px cues, never words:
 ## the outlined `x` says "this row declares something", the sliders mark says "and you can edit it in
 ## the Inspector". The width is fixed so the badge column stays a column at any font size.
@@ -422,9 +427,54 @@ func _region_close_after_uid(collected: Array[EventRowData]) -> String:
 	return last_uid
 
 
+## Every note that names a GUTTER NUMBER, filled in once the flat list has been numbered - which is
+## the only moment those numbers exist. The viewport calls this one function so a future note of the
+## same shape has a place to go instead of a second call site to remember.
+func apply_numbered_labels(numbered_rows: Array) -> void:
+	apply_region_fix_labels(numbered_rows)
+	apply_else_follows_labels(numbered_rows)
+
+
+## K4. The Else row says what it is the else OF: "neither of 9", the gutter number of the event its
+## chain starts at. Idempotent - a fold re-flattens and re-numbers without rebuilding spans, so this
+## runs again over the same rows and must only ever write the span that IS the note.
+func apply_else_follows_labels(numbered_rows: Array) -> void:
+	for index: int in range(numbered_rows.size()):
+		var row_data: EventRowData = (numbered_rows[index] as Dictionary).get("row")
+		if row_data == null or not (row_data.source_resource is EventRow):
+			continue
+		if (row_data.source_resource as EventRow).else_mode != EventRow.ElseMode.ELSE:
+			continue
+		for span: SemanticSpan in row_data.spans:
+			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("else_follows", false)):
+				span.text = else_follows_text(numbered_rows, index, row_data.indent)
+				break
+
+
+## The words an Else row's note carries, or "" when the event it follows is not on the canvas. The
+## search walks BACKWARDS at the Else's own indent: a deeper row is inside the block above it, a
+## shallower one means the block has been left, and the first sibling event that starts a chain
+## (else_mode NONE) is the `if` this Else answers. Static and pure over the numbered rows.
+static func else_follows_text(numbered_rows: Array, else_index: int, indent: int) -> String:
+	for scan: int in range(else_index - 1, -1, -1):
+		var row_data: EventRowData = (numbered_rows[scan] as Dictionary).get("row")
+		if row_data == null or row_data.indent > indent:
+			continue
+		if row_data.indent < indent:
+			return ""
+		if not (row_data.source_resource is EventRow):
+			continue
+		if (row_data.source_resource as EventRow).else_mode != EventRow.ElseMode.NONE:
+			continue
+		if row_data.event_number <= 0:
+			return ""
+		return EventSheetL10n.translate("neither of {n}").replace("{n}", str(row_data.event_number))
+	return ""
+
+
 ## R3 - the fix names the row it writes the fence after, and the number it names is the one in the
-## gutter, which exists only once the flat list is numbered. Runs right after that pass, and does
-## nothing at all on a sheet with no unmatched fence - which is every healthy sheet.
+## gutter, which exists only once the flat list is numbered. Does nothing at all on a sheet with no
+## unmatched fence - which is every healthy sheet.
 func apply_region_fix_labels(numbered_rows: Array) -> void:
 	if _region_fix_notes.is_empty():
 		return
@@ -8054,7 +8104,7 @@ func _joined_call_args(call: Dictionary) -> String:
 ## never meet parentheses in a condition cell). The computed-check cue is the ƒ SVG BADGE the
 ## caller adds in the icon column (the same ƒ collapsed functions wear, one symbol taught
 ## once), never inline text. M12: a negated guard does NOT say the word "not" - the sentence is
-## the positive one and the inversion is the red ✕ in the badge column, the same mark an inverted
+## the positive one and the inversion is the `not` mark in the badge column, the same mark an inverted
 ## ACE condition has always worn, so one symbol means one thing everywhere on the sheet. Value
 ## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
 func _friendly_guard_text(guard: String) -> String:
@@ -8067,7 +8117,7 @@ func _friendly_guard_text(guard: String) -> String:
 	return friendly
 
 
-## M12 - whether a guard is inverted, so the caller can draw the ✕ the sentence no longer says.
+## M12 - whether a guard is inverted, so the caller can draw the mark the sentence no longer says.
 ## Split from _friendly_guard_text because the two answers go to different places: the words go
 ## in the condition cell, the inversion goes in the badge column beside it.
 func _guard_is_negated(guard: String) -> bool:
@@ -8150,7 +8200,7 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## exposed via EventSheets.build_condition_action_row for custom blocks). Non-interactive (spans editable:
 ## false); the caller sets source_resource for double-click routing.
 ## `negated` is for callers that already turned an inverted guard into its positive sentence
-## (_friendly_guard_text does): they pass the inversion here so the ✕ still gets drawn. Callers
+## (_friendly_guard_text does): they pass the inversion here so the mark still gets drawn. Callers
 ## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
 ## `condition_spans`, when given, REPLACES the single condition cell this would otherwise draw - the
 ## M37 Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
@@ -8174,7 +8224,7 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 				"line_index": line_index
 			}.merged(action_style, true)))
 		return row
-	# M12 - a lifted `if not <cond>:` shows its inversion as the red ✕ in the badge column, exactly
+	# M12 - a lifted `if not <cond>:` shows its inversion as the `not` mark in the badge column, exactly
 	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
 	# that already stripped the negation pass plain text and nothing happens here.
 	var inversion: Dictionary = EventSheetViewportLenses.strip_leading_not(condition_text)
@@ -9873,6 +9923,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	if slice_from > 0 or slice_to >= 0 or hide_conditions:
 		return _slice_event_spans(_build_event_spans(event_row, in_verb_body), event_row,
 			slice_from, slice_to, hide_conditions, slice_is_tail)
+	# K4 - collected while the condition lines are built and read off by whoever owns the row (the
+	# divider is drawn between two lines, so it belongs to the ROW, not to a span on either line).
+	_pending_or_lines = PackedInt32Array()
 	var condition_line_index: int = 0
 	var action_line_index: int = 0
 	var inline_trigger_condition_index: int = _find_inline_trigger_condition_index(event_row)
@@ -9930,6 +9983,25 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
+		# K4 - and what it is the else OF. An Else three sub-events below its `if` is the classic
+		# reading mistake, so the row names the event its chain starts at. Filled in AFTER the
+		# viewport numbers the rows (apply_else_follows_labels), because that number does not exist
+		# yet; a row whose head is folded away keeps the blank and says nothing.
+		if event_row.else_mode == EventRow.ElseMode.ELSE:
+			spans.append(
+				_make_span(
+					"",
+					SemanticSpan.SpanType.COMMENT,
+					{
+						"lane": "condition",
+						"kind": "else_follows",
+						"else_follows": true,
+						"hoverable": false,
+						"natural_width": true,
+						"line_index": condition_line_index
+					}.merged(condition_style_meta, true)
+				)
+			)
 		condition_line_index += 1
 	if input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
@@ -10233,6 +10305,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var loop_note: String = str(loop_reading.get("note", ""))
 		if not loop_text.is_empty() and not loop_note.is_empty():
 			loop_text = "%s · %s" % [loop_text, loop_note]
+		# K5 - a pick that NARROWS says so: the family in the object column, "Pick where …" in the
+		# cell, and what the filter keeps following as facts. Asked after the loop words because a
+		# plain walk over everything is a For each and stays one.
+		var pick_reading: Dictionary = _pick_filter_reading(pick)
+		if not pick_reading.is_empty():
+			loop_reading = pick_reading
+			loop_text = str(pick_reading.get("text", ""))
+			loop_object = str(pick_reading.get("object", ""))
 		spans.append(
 			_make_span(
 				loop_text if not loop_reading.is_empty() else _format_pick_filter(pick),
@@ -12164,15 +12244,10 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 	for term: String in terms:
 		if term.strip_edges().is_empty():
 			continue
-		if or_block:
-			var or_meta: Dictionary = _viewport.BADGE_OR_METADATA.duplicate(true)
-			or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport._get_reading_style().or_badge_background_color)
-			or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport._get_reading_style().or_badge_foreground_color)
-			or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-			or_meta["condition_index"] = -1
-			or_meta["line_index"] = line_index
-			or_meta["badge_style"] = "or"
-			branch_row.spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+		# K4 - the same "or" divider an authored OR event draws, so a lifted `a or b` and an OR block
+		# the user built read alike. Above every line but the first: nothing sits above that one.
+		if or_block and line_index > first_line:
+			branch_row.or_condition_lines.append(line_index)
 		# ── N4 lens hook ───────────────────────────────────────────────────────────────────────
 		# A test written on an autoload's member belongs to that autoload: `Game.score > 100` reads
 		# as the object `Game (global)` and the test `score > 100`, so the owner is visible in the
@@ -12424,6 +12499,9 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		row_data.spans = _split_function_reference_spans(row_data.spans)
+		# K4 - which condition lines carry an "or" above them. A sliced row hides its conditions, so
+		# it keeps none: there is nothing left to divide.
+		row_data.or_condition_lines = PackedInt32Array() if row_data.conditions_hidden else _pending_or_lines
 		# The patterns those readings recognised, claimed on the event that OWNS them - the trigger,
 		# function or tick the shape hangs off. Everything that talks about patterns reads the
 		# registry; nothing re-derives them.
@@ -12513,36 +12591,37 @@ func _append_condition_prefix_spans(
 	condition: ACECondition,
 	condition_index: int,
 	line_index: int,
-	_display_index: int,
+	display_index: int,
 	displayed_condition_count: int
 ) -> void:
 	if event_row == null:
 		return
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	# Keep the primary badge column stable for trigger/invert/OR by rendering
-	# negation first. When a line has both badges, ✕ is placed in column 1
+	# negation first. When a line has both badges, the denial is placed in column 1
 	# and OR follows in column 2.
-	if condition.negated or _condition_reads_negated(condition):
+	# K4 - a comparison with a clean opposite already reads as the opposite, so it wears no denial
+	# mark: two marks for one fact is how a reader ends up unwrapping the row in their head.
+	if (condition.negated and not _comparison_flips(condition)) or _condition_reads_negated(condition):
 		spans.append(_negated_badge_span(condition_style_meta, line_index, condition_index))
+	# K4 - the word "or" is drawn BETWEEN two conditions, not badged onto the second one: an event
+	# sheet has no word for "and", so the only thing worth saying about a stack of questions is when
+	# any one of them is enough. The first condition has nothing above it to divide from.
 	if (
 		event_row.condition_mode == EventRow.ConditionMode.OR
 		and displayed_condition_count > 1
+		and display_index > 0
 	):
-		var or_meta: Dictionary = _viewport.BADGE_OR_METADATA.duplicate(true)
-		or_meta["badge_bg"] = condition_style_meta.get("badge_bg", _viewport._get_reading_style().or_badge_background_color)
-		or_meta["badge_fg"] = condition_style_meta.get("badge_fg", _viewport._get_reading_style().or_badge_foreground_color)
-		or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
-		or_meta["condition_index"] = condition_index
-		or_meta["line_index"] = line_index
-		or_meta["badge_style"] = "or"
-		spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+		_pending_or_lines.append(line_index)
 
 
-## M12 - the inverted-condition mark: a bare red ✕ in the badge column, no circle behind it
-## (themable via EventSheetEventStyle.invert_marker_color). ONE factory, because the mark now has
-## two producers - an ACE condition with its `negated` flag, and a lifted `if not <cond>:` whose
-## sentence dropped the word - and they must draw the identical glyph or the sheet teaches two
-## symbols for one idea.
+## M12 / K4 - the inverted-condition mark: the word `not`, in the badge column, in the invert colour
+## and with no plate behind it (themable via EventSheetEventStyle.invert_marker_color). ONE factory,
+## because the mark has two producers - an ACE condition with its `negated` flag, and a lifted
+## `if not <cond>:` whose sentence dropped the word - and they must draw the identical mark or the
+## sheet teaches two symbols for one idea. It is a WORD rather than a glyph because this is the case
+## with no opposite to show instead ("not begins with"), and a reader should not have to be taught a
+## symbol to read the commonest thing a condition can say about itself.
 func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, condition_index: int = -1) -> SemanticSpan:
 	var negated_meta: Dictionary = _viewport.BADGE_NEGATED_METADATA.duplicate(true)
 	negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
@@ -12551,7 +12630,7 @@ func _negated_badge_span(condition_style_meta: Dictionary, line_index: int, cond
 	negated_meta["badge_style"] = "negated"
 	negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
 	negated_meta["badge_fg"] = _viewport._get_event_style().invert_marker_color
-	return _make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta)
+	return _make_span(NEGATED_MARK, SemanticSpan.SpanType.KEYWORD, negated_meta)
 
 
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
@@ -12657,6 +12736,41 @@ func _ticks_in_the_editor(event_row: EventRow) -> bool:
 	# a chip there would repeat the row rather than add to it. A BLANK event counts: it runs every
 	# tick, which is exactly the tempo this chip is about (S27).
 	return INPUT_TRIGGER_TICKS.has(TriggerResolver.effective_trigger_id(event_row))
+
+
+## K5. The pick sentence for a filter that narrows a family, or {} when this loop walks everything
+## (which is a For each, and reads as one). Only a GROUP collection is a family: the group name IS
+## the family name an event sheet puts in the object column, and there is nothing to name for a loop
+## over an arbitrary expression.
+func _pick_filter_reading(pick: PickFilter) -> Dictionary:
+	if pick == null or pick.collection_kind != PickFilter.CollectionKind.GROUP:
+		return {}
+	return EventSheetViewportReadingRows.pick_words(_pick_collection_text(pick), _pick_test_text(pick),
+		pick.order_by_expression, pick.order_descending, pick.pick_first_n)
+
+
+## K5. What a pick FILTERS on, as one line: the legacy predicate expression when the filter carries
+## one, else its structured filter conditions joined the way they compile (AND or OR). Read through
+## the same operator glyphs a condition row uses, so `hp < 10` looks the same wherever it is shown.
+func _pick_test_text(pick: PickFilter) -> String:
+	var predicate: String = pick.predicate_expression.strip_edges()
+	if not predicate.is_empty():
+		return EventSheetSentence.comparison_symbols(predicate)
+	var terms: PackedStringArray = PackedStringArray()
+	for entry: Variant in pick.filter_conditions:
+		if not (entry is ACECondition) or not (entry as ACECondition).enabled:
+			continue
+		# An inverted comparison shows its opposite here too, exactly as it does on a condition row
+		# and exactly as the filter compiles - one spelling of the same question everywhere.
+		var reading: ACECondition = _comparison_flip_of(entry as ACECondition)
+		var term: String = SheetCompiler.condition_source_text(reading).strip_edges()
+		if term.is_empty():
+			continue
+		terms.append("%s %s" % [EventSheetL10n.translate("not"), term] if reading.negated else term)
+	if terms.is_empty():
+		return ""
+	var joiner: String = " %s " % EventSheetL10n.translate("or" if pick.filter_mode == 1 else "and")
+	return EventSheetSentence.comparison_symbols(joiner.join(terms))
 
 
 func _format_pick_filter(pick: PickFilter) -> String:
@@ -12817,7 +12931,7 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	# ── M9 / M10 / M12 lens hook (LIFTED rows) ────────────────────────────────────────────────
 	# The sentence-layer hook further down only covers code that stayed raw; a condition that
 	# LIFTED into a real ACE gets its reading here, at the one place its display text is built.
-	# M12 strips a leading NOT because the ✕ in the badge column says it instead (see
+	# M12 strips a leading NOT because the mark in the badge column says it instead (see
 	# _condition_reads_negated, which asks the same question for the badge).
 	var base_text: String = _reading_sentence(_humanized_input_event_text(str(EventSheetViewportLenses.strip_leading_not(
 		_format_condition_descriptor_base(condition)
@@ -12868,6 +12982,10 @@ func _is_state_header_condition(condition: ACECondition) -> bool:
 
 
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
+	# K4. An inverted COMPARISON reads as its opposite - `hp > 0`, which is also what it compiles to
+	# now - so the row says the question rather than a question wrapped in a denial. Done on a COPY
+	# before anything downstream sees the params; the stored condition keeps its own spelling.
+	condition = _comparison_flip_of(condition)
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	# An Is In State condition reads as a state header - "State: patrol", with the ◆ diamond
 	# rendered as a BADGE by the span builder (the same column trigger icons use, never inline
@@ -13317,6 +13435,9 @@ var _pending_param_ranges: Dictionary = {}
 # rather than spelling the keyword out in the action cell. Display only: the statement in the file is
 # untouched, and nothing about this reaches the view state a user's own breakpoints live in.
 var _pending_grammar_breakpoint: bool = false
+# K4 - the condition lines an "or" divider is drawn above, filled during the span pass of the event
+# currently being built and consumed by the caller that holds its EventRowData.
+var _pending_or_lines: PackedInt32Array = PackedInt32Array()
 
 # The patterns the readings just built recognised, as {pattern id: [the source lines that are its
 # evidence]}. Filled by whatever reading claimed a shape while an event's spans were being built and
@@ -15359,7 +15480,7 @@ func _reading_sentence(text: String) -> String:
 
 ## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
 ## which is the case for an expression condition lifted straight from `if not <cond>:`. The badge
-## column asks this so the ✕ appears; _format_condition_descriptor strips the matching word so
+## column asks this so the mark appears; _format_condition_descriptor strips the matching word so
 ## the two never both show.
 func _condition_reads_negated(condition: ACECondition) -> bool:
 	if condition == null:
@@ -15367,6 +15488,45 @@ func _condition_reads_negated(condition: ACECondition) -> bool:
 	return bool(EventSheetViewportLenses.strip_leading_not(
 		_format_condition_descriptor_base(condition)
 	).get("negated", false))
+
+
+## K4 - true when this inverted condition is a comparison with a clean opposite, so the row shows
+## `hp > 0` (and the compiler emits it) instead of a mark over `hp ≤ 0`. The badge column asks so the
+## denial mark stays off a row that already says the opposite in words.
+func _comparison_flips(condition: ACECondition) -> bool:
+	return condition != null and condition.negated and not _flipped_comparison_params(condition).is_empty()
+
+
+## K4 - the condition a flippable inverted comparison READS as: the same ACE with the opposite
+## operator and no inversion. Returns the condition itself, untouched, for everything else.
+func _comparison_flip_of(condition: ACECondition) -> ACECondition:
+	if condition == null or not condition.negated:
+		return condition
+	var flipped: Dictionary = _flipped_comparison_params(condition)
+	if flipped.is_empty():
+		return condition
+	var reading: ACECondition = condition.duplicate()
+	reading.params = flipped
+	reading.parameters = flipped
+	reading.negated = false
+	return reading
+
+
+## K4 - this condition's params with the comparison operator flipped, or {} when its template is not
+## the plain `{a} {op} {b}` shape. The template is the baked one when the row carries it (custom and
+## pack ACEs bake at apply time), else the descriptor's - the same order the compiler resolves in, so
+## the row and the emitted line can never disagree about which comparisons flip.
+func _flipped_comparison_params(condition: ACECondition) -> Dictionary:
+	if condition == null:
+		return {}
+	var template: String = condition.codegen_template.strip_edges()
+	if template.is_empty():
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+		if descriptor == null:
+			return {}
+		template = descriptor.codegen_template
+	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	return EventForgeACEFactory.flipped_comparison_params(template, params)
 
 
 ## M13/M20 - the class icon for the object a statement row acts on. The subject is the head of the
@@ -15572,8 +15732,12 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# View ▸ Preview In Language: a globe-marked value renders in the previewed GAME locale
 			# ("Jouer") instead of the literal tr("Play"). The identity when no preview is active, so
 			# this is byte-identical to the row you author until someone asks to see another language.
+			#
+			# K1: a value that IS a comparison operator renders as the glyph the row means - ≤ ≥ ≠,
+			# and `=` for equality - the same spellings an opened script's readings already use. Only
+			# the six operator tokens change; every other param value is the author's own GDScript.
 			shown = EventSheetGameCatalog.preview_param(shown)
-			shown = _read_number_words(shown)
+			shown = _read_number_words(EventForgeACEFactory.comparison_glyph(shown))
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
@@ -15593,8 +15757,9 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		var param_shown: String = _read_number_words(EventSheetGameCatalog.preview_param(
-			_translated_option_label(param.display_value(param_value), str(param_value))))
+		var param_shown: String = _read_number_words(EventForgeACEFactory.comparison_glyph(
+			EventSheetGameCatalog.preview_param(
+				_translated_option_label(param.display_value(param_value), str(param_value)))))
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)

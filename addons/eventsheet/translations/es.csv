@@ -4282,3 +4282,27 @@ Open All / Close All Regions,Abrir / cerrar todas las regiones
 Turn Into Group,Convertir en grupo
 Region Color…,Color de la región…
 Remove Region - Keep The Rows,Quitar región - conservar las filas
+neither of {n},ninguno de {n}
+ranges,rangos
+between   two values,entre   dos valores
+not between,no entre
+within ±   of a value,dentro de ±   de un valor
+is,es
+is not,no es
+begins with,empieza por
+ends with,termina en
+contains,contiene
+is one of   a list,es uno de   una lista
+matches   a pattern,coincide con   un patrón
+is empty,está vacío
+Something else…,Otra cosa…
+Compare,Comparar
+on {object},en {object}
+top {count},los {count} primeros
+Pick,Elegir
+where,donde
+nearest to {object} first,más cerca de {object} primero
+furthest from {object} first,más lejos de {object} primero
+highest {value} first,mayor {value} primero
+lowest {value} first,menor {value} primero
+Ignore case,Ignorar mayúsculas

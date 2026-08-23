@@ -4282,3 +4282,27 @@ Open All / Close All Regions,모든 리전 열기 / 닫기
 Turn Into Group,그룹으로 변환
 Region Color…,리전 색상…
 Remove Region - Keep The Rows,리전 제거 - 행은 유지
+neither of {n},{n} 중 어느 것도 아님
+ranges,범위
+between   two values,두 값   사이
+not between,사이가 아님
+within ±   of a value,값의 ±   이내
+is,＝
+is not,≠
+begins with,로 시작
+ends with,로 끝남
+contains,포함
+is one of   a list,목록 중 하나
+matches   a pattern,패턴과 일치
+is empty,비어 있음
+Something else…,다른 것…
+Compare,비교
+on {object},{object} 에서
+top {count},상위 {count}
+Pick,고르기
+where,조건
+nearest to {object} first,{object} 에 가까운 순
+furthest from {object} first,{object} 에서 먼 순
+highest {value} first,{value} 높은 순
+lowest {value} first,{value} 낮은 순
+Ignore case,대소문자 무시

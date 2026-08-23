@@ -2502,6 +2502,16 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
 		var matched: Dictionary = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
+		# An inverted COMPARISON is not lifted as an inverted row any more: the compiler writes the
+		# opposite operator for one of those (`hp > 0`), so a row carrying the flag would re-emit a
+		# spelling this file does not have and lose the byte gate - taking the whole function down to
+		# a verbatim block with it. Claimed WHOLE instead, `not (...)` and all, which re-emits exactly
+		# what the file says. A source that spells it the short way lifts as the comparison it is.
+		if negated and not matched.is_empty() and not _flips_when_inverted(matched).is_empty():
+			var whole: Dictionary = _match_entry(term, reverse_entries, "condition", true, scope_trigger)
+			if not whole.is_empty():
+				matched = whole
+				negated = false
 		if matched.is_empty():
 			return false
 		var condition: ACECondition = ACECondition.new()
@@ -2511,6 +2521,17 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		condition.negated = negated
 		event.conditions.append(condition)
 	return true
+
+
+## The flipped params of a matched condition, or {} when its ACE is not the plain `{a} {op} {b}`
+## shape - which is the same question the compiler asks before writing the opposite operator.
+static func _flips_when_inverted(matched: Dictionary) -> Dictionary:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
+		str(matched.get("provider", "")), str(matched.get("ace_id", "")))
+	if descriptor == null:
+		return {}
+	return EventForgeACEFactory.flipped_comparison_params(descriptor.codegen_template,
+		matched.get("params", {}))
 
 
 ## The index of the line on which a bracketed run STARTING at `start` closes, or -1 when the line

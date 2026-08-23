@@ -640,6 +640,8 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._includes.init(_dock)
 	_dock._find_refs.init(_dock)
 	_dock._pick.init(_dock)
+	_dock._compare.init(_dock)
+	_dock._compare.compare_confirmed.connect(_dock._on_compare_confirmed)
 	_dock._ai.init(_dock)
 	_dock._ask.init(_dock)
 	_dock._sheet_type.init(_dock)

@@ -1998,6 +1998,72 @@ static func collision_trigger_words(trigger_id: String) -> String:
 	return ""
 
 
+## K5. A pick that NARROWS reads as the pick it is: "Pick where hp < 10", with the family in the
+## object column and what the filter keeps following on the same line ("nearest to Player first",
+## "top 3"). A loop over a group with a test, an order or a limit is not a walk over everything - it
+## is a choice - and the reading path already says so for an opened script; this is the same sentence
+## for an authored row. Returns {"text", "object"}, or {} when nothing narrows (a plain walk keeps
+## its For each). Static and pure: only the words change, never the loop.
+static func pick_words(collection: String, test: String, order_by: String,
+		descending: bool, first_n: int) -> Dictionary:
+	var family: String = collection.strip_edges()
+	if family.is_empty():
+		return {}
+	var facts: PackedStringArray = PackedStringArray()
+	var order: String = order_words(order_by, descending)
+	if not order.is_empty():
+		facts.append(order)
+	if first_n > 0:
+		facts.append(EventSheetL10n.translate("top {count}").replace("{count}", str(first_n)))
+	var trimmed_test: String = test.strip_edges()
+	if trimmed_test.is_empty() and facts.is_empty():
+		return {}
+	var text: String = EventSheetL10n.translate("Pick")
+	if not trimmed_test.is_empty():
+		text = "%s %s %s" % [text, EventSheetL10n.translate("where"), trimmed_test]
+		if not facts.is_empty():
+			text = "%s · %s" % [text, " · ".join(facts)]
+	else:
+		text = "%s %s" % [text, " · ".join(facts)]
+	return {"text": text, "object": family.capitalize()}
+
+
+## K5. An order-by expression read back as the order it asks for. A distance is the one shape worth
+## naming ("nearest to Player first"), because that is what an author wrote it to mean; everything
+## else says which end of its own value it starts from, which is all the expression itself claims.
+## "" when there is no ordering.
+static func order_words(order_by: String, descending: bool) -> String:
+	var expression: String = order_by.strip_edges()
+	if expression.is_empty():
+		return ""
+	var target: String = distance_target(expression)
+	if not target.is_empty():
+		var key: String = "furthest from {object} first" if descending else "nearest to {object} first"
+		return EventSheetL10n.translate(key).replace("{object}", target)
+	var value_key: String = "highest {value} first" if descending else "lowest {value} first"
+	return EventSheetL10n.translate(value_key).replace("{value}", expression)
+
+
+## K5. The object a `distance_to(...)` order-by measures against, named the way a reader would say it
+## ("Player"): the argument with its position member and any node-path punctuation taken off. ""
+## whenever the expression is not a distance, which is what keeps every other order-by literal.
+static func distance_target(expression: String) -> String:
+	const CALL := ".distance_to("
+	var at: int = expression.find(CALL)
+	if at < 0 or not expression.ends_with(")"):
+		return ""
+	var argument: String = expression.substr(at + CALL.length())
+	argument = argument.substr(0, argument.length() - 1).strip_edges()
+	for member: String in [".global_position", ".position", ".global_transform.origin"]:
+		if argument.ends_with(member):
+			argument = argument.substr(0, argument.length() - member.length())
+	argument = argument.strip_edges().trim_prefix("$").trim_prefix("%")
+	var slash: int = argument.rfind("/")
+	if slash >= 0:
+		argument = argument.substr(slash + 1)
+	return argument.strip_edges()
+
+
 ## M33. The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over

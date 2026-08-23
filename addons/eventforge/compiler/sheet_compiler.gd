@@ -2226,9 +2226,16 @@ static func _compile_filter_conditions(pick: PickFilter, iterator: String) -> St
 		var base: String = _condition_base_expr(cond)
 		if base.strip_edges().is_empty():
 			continue
+		# An inverted comparison flips its operator instead of wearing a `not (...)`, exactly as it
+		# does in an event header (ConditionCodegen). "" whenever the condition is not the plain
+		# `{a} {op} {b}` shape, which is what keeps every other inverted filter term wrapped.
+		var flipped: String = _flipped_condition_expr(cond) if cond.negated else ""
+		var inverted: bool = cond.negated and flipped.is_empty()
+		if not flipped.is_empty():
+			base = flipped
 		if _condition_is_node_scoped(cond):
 			base = "%s.%s" % [iterator, base]
-		var part: String = "not (%s)" % base if cond.negated else base
+		var part: String = "not (%s)" % base if inverted else base
 		parts.append("(%s)" % part)
 	if parts.is_empty():
 		return ""
@@ -2247,6 +2254,20 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 		template = descriptor.codegen_template
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	return ActionCodegen._apply_template(template, params)
+
+
+## The same expression with the comparison operator flipped to its opposite, or "" when the condition
+## is not the plain `{a} {op} {b}` shape. The short spelling of an inverted comparison.
+static func _flipped_condition_expr(condition: ACECondition) -> String:
+	var template: String = condition.codegen_template.strip_edges()
+	if template.is_empty():
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+		if descriptor == null:
+			return ""
+		template = descriptor.codegen_template
+	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	var flipped: Dictionary = EventForgeACEFactory.flipped_comparison_params(template, params)
+	return "" if flipped.is_empty() else ActionCodegen._apply_template(template, flipped)
 
 
 ## The GDScript a condition compiles to, negation aside - the editor's readers use it to recognize

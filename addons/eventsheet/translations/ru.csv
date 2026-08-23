@@ -4282,3 +4282,27 @@ Open All / Close All Regions,Открыть / закрыть все регион
 Turn Into Group,Преобразовать в группу
 Region Color…,Цвет региона…
 Remove Region - Keep The Rows,Убрать регион - строки оставить
+neither of {n},ни одно из {n}
+ranges,диапазоны
+between   two values,между   двумя значениями
+not between,не между
+within ±   of a value,в пределах ±   значения
+is,равно
+is not,не равно
+begins with,начинается с
+ends with,заканчивается на
+contains,содержит
+is one of   a list,одно из   списка
+matches   a pattern,совпадает с   шаблоном
+is empty,пусто
+Something else…,Что-то другое…
+Compare,Сравнить
+on {object},у {object}
+top {count},первые {count}
+Pick,Выбрать
+where,где
+nearest to {object} first,ближайшие к {object} сначала
+furthest from {object} first,самые дальние от {object} сначала
+highest {value} first,наибольшее {value} сначала
+lowest {value} first,наименьшее {value} сначала
+Ignore case,Игнорировать регистр

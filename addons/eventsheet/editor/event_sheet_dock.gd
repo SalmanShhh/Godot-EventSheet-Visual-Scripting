@@ -244,6 +244,7 @@ var _doctor: EventSheetProjectDoctorPanel = EventSheetProjectDoctorPanel.new()  
 var _includes: EventSheetIncludeManager = EventSheetIncludeManager.new()  # Sheet ▸ Manage Includes… window (dock/include_manager.gd)
 var _find_refs: EventSheetFindReferencesPanel = EventSheetFindReferencesPanel.new()  # Edit ▸ Find References… window (dock/find_references_panel.gd)
 var _pick: EventSheetPickFilterDialog = EventSheetPickFilterDialog.new()  # "For Each" pick-filter dialog (dock/pick_filter_dialog.gd)
+var _compare: EventSheetCompareConditionDialog = EventSheetCompareConditionDialog.new()  # the one Compare dialog (dock/compare_condition_dialog.gd)
 var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit ▸ Generate from Description… window (dock/ai_generate_window.gd)
 var _ask: EventSheetAskWindow = EventSheetAskWindow.new()  # View ▸ Ask… proposed-events window (dock/ask_window.gd)
 var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
@@ -1799,6 +1800,14 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_ace_apply._on_ace_params_confirmed(definition, values, context)
+
+
+## K2 - the Compare dialog confirmed. It answers with an ACE ID rather than a definition, because
+## which of the five comparison conditions the row becomes is exactly what the dialog decides; the
+## row is then applied through the ordinary path, so undo, replace-in-place and the picker's context
+## all behave as they do for any other condition.
+func _on_compare_confirmed(ace_id: String, params: Dictionary, negated: bool, context: Dictionary) -> void:
+	_ace_apply._on_compare_confirmed(ace_id, params, negated, context)
 
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
