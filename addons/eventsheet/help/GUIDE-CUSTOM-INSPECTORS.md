@@ -211,7 +211,7 @@ A choice can also carry a **label**, written `key=Label`: the dropdown READS the
 
 ## 4b. The Inspector Designer (the whole sheet at once)
 
-**Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give - and you edit from it too: **✎** opens that variable in the Variable dialog (the Designer refreshes when you confirm), and **▲** moves a sheet variable up in the Inspector as one undo step. Top-level variables sort alphabetically, so only sheet variables reorder.
+**Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give - and you edit from it too: **✎** opens that variable in the Variable dialog (the Designer refreshes when you confirm), and **▲** moves a sheet variable up in the Inspector as one undo step. The list is in the order the file declares them - the same order the compiler emits, so what you see here is what Godot will show.
 
 <img src="images/inspector-designer.png" alt="The Inspector Designer over the EnemyStats resource: the Combat section with its min-max damage slider, curve, loot grid and health bar, the Identity section with the required portrait warning and swatches, and the Spawning info note - each with a one-line plain-language description." width="620">
 

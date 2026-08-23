@@ -54,6 +54,13 @@ English is the built-in source language, and
 dialogs, the getting-started screens, the tour). They are why those languages already appear
 in the picker - and the files to copy when starting your own.
 
+Those eight are kept COMPLETE, not sampled: every string the editor asks to translate has a row in
+`TEMPLATE.csv`, every shipped locale carries the same key set, and no cell is left blank. The suite
+gate that holds them there (`tests/editor_l10n_coverage_test.gd`) reads the plugin's own scripts, so
+a new message that never reached the CSVs fails the run instead of quietly showing English in every
+language. If you keep your own locale file in `eventsheet_translations/`, diffing it against
+`TEMPLATE.csv` after an update is the whole "what is new to translate?" answer.
+
 Two conveniences make drop-ins painless: translations **hot-reload** - drop, edit, or delete a
 CSV and the catalogs re-read on the editor's next filesystem scan, with open UI re-translating
 live (no restart) - and the language switch lives in **View > Language**, right beside the

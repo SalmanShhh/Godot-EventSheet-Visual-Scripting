@@ -508,7 +508,7 @@ The group's menu:
 
 | Item | What it does |
 |---|---|
-| Edit Group… | name, description, Active on start, Can be switched at runtime, and Colour, in one dialog with the one help strip |
+| Edit Group… | name, description, Active on start, Can be switched at runtime, and Colour, in one dialog with the one help strip. The swatch has to open on some colour, so it is written only when you move it - a group that carries none stays uncoloured |
 | Active On Start | the tick, without opening the dialog |
 | Open / Close Group | fold this one |
 | Open All / Close All Groups | `Ctrl+Shift+G` |

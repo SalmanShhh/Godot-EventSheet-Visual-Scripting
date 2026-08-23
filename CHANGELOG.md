@@ -279,6 +279,47 @@
   Theme Editor, and carried by the presets, so a custom theme that predates them is filled in
   rather than left with holes.
 
+### Fixed - the variable slice's own review: the gestures that only looked like they landed
+
+- **"Show in Inspector" writes the flag.** The menu item handed the undo funnel a one-argument
+  callback, and the funnel calls its operation with NONE - so the gesture aborted mid-frame and
+  `@export` was never added or taken away. It goes through the funnel's own shape now (no
+  arguments, a bool back), writes the flag on a tree declaration or on the descriptor, says which
+  way it went, and undoes in one step.
+- **The order the variable rows are in is the order the file is in.** The compiler re-sorted every
+  sheet variable by NAME on the way out, so dragging one declaration past another - and **Sort
+  A-Z** itself - rearranged the canvas and left the emitted GDScript exactly as it was, which also
+  made each row's code echo sit on a line the file did not have in that place. Emission follows the
+  sheet's own order now, with each Inspector section kept contiguous and the sectionless variables
+  first, because `@export_group` has no closing line and would otherwise swallow everything written
+  after it. The Inspector Designer previews through the same one rule.
+- **The Inspector's variable census reads a hinted export.** `@export_range(0, 100) var speed` -
+  the exact spelling the compiler emits - was cut at the first space, which lands INSIDE the
+  argument list, so the variable vanished from **Instance variables · N** and the note under the
+  buttons named variables that were in the Inspector all along. The annotation comes off by its
+  brackets now, quoted arguments included. `@export_group` and its two siblings stopped vouching
+  for the variable under them as well: they label a band, they export nothing.
+- **Open All / Close All Groups says what it just did.** It asked "is anything open?" AFTER the
+  fold, so both branches reported the opposite of the truth.
+- **Editing a group's description no longer colours it.** The picker has to open on SOME colour and
+  Apply wrote whatever it was showing, so a group that deliberately carried none came back lilac -
+  head, bracket and all. The swatch is written only when it is moved off the colour it opened on;
+  **Group Colour…** is still how a group is given one.
+- **The Add variable dialog explains itself in one place.** The literal check, the greyed-out
+  Constant tick and the locked type each still drew a note of their own beside the field. They speak
+  through the ONE help strip now, in its own red or amber, and the strip puts the field's
+  description back when the complaint is answered. Three hint labels and the tooltips the strip
+  replaced went with them, the nine field paragraphs became one table, and the six confirm-time
+  refusals share one helper.
+- **Every string the editor asks to translate is translatable.** 103 messages had never reached the
+  CSVs, so a reader on any of the eight shipped languages met them in English - whole dialogs and
+  status lines half-translated. They are translated in all eight now, and a new gate reads the
+  plugin's own scripts and fails the suite on the next literal that misses `TEMPLATE.csv`, on a
+  locale that is short a key, and on a cell left empty.
+- Two menu ids the group-menu rewrite left behind (`ROW_MENU_EDIT_GROUP_DESC`,
+  `ROW_MENU_GROUP_RUNTIME`) are deleted with the items they belonged to, and so is a variable-dialog
+  label that had been built, written to, and never shown.
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for
