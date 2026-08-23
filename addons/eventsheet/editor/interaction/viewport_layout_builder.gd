@@ -21,6 +21,10 @@ extends RefCounted
 ## (an empty rect draws nothing and hit-tests to nothing), because a sentence squeezed against a
 ## half-drawn declaration reads worse than a sentence alone. The line is still one hover away.
 const CODE_ECHO_MIN_ROW_WIDTH := 440.0
+## The share of a flow row the SENTENCE keeps whatever the right-anchored run measures. A long `##`
+## description echoes an equally long line, and without a floor that echo would claim the whole row
+## and leave the words it stands for nowhere to draw - so the echo is the half that gets clipped.
+const FLOW_RIGHT_ANCHOR_MIN_SHARE := 0.5
 
 var _viewport: Control = null
 
@@ -143,8 +147,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# the row's right padding as ONE run, laid out left to right from a shared anchor. Without the
 	# anchor each of them independently took "the right edge minus my width" and they drew on top of
 	# each other. With a single right-aligned span the anchor lands exactly where it always did.
-	var flow_right_x: float = _flow_right_anchor(row_data, row_right_limit, width, font, font_size) \
+	var flow_right_anchor: float = _flow_right_anchor(row_data, row_right_limit, width, font, font_size) \
 		if lane_divider_x <= 0.0 else row_right_limit
+	var flow_right_x: float = flow_right_anchor
 	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(row_data.indent, width) if is_comment_row else 0.0
 	var comment_line_tops: Array[int] = []
 	var comment_line_counts: Array[int] = []
@@ -281,8 +286,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
-			# blocks) never bleed past the row's right padding.
-			span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
+			# blocks) never bleed past the row's right padding - nor under the right-anchored run
+			# beside them, which lays out from that edge inward. A long description used to draw
+			# straight through the echo of the very line it stands for.
+			span_width = max(min(span_width, flow_right_anchor - span_x - 2.0), 1.0)
 		# A fill cell whose text wraps grows to its visual-line count (the reserved height
 		# already covers it). Plain cells take the renderer's wrapped-text path (comment_wrap);
 		# styled cells get the shared greedy break points stamped so the renderer slices the
@@ -437,4 +444,4 @@ func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: f
 		if run > 0.0:
 			run += _viewport._get_span_gap(span)
 		run += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
-	return row_right_limit - run
+	return maxf(row_right_limit - run, width * FLOW_RIGHT_ANCHOR_MIN_SHARE)

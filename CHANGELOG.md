@@ -240,6 +240,15 @@
 - **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
   band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each
   prompt is a muted link, not a wizard, and each disappears as it is answered.
+- **An opened pack wears the same stack.** A read-only preview used to fold its bands away and let
+  the Include bar be the identity instead, so the file's first lines were the one thing a reader
+  could not see. The bands are now the head there too, and the bar under them keeps only what no
+  line of the file says: that it is an addon pack, its version, the class it behaves on, how much of
+  it read as events, which file it is, and - for a script that declares no class - the root node of
+  the scene that runs it, which is a fact of the scene rather than a line. Nothing is stated twice:
+  the class name left the bar, `runs in editor` left it for the `@tool` band, an autoload's name left
+  it for the autoload band, and the synthesized "about" comment row is gone because the `##` band
+  already says it.
 - **The Sheet Type dialog took the same shape.** Kind is a dropdown first, reading the six kinds most
   sheets are, then a divider, then the kinds that make editor tooling - each described in the one
   help strip at the foot of the dialog (no READS AS line: the head above it IS the preview). Then

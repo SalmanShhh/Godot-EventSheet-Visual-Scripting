@@ -55,9 +55,9 @@ static func _test_coverage_chip() -> bool:
 		int(coverage.get("percent", -1)), 73) and ok
 	ok = _check("the chip says both halves in the sheet's words",
 		EventSheetReadingCoverage.chip_text(sheet), "73% reads as events · 2 script blocks ▸") and ok
-	ok = _check("and the chip is on the Include bar",
-		_texts(_row_at(_open(COVERAGE_PATH).get_flat_rows(), 0)),
-		"⇥ | CoverageSample | a | Node2D | · opened_script_coverage.gd | 73% reads as events · 2 script blocks ▸") and ok
+	ok = _check("and the chip is on the Include bar, under the bands that name the file",
+		_texts(_row_with_uid(_open(COVERAGE_PATH).get_flat_rows(), "pack_include_bar_")),
+		"⇥ | · opened_script_coverage.gd | 73% reads as events · 2 script blocks ▸") and ok
 
 	# The walk the click follows: the same blocks, in file order, so a click always lands on
 	# something the chip actually counted.
@@ -160,9 +160,14 @@ static func _test_autoload_head() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH, true)
 	var rows: Array = view.get_flat_rows()
-	ok = _check("an autoload's Include bar names the singleton and says what that means",
-		_texts(_row_at(rows, 0)),
-		"⇥ | Game | autoload (global) · opened_script_settings.gd | reads as events") and ok
+	# C1 - the singleton's NAME is the autoload band's, with the project.godot entry that grants it
+	# echoed beside it; the bar under the stack is left with the file it is and its coverage.
+	ok = _check("an autoload's own band names the singleton and echoes the entry that grants it",
+		_texts(_row_with_uid(rows, "sheet_head_autoload_")),
+		"autoload | Game | project.godot: autoload/Game = \"*res://tests/fixtures/opened_script_settings.gd\"") and ok
+	ok = _check("and its Include bar keeps the receipts",
+		_texts(_row_with_uid(rows, "pack_include_bar_")),
+		"⇥ | · opened_script_settings.gd | reads as events") and ok
 	var globals: EventRowData = _bar_titled(rows, "Global variables")
 	ok = _check("its knobs read as ONE Global variables folder", globals != null, true) and ok
 	ok = _check("holding every one of them", globals.children.size() if globals != null else -1, 8) and ok
@@ -241,6 +246,15 @@ static func _open(path: String, as_autoload: bool = false) -> EventSheetViewport
 
 static func _row_at(rows: Array, index: int) -> EventRowData:
 	return (rows[index] as Dictionary).get("row") if index < rows.size() else null
+
+
+## The first row whose uid opens with `prefix`, or null.
+static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
+	for entry: Variant in rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
 
 
 static func _texts(row_data: EventRowData) -> String:

@@ -47,9 +47,11 @@ static func _test_helper_of() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(HELPER_PATH)
 	var readings: PackedStringArray = _readings(view)
+	# C1 - the class name is the name band's and `@tool` is the tool band's, so the bar is left with
+	# the shape this file plays in the editor it belongs to.
 	ok = _check("the Include bar says whose helper this is",
-		_texts(_row_at(view.get_flat_rows(), 0)),
-		"⇥ | Batch12BookmarksHelperFixture | helper of | Dock | (event_sheet_dock.gd) · made with the dock | runs in editor | · opened_script_batch12_helper.gd | reads as events · 1 pattern ▸") and ok
+		_texts(_row_with_uid(view.get_flat_rows(), "pack_include_bar_")),
+		"⇥ | helper of | Dock | (event_sheet_dock.gd) · made with the dock | · opened_script_batch12_helper.gd | reads as events · 1 pattern ▸") and ok
 	ok = _check("the constructor that only stores the reference is folded into the bar",
 		_has_reading(readings, "On Init"), false) and ok
 	ok = _check("a read through the reference is the object's own property",
@@ -105,8 +107,8 @@ static func _test_shared_store() -> bool:
 	var view: EventSheetViewport = _open(SHARED_PATH)
 	var readings: PackedStringArray = _readings(view)
 	ok = _check("the Include bar says nothing of this class is ever made",
-		_texts(_row_at(view.get_flat_rows(), 0)),
-		"⇥ | Batch12SharedStoreFixture | shared store | · nothing of its own is ever made | runs in editor | · opened_script_batch12_shared.gd | reads as events · 1 pattern ▸") and ok
+		_texts(_row_with_uid(view.get_flat_rows(), "pack_include_bar_")),
+		"⇥ | shared store | · nothing of its own is ever made | · opened_script_batch12_shared.gd | reads as events · 1 pattern ▸") and ok
 	ok = _check("a shared value says it is one for the whole editor",
 		_first_containing(readings, "_claims"),
 		"x | Shared | table | _claims | = | empty | one for the whole editor | static var _claims: Dictionary = {}") and ok
@@ -240,6 +242,15 @@ static func _open(path: String) -> EventSheetViewport:
 	view.set_reading_mode(true)
 	view.get_flat_rows()
 	return view
+
+
+## The first row whose uid opens with `prefix`, or null.
+static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
+	for entry: Variant in rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
 
 
 static func _row_at(rows: Array, index: int) -> EventRowData:

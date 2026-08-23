@@ -6,9 +6,10 @@
 # test pins the reading that replaced them, over the REAL FPS Controller pack (a fixture cannot prove
 # a lens that only fires on a file's actual shape):
 #
-#   1. The Include bar - the pack's identity as ONE bar, the way an event sheet opens with its
-#      includes: name, version, and the class it behaves on. The three head bars it replaces are gone.
-#   2. The description ONCE, as a comment bar right under it, and never again at the end of the file.
+#   1. The head bands - one per line of the file (class_name, extends, @icon, the ## block, the host
+#      binding) - then ONE Include bar for what no line of the file says: that it is an addon pack,
+#      its version, the class it behaves on, and how much of it read as events.
+#   2. The pack's own opening comment ONCE, right under the bar, and never again at the end of it.
 #   3. Group bars in FILE order (Triggers, then each @export_group, then Internal state), closed by
 #      default on a preview, with their rows as children.
 #   4. Variable rows in the reading shape: the friendly TYPE WORD leads as a chip, the @export and
@@ -41,24 +42,31 @@ static func run() -> bool:
 	view.set_sheet(sheet)
 	view.set_reading_mode(true)
 
-	# ── 1. The Include bar ──
+	# ── 1. The head: the file's own first lines, then the bar for what no line says ──
 	var rows: Array = view.get_flat_rows()
-	var include_bar: EventRowData = _row_at(rows, 0)
-	ok = _check("the sheet opens on the Include bar",
-		include_bar != null and include_bar.row_uid.begins_with("pack_include_bar_"), true) and ok
-	# Two patterns since the feel layer landed: the pack's airborne run is now READ as air control,
-	# which claims movement beside the look shape the pack already claimed.
-	ok = _check("the Include bar reads as the pack's identity",
-		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 2 patterns · 2 adoptable ▸") and ok
+	ok = _check("the sheet opens on the band that names it",
+		_texts(_row_at(rows, 0)), "▣ | FPSController | class_name FPSController") and ok
+	ok = _check("the band stack IS the head - one band per line of the file",
+		_band_kinds(rows), "name | extends | icon | description | host") and ok
+	ok = _check("a band states its line and echoes it",
+		_texts(_band(rows, "extends")), "extends | Node | extends Node") and ok
+	var include_bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
+	# C1 - the identity half is gone from the bar: the name band says FPSController and the extends
+	# band says Node, so what is left is what the file is as a PACKAGE. Two patterns since the feel
+	# layer landed: the pack's airborne run is READ as air control, beside the look shape it claimed.
+	ok = _check("the Include bar says only what no band says",
+		_texts(include_bar), "⇥ | Addon Pack | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 2 patterns · 2 adoptable ▸") and ok
 	ok = _check("it wears the identity bar's presence",
 		include_bar != null and is_equal_approx(include_bar.height_scale, 1.5), true) and ok
-	ok = _check("the head bands folded into it", _has_uid_prefix(rows, "sheet_head_"), false) and ok
 	ok = _check("the Host binding bar folded into it", _has_text(rows, "Host binding"), false) and ok
 	ok = _check("the host variable folded into it", _has_variable_row(rows, "host"), false) and ok
 
 	# ── 2. The description, once ──
-	var about_bar: EventRowData = _row_at(rows, 1)
-	ok = _check("the description reads directly under the identity",
+	ok = _check("the class description is a band of the head",
+		_texts(_band(rows, "description")).begins_with(
+			"## | A complete first / third person character controller"), true) and ok
+	var about_bar: EventRowData = _row_at(rows, 6)
+	ok = _check("the file's own opening comment reads directly under the bar",
 		about_bar != null and about_bar.row_type == EventRowData.RowType.COMMENT, true) and ok
 	ok = _check("it is the pack's own about text",
 		about_bar != null and _texts(about_bar).begins_with("FPS/TPS controller behavior: mouse look"), true) and ok
@@ -154,11 +162,13 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
-	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
-	ok = _check("a plain script still gets the Include bar", bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
-	# M34 - and it does not wear the word "Script" either: the bar names the OBJECT the script drives
-	# and the class it is, which is what a reader is actually looking at.
-	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | Patrol | a | Node | reads as events") and ok
+	var bar: EventRowData = _row_with_uid(view.get_flat_rows(), "pack_include_bar_")
+	ok = _check("a plain script still gets the Include bar", bar != null, true) and ok
+	# M34 - and it does not wear the word "Script" either. Its name and its class are the head bands'
+	# to say, so all the bar owes a plain script is how much of it read as events.
+	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | reads as events") and ok
+	ok = _check("the bands name it instead", _texts(_row_at(view.get_flat_rows(), 0)),
+		"▣ | Patrol | class_name Patrol") and ok
 	ok = _check("its exported knob lands in the one variable folder",
 		_texts(_bar_titled(view.get_flat_rows(), "Instance variables")), "Instance variables | of Patrol") and ok
 	view.free()
@@ -184,6 +194,32 @@ static func _test_an_editable_sheet_keeps_its_rows() -> bool:
 
 static func _row_at(rows: Array, index: int) -> EventRowData:
 	return (rows[index] as Dictionary).get("row") if index < rows.size() else null
+
+
+## The first row whose uid opens with `prefix`, or null.
+static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
+	for entry: Variant in rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
+
+
+## One head band by its kind, or null - `_band(rows, "extends")`.
+static func _band(rows: Array, kind: String) -> EventRowData:
+	return _row_with_uid(rows, "sheet_head_%s_" % kind)
+
+
+## The head band stack in reading order, by kind: "name | extends | icon | description | host".
+static func _band_kinds(rows: Array) -> String:
+	var kinds: PackedStringArray = PackedStringArray()
+	for entry: Variant in rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data == null or not row_data.row_uid.begins_with("sheet_head_"):
+			continue
+		var tail: String = row_data.row_uid.trim_prefix("sheet_head_")
+		kinds.append(tail.substr(0, tail.rfind("_")))
+	return " | ".join(kinds)
 
 
 static func _texts(row_data: EventRowData) -> String:

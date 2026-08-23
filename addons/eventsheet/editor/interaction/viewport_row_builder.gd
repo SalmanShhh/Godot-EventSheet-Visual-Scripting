@@ -569,7 +569,10 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 		if description_source == null and _carries_class_description(code):
 			description_source = child.source_resource
 	var head_facts: Dictionary = EventSheetHeadBands.facts(sheet, "\n".join(prelude_lines))
-	head_facts["attached"] = _sheet_is_attached(sheet, str(head_facts.get("class_name", "")))
+	# "attach to a node" is a prompt, and a read-only preview asks nothing of the reader - it has no
+	# gestures at all - so a previewed file is never told it is unattached.
+	head_facts["attached"] = sheet.read_only \
+		or _sheet_is_attached(sheet, str(head_facts.get("class_name", "")))
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
 		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
@@ -982,6 +985,10 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	rows = _fold_editor_plugin_facts(rows, sheet)
 	var host_class: String = ""
 	var identity_seen: bool = false
+	# C1 - the band stack the file opens with. It IS the head, here as much as on an authored sheet,
+	# so it is carried through rather than folded away and the Include bar keeps only what no band
+	# says.
+	var band_rows: Array[EventRowData] = []
 	var triggers: Array[EventRowData] = []
 	# [{variable: LocalVariable, group: String, description: String}] in FILE order.
 	var knobs: Array = []
@@ -995,19 +1002,12 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	# knob lands in the wrong bar.
 	var current_group: String = ""
 	var consumed: int = 0
-	# The file's own opening sentence when the importer recovered no class description (see below).
-	var strip_about: String = ""
 	for index in range(rows.size()):
 		var row_data: EventRowData = rows[index]
 		var source: Resource = row_data.source_resource
 		if row_data.row_uid.begins_with(HEAD_BAND_UID_PREFIX):
 			identity_seen = true
-			# A hand-written script writes its doc block ABOVE `class_name`, where the importer's
-			# class-description rule (the block under `extends`) never sees it - so the sentence that
-			# says what the file IS would be folded away with the head. Kept here as the comment
-			# bar's fallback, because the head is exactly where a reader looks for it.
-			if strip_about.is_empty():
-				strip_about = head_band_value(row_data, EventSheetHeadBands.BAND_DESCRIPTION)
+			band_rows.append(row_data)
 			consumed = index + 1
 			continue
 		if source is RawCodeRow:
@@ -1109,18 +1109,31 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	var publishes_vocabulary: bool = bool(EventSheetEditorSourceFacts.facts(sheet).get("vocabulary_module", false))
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon and not publishes_vocabulary):
 		return rows
-	var head: Array[EventRowData] = [_build_pack_include_bar_row(sheet, host_class)]
+	# C1 - the bands first: an opened pack's head is the head of its FILE, one band per line, exactly
+	# as an authored sheet's is. A file whose prelude was too slight to fold still gets them, built
+	# from what the sheet knows, so identity is never the thing that goes missing.
+	var head: Array[EventRowData] = band_rows.duplicate()
+	if head.is_empty():
+		head.append_array(build_head_band_rows(sheet, []))
+	# …and then the bar, carrying only what no band states: what the file is as a PACKAGE (an addon,
+	# its version, the class it behaves on), how much of it reads as events, and its receipts. A bar
+	# left with nothing but its mark is not drawn at all.
+	var include_bar: EventRowData = _build_pack_include_bar_row(sheet, host_class)
+	if include_bar.spans.size() > 1:
+		head.append(include_bar)
 	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
 	# the base declares runs here too. That is a second bar under the identity one, naming the file
 	# and offering to open it, rather than an inheritance keyword nobody outside the language knows.
 	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
 	if base_include_row != null:
 		head.append(base_include_row)
+	# The pack's own trailing about-comment, hoisted: at the END of a file it is a grey wall nobody
+	# scrolls to, and at the top it is the sentence a reader came for. The `##` class description is
+	# NOT repeated here - the description band above says it, once.
 	var about_index: int = _pack_about_row_index(rows, consumed)
-	var about_row: EventRowData = rows[about_index] if about_index >= 0 else _build_pack_about_row(sheet, strip_about)
-	if about_row != null:
-		about_row.indent = 0
-		head.append(about_row)
+	if about_index >= 0:
+		rows[about_index].indent = 0
+		head.append(rows[about_index])
 	if not triggers.is_empty():
 		var fires_subtitle: String = EventSheetL10n.translate("this script fires - %d")
 		if is_addon_pack(sheet):
@@ -1197,27 +1210,17 @@ func _head_comment_text(code_lines: PackedStringArray) -> String:
 	return " ".join(parts).strip_edges()
 
 
-## The fact one head band states, "" when `head_row` is not that band. The bands are the one place
-## the head's facts are written down, so anything that needs one (the reading layer's about text, a
-## test) reads it from the band rather than parsing the prelude a second time.
-static func head_band_value(head_row: EventRowData, band_kind: String) -> String:
-	if head_row == null or not head_row.row_uid.begins_with(HEAD_BAND_UID_PREFIX):
-		return ""
-	for span: SemanticSpan in head_row.spans:
-		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		if str(metadata.get("head_band", "")) != band_kind:
-			continue
-		if span.type == SemanticSpan.SpanType.VALUE:
-			return span.text
-	return ""
-
-
-## The file's identity as ONE bar, in the slot an event sheet uses for its "Include: Sheet" strip. A pack
-## introduces itself as one - `⇥ Addon Pack  [FPSController] [v1.0.0]  behaves on a  [CharacterBody3D]`
-## - and any other opened script names the OBJECT it drives instead (M34):
-## `⇥ [icon] Player  a  [CharacterBody2D]  · player.gd · scene Player.tscn`. Inert (null source) and
-## wearing the same accent band + 1.5x presence the Class setup and Host binding bars wore, because it
-## replaces all three of them on a read-only preview.
+## What the opened file is as a PACKAGE, in the slot an event sheet uses for its "Include: Sheet"
+## strip: `⇥ Addon Pack [v1.0.0] behaves on a [CharacterBody3D]  reads as events ▸`, and for any
+## other script its receipts and coverage - `⇥ · player.gd · scene Player.tscn  96% reads as events ▸`.
+##
+## C1 - the file's own IDENTITY is not here: `class_name`, `extends`, `@tool` and an autoload's name
+## are lines of the file, and the band stack above states each of them once, with its own echo and
+## its own control. This bar says only what no line says - the version, the host it behaves on, how
+## much of it read as events, which file it is - so nothing on the head is stated twice.
+##
+## Inert (null source) and wearing the same accent band + 1.5x presence the Class setup and Host
+## binding bars wore, because it replaces both of them on a read-only preview.
 func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = 0
@@ -1249,48 +1252,48 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 		badge_meta["badge_icon"] = identity_icon
 	var spans: Array[SemanticSpan] = [_make_span("⇥", SemanticSpan.SpanType.KEYWORD, badge_meta)]
 	if is_autoload(sheet):
-		spans.append_array(_autoload_include_spans(sheet))
-		spans.append_array(_reading_coverage_spans(sheet))
-		spans.append_array(_editor_tool_bar_spans(sheet))
-		spans.append_array(_this_editor_bar_spans(sheet))
-		row_data.spans = spans
-		return row_data
-	if not is_addon_pack(sheet):
+		# An autoload's NAME is the autoload band's, one line up, with the `project.godot` entry that
+		# grants it echoed beside it; all this bar owes such a file is which file it is.
+		spans = _append_include_receipts(spans, str(sheet.external_source_path), {})
+	elif is_addon_pack(sheet):
+		spans.append_array(_addon_pack_include_spans(sheet, host_class))
+	else:
 		spans.append_array(_script_include_spans(sheet))
-		spans.append_array(_reading_coverage_spans(sheet))
-		spans.append_array(_editor_tool_bar_spans(sheet))
-		spans.append_array(_this_editor_bar_spans(sheet))
-		row_data.spans = spans
-		return row_data
-	spans.append(_make_span(
+	# What every shape of the bar ends with, in one place: how much of the file read as events, the
+	# buttons a tool sheet is run from, and - only inside this plugin's own repo - the bar a file of
+	# the RUNNING editor wears. Each is silent for the files it has nothing to say about.
+	spans.append_array(_reading_coverage_spans(sheet))
+	spans.append_array(_editor_tool_bar_spans(sheet))
+	spans.append_array(_this_editor_bar_spans(sheet))
+	row_data.spans = spans
+	return row_data
+
+
+## The Include bar of a behaviour PACK: what it is, which version, and the class it behaves on -
+## `Addon Pack  v1.0.0  behaves on a  CharacterBody3D`. Its NAME is the name band's, one line up.
+func _addon_pack_include_spans(sheet: EventSheetResource, host_class: String) -> Array[SemanticSpan]:
+	var muted: Dictionary = {
+		"editable": false, "kind": "pack_include", "line_index": 0,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	}
+	var spans: Array[SemanticSpan] = [_make_span(
 		EventSheetL10n.translate("Addon Pack"),
 		SemanticSpan.SpanType.VALUE,
-		{"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().primary_text_color}
-	))
-	var pack_name: String = sheet.custom_class_name.strip_edges()
-	if pack_name.is_empty():
-		pack_name = str(sheet.external_source_path).get_file().get_basename()
-	if not pack_name.is_empty():
-		spans.append(_pack_include_chip(pack_name))
+		{"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": _viewport._get_reading_style().primary_text_color}
+	)]
 	var version: String = sheet.addon_version.strip_edges()
 	if not version.is_empty():
 		spans.append(_pack_include_chip("v%s" % version))
 	if not host_class.is_empty():
-		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
-		}))
+		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, muted))
 		spans.append(_pack_include_chip(host_class))
 	# R35. A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
 	# Silent for the packs that add nothing, which is nearly all of them.
 	var tools_summary: String = EventSheetEditorToolCensus.summary(EventSheetEditorToolCensus.from_sheet(sheet))
 	if not tools_summary.is_empty():
-		spans.append(_make_span(tools_summary, SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	spans.append_array(_reading_coverage_spans(sheet))
-	spans.append_array(_editor_tool_bar_spans(sheet))
-	row_data.spans = spans
-	return row_data
+		spans.append(_make_span(tools_summary, SemanticSpan.SpanType.VALUE, muted))
+	return spans
 
 
 ## R33 - a tool sheet's own play button, on the bar where the writing happens. An editor script is
@@ -1389,28 +1392,6 @@ static func is_autoload(sheet: EventSheetResource) -> bool:
 	return sheet != null and sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty()
 
 
-## The Include bar of an autoload: `⇥ [globe] Game  autoload (global) · game.gd`. The NAME is the
-## singleton's - the word every other sheet in the project writes to reach it - and the muted words
-## say what that means, because "autoload" alone is a Godot term and "(global)" is the sheet's.
-func _autoload_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	var spans: Array[SemanticSpan] = [
-		_make_span(sheet.autoload_name.strip_edges(), SemanticSpan.SpanType.OBJECT, {
-			"editable": false, "kind": "pack_include", "line_index": 0,
-			"text_color": event_style.object_label_color
-		})
-	]
-	var receipts: PackedStringArray = PackedStringArray([EventSheetL10n.translate("autoload (global)")])
-	var source_path: String = str(sheet.external_source_path)
-	if not source_path.is_empty():
-		receipts.append("· %s" % source_path.get_file())
-	spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
-		"editable": false, "kind": "pack_include", "line_index": 0,
-		"text_color": _viewport._get_reading_style().muted_text_color
-	}))
-	return spans
-
-
 ## P4 - the scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
 ## (there is nothing to edit on it) and wearing the same accent band a script's Include bar wears,
 ## because it is the same kind of thing one level up: the identity of what you are reading.
@@ -1465,114 +1446,85 @@ static func is_addon_pack(sheet: EventSheetResource) -> bool:
 		or str(sheet.external_source_path).begins_with("res://eventsheet_addons/")
 
 
-## M34 - the rest of a plain script's Include bar: the OBJECT it drives, the class it is, and the two
-## receipts (its file, and the scene it is attached to) muted at the end.
+## M34 - what an opened script is BEYOND its own first lines: the shape it plays in this project (a
+## data type, a behavior, a store, a page of the vocabulary, an editor add-on and its constant facts),
+## whatever it is as tooling, and the receipts - `⇥ data type · item.gd`, `⇥ · player.gd · scene
+## Player.tscn`.
 ##
-## The name is the one a reader already uses for this thing: its `class_name` when it has one, else the
-## ROOT NODE of the scene the script is attached to (a scene script rarely declares a class, and
-## "Player" is what its author calls it), else the file name, which is the last thing left.
+## C1 - the NAME and the class are not here: `class_name` and `extends` are lines of the file, and the
+## band stack above states each of them once, with its own control and its own echo. What is left is
+## what no line of the file says.
 func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var source_path: String = str(sheet.external_source_path)
 	# P4 - inside a scene view this bar is the OBJECT bar of the node carrying the script, so it says
 	# what the scene tree says ("HUD a CanvasLayer") and skips the scene receipt: the whole sheet is
-	# that one scene already. Double-click opens the script as its own sheet.
+	# that one scene already. A node's NAME is a fact of the SCENE rather than a line of the script, so
+	# this is the one shape that still leads with an identity. Double-click opens the script as its
+	# own sheet.
 	var object_bar: Dictionary = EventSheetSceneSheet.object_bar_of(sheet)
 	if not object_bar.is_empty():
-		return _scene_object_bar_spans(object_bar, event_style)
-	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
-	var object_name: String = sheet.custom_class_name.strip_edges()
-	if object_name.is_empty():
-		object_name = str(scene.get("root_name", ""))
-	if object_name.is_empty():
-		object_name = source_path.get_file().get_basename()
+		return _scene_object_bar_spans(object_bar, _viewport._get_event_style())
 	var base_class: String = sheet.host_class.strip_edges()
-	# ── V4 ──────────────────────────────────────────────────────────────────────────────────────
-	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
-	# .tres saved from it is one asset of that type. The bar says that in those words, and names the
-	# type the way a designer would say it out loud rather than in the identifier's own spelling.
-	var data_type: bool = EventSheetScriptIntent.is_resource_host(base_class)
+	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
 	var spans: Array[SemanticSpan] = []
-	if not object_name.is_empty():
-		spans.append(_make_span(
-			object_name.capitalize() if data_type else object_name,
-			SemanticSpan.SpanType.OBJECT, {
-				"editable": false, "kind": "pack_include", "line_index": 0,
-				"text_color": event_style.object_label_color
-			}))
-	if data_type:
+	# M34 - a script with no `class_name` is known by the NODE that runs it: "SpawnerPad" is what its
+	# author calls this thing. That name is a fact of the SCENE rather than a line of the file, so it
+	# is this bar's to say; a file that declares a class is named by its name band instead.
+	var scene_name: String = str(scene.get("root_name", "")).strip_edges() \
+		if sheet.custom_class_name.strip_edges().is_empty() else ""
+	if not scene_name.is_empty():
+		spans.append(_make_span(scene_name, SemanticSpan.SpanType.OBJECT, {
+			"editable": false, "kind": "pack_include", "line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}))
+	# ── V4 ─────────────────────────────────────────────────────────────────────────────────
+	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
+	# .tres saved from it is one asset of that type. `extends Resource` is the line; this is the word
+	# a designer would use for what that line makes.
+	if EventSheetScriptIntent.is_resource_host(base_class):
 		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
-		if bool(sheet.tool_mode):
-			spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
-		var asset_receipts: PackedStringArray = PackedStringArray()
-		if not source_path.is_empty():
-			asset_receipts.append("· %s" % source_path.get_file())
-		if not asset_receipts.is_empty():
-			spans.append(_make_span(" ".join(asset_receipts), SemanticSpan.SpanType.COMMENT, {
-				"editable": false, "kind": "pack_include", "line_index": 0,
-				"text_color": _viewport._get_reading_style().muted_text_color
-			}))
-		return spans
-	# ── W3 / W5 / W16 ───────────────────────────────────────────────────────────────────────────
-	# What this file IS to the editor it is part of, said instead of the class it happens to extend:
-	# a behavior of the object it was made with, a store nothing is ever made of, or a page of the
+		return _append_include_receipts(spans, source_path, {})
+	# ── W3 / W5 / W16 ────────────────────────────────────────────────────────────────────
+	# What this file IS to the editor it is part of, said instead of the class it happens to extend: a
+	# behavior of the object it was made with, a store nothing is ever made of, or a page of the
 	# vocabulary. All three replace "a RefCounted", which is the least useful true thing about them.
 	var tool_shape: Array[SemanticSpan] = _tool_shape_spans(sheet)
 	if not tool_shape.is_empty():
 		spans.append_array(tool_shape)
-		if bool(sheet.tool_mode):
-			spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
-		var shape_receipts: PackedStringArray = PackedStringArray()
-		if not source_path.is_empty():
-			shape_receipts.append("· %s" % source_path.get_file())
-		if not shape_receipts.is_empty():
-			spans.append(_make_span(" ".join(shape_receipts), SemanticSpan.SpanType.COMMENT, {
+		return _append_include_receipts(spans, source_path, {})
+	# ── W2 / W15 ─────────────────────────────────────────────────────────────────────────
+	# A script extending one of the editor's plugin classes states the questions with constant answers
+	# as the facts they are: an EditorPlugin's name, its main screen and its icon are three lines of
+	# code that say one thing each, and reading them as three events would be reading three lies.
+	if EventSheetEditorPluginWords.is_editor_plugin_class(base_class):
+		spans.append(_make_span(" · ".join(_editor_plugin_head_facts(sheet, base_class)),
+			SemanticSpan.SpanType.COMMENT, {
 				"editable": false, "kind": "pack_include", "line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
-		return spans
-	# `extends "res://enemy.gd"` is a FILE, not a class: quoting a path into the identity chip reads as
-	# noise, and the Include bar directly below already names that file (N12).
-	if base_class.begins_with("\"") or base_class.begins_with("'"):
-		base_class = ""
-	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
-	# A script extending one of the editor's plugin classes says what KIND of add-on it is in the
-	# sheet's own word for that thing, and states the questions with constant answers as the facts
-	# they are: an EditorPlugin's name, its main screen and its icon are three lines of code that say
-	# one thing each, and reading them as three events would be reading three lies. `@tool` is left
-	# off deliberately - an editor plugin runs in the editor by definition, so the chip says nothing.
-	var plugin_words: bool = EventSheetEditorPluginWords.is_editor_plugin_class(base_class)
-	if plugin_words:
-		var facts: PackedStringArray = _editor_plugin_head_facts(sheet, base_class)
-		spans.append(_make_span(" · ".join(facts), SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "pack_include", "line_index": 0,
-			"text_color": _viewport._get_reading_style().muted_text_color
-		}))
-	elif not base_class.is_empty() and base_class != object_name:
-		spans.append(_make_span(EventSheetL10n.translate("a"), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
-		}))
-		spans.append(_pack_include_chip(base_class))
-	# ── N11 lens hook ─────────────────────────────────────────────────────────────────────────
-	# `@tool` is not a line of the program; it is a fact about WHEN the whole file runs, which is
-	# exactly what a chip on the head bar is for. The importer already recorded it on the sheet, so
-	# this only shows what the file said.
-	if bool(sheet.tool_mode) and not plugin_words:
-		spans.append(_pack_include_chip(EventSheetL10n.translate("runs in editor")))
-	# ── W9 / W10 / W11 lens hook ──────────────────────────────────────────────────────────────
+	# ── W9 / W10 / W11 lens hook ───────────────────────────────────────────────────────────
 	# What this file is as a piece of TOOLING, in the same chips: a test sheet and how many checks it
 	# makes, a command tool that runs headless, a pack recipe and the behavior it builds. A recipe's
 	# sheet-level property writes are FACTS about the pack, so they read here rather than as rows.
 	spans.append_array(_tool_file_chip_spans(sheet, source_path))
+	return _append_include_receipts(spans, source_path, scene)
+
+
+## The muted receipts every shape of the bar ends with, as one span: which file this is, and the scene
+## that runs it. One place, because "which file am I looking at" is the same question in all of them.
+func _append_include_receipts(spans: Array[SemanticSpan], source_path: String,
+		scene: Dictionary) -> Array[SemanticSpan]:
 	var receipts: PackedStringArray = PackedStringArray()
 	if not source_path.is_empty():
 		receipts.append("· %s" % source_path.get_file())
 	if not scene.is_empty():
 		receipts.append("· %s %s" % [EventSheetL10n.translate("scene"), str(scene.get("scene_path", "")).get_file()])
-	if not receipts.is_empty():
-		spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
-			"editable": false, "kind": "pack_include", "line_index": 0, "text_color": _viewport._get_reading_style().muted_text_color
-		}))
+	if receipts.is_empty():
+		return spans
+	spans.append(_make_span(" ".join(receipts), SemanticSpan.SpanType.COMMENT, {
+		"editable": false, "kind": "pack_include", "line_index": 0,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	}))
 	return spans
 
 
@@ -1882,26 +1834,6 @@ func _pack_about_row_index(rows: Array[EventRowData], from_index: int) -> int:
 			return index
 		return -1
 	return -1
-
-
-## The comment bar when the file keeps no trailing about-comment: the class description (the `##` block
-## under `extends`) drawn in the comment-row look. Inert - it is a lens over sheet metadata, not a row
-## the file actually carries.
-func _build_pack_about_row(sheet: EventSheetResource, fallback_text: String = "") -> EventRowData:
-	var description: String = sheet.class_description.strip_edges()
-	if description.is_empty():
-		description = fallback_text.strip_edges()
-	if description.is_empty():
-		return null
-	var comment := CommentRow.new()
-	comment.text = description
-	var row_data: EventRowData = _build_comment_row(comment, 0)
-	row_data.source_resource = null
-	row_data.row_uid = "pack_about_%d" % sheet.get_instance_id()
-	for span: SemanticSpan in row_data.spans:
-		if span.metadata is Dictionary:
-			(span.metadata as Dictionary)["editable"] = false
-	return row_data
 
 
 ## Q2 - the two folders an event sheet's object carries, before its settings: the BEHAVIORS mounted on

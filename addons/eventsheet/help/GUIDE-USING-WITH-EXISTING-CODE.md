@@ -378,21 +378,25 @@ That is the order this section is in.
   just says `reads as events`. The number is measured by the same code the corpus gate measures with,
   so the chip and the test can never disagree about the same file. When the engine reported parse
   errors, the bar also says `N errors - the game will not run this script`, in red.
-- **The head is one Include bar, the description once, and folded folders.** `⇥ Addon Pack  FPSController
-  v1.0.0  behaves on a  CharacterBody3D`, the class description as a comment bar, then a `Triggers this pack
-  fires - 11` folder, one folder per `@export_group` (`Jump - 3 settings`, `Movement - 3 settings`, ...),
-  and `Instance variables  of FPSController` for everything the groups did not claim. Inside a folder a
-  variable reads `Instance number  jump_velocity = 4.5  Upward velocity applied on a jump` - the one
-  sentence below, plus the knob's own description. On an editable sheet the head keeps its band stack
-  and `@export` chips, because those are things you edit; the folders are for reading.
+- **The head is the file's own first lines, then one Include bar for what they do not say.** An
+  opened pack wears the same band stack an authored sheet does - `class_name FPSController`,
+  `extends Node`, `@icon(...)`, the `##` description, the host binding - one band per line, each
+  echoing the line it stands for. Under them the Include bar carries only what no line of the file
+  says: `⇥ Addon Pack  v1.0.0  behaves on a  CharacterBody3D  reads as events ▸`. Then a
+  `Triggers this pack fires - 11` folder, one folder per `@export_group` (`Jump - 3 settings`,
+  `Movement - 3 settings`, ...), and `Instance variables  of FPSController` for everything the groups
+  did not claim. Inside a folder a variable reads `Instance number  jump_velocity = 4.5  Upward
+  velocity applied on a jump` - the one sentence below, plus the knob's own description. Nothing on
+  the head is stated twice: the name is on its band, not on the bar, and the description is the `##`
+  band rather than a second comment row.
 
-  ![A behaviour pack's head: the Include bar reading "Addon Pack FPSController v1.0.0 behaves on a CharacterBody3D", the class description as a comment bar, then folded Triggers, Input and one folder per setting group](images/opened-pack-head.png)
+  ![A behaviour pack's head: the band stack naming the class, what it extends, its icon, its description and its host, then the Include bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", then folded Triggers, Input and one folder per setting group](images/opened-pack-head.png)
 
   ![The same head with its folders opened: every setting under Movement, Wall Tech and Instance variables of FPSController, each reading scope word, type word, name, value and its own description](images/opened-pack-head-open.png)
-- **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, the
-  Include bar reads `⇥ Game  autoload (global) · game.gd` with the globe, its knobs read as one
-  `Global variables` folder rather than the Instance variables one, and its triggers say
-  `this global fires - N`. The Object bar names it the same way.
+- **An autoload opens as the project's Globals sheet.** When the file IS a registered autoload, its
+  head grows an `autoload  Game` band echoing the `project.godot` entry that grants the name, its
+  knobs read as one `Global variables` folder rather than the Instance variables one, and its
+  triggers say `this global fires - N`. The Object bar names it the same way.
 - **A global is declared once and listed where it is used.** Any sheet that reads or writes one of
   the project's globals grows a folded `▸ Global variables used here` folder in its head - `Score ·
   Lives  (from Game)` - and each entry opens to what it is declared as and where: `whole number
@@ -790,9 +794,10 @@ to the function it names, the same jump the Outline panel makes.
   Familiar Words off and the class reads exactly as the file declares it.
 
   ![An Instance variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
-- **A plain script is an object.** Its Include bar names it (`class_name`, else its scene's root node,
-  else the file) with its class icon and the scene it lives in; its engine properties read under that
-  name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
+- **A plain script is an object.** Its name band names it (`class_name`, else the file) with its
+  class icon, and its Include bar adds the fact no line of the file carries - the root node of the
+  scene that runs it, when the script declares no class of its own; its engine properties read under
+  that name (`Player ▸ Set X to 100`, `Player ▸ rotation > 1.5`), never as `self`; global functions read as
   System (`System ▸ Print "ready"`). Any method call reads `Object ▸ what it does ▸ args` with the argument
   names Godot itself declares (`Sprite2D ▸ Play  name = "run"`), a node path by its last segment with its
   icon, `queue_free()` as Destroy. `delta` reads `dt`; the tick triggers read `Every tick (physics)` /

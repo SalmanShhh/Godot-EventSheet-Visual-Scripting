@@ -46,23 +46,28 @@ static func _test_a_script_with_a_class_name() -> bool:
 	var view: EventSheetViewport = _open(PLAYER_PATH)
 	var rows: Array = view.get_flat_rows()
 
-	var bar: EventRowData = _row_at(rows, 0)
-	ok = _check("an opened script opens on the Include bar",
-		bar != null and bar.row_uid.begins_with("pack_include_bar_"), true) and ok
-	ok = _check("the Include bar names the object, its class and its receipts",
+	# C1 - the head is the file's own first lines. The name and the class are BANDS, each echoing the
+	# line it stands for; the Include bar under them carries only what no line of the file says.
+	ok = _check("an opened script opens on the band that names it",
+		_texts(_row_at(rows, 0)), "▣ | PlayerAvatar | class_name PlayerAvatar") and ok
+	ok = _check("the class it extends is a band of its own",
+		_texts(_row_with_uid(rows, "sheet_head_extends_")),
+		"extends | CharacterBody2D | extends CharacterBody2D") and ok
+	var bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
+	ok = _check("the Include bar is left with the receipts and the coverage",
 		_texts(bar),
-		"⇥ | PlayerAvatar | a | CharacterBody2D | · opened_script_head_player.gd · scene opened_script_head_player.tscn | reads as events") and ok
+		"⇥ | · opened_script_head_player.gd · scene opened_script_head_player.tscn | reads as events") and ok
 	ok = _check("it is not called an Addon Pack", _texts(bar).contains("Addon Pack"), false) and ok
 	ok = _check("it wears the identity bar's presence",
 		bar != null and is_equal_approx(bar.height_scale, 1.5), true) and ok
 
 	# The script's own opening sentence sits ABOVE class_name, where the importer's class-description
-	# rule never looks - it must still read as the comment bar rather than vanishing with the strip.
-	var about: EventRowData = _row_at(rows, 1)
-	ok = _check("the file's own sentence reads directly under the identity",
-		about != null and about.row_type == EventRowData.RowType.COMMENT, true) and ok
-	ok = _check("and it is the script's doc block",
-		_texts(about).begins_with("A hand-written game script - not a behavior pack"), true) and ok
+	# rule never looks - the head reads it off the prelude, so it lands on the description band.
+	ok = _check("the file's own sentence is the description band",
+		_texts(_row_with_uid(rows, "sheet_head_description_")).begins_with(
+			"## | A hand-written game script - not a behavior pack"), true) and ok
+	ok = _check("and it is not said a second time as a comment row",
+		_row_at(rows, 4) != null and _row_at(rows, 4).row_type == EventRowData.RowType.COMMENT, false) and ok
 
 	ok = _check("the head bars read in file order",
 		_head_bar_titles(rows), "Triggers | Movement | Instance variables") and ok
@@ -104,10 +109,15 @@ static func _test_signals_read_as_triggers(view: EventSheetViewport) -> bool:
 static func _test_a_script_named_by_its_scene() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(PAD_PATH)
-	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
+	var rows: Array = view.get_flat_rows()
+	# The node's name is a fact of the SCENE, not a line of the file, so it stays on the bar while the
+	# name band says what the file itself does: that it declares no class at all.
 	ok = _check("a script with no class_name is named by its scene's root node",
-		_texts(bar),
-		"⇥ | SpawnerPad | a | Node2D | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn | reads as events") and ok
+		_texts(_row_with_uid(rows, "pack_include_bar_")),
+		"⇥ | SpawnerPad | · opened_script_head_pad.gd · scene opened_script_head_pad.tscn | reads as events") and ok
+	ok = _check("and its name band says the file names it",
+		_texts(_row_at(rows, 0)),
+		"▣ | opened_script_head_pad.gd | # no class_name - named by its file") and ok
 	view.free()
 	return ok
 
@@ -131,9 +141,12 @@ static func _test_a_script_no_scene_uses() -> bool:
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
 	view.set_sheet(sheet)
-	var bar: EventRowData = _row_at(view.get_flat_rows(), 0)
-	ok = _check("a script no scene uses falls back to its file name",
-		_texts(bar), "⇥ | no_such_script_head | a | Node2D | · no_such_script_head.gd | reads as events") and ok
+	var bar: EventRowData = _row_with_uid(view.get_flat_rows(), "pack_include_bar_")
+	ok = _check("a script no scene uses names nothing on the bar - the band has the file",
+		_texts(bar), "⇥ | · no_such_script_head.gd | reads as events") and ok
+	ok = _check("…and no scene note is invented",
+		_texts(_row_at(view.get_flat_rows(), 0)),
+		"▣ | no_such_script_head.gd | # no class_name - named by its file") and ok
 	view.free()
 	return ok
 
@@ -225,6 +238,15 @@ static func _open(path: String) -> EventSheetViewport:
 
 static func _row_at(rows: Array, index: int) -> EventRowData:
 	return (rows[index] as Dictionary).get("row") if index < rows.size() else null
+
+
+## The first row whose uid opens with `prefix`, or null.
+static func _row_with_uid(rows: Array, prefix: String) -> EventRowData:
+	for entry: Variant in rows:
+		var row_data: EventRowData = (entry as Dictionary).get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
 
 
 static func _texts(row_data: EventRowData) -> String:
