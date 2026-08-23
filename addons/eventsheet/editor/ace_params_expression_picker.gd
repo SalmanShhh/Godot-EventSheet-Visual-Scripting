@@ -23,12 +23,19 @@ var _expression_window: AcceptDialog = null
 var _expression_tree: Tree = null
 var _expression_search: LineEdit = null
 var _robust_checkbox: CheckBox = null
+var _inserts_label: Label = null
 var _expression_target_key: String = ""
 # Per-dialog-session cache of the Self section's derivation: typing in the search box only
 # re-FILTERS, so re-deriving the census + all 76 packs' behaviour groups per keystroke (~25ms on
 # a project-sized sheet) would be pure waste. Cleared on every open; the behaviour half also
 # keys on the robust toggle.
 var _self_section_cache: Dictionary = {}
+# V11 - and the GLOBALS the sheet reaches for, for the same reason: answering that one scans every
+# row of the sheet and then the autoloads' scripts, while typing in the search box only re-FILTERS.
+# Only the globals are held: the sheet's own variables and its locals are a cheap walk, and holding
+# those would hide a variable added while the dictionary is open. Keyed "globals" so a sheet that
+# touches none still counts as derived. Cleared on every open, beside the caches above.
+var _global_variables_cache: Dictionary = {}
 var _behaviour_groups_cache: Dictionary = {}  # {robust(bool): Array}
 # The grounded tier's input, derived once per open: the selected Scene-dock node that carries
 # THIS sheet's script, read through its behaviour children ([{name, provider}]). Empty = no
@@ -57,6 +64,7 @@ func _open_expression_picker(target_key: String) -> void:
 	# the dialog last showed.
 	_self_section_cache = {}
 	_behaviour_groups_cache = {}
+	_global_variables_cache = {}
 	_live_owner = ""
 	_live_instances = 0
 	_grounded_children_cache = grounded_children_override if not grounded_children_override.is_empty() else _grounded_children_from_selection()
@@ -197,6 +205,12 @@ func _ensure_expression_window() -> void:
 	var expr_card: PanelContainer = EventSheetPopupUI.titled_card("Expressions", expr_holder)
 	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(expr_card)
+
+	# V11 - the one line under the tree: what the highlighted entry actually inserts. A global reads
+	# `Score` in its group and inserts `Game.Score`, and this is where a reader finds that out before
+	# it lands in the field rather than after.
+	_inserts_label = EventSheetPopupUI.hint_label("")
+	content.add_child(_inserts_label)
 
 
 func _refresh_expression_tree() -> void:
@@ -369,50 +383,95 @@ static func variable_member_fragment(var_name: String, member: String, is_method
 	return var_name + "." + member_expression_fragment(member, is_method)
 
 
-## Lists the sheet's own variables as one-click leaves (insert `name`), and - while searching - the
-## members of any variable whose declared type is a reflectable class, so `enemy.health` is one pick.
-## This is the visual builder's non-self reflection: the host members come from _host_class_for_context,
-## these reach the OTHER objects the sheet names. Member chaining is query-gated: a class can carry 100+
-## members, so showing them all for every variable would bury the idle tree - they surface as you type.
+## V11. The sheet's variables as one-click leaves, GROUPED BY OWNER - this object's own first, then
+## each autoload's globals, then the locals in scope - each written in the sentence its row reads
+## with ("hp   whole number = 100") and inserting what the code needs (a bare name, or `Game.Score`
+## for a global, where the prefix cannot be dropped). A variable whose type cannot go where this
+## parameter is asking is greyed rather than hidden: knowing `alive` exists and is the wrong kind is
+## the answer, and hiding it only makes the reader look for it.
+##
+## While searching it also chains the members of any variable whose declared type is a reflectable
+## class, so `enemy.health` is one pick. Query-gated: a class can carry 100+ members, so showing them
+## all for every variable would bury the idle tree - they surface as you type.
 func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 	if not _host._lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _host._lint_context_provider.call() as EventSheetResource
 	if sheet == null:
 		return
-	# Every variable the script can reach: the family/per-instance `variables` DICT plus the TREE
-	# variables (LocalVariable rows: @export vars, State vars, and the `host` binding). An opened .gd
-	# stores its @export/state vars as tree rows, so a dict-only listing showed nothing for real packs.
-	var entries: Array = _gather_sheet_variables(sheet)
-	if entries.is_empty():
-		return
 	var lowered: String = query.to_lower()
-	# (1) The variables themselves - always shown (filtered by the search).
-	var var_group: TreeItem = null
-	for entry: Dictionary in entries:
-		var name_str: String = str(entry.get("name", ""))
-		if name_str.is_empty() or (not lowered.is_empty() and not name_str.to_lower().contains(lowered)):
-			continue
-		if var_group == null:
-			var_group = _expression_tree.create_item(root)
-			var_group.set_text(0, "Sheet Variables")
-			var_group.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
-			var_group.set_selectable(0, false)
-		var item: TreeItem = _expression_tree.create_item(var_group)
-		item.set_text(0, name_str)
-		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-		var vtype: String = str(entry.get("type_name", ""))
-		if not vtype.is_empty():
-			item.set_tooltip_text(0, "%s : %s" % [name_str, vtype])
-		item.set_metadata(0, name_str)
-	# (2) Member chaining (host.velocity) - only while searching, and only for class-backed variables.
+	var wanted: String = _wanted_type()
+	if not _global_variables_cache.has("globals"):
+		_global_variables_cache["globals"] = EventSheetVariableOwners.global_entries(sheet)
+	var catalog: Array[Dictionary] = EventSheetVariableOwners.own_entries(sheet)
+	catalog.append_array(_global_variables_cache["globals"] as Array[Dictionary])
+	catalog.append_array(EventSheetVariableOwners.local_entries(sheet))
+	for group: Dictionary in EventSheetVariableOwners.group_entries(catalog):
+		var group_item: TreeItem = null
+		for entry: Dictionary in (group.get("entries", []) as Array):
+			var name_str: String = str(entry.get("name", ""))
+			if name_str.is_empty() or (not lowered.is_empty() and not name_str.to_lower().contains(lowered)):
+				continue
+			if group_item == null:
+				group_item = _expression_tree.create_item(root)
+				group_item.set_text(0, str(group.get("title", "")))
+				group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+				group_item.set_selectable(0, false)
+			var item: TreeItem = _expression_tree.create_item(group_item)
+			item.set_text(0, variable_leaf_text(entry))
+			var fits: bool = EventSheetVariableOwners.fits(entry, wanted)
+			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION if fits
+				else ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+			item.set_selectable(0, fits)
+			item.set_tooltip_text(0, EventSheetVariableOwners.sentence(entry) if fits
+				else "%s - this field wants %s." % [
+					EventSheetVariableOwners.sentence(entry),
+					ViewportRowBuilder.friendly_type_word(wanted)])
+			item.set_metadata(0, str(entry.get("insert_text", name_str)))
+	# Member chaining (host.velocity) - only while searching, and only for class-backed variables.
 	if lowered.is_empty():
 		return
-	for entry: Dictionary in entries:
+	for entry: Dictionary in _gather_sheet_variables(sheet):
 		var vtype: String = str(entry.get("type_name", ""))
 		if vtype.is_empty() or not ClassDB.class_exists(vtype):
 			continue
 		_add_variable_member_group(root, str(entry.get("name", "")), vtype, lowered)
+
+
+## V11. One variable's line in the picker: the name, then the type word and what it starts as, then
+## the Inspector note when the value is a designer knob. Static + pure, so the line is pinned without
+## a dialog.
+static func variable_leaf_text(entry: Dictionary) -> String:
+	var text: String = str(entry.get("name", ""))
+	var type_word: String = str(entry.get("type_word", "")).strip_edges()
+	var value_text: String = str(entry.get("value", "")).strip_edges()
+	if not type_word.is_empty():
+		text += "   %s" % type_word
+	if not value_text.is_empty():
+		text += " = %s" % value_text
+	if bool(entry.get("inspector", false)):
+		text += "  · " + EventSheetL10n.translate("Inspector")
+	return text
+
+
+## The GDScript type the field that opened the picker is asking for, or "" when it asks for anything.
+## Read off the parameter's own declared type, which is what the compiler will hand the template.
+func _wanted_type() -> String:
+	if _host._definition == null or _expression_target_key.is_empty():
+		return ""
+	for parameter: Variant in _host._definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == _expression_target_key:
+			return str((parameter as Dictionary).get("type_name", ""))
+	return ""
+
+
+## V11. The line under the tree: what picking the highlighted entry actually inserts, so the reader
+## sees `Game.Score` before they insert it into a field that shows `Score`. "" when nothing is
+## highlighted. Static + pure.
+static func inserts_note(insert_text: String) -> String:
+	if insert_text.strip_edges().is_empty():
+		return ""
+	return EventSheetL10n.translate("Inserts %s") % insert_text.strip_edges()
 
 
 ## Every reachable sheet variable as [{name, type_name}] - the census MOVED to
@@ -455,6 +514,9 @@ func _on_expression_selection_changed() -> void:
 	var selected: TreeItem = _expression_tree.get_selected() if _expression_tree != null else null
 	if _expression_window != null:
 		_expression_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
+	if _inserts_label != null:
+		var metadata: Variant = selected.get_metadata(0) if selected != null else null
+		_inserts_label.text = inserts_note(str(metadata)) if metadata is String else ""
 
 
 func _on_expression_activated() -> void:

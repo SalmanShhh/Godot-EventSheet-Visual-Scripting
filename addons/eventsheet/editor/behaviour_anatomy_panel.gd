@@ -24,8 +24,11 @@ signal reveal_requested(resource: Resource)
 signal open_provider_requested(provider_id: String)
 
 const _ORGAN_ACCENTS: Dictionary = {
-	"properties": EventSheetPalette.TEXT_SECONDARY,
-	"state": EventSheetPalette.TEXT_SECONDARY,
+	# V9 - the variables, in the sheet's own scopes rather than in the code split
+	# (exported / not exported) a reader never asked about.
+	"instance": EventSheetPalette.TEXT_SECONDARY,
+	"global": EventSheetPalette.TEXT_SECONDARY,
+	"local": EventSheetPalette.TEXT_SECONDARY,
 	"triggers": EventSheetPalette.COLOR_TRIGGER,
 	"actions": EventSheetPalette.COLOR_ACTION,
 	"conditions": EventSheetPalette.COLOR_CONDITION,
@@ -50,8 +53,10 @@ static func _organ_pill(organ: String) -> Array:
 	var reading: EventSheetReadingStyle = EventSheetActiveTheme.reading()
 	var chrome: EventSheetChromeStyle = EventSheetActiveTheme.chrome()
 	match organ:
-		"properties":
-			return ["@", reading.plain_chip_background_color, chrome.anatomy_knob_pill_foreground_color]
+		"instance", "global", "local":
+			# The same `x` the canvas puts in a variable row's badge column, so the rail and the
+			# sheet mark a declaration with one mark.
+			return ["x", reading.plain_chip_background_color, chrome.anatomy_knob_pill_foreground_color]
 		"triggers":
 			return ["➜", chrome.anatomy_trigger_pill_background_color,
 				chrome.anatomy_trigger_pill_foreground_color]
@@ -237,20 +242,25 @@ var _last_sheet: EventSheetResource = null
 ## informational.
 static func collect_anatomy(sheet: EventSheetResource) -> Array:
 	var organs: Dictionary = {
-		"properties": [], "state": [], "triggers": [],
+		"instance": [], "global": [], "local": [], "triggers": [],
 		"actions": [], "conditions": [], "expressions": [], "editor_tools": [], "uses": [],
 	}
+	# V9 - the variable organs, named by SCOPE and spelled by the same call the rows make
+	# (EventSheetVariableOwners.sentence -> EventSheetVariableSentence.chip_text), so the rail can
+	# never disagree with the sheet about how a variable reads. The owner rides on the header, not
+	# on every line: "Instance · 3 of Player" says it once.
+	var owners: Dictionary = {"instance": "", "global": "", "local": ""}
 	if sheet != null:
-		var names: Array = sheet.variables.keys()
-		names.sort()
-		for var_name: Variant in names:
-			var descriptor: Dictionary = sheet.variables.get(var_name, {})
-			var entry: Dictionary = {"label": "%s : %s" % [str(var_name), str(descriptor.get("type", "Variant"))]}
-			# Match the compiler default: exported unless explicitly false.
-			if bool(descriptor.get("exported", descriptor.get("exposed", true))):
-				(organs["properties"] as Array).append(entry)
-			else:
-				(organs["state"] as Array).append(entry)
+		for entry: Dictionary in EventSheetVariableOwners.catalog(sheet):
+			var group_id: String = str(entry.get("group", EventSheetVariableOwners.GROUP_INSTANCE))
+			if not organs.has(group_id):
+				continue
+			if str(owners.get(group_id, "")).is_empty():
+				owners[group_id] = str(entry.get("owner", ""))
+			(organs[group_id] as Array).append({
+				"label": EventSheetVariableOwners.sentence(entry),
+				"resource": entry.get("resource") if entry.get("resource") is Resource else null,
+			})
 		var providers: Dictionary = {}
 		for row: Variant in sheet.events:
 			_collect_row(row, organs, providers)
@@ -276,8 +286,12 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 			# `provider` makes the entry a JUMP: double-click opens the behaviour as a sheet.
 			(organs["uses"] as Array).append({"label": str(provider), "provider": str(provider)})
 	return [
-		{"id": "properties", "title": "Properties", "entries": organs["properties"]},
-		{"id": "state", "title": "State", "entries": organs["state"]},
+		{"id": "instance", "title": variable_organ_title("instance", str(owners["instance"])),
+			"entries": organs["instance"]},
+		{"id": "global", "title": variable_organ_title("global", str(owners["global"])),
+			"entries": organs["global"]},
+		{"id": "local", "title": variable_organ_title("local", str(owners["local"])),
+			"entries": organs["local"]},
 		{"id": "triggers", "title": "Triggers", "entries": organs["triggers"]},
 		{"id": "actions", "title": "Actions", "entries": organs["actions"]},
 		{"id": "conditions", "title": "Conditions", "entries": organs["conditions"]},
@@ -285,6 +299,19 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 		{"id": "editor_tools", "title": "Editor Tools", "entries": organs["editor_tools"]},
 		{"id": "uses", "title": "Uses", "entries": organs["uses"]},
 	]
+
+
+## V9. The heading a variable organ wears: the scope word a reader knows the group by, with the owner
+## named once instead of on every line. An organ nothing filled says its scope and nothing else -
+## "of" with no object after it would be a promise the list does not keep.
+static func variable_organ_title(organ: String, owner: String) -> String:
+	match organ:
+		"global":
+			return "Globals used here" if owner.is_empty() \
+				else "Globals used here, from %s" % owner
+		"local":
+			return "Locals in view"
+	return "Instance" if owner.is_empty() else "Instance, of %s" % owner
 
 
 static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary) -> void:
@@ -295,13 +322,8 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 			_collect_row(child, organs, providers)
 		return
 	if row is LocalVariable:
-		# Tree variables - how opened packs (and tree-first authors) carry their designer knobs.
-		var variable: LocalVariable = row as LocalVariable
-		var organ: String = "properties" if variable.exported else "state"
-		(organs[organ] as Array).append({
-			"label": "%s : %s" % [variable.name, variable.type_name],
-			"resource": variable,
-		})
+		# V9 - tree variables are the object's own, and the catalog above already listed every one of
+		# them under its scope. Nothing to add here beyond not walking into a declaration.
 		return
 	if row is SignalRow and (row as SignalRow).trigger:
 		var signal_row: SignalRow = row as SignalRow

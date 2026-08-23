@@ -498,10 +498,43 @@ var _behavior_mode_provider: Callable = Callable()
 var _tool_mode_provider: Callable = Callable()
 ## The node the dialog was attached to (the dock). Only read for the open sheet, never held onto.
 var _host_node: Node = null
+## V7. Returns the open sheet's variables as EventSheetVariableOwners entries. Unset = the Variables
+## group reads exactly as it always did, so an embedder that never wires it loses nothing.
+var _variable_catalog_provider: Callable = Callable()
+## Derived once per open (the provider reads the autoloads' scripts), cleared by open().
+var _variable_catalog: Array[Dictionary] = []
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
 	_simple_mode_provider = provider
+
+
+## V7. The sheet's variables, so the Variables group can name the ones each verb can take and the
+## description panel can read their sentence. A `-> Array[Dictionary]` of catalog entries.
+func set_variable_catalog_provider(provider: Callable) -> void:
+	_variable_catalog_provider = provider
+
+
+## The catalog behind the open dialog, derived at most once per open.
+func _variables_in_scope() -> Array[Dictionary]:
+	if _variable_catalog.is_empty() and _variable_catalog_provider.is_valid():
+		var provided: Variant = _variable_catalog_provider.call()
+		if provided is Array:
+			for entry: Variant in (provided as Array):
+				if entry is Dictionary:
+					_variable_catalog.append(entry as Dictionary)
+	return _variable_catalog
+
+
+## V7. The names a Variables verb can take, written beside it: "hp, speed", "nothing of that kind
+## yet" when the sheet has none, and "" for every verb that is not one of the seven.
+static func variable_verb_note(entries: Array[Dictionary], definition: ACEDefinition) -> String:
+	if definition == null or definition.category != VARIABLES_CATEGORY:
+		return ""
+	if not EventSheetVariableOwners.VARIABLE_VERB_ORDER.has(str(definition.id)):
+		return ""
+	var names: String = EventSheetVariableOwners.verb_variable_note(entries, str(definition.id))
+	return names if not names.is_empty() else EventSheetL10n.translate("nothing of that kind yet")
 
 
 func set_reflect_class_provider(provider: Callable) -> void:
@@ -547,6 +580,9 @@ static func is_editor_tools_category(category: String) -> bool:
 ## The one category the gate above reads. Named here rather than spelled at the call site because it
 ## is also what the vocabulary files put on every Editor descriptor.
 const EDITOR_TOOLS_CATEGORY := "Editor Tools"
+
+## The picker category the variable verbs are filed under. Frozen with their descriptors.
+const VARIABLES_CATEGORY := "Variables"
 
 
 ## Update the registry used for searching (e.g. after a hot-reload).
@@ -594,6 +630,9 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	}
 	for key in extra_context.keys():
 		_context[key] = extra_context[key]
+	# V7 - the variables in scope, re-derived per open (a variable may have been added since) and
+	# never per keystroke: the answer reads the autoloads' scripts off disk.
+	_variable_catalog.clear()
 	_object_filter_provider = ""
 	# Q1/Q12 - "Add condition on Player" opens the picker ALREADY on Player: the object step of the
 	# two-step pick is answered, so the dialog opens at the verbs for that object rather than at the
@@ -1307,6 +1346,7 @@ func _refresh_tree() -> void:
 				__rest.append(__d)
 		definitions = __featured
 		definitions.append_array(__rest)
+	definitions = ordered_variable_verbs(definitions)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
@@ -1689,6 +1729,33 @@ func _category_of(definition: ACEDefinition) -> String:
 var _code_query: String = ""
 
 
+## V7. The Variables verbs, put back into the order a reader looks for them: set it, change it by an
+## amount, the boolean pair, then the two questions. Everything else keeps the order it arrived in,
+## and the section as a whole keeps the position its first member had - so this reorders WITHIN the
+## Variables group and moves nothing else. Static + pure, so the order is pinned without a dialog.
+static func ordered_variable_verbs(definitions: Array[ACEDefinition]) -> Array[ACEDefinition]:
+	var variables: Array[ACEDefinition] = []
+	for definition: ACEDefinition in definitions:
+		if definition.category == VARIABLES_CATEGORY \
+				and EventSheetVariableOwners.VARIABLE_VERB_ORDER.has(str(definition.id)):
+			variables.append(definition)
+	if variables.size() < 2:
+		return definitions
+	variables.sort_custom(func(left: ACEDefinition, right: ACEDefinition) -> bool:
+		return EventSheetVariableOwners.verb_rank(str(left.id)) \
+			< EventSheetVariableOwners.verb_rank(str(right.id)))
+	var ordered: Array[ACEDefinition] = []
+	var next_variable: int = 0
+	for definition: ACEDefinition in definitions:
+		if definition.category == VARIABLES_CATEGORY \
+				and EventSheetVariableOwners.VARIABLE_VERB_ORDER.has(str(definition.id)):
+			ordered.append(variables[next_variable])
+			next_variable += 1
+		else:
+			ordered.append(definition)
+	return ordered
+
+
 func _item_label(definition: ACEDefinition) -> String:
 	# Display names route through the plugin l10n layer (a pass-through in English), so a pack
 	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
@@ -1699,6 +1766,11 @@ func _item_label(definition: ACEDefinition) -> String:
 		var hint: String = EventSheetCodeSearch.gdscript_hint(definition, _code_query)
 		if not hint.is_empty():
 			display_name = "%s  ·  %s" % [display_name, hint]
+	# V7 - a variable verb says which variables it can take, so "Add to" with no numbers in scope
+	# reads as empty before it is clicked rather than after.
+	var takes: String = variable_verb_note(_variables_in_scope(), definition)
+	if not takes.is_empty():
+		display_name = "%s  ·  %s" % [display_name, takes]
 	if definition.provider_id.is_empty() or definition.provider_id == "Core":
 		return display_name
 	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids
@@ -2405,7 +2477,27 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
 	if not reactive.is_empty():
 		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
+	# V7 - the footer under a variable verb: every variable it can take, each in the sentence its row
+	# reads with, so the choice is made from the sheet's own words instead of from a bare name.
+	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
+	if not sentences.is_empty():
+		body += "\n[color=#%s]%s[/color]" % [_muted_header_color().to_html(false), sentences]
 	_info_label.text = body
+
+
+## V7. The variable verbs' footer: one line per variable the highlighted verb can take, written the
+## way its row is ("Instance whole number hp = 100   Current health."). "" for every other verb.
+## Static + pure, so the footer is pinned without a dialog.
+static func variable_sentences_footer(entries: Array[Dictionary], definition: ACEDefinition) -> String:
+	if definition == null or definition.category != VARIABLES_CATEGORY:
+		return ""
+	if not EventSheetVariableOwners.VARIABLE_VERB_ORDER.has(str(definition.id)):
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetVariableOwners.variables_for_verb(entries, str(definition.id)):
+		lines.append("%s  %s" % [
+			str(entry.get("owner", "")), EventSheetVariableOwners.sentence(entry)])
+	return "\n".join(lines)
 
 
 ## Sets the "read more" affordance's label provider: a Callable taking an ACEDefinition and

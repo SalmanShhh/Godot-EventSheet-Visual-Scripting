@@ -281,6 +281,7 @@ func build_ui() -> void:
 	_dock._viewport.sheet_head_action_requested.connect(_dock._head_actions.handle)
 	_dock._viewport.group_action_requested.connect(_dock._on_group_action_requested)
 	_dock._viewport.region_fix_requested.connect(_dock._close_orphan_region)
+	_dock._viewport.variable_note_fix_requested.connect(_dock._apply_variable_note_fix)
 	_dock._viewport.variable_group_requested.connect(_dock._variable_grouping.on_group_requested)
 	_dock._viewport.variable_group_rename_requested.connect(_dock._variable_grouping.on_rename_requested)
 	_dock._viewport.match_edit_requested.connect(_dock._open_match_dialog)
@@ -607,6 +608,10 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
 	# R35. The Editor object is offered on a sheet that runs in the editor and nowhere else.
 	_dock._ace_picker.set_tool_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	# V7. The Variables group names the variables each verb can take, and describes the one under the
+	# cursor in the sentence its row reads with - both out of the sheet's own catalog.
+	_dock._ace_picker.set_variable_catalog_provider(
+		func() -> Array: return EventSheetVariableOwners.catalog(_dock._current_sheet))
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
 	# S27 - the Add event dialog's first entry, "(none - runs every tick)": a real event with no
