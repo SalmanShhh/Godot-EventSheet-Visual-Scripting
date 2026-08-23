@@ -3200,6 +3200,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Is On Floor** - True when this 2D character body is standing on the ground, used to gate jumping.
 - **Has Group Member** (`group: String`) - True when this node belongs to the named group, for tagging and identifying objects.
 - **Compare variable** (`var_name: String, op: String, value: String`) - True when a variable compares against a value as you specify, for branching on game state.
+- **Is boolean set** (`var_name: String`) - True while a boolean variable is true, the plain way to ask whether a flag is set.
 - **Is Timer Stopped** (`target: String`) - True when the Timer is not currently running.
 - **Is Animation Playing** (`target: String`) - True while the AnimationPlayer is playing an animation.
 - **RayCast Is Colliding (2D)** (`target: String`) - True when the RayCast2D is currently hitting something in its path.
@@ -3207,6 +3208,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 
 #### Actions
 - **Set value** (`var_name: String, value: String`) - Sets a variable to a value you give, the basic way to store game state.
+- **Set boolean** (`var_name: String, value: String`) - Sets a boolean variable to true or false, picked from the list instead of typed.
 - **Add to** (`var_name: String, amount: String`) - Adds an amount to a variable, e.g. increasing score or health.
 - **Subtract from** (`var_name: String, amount: String`) - Subtracts an amount from a variable, e.g. spending money or taking damage.
 - **Multiply Variable** (`var_name: String, amount: String`) - Multiplies a variable by a factor, e.g. scaling speed or applying a bonus.

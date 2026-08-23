@@ -2,36 +2,64 @@
 
 ## [Unreleased]
 
-### Changed - the Parameters dialog says what the row will be
+### Changed - Variables: one sentence, one dialog, one owner
 
-- **The title IS the row.** The dialog every action and condition with a blank opens was titled
-  "Subtract from Parameters"; it now reads **Player   Subtract damage * 2 from hp** - the object
-  the row belongs to, then the ACE's own sentence with the values filled in live as they are typed,
-  in the sheet's own colours. The ACE's name sits muted at the right, where it belongs once the
-  sentence is doing the talking.
-- **One help strip, at the foot, for the focused parameter only.** The per-field descriptions in
-  11px and the tooltips repeating them are gone. The strip says what the parameter is for (the same
-  string), then what THIS KIND of box takes - a table of a paragraph per hint next to the control
-  each hint already builds - and then **IN CODE**: the line the compiler will write for the values
-  as typed, produced by the emitter rather than formatted by hand. Tab to the next field and the
-  text is replaced, never stacked, so a four-parameter dialog reads as four rows.
-- **A choice explains itself, from wherever the choice came from.** An Input Map action reads with
-  the keys bound to it ("jump    Space - Gamepad A"); a node group with how many nodes of the open
-  scene are in it ("enemies    14 nodes in this scene", or "none yet - added at runtime?"); a
-  variable with its type word and what it starts at; a true/false pair with the token it stands for.
-  A pack's own list can carry a line per option by declaring `note` beside `key` and `label`.
-- **Validation moved to keystroke time, into the strip.** A name that is not a variable turns the
-  strip red - "hpp is not a variable of Player. Did you mean hp?" - with a **Use hp** button and an
-  **Add hpp…** button that opens the Add variable dialog on that very name; coming back, the list
-  has it. A required field left blank is red. A literal of the wrong kind for the verb is amber
-  (`"ten"` is text. This needs a number. If you meant to join text, Set value can.). OK stays
-  where it is with the reason beside it rather than going grey without explanation.
-- **The "+ var" and "Use …" buttons that used to grow beside an expression field are gone**, folded
-  into the strip's fixes - one place a reader looks for a problem, one wording for it, whether it
-  came from the expression lint or from the parameter checks.
-
-### Changed - a variable belongs to somebody, and every surface now says who
-
+- **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every
+  variable row - authored or opened, sheet member, tree declaration or event local - now reads
+  `<scope> <type> <name> = <value>`, through one branch of one builder. The declaration grammar
+  survives where it belongs, on the name's hover and in the code panel.
+- **Scope and type are words, not pills.** The scope word leads in the theme's own lilac, the type
+  word follows in plain text, and the `const` / `static` pills fold INTO the scope word ("Constant
+  number MAX_HP = 100", "Static number spawned = 0"). The scope is DERIVED, never stored: an
+  autoload sheet says Global, a node script Instance, a Resource script Field, a `static var`
+  Static, a `const` Constant, an event's own declaration Local. `sheet.variables` is unchanged.
+- **The Inspector chip became a mark.** A value a designer can edit wears a 15px sliders glyph
+  beside its name, hovering "Editable in the Inspector" - a cue, not a word. The per-row Inspector
+  GROUP chip is gone too: the folder draws once, as a slim labelled strip over the rows it holds,
+  with the rows themselves left unindented (a bracket around rows never pushes them sideways) and
+  the strip carrying the only fold in the list.
+- **Variable rows are rows of their own kind, in the order you wrote them.** A flat lilac wash and a
+  2px left rule mark every declaration, in the theme's own colours. The view stopped name-sorting the
+  list: dragging one declaration past another WRITES the new order through the undo funnel, and
+  **Sort A-Z** on the row menu writes alphabetical when it is asked for.
+- **Every variable row echoes its own line.** At the right edge, muted, sits the exact declaration
+  the compiler emits for that row - the emitter's own string, so it cannot drift from the file -
+  coloured by a small tokeniser (keyword / annotation / type / member / number / string / symbol /
+  comment) reading the script editor's colours from Editor Settings, with the sheet theme as the
+  fallback. It comes up to full colour on the row under the pointer, is dropped on a canvas too
+  narrow for it, and opens the code panel at that line when activated. **View ▸ Variable rows**
+  dials sentence / both / code (default both; Simple Mode pins sentence) - a toolbar setting, never
+  a row on the sheet.
+- **What a row does while you work on it.** The value edits in place with the type word as its guide
+  rail, turning amber the moment the literal cannot fit and refusing to write it; the Live Values
+  chip now reads `now 73` after the initial value instead of a second `= 73` that read like the
+  declaration; selection is the same blue wash every other row uses, laid over the lilac.
+- **Scope comes first, as a dropdown, with a line under each choice.** Instance / Local / Global /
+  Constant / Static, in the sheet's own order, each carrying the one line that says what it means and
+  naming the object while it does it ("one per Player - each copy in the scene has its own"). The
+  scope is the row's first word, and everything else in the dialog is gated by it, so it is the first
+  thing the dialog asks. The row of scope switches it replaces is gone.
+- **One help strip at the foot, following focus.** `EventSheetPopupUI.help_strip(heading, body,
+  reads_as, in_code)` is a component now, so the dialogs that want the same foot cannot drift apart:
+  a heading naming the focused thing, a paragraph, a **READS AS** line and an **IN CODE** line. Open
+  the Type list and it describes each type before you pick it. READS AS is the row itself, composed
+  through `EventSheetVariableSentence` like every other surface; IN CODE is the compiler's OWN
+  emitted declaration, so the dialog can never promise a line the compiled sheet would not write.
+- **The type list reads in words, and shows the GDScript spelling muted beside the field.** Number,
+  Text, Boolean, then Vector, Color, List and Table, then the Godot types under their own names. The
+  stored type rides as each item's metadata rather than as its text, so the words are free to read
+  plainly while `.gd` round-trips unchanged.
+- **"Initial value", not "Default"** - it is the value the variable starts at, and "default" is
+  Godot's word for something else. Static joins Constant as a checkbox with its explanation muted
+  beside it, and the Inspector polish (range, drawer, grouping) folds behind **More options
+  (Inspector, range, drawer, group…)**.
+- **Global reveals the write-into picker instead of handing the gesture away.** Picking Global asks
+  the one extra question a global has - which autoload it lands on - and confirming writes it there
+  through the same writer the Add global variable dialog uses, in one undo step. Local greys the
+  Inspector tick (a local is never a property); Constant greys Static with it (GDScript has no
+  `static const`).
+- **A name already taken here is flagged under the field as you type**, not on OK, and a fresh
+  variable opens on the scope the last one used.
 - **The object column names the variable's owner.** A step that changes an instance variable used to
   read "System > Subtract 10 from health"; it now reads "Player > Subtract 10 from health", because
   the object that HAS the variable is what a reader looks for. A row reaching through an autoload
@@ -70,8 +98,14 @@
   an amber note instead ("nickname is text - Add to wants a number. Set value fits."), because that
   line compiles and only misbehaves.
 
-### Changed - a comparison reads as the question it is
+### Changed - Comparisons: the symbol, one Compare dialog, and an invert that flips
 
+- **`≤  at most`, not `<= (at most)`.** `COMPARISON_OPTIONS` - the one list every operator picker in
+  the plugin resolves through - now leads with the symbol a reader sees on the row (≥ ≤ ≠, and `=`
+  for equality) and says it in words after. The inserted tokens, the templates and the emitted code
+  are untouched: a dialog showing the list now shows that token muted beside the choice, so the
+  friendly wording teaches the spelling instead of hiding it. Every options dropdown whose words
+  differ from the value it inserts gains the same muted note.
 - **The row shows the symbol, the file keeps the spelling.** An authored comparison now renders the
   glyph a reader means - `hp ≤ 0`, `score ≥ Game.HighScore`, `state ≠ "idle"` - and equality reads
   as a single `=`, which is what a sheet row is asking. This is the same rewriting an opened script's
@@ -110,41 +144,64 @@
   object column. A plain walk over everything is still a For each. Display only - the loop compiles
   exactly as it did.
 
+### Changed - The parameters dialog: the title IS the row
 
-### Changed - a region reads as the fold mark it is, and can trade places with a group
+- **The title IS the row.** The dialog every action and condition with a blank opens was titled
+  "Subtract from Parameters"; it now reads **Player   Subtract damage * 2 from hp** - the object
+  the row belongs to, then the ACE's own sentence with the values filled in live as they are typed,
+  in the sheet's own colours. The ACE's name sits muted at the right, where it belongs once the
+  sentence is doing the talking.
+- **One help strip, at the foot, for the focused parameter only.** The per-field descriptions in
+  11px and the tooltips repeating them are gone. The strip says what the parameter is for (the same
+  string), then what THIS KIND of box takes - a table of a paragraph per hint next to the control
+  each hint already builds - and then **IN CODE**: the line the compiler will write for the values
+  as typed, produced by the emitter rather than formatted by hand. Tab to the next field and the
+  text is replaced, never stacked, so a four-parameter dialog reads as four rows.
+- **A choice explains itself, from wherever the choice came from.** An Input Map action reads with
+  the keys bound to it ("jump    Space - Gamepad A"); a node group with how many nodes of the open
+  scene are in it ("enemies    14 nodes in this scene", or "none yet - added at runtime?"); a
+  variable with its type word and what it starts at; a true/false pair with the token it stands for.
+  A pack's own list can carry a line per option by declaring `note` beside `key` and `label`.
+- **Validation moved to keystroke time, into the strip.** A name that is not a variable turns the
+  strip red - "hpp is not a variable of Player. Did you mean hp?" - with a **Use hp** button and an
+  **Add hpp…** button that opens the Add variable dialog on that very name; coming back, the list
+  has it. A required field left blank is red. A literal of the wrong kind for the verb is amber
+  (`"ten"` is text. This needs a number. If you meant to join text, Set value can.). OK stays
+  where it is with the reason beside it rather than going grey without explanation.
+- **The "+ var" and "Use …" buttons that used to grow beside an expression field are gone**, folded
+  into the strip's fixes - one place a reader looks for a problem, one wording for it, whether it
+  came from the expression lint or from the parameter checks.
 
-- **A region has its own look.** A `#region` fence stopped borrowing the group bar. The opening
-  fence is one ordinary-height row: a dashed `#` badge in the badge column, the name in bold, the
-  description muted beside it, and the line the file really has echoed at its right edge
-  (`#region Movement`), coloured by the script editor's own token colours. Everything it holds sits
-  under a **dashed** 2px rule down the left edge in the region's own colour - the dashed twin of a
-  group's solid bracket, and no row is pushed sideways for it. The closing fence is a slim tick
-  whose only text is `#endregion`; the old "end region" prose is gone. Folded, the head says how
-  much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
-- **A block kind can ask for that look.** `EventSheetBlockKind.row_style(entry)` is a new Custom
-  Block API hook returning `"section"` (the default flat block row), `"group"` or `"region"`, so a
-  kind that stands for STRUCTURE gets a shape the sheet already has through a public, reusable path
-  instead of a special case in the renderer. The built-in Region kind renders through it. Display
-  only - emission, the lift and the byte round-trip are untouched.
-- **Turn a region into a group, and a group into a region.** `Turn Into Group` on a region's
-  opening fence wraps the fenced rows in an `EventGroup` and drops both fences, carrying the name,
-  description and colour across; `Turn Into Region` on a group head does the reverse. One undo step
-  each, nothing inside moves, and the round trip is byte-identical. A group that holds local
-  variables or can be switched at runtime says so **in the menu item itself** ("Turn Into Region -
-  has 2 locals") and is greyed, because a region can carry neither.
-- **A region's own menu.** Rename Region… (also F2), Open / Close Region, Open All / Close All
-  Regions, Turn Into Group, Region Color… and Remove Region - Keep The Rows. No locals, no on/off
-  switch, no Ungroup: a region is two lines of a file, and it now offers only what that can do. The
-  colour picker is the group's, widened - a fence stores its colour as the `#rrggbb` its marker
-  line carries.
-- **An unmatched fence says so, with the fix on the row.** An opener with no closer (or a closer
-  with no opener) gets an amber note directly under it: "Debug helpers never closes, so it cannot
-  fold. Add #endregion after the last row you want inside." An opener's note carries a **Close
-  after row N** button that writes the missing fence after the last row before the next group or
-  fence - the same guess a script editor's fold would make. Amber, never red: the file still
-  compiles, and the wart-not-error covenant is unchanged.
+### Changed - The sheet head: one band per line of the file
 
-### Changed - a group reads in one line, and its body wears its bracket
+- **The crumb trail is gone.** `▣ Node ▸ CharacterBody2D ▸ Player`, folded away by default with the
+  rest of the facts behind a label/value dropdown, is replaced by a STACK: one band per line the
+  file opens with, in reading order - the class name (bold, wearing the base class's own editor
+  icon), `extends`, `@icon`, `@tool`, the `##` description, an autoload's `project.godot` entry, a
+  behaviour's host binding, the variables kept between runs. One fact, one control and one code
+  echo per band, and nothing folds: the head is its lines, always in view, the way the file is.
+- **Every band matches a real line.** The echo at a band's right edge is the line itself, coloured
+  by the same tokeniser a variable row's echo uses - so an autoload, which usually has no
+  `class_name` at all, shows its file name muted and echoes `# no class_name - the name is the
+  autoload entry` rather than inventing a declaration. An `@tool` a kind usually carries but this
+  file does not shows its switch off with the echo ghosted, so the control stays findable.
+- **Each band carries the one control its line needs.** F2 or a double-click on the name renames the
+  class everywhere, saying "renames 9 uses in 4 sheets" before it writes anything; `change…` on
+  `extends` opens the host picker; the icon swatch opens an image file dialog; `@tool` is a switch;
+  the description edits in place and writes the `##` block; an autoload band points at Project
+  Settings, which is the only place its name can change. A muted **+ add** row under the stack
+  offers only the lines this sheet could have and does not (icon, `@tool`, description) - never
+  autoload or host, which come from choosing a kind.
+- **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
+  band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each
+  prompt is a muted link, not a wizard, and each disappears as it is answered.
+- **The Sheet Type dialog took the same shape.** Kind is a dropdown first, reading the six kinds most
+  sheets are, then a divider, then the kinds that make editor tooling - each described in the one
+  help strip at the foot of the dialog (no READS AS line: the head above it IS the preview). Then
+  Name, Extends, Icon, Description, Runs in the editor too, and More… for the composition fields.
+  Every type still carries its frozen index as its item id, so a saved sheet's kind is unchanged.
+
+### Changed - Groups and regions: one-line heads, and the two that trade places
 
 - **The head is one line.** A group head now carries a folder mark in the badge column, its title,
   its description muted right beside it (still inline-editable), and - at the right edge - what the
@@ -180,108 +237,47 @@
   canvas is that group's own head - title, description, counts and switch - so it can be folded,
   switched off or edited without scrolling back up. The parent chain shortens to the last two
   names, and the whole chain is the hover.
+- **A region has its own look.** A `#region` fence stopped borrowing the group bar. The opening
+  fence is one ordinary-height row: a dashed `#` badge in the badge column, the name in bold, the
+  description muted beside it, and the line the file really has echoed at its right edge
+  (`#region Movement`), coloured by the script editor's own token colours. Everything it holds sits
+  under a **dashed** 2px rule down the left edge in the region's own colour - the dashed twin of a
+  group's solid bracket, and no row is pushed sideways for it. The closing fence is a slim tick
+  whose only text is `#endregion`; the old "end region" prose is gone. Folded, the head says how
+  much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
+- **A block kind can ask for that look.** `EventSheetBlockKind.row_style(entry)` is a new Custom
+  Block API hook returning `"section"` (the default flat block row), `"group"` or `"region"`, so a
+  kind that stands for STRUCTURE gets a shape the sheet already has through a public, reusable path
+  instead of a special case in the renderer. The built-in Region kind renders through it. Display
+  only - emission, the lift and the byte round-trip are untouched.
+- **Turn a region into a group, and a group into a region.** `Turn Into Group` on a region's
+  opening fence wraps the fenced rows in an `EventGroup` and drops both fences, carrying the name,
+  description and colour across; `Turn Into Region` on a group head does the reverse. One undo step
+  each, nothing inside moves, and the round trip is byte-identical. A group that holds local
+  variables or can be switched at runtime says so **in the menu item itself** ("Turn Into Region -
+  has 2 locals") and is greyed, because a region can carry neither.
+- **A region's own menu.** Rename Region… (also F2), Open / Close Region, Open All / Close All
+  Regions, Turn Into Group, Region Color… and Remove Region - Keep The Rows. No locals, no on/off
+  switch, no Ungroup: a region is two lines of a file, and it now offers only what that can do. The
+  colour picker is the group's, widened - a fence stores its colour as the `#rrggbb` its marker
+  line carries.
+- **An unmatched fence says so, with the fix on the row.** An opener with no closer (or a closer
+  with no opener) gets an amber note directly under it: "Debug helpers never closes, so it cannot
+  fold. Add #endregion after the last row you want inside." An opener's note carries a **Close
+  after row N** button that writes the missing fence after the last row before the next group or
+  fence - the same guess a script editor's fold would make. Amber, never red: the file still
+  compiles, and the wart-not-error covenant is unchanged.
 
-### Changed - the head of a sheet is the head of its file, one band per line
+### Changed - Theme: the variable row's wash and rule are tokens
 
-- **The crumb trail is gone.** `▣ Node ▸ CharacterBody2D ▸ Player`, folded away by default with the
-  rest of the facts behind a label/value dropdown, is replaced by a STACK: one band per line the
-  file opens with, in reading order - the class name (bold, wearing the base class's own editor
-  icon), `extends`, `@icon`, `@tool`, the `##` description, an autoload's `project.godot` entry, a
-  behaviour's host binding, the variables kept between runs. One fact, one control and one code
-  echo per band, and nothing folds: the head is its lines, always in view, the way the file is.
-- **Every band matches a real line.** The echo at a band's right edge is the line itself, coloured
-  by the same tokeniser a variable row's echo uses - so an autoload, which usually has no
-  `class_name` at all, shows its file name muted and echoes `# no class_name - the name is the
-  autoload entry` rather than inventing a declaration. An `@tool` a kind usually carries but this
-  file does not shows its switch off with the echo ghosted, so the control stays findable.
-- **Each band carries the one control its line needs.** F2 or a double-click on the name renames the
-  class everywhere, saying "renames 9 uses in 4 sheets" before it writes anything; `change…` on
-  `extends` opens the host picker; the icon swatch opens an image file dialog; `@tool` is a switch;
-  the description edits in place and writes the `##` block; an autoload band points at Project
-  Settings, which is the only place its name can change. A muted **+ add** row under the stack
-  offers only the lines this sheet could have and does not (icon, `@tool`, description) - never
-  autoload or host, which come from choosing a kind.
-- **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
-  band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each
-  prompt is a muted link, not a wizard, and each disappears as it is answered.
-- **The Sheet Type dialog took the same shape.** Kind is a dropdown first, reading the six kinds most
-  sheets are, then a divider, then the kinds that make editor tooling - each described in the one
-  help strip at the foot of the dialog (no READS AS line: the head above it IS the preview). Then
-  Name, Extends, Icon, Description, Runs in the editor too, and More… for the composition fields.
-  Every type still carries its frozen index as its item id, so a saved sheet's kind is unchanged.
-
-### Changed - a variable row is one sentence, with its declaration beside it
-
-- **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every
-  variable row - authored or opened, sheet member, tree declaration or event local - now reads
-  `<scope> <type> <name> = <value>`, through one branch of one builder. The declaration grammar
-  survives where it belongs, on the name's hover and in the code panel.
-- **Scope and type are words, not pills.** The scope word leads in the theme's own lilac, the type
-  word follows in plain text, and the `const` / `static` pills fold INTO the scope word ("Constant
-  number MAX_HP = 100", "Static number spawned = 0"). The scope is DERIVED, never stored: an
-  autoload sheet says Global, a node script Instance, a Resource script Field, a `static var`
-  Static, a `const` Constant, an event's own declaration Local. `sheet.variables` is unchanged.
-- **The Inspector chip became a mark.** A value a designer can edit wears a 15px sliders glyph
-  beside its name, hovering "Editable in the Inspector" - a cue, not a word. The per-row Inspector
-  GROUP chip is gone too: the folder draws once, as a slim labelled strip over the rows it holds,
-  with the rows themselves left unindented (a bracket around rows never pushes them sideways) and
-  the strip carrying the only fold in the list.
-- **Variable rows are rows of their own kind, in the order you wrote them.** A flat lilac wash and a
-  2px left rule mark every declaration - three new theme colours (`variable_row_wash_color`,
-  `variable_row_rule_color`, and `variable_row_wash_end_color` for an optional fade, which every
-  bundled preset ships equal to the wash, so they stay flat). The view stopped name-sorting the
-  list: dragging one declaration past another WRITES the new order through the undo funnel, and
-  **Sort A-Z** on the row menu writes alphabetical when it is asked for.
-- **Every variable row echoes its own line.** At the right edge, muted, sits the exact declaration
-  the compiler emits for that row - the emitter's own string, so it cannot drift from the file -
-  coloured by a small tokeniser (keyword / annotation / type / member / number / string / symbol /
-  comment) reading the script editor's colours from Editor Settings, with the sheet theme as the
-  fallback. It comes up to full colour on the row under the pointer, is dropped on a canvas too
-  narrow for it, and opens the code panel at that line when activated. **View ▸ Variable rows**
-  dials sentence / both / code (default both; Simple Mode pins sentence) - a toolbar setting, never
-  a row on the sheet.
-- **What a row does while you work on it.** The value edits in place with the type word as its guide
-  rail, turning amber the moment the literal cannot fit and refusing to write it; the Live Values
-  chip now reads `now 73` after the initial value instead of a second `= 73` that read like the
-  declaration; selection is the same blue wash every other row uses, laid over the lilac.
-
-### Changed - the Add variable dialog asks for the row in the order the row reads
-
-- **Scope comes first, as a dropdown, with a line under each choice.** Instance / Local / Global /
-  Constant / Static, in the sheet's own order, each carrying the one line that says what it means and
-  naming the object while it does it ("one per Player - each copy in the scene has its own"). The
-  scope is the row's first word, and everything else in the dialog is gated by it, so it is the first
-  thing the dialog asks. The row of scope switches it replaces is gone.
-- **One help strip at the foot, following focus.** `EventSheetPopupUI.help_strip(heading, body,
-  reads_as, in_code)` is a component now, so the dialogs that want the same foot cannot drift apart:
-  a heading naming the focused thing, a paragraph, a **READS AS** line and an **IN CODE** line. Open
-  the Type list and it describes each type before you pick it. READS AS is the row itself, composed
-  through `EventSheetVariableSentence` like every other surface; IN CODE is the compiler's OWN
-  emitted declaration, so the dialog can never promise a line the compiled sheet would not write.
-- **The type list reads in words, and shows the GDScript spelling muted beside the field.** Number,
-  Text, Boolean, then Vector, Color, List and Table, then the Godot types under their own names. The
-  stored type rides as each item's metadata rather than as its text, so the words are free to read
-  plainly while `.gd` round-trips unchanged.
-- **"Initial value", not "Default"** - it is the value the variable starts at, and "default" is
-  Godot's word for something else. Static joins Constant as a checkbox with its explanation muted
-  beside it, and the Inspector polish (range, drawer, grouping) folds behind **More options
-  (Inspector, range, drawer, group…)**.
-- **Global reveals the write-into picker instead of handing the gesture away.** Picking Global asks
-  the one extra question a global has - which autoload it lands on - and confirming writes it there
-  through the same writer the Add global variable dialog uses, in one undo step. Local greys the
-  Inspector tick (a local is never a property); Constant greys Static with it (GDScript has no
-  `static const`).
-- **A name already taken here is flagged under the field as you type**, not on OK, and a fresh
-  variable opens on the scope the last one used.
-
-### Changed - the operator list says the symbol, the words, and the code
-
-- **`≤  at most`, not `<= (at most)`.** `COMPARISON_OPTIONS` - the one list every operator picker in
-  the plugin resolves through - now leads with the symbol a reader sees on the row (≥ ≤ ≠, and `=`
-  for equality) and says it in words after. The inserted tokens, the templates and the emitted code
-  are untouched: a dialog showing the list now shows that token muted beside the choice, so the
-  friendly wording teaches the spelling instead of hiding it. Every options dropdown whose words
-  differ from the value it inserts gains the same muted note.
+- **The variable row's wash and its left rule are theme colours.** Three tokens under Reading
+  marks: `variable_row_wash_color` (the flat lilac behind every declaration),
+  `variable_row_rule_color` (the 2px rule down its left edge) and `variable_row_wash_end_color`,
+  which lets a theme fade the wash across the row. Every bundled preset ships the end colour EQUAL
+  to the wash, so all ten stay flat - the fade is an opt-in a designer can reach for, not a
+  gradient the plugin draws at you. All three are dressed by the derivation, described in the
+  Theme Editor, and carried by the presets, so a custom theme that predates them is filled in
+  rather than left with holes.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 
