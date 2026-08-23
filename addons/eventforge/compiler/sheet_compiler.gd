@@ -358,8 +358,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	# function-scope `static`, so a local that must keep its value between runs of its event is
 	# hoisted here (beside the group locals, which solve the same problem one scope wider) and the
 	# event's uses are rewritten onto the member by _rewrite_static_local_uses.
-	var static_locals: Array = []
-	_collect_static_locals(all_events, static_locals, result["warnings"])
+	var static_locals: Array = _collect_sheet_static_locals(all_events, all_functions, result["warnings"])
 	if not static_locals.is_empty():
 		lines.append("")
 		for static_entry: Variant in static_locals:
@@ -383,7 +382,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_collect_stateful_members(all_events, stateful_members)
 	for function_entry: Variant in all_functions:
 		if function_entry is EventFunction:
-			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, stateful_members)
+			_collect_stateful_members(_function_body_rows(function_entry as EventFunction), stateful_members)
 	if not stateful_members.is_empty():
 		if variable_lines.is_empty() and tree_variables.is_empty():
 			lines.append("")
@@ -648,7 +647,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		_emit_expose_annotations(event_function, sheet, lines)
 		_emit_function_annotation_prefix(event_function, lines)
 		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
-		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+		var function_events: Array = _function_body_rows(event_function)
 		var function_body_start: int = lines.size()
 		_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
 		if not _has_statement(lines, function_body_start):
@@ -941,7 +940,7 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 	_emit_expose_annotations(event_function, sheet, lines)
 	_emit_function_annotation_prefix(event_function, lines)
 	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
-	var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	var function_events: Array = _function_body_rows(event_function)
 	var function_body_start: int = lines.size()
 	_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, function_body_start):
@@ -1107,10 +1106,8 @@ static func _insert_missing_member_declarations(lines: PackedStringArray, sheet:
 	_collect_stateful_members(sheet.events, members)
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
-			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, members)
-	var static_locals: Array = []
-	_collect_static_locals(sheet.events, static_locals)
-	for static_local: Variant in static_locals:
+			_collect_stateful_members(_function_body_rows(function_entry as EventFunction), members)
+	for static_local: Variant in _collect_sheet_static_locals(sheet.events, sheet.functions):
 		members.append(_emit_tree_variable_line(static_local as LocalVariable))
 	# A member may span several lines, so its identity is its FIRST line (the state var) - a plain
 	# `lines.has()` of the whole multi-line string never matches once it has been emitted one line per entry.
@@ -2956,6 +2953,29 @@ static func _collect_group_locals(entries: Array, into: Array) -> void:
 			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
 
 
+## The rows one function's body is made of, across the `events` / `rows` alias pair. Every pass that
+## walks function bodies asks here, so a pass cannot walk one spelling and miss the other.
+static func _function_body_rows(event_function: EventFunction) -> Array:
+	if event_function == null:
+		return []
+	return event_function.events if not event_function.events.is_empty() else event_function.rows
+
+
+## V4. Every Static local a sheet declares: the ones under its own events AND the ones under events
+## inside its functions - a function body is ordinary selectable rows, so a local can be written on
+## one. Both hoisting paths ask here: _rewrite_static_local_uses runs over function bodies too, so a
+## sheet collected from `events` alone rewrote uses onto a member nothing declared, and the emitted
+## file did not parse. One `seen` set across both, because both hoist into the same class.
+static func _collect_sheet_static_locals(events: Array, functions: Array, warnings: Array = []) -> Array:
+	var static_locals: Array = []
+	var seen: Dictionary = {}
+	_collect_static_locals(events, static_locals, warnings, seen)
+	for function_entry: Variant in functions:
+		if function_entry is EventFunction:
+			_collect_static_locals(_function_body_rows(function_entry as EventFunction), static_locals, warnings, seen)
+	return static_locals
+
+
 ## V4. Gathers every Static local declared under an event, in reading order (nested events included),
 ## de-duplicated by the member each would write: two events cannot both declare `hits_taken`, because
 ## both hoist to `var _hits_taken`. The second one is a warning, not an error - it still compiles, it
@@ -3318,6 +3338,14 @@ static func static_local_declaration(local_var: LocalVariable) -> String:
 		else _to_code_literal(local_var.default_value)
 	if local_var.type_name.strip_edges() == "float" and literal.is_valid_int():
 		literal = "%s.0" % literal
+	# `:=` has nothing to infer from `null` - the resource types (Texture2D, Curve, Gradient) parse
+	# their empty default to exactly that, and so does any type left with no initial value. Godot
+	# refuses such a script with "Cannot infer the type of 'variable'", which is a silent fault: the
+	# compile reports success and the emitted file simply does not parse. So a null spells its type.
+	if literal == "null":
+		var declared_type: String = local_var.type_name.strip_edges()
+		return "var %s: %s = null" % [LocalVariable.static_local_member(local_var.name),
+			declared_type if not declared_type.is_empty() else "Variant"]
 	return "var %s := %s" % [LocalVariable.static_local_member(local_var.name), literal]
 
 

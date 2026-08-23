@@ -510,6 +510,20 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `ROW_MENU_GROUP_RUNTIME`) are deleted with the items they belonged to, and so is a variable-dialog
   label that had been built, written to, and never shown.
 
+### Fixed - the review's second wave: the file the sheet writes, and the words a translator sees
+
+- **A Static local written inside a function is declared.** The rows of a function body are ordinary
+  selectable rows, so the Add variable dialog files a Static local onto one of them - and the pass
+  that hoists the member walked the sheet's events only. The uses were rewritten onto `_hits_taken`
+  all the same, so the compile reported success and the emitted script would not load ("Identifier
+  '_hits_taken' not declared in the current scope"). Both hoisting paths ask one collector now, and
+  it walks the functions beside the events, sharing one clash check across them.
+- **A Static local with no value spells its type.** The member was always written `var _x := <value>`,
+  and `:=` has nothing to infer from `null` - which is exactly what a Texture2D, a Curve, a Gradient
+  or any empty default parses to, so Godot refused the whole script ("Cannot infer the type of
+  'variable'"). A null default is written `var _x: Curve = null`; everything else keeps the short
+  spelling the row's own type word already explains.
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for

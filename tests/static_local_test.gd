@@ -16,6 +16,8 @@ static func run() -> bool:
 	passed = _test_emission() and passed
 	passed = _test_roundtrip_is_byte_exact() and passed
 	passed = _test_duplicate_names_warn_once() and passed
+	passed = _test_a_function_bodys_static_local_is_declared() and passed
+	passed = _test_a_null_default_spells_its_type() and passed
 	passed = _test_row_reads_and_echoes_the_member() and passed
 	passed = _test_dialog_offers_the_tick_for_locals_only() and passed
 	passed = _test_drag_rescopes_the_local() and passed
@@ -76,8 +78,53 @@ static func _test_duplicate_names_warn_once() -> bool:
 	var warnings: Array = result.get("warnings", [])
 	ok = _check("and the clash is one warning", warnings.size(), 1) and ok
 	if warnings.size() == 1:
-		ok = _check("…naming the variable and the member it shares",
-			str(warnings[0]).contains("hits_taken") and str(warnings[0]).contains("_hits_taken"), true) and ok
+		ok = _check("…naming the variable and the member it shares", str(warnings[0]),
+			"Static local 'hits_taken' is declared on more than one event - they share the one _hits_taken member.") and ok
+	return ok
+
+
+## A function body is ordinary selectable rows, so a Static local can be written on one. The member
+## it hoists to has to be declared for that: the rewrite of the body's uses runs either way, so a
+## sheet whose members were gathered from its events alone emitted a file naming `_hits_taken` with
+## nothing anywhere declaring it - a compile that reports success and a script that will not load.
+static func _test_a_function_bodys_static_local_is_declared() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "Player"
+	sheet.host_class = "Node2D"
+	var event: EventRow = EventRow.new()
+	event.event_uid = "fn_ev1"
+	event.local_variables.append(_static_local("hits_taken", "int", 0))
+	event.actions.append(_raw_action("hits_taken += 1"))
+	var take_hit: EventFunction = EventFunction.new()
+	take_hit.function_name = "take_hit"
+	take_hit.events.append(event)
+	sheet.functions.append(take_hit)
+	var output: String = _compiled(sheet)
+	ok = _check("the marker names the row the member belongs to",
+		output.contains("# @static_local:hits_taken"), true) and ok
+	ok = _check("the member the function body uses is declared",
+		output.contains("\nvar _hits_taken := 0\n"), true) and ok
+	ok = _check("…exactly once", output.count("var _hits_taken := 0"), 1) and ok
+	ok = _check("and the body inside the function reads that member",
+		output.contains("\t_hits_taken += 1"), true) and ok
+	return ok
+
+
+## A Static local whose value is nothing: `:=` has nothing to infer from `null`, and Godot refuses
+## such a script outright ("Cannot infer the type of 'variable'"). The types whose empty default
+## parses to null - Texture2D, Curve, Gradient - are all offered beside the tick, so the declaration
+## spells the type out for them instead.
+static func _test_a_null_default_spells_its_type() -> bool:
+	var ok: bool = true
+	ok = _check("a null default declares its type rather than inferring it",
+		SheetCompiler.static_local_declaration(_static_local("ramp", "Curve", null)),
+		"var _ramp: Curve = null") and ok
+	ok = _check("…and one with no type to name falls back to Variant",
+		SheetCompiler.static_local_declaration(_static_local("thing", "", null)),
+		"var _thing: Variant = null") and ok
+	ok = _check("a value that can be inferred is still written the short way",
+		SheetCompiler.static_local_declaration(_static_local("hits", "int", 0)), "var _hits := 0") and ok
 	return ok
 
 
