@@ -16,7 +16,7 @@ extends RefCounted
 var _dock: Control = null
 var _sheet_type_dialog: ConfirmationDialog = null
 var _sheet_type_option: OptionButton = null
-var _type_hint: Label = null
+var _help_strip: EventSheetPopupUI.HelpStrip = null
 var _sheet_type_name_edit: LineEdit = null
 var _sheet_type_icon_edit: LineEdit = null
 var _sheet_type_description_edit: TextEdit = null
@@ -62,6 +62,31 @@ const TYPE_HINTS: Array[String] = [
 	"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",
 	"A script the Godot binary runs headless from the command line, with arguments and an exit code.",
 ]
+
+## What each type is CALLED, indexed by the same frozen type index TYPE_HINTS is. The list used to be
+## twelve add_item() calls in the dialog builder; keeping the words here means the dropdown, the
+## status lines and a test all read the same table.
+const TYPE_LABELS: PackedStringArray = [
+	"Event Sheet",                                    # plain: compiles onto the host node
+	"Custom Node",                                    # class_name + @icon -> Create Node dialog
+	"Behavior (acts on parent)",                      # Node component with `host`
+	"Editor Tool",                                    # EXPERIMENTAL: events -> editor tooling
+	"Autoload (always-on singleton)",                 # extends Node; registered project-wide
+	"Custom Resource (data asset)",                   # extends Resource; each .tres is designer-editable
+	"Test (asserts + verdict)",                       # extends Node + signal test_started
+	"Editor Plugin (dock, menu item, object type)",   # extends EditorPlugin
+	"Import Tool (runs on import)",                   # EditorScript + On File Imported
+	"Export Hook (runs on export)",                   # EditorScript + On Project Export
+	"Editor Add-on (Properties bar, importer, thumbnails…)",
+	"Command Tool (runs headless from the command line)",  # extends SceneTree
+]
+
+## C4. The order the KIND dropdown reads in: the six kinds most sheets are, then a divider, then the
+## kinds that make editor tooling. `-1` is the divider. The type INDEX is what a saved sheet
+## round-trips through, so the list is reordered by carrying each index as the item's id rather than
+## by renumbering anything.
+const TYPE_ORDER: PackedInt32Array = [0, 1, 2, 4, 5, 6, -1, 3, 7, 8, 9, 10, 11]
+
 
 ## The tool types whose host the sheet does not get to choose, and what each is forced to. Index 3
 ## (Editor Tool) is here too: one table, so the dialog's preview line and the apply path cannot drift.
@@ -115,25 +140,25 @@ func open() -> void:
 	_ensure_sheet_type_dialog()
 	match EventSheetScriptIntent.of_sheet(_dock._current_sheet):
 		EventSheetScriptIntent.Intent.EDITOR_TOOL:
-			_sheet_type_option.select(editor_script_type_index(_dock._current_sheet))
+			_select_type(editor_script_type_index(_dock._current_sheet))
 		EventSheetScriptIntent.Intent.EDITOR_PLUGIN:
-			_sheet_type_option.select(7)
+			_select_type(7)
 		EventSheetScriptIntent.Intent.EDITOR_ADDON:
-			_sheet_type_option.select(10)
+			_select_type(10)
 		EventSheetScriptIntent.Intent.COMMAND_TOOL:
-			_sheet_type_option.select(11)
+			_select_type(11)
 		EventSheetScriptIntent.Intent.BEHAVIOUR:
-			_sheet_type_option.select(2)
+			_select_type(2)
 		EventSheetScriptIntent.Intent.AUTOLOAD:
-			_sheet_type_option.select(4)
+			_select_type(4)
 		EventSheetScriptIntent.Intent.TEST:
-			_sheet_type_option.select(6)
+			_select_type(6)
 		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
-			_sheet_type_option.select(5)
+			_select_type(5)
 		EventSheetScriptIntent.Intent.CUSTOM_NODE:
-			_sheet_type_option.select(1)
+			_select_type(1)
 		_:
-			_sheet_type_option.select(0)
+			_select_type(0)
 	_sheet_type_name_edit.text = _dock._current_sheet.custom_class_name
 	_sheet_type_icon_edit.text = _dock._current_sheet.custom_class_icon
 	_sheet_type_description_edit.text = _dock._current_sheet.class_description
@@ -333,6 +358,34 @@ static func _bucket_candidate(candidate: String, lower_typed: String, prefix_hit
 		substring_hits.append(candidate)
 
 
+## The chosen KIND, as the frozen type index. The dropdown is ordered for reading (the common six,
+## a divider, then the editor kinds) and carries each type index as its item id, so what a sheet
+## round-trips through is never the position in a list.
+func _selected_type() -> int:
+	var chosen: int = _sheet_type_option.get_selected_id()
+	return chosen if chosen >= 0 else 0
+
+
+## Selects a KIND by its frozen type index.
+func _select_type(type_index: int) -> void:
+	for item: int in range(_sheet_type_option.item_count):
+		if _sheet_type_option.get_item_id(item) == type_index:
+			_sheet_type_option.select(item)
+			return
+
+
+## What the help strip says about one item of the KIND list: the kind's name and the line that says
+## what it is for. {} for the divider, which the strip is asked to say nothing about.
+func _kind_help(item_index: int) -> Dictionary:
+	if item_index < 0 or item_index >= _sheet_type_option.item_count:
+		return {}
+	# A divider carries no type index, and the strip is asked to say nothing about it.
+	var type_index: int = _sheet_type_option.get_item_id(item_index)
+	if type_index < 0 or type_index >= TYPE_HINTS.size():
+		return {}
+	return {"heading": "Kind · %s" % TYPE_LABELS[type_index], "body": TYPE_HINTS[type_index]}
+
+
 func _ensure_sheet_type_dialog() -> void:
 	if _sheet_type_dialog != null:
 		return
@@ -343,38 +396,17 @@ func _ensure_sheet_type_dialog() -> void:
 	# fastest honest answer to "what do I type in Controls / extends?" is the node you meant.
 	form.set_drag_forwarding(Callable(), _can_drop_node, _drop_node)
 	_sheet_type_option = OptionButton.new()
-	_sheet_type_option.add_item("Event Sheet")           # plain: compiles onto the host node
-	_sheet_type_option.add_item("Custom Node")           # class_name + @icon -> Create Node dialog
-	_sheet_type_option.add_item("Behavior (acts on parent)")  # Node component with `host`
-	_sheet_type_option.add_item("Editor Tool")           # EXPERIMENTAL: events -> editor tooling
-	_sheet_type_option.add_item("Autoload (always-on singleton)")  # extends Node; registered project-wide
-	_sheet_type_option.add_item("Custom Resource (data asset)")  # extends Resource; each .tres is designer-editable
-	_sheet_type_option.add_item("Test (asserts + verdict)")  # extends Node + signal test_started; run headlessly
-	# R33 - the rest of the tool family. Appended rather than filed next to index 3 because a type
-	# index is what a saved sheet round-trips through: renumbering the list would retype every sheet.
-	_sheet_type_option.add_item("Editor Plugin (dock, menu item, object type)")  # extends EditorPlugin
-	_sheet_type_option.add_item("Import Tool (runs on import)")  # EditorScript + On File Imported
-	_sheet_type_option.add_item("Export Hook (runs on export)")  # EditorScript + On Project Export
-	# W17 - the last two shapes Godot has. "Editor add-on" is the one type here that does NOT force a
-	# host: which add-on class it is (Properties bar, importer, thumbnail maker, debugger panel,
-	# context menu, view handle) is the whole choice, so the host field stays visible for it.
-	_sheet_type_option.add_item("Editor Add-on (Properties bar, importer, thumbnails…)")
-	_sheet_type_option.add_item("Command Tool (runs headless from the command line)")  # extends SceneTree
+	for type_index: int in TYPE_ORDER:
+		if type_index < 0:
+			_sheet_type_option.add_separator()
+			continue
+		_sheet_type_option.add_item(TYPE_LABELS[type_index], type_index)
 	_sheet_type_option.item_selected.connect(func(_index: int) -> void: _refresh_type_ui())
-	form.add_child(_sheet_type_option)
-	_type_hint = EventSheetPopupUI.hint_label(TYPE_HINTS[0], 440.0)
-	form.add_child(_type_hint)
+	form.add_child(EventSheetPopupUI.form_row("Kind", _sheet_type_option))
 	# Identity card - only the fields the chosen type consumes are visible (see field_visibility).
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
-	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Class name", "PatrolBehavior")
-	_sheet_type_icon_edit = _dock._add_sheet_type_field(ident_box, "Icon (res://…)", "res://icons/patrol.svg")
-	# Pick the icon straight from the FileSystem instead of typing a res:// path.
-	var icon_browse: Button = Button.new()
-	icon_browse.text = "Browse…"
-	icon_browse.pressed.connect(_open_icon_file_dialog)
-	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
-	_sheet_type_description_edit = _dock._add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
-	_sheet_type_host_edit = _dock._add_sheet_type_field(ident_box, "Controls / extends", "CharacterBody2D")
+	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Name", "PatrolBehavior")
+	_sheet_type_host_edit = _dock._add_sheet_type_field(ident_box, "Extends", "CharacterBody2D")
 	var host_row: HBoxContainer = _sheet_type_host_edit.get_parent()
 	_host_label = host_row.get_child(0)
 	# As-you-type suggestions: an unfocusable popup under the field (the caret stays in the LineEdit),
@@ -397,7 +429,19 @@ func _ensure_sheet_type_dialog() -> void:
 		_sheet_type_host_edit.text = str(COMMON_HOSTS[index]["host"])
 		_refresh_identity_preview())
 	host_row.add_child(_host_menu)
+	_sheet_type_icon_edit = _dock._add_sheet_type_field(ident_box, "Icon", "res://icons/patrol.svg")
+	# Pick the icon straight from the FileSystem instead of typing a res:// path.
+	var icon_browse: Button = Button.new()
+	icon_browse.text = "Browse…"
+	icon_browse.pressed.connect(_open_icon_file_dialog)
+	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
+	_sheet_type_description_edit = _dock._add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
 	_sheet_type_autoload_edit = _dock._add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
+	# C4 - "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
+	# it is one of the lines the head shows, so it is edited where the other lines are.
+	_sheet_type_tool_check = CheckBox.new()
+	_sheet_type_tool_check.text = "Runs in the editor too  -  @tool"
+	ident_box.add_child(_sheet_type_tool_check)
 	# Family flag (horizontal abstraction): a named sheet's instances are collected into
 	# group family_<class>, so other sheets can write ONE rule over all of them ("for each Enemy: …").
 	_sheet_type_family_check = CheckBox.new()
@@ -429,7 +473,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_more_toggle.toggle_mode = true
 	_more_toggle.flat = true
 	_more_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_more_toggle.text = "▸ More options (tags, includes, @tool)"
+	_more_toggle.text = "▸ More (tags, includes, uses, requires)"
 	_more_toggle.toggled.connect(func(pressed: bool) -> void: _set_more_expanded(pressed))
 	form.add_child(_more_toggle)
 	var more_box: VBoxContainer = EventSheetPopupUI.form_box()
@@ -437,12 +481,27 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_includes_edit = _dock._add_sheet_type_field(more_box, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
 	_sheet_type_uses_edit = _dock._add_sheet_type_field(more_box, "Uses (addon classes)", "ScreenShake, MathHelpers - owned helper instances")
 	_sheet_type_requires_edit = _dock._add_sheet_type_field(more_box, "Requires (sibling behaviors)", "ScreenShake - shows a warning badge when missing")
-	_sheet_type_tool_check = CheckBox.new()
-	_sheet_type_tool_check.text = "@tool - runs inside the editor (EXPERIMENTAL)"
-	more_box.add_child(_sheet_type_tool_check)
 	_more_card = EventSheetPopupUI.titled_card("More options", more_box)
 	_more_card.visible = false
 	form.add_child(_more_card)
+	# C4 / P0 - ONE help strip at the foot, describing whatever field or kind is focused. No READS AS
+	# line: the sheet's own head, right above this dialog, IS the preview of what these fields write.
+	_help_strip = EventSheetPopupUI.help_strip(
+		"Kind · %s" % TYPE_LABELS[0], TYPE_HINTS[0], "", "", 440.0)
+	form.add_child(_help_strip)
+	_help_strip.follow_option(_sheet_type_option, _kind_help)
+	_help_strip.follow(_sheet_type_name_edit, "Name · class_name",
+		"How this script is known to the project and the Add Node dialog. Letters, digits and underscores; it must not be a class Godot already has.")
+	_help_strip.follow(_sheet_type_host_edit, "Extends",
+		"The class this sheet builds on: everything that class can do, this sheet can do. Type to get suggestions, or drop a node from the Scene dock onto this dialog.")
+	_help_strip.follow(_sheet_type_icon_edit, "Icon · @icon",
+		"The image Godot shows for this class in the Scene dock and the Add Node dialog. Any res:// image; Browse… picks one.")
+	_help_strip.follow(_sheet_type_description_edit, "Description · ##",
+		"One or two sentences saying what this sheet is. Godot shows them in the Create Node dialog, and the sheet's head shows them on its own band.")
+	_help_strip.follow(_sheet_type_autoload_edit, "Autoload name",
+		"The name every other sheet writes to reach this one. It lives in project.godot, not in this file.")
+	_help_strip.follow(_sheet_type_tool_check, "Runs in the editor too · @tool",
+		"The script runs inside the editor as well as in the game, so its events fire while you are building the scene.")
 	_sheet_type_dialog.add_child(EventSheetPopupUI.margined(form))
 	_sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
 	_dock.add_child(_sheet_type_dialog)
@@ -452,8 +511,7 @@ func _ensure_sheet_type_dialog() -> void:
 ## ("Acts on" for a behavior, "Extends" for a data asset). Values are never touched - hiding is
 ## purely visual, so OK without edits round-trips the sheet unchanged.
 func _refresh_type_ui() -> void:
-	var type_index: int = _sheet_type_option.selected
-	_type_hint.text = TYPE_HINTS[type_index] if type_index >= 0 and type_index < TYPE_HINTS.size() else ""
+	var type_index: int = _selected_type()
 	var shown: Dictionary = field_visibility(type_index)
 	_sheet_type_name_edit.get_parent().visible = bool(shown["name"])
 	_sheet_type_icon_edit.get_parent().visible = bool(shown["icon"])
@@ -468,7 +526,7 @@ func _refresh_type_ui() -> void:
 		5:
 			_host_label.text = "Extends (data type)"
 		_:
-			_host_label.text = "Controls / extends"
+			_host_label.text = "Extends"
 	_host_menu.visible = type_index != 5  # the node shortlist makes no sense for a Resource host
 	_refresh_identity_preview()
 	if _sheet_type_dialog.visible:
@@ -560,10 +618,10 @@ func _drop_node(_at_position: Vector2, data: Variant) -> void:
 		host_class = str(node_script.get_global_name())
 	if host_class.is_empty():
 		host_class = dropped.get_class()
-	var shown: Dictionary = field_visibility(_sheet_type_option.selected)
+	var shown: Dictionary = field_visibility(_selected_type())
 	if not bool(shown.get("host", false)):
 		_dock._set_status("%s doesn't take a host class - the dropped node's %s was not applied." % [
-			_sheet_type_option.get_item_text(_sheet_type_option.selected), host_class], true)
+			TYPE_LABELS[_selected_type()], host_class], true)
 		return
 	_sheet_type_host_edit.text = host_class
 	_refresh_identity_preview()
@@ -585,7 +643,7 @@ func _open_icon_file_dialog() -> void:
 func _refresh_identity_preview() -> void:
 	var own_class_name: String = _dock._current_sheet.custom_class_name if _dock._current_sheet != null else ""
 	_ships_as.text = identity_preview(
-		_sheet_type_option.selected,
+		_selected_type(),
 		_sheet_type_name_edit.text,
 		_sheet_type_host_edit.text,
 		_sheet_type_autoload_edit.text,
@@ -597,7 +655,7 @@ func _set_more_expanded(expanded: bool) -> void:
 	if _more_toggle == null:
 		return
 	_more_toggle.set_pressed_no_signal(expanded)
-	_more_toggle.text = ("▾" if expanded else "▸") + " More options (tags, includes, @tool)"
+	_more_toggle.text = ("▾" if expanded else "▸") + " More (tags, includes, uses, requires)"
 	_more_card.visible = expanded
 	if _sheet_type_dialog != null and _sheet_type_dialog.visible:
 		_sheet_type_dialog.reset_size()
@@ -605,7 +663,7 @@ func _set_more_expanded(expanded: bool) -> void:
 
 func _on_sheet_type_confirmed() -> void:
 	_dock._apply_sheet_type_settings(
-		_sheet_type_option.selected,
+		_selected_type(),
 		_sheet_type_name_edit.text,
 		_sheet_type_icon_edit.text,
 		_sheet_type_host_edit.text,
@@ -619,7 +677,7 @@ func _on_sheet_type_confirmed() -> void:
 		_sheet_type_description_edit.text,
 		_sheet_type_family_check.button_pressed
 	)
-	if _sheet_type_option.selected == 7:
+	if _selected_type() == 7:
 		_seed_plugin_capabilities()
 
 
