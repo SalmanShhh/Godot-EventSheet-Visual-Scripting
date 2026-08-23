@@ -18,6 +18,7 @@ extends RefCounted
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_row_look() and all_passed
+	all_passed = _test_look_is_reusable() and all_passed
 	all_passed = _test_pairing_unchanged() and all_passed
 	all_passed = _test_refactors() and all_passed
 	all_passed = _test_orphan_note() and all_passed
@@ -75,6 +76,46 @@ static func _test_row_look() -> bool:
 		_span_text(folded, "region_note", true), "1 row") and passed
 	passed = _check("and echoes both fences with the body elided",
 		_span_text(folded, "region_fence", "open"), "#region Debug helpers … #endregion") and passed
+	viewport.free()
+	return passed
+
+
+# ── 1b. The look is a hook, not a privilege of one kind ──
+
+
+## The row LOOK is asked for through the public Custom Block API, so a kind that is NOT the built-in
+## region can wear it - which is the whole reason the region stopped borrowing the group bar through
+## a private branch. Such a row reads with the kind's OWN words: EventSheetRegionFacts answers only
+## about the fences it owns, so the title is the kind's summary and the echo is the last line it
+## emits.
+static func _test_look_is_reusable() -> bool:
+	var passed: bool = true
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends EventSheetBlockKind\n\n\nfunc summary(block: CustomBlockRow) -> String:\n\treturn str(block.fields.get(\"name\", \"\"))\n\n\nfunc emit(block: CustomBlockRow) -> PackedStringArray:\n\treturn PackedStringArray([\"# --- %s ---\" % str(block.fields.get(\"name\", \"\"))])\n\n\nfunc style(_block: CustomBlockRow) -> Dictionary:\n\treturn {\"accent\": Color(\"#33cc88\")}\n\n\nfunc row_style(_entry: Resource) -> String:\n\treturn \"region\"\n"
+	passed = _check("a kind that asks for the fold-mark look parses", script.reload(), OK) and passed
+	var kind: EventSheetBlockKind = script.new() as EventSheetBlockKind
+	kind.kind_id = "region_look_test.chapter"
+	kind.title = "Chapter"
+	EventSheets.register_block_kind(kind)
+	var block: CustomBlockRow = CustomBlockRow.new()
+	block.kind_id = kind.kind_id
+	block.fields = {"name": "Movement"}
+	var sheet: EventSheetResource = _sheet_with([block])
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_sheet(sheet)
+	var row: EventRowData = _row_for(viewport, block)
+	passed = _check("a kind that asks for the look is drawn as a fold mark",
+		row.row_type if row != null else -1, EventRowData.RowType.REGION) and passed
+	passed = _check("it reads with its OWN name, never the region's placeholder",
+		_span_text(row, "region_title", true), "Movement") and passed
+	passed = _check("and echoes the line IT writes",
+		_span_text(row, "region_fence", "open"), "# --- Movement ---") and passed
+	passed = _check("and wears the tint its style() asks for, the same hook a flat row tints with",
+		row.custom_color if row != null else Color(), Color("#33cc88")) and passed
+	passed = _check("which is the line the compile really writes",
+		str(SheetCompiler.compile(sheet).get("output", "")).contains("# --- Movement ---"), true) and passed
+	passed = _check("and the API answers the same line for that row",
+		EventSheets.code_line(block), "# --- Movement ---") and passed
 	viewport.free()
 	return passed
 

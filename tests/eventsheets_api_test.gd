@@ -60,8 +60,8 @@ static func run() -> bool:
 		EventSheets.variable_code(api_var),
 		"# @inspector_header Combat\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
 	# …and the one line of those that DECLARES something, which is what a row's echo shows.
-	ok = _check("variable_declaration_line is the declaration alone",
-		EventSheets.variable_declaration_line(api_var),
+	ok = _check("code_line is the declaration alone",
+		EventSheets.code_line(api_var),
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
 	var api_static_local: LocalVariable = LocalVariable.new()
 	api_static_local.name = "hits_taken"
@@ -69,7 +69,16 @@ static func run() -> bool:
 	api_static_local.default_value = 0
 	api_static_local.static_local = true
 	ok = _check("…and a Static local's is the member it hoists to, never its marker",
-		EventSheets.variable_declaration_line(api_static_local), "var _hits_taken := 0") and ok
+		EventSheets.code_line(api_static_local), "var _hits_taken := 0") and ok
+	# The same question asked of a Custom Block row: the last line its kind writes, so a marker
+	# above the line does not steal the echo. A row that is not one line of the file says nothing.
+	var api_fence: CustomBlockRow = CustomBlockRow.new()
+	api_fence.kind_id = "region"
+	api_fence.fields = {"label": "Movement", "color": "#ff0000"}
+	ok = _check("…and a block row's is the line its kind emits",
+		EventSheets.code_line(api_fence), "#region Movement") and ok
+	ok = _check("…and an event stands for a block, not a line",
+		EventSheets.code_line(EventRow.new()), "") and ok
 
 	# G1 - the line a group declares itself on, keyed by the group, exactly as the compiler emits it
 	# (and as the head echoes it). A nested group carries its parent, which is how the importer
@@ -94,6 +103,13 @@ static func run() -> bool:
 	ok = _check("…and it is the very line the compile writes",
 		str(EventSheets.compile(group_sheet).get("output", "")).contains(
 			str(declaration_lines.get(inner_group, ""))), true) and ok
+	# One group asks the same question through code_line, which needs the sheet: a group's line
+	# names its parent, and only the whole sheet knows what that is.
+	ok = _check("code_line answers for a group when it is given the sheet",
+		EventSheets.code_line(inner_group, group_sheet),
+		"## @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
+	ok = _check("…and says nothing about a group with no sheet to place it in",
+		EventSheets.code_line(inner_group), "") and ok
 
 	# K1/K4 - the operator table a pack's own rows read through: the glyph a row shows, and the
 	# opposite an invert writes. Anything that is not one of the six passes straight through.
@@ -106,10 +122,10 @@ static func run() -> bool:
 
 	# P2 - what the Parameters dialog's help strip says about a field carrying a pack's own hint.
 	# A registration outranks the builtin table, which is how a pack describes a box only it knows.
-	ok = _check("an undescribed hint says nothing", EventSheets.param_help("wave_id"), "") and ok
+	ok = _check("an undescribed hint says nothing", EventSheets.param_help_for("wave_id"), "") and ok
 	EventSheets.register_param_help("wave_id", "A wave from the campaign table.")
 	ok = _check("a registered paragraph is what the strip reads",
-		EventSheets.param_help("wave_id"), "A wave from the campaign table.") and ok
+		EventSheets.param_help_for("wave_id"), "A wave from the campaign table.") and ok
 	ok = _check("and it reaches the strip through the factory",
 		EventSheetParamFieldFactory.hint_paragraph("wave_id"), "A wave from the campaign table.") and ok
 	EventSheets.register_param_help("color", "A wave, actually.")

@@ -186,7 +186,25 @@ static func _test_reference_primitives() -> bool:
 	plain.set_item_metadata(0, "left")
 	all_passed = _check("a plain list is returned untouched",
 		EventSheetPopupUI.code_noted_option(plain) == plain, true) and all_passed
+	all_passed = _check("…and its note text is empty, which is why",
+		EventSheetPopupUI.option_code_text(plain), "") and all_passed
 	plain.free()
+
+	# The note's text, asked WITHOUT a widget tree - and asked of a caller that knows more than the
+	# stored value does (a "Number" that writes int or float depending on a tick beside it).
+	var types: OptionButton = OptionButton.new()
+	types.add_item("Number")
+	types.set_item_metadata(0, "float")
+	types.select(0)
+	all_passed = _check("the code text is the item's stored value",
+		EventSheetPopupUI.option_code_text(types), "float") and all_passed
+	all_passed = _check("…unless the caller answers for it",
+		EventSheetPopupUI.option_code_text(types, func(index: int) -> String:
+			return "int" if index == 0 else "float"), "int") and all_passed
+	types.select(-1)
+	all_passed = _check("nothing chosen says nothing",
+		EventSheetPopupUI.option_code_text(types), "") and all_passed
+	types.free()
 	return all_passed
 
 
