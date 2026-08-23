@@ -4456,3 +4456,5 @@ runs in the editor too,también se ejecuta en el editor
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s nunca se cierra, así que no se puede plegar. Añade %s después de la última fila que quieras dentro."
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.","%s no cierra nada - no hay ningún #region encima. Elimínalo, o abre antes una región."
 Close after row %d,Cerrar después de la fila %d
+every networking line reads as a row - %d of %d,cada línea de red se lee como una fila - %d de %d
+%d of %d networking lines read as rows,%d de %d líneas de red se leen como filas

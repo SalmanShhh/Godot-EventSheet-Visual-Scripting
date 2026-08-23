@@ -4456,3 +4456,5 @@ runs in the editor too,에디터에서도 실행됩니다
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 이(가) 닫히지 않아 접을 수 없습니다. 안에 넣을 마지막 행 뒤에 %s 을(를) 추가하세요.
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 은(는) 아무것도 닫지 않습니다 - 위에 #region 이 없습니다. 삭제하거나 먼저 영역을 여세요.
 Close after row %d,%d 행 뒤에서 닫기
+every networking line reads as a row - %d of %d,모든 네트워크 줄이 행으로 읽힘 - %d개 중 %d개
+%d of %d networking lines read as rows,네트워크 %d개 중 %d개 줄이 행으로 읽힘

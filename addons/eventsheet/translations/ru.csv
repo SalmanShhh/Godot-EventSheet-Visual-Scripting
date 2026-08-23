@@ -4456,3 +4456,5 @@ runs in the editor too,работает и в редакторе
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s не закрыт, поэтому не сворачивается. Добавьте %s после последней строки, которая должна быть внутри."
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s ничего не закрывает - выше нет #region. Удалите его или сначала откройте регион.
 Close after row %d,Закрыть после строки %d
+every networking line reads as a row - %d of %d,каждая сетевая строка читается как строка - %d из %d
+%d of %d networking lines read as rows,строк сети читается как строки: %d из %d

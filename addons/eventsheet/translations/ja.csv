@@ -4456,3 +4456,5 @@ runs in the editor too,エディタでも実行されます
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s が閉じられていないため折りたためません。中に入れたい最後の行の後に %s を追加してください。
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s は何も閉じていません - 上に #region がありません。削除するか、先にリージョンを開いてください。
 Close after row %d,%d 行目の後で閉じる
+every networking line reads as a row - %d of %d,ネットワークの行はすべて行として読める - %d / %d
+%d of %d networking lines read as rows,ネットワークの %d / %d 行が行として読める

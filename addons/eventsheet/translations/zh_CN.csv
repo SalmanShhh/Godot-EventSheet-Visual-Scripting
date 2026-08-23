@@ -4456,3 +4456,5 @@ runs in the editor too,也在编辑器中运行
 "%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 从未关闭，因此无法折叠。请在要包含的最后一行之后添加 %s。
 "%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 没有关闭任何内容 - 它上面没有 #region。请删除它，或先开启一个区域。
 Close after row %d,在第 %d 行后关闭
+every networking line reads as a row - %d of %d,每一行网络代码都读作行 - %d / %d
+%d of %d networking lines read as rows,%d / %d 行网络代码读作行
