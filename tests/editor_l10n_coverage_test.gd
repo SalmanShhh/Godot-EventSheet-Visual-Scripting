@@ -20,7 +20,10 @@ extends RefCounted
 ## words among them ("angle", "the file's text"). Nothing else in the plugin ends a call this way,
 ## so the tail covers an alias nobody has written yet for free.
 const CALL := ".translate("
-const SCRIPT_ROOT := "res://addons/eventsheet"
+## Both halves of the plugin, because a user-visible string does not care which one it lives in:
+## the region notes and the region's "(unnamed region)" placeholder are written in `eventforge/`, and
+## a gate rooted at the editor folder alone reported green on every one of them.
+const SCRIPT_ROOTS: PackedStringArray = ["res://addons/eventsheet", "res://addons/eventforge"]
 const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const TEMPLATE_PATH := "res://addons/eventsheet/translations/TEMPLATE.csv"
 const SHIPPED_LOCALES: PackedStringArray = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
@@ -67,11 +70,12 @@ static func _test_the_reader() -> bool:
 static func _test_literals_are_in_the_template(template_keys: Dictionary) -> bool:
 	var uncovered: PackedStringArray = PackedStringArray()
 	var seen: int = 0
-	for path: String in _scripts_under(SCRIPT_ROOT):
-		for key: String in translated_keys(FileAccess.get_file_as_string(path)):
-			seen += 1
-			if not template_keys.has(key):
-				uncovered.append("%s  <- %s" % [key, path.get_file()])
+	for root: String in SCRIPT_ROOTS:
+		for path: String in _scripts_under(root):
+			for key: String in translated_keys(FileAccess.get_file_as_string(path)):
+				seen += 1
+				if not template_keys.has(key):
+					uncovered.append("%s  <- %s" % [key, path.get_file()])
 	var ok: bool = _check("the sweep found the plugin's translated strings", seen > 300, true)
 	return _check("every translated literal has a template row", uncovered, PackedStringArray()) and ok
 

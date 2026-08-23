@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,"%s konnte nicht gefunden werden, um di
 renames %d use%s in %d sheet%s,benennt %d Verwendung%s in %d Blatt%s um
 Enter to apply · Esc,Enter zum Anwenden · Esc
 used nowhere yet,noch nirgends verwendet
+1 group,1 Gruppe
+%d groups,%d Gruppen
+1 local,1 lokale Variable
+%d locals,%d lokale Variablen
+description,Beschreibung
+change…,ändern…
+Project Settings…,Projekteinstellungen…
+open,öffnen
++ add: %s,+ hinzufügen: %s
+acts on its parent,wirkt auf sein Elternobjekt
+%s kept between runs,%s bleibt zwischen Läufen erhalten
+attach to a node,an einen Node hängen
+Untitled,Unbenannt
+# no class_name yet,# noch kein class_name
+name it,benennen
+# no class_name - the name is the autoload entry,# kein class_name - der Name ist der Autoload-Eintrag
+# no class_name - named by its file,# kein class_name - benannt nach seiner Datei
+choose what it extends,Basisklasse wählen
+runs in the editor too,läuft auch im Editor
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s wird nie geschlossen und kann daher nicht eingeklappt werden. Fügen Sie %s nach der letzten Zeile ein, die dazugehören soll."
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.","%s schließt nichts - darüber steht kein #region. Entfernen Sie es, oder öffnen Sie zuerst eine Region."
+Close after row %d,Nach Zeile %d schließen

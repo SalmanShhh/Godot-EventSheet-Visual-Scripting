@@ -64,19 +64,22 @@ static func counts_text(group: EventGroup, object_labels: PackedStringArray = Pa
 		return ""
 	var pieces: PackedStringArray = PackedStringArray()
 	if not group.enabled:
-		pieces.append("off")
+		pieces.append(EventSheetL10n.translate("off"))
 	var tally: Dictionary = counts(group)
 	var group_count: int = int(tally.get("groups", 0))
 	var event_count: int = int(tally.get("events", 0))
 	var local_count: int = int(tally.get("locals", 0))
 	if group_count > 0:
-		pieces.append("%d group%s" % [group_count, "" if group_count == 1 else "s"])
+		pieces.append(EventSheetL10n.translate("1 group") if group_count == 1 \
+			else EventSheetL10n.translate("%d groups") % group_count)
 	if event_count > 0:
-		pieces.append("%d event%s" % [event_count, "" if event_count == 1 else "s"])
+		pieces.append(EventSheetL10n.translate("1 event") if event_count == 1 \
+			else EventSheetL10n.translate("%d events") % event_count)
 	if local_count > 0:
-		pieces.append("%d local%s" % [local_count, "" if local_count == 1 else "s"])
+		pieces.append(EventSheetL10n.translate("1 local") if local_count == 1 \
+			else EventSheetL10n.translate("%d locals") % local_count)
 	if pieces.is_empty():
-		pieces.append("empty")
+		pieces.append(EventSheetL10n.translate("empty"))
 	var objects: String = object_list_text(object_labels)
 	if not objects.is_empty():
 		pieces.append(objects)

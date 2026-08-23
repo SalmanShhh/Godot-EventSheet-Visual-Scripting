@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,이 행을 쓸 %s 을(를) 찾지 못�
 renames %d use%s in %d sheet%s,%d 곳%s 의 사용을 %d 개%s 시트에서 변경
 Enter to apply · Esc,Enter 로 적용 · Esc
 used nowhere yet,아직 어디에도 쓰이지 않음
+1 group,그룹 1개
+%d groups,그룹 %d개
+1 local,지역 변수 1개
+%d locals,지역 변수 %d개
+description,설명
+change…,변경…
+Project Settings…,프로젝트 설정…
+open,열기
++ add: %s,+ 추가: %s
+acts on its parent,부모 노드에 작용합니다
+%s kept between runs,%s 은(는) 실행 간에 유지됩니다
+attach to a node,노드에 연결
+Untitled,제목 없음
+# no class_name yet,# 아직 class_name 없음
+name it,이름 지정
+# no class_name - the name is the autoload entry,# class_name 없음 - 이름은 autoload 항목입니다
+# no class_name - named by its file,# class_name 없음 - 파일 이름이 이름입니다
+choose what it extends,상속할 클래스 선택
+runs in the editor too,에디터에서도 실행됩니다
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 이(가) 닫히지 않아 접을 수 없습니다. 안에 넣을 마지막 행 뒤에 %s 을(를) 추가하세요.
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 은(는) 아무것도 닫지 않습니다 - 위에 #region 이 없습니다. 삭제하거나 먼저 영역을 여세요.
+Close after row %d,%d 행 뒤에서 닫기

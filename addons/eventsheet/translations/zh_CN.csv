@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,找不到 %s 来写这一行。
 renames %d use%s in %d sheet%s,重命名 %d 处%s 使用，涉及 %d 个%s 表
 Enter to apply · Esc,Enter 应用 · Esc
 used nowhere yet,尚未在任何地方使用
+1 group,1 个组
+%d groups,%d 个组
+1 local,1 个局部变量
+%d locals,%d 个局部变量
+description,描述
+change…,更改…
+Project Settings…,项目设置…
+open,打开
++ add: %s,+ 添加：%s
+acts on its parent,作用于其父节点
+%s kept between runs,%s 在多次运行之间保留
+attach to a node,附加到节点
+Untitled,未命名
+# no class_name yet,# 尚无 class_name
+name it,为它命名
+# no class_name - the name is the autoload entry,# 没有 class_name - 名称来自 autoload 条目
+# no class_name - named by its file,# 没有 class_name - 由文件名命名
+choose what it extends,选择它继承什么
+runs in the editor too,也在编辑器中运行
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s 从未关闭，因此无法折叠。请在要包含的最后一行之后添加 %s。
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s 没有关闭任何内容 - 它上面没有 #region。请删除它，或先开启一个区域。
+Close after row %d,在第 %d 行后关闭

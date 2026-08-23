@@ -8,7 +8,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Tooling
 
-- The test suite can run sharded across several Godot processes (`tools/run_tests_parallel.ps1`; `EVENTFORGE_TEST_SHARD` in `tests/run_tests.gd`): the parallel-safe tests split by file, the timing-budget and teardown tests run serially afterwards, and the launcher prints the serial runner's own verdict line. About three times faster on an eight-core machine.
+- The test suite can run sharded across several Godot processes (`tools/run_tests_parallel.ps1`; `EVENTFORGE_TEST_SHARD` in `tests/run_tests.gd`): the parallel-safe tests split by file, the timing and teardown tests run serially afterwards, and the launcher prints the serial runner's own verdict line. About three times faster on an eight-core machine.
+- A test joins that serial tail by DECLARING it, not by what its file is called. The split routed by file name, so `doc_library_test.gd`'s 12-second parse budget ran inside a shard beside seven other Godot processes - the flaky red the tail exists to prevent, in the direction that costs the most to diagnose. A `*BUDGET_MS*` or `PARALLEL_UNSAFE` constant is now the marker, read out of the test's own source, and `tests/shard_split_test.gd` pins the invariant the split claims: across n shards plus the tail every file runs exactly once, malformed shard strings included.
 - The canvas-rebuild backstop is re-measured rather than nudged. The variable sentence took the sample pack's sheet from 389 rows to 414 (the globals it borrows, and the folder strips over them), and on a quiet machine those rows rebuild in 950-1117 ms across five runs, one of them inside the full suite - so the budget moves 1600 to 1800, the same near-doubled margin every earlier figure carried over its own measurement. A budget sized while the machine is loaded is a budget everyone learns to ignore.
 - The editor's translation gate reads every spelling of the call. `EventSheetSentence.translate` and `EventSheets.translate` are one-line aliases of `EventSheetL10n.translate`, and a sweep keyed to the first class name alone walked past ten of the row grammar's own words (\"angle\", \"the file's text\", \"runs headless\"). It matches the call by its tail now, so an alias nobody has written yet is covered too: all 725 literals the editor asks to translate carry a `TEMPLATE.csv` row, and the eight shipped locales carry all 4,412 keys with no cell left blank.
 - The project-templates test sweeps its own scratch directory before it scans. It SAVES templates into `user://tpl_dir`, and Save as Template suffixes rather than overwrites, so a run that ended between the saves and the cleanup left a `boss_fight-N.tres` behind that every later run found - the scan then reported the machine's history instead of what the test wrote, and two assertions failed on a tree with nothing wrong with it.
@@ -548,6 +549,13 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
   `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
   now, and the gate compares every echo against a real compile instead of against a second formatter.
+- **The head, the group counts and the region notes speak the reader's language.** The three modules
+  this design added drew user-visible row text with no `translate()` call between them, so a French
+  or Japanese editor met an English head stack (\"acts on its parent\", \"runs in the editor too\",
+  \"name it\", \"+ add: …\"), English group counts (\"off · 2 events · 1 local\") and English region notes
+  - and the new coverage gate could not see any of it, because it swept the editor folder only while
+  the region facts live beside the compiler. 22 messages are translated in all eight shipped
+  languages, and the gate now reads both halves of the plugin.
 - **Both spellings of an inverted comparison open as the same row.** A hand-written
   `if not (hp <= 0):` was claimed whole by the generic *Expression Is True*, so the row read as a raw
   expression and the Compare dialog, the operator glyphs and the Invert tick no longer applied to it -

@@ -545,6 +545,13 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
   `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
   now, and the gate compares every echo against a real compile instead of against a second formatter.
+- **The head, the group counts and the region notes speak the reader's language.** The three modules
+  this design added drew user-visible row text with no `translate()` call between them, so a French
+  or Japanese editor met an English head stack ("acts on its parent", "runs in the editor too",
+  "name it", "+ add: …"), English group counts ("off · 2 events · 1 local") and English region notes
+  - and the new coverage gate could not see any of it, because it swept the editor folder only while
+  the region facts live beside the compiler. 22 messages are translated in all eight shipped
+  languages, and the gate now reads both halves of the plugin.
 - **Both spellings of an inverted comparison open as the same row.** A hand-written
   `if not (hp <= 0):` was claimed whole by the generic *Expression Is True*, so the row read as a raw
   expression and the Compare dialog, the operator glyphs and the Invert tick no longer applied to it -

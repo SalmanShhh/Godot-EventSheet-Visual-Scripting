@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,Impossible de trouver %s pour écrire c
 renames %d use%s in %d sheet%s,renomme %d utilisation%s dans %d feuille%s
 Enter to apply · Esc,Entrée pour appliquer · Échap
 used nowhere yet,utilisé nulle part pour l'instant
+1 group,1 groupe
+%d groups,%d groupes
+1 local,1 variable locale
+%d locals,%d variables locales
+description,description
+change…,modifier…
+Project Settings…,Paramètres du projet…
+open,ouvrir
++ add: %s,+ ajouter : %s
+acts on its parent,agit sur son parent
+%s kept between runs,%s conservé entre les exécutions
+attach to a node,attacher à un nœud
+Untitled,Sans titre
+# no class_name yet,# pas encore de class_name
+name it,nommez-la
+# no class_name - the name is the autoload entry,# pas de class_name - le nom est l'entrée autoload
+# no class_name - named by its file,# pas de class_name - nommé par son fichier
+choose what it extends,choisissez ce qu'elle étend
+runs in the editor too,s'exécute aussi dans l'éditeur
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s ne se ferme jamais et ne peut donc pas se replier. Ajoutez %s après la dernière ligne à inclure.
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.","%s ne ferme rien - il n'y a aucun #region au-dessus. Supprimez-le, ou ouvrez d'abord une région."
+Close after row %d,Fermer après la ligne %d

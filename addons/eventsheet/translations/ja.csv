@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,この行を書く %s が見つかり�
 renames %d use%s in %d sheet%s,%d 件%s の使用を %d 枚%s のシートで変更
 Enter to apply · Esc,Enter で適用 · Esc
 used nowhere yet,まだどこにも使われていません
+1 group,グループ 1 個
+%d groups,グループ %d 個
+1 local,ローカル変数 1 個
+%d locals,ローカル変数 %d 個
+description,説明
+change…,変更…
+Project Settings…,プロジェクト設定…
+open,開く
++ add: %s,+ 追加: %s
+acts on its parent,親ノードに作用します
+%s kept between runs,%s は実行間で保持されます
+attach to a node,ノードにアタッチ
+Untitled,無題
+# no class_name yet,# class_name はまだありません
+name it,名前を付ける
+# no class_name - the name is the autoload entry,# class_name なし - 名前は autoload の登録名です
+# no class_name - named by its file,# class_name なし - ファイル名が名前です
+choose what it extends,継承元を選択
+runs in the editor too,エディタでも実行されます
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.",%s が閉じられていないため折りたためません。中に入れたい最後の行の後に %s を追加してください。
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s は何も閉じていません - 上に #region がありません。削除するか、先にリージョンを開いてください。
+Close after row %d,%d 行目の後で閉じる

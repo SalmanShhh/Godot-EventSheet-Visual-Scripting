@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,No se encontró %s para escribir esta f
 renames %d use%s in %d sheet%s,renombra %d uso%s en %d hoja%s
 Enter to apply · Esc,Enter para aplicar · Esc
 used nowhere yet,aún no se usa en ninguna parte
+1 group,1 grupo
+%d groups,%d grupos
+1 local,1 variable local
+%d locals,%d variables locales
+description,descripción
+change…,cambiar…
+Project Settings…,Ajustes del proyecto…
+open,abrir
++ add: %s,+ añadir: %s
+acts on its parent,actúa sobre su nodo padre
+%s kept between runs,%s se conserva entre ejecuciones
+attach to a node,adjuntar a un nodo
+Untitled,Sin título
+# no class_name yet,# aún sin class_name
+name it,ponle nombre
+# no class_name - the name is the autoload entry,# sin class_name - el nombre es la entrada de autoload
+# no class_name - named by its file,# sin class_name - lo nombra su archivo
+choose what it extends,elige de qué extiende
+runs in the editor too,también se ejecuta en el editor
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s nunca se cierra, así que no se puede plegar. Añade %s después de la última fila que quieras dentro."
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.","%s no cierra nada - no hay ningún #region encima. Elimínalo, o abre antes una región."
+Close after row %d,Cerrar después de la fila %d

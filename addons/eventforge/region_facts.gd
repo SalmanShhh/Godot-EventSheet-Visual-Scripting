@@ -26,7 +26,8 @@ const CLOSING_LINE: String = "#endregion"
 ## What a folded opener echoes: the script editor's own folded-fence shape.
 const FOLDED_ECHO_JOIN: String = " … "
 
-## What an unnamed region reads as. A fence may legitimately carry no label.
+## What an unnamed region reads as. A fence may legitimately carry no label. The reading goes
+## through `display_name`, which translates it - this const is the English source the CSVs key on.
 const UNNAMED_LABEL: String = "(unnamed region)"
 
 
@@ -55,10 +56,12 @@ static func label(entry: Variant) -> String:
 	return str(((entry as CustomBlockRow).fields as Dictionary).get("label", "")).strip_edges()
 
 
-## The name a region READS with - its label, or the placeholder when it has none.
+## The name a region READS with - its label, or the placeholder when it has none. The ONE answer:
+## the row, the block kind's summary, the orphan notes and the menu all take the name from here, so
+## one fence cannot be called two things.
 static func display_name(entry: Variant) -> String:
 	var named: String = label(entry)
-	return named if not named.is_empty() else UNNAMED_LABEL
+	return named if not named.is_empty() else EventSheetL10n.translate("(unnamed region)")
 
 
 ## The one-line description a styled fence carries, trimmed. "" when it has none.
@@ -141,17 +144,19 @@ static func closer_insert_index(container: Array, opener_index: int) -> int:
 
 ## The amber sentence an unmatched OPENING fence wears: what is wrong, and what to write.
 static func unclosed_note(entry: Variant) -> String:
-	return "%s never closes, so it cannot fold. Add %s after the last row you want inside." % [
-		display_name(entry), CLOSING_LINE
-	]
+	return EventSheetL10n.translate(
+		"%s never closes, so it cannot fold. Add %s after the last row you want inside.") % [
+			display_name(entry), CLOSING_LINE
+		]
 
 
 ## The amber sentence an unmatched CLOSING fence wears. There is nothing to close, so the only
 ## honest fix is to remove it or open a region above it.
 static func unopened_note() -> String:
-	return "%s closes nothing - there is no #region above it. Remove it, or open a region first." % CLOSING_LINE
+	return EventSheetL10n.translate(
+		"%s closes nothing - there is no #region above it. Remove it, or open a region first.") % CLOSING_LINE
 
 
 ## The fix button on an unclosed opener's note: the row the closing fence would land after.
 static func close_after_label(row_number: int) -> String:
-	return "Close after row %d" % row_number
+	return EventSheetL10n.translate("Close after row %d") % row_number

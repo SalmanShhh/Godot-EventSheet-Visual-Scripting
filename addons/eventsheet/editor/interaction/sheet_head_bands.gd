@@ -54,23 +54,6 @@ const LEADERS: Dictionary = {
 	BAND_ATTACH: "attach",
 }
 
-## The word on each band's control, "" where the band's own gesture is the control (the name band
-## renames on F2 / double-click, the description edits in place, the `@tool` switch is the switch).
-const CONTROL_LABELS: Dictionary = {
-	BAND_EXTENDS: "change…",
-	BAND_ICON: "change…",
-	BAND_AUTOLOAD: "Project Settings…",
-	BAND_INCLUDE: "open",
-}
-
-## What the "+ add" row calls each line it can offer. Only these four are ever offered: autoload and
-## host come from choosing a KIND, never from adding a line.
-const ADD_LABELS: Dictionary = {
-	BAND_ICON: "icon",
-	BAND_TOOL: "@tool",
-	BAND_DESCRIPTION: "description",
-}
-
 ## Band -> the LINE of the file it stands for: the `prefix` a line is recognised by, and the
 ## `format` it is written with. One table, so the reader that finds a line, the parser that lifts
 ## its value and the writer that replaces it can never disagree about which line a band is. `@tool`
@@ -234,9 +217,30 @@ static func addable(head_facts: Dictionary) -> PackedStringArray:
 	return offers
 
 
-## The word the "+ add" row uses for one offer.
+## The word the "+ add" row uses for one offer. `@tool` is the annotation itself - a line of
+## GDScript rather than a word about one - so it is offered under its own spelling in every language.
 static func add_label(kind: String) -> String:
-	return str(ADD_LABELS.get(kind, kind))
+	match kind:
+		BAND_ICON:
+			return EventSheetL10n.translate("icon")
+		BAND_DESCRIPTION:
+			return EventSheetL10n.translate("description")
+		BAND_TOOL:
+			return "@tool"
+	return kind
+
+
+## The word on one band's control, "" where the band's own gesture IS the control (the name band
+## renames on F2 / double-click, the description edits in place, the `@tool` switch is the switch).
+static func control_label(kind: String) -> String:
+	match kind:
+		BAND_EXTENDS, BAND_ICON:
+			return EventSheetL10n.translate("change…")
+		BAND_AUTOLOAD:
+			return EventSheetL10n.translate("Project Settings…")
+		BAND_INCLUDE:
+			return EventSheetL10n.translate("open")
+	return ""
 
 
 ## The whole "+ add" row's text, "" when this sheet already has every line it could have.
@@ -247,7 +251,7 @@ static func add_row_text(head_facts: Dictionary) -> String:
 	var words: PackedStringArray = PackedStringArray()
 	for kind: String in offers:
 		words.append(add_label(kind))
-	return "+ add: %s" % " · ".join(words)
+	return EventSheetL10n.translate("+ add: %s") % " · ".join(words)
 
 
 ## One band, or {} when this sheet has no such line.
@@ -277,13 +281,13 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 			var host_class: String = str(head_facts.get("host", "")).strip_edges()
 			if host_class.is_empty():
 				return {}
-			return _make(kind, "acts on its parent",
+			return _make(kind, EventSheetL10n.translate("acts on its parent"),
 				"var host: %s · _enter_tree: host = get_parent()" % host_class)
 		BAND_REMEMBER:
 			var remembered: PackedStringArray = head_facts.get("remembered", PackedStringArray())
 			if remembered.is_empty():
 				return {}
-			return _make(kind, "%s kept between runs" % ", ".join(remembered),
+			return _make(kind, EventSheetL10n.translate("%s kept between runs") % ", ".join(remembered),
 				"@onready var __ef_remember_boot: bool = _ef_recall_remembered()")
 		BAND_INCLUDE:
 			var includes: PackedStringArray = head_facts.get("includes", PackedStringArray())
@@ -299,7 +303,7 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 			if bool(head_facts.get("attached", true)):
 				return {}
 			var attach: Dictionary = _make(kind, "", "")
-			attach["prompt"] = "attach to a node"
+			attach["prompt"] = EventSheetL10n.translate("attach to a node")
 			return attach
 	return {}
 
@@ -313,15 +317,16 @@ static func _name_band(head_facts: Dictionary) -> Dictionary:
 		return _make(BAND_NAME, declared_class, "class_name %s" % declared_class)
 	var file_name: String = str(head_facts.get("file_name", "")).strip_edges()
 	if file_name.is_empty():
-		var asking: Dictionary = _make(BAND_NAME, "Untitled", "# no class_name yet")
+		var asking: Dictionary = _make(BAND_NAME, EventSheetL10n.translate("Untitled"),
+			EventSheetL10n.translate("# no class_name yet"))
 		asking["value_muted"] = true
 		asking["echo_ghosted"] = true
-		asking["prompt"] = "name it"
+		asking["prompt"] = EventSheetL10n.translate("name it")
 		return asking
 	var named_by_file: Dictionary = _make(BAND_NAME, file_name,
-		"# no class_name - the name is the autoload entry" \
+		EventSheetL10n.translate("# no class_name - the name is the autoload entry") \
 			if not str(head_facts.get("autoload", "")).strip_edges().is_empty() \
-			else "# no class_name - named by its file")
+			else EventSheetL10n.translate("# no class_name - named by its file"))
 	named_by_file["value_muted"] = true
 	return named_by_file
 
@@ -333,7 +338,7 @@ static func _extends_band(head_facts: Dictionary) -> Dictionary:
 	if extends_target.is_empty():
 		var asking: Dictionary = _make(BAND_EXTENDS, "Node", "extends Node")
 		asking["value_muted"] = true
-		asking["prompt"] = "choose what it extends"
+		asking["prompt"] = EventSheetL10n.translate("choose what it extends")
 		return asking
 	return _make(BAND_EXTENDS, extends_target, "extends %s" % extends_target)
 
@@ -345,7 +350,7 @@ static func _tool_band(head_facts: Dictionary) -> Dictionary:
 	var switched_on: bool = bool(head_facts.get("tool", false))
 	if not switched_on and not tool_is_expected(str(head_facts.get("extends", ""))):
 		return {}
-	var band: Dictionary = _make(BAND_TOOL, "runs in the editor too", "@tool")
+	var band: Dictionary = _make(BAND_TOOL, EventSheetL10n.translate("runs in the editor too"), "@tool")
 	band["switch"] = true
 	band["switch_on"] = switched_on
 	band["echo_ghosted"] = not switched_on
@@ -383,7 +388,7 @@ static func _make(kind: String, value: String, echo: String) -> Dictionary:
 		"editable": false,
 		"switch": false,
 		"switch_on": false,
-		"control": str(CONTROL_LABELS.get(kind, "")),
+		"control": control_label(kind),
 	}
 
 

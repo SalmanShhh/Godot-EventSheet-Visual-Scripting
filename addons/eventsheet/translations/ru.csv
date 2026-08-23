@@ -4434,3 +4434,25 @@ Couldn't find %s to write this row with.,Не удалось найти %s дл�
 renames %d use%s in %d sheet%s,переименует %d использован.%s в %d листах%s
 Enter to apply · Esc,Enter - применить · Esc
 used nowhere yet,пока нигде не используется
+1 group,1 группа
+%d groups,%d групп
+1 local,1 локальная переменная
+%d locals,%d локальных переменных
+description,описание
+change…,изменить…
+Project Settings…,Настройки проекта…
+open,открыть
++ add: %s,+ добавить: %s
+acts on its parent,действует на родителя
+%s kept between runs,%s сохраняется между запусками
+attach to a node,прикрепить к узлу
+Untitled,Без названия
+# no class_name yet,# class_name ещё нет
+name it,дайте имя
+# no class_name - the name is the autoload entry,# нет class_name - имя задаёт запись autoload
+# no class_name - named by its file,# нет class_name - имя даёт файл
+choose what it extends,выберите базовый класс
+runs in the editor too,работает и в редакторе
+"%s never closes, so it cannot fold. Add %s after the last row you want inside.","%s не закрыт, поэтому не сворачивается. Добавьте %s после последней строки, которая должна быть внутри."
+"%s closes nothing - there is no #region above it. Remove it, or open a region first.",%s ничего не закрывает - выше нет #region. Удалите его или сначала откройте регион.
+Close after row %d,Закрыть после строки %d
