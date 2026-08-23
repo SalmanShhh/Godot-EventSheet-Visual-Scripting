@@ -14,7 +14,12 @@
 class_name EditorL10nCoverageTest
 extends RefCounted
 
-const CALL := "EventSheetL10n.translate("
+## Every spelling of the call, matched by its tail. `EventSheetL10n.translate` reads the catalog;
+## `EventSheetSentence.translate` and `EventSheets.translate` are one-line aliases of it, and a gate
+## keyed to the first class name alone walked straight past them - ten of the row grammar's own
+## words among them ("angle", "the file's text"). Nothing else in the plugin ends a call this way,
+## so the tail covers an alias nobody has written yet for free.
+const CALL := ".translate("
 const SCRIPT_ROOT := "res://addons/eventsheet"
 const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const TEMPLATE_PATH := "res://addons/eventsheet/translations/TEMPLATE.csv"
@@ -43,6 +48,9 @@ static func _test_the_reader() -> bool:
 	ok = _check("both halves of a ternary are keys",
 		translated_keys("EventSheetL10n.translate(\"Else\" if plain else \"Else If\")"),
 		PackedStringArray(["Else", "Else If"])) and ok
+	ok = _check("an alias of the same call is read the same way",
+		translated_keys("EventSheetSentence.translate(\"the file's text\")"),
+		PackedStringArray(["the file's text"])) and ok
 	ok = _check("an escaped quote stays inside its key",
 		translated_keys("EventSheetL10n.translate(\"say \\\"go\\\" now\")"),
 		PackedStringArray(["say \"go\" now"])) and ok
