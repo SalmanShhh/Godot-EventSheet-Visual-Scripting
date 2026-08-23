@@ -52,7 +52,7 @@ static func run() -> bool:
 		_texts(include_bar), "⇥ | Addon Pack | FPSController | v1.0.0 | behaves on a | CharacterBody3D | reads as events · 2 patterns · 2 adoptable ▸") and ok
 	ok = _check("it wears the identity bar's presence",
 		include_bar != null and is_equal_approx(include_bar.height_scale, 1.5), true) and ok
-	ok = _check("the Class setup strip folded into it", _has_uid_prefix(rows, "scaffolding_strip_"), false) and ok
+	ok = _check("the head bands folded into it", _has_uid_prefix(rows, "sheet_head_"), false) and ok
 	ok = _check("the Host binding bar folded into it", _has_text(rows, "Host binding"), false) and ok
 	ok = _check("the host variable folded into it", _has_variable_row(rows, "host"), false) and ok
 
@@ -176,7 +176,7 @@ static func _test_an_editable_sheet_keeps_its_rows() -> bool:
 	view.set_sheet(sheet)
 	var rows: Array = view.get_flat_rows()
 	ok = _check("an editable sheet grows no Include bar", _has_uid_prefix(rows, "pack_include_bar_"), false) and ok
-	ok = _check("its class setup strip is still there", _has_uid_prefix(rows, "scaffolding_strip_"), true) and ok
+	ok = _check("its head bands are still there", _has_uid_prefix(rows, "sheet_head_"), true) and ok
 	ok = _check("its knobs are still rows of their own", _has_variable_row(rows, "jump_velocity"), true) and ok
 	view.free()
 	return ok
