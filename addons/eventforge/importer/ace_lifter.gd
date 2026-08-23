@@ -219,6 +219,9 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# The file's own object-typed members, read before any line is matched: they are what tells
 	# `candidate == host` apart from `i == 1` (see _is_object_expression).
 	_object_reference_names = _object_names_from_source(source)
+	# E1 - and its network peers, for the same reason: `peer.create_server(…)` only means "host a
+	# game" when `peer` really is a multiplayer peer this file declared.
+	EventForgeMultiplayerLift.note_source(source)
 	_lift_host_class = str(sheet.host_class).strip_edges()
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
 	# and a final top-level comment block - EventForge's emission layout in row form.
@@ -314,6 +317,11 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# byte-verify, and reverted EVERY function in the file to raw blocks.
 	var connects_ready_blanks: int = 0
 	var connects_ready_header: String = ""
+	# Whether THIS run has taken the `_ready` that holds the connect lines. A handler may only lift to
+	# an event once it has: emission regenerates the connect for every lifted handler, so one lifted
+	# beside a still-verbatim `_ready` writes that line twice. Cleared with everything else on a
+	# re-anchor, because the restarted run no longer owns the `_ready` behind it.
+	var ready_lifted: bool = false
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
@@ -384,6 +392,17 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# the functions after it still lift here, and the ones before it anchor in place
 						# in the mid-file pass below.
 						failed = true
+					elif _connects_through_ready(header, connections) and not ready_lifted:
+						# A handler wired by a `_ready` this run did NOT take. Emission regenerates the
+						# connect line for every lifted handler, so lifting one while its `_ready` stays a
+						# verbatim block above it writes that connect TWICE - the signal wired twice at
+						# runtime, and a whole-file byte-verify that fails and reverts every function in
+						# the file. It happens whenever anything sits between the `_ready` and its
+						# handlers (one plain helper in a lobby autoload was enough): the run re-anchors
+						# past the helper, leaving the `_ready` outside it and the handlers below still
+						# willing. Re-anchor here too - the mid-file pass anchors these handlers in place
+						# instead, which is where they already are.
+						failed = true
 					else:
 						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
 						# the event instead of failing the file (byte-verify still gates).
@@ -406,6 +425,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 							lift = {"ok": false}
 						if bool(lift.get("ok", false)):
 							saw_function = true
+							if header.begins_with("func _ready("):
+								ready_lifted = true
 							var lift_events: Array = lift.get("events", [])
 							if lift_events.is_empty() and header.begins_with("func _ready("):
 								# Connects-only `_ready`: remember its gap (and any non-canonical
@@ -468,6 +489,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			saw_function = false
 			first_section_blanks = -1
 			connects_ready_blanks = 0
+			ready_lifted = false
 			connects_ready_header = ""
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
@@ -1291,6 +1313,18 @@ static func _run_row_kind(code: String, lift_functions: bool) -> String:
 	return "other"
 
 
+## True when this handler's connection is a CODE connect line (a `_ready` wired it) rather than one
+## the project made in its scene file. Only a code connect is re-emitted by the lift, so only a code
+## connect can end up written twice.
+static func _connects_through_ready(header: String, connections: Dictionary) -> bool:
+	var header_regex: RegEx = RegEx.create_from_string("^func ([A-Za-z_][A-Za-z0-9_]*)")
+	var header_match: RegExMatch = header_regex.search(header)
+	if header_match == null:
+		return false
+	var connection: Dictionary = connections.get(header_match.get_string(1), {}) as Dictionary
+	return not str(connection.get("line", "")).is_empty()
+
+
 ## True when the header is a signal handler present in the `_ready` connection map.
 static func _is_connected_handler(header: String, connections: Dictionary) -> bool:
 	var header_regex: RegEx = RegEx.new()
@@ -1762,6 +1796,14 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# leftover path would have emission reach for get_node("EditorInterface…").
 			trigger_id = str(editor_signals[signal_name])
 			trigger_source = ""
+		elif trigger_source == EventForgeMultiplayerLift.CONNECT_SOURCE \
+				and EventForgeMultiplayerLift.SIGNAL_TRIGGERS.has(signal_name):
+			# E1. MultiplayerAPI's own signals, off the `multiplayer` object the connect line names.
+			# The source moves to the global "@multiplayer" token the resolver knows how to write
+			# back, exactly as an editor signal's does - `multiplayer` is a property, not a node, so
+			# a leftover path would have emission reach for get_node("multiplayer").
+			trigger_id = str(EventForgeMultiplayerLift.SIGNAL_TRIGGERS[signal_name])
+			trigger_source = TriggerResolver.MULTIPLAYER_SOURCE
 		elif CORE_SIGNAL_TRIGGERS.has(signal_name):
 			trigger_id = str(CORE_SIGNAL_TRIGGERS[signal_name])
 		else:
@@ -2046,6 +2088,17 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
+			# E1 - a networking run that only means something as a group: the two or three lines that
+			# open a game are ONE row, so they are claimed together before any single line is. The
+			# matched spelling rides back as the row's baked template, which is what re-emits the
+			# author's own bytes instead of the canonical three-line form.
+			var networked_run: Dictionary = EventForgeMultiplayerLift.match_run(lines, index, depth)
+			if not networked_run.is_empty():
+				_flush_raw(current, pending_raw, blank_box)
+				current.actions.append(_networked_action(networked_run, blank_box))
+				index += int(networked_run["consumed"])
+				chain_open = false
+				continue
 			# A line that OPENS a multi-line collection literal takes the whole literal with it.
 			# Matching only its head once published `var metadata := {` as an action and stranded the
 			# entries in a block below it, so a table of defaults read as a wall of orphaned strings.
@@ -2565,6 +2618,14 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if line.strip_edges().begins_with("#"):
 		_append_raw_line(event, pending_raw, blank_box, line)
 		return
+	# E1 - the networking spellings the generic index has no words for (`rpc(&"f", …)` reads as
+	# "Call rpc" through it). Asked FIRST so the row that knows what the line is about wins, with the
+	# spelling it matched baked on so emission writes the author's bytes back.
+	var networked: Dictionary = EventForgeMultiplayerLift.match_line(line)
+	if not networked.is_empty():
+		_flush_raw(event, pending_raw, blank_box)
+		event.actions.append(_networked_action(networked, blank_box))
+		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
 		# No ACE claims it - defer to the raw block. Any pending blank rides along and lands on that
@@ -2578,6 +2639,20 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	action.params = matched.get("params", {})
 	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
+
+
+## E1. One matched networking spelling as the row it is. The template the matcher handed back is
+## BAKED onto the action, where it outranks the descriptor's canonical one - so a row lifted from a
+## hand-written file writes that file's own line, and a row the sheet authored writes the canonical
+## form. One field, already serialized, already the way an addon ACE carries its own template.
+static func _networked_action(matched: Dictionary, blank_box: Array) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = str(matched.get("ace_id", ""))
+	action.params = matched.get("params", {})
+	action.codegen_template = str(matched.get("template", ""))
+	_stamp_body_blanks(action, blank_box)
+	return action
 
 
 ## Appends a verbatim line, closing a pending COMMENT run first when this line does not continue
