@@ -1308,10 +1308,11 @@ static func _count_event_rows(rows: Array) -> int:
 ## A group name sanitized to a legal GDScript identifier fragment: lowercase snake-case,
 ## non-alphanumerics collapsed to a single underscore, trimmed, "group" when nothing remains.
 ## Used for BOTH the runtime-toggle guard member and (via _group_slug) the round-trip markers.
+## Public: the editor's group picker writes the very token Set/Is Group Active address here.
 ## No collision suffix here ON PURPOSE: Set/Is Group Active address guards BY NAME
 ## ("__group_" + name + "_active"), so same-named toggleable groups deliberately share one
 ## guard - a suffix would make the second group unaddressable from those ACEs.
-static func _guard_token(group_name: String) -> String:
+static func guard_token(group_name: String) -> String:
 	var token: String = group_name.strip_edges().to_snake_case()
 	var sanitizer: RegEx = RegEx.new()
 	sanitizer.compile("[^a-z0-9]+")
@@ -1330,7 +1331,7 @@ static func _guard_token(group_name: String) -> String:
 ## single underscore, with a numeric suffix on collision so two same-named groups stay distinct.
 ## `used` accumulates the slugs already handed out this compile.
 static func _group_slug(group_name: String, used: Dictionary) -> String:
-	var slug: String = _guard_token(group_name)
+	var slug: String = guard_token(group_name)
 	var candidate: String = slug
 	var suffix: int = 2
 	while used.has(candidate):
@@ -1405,9 +1406,9 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 				# INNERMOST toggleable guard - toggling the inner group wins, event-sheet-style).
 				var child_guard: String = runtime_guard
 				if group.runtime_toggleable:
-					# _guard_token, not raw to_snake_case: "Wave 1!" used to emit
+					# guard_token, not raw to_snake_case: "Wave 1!" used to emit
 					# `__group_wave_1!_active` - a parse error in the generated script.
-					child_guard = "__group_%s_active" % _guard_token(group.group_name)
+					child_guard = "__group_%s_active" % guard_token(group.group_name)
 					var already_known: bool = false
 					for member_pair: Array in _runtime_group_members:
 						if str(member_pair[0]) == child_guard:
@@ -2847,9 +2848,9 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 		if row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			if group.enabled and group.runtime_toggleable:
-				# Must mirror _flatten_trigger_rows' guard exactly (same _guard_token) or the
+				# Must mirror _flatten_trigger_rows' guard exactly (same guard_token) or the
 				# declared member and the guard reads drift apart.
-				var guard_name: String = "__group_%s_active" % _guard_token(group.group_name)
+				var guard_name: String = "__group_%s_active" % guard_token(group.group_name)
 				var already_known: bool = false
 				for member_pair: Array in _runtime_group_members:
 					if str(member_pair[0]) == guard_name:

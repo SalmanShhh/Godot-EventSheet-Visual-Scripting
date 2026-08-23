@@ -1398,6 +1398,16 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		# editable in the Inspector). No plate and no word - the hover carries the sentence. Falls
 		# through to the plain text draw below if the mark has no art.
 		var mark_side: float = min(badge_rect.size.x, badge_rect.size.y) * 0.95
+		# A row may hand the slot a real texture instead (a group head's folder, which is the
+		# editor's own Folder icon): drawn untinted, the way the icon was designed.
+		var supplied_mark: Variant = metadata.get("badge_icon")
+		if supplied_mark is Texture2D:
+			control.draw_texture_rect(
+				supplied_mark as Texture2D,
+				Rect2(badge_rect.get_center() - Vector2(mark_side, mark_side) * 0.5, Vector2(mark_side, mark_side)),
+				false
+			)
+			return
 		var mark: Texture2D = _badge_icon(span.text, int(round(mark_side)))
 		if mark != null:
 			control.draw_texture_rect(
@@ -1485,6 +1495,12 @@ const BADGE_MARK_SVGS: Dictionary = {
 	# its knob at the right when the line is there, at the left and hollow when it is not.
 	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.4\" y=\"7.2\" width=\"19.2\" height=\"9.6\" rx=\"4.8\" fill=\"#fff\"/><circle cx=\"16.8\" cy=\"12\" r=\"3.1\" fill=\"#000\" fill-opacity=\"0.55\"/></svg>",
 	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3.5\" y=\"8.3\" width=\"17\" height=\"7.4\" rx=\"3.7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"7.9\" cy=\"12\" r=\"2.4\" fill=\"#fff\"/></svg>",
+	# G2 - the ring a group head wears BEFORE its switch: this switch can be thrown while the game
+	# runs, by Set group active. A plain ring, so it qualifies the switch instead of competing with it.
+	"◎": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/></svg>",
+	# G1 - the folder a group head leads with when the editor's own Folder texture is unavailable
+	# (headless, or object icons turned off): a tab and a body, the file-manager idiom.
+	"▤": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.2 6.6a1.6 1.6 0 0 1 1.6-1.6h4.1l1.9 2.2h7.4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.8a1.6 1.6 0 0 1-1.6-1.6z\" fill=\"#fff\"/></svg>",
 }
 
 ## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.

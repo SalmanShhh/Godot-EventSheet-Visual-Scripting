@@ -139,6 +139,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# many visual lines it spans, so spans stack without overlapping (height matches the
 	# reserved row height from _measure_comment_height).
 	var is_comment_row: bool = row_data.row_type == EventRowData.RowType.COMMENT
+	# Right-anchored spans on a FLOW row - the code echo, and a group head's counts and switch - hug
+	# the row's right padding as ONE run, laid out left to right from a shared anchor. Without the
+	# anchor each of them independently took "the right edge minus my width" and they drew on top of
+	# each other. With a single right-aligned span the anchor lands exactly where it always did.
+	var flow_right_x: float = _flow_right_anchor(row_data, row_right_limit, width, font, font_size) \
+		if lane_divider_x <= 0.0 else row_right_limit
 	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(row_data.indent, width) if is_comment_row else 0.0
 	var comment_line_tops: Array[int] = []
 	var comment_line_counts: Array[int] = []
@@ -267,10 +273,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# width, so the whole row reads as one solid note band.
 			span_width = max(row_right_limit - span_x - 2.0, 1.0)
 		elif bool(metadata.get("align_right", false)):
-			# A right-aligned span on a flow row (the variable row's code echo) rides the row's
-			# right padding at its measured size instead of following the sentence's cursor.
+			# A right-aligned span on a flow row (the variable row's code echo, a group head's counts
+			# and switch) rides the row's right padding at its measured size instead of following the
+			# sentence's cursor, taking its place in the right-anchored run.
 			span_width = max(min(span_width, row_right_limit - non_event_origin_x - 2.0), 1.0)
-			span_x = max(non_event_origin_x, row_right_limit - span_width - 2.0)
+			span_x = max(non_event_origin_x, flow_right_x)
+			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		else:
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
 			# blocks) never bleed past the row's right padding.
@@ -409,3 +417,24 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	}
 	_viewport._layout_cache.store(key, layout)
 	return layout
+
+
+## Where the right-anchored run of a flow row starts: the row's right padding minus the measured
+## width of every right-aligned span on it (gaps included), so those spans lay out left to right and
+## still finish flush with the edge. A row with one of them gets the edge itself, unchanged.
+func _flow_right_anchor(row_data: EventRowData, row_right_limit: float, width: float,
+		font: Font, font_size: int) -> float:
+	var run: float = 0.0
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if not bool(metadata.get("align_right", false)):
+			continue
+		# A dropped echo (too narrow a row) claims no width: it is not drawn at all.
+		if bool(metadata.get("code_echo", false)) and width < CODE_ECHO_MIN_ROW_WIDTH:
+			continue
+		if run > 0.0:
+			run += _viewport._get_span_gap(span)
+		run += _viewport._measure_span_width(span, span.text, font, font_size) + 2.0
+	return row_right_limit - run

@@ -50,8 +50,15 @@ const INSPECTOR_BADGE_GLYPH := "⚙"
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 
 ## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
+## G2 - a group head wears the same pair, because it is the same fact: this line is on, or it is not.
 const HEAD_SWITCH_ON_GLYPH := "◍"
 const HEAD_SWITCH_OFF_GLYPH := "◌"
+
+## G1/G2. The marks a group head leads and ends with: the folder that says "this is structure" (the
+## editor's own Folder texture draws over it when there is one), and the ring that says the group can
+## be switched at runtime, which sits just before the switch it qualifies.
+const GROUP_FOLDER_GLYPH := "▤"
+const GROUP_TOGGLEABLE_GLYPH := "◎"
 
 ## How loud the echo of a line the file does NOT have yet is (an unticked `@tool`): quieter than a
 ## resting echo, so the band is findable without claiming the file says something it does not.
@@ -5612,39 +5619,48 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	row_data.debug_state = str(_viewport._debug_rows.get(row_data.row_uid, ""))
 	row_data.disabled = not group.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	# The group's distinctive chrome (accent bar + tinted background, drawn from row_type == GROUP)
-	# already reads unmistakably as a group, so the old leading "Group" text badge was pure clutter -
-	# the header is a FOLDER icon (the editor-theme Folder texture, the file-manager idiom) plus the
-	# inline-editable title (and an optional description line). Headless the icon resolves null and
-	# simply does not draw.
-	row_data.spans = [
+	# G1 - the head reads in ONE line: a folder mark in the badge column, the title, the description
+	# muted right beside it (still inline-editable), then what the group holds and its switch at the
+	# right edge. The body wears a bracket in the group's colour instead of pushing its rows sideways,
+	# so the head is the only place a group takes vertical room. Headless the folder icon resolves
+	# null and the mark simply does not draw.
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
+	var spans: Array[SemanticSpan] = []
+	spans.append(_group_folder_span(reading_style))
+	spans.append(
 		_make_span(
-			_viewport._group_name(group),
+			EventSheetGroupFacts.display_name(group),
 			SemanticSpan.SpanType.OBJECT,
 			{
 				"editable": true,
 				"edit_kind": "group_name",
 				"group_title": true,
-				"object_icon": _folder_icon() if _viewport.show_object_icons else null,
 				"text_color": event_style.group_title_color
 			}
 		)
-	]
-	# Event-sheet-style group description: a muted second line on the header, inline-editable.
+	)
+	# The description sits on the SAME line now: a group's one-line summary belongs beside its name,
+	# the way a variable's does, and a folded head keeps it rather than hiding the very sentence that
+	# says whether the fold is worth opening.
 	if not group.description.strip_edges().is_empty():
-		row_data.line_count = 2
-		row_data.spans.append(
+		spans.append(
 			_make_span(
 				group.description,
 				SemanticSpan.SpanType.COMMENT,
 				{
 					"editable": true,
 					"edit_kind": "group_description",
-					"line_index": 1,
+					"line_index": 0,
 					"text_color": event_style.comment_text_color
 				}
 			)
 		)
+	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style))
+	row_data.spans = spans
+	# G3 - the group's own locals are rows at the TOP of its body: they are declarations, and a
+	# declaration reads where it is declared. The echo is the member the compiler really writes.
+	for local_row: EventRowData in _build_group_local_rows(group, indent + 1):
+		row_data.children.append(local_row)
 	for child in _viewport._group_children(group):
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
@@ -5653,9 +5669,148 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	# preview grows none: nothing can be added to it.
 	if _viewport.show_add_event_footers and not _scaffolding_suppressed():
 		row_data.children.append(
-			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _viewport._group_name(group))
+			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % EventSheetGroupFacts.display_name(group))
 		)
 	return row_data
+
+
+## The folder mark a group head leads with: the file-manager idiom, in the badge column every other
+## declaration row uses, so title text starts at the same x whatever the row is.
+func _group_folder_span(reading_style: EventSheetReadingStyle) -> SemanticSpan:
+	var badge_meta: Dictionary = {
+		"badge": true,
+		"badge_style": "glyph",
+		"badge_natural_width": true,
+		"badge_fixed_width": KIND_BADGE_WIDTH,
+		"line_index": 0,
+		"badge_bg": reading_style.plain_chip_background_color,
+		"badge_fg": reading_style.primary_text_color
+	}
+	var folder: Texture2D = _folder_icon() if _viewport.show_object_icons else null
+	if folder != null:
+		badge_meta["badge_icon"] = folder
+	return _make_span(GROUP_FOLDER_GLYPH, SemanticSpan.SpanType.KEYWORD, badge_meta)
+
+
+## What the head says at its right edge: what the group holds (plus, when it is folded, the objects
+## inside it), the ring that means "and it can be switched at runtime", and the switch itself. All
+## three are right-anchored, so they stay a column no matter how long the title and description are.
+func _group_head_status_spans(group: EventGroup, folded: bool,
+		reading_style: EventSheetReadingStyle) -> Array[SemanticSpan]:
+	var status: Array[SemanticSpan] = []
+	var counts: String = EventSheetGroupFacts.counts_text(
+		group, _group_object_labels(group) if folded else PackedStringArray()
+	)
+	if not counts.is_empty():
+		status.append(_make_span(counts, SemanticSpan.SpanType.COMMENT, {
+			"align_right": true,
+			"line_index": 0,
+			"group_counts": true,
+			"text_color": reading_style.muted_text_color,
+			"hover_note": EventSheetL10n.translate("What this group holds.")
+		}))
+	if group.runtime_toggleable:
+		status.append(_make_span(GROUP_TOGGLEABLE_GLYPH, SemanticSpan.SpanType.KEYWORD, {
+			"badge": true,
+			"badge_style": "glyph",
+			"badge_natural_width": true,
+			"badge_fixed_width": KIND_BADGE_WIDTH,
+			"align_right": true,
+			"line_index": 0,
+			"group_action": "toggleable",
+			"badge_bg": reading_style.plain_chip_background_color,
+			"badge_fg": reading_style.muted_text_color,
+			"hover_note": EventSheetL10n.translate("Can be switched at runtime - Set group active / Group is active.")
+		}))
+	status.append(_make_span(
+		HEAD_SWITCH_ON_GLYPH if group.enabled else HEAD_SWITCH_OFF_GLYPH,
+		SemanticSpan.SpanType.KEYWORD,
+		{
+			"badge": true,
+			"badge_style": "glyph",
+			"badge_natural_width": true,
+			"badge_fixed_width": KIND_BADGE_WIDTH,
+			"align_right": true,
+			"line_index": 0,
+			"group_action": "enabled",
+			"badge_bg": reading_style.plain_chip_background_color,
+			"badge_fg": reading_style.primary_text_color if group.enabled else reading_style.muted_text_color,
+			"hover_note": EventSheetL10n.translate("Active on start.") if group.enabled \
+				else EventSheetL10n.translate("Off - this group and its rows compile out.")
+		}
+	))
+	return status
+
+
+## The distinct object names the rows inside a group act on, in the order they first appear - read
+## off the ROWS' own descriptors rather than off their spans, so a folded group never has to build
+## the spans it is not drawing.
+func _group_object_labels(group: EventGroup) -> PackedStringArray:
+	var labels: PackedStringArray = PackedStringArray()
+	var seen: Dictionary = {}
+	_collect_group_object_labels(EventSheetGroupFacts.children(group), labels, seen)
+	return labels
+
+
+func _collect_group_object_labels(rows: Array, labels: PackedStringArray, seen: Dictionary) -> void:
+	for entry: Variant in rows:
+		if labels.size() > EventSheetGroupFacts.FOLDED_OBJECT_LIMIT:
+			return
+		if entry is EventGroup:
+			_collect_group_object_labels(EventSheetGroupFacts.children(entry as EventGroup), labels, seen)
+			continue
+		var event_row: EventRow = entry as EventRow
+		if event_row == null:
+			continue
+		if not event_row.trigger_id.strip_edges().is_empty():
+			_note_object_label(_object_label_for(event_row.trigger_provider_id, event_row.trigger_id), labels, seen)
+		for condition: Variant in event_row.conditions:
+			if condition is ACECondition:
+				_note_object_label(_object_label_for((condition as ACECondition).provider_id, (condition as ACECondition).ace_id), labels, seen)
+		for action: Variant in event_row.actions:
+			if action is ACEAction:
+				_note_object_label(_object_label_for((action as ACEAction).provider_id, (action as ACEAction).ace_id), labels, seen)
+
+
+func _note_object_label(label: String, labels: PackedStringArray, seen: Dictionary) -> void:
+	var trimmed: String = label.strip_edges()
+	if trimmed.is_empty() or seen.has(trimmed):
+		return
+	seen[trimmed] = true
+	labels.append(trimmed)
+
+
+## G3. A group's `local_variables` as Local rows, first inside the bracket. Same shape as an event's
+## own locals - one variable sentence for every declaration on the canvas - and the same echo, which
+## is the plain `var` line the compiler emits under the group's "group locals" header.
+func _build_group_local_rows(group: EventGroup, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if group == null:
+		return rows
+	for entry: Variant in group.local_variables:
+		if not (entry is LocalVariable):
+			continue
+		var descriptor: LocalVariable = entry as LocalVariable
+		rows.append(
+			_build_variable_row(
+				"local",
+				descriptor.name,
+				descriptor.type_name,
+				descriptor.default_value,
+				indent,
+				{
+					"is_constant": descriptor.is_constant,
+					"variable_index": rows.size(),
+					"source_resource": group,
+					"row_uid": "variable_group_%s_%d" % [group.group_uid, rows.size()],
+					"reading_scope": EventSheetVariableSentence.SCOPE_LOCAL,
+					"expression_default": descriptor.expression_default or descriptor.inferred_type,
+					"description": descriptor.description.strip_edges().get_slice("\n", 0).strip_edges(),
+					"code_line": EventSheetCodeEcho.line_for(descriptor)
+				}
+			)
+		)
+	return rows
 
 
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:

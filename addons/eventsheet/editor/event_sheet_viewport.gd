@@ -70,6 +70,9 @@ signal this_editor_action_requested(kind: String)
 ## the "attach to a node" prompt, the "+ add" row. The viewport only names the band; the dock owns
 ## every dialog and every undoable write.
 signal sheet_head_action_requested(action: String)
+## G2 - a mark on a GROUP head was clicked: "enabled" (the switch) or "toggleable" (the ring
+## before it). The viewport only names the mark; the group is the sheet's, so the dock writes it.
+signal group_action_requested(action: String, group: EventGroup)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
@@ -1963,6 +1966,7 @@ func _draw() -> void:
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_variable_group_bubbles(width)
+	_draw_group_brackets(width)
 	_draw_region_bubbles(width)
 	_draw_box_selection_overlay()
 	_draw_divider_guide(width)
@@ -2021,6 +2025,42 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		# unlabelled bracket around three rows.
 		if not _run_leads_with_folder_strip(start_index):
 			_draw_variable_group_label(str(run.get("group", "")), top)
+
+
+## G1 - the group brackets: a 2px rule in the group's own colour down the LEFT EDGE of its body,
+## from the head's bottom to its last row's bottom, so where a group ends is visible without reading
+## indents. Nested groups inset 2px each, and rows are never pushed sideways for one. A group that is
+## switched off fades its whole body here too, in the same pass that knows the body's range.
+func _draw_group_brackets(width: float) -> void:
+	var shape: Array = []
+	for index: int in range(_flat_rows.size()):
+		var row_data: EventRowData = _flat_rows[index].get("row")
+		shape.append({
+			"group": row_data != null and row_data.row_type == EventRowData.RowType.GROUP,
+			"indent": row_data.indent if row_data != null else 0,
+			"top": _get_row_top(index),
+			"height": _get_row_height(index)
+		})
+	var reading_style: EventSheetReadingStyle = _get_reading_style()
+	var theme_color: Color = _get_event_style().group_title_color
+	for bracket: Dictionary in EventSheetGroupFacts.brackets(shape):
+		var row_data: EventRowData = _flat_rows[int(bracket["index"])].get("row")
+		if row_data == null:
+			continue
+		var accent: Color = theme_color
+		if row_data.source_resource is EventGroup and (row_data.source_resource as EventGroup).custom_color.a > 0.01:
+			accent = (row_data.source_resource as EventGroup).custom_color
+		elif row_data.custom_color.a > 0.01:
+			accent = row_data.custom_color
+		var top: float = float(bracket["top"])
+		var height: float = float(bracket["bottom"]) - top
+		if row_data.disabled:
+			draw_rect(Rect2(float(bracket["x"]), top, width - float(bracket["x"]), height), reading_style.disabled_row_color, true)
+		draw_rect(
+			Rect2(float(bracket["x"]), top, EventSheetGroupFacts.BRACKET_WIDTH, height),
+			Color(accent.r, accent.g, accent.b, 0.75),
+			true
+		)
 
 
 ## True when the row at `index` IS the folder strip that names its run - the row the builder puts
@@ -2099,6 +2139,16 @@ func _draw_region_bubbles(width: float) -> void:
 ## groups for the whole-sheet Fold Everything command.
 func set_region_folds(folded: bool, include_groups: bool = false) -> void:
 	_folding.set_region_folds(folded, include_groups)
+
+
+## Folds or unfolds every event group on the sheet (G4's Open all / Close all).
+func set_group_folds(folded: bool) -> void:
+	_folding.set_group_folds(folded)
+
+
+## True while any group on the sheet is still open.
+func any_group_open() -> bool:
+	return _folding.any_group_open()
 
 
 func _enclosing_region_flat_index(flat_index: int) -> int:
@@ -3423,6 +3473,9 @@ static func _apply_decl_entry_edit(source: Resource, edit_kind: String, value: S
 ## template with the ACE's parameter values substituted) - the sheet continuously teaches
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
 func _get_tooltip(at_position: Vector2) -> String:
+	# G5 - the pinned head shows the last two parent names; the hover is where the whole chain is.
+	if _group_breadcrumb.covers(at_position):
+		return _group_breadcrumb.full_chain()
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
 	# Error → row deep-link: a flagged row leads its tooltip with the diagnostic (it matters
 	# more than the codegen preview).
@@ -4192,17 +4245,11 @@ func _row_at(index: int) -> EventRowData:
 
 
 func _group_children(group: EventGroup) -> Array[Resource]:
-	if not group.events.is_empty():
-		return group.events
-	return group.rows
+	return EventSheetGroupFacts.children(group)
 
 
 func _group_name(group: EventGroup) -> String:
-	if not group.name.is_empty():
-		return group.name
-	if not group.group_name.is_empty():
-		return group.group_name
-	return "Group"
+	return EventSheetGroupFacts.display_name(group)
 
 
 func _object_label_for(provider_id: String, ace_id: String) -> String:
