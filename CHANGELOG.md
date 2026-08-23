@@ -460,6 +460,10 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   the one table all three read - and so does the row builder's search for the prelude block a
   description edit has to rewrite, which had hand-coded the same `## ` prefix and `## @` exclusion a
   fourth time.
+- **An unnamed region has one name.** The block kind called it `(unnamed)` and the region facts
+  called it `(unnamed region)`, so the row on the canvas and the picker (and the amber note about an
+  unclosed fence) named the same fence two different things. The kind asks the facts module, which
+  the row, the refactors, the menu and the tests already ask.
 - **"Is this sheet an autoload?" is one question.** Three predicates answered it - one on the name
   alone, two on the kind and the name - so a sheet given a name without the kind (which
   `EventSheets.new_sheet` allows, the two being separate keys) had its variables scoped *Global* by

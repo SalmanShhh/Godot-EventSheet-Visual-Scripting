@@ -77,6 +77,15 @@ static func _test_row_look() -> bool:
 	passed = _check("and echoes both fences with the body elided",
 		_span_text(folded, "region_fence", "open"), "#region Debug helpers … #endregion") and passed
 	viewport.free()
+
+	# A fence may legitimately carry no label, and then it has ONE placeholder name: the kind's
+	# summary (the picker, the block listings) and the region facts (the row, the orphan note) say
+	# the same words, or a reader meets two names for one fence.
+	var nameless: CustomBlockRow = _region("", false)
+	passed = _check("an unnamed region reads one way from its facts",
+		EventSheetRegionFacts.display_name(nameless), "(unnamed region)") and passed
+	passed = _check("…and the kind's summary says the same words",
+		EventSheetBlockRegistry.get_kind("region").summary(nameless), "(unnamed region)") and passed
 	return passed
 
 

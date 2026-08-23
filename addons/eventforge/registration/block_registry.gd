@@ -514,8 +514,9 @@ class RegionBlockKind extends EventSheetBlockKind:
 	func summary(block: CustomBlockRow) -> String:
 		if bool(block.fields.get("is_end", false)):
 			return "end"
-		var label: String = str(block.fields.get("label", "")).strip_edges()
-		return label if not label.is_empty() else "(unnamed)"
+		# The name a region READS with is the region facts' answer - the row on the canvas, the picker
+		# and the block listings say the same words about the same fence, unnamed ones included.
+		return EventSheetRegionFacts.display_name(block)
 
 	# R1 - a region is a FOLD MARK, not a group: it holds no locals, it cannot be switched off, and
 	# it is two plain lines of the file rather than a resource. Asking for the region look through
