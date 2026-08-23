@@ -523,6 +523,12 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   or any empty default parses to, so Godot refused the whole script ("Cannot infer the type of
   'variable'"). A null default is written `var _x: Curve = null`; everything else keeps the short
   spelling the row's own type word already explains.
+- **A sheet variable's echo is the line the compiler writes for it.** The echo was built by handing a
+  stand-in variable to the TREE-variable emitter, and a sheet variable is emitted by a different one:
+  the two disagreed about `const` (the row echoed `const ammo: int = 99` where the file says
+  `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
+  `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
+  now, and the gate compares every echo against a real compile instead of against a second formatter.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

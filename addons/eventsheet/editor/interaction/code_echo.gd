@@ -195,22 +195,16 @@ static func line_for(variable: LocalVariable) -> String:
 	return declaration_line(SheetCompiler._emit_tree_variable_line(variable))
 
 
-## The declaration line for a sheet-level (dictionary) variable, built by handing the SAME emitter a
-## throwaway variable carrying the descriptor's facts - never a second formatter that could disagree
-## with the compiler about how a declaration is spelled.
+## The declaration line for a sheet-level (dictionary) variable: the compiler's OWN emitter for those
+## variables, handed a one-entry dictionary. A sheet variable is not emitted by the tree-variable
+## path, and the two disagree about several facts a descriptor can carry - `@export_multiline`, the
+## read-only export, the `set(value):` block a clamp or an On Changed writes - so building a stand-in
+## LocalVariable here echoed a line the file does not contain. There is one formatter, and it is the
+## one that writes the file.
 static func line_for_descriptor(var_name: String, descriptor: Dictionary) -> String:
 	if var_name.strip_edges().is_empty():
 		return ""
-	var preview := LocalVariable.new()
-	preview.name = var_name
-	preview.type_name = str(descriptor.get("type", "Variant"))
-	preview.default_value = descriptor.get("default", descriptor.get("value", null))
-	preview.is_constant = bool(descriptor.get("const", descriptor.get("is_constant", false)))
-	preview.exported = bool(descriptor.get("exported", descriptor.get("exposed", true)))
-	preview.options = PackedStringArray(descriptor.get("options", []))
-	if descriptor.get("attributes") is Dictionary:
-		preview.attributes = (descriptor["attributes"] as Dictionary).duplicate(true)
-	return line_for(preview)
+	return declaration_line("\n".join(SheetCompiler._emit_variables({var_name: descriptor})))
 
 
 ## The DECLARATION out of what the emitter wrote for a variable. The emitter also writes the doc

@@ -17,6 +17,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_tokeniser_names_every_part_of_a_declaration() and ok
 	ok = _test_the_echo_is_the_declaration_line_only() and ok
+	ok = _test_a_sheet_variables_echo_is_a_line_of_the_compiled_file() and ok
 	ok = _test_the_segments_rest_below_full_colour() and ok
 	ok = _test_the_scope_word_is_derived() and ok
 	ok = _test_the_list_keeps_the_order_it_was_written_in() and ok
@@ -314,6 +315,36 @@ static func _test_the_echo_is_the_declaration_line_only() -> bool:
 		"var lives: int = 3") and ok
 	ok = _check("a global read here echoes the way you would type it",
 		EventSheetCodeEcho.reference_line("Game", "Score"), "Game.Score") and ok
+	return ok
+
+
+## The echo on a sheet-level variable is checked against a REAL COMPILE, not against a second
+## formatter's idea of the same declaration - a stand-in variable routed through the tree-variable
+## emitter disagreed with the compiler about four facts a descriptor can carry, so the row promised a
+## line the file does not have. Each of the four is here, and every echo is looked for in the output.
+static func _test_a_sheet_variables_echo_is_a_line_of_the_compiled_file() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "Player"
+	sheet.host_class = "Node2D"
+	sheet.variables = {
+		"ammo": {"type": "int", "default": 99, "const": true},
+		"notes": {"type": "String", "default": "", "attributes": {"multiline": true}},
+		"seed_value": {"type": "int", "default": 1, "attributes": {"read_only": true}},
+		"hp": {"type": "int", "default": 100, "attributes": {"clamp": true, "range": {"min": 0, "max": 100}}},
+	}
+	var expected: Dictionary = {
+		"ammo": "@export var ammo: int = 99",
+		"notes": "@export_multiline var notes: String = \"\"",
+		"seed_value": "@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var seed_value: int = 1",
+		"hp": "@export_range(0, 100, 1) var hp: int = 100:",
+	}
+	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_variable_echo.gd").get("output", ""))
+	for var_name: String in expected:
+		var echoed: String = EventSheetCodeEcho.line_for_descriptor(var_name, sheet.variables[var_name])
+		ok = _check("the echo on %s is the declaration the compiler spells" % var_name,
+			echoed, str(expected[var_name])) and ok
+		ok = _check("…and that line is in the compiled file", output.contains("\n%s\n" % echoed), true) and ok
 	return ok
 
 
