@@ -461,6 +461,34 @@ static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
+## Every variable a sheet can name, and who owns each - the ONE list the rows, the picker, the
+## Anatomy rail and the expression picker read. Entries are
+## `{"name", "type_name", "type_word", "value", "scope", "owner", "group", "inspector",
+## "description", "insert_text", "resource", "autoload"}`, in reading order: this object's own
+## variables, then the globals it reaches for, then the locals in scope.
+##
+## `owner` is the object column a row carrying that variable reads with (the sheet's own object, an
+## autoload's name, or "System" for a local), and `insert_text` is what a parameter field must
+## actually receive - bare for an instance variable or a local, `Game.Score` for a global, where the
+## prefix is real code and cannot be dropped.
+static func sheet_variables(sheet: EventSheetResource) -> Array[Dictionary]:
+	return EventSheetVariableOwners.catalog(sheet)
+
+
+## The object column a row naming this variable belongs in, or "" when the sheet declares no such
+## variable and the ordinary provider reading should stand. Pass the list `sheet_variables()`
+## returned - the answer is a lookup, so a caller drawing many rows derives the list once.
+static func variable_owner(variables: Array[Dictionary], variable_name: String) -> String:
+	return EventSheetVariableOwners.owner_for(variables, variable_name)
+
+
+## One variable written the way its ROW reads it, minus the owner: "Instance whole number hp = 100".
+## Composed through the same call the canvas makes, so a pack's own panel and the sheet can never
+## disagree about how a variable is spelled.
+static func variable_sentence(variable: Dictionary) -> String:
+	return EventSheetVariableOwners.sentence(variable)
+
+
 ## The glyph a ROW shows for a comparison operator: `<=` reads ≤, `>=` reads ≥, `!=` reads ≠ and
 ## `==` reads a single `=` (a row is a question, so there is nothing for the doubled character to
 ## disambiguate). Anything that is not one of the six operators comes back unchanged, so a pack can
