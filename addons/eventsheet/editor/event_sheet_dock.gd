@@ -576,7 +576,6 @@ func _activate_tab(index: int) -> void:
 	_refresh_title_strip()
 	_theme_manager._refresh_theme_picker_selection()
 	_refresh_exposed_node()
-	_refresh_variable_panel()
 	_refresh_tab_bar()
 	# Godot-native default (welcome panel choice): the generated-GDScript panel rides
 	# along with every sheet, so the honest output is always in view.
@@ -2232,18 +2231,6 @@ func _toggle_context_variable_constant() -> void:
 
 func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:
 	return _variables._convert_variable_scope(entry, target_scope, target_event_uid)
-
-
-func _on_global_variable_activated(index: int) -> void:
-	_variables._on_global_variable_activated(index)
-
-
-func _on_local_variable_activated(index: int) -> void:
-	_variables._on_local_variable_activated(index)
-
-
-func _refresh_variable_panel() -> void:
-	_variables._refresh_variable_panel()
 
 
 func _edit_context_variable() -> void:
@@ -6085,7 +6072,6 @@ func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palet
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_update_row_address_status()
-	_refresh_variable_panel()
 	_update_code_panel_highlight()
 	_follow_selection_in_manual()
 	# The Scene dock's half of the two-way link: the node this row is about is selected there (and
@@ -6300,7 +6286,6 @@ func _refresh_after_edit() -> void:
 	_sync_split_sheet()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_exposed_node()
-	_refresh_variable_panel()
 	_refresh_code_panel()
 	_refresh_anatomy_panel()
 	_refresh_functions_list()

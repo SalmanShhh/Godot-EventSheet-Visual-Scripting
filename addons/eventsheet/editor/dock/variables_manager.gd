@@ -19,13 +19,6 @@ var _dock: Control = null
 # precisely because the dock populates it before delegating in.
 var _context_variable: Dictionary = {}
 var _context_variable_row: EventRowData = null
-var _global_variable_entries: Array[Dictionary] = []
-var _local_variable_entries: Array[Dictionary] = []
-# Vestigial: the dock never builds these ItemLists (the variable panel was folded into the viewport's
-# inline variable rows), so they stay null and the null-guards below no-op. Kept so _refresh_variable_panel
-# still materializes the entry arrays its activations index into.
-var _global_var_list: ItemList = null
-var _local_var_list: ItemList = null
 
 
 func init(dock: Control) -> void:
@@ -914,47 +907,6 @@ func _variable_type_supports_const(type_name: String) -> bool:
 	return type_name != "Variant"
 
 
-func _on_global_variable_activated(index: int) -> void:
-	if index < 0 or index >= _global_variable_entries.size():
-		return
-	var entry: Dictionary = _global_variable_entries[index]
-	var var_name: String = str(entry.get("name", ""))
-	_dock._variable_dlg.open_for_edit(
-		"global",
-		{"editing": true, "original_name": var_name},
-		var_name,
-		str(entry.get("type", "Variant")),
-		entry.get("default", null),
-		_is_global_variable_in_use(var_name),
-		"Edit Variable",
-		bool(entry.get("const", false)),
-		bool(entry.get("exported", entry.get("exposed", true)))
-	)
-
-
-func _on_local_variable_activated(index: int) -> void:
-	if index < 0 or index >= _local_variable_entries.size():
-		return
-	var entry: Dictionary = _local_variable_entries[index]
-	var var_name: String = str(entry.get("name", ""))
-	var selected_resource: Resource = entry.get("selected_resource", null)
-	_dock._variable_dlg.open_for_edit(
-		"local",
-		{
-			"editing": true,
-			"original_name": var_name,
-			"variable_index": int(entry.get("index", -1)),
-			"selected_resource": selected_resource
-		},
-		var_name,
-		str(entry.get("type", "Variant")),
-		entry.get("default", null),
-		_is_local_variable_in_use(var_name, selected_resource),
-		"Edit Variable",
-		bool(entry.get("const", false))
-	)
-
-
 func _is_global_variable_in_use(var_name: String) -> bool:
 	if _dock._current_sheet == null or var_name.is_empty():
 		return false
@@ -1031,58 +983,3 @@ func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int)
 		elif str(value) == var_name:
 			return true
 	return false
-
-
-func _refresh_variable_panel() -> void:
-	_global_variable_entries.clear()
-	_local_variable_entries.clear()
-	if _global_var_list != null:
-		_global_var_list.clear()
-	if _local_var_list != null:
-		_local_var_list.clear()
-	if _dock._current_sheet != null:
-		var names: Array = _dock._current_sheet.variables.keys()
-		names.sort()
-		for var_name in names:
-			var descriptor: Dictionary = _dock._current_sheet.variables.get(var_name, {})
-			var is_constant: bool = bool(descriptor.get("const", descriptor.get("is_constant", false)))
-			if _global_var_list != null:
-				_global_var_list.add_item(
-					"%s%s : %s = %s"
-					% [
-						"const " if is_constant else "",
-						var_name,
-						str(descriptor.get("type", "Variant")),
-						str(descriptor.get("default", ""))
-					]
-				)
-			_global_variable_entries.append({
-				"name": var_name,
-				"type": str(descriptor.get("type", "Variant")),
-				"default": descriptor.get("default", ""),
-				"const": is_constant
-			})
-	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
-	if selected_resource is EventRow:
-		for index in range((selected_resource as EventRow).local_variables.size()):
-			var local_var: LocalVariable = (selected_resource as EventRow).local_variables[index]
-			if local_var == null:
-				continue
-			if _local_var_list != null:
-				_local_var_list.add_item(
-					"%s%s : %s = %s"
-					% [
-						"const " if local_var.is_constant else "",
-						local_var.name,
-						local_var.type_name,
-						str(local_var.default_value)
-					]
-				)
-			_local_variable_entries.append({
-				"index": index,
-				"name": local_var.name,
-				"type": local_var.type_name,
-				"default": local_var.default_value,
-				"const": local_var.is_constant,
-				"selected_resource": selected_resource
-			})

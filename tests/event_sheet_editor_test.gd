@@ -1408,7 +1408,9 @@ static func run() -> bool:
     all_passed = _check("undo removes local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 0) and all_passed
     dock._on_redo_requested()
     all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
-    dock._on_global_variable_activated(0)
+    # The one way a variable is opened for editing: the row the reader picked, through the context.
+    dock._variables._context_variable = {"scope": "global", "name": "ammo", "type": "int", "default": 12}
+    dock._edit_context_variable()
     all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
     dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"}, true)
     all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
