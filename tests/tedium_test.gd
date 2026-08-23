@@ -117,13 +117,22 @@ static func run() -> bool:
 	var expression_edit: LineEdit = LineEdit.new()
 	field_box.add_child(expression_edit)
 	expression_edit.text = "missing_thing + 1"
+	# P3 - the "+ var" and "Use …" buttons that used to grow beside the field are the help strip's
+	# FIXES now, so the note is what the field reports and the strip is where a reader looks.
+	dialog._fields["amount"] = expression_edit
+	dialog._param_dicts["amount"] = {"id": "amount", "display_name": "Amount", "hint": "expression"}
 	dialog._validate_expression_field(expression_edit)
-	var quickfix: Button = dialog._quickfix_buttons.get(expression_edit) as Button
-	all_passed = _check("unknown identifier grows the + var button",
-		quickfix != null and quickfix.visible and quickfix.text == "+ var missing_thing", true) and all_passed
-	dialog._on_quickfix_pressed(expression_edit)
-	all_passed = _check("the button creates the variable and the field lints clean",
-		editor._current_sheet.variables.has("missing_thing") and not quickfix.visible, true) and all_passed
+	var unknown_note: Dictionary = dialog._note_for("amount")
+	all_passed = _check("an unknown identifier is an error, not a silent field",
+		str(unknown_note.get("level", "")), "error") and all_passed
+	all_passed = _check("the note names what is missing",
+		str(unknown_note.get("body", "")).contains("missing_thing"), true) and all_passed
+	all_passed = _check("and offers to declare it",
+		str((unknown_note.get("fixes", [] as Array)[0] as Dictionary).get("kind", "")), "add") and all_passed
+	dialog._add_variable_named("amount", "missing_thing")
+	dialog._validate_expression_field(expression_edit)
+	all_passed = _check("the fix creates the variable and the field lints clean",
+		editor._current_sheet.variables.has("missing_thing") and dialog._note_for("amount").is_empty(), true) and all_passed
 	field_box.free()
 	editor.free()
 	DirAccess.remove_absolute("user://rename_lib.tres")

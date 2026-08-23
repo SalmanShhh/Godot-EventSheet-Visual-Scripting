@@ -69,6 +69,28 @@ static func run() -> bool:
 		[EventSheets.opposite_operator("<="), EventSheets.opposite_operator("=="),
 			EventSheets.opposite_operator("begins with")], [">", "!=", ""]) and ok
 
+	# P2 - what the Parameters dialog's help strip says about a field carrying a pack's own hint.
+	# A registration outranks the builtin table, which is how a pack describes a box only it knows.
+	ok = _check("an undescribed hint says nothing", EventSheets.param_help("wave_id"), "") and ok
+	EventSheets.register_param_help("wave_id", "A wave from the campaign table.")
+	ok = _check("a registered paragraph is what the strip reads",
+		EventSheets.param_help("wave_id"), "A wave from the campaign table.") and ok
+	ok = _check("and it reaches the strip through the factory",
+		EventSheetParamFieldFactory.hint_paragraph("wave_id"), "A wave from the campaign table.") and ok
+	EventSheets.register_param_help("color", "A wave, actually.")
+	ok = _check("a registration outranks the builtin wording",
+		EventSheetParamFieldFactory.hint_paragraph("color"), "A wave, actually.") and ok
+	EventSheets.register_param_help("color", "")
+	ok = _check("clearing it hands the builtin wording back",
+		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff4d4d"), true) and ok
+	# P1 - an option may declare the line that reads under it; one without a note is unchanged.
+	var noted: Array = EventSheets.combo_options([
+		{"key": "run", "label": "Run", "note": "double speed, keeps momentum"}, "walk"])
+	ok = _check("combo_options carries an option's own note",
+		str((noted[0] as Dictionary).get("note", "")), "double speed, keeps momentum") and ok
+	ok = _check("and leaves a plain choice with none",
+		str((noted[1] as Dictionary).get("note", "")), "") and ok
+
 	# V6 - who owns each variable a sheet can name, and how a row spells one.
 	var owned: EventSheetResource = EventSheetResource.new()
 	owned.custom_class_name = "Player"

@@ -1566,8 +1566,14 @@ static func run() -> bool:
         # Detached: the params dialog can't popup(), so prove it opened by the definition it
         # bound for this flow (a tree-independent signal that open() ran).
         all_passed = _check("editing ace with params opens param dialog", dock._ace_params._definition == action_definition, true) and all_passed
-        all_passed = _check("params dialog adds edit cue in title for replace flows", dock._ace_params._dialog.title.contains("(Edit)"), true) and all_passed
-        all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Editing this existing cell"), true) and all_passed
+        all_passed = _check("params dialog titles itself with the row it will write",
+            dock._ace_params._dialog.title, ACEParamsDialog.title_sentence(action_definition,
+                dock._ace_params._current_values(), dock._ace_params._row_owner)) and all_passed
+        all_passed = _check("and the edit cue rides the ACE name beside it",
+            dock._ace_params._title_ace_label.text.contains("editing"), true) and all_passed
+        all_passed = _check("params dialog exposes flow-aware hint text",
+            dock._ace_params._help_strip.body_label.text.contains("Editing this existing cell"),
+            true) and all_passed
         # grab_focus() is a no-op for a detached control, so assert the first focusable field
         # the focus routine targets exists and is eligible, rather than has_focus().
         var first_focus_field: Control = null
