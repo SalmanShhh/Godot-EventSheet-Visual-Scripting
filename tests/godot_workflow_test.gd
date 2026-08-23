@@ -677,7 +677,8 @@ static func run() -> bool:
 	menu_editor._build_row_context_menu(group_row)
 	var group_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("group menu shows group items, hides event-only ones",
-		group_labels.has("Group Color…") and group_labels.has("Runtime Toggleable")
+		group_labels.has("Group Color…") and group_labels.has("Edit Group…")
+		and group_labels.has("Active On Start") and group_labels.has("Ungroup - Keep The Rows")
 		and not group_labels.has("Make 'Or' block") and not group_labels.has("Edit Comment…"), true) and all_passed
 	var comment_row: EventRowData = EventRowData.new()
 	comment_row.row_type = EventRowData.RowType.COMMENT

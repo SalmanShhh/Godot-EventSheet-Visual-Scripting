@@ -58,10 +58,10 @@ static func run() -> bool:
 		if flat_row != null and flat_row.source_resource == group:
 			group_row = flat_row
 			group_row_index = index
-	all_passed = _check("description renders as a second line", group_row.line_count, 2) and all_passed
-	var description_span: SemanticSpan = group_row.spans[group_row.spans.size() - 1]
-	all_passed = _check("description span is inline-editable",
-		str((description_span.metadata as Dictionary).get("edit_kind", "")), "group_description") and all_passed
+	# G1 - the head is ONE line: the description sits beside the name, not under it.
+	all_passed = _check("the head reads in one line", group_row.line_count, 1) and all_passed
+	var description_span: SemanticSpan = _span_with_edit_kind(group_row, "group_description")
+	all_passed = _check("description span is inline-editable", description_span != null, true) and all_passed
 	editor._on_viewport_span_edit_requested(group_row, "group_description", group.description, "The core loop")
 	all_passed = _check("editing the description applies", group.description, "The core loop") and all_passed
 
@@ -76,8 +76,9 @@ static func run() -> bool:
 		pasted_group != null and pasted_group.description == "The core loop", true) and all_passed
 
 	# ── Slow double-click (injected clock) ───────────────────────────────────
-	# The editable description span is last; slow-clicking it is what begins inline editing.
-	var group_title_span: int = group_row.spans.size() - 1
+	# Slow-clicking the editable description span is what begins inline editing. Found by its edit
+	# kind, never by position: the head gained right-anchored counts and a switch after it.
+	var group_title_span: int = group_row.spans.find(description_span)
 	all_passed = _check("first slow click never edits",
 		viewport._maybe_begin_slow_edit(group_row_index, group_title_span, 10000), false) and all_passed
 	all_passed = _check("a fast second click defers to double-click",
@@ -165,6 +166,14 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
+
+## The span of a row carrying `edit_kind`, or null. Metadata, never position: rows gain spans.
+static func _span_with_edit_kind(row_data: EventRowData, edit_kind: String) -> SemanticSpan:
+	for span: SemanticSpan in row_data.spans:
+		if span != null and span.metadata is Dictionary 				and str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:
+			return span
+	return null
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

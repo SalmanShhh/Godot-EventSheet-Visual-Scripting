@@ -1,14 +1,11 @@
-# Godot EventSheets - a group header reserves height for its DESCRIPTION line.
+# Godot EventSheets - a group head is ONE line, and everything it says fits inside it.
 #
-# A group with a description is a two-line header: the builder sets line_count = 2 and draws the
-# description as a muted second line. The metrics pass, though, returned the themed group_row_height
-# flat and never looked at line_count - so the second line had no height reserved, and the row below
-# was drawn over it. The themed default (56) is already under two lines of the default font, and the
-# gap widens with the editor font, which is the same bleed single-line rows had on a Retina Mac.
-#
-# This pins the relationship rather than the pixels: a described group is at least two font-lines
-# tall, is taller than an undescribed one, and still clears the themed minimum. Pixel values would
-# just re-encode the theme.
+# G1 moved the description onto the head's own line (beside the name, still inline-editable) and put
+# what the group holds at the right edge, so a group costs one row however much it says. This pins
+# the relationship rather than the pixels: the head is a single-line row, a described group is no
+# taller than an undescribed one, both clear the themed bar height, and every span - including the
+# right-anchored counts and switch - draws inside the head instead of bleeding into the row below.
+# Pixel values would just re-encode the theme.
 @tool
 class_name GroupHeaderHeightTest
 extends RefCounted
@@ -20,8 +17,10 @@ static func run() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var plain: EventGroup = EventGroup.new()
 	plain.name = "Setup"
+	plain.group_name = "Setup"
 	var described: EventGroup = EventGroup.new()
 	described.name = "Setup"
+	described.group_name = "Setup"
 	described.description = "one-time wiring"
 	sheet.events.append(plain)
 	sheet.events.append(described)
@@ -41,43 +40,43 @@ static func run() -> bool:
 		return false
 	var plain_height: float = viewport._get_row_height(plain_index)
 	var described_height: float = viewport._get_row_height(described_index)
+	var described_row: EventRowData = viewport.get_flat_rows()[described_index].get("row")
 
-	all_passed = _check("a described group header is a two-line row",
-		viewport.get_flat_rows()[described_index].get("row").line_count, 2) and all_passed
-	all_passed = _check("it reserves both font lines",
-		described_height >= line_height * 2.0, true) and all_passed
-	all_passed = _check("it is taller than a group with no description",
-		described_height > plain_height, true) and all_passed
-	all_passed = _check("an undescribed group still clears the themed bar height",
+	all_passed = _check("a described group head is a ONE-line row", described_row.line_count, 1) and all_passed
+	all_passed = _check("the description rides the head's own line",
+		_line_index_of(described_row, "group_description"), 0) and all_passed
+	all_passed = _check("a description costs the head no height", described_height, plain_height) and all_passed
+	all_passed = _check("a group head still clears the themed bar height",
 		plain_height >= float(viewport._get_event_style().group_row_height), true) and all_passed
+	all_passed = _check("the head reserves its font line",
+		described_height >= line_height, true) and all_passed
 
-	# The invariant that actually matters: the description is DRAWN inside its own row. Reserving the
-	# height was only half the fix - the layout centred the text block as though it were a single line,
-	# which pushed the second line past the bar's bottom edge and under the row that follows.
+	# The invariant that actually matters: everything the head says is DRAWN inside the head. The
+	# counts and the switch are right-anchored, which is its own way to land outside the row.
 	var described_top: float = viewport._get_row_top(described_index)
 	# Laying the row out is what writes each span's rect, so this must run before they are read.
 	viewport.get_row_layout_for_test(described_index)
-	var described_row: EventRowData = viewport.get_flat_rows()[described_index].get("row")
 	var lowest_span_bottom: float = described_top
 	for span: SemanticSpan in described_row.spans:
 		if span != null:
 			lowest_span_bottom = maxf(lowest_span_bottom, span.rect.end.y)
-	all_passed = _check("every line of the header is drawn inside the header",
+	all_passed = _check("every part of the head is drawn inside the head",
 		lowest_span_bottom <= described_top + described_height + 0.5, true) and all_passed
-	all_passed = _check("the second line is genuinely below the first",
-		lowest_span_bottom > described_top + line_height, true) and all_passed
-
-	# The Retina case that made this visible: at a large editor font two lines far exceed the themed
-	# 56, so a flat themed height would bleed tens of pixels into the row below.
-	var big_font: int = 28
-	var big_line: float = viewport._get_event_line_height(big_font)
-	all_passed = _check("two lines of a Retina-sized font exceed the themed bar",
-		big_line * 2.0 > float(viewport._get_event_style().group_row_height), true) and all_passed
 
 	editor.free()
 	if all_passed:
-		print("[PASS] group_header_height: a described group header reserves its second line.")
+		print("[PASS] group_header_height: a group head reads in one line and fits in it.")
 	return all_passed
+
+
+## The line_index of the head span carrying `edit_kind`, or -1 when the head has none.
+static func _line_index_of(row_data: EventRowData, edit_kind: String) -> int:
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		if str((span.metadata as Dictionary).get("edit_kind", "")) == edit_kind:
+			return int((span.metadata as Dictionary).get("line_index", 0))
+	return -1
 
 
 ## The flat-row index whose row is backed by `resource`, or -1.
