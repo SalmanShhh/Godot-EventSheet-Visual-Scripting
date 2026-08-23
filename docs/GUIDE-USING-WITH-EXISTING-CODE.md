@@ -1255,6 +1255,30 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     host**, `f.rpc_id(peer, 10)` reads **to peer**, `multiplayer.is_server()` reads **Is host**,
     `is_multiplayer_authority()` reads **Owns this object**, and `multiplayer.get_unique_id()` reads
     **Multiplayer.MyID**.
+
+    The connection itself reads too, and this half is a **lift**: the row stores the spelling it
+    matched and writes that spelling back, so opening a networked file and saving it untouched
+    reproduces it byte for byte. Nothing on disk changes until you edit a row, and then only that
+    row's lines change.
+
+    | What you wrote | Reads as |
+    | --- | --- |
+    | `peer.create_server(PORT, 4)` then `multiplayer.multiplayer_peer = peer`, with `peer` declared at the top of the file | **Host a game on port PORT for up to 4 players** |
+    | `var peer := ENetMultiplayerPeer.new()` / `peer.create_server(PORT, MAX)` / `multiplayer.multiplayer_peer = peer` (the three-line form Godot's own docs use) | the same row, with the local peer |
+    | the `create_client(address, PORT)` twin of either | **Join a game at address port PORT** |
+    | `multiplayer.multiplayer_peer = null`, `peer.close()`, or the `get_tree().get_multiplayer()` spelling of the first | **Leave the game** |
+    | `WebSocketMultiplayerPeer` / `WebRTCMultiplayerPeer` in the constructor | the same rows, with that peer kind |
+    | `multiplayer.peer_connected.connect(_on_x)` and its four siblings | **On player joined** / **On player left** / **On joined the host** / **On join failed** / **On the host left**, with the connect line re-emitted exactly as you wrote it |
+    | `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each re-emitting your own quoting |
+    | `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
+    | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
+    | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
+
+    And the honest other half. These stay the code they are, because no row can say them without
+    losing something: a `create_server` given channel or bandwidth limits, `peer.host.compress(...)`,
+    `put_packet` / `get_packet`, and the `var error = peer.create_client(...)` spelling that checks
+    what the call answered. They still read line by line, and the head's **reads as** band counts
+    them: *every networking line reads as a row - 9 of 9*, or the number it really is.
   - **Navigation.** `agent.target_position = p` reads **Find path to p**, the
     direction-to-the-next-waypoint step reads **Move along path at speed**, with **(avoiding
     others)** when the file wires the `velocity_computed` callback, and `is_navigation_finished()`
