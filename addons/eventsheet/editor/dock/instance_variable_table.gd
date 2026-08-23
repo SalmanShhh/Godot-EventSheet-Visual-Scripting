@@ -37,7 +37,7 @@ static func rows_for(sheet: EventSheetResource) -> Array[Dictionary]:
 	if sheet == null:
 		return rows
 	var resource_host: bool = EventSheetVariableSentence.is_resource_host(str(sheet.host_class))
-	var autoload: bool = not str(sheet.get("autoload_name")).strip_edges().is_empty()
+	var autoload: bool = not sheet.autoload_singleton_name().is_empty()
 	for entry: Variant in sheet.events:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable == null:

@@ -143,7 +143,7 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	var source_path: String = str(sheet.external_source_path).strip_edges()
 	head["file_name"] = source_path.get_file()
 	head["source_path"] = source_path
-	head["autoload"] = sheet.autoload_name.strip_edges() if sheet.autoload_mode else ""
+	head["autoload"] = sheet.autoload_singleton_name()
 	head["host"] = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""
 	head["remembered"] = remembered_variables(sheet)
 	head["includes"] = PackedStringArray(sheet.includes)

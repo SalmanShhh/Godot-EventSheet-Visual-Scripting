@@ -460,6 +460,13 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   the one table all three read - and so does the row builder's search for the prelude block a
   description edit has to rewrite, which had hand-coded the same `## ` prefix and `## @` exclusion a
   fourth time.
+- **"Is this sheet an autoload?" is one question.** Three predicates answered it - one on the name
+  alone, two on the kind and the name - so a sheet given a name without the kind (which
+  `EventSheets.new_sheet` allows, the two being separate keys) had its variables scoped *Global* by
+  the catalog that feeds the picker, the rail and the Doctor notes, and *Instance* by the row itself.
+  `EventSheetResource.autoload_singleton_name()` is the one answer, and the six places that asked -
+  the catalog, the instance-variable table, the row builder's two, the head band and the compiler's
+  call prefix - read it.
 - **The variable panel nobody could open is gone.** The dock folded its global/local variable lists
   into the viewport's own rows long ago, but the ItemLists, the entry arrays and the two activation
   handlers stayed - and were the last place a variable was still spelled `name : Type = value`. With

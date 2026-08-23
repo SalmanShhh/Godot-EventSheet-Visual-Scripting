@@ -2477,10 +2477,10 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		call_prefix = event_function.codegen_call_prefix
 	elif sheet.behavior_mode and not sheet.custom_class_name.strip_edges().is_empty():
 		call_prefix = "$%s." % sheet.custom_class_name.strip_edges()
-	elif sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty():
+	elif not sheet.autoload_singleton_name().is_empty():
 		# Singletons are addressed by their autoload name - works from every scene,
 		# no node paths (the whole point of an autoload).
-		call_prefix = "%s." % sheet.autoload_name.strip_edges()
+		call_prefix = "%s." % sheet.autoload_singleton_name()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
 
 

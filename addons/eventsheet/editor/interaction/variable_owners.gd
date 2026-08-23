@@ -79,7 +79,7 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	# table only lists the top-level ones because that is where an author puts them, but an opened
 	# pack can put a knob anywhere, and a knob the catalog cannot see is one the picker cannot offer.
 	var resource_host: bool = EventSheetVariableSentence.is_resource_host(str(sheet.host_class))
-	var autoload: bool = not str(sheet.get("autoload_name")).strip_edges().is_empty()
+	var autoload: bool = not sheet.autoload_singleton_name().is_empty()
 	var nested: Array = []
 	EventSheetSelfExpressions.collect_tree_variables_into(sheet.events, nested)
 	for entry: Variant in nested:

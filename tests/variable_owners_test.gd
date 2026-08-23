@@ -26,7 +26,41 @@ static func run() -> bool:
 	ok = _test_inspector_census() and ok
 	ok = _test_row_owner_and_notes() and ok
 	ok = _test_the_doctor_says_what_the_rows_say() and ok
+	ok = _test_one_question_answers_whether_a_sheet_is_an_autoload() and ok
 	return ok
+
+
+## A sheet is an autoload when the project made it one: the KIND and the name it was granted. The two
+## ride in separate fields and can be set independently, so a sheet carrying a name without the kind
+## used to be scoped Global by the catalog that feeds the picker, the rail and the Doctor, and
+## Instance by the row itself. Every surface asks the sheet the one question now.
+static func _test_one_question_answers_whether_a_sheet_is_an_autoload() -> bool:
+	var ok: bool = true
+	var sheet: EventSheetResource = _sheet()
+	sheet.autoload_name = "Game"
+	ok = _check("a name with no kind is not a singleton", sheet.autoload_singleton_name(), "") and ok
+	ok = _check("…so the row does not read the file as an autoload",
+		ViewportRowBuilder.is_autoload(sheet), false) and ok
+	ok = _check("…and the catalog scopes its variables the same way the row does",
+		_scope_of(sheet, "speed"), EventSheetVariableSentence.SCOPE_INSTANCE) and ok
+	sheet.autoload_mode = true
+	ok = _check("with the kind set, the name is the singleton",
+		sheet.autoload_singleton_name(), "Game") and ok
+	ok = _check("…the row reads the file as an autoload",
+		ViewportRowBuilder.is_autoload(sheet), true) and ok
+	ok = _check("…and the catalog moves with it",
+		_scope_of(sheet, "speed"), EventSheetVariableSentence.SCOPE_GLOBAL) and ok
+	ok = _check("and the head band echoes the entry that granted the name",
+		str(EventSheetHeadBands.facts(sheet, "extends Node").get("autoload", "")), "Game") and ok
+	return ok
+
+
+## The scope word the variable catalog files one of this sheet's own variables under.
+static func _scope_of(sheet: EventSheetResource, var_name: String) -> String:
+	for entry: Dictionary in EventSheetVariableOwners.own_entries(sheet):
+		if str(entry.get("name", "")) == var_name:
+			return str(entry.get("scope", ""))
+	return ""
 
 
 ## V12/R3. The Doctor's three new findings are the ROWS' own sentences, word for word: a name this

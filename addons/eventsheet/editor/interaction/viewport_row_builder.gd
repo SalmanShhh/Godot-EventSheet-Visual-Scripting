@@ -1421,7 +1421,7 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 ## truth and the importer already reads it onto the sheet, so this is a read of what the project
 ## says rather than a guess from the file's shape.
 static func is_autoload(sheet: EventSheetResource) -> bool:
-	return sheet != null and sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty()
+	return sheet != null and not sheet.autoload_singleton_name().is_empty()
 
 
 ## P4 - the scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
@@ -2042,7 +2042,7 @@ func _inheritance_member_rows(sheet: EventSheetResource, groups: PackedStringArr
 ## globals are already its head rows - listing them again as "used here" would say nothing).
 func _build_global_variables_bar_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var bars: Array[EventRowData] = []
-	if sheet == null or not str(sheet.get("autoload_name")).strip_edges().is_empty():
+	if sheet == null or not sheet.autoload_singleton_name().is_empty():
 		return bars
 	var used: Array[Dictionary] = EventSheetGlobalVariables.used_here(sheet)
 	if used.is_empty():

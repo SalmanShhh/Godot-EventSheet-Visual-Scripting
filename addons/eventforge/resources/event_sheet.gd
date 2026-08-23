@@ -126,6 +126,15 @@ extends Resource
 @export var read_only: bool = false
 
 
+## The singleton name every other sheet writes to reach this one - `Game` in `Game.Score` - and "" when
+## this sheet is not a project autoload. Two fields carry the fact (the kind, and the name the project
+## grants it) and a sheet configured through the API can be given one without the other, so this is the
+## ONE question: the catalog that scopes a variable Global, the row that says Instance and the head band
+## that echoes the `project.godot` entry all ask it, and cannot answer differently.
+func autoload_singleton_name() -> String:
+	return autoload_name.strip_edges() if autoload_mode else ""
+
+
 ## The runtime group a Family's instances live in, derived from the class name (e.g. class "Enemy" →
 ## "family_enemy"). One rule over the family iterates this group. Empty when the sheet has no class name
 ## (a family needs a custom_class_name - the type instances share). The "Add To Family" action and any

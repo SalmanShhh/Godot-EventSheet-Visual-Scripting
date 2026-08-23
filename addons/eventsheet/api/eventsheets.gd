@@ -430,6 +430,8 @@ static func describe_inspector(type_name: String, attributes: Dictionary, export
 ## For a tool script pass {"tool_mode": true, "host_class": "EditorScript"}; for a Test sheet pass
 ## {"test_mode": true}, which adds the runner's start signal and the discovery marker. Append events and
 ## functions to the returned sheet, then compile() it or open_sheet() its saved path.
+## A singleton needs BOTH autoload keys: `autoload_name` alone names nothing, and every surface asks
+## `sheet.autoload_singleton_name()`, which answers "" until the kind is set as well.
 static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = str(config.get("host_class", "Node"))
