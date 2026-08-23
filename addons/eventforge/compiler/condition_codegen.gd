@@ -34,8 +34,10 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 		# An inverted COMPARISON says itself the short way: the opposite of `hp <= 0` is `hp > 0`,
 		# same truth table and one fewer pair of brackets to unwrap. Only the plain `{a} {op} {b}`
 		# shape qualifies (EventForgeACEFactory decides), so every other inverted condition still
-		# emits the `not (...)` wrap it always did.
-		var flipped: Dictionary = EventForgeACEFactory.flipped_comparison_params(template, params)
+		# emits the `not (...)` wrap it always did - as does a row lifted from a file that wrote the
+		# long spelling, which is the same row and re-emits the words its own file has.
+		var flipped: Dictionary = {} if condition.negation_wrapped \
+			else EventForgeACEFactory.flipped_comparison_params(template, params)
 		if not flipped.is_empty():
 			return ActionCodegen._apply_template(template, flipped)
 		return "not (%s)" % output

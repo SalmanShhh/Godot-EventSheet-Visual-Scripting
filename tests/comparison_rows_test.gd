@@ -204,16 +204,20 @@ static func _test_flip() -> bool:
 	passed = _check("and wears no denial mark", _has_negated_mark(viewport, sheet), false) and passed
 	viewport.free()
 
-	# Both spellings still lift, and each one re-emits ITSELF. The short spelling is the comparison it
-	# reads as; the long one is claimed WHOLE, `not (...)` and all, because a row wearing the flag
-	# would now re-emit the short spelling and lose the byte gate the whole function rides on.
+	# Both spellings lift to the SAME ROW - the comparison, with the invert on for the long one - and
+	# each re-emits ITSELF, because the row remembers which spelling its file used.
 	var short_spelling: EventRow = _lifted_condition_row("if hp > 0:\n\tprint(\"alive\")")
 	var long_spelling: EventRow = _lifted_condition_row("if not (hp <= 0):\n\tprint(\"alive\")")
 	passed = _check("the short spelling lifts as the comparison it is",
 		[_lifted_expression(short_spelling), _lifted_negated(short_spelling)], ["hp > 0", false]) and passed
-	passed = _check("the long spelling lifts as the words the file has",
-		[_lifted_expression(long_spelling), _lifted_negated(long_spelling)],
-		["not (hp <= 0)", false]) and passed
+	passed = _check("the long spelling lifts as the comparison with the invert on, not a raw expression",
+		[_lifted_ace(long_spelling), _lifted_expression(long_spelling), _lifted_negated(long_spelling)],
+		["Core/CompareVar", "hp <= 0", true]) and passed
+	passed = _check("…so the row asks the question in the same words the short spelling does",
+		_row_condition_text(long_spelling), "hp > 0") and passed
+	passed = _check("and the row remembers which spelling its file used",
+		[(short_spelling.conditions[0] as ACECondition).negation_wrapped,
+			(long_spelling.conditions[0] as ACECondition).negation_wrapped], [false, true]) and passed
 
 	# The covenant, both ways round: whatever each spelling lifted to re-emits that spelling exactly.
 	for body: String in ["if hp > 0:\n\tprint(\"alive\")", "if not (hp <= 0):\n\tprint(\"alive\")"]:
@@ -396,6 +400,29 @@ static func _lifted_expression(event: EventRow) -> String:
 
 static func _lifted_negated(event: EventRow) -> bool:
 	return event != null and not event.conditions.is_empty() and (event.conditions[0] as ACECondition).negated
+
+
+## The ACE a lifted row's first condition is, as `provider/ace_id` - the fact that says two spellings
+## landed on the same row rather than on two different vocabularies.
+static func _lifted_ace(event: EventRow) -> String:
+	if event == null or event.conditions.is_empty():
+		return "<no condition>"
+	var condition: ACECondition = event.conditions[0]
+	return "%s/%s" % [condition.provider_id, condition.ace_id]
+
+
+## What a lifted row's condition cell READS, drawn on a real canvas around that row alone.
+static func _row_condition_text(event: EventRow) -> String:
+	if event == null:
+		return "<no row>"
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.events.append(event)
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport.set_sheet(sheet)
+	var reading: String = _condition_text(viewport, sheet)
+	viewport.free()
+	return reading
 
 
 ## Two flat rows at the same indent: an `if` numbered `head_number`, then the Else that follows it.

@@ -2318,8 +2318,11 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 
 
 ## The same expression with the comparison operator flipped to its opposite, or "" when the condition
-## is not the plain `{a} {op} {b}` shape. The short spelling of an inverted comparison.
+## is not the plain `{a} {op} {b}` shape - or when it was lifted from a file that wrote the long
+## spelling, which re-emits the words its own file has. The short spelling of an inverted comparison.
 static func _flipped_condition_expr(condition: ACECondition) -> String:
+	if condition.negation_wrapped:
+		return ""
 	var template: String = condition.codegen_template.strip_edges()
 	if template.is_empty():
 		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)

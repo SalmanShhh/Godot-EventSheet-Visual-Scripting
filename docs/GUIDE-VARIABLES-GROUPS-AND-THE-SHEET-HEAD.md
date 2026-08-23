@@ -451,9 +451,10 @@ clean opposite, so the row simply says - and emits - the opposite:
 | `hp ≤ 0`, inverted | `hp > 0` | `if hp > 0:` |
 | `state = "idle"`, inverted | `state ≠ "idle"` | `if state != "idle":` |
 
-Same truth table, one fewer pair of brackets. Both spellings still open as sheets: a hand-written
-`not (hp <= 0)` lifts as a row of its own that reads `not (hp ≤ 0)`, so your file re-emits byte for
-byte either way.
+Same truth table, one fewer pair of brackets. **Both spellings open as the same row.** A hand-written
+`not (hp <= 0)` lifts as that comparison with Invert ticked - it reads `hp > 0` on the canvas, and the
+Compare dialog, the operator glyphs and the Invert tick all work on it. The row remembers that your
+file wrote the long spelling, so saving it untouched re-emits `not (hp <= 0)` byte for byte.
 
 A condition with **no** clean opposite - begins with, is on floor - is unchanged except for its
 mark, which is now the word **not** in the badge column rather than a symbol.

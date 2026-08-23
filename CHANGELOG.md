@@ -544,6 +544,12 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
   `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
   now, and the gate compares every echo against a real compile instead of against a second formatter.
+- **Both spellings of an inverted comparison open as the same row.** A hand-written
+  `if not (hp <= 0):` was claimed whole by the generic *Expression Is True*, so the row read as a raw
+  expression and the Compare dialog, the operator glyphs and the Invert tick no longer applied to it -
+  while `if hp > 0:` next to it opened as a proper comparison. The long spelling lifts as the
+  comparison with Invert ticked, reading `hp > 0` like its twin, and the row remembers which spelling
+  its file used so an untouched save still re-emits `not (hp <= 0)` byte for byte.
 - **The `##` description band is one line of the file, and writing it keeps the rest.** A doc comment
   written over two lines was joined into one for the band, so the echo claimed a line the file does
   not have - and committing the band then DELETED every `##` line after the first, silently rewriting

@@ -2502,16 +2502,6 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
 		var matched: Dictionary = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
-		# An inverted COMPARISON is not lifted as an inverted row any more: the compiler writes the
-		# opposite operator for one of those (`hp > 0`), so a row carrying the flag would re-emit a
-		# spelling this file does not have and lose the byte gate - taking the whole function down to
-		# a verbatim block with it. Claimed WHOLE instead, `not (...)` and all, which re-emits exactly
-		# what the file says. A source that spells it the short way lifts as the comparison it is.
-		if negated and not matched.is_empty() and not _flips_when_inverted(matched).is_empty():
-			var whole: Dictionary = _match_entry(term, reverse_entries, "condition", true, scope_trigger)
-			if not whole.is_empty():
-				matched = whole
-				negated = false
 		if matched.is_empty():
 			return false
 		var condition: ACECondition = ACECondition.new()
@@ -2519,6 +2509,12 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		condition.ace_id = str(matched.get("ace_id", ""))
 		condition.params = matched.get("params", {})
 		condition.negated = negated
+		# K4 - both spellings of an inverted comparison are the SAME row: `not (hp <= 0)` lifts to the
+		# comparison with the invert on, reading `hp > 0` exactly as a file that wrote the short form
+		# does, so the Compare dialog, the operator glyphs and the invert toggle all still apply. The
+		# file's own spelling is remembered on the row, because the compiler writes the opposite
+		# operator by default and re-emitting the short form here would lose the byte gate.
+		condition.negation_wrapped = negated and not _flips_when_inverted(matched).is_empty()
 		event.conditions.append(condition)
 	return true
 
