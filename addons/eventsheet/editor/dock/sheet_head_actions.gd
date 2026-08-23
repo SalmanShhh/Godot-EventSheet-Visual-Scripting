@@ -45,8 +45,10 @@ func handle(action: String) -> void:
 		EventSheetHeadBands.BAND_TOOL:
 			toggle_tool_mode()
 		EventSheetHeadBands.BAND_DESCRIPTION:
+			# The band's own line, not the whole doc-comment block: a one-line field cannot hold a
+			# block, and seeding it with one would write the block back as a single line.
 			_prompt_for_text(EventSheetHeadBands.BAND_DESCRIPTION, "Description",
-				_dock._current_sheet.class_description)
+				EventSheetHeadBands.description_line(_dock._current_sheet.class_description))
 		EventSheetHeadBands.BAND_AUTOLOAD:
 			_dock._set_status(EventSheetL10n.translate(
 				"Project Settings ▸ Autoload is where this name lives - it is not in this file."))
@@ -263,7 +265,8 @@ func _write_head_line(band_kind: String, new_value: String) -> bool:
 		EventSheetHeadBands.BAND_TOOL:
 			sheet.tool_mode = new_value == "true"
 		EventSheetHeadBands.BAND_DESCRIPTION:
-			sheet.class_description = new_value.strip_edges()
+			sheet.class_description = EventSheetHeadBands.replace_description_line(
+				sheet.class_description, new_value)
 	var target: RawCodeRow = _prelude_row_for(sheet, band_kind)
 	if target == null:
 		return true
@@ -310,15 +313,17 @@ static func rewrite_prelude(code: String, band_kind: String, new_value: String) 
 	var kept: PackedStringArray = PackedStringArray()
 	var replaced: bool = false
 	for line: String in lines:
-		if not EventSheetHeadBands.line_is(line.strip_edges(), band_kind):
+		# ONE line is written: the FIRST the band matches. Every later one is left exactly as it was,
+		# because the band never stood for it - a `##` block of several lines is several lines of
+		# prose, and dropping the ones the band does not show rewrote a hand-written file behind its
+		# author's back, which is the one thing the lossless rule forbids.
+		if replaced or not EventSheetHeadBands.line_is(line.strip_edges(), band_kind):
 			kept.append(line)
 			continue
+		replaced = true
 		if wanted.is_empty():
 			continue  # the line goes away
-		if replaced:
-			continue  # a multi-line `##` block collapses to the one sentence the band shows
 		kept.append(wanted)
-		replaced = true
 	if wanted.is_empty() or replaced:
 		return "\n".join(kept)
 	return "\n".join(_insert_head_line(kept, band_kind, wanted))

@@ -124,7 +124,9 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 			host_bound = true
 		elif line_is(line, BAND_DESCRIPTION):
 			description_lines.append(line.trim_prefix("## ").strip_edges())
-	head["description"] = " ".join(description_lines).strip_edges()
+	# One entry per LINE, joined the way the sheet's own `class_description` field holds it. Joining
+	# them into one sentence would make the band echo a line the file does not have.
+	head["description"] = "\n".join(description_lines).strip_edges()
 	if sheet == null:
 		return head
 	# The sheet's own fields answer for anything the prelude text did not say - a `.tres` sheet the
@@ -158,6 +160,28 @@ static func line_is(line: String, band_kind: String) -> bool:
 	if band_kind == BAND_DESCRIPTION and line.begins_with("## @"):
 		return false
 	return line.begins_with(str(shape["prefix"]))
+
+
+## The ONE line of a doc-comment block the `##` band stands for: its first. A doc comment is one
+## `## ` line per line of prose, and a band is one line of the file - joining the block into a single
+## sentence would echo a line nothing in the file says, so the band is the first line and the rest of
+## the block is left where the reader wrote it.
+static func description_line(description: String) -> String:
+	return description.strip_edges().split("\n")[0].strip_edges()
+
+
+## That same block with only the band's own line rewritten - "" for the whole block when it had one
+## line and that line is being cleared. Every line after the first comes back untouched, because the
+## band was never standing for them.
+static func replace_description_line(description: String, new_line: String) -> String:
+	var lines: PackedStringArray = description.strip_edges().split("\n")
+	var rest: PackedStringArray = lines.slice(1) if lines.size() > 1 else PackedStringArray()
+	var written: String = new_line.strip_edges()
+	if written.is_empty():
+		return "\n".join(rest)
+	var kept: PackedStringArray = PackedStringArray([written])
+	kept.append_array(rest)
+	return "\n".join(kept)
 
 
 ## The exact line a band writes, "" when the band's value means "no such line" - an emptied field,
@@ -241,7 +265,7 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 		BAND_TOOL:
 			return _tool_band(head_facts)
 		BAND_DESCRIPTION:
-			var described: String = str(head_facts.get("description", "")).strip_edges()
+			var described: String = description_line(str(head_facts.get("description", "")))
 			if described.is_empty():
 				return {}
 			var band: Dictionary = _make(kind, described, "## %s" % described)

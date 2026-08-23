@@ -529,6 +529,12 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
   `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
   now, and the gate compares every echo against a real compile instead of against a second formatter.
+- **The `##` description band is one line of the file, and writing it keeps the rest.** A doc comment
+  written over two lines was joined into one for the band, so the echo claimed a line the file does
+  not have - and committing the band then DELETED every `##` line after the first, silently rewriting
+  a hand-written block beyond the fact being edited. The band stands for the first `## ` line, echoes
+  exactly that line, and the rewrite replaces that one line and leaves the block's other lines where
+  their author put them (the sheet's own `class_description` field included).
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

@@ -26,6 +26,7 @@ static func run() -> bool:
 	ok = _test_bands_per_kind() and ok
 	ok = _test_add_offers() and ok
 	ok = _test_prelude_rewrite() and ok
+	ok = _test_a_doc_comment_block_keeps_its_other_lines() and ok
 	ok = _test_rename_count() and ok
 	ok = _test_dialog_order() and ok
 	return ok
@@ -238,6 +239,32 @@ static func _ordered_types() -> Dictionary:
 		if type_index >= 0:
 			seen[type_index] = true
 	return seen
+
+
+## A `##` block of several lines is several LINES of the file, and a band is one line. The band is
+## the first of them - so its echo is a line the file really has, rather than the block joined into
+## one sentence - and writing it leaves every other line of the block exactly where its author put it.
+static func _test_a_doc_comment_block_keeps_its_other_lines() -> bool:
+	var ok: bool = true
+	const BLOCK := "## Player controller.\n## Handles input and movement.\nclass_name Player"
+	var facts: Dictionary = EventSheetHeadBands.facts(_sheet("res://player.gd"),
+		"%s\nextends CharacterBody2D" % BLOCK)
+	ok = _check("the band stands for the first ## line, not the block joined into one",
+		_band(facts, "description").get("value", ""), "Player controller.") and ok
+	ok = _check("…so its echo is a line the file actually has",
+		_echo(facts, "description"), "## Player controller.") and ok
+	ok = _check("rewriting the band leaves the rest of the block alone",
+		EventSheetHeadActions.rewrite_prelude(BLOCK, EventSheetHeadBands.BAND_DESCRIPTION,
+			"The player avatar."),
+		"## The player avatar.\n## Handles input and movement.\nclass_name Player") and ok
+	ok = _check("and clearing it takes away one line, not the block",
+		EventSheetHeadActions.rewrite_prelude(BLOCK, EventSheetHeadBands.BAND_DESCRIPTION, ""),
+		"## Handles input and movement.\nclass_name Player") and ok
+	ok = _check("the sheet field the band mirrors keeps its other lines too",
+		EventSheetHeadBands.replace_description_line(
+			"Player controller.\nHandles input and movement.", "The player avatar."),
+		"The player avatar.\nHandles input and movement.") and ok
+	return ok
 
 
 static func _sheet(source_path: String) -> EventSheetResource:

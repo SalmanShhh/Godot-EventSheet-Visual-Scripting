@@ -1705,7 +1705,9 @@ The lift does not require style-guide code. Beginner spellings round-trip byte-e
   name (with the base class's own editor icon), `extends`, `@icon`, `@tool`, the `##` description,
   an autoload's `project.godot` entry, a behaviour's host binding - each echoing its own line at
   the right edge, and an enum reads as a sentence ("State is one of PATROL, CHASE or FLEE") that
-  opens into one row per value.
+  opens into one row per value. A band is one LINE: a doc comment written over several `##` lines
+  shows its first on the band, and editing that band rewrites only that line - the rest of your
+  block comes back exactly as you wrote it.
 
 And a hand-written `enum` + `match` state machine opens READING like a state machine: the tick
 event's lane says "decides by state - 3 states below", each case is a ◆ `Current state is "patrol"`

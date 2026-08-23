@@ -514,6 +514,32 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   `ROW_MENU_GROUP_RUNTIME`) are deleted with the items they belonged to, and so is a variable-dialog
   label that had been built, written to, and never shown.
 
+### Fixed - the review's second wave: the file the sheet writes, and the words a translator sees
+
+- **A Static local written inside a function is declared.** The rows of a function body are ordinary
+  selectable rows, so the Add variable dialog files a Static local onto one of them - and the pass
+  that hoists the member walked the sheet's events only. The uses were rewritten onto `_hits_taken`
+  all the same, so the compile reported success and the emitted script would not load (\"Identifier
+  '_hits_taken' not declared in the current scope\"). Both hoisting paths ask one collector now, and
+  it walks the functions beside the events, sharing one clash check across them.
+- **A Static local with no value spells its type.** The member was always written `var _x := <value>`,
+  and `:=` has nothing to infer from `null` - which is exactly what a Texture2D, a Curve, a Gradient
+  or any empty default parses to, so Godot refused the whole script (\"Cannot infer the type of
+  'variable'\"). A null default is written `var _x: Curve = null`; everything else keeps the short
+  spelling the row's own type word already explains.
+- **A sheet variable's echo is the line the compiler writes for it.** The echo was built by handing a
+  stand-in variable to the TREE-variable emitter, and a sheet variable is emitted by a different one:
+  the two disagreed about `const` (the row echoed `const ammo: int = 99` where the file says
+  `@export var ammo: int = 99`), about `@export_multiline`, about the read-only export, and about the
+  `set(value):` block a clamp writes under its declaration. The echo asks the compiler's own emitter
+  now, and the gate compares every echo against a real compile instead of against a second formatter.
+- **The `##` description band is one line of the file, and writing it keeps the rest.** A doc comment
+  written over two lines was joined into one for the band, so the echo claimed a line the file does
+  not have - and committing the band then DELETED every `##` line after the first, silently rewriting
+  a hand-written block beyond the fact being edited. The band stands for the first `## ` line, echoes
+  exactly that line, and the rewrite replaces that one line and leaves the block's other lines where
+  their author put them (the sheet's own `class_description` field included).
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for
