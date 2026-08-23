@@ -326,7 +326,8 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 			"badge_fg": accent
 		}
 	)]
-	var title: String = EventSheetRegionFacts.display_name(block)
+	var words: Dictionary = _fold_mark_words(block, row_data.folded, count_text)
+	var title: String = str(words["title"])
 	spans.append(_make_span(
 		title,
 		SemanticSpan.SpanType.OBJECT,
@@ -347,7 +348,7 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 	))
 	# Open, the row carries the author's own description; folded, what it holds - the one thing
 	# worth knowing before deciding whether to open it.
-	var note: String = count_text if row_data.folded else EventSheetRegionFacts.description(block)
+	var note: String = str(words["note"])
 	if not note.is_empty():
 		spans.append(_make_span(note, SemanticSpan.SpanType.COMMENT, {
 			"kind": "custom_block_row",
@@ -355,10 +356,8 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 			"line_index": 0,
 			"text_color": reading_style.muted_text_color
 		}))
-	var echo_line: String = EventSheetRegionFacts.folded_echo(block) if row_data.folded \
-		else EventSheetRegionFacts.fence_line(block)
 	spans.append(_code_echo_span(
-		echo_line,
+		str(words["echo"]),
 		{
 			"kind": "custom_block_row",
 			"region_fence": "open",
@@ -371,10 +370,38 @@ func _apply_region_opener_spans(row_data: EventRowData, count_text: String) -> v
 	row_data.line_count = 1
 
 
-## The region's own colour, or the theme's behaviour accent when the fence carries none.
+## The three things a fold-mark row says: the name it leads with, the muted line beside it, and the
+## line of the file it echoes. The built-in fences answer from EventSheetRegionFacts - a label
+## field, a description field, the fence line. ANY OTHER KIND that asked for this look through
+## `row_style()` answers from the Custom Block API it already implements: its summary is the title
+## and the last line it emits is the echo, so the fold-mark shape is reusable rather than region-
+## only, and one place decides which of the two readings a row gets.
+func _fold_mark_words(block: CustomBlockRow, folded: bool, count_text: String) -> Dictionary:
+	if EventSheetRegionFacts.is_fence(block):
+		return {
+			"title": EventSheetRegionFacts.display_name(block),
+			"note": count_text if folded else EventSheetRegionFacts.description(block),
+			"echo": EventSheetRegionFacts.folded_echo(block) if folded else EventSheetRegionFacts.fence_line(block)
+		}
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
+	var emitted: PackedStringArray = kind.emit_lines(block) if kind != null else PackedStringArray()
+	return {
+		"title": kind.summary(block) if kind != null else block.kind_id,
+		"note": count_text if folded else "",
+		"echo": emitted[emitted.size() - 1] if not emitted.is_empty() else ""
+	}
+
+
+## The region's own colour; failing that the kind's own tint, and failing that the theme's behaviour
+## accent. A kind that asked for this look tints its badge through `style()`, the very hook that
+## tints a flat block row's - one answer about a kind's colour, whichever shape its rows take.
 func _region_accent(block: CustomBlockRow) -> Color:
 	var stored: String = EventSheetRegionFacts.accent_hex(block)
-	return Color.html(stored) if not stored.is_empty() else _viewport._get_event_style().behavior_accent_color
+	if not stored.is_empty():
+		return Color.html(stored)
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
+	var styled: Dictionary = kind.style(block) if kind != null else {}
+	return styled.get("accent", _viewport._get_event_style().behavior_accent_color)
 
 
 # ── R3: a fence with no partner ────────────────────────────────────────────────────────────────

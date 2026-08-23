@@ -78,11 +78,20 @@ func display_spans(_entry: Resource) -> Array[Dictionary]:
 
 
 ## Optional ROW LOOK: which of the sheet's row shapes this kind's rows are drawn as. A kind that
-## stands for STRUCTURE - something that opens, holds rows and closes again - can ask for a shape
-## the sheet already has instead of the flat "badge + summary line" every block gets by default.
-## The answers are words, never renderer types, so the model layer never names an editor class:
-##   "section" (the default flat block row) · "group" (a chapter bar with a fold) ·
-##   "region" (a fold mark: dashed badge, dashed rule down the body, slim closing tick)
+## stands for STRUCTURE - something that opens a stretch of the file and closes it again - can ask
+## for a shape the sheet already has instead of the flat "badge + summary line" every block gets by
+## default. The answers are words, never renderer types, so the model layer never names an editor
+## class:
+##   "section" (the default flat block row) ·
+##   "region" (a fold mark: a dashed `#` badge in the kind's own tint, no chapter-bar height, and
+##   the row's own line echoed at the right edge)
+## A kind that answers "region" for its own rows reads with its own words - `summary()` is the
+## title, the last line `emit()` writes is the echo, and `style()` tints the badge - so the look is
+## reusable and not region-only.
+## Folding a PAIR of rows into one (and the dashed rule down what they hold) is the built-in Region
+## kind's own grammar, over the two fences it stores; a kind that wants that stores fences of its
+## own through it.
+##
 ## Display only - it never affects emission, the lift, or the byte round-trip. The built-in region
 ## kind renders through this, so the hook is load-bearing rather than only an extension point.
 func row_style(_entry: Resource) -> String:
