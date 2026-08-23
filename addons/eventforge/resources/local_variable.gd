@@ -74,12 +74,6 @@ static func static_local_member(local_name: String) -> String:
 	return "_%s" % local_name.strip_edges()
 
 
-## The row name a Static local member reads back as - the exact inverse of static_local_member().
-static func static_local_name(member_name: String) -> String:
-	var bare: String = member_name.strip_edges()
-	return bare.substr(1) if bare.begins_with("_") else bare
-
-
 ## True when this variable is a PROPERTY (a setter and/or getter body is set).
 func has_property_accessors() -> bool:
 	return not setter_body.strip_edges().is_empty() or not getter_body.strip_edges().is_empty()

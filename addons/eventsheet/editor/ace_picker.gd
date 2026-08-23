@@ -261,8 +261,6 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 
 # Group-header colours (by group kind).
 const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber - Godot class sections
-const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green - run context / triggers / signals
-const GROUP_COLOR_VARIABLE := Color("#8fb4e0")    # muted blue - variables
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
