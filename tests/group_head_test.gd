@@ -263,6 +263,36 @@ static func _test_pinned_head() -> bool:
 	passed = _check("the innermost name is the title, not a crumb",
 		str(deep.get("title", "")), "Combat") and passed
 
+	# G5 - the trail is broken back into the names it is made of, so each can be armed as a door.
+	# The elision stands for names rather than being one, so it points at nothing.
+	var crumbs: Array = deep.get("crumbs", []) as Array
+	passed = _check("a deep trail is three crumbs", crumbs.size(), 3) and passed
+	passed = _check("led by the elision, which names no group",
+		[str((crumbs[0] as Dictionary).get("text", "")), int((crumbs[0] as Dictionary).get("index", 0))],
+		["…", -1]) and passed
+	passed = _check("then the two parents, each pointing at its own place in the chain",
+		[str((crumbs[1] as Dictionary).get("text", "")), int((crumbs[1] as Dictionary).get("index", -1)),
+			str((crumbs[2] as Dictionary).get("text", "")), int((crumbs[2] as Dictionary).get("index", -1))],
+		["Gameplay", 1, "Enemies", 2]) and passed
+	passed = _check("a top-level group has no crumbs at all", (one.get("crumbs", []) as Array).size(), 0) and passed
+
+	# …and where each one lands on the strip: names laid out left to right past the separators, the
+	# elision arming nothing, and a click inside a name finding the row that name stands for.
+	var zones: Array[Dictionary] = ViewportGroupBreadcrumb.crumb_zones(
+		crumbs, PackedInt32Array([2, 5, 9, 12]), 30.0,
+		PackedFloat32Array([10.0, 60.0, 50.0]), 8.0)
+	passed = _check("only the two names arm a zone", zones.size(), 2) and passed
+	passed = _check("the first name starts past the elision and its separator",
+		[float(zones[0].get("x", 0.0)), int(zones[0].get("index", -1))], [48.0, 5]) and passed
+	passed = _check("and the second past the first",
+		[float(zones[1].get("x", 0.0)), int(zones[1].get("index", -1))], [116.0, 9]) and passed
+	passed = _check("a click on a name scrolls to that head",
+		ViewportGroupBreadcrumb.crumb_at(zones, 60.0), 5) and passed
+	passed = _check("a click on the separator between them lands on neither",
+		ViewportGroupBreadcrumb.crumb_at(zones, 111.0), -1) and passed
+	passed = _check("and a click past the trail lands on nothing",
+		ViewportGroupBreadcrumb.crumb_at(zones, 400.0), -1) and passed
+
 	# The parts the pinned copy re-draws come off the head ROW, by metadata.
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var group: EventGroup = _group("Combat", "Damage, hits and death.")

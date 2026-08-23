@@ -8,9 +8,11 @@
 # (the viewport already redraws on scroll), so appearing and disappearing can never reflow the
 # scroll area or jitter at group boundaries.
 #
-# Three click zones: the fold arrow folds the group (and scrolls to its real head, so you never fall
-# into the next group by surprise), the switch at the right turns it on and off, and anything else
-# opens Edit group. The enclosure map is a single O(rows) pass cached until the viewport rebuilds its
+# Four click zones: the fold arrow folds the group (and scrolls to its real head, so you never fall
+# into the next group by surprise), each PARENT NAME in the trail scrolls to that head, the switch at
+# the right turns the group on and off, and anything else opens Edit group. A crumb is a door because
+# the name of the thing you are inside is exactly what a reader reaches for to get back out of it.
+# The enclosure map is a single O(rows) pass cached until the viewport rebuilds its
 # flat rows (the one _refresh_rows site invalidates it) - per-frame work is a map lookup, never a
 # scan. The derivations are static + pure, so the path logic is headless-testable without a
 # viewport.
@@ -31,6 +33,9 @@ var _map_dirty: bool = true
 var _jump_index: int = -1
 # The full parent chain of the pinned head, for the hover - the strip only shows the last two.
 var _full_chain: String = ""
+# G5 - one click zone per drawn parent name: [{"x", "width", "index"}] in canvas x, `index` the flat
+# row of the head that name stands for. Rebuilt by every draw, so it can never point at a stale row.
+var _crumb_zones: Array[Dictionary] = []
 
 
 func init(viewport: Control) -> void:
@@ -78,6 +83,7 @@ static func chain_for(map: PackedInt32Array, index: int) -> PackedInt32Array:
 func draw(width: float, font: Font, font_size: int) -> void:
 	_jump_index = -1
 	_full_chain = ""
+	_crumb_zones.clear()
 	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
 	var scroll_offset: float = float(_viewport._get_scroll_offset()) / zoom
 	if scroll_offset <= 0.0:
@@ -88,18 +94,24 @@ func draw(width: float, font: Font, font_size: int) -> void:
 	if chain.is_empty():
 		return
 	var titles: PackedStringArray = PackedStringArray()
+	# The flat row each title stands for, kept beside it: a chain row that names nothing is skipped,
+	# so titles[i] and chain[i] part company the moment one is - and a crumb whose zone points at the
+	# wrong head is worse than no crumb at all.
+	var title_rows: PackedInt32Array = PackedInt32Array()
 	for group_index: int in chain:
 		var chain_row: EventRowData = (_viewport._flat_rows[group_index] as Dictionary).get("row")
 		if chain_row == null:
 			continue
 		if chain_row.source_resource is EventGroup:
 			titles.append(EventSheetGroupFacts.display_name(chain_row.source_resource as EventGroup))
+			title_rows.append(group_index)
 			continue
 		# V12: an Arrange-by header is a group as far as reading goes - it holds events and the
 		# reader is inside it - so the pinned head names it too, from its own drawn title.
 		var header_title: String = header_title_of(chain_row)
 		if not header_title.is_empty():
 			titles.append(header_title)
+			title_rows.append(group_index)
 	if titles.is_empty():
 		return
 	_jump_index = chain[chain.size() - 1]
@@ -118,11 +130,25 @@ func draw(width: float, font: Font, font_size: int) -> void:
 	_viewport.draw_string(font, Vector2(cursor - 14.0, baseline),
 		"▸" if head_row != null and head_row.folded else "▾",
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
-	var parent_trail: String = str(trail.get("trail", ""))
-	if not parent_trail.is_empty():
-		_viewport.draw_string(font, Vector2(cursor, baseline), parent_trail,
+	# G5 - the parent names are drawn one at a time rather than as one joined string, so each can
+	# arm its own click zone. The separators are drawn between them, and belong to neither.
+	var crumbs: Array = trail.get("crumbs", []) as Array
+	var crumb_widths: PackedFloat32Array = PackedFloat32Array()
+	for crumb: Dictionary in crumbs:
+		crumb_widths.append(font.get_string_size(
+			str(crumb.get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x)
+	var separator_width: float = font.get_string_size(
+		EventSheetGroupFacts.CRUMB_SEPARATOR, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x
+	_crumb_zones = crumb_zones(crumbs, title_rows, cursor, crumb_widths, separator_width)
+	for index: int in range(crumbs.size()):
+		_viewport.draw_string(font, Vector2(cursor, baseline), str((crumbs[index] as Dictionary).get("text", "")),
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
-		cursor += font.get_string_size(parent_trail, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x + 6.0
+		cursor += crumb_widths[index]
+		_viewport.draw_string(font, Vector2(cursor, baseline), EventSheetGroupFacts.CRUMB_SEPARATOR,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
+		cursor += separator_width
+	if not crumbs.is_empty():
+		cursor += 2.0
 	var title: String = str(trail.get("title", ""))
 	_viewport.draw_string(font, Vector2(cursor, baseline), title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, event_style.group_title_color)
@@ -206,6 +232,12 @@ func handle_click(local_position: Vector2) -> bool:
 		_viewport._toggle_row_fold(_jump_index)
 		_scroll_to_pinned_head(zoom)
 		return true
+	# G5 - a parent name is a door back out to that group: clicking it scrolls to its own head,
+	# which is the row the reader wanted when they read the name.
+	var crumb_row: int = crumb_at(_crumb_zones, canvas_x)
+	if crumb_row >= 0:
+		_scroll_to_row(crumb_row, zoom)
+		return true
 	if group != null and canvas_x >= width - EventSheetPalette.ROW_HORIZONTAL_PADDING - SWITCH_ZONE_WIDTH:
 		_viewport.group_action_requested.emit("enabled", group)
 		return true
@@ -216,11 +248,40 @@ func handle_click(local_position: Vector2) -> bool:
 	return true
 
 
+## G5. Where each parent name lands on the strip, given the widths the font measured for them:
+## [{"x", "width", "index"}] in canvas x, one per crumb that stands for a row. The elision names no
+## group, so it arms nothing. Pure + static, so the geometry is pinned without a canvas.
+static func crumb_zones(crumbs: Array, title_rows: PackedInt32Array, start_x: float,
+		widths: PackedFloat32Array, separator_width: float) -> Array[Dictionary]:
+	var zones: Array[Dictionary] = []
+	var cursor: float = start_x
+	for index: int in range(crumbs.size()):
+		var crumb_width: float = widths[index] if index < widths.size() else 0.0
+		var title_index: int = int((crumbs[index] as Dictionary).get("index", -1))
+		if title_index >= 0 and title_index < title_rows.size():
+			zones.append({"x": cursor, "width": crumb_width, "index": title_rows[title_index]})
+		cursor += crumb_width + separator_width
+	return zones
+
+
+## The flat row the parent name under `canvas_x` stands for, or -1 where no crumb is drawn there.
+static func crumb_at(zones: Array[Dictionary], canvas_x: float) -> int:
+	for zone: Dictionary in zones:
+		var left: float = float(zone.get("x", 0.0))
+		if canvas_x >= left and canvas_x <= left + float(zone.get("width", 0.0)):
+			return int(zone.get("index", -1))
+	return -1
+
+
 func _scroll_to_pinned_head(zoom: float) -> void:
+	_scroll_to_row(_jump_index, zoom)
+
+
+func _scroll_to_row(row_index: int, zoom: float) -> void:
 	var scroll: ScrollContainer = _viewport._get_scroll_container()
 	if scroll == null:
 		return
-	scroll.scroll_vertical = maxi(0, int(round(_viewport._row_metrics_helper.row_top(_jump_index) * zoom)))
+	scroll.scroll_vertical = maxi(0, int(round(_viewport._row_metrics_helper.row_top(row_index) * zoom)))
 
 
 func _ensure_map() -> void:

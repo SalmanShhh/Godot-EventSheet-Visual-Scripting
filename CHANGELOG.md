@@ -303,7 +303,9 @@
 - **The breadcrumb became the pinned head.** Scrolled inside a group, what pins at the top of the
   canvas is that group's own head - title, description, counts and switch - so it can be folded,
   switched off or edited without scrolling back up. The parent chain shortens to the last two
-  names, and the whole chain is the hover.
+  names, and the whole chain is the hover. Each of those parent names is a door: clicking one
+  scrolls to that group's own head, because the name of what you are inside is exactly what you
+  reach for to get back out of it.
 - **A region has its own look.** A `#region` fence stopped borrowing the group bar. The opening
   fence is one ordinary-height row: a dashed `#` badge in the badge column, the name in bold, the
   description muted beside it, and the line the file really has echoed at its right edge

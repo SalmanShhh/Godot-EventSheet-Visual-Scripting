@@ -211,19 +211,36 @@ static func brackets(rows: Array, left: float = BRACKET_LEFT, depth_inset: float
 	return drawable
 
 
+## The separator between two crumbs of the pinned head's parent trail.
+const CRUMB_SEPARATOR: String = " ▸ "
+
+## The elision a trail longer than two parents wears in place of the names it drops.
+const CRUMB_ELLIPSIS: String = "…"
+
+
 ## The pinned head's parent trail: the last two names, with the full chain kept for the hover. The
 ## innermost name is the head itself and is NOT part of the trail - the pinned row IS that group.
+##
+## `crumbs` is the trail broken back into the names it is made of - [{"text", "index"}], where
+## `index` is that name's position in `titles` and -1 for the elision, which stands for names rather
+## than being one. G5 - the strip arms a click zone per crumb from these, so clicking a parent name
+## scrolls to that head; the joined `trail` string is what it draws when it has nothing to arm.
 static func pinned_trail(titles: PackedStringArray) -> Dictionary:
 	if titles.size() <= 1:
-		return {"title": titles[0] if titles.size() == 1 else "", "trail": "", "full": " ▸ ".join(titles)}
-	var parents: PackedStringArray = PackedStringArray()
-	for index: int in range(titles.size() - 1):
-		parents.append(titles[index])
-	var shown: PackedStringArray = parents
-	if parents.size() > 2:
-		shown = PackedStringArray(["…", parents[parents.size() - 2], parents[parents.size() - 1]])
+		return {"title": titles[0] if titles.size() == 1 else "", "trail": "", "crumbs": [],
+			"full": CRUMB_SEPARATOR.join(titles)}
+	var crumbs: Array[Dictionary] = []
+	var first_shown: int = maxi(0, titles.size() - 3)
+	if first_shown > 0:
+		crumbs.append({"text": CRUMB_ELLIPSIS, "index": -1})
+	for index: int in range(first_shown, titles.size() - 1):
+		crumbs.append({"text": titles[index], "index": index})
+	var shown: PackedStringArray = PackedStringArray()
+	for crumb: Dictionary in crumbs:
+		shown.append(str(crumb["text"]))
 	return {
 		"title": titles[titles.size() - 1],
-		"trail": "%s ▸" % " ▸ ".join(shown),
-		"full": " ▸ ".join(titles)
+		"trail": "%s ▸" % CRUMB_SEPARATOR.join(shown),
+		"crumbs": crumbs,
+		"full": CRUMB_SEPARATOR.join(titles)
 	}

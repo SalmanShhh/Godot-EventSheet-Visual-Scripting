@@ -473,6 +473,8 @@ i18n (Godot translations).
   **that group's own head** under the column header - its title, description, what it holds and
   its switch - so it can be folded, switched off or edited without scrolling back up. The parent
   chain shortens to the last two names ("Gameplay ▸ Combat") and the whole chain is the hover.
+  Clicking one of those parent names scrolls to that group's own head, so getting back out is the
+  same gesture as reading where you are.
 
   <img src="images/group-breadcrumb.png" alt="Scrolled deep inside a sheet: the slim Gameplay - Combat breadcrumb strip pinned above the rows, with events 8 and 9 visible beneath it." width="560">
 - **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same
