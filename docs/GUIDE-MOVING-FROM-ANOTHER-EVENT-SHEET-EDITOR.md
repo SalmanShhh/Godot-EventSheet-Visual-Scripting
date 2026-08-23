@@ -489,8 +489,9 @@ i18n (Godot translations).
   | `S` | Add sub-event (picker) |
   | `B` | Add blank sub-event |
   | `Q` | Add comment |
-  | `G` | Add group |
-  | `V` | Add variable |
+  | `G` | Group the selected rows (or add an empty group when nothing is selected) |
+  | `Ctrl+Shift+G` | Open all / close all groups |
+  | `V` | Add variable (a local of the group when a group head is selected) |
   | `D` | Toggle disabled |
   | `I` | Invert the selected condition |
   | `R` | Replace the selected trigger / condition / action |

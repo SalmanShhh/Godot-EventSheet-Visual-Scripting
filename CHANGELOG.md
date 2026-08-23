@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Changed - a group reads in one line, and its body wears its bracket
+
+- **The head is one line.** A group head now carries a folder mark in the badge column, its title,
+  its description muted right beside it (still inline-editable), and - at the right edge - what the
+  group holds and its switch. The description no longer costs a second line, so a group costs one
+  row however much it says, and a FOLDED head keeps the description and adds the object names
+  inside it, which is the sentence a reader needs to decide whether to open it.
+- **The body wears a bracket, and the rows do not move.** A 2px rule in the group's own colour (the
+  Colour field, or the theme's group colour) runs down the LEFT EDGE of the body, from the head's
+  bottom to its last row's bottom. Nested groups inset one step each, so where a group ends is
+  visible without counting indents - and nothing is pushed sideways to make room for it. A group
+  that is switched off fades its whole body in the same pass.
+- **The switch says what the group is.** `◍` / `◌` at the right of the head is Active on start, one
+  click to throw; a ring before it means the group can also be switched while the game runs. Both
+  are marks with a hover, never words.
+- **Set group active picks the group from a list.** The two group rows keep their ids, their
+  templates and the exact code they emit; what changed is that their Group field now offers this
+  sheet's own groups (switchable ones first) written as the token the compiler addresses, with a
+  one-click offer to make a group switchable when the row names one that is not. The rows read
+  "Set group Tutorial inactive" and "Group Tutorial is active".
+- **A group's own variables are rows.** `local_variables` render as Local rows at the top of the
+  group's body, in the one variable sentence, each echoing the `var` line the compiler writes for
+  it. `V` with a group head selected adds one ("in group Combat" in the dialog's title).
+- **One Edit group dialog.** Name, Description, Active on start, Can be switched at runtime and
+  Colour in one place, with the single help strip describing whatever field is focused and showing
+  the head it is about to write. The group menu follows: Edit Group…, Active On Start (a tick),
+  Open / Close Group, Open All / Close All Groups (Ctrl+Shift+G), Add Local Variable…, Group
+  Color…, Ungroup - Keep The Rows. Edit Description… and Runtime Toggleable are gone - both are
+  fields of the dialog now.
+- **G wraps what is selected.** With rows selected, `G` groups THEM and opens the name editor (the
+  existing Group Selection command, on the key people already press); with nothing selected it
+  still adds an empty group at the cursor.
+- **The breadcrumb became the pinned head.** Scrolled inside a group, what pins at the top of the
+  canvas is that group's own head - title, description, counts and switch - so it can be folded,
+  switched off or edited without scrolling back up. The parent chain shortens to the last two
+  names, and the whole chain is the hover.
+
 ### Changed - the head of a sheet is the head of its file, one band per line
 
 - **The crumb trail is gone.** `▣ Node ▸ CharacterBody2D ▸ Player`, folded away by default with the

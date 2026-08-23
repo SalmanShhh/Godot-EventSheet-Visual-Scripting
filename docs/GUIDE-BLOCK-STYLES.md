@@ -144,8 +144,32 @@ so the symbol teaches once.
 ## Comments, regions, groups
 
 Comments are their own full-width rows (Reading Mode restyles body comments as italic intent
-captions). Regions collapse a named, colored span of rows. Groups are the chapter bars - taller,
-titled, tinted by their color tag, holding events as children.
+captions). Regions collapse a named, colored span of rows.
+
+A **group** is the sheet's chapter bar, and it reads in one line: a folder mark, the title, the
+description muted right beside it, and at the right edge what the group holds ("3 events · 1 local")
+followed by its switch. `◍` means active on start and `◌` means off; a ring before the switch means
+the group can also be switched while the game runs, which is what `Set group active` needs to reach
+it. One click on either mark throws it.
+
+Everything the group holds sits under a 2px **bracket** down the left edge of the body, in the
+group's own colour, running from the head's bottom to its last row's bottom. Nested groups inset one
+step each, and no row is ever pushed sideways to make room for a bracket. A group that is switched
+off fades its whole body: it and its rows compile out entirely.
+
+Folded, the head keeps its description and adds the object names inside, so you can decide whether
+to open it. Scrolled inside a group, its head pins to the top of the canvas - the same title,
+description, counts and switch, still clickable, with the parent chain shortened to the last two
+names and the whole chain on hover.
+
+A group's own variables read as **Local rows at the top of its body**, each echoing the `var` line
+the compiler writes for it. Add one with `V` while the head is selected.
+
+Right-click a head for the group's verbs: Edit Group… (name, description, Active on start, Can be
+switched at runtime, colour), Active On Start, Open / Close Group, Open All / Close All Groups
+(Ctrl+Shift+G), Add Local Variable…, Group Color… and Ungroup - Keep The Rows. `G` with rows
+selected wraps THEM in a new group and opens the name editor; `G` with nothing selected adds an
+empty one.
 
 ## Script blocks - the honest escape hatch
 
