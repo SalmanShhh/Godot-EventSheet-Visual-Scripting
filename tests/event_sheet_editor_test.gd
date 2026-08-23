@@ -1425,7 +1425,8 @@ static func run() -> bool:
     all_passed = _check("a constant says so in its scope word, not in a pill", _rows_contain_text(dock_viewport.get_flat_rows(), "Constant"), true) and all_passed
     var variable_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var global_variable_row: EventRowData = variable_rows[0].get("row")
-    all_passed = _check("a variable row leads with its kind badge, then the sentence", bool((global_variable_row.spans[0].metadata as Dictionary).get("variable_badge", false)) and str(global_variable_row.spans[3].text) == "ammo", true) and all_passed
+    all_passed = _check("a variable row leads with its kind badge", bool((global_variable_row.spans[0].metadata as Dictionary).get("variable_badge", false)), true) and all_passed
+    all_passed = _check("…and the sentence behind it names the variable", str(global_variable_row.spans[3].text), "ammo") and all_passed
     var variable_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
     all_passed = _check("variable name and type spans do not overlap", global_variable_row.spans[0].rect.end.x < global_variable_row.spans[1].rect.position.x, true) and all_passed
     var variable_double_click := InputEventMouseButton.new()
