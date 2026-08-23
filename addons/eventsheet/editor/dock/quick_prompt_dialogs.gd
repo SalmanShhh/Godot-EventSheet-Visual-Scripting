@@ -180,6 +180,9 @@ var _group_runtime_check: CheckBox = null
 var _group_color_button: ColorPickerButton = null
 var _group_help_strip: EventSheetPopupUI.HelpStrip = null
 var _group_edit_target: EventGroup = null
+## The colour the swatch opened on. Apply writes a colour only when the swatch moved off it, so a
+## group that deliberately carries none does not come back tinted just for having been edited.
+var _group_color_seed: Color = Color(0, 0, 0, 0)
 
 ## The facts a group HAS, in the order the dialog asks for them. One table, so the dialog, its help
 ## strip and the tests all read the same list.
@@ -200,7 +203,8 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_desc_edit.text = group.description
 	_group_enabled_check.button_pressed = group.enabled
 	_group_runtime_check.button_pressed = group.runtime_toggleable
-	_group_color_button.color = group.custom_color if group.custom_color.a > 0.0 else Color(0.55, 0.45, 0.85, 1.0)
+	_group_color_seed = group.custom_color if group.custom_color.a > 0.0 else _dock.DEFAULT_STRUCTURE_COLOR
+	_group_color_button.color = _group_color_seed
 	_refresh_group_reading()
 	_group_edit_dialog.popup_centered()
 	_group_name_edit.grab_focus()
@@ -300,11 +304,21 @@ func _apply_group_edit() -> void:
 		return
 	var target: EventGroup = _group_edit_target
 	_group_edit_target = null
-	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, {
-		"enabled": _group_enabled_check.button_pressed,
-		"runtime_toggleable": _group_runtime_check.button_pressed,
-		"custom_color": _group_color_button.color
-	})
+	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, group_edit_extras(
+		_group_enabled_check.button_pressed, _group_runtime_check.button_pressed,
+		_group_color_button.color, _group_color_seed))
+
+
+## G4 - what Apply asks `set_group_fields` to change beyond the name and the description. The colour
+## rides along only when the swatch moved off the colour it opened on: the picker has to open on
+## SOME colour, and a group that deliberately carries none must not come back tinted just because its
+## description was edited. "Group Colour…" on the row menu is still how a group is given one.
+## Static so the rule is testable without a display server.
+static func group_edit_extras(enabled: bool, runtime_toggleable: bool, chosen: Color, seeded: Color) -> Dictionary:
+	var extras: Dictionary = {"enabled": enabled, "runtime_toggleable": runtime_toggleable}
+	if chosen != seeded:
+		extras["custom_color"] = chosen
+	return extras
 
 
 ## Applies a group's fields undoably. Wraps the pure static mutation so the popup's Apply and tests

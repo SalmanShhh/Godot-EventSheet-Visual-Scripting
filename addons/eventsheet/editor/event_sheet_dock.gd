@@ -53,9 +53,7 @@ const ROW_MENU_ATTACH_COMMENT := 17
 const ACTION_MENU_DETACH_COMMENT := 6
 const ROW_MENU_ADD_PICK_FILTER := 18
 const ROW_MENU_ADD_ENUM := 19
-const ROW_MENU_EDIT_GROUP_DESC := 20
 const ROW_MENU_GROUP_COLOR := 27
-const ROW_MENU_GROUP_RUNTIME := 28
 const ROW_MENU_FIND_USAGES := 29
 # 41, not 30: SURROUND_REGION shipped colliding with SAVE_SNIPPET, which made "Save Selection
 # as Snippet…" silently run Surround with Region (first match in the dispatch wins).
@@ -3551,8 +3549,11 @@ func _toggle_all_group_folds() -> void:
 	var view: EventSheetViewport = _active_view()
 	if view == null:
 		return
-	view.set_group_folds(view.any_group_open())
-	_set_status("Groups closed." if view.any_group_open() else "Groups opened.")
+	# Read BEFORE folding: the call rewrites the fold state, so asking again afterwards answers
+	# about the sheet this gesture just made, not the one it was asked about.
+	var opening: bool = not view.any_group_open()
+	view.set_group_folds(not opening)
+	_set_status("Groups opened." if opening else "Groups closed.")
 
 
 ## G3 - V (or Add local variable…) with a group head selected: a Local of THIS group, which the
