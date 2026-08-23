@@ -1,23 +1,36 @@
-# EventSheet - the sticky group breadcrumb: "Gameplay ▸ Combat" pinned under the column header
-# while you are scrolled INSIDE those groups, so a 1,000-row sheet never loses you. A DRAW PASS in
-# the virtualized viewport, not a Control: it renders at the scroll offset each frame (the
-# viewport already redraws on scroll), so appearing and disappearing can never reflow the scroll
-# area or jitter at group boundaries. Clicking the strip jumps to the innermost group's bar.
+# EventSheet - the PINNED GROUP HEAD: while you are scrolled inside a group, its own head stays at
+# the top of the canvas, so the thing that pins is the thing you can act on. Same parts as the head
+# itself - the parent trail, the title, the description, what the group holds and its switch - read
+# straight off the head ROW, so the pinned copy can never drift from the row it stands for. The
+# parent chain shortens to the last two names; the full chain is the hover.
 #
-# The enclosure map is a single O(rows) pass cached until the viewport rebuilds its flat rows
-# (the one _refresh_rows site invalidates it) - per-frame work is a map lookup, never a scan.
-# The derivation is static + pure, so the path logic is headless-testable without a viewport.
+# A DRAW PASS in the virtualized viewport, not a Control: it renders at the scroll offset each frame
+# (the viewport already redraws on scroll), so appearing and disappearing can never reflow the
+# scroll area or jitter at group boundaries.
+#
+# Three click zones: the fold arrow folds the group (and scrolls to its real head, so you never fall
+# into the next group by surprise), the switch at the right turns it on and off, and anything else
+# opens Edit group. The enclosure map is a single O(rows) pass cached until the viewport rebuilds its
+# flat rows (the one _refresh_rows site invalidates it) - per-frame work is a map lookup, never a
+# scan. The derivations are static + pure, so the path logic is headless-testable without a
+# viewport.
 @tool
 class_name ViewportGroupBreadcrumb
 extends RefCounted
 
-const STRIP_HEIGHT := 20.0
+const STRIP_HEIGHT := 24.0
+
+## How wide the fold zone at the left of the strip is, and the switch zone at its right.
+const FOLD_ZONE_WIDTH := 26.0
+const SWITCH_ZONE_WIDTH := 26.0
 
 var _viewport: Control = null
 var _map: PackedInt32Array = PackedInt32Array()
 var _map_dirty: bool = true
-# The click target while the strip is visible (-1 = strip hidden, clicks pass through).
+# The pinned head's flat index while the strip is visible (-1 = strip hidden, clicks pass through).
 var _jump_index: int = -1
+# The full parent chain of the pinned head, for the hover - the strip only shows the last two.
+var _full_chain: String = ""
 
 
 func init(viewport: Control) -> void:
@@ -60,10 +73,11 @@ static func chain_for(map: PackedInt32Array, index: int) -> PackedInt32Array:
 	return chain
 
 
-## Draws the strip (canvas coordinates - the zoom transform is already active) and arms the
-## click target. Called from the viewport's _draw after the rows.
+## Draws the pinned head (canvas coordinates - the zoom transform is already active) and arms the
+## click zones. Called from the viewport's _draw after the rows.
 func draw(width: float, font: Font, font_size: int) -> void:
 	_jump_index = -1
+	_full_chain = ""
 	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
 	var scroll_offset: float = float(_viewport._get_scroll_offset()) / zoom
 	if scroll_offset <= 0.0:
@@ -75,46 +89,138 @@ func draw(width: float, font: Font, font_size: int) -> void:
 		return
 	var titles: PackedStringArray = PackedStringArray()
 	for group_index: int in chain:
-		var row_data: EventRowData = (_viewport._flat_rows[group_index] as Dictionary).get("row")
-		if row_data == null:
+		var chain_row: EventRowData = (_viewport._flat_rows[group_index] as Dictionary).get("row")
+		if chain_row == null:
 			continue
-		if row_data.source_resource is EventGroup:
-			titles.append(_viewport._group_name(row_data.source_resource as EventGroup))
+		if chain_row.source_resource is EventGroup:
+			titles.append(EventSheetGroupFacts.display_name(chain_row.source_resource as EventGroup))
 			continue
 		# V12: an Arrange-by header is a group as far as reading goes - it holds events and the
-		# reader is inside it - so the breadcrumb names it too, from its own drawn title.
-		var header_title: String = header_title_of(row_data)
+		# reader is inside it - so the pinned head names it too, from its own drawn title.
+		var header_title: String = header_title_of(chain_row)
 		if not header_title.is_empty():
 			titles.append(header_title)
 	if titles.is_empty():
 		return
 	_jump_index = chain[chain.size() - 1]
+	var head_row: EventRowData = (_viewport._flat_rows[_jump_index] as Dictionary).get("row")
+	var trail: Dictionary = EventSheetGroupFacts.pinned_trail(titles)
+	_full_chain = str(trail.get("full", ""))
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var background: Color = event_style.column_header_background_color
 	background.a = 0.97
 	_viewport.draw_rect(Rect2(0.0, scroll_offset, width, STRIP_HEIGHT), background, true)
 	_viewport.draw_rect(Rect2(0.0, scroll_offset + STRIP_HEIGHT - 1.0, width, 1.0), event_style.lane_divider_color, true)
 	var text_size: int = EventSheetPalette.resolve_font_size(font_size, -1)
 	var baseline: float = scroll_offset + STRIP_HEIGHT * 0.5 + float(text_size) * 0.32
-	_viewport.draw_string(font, Vector2(EventSheetPalette.GUTTER_WIDTH + 8.0, baseline),
-		" ▸ ".join(titles), HORIZONTAL_ALIGNMENT_LEFT, width - EventSheetPalette.GUTTER_WIDTH - 16.0,
-		text_size, event_style.group_title_color)
+	var cursor: float = FOLD_ZONE_WIDTH
+	_viewport.draw_string(font, Vector2(cursor - 14.0, baseline),
+		"▸" if head_row != null and head_row.folded else "▾",
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
+	var parent_trail: String = str(trail.get("trail", ""))
+	if not parent_trail.is_empty():
+		_viewport.draw_string(font, Vector2(cursor, baseline), parent_trail,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
+		cursor += font.get_string_size(parent_trail, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x + 6.0
+	var title: String = str(trail.get("title", ""))
+	_viewport.draw_string(font, Vector2(cursor, baseline), title,
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, event_style.group_title_color)
+	cursor += font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x + 8.0
+	# The rest of the head, taken from the head ROW itself so the pinned copy is the same reading:
+	# the description beside the name, then what the group holds and its switch at the right edge.
+	var parts: Dictionary = head_parts(head_row)
+	var description: String = str(parts.get("description", ""))
+	var right_edge: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
+	var switch_glyph: String = str(parts.get("switch", ""))
+	if not switch_glyph.is_empty():
+		right_edge -= SWITCH_ZONE_WIDTH
+		_viewport.draw_string(font, Vector2(right_edge + 6.0, baseline), switch_glyph,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size,
+			reading_style.primary_text_color if bool(parts.get("enabled", true)) else reading_style.muted_text_color)
+	var counts: String = str(parts.get("counts", ""))
+	if not counts.is_empty():
+		var counts_width: float = font.get_string_size(counts, HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size).x
+		right_edge -= counts_width + 8.0
+		_viewport.draw_string(font, Vector2(right_edge, baseline), counts,
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
+	if not description.is_empty() and right_edge - cursor > 40.0:
+		_viewport.draw_string(font, Vector2(cursor, baseline), description,
+			HORIZONTAL_ALIGNMENT_LEFT, right_edge - cursor - 8.0, text_size, event_style.comment_text_color)
 
 
-## Left-click routing: true (and jumps) when the click lands on the visible strip. `local_position`
-## is the event position in the control's own coordinates (zoomed canvas pixels).
-func handle_click(local_position: Vector2) -> bool:
+## The parts of a group head the pinned copy re-draws, read off the head row's own spans by their
+## METADATA, never by position: whatever the row builder puts there is what pins. Static + pure.
+static func head_parts(head_row: EventRowData) -> Dictionary:
+	var parts := {"description": "", "counts": "", "switch": "", "enabled": true}
+	if head_row == null:
+		return parts
+	for span: SemanticSpan in head_row.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if str(metadata.get("edit_kind", "")) == "group_description":
+			parts["description"] = span.text
+		elif bool(metadata.get("group_counts", false)):
+			parts["counts"] = span.text
+		elif str(metadata.get("group_action", "")) == "enabled":
+			parts["switch"] = span.text
+			parts["enabled"] = not head_row.disabled
+	return parts
+
+
+## The pinned head's group, or null when the strip is hidden (or pins an Arrange-by header, which is
+## a reading rather than a resource).
+func pinned_group() -> EventGroup:
+	if _jump_index < 0 or _jump_index >= _viewport._flat_rows.size():
+		return null
+	var head_row: EventRowData = (_viewport._flat_rows[_jump_index] as Dictionary).get("row")
+	return head_row.source_resource as EventGroup if head_row != null else null
+
+
+## The full parent chain, for the strip's hover ("" while the strip is hidden).
+func full_chain() -> String:
+	return _full_chain
+
+
+## True when `local_position` (control coordinates) is inside the visible strip.
+func covers(local_position: Vector2) -> bool:
 	if _jump_index < 0:
 		return false
 	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
 	var scroll_offset: float = float(_viewport._get_scroll_offset())
-	if local_position.y < scroll_offset or local_position.y > scroll_offset + STRIP_HEIGHT * zoom:
+	return local_position.y >= scroll_offset and local_position.y <= scroll_offset + STRIP_HEIGHT * zoom
+
+
+## Left-click routing: true (and acts) when the click lands on the visible strip. `local_position`
+## is the event position in the control's own coordinates (zoomed canvas pixels). The fold arrow
+## folds, the switch at the right turns the group on and off, and anything between opens Edit group.
+func handle_click(local_position: Vector2) -> bool:
+	if not covers(local_position):
 		return false
+	var zoom: float = maxf(_viewport._zoom_factor, 0.001)
+	var group: EventGroup = pinned_group()
+	var canvas_x: float = local_position.x / zoom
+	var width: float = _viewport._get_logical_canvas_width()
+	if canvas_x <= FOLD_ZONE_WIDTH:
+		_viewport._toggle_row_fold(_jump_index)
+		_scroll_to_pinned_head(zoom)
+		return true
+	if group != null and canvas_x >= width - EventSheetPalette.ROW_HORIZONTAL_PADDING - SWITCH_ZONE_WIDTH:
+		_viewport.group_action_requested.emit("enabled", group)
+		return true
+	if group != null:
+		_viewport.group_edit_requested.emit(group)
+		return true
+	_scroll_to_pinned_head(zoom)
+	return true
+
+
+func _scroll_to_pinned_head(zoom: float) -> void:
 	var scroll: ScrollContainer = _viewport._get_scroll_container()
 	if scroll == null:
-		return false
+		return
 	scroll.scroll_vertical = maxi(0, int(round(_viewport._row_metrics_helper.row_top(_jump_index) * zoom)))
-	return true
 
 
 func _ensure_map() -> void:
