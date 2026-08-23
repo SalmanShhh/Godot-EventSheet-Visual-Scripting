@@ -78,13 +78,10 @@ const REGION_CLOSER_ECHO_ALPHA: float = 0.4
 ## floors it. Slim enough to read as a rule with a label rather than as another row.
 const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 
-## R3. The mark an amber note leads with - the same warning glyph a line that would not lift wears,
-## because it means the same thing: look here, nothing is broken.
-const REGION_WARNING_GLYPH := "⚠"
-## V12. The mark on a variable note - the same warning the region notes wear, because it is the same
-## kind of thing to say: something about this row does not add up. The COLOUR is what separates a
-## name that cannot work from a kind that only misbehaves.
-const VARIABLE_NOTE_MARK := "⚠"
+## The mark every note row leads with - the same warning glyph a line that would not lift wears,
+## because every note means the same thing: look here, something about this row does not add up.
+## The COLOUR is what separates a line that cannot work from one that only misbehaves.
+const NOTE_MARK := "⚠"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -383,44 +380,63 @@ func _region_accent(block: CustomBlockRow) -> Color:
 ## fix that writes the missing `#endregion` after the last row before the next head. Amber, never
 ## red: an unbalanced fence is a readability wart and the file still compiles.
 func _build_region_orphan_note_row(fence_row: EventRowData, message: String, close_after_uid: String) -> EventRowData:
+	var note_row: EventRowData = _build_note_row(
+		"region_orphan_%s" % str(fence_row.source_resource.get_instance_id()),
+		fence_row.indent, "region_orphan", message,
+		_viewport._get_reading_style().lift_note_badge_foreground_color, {},
+		# The label is written once the rows are numbered - the number it names does not exist yet.
+		{} if close_after_uid.is_empty() else {"label": "", "meta": {
+			"region_fix": close_after_uid,
+			"hover_note": EventSheetL10n.translate("Writes the missing #endregion there.")
+		}})
+	if not close_after_uid.is_empty():
+		_region_fix_notes.append(note_row)
+	return note_row
+
+
+## THE note row, wherever the canvas grows one: the warning mark, the sentence, and - when there is
+## an answer to offer - the fix at the right edge. Inert (no source_resource), so Delete and drag
+## cannot reach a row through it.
+##
+## `kind` names the note's metadata family ("region_orphan", "variable_note"); every span carries it
+## under "kind" and again as the key whose value says WHICH span this is ("mark" / "message" /
+## "fix"), which is what the input dispatch and the tests address a note's parts by. `shared_meta`
+## rides on all three spans (a fix that needs to know what it is fixing), `fix` is
+## {"label", "meta"} or {} for a note with nothing to offer, and `ink` is the whole difference
+## between red (this line cannot work) and amber (it compiles and only misbehaves).
+func _build_note_row(row_uid: String, indent: int, kind: String, message: String, ink: Color,
+		shared_meta: Dictionary, fix: Dictionary) -> EventRowData:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var row_data := EventRowData.new()
-	row_data.indent = fence_row.indent
+	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
-	row_data.row_uid = "region_orphan_%s" % str(fence_row.source_resource.get_instance_id())
+	row_data.row_uid = row_uid
+	var base_meta: Dictionary = shared_meta.duplicate()
+	base_meta["kind"] = kind
+	base_meta["editable"] = false
+	base_meta["line_index"] = 0
 	row_data.spans = [
-		_make_span(REGION_WARNING_GLYPH, SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
+		_make_span(NOTE_MARK, SemanticSpan.SpanType.KEYWORD, base_meta.merged({
 			"badge": true,
 			"badge_style": "scope",
-			"kind": "region_orphan",
-			"region_orphan": "mark",
-			"line_index": 0,
+			kind: "mark",
 			"badge_bg": reading_style.lift_note_badge_background_color,
-			"badge_fg": reading_style.lift_note_badge_foreground_color
-		}),
-		_make_span(message, SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "region_orphan",
-			"region_orphan": "message",
-			"line_index": 0,
-			"text_color": reading_style.lift_note_badge_foreground_color
-		})
+			"badge_fg": ink
+		}, true)),
+		_make_span(message, SemanticSpan.SpanType.COMMENT, base_meta.merged({
+			kind: "message", "text_color": ink
+		}, true))
 	]
-	if close_after_uid.is_empty():
+	if fix.is_empty():
 		return row_data
-	row_data.spans.append(_make_span("", SemanticSpan.SpanType.VALUE, {
-		"editable": false,
-		"kind": "region_orphan",
-		"region_orphan": "fix",
-		"region_fix": close_after_uid,
-		"align_right": true,
-		"line_index": 0,
-		"text_color": reading_style.primary_text_color,
-		"hover_note": EventSheetL10n.translate("Writes the missing #endregion there.")
-	}))
-	_region_fix_notes.append(row_data)
+	var fix_meta: Dictionary = base_meta.merged(fix.get("meta", {}) as Dictionary, true)
+	row_data.spans.append(_make_span(str(fix.get("label", "")), SemanticSpan.SpanType.VALUE,
+		fix_meta.merged({
+			kind: "fix",
+			"align_right": true,
+			"text_color": reading_style.primary_text_color
+		}, true)))
 	return row_data
 
 
@@ -8527,42 +8543,17 @@ func _variable_reference_values(provider_id: String, ace_id: String, params: Dic
 	return found
 
 
-## One note row: the mark, the sentence, and the fix at the right edge. Inert (no source_resource),
-## exactly like the region orphan note beside it, so Delete and drag cannot reach a row through it.
+## One variable note, through the shared note row: red when the name cannot work at all, amber when
+## the row compiles and only misbehaves - the two colours the sheet already uses for exactly that
+## difference, so no new token is minted.
 func _build_variable_note_row(event_uid: String, indent: int, message: String, fix_label: String,
 		fix_meta: Dictionary, severe: bool) -> EventRowData:
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
-	# Red when the line cannot work at all, amber when it compiles and only misbehaves - the two
-	# colours the sheet already uses for exactly that difference, so no new token is minted.
-	var ink: Color = reading_style.error_text_color if severe else reading_style.lift_note_badge_foreground_color
-	var row_data := EventRowData.new()
-	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
-	row_data.source_resource = null
-	row_data.row_uid = "variable_note_%s_%s" % [event_uid, str(fix_meta.get("variable_note_name", ""))]
-	var base_meta: Dictionary = fix_meta.duplicate()
-	base_meta["kind"] = "variable_note"
-	base_meta["editable"] = false
-	base_meta["line_index"] = 0
-	row_data.spans = [
-		_make_span(VARIABLE_NOTE_MARK, SemanticSpan.SpanType.KEYWORD, base_meta.merged({
-			"badge": true,
-			"badge_style": "scope",
-			"variable_note": "mark",
-			"badge_bg": reading_style.lift_note_badge_background_color,
-			"badge_fg": ink
-		}, true)),
-		_make_span(message, SemanticSpan.SpanType.COMMENT, base_meta.merged({
-			"variable_note": "message", "text_color": ink
-		}, true))
-	]
-	if not fix_label.is_empty():
-		row_data.spans.append(_make_span(fix_label, SemanticSpan.SpanType.VALUE, base_meta.merged({
-			"variable_note": "fix",
-			"align_right": true,
-			"text_color": reading_style.primary_text_color
-		}, true)))
-	return row_data
+	return _build_note_row(
+		"variable_note_%s_%s" % [event_uid, str(fix_meta.get("variable_note_name", ""))],
+		indent, "variable_note", message,
+		reading_style.error_text_color if severe else reading_style.lift_note_badge_foreground_color,
+		fix_meta, {} if fix_label.is_empty() else {"label": fix_label, "meta": {}})
 
 
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
