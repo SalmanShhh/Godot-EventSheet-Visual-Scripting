@@ -37,9 +37,12 @@ static func run() -> bool:
 		"Scope", "Write into", "Name", "Type", "Whole numbers only", "Initial value",
 		"Options (combo)", "Description", "Flags", "On ready"
 	]) and ok
-	# ── No hint text sits under a checkbox: the strip is the one place that explains ──
-	ok = _check("the Flags row carries the two checkboxes and nothing else",
-		dialog._static_check.get_parent().get_child_count(), 2) and ok
+	# ── No hint text sits under a checkbox: the strip is the one place that explains. The row holds
+	# only checkboxes, and only the flags the scope in front of you can actually wear are on screen ──
+	ok = _check("the Flags row carries checkboxes and nothing else",
+		_flag_row_classes(dialog), ["CheckBox", "CheckBox", "CheckBox"]) and ok
+	ok = _check("a member variable is offered Static and Constant",
+		_visible_flags(dialog), ["Static", "Constant"]) and ok
 	ok = _check("the Inspector checkbox lives behind More options",
 		dialog._exported_check.get_parent().get_parent() == dialog._attr_section, true) and ok
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
@@ -190,6 +193,23 @@ static func _loose_labels(dialog: VariableDialog) -> PackedStringArray:
 
 
 ## The scope keys the dropdown offers, in order.
+## What the Flags row is made of - nothing but checkboxes, which is the whole claim.
+static func _flag_row_classes(dialog: VariableDialog) -> Array:
+	var classes: Array = []
+	for child: Node in dialog._static_check.get_parent().get_children():
+		classes.append(child.get_class())
+	return classes
+
+
+## The flags actually on screen right now, in the order they read.
+static func _visible_flags(dialog: VariableDialog) -> Array:
+	var shown: Array = []
+	for child: Node in dialog._static_check.get_parent().get_children():
+		if child is CheckBox and (child as CheckBox).visible:
+			shown.append((child as CheckBox).text)
+	return shown
+
+
 static func _scope_keys(dialog: VariableDialog) -> Array:
 	var keys: Array = []
 	for index: int in range(dialog._scope_option.item_count):
