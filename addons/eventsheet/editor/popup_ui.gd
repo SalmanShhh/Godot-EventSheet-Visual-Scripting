@@ -455,6 +455,10 @@ class HelpStrip extends PanelContainer:
 	## Which voice the strip is speaking in right now - readable, so a test can pin the state
 	## without sampling a colour.
 	var tone: String = TONE_NORMAL
+	## Every field this strip was told to follow, in wiring order. The strip is the one place a
+	## dialog explains itself, so "is every field wired to it" is a question worth being able to ask
+	## of a built dialog rather than of its source (see EventSheetPopupUI.probe_help_dialog).
+	var followed: Array[Control] = []
 
 	var _panel_style: StyleBoxFlat = null
 
@@ -581,6 +585,7 @@ class HelpStrip extends PanelContainer:
 			show_note(heading, str(body_provider.call()) if body_provider.is_valid() else body)
 		control.focus_entered.connect(describe_now)
 		control.mouse_entered.connect(describe_now)
+		followed.append(control)
 
 
 	## Wires a dropdown per ITEM: `describer.call(index)` returns {"heading": …, "body": …} for the
@@ -597,6 +602,7 @@ class HelpStrip extends PanelContainer:
 				show_note(str((told as Dictionary).get("heading", "")), str((told as Dictionary).get("body", "")))
 		option.item_selected.connect(apply)
 		option.focus_entered.connect(func() -> void: apply.call(option.selected))
+		followed.append(option)
 		var popup: PopupMenu = option.get_popup()
 		if popup != null:
 			popup.id_focused.connect(apply)
@@ -610,6 +616,72 @@ static func help_strip(heading: String = "", body: String = "", reads_as: String
 	strip.describe(heading, body)
 	strip.set_reading(reads_as, in_code)
 	return strip
+
+
+## THE DIALOG PROBE: what a built dialog says about itself, without a display server.
+##
+## Every dialog in this editor is the same shape - fields, and ONE help strip at the foot that
+## describes whichever field is focused - and the shape is only kept if something checks it. This
+## answers, for any built UI:
+##   strips        how many help strips it holds (one, or the shape is broken)
+##   fields        the focusable controls in it
+##   wired         the ones the strip was told to follow
+##   unwired       the ones it was not, BY NAME - the fields with nothing to say for themselves
+##   follows_focus true when focusing each wired field in turn actually changes what the strip says
+##   reads_as / in_code   the two reading lines, as the reader would see them
+##
+## Focus is delivered by emitting `focus_entered` rather than by grabbing it, which is what lets this
+## run in the suite: a real grab needs a Viewport and a display server, and the signal is the whole
+## of what the wiring listens to.
+static func probe_help_dialog(node: Node) -> Dictionary:
+	var strips: Array[HelpStrip] = []
+	var fields: Array[Control] = []
+	_gather_dialog_parts(node, strips, fields)
+	var probe: Dictionary = {"strips": strips.size(), "fields": fields.size(), "wired": 0,
+		"unwired": PackedStringArray(), "follows_focus": false, "reads_as": "", "in_code": ""}
+	if strips.size() != 1:
+		return probe
+	var strip: HelpStrip = strips[0]
+	var followed: Array[Control] = strip.followed
+	var unwired: PackedStringArray = PackedStringArray()
+	for field: Control in fields:
+		if not followed.has(field):
+			unwired.append(field.name)
+	probe["wired"] = followed.size()
+	probe["unwired"] = unwired
+	probe["reads_as"] = strip.reads_as_value.text
+	probe["in_code"] = strip.in_code_value.text
+	probe["follows_focus"] = _strip_follows_focus(strip, followed)
+	return probe
+
+
+## True when focusing each followed field in turn leaves the strip saying something DIFFERENT from
+## what the field before it left standing. One field is a trivial yes; a dialog whose fields all
+## share one description is a no, and it should be.
+static func _strip_follows_focus(strip: HelpStrip, followed: Array[Control]) -> bool:
+	if followed.is_empty():
+		return false
+	var said: PackedStringArray = PackedStringArray()
+	for field: Control in followed:
+		field.focus_entered.emit()
+		said.append("%s|%s" % [strip.heading_label.text, strip.body_label.text])
+	for index: int in range(1, said.size()):
+		if said[index] == said[index - 1]:
+			return false
+	return not said[0].strip_edges().is_empty()
+
+
+## The strips and the focusable controls of one built dialog, gathered in one walk of its tree.
+static func _gather_dialog_parts(node: Node, strips: Array[HelpStrip], fields: Array[Control]) -> void:
+	if node is HelpStrip:
+		strips.append(node)
+		# A strip's own fix buttons are not fields of the dialog - they are part of what it says.
+		return
+	var control: Control = node as Control
+	if control != null and control.focus_mode != Control.FOCUS_NONE:
+		fields.append(control)
+	for child: Node in node.get_children():
+		_gather_dialog_parts(child, strips, fields)
 
 
 ## A dropdown that shows the GDScript form of its current choice, muted, beside it: the operator list
