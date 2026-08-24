@@ -184,6 +184,17 @@ static func _test_the_one_click_fix() -> bool:
 		true) and ok
 	ok = _check("a sheet that already takes its own copy is not told to again",
 		EventSheetLightingFindings.insert_own_environment(sheet, "$World"), false) and ok
+	# AND AFTER A SAVE AND A REOPEN, which is the only form of "fixed" a reader ever sees. The sheet
+	# in memory is not the artefact - the FILE is - so the line has to read back as the row that wrote
+	# it. Otherwise the finding returns on the next open, the reader clicks the fix again, and the
+	# scene takes the copy twice every _ready.
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(compiled, true, CRYPT)
+	ok = _check("the file it wrote still holds the row when it is opened again",
+		EventSheetLightingFindings.writes_its_own_environment(reopened), true) and ok
+	ok = _check("so the reader is not told to fix it a second time",
+		EventSheetLightingFindings.findings(reopened).size(), 0) and ok
+	ok = _check("and a second click has nothing left to write",
+		EventSheetLightingFindings.insert_own_environment(reopened, "$World"), false) and ok
 	# The same gesture from the report: the panel's chip runs the dock operation the note row runs.
 	var offered: Array[Dictionary] = EventSheetQuickFixes.fixes_for(
 		{"check": EventSheetLightingDoctor.CHECK_SHARED, "subject": "$World"})

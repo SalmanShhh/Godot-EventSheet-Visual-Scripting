@@ -2,16 +2,18 @@
 #
 # Most lit games are older than the sheet that opens them, so every light row has to be readable
 # BACKWARDS out of hand-written GDScript: `$Torch.energy = 1.2`, `torch.light_energy = 0.5`,
-# `get_node("Lantern").shadow_enabled = true`, and the one-line tween a fade is. Each match hands
-# back the exact template it matched, so the row re-emits the author's own bytes rather than a
-# canonical spelling of them.
+# `get_node("Lantern").shadow_enabled = true`, the one-line tween a fade is, and the bare
+# `energy = 1.2` a sheet attached to the light ITSELF writes - "On node" is optional, so a receiver
+# that is not there is a spelling too, and the commonest one. Each match hands back the exact
+# template it matched, so the row re-emits the author's own bytes rather than a canonical spelling
+# of them.
 #
 # THE GATE, and the reason this family has a guard at all: a line only becomes a light row when the
-# ATTACHED SCENE (or the file's own typed declaration) says the node it names really is a light.
-# `.enabled = false` is a sentence half the objects in a game can say, and claiming it for a light
-# would relabel somebody's door. A node whose class cannot be established stays a script block with
-# the usual Adopt offer - the row never guesses, and a reader can always check the claim against the
-# scene in front of them.
+# ATTACHED SCENE (or the file's own typed declaration) says the node it names really is a light -
+# and for a line that names no node, that the node the SHEET is on is one. `.enabled = false` is a
+# sentence half the objects in a game can say, and claiming it for a light would relabel somebody's
+# door. A node whose class cannot be established stays a script block with the usual Adopt offer -
+# the row never guesses, and a reader can always check the claim against the scene in front of them.
 #
 # Everything here is TABLE ENTRIES (see EventForgeLiftTable): one pattern per property, the captures
 # that are values, and the spelling stored by splicing those captures out of the author's own line.
@@ -23,14 +25,20 @@ extends RefCounted
 
 const W := preload("res://addons/eventforge/registration/light_words.gd")
 
-## The node spellings a row can address a light by, as one capture. All four are the author's own
-## text and ride back out untouched: the row shows the light it names, so `target` IS a value, and
-## which of the four spellings was used is part of the line rather than part of the sentence.
-const TARGET: String = "(?<target>\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
-	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*)"
+## The node spellings a row can address a light by. All four are the author's own text and ride back
+## out untouched: the row shows the light it names, so `target` IS a value, and which of the four
+## spellings was used is part of the line rather than part of the sentence.
+const NODE_TEXT: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
+	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*"
 
 ## The call a fade is written as - the one spelling that names no property of its own.
 const FADE_CALL: String = "tween_property"
+
+## The value a row's receiver carries when the line names no node - "On node", left blank, which is
+## what every shipped node-scoped descriptor opens on and what its own description tells the author
+## to leave there. A blank receiver means the node the SHEET is on, so `energy = 1.2` on a sheet
+## attached to a torch is the same row as `$Torch.energy = 1.2` on the sheet beside it.
+const BLANK_RECEIVER: Dictionary = {"target": ""}
 
 ## L4/L6. The two lighting nodes that are not lights, and the member the World rows all write
 ## through. A darkness line and a light's colour line are spelled identically (`X.color = ...`), so
@@ -170,7 +178,39 @@ static func _scene_object_entries() -> Array[Dictionary]:
 		_through_environment("ambient_light_energy"), FIXTURE_VALUE))
 	entries.append(_tween_entry("WorldFadeGlow", WORLD_HOST, ".%s" % ENVIRONMENT_MEMBER,
 		"glow_intensity", FIXTURE_VALUE))
+	entries.append(_own_environment_entry())
 	return entries
+
+
+## L6/L8 - the one atmosphere row that is not a knob, and the one the Doctor writes on a reader's
+## behalf. `environment = environment.duplicate()` gives a scene its own copy of an environment other
+## scenes load; a sheet that has taken that step is never told to take it again, which only works if
+## the line reads back as the row that wrote it. Both halves name the SAME node, so the second
+## mention is matched under its own capture and left out of `params` - it is part of the spelling,
+## and a line copying one world into a different one is nobody's row.
+static func _own_environment_entry() -> Dictionary:
+	return {
+		"id": "%s_%s_own" % [ENVIRONMENT_MEMBER, WORLD_HOST.to_lower()],
+		"ace_id": "WorldOwnEnvironment",
+		"pattern": "^%s%s = %s%s\\.duplicate\\(\\)$" % [_receiver(), ENVIRONMENT_MEMBER,
+			_receiver("holder"), ENVIRONMENT_MEMBER],
+		"params": ["target"],
+		"defaults": BLANK_RECEIVER,
+		"guard": Callable(EventForgeLightingLift, "_copies_its_own_world"),
+		"shape": "%s%s = %s%s.duplicate()" % [
+			EventForgeLiftTable.optional_prefix_slot("target"), ENVIRONMENT_MEMBER,
+			EventForgeLiftTable.optional_prefix_slot("target"), ENVIRONMENT_MEMBER],
+		"slots": {"target": _fixture_node(WORLD_HOST)}
+	}
+
+
+## True when a line gives ONE WorldEnvironment its own copy of its own environment. Two questions,
+## because the row is only that row when both hold: the same node on both sides of the `=`, and a
+## node the scene says really is a WorldEnvironment.
+static func _copies_its_own_world(captures: Dictionary) -> bool:
+	if str(captures.get("target", "")).strip_edges() != str(captures.get("holder", "")).strip_edges():
+		return false
+	return _target_is(captures, WORLD_HOST)
 
 
 ## One property reached THROUGH the environment - the shape every World row's line has.
@@ -185,13 +225,24 @@ static func _literal(member_path: String) -> String:
 	return member_path.replace(".", "\\.")
 
 
-## `<node>.<property> = <anything>` on a node the scene says is `host_class`.
+## The receiver a node-scoped line opens with, as one OPTIONAL capture. Optional because "On node" is
+## an optional field on every one of these rows: leave it blank and the line is the bare member
+## operation, `energy = 1.2`, which is the commonest shape a lit sheet writes and has to read back as
+## the row that wrote it. `name` is the capture, so a line naming the same node twice can be matched
+## with one group per mention and the guard asked whether they agree.
+static func _receiver(name: String = "target") -> String:
+	return "(?:(?<%s>%s)\\.)?" % [name, NODE_TEXT]
+
+
+## `<node>.<property> = <anything>` on a node the scene says is `host_class`, or the same line with
+## the receiver left off, on a sheet attached to a node of that class.
 static func _object_entry(ace_id: String, host_class: String, property: String, sample: String) -> Dictionary:
 	return {
 		"id": "%s_%s_set" % [property.replace(".", "_"), host_class.to_lower()],
 		"ace_id": ace_id,
-		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, _literal(property)],
+		"pattern": "^%s%s = (?<value>.+)$" % [_receiver(), _literal(property)],
 		"params": ["target", "value"],
+		"defaults": BLANK_RECEIVER,
 		"guard": _guard_of(host_class),
 		"shape": "%s%s = {value}" % [EventForgeLiftTable.optional_prefix_slot("target"), property],
 		"slots": {"target": _fixture_node(host_class), "value": sample}
@@ -203,8 +254,9 @@ static func _switch_of(ace_id: String, host_class: String, property: String, wri
 	return {
 		"id": "%s_%s_%s" % [property.replace(".", "_"), host_class.to_lower(), written],
 		"ace_id": ace_id,
-		"pattern": "^%s\\.%s = %s$" % [TARGET, _literal(property), written],
+		"pattern": "^%s%s = %s$" % [_receiver(), _literal(property), written],
 		"params": ["target"],
+		"defaults": BLANK_RECEIVER,
 		"guard": _guard_of(host_class),
 		"shape": "%s%s = %s" % [EventForgeLiftTable.optional_prefix_slot("target"), property, written],
 		"slots": {"target": _fixture_node(host_class)}
@@ -239,8 +291,9 @@ static func _value_entry(word: Dictionary, row: Dictionary) -> Dictionary:
 	return {
 		"id": _entry_id(row, "set"),
 		"ace_id": "LightSet%s" % str(row["id_stem"]),
-		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, property],
+		"pattern": "^%s%s = (?<value>.+)$" % [_receiver(), property],
 		"params": ["target", "value"],
+		"defaults": BLANK_RECEIVER,
 		"guard": _guard_for(row),
 		"shape": "%s%s = {value}" % [EventForgeLiftTable.optional_prefix_slot("target"), property],
 		"slots": {
@@ -258,8 +311,9 @@ static func _switch_entry(row: Dictionary, turned_on: bool) -> Dictionary:
 	return {
 		"id": _entry_id(row, written),
 		"ace_id": "Light%s%s" % [str(row["id_stem"]), "On" if turned_on else "Off"],
-		"pattern": "^%s\\.%s = %s$" % [TARGET, property, written],
+		"pattern": "^%s%s = %s$" % [_receiver(), property, written],
 		"params": ["target"],
+		"defaults": BLANK_RECEIVER,
 		"guard": _guard_for(row),
 		"shape": "%s%s = %s" % [EventForgeLiftTable.optional_prefix_slot("target"), property, written],
 		"slots": {"target": _fixture_target(row)}
@@ -305,8 +359,14 @@ static func _guard_of(host_class: String) -> Callable:
 ## True when the line's target really is a light of `host_class`. The whole of the "never guess"
 ## promise: an unknown name, a name the scenes do not carry, and a name that is some other kind of
 ## node all answer false, and the line stays the script block it was.
+##
+## A line that names NO node is asking about the node the sheet is on, which is the same question
+## asked of the same map under the `self` spelling: `energy = 1.2` in a file attached to a torch is a
+## light row, and the identical line in a file attached to anything else is somebody's variable.
 static func _target_is(captures: Dictionary, host_class: String) -> bool:
-	var named: String = EventSheetSceneLights.reference_key(str(captures.get("target", "")))
+	var written: String = str(captures.get("target", "")).strip_edges()
+	var named: String = EventSheetSceneLights.SELF_REFERENCE if written.is_empty() \
+		else EventSheetSceneLights.reference_key(written)
 	if named.is_empty():
 		return false
 	var found: String = str(target_classes.get(named, ""))

@@ -39,6 +39,12 @@ const SHADOW_PROPERTY: String = "shadow_enabled"
 const OCCLUDER_CLASS: String = "LightOccluder2D"
 const OCCLUDER_MASK_PROPERTY: String = "occluder_light_mask"
 
+## How a row spells the node the SHEET ITSELF is on - the answer to a row whose "On node" is blank,
+## and the one spelling that names a node without naming it. A blank receiver is what the shipped
+## node-scoped rows open on, so this is the commonest target in a lit sheet and the one the lift has
+## to be able to look up like any other.
+const SELF_REFERENCE: String = "self"
+
 ## The mask the 2D side falls back to when the scene file never wrote one - Godot's own default for
 ## `range_item_cull_mask`, `shadow_item_cull_mask` and `occluder_light_mask` alike. A file only
 ## stores a property it changed, so an absent line means "layer 1", never "nothing".
@@ -119,20 +125,12 @@ static func _of_class(nodes: Array[Dictionary], class_text: String) -> Array[Dic
 
 
 ## Every node of those scenes as `reference -> class`, under each spelling a row can name it by: the
-## bare name, the path, and the `$` and `%` forms of both. EVERY node, not only the lights - knowing
-## that `$Door` is a StaticBody2D is what lets the lift refuse a line rather than guess about it.
+## bare name, the path, the `$` and `%` forms of both, and `self` for the node the script is on.
+## EVERY node, not only the lights - knowing that `$Door` is a StaticBody2D is what lets the lift
+## refuse a line rather than guess about it. Ask it through `reference_key`, which reduces a row's
+## own spelling to the key an answer is filed under.
 static func classes_for_script(script_path: String) -> Dictionary:
 	return _read(script_path)["classes"]
-
-
-## The class one node reference names, or "" when this script's scenes have no such node. `text` is
-## a node reference as rows spell them: `$Torch`, `%Torch`, `get_node("Torch")`, `Room/Torch`, or the
-## bare name. Never a guess: a name the scenes do not carry is "" and the caller must degrade.
-static func class_of_reference(script_path: String, text: String) -> String:
-	var wanted: String = reference_key(text)
-	if wanted.is_empty():
-		return ""
-	return str(classes_for_script(script_path).get(wanted, ""))
 
 
 ## One node reference reduced to the key the map above is built under: sigils off, a `get_node()`
@@ -180,6 +178,11 @@ static func _read(script_path: String) -> Dictionary:
 		lights.append_array(scene["lights"] as Array[Dictionary])
 		for node: Dictionary in scene["nodes"] as Array[Dictionary]:
 			_note_spellings(classes, str(node["name"]), str(node["path"]), str(node["class"]))
+			# The node the SCRIPT is on, under the spelling a blank receiver means. Matched on the host
+			# path rather than on the `reference` spelling, because a scene ROOT is written `self` too
+			# and a script on a child would otherwise be told it is whatever the root is.
+			if str(node["path"]) == host:
+				classes[SELF_REFERENCE] = str(node["class"])
 	var answer: Dictionary = {"nodes": nodes, "lights": lights, "classes": classes}
 	_cache[path] = answer
 	return answer
@@ -264,7 +267,7 @@ static func _note_spellings(classes: Dictionary, node_name: String, node_path: S
 ## the file holds and what the reader can check.
 static func _reference_of(node_path: String, host_path: String) -> String:
 	if node_path == host_path or node_path == ".":
-		return "self"
+		return SELF_REFERENCE
 	var below: String = "%s/" % host_path
 	if host_path != "." and node_path.begins_with(below):
 		return "$%s" % node_path.substr(below.length())

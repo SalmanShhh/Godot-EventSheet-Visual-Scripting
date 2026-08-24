@@ -22,6 +22,8 @@ const ROOM: String = "lighting_scene_room.gd"
 const CAVE: String = "lighting_scene_cave.gd"
 const CRYPT: String = "lighting_scene_crypt.gd"
 const BLOCK: String = "lighting_stays_a_block.gd"
+const LAMP: String = "lighting_hall_lamp.gd"
+const WORLD: String = "lighting_hall_world.gd"
 
 ## The prefix every row this family lifts to shares. Used to ask a whole file whether ANY of it
 ## became a light row, which is the shape the refusal test needs.
@@ -34,6 +36,7 @@ static func run() -> bool:
 	ok = _test_the_room() and ok
 	ok = _test_the_cave() and ok
 	ok = _test_the_crypt() and ok
+	ok = _test_the_blank_receiver() and ok
 	ok = _test_the_refusals() and ok
 	ok = _test_the_guard_alone() and ok
 	ok = _test_the_receiver_can_be_cleared() and ok
@@ -55,15 +58,20 @@ static func _test_the_scene_is_read() -> bool:
 		"$Props/Lantern PointLight2D point shadows=false"
 	] as Array[String])
 	ok = _check("a node the scene does not carry has no class",
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "$Nowhere"), "") and ok
+		_class_of(ROOM, "$Nowhere"), "") and ok
 	ok = _check("and one that is not a light is named for what it is",
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "$Door"), "StaticBody2D") and ok
-	return _check("every spelling of one node reaches it", PackedStringArray([
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "$Props/Lantern"),
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "%Lantern"),
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "get_node(\"Props/Lantern\")"),
-		EventSheetSceneLights.class_of_reference(FIXTURE_DIR + ROOM, "Lantern")
+		_class_of(ROOM, "$Door"), "StaticBody2D") and ok
+	ok = _check("every spelling of one node reaches it", PackedStringArray([
+		_class_of(ROOM, "$Props/Lantern"), _class_of(ROOM, "%Lantern"),
+		_class_of(ROOM, "get_node(\"Props/Lantern\")"), _class_of(ROOM, "Lantern")
 	]), PackedStringArray(["PointLight2D", "PointLight2D", "PointLight2D", "PointLight2D"])) and ok
+	# The spelling a BLANK "On node" means. It is a node reference like any other, and the one a lit
+	# sheet writes most: without it every row on a sheet attached to its own light is unreadable.
+	return _check("and the node the sheet itself is on answers to `self`", PackedStringArray([
+		_class_of(LAMP, EventSheetSceneLights.SELF_REFERENCE),
+		_class_of(WORLD, EventSheetSceneLights.SELF_REFERENCE),
+		_class_of(ROOM, EventSheetSceneLights.SELF_REFERENCE)
+	]), PackedStringArray(["PointLight2D", "WorldEnvironment", "Node2D"])) and ok
 
 
 ## The 2D room: four spellings, five words, and the tween.
@@ -111,6 +119,33 @@ static func _test_the_crypt() -> bool:
 		"WorldSetAmbientLight target=$World value=0.15 | {target.}environment.ambient_light_energy = {value}",
 		"WorldGlowOn target=$World | {target.}environment.glow_enabled = true",
 		"WorldFadeGlow seconds=4.0 target=$World value=1.2 | create_tween().tween_property({target}.environment, \"glow_intensity\", {value}, {seconds})"
+	] as Array[String]) and ok
+
+
+## THE BLANK RECEIVER, opened again. "On node" is optional on every node-scoped lighting row, and its
+## own description tells an author to leave it blank for this node - so a sheet attached to the light
+## it is about saves the bare property, and that is the shape most lit sheets really hold. Two files:
+## the sheet on a light, and the sheet on the world, whose first line is the very row the Doctor
+## offers to write for a shared environment. That one matters twice over - a fix that does not read
+## back as the row that wrote it is offered again on every open, and taken twice takes the copy twice.
+static func _test_the_blank_receiver() -> bool:
+	var lamp: EventSheetResource = _open(LAMP)
+	var ok: bool = _roundtrips(LAMP, lamp)
+	ok = _check("a row that named no node reads as the row that wrote it", _rows_of(lamp), [
+		"LightSetBrightness target= value=1.2 | {target.}energy = {value}",
+		"LightSetColour target= value=Color(\"ffd9a1\") | {target.}color = {value}",
+		"LightShadowsOn target= | {target.}shadow_enabled = true",
+		"LightSetReach target= value=1.5 | {target.}texture_scale = {value}"
+	] as Array[String]) and ok
+	var world: EventSheetResource = _open(WORLD)
+	ok = _roundtrips(WORLD, world) and ok
+	# The template stored is the SHIPPED one, slots and all, rather than the line with its blanks baked
+	# in: a row that came back carrying `environment = environment.duplicate()` would go on writing
+	# that line after somebody aimed it at another node.
+	return _check("and so does the world's own, the copy the Doctor writes included", _rows_of(world), [
+		"WorldOwnEnvironment target= | {target.}environment = {target.}environment.duplicate()",
+		"WorldFogOn target= | {target.}environment.fog_enabled = true",
+		"WorldSetFogThickness target= value=0.03 | {target.}environment.fog_density = {value}"
 	] as Array[String]) and ok
 
 
@@ -181,6 +216,14 @@ static func _test_the_receiver_can_be_cleared() -> bool:
 
 
 # ── the walk ────────────────────────────────────────────────────────────────────
+
+
+## The class one node reference names, asked exactly the way the lift's own guard asks it: the row's
+## spelling reduced to the key the scene's map is filed under, then looked up in that map. "" for a
+## name the scenes do not carry, which is the answer that leaves a line whatever it already was.
+static func _class_of(file_name: String, text: String) -> String:
+	return str(EventSheetSceneLights.classes_for_script(FIXTURE_DIR + file_name).get(
+		EventSheetSceneLights.reference_key(text), ""))
 
 
 ## One row's line, through the compiler's own emitter rather than a copy of the substitution.

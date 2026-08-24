@@ -96,12 +96,13 @@ static func match_line(entries: Array, line: String) -> Dictionary:
 		var guard: Variant = entry.get("guard", null)
 		if guard is Callable and not (guard as Callable).call(_captures(hit)):
 			continue
+		var params: Dictionary = _params_of(entry, hit)
 		return {
 			"entry_id": str(entry.get("id", "")),
 			"ace_id": str(entry.get("ace_id", "")),
 			"provider": str(entry.get("provider", DEFAULT_PROVIDER)),
-			"params": _params_of(entry, hit),
-			"template": _template_of(entry, hit, text)
+			"params": params,
+			"template": _template_of(entry, hit, text, params)
 		}
 	return {}
 
@@ -202,8 +203,19 @@ static func shape_answers(shape: String, name: String) -> bool:
 ## the dot AFTER it into the slot, because that dot is part of the idiom rather than part of the
 ## line: the row a lift hands back must be the row the picker would have authored, and the picker's
 ## is `{target.}energy = {value}`.
-static func _template_of(entry: Dictionary, hit: RegExMatch, text: String) -> String:
+##
+## THE CANONICAL SPELLING WINS. When the author's own line IS what the shape emits with these values
+## in it, the SHAPE is what gets stored rather than the splice of it. The two agree on the bytes
+## either way - that is what the comparison asks - so this changes nothing about the round trip and
+## everything about the row afterwards: a splice can only reinstate a slot the line had text for, and
+## a spelling that leaves an optional receiver out (`energy = 1.2`) or repeats it
+## (`$World.environment = $World.environment.duplicate()`) would otherwise come back carrying a
+## template with no `{target.}` in it, or with one - and then changing "On node" on that row would
+## write a line the author never asked for.
+static func _template_of(entry: Dictionary, hit: RegExMatch, text: String, params: Dictionary) -> String:
 	var shape: String = str(entry.get("shape", ""))
+	if ActionCodegen._apply_template(shape, params) == text:
+		return shape
 	var spans: Array = []
 	for name: String in param_names(entry):
 		if hit.get_start(name) < 0:

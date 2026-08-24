@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/lighting_hall_lamp.gd" id="1_lamp"]
+[ext_resource type="Script" path="res://tests/fixtures/lighting_hall_world.gd" id="2_world"]
+
+[sub_resource type="Environment" id="1_air"]
+
+[node name="Hall" type="Node2D"]
+
+[node name="Chandelier" type="PointLight2D" parent="."]
+shadow_enabled = true
+
+[node name="Candle" type="PointLight2D" parent="."]
+shadow_enabled = true
+shadow_item_cull_mask = 2
+
+[node name="Pillar" type="LightOccluder2D" parent="."]
+
+[node name="Lamp" type="PointLight2D" parent="."]
+script = ExtResource("1_lamp")
+
+[node name="Sky" type="WorldEnvironment" parent="."]
+script = ExtResource("2_world")
+environment = SubResource("1_air")

@@ -63,7 +63,8 @@ static func run() -> bool:
 	all_passed = _check("the next question re-reads the scene and answers the same",
 		EventSheetSceneLights.for_script(lit_script).size(), warm_lights) and all_passed
 	all_passed = _check("the class behind a node reference comes back too",
-		EventSheetSceneLights.class_of_reference(lit_script, "$Torch"), "PointLight2D") and all_passed
+		str(EventSheetSceneLights.classes_for_script(lit_script).get(
+			EventSheetSceneLights.reference_key("$Torch"), "")), "PointLight2D") and all_passed
 
 	# ── The dock actually calls both ────────────────────────────────────────────────────────
 	# Source lint, not a live dock: constructing the dock needs a display server. What matters is

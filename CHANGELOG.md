@@ -192,6 +192,18 @@
 - **The figures on the front page are measured again.** 1,641 native ACEs and 64 triggers, 105
   behavior packs with 87 guides between them, counted off this tree rather than carried forward -
   plus the feature bullet the wave earned, in the words the sheet uses for it.
+- **Fixed: a row that named no node came back as something else.** *On node* is optional on every
+  node-scoped lighting row, and its own description tells you to leave it blank for this node - so a
+  sheet attached to its own torch saves `energy = 1.2` and nothing more. Those lines are now
+  recognised: the light rows, the darkness rows and the World rows all read back as themselves with
+  the receiver still blank, so a sheet on a light keeps its light rows across a save and an open.
+  The gate is unchanged and does the whole job - the scene has to say the node this script runs on
+  really is a light, so the identical line in any other file stays the assignment it always was.
+- **Fixed: the one-click environment fix stayed fixed.** *Make the environment this scene's own*
+  writes `environment = environment.duplicate()`, and that line did not read back as the row that
+  wrote it - so re-opening the file raised the same finding again, and taking the offer twice took
+  the copy twice on every `_ready`. The line is now a lift of its own, on either spelling, and only
+  when both halves name the same WorldEnvironment.
 
 ### Translations
 

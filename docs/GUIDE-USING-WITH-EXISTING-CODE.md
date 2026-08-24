@@ -1338,6 +1338,12 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `$Flashlight.spot_angle = 30.0` | **Set cone angle to 30.0** |
     | `create_tween().tween_property($Lantern, "energy", 1.0, 0.5)` | **Fade to 1.0 over 0.5 s** |
 
+    A sheet attached to the light itself names no node at all: `energy = 1.2` in a script on a
+    `PointLight2D` is the same **Set brightness to 1.2** row, with *On node* left blank exactly as a
+    row you dropped would leave it. The gate is the same one - the scene has to say the node this
+    script runs on really is a light - so the identical line in a script on anything else stays the
+    variable assignment it always was.
+
     Two nodes of a lit scene are not lights, and they read the same way. A **CanvasModulate** is how
     Godot darkens a whole 2D layer, and it stores that as a colour - correct, and unreadable. The row
     keeps the colour (so your file comes back byte for byte) and READS as the darkness it makes: how
@@ -1354,9 +1360,12 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `$World.environment.fog_density = 0.03` | **Set fog thickness to 0.03** |
     | `$World.environment.ambient_light_energy = 0.15` | **Set ambient light to 0.15** |
     | `create_tween().tween_property($World.environment, "glow_intensity", 1.2, 4.0)` | **Fade the glow to 1.2 over 4 s** |
+    | `$World.environment = $World.environment.duplicate()` | **Make the environment this scene's own** |
 
     What deliberately does NOT lift: a toggle (`light.shadow_enabled = not light.shadow_enabled`),
-    which no single row can say, and every line whose target the scene cannot show to be a light.
+    which no single row can say; a copy taken from a DIFFERENT world
+    (`$A.environment = $B.environment.duplicate()`), which is not the one step that row stands for;
+    and every line whose target the scene cannot show to be a light.
     `$Level.color = …` is the same sentence as a light's colour, so which of the two it IS depends
     entirely on what the scene says `$Level` is - and a node the scene cannot place stays code.
     The sixteen Core lighting actions are untouched beside all of this - a sheet saved with one of
