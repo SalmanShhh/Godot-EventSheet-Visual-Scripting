@@ -4559,3 +4559,12 @@ also in,他にも
 select the light,ライトを選択
 select the node,ノードを選択
 tinted,色合い
+"%s has no texture, so it lights nothing. Give it one - a soft white circle is the whole of a torch.",%s にはテクスチャがないため、何も照らしません。柔らかい白い円を一つ与えてください - それだけで松明になります。
+"Add an occluder, or turn the shadows off and save the draw cost.",オクルーダーを追加するか、影をオフにして描画コストを節約してください。
+"%s darkens the layer to %s and no light reaches it - the scene is uniformly dark. Add a light, or check the range masks of the ones there are.",%s はレイヤーを %s まで暗くしますが、どの光も届いていません - シーンは一様に暗いままです。ライトを追加するか、既存のライトの範囲マスクを確認してください。
+"%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.",%s はワールドの環境に書き込みますが、%s には WorldEnvironment ノードがありません - ゲーム実行時にこの行は何もしません。シーンに追加してください。
+"%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.",%s は %s に書き込みますが、そのファイルは %s も使っています - 変更はプレイヤーと一緒にそれらのシーンへついていきます。まずこのシーン専用のコピーを持たせてください。
+Make the environment this scene's own,環境をこのシーン専用にする
+"Lighting: %d lit scene(s), %d with something that will not show at run time.",ライティング: 照明のあるシーン %d 件、うち %d 件に実行時には見えないものがあります。
+This sheet already takes its own copy.,このシートはすでに自分のコピーを取っています。
+This scene has its own environment now - the change stops here.,このシーンは自分の環境を持つようになりました - 変更はここで止まります。

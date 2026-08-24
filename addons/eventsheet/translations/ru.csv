@@ -4559,3 +4559,12 @@ also in,также в
 select the light,выбрать свет
 select the node,выбрать узел
 tinted,оттенок
+"%s has no texture, so it lights nothing. Give it one - a soft white circle is the whole of a torch.","%s не имеет текстуры, поэтому ничего не освещает. Дайте ей текстуру - мягкий белый круг и есть весь факел."
+"Add an occluder, or turn the shadows off and save the draw cost.",Добавьте окклюдер или выключите тени и сэкономьте на отрисовке.
+"%s darkens the layer to %s and no light reaches it - the scene is uniformly dark. Add a light, or check the range masks of the ones there are.","%s затемняет слой до %s, и до него не доходит ни один свет - сцена равномерно тёмная. Добавьте свет или проверьте маски дальности у имеющихся."
+"%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.","%s записывает окружение мира, а в %s нет узла WorldEnvironment - во время игры эта строка ничего не делает. Добавьте его в сцену."
+"%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.","%s записывает %s, и этот же файл использует %s - изменение последует за игроком в те сцены. Сначала дайте этой сцене собственную копию."
+Make the environment this scene's own,Сделать окружение собственным для этой сцены
+"Lighting: %d lit scene(s), %d with something that will not show at run time.","Освещение: освещённых сцен - %d, из них %d с тем, что не будет видно во время игры."
+This sheet already takes its own copy.,Этот лист уже берёт собственную копию.
+This scene has its own environment now - the change stops here.,Теперь у этой сцены собственное окружение - изменение дальше не уйдёт.

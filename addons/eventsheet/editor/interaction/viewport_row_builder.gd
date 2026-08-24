@@ -92,6 +92,11 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## The COLOUR is what separates a line that cannot work from one that only misbehaves.
 const NOTE_MARK := "⚠"
 
+## The two families of finding the canvas hangs under a row (M7's networking mistakes, L8's lighting
+## ones). Names for the per-sweep cache below, never shown to anybody.
+const FINDINGS_MULTIPLAYER := "multiplayer"
+const FINDINGS_LIGHTING := "lighting"
+
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
 # CONDITION or EXPRESSION verb read their `return` as "Set return value to x" rather than "Stop event",
@@ -159,11 +164,11 @@ var _class_uid_counts: Dictionary = {}
 # scripts off disk - so it is derived once per sweep and cleared beside the palette above.
 var _variable_owner_catalog: Dictionary = {}
 
-# M7. The four networking mistakes this sheet earns, keyed "found" so a sheet with none still counts
-# as derived. Asked once per event, once per variable and once per function, and answering it walks
-# the whole sheet and the attached scene - so it is derived once per sweep and cleared beside the
-# catalog above.
-var _multiplayer_findings_cache: Dictionary = {}
+# M7 / L8. The mistakes this sheet earns, by family, so a sheet with none still counts as derived.
+# Asked once per event, once per variable and once per function, and answering one walks the whole
+# sheet and the attached scene - so each is derived once per sweep and cleared beside the catalog
+# above.
+var _sheet_findings_cache: Dictionary = {}
 
 
 ## The uid scope for one class block: the class name for the first occurrence (uids unchanged
@@ -910,8 +915,8 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 			_viewport._get_reading_style().lift_note_badge_foreground_color, {}, {}))
 	# M7 - a message anyone may send that writes a value every peer keeps in step, without ever
 	# asking who sent it. It is about the MESSAGE, so it sits under its head.
-	rows.append_array(_build_multiplayer_note_rows(
-		EventSheetMultiplayerFindings.for_subject(_multiplayer_findings(),
+	rows.append_array(_build_finding_note_rows(
+		EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
 			EventSheetMultiplayerFindings.ANCHOR_FUNCTION,
 			event_function.function_name.strip_edges()),
 		"verb_%s" % event_function.function_name.strip_edges(), indent))
@@ -6273,8 +6278,14 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 		row_data.children.append(note_row)
 	# M7 - and the networking mistakes about THIS event: a Send row naming a function that is not a
 	# message, and a row that moves a synced object on every peer.
-	for note_row: EventRowData in _build_multiplayer_note_rows(
-			EventSheetMultiplayerFindings.for_event(_multiplayer_findings(), event_row),
+	for note_row: EventRowData in _build_finding_note_rows(
+			EventSheetMultiplayerFindings.for_event(_sheet_findings(FINDINGS_MULTIPLAYER), event_row),
+			row_data.row_uid, indent + 1):
+		row_data.children.append(note_row)
+	# L8 - and the lighting ones: an environment row aimed at a scene with no WorldEnvironment, and a
+	# row writing an environment file other scenes load, which is the one with a single step to take.
+	for note_row: EventRowData in _build_finding_note_rows(
+			EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row),
 			row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
 	# R41 - a `var` line inside the body declares a local of this event, so it reads at the top of the
@@ -8507,8 +8518,8 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 		landing.append(row)
 		# M7 - "changed on the host, seen nowhere" is about the VALUE, so it hangs under the line
 		# that declares it rather than under whichever event happened to change it.
-		landing.append_array(_build_multiplayer_note_rows(
-			EventSheetMultiplayerFindings.for_subject(_multiplayer_findings(),
+		landing.append_array(_build_finding_note_rows(
+			EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
 				EventSheetMultiplayerFindings.ANCHOR_VARIABLE, str(var_name)),
 			row.row_uid, 0))
 	_flush_variable_group(rows, sheet, current_group, group_members, group_runs)
@@ -8786,21 +8797,25 @@ func _build_variable_note_row(event_uid: String, indent: int, message: String, f
 		fix_meta, {} if fix_label.is_empty() else {"label": fix_label, "meta": {}})
 
 
-## M7. The four networking mistakes this sheet earns, derived once per sweep.
-func _multiplayer_findings() -> Array[Dictionary]:
-	if not _multiplayer_findings_cache.has("found"):
-		_multiplayer_findings_cache["found"] = EventSheetMultiplayerFindings.findings(
-			_viewport._sheet if _viewport != null else null)
-	return _multiplayer_findings_cache["found"]
+## M7 / L8. The mistakes one family reads out of this sheet, derived once per sweep and kept under
+## its own name. Both families answer the same shape - a message, a subject, a one-click fix and the
+## row it hangs under - which is why one cache and one note row serve them and a third is one leg.
+func _sheet_findings(family: String) -> Array[Dictionary]:
+	if not _sheet_findings_cache.has(family):
+		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+		_sheet_findings_cache[family] = EventSheetLightingFindings.findings(sheet) \
+			if family == FINDINGS_LIGHTING else EventSheetMultiplayerFindings.findings(sheet)
+	return _sheet_findings_cache[family]
 
 
-## M7. A networking finding said UNDER the row it is about - the Send row's event, the variable's
-## own declaration, the message's function head - through the very note row an unknown variable
-## already uses, so there is one note look and one fix click in the sheet rather than two.
+## M7 / L8. A finding said UNDER the row it is about - the Send row's event, the variable's own
+## declaration, the message's function head, the event that writes a shared environment - through the
+## very note row an unknown variable already uses, so there is one note look and one fix click in the
+## sheet rather than three.
 ##
-## Amber, never red, on all four: every one of them compiles and runs, and only the other player
-## sees the consequence.
-func _build_multiplayer_note_rows(found: Array[Dictionary], uid: String, indent: int) -> Array[EventRowData]:
+## Amber, never red: every one of these compiles and runs, and only the other player (or the next
+## room) sees the consequence.
+func _build_finding_note_rows(found: Array[Dictionary], uid: String, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	for finding: Dictionary in found:
 		rows.append(_build_variable_note_row(

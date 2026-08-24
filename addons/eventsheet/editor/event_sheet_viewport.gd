@@ -2434,9 +2434,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# V6 - and who owns each variable the sheet names, so a row that touches `hp` can lead with the
 	# object that HAS an hp. Derived once per sweep: it reads the autoloads' scripts.
 	_row_builder._variable_owner_catalog.clear()
-	# M7 - and the four networking mistakes, which are read from the whole sheet and then hung under
-	# the rows they are about. Derived once per sweep for the same reason: it walks every row.
-	_row_builder._multiplayer_findings_cache.clear()
+	# M7 / L8 - and the networking and lighting mistakes, read from the whole sheet and then hung under
+	# the rows they are about. Derived once per sweep for the same reason: each walks every row.
+	_row_builder._sheet_findings_cache.clear()
 	if sheet == null:
 		return root_rows
 	# ── The pattern registry ──────────────────────────────────────────────────────────────────

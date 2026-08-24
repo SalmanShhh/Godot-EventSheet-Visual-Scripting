@@ -54,6 +54,12 @@ const OFFERED := {
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
+	# L8. The one lighting finding with a single step to take: an environment `.tres` is a FILE, so
+	# writing fog into it at run time writes it for every scene that loads the same file. The chip
+	# writes the row that takes a copy first, at the top of the sheet the finding points at.
+	"lighting-shared-environment": [
+		{"id": "own_environment", "label": "Make the environment this scene's own"},
+	],
 	"repeated-literal": [
 		{"id": "extract_to_variable", "label": "⚡ Extract %s to a variable"},
 	],
@@ -174,6 +180,10 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Open %s, right-click the %s function row and choose Make it a message - the annotation is what makes a call travel." % [str(finding.get("path", "")).get_file(), subject]}
 		"open_pack":
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
+		# L8. The same gesture the note row under the event offers, reached from the report instead:
+		# the sheet is opened and the row goes in at its top, on ready, through the dock's own funnel.
+		"own_environment":
+			return _own_environment(subject, str(finding.get("path", "")), dock)
 		"extract_to_variable":
 			return _extract_to_variable(subject, str(finding.get("path", "")), dock)
 		# X17. All three point at a line in an emitted script rather than at one row, so each names
@@ -199,6 +209,19 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Writes "Make the environment this scene's own" at the top of the sheet the finding points at, so
+## every fog and glow row after it changes this scene's own copy rather than the file every scene
+## loads. One undo step, through the dock's own funnel - the same operation the note row's button runs.
+static func _own_environment(target: String, sheet_path: String, dock: Variant) -> Dictionary:
+	if dock == null or not dock.has_method("give_the_scene_its_own_environment"):
+		return {"ok": false, "message": "Open %s and click the fix on the note under the row." % sheet_path.get_file()}
+	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
+		dock.call("_load_sheet_from_path", sheet_path)
+	if not bool(dock.call("give_the_scene_its_own_environment", target)):
+		return {"ok": false, "message": "%s already takes its own copy of the environment." % sheet_path.get_file()}
+	return {"ok": true, "message": "%s takes its own copy of the environment first - the change stops in this scene." % sheet_path.get_file()}
 
 
 ## Gives a number typed three times a name, and points every row that spelled it at the name. The

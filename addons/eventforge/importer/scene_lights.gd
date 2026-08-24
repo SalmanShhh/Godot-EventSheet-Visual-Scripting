@@ -56,6 +56,12 @@ const DEFAULT_MASK_3D: int = 4294967295
 ## directory each time.
 static var _cache: Dictionary = {}
 
+## "scene path|host node" -> {"nodes": Array, "lights": Array}. One scene read once, whichever of the
+## two questions asked for it: a SHEET asks what its own scene holds, and the Doctor asks the same of
+## every scene in the project without a sheet in hand. The host is part of the key because it is the
+## node the `reference` spellings are written from, and nothing else about a scene depends on it.
+static var _scenes: Dictionary = {}
+
 ## The node-path matcher, compiled once: the lift guard asks it of every candidate line of every
 ## opened file, and recompiling a pattern per line was the whole cost of the hand-written matchers.
 static var _path_regex: RegEx = null
@@ -85,10 +91,27 @@ static func nodes_for_script(script_path: String) -> Array[Dictionary]:
 ## WorldEnvironment, its occluders. Empty for a class no scene of this script carries, which is what
 ## makes a fact about a missing node absent rather than wrong.
 static func nodes_of_class(script_path: String, class_text: String) -> Array[Dictionary]:
+	return _of_class(nodes_for_script(script_path), class_text)
+
+
+## L8. The same two questions asked of ONE SCENE rather than of a script's scenes: the lights it
+## holds, and its nodes of a class. The Doctor audits scenes a sheet may never have been opened on -
+## a scene whose lighting is broken is broken whether or not anybody wrote a row about it - so it
+## reads them by scene, and both entry points come out of the one walk below.
+static func for_scene(scene_path: String) -> Array[Dictionary]:
+	return _scene(scene_path)["lights"]
+
+
+static func nodes_of_scene_class(scene_path: String, class_text: String) -> Array[Dictionary]:
+	return _of_class(_scene(scene_path)["nodes"], class_text)
+
+
+## The entries of one class, subclasses included - the one filter both questions above run through.
+static func _of_class(nodes: Array[Dictionary], class_text: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	if not ClassDB.class_exists(class_text):
 		return found
-	for node: Dictionary in nodes_for_script(script_path):
+	for node: Dictionary in nodes:
 		var node_class: String = str(node["class"])
 		if ClassDB.class_exists(node_class) and ClassDB.is_parent_class(node_class, class_text):
 			found.append(node)
@@ -130,6 +153,7 @@ static func reference_key(text: String) -> String:
 ## fixtures.
 static func clear_cache() -> void:
 	_cache.clear()
+	_scenes.clear()
 
 
 ## A plain node path and nothing else: one or more identifiers separated by slashes.
@@ -151,19 +175,36 @@ static func _read(script_path: String) -> Dictionary:
 	var classes: Dictionary = {}
 	var host: String = str(EventSheetSceneReplication.host_node(path).get("node_path", "."))
 	for scene_path: String in EventSheetSceneReplication.scenes_using(path):
-		for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
-			var node: Dictionary = entry
-			var node_class: String = str(node.get("type", ""))
-			if node_class.is_empty():
-				continue
-			var found: Dictionary = _node_entry(node, node_class,
-				_reference_of(str(node.get("path", "")), host), scene_path)
-			nodes.append(found)
-			_note_spellings(classes, str(node.get("name", "")), str(node.get("path", "")), node_class)
-			if EventForgeLightWords.is_light_class(node_class):
-				lights.append(_light_facts(found))
+		var scene: Dictionary = _scene(scene_path, host)
+		nodes.append_array(scene["nodes"] as Array[Dictionary])
+		lights.append_array(scene["lights"] as Array[Dictionary])
+		for node: Dictionary in scene["nodes"] as Array[Dictionary]:
+			_note_spellings(classes, str(node["name"]), str(node["path"]), str(node["class"]))
 	var answer: Dictionary = {"nodes": nodes, "lights": lights, "classes": classes}
 	_cache[path] = answer
+	return answer
+
+
+## ONE scene's nodes and lights, read once. `host_path` is the node the `reference` spellings are
+## written from - the script's own node when a sheet asked, and the scene root when the Doctor did.
+static func _scene(scene_path: String, host_path: String = ".") -> Dictionary:
+	var key: String = "%s|%s" % [scene_path, host_path]
+	if _scenes.has(key):
+		return _scenes[key]
+	var nodes: Array[Dictionary] = []
+	var lights: Array[Dictionary] = []
+	for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
+		var node: Dictionary = entry
+		var node_class: String = str(node.get("type", ""))
+		if node_class.is_empty():
+			continue
+		var found: Dictionary = _node_entry(node, node_class,
+			_reference_of(str(node.get("path", "")), host_path), scene_path)
+		nodes.append(found)
+		if EventForgeLightWords.is_light_class(node_class):
+			lights.append(_light_facts(found))
+	var answer: Dictionary = {"nodes": nodes, "lights": lights}
+	_scenes[key] = answer
 	return answer
 
 

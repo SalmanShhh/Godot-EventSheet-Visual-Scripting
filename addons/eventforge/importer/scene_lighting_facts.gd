@@ -11,6 +11,12 @@
 #   environment - which environment resource the scene's WorldEnvironment holds, and how many OTHER
 #                 scenes hold the same file (which is what makes a run-time write follow the player).
 #
+# The same questions, asked of a scene rather than of a sheet, are what the Doctor's Lighting section
+# is made of (EventSheetLightingFindings) - which is why everything below takes a SCENE path once the
+# head has resolved the one scene its sheet is about. Three more facts are here for that section
+# alone: which lights have no texture to cast, which reach what is drawn on the layer, and which
+# CanvasModulate really darkens one.
+#
 # NOTHING IS STORED. Every sentence is derived from the scene on every ask, so a `.gd` still
 # round-trips byte for byte and a project with no scenes grows no bands at all. The project-wide
 # "who else uses this file" scan is the one expensive question here, so its answer is cached for the
@@ -25,8 +31,14 @@ extends RefCounted
 const ENVIRONMENT_CLASS: String = "WorldEnvironment"
 const ENVIRONMENT_PROPERTY: String = "environment"
 
-## The node the darkness rows are about - the one that tints a whole 2D layer at once.
+## The node the darkness rows are about - the one that tints a whole 2D layer at once - and the
+## property it keeps the darkness in.
 const DARKNESS_CLASS: String = "CanvasModulate"
+const DARKNESS_PROPERTY: String = "color"
+
+## L8. What a 2D point light casts through. A light with none of it lights nothing at all, which is
+## the first of the Doctor's five findings.
+const TEXTURE_PROPERTY: String = "texture"
 
 ## environment resource path -> the other scenes holding it, sorted. The project scan behind it
 ## reads every `.tscn` once, which is why the answer is kept: the head asks on every open, and a
@@ -89,36 +101,39 @@ static func light_echo(light: Dictionary) -> String:
 ## casts shadows, so there is nothing for an occluder to block. A 3D light needs no occluder at all,
 ## which is why only the 2D lights ask this.
 static func shadow_bands(script_path: String) -> Array[Dictionary]:
-	if attached_scene(script_path).is_empty():
+	var scene_path: String = attached_scene(script_path)
+	if scene_path.is_empty():
 		return []
-	var casting: Array[Dictionary] = shadow_casting_lights(script_path)
+	var casting: Array[Dictionary] = shadow_casting_lights(scene_path)
 	if casting.is_empty():
 		return []
-	var blocked: Array[Dictionary] = matching_occluders(script_path, casting)
-	var unblocked: PackedStringArray = lights_without_occluders(script_path, casting)
+	var blocked: Array[Dictionary] = matching_occluders(scene_path, casting)
+	var unblocked: PackedStringArray = lights_without_occluders(scene_path, casting)
 	return [{
 		"value": shadows_reading(blocked.size(), unblocked),
-		"echo": shadows_echo(script_path, blocked.size()),
+		"echo": shadows_echo(scene_path, blocked.size()),
 		"reference": _reference(casting[0]),
 		"warning": not unblocked.is_empty()
 	}]
 
 
-## The 2D lights of the scene that cast shadows - the only ones an occluder is about.
-static func shadow_casting_lights(script_path: String) -> Array[Dictionary]:
+## The 2D lights of one scene that cast shadows - the only ones an occluder is about. Asked by the
+## SCENE from here down: the head resolves its sheet's one scene first, and the Doctor walks every
+## scene the project has, so the rule below is written once and both of them run it.
+static func shadow_casting_lights(scene_path: String) -> Array[Dictionary]:
 	var casting: Array[Dictionary] = []
-	for light: Dictionary in EventSheetSceneLights.for_script(script_path):
-		if bool(light.get("shadows", false)) and _is_2d(light):
+	for light: Dictionary in EventSheetSceneLights.for_scene(scene_path):
+		if bool(light.get("shadows", false)) and is_2d(light):
 			casting.append(light)
 	return casting
 
 
 ## Every occluder of the scene whose own mask shares a layer with at least one shadow-casting light -
 ## Godot's own rule for whether a shadow is ever drawn.
-static func matching_occluders(script_path: String, casting: Array[Dictionary]) -> Array[Dictionary]:
+static func matching_occluders(scene_path: String, casting: Array[Dictionary]) -> Array[Dictionary]:
 	var blocking: Array[Dictionary] = []
-	for occluder: Dictionary in EventSheetSceneLights.nodes_of_class(
-			script_path, EventSheetSceneLights.OCCLUDER_CLASS):
+	for occluder: Dictionary in EventSheetSceneLights.nodes_of_scene_class(
+			scene_path, EventSheetSceneLights.OCCLUDER_CLASS):
 		if not _blocked_lights(occluder, casting).is_empty():
 			blocking.append(occluder)
 	return blocking
@@ -126,9 +141,9 @@ static func matching_occluders(script_path: String, casting: Array[Dictionary]) 
 
 ## The shadow-casting lights nothing in the scene can block, by name. Empty is the healthy answer,
 ## and a name in it is the whole of the warning below.
-static func lights_without_occluders(script_path: String, casting: Array[Dictionary]) -> PackedStringArray:
-	var occluders: Array[Dictionary] = EventSheetSceneLights.nodes_of_class(
-		script_path, EventSheetSceneLights.OCCLUDER_CLASS)
+static func lights_without_occluders(scene_path: String, casting: Array[Dictionary]) -> PackedStringArray:
+	var occluders: Array[Dictionary] = EventSheetSceneLights.nodes_of_scene_class(
+		scene_path, EventSheetSceneLights.OCCLUDER_CLASS)
 	var stranded: PackedStringArray = PackedStringArray()
 	for light: Dictionary in casting:
 		var blocked: bool = false
@@ -137,6 +152,50 @@ static func lights_without_occluders(script_path: String, casting: Array[Diction
 		if not blocked:
 			stranded.append(str(light.get("name", "")))
 	return stranded
+
+
+## L8. The 2D lights of a scene with NO texture on them, by name. A PointLight2D lights the shape of
+## its texture and nothing else, so one without a texture is a node that is switched on, costs a
+## draw, and shows nothing - the quietest way a lit scene can be dark. Only asked of the classes that
+## HAVE a texture: a DirectionalLight2D has none and needs none.
+static func textureless_lights(scene_path: String) -> PackedStringArray:
+	var dark: PackedStringArray = PackedStringArray()
+	for light: Dictionary in EventSheetSceneLights.for_scene(scene_path):
+		if not EventForgeLightWords.has_property(str(light.get("class", "")), TEXTURE_PROPERTY):
+			continue
+		if str((light.get("properties", {}) as Dictionary).get(TEXTURE_PROPERTY, "")).strip_edges().is_empty():
+			dark.append(str(light.get("name", "")))
+	return dark
+
+
+## L8. The 2D lights of a scene whose RANGE mask reaches what is drawn on the layer. Godot matches a
+## light's `range_item_cull_mask` against each item's own `light_mask`, and an item that never set one
+## is on layer 1 - so a light whose range mask misses layer 1 lights nothing anybody put in the scene
+## by hand. This is the RANGE question, not the shadow one: two masks, two rules, and confusing them
+## is how "the light is right there and the room is black" happens.
+static func lights_reaching_the_layer(scene_path: String) -> PackedStringArray:
+	var reaching: PackedStringArray = PackedStringArray()
+	for light: Dictionary in EventSheetSceneLights.for_scene(scene_path):
+		if is_2d(light) and EventSheetSceneLights.mask_bits(str(light.get("masks", ""))) \
+				& EventSheetSceneLights.DEFAULT_MASK != 0:
+			reaching.append(str(light.get("name", "")))
+	return reaching
+
+
+## L8. The CanvasModulate nodes of a scene that really DARKEN it, each as {"name", "percent"}. A
+## CanvasModulate holding white multiplies everything by one and changes nothing, so it is not a
+## darkness at all; the percentage is the row's own reading of the colour, so the Doctor and the row
+## say the same number about the same node.
+static func darkening_nodes(scene_path: String) -> Array[Dictionary]:
+	var darkening: Array[Dictionary] = []
+	for node: Dictionary in EventSheetSceneLights.nodes_of_scene_class(scene_path, DARKNESS_CLASS):
+		var written: String = str((node.get("properties", {}) as Dictionary).get(DARKNESS_PROPERTY, ""))
+		var percent: String = EventForgeValueLens.darkness_percent(written)
+		if percent == written or percent == "0%":
+			continue
+		darkening.append({"name": str(node.get("name", "")), "percent": percent,
+			"path": str(node.get("path", "")), "scene_path": scene_path})
+	return darkening
 
 
 ## What the band says. The healthy reading is a count; the unhealthy one is the sentence the Doctor
@@ -159,11 +218,10 @@ static func shadows_warning(unblocked: PackedStringArray) -> String:
 ## many the scene holds at all, and how many of those can really block these shadows. BOTH numbers,
 ## because "there is nothing to block them" and "the ones there are sit on another layer" are
 ## different problems with different fixes, and the echo is where a reader tells them apart.
-static func shadows_echo(script_path: String, blocking: int) -> String:
-	var occluders: Array[Dictionary] = EventSheetSceneLights.nodes_of_class(
-		script_path, EventSheetSceneLights.OCCLUDER_CLASS)
-	var scene_file: String = str(occluders[0].get("scene_path", "")).get_file() \
-		if not occluders.is_empty() else attached_scene(script_path).get_file()
+static func shadows_echo(scene_path: String, blocking: int) -> String:
+	var occluders: Array[Dictionary] = EventSheetSceneLights.nodes_of_scene_class(
+		scene_path, EventSheetSceneLights.OCCLUDER_CLASS)
+	var scene_file: String = scene_path.get_file()
 	return "%s: %s x %d, %d whose %s matches %s" % [scene_file,
 		EventSheetSceneLights.OCCLUDER_CLASS, occluders.size(), blocking,
 		EventSheetSceneLights.OCCLUDER_MASK_PROPERTY, EventSheetSceneLights.SHADOW_MASK_PROPERTY_2D]
@@ -271,10 +329,9 @@ static func _blocked_lights(occluder: Dictionary, casting: Array) -> PackedStrin
 	return blocked
 
 
-## True for a light of the 2D dimension - the only one occluders are about.
-static func _is_2d(light: Dictionary) -> bool:
+## True for a light of the 2D dimension - the only one occluders, textures and a darkened layer are
+## about. A 3D light needs no occluder to cast a shadow and no texture to shine.
+static func is_2d(light: Dictionary) -> bool:
 	var node_class: String = str(light.get("class", ""))
 	return ClassDB.class_exists(node_class) \
 		and ClassDB.is_parent_class(node_class, EventForgeLightWords.ROOT_2D)
-
-

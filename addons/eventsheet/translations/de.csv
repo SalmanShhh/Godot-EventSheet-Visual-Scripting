@@ -4559,3 +4559,12 @@ also in,auch in
 select the light,das Licht auswählen
 select the node,den Node auswählen
 tinted,getönt
+"%s has no texture, so it lights nothing. Give it one - a soft white circle is the whole of a torch.",%s hat keine Textur und leuchtet daher nichts an. Gib ihm eine - ein weicher weißer Kreis ist die ganze Fackel.
+"Add an occluder, or turn the shadows off and save the draw cost.","Füge einen Occluder hinzu, oder schalte die Schatten aus und spare die Zeichenkosten."
+"%s darkens the layer to %s and no light reaches it - the scene is uniformly dark. Add a light, or check the range masks of the ones there are.","%s verdunkelt die Ebene auf %s und kein Licht erreicht sie - die Szene ist gleichmäßig dunkel. Füge ein Licht hinzu, oder prüfe die Reichweiten-Masken der vorhandenen."
+"%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.","%s schreibt die Umgebung der Welt, und %s hat keinen WorldEnvironment-Node - die Zeile tut im laufenden Spiel nichts. Füge der Szene einen hinzu."
+"%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.","%s schreibt %s, und %s benutzt dieselbe Datei - die Änderung folgt dem Spieler in jene Szenen. Gib dieser Szene zuerst eine eigene Kopie."
+Make the environment this scene's own,Der Szene eine eigene Umgebung geben
+"Lighting: %d lit scene(s), %d with something that will not show at run time.","Beleuchtung: %d beleuchtete Szene(n), %d davon mit etwas, das zur Laufzeit nicht zu sehen sein wird."
+This sheet already takes its own copy.,Dieses Blatt nimmt bereits eine eigene Kopie.
+This scene has its own environment now - the change stops here.,Diese Szene hat jetzt ihre eigene Umgebung - die Änderung endet hier.

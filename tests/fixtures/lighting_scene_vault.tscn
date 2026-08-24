@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="GradientTexture2D" id="1_glow"]
+
+[node name="Vault" type="Node2D"]
+
+[node name="Level" type="CanvasModulate" parent="."]
+color = Color(0.15, 0.18, 0.3, 1)
+
+[node name="Lamp" type="PointLight2D" parent="."]
+texture = SubResource("1_glow")
+range_item_cull_mask = 2

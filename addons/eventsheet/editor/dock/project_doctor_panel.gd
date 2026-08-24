@@ -137,8 +137,17 @@ func _run_project_doctor() -> void:
 	EventSheetProjectOutline.set_doctor_findings(report.get("findings", []))
 	if _dock._project_bar_glue.bar() != null:
 		_dock._project_bar_glue.bar().refresh()
-	for finding: Dictionary in (report.get("findings", []) as Array):
-		var item: TreeItem = _doctor_tree.create_item(root_item)
+	fill(_doctor_tree, root_item, report.get("findings", []) as Array)
+	var errors: int = int(report.get("errors", 0))
+	_dock._set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
+
+
+## The report itself, as rows of a Tree: severity, where, and the finding. Static and given its tree,
+## so the window is not the only thing that can draw a report - a preview and a test build the same
+## rows from the same findings, and there is one place that decides what a report line looks like.
+static func fill(tree: Tree, root_item: TreeItem, findings: Array) -> void:
+	for finding: Dictionary in findings:
+		var item: TreeItem = tree.create_item(root_item)
 		var severity: String = str(finding.get("severity"))
 		item.set_text(0, severity.to_upper())
 		item.set_custom_color(0, Color(0.92, 0.42, 0.42) if severity == "error"
@@ -155,8 +164,6 @@ func _run_project_doctor() -> void:
 		item.set_metadata(0, str(finding.get("path", "")))
 		item.set_metadata(1, finding)
 		item.set_tooltip_text(2, "%s\n\nDouble-click to open this sheet." % str(finding.get("message")))
-	var errors: int = int(report.get("errors", 0))
-	_dock._set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
 
 
 ## Double-click / Enter on a finding: open its sheet in a tab (re-focusing an already-open one).

@@ -4559,3 +4559,12 @@ also in,也在
 select the light,选中该灯光
 select the node,选中该节点
 tinted,色调
+"%s has no texture, so it lights nothing. Give it one - a soft white circle is the whole of a torch.",%s 没有纹理，因此什么也照不亮。给它一张 - 一个柔和的白色圆形就是一支火把的全部。
+"Add an occluder, or turn the shadows off and save the draw cost.",添加一个遮挡体，或者关闭阴影以省下绘制开销。
+"%s darkens the layer to %s and no light reaches it - the scene is uniformly dark. Add a light, or check the range masks of the ones there are.",%s 将该层压暗到 %s，却没有任何灯光照到它 - 场景会一片漆黑。添加一盏灯，或检查现有灯光的范围遮罩。
+"%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.",%s 会写入世界的环境，而 %s 里没有 WorldEnvironment 节点 - 游戏运行时这一行什么也不会做。给场景加一个。
+"%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.",%s 会写入 %s，而 %s 也在用同一个文件 - 这个改动会跟着玩家进入那些场景。先让这个场景拥有自己的副本。
+Make the environment this scene's own,让环境成为这个场景自己的
+"Lighting: %d lit scene(s), %d with something that will not show at run time.",光照：%d 个有光照的场景，其中 %d 个含有运行时看不到的东西。
+This sheet already takes its own copy.,这张事件表已经取了自己的副本。
+This scene has its own environment now - the change stops here.,这个场景现在有了自己的环境 - 改动到此为止。

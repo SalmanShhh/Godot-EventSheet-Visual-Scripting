@@ -5365,9 +5365,9 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 		fix_kind = str(metadata.get("variable_note_fix", fix_kind))
 		if metadata.has("variable_note_event"):
 			note_meta = metadata
-	# M7 - the three networking fixes ride the same note row and the same click, because they are
-	# the same gesture: a line under the row, a button at its right edge, one undo step.
-	if _apply_multiplayer_note_fix(fix_kind, wrong, note_meta):
+	# M7 / L8 - the networking and lighting fixes ride the same note row and the same click, because
+	# they are the same gesture: a line under the row, a button at its right edge, one undo step.
+	if _apply_finding_note_fix(fix_kind, wrong, note_meta):
 		return
 	if fix_kind == "retarget":
 		_retarget_variable_row(note_meta, right)
@@ -5384,12 +5384,16 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 	_set_status(EventSheetL10n.translate("Renamed %s to %s.") % [wrong, right])
 
 
-## M7 - the button on a networking note. "Make heal a message…" opens the Message dialog on that
-## function, "Keep in step" hands the value to a synchronizer in the scene, and "Wrap in an owner
-## group" puts the event in a group only the owner of this object runs. True when the click was
-## one of those, so the variable-note fixes above stay exactly as they were.
-func _apply_multiplayer_note_fix(fix_kind: String, subject: String, note_meta: Dictionary) -> bool:
+## M7 / L8 - the button on a networking or lighting note. "Make heal a message…" opens the Message
+## dialog on that function, "Keep in step" hands the value to a synchronizer in the scene, "Wrap in an
+## owner group" puts the event in a group only the owner of this object runs, and "Make the
+## environment this scene's own" writes the row that takes the copy. True when the click was one of
+## those, so the variable-note fixes above stay exactly as they were.
+func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dictionary) -> bool:
 	match fix_kind:
+		EventSheetLightingFindings.FIX_OWN_ENVIRONMENT:
+			give_the_scene_its_own_environment(subject)
+			return true
 		EventSheetMultiplayerFindings.FIX_MAKE_MESSAGE:
 			for entry: Variant in _current_sheet.functions:
 				var event_function: EventFunction = entry as EventFunction
@@ -5408,6 +5412,23 @@ func _apply_multiplayer_note_fix(fix_kind: String, subject: String, note_meta: D
 			_wrap_event_in_owner_group(note_meta.get("variable_note_event", null) as EventRow)
 			return true
 	return false
+
+
+## L8 - "Make the environment this scene's own". A WorldEnvironment usually points at a `.tres`, and a
+## `.tres` is a FILE: writing fog into it at run time writes it for every other scene that loads the
+## same file, so the change follows the player out of the room. The copy has to exist BEFORE anything
+## writes through it, which is why the row goes in an event of its own at the top of the sheet. One
+## undo step, through the funnel every other mutation takes. True when the sheet changed.
+func give_the_scene_its_own_environment(target: String) -> bool:
+	if _current_sheet == null:
+		return false
+	if not _perform_undoable_sheet_edit(
+			EventSheetL10n.translate("Make the environment this scene's own"), func() -> bool:
+				return EventSheetLightingFindings.insert_own_environment(_current_sheet, target)):
+		_set_status(EventSheetL10n.translate("This sheet already takes its own copy."))
+		return false
+	_mark_dirty(EventSheetL10n.translate("This scene has its own environment now - the change stops here."))
+	return true
 
 
 ## M7 - "Wrap in an owner group". The event moves an object every peer keeps in step, so it belongs
