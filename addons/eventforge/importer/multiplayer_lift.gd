@@ -12,6 +12,11 @@ extends RefCounted
 # already exists: `ACEAction.codegen_template`, the baked template that outranks the registry. No
 # second store, no parallel emitter - the row IS the spelling.
 #
+# The SINGLE-STATEMENT families (leaving, and the named-message sends) are table entries run by
+# EventForgeLiftTable - a pattern, the row it means, and the captures that are values; the engine
+# stores the spelling by splicing those captures out of the author's own line. The RUNS below stay
+# hand-written, because two or three statements that only mean something together are not a pattern.
+#
 # What lifts here, and nothing else:
 #   Host / Join   `<peer>.create_server(<port>[, <max>])` or `.create_client(<address>, <port>)`
 #                 followed by `multiplayer.multiplayer_peer = <peer>` (or the `get_tree()`
@@ -210,18 +215,120 @@ static func _match_spawn_run(lines: PackedStringArray, index: int, depth: int, o
 
 ## The single-line spellings: leaving, and the named-message sends. Returns
 ## {ace_id, params, template} or {}. `line` is one statement, already dedented.
+##
+## Both families are TABLE entries (see lift_entries below): one statement, one pattern, and the
+## matched spelling stored by splicing the row's values out of the author's own line. The runs above
+## stay hand-written, because three statements that only mean something together are not a pattern.
 static func match_line(line: String) -> Dictionary:
 	var text: String = line.strip_edges()
 	# The same cheap rejection as match_run, for the same reason: three words, one of which every
-	# spelling below has to contain.
+	# spelling below has to contain. Cheaper than running six patterns over every statement of a file.
 	if not (text.contains("rpc") or text.contains(".close()") or text.contains("multiplayer_peer")):
 		return {}
-	var closed: RegExMatch = _regex("^([A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$").search(text)
-	if closed != null and peer_variables.has(closed.get_string(1)):
-		return {"ace_id": "LeaveGame", "params": {}, "template": text}
-	if text == "get_tree().get_multiplayer().multiplayer_peer = null":
-		return {"ace_id": "LeaveGame", "params": {}, "template": text}
-	return _match_named_send(text)
+	return EventForgeLiftTable.match_line(lift_entries(), text)
+
+
+## The two single-statement families, as table entries. Order is meaning: `rpc_id(1, …)` is the HOST,
+## so it is asked before the entry that reads the first argument as any peer at all.
+##
+## What is NOT here, deliberately: the plain `multiplayer.multiplayer_peer = null`, which IS the Leave
+## The Game template and so is already claimed by the shipped reverse index; and the callable sends
+## (`f.rpc(…)`), the first of which is likewise the shipped Send Message To Everyone template while
+## the second reads better through the sentence grammar, which can name the message's own parameters.
+static func lift_entries() -> Array[Dictionary]:
+	# An optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`). Not a param: the row
+	# says nothing about it, so it rides into the stored spelling verbatim and comes back unchanged.
+	const RECEIVER: String = "(?:(?:\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_.]*)\\.)?"
+	# The message name as a STRING, in either quoting. The `&` is the author's spelling, not a value,
+	# so it stays outside the capture and rides into the template the same way the receiver does.
+	const NAME: String = "&?\"(?<message>[A-Za-z_][A-Za-z0-9_]*)\""
+	# The separator as WRITTEN. Everything outside a param capture is kept verbatim, so a call spelled
+	# without the space re-emits without it instead of being canonicalised into a byte-gate failure.
+	const GAP: String = ",[ \\t]*"
+	var peer_is_declared: Callable = Callable(EventForgeMultiplayerLift, "_peer_is_declared")
+	return [
+		{
+			"id": "send_everyone_with_arguments",
+			"ace_id": "SendMessageToEveryone",
+			"pattern": "^%srpc\\(%s%s(?<args>.+)\\)$" % [RECEIVER, NAME, GAP],
+			"params": ["message", "args"],
+			"shape": "rpc(\"{message}\", {args})",
+			"slots": {"message": "take_damage", "args": "10"}
+		},
+		{
+			"id": "send_everyone",
+			"ace_id": "SendMessageToEveryone",
+			"pattern": "^%srpc\\(%s\\)$" % [RECEIVER, NAME],
+			"params": ["message"],
+			"defaults": {"args": ""},
+			"shape": "rpc(\"{message}\")",
+			"slots": {"message": "ping"}
+		},
+		{
+			"id": "send_host_with_arguments",
+			"ace_id": "SendMessageToHost",
+			"pattern": "^%srpc_id\\(1%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
+			"params": ["message", "args"],
+			"shape": "rpc_id(1, \"{message}\", {args})",
+			"slots": {"message": "take_damage", "args": "10"}
+		},
+		{
+			"id": "send_host",
+			"ace_id": "SendMessageToHost",
+			"pattern": "^%srpc_id\\(1%s%s\\)$" % [RECEIVER, GAP, NAME],
+			"params": ["message"],
+			"defaults": {"args": ""},
+			"shape": "rpc_id(1, \"{message}\")",
+			"slots": {"message": "ping"}
+		},
+		{
+			"id": "send_peer_with_arguments",
+			"ace_id": "SendMessageToPeer",
+			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
+			"params": ["peer", "message", "args"],
+			"shape": "rpc_id({peer}, \"{message}\", {args})",
+			"slots": {"peer": "peer_id", "message": "heal", "args": "5"}
+		},
+		{
+			"id": "send_peer",
+			"ace_id": "SendMessageToPeer",
+			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s\\)$" % [RECEIVER, GAP, NAME],
+			"params": ["peer", "message"],
+			"defaults": {"args": ""},
+			"shape": "rpc_id({peer}, \"{message}\")",
+			"slots": {"peer": "peer_id", "message": "ping"}
+		},
+		{
+			# `peer` is captured for the guard only - the row says nothing about which variable held
+			# the connection, so the name stays part of the spelling and comes back as it was written.
+			"id": "leave_by_closing_the_peer",
+			"ace_id": "LeaveGame",
+			"pattern": "^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$",
+			"guard": peer_is_declared,
+			"shape": "peer.close()",
+			"slots": {}
+		},
+		{
+			"id": "leave_via_the_tree",
+			"ace_id": "LeaveGame",
+			"pattern": "^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
+			"shape": "get_tree().get_multiplayer().multiplayer_peer = null",
+			"slots": {}
+		}
+	]
+
+
+## The guard behind `<peer>.close()`: a `close()` on anything the file did not declare as a network
+## peer is somebody's file handle, or their audio stream, and lifting it would relabel their code.
+static func _peer_is_declared(captures: Dictionary) -> bool:
+	return peer_variables.has(str(captures.get("peer", "")))
+
+
+## The peer variables a GENERATED fixture line cannot have: the harness builds `peer.close()` out of
+## the entry itself, with no file around it to have declared anything. Called once per family before
+## its entries are probed (see EventForgeLiftTable.FIXTURE_CONTEXT_METHOD).
+static func lift_fixture_context() -> void:
+	peer_variables = {"peer": "ENetMultiplayerPeer"}
 
 
 ## True when a line of code is part of the networking story - the filter behind the per-script
@@ -319,69 +426,6 @@ static func _match_peer_assignment(line: String) -> Dictionary:
 	if assigned == null:
 		return {}
 	return {"value": assigned.get_string(1)}
-
-
-## The message spellings that name their message as a STRING: `rpc("f", …)`, `rpc(&"f", …)`,
-## `rpc_id(1, "f", …)`, `rpc_id(peer, &"f", …)`, each with an optional receiver in front. The
-## receiver and the quoting ride into the template, so the line comes back exactly as it went in.
-static func _match_named_send(text: String) -> Dictionary:
-	var called: RegExMatch = _regex("^((?:\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_.]*)\\.)?rpc(_id)?\\((.*)\\)$").search(text)
-	if called == null:
-		return {}
-	var receiver: String = called.get_string(1)
-	var arguments: PackedStringArray = EventSheetBlockRegistry.split_params_top_level(called.get_string(3))
-	var addressed: bool = not called.get_string(2).is_empty()
-	var peer_slot: String = ""
-	if addressed:
-		if arguments.size() < 2:
-			return {}
-		peer_slot = arguments[0].strip_edges()
-		arguments = arguments.slice(1)
-	elif arguments.is_empty():
-		return {}
-	var quoted: String = arguments[0].strip_edges()
-	var name_form: String = _quoted_name_form(quoted)
-	if name_form.is_empty():
-		return {}
-	var params: Dictionary = {"message": _unquote_name(quoted), "args": ", ".join(_stripped(arguments.slice(1)))}
-	var slots: PackedStringArray = PackedStringArray()
-	if addressed:
-		if peer_slot == "1":
-			slots.append("1")
-		else:
-			slots.append("{peer}")
-			params["peer"] = peer_slot
-	slots.append(name_form)
-	if not str(params["args"]).is_empty():
-		slots.append("{args}")
-	var ace_id: String = "SendMessageToEveryone"
-	if addressed:
-		ace_id = "SendMessageToHost" if peer_slot == "1" else "SendMessageToPeer"
-	return {"ace_id": ace_id, "params": params,
-		"template": "%srpc%s(%s)" % [receiver, "_id" if addressed else "", ", ".join(slots)]}
-
-
-## `&"take_damage"` -> `&"{message}"`, `"take_damage"` -> `"{message}"`, anything else -> "". The
-## quoting is part of the author's spelling, so it is kept rather than normalised.
-static func _quoted_name_form(argument: String) -> String:
-	var body: String = argument.trim_prefix("&")
-	if body.length() < 3 or not body.begins_with("\"") or not body.ends_with("\""):
-		return ""
-	var inner: String = body.substr(1, body.length() - 2)
-	if _regex("^[A-Za-z_][A-Za-z0-9_]*$").search(inner) == null:
-		return ""
-	return "%s\"{message}\"" % ("&" if argument.begins_with("&") else "")
-
-
-static func _unquote_name(argument: String) -> String:
-	return argument.trim_prefix("&").trim_prefix("\"").trim_suffix("\"")
-
-
-static func _stripped(values: PackedStringArray) -> PackedStringArray:
-	var out: PackedStringArray = PackedStringArray()
-	for value: String in values:
-		out.append(value.strip_edges())
-	return out
 
 
 static func _regex(pattern: String) -> RegEx:
