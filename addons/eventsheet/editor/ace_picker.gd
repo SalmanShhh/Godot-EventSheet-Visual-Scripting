@@ -602,6 +602,25 @@ static func comparison_group_key(definition: ACEDefinition) -> String:
 	return COMPARISONS_GROUP if EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id) else ""
 
 
+## M1. Which shelf of the Multiplayer object a TRIGGER is offered on, or "" for anything else -
+## every action, condition and expression there stays in the one flat section, and so does every
+## row of every other object. Derived from the trigger itself rather than listed: a trigger that
+## names a node in the scene is about that node (Scenes), one that hands you a player id is about a
+## player (Players), and one that says only what happened to this peer's own connection is about the
+## connection. A trigger added to the vocabulary later is filed by the same three questions, with no
+## table to remember to edit. Pure + static, so the filing is pinned without a tree.
+static func multiplayer_group_key(definition: ACEDefinition) -> String:
+	if definition == null or definition.ace_type != ACEDefinition.ACEType.TRIGGER:
+		return ""
+	if definition.category.strip_edges() != EventForgeMultiplayerACEs.CATEGORY:
+		return ""
+	if not str(definition.metadata.get("node_type", "")).strip_edges().is_empty():
+		return EventForgeMultiplayerACEs.SECTION_SCENES
+	if definition.parameters.is_empty():
+		return EventForgeMultiplayerACEs.SECTION_CONNECTION
+	return EventForgeMultiplayerACEs.SECTION_PLAYERS
+
+
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
@@ -1384,6 +1403,14 @@ func _refresh_tree() -> void:
 		var comparison_key: String = comparison_group_key(definition)
 		if not comparison_key.is_empty():
 			group_key = comparison_key
+			is_node_type_group = false
+		# M1 - the Multiplayer triggers sort onto three named shelves inside their own section, for
+		# the same reason the comparisons do: "what can happen in a networked game" is a list nobody
+		# reads flat. Outranks the node-type filing so a spawner's own event is still found under
+		# Multiplayer, where the reader went looking for it.
+		var multiplayer_key: String = multiplayer_group_key(definition)
+		if not multiplayer_key.is_empty():
+			group_key = multiplayer_key
 			is_node_type_group = false
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)

@@ -274,6 +274,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on_join_failed", "", "connection_failed", MULTIPLAYER_SOURCE)
 		"OnTheHostLeft":
 			return _signal_backed("_on_the_host_left", "", "server_disconnected", MULTIPLAYER_SOURCE)
+		"OnPlayerAuthenticating":
+			# M1. The handshake's two, on the same object. Each carries the peer id and nothing else -
+			# the bytes the peer sent reach the auth callback, not the signal, so a second argument
+			# here would be a connection Godot refuses at runtime.
+			return _signal_backed("_on_player_authenticating", "id: int", "peer_authenticating", MULTIPLAYER_SOURCE)
+		"OnAuthenticationFailed":
+			return _signal_backed("_on_authentication_failed", "id: int", "peer_authentication_failed", MULTIPLAYER_SOURCE)
 		"OnBodyEntered":
 			return _signal_backed("_on%s_body_entered" % source_token, "body: Node", "body_entered", source_path)
 		"OnAreaEntered":

@@ -3018,7 +3018,13 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"SetFlippedSprite3D", "SetFlippedTextureRect", "SetFlippedAnimatedSprite2D",
 	"IsMirroredAnimatedSprite2D", "IsMirroredSprite3D", "IsMirroredTextureRect",
 	"IsFlippedAnimatedSprite2D", "IsFlippedSprite3D", "IsFlippedTextureRect",
-	"IsMirroredSpatial", "IsMirroredControl", "SetMirroredLabel3D"
+	"IsMirroredSpatial", "IsMirroredControl", "SetMirroredLabel3D",
+	# M1. Two Multiplayer rows whose template is another row's template, letter for letter. Reject
+	# player writes the same `disconnect_peer(id)` line Kick player writes, and only the event above
+	# it says which of the two a reader means - so the bare line reads as Kick, and Reject authors.
+	# Started as writes `OS.has_feature(tag)`, which is exactly Platform Has Feature's line; that row
+	# already speaks for every feature test in every project, multiplayer tag or not.
+	"RejectPlayer", "StartedAs"
 ]
 
 

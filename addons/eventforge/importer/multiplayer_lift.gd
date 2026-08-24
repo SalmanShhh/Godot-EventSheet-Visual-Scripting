@@ -43,7 +43,9 @@ const SIGNAL_TRIGGERS: Dictionary = {
 	"peer_disconnected": "OnPlayerLeft",
 	"connected_to_server": "OnJoinedTheHost",
 	"connection_failed": "OnJoinFailed",
-	"server_disconnected": "OnTheHostLeft"
+	"server_disconnected": "OnTheHostLeft",
+	"peer_authenticating": "OnPlayerAuthenticating",
+	"peer_authentication_failed": "OnAuthenticationFailed"
 }
 
 ## The object a connect line names for those signals - the `multiplayer` property every node has.
@@ -60,7 +62,9 @@ const DEFAULT_MAX_PLAYERS: String = "32"
 const NETWORKING_MARKS: Array[String] = [
 	"multiplayer", "Multiplayer", "@rpc", "rpc(", "rpc_id(", "create_server(", "create_client(",
 	"peer_connected", "peer_disconnected", "connected_to_server", "connection_failed",
-	"server_disconnected"
+	"server_disconnected", "peer_authenticating", "peer_authentication_failed",
+	"complete_auth(", "send_auth(", "disconnect_peer(", "refuse_new_connections",
+	"set_multiplayer_authority(", "get_multiplayer_authority()"
 ]
 
 ## The peer variables the file under lift declares: name -> the peer class it was made from. Filled
