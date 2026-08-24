@@ -14,6 +14,14 @@
 #       companion state, a user-chosen call target) - see NOT_STANDALONE.
 # Triggers are skipped (they name a signal, they have no inline template). Nothing is dropped
 # silently: every skip is printed.
+#
+# EVERY CHOICE, not only the pre-filled one. A dropdown is a promise that each of its items writes
+# working code, and the item nobody picked while authoring is the one whose spelling was never tried:
+# Configure Canvas offered `world` where its own default was `"world"`, so picking either item off
+# the list wrote an undefined identifier into the game. Each option is compiled in its turn, with two
+# tables beside it - the lists whose choice constrains another parameter (the harness cannot fill
+# both, so it does not try), and the choices that really do not compile, written down with the cause
+# rather than hidden.
 @tool
 class_name BuiltinACECompileTest
 extends RefCounted
@@ -29,6 +37,28 @@ extends RefCounted
 ## therefore the right fill here: synthesizing a String for one would staple a stray literal onto the
 ## end of a working statement and fail an ACE that is perfectly correct.
 const OWN_LINE_HINTS: Array[String] = ["input_prompt_show", "input_prompt_clear"]
+
+## Dropdowns whose choice CONSTRAINS another parameter, so trying each item against one fixed fill
+## cannot say anything: the harness fills every param independently, and these are the lists where
+## that is the wrong thing to do. Not defects - the row is correct, the harness is the one that
+## cannot know. Keyed `<ace_id>.<param_id>`, with the reason, because a list added later must be
+## thought about rather than inherited.
+const OPTIONS_CONSTRAIN_OTHER_PARAMS: Dictionary = {
+	"PartOf.part": "which parts exist depends on the value beside it - a Vector2 has no z",
+	"SetPartOf.part": "the same, on the writing side",
+	"SetLocalVarTyped.var_type": "the type has to agree with the value beside it",
+	"SetLocalConstTyped.const_type": "the same, for a constant"
+}
+
+## Choices that really do NOT compile, with the cause. An entry here is a defect that is written
+## down rather than hidden, and it is DELETED the day the cause is fixed - never added to make a red
+## run green. Keyed `<ace_id>.<param_id>=<value>`.
+const KNOWN_OPTION_FAILURES: Dictionary = {
+	"HostGame.peer_kind=WebSocketMultiplayerPeer": "the row writes ENet's create_server(port, max_players); WebSocket's second argument is the bind address, so the line does not compile until Host A Game writes a template per peer kind",
+	"HostGame.peer_kind=WebRTCMultiplayerPeer": "WebRTCMultiplayerPeer ships as a separate extension, so the class does not exist in a stock build",
+	"JoinGame.peer_kind=WebSocketMultiplayerPeer": "create_client takes ONE url on a WebSocket peer, not an address and a port",
+	"JoinGame.peer_kind=WebRTCMultiplayerPeer": "the same missing extension as above"
+}
 
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
@@ -90,6 +120,8 @@ const NOT_STANDALONE: Array[String] = [
 static func run() -> bool:
 	var descriptors: Array[ACEDescriptor] = EventForgeBuiltinACEs.get_descriptors()
 	var checked: int = 0
+	var options_checked: int = 0
+	var known_bad: Array[String] = []
 	var skipped: Array[String] = []
 	var failures: Array[String] = []
 
@@ -105,24 +137,71 @@ static func run() -> bool:
 		if fill.get("skip", false):
 			skipped.append("%s/%s (%s)" % [d.provider_id, d.ace_id, fill.get("reason", "")])
 			continue
-		var source: String = _wrap(d, fill["params"])
-		var script: GDScript = GDScript.new()
-		script.source_code = source
-		var err: int = script.reload()
 		checked += 1
-		if err != OK:
-			failures.append("%s/%s [%s host=%s] -> %s\n----\n%s\n----" % [
-				d.provider_id, d.ace_id, _type_name(d.ace_type),
-				(d.node_type if not str(d.node_type).is_empty() else "Node"),
-				error_string(err), source])
+		var failure: String = _compile_failure(d, fill["params"])
+		if not failure.is_empty():
+			failures.append(failure)
+		# EVERY CHOICE, not just the pre-filled one. A dropdown is a promise that each of its items
+		# writes working code, and the item nobody picked while authoring is exactly the one whose
+		# spelling was never tried - an enum name that does not exist on the host, a method the
+		# other option calls under a different name. One compile per option, minus the one the fill
+		# above already used.
+		for variant: Dictionary in _option_variants(d, fill["params"]):
+			var key: String = "%s.%s=%s" % [d.ace_id, str(variant["param"]), str(variant["value"])]
+			if KNOWN_OPTION_FAILURES.has(key):
+				known_bad.append("%s (%s)" % [key, str(KNOWN_OPTION_FAILURES[key])])
+				continue
+			options_checked += 1
+			var option_failure: String = _compile_failure(d, variant["params"])
+			if not option_failure.is_empty():
+				failures.append("with %s = %s: %s" % [str(variant["param"]), str(variant["value"]), option_failure])
 
 	for f: String in failures:
 		print("[FAIL] builtin_ace_compile_test: %s" % f)
-	print("[INFO] builtin_ace_compile_test: checked=%d compiled, skipped=%d, failed=%d" % [checked, skipped.size(), failures.size()])
+	print("[INFO] builtin_ace_compile_test: checked=%d compiled (%d option choices), skipped=%d, failed=%d" % [
+		checked, options_checked, skipped.size(), failures.size()])
+	if not known_bad.is_empty():
+		print("[INFO] builtin_ace_compile_test: choices that do NOT compile, written down with their cause: %s" % ", ".join(known_bad))
 	if not skipped.is_empty():
 		print("[INFO] builtin_ace_compile_test: skipped (need user-supplied context; covered by feature tests + the template audit): %s" % ", ".join(skipped))
 
 	return _check("every auto-fillable built-in ACE compiles in its host", failures.is_empty(), true)
+
+
+## One compile of one filled template, as the message naming what went wrong - "" when it built. The
+## two passes above share it, so the option pass can never test the ACE differently from the default
+## pass does.
+static func _compile_failure(d: ACEDescriptor, params: Dictionary) -> String:
+	var source: String = _wrap(d, params)
+	var script: GDScript = GDScript.new()
+	script.source_code = source
+	var err: int = script.reload()
+	if err == OK:
+		return ""
+	return "%s/%s [%s host=%s] -> %s
+----
+%s
+----" % [
+		d.provider_id, d.ace_id, _type_name(d.ace_type),
+		(d.node_type if not str(d.node_type).is_empty() else "Node"),
+		error_string(err), source]
+
+
+## Every OTHER choice of every dropdown this ACE has, as {param, value, params}. The value already
+## filled in is left out (it was just compiled), and a list of one is no choice at all.
+static func _option_variants(d: ACEDescriptor, filled: Dictionary) -> Array[Dictionary]:
+	var variants: Array[Dictionary] = []
+	for p: ACEParam in d.params:
+		if p.options.size() < 2 or OPTIONS_CONSTRAIN_OTHER_PARAMS.has("%s.%s" % [d.ace_id, p.id]):
+			continue
+		for option: Variant in p.options:
+			var value: String = str((option as Dictionary).get("key", "")) if option is Dictionary else str(option)
+			if value == str(filled.get(p.id, "")):
+				continue
+			var params: Dictionary = filled.duplicate()
+			params[p.id] = value
+			variants.append({"param": p.id, "value": value, "params": params})
+	return variants
 
 
 ## Builds a params dict that fills each placeholder with a value of the param's type that
