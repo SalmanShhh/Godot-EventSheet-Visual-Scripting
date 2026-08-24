@@ -202,8 +202,11 @@ static func _test_messages() -> bool:
 		_annotations_of(sheet, "take_damage"), PackedStringArray(["@rpc(\"any_peer\", \"call_local\", \"reliable\")"])) and ok
 	ok = _check("so is one whose options are in another order",
 		_annotations_of(sheet, "heal"), PackedStringArray(["@rpc(\"call_local\", \"any_peer\")"])) and ok
+	# A channel is only ever the FOURTH argument (Godot rejects an int in any earlier slot), so the
+	# spelling that carries one always names all three options first.
 	ok = _check("so is one carrying a channel",
-		_annotations_of(sheet, "set_skin"), PackedStringArray(["@rpc(\"authority\", \"unreliable_ordered\", 2)"])) and ok
+		_annotations_of(sheet, "set_skin"),
+		PackedStringArray(["@rpc(\"authority\", \"call_remote\", \"unreliable_ordered\", 2)"])) and ok
 	ok = _check("and the bare annotation", _annotations_of(sheet, "ping"), PackedStringArray(["@rpc"])) and ok
 
 	var sent: PackedStringArray = _function_row_ids(sheet, "send_every_spelling")

@@ -1,5 +1,6 @@
 # Messages, in every spelling Godot 4 accepts. The four functions carry `@rpc` with its options in
-# different orders and subsets (and one with a channel), and the sender walks all six ways a project
+# different orders and subsets (and one with a channel, which Godot only takes as the fourth
+# argument, so that one spells all three options out), and the sender walks all six ways a project
 # writes a call: the callable form, the two string forms, the addressed forms, and a call aimed at
 # another node's message.
 extends CharacterBody2D
@@ -17,7 +18,7 @@ func heal(amount: int) -> void:
 	hp += amount
 
 
-@rpc("authority", "unreliable_ordered", 2)
+@rpc("authority", "call_remote", "unreliable_ordered", 2)
 func set_skin(skin: String) -> void:
 	print(skin)
 
