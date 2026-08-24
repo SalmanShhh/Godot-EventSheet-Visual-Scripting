@@ -12,6 +12,18 @@
 - The project-templates test sweeps its own scratch directory before it scans. It SAVES templates into `user://tpl_dir`, and Save as Template suffixes rather than overwrites, so a run that ended between the saves and the cleanup left a `boss_fight-N.tres` behind that every later run found - the scan then reported the machine's history instead of what the test wrote, and two assertions failed on a tree with nothing wrong with it.
 - README's test figures are measured off this tree rather than carried over: 17,695 assertions across 624 test files, counted the way the README's own figures always are - `[PASS]` lines from one full serial suite run, and `tests/*_test.gd`.
 
+### Fixed - a behaviour you compiled earlier no longer decides how the next file opens
+
+- **Compiling a behaviour sheet used to sink the next `.gd` you opened.** The host-targeting default
+  ({host.} templates aiming at the parent instead of self) is per-compile scratch that `compile()`
+  clears, but the two text emitters the importer gates every lifted function with did not - so after
+  any behaviour compile in the same session, the gate emitted `host.move_and_slide()` for a file that
+  says `move_and_slide()`, refused its own match, and dropped the whole file back to script blocks.
+  Both emitters clear it now, and the invariant is pinned.
+- **The networking count speaks every shipped language.** *every networking line reads as a row - 9
+  of 9* and *%d of %d networking lines read as rows* arrived without a `TEMPLATE.csv` row; both now
+  carry one, and all eight locales carry them filled.
+
 ### Changed - Variables: one sentence, one dialog, one owner
 
 - **The reading shape is the only shape.** `name : Type = value` is gone from the canvas: every
