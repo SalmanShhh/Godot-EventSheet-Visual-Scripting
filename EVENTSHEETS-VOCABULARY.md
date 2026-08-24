@@ -403,6 +403,25 @@ Node script extending `CharacterBody2D`.
 - **Offline Id** - The currency credited (inside On Offline Gain).
 - **Offline Gain** - The amount credited offline (inside On Offline Gain).
 
+### DayNightCycleBehavior (`res://eventsheet_addons/day_night_cycle/day_night_cycle_behavior.gd`)
+@ace_tags(lighting, time, day-night) @ace_category("Day/Night Cycle") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Sunrise**
+- **On Sunset**
+- **On Midnight**
+- **On The Hour** (`hour: int`)
+
+#### Conditions
+- **It Is Day** - True between sunrise and sunset. The comparison is made in hours SINCE sunrise so that a day running past midnight (sunrise 20:00, sunset 4:00) reads the same as an ordinary one.
+- **It Is Night** - True between sunset and sunrise - the other half of the same question, written as one row so a sheet never has to invert anything.
+
+#### Actions
+- **Set The Time** (`hour: float`) - Jumps the clock to an hour on the 24 hour clock - the row a cutscene, a bed or a debug key uses. The hours it skips over do NOT ring: a jump is one moment, not the twelve it passed.
+- **Run The Clock Faster** (`times_faster: float`) - Changes how fast the clock runs without changing the day it is set to - what a game uses for a rest at an inn, or for a sky that races while a menu is open.
+- **Pause The Clock** - Stops the clock where it is. The sky keeps whatever it is showing - nothing is reset.
+- **Resume The Clock** - Starts the clock again from where it was paused.
+
 ### DebugOverlayAddon (`res://eventsheet_addons/debug_overlay/debug_overlay_addon.gd`)
 @ace_tags(debug, overlay, hud, profiling) @ace_category("Debug Overlay") @ace_version(1.0.0)
 
@@ -1057,6 +1076,26 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Ticker Value** (`ticker_name: String`) - What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.
 - **Trauma**
+
+### LightFlickerBehavior (`res://eventsheet_addons/light_flicker/light_flicker_behavior.gd`)
+@ace_tags(lighting, juice, visual) @ace_category("Light Flicker") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Flickering** - True while the light is actually flickering - false while it waits out a delay, and false once it has been stopped.
+
+#### Actions
+- **Start Flickering** (`after_seconds: float = 0.0`) - Starts the flicker, either now or after a delay. The delay is what a row uses when a torch should catch a moment after the thing that lit it.
+- **Stop Flickering** (`settle_at: float = 1.0`) - Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. Reach goes back to whatever the scene was authored with.
+
+### LightPulseBehavior (`res://eventsheet_addons/light_pulse/light_pulse_behavior.gd`)
+@ace_tags(lighting, juice, visual) @ace_category("Light Pulse") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Pulsing** - True while the light is actually pulsing - false while it waits out a delay, and false once it has been stopped.
+
+#### Actions
+- **Start Pulsing** (`after_seconds: float = 0.0`) - Starts the pulse, either now or after a delay - the delay is what a row uses when a beacon should come up a moment after the thing that switched it on.
+- **Stop Pulsing** (`settle_at: float = 1.0`) - Stops the pulse and leaves the light at one steady brightness - the number the row names.
 
 ### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.gd`)
 @ace_category("Line Of Sight") @ace_expose_all(node) @ace_version(1.0.0)
@@ -3747,6 +3786,45 @@ Keys and doors (Y16): the coloured keycard, said as the sheet's list words.
 #### Expressions
 - **Keys Held** (`keys: String`) - How many keys the player is carrying - the number a row of HUD key icons counts up to.
 
+### Light Node (`res://addons/eventforge/registration/modules/light_node_aces.gd`)
+L1/L2: the LIGHT is the object, not a parameter.
+
+#### Conditions
+- **Is On** (`target: String`) - True while is on. Reads `Light2D.enabled`.
+- **Is On** (`target: String`) - True while is on. Reads `Light3D.visible`.
+- **Is Casting Shadows** (`target: String`) - True while is casting shadows. Reads `Light2D.shadow_enabled`.
+- **Is Casting Shadows** (`target: String`) - True while is casting shadows. Reads `Light3D.shadow_enabled`.
+
+#### Actions
+- **Set Brightness** (`value: String, target: String`) - How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.
+- **Fade Brightness** (`target: String, value: String, seconds: String`) - Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.
+- **Set Brightness** (`value: String, target: String`) - How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.
+- **Fade Brightness** (`target: String, value: String, seconds: String`) - Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.
+- **Set Colour** (`value: Color, target: String`) - The colour the light casts. Writes `Light2D.color`.
+- **Set Colour** (`value: Color, target: String`) - The colour the light casts. Writes `Light3D.light_color`.
+- **Set Reach** (`value: String, target: String`) - How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.
+- **Set Reach** (`value: String, target: String`) - How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.
+- **Set Reach** (`value: String, target: String`) - How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.
+- **Set Cone Angle** (`value: String, target: String`) - How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.
+- **Turn On** (`target: String`) - Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.
+- **Turn Off** (`target: String`) - Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.
+- **Turn On** (`target: String`) - Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.
+- **Turn Off** (`target: String`) - Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.
+- **Turn Shadows On** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.
+- **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.
+- **Turn Shadows On** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
+- **Turn Shadows Off** (`target: String`) - Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.
+
+#### Expressions
+- **Brightness** (`target: String`) - Reads brightness back: `Light2D.energy`. Use it in any value field.
+- **Brightness** (`target: String`) - Reads brightness back: `Light3D.light_energy`. Use it in any value field.
+- **Colour** (`target: String`) - Reads the light's colour back: `Light2D.color`. Use it in any value field.
+- **Colour** (`target: String`) - Reads the light's colour back: `Light3D.light_color`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.
+- **Reach** (`target: String`) - Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.
+- **Cone Angle** (`target: String`) - Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.
+
 ### Lighting (`res://addons/eventforge/registration/modules/lighting_aces.gd`)
 lights, layer tint and the world's ambient light.
 
@@ -4299,6 +4377,21 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Deep Copy** (`var_name: String`) - Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.
 - **Deep Copy** (`var_name: String`) - Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.
 - **Data Folder Problems** (`folder: String`) - Every structural problem in a folder of data assets, one per line, and "" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.
+
+### Scene Lighting (`res://addons/eventforge/registration/modules/scene_lighting_aces.gd`)
+L4/L6: the two lighting objects that are not lights.
+
+#### Actions
+- **Set Darkness** (`value: Color, target: String`) - Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.
+- **Fade Darkness** (`target: String, value: Color, seconds: String`) - Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.
+- **Turn Fog On** (`target: String`) - Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.
+- **Turn Fog Off** (`target: String`) - Switches the world's fog off again. Writes `Environment.fog_enabled`.
+- **Turn Glow On** (`target: String`) - Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.
+- **Turn Glow Off** (`target: String`) - Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.
+- **Set Fog Thickness** (`value: String, target: String`) - Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.
+- **Set Ambient Light** (`value: String, target: String`) - Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.
+- **Fade The Glow** (`target: String, value: String, seconds: String`) - Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.
+- **Make The Environment This Scene's Own** (`target: String`) - Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.
 
 ### Spatial (`res://addons/eventforge/registration/modules/spatial_aces.gd`)
 Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).
