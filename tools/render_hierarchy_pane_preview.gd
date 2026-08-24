@@ -25,15 +25,10 @@ func _on_frame() -> void:
 		var facts: Dictionary = {
 			"parent": {"label": "Level", "note": "(the layout)", "scene_owned": true},
 			"children": [
-				{"label": "Camera Pivot", "type": "Camera3D", "child_count": 0, "scene_owned": true,
-					"ignores_movement": false, "transforms": {}},
-				{"label": "Hand", "type": "", "child_count": 1, "scene_owned": true,
-					"ignores_movement": false, "transforms": {}},
-				{"label": "HealthBar", "type": "", "child_count": 0, "scene_owned": false,
-					"ignores_movement": true, "transforms": {}},
-				{"label": "Hat", "type": "", "child_count": 0, "scene_owned": false,
-					"ignores_movement": false,
-					"transforms": {"position": true, "angle": true, "size": false}}
+				_sample_child("Camera Pivot", "Camera3D", 0, true, false, {}),
+				_sample_child("Hand", "", 1, true, false, {}),
+				_sample_child("HealthBar", "", 0, false, true, {}),
+				_sample_child("Hat", "", 0, false, false, {"position": true, "angle": true, "size": false})
 			]
 		}
 		var handlers: Dictionary = {
@@ -63,3 +58,19 @@ func _on_frame() -> void:
 	print("[hierarchy_pane_preview] saved res://docs/images/hierarchy-pane.png (%dx%d)"
 		% [image.get_width(), image.get_height()])
 	quit(0)
+
+
+## One child of the sample hierarchy, in the shape the pane reads: what it is called, its class when
+## the pane shows one, how many children of its own it has, whether the scene owns it, whether it
+## stays put while the parent moves, and which transforms it follows. Spelled once here rather than
+## the same six key names written out four times over.
+func _sample_child(label: String, type: String, child_count: int, scene_owned: bool,
+		ignores_movement: bool, transforms: Dictionary) -> Dictionary:
+	return {
+		"label": label,
+		"type": type,
+		"child_count": child_count,
+		"scene_owned": scene_owned,
+		"ignores_movement": ignores_movement,
+		"transforms": transforms
+	}
