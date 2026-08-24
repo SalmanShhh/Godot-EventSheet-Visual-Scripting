@@ -65,7 +65,8 @@ static func run() -> bool:
 	# Batch 14: Pin 3D (+1), the skill-tree data asset (+1), Skateboard + Skateboard 3D (+2), the
 	# two Traversal Kits (+2), on the colour-palette asset (+1) and the two gesture packs (+2).
 	# Recomputed as base + deltas.
-	all_passed = _check("the fleet was scanned (102 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2) and all_passed
+	# Lighting: Light Flicker, Light Pulse and Day/Night Cycle (+3). Recomputed as base + deltas.
+	all_passed = _check("the fleet was scanned (105 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -76,9 +77,11 @@ static func run() -> bool:
 	# Kit needle; traversal: +21 Traversal Kit, +22 on its 3D twin (the same words plus Float);
 	# combos: +4 more Combo Box rows - the move table (Set / Clear Animation For Combo) and the
 	# two that read it back (Combo Has Animation, Animation For Combo).
+	# lighting: +3 Light Flicker (start, stop, is flickering), +3 Light Pulse (the same three), and
+	# +6 Day/Night Cycle (set the time, run the clock faster, pause, resume, it is day, it is night).
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
-		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4) and all_passed
+		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0
