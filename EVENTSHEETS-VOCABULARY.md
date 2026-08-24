@@ -3819,17 +3819,52 @@ Mesh vocabulary (build and swap 3D meshes from events).
 
 ### Multiplayer (`res://addons/eventforge/registration/modules/multiplayer_aces.gd`)
 
+#### Triggers
+- **On Player Joined** (`id: int`) - Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.
+- **On Player Left** (`id: int`) - Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.
+- **On Joined The Host** - Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.
+- **On Join Failed** - Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.
+- **On The Host Left** - Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.
+- **On Player Authenticating** (`id: int`) - Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.
+- **On Authentication Failed** (`id: int`) - Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.
+- **On Spawned** (`node: Node`) - Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.
+- **On Despawned** (`node: Node`) - Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.
+- **On Synchronized** - Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.
+
 #### Conditions
 - **Is Host** - True on the peer that is hosting the game. Put everything that decides what is true behind this.
 - **Owns This Object** - True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.
+- **Is Connected** - True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.
+- **Started As** (`tag: String`) - True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.
 
 #### Actions
 - **Send Message To Everyone** (`message: String, args: String`) - Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.
 - **Send Message To The Host** (`message: String, args: String`) - Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.
 - **Send Message To One Peer** (`message: String, peer: String, args: String`) - Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.
+- **Host A Game** (`port: String, max_players: String, peer_kind: String`) - Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.
+- **Join A Game** (`address: String, port: String, peer_kind: String`) - Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.
+- **Leave The Game** - Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.
+- **Spawn** (`target: String, data: String`) - Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.
+- **Kick Player** (`id: String`) - Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.
+- **Stop Accepting Players** - Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.
+- **Relay Messages Between Players** (`on: String`) - Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.
+- **Accept Player** (`id: String`) - Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.
+- **Reject Player** (`id: String`) - Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.
+- **Send Auth** (`id: String, data: String`) - Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.
+- **Give To Player** (`target: String, id: String`) - Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.
+- **Spawn A Scene** (`target: String, scene: String, name: String, at: String`) - Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.
+- **Despawn** - Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.
+- **Show To Player** (`id: String, target: String`) - Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.
+- **Hide From Player** (`id: String, target: String`) - Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.
+- **Show To Everyone** (`target: String`) - Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.
+- **Ask A Function Who May See It** (`filter: String, target: String`) - Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.
 
 #### Expressions
 - **My ID** - This peer's own id. The host is always 1; everyone else gets a number when they join.
+- **Players** - The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.
+- **Player Count** - How many other peers are in the game. Add one for this peer when the number a player reads should include them.
+- **Sender** - Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.
+- **Owner Of** (`target: String`) - The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.
 
 ### Native 3d (`res://addons/eventforge/registration/modules/native_3d_aces.gd`)
 3D vocabulary

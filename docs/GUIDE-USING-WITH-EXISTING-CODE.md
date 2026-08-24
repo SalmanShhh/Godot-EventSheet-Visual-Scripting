@@ -1303,6 +1303,9 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `multiplayer.get_peers()`, `.size()`, `multiplayer.get_remote_sender_id()` | **Players**, **Player count**, **Sender** |
     | `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each re-emitting your own quoting |
     | `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
+    | the four lines of an automatic spawn - `var p = load(...).instantiate()`, `p.name = ...`, `p.position = ...`, `$Spawner.get_node($Spawner.spawn_path).add_child(p, true)` | one **Spawn scene named at** row, re-emitting your own variable name, your `load` or `preload`, and whether you passed `true` |
+    | `$Spawner.spawned.connect(...)`, `despawned`, `$Sync.synchronized.connect(...)` | **On spawned** / **On despawned** / **On synchronized**, on the node in the object column |
+    | `$Sync.set_visibility_for(id, true)` / `(id, false)`, `$Sync.public_visibility = true`, `$Sync.add_visibility_filter(f)` | **Show to player** / **Hide from player** / **Show to everyone** / **Ask f who may see it**, and `f`'s own function row then reads `visibility filter` |
     | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
     | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
     | `## @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |

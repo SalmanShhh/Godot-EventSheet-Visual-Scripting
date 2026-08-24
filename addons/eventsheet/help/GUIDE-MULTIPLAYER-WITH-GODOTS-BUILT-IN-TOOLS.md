@@ -7,7 +7,8 @@ sheet writes is the script the Godot documentation would have you write by hand,
 already wrote those lines opens on the same rows.
 
 This page covers hosting and joining, the events the connection fires, the lobby and the
-handshake, who is allowed to run what, and the fields the dialogs explain while you fill them in.
+handshake, who is allowed to run what, spawning a scene on every peer and deciding who may see it,
+and the fields the dialogs explain while you fill them in.
 
 ## Host a game, join a game, leave
 
@@ -216,6 +217,112 @@ That is the spelling Godot's own samples use - name the spawned copy after the p
 copy makes that player its owner. The sheet head reads the line back as a fact about the script, so
 you can see who owns an object without going looking for the call.
 
+## Spawning a scene on every peer
+
+A `MultiplayerSpawner` is the node that makes one copy of a scene appear on the host and on every
+connected peer at once. You put it in the scene, tell it in the Inspector which scenes it may make
+(*Auto spawn list*) and where the copies go (*Spawn path*), and from then on the sheet has a verb on
+it: **Spawn**, on the spawner as its object, asking four things - which scene, what to call the
+copy, where to put it, and which spawner is watching.
+
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	$Spawner.spawned.connect(_on_spawner_spawned)
+
+
+func welcome(id: int) -> void:
+	var player = load("res://player.tscn").instantiate()
+	player.name = str(id)
+	player.position = Vector2(0, 0)
+	$Spawner.get_node($Spawner.spawn_path).add_child(player, true)
+
+
+func _on_spawner_spawned(node: Node) -> void:
+	print(node.name)
+```
+
+Those four lines are the whole of Godot's automatic spawning, and the row is exactly them. Make the
+copy, name it, place it, and hand it to the node the spawner watches - the spawner sees the child
+arrive and sends it to everybody else. The name is set BEFORE the copy joins the tree because the
+name travels with it, and naming a player's copy after their peer id is what lets the copy make that
+player its owner (see *Objects have owners*, above). Run it on the host: everybody else receives the
+copy rather than making one.
+
+The *Scene* field offers the spawner's own list, and it will take a path that is not in the list
+yet - the help strip says so while you are typing, and pressing OK adds that scene to the list as
+one step of the SCENE's undo, beside the row's own. That matters, because a spawner will not
+replicate a scene it does not know: without the list entry the copy appears on the peer that made it
+and nowhere else. The *Spawner* field's strip says the spawn limit when the spawner has one - past
+that many copies it refuses to make another until one goes.
+
+**Despawn** is the other half, and it is one line: `queue_free()`. Run it on the peer that owns the
+copy; the spawner that made it sees it go and removes it everywhere else, so nothing has to be sent
+by hand. **On spawned** and **On despawned** are the spawner's own two events, and they run on every
+peer - the host included - with the copy as the event's chip, which is where a name is added to a
+scoreboard or a camera is pointed at something.
+
+If a spawner builds its copies out of a value instead of from a scene path - a dictionary read by
+its `spawn_function` - that is the older **Spawn** row, which writes `$Spawner.spawn(data)` and says
+nothing about the list.
+
+## Who is allowed to see it
+
+A `MultiplayerSynchronizer` copies the properties it lists from the owner to everybody else. By
+default everybody receives them, and three rows on the synchronizer change that per player:
+
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	$HandSync.synchronized.connect(_on_handsync_synchronized)
+
+
+func deal_in(id: int) -> void:
+	$HandSync.set_visibility_for(id, true)
+
+
+func fold(id: int) -> void:
+	$HandSync.set_visibility_for(id, false)
+
+
+func showdown() -> void:
+	$HandSync.public_visibility = true
+	$HandSync.add_visibility_filter(can_see)
+
+
+func can_see(peer: int) -> bool:
+	return peer != 0
+
+
+func _on_handsync_synchronized() -> void:
+	print("a new hand arrived")
+```
+
+**Show to player** and **Hide from player** decide one peer at a time; **Show to everyone** puts the
+node back to being public, whatever was set per peer before. A hidden node is not deleted on that
+peer - it simply stops arriving, which is the point: a value a player was never meant to see is not
+in their packets either, so it cannot be read out of them.
+
+When the rule is a rule rather than a list, hand it to a function instead. **Ask X who may see it**
+writes `add_visibility_filter`, and the function it names is asked with one peer id and answers true
+or false - again as players come and go, so a rule like *same room* or *same team* keeps itself true
+with no row saying so. The function's own row in the sheet then leads with the words `visibility
+filter`, and says which synchronizer asks it. Nothing is written into the `.gd` to mark it: being a
+filter IS the row that hands the function over, so deleting that row makes it an ordinary function
+again with nothing to clean up.
+
+**On synchronized** is the synchronizer's own event: it runs on a peer that has just been sent new
+values, which is where something has to answer a value that ARRIVED rather than one this peer
+changed itself.
+
+Which properties a synchronizer keeps in step, how often, and whether it is public are the scene's
+own facts, edited in Godot's Replication panel and the Inspector. The sheet reads them - the head's
+*keeps in step* band and the sync mark on a variable row - and never stores a second copy.
+
 ## The lobby and the handshake
 
 Once players are arriving, four more rows run the lobby:
@@ -250,6 +357,8 @@ it says the things people go and look up:
   Each one costs the host bandwidth every tick, for every value it keeps in step.
 - **Using** - ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes
   browser to browser through a signalling server you run. Both sides must pick the same one.
+- **Scene** - the list is the spawner's own, from the Inspector. A path that is not in it yet is
+  added when you press OK, because a spawner only replicates scenes it lists.
 
 ## Slotting into a project you already wrote
 
@@ -257,8 +366,15 @@ Everything above is also a READING. A networked project written before this plug
 these rows without a byte changing, because the importer recognises the spellings people actually
 publish - the three-line host and join blocks, `peer.close()`, the `get_tree().get_multiplayer()`
 spelling, `multiplayer.<signal>.connect(...)` for every one of the seven signals, `$Spawner.spawn(id)`
-and the message sends. Each recogniser stores the spelling it matched on the row and re-emits that,
+and the message sends. The scene side reads too: the four-line automatic spawn above, the spawner's
+own `spawned` and `despawned` connects, `synchronized`, `set_visibility_for`, `public_visibility` and
+`add_visibility_filter`. Each recogniser stores the spelling it matched on the row and re-emits that,
 so the file that opened is the file that saves.
+
+One line deliberately does NOT become a networking row: `queue_free()`. It is what **Despawn**
+writes, but it is also the line every project writes to remove any node at all - the networked
+meaning is in WHERE it runs, not in the line - so a bare `queue_free()` still reads **Queue free**,
+and Despawn is a row you author rather than one a reading hands you.
 
 What no row can say stays code, on purpose and visibly: a `create_server` with channel and bandwidth
 limits, ENet compression, packets put on the wire by hand. Those lines keep their script block, and

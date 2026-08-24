@@ -38,6 +38,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_theme_font_size_override` | [Set Font Size](ace:Core/SetFontSize) | Text | Vocabulary |
 | `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
 | `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
+| `add_visibility_filter` | [Ask A Function Who May See It](ace:Core/AddVisibilityFilter) | Multiplayer | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
 | `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
 | `alerted` | [Alert Enemies Within](ace:Core/AlertEnemiesWithin) | Enemies 3D | Vocabulary |
@@ -602,6 +603,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `project_position` | [Wrap Inside The View (3D)](ace:Core/WrapInsideView3D) | Movement | Vocabulary |
 | `project_ray_normal` | [Mouse Ray Direction (3D)](ace:Core/MouseRayDirection) | Mouse | Vocabulary |
 | `project_ray_origin` | [Mouse Ray Origin (3D)](ace:Core/MouseRayOrigin) | Mouse | Vocabulary |
+| `public_visibility` | [Show To Everyone](ace:Core/ShowToEveryone) | Multiplayer | Vocabulary |
 | `push_back` | Push back to | Array | Lists |
 | `push_error` | [Push Error](ace:Core/PushError) | Debug | Vocabulary |
 | `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
@@ -727,6 +729,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_shader_parameter` | [Set Effect Parameter](ace:Core/SetShaderParameter) | Effects | Vocabulary |
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
+| `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
 | `shadow_enabled` | [Set Shadows On/Off](ace:Core/SetLightShadows) | Lighting | Vocabulary |
 | `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
@@ -751,6 +754,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `space` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `space_set_active` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `spawn` | [Spawn](ace:Core/Spawn) | Multiplayer | Vocabulary |
+| `spawn_path` | [Spawn A Scene](ace:Core/SpawnReplicatedScene) | Multiplayer | Vocabulary |
 | `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
 | `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |

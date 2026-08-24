@@ -14,6 +14,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - The canvas-rebuild backstop is re-measured rather than nudged. The variable sentence took the sample pack's sheet from 389 rows to 414 (the globals it borrows, and the folder strips over them), and on a quiet machine those rows rebuild in 950-1117 ms across five runs, one of them inside the full suite - so the budget moves 1600 to 1800, the same near-doubled margin every earlier figure carried over its own measurement. A budget sized while the machine is loaded is a budget everyone learns to ignore.
 - The editor's translation gate reads every spelling of the call. `EventSheetSentence.translate` and `EventSheets.translate` are one-line aliases of `EventSheetL10n.translate`, and a sweep keyed to the first class name alone walked past ten of the row grammar's own words (\"angle\", \"the file's text\", \"runs headless\"). It matches the call by its tail now, so an alias nobody has written yet is covered too: all 725 literals the editor asks to translate carry a `TEMPLATE.csv` row, and the eight shipped locales carry all 4,412 keys with no cell left blank.
 - The project-templates test sweeps its own scratch directory before it scans. It SAVES templates into `user://tpl_dir`, and Save as Template suffixes rather than overwrites, so a run that ended between the saves and the cleanup left a `boss_fight-N.tres` behind that every later run found - the scan then reported the machine's history instead of what the test wrote, and two assertions failed on a tree with nothing wrong with it.
+- The hierarchy-pane render harness spells its sample children once. Its four sample nodes each wrote the same six key names out in full, so fourteen of that file's rows were literal fragments and it read at 29% wordless against its group's 24% ceiling - the rotating this-editor sample only had to draw it to go red, which it did the moment the corpus gained a file. A `_sample_child(...)` helper names the fields once and the file reads at 23%; the harness renders the same picture byte for byte.
 - README's test figures are measured off this tree rather than carried over: 17,695 assertions across 624 test files, counted the way the README's own figures always are - `[PASS]` lines from one full serial suite run, and `tests/*_test.gd`.
 
 ### Fixed - a behaviour you compiled earlier no longer decides how the next file opens
@@ -727,6 +728,38 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   guard is taken off the events on the way in - so a saved sheet reopens with the word on the group
   instead of a repeated condition, and re-saving it reproduces the file byte for byte, guard
   included. Single player is untouched either way: `multiplayer.is_server()` is true with no peer.
+
+### Multiplayer - the scene's own two nodes have words now
+
+- **Spawn a scene on every peer, from the spawner's own row.** **Spawn** on a `MultiplayerSpawner`
+  asks four things - which scene, what to call the copy, where to put it, and which spawner is
+  watching - and writes the four lines Godot's automatic spawning IS: make the copy, name it, place
+  it, and hand it to the node the spawner watches. Named before it joins the tree, because the name
+  travels with the copy and is what lets the peer it belongs to own it. **Despawn** is the other
+  half and is the one line it says, `queue_free()`, run on the owner with the spawner replicating
+  the removal.
+- **Picking a scene the spawner does not know makes the SCENE say so too.** The *Scene* field offers
+  the spawner's *Auto spawn list* and still takes any path; when the path is not in the list the help
+  strip says so while the field has focus, and pressing OK adds it to the list as one step of the
+  scene's own undo, beside the row's. A spawner will not replicate a scene it does not list, so
+  without that step the copy would appear on one peer and nowhere else. The *Spawner* field's strip
+  says the spawn limit when the spawner has one.
+- **The spawner and the synchronizer raise events.** **On spawned** and **On despawned** on a
+  spawner (each carrying the copy), **On synchronized** on a synchronizer - ordinary signal triggers,
+  connected on the node in `_ready` exactly as a hand-written script connects them, and filed on the
+  Add event picker's *Scenes* shelf.
+- **Who is allowed to see it, in three rows and a function.** **Show to player** / **Hide from
+  player** / **Show to everyone** on a `MultiplayerSynchronizer` write `set_visibility_for` and
+  `public_visibility`; **Ask X who may see it** writes `add_visibility_filter`, and the function it
+  names then leads its own row with the words `visibility filter` and says which synchronizer asks
+  it. Nothing is written into the `.gd` for that mark - being a filter IS the row that hands the
+  function over, so deleting the row makes it an ordinary function again.
+  `EventSheets.sheet_visibility_filters(sheet)` is the same list, public.
+- **All of it reads back.** A project that already wrote those lines opens on these rows: the
+  four-line spawn (re-emitting your own variable name, your `load` or `preload`, and whether you
+  passed `true`), the three connects, and the four visibility calls. `queue_free()` deliberately
+  stays **Queue free** - it is the line every project writes to remove any node at all, and the
+  networked meaning is in where it runs, not in the line.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 
