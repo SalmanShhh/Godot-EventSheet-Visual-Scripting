@@ -194,6 +194,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_apply_ace_definition(definition, values, context)
+	_list_spawn_scene_if_needed(definition, values)
 	# The source string IS the key: editing a globe-marked value orphans every translation of it
 	# silently, so offer to move the key in the catalogs the way Rename Everywhere… moves a variable.
 	# Nothing pops up in a project with no catalogs - the offer answers false and the edit is done.
@@ -208,6 +209,29 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 		var selected_resource: Resource = context.get("selected_resource", null)
 		if mode in ["append_condition", "append_action"] and selected_resource is EventRow:
 			_dock._ace_picker.open(mode, false, selected_resource, {})
+
+
+## M4. A Spawn row naming a scene its spawner does not list yet makes the SCENE say so too: a
+## spawner only replicates a copy of a scene it knows, so the row would otherwise compile to a copy
+## that appears on this peer and nowhere else. One step of the scene's own undo, beside the row's,
+## because the Inspector's *Auto spawn list* is the other editor of that fact - and the dialog's help
+## strip said this was coming while the field had focus.
+##
+## Silent for every other row, and for a Spawn row whose spawner or scene cannot be resolved: the
+## decision belongs to EventSheetSceneVerbs, which is what the warning was read from.
+func _list_spawn_scene_if_needed(definition: ACEDefinition, values: Dictionary) -> void:
+	if definition == null or definition.id != EventSheetSceneVerbs.SPAWN_ACE_ID:
+		return
+	var pending: Dictionary = EventSheetSceneVerbs.unlisted_spawn_scene(_dock._current_sheet, values)
+	if pending.is_empty():
+		return
+	var written: Dictionary = EventSheetSceneReplication.add_spawnable_scene(
+		str(pending.get("scene_path", "")), str(pending.get("spawner_path", "")), str(pending.get("scene", "")))
+	if not bool(written.get("ok", false)):
+		_dock._set_status(str(written.get("reason", "")), true)
+		return
+	_dock._set_status(EventSheetL10n.translate("%s may now spawn %s.")
+		% [str(pending.get("spawner", "")), str(pending.get("scene", "")).get_file()])
 
 
 ## Batch param edit: every condition/action that appears MORE THAN ONCE across the given

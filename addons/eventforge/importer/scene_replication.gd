@@ -625,6 +625,43 @@ static func add_synchronizer(scene_path: String, node_path: String) -> Dictionar
 	return {"ok": true, "reason": "", "name": added.name}
 
 
+## M4. Adds one scene to a spawner's list of the scenes it may spawn - the Inspector's *Auto spawn
+## list* - so a Spawn row naming a scene the spawner does not know yet makes itself true instead of
+## compiling to a copy that never travels. Through the scene's own undo like every other write here,
+## and a no-op (reported as ok) when the list already holds it. Returns `{"ok", "reason"}`.
+static func add_spawnable_scene(scene_path: String, spawner_path: String, spawned_scene: String) -> Dictionary:
+	var wanted: String = spawned_scene.strip_edges()
+	if not Engine.is_editor_hint():
+		return {"ok": false, "reason": EventSheetL10n.translate("The scene is only editable inside the editor.")}
+	var root: Node = EditorInterface.get_edited_scene_root()
+	if root == null or root.scene_file_path != scene_path:
+		return {"ok": false, "reason": EventSheetL10n.translate("Open %s to change what its spawner may spawn.")
+			% scene_path.get_file()}
+	var spawner: Node = root if spawner_path == "." else root.get_node_or_null(NodePath(spawner_path))
+	if not (spawner is MultiplayerSpawner):
+		return {"ok": false, "reason": EventSheetL10n.translate("%s is not in the open scene any more.")
+			% spawner_path}
+	var listed: MultiplayerSpawner = spawner as MultiplayerSpawner
+	for index: int in range(listed.get_spawnable_scene_count()):
+		if listed.get_spawnable_scene(index) == wanted:
+			return {"ok": true, "reason": ""}
+	var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
+	if undo == null:
+		listed.add_spawnable_scene(wanted)
+	else:
+		undo.create_action(EventSheetL10n.translate("Let %s spawn %s") % [listed.name, wanted.get_file()])
+		undo.add_do_method(listed, "add_spawnable_scene", wanted)
+		# There is no remove-by-name: the undo puts the whole list back the way it was, which is also
+		# the only shape that survives two adds in a row being undone one at a time.
+		undo.add_undo_method(listed, "clear_spawnable_scenes")
+		for index: int in range(listed.get_spawnable_scene_count()):
+			undo.add_undo_method(listed, "add_spawnable_scene", listed.get_spawnable_scene(index))
+		undo.commit_action()
+	EditorInterface.mark_scene_as_unsaved()
+	clear_cache()
+	return {"ok": true, "reason": ""}
+
+
 ## Opens the scene holding a node and selects it, which is where Godot's own Replication panel and
 ## Inspector are - the gesture both scene bands offer, because both mean "the other editor of this
 ## fact is over there". False outside the editor, or when the node is gone.

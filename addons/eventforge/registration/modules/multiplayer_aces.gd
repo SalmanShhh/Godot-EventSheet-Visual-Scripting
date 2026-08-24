@@ -67,6 +67,13 @@ const PEER_KINDS: Array = [
 const HOST_TEMPLATE := "var __peer := {peer_kind}.new()\n__peer.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer"
 const JOIN_TEMPLATE := "var __peer := {peer_kind}.new()\n__peer.create_client({address}, {port})\nmultiplayer.multiplayer_peer = __peer"
 
+## M4. The four lines "Spawn a scene" writes: make the copy, name it, put it where it goes, and hand
+## it to the node the spawner watches. Four because that is what Godot's AUTO spawn IS - a scene in
+## the spawner's own list, added under its spawn path, copied from there onto every peer without a
+## factory function anywhere. The name is set BEFORE the child goes in, because the name is what
+## travels with the copy and is how the peer that owns it is worked out on the other side.
+const SPAWN_SCENE_TEMPLATE := "var __spawn_{uid} = load({scene}).instantiate()\n__spawn_{uid}.name = {name}\n__spawn_{uid}.position = {at}\n{target}.get_node({target}.spawn_path).add_child(__spawn_{uid}, true)"
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -86,6 +93,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(_lobby_descriptors())
 	descriptors.append_array(_state_descriptors())
 	descriptors.append_array(_connection_triggers())
+	descriptors.append_array(_scene_descriptors())
+	descriptors.append_array(_scene_triggers())
 	return descriptors
 
 
@@ -203,6 +212,61 @@ static func _state_descriptors() -> Array[ACEDescriptor]:
 		F.make_param("target", "String", "self", "Object", "The node to ask about.", "expression")
 	], CATEGORY, "Owner of {target}")
 		.described("The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with."))
+	return descriptors
+
+
+## M4 / E3. The two nodes Godot hands a networked scene to, as verbs. A `MultiplayerSpawner` makes
+## one copy of a scene on every peer at once; a `MultiplayerSynchronizer` keeps the properties it
+## lists in step and decides which players are allowed to see them at all. Both are configured in the
+## Inspector and neither has ever had a word in the sheet - these are their rows, each naming the
+## exact call it compiles to.
+##
+## The spawn row writes the AUTO-spawn shape rather than `spawn(data)`: a scene from the spawner's
+## own list, added under its spawn path. The custom-spawn row (Spawn, above) stays what it always
+## was, for a spawner that builds its copies out of a value through its own spawn function.
+static func _scene_descriptors() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "SpawnReplicatedScene", "Spawn A Scene", ACEDescriptor.ACEType.ACTION, SPAWN_SCENE_TEMPLATE, "", [
+		F.make_param("target", "String", "self", "Spawner", "The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.", "scene_node"),
+		F.make_param("scene", "String", "\"res://player.tscn\"", "Scene", "The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.", "spawn_scene"),
+		F.make_param("name", "String", "\"Player\"", "Name", "What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.", "expression"),
+		F.make_param("at", "String", "Vector2.ZERO", "At", "Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.", "expression")
+	], CATEGORY, "Spawn {scene} named {name} at {at}", "MultiplayerSpawner")
+		.described("Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.").featured())
+	descriptors.append(F.make_descriptor("Core", "Despawn", "Despawn", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], CATEGORY, "Despawn")
+		.described("Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand."))
+	descriptors.append(F.make_descriptor("Core", "ShowToPlayer", "Show To Player", ACEDescriptor.ACEType.ACTION, "set_visibility_for({id}, true)", "", [
+		F.make_param("id", "String", "1", "Player", "The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.", "expression")
+	], CATEGORY, "Show to player {id}", "MultiplayerSynchronizer")
+		.described("Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to."))
+	descriptors.append(F.make_descriptor("Core", "HideFromPlayer", "Hide From Player", ACEDescriptor.ACEType.ACTION, "set_visibility_for({id}, false)", "", [
+		F.make_param("id", "String", "1", "Player", "The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.", "expression")
+	], CATEGORY, "Hide from player {id}", "MultiplayerSynchronizer")
+		.described("Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either."))
+	descriptors.append(F.make_descriptor("Core", "ShowToEveryone", "Show To Everyone", ACEDescriptor.ACEType.ACTION, "public_visibility = true", "", [], CATEGORY, "Show to everyone", "MultiplayerSynchronizer")
+		.described("Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first."))
+	descriptors.append(F.make_descriptor("Core", "AddVisibilityFilter", "Ask A Function Who May See It", ACEDescriptor.ACEType.ACTION, "add_visibility_filter({filter})", "", [
+		F.make_param("filter", "String", "Callable()", "Function", "The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.", "expression")
+	], CATEGORY, "Ask {filter} who may see it", "MultiplayerSynchronizer")
+		.described("Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so."))
+	return descriptors
+
+
+## M4. The three things the scene's own two nodes say. Signal triggers like every other one, but on
+## the NODE rather than on `multiplayer`: the sheet connects them in `_ready` to the spawner or the
+## synchronizer the event names, which is the spelling a hand-written project already uses.
+static func _scene_triggers() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "OnSpawned", "On Spawned", ACEDescriptor.ACEType.TRIGGER, "", "spawned", [
+		F.make_param("node", "Node", "", "Copy", "The copy that has just been made - the same node, on every peer that got it.")
+	], CATEGORY, "On spawned {node}", "MultiplayerSpawner")
+		.described("Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.").featured())
+	descriptors.append(F.make_descriptor("Core", "OnDespawned", "On Despawned", ACEDescriptor.ACEType.TRIGGER, "", "despawned", [
+		F.make_param("node", "Node", "", "Copy", "The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.")
+	], CATEGORY, "On despawned {node}", "MultiplayerSpawner")
+		.described("Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here."))
+	descriptors.append(F.make_descriptor("Core", "OnSynchronized", "On Synchronized", ACEDescriptor.ACEType.TRIGGER, "", "synchronized", [], CATEGORY, "On synchronized", "MultiplayerSynchronizer")
+		.described("Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself."))
 	return descriptors
 
 

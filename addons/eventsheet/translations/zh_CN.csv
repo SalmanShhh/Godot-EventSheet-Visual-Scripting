@@ -4525,3 +4525,11 @@ The line that makes this function a message. Click to open it in the code panel.
 Message…,消息…
 Make It A Message…,设为消息…
 Change The Message…,修改消息…
+%s may now spawn %s.,%s 现在可以生成 %s 了。
+"%s is not in %s's list of scenes it may spawn yet. Pressing OK adds it, as one step of the scene's own undo.",%s 还不在 %s 允许生成的场景列表里。按下确定会把它加进去，作为场景自身撤销记录中的一步。
+%s may be watching %d copies at once - its Spawn limit in the Inspector. Past that it refuses to make another until one goes.,%s 最多同时照看 %d 份副本 - 这是检查器里的 Spawn limit。超过之后，它会等到有一份消失才再生成。
+visibility filter,可见性过滤器
+for %s,用于 %s
+Open %s to change what its spawner may spawn.,打开 %s 才能修改它的生成器可以生成什么。
+Let %s spawn %s,允许 %s 生成 %s
+On asked,被询问时

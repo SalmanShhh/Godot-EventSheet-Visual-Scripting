@@ -4525,3 +4525,11 @@ The line that makes this function a message. Click to open it in the code panel.
 Message…,메시지…
 Make It A Message…,메시지로 만들기…
 Change The Message…,메시지 변경…
+%s may now spawn %s.,이제 %s이(가) %s을(를) 스폰할 수 있습니다.
+"%s is not in %s's list of scenes it may spawn yet. Pressing OK adds it, as one step of the scene's own undo.",%s은(는) 아직 %s이(가) 스폰할 수 있는 씬 목록에 없습니다. 확인을 누르면 씬 자체의 실행 취소 한 단계로 추가됩니다.
+%s may be watching %d copies at once - its Spawn limit in the Inspector. Past that it refuses to make another until one goes.,%s은(는) 한 번에 %d개의 사본을 지켜볼 수 있습니다 - 인스펙터의 Spawn limit입니다. 그 이상은 하나가 사라질 때까지 새로 만들지 않습니다.
+visibility filter,가시성 필터
+for %s,%s용
+Open %s to change what its spawner may spawn.,스포너가 스폰할 수 있는 대상을 바꾸려면 %s을(를) 여세요.
+Let %s spawn %s,%s이(가) %s을(를) 스폰하도록 허용
+On asked,요청받을 때

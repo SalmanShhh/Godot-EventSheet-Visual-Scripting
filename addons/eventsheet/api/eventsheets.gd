@@ -538,6 +538,18 @@ static func message_annotation(original: String, answers: Dictionary) -> String:
 	return EventSheetMessageFacts.rewrite(original, answers)
 
 
+## M4. Every function of this sheet that a `MultiplayerSynchronizer` asks whether a player may see
+## its node - one entry each, `{"name", "synchronizer"}`, in the order the rows name them.
+## `synchronizer` is the node the asking row addresses, and "" when that row acts on the sheet's own
+## node.
+##
+## Read-only and derived like `sheet_messages`: being a visibility filter is not a flag on the
+## function, it is the fact that a row hands the function to `add_visibility_filter` - so a filter
+## nobody asks stops being one the moment that row goes, with nothing to clean up.
+static func sheet_visibility_filters(sheet: EventSheetResource) -> Array[Dictionary]:
+	return EventSheetSceneVerbs.visibility_filters_in(sheet)
+
+
 ## The object column a row naming this variable belongs in, or "" when the sheet declares no such
 ## variable and the ordinary provider reading should stand. Pass the list `sheet_variables()`
 ## returned - the answer is a lookup, so a caller drawing many rows derives the list once.

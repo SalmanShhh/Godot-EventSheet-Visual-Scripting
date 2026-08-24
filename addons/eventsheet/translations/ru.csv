@@ -4525,3 +4525,11 @@ The line that makes this function a message. Click to open it in the code panel.
 Message…,Сообщение…
 Make It A Message…,Сделать сообщением…
 Change The Message…,Изменить сообщение…
+%s may now spawn %s.,%s теперь может создавать %s.
+"%s is not in %s's list of scenes it may spawn yet. Pressing OK adds it, as one step of the scene's own undo.","%s ещё нет в списке сцен, которые может создавать %s. Нажатие OK добавит её одним шагом отмены самой сцены."
+%s may be watching %d copies at once - its Spawn limit in the Inspector. Past that it refuses to make another until one goes.,"%s может следить за %d копиями одновременно - это его Spawn limit в инспекторе. Сверх того он не создаст новую, пока одна не исчезнет."
+visibility filter,фильтр видимости
+for %s,для %s
+Open %s to change what its spawner may spawn.,"Откройте %s, чтобы изменить, что может создавать её спавнер."
+Let %s spawn %s,Разрешить %s создавать %s
+On asked,По запросу

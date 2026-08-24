@@ -304,6 +304,16 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# function and nothing else, the same way the noise hook above does: plain GDScript on both
 			# sides, and a track that names it finds it.
 			return _lifecycle(animation_event_handler_name(animation_event_name_of(event)), "")
+		"OnSpawned":
+			# M4. The scene side's own three, on the NODE rather than on `multiplayer`: a spawner says
+			# what it just made and what it just took away, a synchronizer says that new values landed.
+			# Ordinary node signal triggers, so the `_ready` connect line reads exactly as a
+			# hand-written `$Spawner.spawned.connect(...)` does.
+			return _signal_backed("_on%s_spawned" % source_token, "node: Node", "spawned", source_path)
+		"OnDespawned":
+			return _signal_backed("_on%s_despawned" % source_token, "node: Node", "despawned", source_path)
+		"OnSynchronized":
+			return _signal_backed("_on%s_synchronized" % source_token, "", "synchronized", source_path)
 		"OnButtonPressed":
 			return _signal_backed("_on%s_pressed" % source_token, "", "pressed", source_path)
 		"OnButtonToggled":

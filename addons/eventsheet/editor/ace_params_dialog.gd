@@ -402,6 +402,11 @@ func _ensure_hint_factories() -> void:
 			"net_address": _create_expression_field,
 			"net_port": _create_expression_field,
 			"max_players": _create_expression_field,
+			# M4 - the scenes the sheet's own spawners may make, read LIVE off the scene for the same
+			# reason the feature tags are: a list baked into the descriptor would be a snapshot of
+			# whatever the project looked like the day it shipped. Any path may still be typed - one
+			# the spawner does not list yet is added to its list when OK is pressed.
+			"spawn_scene": _create_spawn_scene_field,
 			"editor_icon": _create_editor_icon_field,
 			"editor_preference": _create_editor_preference_field,
 			"project_setting": _create_project_setting_field,
@@ -926,7 +931,7 @@ func _definition_template() -> String:
 ## snake_case the template concatenates. A group that is NOT switchable yet is still offered - with
 ## the one-click offer to make it one, because "it is not in the list" teaches nobody why.
 func _create_sheet_group_field(key: String, default_value: Variant) -> Control:
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	var offered: Array[Dictionary] = EventSheetGroupFacts.choices(sheet)
 	var suggestions: Array = []
 	for entry: Dictionary in offered:
@@ -1214,7 +1219,7 @@ func _create_property_reference_field(key: String, default_value: Variant) -> Co
 
 ## The sheet's host class (or Node) - the default Call Method / Set Property target (`self`).
 func _host_class_for_context() -> String:
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	return sheet.host_class if sheet != null and not sheet.host_class.strip_edges().is_empty() else "Node"
 
 
@@ -1268,7 +1273,7 @@ func _create_variable_reference_field(key: String, default_value: Variant, hint:
 ## True when the sheet variable's declared type starts with `required` (so "Array" also
 ## matches "Array[int]"); untyped/Variant variables always qualify.
 func _variable_matches_type(variable_name: String, required: String) -> bool:
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	if sheet == null:
 		return true
 	var type_name: String = ""
@@ -1317,7 +1322,7 @@ func _create_signal_reference_field(key: String, default_value: Variant, quoted:
 ## GDScript blocks, sorted and deduplicated.
 func _signal_options() -> Array[String]:
 	var names: Array[String] = []
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	if sheet == null:
 		return names
 	for entry in sheet.events:
@@ -1344,7 +1349,7 @@ func _signal_options() -> Array[String]:
 ## Sheet-enum-driven dropdown (hint "enum:State"): options are the enum's members as
 ## State.MEMBER values - the Combo backed by a real enum.
 func _create_enum_reference_field(key: String, default_value: Variant, enum_name: String) -> Control:
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	var member_options: Array = []
 	if sheet != null:
 		for entry in sheet.events:
@@ -2113,6 +2118,19 @@ func _validation_scene_root() -> Node:
 ## choices at all, which leaves the ordinary text field the param had before.
 func _create_scene_node_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, scene_node_choices(_validation_scene_root()), default_value)
+
+
+## M4. The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
+## combo rather than a dropdown: a project is allowed to spawn a scene the spawner does not list yet,
+## and answering that with a refusal would be a wall where a code author has none - so the field
+## takes any path, the help strip says the list does not hold this one, and OK adds it.
+func _create_spawn_scene_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, EventSheetSceneVerbs.spawn_scene_choices(_lint_sheet()), default_value)
+
+
+## The sheet this dialog is editing a row of, or null when it was opened without one.
+func _lint_sheet() -> EventSheetResource:
+	return (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
 
 
 ## Every node reference the open layout offers: `self` first (the sheet's own node is the commonest
@@ -2892,7 +2910,7 @@ func _current_values() -> Dictionary:
 ## EventSheetVariableOwners on purpose: the whole catalog walks every row and reads every autoload's
 ## script, which is not something to do while somebody is typing.
 func _read_variable_context() -> void:
-	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var sheet: EventSheetResource = _lint_sheet()
 	_variable_entries = EventSheetVariableOwners.own_entries(sheet) if sheet != null else ([] as Array[Dictionary])
 	_row_owner = EventSheetVariableOwners.owner_of_sheet(sheet) if sheet != null else ""
 
@@ -2986,6 +3004,13 @@ func _describe_field(key: String) -> void:
 	var param: Dictionary = _param_dict(key)
 	var note: Dictionary = _note_for(key)
 	if note.is_empty():
+		# M4 - a Spawn row is the one row that edits the SCENE as well as itself, so the two things
+		# the scene has to say about it are said while the field that decides them still has focus.
+		var scene_note: Dictionary = _scene_verb_note(key, param)
+		if not scene_note.is_empty():
+			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
+				str(scene_note.get("body", "")), str(scene_note.get("level", "")))
+			return
 		# V6 - nothing is wrong, but there may still be a plainer way to read what was typed.
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 			EventSheetParamFieldFactory.strip_body(param, _row_owner),
@@ -2993,6 +3018,29 @@ func _describe_field(key: String) -> void:
 		return
 	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
 		str(note.get("level", "")), _fix_offers(key, note))
+
+
+## M4. What the SCENE has to say about the field being filled in, as `{"body", "level"}`, or {} for
+## every other field of every other row. Two answers, and only ever one at a time: the *Scene* field
+## warns that the spawner does not list this scene yet and that pressing OK will add it, and the
+## *Spawner* field says how many copies that spawner is allowed to be watching. Both are read from
+## the `.tscn` through EventSheetSceneVerbs, so the dialog states a fact rather than deciding one.
+func _scene_verb_note(key: String, param: Dictionary) -> Dictionary:
+	var sheet: EventSheetResource = _lint_sheet()
+	if str(param.get("hint", "")) == EventSheetSceneVerbs.SCENE_HINT:
+		var unlisted: String = EventSheetSceneVerbs.unlisted_scene_note(
+			EventSheetSceneVerbs.unlisted_spawn_scene(sheet, _current_values()))
+		return {} if unlisted.is_empty() else {
+			"body": unlisted, "level": EventSheetPopupUI.HelpStrip.TONE_WARNING
+		}
+	if _definition == null or _definition.id != EventSheetSceneVerbs.SPAWN_ACE_ID \
+			or key != EventSheetSceneVerbs.TARGET_PARAM:
+		return {}
+	var limit: String = EventSheetSceneVerbs.spawn_limit_note(sheet, _current_values())
+	return {} if limit.is_empty() else {
+		"body": "%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), limit],
+		"level": EventSheetPopupUI.HelpStrip.TONE_NORMAL
+	}
 
 
 ## The strip's own description before any field is focused: what the ACE is, and what this opening

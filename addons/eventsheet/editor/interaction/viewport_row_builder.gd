@@ -2994,13 +2994,15 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"line_index": 0
 		})
 	]
-	# M2 - one word says this function is not called from here, it arrives: a `@rpc` function is a
-	# message, and the row says so before its name the way a variable row says its scope.
-	if EventSheetMessageFacts.is_message(event_function):
-		spans.append(_make_span(EventSheetL10n.translate("message"), SemanticSpan.SpanType.KEYWORD, {
+	# M2 / M4 - one word says this function is not one the sheet CALLS: a `@rpc` function arrives,
+	# sent by another peer, and a visibility filter is asked, per player, by a synchronizer. The word
+	# leads the name the way a variable row's scope word leads its own.
+	var role_word: String = _function_role_word(event_function)
+	if not role_word.is_empty():
+		spans.append(_make_span(role_word, SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"kind": "define_function",
-			"message_word": true,
+			"role_word": true,
 			"lane": "condition",
 			"line_index": 0,
 			"natural_width": true,
@@ -3245,11 +3247,14 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	if EventSheetBBCodeLite.has_markup(display_name):
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
-	# M2 - a function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer. So
-	# the word between "On" and the name says which kind of arrival this head stands for.
+	# M2 / M4 - a function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer,
+	# and a visibility filter is ASKED, once per player, by a synchronizer. So the word between "On"
+	# and the name says which kind of arrival this head stands for.
 	var arrival: String = EventSheetL10n.translate("On")
 	if EventSheetMessageFacts.is_message(event_function):
 		arrival = EventSheetL10n.translate("On message")
+	elif not _visibility_filter_entry(event_function).is_empty():
+		arrival = EventSheetL10n.translate("On asked")
 	spans.append(_make_span("%s %s" % [arrival, plain_name],
 		SemanticSpan.SpanType.OBJECT, name_meta))
 	# The inputs, as an event sheet's own trigger payload chips - the names the call passes in, beside
@@ -3342,6 +3347,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
 	var annotation: String = EventSheetMessageFacts.annotation_of(event_function)
 	if annotation.is_empty():
+		_append_visibility_filter_span(spans, event_function)
 		return
 	var mode_words: String = EventSheetMessageFacts.words(annotation)
 	if not mode_words.is_empty() and EventSheetMessageFacts.unknown_note(annotation).is_empty():
@@ -3359,6 +3365,45 @@ func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunc
 		"message_annotation": true,
 		"hover_note": EventSheetL10n.translate("The line that makes this function a message. Click to open it in the code panel.")
 	}, EventSheetCodeEcho.REST_ALPHA, true))
+
+
+## M2 / M4. The word a function row leads with when the sheet does not CALL this function - it is
+## reached some other way, and the row says which. "" for an ordinary function, which is most of
+## them. Both words are literals rather than a table lookup, so the translation gate can see them.
+func _function_role_word(event_function: EventFunction) -> String:
+	if EventSheetMessageFacts.is_message(event_function):
+		return EventSheetL10n.translate("message")
+	if not _visibility_filter_entry(event_function).is_empty():
+		return EventSheetL10n.translate("visibility filter")
+	return ""
+
+
+## M4. What the sheet's own rows say about this function being a visibility filter, or {} for every
+## other function. One lookup for both halves of the mark - the word that leads the row, and the
+## synchronizer named at the right of it.
+func _visibility_filter_entry(event_function: EventFunction) -> Dictionary:
+	if event_function == null:
+		return {}
+	return EventSheetSceneVerbs.filter_of(_viewport._sheet as EventSheetResource,
+		event_function.function_name)
+
+
+## M4. Which synchronizer asks this function whether a player may see it, at the right of its own
+## row - the other half of the "visibility filter" word. Nothing is written into the `.gd` for it:
+## the fact IS the row that names the function, so a filter nobody asks stops saying it is one.
+func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
+	var asked_by: String = str(_visibility_filter_entry(event_function).get("synchronizer", ""))
+	if asked_by.is_empty():
+		return
+	spans.append(_make_span(EventSheetL10n.translate("for %s") % asked_by, SemanticSpan.SpanType.COMMENT, {
+		"editable": false,
+		"kind": "define_function",
+		"role_words": true,
+		"lane": "condition",
+		"line_index": 0,
+		"natural_width": true,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	}))
 
 
 ## W2 / W15. One editor callback as the event it is: the trigger arrow, the owning panel in the

@@ -4525,3 +4525,11 @@ The line that makes this function a message. Click to open it in the code panel.
 Message…,メッセージ…
 Make It A Message…,メッセージにする…
 Change The Message…,メッセージを変更…
+%s may now spawn %s.,%s は %s をスポーンできるようになりました。
+"%s is not in %s's list of scenes it may spawn yet. Pressing OK adds it, as one step of the scene's own undo.",%s はまだ %s がスポーンできるシーンの一覧にありません。OK を押すと、シーン自身の取り消し履歴の 1 ステップとして追加されます。
+%s may be watching %d copies at once - its Spawn limit in the Inspector. Past that it refuses to make another until one goes.,%s が同時に見ていられるコピーは %d 個までです - インスペクターの Spawn limit です。それを超えると、1 つ消えるまで新しいコピーは作られません。
+visibility filter,可視性フィルター
+for %s,%s 用
+Open %s to change what its spawner may spawn.,スポナーがスポーンできるものを変えるには %s を開いてください。
+Let %s spawn %s,%s に %s のスポーンを許可
+On asked,尋ねられたとき

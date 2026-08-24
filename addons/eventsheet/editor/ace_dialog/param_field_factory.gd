@@ -140,6 +140,9 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"net_port": "7000 to 65535 are free for games; anything below 1024 needs admin rights on most systems. Over the internet the host forwards this one port on its router, which is the step people miss.",
 	"peer_kind": "How the game talks over the network, and both sides have to pick the same one. ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes browser to browser through a signalling server you run.",
 	"max_players": "Every connected player costs the host bandwidth on every tick, for every value it keeps in step, so this number is a budget as much as a limit.",
+	# M4 - the one networking field that edits the SCENE as well as the row, so it says what pressing
+	# OK is about to do while the field still has focus.
+	"spawn_scene": "A scene the spawner is allowed to make. The list is the spawner's own, from the Inspector; a scene that is not in it yet is added when you press OK, as one step of the scene's undo. A spawner only copies scenes it lists - one it does not know is made here and nowhere else.",
 	"editor_icon": "The name of an icon in the editor's own set; the picture beside the field is what it draws.",
 	"editor_preference": "An editor setting, by its full path. These are the editor's own preferences, not the project's.",
 	"project_setting": "A project setting, by its full path, as Project Settings spells it.",
@@ -159,6 +162,7 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"group_reference": "a node group",
 	"scene_node": "a node",
 	"scene_path": "a scene",
+	"spawn_scene": "a scene",
 	"audio_path": "a sound",
 	"angle": "degrees",
 	"key_capture": "a key",

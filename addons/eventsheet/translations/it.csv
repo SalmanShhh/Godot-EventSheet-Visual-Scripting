@@ -4525,3 +4525,11 @@ The line that makes this function a message. Click to open it in the code panel.
 Message…,Messaggio…
 Make It A Message…,Rendi un messaggio…
 Change The Message…,Modifica il messaggio…
+%s may now spawn %s.,%s ora può generare %s.
+"%s is not in %s's list of scenes it may spawn yet. Pressing OK adds it, as one step of the scene's own undo.","%s non è ancora nell'elenco delle scene che %s può generare. Premendo OK viene aggiunta, come un passo dell'annulla della scena."
+%s may be watching %d copies at once - its Spawn limit in the Inspector. Past that it refuses to make another until one goes.,%s può sorvegliare %d copie alla volta - il suo limite di generazione nell'Inspector. Oltre quello non ne crea altre finché una non sparisce.
+visibility filter,filtro di visibilità
+for %s,per %s
+Open %s to change what its spawner may spawn.,Apri %s per cambiare cosa può generare il suo spawner.
+Let %s spawn %s,Consenti a %s di generare %s
+On asked,Su richiesta
