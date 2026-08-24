@@ -4491,3 +4491,37 @@ The owner,El propietario
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,Solo el par que llamo a Alojar una partida los ejecuta. Adecuado para todo lo que decide que es cierto; los demas conocen el resultado por un mensaje o por un valor mantenido en sincronia.
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Solo el par que posee este objeto los ejecuta. Adecuado para lo que cada jugador controla de su propio personaje, para que nadie mueva el de otro."
 Who runs the events in this group - right-click the head to change it.,Quien ejecuta los eventos de este grupo: cambialo con clic derecho en la cabecera.
+message,mensaje
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.","%s todavia no esta marcada como mensaje, asi que no viajaria nada. Haz clic derecho en su fila de funcion y elige Convertir en mensaje."
+Anyone,Cualquiera
+from anyone,de cualquiera
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.","Cualquier par puede enviar este mensaje, asi que un cliente puede pedir algo al anfitrion. El anfitrion decide si creerselo: comprueba Remitente antes de actuar sobre algo que un jugador podria haber inventado."
+Only the owner,Solo el propietario
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.","Solo el par que posee este nodo puede enviarla - el anfitrion, salvo que el nodo se haya cedido. Una llamada de cualquier otro se descarta y se registra, y por eso esta es la respuesta segura."
+On the others,En los demas
+on the others,en los demas
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,Cada par que lo recibe ejecuta la funcion; el que lo envio no. Correcto cuando el emisor ya ha hecho la cosa por su cuenta y solo se lo cuenta a los demas.
+"On the others, and here too","En los demas, y tambien aqui"
+also here,tambien aqui
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.","El emisor tambien ejecuta la funcion, asi que una sola fila es todo el efecto. Por eso el disparo que haces impacta para ti en el mismo momento que para los demas."
+Reliable,Fiable
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.","Se reenvia hasta que llega, y llega en el orden en que se envio. Correcto para todo lo que ocurre una vez - un impacto, una recogida, el inicio de una ronda."
+"Fast, may drop","Rapido, puede perderse"
+"fast, may drop","rapido, puede perderse"
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.","Se envia una vez y nunca se reintenta. Correcto para un valor que de todos modos se sustituye varias veces por segundo, donde perder uno no cuesta nada porque el siguiente ya viene de camino."
+"Fast, in order","Rapido, en orden"
+"fast, in order","rapido, en orden"
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.","Se envia una vez, y el que llega despues de uno mas nuevo se descarta. Correcto para un flujo donde solo importa el ultimo - una posicion, una direccion de apuntado."
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.","Los mensajes en canales distintos no hacen cola unos detras de otros. Dejalo en 0 salvo que un mensaje fiable grande - un nivel, una lista larga - este reteniendo algo pequeno y frecuente."
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.","La funcion que ejecutan los demas pares. Solo viaja una funcion marcada como mensaje, y la lista contiene las que marca esta hoja."
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.","El id del par que la ejecuta - el propio id del evento, o Remitente para responder a quien acaba de enviarte un mensaje."
+A value to send along. It arrives as this parameter on every peer that runs the message.,Un valor que se envia con el mensaje. Llega como este parametro en cada par que ejecuta el mensaje.
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.","%s no es una de las opciones @rpc de Godot, asi que esta fila muestra la anotacion tal cual."
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.","Todos los pares conectados ejecutan el mensaje, y este par tambien si el mensaje dice que tambien se ejecuta aqui."
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,Solo el par 1 la ejecuta - el que aloja la partida. Asi es como un cliente pide algo que no puede decidir por su cuenta.
+One player,Un jugador
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.","Solo lo ejecuta el par cuyo id indiques. El propio id del evento, o Remitente para responder a quien acaba de enviarte un mensaje."
+The line that makes this function a message. Click to open it in the code panel.,La linea que convierte esta funcion en un mensaje. Haz clic para abrirla en el panel de codigo.
+Message…,Mensaje…
+Make It A Message…,Convertir en mensaje…
+Change The Message…,Cambiar el mensaje…

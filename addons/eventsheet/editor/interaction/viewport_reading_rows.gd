@@ -595,13 +595,10 @@ static func godot_systems_facts(sheet: EventSheetResource) -> Dictionary:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function == null:
 			continue
-		var mode_note: String = ""
-		for annotation: String in event_function.annotation_lines:
-			var words: String = EventSheetSentence.rpc_mode_words(annotation)
-			if annotation.strip_edges().begins_with("@rpc"):
-				mode_note = words
-		if not _declares_rpc(event_function):
+		var annotation: String = EventSheetMessageFacts.annotation_of(event_function)
+		if annotation.is_empty():
 			continue
+		var mode_note: String = EventSheetMessageFacts.words(annotation)
 		var name_text: String = event_function.function_name.strip_edges()
 		if name_text.is_empty():
 			continue
@@ -875,15 +872,6 @@ static func _systems_fact_lines(sheet: EventSheetResource) -> PackedStringArray:
 	for block: String in lifted:
 		lines.append_array(block.split("\n"))
 	return lines
-
-
-## S10. True when a function carries an `@rpc` annotation - which is what makes it a message rather
-## than a function anyone can call locally.
-static func _declares_rpc(event_function: EventFunction) -> bool:
-	for annotation: String in event_function.annotation_lines:
-		if annotation.strip_edges().begins_with("@rpc"):
-			return true
-	return false
 
 
 ## The name a `var x ... = ...` line declares, or "" when the line declares nothing. The walrus, the

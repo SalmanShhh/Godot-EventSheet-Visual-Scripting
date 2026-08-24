@@ -4491,3 +4491,37 @@ The owner,Владелец
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,"Их выполняет только участник, вызвавший Создать игру. Подходит для всего, что решает, что истинно; остальные узнают результат через сообщение или синхронизированное значение."
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Их выполняет только участник, которому принадлежит этот объект. Подходит для того, чем каждый игрок управляет у своего персонажа, чтобы никто не двигал чужого."
 Who runs the events in this group - right-click the head to change it.,Кто выполняет события этой группы - измените правым кликом по заголовку.
+message,сообщение
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.","%s ещё не отмечена как сообщение, поэтому ничего не будет передано. Щёлкните правой кнопкой по строке функции и выберите ""Сделать сообщением""."
+Anyone,Любой
+from anyone,от любого
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.","Отправить это сообщение может любой участник, поэтому клиент может о чём-то попросить хост. Хост должен решить, верить ли этому: проверьте Отправителя, прежде чем реагировать на то, что игрок мог выдумать."
+Only the owner,Только владелец
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.","Отправить его может только участник, владеющий этим узлом - хост, если узел не был передан. Вызов от кого-либо ещё отбрасывается и попадает в журнал, и именно это делает такой ответ безопасным."
+On the others,У остальных
+on the others,у остальных
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,"Функцию выполняет каждый участник, который её получил; отправитель - нет. Подходит, когда отправитель уже сделал это сам и лишь сообщает остальным."
+"On the others, and here too",У остальных и здесь тоже
+also here,и здесь
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.","Отправитель тоже выполняет функцию, поэтому одна строка даёт весь эффект. Именно поэтому выпущенный вами выстрел попадает у вас в тот же момент, что и у всех остальных."
+Reliable,Надёжно
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.","Отправляется снова, пока не дойдёт, и приходит в том порядке, в котором было послано. Подходит для всего, что случается один раз - попадание, подбор предмета, начало раунда."
+"Fast, may drop","Быстро, может потеряться"
+"fast, may drop","быстро, может потеряться"
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.","Отправляется один раз и никогда не досылается. Подходит для значения, которое и так обновляется несколько раз в секунду: потеря одного ничего не стоит, потому что следующее уже в пути."
+"Fast, in order","Быстро, по порядку"
+"fast, in order","быстро, по порядку"
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.","Отправляется один раз, а пришедшее позже более нового отбрасывается. Подходит для потока, где важно только последнее значение - позиция, направление прицела."
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.","Сообщения в разных каналах не ждут друг друга. Оставьте 0, если только одно большое надёжное сообщение - уровень, длинный список - не задерживает что-то мелкое и частое."
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.","Функция, которую выполнят остальные участники. Передаётся только функция, отмеченная как сообщение, и в списке те, что отмечает этот лист."
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.","Идентификатор участника, который её выполнит - собственный id события или Отправитель, чтобы ответить тому, кто только что прислал вам сообщение."
+A value to send along. It arrives as this parameter on every peer that runs the message.,"Значение, отправляемое вместе с сообщением. Оно приходит как этот параметр к каждому участнику, который выполняет сообщение."
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.","%s не входит в число параметров @rpc в Godot, поэтому строка показывает аннотацию как есть."
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.","Сообщение выполняет каждый подключённый участник, а также этот участник, если сообщение говорит, что оно выполняется и здесь."
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,"Его выполняет только участник 1 - тот, кто ведёт игру. Так клиент просит о том, что не вправе решить сам."
+One player,Один игрок
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.","Его выполнит только участник с указанным вами идентификатором. Собственный id события или Отправитель, чтобы ответить тому, кто только что прислал вам сообщение."
+The line that makes this function a message. Click to open it in the code panel.,"Строка, которая делает эту функцию сообщением. Щёлкните, чтобы открыть её в панели кода."
+Message…,Сообщение…
+Make It A Message…,Сделать сообщением…
+Change The Message…,Изменить сообщение…

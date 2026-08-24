@@ -4491,3 +4491,37 @@ The owner,Il proprietario
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,Li esegue solo il peer che ha chiamato Ospita una partita. Adatto a tutto cio che decide cosa e vero; gli altri apprendono il risultato tramite un messaggio o un valore tenuto allineato.
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Li esegue solo il peer che possiede questo oggetto. Adatto a cio che ogni giocatore controlla del proprio personaggio, cosi nessuno muove quello di un altro."
 Who runs the events in this group - right-click the head to change it.,Chi esegue gli eventi di questo gruppo - clic destro sulla testata per cambiarlo.
+message,messaggio
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.","%s non e ancora contrassegnata come messaggio, quindi non viaggerebbe nulla. Fai clic destro sulla sua riga di funzione e scegli Rendi un messaggio."
+Anyone,Chiunque
+from anyone,da chiunque
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.","Qualsiasi peer puo inviare questo messaggio, quindi un client puo chiedere qualcosa all'host. L'host deve decidere se crederci: controlla Mittente prima di agire su qualcosa che un giocatore potrebbe essersi inventato."
+Only the owner,Solo il proprietario
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.","Solo il peer proprietario di questo nodo puo inviarlo - l'host, a meno che il nodo non sia stato ceduto. Una chiamata da chiunque altro viene scartata e registrata, ed e questo che la rende la risposta sicura."
+On the others,Sugli altri
+on the others,sugli altri
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,Ogni peer che lo riceve esegue la funzione; quello che l'ha inviato no. Giusto quando il mittente ha gia fatto la cosa da se e sta solo avvisando gli altri.
+"On the others, and here too","Sugli altri, e anche qui"
+also here,anche qui
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.","Anche il mittente esegue la funzione, quindi una sola riga e l'intero effetto. Per questo il colpo che hai sparato arriva per te nello stesso momento in cui arriva per tutti gli altri."
+Reliable,Affidabile
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.","Viene inviato di nuovo finche non arriva, e arriva nell'ordine in cui e stato inviato. Giusto per tutto cio che accade una volta sola - un colpo, una raccolta, l'inizio di un round."
+"Fast, may drop","Veloce, puo perdersi"
+"fast, may drop","veloce, puo perdersi"
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.","Inviato una volta e mai reinviato. Giusto per un valore che comunque viene sostituito piu volte al secondo, dove perderne uno non costa nulla perche il prossimo e gia in arrivo."
+"Fast, in order","Veloce, in ordine"
+"fast, in order","veloce, in ordine"
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.","Inviato una volta, e quello che arriva dopo uno piu recente viene scartato. Giusto per un flusso in cui conta solo l'ultimo - una posizione, una direzione di mira."
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.","I messaggi su canali diversi non si mettono in coda l'uno dietro l'altro. Lascialo a 0 a meno che un grosso messaggio affidabile - un livello, un lungo elenco - non stia bloccando qualcosa di piccolo e frequente."
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.","La funzione che gli altri peer eseguono. Viaggia solo una funzione contrassegnata come messaggio, e l'elenco contiene quelle contrassegnate da questo foglio."
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.","L'id del peer che la esegue - l'id dell'evento stesso, oppure Mittente per rispondere a chi ti ha appena inviato un messaggio."
+A value to send along. It arrives as this parameter on every peer that runs the message.,Un valore da inviare insieme. Arriva come questo parametro su ogni peer che esegue il messaggio.
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.","%s non e una delle opzioni @rpc di Godot, quindi questa riga mostra l'annotazione cosi com'e."
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.","Ogni peer connesso esegue il messaggio, e anche questo peer quando il messaggio dice che viene eseguito anche qui."
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,Solo il peer 1 lo esegue - quello che ospita la partita. E cosi che un client chiede qualcosa che non puo decidere da solo.
+One player,Un giocatore
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.","Lo esegue solo il peer di cui indichi l'id. L'id dell'evento stesso, oppure Mittente per rispondere a chi ti ha appena inviato un messaggio."
+The line that makes this function a message. Click to open it in the code panel.,La riga che rende questa funzione un messaggio. Fai clic per aprirla nel pannello del codice.
+Message…,Messaggio…
+Make It A Message…,Rendi un messaggio…
+Change The Message…,Modifica il messaggio…

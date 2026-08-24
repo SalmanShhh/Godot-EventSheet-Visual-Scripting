@@ -102,6 +102,9 @@ const ROW_MENU_GROUP_TO_REGION := 63
 ## M3 - "Runs on" on the group head, and the three answers behind it. The three have their own run
 ## of ids because the submenu owns its own id_pressed: the row menu never sees them.
 const ROW_MENU_GROUP_RUNS_ON := 64
+## M2 - "Make it a message…" on a function's own row: the annotation belongs to the function, so the
+## gesture belongs to the row that declares it.
+const ROW_MENU_MAKE_MESSAGE := 65
 const GROUP_RUNS_ON_EVERYONE := 70
 const GROUP_RUNS_ON_HOST := 71
 const GROUP_RUNS_ON_OWNER := 72
@@ -171,6 +174,9 @@ const NEW_FUNCTION_MENU_PLAIN := 0
 const NEW_FUNCTION_MENU_ACTION := 1
 const NEW_FUNCTION_MENU_CONDITION := 2
 const NEW_FUNCTION_MENU_EXPRESSION := 3
+## M2 - New Function ▸ Message…: the same dialog for the name and the parameters, then the three
+## questions an `@rpc` answers, because a message IS a function before it is anything else.
+const NEW_FUNCTION_MENU_MESSAGE := 4
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
@@ -336,6 +342,7 @@ var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDial
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
 var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
+var _messages: EventSheetMessageDialog = EventSheetMessageDialog.new()  # M2: Make it a message… (the @rpc words) + the Send dialog whose To dropdown picks the Send ACE (dock/message_dialog.gd)
 var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
 var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
@@ -1846,6 +1853,10 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 ## all behave as they do for any other condition.
 func _on_compare_confirmed(ace_id: String, params: Dictionary, negated: bool, context: Dictionary) -> void:
 	_ace_apply._on_compare_confirmed(ace_id, params, negated, context)
+
+
+func _on_send_message_confirmed(ace_id: String, params: Dictionary, context: Dictionary) -> void:
+	_ace_apply._on_send_message_confirmed(ace_id, params, context)
 
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
@@ -4815,6 +4826,10 @@ func _on_new_function_submenu_id_pressed(id: int) -> void:
 			_function_dialog_glue._open_function_dialog_new("condition", true)
 		NEW_FUNCTION_MENU_EXPRESSION:
 			_function_dialog_glue._open_function_dialog_new("expression", true)
+		NEW_FUNCTION_MENU_MESSAGE:
+			# M2 - name and parameters first (a message is a function), then the Message dialog on the
+			# function that was just added.
+			_function_dialog_glue.open_function_dialog_for_new_message()
 
 
 # Context-menu popup + per-click configuration live in EventSheetContextMenus (dock/context_menus.gd).

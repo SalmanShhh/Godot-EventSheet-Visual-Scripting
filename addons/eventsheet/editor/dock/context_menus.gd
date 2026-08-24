@@ -181,6 +181,8 @@ func build_all() -> void:
 	_dock._new_function_submenu.add_item("Action", _dock.NEW_FUNCTION_MENU_ACTION)
 	_dock._new_function_submenu.add_item("Condition", _dock.NEW_FUNCTION_MENU_CONDITION)
 	_dock._new_function_submenu.add_item("Expression", _dock.NEW_FUNCTION_MENU_EXPRESSION)
+	# M2 - a message is a function other peers call, so it is added the same way and then marked.
+	_dock._new_function_submenu.add_item("Message…", _dock.NEW_FUNCTION_MENU_MESSAGE)
 	_dock._new_function_submenu.id_pressed.connect(_dock._on_new_function_submenu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("New Function", _dock._new_function_submenu)
 	# V8 - "add a variable" is three questions, so the submenu asks the one that matters: where does
@@ -314,6 +316,12 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
 		menu.add_item("Edit Function…", _dock.ROW_MENU_EDIT_FUNCTION)
 		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
+		# M2 - what makes this function a message is an `@rpc` line above it, so the gesture that
+		# writes that line lives on the function's own row. The menu is built per right-click, so the
+		# item reads the live state: a function that already is one opens the same dialog to change it.
+		menu.add_item(
+			"Change The Message…" if EventSheetMessageFacts.is_message(verb_function) else "Make It A Message…",
+			_dock.ROW_MENU_MAKE_MESSAGE)
 		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
 		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
 		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.

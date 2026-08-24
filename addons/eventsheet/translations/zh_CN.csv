@@ -4491,3 +4491,37 @@ The owner,所有者
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,只有调用了主持游戏的对等端会运行它们。适合一切决定真实结果的处理；其他端通过消息或同步的值得知结果。
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.",只有拥有该对象的对等端会运行它们。适合每个玩家对自己角色的操作，这样没人能移动别人的角色。
 Who runs the events in this group - right-click the head to change it.,谁来运行该组中的事件 - 右键单击标题可以更改。
+message,消息
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.","%s 尚未标记为消息，因此不会发送任何内容。右键点击它的函数行并选择""设为消息""。"
+Anyone,任何人
+from anyone,任何人可发
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.",任何对等端都可以发送这条消息，因此客户端可以请求主机做某件事。主机必须判断是否相信它：在响应玩家可能伪造的内容之前，先检查发送者。
+Only the owner,仅所有者
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.",只有拥有该节点的对等端才能发送它 - 除非节点已被转交，否则就是主机。来自其他人的调用会被丢弃并记录，这正是它成为安全选项的原因。
+On the others,在其他端
+on the others,在其他端
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,收到它的每个对等端都会运行该函数，发送方不会。适合发送方已经自己做过这件事、只是告知其他人的情形。
+"On the others, and here too",在其他端，本端也执行
+also here,本端也执行
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.",发送方也会运行该函数，因此一行就是全部效果。这就是你打出的那一枪在你这边和在其他人那边同时命中的原因。
+Reliable,可靠
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.",会重发直到送达，并按发送顺序到达。适合只发生一次的事 - 一次命中、一次拾取、一轮开始。
+"Fast, may drop",快速，可能丢失
+"fast, may drop",快速，可能丢失
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.",只发送一次，不会重发。适合本来每秒就更新好几次的值 - 丢掉一个也没有代价，因为下一个已经在路上。
+"Fast, in order",快速，按顺序
+"fast, in order",快速，按顺序
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.",只发送一次，比更新的那条晚到的会被丢弃。适合只有最新值才重要的数据流 - 位置、瞄准方向。
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.",不同通道上的消息不会互相排队。除非某条大的可靠消息 - 一个关卡、一份长列表 - 正拖住频繁的小消息，否则保持 0。
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.",其他对等端要运行的函数。只有标记为消息的函数才会传送，列表里是本表标记过的那些。
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.",运行它的对等端 id - 事件自带的 id，或者用发送者来回复刚给你发消息的那一方。
+A value to send along. It arrives as this parameter on every peer that runs the message.,随消息一起发送的值。它会作为这个参数到达运行该消息的每个对等端。
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.",%s 不是 Godot 的 @rpc 选项之一，因此这一行原样显示该注解。
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.",每个已连接的对等端都会运行该消息；如果消息声明本端也执行，则本端也会运行。
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,只有对等端 1 会运行它 - 也就是主持游戏的那一方。客户端就是这样请求自己无权决定的事情。
+One player,某位玩家
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.",只有你指定 id 的那个对等端会运行它。可以用事件自带的 id，或用发送者来回复刚给你发消息的一方。
+The line that makes this function a message. Click to open it in the code panel.,使这个函数成为消息的那一行。点击可在代码面板中打开它。
+Message…,消息…
+Make It A Message…,设为消息…
+Change The Message…,修改消息…

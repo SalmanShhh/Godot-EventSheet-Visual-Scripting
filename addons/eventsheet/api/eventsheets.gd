@@ -515,6 +515,29 @@ static func sheet_variables(sheet: EventSheetResource) -> Array[Dictionary]:
 	return EventSheetVariableOwners.catalog(sheet)
 
 
+## M2. Every function a sheet publishes as a MESSAGE - the ones carrying an `@rpc` annotation, which
+## is what makes a call travel to the other peers. Entries are
+## `{"name", "params", "annotation", "words", "note"}`, in declaration order: the function name, its
+## parameter names in order, the annotation verbatim, that annotation read back in the sheet's own
+## words ("from anyone · also here · reliable"), and the amber line an annotation carrying an option
+## Godot does not take earns ("" for every other).
+##
+## Read-only and derived from the sheet - nothing about a message is stored in a second place. This
+## is the list a Send row picks from, so a pack building its own send surface offers exactly what the
+## shipped one offers.
+static func sheet_messages(sheet: EventSheetResource) -> Array[Dictionary]:
+	return EventSheetMessageFacts.messages_in(sheet)
+
+
+## M2. The `@rpc(...)` line a set of answers writes, and the reverse - what a line already says. Pass
+## `{"Who may send": "any_peer", "Where it runs": "call_local", "Delivery": "reliable",
+## "channel": 0}`; the field words are `EventSheetMessageFacts.FIELD_*`. Handing back the ORIGINAL
+## line when the answers still mean what it said is the byte-exactness rule, so a pack that edits a
+## message through this cannot rewrite a `.gd` it did not change.
+static func message_annotation(original: String, answers: Dictionary) -> String:
+	return EventSheetMessageFacts.rewrite(original, answers)
+
+
 ## The object column a row naming this variable belongs in, or "" when the sheet declares no such
 ## variable and the ordinary provider reading should stand. Pass the list `sheet_variables()`
 ## returned - the answer is a lookup, so a caller drawing many rows derives the list once.

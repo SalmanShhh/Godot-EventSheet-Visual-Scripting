@@ -4491,3 +4491,37 @@ The owner,所有者
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,ゲームをホストを呼んだピアだけが実行します。何が正しいかを決める処理に適しており、他のピアはメッセージや同期された値で結果を知ります。
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.",このオブジェクトを所有するピアだけが実行します。各プレイヤーが自分のキャラクターを操作する処理に適しており、他人のキャラクターを動かせません。
 Who runs the events in this group - right-click the head to change it.,このグループのイベントを実行する相手です。見出しを右クリックすると変更できます。
+message,メッセージ
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.",%s はまだメッセージとして指定されていないため、何も送信されません。関数の行を右クリックして「メッセージにする」を選んでください。
+Anyone,誰でも
+from anyone,誰からでも
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.",どのピアでもこのメッセージを送れるため、クライアントからホストに要求を出せます。ホストはそれを信じるかどうかを判断する必要があります。プレイヤーが偽装できる内容に反応する前に、送信者を確認してください。
+Only the owner,所有者のみ
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.",このノードを所有するピアだけが送信できます。ノードを譲り渡していなければホストです。ほかの誰かからの呼び出しは破棄されログに残るため、これが安全な選択になります。
+On the others,ほかのピアで
+on the others,ほかのピアで
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,受信したピアだけが関数を実行し、送信したピアは実行しません。送信側がすでに自分で処理を済ませ、ほかに知らせるだけの場合に適しています。
+"On the others, and here too",ほかのピアと、ここでも
+also here,ここでも
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.",送信側でも関数が実行されるため、1 行だけで効果全体になります。自分が撃った弾が、ほかの全員と同じ瞬間に自分の画面でも当たるのはこのためです。
+Reliable,確実
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.",届くまで再送され、送った順に到着します。一度きり起きること - 命中、アイテム取得、ラウンド開始などに適しています。
+"Fast, may drop",高速、欠落あり
+"fast, may drop",高速、欠落あり
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.",一度だけ送信し、再送はしません。もともと毎秒何度も更新される値に適しています。ひとつ失われても、次がすでに送られてくるので問題になりません。
+"Fast, in order",高速、順序どおり
+"fast, in order",高速、順序どおり
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.",一度だけ送信し、より新しいものより後に届いたものは破棄されます。最新の値だけが意味を持つ連続的な値 - 位置や照準方向に適しています。
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.",異なるチャンネルのメッセージは互いに待たされません。大きな確実メッセージ - レベルや長いリスト - が小さく頻繁なものを詰まらせている場合を除き、0 のままにしてください。
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.",ほかのピアが実行する関数です。メッセージとして指定された関数だけが送信され、一覧にはこのシートが指定したものが並びます。
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.",それを実行するピアの ID です。イベント自身の ID か、直前にメッセージを送ってきた相手に返す場合は送信者を使います。
+A value to send along. It arrives as this parameter on every peer that runs the message.,一緒に送る値です。メッセージを実行するすべてのピアに、このパラメータとして届きます。
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.",%s は Godot の @rpc オプションではないため、この行は注釈をそのまま表示します。
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.",接続中のすべてのピアがメッセージを実行します。メッセージが「ここでも」と指定していれば、このピアでも実行されます。
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,ピア 1 だけが実行します。ゲームをホストしているピアです。クライアントが自分では決められないことを頼むときの方法です。
+One player,1 人のプレイヤー
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.",指定した ID のピアだけが実行します。イベント自身の ID か、直前にメッセージを送ってきた相手に返す場合は送信者を使います。
+The line that makes this function a message. Click to open it in the code panel.,この関数をメッセージにしている行です。クリックするとコードパネルで開きます。
+Message…,メッセージ…
+Make It A Message…,メッセージにする…
+Change The Message…,メッセージを変更…

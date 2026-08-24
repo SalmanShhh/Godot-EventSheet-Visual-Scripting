@@ -48,6 +48,12 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 	if _opens_compare(definition):
 		_dock._compare.open(context, definition.id, initial_values, false)
 		return
+	# M2 - and every Send goes to the ONE Send dialog, whichever of the three the picker offered: what
+	# an author decides is which message, with what, and to whom, and the ACE that gets written is a
+	# consequence of the last answer rather than a choice of its own.
+	if _opens_send(definition):
+		_dock._messages.open_send(context, definition.id, initial_values)
+		return
 	context["from_picker"] = true
 	_dock._ace_params.open_with_values(definition, context, initial_values)
 
@@ -58,6 +64,27 @@ static func _opens_compare(definition: ACEDefinition) -> bool:
 	if definition == null or definition.provider_id != EventSheetCompareConditionDialog.PROVIDER:
 		return false
 	return EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id)
+
+
+## M2 - True when this ACE is one of the three Send actions the Send dialog owns. One list (the
+## dialog's own), so the picker route and the row-edit route can never disagree about which rows open
+## where.
+static func _opens_send(definition: ACEDefinition) -> bool:
+	if definition == null or definition.provider_id != EventSheetMessageFacts.PROVIDER:
+		return false
+	return EventSheetMessageFacts.SEND_ACE_IDS.has(definition.id)
+
+
+## M2 - the Send dialog's answer, applied through the ordinary route. The dialog names an ACE ID
+## because choosing WHO runs the message IS choosing the action; everything downstream (undo,
+## replace-in-place, the `{uid}` bake) behaves exactly as for a row applied from the picker.
+func _on_send_message_confirmed(ace_id: String, params: Dictionary, context: Dictionary) -> void:
+	var definition: ACEDefinition = _dock._ace_registry.find_definition(
+		EventSheetMessageFacts.PROVIDER, ace_id)
+	if definition == null:
+		_dock._set_status("Couldn't find the %s action to send this message with." % ace_id, true)
+		return
+	_apply_ace_definition(definition, params, context)
 
 
 ## K2 - the Compare dialog's answer, applied through the ordinary route. The dialog names an ACE ID
@@ -148,6 +175,11 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 		return
 	# K2 - a comparison row opens in the Compare dialog it was written in, inversion and all, so
 	# changing `hp <= 0` into `hp between 1 and 50` is one edit rather than a delete and a re-pick.
+	# M2 - and a Send row opens in the Send dialog it was written in, so changing "to everyone" into
+	# "to the host" is one edit rather than a delete and a re-pick.
+	if _opens_send(definition):
+		_dock._messages.open_send(edit_context, definition.id, edit_context.get("existing_params", {}))
+		return
 	if _opens_compare(definition):
 		var condition_index: int = int(edit_context.get("ace_index", -1))
 		var edited: Variant = event_row.conditions[condition_index] if condition_index >= 0 \

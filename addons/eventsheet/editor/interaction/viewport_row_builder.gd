@@ -888,6 +888,16 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 		if note_row != null:
 			rows.append(note_row)
 	rows.append(_build_define_function_row(event_function, indent))
+	# M2 - an `@rpc` carrying an option Godot does not take cannot be read into words, so the row
+	# shows the annotation itself and this note says which option stopped it. Amber, never red: the
+	# file compiles, and it is only the message that will not travel.
+	var message_note: String = EventSheetMessageFacts.unknown_note(
+		EventSheetMessageFacts.annotation_of(event_function))
+	if not message_note.is_empty():
+		rows.append(_build_note_row(
+			"message_note_%s" % event_function.function_name.strip_edges(), indent,
+			"message_note", message_note,
+			_viewport._get_reading_style().lift_note_badge_foreground_color, {}, {}))
 	return rows
 
 
@@ -2984,6 +2994,18 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"line_index": 0
 		})
 	]
+	# M2 - one word says this function is not called from here, it arrives: a `@rpc` function is a
+	# message, and the row says so before its name the way a variable row says its scope.
+	if EventSheetMessageFacts.is_message(event_function):
+		spans.append(_make_span(EventSheetL10n.translate("message"), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"kind": "define_function",
+			"message_word": true,
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
 	# The verb reads as an event-sheet line, NOT a raw signature: an authored @ace_display_template is
 	# the whole sentence (its {param} slots filled with each parameter's label); otherwise the friendly
 	# name plus first-class typed parameter chips (`name : Type`, the same grammar a variable row uses).
@@ -3080,6 +3102,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		spans.append(_make_span(
 			category if not category.is_empty() else EventSheetL10n.translate("+ category"),
 			SemanticSpan.SpanType.KEYWORD, category_meta))
+	_append_message_spans(spans, event_function)
 	row_data.spans = spans
 	_append_verb_body_rows(row_data, event_function, indent, display_name)
 	row_data.line_count = maxi(condition_lines, 1)
@@ -3222,7 +3245,12 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	if EventSheetBBCodeLite.has_markup(display_name):
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
-	spans.append(_make_span("%s %s" % [EventSheetL10n.translate("On"), plain_name],
+	# M2 - a function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer. So
+	# the word between "On" and the name says which kind of arrival this head stands for.
+	var arrival: String = EventSheetL10n.translate("On")
+	if EventSheetMessageFacts.is_message(event_function):
+		arrival = EventSheetL10n.translate("On message")
+	spans.append(_make_span("%s %s" % [arrival, plain_name],
 		SemanticSpan.SpanType.OBJECT, name_meta))
 	# The inputs, as an event sheet's own trigger payload chips - the names the call passes in, beside
 	# the trigger that receives them. Their TYPES live in the properties popup, one click away.
@@ -3302,7 +3330,35 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 				"line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
+	_append_message_spans(spans, event_function)
 	return spans
+
+
+## M2. What a MESSAGE says about itself at the right of its own row: the three `@rpc` choices in the
+## sheet's words ("from anyone · also here · reliable"), then the annotation itself echoed in the
+## script editor's own colours. An annotation carrying an option Godot does not take reads as no
+## words at all - the echo IS the annotation, and guessing at what it meant would be worse than the
+## line - and `build_verb_block_rows` puts the amber note naming that option under the row.
+func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
+	var annotation: String = EventSheetMessageFacts.annotation_of(event_function)
+	if annotation.is_empty():
+		return
+	var mode_words: String = EventSheetMessageFacts.words(annotation)
+	if not mode_words.is_empty() and EventSheetMessageFacts.unknown_note(annotation).is_empty():
+		spans.append(_make_span(mode_words, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"message_words": true,
+			"lane": "condition",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
+	spans.append(_code_echo_span(annotation, {
+		"kind": "define_function",
+		"message_annotation": true,
+		"hover_note": EventSheetL10n.translate("The line that makes this function a message. Click to open it in the code panel.")
+	}, EventSheetCodeEcho.REST_ALPHA, true))
 
 
 ## W2 / W15. One editor callback as the event it is: the trigger arrow, the owning panel in the
@@ -13537,6 +13593,10 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# owns that variable, so "Player > Subtract 10 from health" leads with the object it changes.
 	if global_owner.is_empty():
 		global_owner = _variable_owner_label(action.provider_id, action.ace_id, action_params)
+	# M2 - and the same rule again for a Send row: it is about the MESSAGE, so it belongs to the
+	# object whose function that message is rather than to the Multiplayer object in general.
+	if global_owner.is_empty():
+		global_owner = _message_owner_label(action.provider_id, action.ace_id, action_params)
 	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
 	var read_action: ACEAction = action
 	if not global_read.is_empty():
@@ -15736,6 +15796,24 @@ func _variable_owner_entries() -> Array[Dictionary]:
 ## registry has a definition for at all: an expression that happens to mention `hp` is arithmetic,
 ## not ownership, and a line the reading layer recognised on its own already has an object rule of
 ## its own that says more than this one could.
+## M2. The object column a Send row belongs in: the object whose function the message IS. V6's rule,
+## applied to a message - a row that sends one belongs to whoever declares it, the same way a row
+## that changes a variable belongs to whoever owns the variable. "" for a message this sheet does not
+## declare, which leaves the row its shipped Multiplayer label.
+func _message_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
+	if provider_id != EventSheetMessageFacts.PROVIDER:
+		return ""
+	if not EventSheetMessageFacts.SEND_ACE_IDS.has(ace_id):
+		return ""
+	var named: String = str(params.get("message", "")).strip_edges()
+	if named.is_empty():
+		return ""
+	for entry: Dictionary in EventSheetMessageFacts.messages_in(_viewport._sheet as EventSheetResource):
+		if str(entry.get("name", "")) == named:
+			return _script_object_name()
+	return ""
+
+
 func _variable_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
 	if params.is_empty():
 		return ""

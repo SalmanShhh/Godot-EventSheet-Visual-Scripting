@@ -4491,3 +4491,37 @@ The owner,Der Besitzer
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,"Nur der Peer, der Ein Spiel hosten aufgerufen hat, fuehrt sie aus. Richtig fuer alles, was entscheidet, was gilt; die anderen erfahren das Ergebnis ueber eine Nachricht oder einen synchron gehaltenen Wert."
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Nur der Peer, dem dieses Objekt gehoert, fuehrt sie aus. Richtig fuer alles, was jeder Spieler an der eigenen Figur steuert, damit niemand die Figur eines anderen bewegt."
 Who runs the events in this group - right-click the head to change it.,Wer die Ereignisse dieser Gruppe ausfuehrt - mit Rechtsklick auf den Kopf aendern.
+message,Nachricht
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.","%s ist noch nicht als Nachricht markiert, es wuerde also nichts uebertragen. Rechtsklick auf die Funktionszeile und ""Zur Nachricht machen"" waehlen."
+Anyone,Jeder
+from anyone,von jedem
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.","Jeder Peer darf diese Nachricht senden, ein Client kann den Host also um etwas bitten. Der Host muss entscheiden, ob er das glaubt: pruefe Sender, bevor du auf etwas reagierst, das ein Spieler erfunden haben koennte."
+Only the owner,Nur der Besitzer
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.","Nur der Peer, dem dieser Node gehoert, darf sie senden - der Host, sofern der Node nicht abgegeben wurde. Ein Aufruf von jemand anderem wird verworfen und protokolliert, und genau das macht dies zur sicheren Antwort."
+On the others,Auf den anderen
+on the others,auf den anderen
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,"Jeder Peer, der sie empfaengt, fuehrt die Funktion aus; der sendende Peer nicht. Richtig, wenn der Sender die Sache schon selbst erledigt hat und es den anderen nur mitteilt."
+"On the others, and here too",Auf den anderen und auch hier
+also here,auch hier
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.","Der Sender fuehrt die Funktion ebenfalls aus, eine Zeile ist also der ganze Effekt. Deshalb trifft der Schuss, den du abgibst, bei dir im selben Moment wie bei allen anderen."
+Reliable,Zuverlaessig
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.","Wird erneut gesendet, bis sie ankommt, und kommt in der Reihenfolge an, in der sie gesendet wurde. Richtig fuer alles, was einmal passiert - ein Treffer, ein Aufsammeln, ein Rundenstart."
+"Fast, may drop","Schnell, kann verloren gehen"
+"fast, may drop","schnell, kann verloren gehen"
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.","Wird einmal gesendet und nie nachgefasst. Richtig fuer einen Wert, der ohnehin mehrmals pro Sekunde ersetzt wird, wo ein verlorener nichts kostet, weil der naechste schon unterwegs ist."
+"Fast, in order","Schnell, in Reihenfolge"
+"fast, in order","schnell, in Reihenfolge"
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.","Wird einmal gesendet, und eine, die nach einer neueren ankommt, wird verworfen. Richtig fuer einen Strom, bei dem nur der neueste Wert zaehlt - eine Position, eine Zielrichtung."
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.","Nachrichten auf verschiedenen Kanaelen warten nicht aufeinander. Lass ihn bei 0, ausser eine grosse zuverlaessige Nachricht - ein Level, eine lange Liste - haelt etwas Kleines und Haeufiges auf."
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.","Die Funktion, die die anderen Peers ausfuehren. Nur eine als Nachricht markierte Funktion wird uebertragen, und die Liste enthaelt die, die dieses Blatt markiert."
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.","Die ID des Peers, der sie ausfuehrt - die ID des Ereignisses selbst oder Sender, um dem zu antworten, der dir gerade eine Nachricht geschickt hat."
+A value to send along. It arrives as this parameter on every peer that runs the message.,"Ein Wert, der mitgeschickt wird. Er kommt bei jedem Peer, der die Nachricht ausfuehrt, als dieser Parameter an."
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.","%s ist keine der @rpc-Optionen von Godot, deshalb zeigt diese Zeile die Annotation so, wie sie dasteht."
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.","Jeder verbundene Peer fuehrt die Nachricht aus, und dieser Peer ebenfalls, wenn die Nachricht sagt, dass sie auch hier laeuft."
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,"Nur Peer 1 fuehrt sie aus - der, der das Spiel hostet. So bittet ein Client um etwas, das er nicht selbst entscheiden darf."
+One player,Ein Spieler
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.","Nur der Peer mit der ID, die du angibst, fuehrt sie aus. Die ID des Ereignisses selbst oder Sender, um dem zu antworten, der dir gerade eine Nachricht geschickt hat."
+The line that makes this function a message. Click to open it in the code panel.,"Die Zeile, die diese Funktion zu einer Nachricht macht. Klicke, um sie im Code-Panel zu oeffnen."
+Message…,Nachricht…
+Make It A Message…,Zur Nachricht machen…
+Change The Message…,Nachricht aendern…

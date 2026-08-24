@@ -1457,7 +1457,7 @@ static func _group_count_words(text: String) -> String:
 		var tail: String = out.substr(close_at + 1)
 		if not _is_string_literal(group_value) or not tail.begins_with(".size()"):
 			return out
-		out = "%s%s %s %s%s" % [out.substr(0, at), _unquote(group_value.strip_edges().trim_prefix("&")),
+		out = "%s%s %s %s%s" % [out.substr(0, at), unquote(group_value.strip_edges().trim_prefix("&")),
 			translate("(group)"), translate("count"), tail.substr(".size()".length())]
 	return out
 
@@ -1479,7 +1479,7 @@ static func node_lookup_text(text: String) -> String:
 			var path_value: String = out.substr(at + head.length(), close_at - at - head.length())
 			if not _is_string_literal(path_value):
 				break
-			var path: String = _unquote(path_value.strip_edges().trim_prefix("&"))
+			var path: String = unquote(path_value.strip_edges().trim_prefix("&"))
 			if path.is_empty() or path.contains(" "):
 				break
 			out = "%s$%s%s" % [out.substr(0, at), path, out.substr(close_at + 1)]
@@ -1706,7 +1706,7 @@ static func _nested_index_run(text: String, open_at: int) -> Dictionary:
 		if key.is_empty():
 			return {}
 		if _is_string_literal(key):
-			steps.append(_unquote(key.trim_prefix("&")))
+			steps.append(unquote(key.trim_prefix("&")))
 		elif key.is_valid_int():
 			steps.append(key)
 		else:
@@ -2505,7 +2505,7 @@ static func _call_statement(text: String, context: Dictionary) -> Dictionary:
 		return _sentence(object_name, "Remove from group {group}", {"group": [_quoted(args[0]), "value"]})
 	# `call_deferred("queue_free")` is the same destroy, one frame later - and the delay is the whole
 	# reason a user reached for it, so the reading says so.
-	if method == "call_deferred" and args.size() == 1 and _unquote(args[0]) == "queue_free":
+	if method == "call_deferred" and args.size() == 1 and unquote(args[0]) == "queue_free":
 		return _sentence(object_name, "Destroy (at end of frame)", {})
 	if method == "emit":
 		return signal_sentence(target, ", ".join(args), context)
@@ -2713,10 +2713,10 @@ static func _deferred_statement(target: String, method: String, args: PackedStri
 	var object_name: String = script_object(context) if receiver.is_empty() or receiver == "self" else object_of_reference(receiver)
 	if method == "call_deferred" and args.size() == 1 and _is_string_literal(args[0]):
 		return _sentence(object_name, "Call {name} (at end of frame)",
-			{"name": [verb_words(_unquote(args[0])), "name"]})
+			{"name": [verb_words(unquote(args[0])), "name"]})
 	if method == "set_deferred" and args.size() == 2 and _is_string_literal(args[0]):
 		return _sentence(object_name, "Set {name} to {value} (at end of frame)", {
-			"name": [engine_member_name(_unquote(args[0])), "name"],
+			"name": [engine_member_name(unquote(args[0])), "name"],
 			"value": [expression_text(args[1], context), "value"]
 		})
 	# `reset.call_deferred()` defers a CALLABLE - the receiver is the function, not an object, so the
@@ -2841,7 +2841,7 @@ static func _undo_statement(target: String, method: String, args: PackedStringAr
 				var call_step: String = "Add do step: call {name}" if method == "add_do_method" \
 					else "Add undo step: call {name}"
 				return _sentence(target, call_step,
-					{"name": [function_words(_unquote(args[1])), "name"]})
+					{"name": [function_words(unquote(args[1])), "name"]})
 		"add_do_reference":
 			if args.size() == 1:
 				return _sentence(target, "Add do step: keep {object}",
@@ -2852,7 +2852,7 @@ static func _undo_statement(target: String, method: String, args: PackedStringAr
 ## R31. The readable half of a property path an undo step addresses: `"position:x"` is `x`,
 ## `"modulate"` is `modulate`. Godot's `:` sub-path addressing is filing, not something the row says.
 static func _undo_member_word(property_value: String) -> String:
-	var bare: String = _unquote(property_value)
+	var bare: String = unquote(property_value)
 	var colon_at: int = bare.rfind(":")
 	if colon_at >= 0:
 		bare = bare.substr(colon_at + 1)
@@ -2897,8 +2897,8 @@ static func _editor_plugin_statement(target: String, method: String, args: Packe
 static func storage_item_key(section: String, key: String) -> String:
 	if not _is_string_literal(section) or not _is_string_literal(key):
 		return ""
-	var section_text: String = _unquote(section.strip_edges().trim_prefix("&"))
-	var key_text: String = _unquote(key.strip_edges().trim_prefix("&"))
+	var section_text: String = unquote(section.strip_edges().trim_prefix("&"))
+	var key_text: String = unquote(key.strip_edges().trim_prefix("&"))
 	if section_text.is_empty() or key_text.is_empty():
 		return ""
 	return "%s/%s" % [section_text, key_text]
@@ -2914,7 +2914,7 @@ const STORAGE_EXTENSIONS: PackedStringArray = [".cfg", ".ini", ".json", ".save",
 static func _is_config_path(value: String) -> bool:
 	if not _is_string_literal(value):
 		return false
-	var path: String = _unquote(value.strip_edges().trim_prefix("&")).to_lower()
+	var path: String = unquote(value.strip_edges().trim_prefix("&")).to_lower()
 	# S5. The extension is what says "this is a save file", not the folder: `sprite.save(
 	# "user://shot.png")` writes an image and keeps its own reading, which is why a blanket `user://`
 	# rule would be exactly the confident lie this grammar refuses.
@@ -3159,9 +3159,9 @@ static func _engine_verb_call(call: Dictionary, context: Dictionary) -> Dictiona
 				return _sentence(object_name, "Set angle toward {target}", {
 					"target": [expression_text(arguments[0], context), "value"]})
 		"set":
-			if arguments.size() == 2 and _is_string_literal(arguments[0]) and is_identifier(_unquote(arguments[0])):
+			if arguments.size() == 2 and _is_string_literal(arguments[0]) and is_identifier(unquote(arguments[0])):
 				return _sentence(object_name, "Set {name} to {value}", {
-					"name": [_unquote(arguments[0]), "name"],
+					"name": [unquote(arguments[0]), "name"],
 					"value": [expression_text(arguments[1], context), "value"]})
 		"play":
 			# P11. `play("run", 2.0)` hands over a SPEED as its second argument, and the engine's own
@@ -3415,8 +3415,8 @@ static func _group_call_statement(text: String, context: Dictionary = {}) -> Dic
 	# honestly print, and inventing them is exactly the confident lie this grammar refuses.
 	if not _is_string_literal(arguments[0]) or not _is_string_literal(arguments[1]):
 		return {}
-	var group_name: String = _unquote(arguments[0].strip_edges().trim_prefix("&"))
-	var method: String = _unquote(arguments[1].strip_edges().trim_prefix("&"))
+	var group_name: String = unquote(arguments[0].strip_edges().trim_prefix("&"))
+	var method: String = unquote(arguments[1].strip_edges().trim_prefix("&"))
 	if group_name.is_empty() or not is_identifier(method):
 		return {}
 	var object_label: String = "%s %s" % [group_name, translate("(group)")]
@@ -3531,7 +3531,7 @@ static func _tween_property_sentence(text: String, parts: Dictionary, context: D
 	else:
 		object_name = object_of_reference(object_name)
 	var reading: Dictionary = _sentence(object_name, "Tween {property} to {value} in {duration} seconds", {
-		"property": [tween_property_word(_unquote(arguments[1])), "name"],
+		"property": [tween_property_word(unquote(arguments[1])), "name"],
 		"value": [expression_text(arguments[2], context), "value"],
 		"duration": [expression_text(arguments[3], context), "value"]
 	})
@@ -3903,7 +3903,7 @@ static func _quoted(value: String) -> String:
 	var text: String = value.strip_edges().trim_prefix("&")
 	if not (text.begins_with("\"") or text.begins_with("'")):
 		return expression_text(text)
-	return "\"%s\"" % _unquote(text)
+	return "\"%s\"" % unquote(text)
 
 
 ## True when a value is a plain string literal - the only spelling a group or method NAME can have
@@ -4145,7 +4145,7 @@ static func _capability_condition(text: String, context: Dictionary) -> Dictiona
 	var target: String = str(call.get("target", "")).strip_edges()
 	if target.is_empty() or target == "self":
 		target = script_object(context)
-	var named: String = _unquote(arguments[0].strip_edges().trim_prefix("&"))
+	var named: String = unquote(arguments[0].strip_edges().trim_prefix("&"))
 	if named.is_empty():
 		return {}
 	if method == "has_method":
@@ -4209,7 +4209,7 @@ static func _storage_condition(text: String, context: Dictionary) -> Dictionary:
 static func file_name_value(path_value: String, context: Dictionary = {}) -> String:
 	if not _is_string_literal(path_value):
 		return expression_text(path_value, context)
-	var path: String = _unquote(path_value.strip_edges().trim_prefix("&"))
+	var path: String = unquote(path_value.strip_edges().trim_prefix("&"))
 	var slash_at: int = path.rfind("/")
 	if slash_at >= 0:
 		path = path.substr(slash_at + 1)
@@ -4408,7 +4408,7 @@ static func _object_property_condition(text: String, context: Dictionary) -> Dic
 		var arguments: PackedStringArray = call.get("args", PackedStringArray())
 		if arguments.size() != 1 or not _is_string_literal(arguments[0]):
 			return {}
-		var property_name: String = _unquote(arguments[0])
+		var property_name: String = unquote(arguments[0])
 		var receiver: String = str(call.get("target", "")).strip_edges()
 		if not is_identifier(property_name) or receiver.is_empty():
 			return {}
@@ -4520,7 +4520,7 @@ static func undo_step_sentence(target: String, method: String, args: PackedStrin
 	if not (label.begins_with("\"") or label.begins_with("'")):
 		return {}
 	return _sentence(_receiver_object(target, context), "Edit sheet undoably {label}",
-		{"label": ["\"%s\"" % _unquote(label), "value"]})
+		{"label": ["\"%s\"" % unquote(label), "value"]})
 
 
 ## M40/M41. The engine class an object label is known to be - the sheet's own object map first (an
@@ -4850,7 +4850,7 @@ static func call_parts(text: String) -> Dictionary:
 ## user typed, and an event sheet shows it as one ("jump" is down). Kept quoted, the name lens also
 ## knows to leave it alone (it never rewrites inside a literal), so `ui_accept` stays `ui_accept`.
 static func strip_action_name(value: String) -> String:
-	var bare: String = _unquote(value.strip_edges().trim_prefix("&"))
+	var bare: String = unquote(value.strip_edges().trim_prefix("&"))
 	return "" if bare.is_empty() else "\"%s\"" % bare
 
 
@@ -5045,7 +5045,10 @@ static func _inferred_type(value: String) -> String:
 	return ""
 
 
-static func _unquote(text: String) -> String:
+## A string literal without its quotes, and any other text unchanged. Public because it is the ONE
+## rule the whole reading layer unquotes by - a second copy beside it is how `'x'` comes to be a
+## literal in one reading and an identifier in another.
+static func unquote(text: String) -> String:
 	var trimmed: String = text.strip_edges()
 	if trimmed.length() >= 2 and (trimmed.begins_with("\"") and trimmed.ends_with("\"")):
 		return trimmed.substr(1, trimmed.length() - 2)
@@ -5132,7 +5135,7 @@ static func _receiver_idiom(chain: String, arguments: PackedStringArray) -> Stri
 		pattern = str(forms[0] if own_place else forms[1])
 	# M47. `enemy.get("hp")` names a property, and an event sheet shows the property, never the lookup.
 	if method == "get" and arguments.size() == 1 and _is_string_literal(arguments[0]):
-		var property_name: String = _unquote(arguments[0])
+		var property_name: String = unquote(arguments[0])
 		if is_identifier(property_name):
 			return "%s's %s" % [receiver, property_name]
 	if pattern.is_empty():
@@ -5679,7 +5682,7 @@ static func physics_dimension_of(object_name: String, context: Dictionary) -> St
 ## to: mouse buttons only make it a Mouse row, gamepad only a Gamepad row, anything else Keyboard.
 ## The object column then tells the truth about where the input comes from.
 static func input_action_object(action_value: String) -> String:
-	var bare: String = _unquote(action_value.strip_edges().trim_prefix("&"))
+	var bare: String = unquote(action_value.strip_edges().trim_prefix("&"))
 	if bare.is_empty():
 		return OBJECT_KEYBOARD
 	var setting: Variant = ProjectSettings.get_setting("input/%s" % bare, null)
@@ -6506,7 +6509,7 @@ static func layout_name(scene_path: String) -> String:
 	var text: String = scene_path.strip_edges()
 	if not _is_string_literal(text):
 		return text
-	var file_name: String = _unquote(text.trim_prefix("&")).get_file().get_basename()
+	var file_name: String = unquote(text.trim_prefix("&")).get_file().get_basename()
 	return file_name.capitalize() if not file_name.is_empty() else text
 
 
@@ -6785,7 +6788,7 @@ static func effects_object(receiver: String, context: Dictionary) -> String:
 static func effect_parameter_name(argument: String) -> String:
 	var text: String = argument.strip_edges().trim_prefix("&")
 	if _is_string_literal(text):
-		return _unquote(text)
+		return unquote(text)
 	return text
 
 
@@ -6837,7 +6840,7 @@ static func effect_resource_name(value: String) -> String:
 		var inner: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
 		if not _is_string_literal(inner):
 			return ""
-		return _unquote(inner).get_file().get_basename()
+		return unquote(inner).get_file().get_basename()
 	return text if is_identifier(text) else ""
 
 
@@ -6964,7 +6967,7 @@ static func _tile_data_condition(text: String, context: Dictionary) -> Dictionar
 		return {}
 	return _patterned(_sentence(str(tile.get("object", "")), "tile at {cell} has {name} set", {
 		"cell": [expression_text(str(tile.get("cell", "")), context), "value"],
-		"name": [_unquote(key), "name"]
+		"name": [unquote(key), "name"]
 	}), "tilemap")
 
 
@@ -7092,18 +7095,6 @@ const LOADED_CONSTANT := "ResourceLoader.THREAD_LOAD_LOADED"
 
 ## S15. What a navigation agent IS. Matched through ClassDB, so a subclass of either answers alike.
 const NAV_AGENT_CLASSES: PackedStringArray = ["NavigationAgent2D", "NavigationAgent3D"]
-
-## S10. The two `@rpc` mode words that change what a message DOES, in the sheet's own phrasing. A
-## mode the annotation leaves out is Godot's default, which is what the muted note then says.
-const RPC_MODE_WORDS: Dictionary = {
-	"any_peer": "from any peer",
-	"authority": "from the owner",
-	"call_local": "runs here too",
-	"call_remote": "remote only",
-	"reliable": "reliable",
-	"unreliable": "unreliable",
-	"unreliable_ordered": "unreliable, in order"
-}
 
 
 ## S8. The layout a background-load call names: a path literal is named the way the file is named,
@@ -7280,7 +7271,7 @@ static func _collided_family_condition(text: String, context: Dictionary) -> Dic
 	if not _is_string_literal(group):
 		return {}
 	return _sentence(receiver, "collided object is in family {name}",
-		{"name": [_unquote(group), "value"]})
+		{"name": [unquote(group), "value"]})
 
 
 ## S10. The published name of a message - the function name as the picker would publish it.
@@ -7291,22 +7282,12 @@ static func message_name(function_name: String, context: Dictionary) -> String:
 	return function_words(function_name)
 
 
-## S10. The muted note an `@rpc(...)` annotation reads as: its mode words in the order the annotation
-## wrote them, separated the way the sheet separates a trigger's settings. "" when the annotation
-## names no mode, which is Godot's own default and says nothing a reader could act on.
-static func rpc_mode_words(annotation: String) -> String:
-	var text: String = annotation.strip_edges()
-	if not text.begins_with("@rpc"):
-		return ""
-	var open_at: int = text.find("(")
-	if open_at < 0 or not text.ends_with(")"):
-		return ""
-	var words: PackedStringArray = PackedStringArray()
-	for argument: String in _split_arguments(text.substr(open_at + 1, text.length() - open_at - 2)):
-		var mode: String = _unquote(argument.strip_edges())
-		if RPC_MODE_WORDS.has(mode):
-			words.append(translate(str(RPC_MODE_WORDS[mode])))
-	return " · ".join(words)
+## S10 / M2. The object column a Send row belongs in: the object whose function the message IS when
+## this sheet declares it, and the Multiplayer object when the message was published somewhere else.
+## V6's rule, applied to a message - a row belongs to whatever owns the thing it names.
+static func message_owner(function_name: String, context: Dictionary) -> String:
+	var published: Dictionary = context.get("message_names", {})
+	return script_object(context) if published.has(function_name) else OBJECT_MULTIPLAYER
 
 
 ## S10. `take_damage.rpc(10)` and its two addressed twins, as the Send rows an event sheet writes.
@@ -7330,15 +7311,15 @@ static func _multiplayer_statement(text: String, context: Dictionary) -> Diction
 		payload = args.slice(1)
 		var peer: String = args[0].strip_edges()
 		if peer == "1":
-			reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to the host",
+			reading = _sentence(message_owner(sent, context), "Send {name} to the host",
 				{"name": [message_name(sent, context), "name"]})
 		else:
-			reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to {peer}", {
+			reading = _sentence(message_owner(sent, context), "Send {name} to {peer}", {
 				"name": [message_name(sent, context), "name"],
 				"peer": [expression_text(peer, context), "value"]
 			})
 	else:
-		reading = _sentence(OBJECT_MULTIPLAYER, "Send {name} to everyone",
+		reading = _sentence(message_owner(sent, context), "Send {name} to everyone",
 			{"name": [message_name(sent, context), "name"]})
 	var names: PackedStringArray = (context.get("message_params", {}) as Dictionary).get(
 		sent, PackedStringArray())
@@ -7543,7 +7524,7 @@ static func media_assignment(object_name: String, object_class: String, member: 
 		"bus":
 			if audio and _is_string_literal(value):
 				return _with_pattern(_sentence(object_name, "Set bus to {bus}", {
-					"bus": [_unquote(value), "name"]}), "sound", line)
+					"bus": [unquote(value), "name"]}), "sound", line)
 		"volume_db":
 			if audio:
 				return _with_pattern(_volume_sentence(object_name, "Set volume to {value}", value, context),
@@ -7563,7 +7544,7 @@ static func _asset_file_name(value: String) -> String:
 			break
 	if not _is_string_literal(text):
 		return ""
-	var path: String = _unquote(text.trim_prefix("&"))
+	var path: String = unquote(text.trim_prefix("&"))
 	return path.substr(path.rfind("/") + 1)
 
 
@@ -7720,7 +7701,7 @@ static func facing_statement(text: String, context: Dictionary) -> Dictionary:
 	# Y20. A blend tree steered by which way the object is pointing IS the facing, said to the
 	# animation. Filed under the object's own Animation aspect, the way every other blend row is, so
 	# the word "Animation" is said once rather than twice.
-	if method == "set" and args.size() == 2 and _unquote(args[0].strip_edges()).ends_with("/blend_position") \
+	if method == "set" and args.size() == 2 and unquote(args[0].strip_edges()).ends_with("/blend_position") \
 			and (args[1].contains("scale.x") or args[1].contains("velocity.x")) \
 			and _class_is_any(object_class_of(_receiver_object(receiver, context), context), ANIMATION_TREE_CLASSES):
 		return _with_pattern(_animation_aspect(_sentence(script_object(context),
@@ -8176,7 +8157,7 @@ static func _bus_index_name(expression: String) -> String:
 	if not text.begins_with(HEAD) or not text.ends_with(")"):
 		return ""
 	var inner: String = text.substr(HEAD.length(), text.length() - HEAD.length() - 1).strip_edges()
-	return _unquote(inner) if _is_string_literal(inner) else ""
+	return unquote(inner) if _is_string_literal(inner) else ""
 
 
 ## S11. The blend name in `"parameters/blend_position"` - the last leg of the path, in words - or ""
@@ -8185,7 +8166,7 @@ static func _animation_parameter_name(argument: String) -> String:
 	var text: String = argument.strip_edges()
 	if not _is_string_literal(text):
 		return ""
-	var path: String = _unquote(text)
+	var path: String = unquote(text)
 	if not path.begins_with(ANIMATION_PARAMETER_HEAD) or path == ANIMATION_PLAYBACK_PATH:
 		return ""
 	return path.substr(path.rfind("/") + 1).replace("_", " ")
@@ -8206,7 +8187,7 @@ static func _animation_playback_receiver(receiver: String) -> String:
 	if open_at <= 0 or not text.ends_with("]"):
 		return ""
 	var key: String = text.substr(open_at + 1, text.length() - open_at - 2).strip_edges()
-	if not _is_string_literal(key) or _unquote(key) != ANIMATION_PLAYBACK_PATH:
+	if not _is_string_literal(key) or unquote(key) != ANIMATION_PLAYBACK_PATH:
 		return ""
 	return text.substr(0, open_at)
 
@@ -8801,7 +8782,7 @@ static func call_by_name_statement(text: String, context: Dictionary) -> Diction
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	if args.is_empty() or not _is_string_literal(args[0]):
 		return {}
-	var function_name: String = _unquote(args[0].strip_edges().trim_prefix("&"))
+	var function_name: String = unquote(args[0].strip_edges().trim_prefix("&"))
 	if not is_identifier(function_name):
 		return {}
 	var values: PackedStringArray = PackedStringArray()
@@ -8837,7 +8818,7 @@ static func callable_value_words(text: String) -> String:
 	var args: PackedStringArray = _split_arguments(bare.substr(HEAD.length(), bare.length() - HEAD.length() - 1))
 	if args.size() != 2 or not _is_string_literal(args[1]):
 		return ""
-	var function_name: String = _unquote(args[1].strip_edges().trim_prefix("&"))
+	var function_name: String = unquote(args[1].strip_edges().trim_prefix("&"))
 	if not is_identifier(function_name):
 		return ""
 	# W13 - the ƒ mark is the sheet's own word for "a function, by name": it is what the condition
@@ -9280,7 +9261,7 @@ static func combo_arm_words(pattern_text: String, separator: String, window: Str
 	var bare: String = pattern_text.strip_edges()
 	if bare == "_" or not _is_string_literal(bare):
 		return {}
-	var joined: String = _unquote(bare)
+	var joined: String = unquote(bare)
 	if joined.is_empty():
 		return {}
 	var tokens: PackedStringArray = PackedStringArray()
@@ -9313,7 +9294,7 @@ static func combo_match_subject(subject: String) -> Dictionary:
 	var list_name: String = text.substr(at + 6, text.length() - at - 7).strip_edges()
 	if not is_identifier(list_name):
 		return {}
-	return {"list": list_name, "separator": _unquote(separator_literal)}
+	return {"list": list_name, "separator": unquote(separator_literal)}
 
 
 ## Y2. The three lines a hit-stop is written as, folded into the one thing that happened, as
@@ -9635,7 +9616,7 @@ static func font_file_words(value: String, context: Dictionary) -> String:
 			continue
 		var inner: String = text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
 		if _is_string_literal(inner):
-			return _unquote(inner).get_file()
+			return unquote(inner).get_file()
 	return expression_text(text, context)
 
 
@@ -9797,7 +9778,7 @@ static func _platform_condition(text: String, context: Dictionary) -> Dictionary
 			and str(call.get("method", "")) == "has_feature":
 		var args: PackedStringArray = call.get("args", PackedStringArray())
 		if args.size() == 1 and _is_string_literal(args[0]):
-			var tag: String = _unquote(args[0])
+			var tag: String = unquote(args[0])
 			# The editor tag is already the sheet's own "running in the editor" question, and that
 			# reading owns it: two sentences for one line would be one too many.
 			if tag == "editor":
@@ -9815,7 +9796,7 @@ static func _platform_condition(text: String, context: Dictionary) -> Dictionary
 	if left != "OS.get_name()" or not _is_string_literal(right):
 		return {}
 	return _patterned(_sentence(OBJECT_PLATFORM, "Is {platform}",
-		{"platform": [_unquote(right), "name"]}), "platform")
+		{"platform": [unquote(right), "name"]}), "platform")
 
 
 ## T10 / T11. The around-objects reading of one ASSIGNMENT, or {} when neither family claims it.
@@ -10157,7 +10138,7 @@ static func node_path_words(value: String) -> String:
 	text = text.rstrip(")").strip_edges()
 	if not _is_string_literal(text):
 		return "" if text.is_empty() else text
-	var path: String = _unquote(text).strip_edges()
+	var path: String = unquote(text).strip_edges()
 	if path.is_empty():
 		return ""
 	var slash_at: int = path.rfind("/")
@@ -10882,7 +10863,7 @@ static func pattern_literal_words(value: String) -> String:
 	var text: String = value.strip_edges()
 	if not _is_string_literal(text):
 		return text
-	return "\"%s\"" % _unquote(text).replace("\\\\", "\\")
+	return "\"%s\"" % unquote(text).replace("\\\\", "\\")
 
 
 ## V2. The verbs a form's Controls publish: the list steps, the two formatted-text ones, and opening
@@ -10970,7 +10951,7 @@ static func _format_with_names(text: String) -> String:
 		var key: String = entry.substr(0, colon_at).strip_edges()
 		if not _is_string_literal(key):
 			return text
-		var slot: String = _unquote(key)
+		var slot: String = unquote(key)
 		if not body.contains("{%s}" % slot):
 			return text
 		named.append("%s = %s" % [slot, entry.substr(colon_at + 2).strip_edges()])
@@ -11187,7 +11168,7 @@ static func _image_save_statement(line: String, context: Dictionary) -> Dictiona
 static func bare_file_name(path_value: String, context: Dictionary) -> String:
 	if not _is_string_literal(path_value):
 		return expression_text(path_value, context)
-	var path: String = _unquote(path_value.strip_edges())
+	var path: String = unquote(path_value.strip_edges())
 	var slash_at: int = path.rfind("/")
 	return path.substr(slash_at + 1) if slash_at >= 0 else path
 
@@ -11249,7 +11230,7 @@ static func data_asset_expression(text: String) -> String:
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	if args.size() != 1 or not _is_string_literal(args[0]):
 		return ""
-	var path: String = _unquote(args[0].strip_edges())
+	var path: String = unquote(args[0].strip_edges())
 	if not DATA_ASSET_EXTENSIONS.has(path.get_extension()):
 		return ""
 	return "%s %s" % [translate("the data asset"), path.get_file()]
@@ -12019,7 +12000,7 @@ static func data_scene_receiver_words(receiver: String, method: String,
 		"find_child":
 			if arguments.size() == 1 and _is_string_literal(arguments[0]):
 				return _fill(translate("{object}'s child named {name}"),
-					{"object": receiver, "name": _unquote(arguments[0])})
+					{"object": receiver, "name": unquote(arguments[0])})
 		# ── X12 - the hierarchy read as the possessives a reader already says out loud ───────────
 		# "the squad's parent", "the squad's first child", "how many children the squad has". Each is
 		# one call with one answer, which is exactly when a value earns a sentence of its own.
@@ -12037,8 +12018,8 @@ static func data_scene_receiver_words(receiver: String, method: String,
 		# `find_child` above already answers that one.
 		"find_children":
 			if arguments.size() >= 2 and arguments.size() <= 4 \
-					and _unquote(arguments[0].strip_edges()) == "*" and _is_string_literal(arguments[1]):
-				var kind: String = _unquote(arguments[1]).strip_edges()
+					and unquote(arguments[0].strip_edges()) == "*" and _is_string_literal(arguments[1]):
+				var kind: String = unquote(arguments[1]).strip_edges()
 				if not kind.is_empty():
 					return _fill(translate("every {type} among {object}'s descendants"),
 						{"type": kind, "object": receiver})
@@ -12370,7 +12351,7 @@ static func _is_pattern_value(text: String) -> bool:
 ## asking for a piece of text rather than anything the row is about.
 static func _pattern_key_words(key: String) -> String:
 	var text: String = key.strip_edges()
-	return _unquote(text) if _is_string_literal(text) else text
+	return unquote(text) if _is_string_literal(text) else text
 
 
 # ── X1 / X3 / X5 / X31 - moving, facing, placing, and the point at an angle ──────────────────────
@@ -13687,7 +13668,7 @@ static func cursor_ray_expression_words(text: String, context: Dictionary) -> St
 	if entries.is_empty():
 		return ""
 	var aim: Dictionary = call_parts(bare.substr(0, helper_end + 1))
-	return _cursor_floor_words(_unquote(entries[0].strip_edges()), _aimed_cursor_owner(aim, context))
+	return _cursor_floor_words(unquote(entries[0].strip_edges()), _aimed_cursor_owner(aim, context))
 
 
 ## X30, the 2D twins. The flat game's two aiming answers, read back out of the helpers the picker
@@ -13708,7 +13689,7 @@ static func cursor_flat_expression_words(text: String) -> String:
 	var entries: PackedStringArray = _split_arguments(tail.substr(5, tail.length() - 6))
 	if entries.is_empty():
 		return ""
-	if _unquote(entries[0].strip_edges()) != "collider":
+	if unquote(entries[0].strip_edges()) != "collider":
 		return ""
 	return translate("the object under the cursor")
 
@@ -14141,7 +14122,7 @@ static func animation_parameter_role(argument: String) -> Dictionary:
 	var text: String = argument.strip_edges()
 	if not _is_string_literal(text):
 		return {}
-	var path: String = _unquote(text)
+	var path: String = unquote(text)
 	if not path.begins_with(ANIMATION_PARAMETER_HEAD) or path == ANIMATION_PLAYBACK_PATH:
 		return {}
 	var legs: PackedStringArray = path.split("/")
@@ -14492,7 +14473,7 @@ static func skill_id_words(value: String) -> String:
 	var text: String = value.strip_edges().trim_prefix("&")
 	if not _is_string_literal(text):
 		return text
-	return "\"%s\"" % _unquote(text).replace("_", " ")
+	return "\"%s\"" % unquote(text).replace("_", " ")
 
 
 ## Y13. A stat with an upgrade's level inside it, said as the one sentence it is:
@@ -14572,7 +14553,7 @@ static func skill_level_call_name(text: String) -> String:
 	var args: PackedStringArray = call.get("args", PackedStringArray())
 	if args.size() != 1 or not _is_string_literal(args[0]):
 		return ""
-	return function_words(_unquote(args[0].strip_edges().trim_prefix("&")))
+	return function_words(unquote(args[0].strip_edges().trim_prefix("&")))
 
 
 ## A factor as the per-cent a reader thinks in: 0.1 is 10%, 1.25 is 125%. Trailing zeros go, so a

@@ -4491,3 +4491,37 @@ The owner,소유자
 Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,"게임 호스팅을 호출한 피어만 실행합니다. 무엇이 참인지를 결정하는 처리에 알맞으며, 다른 피어는 메시지나 동기화된 값으로 결과를 압니다."
 "Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","이 오브젝트를 소유한 피어만 실행합니다. 각 플레이어가 자신의 캐릭터를 조작하는 처리에 알맞아, 다른 사람의 캐릭터를 움직이지 못합니다."
 Who runs the events in this group - right-click the head to change it.,이 그룹의 이벤트를 실행하는 대상입니다. 머리글을 오른쪽 클릭하여 바꿀 수 있습니다.
+message,메시지
+"%s is not marked as a message yet, so nothing would travel. Right-click its function row and choose Make it a message.",%s 은(는) 아직 메시지로 지정되지 않아 아무것도 전달되지 않습니다. 함수 행을 마우스 오른쪽 버튼으로 클릭하고 '메시지로 만들기'를 선택하세요.
+Anyone,누구나
+from anyone,누구나 보냄
+"Any peer may send this message, so a client can ask the host for something. The host has to decide whether to believe it: check Sender before acting on anything a player could have made up.",모든 피어가 이 메시지를 보낼 수 있으므로 클라이언트가 호스트에게 무언가를 요청할 수 있습니다. 호스트는 그것을 믿을지 판단해야 합니다. 플레이어가 꾸며냈을 수 있는 내용에 반응하기 전에 발신자를 확인하세요.
+Only the owner,소유자만
+"Only the peer that owns this node may send it - the host, unless the node was given away. A call from anybody else is dropped and logged, which is what makes this the safe answer.",이 노드를 소유한 피어만 보낼 수 있습니다. 노드를 넘기지 않았다면 호스트입니다. 다른 누군가의 호출은 폐기되고 기록되므로 이것이 안전한 답입니다.
+On the others,다른 피어에서
+on the others,다른 피어에서
+Every peer that receives it runs the function; the peer that sent it does not. Right when the sender has already done the thing itself and is only telling the others.,"받은 모든 피어가 함수를 실행하고, 보낸 피어는 실행하지 않습니다. 보낸 쪽이 이미 스스로 처리했고 다른 피어에게 알리기만 할 때 알맞습니다."
+"On the others, and here too",다른 피어와 여기서도
+also here,여기서도
+"The sender runs the function as well, so one row is the whole effect. This is why the shot you fired lands for you at the same moment as for everybody else.",보낸 쪽에서도 함수가 실행되므로 한 행이 효과 전체가 됩니다. 내가 쏜 총알이 다른 모두와 같은 순간에 내게도 명중하는 이유입니다.
+Reliable,안정
+"Sent again until it arrives, and it arrives in the order it was sent. Right for anything that happens once - a hit, a pickup, a round starting.","도착할 때까지 다시 보내며, 보낸 순서대로 도착합니다. 한 번만 일어나는 일 - 명중, 아이템 획득, 라운드 시작에 알맞습니다."
+"Fast, may drop","빠름, 유실 가능"
+"fast, may drop","빠름, 유실 가능"
+"Sent once and never chased. Right for a value replaced a few times a second anyway, where one that goes missing costs nothing because the next is already on its way.",한 번만 보내고 다시 시도하지 않습니다. 어차피 초당 여러 번 갱신되는 값에 알맞습니다. 하나를 잃어도 다음 값이 이미 오는 중이라 손해가 없습니다.
+"Fast, in order","빠름, 순서 유지"
+"fast, in order","빠름, 순서 유지"
+"Sent once, and one that arrives after a newer one is thrown away. Right for a stream where only the latest matters - a position, an aim direction.","한 번만 보내고, 더 새로운 것보다 늦게 도착한 것은 버립니다. 최신 값만 의미가 있는 흐름 - 위치, 조준 방향에 알맞습니다."
+"Messages on different channels do not queue behind each other. Leave it at 0 unless one big reliable message - a level, a long list - is holding up something small and frequent.",서로 다른 채널의 메시지는 앞뒤로 줄 서지 않습니다. 큰 안정 메시지 - 레벨이나 긴 목록 - 가 작고 잦은 메시지를 막고 있지 않다면 0으로 두세요.
+"The function the other peers run. Only a function marked as a message travels, and the list holds the ones this sheet marks.","다른 피어가 실행하는 함수입니다. 메시지로 지정된 함수만 전달되며, 목록에는 이 시트가 지정한 것이 들어 있습니다."
+"The id of the peer that runs it - the event's own id, or Sender to answer whoever just sent you a message.","그것을 실행하는 피어의 id입니다. 이벤트 자체의 id를 쓰거나, 방금 메시지를 보낸 상대에게 답하려면 발신자를 사용하세요."
+A value to send along. It arrives as this parameter on every peer that runs the message.,함께 보낼 값입니다. 메시지를 실행하는 모든 피어에 이 매개변수로 도착합니다.
+"%s is not one of Godot's @rpc options, so this row shows the annotation as it stands.","%s 은(는) Godot의 @rpc 옵션이 아니므로, 이 행은 주석을 있는 그대로 보여줍니다."
+"Every connected peer runs the message, and this peer as well when the message says it also runs here.","연결된 모든 피어가 메시지를 실행하며, 메시지가 여기서도 실행된다고 되어 있으면 이 피어도 실행합니다."
+Only peer 1 runs it - the one hosting the game. This is how a client asks for something it may not decide by itself.,피어 1만 실행합니다. 게임을 호스팅하는 쪽입니다. 클라이언트가 스스로 결정할 수 없는 일을 요청하는 방법입니다.
+One player,한 플레이어
+"Only the peer whose id you give runs it. The event's own id, or Sender to answer whoever just sent you a message.","지정한 id의 피어만 실행합니다. 이벤트 자체의 id를 쓰거나, 방금 메시지를 보낸 상대에게 답하려면 발신자를 사용하세요."
+The line that makes this function a message. Click to open it in the code panel.,이 함수를 메시지로 만드는 줄입니다. 클릭하면 코드 패널에서 열립니다.
+Message…,메시지…
+Make It A Message…,메시지로 만들기…
+Change The Message…,메시지 변경…

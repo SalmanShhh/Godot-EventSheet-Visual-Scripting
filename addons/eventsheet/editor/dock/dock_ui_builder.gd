@@ -677,6 +677,10 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._find_bar_glue.init(_dock)
 	_dock._clipboard_glue.init(_dock)
 	_dock._quick_prompts.init(_dock)
+	# M2 - the Message dialog writes an annotation; the Send dialog names one of the three shipped
+	# Send ACEs and hands it to the ordinary apply path, exactly as the Compare dialog does.
+	_dock._messages.init(_dock)
+	_dock._messages.send_confirmed.connect(_dock._on_send_message_confirmed)
 	_dock._custom_block_dialog.init(_dock)
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_dock._variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _dock._current_sheet)

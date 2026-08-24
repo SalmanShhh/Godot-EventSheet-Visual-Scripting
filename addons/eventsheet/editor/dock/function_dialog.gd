@@ -46,6 +46,9 @@ func init(dock: Control) -> void:
 
 # ── Sheet functions: the dialog with the expanding param list (Add ▾ → Function…) ────
 var _function_dialog: EventSheetFunctionDialog = null
+## M2. Set by Message…, cleared the moment the function lands: the next Add opens the Message dialog
+## on it. One-shot on purpose - a plain Add Function that follows must not inherit it.
+var _message_after_add: bool = false
 
 
 func _open_function_dialog() -> void:
@@ -64,6 +67,19 @@ func _open_function_dialog_new(kind: String, publish: bool) -> void:
 	_ensure_dialog()
 	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
 	_function_dialog.open(kind, publish)
+
+
+## M2 - New Function ▸ Message…: a message IS a function, so the name and the parameters are asked
+## for in the ordinary dialog and the Message dialog opens on the function that was just added. The
+## chaining is a one-shot flag rather than a second dialog: one add path, one undo step for the
+## function, one for the annotation.
+func open_function_dialog_for_new_message() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_ensure_dialog()
+	_message_after_add = true
+	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	_function_dialog.open("", false)
 
 
 ## Double-clicking a Define block on the canvas edits that verb in the same dialog (edit mode:
@@ -234,8 +250,12 @@ func _apply_function_data(data: Dictionary) -> void:
 			event_function.events.append(guard_row)
 		_dock._current_sheet.functions.append(event_function)
 		return true)
+	var wants_message: bool = _message_after_add
+	_message_after_add = false
 	if changed:
 		_dock._mark_dirty("Added function %s()." % str(data.get("name")))
+	if changed and wants_message:
+		_dock._messages.open_message(_find_function(str(data.get("name"))))
 
 
 ## Updates an existing function in place (undoable). The target is found by its ORIGINAL name in the
