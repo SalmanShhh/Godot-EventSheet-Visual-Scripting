@@ -162,10 +162,47 @@ because that is how a reader sets it and how every other 0-to-1 setting on the s
 | Set Layer Tint | Tints a whole 2D layer at once - the one row that makes a level read as night. | `{node}.color = {colour}` |
 | Set Ambient Light | Sets how much light a 3D scene has with no light shining on it. | `{node}.environment.ambient_light_energy = {value}` |
 
-An opened `.gd` file reads the same words: `lamp.energy = 0.5` is **Set light energy to 50%**,
-`lamp.enabled = false` is **Set light off**, `lamp.shadow_enabled = true` is **Set shadows on**,
-`$CanvasModulate.color = Color(0.2, 0.2, 0.4)` is **System ▸ Set layer tint**, and a world
-environment's ambient energy is **System ▸ Set ambient light to 30%**.
+`$CanvasModulate.color = Color(0.2, 0.2, 0.4)` in an opened `.gd` reads **System ▸ Set layer
+tint**, and a world environment's ambient energy is **System ▸ Set ambient light to 30%**.
+
+### The lights of your scene (picker section: Lights in this scene)
+
+The rows above take the light as a field. These take it as the OBJECT: pick the light off the
+picker's *Lights in this scene* shelf and the row reads **Torch ▸ Set brightness to 1.2**, with the
+light in the column where a reader looks for it.
+
+One word covers both dimensions and the code echo shows the property your light really has, because
+Godot spells every knob differently depending on which light you picked: brightness is `energy` on a
+2D light and `light_energy` on a 3D one, reach is `texture_scale` (a 2D point light), `omni_range`
+or `spot_range`, and on/off is `enabled` in 2D but `visible` in 3D, because a Light3D has no
+`enabled` at all. Each row is hosted on the class that really answers to it, so a spot light is
+offered a cone angle and a directional light is offered no reach.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Brightness | Sets how bright the light is, as a fraction. | `{target.}energy = {value}` (3D: `light_energy`) |
+| Fade Brightness | Walks the brightness to a new value over time - one tween, no state to keep. | `create_tween().tween_property({target}, "energy", {value}, {seconds})` |
+| Set Colour | Sets the colour the light casts. | `{target.}color = {value}` (3D: `light_color`) |
+| Set Reach | Sets how far the light gets: a texture scale in 2D, metres in 3D. | `{target.}texture_scale = {value}` (3D: `omni_range` / `spot_range`) |
+| Set Cone Angle | Sets how wide a spot's cone opens, in degrees. | `{target.}spot_angle = {value}` |
+| Turn On | Lights the light. | `{target.}enabled = true` (3D: `visible`) |
+| Turn Off | Puts it out. | `{target.}enabled = false` (3D: `visible`) |
+| Turn Shadows On | Makes the light cast shadows. | `{target.}shadow_enabled = true` |
+| Turn Shadows Off | Stops it casting them. | `{target.}shadow_enabled = false` |
+| Is On | True while the light is lit. | `{target.}enabled` (3D: `visible`) |
+| Is Casting Shadows | True while the light casts shadows. | `{target.}shadow_enabled` |
+| Brightness | Reads the brightness back, for any value field. | `{target.}energy` (3D: `light_energy`) |
+| Colour | Reads the colour back. | `{target.}color` (3D: `light_color`) |
+| Reach | Reads the reach back. | `{target.}texture_scale` (3D: `omni_range` / `spot_range`) |
+
+An opened `.gd` file reads these words too, and the row stores the spelling it lifted from, so
+`$Torch`, the variable you held the light in, and `get_node("Torch")` each come back exactly as you
+wrote them: `lamp.energy = 0.5` is **lamp ▸ Set brightness to 0.5**, `lamp.shadow_enabled = true`
+is **lamp ▸ Turn shadows on**, and `create_tween().tween_property($Lantern, "energy", 1.0, 0.5)`
+is **Lantern ▸ Fade to 1.0 over 0.5 s**. The gate is the SCENE: a line becomes a light row only
+when the scene the sheet is attached to (or a typed declaration in the file itself) says the node it
+names really is a light, so `$Door.visible = false` stays the script block it is rather than being
+relabelled.
 
 An opened `.gd` file reads the same words: `sprite.material.set_shader_parameter("flash", 1.0)` is
 **Set effect parameter flash to 1**, `sprite.material = null` is **Remove effect**,

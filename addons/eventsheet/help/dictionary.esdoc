@@ -113,7 +113,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
 | `collider` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
 | `collision_mask` | [Set RayCast Mask (2D)](ace:Core/RayCast2DSetMask) | Raycast 2D | Vocabulary |
-| `color` | [Set Light Colour (2D)](ace:Core/SetLightColour) | Lighting | Vocabulary |
+| `color` | [Set Colour](ace:Core/LightSetColour) | Lighting | Vocabulary |
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
 | `compile` | [Set Pattern](ace:Core/SetTextPattern) | Text: RegEx | Vocabulary |
 | `complete_auth` | [Accept Player](ace:Core/AcceptPlayer) | Multiplayer | Vocabulary |
@@ -129,7 +129,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
 | `create_server` | [Host A Game](ace:Core/HostGame) | Multiplayer | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
-| `create_tween` | [Tween Callback](ace:Core/TweenCallback) | Tween | Vocabulary |
+| `create_tween` | [Fade Brightness](ace:Core/LightFadeBrightness) | Lighting | Vocabulary |
 | `cross` | [Fire Hitscan](ace:Core/FireHitscan) | Weapons 3D | Vocabulary |
 | `current_animation` | [Set Current Animation](ace:Core/SetAnimationTime) | Animation | Vocabulary |
 | `current_animation_length` | [Animation Length](ace:Core/AnimationLength) | Animation | Vocabulary |
@@ -165,9 +165,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `emit` | [Emit Signal](ace:Core/EmitSignal) | Signals / Scene / Input | Vocabulary |
 | `emit_signal` | [Report Failure](ace:Core/ReportFailure) | Run Context | Vocabulary |
 | `emitting` | [Set Emitting](ace:Core/SetEmitting) | Particles | Vocabulary |
-| `enabled` | [Set Light On/Off](ace:Core/SetLightEnabled) | Lighting | Vocabulary |
+| `enabled` | [Turn On](ace:Core/LightLitOn) | Lighting | Vocabulary |
 | `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
-| `energy` | [Set Light Energy (2D)](ace:Core/SetLightEnergy) | Lighting | Vocabulary |
+| `energy` | [Set Brightness](ace:Core/LightSetBrightness) | Lighting | Vocabulary |
 | `environment` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
 | `erase` | [Delete Key](ace:Core/DictDeleteKey) | Variables: Dictionary | Vocabulary |
 | `erase_action` | [Remove Input Action](ace:Core/InputRemoveAction) | Input | Vocabulary |
@@ -477,8 +477,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `lerp` | [Lerp Color](ace:Core/ColorLerp) | Color | Vocabulary |
 | `lerp_angle` | [Lerp Angle](ace:Core/LerpAngle) | Math & Random | Vocabulary |
 | `lerpf` | [Lerp](ace:Core/LerpValue) | Math & Random | Vocabulary |
-| `light_color` | [Set Light Colour (3D)](ace:Core/SetLightColour3D) | Lighting | Vocabulary |
-| `light_energy` | [Set Light Energy (3D)](ace:Core/SetLightEnergy3D) | Lighting | Vocabulary |
+| `light_color` | [Set Colour](ace:Core/LightSetColour3D) | Lighting | Vocabulary |
+| `light_energy` | [Set Brightness](ace:Core/LightSetBrightness3D) | Lighting | Vocabulary |
 | `lightened` | [Lighten Color](ace:Core/ColorLighten) | Color | Vocabulary |
 | `limit_bottom` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
 | `limit_left` | [Set Scroll Limits](ace:Core/SetCameraLimits) | Camera | Vocabulary |
@@ -548,6 +548,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `not` | [Has Something](ace:Core/HasSomething) | Compare: Types | Vocabulary |
 | `num` | [Format Decimals](ace:Core/FormatDecimals) | Text | Vocabulary |
 | `offset` | [Set Offset](ace:Core/SetCameraOffset) | Camera | Vocabulary |
+| `omni_range` | [Set Reach](ace:Core/LightSetReachOmni) | Lighting | Vocabulary |
 | `one_shot` | [Set One-Shot](ace:Core/SetOneShot) | Particles | Vocabulary |
 | `open` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
 | `open_door` | [Try Door](ace:Core/TryDoor) | Keys & Doors | Vocabulary |
@@ -730,7 +731,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
-| `shadow_enabled` | [Set Shadows On/Off](ace:Core/SetLightShadows) | Lighting | Vocabulary |
+| `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
 | `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
@@ -757,6 +758,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `spawn_path` | [Spawn A Scene](ace:Core/SpawnReplicatedScene) | Multiplayer | Vocabulary |
 | `speed_scale` | [Set Animation Speed](ace:Core/SetAnimationSpeed) | Animation | Vocabulary |
 | `split` | [Split Text](ace:Core/StringSplit) | Variables: String | Vocabulary |
+| `spot_angle` | [Set Cone Angle](ace:Core/LightSetConeAngle) | Lighting | Vocabulary |
+| `spot_range` | [Set Reach](ace:Core/LightSetReachSpot) | Lighting | Vocabulary |
 | `spring_length` | [Set Camera Distance](ace:Core/SetCameraDistance) | Native 3D | Vocabulary |
 | `sqrt` | [Square Root](ace:Core/MathSqrt) | Math & Random | Vocabulary |
 | `ssao_enabled` | [Set Ambient Occlusion On/Off](ace:Core/SetAmbientOcclusion) | Environment | Vocabulary |
@@ -783,6 +786,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `test_move` | [Is Overlapping At Offset](ace:Core/IsOverlappingAtOffset) | Collisions | Vocabulary |
 | `text` | [Get Text](ace:Core/GetLabelText) | General Expressions | Vocabulary |
 | `texture` | [Set Image](ace:Core/SetSpriteTexture) | Animation | Vocabulary |
+| `texture_scale` | [Set Reach](ace:Core/LightSetReach) | Lighting | Vocabulary |
 | `time_left` | [Get Time Left](ace:Core/GetTimerTimeLeft) | General Expressions | Vocabulary |
 | `time_scale` | [Time Scale](ace:Core/GetTimeScale) | Time | Vocabulary |
 | `timeout` | [Wait](ace:Core/Wait) | Time | Vocabulary |

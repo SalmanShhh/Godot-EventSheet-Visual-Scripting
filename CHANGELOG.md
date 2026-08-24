@@ -2,6 +2,50 @@
 
 ## [Unreleased]
 
+### Lighting - the light is the object
+
+- **A light is something you point at, not a parameter you fill in.** The sixteen Core lighting
+  actions take the light as their first field, so a row reads *Set light energy to 1.0* and which
+  light that is lives two clicks away. Thirty new node-scoped rows put the light in the object
+  column instead: **Torch ▸ Set brightness to 1.2**, **Turn on** / **Turn off**, **Turn shadows on**
+  / **off**, **Set reach to …**, **Set cone angle to …**, **Fade to N over S s**, the two questions
+  **Is on** and **Is casting shadows**, and the expressions that read brightness, colour and reach
+  back. The sixteen are untouched and keep compiling: their ids and templates are frozen, and a
+  sheet saved with one of them opens with it.
+- **One word, and the property your light really has.** A light has five things a game touches - how
+  bright, what colour, how far, on or off, shadows or not - and Godot spells every one of them
+  differently depending on which light you picked. The sheet says the one word in both dimensions
+  and the code echo shows the truth: brightness is `energy` on a 2D light and `light_energy` on a 3D
+  one, reach is `texture_scale`, `omni_range` or `spot_range`, and on/off is `enabled` in 2D but
+  `visible` in 3D, because a Light3D has no `enabled` at all. The mapping is DERIVED from the node's
+  class through ClassDB rather than kept as a table, so each row is hosted on the class that really
+  answers to it - a spot light is offered a cone angle, a directional light is offered no reach, and
+  a light class the engine adds resolves on the strength of ClassDB knowing it. The row's initial
+  value is the engine's own default for that property, asked rather than guessed.
+- **"Lights in this scene", in the picker.** The question a reader arrives with is *which of MY
+  lights*, so the picker offers one folder with a sub-folder per light of the attached scene, each
+  labelled with the class it is and whether it casts shadows, holding exactly the verbs that light's
+  class answers to - with the light already chosen, so the parameter dialog opens on the value. The
+  per-class groups and the sixteen Core actions are untouched beside it.
+- **A lit project opens on those rows.** `$Torch.energy = 1.2`, `torch.light_energy = 0.5`,
+  `get_node("Lantern").texture_scale = 1.5`, the on/off and shadow switches in both dimensions, and
+  the one-line tween a fade is - eighteen spellings, recognised as table entries and re-emitted BYTE
+  FOR BYTE, because each row stores the spelling it matched. The gate is the SCENE: a line becomes a
+  light row only when the attached scene (or a typed declaration in the file) says the node it names
+  really is a light. `$Door.visible = false` is a sentence half the objects in a game can say, so a
+  target whose class cannot be established stays a script block rather than being relabelled - and a
+  `visible` write on a 2D light is refused for the same reason, since only a 3D light switches with
+  it. Measured against two whole scenes and the hand-written scripts that light them.
+- **The two frozen switches read as words.** *Set light true* and *Set shadows true* were the rows
+  the Core actions drew; their dropdowns now carry labels, so they read *Set light on* / *Set light
+  off* and *Set shadows on* / *off* - the same words the reading already gave a hand-written
+  `enabled = false`. The keys are still `true` and `false`, which is what the template writes and
+  what every saved row holds.
+- **`EventSheetSceneLights`** answers what the scene says about a sheet's lights - every light with
+  its name, class, kind word, whether it casts shadows, its cull mask and the spelling a row
+  addresses it by - and what class one node reference is. A reader, like the replication reader
+  beside it: nothing is copied into the sheet, so the `.gd` round-trip is untouched.
+
 ### Tooling
 
 - **The test that writes into the shipped tree runs alone.** `pack_dependency_doctor_test` makes a probe pack under `eventsheet_addons/` and takes it away again; `pack_icons_test` asks every pack in that folder for its own icon. In one process they never overlap, and across two shards they are a race - the shards share one filesystem, so a red run appeared with nothing wrong in the tree. It declares `PARALLEL_UNSAFE` now, which is the repository's own mechanism for exactly this, and joins the serial tail. Adding four test files was enough to change the split and expose it.

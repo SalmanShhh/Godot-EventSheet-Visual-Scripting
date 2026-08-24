@@ -177,6 +177,20 @@ matchers, and they say so in a comment.
 19. **Some tests deliberately lint invalid GDScript.** "Parse Error" lines naming fixtures mid-suite
     are expected noise, and a segfault AFTER the verdict line is a known harmless teardown flake.
 
+20. **A whole picker CATEGORY can be barred from the reverse index.** `ace_lifter.gd`'s
+    `REVERSE_LIFT_EXCLUDED_CATEGORIES` names six ("Lighting", "AJAX", "Video", the three 3D pages),
+    and a descriptor filed under one of them never claims a line however specific its template is.
+    That is a feature - it is what lets a family gate its own lifts on something a template match
+    cannot know, like the attached scene saying a node really is a light - but it also means adding
+    a row to such a category and expecting hand-written code to open on it will silently do nothing.
+    Ask the family's own matcher first (the `EventForge*Lift.match_line` call in
+    `_consume_action_line`), and leave the general index to the lines nobody can say more about.
+
+21. **The l10n sweep matches the CALL, not the class.** Any `translate("...")` literal the editor
+    reaches needs a row in `TEMPLATE.csv` and a filled cell in all eight locales, in the SAME ORDER
+    in every file. One new word in a picker shelf label is one append to nine files; forgetting it
+    fails the suite in a place that names the locale, not the feature.
+
 ---
 
 ## 7. House style, in one place

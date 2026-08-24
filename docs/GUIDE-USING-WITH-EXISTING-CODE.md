@@ -1316,6 +1316,32 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     `put_packet` / `get_packet`, and the `var error = peer.create_client(...)` spelling that checks
     what the call answered. They still read line by line, and the head's **reads as** band counts
     them: *every networking line reads as a row - 9 of 9*, or the number it really is.
+  - **Lighting.** A light is an OBJECT, not a parameter: `$Torch.energy = 1.2` reads **Torch ▸ Set
+    brightness to 1.2**, and the word is the same in 2D and 3D while the code echo shows the property
+    your light really has. This half is a **lift** too - the row stores the spelling it matched, so
+    `$Torch`, the variable you held it in, and `get_node("Torch")` each come back exactly as you
+    wrote them.
+
+    The gate is the SCENE. A line only becomes a light row when the scene the sheet is attached to
+    (or a typed declaration in the file itself, `@onready var torch: PointLight2D = $Torch`) says the
+    node it names really is a light. `$Door.visible = false` is a sentence half the objects in a game
+    can say, so a node whose class cannot be established stays a script block with the usual Adopt
+    offer rather than being relabelled.
+
+    | What you wrote | Reads as |
+    | --- | --- |
+    | `$Torch.energy = 1.2`, `torch.light_energy = 0.5` | **Set brightness to …**, on the light the line names |
+    | `$Torch.color = Color("ffd9a1")`, `$Sun.light_color = …` | **Set colour to …** |
+    | `$Torch.enabled = false` (2D), `$Flashlight.visible = false` (3D - a Light3D has no `enabled`) | **Turn off**, and the `= true` twin **Turn on** |
+    | `$Torch.shadow_enabled = true` / `= false` | **Turn shadows on** / **Turn shadows off** |
+    | `$Torch.texture_scale`, `$Bulb.omni_range`, `$Flashlight.spot_range` | **Set reach to …**, whichever of the three that light answers to |
+    | `$Flashlight.spot_angle = 30.0` | **Set cone angle to 30.0** |
+    | `create_tween().tween_property($Lantern, "energy", 1.0, 0.5)` | **Fade to 1.0 over 0.5 s** |
+
+    What deliberately does NOT lift: a toggle (`light.shadow_enabled = not light.shadow_enabled`),
+    which no single row can say, and every line whose target the scene cannot show to be a light.
+    The sixteen Core lighting actions are untouched beside all of this - a sheet saved with one of
+    them opens with it.
   - **Navigation.** `agent.target_position = p` reads **Find path to p**, the
     direction-to-the-next-waypoint step reads **Move along path at speed**, with **(avoiding
     others)** when the file wires the `velocity_computed` callback, and `is_navigation_finished()`
