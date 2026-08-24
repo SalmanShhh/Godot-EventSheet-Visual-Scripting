@@ -1276,7 +1276,7 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     of these words, so neither is claimed.
   - **Multiplayer.** An `@rpc` function reads with its name in the condition lane -
     **Multiplayer ▸ On message Take Damage** with its parameter chips and its mode words muted
-    beside it (*from any peer · runs here too · reliable*). `f.rpc(10)` reads **Multiplayer ▸ Send
+    beside it (*from anyone · also here · reliable*). `f.rpc(10)` reads **Multiplayer ▸ Send
     Take Damage to everyone** with the payload as named chips, `f.rpc_id(1, 10)` reads **to the
     host**, `f.rpc_id(peer, 10)` reads **to peer**, `multiplayer.is_server()` reads **Is host**,
     `is_multiplayer_authority()` reads **Owns this object**, and `multiplayer.get_unique_id()` reads
@@ -1302,6 +1302,7 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `$Player.set_multiplayer_authority(id)`, `$Player.get_multiplayer_authority()` | **Give $Player to player id**, **Owner of $Player** |
     | `multiplayer.get_peers()`, `.size()`, `multiplayer.get_remote_sender_id()` | **Players**, **Player count**, **Sender** |
     | `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each re-emitting your own quoting |
+    | `@rpc(...)` above a function, in any order or subset of the options, with or without a channel | that function's **message** row and its words, with the annotation itself as the row's echo - and back verbatim when the dialog is confirmed unchanged |
     | `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
     | the four lines of an automatic spawn - `var p = load(...).instantiate()`, `p.name = ...`, `p.position = ...`, `$Spawner.get_node($Spawner.spawn_path).add_child(p, true)` | one **Spawn scene named at** row, re-emitting your own variable name, your `load` or `preload`, and whether you passed `true` |
     | `$Spawner.spawned.connect(...)`, `despawned`, `$Sync.synchronized.connect(...)` | **On spawned** / **On despawned** / **On synchronized**, on the node in the object column |

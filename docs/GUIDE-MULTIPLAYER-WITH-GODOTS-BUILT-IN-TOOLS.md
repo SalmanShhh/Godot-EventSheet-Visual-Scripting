@@ -6,9 +6,27 @@ Playing together over a network, as rows. Nothing here is a networking layer: ev
 sheet writes is the script the Godot documentation would have you write by hand, and a project that
 already wrote those lines opens on the same rows.
 
-This page covers hosting and joining, the events the connection fires, the lobby and the
-handshake, who is allowed to run what, spawning a scene on every peer and deciding who may see it,
-and the fields the dialogs explain while you fill them in.
+This page covers hosting and joining, the events the connection fires, the messages peers send each
+other, who is allowed to run what, spawning a scene on every peer, keeping a value in step and
+deciding who may see it, the lobby and the handshake, testing the whole thing as two players, the
+four mistakes the Project Doctor knows, and what a networked project you already wrote opens as.
+
+## Table of Contents
+
+1. [Host a game, join a game, leave](#host-a-game-join-a-game-leave)
+2. [The events the connection fires](#the-events-the-connection-fires)
+3. [Who is in the game, and who sent this](#who-is-in-the-game-and-who-sent-this)
+4. [Messages: the calls that travel](#messages-the-calls-that-travel)
+5. [Who runs what](#who-runs-what)
+6. [Objects have owners](#objects-have-owners)
+7. [Spawning a scene on every peer](#spawning-a-scene-on-every-peer)
+8. [Keeping a value in step](#keeping-a-value-in-step)
+9. [Who is allowed to see it](#who-is-allowed-to-see-it)
+10. [The lobby and the handshake](#the-lobby-and-the-handshake)
+11. [The fields, explained while you fill them in](#the-fields-explained-while-you-fill-them-in)
+12. [Testing it as two players](#testing-it-as-two-players)
+13. [The four mistakes the Doctor knows](#the-four-mistakes-the-doctor-knows)
+14. [Slotting into a project you already wrote](#slotting-into-a-project-you-already-wrote)
 
 ## Host a game, join a game, leave
 
@@ -30,6 +48,8 @@ func _on_host_button_pressed() -> void:
 ```
 
 Join a game is the same three lines with `create_client` and an address instead:
+
+<!-- caption: Join a game at 127.0.0.1 port 7000 - the same three lines, pointed at a host. -->
 
 ```gdscript
 extends Control
@@ -58,8 +78,8 @@ means "I knocked"; what happened next arrives as an event.
 Seven, one per `MultiplayerAPI` signal, connected in `_ready` exactly as a hand-written script
 connects them. **Add event ▸ Multiplayer** sorts them onto three shelves:
 
-- **Players** - *On player joined*, *On player left*, *On player authenticating*, *On
-  authentication failed*. Each hands you that player's id as a chip every row beneath can use.
+- **Players** - *On player joined*, *On player left*, *On player authenticating*,
+  *On authentication failed*. Each hands you that player's id as a chip every row beneath can use.
 - **Connection** - *On joined the host*, *On join failed*, *On the host left*. None of them is about
   a particular player; they say what happened to this peer's own connection.
 - **Scenes** - what a `MultiplayerSpawner` or a `MultiplayerSynchronizer` in the scene just did.
@@ -121,6 +141,8 @@ starting); the two fast ones are for a value that is replaced several times a se
 
 The row then reads the annotation back in those words and echoes the line itself at its right edge:
 
+<!-- caption: A message, and the row it reads as: message take_damage(amount)  from the owner · also here · reliable -->
+
 ```gdscript
 extends CharacterBody2D
 
@@ -131,8 +153,6 @@ var hp: int = 100
 func take_damage(amount: int) -> void:
 	hp -= amount
 ```
-
-<!-- caption: A message, and the row it reads as: message take_damage(amount)  from the owner · also here · reliable -->
 
 Read as an event, the same head says **On message take_damage** - because a message is not a
 function this peer calls, it is one that arrives. An option Godot does not take (a typo in the
@@ -175,6 +195,8 @@ it: **Edit group… ▸ Runs on**, or right-click the head ▸ **Runs On**.
 
 The head shows the answer as one muted word beside the group's name, and the compiler wraps the
 group's events in the matching test:
+
+<!-- caption: A group that runs on the owner, and the test the compiler wraps its events in. -->
 
 ```gdscript
 extends CharacterBody2D
@@ -268,6 +290,41 @@ If a spawner builds its copies out of a value instead of from a scene path - a d
 its `spawn_function` - that is the older **Spawn** row, which writes `$Spawner.spawn(data)` and says
 nothing about the list.
 
+## Keeping a value in step
+
+A `MultiplayerSynchronizer` is the node that copies named properties from the peer that owns an
+object to every other peer. Which properties, in which mode and how often are the SCENE's facts
+rather than the script's: Godot writes them into the `.tscn` from its own Replication panel, and the
+sheet reads them instead of keeping a second copy.
+
+That reading reaches you in three places:
+
+- **On the sheet head**, one *keeps in step* band per synchronizer watching this object -
+  *PlayerSync · position, hp always · nickname at spawn · every 0.05 s · seen by everyone* - whose
+  control opens that scene on that node, because the Replication panel is the other editor of the
+  same fact.
+- **On the variable row**, a 15px mark after the name: a box with two short bars in it, hovering
+  *PlayerSync · on change*.
+- **In the row's own menu**: right-click a variable ▸ **Keep in Step ▸** Off / Always / On change /
+  At spawn only, and the same dropdown in **Edit variable… ▸ More options**. The write goes into the
+  scene as one step of the SCENE's undo history, and the menu offers to add a synchronizer when the
+  scene has none yet.
+
+| Mark | Mode | What it does at runtime |
+| --- | --- | --- |
+| solid | always | sent every tick, whether the value changed or not |
+| dotted | on change | sent when the value moves, and not otherwise |
+| dashed | at spawn | sent once, with the copy, and never again |
+
+Two things follow from a value being kept in step. It travels from the OWNER outwards, so a peer
+that does not own the object may write its copy and have the next packet overwrite it - which is why
+editing such a value on the canvas says `set by the owner` beside the field. And every value the
+host changes that nothing keeps in step and no message carries stays on the host: that is the second
+of the four findings below, and this menu is its one-click fix.
+
+Nothing is written into the `.gd` for any of it. A sheet whose scene has no synchronizer gets no
+bands, no marks and no menu entry, and the file round-trips byte for byte either way.
+
 ## Who is allowed to see it
 
 A `MultiplayerSynchronizer` copies the properties it lists from the owner to everybody else. By
@@ -319,10 +376,6 @@ again with nothing to clean up.
 values, which is where something has to answer a value that ARRIVED rather than one this peer
 changed itself.
 
-Which properties a synchronizer keeps in step, how often, and whether it is public are the scene's
-own facts, edited in Godot's Replication panel and the Inspector. The sheet reads them - the head's
-*keeps in step* band and the sync mark on a variable row - and never stores a second copy.
-
 ## The lobby and the handshake
 
 Once players are arriving, four more rows run the lobby:
@@ -343,6 +396,24 @@ as joined. **On player authenticating** runs on the host while the peer is still
 before On player joined - and it is answered with **Accept player** (`complete_auth`) or **Reject
 player**. **Send auth** is how either side sends the bytes the other checks. A peer that is never
 answered simply waits, so every handshake needs one of the two.
+
+<!-- caption: A host that lets everybody in, and closes the lobby when the match starts. -->
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	multiplayer.peer_authenticating.connect(_on_player_authenticating)
+
+
+func start_the_match() -> void:
+	multiplayer.multiplayer_peer.refuse_new_connections = true
+
+
+func _on_player_authenticating(id: int) -> void:
+	multiplayer.complete_auth(id)
+```
 
 ## The fields, explained while you fill them in
 
@@ -370,8 +441,10 @@ is attached to. Nothing about it is this plugin's: the button writes the editor'
 dialog shows what it wrote, and unticking **Enable Multiple Instances** there turns it off again.
 Anything else you had set per instance, such as launch arguments, is left exactly as it was.
 
-The tags are what let one project host itself and join itself. **Started as** is `OS.has_feature`,
-so an On ready event can ask which copy it is:
+The tags are what let one project host itself and join itself. **Started as** writes
+`OS.has_feature`, so an On ready event can ask which copy it is (a file that already asks that
+question keeps the older **Platform Has Feature** row it was written with - one line, two ways of
+picking it):
 
 <!-- caption: One project, two windows: the copy started with the host tag opens the game, the other joins it. -->
 
@@ -387,13 +460,25 @@ func _ready() -> void:
 ```
 
 Put **Join a game at 127.0.0.1 port 7000** on the Else beneath it and both windows sort themselves
-out on launch. The same condition is how a dedicated server knows what it is: Godot's own Dedicated
-Server export preset sets the `dedicated_server` tag, and that build is run with `--headless`.
+out on launch.
 
 While both are running, a variable row's live value grows one chip per instance, headed by the tag
 that copy was started with: `host · now 100   client · now 90`. A lone run is not labelled at all,
 because there is nothing to tell apart. Godot's own Debugger ▸ Network tab is where the per-message
 send and receive counts live; the editor keeps those to itself, so the sheet does not repeat them.
+
+### As a dedicated server
+
+A dedicated server is the same project running where nobody is playing. Godot's own Dedicated Server
+export preset sets the `dedicated_server` feature tag and leaves out what a server has no use for,
+and the build is started with `--headless` - no window, no rendering, no audio.
+
+Nothing about the sheet changes for it. **Started as dedicated_server** is the row that tells that
+build apart, **Host a game** is the same row it always was, and the peers that join are the same
+peers - a server is simply a host with no player on it, still peer 1. What such a build must not do
+is anything that expects a screen or a player, so keep the rows that draw, play a sound or read
+input out of the events a server runs, and let messages and the values kept in step carry the
+result to the peers that do have a screen.
 
 ## The four mistakes the Doctor knows
 
@@ -431,19 +516,43 @@ rather than starting a second report.
 ## Slotting into a project you already wrote
 
 Everything above is also a READING. A networked project written before this plugin existed opens on
-these rows without a byte changing, because the importer recognises the spellings people actually
-publish - the three-line host and join blocks, `peer.close()`, the `get_tree().get_multiplayer()`
-spelling, `multiplayer.<signal>.connect(...)` for every one of the seven signals, `$Spawner.spawn(id)`
-and the message sends. The scene side reads too: the four-line automatic spawn above, the spawner's
-own `spawned` and `despawned` connects, `synchronized`, `set_visibility_for`, `public_visibility` and
-`add_visibility_filter`. Each recogniser stores the spelling it matched on the row and re-emits that,
-so the file that opened is the file that saves.
+these rows without a byte changing, because each recogniser stores the spelling it matched ON the
+row and re-emits that spelling - so the file that opened is the file that saves, and nothing on disk
+changes until you edit a row, and then only that row's lines.
+
+This is the whole table of what is recognised. Where two spellings of one thing are listed together,
+both open as the same row and each saves back as itself:
+
+| What you wrote | Reads as |
+| --- | --- |
+| `var peer := ENetMultiplayerPeer.new()`, `peer.create_server(PORT, MAX)`, `multiplayer.multiplayer_peer = peer` - the three-line form Godot's own documentation uses | **Host a game on port PORT for up to MAX players** |
+| the same three lines with `peer` declared at the top of the file instead of beside them | the same row, using that variable |
+| the `create_client(address, PORT)` twin of either | **Join a game at address port PORT** |
+| `multiplayer.multiplayer_peer = null`, `peer.close()`, or the `get_tree().get_multiplayer()` spelling of the first | **Leave the game** |
+| `WebSocketMultiplayerPeer` or `WebRTCMultiplayerPeer` in the constructor | the same rows, with that peer kind |
+| `multiplayer.<signal>.connect(...)` for any of the seven signals | the seven events, with the connect line re-emitted exactly as written |
+| `@rpc(...)` above a function, in any order or subset of the options, with or without a channel | that function's **message** row and its words, with the annotation itself as the row's echo |
+| `f.rpc(10)`, `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `f.rpc_id(peer, 10)`, `$Other.f.rpc(...)` | the three **Send** rows, each keeping your own quoting |
+| `multiplayer.multiplayer_peer.disconnect_peer(id)`, `refuse_new_connections = true`, `multiplayer.server_relay = false` | **Kick player**, **Stop accepting players**, **Relay messages between players off** |
+| `multiplayer.complete_auth(id)`, `multiplayer.send_auth(id, bytes)` | **Accept player**, **Send auth** |
+| `multiplayer.get_peers()`, `.size()`, `multiplayer.get_remote_sender_id()`, `X.get_multiplayer_authority()` | **Players**, **Player count**, **Sender**, **Owner of X** |
+| `OS.has_feature("dedicated_server")` | **Platform Has Feature** - the same line **Started as** writes, so a file that already asked keeps the row it was written with |
+| `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())` or `(id, true)` in `_enter_tree` or `_ready` | the head's owner band - who owns this object |
+| `if not is_multiplayer_authority(): return`, and the `if is_multiplayer_authority():` that wraps a whole body (the `multiplayer.is_server()` pair too) | who runs this function; the early-return form keeps its `return` |
+| `## @ace_group(name="Scoring", runs_on="host")` and the guard the group wraps its events in | the group's **Runs on** word, with the guard off the rows |
+| the four lines of an automatic spawn - instantiate, name, place, `add_child(copy, true)` under the spawner's `spawn_path` | one **Spawn a scene** row, re-emitting your own variable name, your `load` or `preload`, and whether you passed `true` |
+| `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
+| `$Spawner.spawned.connect(...)`, `despawned`, `$Sync.synchronized.connect(...)` | **On spawned** / **On despawned** / **On synchronized**, on that node |
+| `set_visibility_for(id, true)` / `(id, false)`, `public_visibility = true`, `add_visibility_filter(f)` | **Show to player** / **Hide from player** / **Show to everyone** / **Ask f who may see it** |
 
 One line deliberately does NOT become a networking row: `queue_free()`. It is what **Despawn**
 writes, but it is also the line every project writes to remove any node at all - the networked
 meaning is in WHERE it runs, not in the line - so a bare `queue_free()` still reads **Queue free**,
 and Despawn is a row you author rather than one a reading hands you.
 
-What no row can say stays code, on purpose and visibly: a `create_server` with channel and bandwidth
-limits, ENet compression, packets put on the wire by hand. Those lines keep their script block, and
-the per-script count in the Project Doctor reports honestly how much of a script arrived as rows.
+What no row can say stays code, on purpose and visibly: a `create_server` given channel or bandwidth
+limits, `peer.host.compress(...)`, packets put on the wire by hand, and the
+`var error = peer.create_client(...)` spelling that checks what the call answered. Those lines keep
+their script block, and the sheet counts them out loud rather than rounding up:
+*every networking line reads as a row - 9 of 9*, or the number it really is, on the head and again
+per script in the Project Doctor's Multiplayer section.

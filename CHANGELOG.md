@@ -583,94 +583,40 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   a hand-written block beyond the fact being edited. The band stands for the first `## ` line, echoes
   exactly that line, and the rewrite replaces that one line and leaves the block's other lines where
   their author put them (the sheet's own `class_description` field included).
-### Multiplayer - the networking you already wrote opens as rows
+### Multiplayer - playing together, in the sheet's own words
 
-- **Hosting, joining and leaving are rows now.** **Host a game on port 7777 for up to 4 players**,
+Nothing in this wave is a networking layer. Every row compiles to exactly the Godot call it names
+(`ENetMultiplayerPeer`, `MultiplayerAPI`'s own signals, `@rpc`, `set_multiplayer_authority`,
+`MultiplayerSpawner`, `MultiplayerSynchronizer`, `OS.has_feature`), every mark is READ from the
+script or from the scene rather than stored a second time, and a project that never hosts compiles
+to exactly what it compiled to before.
+
+- **Hosting, joining and leaving are rows.** **Host a game on port 7777 for up to 4 players**,
   **Join a game at 127.0.0.1 port 7777** and **Leave the game** sit on the Multiplayer object beside
   the messages that were already there, and each writes exactly the Godot lines it names - a peer of
   the kind you picked (ENet, WebSocket or WebRTC), its `create_server` / `create_client`, and
-  `multiplayer.multiplayer_peer`. Nothing here is a networking layer.
-- **The five things the connection tells you are five events.** **On player joined**, **On player
-  left**, **On joined the host**, **On join failed** and **On the host left** are ordinary signal
-  triggers, connected in `_ready` on `multiplayer` exactly as a hand-written script connects them.
-  **Spawn** is the MultiplayerSpawner's own call, with the node it belongs to in the object column.
-- **A multiplayer project you already wrote opens as those rows, without changing a byte.** The
-  importer learned the spellings people actually publish: `peer.create_server(PORT, 4)` followed by
-  `multiplayer.multiplayer_peer = peer` with a peer declared at the top of the file, the three-line
-  local-peer form Godot's own documentation uses, `peer.close()`, the `get_tree().get_multiplayer()`
-  spelling, `multiplayer.<signal>.connect(...)` for all five signals, `$Spawner.spawn(id)` and
-  `spawner.spawn({...})`, and the message sends nothing could read before - `rpc("f", 10)`,
-  `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)` and `$Other.rpc(&"f")`. Every
-  recogniser stores the spelling it matched ON the row and re-emits it, so the file that opened is
-  the file that saves.
-- **What no row can say stays code, and says so.** A `create_server` with channel and bandwidth
-  limits, ENet compression, packets put on the wire by hand and the error-returning `create_client`
-  Godot's docs use are all refused rather than guessed at, and a new per-script count -
-  *every networking line reads as a row - 9 of 9* - reports honestly how much of a script arrived as
-  rows. Who owns an object (`set_multiplayer_authority` in its three spellings) and who is allowed to
-  run a function (the early-return and whole-body guards, for the owner and for the host) are read
-  as facts about the script.
-- **The scene's half of multiplayer is read, and it is read where you already are.** Godot keeps the
-  list of properties a `MultiplayerSynchronizer` replicates in the `.tscn`, written by the Inspector
-  and the Replication panel, so a sheet that only read the `.gd` showed `hp` as an ordinary variable
-  while the running game shipped it across the network every frame. The head now carries a
-  **keeps in step** band per synchronizer - *PlayerSync · position, hp always · nickname at spawn ·
-  every 0.05 s · seen by everyone* - and a **spawned by** band when another scene's spawner lists
-  this one, each echoing the lines of the scene file it came from, and each opening that scene on
-  that node, because the Replication panel and the Inspector are the other editors of the same fact.
-- **The sync mark: 15px, and it says which mode.** A variable a synchronizer watches wears a box with
-  two short bars in it after its name - solid for *always*, dotted for *on change*, dashed for
-  *at spawn* - hovering "PlayerSync · on change". Editing the value in place says `set by the owner`
-  beside the field, because at runtime the value comes from whoever owns the object. **Nothing is
-  written into the script for any of it**: the marks and the bands are derived on every draw, so a
-  `.gd` still round-trips byte for byte and a project with no scenes gains nothing at all.
-- **Keep in step, from the row and from the dialog.** Right-click a variable ▸ **Keep in Step ▸**
-  Off / Always / On change / At spawn only (the submenu led by the synchronizer holding the mode, or
-  offering *Add a synchronizer to Player…* when the scene has none), and the same dropdown in
-  **Edit variable… ▸ More options**. Every write goes into the SCENE through `EditorInterface`, as one
-  step of the scene's own undo history - the Replication panel shows it immediately and Ctrl+Z there
-  takes it back, so the fact is never stored twice.
-- **`EventSheets.synced_properties(sheet)` and `EventSheets.spawners_of(sheet)`** publish the seam, so
-  a pack that adds its own networking reads the same scene facts the canvas does instead of writing a
-  second parser: every replicated property with its mode, interval and visibility, and every spawner
-  the sheet is about - the ones in its own scene and the ones elsewhere that can make it, told apart
-  by `relation`. `spawn_function` is read from the scene's GDScript, because Godot never stores a
-  Callable in a `.tscn`.
-- **Fixed: one plain helper between a `_ready` and its handlers no longer sinks the whole file.**
-  A lobby autoload that connects its signals in `_ready`, then defines a helper, then its handlers,
-  used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to
-  an event, and its connect line was then written twice - failing the byte-verify and reverting every
-  function in the file to a script block. Handlers now wait for the `_ready` that wires them.
-- **The lobby, the handshake and the questions a networked script asks are rows now.** **Kick
-  player**, **Stop accepting players** and **Relay messages between players off** run a lobby;
-  **Accept player** / **Reject player** / **Send auth** answer the handshake; **Give Player to
-  player 2** hands one object to one peer. **Is connected** and **Started as dedicated_server**
-  ask what state this build is in, and **Players**, **Player count**, **Sender** and **Owner of
-  Player** are the four values a networked rule reaches for. Each writes exactly one Godot call -
-  `disconnect_peer`, `refuse_new_connections`, `server_relay`, `complete_auth`, `send_auth`,
-  `set_multiplayer_authority`, `get_connection_status`, `OS.has_feature`, `get_peers`,
-  `get_remote_sender_id`, `get_multiplayer_authority` - and every parameter carries a real
-  description, because that reference page is derived from the vocabulary itself.
-- **Two more events, off Godot's own signals.** **On player authenticating** and **On authentication
-  failed** connect to `peer_authenticating` and `peer_authentication_failed` in `_ready` like every
-  other signal trigger, and a script that already connected them by hand opens on them.
-- **Add event ▸ Multiplayer sorts onto three shelves.** *Players* (who arrived, who left, who is
-  still proving who they are), *Connection* (this peer got in, was refused, or lost the host) and
+  `multiplayer.multiplayer_peer`. They are one row rather than three because they are one decision:
+  a reader who splits them has a half-connected game.
+- **The seven things the connection tells you are seven events.** **On player joined**, **On player
+  left**, **On joined the host**, **On join failed**, **On the host left**, **On player
+  authenticating** and **On authentication failed** are ordinary signal triggers, connected in
+  `_ready` on `multiplayer` exactly as a hand-written script connects them.
+- **Add event ▸ Multiplayer sorts them onto three shelves.** *Players* (who arrived, who left, who
+  is still proving who they are), *Connection* (this peer got in, was refused, or lost the host) and
   *Scenes* (what a spawner or a synchronizer just did), each with a line saying what it holds. Which
   shelf a trigger lands on is DERIVED from the trigger - one that hands you a player id is about a
   player, one that names a node in the scene is about that node - so a trigger added later is filed
   without a list being edited, and every action, condition and expression stays in the one flat
   Multiplayer section where it always was.
-- **The networking fields explain themselves while you fill them in.** The Parameters dialog's help
-  strip now has paragraphs for an address, a port, a peer kind and a player count - which ports are
-  free and which need admin rights, why 127.0.0.1 only reaches this machine, what each connected
-  player costs the host every tick - and the peer-kind dropdown carries a line under each choice
-  (ENet is the default, WebSocket is the one a browser export can open, WebRTC needs a signalling
-  server you run). They live in the shared hint table, so a pack that ships a hosting row of its own
-  gets the same words for nothing.
-
-### Multiplayer - a message says who may send it, where it runs, and how it travels
-
+- **The lobby, the handshake and the questions a networked script asks are rows.** **Kick player**,
+  **Stop accepting players** and **Relay messages between players off** run a lobby; **Accept
+  player** / **Reject player** / **Send auth** answer the handshake; **Give Player to player 2**
+  hands one object to one peer. **Is connected** and **Started as dedicated_server** ask what state
+  this build is in, and **Players**, **Player count**, **Sender** and **Owner of Player** are the
+  four values a networked rule reaches for. Each writes exactly one Godot call - `disconnect_peer`,
+  `refuse_new_connections`, `server_relay`, `complete_auth`, `send_auth`,
+  `set_multiplayer_authority`, `get_connection_status`, `OS.has_feature`, `get_peers`,
+  `get_remote_sender_id`, `get_multiplayer_authority`.
 - **Marking a function as a message is four questions in words, not a string nobody reads.**
   Right-click a function row and **Make It A Message…** opens a dialog in the shape every other one
   here has: **Who may send** (*Anyone* / *Only the owner*), **Where it runs** (*On the others* /
@@ -700,13 +646,6 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
 - **A Send row belongs to the object whose function the message is.** The same rule a row that
   changes a variable already follows: `Player ▸ Send take_damage(10) to everyone`, rather than filing
   every message under the Multiplayer object.
-- **The list is public.** `EventSheets.sheet_messages(sheet)` answers every message a sheet
-  publishes - name, parameters, the annotation, its words, and the amber note an unreadable one
-  earns - and `EventSheets.message_annotation(original, answers)` writes one back under the same
-  byte-exact rule, so a pack building its own send surface offers exactly what the shipped one does.
-
-### Multiplayer - a group says who runs it
-
 - **Who runs these events is one word on the group, not a condition on every row.** A group carries
   **Runs on**: *Everyone* (the default, which writes nothing at all), *The host*, or *The owner*. The
   head shows the answer as one muted word beside the name, the compiler wraps the group's events in
@@ -724,16 +663,13 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   guard is taken off the events on the way in - so a saved sheet reopens with the word on the group
   instead of a repeated condition, and re-saving it reproduces the file byte for byte, guard
   included. Single player is untouched either way: `multiplayer.is_server()` is true with no peer.
-
-### Multiplayer - the scene's own two nodes have words now
-
-- **Spawn a scene on every peer, from the spawner's own row.** **Spawn** on a `MultiplayerSpawner`
-  asks four things - which scene, what to call the copy, where to put it, and which spawner is
-  watching - and writes the four lines Godot's automatic spawning IS: make the copy, name it, place
-  it, and hand it to the node the spawner watches. Named before it joins the tree, because the name
-  travels with the copy and is what lets the peer it belongs to own it. **Despawn** is the other
-  half and is the one line it says, `queue_free()`, run on the owner with the spawner replicating
-  the removal.
+- **Spawn a scene on every peer, from the spawner's own row.** **Spawn a scene** on a
+  `MultiplayerSpawner` asks four things - which scene, what to call the copy, where to put it, and
+  which spawner is watching - and writes the four lines Godot's automatic spawning IS: make the copy,
+  name it, place it, and hand it to the node the spawner watches. Named before it joins the tree,
+  because the name travels with the copy and is what lets the peer it belongs to own it. **Despawn**
+  is the other half and is the one line it says, `queue_free()`, run on the owner with the spawner
+  replicating the removal.
 - **Picking a scene the spawner does not know makes the SCENE say so too.** The *Scene* field offers
   the spawner's *Auto spawn list* and still takes any path; when the path is not in the list the help
   strip says so while the field has focus, and pressing OK adds it to the list as one step of the
@@ -750,15 +686,26 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   names then leads its own row with the words `visibility filter` and says which synchronizer asks
   it. Nothing is written into the `.gd` for that mark - being a filter IS the row that hands the
   function over, so deleting the row makes it an ordinary function again.
-  `EventSheets.sheet_visibility_filters(sheet)` is the same list, public.
-- **All of it reads back.** A project that already wrote those lines opens on these rows: the
-  four-line spawn (re-emitting your own variable name, your `load` or `preload`, and whether you
-  passed `true`), the three connects, and the four visibility calls. `queue_free()` deliberately
-  stays **Queue free** - it is the line every project writes to remove any node at all, and the
-  networked meaning is in where it runs, not in the line.
-
-### Multiplayer - two players in one click, and the four mistakes nobody sees
-
+- **The scene's half of multiplayer is read, and it is read where you already are.** Godot keeps the
+  list of properties a `MultiplayerSynchronizer` replicates in the `.tscn`, written by the Inspector
+  and the Replication panel, so a sheet that only read the `.gd` showed `hp` as an ordinary variable
+  while the running game shipped it across the network every frame. The head now carries a
+  **keeps in step** band per synchronizer - *PlayerSync · position, hp always · nickname at spawn ·
+  every 0.05 s · seen by everyone* - and a **spawned by** band when another scene's spawner lists
+  this one, each echoing the lines of the scene file it came from, and each opening that scene on
+  that node, because the Replication panel and the Inspector are the other editors of the same fact.
+- **The sync mark: 15px, and it says which mode.** A variable a synchronizer watches wears a box with
+  two short bars in it after its name - solid for *always*, dotted for *on change*, dashed for
+  *at spawn* - hovering "PlayerSync · on change". Editing the value in place says `set by the owner`
+  beside the field, because at runtime the value comes from whoever owns the object. **Nothing is
+  written into the script for any of it**: the marks and the bands are derived on every draw, so a
+  `.gd` still round-trips byte for byte and a project with no scenes gains nothing at all.
+- **Keep in step, from the row and from the dialog.** Right-click a variable ▸ **Keep in Step ▸**
+  Off / Always / On change / At spawn only (the submenu led by the synchronizer holding the mode, or
+  offering *Add a synchronizer to Player…* when the scene has none), and the same dropdown in
+  **Edit variable… ▸ More options**. Every write goes into the SCENE through `EditorInterface`, as one
+  step of the scene's own undo history - the Replication panel shows it immediately and Ctrl+Z there
+  takes it back, so the fact is never stored twice.
 - **Play as host + client, from the toolbar.** Testing a networked game needs two copies of it
   running, and Godot can already do that (Debug ▸ Run Multiple Instances) without anybody finding
   it. A button beside Run Scene sets that dialog to two instances, tags the first `host` and the
@@ -794,6 +741,52 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   the diff can be shown, then the four findings. It ships as an EXTENSION check registered through
   `EventSheets.register_doctor_check`, the same public seam a pack uses, so a pack that adds its own
   networking adds its scripts to this section instead of starting a second report.
+- **A multiplayer project you already wrote opens as these rows, without changing a byte.** The
+  importer learned the spellings people actually publish: `peer.create_server(PORT, 4)` followed by
+  `multiplayer.multiplayer_peer = peer` with a peer declared at the top of the file, the three-line
+  local-peer form Godot's own documentation uses, `peer.close()`, the `get_tree().get_multiplayer()`
+  spelling, `multiplayer.<signal>.connect(...)` for all seven signals, `@rpc(...)` in any option
+  order or subset, the message sends nothing could read before (`rpc("f", 10)`, `rpc(&"f", 10)`,
+  `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")`), the guards that say who runs a
+  function, `set_multiplayer_authority` in its three spellings, `$Spawner.spawn(id)`, the four lines
+  of an automatic spawn, the spawner's own `spawned` and `despawned` connects, `synchronized`, and
+  the four visibility calls. Every recogniser stores the spelling it matched ON the row and re-emits
+  it, so the file that opened is the file that saves. `queue_free()` deliberately stays **Queue
+  free**: it is the line every project writes to remove any node at all, and the networked meaning is
+  in where it runs, not in the line.
+- **What no row can say stays code, and says so.** A `create_server` with channel and bandwidth
+  limits, ENet compression, packets put on the wire by hand and the error-returning `create_client`
+  Godot's docs use are all refused rather than guessed at, and a per-script count -
+  *every networking line reads as a row - 9 of 9* - reports honestly how much of a script arrived as
+  rows.
+- **The networking fields explain themselves while you fill them in.** The Parameters dialog's help
+  strip now has paragraphs for an address, a port, a peer kind and a player count - which ports are
+  free and which need admin rights, why 127.0.0.1 only reaches this machine, what each connected
+  player costs the host every tick - and the peer-kind dropdown carries a line under each choice
+  (ENet is the default, WebSocket is the one a browser export can open, WebRTC needs a signalling
+  server you run). They live in the shared hint table, so a pack that ships a hosting row of its own
+  gets the same words for nothing.
+- **The seams are public, so a pack can do all of it too.** `EventSheets.synced_properties(sheet)`
+  and `EventSheets.spawners_of(sheet)` answer what the scene keeps in step and what can spawn this
+  scene (`spawn_function` read from the scene's GDScript, because Godot never stores a Callable in a
+  `.tscn`); `EventSheets.sheet_messages(sheet)` and `EventSheets.message_annotation(original,
+  answers)` read and write the `@rpc` words under the same byte-exact rule the dialog uses;
+  `EventSheets.sheet_visibility_filters(sheet)` lists the functions a synchronizer asks; and the
+  Doctor section is registered through `EventSheets.register_doctor_check`. Their shapes freeze like
+  the ace ids.
+- **All of it is documented where you are.** A new guide - *Multiplayer with Godot's Built-in Tools* -
+  covers hosting and joining, the seven events, messages, who runs what, spawning, keeping a value in
+  step, who may see it, the lobby and the handshake, testing as two players and as a dedicated
+  server, the four findings, and a table of every spelling a project you already wrote opens as. Ten
+  of its worked examples are live figures, drawn by the real renderer with an Insert button. The
+  Manual's tutorials gained **Your first networked game** - ten steps against the real controls,
+  each completing when the sheet contains what it asked for - and the migration guide's concept map
+  now names where the multiplayer plugin you knew goes.
+- **Fixed: one plain helper between a `_ready` and its handlers no longer sinks the whole file.**
+  A lobby autoload that connects its signals in `_ready`, then defines a helper, then its handlers,
+  used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to
+  an event, and its connect line was then written twice - failing the byte-verify and reverting every
+  function in the file to a script block. Handlers now wait for the `_ready` that wires them.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

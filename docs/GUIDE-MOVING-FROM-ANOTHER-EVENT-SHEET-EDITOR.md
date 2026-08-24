@@ -54,6 +54,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | The expression language | **GDScript** - there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
 | Functions (event sheets) | Sheet functions - callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** action) |
+| Multiplayer plugin | **Multiplayer object** - Host a game / Join a game / Leave the game, the seven events the connection fires, `@rpc` messages answered as four questions in words, a group that says who runs it (everyone / the host / the owner), and the scene's `MultiplayerSpawner` and `MultiplayerSynchronizer` as verbs. Not a row-for-row twin of the plugin you know: every row is Godot's own high-level multiplayer call, which is also why a networked project you already wrote opens on these same rows |
 | Timer behavior | **TimerBehavior pack** (Start/Stop Timer, On Timer) - or a Timer node + `On Timeout` |
 | Flash / Tween behaviors | **FlashBehavior pack** (Flash, On Flash Finished); tweens via a GDScript block (`create_tween()…`) |
 
@@ -254,6 +255,7 @@ The picker wraps the native feature:
 | Particles plugin | **GPUParticles2D / CPUParticles2D** group (control emission + one-shot bursts) |
 | Tilemap / Tiled Background | **TileMapLayer** group (read / write / erase cells from events) |
 | Timeline (keyframe animation) | **AnimationPlayer** + **AnimationTree** vocabulary (play, travel to state, set blend params, is playing) |
+| Multiplayer plugin | **Multiplayer** object (Host a game, Join a game, the connection's own events, `@rpc` messages, spawn on every peer, keep a value in step, who may see it) - Godot's high-level multiplayer, one row per call |
 | Persist behavior | the **Save System** pack (save / load game state), or Godot's `ConfigFile` / `ResourceSaver` directly |
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
@@ -286,7 +288,6 @@ shared behavior packs for shared ACEs - so you can also drop to that lower level
 
 ### Lane 3 - use the Godot feature directly
 
-Multiplayer (high-level multiplayer API),
 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
 i18n (Godot translations).
 
@@ -638,7 +639,10 @@ words are written into the file, and the report names it with a reason:
   Movement behaviour covers this - attach it and add the row from its own words."
 - **A row with no word here yet** ("No row here spells this yet").
 - **A JavaScript block.** It is not GDScript; the report says so and the code is kept as a comment.
-- **AJAX and multiplayer.** No pack ships these yet.
+- **AJAX.** Nothing here speaks HTTP yet - the report says so and the request stays a script block.
+- **The multiplayer plugin.** Multiplayer here is Godot's own, not a row-for-row twin, and the report
+  says exactly that. The rebuilt version goes on the sheet's own **Multiplayer** object - hosting,
+  joining, the connection's events, messages and who runs what.
 
 A row that *did* map but whose parameter could not be translated is kept as written and **flagged**
 in the report, so you know exactly which values still need a human. Every value the wizard could not
@@ -680,7 +684,7 @@ C3 families map to the family marker plus group iteration here - pick-by-family 
 
 ### 5. The plugins with no equivalent
 
-Multiplayer and XML route to Godot's native features - the migration table names each destination so nothing dead-ends.
+XML routes to JSON, and the multiplayer plugin routes to the sheet's own **Multiplayer** object - Godot's high-level multiplayer, rebuilt row by row rather than translated - so the migration table names a destination for every plugin and nothing dead-ends.
 
 ### 6. Killing the "every tick" polling soup
 
