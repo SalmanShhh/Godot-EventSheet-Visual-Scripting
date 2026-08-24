@@ -229,12 +229,8 @@ static func match_line(line: String) -> Dictionary:
 
 
 ## The two single-statement families, as table entries. Order is meaning: `rpc_id(1, …)` is the HOST,
-## so it is asked before the entry that reads the first argument as any peer at all.
-##
-## What is NOT here, deliberately: the plain `multiplayer.multiplayer_peer = null`, which IS the Leave
-## The Game template and so is already claimed by the shipped reverse index; and the callable sends
-## (`f.rpc(…)`), the first of which is likewise the shipped Send Message To Everyone template while
-## the second reads better through the sentence grammar, which can name the message's own parameters.
+## so it is asked before the entry that reads the first argument as any peer at all. What is left out,
+## and why, is the list at the top of this file.
 static func lift_entries() -> Array[Dictionary]:
 	# An optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`). Not a param: the row
 	# says nothing about it, so it rides into the stored spelling verbatim and comes back unchanged.
@@ -248,72 +244,52 @@ static func lift_entries() -> Array[Dictionary]:
 	var peer_is_declared: Callable = Callable(EventForgeMultiplayerLift, "_peer_is_declared")
 	return [
 		{
-			"id": "send_everyone_with_arguments",
-			"ace_id": "SendMessageToEveryone",
+			"id": "send_everyone_with_arguments", "ace_id": "SendMessageToEveryone",
 			"pattern": "^%srpc\\(%s%s(?<args>.+)\\)$" % [RECEIVER, NAME, GAP],
-			"params": ["message", "args"],
-			"shape": "rpc(\"{message}\", {args})",
+			"params": ["message", "args"], "shape": "rpc(\"{message}\", {args})",
 			"slots": {"message": "take_damage", "args": "10"}
 		},
 		{
-			"id": "send_everyone",
-			"ace_id": "SendMessageToEveryone",
+			"id": "send_everyone", "ace_id": "SendMessageToEveryone",
 			"pattern": "^%srpc\\(%s\\)$" % [RECEIVER, NAME],
-			"params": ["message"],
-			"defaults": {"args": ""},
-			"shape": "rpc(\"{message}\")",
-			"slots": {"message": "ping"}
+			"params": ["message"], "defaults": {"args": ""},
+			"shape": "rpc(\"{message}\")", "slots": {"message": "ping"}
 		},
 		{
-			"id": "send_host_with_arguments",
-			"ace_id": "SendMessageToHost",
+			"id": "send_host_with_arguments", "ace_id": "SendMessageToHost",
 			"pattern": "^%srpc_id\\(1%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
-			"params": ["message", "args"],
-			"shape": "rpc_id(1, \"{message}\", {args})",
+			"params": ["message", "args"], "shape": "rpc_id(1, \"{message}\", {args})",
 			"slots": {"message": "take_damage", "args": "10"}
 		},
 		{
-			"id": "send_host",
-			"ace_id": "SendMessageToHost",
+			"id": "send_host", "ace_id": "SendMessageToHost",
 			"pattern": "^%srpc_id\\(1%s%s\\)$" % [RECEIVER, GAP, NAME],
-			"params": ["message"],
-			"defaults": {"args": ""},
-			"shape": "rpc_id(1, \"{message}\")",
-			"slots": {"message": "ping"}
+			"params": ["message"], "defaults": {"args": ""},
+			"shape": "rpc_id(1, \"{message}\")", "slots": {"message": "ping"}
 		},
 		{
-			"id": "send_peer_with_arguments",
-			"ace_id": "SendMessageToPeer",
+			"id": "send_peer_with_arguments", "ace_id": "SendMessageToPeer",
 			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
-			"params": ["peer", "message", "args"],
-			"shape": "rpc_id({peer}, \"{message}\", {args})",
+			"params": ["peer", "message", "args"], "shape": "rpc_id({peer}, \"{message}\", {args})",
 			"slots": {"peer": "peer_id", "message": "heal", "args": "5"}
 		},
 		{
-			"id": "send_peer",
-			"ace_id": "SendMessageToPeer",
+			"id": "send_peer", "ace_id": "SendMessageToPeer",
 			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s\\)$" % [RECEIVER, GAP, NAME],
-			"params": ["peer", "message"],
-			"defaults": {"args": ""},
-			"shape": "rpc_id({peer}, \"{message}\")",
-			"slots": {"peer": "peer_id", "message": "ping"}
+			"params": ["peer", "message"], "defaults": {"args": ""},
+			"shape": "rpc_id({peer}, \"{message}\")", "slots": {"peer": "peer_id", "message": "ping"}
 		},
 		{
 			# `peer` is captured for the guard only - the row says nothing about which variable held
 			# the connection, so the name stays part of the spelling and comes back as it was written.
-			"id": "leave_by_closing_the_peer",
-			"ace_id": "LeaveGame",
+			"id": "leave_by_closing_the_peer", "ace_id": "LeaveGame",
 			"pattern": "^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$",
-			"guard": peer_is_declared,
-			"shape": "peer.close()",
-			"slots": {}
+			"guard": peer_is_declared, "shape": "peer.close()", "slots": {}
 		},
 		{
-			"id": "leave_via_the_tree",
-			"ace_id": "LeaveGame",
+			"id": "leave_via_the_tree", "ace_id": "LeaveGame",
 			"pattern": "^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
-			"shape": "get_tree().get_multiplayer().multiplayer_peer = null",
-			"slots": {}
+			"shape": "get_tree().get_multiplayer().multiplayer_peer = null", "slots": {}
 		}
 	]
 
