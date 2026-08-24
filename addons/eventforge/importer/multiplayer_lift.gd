@@ -228,70 +228,84 @@ static func match_line(line: String) -> Dictionary:
 	return EventForgeLiftTable.match_line(lift_entries(), text)
 
 
-## The two single-statement families, as table entries. Order is meaning: `rpc_id(1, …)` is the HOST,
-## so it is asked before the entry that reads the first argument as any peer at all. What is left out,
-## and why, is the list at the top of this file.
+## The three audiences a named message can be sent to, as the call that says so. The rest of a send
+## spelling is the same in all three, so it is written once in `_send_entry` below rather than six
+## times here: each audience becomes two entries, with arguments and without.
+##
+## `call` is the pattern's own head and `spelling` the canonical one, which differ only in escaping;
+## `peer` names the capture that is a VALUE of the row (the addressed send is the only one that has
+## one, because the host is spelled `1` and everybody is spelled by not saying).
+const SEND_AUDIENCES: Array[Dictionary] = [
+	{"id": "everyone", "ace_id": "SendMessageToEveryone", "call": "rpc\\(", "spelling": "rpc(", "peer": ""},
+	{"id": "host", "ace_id": "SendMessageToHost", "call": "rpc_id\\(1,[ \\t]*", "spelling": "rpc_id(1, ", "peer": ""},
+	{"id": "peer", "ace_id": "SendMessageToPeer", "call": "rpc_id\\((?<peer>.+?),[ \\t]*", "spelling": "rpc_id({peer}, ", "peer": "peer"}
+]
+
+## An optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`). Not a param: the row says
+## nothing about it, so it rides into the stored spelling verbatim and comes back unchanged.
+const SEND_RECEIVER: String = "(?:(?:\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_.]*)\\.)?"
+
+## The message name as a STRING, in either quoting. The `&` is the author's spelling, not a value, so
+## it stays outside the capture and rides into the template the same way the receiver does.
+const SEND_NAME: String = "&?\"(?<message>[A-Za-z_][A-Za-z0-9_]*)\""
+
+## The separator as WRITTEN. Everything outside a param capture is kept verbatim, so a call spelled
+## without the space re-emits without it instead of being canonicalised into a byte-gate failure.
+const SEND_GAP: String = ",[ \\t]*"
+
+
+## The two single-statement families, as table entries: the six sends, then the two ways of leaving.
+## Order is meaning - `rpc_id(1, …)` is the HOST, so it is asked before the entry that reads the first
+## argument as any peer at all, and the with-arguments spelling before the bare one. What is left out
+## of both families, and why, is the list at the top of this file.
 static func lift_entries() -> Array[Dictionary]:
-	# An optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`). Not a param: the row
-	# says nothing about it, so it rides into the stored spelling verbatim and comes back unchanged.
-	const RECEIVER: String = "(?:(?:\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_.]*)\\.)?"
-	# The message name as a STRING, in either quoting. The `&` is the author's spelling, not a value,
-	# so it stays outside the capture and rides into the template the same way the receiver does.
-	const NAME: String = "&?\"(?<message>[A-Za-z_][A-Za-z0-9_]*)\""
-	# The separator as WRITTEN. Everything outside a param capture is kept verbatim, so a call spelled
-	# without the space re-emits without it instead of being canonicalised into a byte-gate failure.
-	const GAP: String = ",[ \\t]*"
-	var peer_is_declared: Callable = Callable(EventForgeMultiplayerLift, "_peer_is_declared")
-	return [
-		{
-			"id": "send_everyone_with_arguments", "ace_id": "SendMessageToEveryone",
-			"pattern": "^%srpc\\(%s%s(?<args>.+)\\)$" % [RECEIVER, NAME, GAP],
-			"params": ["message", "args"], "shape": "rpc(\"{message}\", {args})",
-			"slots": {"message": "take_damage", "args": "10"}
-		},
-		{
-			"id": "send_everyone", "ace_id": "SendMessageToEveryone",
-			"pattern": "^%srpc\\(%s\\)$" % [RECEIVER, NAME],
-			"params": ["message"], "defaults": {"args": ""},
-			"shape": "rpc(\"{message}\")", "slots": {"message": "ping"}
-		},
-		{
-			"id": "send_host_with_arguments", "ace_id": "SendMessageToHost",
-			"pattern": "^%srpc_id\\(1%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
-			"params": ["message", "args"], "shape": "rpc_id(1, \"{message}\", {args})",
-			"slots": {"message": "take_damage", "args": "10"}
-		},
-		{
-			"id": "send_host", "ace_id": "SendMessageToHost",
-			"pattern": "^%srpc_id\\(1%s%s\\)$" % [RECEIVER, GAP, NAME],
-			"params": ["message"], "defaults": {"args": ""},
-			"shape": "rpc_id(1, \"{message}\")", "slots": {"message": "ping"}
-		},
-		{
-			"id": "send_peer_with_arguments", "ace_id": "SendMessageToPeer",
-			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s%s(?<args>.+)\\)$" % [RECEIVER, GAP, NAME, GAP],
-			"params": ["peer", "message", "args"], "shape": "rpc_id({peer}, \"{message}\", {args})",
-			"slots": {"peer": "peer_id", "message": "heal", "args": "5"}
-		},
-		{
-			"id": "send_peer", "ace_id": "SendMessageToPeer",
-			"pattern": "^%srpc_id\\((?<peer>.+?)%s%s\\)$" % [RECEIVER, GAP, NAME],
-			"params": ["peer", "message"], "defaults": {"args": ""},
-			"shape": "rpc_id({peer}, \"{message}\")", "slots": {"peer": "peer_id", "message": "ping"}
-		},
-		{
-			# `peer` is captured for the guard only - the row says nothing about which variable held
-			# the connection, so the name stays part of the spelling and comes back as it was written.
-			"id": "leave_by_closing_the_peer", "ace_id": "LeaveGame",
-			"pattern": "^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$",
-			"guard": peer_is_declared, "shape": "peer.close()", "slots": {}
-		},
-		{
-			"id": "leave_via_the_tree", "ace_id": "LeaveGame",
-			"pattern": "^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
-			"shape": "get_tree().get_multiplayer().multiplayer_peer = null", "slots": {}
-		}
-	]
+	var entries: Array[Dictionary] = []
+	for audience: Dictionary in SEND_AUDIENCES:
+		entries.append(_send_entry(audience, true))
+		entries.append(_send_entry(audience, false))
+	entries.append(_leave_entry("leave_by_closing_the_peer",
+		"^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$", "peer.close()",
+		Callable(EventForgeMultiplayerLift, "_peer_is_declared")))
+	entries.append(_leave_entry("leave_via_the_tree",
+		"^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
+		"get_tree().get_multiplayer().multiplayer_peer = null", Callable()))
+	return entries
+
+
+## One send spelling: an audience, and whether the message carries anything with it. A send with no
+## arguments still has an `args` VALUE (the row has the field even when the line does not say it), so
+## it is defaulted to nothing rather than left absent.
+static func _send_entry(audience: Dictionary, with_arguments: bool) -> Dictionary:
+	var params: PackedStringArray = PackedStringArray()
+	if not str(audience["peer"]).is_empty():
+		params.append(str(audience["peer"]))
+	params.append("message")
+	var entry: Dictionary = {
+		"id": "send_%s%s" % [str(audience["id"]), "_with_arguments" if with_arguments else ""],
+		"ace_id": str(audience["ace_id"]),
+		"pattern": "^%s%s%s%s" % [SEND_RECEIVER, str(audience["call"]), SEND_NAME,
+			"%s(?<args>.+)\\)$" % SEND_GAP if with_arguments else "\\)$"],
+		"shape": "%s\"{message}\"%s)" % [str(audience["spelling"]), ", {args}" if with_arguments else ""],
+		"slots": {"message": "take_damage" if with_arguments else "ping"}
+	}
+	if with_arguments:
+		params.append("args")
+		(entry["slots"] as Dictionary)["args"] = "10"
+	else:
+		entry["defaults"] = {"args": ""}
+	if not str(audience["peer"]).is_empty():
+		(entry["slots"] as Dictionary)["peer"] = "peer_id"
+	entry["params"] = params
+	return entry
+
+
+## One way of leaving. Neither spelling has a value the row shows - the variable a connection was
+## held in is part of the spelling, not part of the sentence - so both are pattern, shape and guard.
+static func _leave_entry(id: String, pattern: String, shape: String, guard: Callable) -> Dictionary:
+	var entry: Dictionary = {"id": id, "ace_id": "LeaveGame", "pattern": pattern, "shape": shape, "slots": {}}
+	if guard.is_valid():
+		entry["guard"] = guard
+	return entry
 
 
 ## The guard behind `<peer>.close()`: a `close()` on anything the file did not declare as a network
