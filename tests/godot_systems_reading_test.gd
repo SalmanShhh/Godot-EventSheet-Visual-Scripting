@@ -103,7 +103,12 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# S15 - the path words
 	"System ▸ Has arrived",
 	# S10 - the messages
-	"Multiplayer ▸ Send Take Damage to the host   amount = 10",
+	# M2 - a Send row belongs to the object whose function the message is (this file has no
+	# class_name, so its object is what it extends), whether the row is the grammar's reading of a
+	# typed line or the lifted Send action itself.
+	"CharacterBody2D ▸ Send Take Damage to the host   amount = 10",
+	"CharacterBody2D ▸ Send take damage to everyone 10",
+	"Functions ▸ On message Take Damage",
 	"Multiplayer ▸ Is host",
 	"Multiplayer ▸ Owns this object"
 ])
@@ -148,9 +153,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	"rotation = lerp_angle(rotation, target_angle, 5 * delta)":
 		"Player ▸ Rotate toward target_angle at 5 (per second)",
 	# S10
-	"take_damage.rpc(10)": "Multiplayer ▸ Send Take Damage to everyone   amount = 10",
-	"take_damage.rpc_id(1, 10)": "Multiplayer ▸ Send Take Damage to the host   amount = 10",
-	"take_damage.rpc_id(peer, 10)": "Multiplayer ▸ Send Take Damage to peer   amount = 10",
+	"take_damage.rpc(10)": "Player ▸ Send Take Damage to everyone   amount = 10",
+	"take_damage.rpc_id(1, 10)": "Player ▸ Send Take Damage to the host   amount = 10",
+	"take_damage.rpc_id(peer, 10)": "Player ▸ Send Take Damage to peer   amount = 10",
 	# S15
 	"agent.target_position = player.global_position": "Player ▸ Find path to player",
 	"velocity = global_position.direction_to(next) * speed":
@@ -261,10 +266,10 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.expression_text("multiplayer.get_unique_id()", context),
 		"Multiplayer.MyID") and ok
 	ok = _check("the annotation's modes read as the sheet's words",
-		EventSheetSentence.rpc_mode_words("@rpc(\"any_peer\", \"call_local\", \"reliable\")"),
-		"from any peer · runs here too · reliable") and ok
+		EventSheetMessageFacts.words("@rpc(\"any_peer\", \"call_local\", \"reliable\")"),
+		"from anyone · also here · reliable") and ok
 	ok = _check("an @rpc naming no mode says nothing",
-		EventSheetSentence.rpc_mode_words("@rpc()"), "") and ok
+		EventSheetMessageFacts.words("@rpc()"), "") and ok
 	# S9 - the movement words are claimed on a BODY only. A plain node's velocity is a variable.
 	var plain: Dictionary = _context()
 	plain["self_class"] = "Node2D"
