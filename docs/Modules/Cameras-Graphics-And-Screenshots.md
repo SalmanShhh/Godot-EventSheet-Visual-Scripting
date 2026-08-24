@@ -144,6 +144,13 @@ so that is what these rows are called.
 | Set Effect | Puts an effect on this object, changing how it draws. | `{target.}material = {material}` |
 | Remove Effect | Takes the effect off this object, returning it to how it normally draws. | `{target.}material = null` |
 
+An opened `.gd` file reads the same words: `sprite.material.set_shader_parameter("flash", 1.0)` is
+**Set effect parameter flash to 1**, `sprite.material = null` is **Remove effect**,
+`sprite.material = preload("res://outline.tres")` is **Set effect to outline**, and the
+tween-a-uniform idiom
+(`tween.tween_method(func(v): mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)`) is ONE
+**Tween effect parameter dissolve from 0 to 1 in 0.5 seconds** row, on the material it drives.
+
 ### Lights
 
 The six knobs a running game actually touches. Godot spells brightness `energy` on a 2D light and
@@ -204,12 +211,67 @@ when the scene the sheet is attached to (or a typed declaration in the file itse
 names really is a light, so `$Door.visible = false` stays the script block it is rather than being
 relabelled.
 
-An opened `.gd` file reads the same words: `sprite.material.set_shader_parameter("flash", 1.0)` is
-**Set effect parameter flash to 1**, `sprite.material = null` is **Remove effect**,
-`sprite.material = preload("res://outline.tres")` is **Set effect to outline**, and the
-tween-a-uniform idiom
-(`tween.tween_method(func(v): mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)`) is ONE
-**Tween effect parameter dissolve from 0 to 1 in 0.5 seconds** row, on the material it drives.
+### The darkness of your scene (picker section: Darkness in this scene)
+
+Darkening a 2D level in Godot is a `CanvasModulate`: one node that multiplies everything on the
+layer by its colour. That is exactly right and says nothing - `Color(0.3, 0.3, 0.36)` does not tell
+anyone how dark the cave feels. So the row keeps the colour, which is all Godot stores and all a
+re-save writes back, and READS as the darkness it makes: **Level ▸ Set darkness to 70%, tinted
+#4d4d5c**. The percentage is how much light the tint takes away, by the engine's own reckoning of
+how bright a colour is, so a green-ish gloom reads darker than a blue one of the same numbers -
+which is what your eye says too.
+
+Pick the node off the picker's *Darkness in this scene* shelf and the row arrives aimed at it.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Darkness | Darkens a whole 2D layer at once - the one row that makes a level read as night. | `{target.}color = {value}` |
+| Fade Darkness | Walks the layer's darkness to a new value over time instead of jumping to it. | `create_tween().tween_property({target}, "color", {value}, {seconds})` |
+
+Set Layer Tint above is the same write with the node in a field instead of in the object column; it
+is untouched, and a sheet saved with it opens with it.
+
+### The world's atmosphere (picker section: Atmosphere in this scene)
+
+A 3D scene's fog, glow and ambient light live on the `Environment` a `WorldEnvironment` node holds.
+These rows take that node as the OBJECT, so the column reads **World** and the sentence reads the
+word: **World ▸ Turn fog on**, **World ▸ Set fog thickness to 0.03**.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Turn Fog On | Switches the world's fog on - the one row that turns a clear day into a misty one. | `{target.}environment.fog_enabled = true` |
+| Turn Fog Off | Switches it off again. | `{target.}environment.fog_enabled = false` |
+| Set Fog Thickness | Sets how thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall. | `{target.}environment.fog_density = {value}` |
+| Turn Glow On | Switches the glow on - what makes neon, fire and magic read as bright. | `{target.}environment.glow_enabled = true` |
+| Turn Glow Off | Switches it off again - and gives the frames back. | `{target.}environment.glow_enabled = false` |
+| Fade The Glow | Walks the glow to a new strength over time. | `create_tween().tween_property({target}.environment, "glow_intensity", {value}, {seconds})` |
+| Set Ambient Light | Sets how much light the scene has with no light shining on it. | `{target.}environment.ambient_light_energy = {value}` |
+| Make The Environment This Scene's Own | Gives this scene its own copy of the environment before anything changes it. | `{target.}environment = {target.}environment.duplicate()` |
+
+That last row is the one to know about. A `WorldEnvironment` usually points at a `.tres` FILE, and a
+file is shared: writing fog at run time writes it for every other scene that loads the same file, so
+the weather follows the player out of the room and is still there next time. `environment =
+environment.duplicate()` at the top of the sheet is the engine's own answer, and this is the row
+that says it.
+
+### What the scene tells the head
+
+Three of these facts are worth knowing before the game runs, and none of them is in the script - so
+an attached sheet reads them off the scene every time it opens, shows them as bands on its head, and
+stores none of them:
+
+- **lit by** - one band per light: its name, the plain word for what kind it is, and *casts shadows*
+  when it does.
+- **shadows** - how many `LightOccluder2D`s can actually block those shadows. Godot draws a shadow
+  only where an occluder's own mask shares a layer with the light's shadow mask, so when none does,
+  this band says so instead of counting: *Candle casts shadows and no occluder's mask matches -
+  shadows never appear*. That is the classic "I turned shadows on and nothing happened", visible
+  before you press play.
+- **environment** - which environment resource the scene loads, and how many OTHER scenes load the
+  same one (*shared with 2 other scenes*), which is the quiet version of the warning above.
+
+Clicking a band selects that node in the Scene dock, where the Inspector that owns the fact is.
+
 
 ### The screenshot (picker section: General Actions)
 

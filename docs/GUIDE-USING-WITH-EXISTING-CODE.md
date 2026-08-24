@@ -1338,10 +1338,38 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `$Flashlight.spot_angle = 30.0` | **Set cone angle to 30.0** |
     | `create_tween().tween_property($Lantern, "energy", 1.0, 0.5)` | **Fade to 1.0 over 0.5 s** |
 
+    Two nodes of a lit scene are not lights, and they read the same way. A **CanvasModulate** is how
+    Godot darkens a whole 2D layer, and it stores that as a colour - correct, and unreadable. The row
+    keeps the colour (so your file comes back byte for byte) and READS as the darkness it makes: how
+    much light the tint takes away, by the engine's own reckoning of how bright a colour is. A
+    **WorldEnvironment** is the World object, and every one of its rows writes a property of the
+    environment it holds.
+
+    | What you wrote | Reads as |
+    | --- | --- |
+    | `$Level.color = Color(0.3, 0.3, 0.36)` | **Level ▸ Set darkness to 70%, tinted #4d4d5c** |
+    | `create_tween().tween_property($Level, "color", Color(0.1, 0.1, 0.15), 10.0)` | **Fade darkness to 90% over 10 s** |
+    | `$World.environment.fog_enabled = true` / `= false` | **World ▸ Turn fog on** / **Turn fog off** |
+    | `$World.environment.glow_enabled = true` / `= false` | **Turn glow on** / **Turn glow off** |
+    | `$World.environment.fog_density = 0.03` | **Set fog thickness to 0.03** |
+    | `$World.environment.ambient_light_energy = 0.15` | **Set ambient light to 0.15** |
+    | `create_tween().tween_property($World.environment, "glow_intensity", 1.2, 4.0)` | **Fade the glow to 1.2 over 4 s** |
+
     What deliberately does NOT lift: a toggle (`light.shadow_enabled = not light.shadow_enabled`),
     which no single row can say, and every line whose target the scene cannot show to be a light.
+    `$Level.color = …` is the same sentence as a light's colour, so which of the two it IS depends
+    entirely on what the scene says `$Level` is - and a node the scene cannot place stays code.
     The sixteen Core lighting actions are untouched beside all of this - a sheet saved with one of
     them opens with it.
+
+    The head of an opened lit sheet also gains bands nothing in the file says, read from the scene
+    every time it opens and stored nowhere: **lit by** (one per light: its name, the plain word for
+    what kind it is, and *casts shadows* when it does), **shadows** (how many `LightOccluder2D`s can
+    actually block them - and, when none can, the sentence saying so, because a light casting
+    shadows nothing blocks pays for them and shows nothing), and **environment** (the `.tres` the
+    scene loads, and how many OTHER scenes load the same file - which is what makes a fog row
+    written at run time follow the player out of the room). Clicking a band selects that node in the
+    Scene dock.
   - **Navigation.** `agent.target_position = p` reads **Find path to p**, the
     direction-to-the-next-waypoint step reads **Move along path at speed**, with **(avoiding
     others)** when the file wires the `velocity_computed` callback, and `is_navigation_finished()`

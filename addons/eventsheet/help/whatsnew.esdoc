@@ -49,6 +49,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
   its name, class, kind word, whether it casts shadows, its cull mask and the spelling a row
   addresses it by - and what class one node reference is. A reader, like the replication reader
   beside it: nothing is copied into the sheet, so the `.gd` round-trip is untouched.
+- **Darkness is a percentage, and the file still holds the colour.** Godot darkens a 2D level with a
+  `CanvasModulate`, which stores it as a colour: exactly right, and unreadable - `Color(0.3, 0.3,
+  0.36)` says nothing about how dark the cave feels. **Set darkness** and **Fade darkness to N over
+  S s** store the colour, all Godot stores and all a re-save writes back, and READ as the darkness
+  it makes: **Level ▸ Set darkness to 70%, tinted #4d4d5c**. The percentage is how much light the
+  tint takes away by the engine's own reckoning of brightness, so it agrees with the eye rather than
+  with the biggest number. That reading is a new opt-in on a parameter (a *lens*), display-only by
+  construction: the dialog, the code echo and the emitted line all go on showing the author's own
+  GDScript, and a param that names no lens reads exactly as it always did. Set Layer Tint is
+  untouched beside it.
+- **The World is an object.** The fog, glow, ambient and sky rows have always taken the environment
+  as their first field, so the object column said Core. Eight node-scoped rows put the
+  `WorldEnvironment` in the column instead - **World ▸ Turn fog on** / **off**, **Set fog
+  thickness**, **Turn glow on** / **off**, **Fade the glow to N over S s**, **Set ambient light**,
+  and **Make the environment this scene's own** - and the frozen Core action reads *Set fog
+  thickness* now instead of *Set fog density*, which is the word a person uses for it. Ids and
+  templates are untouched.
+- **The scene tells the head three things the script never says.** An attached sheet now opens with
+  **lit by** (one band per light: its name, the plain word for what kind it is, *casts shadows* when
+  it does), **shadows** (how many `LightOccluder2D`s can actually block them) and **environment**
+  (the resource file the scene loads, and how many OTHER scenes load the same one). All three are
+  read from the `.tscn` at open and stored nowhere, so the `.gd` round-trip is untouched and a
+  project with no lit scenes grows no bands. Clicking a band selects that node in the Scene dock.
+  When a fact is a PROBLEM the band says so in the note colour and in the words the Doctor will use:
+  *Candle casts shadows and no occluder's mask matches - shadows never appear*, which is the classic
+  \"I turned shadows on and nothing happened\", visible before the game runs.
+- **A shared environment is a shared file.** A `WorldEnvironment` usually points at a `.tres`, so a
+  fog row written at run time writes it for every other scene that loads the same file and the
+  weather follows the player out of the room. The environment band counts those scenes and names
+  them in its echo; **Make the environment this scene's own** is the row that fixes it, and what it
+  writes is the engine's own answer: `environment = environment.duplicate()`.
+- **A crypt somebody lit by hand opens on those rows.** Eight more spellings lift and re-emit byte
+  for byte: `$Level.color = …` and the variable the CanvasModulate was held in, the colour tween,
+  the four `environment.` switches, fog thickness, ambient light and the glow tween. The gate is the
+  same one the lights use and matters more here, because `X.color = …` is a light's sentence too:
+  which of the two a line IS depends entirely on what the attached scene says `X` is.
+- **`EventSheets.scene_lights(sheet)`** publishes that reading: every light of the sheet's scene with
+  its kind word, its shadow state, both cull masks and the spelling a row addresses it by. The list
+  the picker shelf and the `lit by` bands are built from, and the one a pack asks before offering a
+  light row of its own.
 
 ### Tooling
 
