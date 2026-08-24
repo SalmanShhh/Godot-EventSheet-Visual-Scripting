@@ -11,6 +11,15 @@ speed, and two pulses set to the same period stay in time with each other.
 Like the flicker, it works on **any light, 2D or 3D**, because it asks its host which property that
 host spells brightness with rather than naming a light class.
 
+## Table of Contents
+
+1. [Where this pack shines](#where-this-pack-shines)
+2. [Core concepts](#core-concepts)
+3. [Setup](#setup)
+4. [ACE reference](#ace-reference)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
+
 ## Where this pack shines
 
 - **Pickups and interactables.** A pulsing light is the oldest "you can take this" signal there is.
@@ -18,6 +27,22 @@ host spells brightness with rather than naming a light class.
 - **Charge-ups.** Shorten `period_seconds` as a meter fills and the light tells the player how close
   they are without a HUD element.
 - **Anything that should look powered.** A rune, a portal, a reactor, a phone on a table.
+
+## Core concepts
+
+- **It acts on its parent.** The behaviour is a child of the light and writes that light's own
+  brightness. Anywhere else it warns once on its first frame and then does nothing.
+- **The property is asked, not assumed.** On its first frame it asks the host which property spells
+  brightness - `energy` on a 2D light, `light_energy` on a 3D one - which is why one pack covers both
+  dimensions and a project's own subclass of a light.
+- **Period is a rhythm, not a speed.** `period_seconds` is the length of one whole breath, dim to
+  bright and back, so two pulses given the same period stay in time with each other.
+- **`between` is a pair of absolute brightnesses**, in the same units the light's own brightness
+  uses. It is not a range around a maximum.
+- **Stopping settles; it does not disable.** *Stop Pulsing* leaves the light at the brightness the row
+  names and the behaviour in place, ready for the next *Start Pulsing*.
+- **Brightness only.** The pulse never touches the light's reach - that is the flicker's *Also
+  Flicker Reach* knob, and this pack ships none of the plumbing for it.
 
 ## Setup
 
