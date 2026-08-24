@@ -64,22 +64,15 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 const KNOWN_DRIFT: PackedStringArray = []
 
 ## The files under addons/ and tools/ that still put lines in a script block, with the count each one
-## has today. Everything else in the editor's own source reaches zero.
-##
-## The three lighting pack recipes are all the same two lines, and the cause is worth writing down
-## because it is not theirs: every one of the 105 recipes opens with `@tool` and
-## `const Lib := preload(…)`, and `is_scaffolding_code` accepts `@tool` but not `const`, so that
-## prelude is logic as far as the reading is concerned. In most recipes it is invisible, because the
-## whole file arrives as ONE verbatim row that the function-body reading claims; in a recipe whose
-## body splits cleanly the prelude is left standing on its own and is counted. Fixing it means giving
-## the class-setup strip a band for a `const` declaration - a reading-layer change, not a recipe
-## change - and these three entries go the day it lands.
+## has today. Everything else in the editor's own source reaches zero. An entry here is a debt with a
+## cause, not a licence: it is deleted the day the cause is fixed, and never added to make a red run
+## green. (Three lighting pack recipes were listed here for one release: every one of the 105 recipes
+## opens with `@tool` and `const Lib := preload(…)`, and the reading accepted the annotation but not
+## the import, so a recipe whose body split cleanly was left with its prelude standing as code. The
+## reading now knows a preloaded constant is an import, and the three entries are gone with it.)
 const KNOWN_BLOCK_LINES: Dictionary = {
 	"res://addons/eventsheet/theme/event_sheet_editor_style.gd": 6,
 	"res://tools/render_opened_script_head5_preview.gd": 3,
-	"res://tools/pack_builders/day_night_cycle.gd": 2,
-	"res://tools/pack_builders/light_flicker.gd": 2,
-	"res://tools/pack_builders/light_pulse.gd": 2,
 }
 
 

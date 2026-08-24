@@ -2746,7 +2746,8 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 
 ## True when a top-level GDScript block is pure class SCAFFOLDING - the structural boilerplate a
 ## behaviour / custom-node / family sheet always carries (class prelude, `## …` doc + `## @ace_*`
-## annotations, the generated host-binding `_enter_tree`, blank separators) rather than game LOGIC.
+## annotations, a `const X := preload(…)` import, the generated host-binding `_enter_tree`, blank
+## separators) rather than game LOGIC.
 ## Drives both type-aware styling (scaffolding rendered muted) and the leading-run collapse below, so an
 ## opened .gd reads as logic instead of boilerplate. Pure + static so the classification is unit-testable
 ## without standing up the viewport. CONSERVATIVE by design: any line that isn't recognizably scaffolding
@@ -2763,6 +2764,12 @@ static func is_scaffolding_code(code: String) -> bool:
 		# instead of the collapsed Class setup strip. A comment is never logic.
 		if line.begins_with("class_name ") or line.begins_with("extends ") \
 				or line.begins_with("@icon") or line.begins_with("@tool") or line.begins_with("#"):
+			continue
+		# A PRELOADED constant is an import rather than logic: `const Lib := preload("res://…")` is
+		# how one file names another, and it sits up in the prelude for exactly that reason. Only a
+		# const whose value is a preload - `const SPEED := 200.0` is a number the game plays by and
+		# stays content, which is what keeps this as conservative as the rest of the list.
+		if line.begins_with("const ") and line.contains("preload("):
 			continue
 		# The generated host binding (behaviour sheets): `func _enter_tree(): host = get_parent() as X`.
 		if line.begins_with("func _enter_tree") or line.begins_with("host = get_parent"):

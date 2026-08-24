@@ -29,6 +29,12 @@ static func run() -> bool:
 		EventSheetViewport.is_scaffolding_code("# EventForge - Variable parser\n#\n# Parses declarations.\n@tool\nclass_name VariableParser\nextends RefCounted"), true) and all_passed
 	all_passed = _check("a lone # note is scaffolding",
 		EventSheetViewport.is_scaffolding_code("# just a note"), true) and all_passed
+	# The other line a prelude really opens with: the import. Every pack recipe in this repo begins
+	# `@tool` + `const Lib := preload(…)`, and while only the annotation was accepted that one line
+	# left the whole prelude standing as a script block in any file whose body split cleanly.
+	all_passed = _check("a preloaded constant is an import, and scaffolding",
+		EventSheetViewport.is_scaffolding_code(
+			"@tool\n\nconst Lib := preload(\"res://tools/pack_builders/_lib.gd\")"), true) and all_passed
 	all_passed = _check("a # comment sitting above real logic does NOT make it scaffolding",
 		EventSheetViewport.is_scaffolding_code("# bump the score\nscore += 1"), false) and all_passed
 
@@ -37,7 +43,7 @@ static func run() -> bool:
 		EventSheetViewport.is_scaffolding_code("velocity.y += gravity * delta\nmove_and_slide()"), false) and all_passed
 	all_passed = _check("an _enter_tree with extra logic is NOT scaffolding (conservative)",
 		EventSheetViewport.is_scaffolding_code("func _enter_tree() -> void:\n\thost = get_parent() as Node\n\tprint(\"hi\")"), false) and all_passed
-	all_passed = _check("a top-level const is NOT scaffolding",
+	all_passed = _check("a top-level const the game plays by is NOT scaffolding",
 		EventSheetViewport.is_scaffolding_code("const SPEED := 200.0"), false) and all_passed
 
 	# ── The leading scaffolding run reads as the head's band stack ──
