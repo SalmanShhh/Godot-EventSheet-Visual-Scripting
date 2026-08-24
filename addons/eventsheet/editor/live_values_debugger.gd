@@ -68,15 +68,31 @@ func _setup_session(session_id: int) -> void:
 	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
 	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
 	var session: EditorDebuggerSession = get_session(session_id)
-	if session != null and not session.stopped.is_connected(_on_session_stopped):
-		session.stopped.connect(_on_session_stopped)
+	# Bound to the id, because a run can be two games: the handler is connected once per session and
+	# has to know which of them just went.
+	var stopped: Callable = _on_session_stopped.bind(session_id)
+	if session != null and not session.stopped.is_connected(stopped):
+		session.stopped.connect(stopped)
 
 
 ## The run ended. Announced rather than inferred: "no values have arrived recently" and "the game is
 ## gone" look identical from the receiving end, and only one of them means the numbers are stale.
-func _on_session_stopped() -> void:
-	_instance_labels.clear()
+##
+## Only THIS session's label is dropped. Play as host + client runs two copies, and clearing the
+## whole map when one window is closed took the tag off the survivor's chips - the game still being
+## debugged would go back to reading as a lone run while the other one was the thing that ended.
+func _on_session_stopped(session_id: int) -> void:
+	_instance_labels = labels_after_stop(_instance_labels, session_id)
 	session_ended.emit()
+
+
+## The labels a run keeps when ONE of its games ends: every other session's, untouched. Static like
+## the payload parsers below, and for the same reason - `EditorDebuggerPlugin` cannot be instantiated
+## headless, so the rule is pinned here or nowhere.
+static func labels_after_stop(labels: Dictionary, session_id: int) -> Dictionary:
+	var kept: Dictionary = labels.duplicate()
+	kept.erase(session_id)
+	return kept
 
 
 func _capture(message: String, data: Array, session_id: int) -> bool:

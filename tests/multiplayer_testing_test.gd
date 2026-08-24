@@ -109,6 +109,12 @@ static func _test_what_each_instance_is_called() -> bool:
 	ok = _check("a lone run is not labelled at all",
 		EventSheetRunInstances.labels(stored.merged({EventSheetRunInstances.KEY_COUNT: 1}, true)),
 		PackedStringArray()) and ok
+	# Closing one of the two windows is not the end of the run. The survivor is still the game being
+	# debugged, and its chips have to go on saying which window they are describing.
+	ok = _check("closing one window leaves the other's label alone",
+		EventSheetLiveValuesDebugger.labels_after_stop({0: "host", 1: "client"}, 1), {0: "host"}) and ok
+	ok = _check("and closing the last one leaves nothing behind",
+		EventSheetLiveValuesDebugger.labels_after_stop({0: "host"}, 0), {}) and ok
 	return ok
 
 
