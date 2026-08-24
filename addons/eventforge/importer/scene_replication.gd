@@ -149,6 +149,9 @@ static func host_node(script_path: String) -> Dictionary:
 ## does: `{"name", "node_path", "scene_path", "target_path", "config_id", "interval",
 ## "public_visibility"}`.
 static func synchronizers_in_scene(scene_path: String, script_path: String) -> Array:
+	var editing: Node = edited_root(scene_path)
+	if editing != null:
+		return synchronizers_of_root(editing, script_path)
 	var found: Array = []
 	var scripts: Dictionary = {}
 	for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
@@ -181,6 +184,9 @@ static func synchronizers_in_scene(scene_path: String, script_path: String) -> A
 ## "node_path", "interval", "public_visibility"}`. `name` is the bare property - the word a variable
 ## row shows - and `property_path` is the `NodePath` spelling the config actually holds.
 static func synced_in_scene(scene_path: String, script_path: String) -> Array:
+	var editing: Node = edited_root(scene_path)
+	if editing != null:
+		return synced_of_root(editing, script_path)
 	var found: Array = []
 	var synchronizers: Array = synchronizers_in_scene(scene_path, script_path)
 	if synchronizers.is_empty():
@@ -200,18 +206,118 @@ static func synced_in_scene(scene_path: String, script_path: String) -> Array:
 				str(replicated.get("node", ".")))
 			if str(scripts.get(owner_path, "")) != script_path:
 				continue
-			found.append({
-				"name": str(replicated.get("property", "")),
-				"property_path": str(replicated.get("path", "")),
-				"mode": str(replicated.get("mode", MODE_OFF)),
-				"synchronizer": str(synchronizer.get("name", "")),
-				"synchronizer_path": str(synchronizer.get("node_path", "")),
-				"scene_path": scene_path,
-				"node_path": owner_path,
-				"interval": float(synchronizer.get("interval", 0.0)),
-				"public_visibility": bool(synchronizer.get("public_visibility", true)),
-			})
+			found.append(_synced_entry(synchronizer, replicated, owner_path))
 	return found
+
+
+## One replicated property as the readings hand it on. Composed here rather than at each call site so
+## the scene file and the scene the editor is holding say a property in exactly one shape.
+static func _synced_entry(synchronizer: Dictionary, replicated: Dictionary, owner_path: String) -> Dictionary:
+	return {
+		"name": str(replicated.get("property", "")),
+		"property_path": str(replicated.get("path", "")),
+		"mode": str(replicated.get("mode", MODE_OFF)),
+		"synchronizer": str(synchronizer.get("name", "")),
+		"synchronizer_path": str(synchronizer.get("node_path", "")),
+		"scene_path": str(synchronizer.get("scene_path", "")),
+		"node_path": owner_path,
+		"interval": float(synchronizer.get("interval", 0.0)),
+		"public_visibility": bool(synchronizer.get("public_visibility", true)),
+	}
+
+
+# ── The scene the editor is holding ────────────────────────────────────────────────────────
+
+
+## The scene as the EDITOR has it, when the scene asked about is the one open in front of the reader
+## - `null` for any other scene, and outside the editor.
+##
+## The `.tscn` is the scene as it was last SAVED. A node added since (the synchronizer "Keep in step"
+## offers to make, and the mode written on it a moment later) is not in that file, so a reader that
+## only ever reads the file answers about a scene nobody is looking at: the menu went on offering to
+## add the synchronizer it had just added, and the mode went nowhere with nothing said. The editor is
+## the authority on the scene it is editing; the file is the authority on every other one.
+static func edited_root(scene_path: String) -> Node:
+	if not Engine.is_editor_hint() or scene_path.strip_edges().is_empty():
+		return null
+	var root: Node = EditorInterface.get_edited_scene_root()
+	return root if root != null and root.scene_file_path == scene_path else null
+
+
+## Every `MultiplayerSynchronizer` of a LIVE scene tree whose root is a node carrying `script_path` -
+## the same entries `synchronizers_in_scene` reads out of the file, read off the nodes themselves.
+## PURE: a root node in, plain dictionaries out, so both readings are pinned against each other
+## without an editor. Only the nodes this scene OWNS are read, which is what the file holds too - a
+## synchronizer inside an instanced child scene belongs to that scene's file.
+static func synchronizers_of_root(root: Node, script_path: String) -> Array:
+	var found: Array = []
+	for node: Node in _own_nodes(root):
+		if not (node is MultiplayerSynchronizer):
+			continue
+		var synchronizer: MultiplayerSynchronizer = node as MultiplayerSynchronizer
+		var target: Node = synchronizer.get_node_or_null(synchronizer.root_path)
+		if target == null or _script_path_of(target) != script_path:
+			continue
+		found.append({
+			"name": str(synchronizer.name),
+			"node_path": str(root.get_path_to(synchronizer)),
+			"scene_path": root.scene_file_path,
+			"target_path": str(root.get_path_to(target)),
+			# The config is the object itself here, so there is no sub-resource id to name.
+			"config_id": "",
+			"interval": synchronizer.replication_interval,
+			"public_visibility": synchronizer.public_visibility,
+		})
+	return found
+
+
+## Every property a LIVE scene tree keeps in step for the nodes carrying `script_path`, in the same
+## shape `synced_in_scene` answers in - read off each synchronizer's own `SceneReplicationConfig`
+## rather than out of the sub-resource the file would hold.
+static func synced_of_root(root: Node, script_path: String) -> Array:
+	var found: Array = []
+	for entry: Variant in synchronizers_of_root(root, script_path):
+		var synchronizer: Dictionary = entry
+		var node: Node = root.get_node_or_null(NodePath(str(synchronizer.get("node_path", "."))))
+		if not (node is MultiplayerSynchronizer):
+			continue
+		var config: SceneReplicationConfig = (node as MultiplayerSynchronizer).replication_config
+		if config == null:
+			continue
+		for property: NodePath in config.get_properties():
+			var replicated: Dictionary = _property_record(str(property),
+				config.property_get_spawn(property), config.property_get_replication_mode(property))
+			var owner_path: String = resolve_path(str(synchronizer.get("target_path", ".")),
+				str(replicated.get("node", ".")))
+			var owner: Node = root.get_node_or_null(NodePath(owner_path))
+			if owner == null or _script_path_of(owner) != script_path:
+				continue
+			found.append(_synced_entry(synchronizer, replicated, owner_path))
+	return found
+
+
+## A scene's own nodes, in tree order, root first - the nodes its file writes. A node from an
+## instanced child scene is that scene's, and is skipped here exactly as it is skipped by the reader
+## that walks the text.
+static func _own_nodes(root: Node) -> Array[Node]:
+	var found: Array[Node] = []
+	if root == null:
+		return found
+	found.append(root)
+	for child: Node in root.get_children():
+		if child.owner != root:
+			continue
+		found.append_array(_own_nodes(child))
+	return found
+
+
+## The file one node's script came from, "" when it carries none.
+static func _script_path_of(node: Node) -> String:
+	var script: Script = node.get_script() as Script
+	return script.resource_path if script != null else ""
+
+
+# ── Reading the scene, continued ───────────────────────────────────────────────────────────
 
 
 ## Every `MultiplayerSpawner` of one scene: `{"name", "node_path", "scene_path", "spawn_path",
@@ -450,8 +556,7 @@ static func _replication_configs(scene_path: String) -> Dictionary:
 	return configs
 
 
-## One config's properties in the order the file numbers them, each split into the node it addresses
-## and the property on it (`.:hp` is "the sync root" and "hp").
+## One config's properties in the order the file numbers them.
 static func _ordered_records(records: Dictionary) -> Array:
 	var indices: Array = records.keys()
 	indices.sort_custom(func(left: Variant, right: Variant) -> bool: return str(left).to_int() < str(right).to_int())
@@ -461,13 +566,21 @@ static func _ordered_records(records: Dictionary) -> Array:
 		var path: String = str(record.get("path", ""))
 		if path.is_empty():
 			continue
-		ordered.append({
-			"path": path,
-			"node": path.get_slice(":", 0) if path.contains(":") else ".",
-			"property": path.get_slice(":", 1) if path.contains(":") else path,
-			"mode": mode_of(bool(record.get("spawn", false)), int(record.get("replication_mode", REPLICATION_NEVER))),
-		})
+		ordered.append(_property_record(path, bool(record.get("spawn", false)),
+			int(record.get("replication_mode", REPLICATION_NEVER))))
 	return ordered
+
+
+## One replicated property, split into the node it addresses and the property on it (`.:hp` is "the
+## sync root" and "hp") with the two stored facts read as the word a row says. The ONE place a
+## property path is taken apart, so the file and the live config cannot say it two ways.
+static func _property_record(path: String, spawns: bool, replication_mode: int) -> Dictionary:
+	return {
+		"path": path,
+		"node": path.get_slice(":", 0) if path.contains(":") else ".",
+		"property": path.get_slice(":", 1) if path.contains(":") else path,
+		"mode": mode_of(spawns, replication_mode),
+	}
 
 
 ## A node path walked from where it is written, in the same "." / "A/B" spelling `nodes_of_scene`
@@ -668,10 +781,13 @@ static func add_spawnable_scene(scene_path: String, spawner_path: String, spawne
 static func reveal_node(scene_path: String, node_path: String) -> bool:
 	if not Engine.is_editor_hint() or scene_path.strip_edges().is_empty():
 		return false
-	var root: Node = EditorInterface.get_edited_scene_root()
-	if root == null or root.scene_file_path != scene_path:
+	var root: Node = edited_root(scene_path)
+	if root == null:
 		EditorInterface.open_scene_from_path(scene_path)
-		root = EditorInterface.get_edited_scene_root()
+		# Asked again rather than assumed: opening a scene can land on a later frame, and until it
+		# does the edited root is still the PREVIOUS scene - where a node of the same name would be
+		# selected instead, and this would report that it had shown the reader the right one.
+		root = edited_root(scene_path)
 	if root == null:
 		return false
 	var node: Node = root if node_path == "." else root.get_node_or_null(NodePath(node_path))

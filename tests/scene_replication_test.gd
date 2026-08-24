@@ -31,6 +31,7 @@ static func run() -> bool:
 	ok = _test_the_public_api() and ok
 	ok = _test_the_head_bands() and ok
 	ok = _test_writing_a_mode() and ok
+	ok = _test_the_scene_the_editor_holds() and ok
 	ok = _test_a_scene_that_says_nothing() and ok
 	EventSheetSceneReplication.clear_cache()
 	return ok
@@ -274,11 +275,55 @@ static func _test_a_scene_that_says_nothing() -> bool:
 	return ok
 
 
+## The scene the EDITOR is holding, which is the one the reader has to answer about: a node added
+## since the last save is not in the `.tscn` at all. Without this, "Keep in step" on a project that
+## had never replicated anything added the synchronizer, looked for it in the file, did not find it,
+## and wrote the mode nowhere with nothing said - and the row's own menu went on offering to add the
+## synchronizer it had just added. The live reading is pinned against the text reading first, so the
+## two can never drift into two different answers about the same scene.
+static func _test_the_scene_the_editor_holds() -> bool:
+	var root: Node = (load(PLAYER_SCENE) as PackedScene).instantiate()
+	var live: Array = EventSheetSceneReplication.synchronizers_of_root(root, PLAYER_SCRIPT)
+	var from_text: Array = EventSheetSceneReplication.synchronizers_in_scene(PLAYER_SCENE, PLAYER_SCRIPT)
+	var ok: bool = _check("the live tree names the synchronizer the file does",
+		_names(live), _names(from_text))
+	var held: Dictionary = live[0] if not live.is_empty() else {}
+	var written: Dictionary = from_text[0] if not from_text.is_empty() else {}
+	for fact: String in ["node_path", "scene_path", "target_path", "interval", "public_visibility"]:
+		ok = _check("...and says the same %s" % fact, held.get(fact), written.get(fact)) and ok
+	var live_synced: Array = EventSheetSceneReplication.synced_of_root(root, PLAYER_SCRIPT)
+	var text_synced: Array = EventSheetSceneReplication.synced_in_scene(PLAYER_SCENE, PLAYER_SCRIPT)
+	ok = _check("the same properties are kept in step", _names(live_synced), _names(text_synced)) and ok
+	ok = _check("...in the same modes", _modes(live_synced), _modes(text_synced)) and ok
+	# The half the file cannot answer: a synchronizer added a moment ago and not saved yet.
+	var added := MultiplayerSynchronizer.new()
+	added.name = "ExtraSync"
+	added.replication_config = SceneReplicationConfig.new()
+	root.add_child(added)
+	added.owner = root
+	ok = _check("a synchronizer added since the last save is part of the reading",
+		_names(EventSheetSceneReplication.synchronizers_of_root(root, PLAYER_SCRIPT)),
+		PackedStringArray(["PlayerSync", "ExtraSync"])) and ok
+	ok = _check("...and the file still says only what was saved into it",
+		_names(EventSheetSceneReplication.synchronizers_in_scene(PLAYER_SCENE, PLAYER_SCRIPT)),
+		PackedStringArray(["PlayerSync"])) and ok
+	root.free()
+	return ok
+
+
 static func _names(entries: Array) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Variant in entries:
 		names.append(str((entry as Dictionary).get("name", "")))
 	return names
+
+
+## The mode each entry is in, keyed by the property - what a row's mark shows.
+static func _modes(entries: Array) -> Dictionary:
+	var modes: Dictionary = {}
+	for entry: Variant in entries:
+		modes[str((entry as Dictionary).get("name", ""))] = str((entry as Dictionary).get("mode", ""))
+	return modes
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
