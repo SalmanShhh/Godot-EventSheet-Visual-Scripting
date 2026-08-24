@@ -128,6 +128,57 @@ static func number(sheet: EventSheetResource, function_name: String, display_nam
 	sheet.functions.append(fn)
 
 
+# ── Shared light-behaviour runtime ───────────────────────────────────────────────────────
+# The two light behaviours (flicker, pulse) both have to answer the same question before they can
+# touch anything: which property does THIS host spell brightness with. Godot spells it `energy` on a
+# 2D light and `light_energy` on a 3D one, spells reach three more ways again, and neither light
+# class is the other's parent - so a behaviour that works on any light has to ask its host rather
+# than name a class. That question is one block, emitted verbatim by both packs, so a fix lands once.
+
+
+## The binding block both light behaviours open with: the two resolved property names, the reach the
+## scene was authored with, and the two helpers that fill them in. Everything here is `_`-prefixed,
+## so none of it publishes as vocabulary - it is the plumbing under the four verbs that do.
+static func light_binding_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"## The property this host spells brightness with - `energy` on a 2D light, `light_energy` on",
+		"## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one",
+		"## of them and the answer cannot change while the game runs.",
+		"var _brightness_property: String = \"\"",
+		"## The property this host spells reach with, when it has one: a 2D point light scales a",
+		"## texture, an omni light has a radius in metres, a spot light has its own. A directional",
+		"## light reaches everywhere and has none, and then this stays empty.",
+		"var _reach_property: String = \"\"",
+		"## The reach the light was authored with. Reach is SCALED around this rather than replaced,",
+		"## so a designer's own radius survives the effect.",
+		"var _authored_reach: float = 0.0",
+		"",
+		"## The first of these properties the host really has. `in` on an object is the honest",
+		"## question: it answers for a project's own subclass of a light exactly as it does for the",
+		"## engine's classes, with no list of class names here to keep in step with the engine.",
+		"func _first_property_of(candidates: PackedStringArray) -> String:",
+		"\tfor candidate: String in candidates:",
+		"\t\tif host != null and candidate in host:",
+		"\t\t\treturn candidate",
+		"\treturn \"\"",
+		"",
+		"## Binds to the parent light: fills both property names and remembers the authored reach.",
+		"## False means the parent is not a light at all, which is the one setup mistake to warn about.",
+		"func _bind_to_light() -> bool:",
+		"\t_brightness_property = _first_property_of(PackedStringArray([\"energy\", \"light_energy\"]))",
+		"\t_reach_property = _first_property_of(PackedStringArray([\"texture_scale\", \"omni_range\", \"spot_range\"]))",
+		"\tif not _reach_property.is_empty():",
+		"\t\t_authored_reach = float(host.get(_reach_property))",
+		"\treturn not _brightness_property.is_empty()",
+		"",
+		"## Writes one frame of the effect: brightness always, reach only when this pack scales it too.",
+		"func _apply_light(brightness: float, reach_scale: float) -> void:",
+		"\thost.set(_brightness_property, brightness)",
+		"\tif reach_scale != 1.0 and not _reach_property.is_empty():",
+		"\t\thost.set(_reach_property, _authored_reach * reach_scale)"
+	])
+
+
 # ── Shared Juice runtime blocks ──────────────────────────────────────────────────────────
 # The screen-FX overlay (bundled shader + build/visibility helpers) is identical in the 2D and 3D
 # Juice packs; single-sourcing it here means a fix (or the un-set-uniform-null crash fix) lands ONCE
