@@ -668,6 +668,42 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   server you run). They live in the shared hint table, so a pack that ships a hosting row of its own
   gets the same words for nothing.
 
+### Multiplayer - a message says who may send it, where it runs, and how it travels
+
+- **Marking a function as a message is four questions in words, not a string nobody reads.**
+  Right-click a function row and **Make It A Message…** opens a dialog in the shape every other one
+  here has: **Who may send** (*Anyone* / *Only the owner*), **Where it runs** (*On the others* /
+  *On the others, and here too*), **Delivery** (*Reliable* / *Fast, may drop* / *Fast, in order*)
+  and **Channel** - each a dropdown with a line under every choice, one help strip at the foot that
+  follows whichever choice is highlighted, and the exact `@rpc(...)` it is about to write as its IN
+  CODE line. **New Function ▸ Message…** asks for the name and the parameters first and then the
+  same four. A function that already is one opens the same dialog to change it.
+- **The row reads the annotation, and echoes it.** A message row leads with the word `message`,
+  carries its choices as the muted words they mean (`from anyone · also here · reliable`, in the
+  order the annotation wrote them), and echoes the `@rpc(...)` line itself at the right edge in the
+  script editor's own colours. Read as an event the same head says **On message take_damage** -
+  because a message is not called from here, it arrives. An option Godot does not take reads as no
+  words at all: the row shows the annotation as it stands, and an amber note under it names the
+  string that stopped the reading.
+- **Nothing is stored twice, and confirming an unchanged message changes no bytes.** The words and
+  the annotation are one table read in both directions, so what the row says and what the dialog
+  writes cannot drift apart. Pressing OK on a message whose answers still mean what the file already
+  said hands the original line back verbatim - a partial `@rpc("any_peer")` stays exactly that - so
+  opening a message cannot rewrite a `.gd` you did not change.
+- **Sending one is a single dialog whose last answer picks the action.** The three shipped Send
+  actions stay exactly as they were, and picking or editing any of them now opens one **Send
+  message** dialog: which message (suggesting only the functions this sheet marks, with each one's
+  words beside it), a field per parameter of that message rather than a comma-separated list, and
+  **To** - *Everyone* / *The host* / *One player*, described, deciding which of the three ids the row
+  is written with. Naming a function that is not marked says so in amber before the row is written.
+- **A Send row belongs to the object whose function the message is.** The same rule a row that
+  changes a variable already follows: `Player ▸ Send take_damage(10) to everyone`, rather than filing
+  every message under the Multiplayer object.
+- **The list is public.** `EventSheets.sheet_messages(sheet)` answers every message a sheet
+  publishes - name, parameters, the annotation, its words, and the amber note an unreadable one
+  earns - and `EventSheets.message_annotation(original, answers)` writes one back under the same
+  byte-exact rule, so a pack building its own send surface offers exactly what the shipped one does.
+
 ### Multiplayer - a group says who runs it
 
 - **Who runs these events is one word on the group, not a condition on every row.** A group carries

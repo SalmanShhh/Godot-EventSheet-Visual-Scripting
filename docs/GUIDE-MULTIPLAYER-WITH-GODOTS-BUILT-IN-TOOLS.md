@@ -98,6 +98,67 @@ Four expressions and two conditions answer the questions a networked rule asks:
 **Sender** is the one thing a message cannot lie about, so a host that acts on what a client asked
 for should check it before trusting the rest.
 
+## Messages: the calls that travel
+
+A message is an ordinary function with one extra line above it. Godot's `@rpc` annotation is what
+makes calling it reach the other peers, and it answers three questions plus a channel. Right-click a
+function row and choose **Make It A Message…** to answer them in words (**New Function ▸ Message…**
+asks for the name and the parameters first, then the same four):
+
+| Question | The answers | What Godot writes |
+| --- | --- | --- |
+| **Who may send** | *Anyone* / *Only the owner* | `"any_peer"` / `"authority"` |
+| **Where it runs** | *On the others* / *On the others, and here too* | `"call_remote"` / `"call_local"` |
+| **Delivery** | *Reliable* / *Fast, may drop* / *Fast, in order* | `"reliable"` / `"unreliable"` / `"unreliable_ordered"` |
+| **Channel** | a number, 0 unless something big is in the way | the trailing `0`, `1`, `2`… |
+
+*Only the owner* is the safe answer: a call from anybody else is dropped and logged. Pick *Anyone*
+for the things a client has to be able to ask the host for, and check **Sender** before acting on
+anything a player could have made up. *and here too* is why the shot you fired lands for you at the
+same moment as for everybody else. *Reliable* is for what happens once (a hit, a pickup, a round
+starting); the two fast ones are for a value that is replaced several times a second anyway.
+
+The row then reads the annotation back in those words and echoes the line itself at its right edge:
+
+```gdscript
+extends CharacterBody2D
+
+var hp: int = 100
+
+
+@rpc("authority", "call_local", "reliable")
+func take_damage(amount: int) -> void:
+	hp -= amount
+```
+
+<!-- caption: A message, and the row it reads as: message take_damage(amount)  from the owner · also here · reliable -->
+
+Read as an event, the same head says **On message take_damage** - because a message is not a
+function this peer calls, it is one that arrives. An option Godot does not take (a typo in the
+annotation) reads as no words at all: the row shows the annotation as it stands and an amber note
+under it names the string that stopped the reading, so the sheet never guesses at what the file
+meant.
+
+### Sending one
+
+**Add action ▸ Multiplayer ▸ Send message** opens one dialog for all three destinations: which
+message (the list holds only the functions this sheet marks), a field per parameter of that message,
+and **To**.
+
+| To | Who runs it | The line |
+| --- | --- | --- |
+| **Everyone** | every connected peer, and this one too when the message says *also here* | `take_damage.rpc(10)` |
+| **The host** | peer 1 only - how a client asks for something it may not decide by itself | `take_damage.rpc_id(1, 10)` |
+| **One player** | the peer whose id you give - the event's own id, or **Sender** | `take_damage.rpc_id(Multiplayer.Sender, 10)` |
+
+The row belongs to the object whose function the message is, so it reads
+`Player ▸ Send take_damage(10) to everyone` rather than filing every message under the Multiplayer
+object. Naming a function that is not marked as a message says so in amber before the row is
+written: that call compiles, and then quietly never travels.
+
+Confirming a message dialog you did not change writes nothing at all - the annotation comes back
+verbatim, a partial `@rpc("any_peer")` included - so opening one to read it cannot rewrite the file.
+
 ## Who runs what
 
 The commonest multiplayer bug is a rule that runs on every peer when it should run once, or on every
