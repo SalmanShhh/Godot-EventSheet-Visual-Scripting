@@ -72,8 +72,10 @@ func chunk_of(index: int) -> void:
 ## Every reading the opened file must contain, one per shape these items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"AJAX ▸ Request \"https://example.com/scores\"",
-	"lamp ▸ Set light energy to 50%",
-	"lamp ▸ Set shadows on",
+	# L1 - the light is the OBJECT now: a file whose own declaration says `lamp` is a PointLight2D
+	# opens on the node-scoped light rows, which say the word and leave the property to the echo.
+	"lamp ▸ Set brightness to 0.5",
+	"lamp ▸ Turn shadows on",
 	"horn ▸ Set hearing distance to 600",
 	"horn ▸ Set falloff to 2",
 	"Video ▸ Play",
@@ -90,6 +92,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	"lamp ▸ Set energy to 0.5",
 	"lamp ▸ Set enabled to false",
+	# And the words the light rows replaced, which a lift that stopped firing would leave behind.
+	"lamp ▸ Set light energy to 50%",
 	"horn ▸ Set max_distance to 600",
 	# The two faders the crossfade run swallowed: each was a perfectly good volume row on its own,
 	# and a run that stopped firing would leave them behind.

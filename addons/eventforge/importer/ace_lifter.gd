@@ -222,6 +222,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# E1 - and its network peers, for the same reason: `peer.create_server(…)` only means "host a
 	# game" when `peer` really is a multiplayer peer this file declared.
 	EventForgeMultiplayerLift.note_source(source)
+	# L7 - and the lights of the file's own scene, for the same reason again: `$Torch.enabled = false`
+	# only means "turn the light off" when the scene says Torch is a light. Nothing else can say so,
+	# and a row that guessed would relabel somebody's door.
+	EventForgeLightingLift.note_source(source, _scene_source_path_of(sheet))
 	# M3 - and the groups' own "who runs it", resolved per slug (a group inherits its parent's
 	# answer), so the guard the compiler wrote in front of each event can be taken back off.
 	_note_group_guards(source)
@@ -2112,7 +2116,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			var networked_run: Dictionary = EventForgeMultiplayerLift.match_run(lines, index, depth)
 			if not networked_run.is_empty():
 				_flush_raw(current, pending_raw, blank_box)
-				current.actions.append(_networked_action(networked_run, blank_box))
+				current.actions.append(_matched_spelling_action(networked_run, blank_box))
 				index += int(networked_run["consumed"])
 				chain_open = false
 				continue
@@ -2720,7 +2724,16 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	var networked: Dictionary = EventForgeMultiplayerLift.match_line(line)
 	if not networked.is_empty():
 		_flush_raw(event, pending_raw, blank_box)
-		event.actions.append(_networked_action(networked, blank_box))
+		event.actions.append(_matched_spelling_action(networked, blank_box))
+		return
+	# L7 - the lighting spellings, on the same footing and for the same reason: the row that knows
+	# the node is a light wins, with the author's own spelling baked on. Its guard reads the attached
+	# scene, so a line whose target cannot be shown to be a light falls straight through to the
+	# general index below and stays whatever it was.
+	var lit: Dictionary = EventForgeLightingLift.match_line(line)
+	if not lit.is_empty():
+		_flush_raw(event, pending_raw, blank_box)
+		event.actions.append(_matched_spelling_action(lit, blank_box))
 		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
@@ -2737,11 +2750,12 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	event.actions.append(action)
 
 
-## E1. One matched networking spelling as the row it is. The template the matcher handed back is
-## BAKED onto the action, where it outranks the descriptor's canonical one - so a row lifted from a
-## hand-written file writes that file's own line, and a row the sheet authored writes the canonical
-## form. One field, already serialized, already the way an addon ACE carries its own template.
-static func _networked_action(matched: Dictionary, blank_box: Array) -> ACEAction:
+## E1 / L7. One matched spelling as the row it is, for every family that recognises the author's own
+## text rather than the canonical template. The template the matcher handed back is BAKED onto the
+## action, where it outranks the descriptor's canonical one - so a row lifted from a hand-written
+## file writes that file's own line, and a row the sheet authored writes the canonical form. One
+## field, already serialized, already the way an addon ACE carries its own template.
+static func _matched_spelling_action(matched: Dictionary, blank_box: Array) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = str(matched.get("ace_id", ""))

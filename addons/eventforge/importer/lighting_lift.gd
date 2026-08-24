@@ -1,0 +1,213 @@
+# EventForge - L7: the lighting spellings people wrote before this plugin existed.
+#
+# Most lit games are older than the sheet that opens them, so every light row has to be readable
+# BACKWARDS out of hand-written GDScript: `$Torch.energy = 1.2`, `torch.light_energy = 0.5`,
+# `get_node("Lantern").shadow_enabled = true`, and the one-line tween a fade is. Each match hands
+# back the exact template it matched, so the row re-emits the author's own bytes rather than a
+# canonical spelling of them.
+#
+# THE GATE, and the reason this family has a guard at all: a line only becomes a light row when the
+# ATTACHED SCENE (or the file's own typed declaration) says the node it names really is a light.
+# `.enabled = false` is a sentence half the objects in a game can say, and claiming it for a light
+# would relabel somebody's door. A node whose class cannot be established stays a script block with
+# the usual Adopt offer - the row never guesses, and a reader can always check the claim against the
+# scene in front of them.
+#
+# Everything here is TABLE ENTRIES (see EventForgeLiftTable): one pattern per property, the captures
+# that are values, and the spelling stored by splicing those captures out of the author's own line.
+# And nothing is written per property: the entries are built from the same word map the rows are
+# built from, so a light class the engine adds is recognised on the strength of ClassDB knowing it.
+@tool
+class_name EventForgeLightingLift
+extends RefCounted
+
+const W := preload("res://addons/eventforge/registration/light_words.gd")
+
+## The node spellings a row can address a light by, as one capture. All four are the author's own
+## text and ride back out untouched: the row shows the light it names, so `target` IS a value, and
+## which of the four spellings was used is part of the line rather than part of the sentence.
+const TARGET: String = "(?<target>\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
+	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*)"
+
+## The call a fade is written as - the one spelling that names no property of its own.
+const FADE_CALL: String = "tween_property"
+
+## The sample node one class is given in a generated fixture, so every entry can write a line whose
+## target really is a light of the kind that entry is about. Doubles as the fixture's whole scene:
+## `lift_fixture_context` notes exactly these.
+const FIXTURE_NODES: Dictionary = {
+	"PointLight2D": "Torch",
+	"DirectionalLight2D": "Moonlight",
+	"OmniLight3D": "Bulb",
+	"SpotLight3D": "Flashlight",
+	"DirectionalLight3D": "Sun"
+}
+
+## What a generated fixture sets a light to. One per kind of field, because a colour is written as a
+## colour and everything else as a number.
+const FIXTURE_VALUE: String = "1.2"
+const FIXTURE_COLOUR: String = "Color(\"ffd9a1\")"
+const FIXTURE_SECONDS: String = "0.5"
+
+## Node reference -> class, for the file being lifted: every node of its scenes, plus every variable
+## it declares that a class can be put to. Filled once per lift from the scene and the source, for
+## the same reason the multiplayer table's peer variables are: a `torch.energy = 1.2` line cannot say
+## on its own whether `torch` is a light or somebody's campfire counter.
+static var target_classes: Dictionary = {}
+
+## The declaration shapes a class can be read off: `@onready var torch: PointLight2D = $Torch`,
+## `@export var lamp: OmniLight3D`, `@onready var torch := $Torch`. The type wins when there is one;
+## otherwise the node the variable holds is looked up in the scene.
+static var _declaration: RegEx = null
+
+## The entries and their prefilter, built once for the life of the session: these run on every
+## statement of every opened file, and rebuilding the table per line was the whole cost of it.
+static var _entries: Array[Dictionary] = []
+static var _marks: PackedStringArray = PackedStringArray()
+
+
+## Records what the file being lifted can name, and what each of those names is. Called at the start
+## of every lift; a file with no scene and no typed declarations simply leaves every guard with
+## nothing to say yes to.
+static func note_source(source: String, script_path: String) -> void:
+	target_classes = EventSheetSceneLights.classes_for_script(script_path).duplicate()
+	if _declaration == null:
+		_declaration = RegEx.create_from_string("(?m)^[ \\t]*(?:@onready[ \\t]+|@export[ \\t]+)?"\
+			+ "var[ \\t]+(?<name>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*"\
+			+ "(?::[ \\t]*(?<type>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*)?(?::?=[ \\t]*(?<value>[^\\n]+))?$")
+	for hit: RegExMatch in _declaration.search_all(source):
+		var declared: String = hit.get_string("type").strip_edges()
+		if declared.is_empty():
+			declared = str(target_classes.get(
+				EventSheetSceneLights.reference_key(hit.get_string("value")), ""))
+		if W.is_light_class(declared):
+			target_classes[hit.get_string("name")] = declared
+
+
+## The row one statement means, or {} when no spelling claims it. `line` is a single statement,
+## already dedented by the lifter.
+static func match_line(line: String) -> Dictionary:
+	var text: String = line.strip_edges()
+	var entries: Array[Dictionary] = lift_entries()
+	var possible: bool = false
+	for mark: String in _marks:
+		possible = possible or text.contains(mark)
+	if not possible:
+		return {}
+	return EventForgeLiftTable.match_line(entries, text)
+
+
+## Every lighting spelling, as table entries. Built from the word map rather than written out: one
+## entry per property a word resolves to (two for a switch, because on and off are two rows), plus
+## the tween for a word a light can be faded on. Alongside them, the fragments a line must contain
+## for any of them to be worth trying - the property names themselves, so the prefilter can never
+## drift from the table it guards.
+static func lift_entries() -> Array[Dictionary]:
+	if not _entries.is_empty():
+		return _entries
+	var entries: Array[Dictionary] = []
+	var marks: PackedStringArray = PackedStringArray([FADE_CALL])
+	for word: Dictionary in W.WORDS:
+		for dimension: Array in [[W.CLASSES_2D, W.ROOT_2D], [W.CLASSES_3D, W.ROOT_3D]]:
+			for row: Dictionary in W.rows_of(str(word["word"]), dimension[0], str(dimension[1])):
+				if not marks.has(str(row["property"])):
+					marks.append(str(row["property"]))
+				if str(word["kind"]) == W.KIND_SWITCH:
+					entries.append(_switch_entry(row, true))
+					entries.append(_switch_entry(row, false))
+					continue
+				entries.append(_value_entry(word, row))
+				if bool(word.get("fades", false)):
+					entries.append(_fade_entry(row))
+	_entries = entries
+	_marks = marks
+	return _entries
+
+
+## `<light>.energy = 1.2` - the property this class answers the word with, set to anything.
+static func _value_entry(word: Dictionary, row: Dictionary) -> Dictionary:
+	var property: String = str(row["property"])
+	return {
+		"id": _entry_id(row, "set"),
+		"ace_id": "LightSet%s" % str(row["id_stem"]),
+		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, property],
+		"params": ["target", "value"],
+		"guard": _guard_for(row),
+		"shape": "{target}.%s = {value}" % property,
+		"slots": {
+			"target": _fixture_target(row),
+			"value": FIXTURE_COLOUR if str(word["kind"]) == W.KIND_COLOUR else FIXTURE_VALUE
+		}
+	}
+
+
+## `<light>.enabled = false` - a switch, whose two answers are two rows. The value is not a param:
+## which of the two rows this is IS the answer, so there is nothing left for the row to show.
+static func _switch_entry(row: Dictionary, turned_on: bool) -> Dictionary:
+	var property: String = str(row["property"])
+	var written: String = "true" if turned_on else "false"
+	return {
+		"id": _entry_id(row, written),
+		"ace_id": "Light%s%s" % [str(row["id_stem"]), "On" if turned_on else "Off"],
+		"pattern": "^%s\\.%s = %s$" % [TARGET, property, written],
+		"params": ["target"],
+		"guard": _guard_for(row),
+		"shape": "{target}.%s = %s" % [property, written],
+		"slots": {"target": _fixture_target(row)}
+	}
+
+
+## `create_tween().tween_property($Lantern, "energy", 1.0, 0.5)` - the one-line tween a fade is. The
+## quoted property name is not a value either: it is the word the row already says.
+static func _fade_entry(row: Dictionary) -> Dictionary:
+	var property: String = str(row["property"])
+	return {
+		"id": _entry_id(row, "fade"),
+		"ace_id": "LightFade%s" % str(row["id_stem"]),
+		"pattern": "^create_tween\\(\\)\\.tween_property\\((?<target>[^,]+), \"%s\", (?<value>[^,]+),"\
+			% property + " (?<seconds>.+)\\)$",
+		"params": ["target", "value", "seconds"],
+		"guard": _guard_for(row),
+		"shape": "create_tween().tween_property({target}, \"%s\", {value}, {seconds})" % property,
+		"slots": {"target": _fixture_target(row), "value": FIXTURE_VALUE, "seconds": FIXTURE_SECONDS}
+	}
+
+
+## An entry's own name, for the harness and for the printout it doubles as: the property, the class
+## that answers to it, and what the line does with it. The class is part of it because one property
+## can be two entries - `shadow_enabled` is both dimensions' answer, and the two rows are two rows.
+static func _entry_id(row: Dictionary, doing: String) -> String:
+	return "%s_%s_%s" % [str(row["property"]), str(row["host"]).to_lower(), doing]
+
+
+## One row's guard: the target names a node the scene (or a typed declaration) says is a light of
+## this row's own host class. Bound rather than written per entry, because the question is the same
+## one every time and only the class changes.
+static func _guard_for(row: Dictionary) -> Callable:
+	return Callable(EventForgeLightingLift, "_target_is").bind(str(row["host"]))
+
+
+## True when the line's target really is a light of `host_class`. The whole of the "never guess"
+## promise: an unknown name, a name the scenes do not carry, and a name that is some other kind of
+## node all answer false, and the line stays the script block it was.
+static func _target_is(captures: Dictionary, host_class: String) -> bool:
+	var named: String = EventSheetSceneLights.reference_key(str(captures.get("target", "")))
+	if named.is_empty():
+		return false
+	var found: String = str(target_classes.get(named, ""))
+	return not found.is_empty() and ClassDB.is_parent_class(found, host_class)
+
+
+## The node a generated fixture line points at: one of this row's own classes, by the sample name
+## `lift_fixture_context` notes for it.
+static func _fixture_target(row: Dictionary) -> String:
+	return "$%s" % str(FIXTURE_NODES.get(str(row["classes"][0]), "Torch"))
+
+
+## The scene a GENERATED fixture cannot have: the harness builds `$Torch.energy = 1.2` out of the
+## entry itself, with no project around it to have put a light in a scene. Called once per family
+## before its entries are probed (see EventForgeLiftTable.FIXTURE_CONTEXT_METHOD).
+static func lift_fixture_context() -> void:
+	target_classes = {}
+	for class_text: String in FIXTURE_NODES.keys():
+		target_classes[str(FIXTURE_NODES[class_text])] = class_text
