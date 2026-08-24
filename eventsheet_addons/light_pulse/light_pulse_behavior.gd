@@ -29,13 +29,6 @@ func _enter_tree() -> void:
 ## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one
 ## of them and the answer cannot change while the game runs.
 var _brightness_property: String = ""
-## The property this host spells reach with, when it has one: a 2D point light scales a
-## texture, an omni light has a radius in metres, a spot light has its own. A directional
-## light reaches everywhere and has none, and then this stays empty.
-var _reach_property: String = ""
-## The reach the light was authored with. Reach is SCALED around this rather than replaced,
-## so a designer's own radius survives the effect.
-var _authored_reach: float = 0.0
 ## How far into the current breath we are, in seconds. Kept rather than read off the game
 ## clock so that stopping and starting again resumes from where the wave was, and so that
 ## changing Period Seconds mid-breath does not snap the light.
@@ -60,7 +53,7 @@ func _process(delta: float) -> void:
 	# A cosine, not a sine: a breath should START at the dim end rather than halfway up it, so
 	# a light that begins pulsing does not jump on its first frame.
 	var wave: float = (1.0 - cos(TAU * _breath / maxf(period_seconds, 0.001))) * 0.5
-	_apply_light(lerpf(between.x, between.y, wave), 1.0)
+	_apply_light(lerpf(between.x, between.y, wave))
 
 ## The first of these properties the host really has. `in` on an object is the honest
 ## question: it answers for a project's own subclass of a light exactly as it does for the
@@ -71,20 +64,15 @@ func _first_property_of(candidates: PackedStringArray) -> String:
 			return candidate
 	return ""
 
-## Binds to the parent light: fills both property names and remembers the authored reach.
+## Binds to the parent light: finds the property it spells brightness with.
 ## False means the parent is not a light at all, which is the one setup mistake to warn about.
 func _bind_to_light() -> bool:
 	_brightness_property = _first_property_of(PackedStringArray(["energy", "light_energy"]))
-	_reach_property = _first_property_of(PackedStringArray(["texture_scale", "omni_range", "spot_range"]))
-	if not _reach_property.is_empty():
-		_authored_reach = float(host.get(_reach_property))
 	return not _brightness_property.is_empty()
 
-## Writes one frame of the effect: brightness always, reach only when this pack scales it too.
-func _apply_light(brightness: float, reach_scale: float) -> void:
+## Writes one frame of the effect. Brightness is all this pack moves.
+func _apply_light(brightness: float) -> void:
 	host.set(_brightness_property, brightness)
-	if reach_scale != 1.0 and not _reach_property.is_empty():
-		host.set(_reach_property, _authored_reach * reach_scale)
 
 ## @ace_action
 ## @ace_featured
@@ -108,7 +96,7 @@ func stop_pulsing(settle_at: float = 1.0) -> void:
 	_waiting = 0.0
 	if host == null or _brightness_property.is_empty():
 		return
-	_apply_light(settle_at, 1.0)
+	_apply_light(settle_at)
 
 ## @ace_condition
 ## @ace_name("Is Pulsing")

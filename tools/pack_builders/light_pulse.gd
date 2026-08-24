@@ -42,6 +42,8 @@ static func build() -> bool:
 		"@export var running: bool = true",
 		""
 	])
+	# No reach knob: a breath is a brightness effect here, so the binding block comes without the
+	# reach half rather than with plumbing this pack never runs.
 	lines.append_array(Lib.light_binding_lines())
 	lines.append_array(PackedStringArray([
 		"",
@@ -71,7 +73,7 @@ static func build() -> bool:
 		"\t_waiting = 0.0",
 		"\tif host == null or _brightness_property.is_empty():",
 		"\t\treturn",
-		"\t_apply_light(settle_at, 1.0)",
+		"\t_apply_light(settle_at)",
 		"",
 		"## True while the light is actually pulsing - false while it waits out a delay, and false",
 		"## once it has been stopped.",
@@ -111,7 +113,7 @@ static func build() -> bool:
 		"# A cosine, not a sine: a breath should START at the dim end rather than halfway up it, so",
 		"# a light that begins pulsing does not jump on its first frame.",
 		"var wave: float = (1.0 - cos(TAU * _breath / maxf(period_seconds, 0.001))) * 0.5",
-		"_apply_light(lerpf(between.x, between.y, wave), 1.0)"
+		"_apply_light(lerpf(between.x, between.y, wave))"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)

@@ -37,6 +37,7 @@ static func run() -> bool:
 	all_passed = _packs_share_one_binding() and all_passed
 	all_passed = _the_clock_maths() and all_passed
 	all_passed = _the_light_verbs_run() and all_passed
+	all_passed = _the_flame_gives_the_reach_back() and all_passed
 	return all_passed
 
 
@@ -234,6 +235,46 @@ static func _the_light_verbs_run() -> bool:
 		behaviour.call(stop, 0.25)
 		all_passed = _check("%s stops without a light to stop" % name_text, behaviour.call(asks), false) and all_passed
 		behaviour.free()
+	return all_passed
+
+
+## L3 - THE REACH A FLAME BORROWS, AND GIVES BACK, with a real light on the other end of the promise.
+## `Stop Flickering` tells the author "reach goes back to whatever the scene was authored with", and
+## the verbs above are called with NO light attached, which is exactly the case where every reach
+## line is skipped - so the promise was shipped untested and was false. No tree and no frames are
+## needed for it: `_apply_light` is the one line the per-frame half writes through, so calling it is
+## calling the effect. The numbers are snapped because a light's reach is a float32 and the
+## arithmetic is a double.
+static func _the_flame_gives_the_reach_back() -> bool:
+	var all_passed: bool = true
+	var torch: PointLight2D = PointLight2D.new()
+	torch.texture_scale = 4.0
+	var flame: Node = load(FLICKER).new()
+	flame.host = torch
+	flame.also_flicker_reach = true
+	all_passed = _check("the flame binds to the light it is under", flame._bind_to_light(), true) and all_passed
+	flame._apply_light(1.0, 0.92)
+	all_passed = _check("a flickering frame scales the reach the scene was authored with",
+		snappedf(torch.texture_scale, 0.0001), 3.68) and all_passed
+	flame.stop_flickering(1.0)
+	all_passed = _check("and stopping the flame puts that reach back",
+		snappedf(torch.texture_scale, 0.0001), 4.0) and all_passed
+	# With the knob off the flame never touches reach at all, so a row that sets the radius while the
+	# torch burns is still there on the next frame.
+	flame.also_flicker_reach = false
+	torch.texture_scale = 7.0
+	flame._apply_light(1.0, 0.92)
+	all_passed = _check("a flame that was not asked to flicker reach leaves it alone",
+		snappedf(torch.texture_scale, 0.0001), 7.0) and all_passed
+	# And the pack that never scales reach ships none of the plumbing for it: the members and the
+	# branch were emitted into both packs, describing an effect only one of them has.
+	var pulse_source: String = FileAccess.get_file_as_string(PULSE)
+	all_passed = _check("the pulse carries no reach plumbing it never runs",
+		pulse_source.contains("_reach_property"), false) and all_passed
+	all_passed = _check("and says so in the one line it writes a frame through",
+		pulse_source.contains("func _apply_light(brightness: float) -> void:"), true) and all_passed
+	flame.free()
+	torch.free()
 	return all_passed
 
 

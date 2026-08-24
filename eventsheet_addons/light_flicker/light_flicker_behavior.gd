@@ -36,8 +36,9 @@ var _brightness_property: String = ""
 ## texture, an omni light has a radius in metres, a spot light has its own. A directional
 ## light reaches everywhere and has none, and then this stays empty.
 var _reach_property: String = ""
-## The reach the light was authored with. Reach is SCALED around this rather than replaced,
-## so a designer's own radius survives the effect.
+## The reach the light was authored with. Reach is SCALED around this rather than
+## replaced, so a designer's own radius survives the effect - and a scale of 1 is the way
+## back to it, which is what the light settles on when the effect stops.
 var _authored_reach: float = 0.0
 ## The noise field the flame is sampled from, and how far along it we are. NOISE, not a fresh
 ## random number per frame: consecutive samples of a noise field are RELATED, so the light
@@ -84,7 +85,7 @@ func _first_property_of(candidates: PackedStringArray) -> String:
 			return candidate
 	return ""
 
-## Binds to the parent light: fills both property names and remembers the authored reach.
+## Binds to the parent light: finds the property it spells brightness with, and remembers the reach it was authored with.
 ## False means the parent is not a light at all, which is the one setup mistake to warn about.
 func _bind_to_light() -> bool:
 	_brightness_property = _first_property_of(PackedStringArray(["energy", "light_energy"]))
@@ -93,10 +94,14 @@ func _bind_to_light() -> bool:
 		_authored_reach = float(host.get(_reach_property))
 	return not _brightness_property.is_empty()
 
-## Writes one frame of the effect: brightness always, reach only when this pack scales it too.
+## Writes one frame of the effect: brightness always, and reach whenever also_flicker_reach asked for it.
+## The scale is around the reach the scene was AUTHORED with rather than around the current
+## one, so a scale of 1 is the way back - which is what a stopped effect settles on. Skipping
+## the write for a scale of 1 is how a torch put out mid-flicker kept the radius of the frame
+## it happened to die on.
 func _apply_light(brightness: float, reach_scale: float) -> void:
 	host.set(_brightness_property, brightness)
-	if reach_scale != 1.0 and not _reach_property.is_empty():
+	if also_flicker_reach and not _reach_property.is_empty():
 		host.set(_reach_property, _authored_reach * reach_scale)
 
 ## @ace_action
@@ -112,7 +117,7 @@ func start_flickering(after_seconds: float = 0.0) -> void:
 
 ## @ace_action
 ## @ace_name("Stop Flickering")
-## @ace_description("Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. Reach goes back to whatever the scene was authored with.")
+## @ace_description("Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. A flame that was flickering its reach puts that back to whatever the scene was authored with, rather than leaving the radius of the frame it stopped on.")
 ## @ace_display_template("Stop flickering and settle at [b]{settle_at}[/b]")
 ## @ace_icon("res://eventsheet_addons/light_flicker/icon.svg")
 ## @ace_codegen_template("$LightFlickerBehavior.stop_flickering({settle_at})")

@@ -47,7 +47,9 @@ static func build() -> bool:
 		"@export var running: bool = true",
 		""
 	])
-	lines.append_array(Lib.light_binding_lines())
+	# The flame is the one of the two light packs that scales reach, so its binding block gets the
+	# reach half - and the knob that says whether this flame is using it.
+	lines.append_array(Lib.light_binding_lines("also_flicker_reach"))
 	lines.append_array(PackedStringArray([
 		"",
 		"## The noise field the flame is sampled from, and how far along it we are. NOISE, not a fresh",
@@ -70,7 +72,8 @@ static func build() -> bool:
 		"",
 		"## Stops the flicker and leaves the light at one steady brightness - the number the row",
 		"## names, so a torch that goes out settles dark and one that is merely calmed settles lit.",
-		"## Reach goes back to whatever the scene was authored with.",
+		"## A flame that was flickering its reach puts that back to whatever the scene was authored",
+		"## with, rather than leaving the radius of the frame it stopped on.",
 		"## @ace_action",
 		"## @ace_name(\"Stop Flickering\")",
 		"## @ace_display_template(\"Stop flickering and settle at [b]{settle_at}[/b]\")",
