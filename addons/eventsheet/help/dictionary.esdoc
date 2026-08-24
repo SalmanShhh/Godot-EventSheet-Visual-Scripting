@@ -115,6 +115,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `color` | [Set Light Colour (2D)](ace:Core/SetLightColour) | Lighting | Vocabulary |
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
 | `compile` | [Set Pattern](ace:Core/SetTextPattern) | Text: RegEx | Vocabulary |
+| `complete_auth` | [Accept Player](ace:Core/AcceptPlayer) | Multiplayer | Vocabulary |
 | `cone` | [Draw Cone](ace:Core/DrawCone) | Drawing | Vocabulary |
 | `configure` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `connect` | [Connect Signal](ace:Core/ConnectSignal) | Helpers | Vocabulary |
@@ -150,6 +151,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `disable_collision` | [Set Disable Collision](ace:Core/SetJointDisableCollision) | Joints | Vocabulary |
 | `disabled` | [Is Button Disabled](ace:Core/IsButtonDisabled) | UI | Vocabulary |
 | `disconnect` | [Disconnect Signal](ace:Core/DisconnectSignal) | Helpers | Vocabulary |
+| `disconnect_peer` | [Kick Player](ace:Core/KickPlayer) | Multiplayer | Vocabulary |
 | `distance_squared_to` | [Look At (flat)](ace:Core/LookAtFlat) | Movement | Vocabulary |
 | `distance_to` | [Distance To](ace:Core/DistanceTo) | Math & Random | Vocabulary |
 | `distance_to_target` | [Distance To Target](ace:Core/GetNavDistance) | General Expressions | Vocabulary |
@@ -244,6 +246,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_collision_point` | [RayCast Hit Point (2D)](ace:Core/RayCast2DGetPoint) | Raycast 2D | Vocabulary |
 | `get_command_palette` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
+| `get_connection_status` | [Is Connected](ace:Core/IsConnected) | Multiplayer | Vocabulary |
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
 | `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
@@ -297,6 +300,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_monitor` | [Performance Monitor](ace:Core/GetPerfMonitor) | Utility: Debug | Vocabulary |
 | `get_mouse_position` | [Mouse Position (screen)](ace:Core/GetMouseScreenPosition) | Mouse | Vocabulary |
 | `get_multiline_string_size` | [Wrapped Text Height](ace:Core/WrappedTextHeight) | Text | Vocabulary |
+| `get_multiplayer_authority` | [Owner Of](ace:Core/OwnerOf) | Multiplayer | Vocabulary |
 | `get_name` | [Is Platform](ace:Core/IsPlatform) | Platform | Vocabulary |
 | `get_next_path_position` | [Next Path Position](ace:Core/GetNextPathPosition) | General Expressions | Vocabulary |
 | `get_node` | [Get Node](ace:Core/GetNode) | Helpers | Vocabulary |
@@ -310,6 +314,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_overlapping_bodies` | [Overlapping Bodies](ace:Core/GetOverlappingBodies) | Collisions | Vocabulary |
 | `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
 | `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
+| `get_peers` | [Players](ace:Core/Players) | Multiplayer | Vocabulary |
 | `get_percent_sign` | [Percent Sign](ace:Core/PercentSign) | Translation | Vocabulary |
 | `get_physics_frames` | [Buffer Input (Frames)](ace:Core/BufferInputFrames) | Timed Input | Vocabulary |
 | `get_physics_interpolation_fraction` | [Physics Interpolation Fraction](ace:Core/PhysicsInterpolationFraction) | Physics Server | Vocabulary |
@@ -320,6 +325,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_process_frames` | [Frame Count](ace:Core/GetFrameCount) | Time | Vocabulary |
 | `get_process_info` | [Active Bodies (2D)](ace:Core/PhysicsActiveObjects2D) | Physics Server | Vocabulary |
 | `get_property_list` | [Apply Preset To Node](ace:Core/ApplyPresetToNode) | Helpers | Vocabulary |
+| `get_remote_sender_id` | [Sender](ace:Core/Sender) | Multiplayer | Vocabulary |
 | `get_rendering_device` | [Uses Modern Renderer](ace:Core/RenderingUsesModernRenderer) | Rendering | Vocabulary |
 | `get_rendering_info` | [Draw Calls (frame)](ace:Core/RenderingDrawCallsInFrame) | Rendering | Vocabulary |
 | `get_resource_filesystem` | [Rescan Project Files](ace:Core/RescanProjectFiles) | Editor Tools | Vocabulary |
@@ -615,6 +621,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
 | `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
 | `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
+| `refuse_new_connections` | [Stop Accepting Players](ace:Core/StopAcceptingPlayers) | Multiplayer | Vocabulary |
 | `region_rect` | [Set Bar Width](ace:Core/SetBarWidth) | World-space UI | Vocabulary |
 | `relative` | [Mouse Move Delta (event)](ace:Core/MouseMotionDelta) | Mouse | Vocabulary |
 | `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
@@ -680,6 +687,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `seek_end` | [Append To File](ace:Core/AppendTextFile) | Files | Vocabulary |
 | `select` | [Select Item](ace:Core/ListSelectItem) | UI | Vocabulary |
 | `self_modulate` | [Set Self Tint](ace:Core/SetSelfModulate) | General Actions | Vocabulary |
+| `send_auth` | [Send Auth](ace:Core/SendAuth) | Multiplayer | Vocabulary |
+| `server_relay` | [Relay Messages Between Players](ace:Core/SetRelay) | Multiplayer | Vocabulary |
 | `set` | [Set Blend](ace:Core/SetTreeParam) | Animation | Vocabulary |
 | `set_anchors_and_offsets_preset` | [Set Anchors Preset](ace:Core/SetAnchorsPreset) | UI | Vocabulary |
 | `set_auto_accept_quit` | [Handle Quit Myself](ace:Core/HandleQuitRequest) | Scene | Vocabulary |
@@ -704,6 +713,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_main_screen_editor` | [Switch To Workspace](ace:Core/SwitchToWorkspace) | Editor Tools: Panels & menus | Vocabulary |
 | `set_meta` | [Clear Measurements](ace:Core/ClearMeasurements) | Debug | Vocabulary |
 | `set_mouse_mode` | [Request Pointer Lock](ace:Core/MouseRequestPointerLock) | Mouse | Vocabulary |
+| `set_multiplayer_authority` | [Give To Player](ace:Core/GiveAuthority) | Multiplayer | Vocabulary |
 | `set_physics_process` | [Set Node Physics Processing](ace:Core/NodeSetPhysicsProcessing) | Nodes: Activation | Vocabulary |
 | `set_point_position` | [Mirror Path](ace:Core/MirrorPath) | Facing | Vocabulary |
 | `set_pressed_no_signal` | [Set Button Pressed](ace:Core/SetButtonPressedState) | UI | Vocabulary |

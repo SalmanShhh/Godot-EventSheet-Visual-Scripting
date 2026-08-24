@@ -659,7 +659,8 @@ The group's menu:
 
 | Item | What it does |
 |---|---|
-| Edit Group… | name, description, Active on start, Can be switched at runtime, and Colour, in one dialog with the one help strip. The swatch has to open on some colour, so it is written only when you move it - a group that carries none stays uncoloured |
+| Edit Group… | name, description, Runs on, Active on start, Can be switched at runtime, and Colour, in one dialog with the one help strip. The swatch has to open on some colour, so it is written only when you move it - a group that carries none stays uncoloured |
+| Runs On | Everyone / The host / The owner, without opening the dialog |
 | Active On Start | the tick, without opening the dialog |
 | Open / Close Group | fold this one |
 | Open All / Close All Groups | `Ctrl+Shift+G` |
@@ -671,6 +672,16 @@ The group's menu:
 Duplicate and Delete are not repeated here: they are the universal items further down the same menu,
 and they act on a group head the way they act on any row. `Ctrl+D` on a selected head duplicates the
 group and everything in it, which is the same thing the menu's **Duplicate** does.
+
+**A group can say who runs it.** Over a network the commonest bug is a rule that runs on every peer
+when it should run once, or on every copy of a player when only its owner should move it. **Runs on**
+answers that once, for the whole group: *Everyone* (the default, which writes nothing at all), *The
+host*, or *The owner*. The head shows the answer as one muted word beside the name, and the compiler
+wraps the group's events in `multiplayer.is_server()` or `is_multiplayer_authority()` - the same
+guard path a runtime-switchable group already used, so a group that is both asks the switch first.
+Nested groups inherit until one answers for itself, and then the innermost answer wins. The word
+rides the file in the group's own `## @ace_group(name="Scoring", runs_on="host")` header, so a saved
+sheet reopens with it. A sheet that never says it compiles to exactly what it compiled to before.
 
 **A group's own variables are rows.** Its local variables render as Local rows at the top of its
 body, in the same one sentence, each echoing the `var` line the compiler writes for it.

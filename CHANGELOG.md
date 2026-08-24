@@ -640,6 +640,53 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to
   an event, and its connect line was then written twice - failing the byte-verify and reverting every
   function in the file to a script block. Handlers now wait for the `_ready` that wires them.
+- **The lobby, the handshake and the questions a networked script asks are rows now.** **Kick
+  player**, **Stop accepting players** and **Relay messages between players off** run a lobby;
+  **Accept player** / **Reject player** / **Send auth** answer the handshake; **Give Player to
+  player 2** hands one object to one peer. **Is connected** and **Started as dedicated_server**
+  ask what state this build is in, and **Players**, **Player count**, **Sender** and **Owner of
+  Player** are the four values a networked rule reaches for. Each writes exactly one Godot call -
+  `disconnect_peer`, `refuse_new_connections`, `server_relay`, `complete_auth`, `send_auth`,
+  `set_multiplayer_authority`, `get_connection_status`, `OS.has_feature`, `get_peers`,
+  `get_remote_sender_id`, `get_multiplayer_authority` - and every parameter carries a real
+  description, because that reference page is derived from the vocabulary itself.
+- **Two more events, off Godot's own signals.** **On player authenticating** and **On authentication
+  failed** connect to `peer_authenticating` and `peer_authentication_failed` in `_ready` like every
+  other signal trigger, and a script that already connected them by hand opens on them.
+- **Add event ▸ Multiplayer sorts onto three shelves.** *Players* (who arrived, who left, who is
+  still proving who they are), *Connection* (this peer got in, was refused, or lost the host) and
+  *Scenes* (what a spawner or a synchronizer just did), each with a line saying what it holds. Which
+  shelf a trigger lands on is DERIVED from the trigger - one that hands you a player id is about a
+  player, one that names a node in the scene is about that node - so a trigger added later is filed
+  without a list being edited, and every action, condition and expression stays in the one flat
+  Multiplayer section where it always was.
+- **The networking fields explain themselves while you fill them in.** The Parameters dialog's help
+  strip now has paragraphs for an address, a port, a peer kind and a player count - which ports are
+  free and which need admin rights, why 127.0.0.1 only reaches this machine, what each connected
+  player costs the host every tick - and the peer-kind dropdown carries a line under each choice
+  (ENet is the default, WebSocket is the one a browser export can open, WebRTC needs a signalling
+  server you run). They live in the shared hint table, so a pack that ships a hosting row of its own
+  gets the same words for nothing.
+
+### Multiplayer - a group says who runs it
+
+- **Who runs these events is one word on the group, not a condition on every row.** A group carries
+  **Runs on**: *Everyone* (the default, which writes nothing at all), *The host*, or *The owner*. The
+  head shows the answer as one muted word beside the name, the compiler wraps the group's events in
+  `multiplayer.is_server()` or `is_multiplayer_authority()` through the same guard path a
+  runtime-switchable group already used, and nested groups inherit until one answers for itself -
+  the innermost answer wins, because that is the one the reader put closest to the rows. A sheet that
+  never says it compiles to exactly what it compiled to before.
+- **Two ways to say it, one undo step.** **Edit group…** gained the *Runs on* dropdown with a line
+  under each choice and the guard as its IN CODE line, and right-clicking the head offers
+  **Runs On ▸** the same three directly. Picking *The host* on a group whose rows each carry their
+  own **Is host** condition folds those conditions into the group's one word, so the test is asked
+  once rather than twice.
+- **It rides the file, and the file comes back unchanged.** The answer is written into the group's
+  own `## @ace_group(name="Scoring", runs_on="host")` header, read back by the importer, and the
+  guard is taken off the events on the way in - so a saved sheet reopens with the word on the group
+  instead of a repeated condition, and re-saving it reproduces the file byte for byte, guard
+  included. Single player is untouched either way: `multiplayer.is_server()` is true with no peer.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

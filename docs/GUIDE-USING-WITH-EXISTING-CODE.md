@@ -1295,10 +1295,17 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `multiplayer.multiplayer_peer = null`, `peer.close()`, or the `get_tree().get_multiplayer()` spelling of the first | **Leave the game** |
     | `WebSocketMultiplayerPeer` / `WebRTCMultiplayerPeer` in the constructor | the same rows, with that peer kind |
     | `multiplayer.peer_connected.connect(_on_x)` and its four siblings | **On player joined** / **On player left** / **On joined the host** / **On join failed** / **On the host left**, with the connect line re-emitted exactly as you wrote it |
+    | `multiplayer.peer_authenticating.connect(...)` and `peer_authentication_failed` | **On player authenticating** / **On authentication failed** |
+    | `multiplayer.multiplayer_peer.disconnect_peer(id)` | **Kick player id** |
+    | `multiplayer.multiplayer_peer.refuse_new_connections = true`, `multiplayer.server_relay = false` | **Stop accepting players**, **Relay messages between players off** |
+    | `multiplayer.complete_auth(id)`, `multiplayer.send_auth(id, bytes)` | **Accept player id**, **Send auth bytes to player id** |
+    | `$Player.set_multiplayer_authority(id)`, `$Player.get_multiplayer_authority()` | **Give $Player to player id**, **Owner of $Player** |
+    | `multiplayer.get_peers()`, `.size()`, `multiplayer.get_remote_sender_id()` | **Players**, **Player count**, **Sender** |
     | `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each re-emitting your own quoting |
     | `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
     | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
     | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
+    | `## @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |
 
     And the honest other half. These stay the code they are, because no row can say them without
     losing something: a `create_server` given channel or bandwidth limits, `peer.host.compress(...)`,
