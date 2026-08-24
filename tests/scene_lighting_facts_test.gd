@@ -24,6 +24,11 @@ const CRYPT: String = "res://tests/fixtures/lighting_scene_crypt.gd"
 const CRYPT_SCENE: String = "res://tests/fixtures/lighting_scene_crypt.tscn"
 const ENVIRONMENT: String = "res://tests/fixtures/lighting_environment.tres"
 
+## A hall lit by two shadow-casting lights, one of which an occluder can block and one of which
+## nothing can - the scene that tells the band's WARNING apart from the band's CLICK.
+const HALL: String = "res://tests/fixtures/lighting_hall_lamp.gd"
+const HALL_SCENE: String = "res://tests/fixtures/lighting_scene_hall.tscn"
+
 
 static func run() -> bool:
 	EventSheetSceneLights.clear_cache()
@@ -96,6 +101,17 @@ static func _test_the_shadow_band() -> bool:
 	ok = _check("and its echo counts the occluders that exist as well as the ones that match",
 		str(stranded[0]["echo"]),
 		"lighting_scene_crypt.tscn: LightOccluder2D x 1, 0 whose occluder_light_mask matches shadow_item_cull_mask") and ok
+	# THE CLICK, in a scene where the two halves of the band could disagree. The hall's chandelier is
+	# blocked and its candle is not, so the warning names the candle - and the control beside it has to
+	# select the candle too, or the click sends a reader to the light that is fine.
+	var mixed: Array[Dictionary] = EventSheetSceneLightingFacts.shadow_bands(HALL)
+	ok = _check("with several shadow-casters, the warning names the stranded one",
+		str(mixed[0]["value"]),
+		"Candle casts shadows and no occluder's mask matches - shadows never appear") and ok
+	ok = _check("and the band's control selects the light it just named",
+		str(mixed[0]["reference"]), "%s|Candle" % HALL_SCENE) and ok
+	ok = _check("a band with nothing wrong points at a light too", str(healthy[0]["reference"]),
+		"res://tests/fixtures/lighting_scene_room.tscn|Torch") and ok
 	return _check("and a scene whose lights cast nothing has no shadow band at all",
 		EventSheetSceneLightingFacts.shadow_bands("res://tests/fixtures/lighting_scene_cave.gd").size(), 0) and ok
 

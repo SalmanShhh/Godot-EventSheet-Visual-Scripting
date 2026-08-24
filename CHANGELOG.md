@@ -210,6 +210,9 @@
   spot aimed at a door swung a full revolution per game day. A directional light's rotation IS where
   the sky's light comes from; every other light now keeps the angle it was given and follows the day
   in brightness alone.
+- **Fixed: the shadows band selects the light it just named.** In a scene where one light's shadows
+  are blocked and another's are not, the band said the stranded light's name and its control opened
+  the scene on the first shadow-caster - the one that was fine.
 
 ### Translations
 

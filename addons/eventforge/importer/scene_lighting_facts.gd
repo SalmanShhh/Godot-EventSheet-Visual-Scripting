@@ -109,12 +109,25 @@ static func shadow_bands(script_path: String) -> Array[Dictionary]:
 		return []
 	var blocked: Array[Dictionary] = matching_occluders(scene_path, casting)
 	var unblocked: PackedStringArray = lights_without_occluders(scene_path, casting)
+	# The band's control selects the light the band is ABOUT, which when there is a warning is the
+	# light the warning names rather than the scene's first shadow-caster: in a scene where one
+	# torch's shadows are blocked and another's are not, clicking through has to land on the one that
+	# is not, or it sends the reader to the node that is fine.
 	return [{
 		"value": shadows_reading(blocked.size(), unblocked),
 		"echo": shadows_echo(scene_path, blocked.size()),
-		"reference": _reference(casting[0]),
+		"reference": _reference(casting[0] if unblocked.is_empty() else _light_named(casting, unblocked[0])),
 		"warning": not unblocked.is_empty()
 	}]
+
+
+## One light of a set by name, falling back to the first - which is what a set with nothing wrong in
+## it has to point at, since every light in it is as good an answer as the next.
+static func _light_named(lights: Array[Dictionary], name_text: String) -> Dictionary:
+	for light: Dictionary in lights:
+		if str(light.get("name", "")) == name_text:
+			return light
+	return lights[0]
 
 
 ## The 2D lights of one scene that cast shadows - the only ones an occluder is about. Asked by the
