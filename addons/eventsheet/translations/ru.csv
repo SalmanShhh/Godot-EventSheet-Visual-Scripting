@@ -4542,3 +4542,8 @@ Wrap in an owner group,Обернуть в группу владельца
 "%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s может отправить кто угодно, и оно записывает %s, не спрашивая, кто его отправил. Любой игрок может отправить его сам."
 Couldn't find that event to group.,Не удалось найти это событие для группировки.
 Only the owner of this object runs it now.,Теперь его выполняет только владелец этого объекта.
+"Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.","Запускает две копии игры сразу, с метками %s и %s, и играет сцену, к которой прикреплён этот лист. Он задаёт собственную настройку Godot Отладка > Запустить несколько экземпляров (2 экземпляра, по одной метке возможностей), так что событие При готовности > Запущено как принимает игру в одном окне, пока другое подключается. Снимите галочку Включить несколько экземпляров в том же диалоге, чтобы вернуться к одному."
+"Run Multiple Instances is an editor setting, and there is no editor here.","Запуск нескольких экземпляров - это настройка редактора, а редактора здесь нет."
+"Already set to run %d copies, tagged %s.",Уже настроено на запуск %d копий с метками %s.
+"Set to run %d copies, tagged %s.",Настроено на запуск %d копий с метками %s.
+instance %d,экземпляр %d

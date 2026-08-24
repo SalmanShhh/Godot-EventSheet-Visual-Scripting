@@ -4542,3 +4542,8 @@ Wrap in an owner group,소유자 그룹으로 감싸기
 "%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s 은(는) 누구나 보낼 수 있고, 보낸 사람을 확인하지 않은 채 %s 을(를) 쓵니다. 어떤 플레이어든 직접 보낼 수 있습니다."
 Couldn't find that event to group.,그룹으로 묶을 이벤트를 찾지 못했습니다.
 Only the owner of this object runs it now.,이제 이 오브젝트의 소유자만 실행합니다.
+"Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.","게임 사본 두 개를 동시에 실행하고 각각 %s 와 %s 태그를 붙인 뒤, 이 시트가 연결된 씬을 재생합니다. 고도 자체의 디버그 > 다중 인스턴스 실행(인스턴스 2개, 각각 기능 태그 하나)을 설정하므로, 준비되면 > 시작 태그 이벤트가 한 창에서 호스트하고 다른 창이 참가합니다. 하나로 되돌리려면 같은 대화 상자에서 다중 인스턴스 활성화 체크를 해제하세요."
+"Run Multiple Instances is an editor setting, and there is no editor here.","다중 인스턴스 실행은 에디터 설정인데, 여기에는 에디터가 없습니다."
+"Already set to run %d copies, tagged %s.",이미 %d 개의 사본을 실행하도록 설정되어 있습니다. 태그는 %s 입니다.
+"Set to run %d copies, tagged %s.",%d 개의 사본을 실행하도록 설정했습니다. 태그는 %s 입니다.
+instance %d,인스턴스 %d

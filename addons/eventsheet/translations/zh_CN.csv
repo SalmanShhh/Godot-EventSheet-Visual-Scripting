@@ -4542,3 +4542,8 @@ Wrap in an owner group,放进所有者分组
 "%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.",%s 谁都可以发送，而且它在不确认发送者的情况下写入 %s。任何玩家都可以自己发一条。
 Couldn't find that event to group.,找不到要分组的那个事件。
 Only the owner of this object runs it now.,现在只有这个对象的所有者会运行它。
+"Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.",同时运行游戏的两个副本，分别标记为 %s 和 %s，并播放此表所附加的场景。它设置的是 Godot 自己的调试 > 运行多个实例（2 个实例，各带一个功能标签），因此当就绪 > 启动标签为 的事件会在一个窗口中主持游戏，另一个窗口加入。要恢复为一个，请在同一对话框中取消勾选启用多个实例。
+"Run Multiple Instances is an editor setting, and there is no editor here.",运行多个实例是编辑器设置，而这里没有编辑器。
+"Already set to run %d copies, tagged %s.",已经设置为运行 %d 个副本，标记为 %s。
+"Set to run %d copies, tagged %s.",已设置为运行 %d 个副本，标记为 %s。
+instance %d,实例 %d

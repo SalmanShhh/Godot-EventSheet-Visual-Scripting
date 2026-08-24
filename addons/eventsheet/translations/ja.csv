@@ -4542,3 +4542,8 @@ Wrap in an owner group,所有者のグループで囲む
 "%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.",%s は誰でも送れるうえ、送り主を確かめずに %s を書き換えます。プレイヤーが自分で送ることもできてしまいます。
 Couldn't find that event to group.,グループ化するイベントが見つかりませんでした。
 Only the owner of this object runs it now.,これからはこのオブジェクトの所有者だけが実行します。
+"Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.",ゲームのコピーを2つ同時に実行し、それぞれに %s と %s のタグを付けて、このシートが接続されているシーンを再生します。Godot 自身のデバッグ > 複数インスタンスを実行（2 インスタンス、機能タグを1つずつ）を設定するので、準備完了時 > 起動時のタグは のイベントが一方のウィンドウでホストし、もう一方が参加します。1つに戻すには、同じダイアログで複数インスタンスを有効化のチェックを外してください。
+"Run Multiple Instances is an editor setting, and there is no editor here.",複数インスタンスを実行はエディタの設定ですが、ここにエディタはありません。
+"Already set to run %d copies, tagged %s.",すでに %d 個のコピーを実行する設定です。タグは %s です。
+"Set to run %d copies, tagged %s.",%d 個のコピーを実行するよう設定しました。タグは %s です。
+instance %d,インスタンス %d

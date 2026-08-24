@@ -94,7 +94,7 @@ static func labels(stored: Dictionary) -> PackedStringArray:
 	for index: int in range(count):
 		var tag: String = tags[index]
 		if tag.is_empty():
-			named.append("instance %d" % (index + 1))
+			named.append(EventSheetL10n.translate("instance %d") % (index + 1))
 		elif int(seen.get(tag, 0)) > 1:
 			named.append("%s %d" % [tag, index + 1])
 		else:
@@ -105,7 +105,7 @@ static func labels(stored: Dictionary) -> PackedStringArray:
 ## What the toolbar button promises, and how to take it back - the tooltip is the only place the
 ## reader is told that this is Godot's own setting rather than something this plugin invented.
 static func tooltip() -> String:
-	return "Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one." % [HOST_TAG, CLIENT_TAG]
+	return EventSheetL10n.translate("Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.") % [HOST_TAG, CLIENT_TAG]
 
 
 # -- The editor half (writes the setting; refuses outside the editor) ---------------------------
@@ -131,14 +131,18 @@ static func stored() -> Dictionary:
 static func apply_tags(tags: PackedStringArray) -> Dictionary:
 	var settings: Object = _editor_settings()
 	if settings == null:
-		return {"ok": false, "reason": "Run Multiple Instances is an editor setting, and there is no editor here."}
+		return {"ok": false, "reason": EventSheetL10n.translate(
+			"Run Multiple Instances is an editor setting, and there is no editor here.")}
 	var was_on: bool = says_tags(stored(), tags)
 	settings.call("set_project_metadata", METADATA_SECTION, KEY_CONFIG,
 		config_with_tags(stored().get(KEY_CONFIG, []) as Array, tags))
 	settings.call("set_project_metadata", METADATA_SECTION, KEY_COUNT, tags.size())
 	settings.call("set_project_metadata", METADATA_SECTION, KEY_ENABLED, true)
-	var said: String = "Already set to run" if was_on else "Set to run"
-	return {"ok": true, "message": "%s %d copies, tagged %s." % [said, tags.size(), ", ".join(tags)]}
+	# Whole sentences either way: a translator handed "Set to run" and "%s %d copies" separately
+	# cannot put them in the order their own language asks for.
+	var said: String = EventSheetL10n.translate("Already set to run %d copies, tagged %s.") if was_on \
+		else EventSheetL10n.translate("Set to run %d copies, tagged %s.")
+	return {"ok": true, "message": said % [tags.size(), ", ".join(tags)]}
 
 
 ## The label a debug session's values belong under - the tag the instance it came from was started

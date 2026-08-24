@@ -4542,3 +4542,8 @@ Wrap in an owner group,Racchiudi in un gruppo del proprietario
 "%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s può inviarlo chiunque, e scrive %s senza chiedere chi l'ha inviato. Qualsiasi giocatore potrebbe inviarlo da sé."
 Couldn't find that event to group.,Non è stato possibile trovare quell'evento da raggruppare.
 Only the owner of this object runs it now.,Ora lo esegue solo il proprietario di questo oggetto.
+"Run two copies of the game at once, tagged %s and %s, and play the scene this sheet is attached to. It sets Godot's own Debug > Run Multiple Instances (2 instances, one feature tag each), so an On ready > Started as host event hosts in one window while the other joins. Untick Enable Multiple Instances in that same dialog to go back to one.","Avvia due copie del gioco insieme, contrassegnate %s e %s, e riproduce la scena a cui è collegato questo foglio. Imposta il Debug > Esegui più istanze di Godot (2 istanze, un tag di funzionalità ciascuna), così un evento Quando è pronto > Avviato come ospita la partita in una finestra mentre l'altra si unisce. Togli la spunta ad Abilita più istanze nella stessa finestra per tornare a una."
+"Run Multiple Instances is an editor setting, and there is no editor here.","Esegui più istanze è un'impostazione dell'editor, e qui non c'è un editor."
+"Already set to run %d copies, tagged %s.","Già impostato per eseguire %d copie, contrassegnate %s."
+"Set to run %d copies, tagged %s.","Impostato per eseguire %d copie, contrassegnate %s."
+instance %d,istanza %d
