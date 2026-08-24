@@ -35,6 +35,11 @@ godot --headless --path . --script tools/project_doctor.gd  # repo health (CI ga
 godot --headless --path . --script tools/build_help_bundle.gd  # ONLY after editing docs/*.md - see below
 ```
 
+**While a change is still moving**, `godot --headless --path . --script tools/pick_tests.gd -- run`
+runs only the tests that could plausibly have broken (it reads `git status` and maps changed files to
+tests by name plus a small override table). That is an iteration tool, not a verdict: the loop above
+runs in full before every commit.
+
 **If you touched a guide, regenerate the shipped copy.** The release zip carries `addons/` and
 nothing else, so the guides are copied verbatim into `addons/eventsheet/help/` for the Manual (the
 in-editor documentation reader) to read. `tests/doc_library_test.gd` compares the two byte for byte, so an
