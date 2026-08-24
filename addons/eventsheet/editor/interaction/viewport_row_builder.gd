@@ -50,6 +50,15 @@ const NEGATED_MARK := "not"
 const KIND_BADGE_WIDTH: float = 15.0
 const INSPECTOR_BADGE_GLYPH := "⚙"
 
+## E2 - the third mark a variable row can wear: this value is kept in step across the network. One
+## glyph per mode, because the mark has to say WHICH mode without a word - the art behind each is a
+## box with two bars in it, stroked solid, dotted or dashed.
+const SYNC_BADGE_GLYPHS: Dictionary = {
+	EventSheetSceneReplication.MODE_ALWAYS: "⚌",
+	EventSheetSceneReplication.MODE_ON_CHANGE: "⚍",
+	EventSheetSceneReplication.MODE_AT_SPAWN: "⚏",
+}
+
 ## The head's band rows all share this uid prefix, so anything that has to find the head - the
 ## opened-pack reading, the fold guard, a test - asks one question instead of listing band kinds.
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
@@ -604,6 +613,9 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# gestures at all - so a previewed file is never told it is unattached.
 	head_facts["attached"] = sheet.read_only \
 		or _sheet_is_attached(sheet, str(head_facts.get("class_name", "")))
+	# E2 - the half of the head that comes from the SCENE: what keeps this object in step, and which
+	# spawner can make it. Read, never stored, so a project with no scenes gains no bands at all.
+	head_facts.merge(EventSheetHeadBands.scene_facts(sheet), true)
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
 		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
@@ -621,12 +633,16 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_facts: Dictionary,
 		description_source: Resource) -> EventRowData:
 	var kind: String = str(band["kind"])
+	# E2 - a band about something outside this file names it after a colon, so one gesture carries
+	# both which band was clicked and which node it was about (the way an edit kind does).
+	var reference: String = str(band.get("reference", ""))
+	var band_action: String = kind if reference.is_empty() else "%s:%s" % [kind, reference]
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
 	var row_data := EventRowData.new()
 	row_data.indent = 0
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
-	row_data.row_uid = "%s%s_%d" % [HEAD_BAND_UID_PREFIX, kind, sheet.get_instance_id()]
+	row_data.row_uid = "%s%s%s_%d" % [HEAD_BAND_UID_PREFIX, kind, reference, sheet.get_instance_id()]
 	row_data.folded = false
 	var accent: Color = _viewport._get_event_style().behavior_accent_color
 	var is_name_band: bool = kind == EventSheetHeadBands.BAND_NAME
@@ -684,7 +700,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		if word.is_empty() or sheet.read_only:
 			continue
 		spans.append(_make_span(word, SemanticSpan.SpanType.COMMENT, band_meta.merged({
-			"head_action": kind,
+			"head_action": band_action,
 			"text_color": _viewport._get_event_style().behavior_accent_color
 		}, true)))
 	if is_name_band:
@@ -8818,6 +8834,10 @@ func _build_variable_row(
 	var code_line: String = str(options.get("code_line", ""))
 	var view_mode: int = _variable_row_view()
 	var code_only: bool = view_mode == EventSheetCodeEcho.VIEW_CODE and not code_line.is_empty()
+	# E2 - what the SCENE says about this variable, asked once for the row: {} unless a
+	# MultiplayerSynchronizer keeps it in step, which is every variable of every project with no
+	# networking in it.
+	var sync_entry: Dictionary = _sync_entry(scope_label, var_name, declared_in)
 	# V2 - the kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill.
 	row_data.spans = [
@@ -8909,6 +8929,29 @@ func _build_variable_row(
 					}, true)
 				)
 			)
+		# E2 - and the mark that says this value does not stay on this machine: a synchronizer in the
+		# scene keeps it in step, in the mode the stroke spells. Nothing is written into the script
+		# for it, so the mark appears and disappears with the .tscn and never with the .gd.
+		if not sync_entry.is_empty():
+			row_data.spans.append(
+				_make_span(
+					str(SYNC_BADGE_GLYPHS.get(str(sync_entry.get("mode", "")), "")),
+					SemanticSpan.SpanType.KEYWORD,
+					variable_meta.merged({
+						"editable": false,
+						"badge": true,
+						"badge_style": "glyph",
+						"badge_natural_width": true,
+						"badge_fixed_width": KIND_BADGE_WIDTH,
+						"sync_badge": true,
+						"badge_bg": Color(0.0, 0.0, 0.0, 0.0),
+						# The theme's own green-teal accent, dressed by every bundled preset: a mark
+						# nobody themed would be the one cue on the row that ignores the theme.
+						"badge_fg": _viewport._get_event_style().ace_condition_accent_color,
+						"hover_note": EventSheetSceneReplication.mark_hover(sync_entry)
+					}, true)
+				)
+			)
 	# R32 - a setting with nothing to tune shows nothing to tune: an Inspector button's `= _bake` is
 	# which function it calls, and the muted note beside it already says so in words.
 	var hide_value: bool = code_only or bool(facts.get("hide_value", false))
@@ -8933,7 +8976,11 @@ func _build_variable_row(
 		"edit_kind": "variable_value",
 		"variable_value_span": declared_in.is_empty(),
 		"variable_type_word": type_word,
-		"variable_type_name": type_name
+		"variable_type_name": type_name,
+		# E2 - a value another peer owns is not this machine's to set: the field still opens (the
+		# INITIAL value is this file's, and every peer starts from it), with the note beside it
+		# saying who the running game will take it from.
+		"edit_note": EventSheetL10n.translate("set by the owner") if not sync_entry.is_empty() else ""
 	}, true)
 	# The swatch belongs beside the colour's WORD, not trailing the row: "tint = white [] #ffffff"
 	# reads as one value with its picture, where the same swatch parked after the hex read as an
@@ -8980,6 +9027,17 @@ func _build_variable_row(
 		str(options.get("description", "")).strip_edges() if not code_only else "")
 	_append_code_echo_span(row_data, variable_meta, code_line, view_mode)
 	return row_data
+
+
+## E2 - the scene's word about one variable of THIS sheet, {} when there is none. A local lives and
+## dies inside its event and a borrowed declaration belongs to another file, so neither can be the
+## property a synchronizer in this object's scene keeps in step.
+func _sync_entry(scope_label: String, var_name: String, declared_in: String) -> Dictionary:
+	if scope_label == "local" or not declared_in.is_empty() or _viewport == null or _viewport._sheet == null:
+		return {}
+	return EventSheetSceneReplication.entry_for(
+		EventSheetSceneReplication.for_script(str(_viewport._sheet.external_source_path)).get("synced", []),
+		var_name)
 
 
 ## A muted note trailing the sentence: the limits a hint sets, what a scope adds beyond its word, a

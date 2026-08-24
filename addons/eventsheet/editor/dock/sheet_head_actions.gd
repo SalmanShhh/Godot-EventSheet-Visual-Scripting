@@ -35,6 +35,15 @@ func init(dock: Control) -> void:
 func handle(action: String) -> void:
 	if _dock._current_sheet == null:
 		return
+	# E2 - the two bands that stand for a fact of the SCENE name the node they are about after a
+	# colon. Both mean the same gesture: the other editor of that fact - the Replication panel, the
+	# Inspector - is over there, so open the scene and select the node.
+	for scene_band: String in [EventSheetHeadBands.BAND_SYNC, EventSheetHeadBands.BAND_SPAWNED]:
+		if not action.begins_with("%s:" % scene_band):
+			continue
+		var reference: String = action.trim_prefix("%s:" % scene_band)
+		reveal_scene_node(reference.get_slice("|", 0), reference.get_slice("|", 1))
+		return
 	match action:
 		EventSheetHeadBands.BAND_NAME:
 			open_class_rename()
@@ -59,6 +68,18 @@ func handle(action: String) -> void:
 			_dock._attach_behavior_to_selection()
 		"add":
 			open_add_menu()
+
+
+## E2 - opens the scene a replication fact lives in and selects the node that holds it, so Godot's
+## own Replication panel and Inspector open on it. Says so on the status line either way: a node that
+## is not there any more is a fact the sheet read from a file somebody has since changed.
+func reveal_scene_node(scene_path: String, node_path: String) -> void:
+	if EventSheetSceneReplication.reveal_node(scene_path, node_path):
+		_dock._set_status(EventSheetL10n.translate("%s selected in %s - its panels are the Inspector and Replication.")
+			% [node_path.get_file(), scene_path.get_file()])
+		return
+	_dock._set_status(EventSheetL10n.translate("%s is not in %s any more.")
+		% [node_path.get_file(), scene_path.get_file()], true)
 
 
 ## What a class rename would touch, before anything is written: {"uses": N, "sheets": M}. The count

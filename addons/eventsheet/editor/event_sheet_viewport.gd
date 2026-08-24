@@ -3274,8 +3274,10 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 		return
 	_editing_row_index = row_index
 	_editing_span_index = resolved_span_index
-	# An ordinary edit has nothing to say before it commits; only a named gesture fills this in.
-	_editing_note = ""
+	# An ordinary edit has nothing to say before it commits; a cell that knows something the typist
+	# needs (E2 - a value the running game takes from whoever owns the object) carries the sentence
+	# on the span, and a named gesture fills this in afterwards.
+	_editing_note = str(metadata.get("edit_note", ""))
 	# A placeholder span (an empty verb description / category showing "+ ...") starts the buffer EMPTY,
 	# not with the placeholder text - the user is filling in a blank field, not editing that prompt.
 	# W12 - a span whose TEXT is a reading edits the source it stands for: a table entry chip reads

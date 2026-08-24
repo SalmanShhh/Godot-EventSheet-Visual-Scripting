@@ -1651,6 +1651,12 @@ const BADGE_MARK_SVGS: Dictionary = {
 	# G2 - the ring a group head wears BEFORE its switch: this switch can be thrown while the game
 	# runs, by Set group active. A plain ring, so it qualifies the switch instead of competing with it.
 	"◎": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/></svg>",
+	# E2 - the sync mark: a box with two short bars in it, saying this value is kept in step across
+	# the network. The STROKE says how - solid for always, dotted for on change, dashed for at spawn,
+	# the three modes the Replication panel offers - so the three tell apart at 15px without a word.
+	"⚌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
+	"⚍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"1.8 2.6\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-dasharray=\"0.6 3.1\"/></svg>",
+	"⚏": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"4 3\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"butt\" stroke-dasharray=\"3.4 2.6\"/></svg>",
 	# G1 - the folder a group head leads with when the editor's own Folder texture is unavailable
 	# (headless, or object icons turned off): a tab and a body, the file-manager idiom.
 	"▤": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.2 6.6a1.6 1.6 0 0 1 1.6-1.6h4.1l1.9 2.2h7.4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.8a1.6 1.6 0 0 1-1.6-1.6z\" fill=\"#fff\"/></svg>",

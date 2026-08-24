@@ -27,6 +27,8 @@ const BAND_TOOL: String = "tool"
 const BAND_DESCRIPTION: String = "description"
 const BAND_AUTOLOAD: String = "autoload"
 const BAND_HOST: String = "host"
+const BAND_SYNC: String = "sync"
+const BAND_SPAWNED: String = "spawned"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -36,8 +38,16 @@ const BAND_ATTACH: String = "attach"
 ## is the order a reader recites the head in.
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
-	BAND_AUTOLOAD, BAND_HOST, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
+	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
+
+## E2 - the bands that come from the SCENE rather than from the file, and the key each reads its
+## entries from. These are the two kinds a sheet can wear SEVERAL of (a scene may hold two
+## synchronizers), so they are built as a list instead of as one band per kind.
+const SCENE_BANDS: Dictionary = {
+	BAND_SYNC: "synchronizers",
+	BAND_SPAWNED: "spawned_by",
+}
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
 ## none: its value IS the name.
@@ -49,6 +59,8 @@ const LEADERS: Dictionary = {
 	BAND_DESCRIPTION: "##",
 	BAND_AUTOLOAD: "autoload",
 	BAND_HOST: "host",
+	BAND_SYNC: "keeps in step",
+	BAND_SPAWNED: "spawned by",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -200,10 +212,61 @@ static func remembered_variables(sheet: EventSheetResource) -> PackedStringArray
 static func bands(head_facts: Dictionary) -> Array[Dictionary]:
 	var built: Array[Dictionary] = []
 	for kind: String in ORDER:
+		if SCENE_BANDS.has(kind):
+			built.append_array(_scene_bands(kind, head_facts))
+			continue
 		var band: Dictionary = _band(kind, head_facts)
 		if not band.is_empty():
 			built.append(band)
 	return built
+
+
+## E2 - the scene's bands: one per synchronizer that keeps this sheet's object in step, one per
+## spawner elsewhere that can make its scene. The readings and the echoes are composed by the scene
+## reader (a band never spells a fact itself), and each band carries the node it is about so its
+## control can open the editor that owns it.
+static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictionary]:
+	var built: Array[Dictionary] = []
+	var entries: Variant = head_facts.get(str(SCENE_BANDS[kind]))
+	if not (entries is Array):
+		return built
+	for entry: Variant in entries as Array:
+		var reading: Dictionary = entry
+		var band: Dictionary = _make(kind, str(reading.get("value", "")), str(reading.get("echo", "")))
+		band["reference"] = str(reading.get("reference", ""))
+		built.append(band)
+	return built
+
+
+## E2 - everything the SCENE says about a sheet, in the shape `bands()` reads: one entry per
+## synchronizer and one per spawner, each already written as the words the band shows and the lines
+## of the file they came from. Empty for a sheet no scene runs, which is why nothing about
+## replication appears in a project that has none.
+static func scene_facts(sheet: EventSheetResource) -> Dictionary:
+	var facts: Dictionary = {"synchronizers": [], "spawned_by": []}
+	if sheet == null:
+		return facts
+	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
+	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
+		var group: Array = entries
+		if group.is_empty():
+			continue
+		var lead: Dictionary = group[0]
+		(facts["synchronizers"] as Array).append({
+			"value": EventSheetSceneReplication.synchronizer_reading(group),
+			"echo": EventSheetSceneReplication.synchronizer_echo(group),
+			"reference": "%s|%s" % [str(lead.get("scene_path", "")), str(lead.get("synchronizer_path", ""))],
+		})
+	for entry: Variant in scene.get("spawners", []) as Array:
+		var spawner: Dictionary = entry
+		if str(spawner.get("relation", "")) != EventSheetSceneReplication.RELATION_SPAWNS_THIS:
+			continue
+		(facts["spawned_by"] as Array).append({
+			"value": EventSheetSceneReplication.spawner_reading(spawner),
+			"echo": EventSheetSceneReplication.spawner_echo(spawner),
+			"reference": "%s|%s" % [str(spawner.get("scene_path", "")), str(spawner.get("node_path", ""))],
+		})
+	return facts
 
 
 ## The lines this sheet could have and does not - what the "+ add" row under the stack offers, in
@@ -240,6 +303,10 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("Project Settings…")
 		BAND_INCLUDE:
 			return EventSheetL10n.translate("open")
+		BAND_SYNC:
+			return EventSheetL10n.translate("Replication panel…")
+		BAND_SPAWNED:
+			return EventSheetL10n.translate("select the spawner")
 	return ""
 
 
@@ -388,6 +455,9 @@ static func _make(kind: String, value: String, echo: String) -> Dictionary:
 		"editable": false,
 		"switch": false,
 		"switch_on": false,
+		# E2 - the thing OUTSIDE this file a band is about ("scene|node"), so its control can open
+		# the editor that owns the fact. "" for every band that stands for a line of the file.
+		"reference": "",
 		"control": control_label(kind),
 	}
 
