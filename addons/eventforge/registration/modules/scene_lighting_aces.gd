@@ -46,8 +46,10 @@ const ENVIRONMENT_MEMBER := "environment"
 const DEFAULT_FADE_SECONDS := "0.5"
 const DEFAULT_DARKNESS_SECONDS := "2.0"
 
-## What a scene starts at when a reader drops a darkness row in: a night blue that reads as 70%
-## dark - dark enough to be night, light enough to still see the level through.
+## What a scene starts at when a reader drops a darkness row in: a night blue that reads as 82%
+## dark - dark enough to be night, light enough to still see the level through. (The reading is the
+## engine's own luminance, which counts green for most of what an eye calls brightness, so a blue
+## this deep reads darker than its numbers look.)
 const DEFAULT_DARKNESS := "Color(0.15, 0.18, 0.3)"
 
 
@@ -155,7 +157,8 @@ static func _target_param(about: String) -> ACEParam:
 	return F.make_param("target", "String", "self", "On node", about, "expression")
 
 
-## One Environment property's engine default, as the text a row starts on.
+## One Environment property's engine default, as the text a row starts on. Asked through the factory
+## rather than of ClassDB directly, because the answer arrives as a float32 widened to a double and a
+## row must not open on `0.00999999977648` when the engine's own number is a hundredth.
 static func _environment_default(property: String) -> String:
-	var value: Variant = ClassDB.class_get_property_default_value("Environment", property)
-	return str(float(value)) if value is float else str(value)
+	return F.default_literal("Environment", property)

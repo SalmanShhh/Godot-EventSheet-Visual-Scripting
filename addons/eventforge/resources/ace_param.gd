@@ -53,7 +53,7 @@ extends Resource
 @export var display_option_labels: bool = false
 ## Display-only: the name of a READING LENS the canvas puts this param's value through before it
 ## lands in the row sentence (see EventForgeValueLens - "darkness" reads a CanvasModulate colour as
-## "70%, tinted #26304d"). The stored value never changes, the dialog and the code echo go on
+## "81%, tinted #26304d"). The stored value never changes, the dialog and the code echo go on
 ## showing the author's own GDScript, and a name no lens answers to reads exactly as it always did.
 ## Set it only where the reading is DERIVED from the value rather than a second way of writing it.
 @export var display_lens: String = ""

@@ -2,7 +2,7 @@
 #
 # Most parameters read as themselves: a number is a number and a node path is a node path. A few do
 # not. Godot stores 2D darkness as a CanvasModulate colour, so `Color("26304d")` is exactly right
-# and tells a reader nothing about how dark the cave feels - the sentence they want is "70% dark,
+# and tells a reader nothing about how dark the cave feels - the sentence they want is "81% dark,
 # tinted #26304d", and the VALUE has to stay the colour, because that is what the file holds and
 # what a re-save must write back byte for byte.
 #
@@ -47,7 +47,7 @@ static func lens_of(parameter_dict: Dictionary) -> String:
 	return str(parameter_dict.get("display_lens", "")).strip_edges()
 
 
-## `Color("26304d")` as "70%, tinted #26304d" - how dark the layer is, and what colour the dark is.
+## `Color("26304d")` as "81%, tinted #26304d" - how dark the layer is, and what colour the dark is.
 ## The percentage is the reading and the colour is the row: a reader sees the fact they set out to
 ## set, and the file still holds the colour they will save.
 static func darkness(value: String) -> String:
@@ -56,7 +56,7 @@ static func darkness(value: String) -> String:
 		EventSheetL10n.translate("tinted"), hex_of(colour_of(value))]
 
 
-## The same colour as "70%" alone: how much of the layer's light the tint takes away, asked of the
+## The same colour as "81%" alone: how much of the layer's light the tint takes away, asked of the
 ## engine's own `get_luminance()` so the reading and Godot agree about what "bright" means.
 static func darkness_percent(value: String) -> String:
 	if not is_colour(value):

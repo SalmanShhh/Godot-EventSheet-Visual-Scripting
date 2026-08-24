@@ -37,6 +37,8 @@ static func run() -> bool:
 	ok = _test_the_darkness_lens() and ok
 	ok = _test_the_rows_read_as_percentages() and ok
 	ok = _test_the_picker_shelves() and ok
+	ok = _test_the_rows_open_on_the_engines_numbers() and ok
+	ok = _test_the_masks_default_the_way_the_engine_does() and ok
 	return ok
 
 
@@ -174,6 +176,12 @@ static func _test_the_public_seam() -> bool:
 	] as Array[String])
 	ok = _check("typed, so a caller of a public method casts nothing",
 		lights.get_typed_builtin(), TYPE_DICTIONARY) and ok
+	# The LIST is the caller's own. The reader behind it answers from a session cache, so handing the
+	# cached array out would let a pack that sorts or filters its "read-only" answer in place
+	# rearrange the picker's shelf, the head's bands and the lift's guard for the rest of the session.
+	lights.append({"name": "NotALight"})
+	ok = _check("and the list a caller is handed is theirs to do what they like with",
+		EventSheets.scene_lights(sheet).size(), 3) and ok
 	return _check("and no sheet at all has no lights", EventSheets.scene_lights(null).size(), 0) and ok
 
 
@@ -196,8 +204,66 @@ static func _test_the_darkness_lens() -> bool:
 	ok = _check("the fade row asks for the percentage alone",
 		EventForgeValueLens.read(EventForgeValueLens.LENS_DARKNESS_PERCENT, "Color(0.1, 0.1, 0.15)"),
 		"90%") and ok
+	# The two worked examples the lens documents itself with, and the value a dropped row starts on.
+	# A comment quoting a percentage the lens does not produce is how a reader concludes the lens is
+	# broken, so both numbers are pinned here rather than trusted to stay written down correctly.
+	ok = _check("the worked example in the lens's own header reads as the lens reads it",
+		EventForgeValueLens.darkness("Color(\"26304d\")"), "81%, tinted #26304d") and ok
+	ok = _check("and a dropped darkness row starts at the percentage its default says",
+		EventForgeValueLens.darkness_percent(EventForgeSceneLightingACEs.DEFAULT_DARKNESS), "82%") and ok
 	return _check("and a param that named no lens is read exactly as it always was",
 		EventForgeValueLens.read("", "Color(0.3, 0.3, 0.36)"), "Color(0.3, 0.3, 0.36)") and ok
+
+
+## WHAT A DROPPED ROW STARTS ON. Every one of these values is Godot's own default for the property
+## the row writes, and every one of them is stored as a float32 that ClassDB hands back widened to a
+## double - so the row that says "0.01 is a haze" has to open on `0.01` rather than on the
+## `0.00999999977648` that widening prints. Pinned as the literal text a reader sees in the field.
+static func _test_the_rows_open_on_the_engines_numbers() -> bool:
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var starts: Dictionary = {}
+	for ace_id: String in ["WorldSetFogThickness", "WorldSetAmbientLight", "WorldFadeGlow",
+			"LightSetBrightness", "LightSetReachOmni", "LightSetConeAngle"]:
+		starts[ace_id] = _first_value_default(registry, ace_id)
+	return _check("every lighting row opens on the engine's own number, said the way a person types it",
+		starts, {
+			"WorldSetFogThickness": "0.01",
+			"WorldSetAmbientLight": "1.0",
+			"WorldFadeGlow": "0.3",
+			"LightSetBrightness": "1.0",
+			"LightSetReachOmni": "5.0",
+			"LightSetConeAngle": "45.0"
+		})
+
+
+## THE TWO MASK DEFAULTS, which are not the same number. Godot starts `light_cull_mask` (3D) with
+## every layer set and the three 2D masks on layer 1 alone, so a scene file that never wrote one
+## means "all of them" in 3D and "layer 1" in 2D. Read off ClassDB here rather than restated, because
+## the constants exist to save the readers a lookup, not to become a second opinion.
+static func _test_the_masks_default_the_way_the_engine_does() -> bool:
+	var ok: bool = _check("an absent 2D mask means the layer the engine puts it on",
+		EventSheetSceneLights.mask_bits(""), int(ClassDB.class_get_property_default_value(
+			"PointLight2D", EventSheetSceneLights.MASK_PROPERTY_2D)))
+	ok = _check("an absent 3D mask means every layer, not the first one",
+		EventSheetSceneLights.mask_bits("", EventSheetSceneLights.DEFAULT_MASK_3D),
+		int(ClassDB.class_get_property_default_value(
+			"OmniLight3D", EventSheetSceneLights.MASK_PROPERTY_3D))) and ok
+	ok = _check("and the two are really different numbers",
+		EventSheetSceneLights.DEFAULT_MASK == EventSheetSceneLights.DEFAULT_MASK_3D, false) and ok
+	return _check("a mask the file DID write is read as itself",
+		EventSheetSceneLights.mask_bits("3", EventSheetSceneLights.DEFAULT_MASK_3D), 3) and ok
+
+
+## The default a row's first value field opens on - the number a reader meets the moment they drop it.
+static func _first_value_default(registry: EventSheetACERegistry, ace_id: String) -> String:
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if definition.id != ace_id:
+			continue
+		for parameter: Variant in definition.parameters:
+			if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == "value":
+				return str((parameter as Dictionary).get("default_value", ""))
+	return ""
 
 
 ## The lens where a reader meets it: on the canvas, in the row the crypt's hand-written lines opened

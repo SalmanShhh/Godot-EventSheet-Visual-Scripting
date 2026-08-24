@@ -137,14 +137,9 @@ static func _echo(row: Dictionary) -> String:
 	return "`%s.%s`" % [str(row["host"]), str(row["property"])]
 
 
-## The value a row starts on: the ENGINE's own default for that property, asked of ClassDB rather
-## than guessed. A light's brightness starts at 1.0 because that is where Godot starts it, and an
-## omni light's reach at 5.0 for the same reason.
+## The value a row starts on: the ENGINE's own default for that property, asked of the factory (which
+## asks ClassDB, and rounds the float32 the answer arrives widened from) rather than guessed. A
+## light's brightness starts at 1.0 because that is where Godot starts it, and an omni light's reach
+## at 5.0 for the same reason.
 static func _default_of(row: Dictionary) -> String:
-	var value: Variant = ClassDB.class_get_property_default_value(str(row["classes"][0]), str(row["property"]))
-	if value is Color:
-		var colour: Color = value
-		return "Color.WHITE" if colour == Color.WHITE else "Color(%s, %s, %s)" % [colour.r, colour.g, colour.b]
-	if value is float:
-		return str(float(value))
-	return str(value)
+	return F.default_literal(str(row["classes"][0]), str(row["property"]))

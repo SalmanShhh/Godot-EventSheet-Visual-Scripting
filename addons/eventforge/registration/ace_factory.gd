@@ -55,6 +55,33 @@ static func make_param(param_id: String, type_name: String, default_value: Varia
 	parameter.autocomplete = autocomplete.duplicate()
 	return parameter
 
+
+## One class property's ENGINE default, as the literal a row starts on - asked of ClassDB rather than
+## guessed, so a dropped row opens where Godot opens it and a reader never meets a number nobody
+## chose. The one place any module asks the question, because the answer needs the care below.
+##
+## FLOATS ARE ROUNDED ON THE WAY OUT. Godot stores most of these properties as float32 and ClassDB
+## hands the value back widened to a double, so printing it in full writes the widening into the
+## user's script: `Environment.fog_density` is a hundredth and prints as `0.00999999977648`, and
+## `glow_intensity` is three tenths and prints as `0.30000001192093`. A millionth is finer than any
+## of these dials and coarse enough to land back on the literal the engine's own docs name.
+static func default_literal(class_text: String, property: String) -> String:
+	var value: Variant = ClassDB.class_get_property_default_value(class_text, property)
+	if value is Color:
+		var colour: Color = value
+		return "Color.WHITE" if colour == Color.WHITE else "Color(%s, %s, %s)" % [
+			float_literal(colour.r), float_literal(colour.g), float_literal(colour.b)]
+	if value is float:
+		return float_literal(float(value))
+	return str(value)
+
+
+## One float as a row writes it: rounded to a millionth, which is what turns a float32 widened to a
+## double back into the number a person would type.
+static func float_literal(number: float) -> String:
+	return str(snappedf(number, 0.000001))
+
+
 ## THE canonical comparison dropdown, labeled - every operator picker in the plugin resolves here:
 ## the builtin Compare Variable / Compare Values conditions, the `hint: comparison` provider
 ## shorthand, and any pack builder that calls comparison_options(). One list, so a wording change

@@ -39,10 +39,16 @@ const SHADOW_PROPERTY: String = "shadow_enabled"
 const OCCLUDER_CLASS: String = "LightOccluder2D"
 const OCCLUDER_MASK_PROPERTY: String = "occluder_light_mask"
 
-## The mask both sides fall back to when the scene file never wrote one - Godot's own default for
-## every one of these four properties. A file only stores a property it changed, so an absent line
-## means "1", never "nothing".
+## The mask the 2D side falls back to when the scene file never wrote one - Godot's own default for
+## `range_item_cull_mask`, `shadow_item_cull_mask` and `occluder_light_mask` alike. A file only
+## stores a property it changed, so an absent line means "layer 1", never "nothing".
 const DEFAULT_MASK: int = 1
+
+## The 3D light's own default, which is NOT the same number: `light_cull_mask` starts with every
+## layer set, so an OmniLight3D nobody touched lights everything rather than layer 1. Reading an
+## absent 3D mask as 1 would say a light reaches almost nothing, which is the opposite of the truth -
+## so the two defaults are two constants and a caller says which dimension it is asking about.
+const DEFAULT_MASK_3D: int = 4294967295
 
 ## script path -> {"nodes": Array, "lights": Array, "classes": Dictionary}. Session-lifetime for the
 ## same reason the replication reader caches: the picker and the lift ask per row and per line, and a
@@ -190,10 +196,12 @@ static func _light_facts(node: Dictionary) -> Dictionary:
 
 ## The bits a mask property holds, with the engine's own default standing in for a property the
 ## scene file never wrote. Two masks OVERLAP when they share a bit, which is the whole of Godot's
-## "does this occluder block that light" rule.
-static func mask_bits(mask_text: String) -> int:
+## "does this occluder block that light" rule. `absent` is which default that is - layer 1 for the
+## three 2D masks, every layer for a 3D light's own - and it defaults to the 2D one because the
+## occluder rule the overlap below serves is a 2D rule.
+static func mask_bits(mask_text: String, absent: int = DEFAULT_MASK) -> int:
 	var text: String = mask_text.strip_edges()
-	return DEFAULT_MASK if text.is_empty() or not text.is_valid_int() else text.to_int()
+	return absent if text.is_empty() or not text.is_valid_int() else text.to_int()
 
 
 ## True when two masks share a layer - what Godot asks of a light's shadow mask and an occluder's

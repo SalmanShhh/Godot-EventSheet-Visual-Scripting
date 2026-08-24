@@ -2413,10 +2413,12 @@ static func spawners_of(sheet: EventSheetResource) -> Array[Dictionary]:
 ## The list the picker's "Lights in this scene" shelf and the head's `lit by` bands are built from,
 ## and the one a pack asks before offering a light row of its own. READ-ONLY and derived on every
 ## ask, exactly like `synced_properties`: nothing about the scene is stored in the sheet, so a `.gd`
-## still round-trips byte for byte, and a sheet no scene uses simply has no lights.
+## still round-trips byte for byte, and a sheet no scene uses simply has no lights. The LIST itself
+## is the caller's own (the reader behind it answers from a session cache, and a pack that sorts or
+## filters the answer in place would otherwise be rearranging the editor's own view of the scene).
 static func scene_lights(sheet: EventSheetResource) -> Array[Dictionary]:
-	return EventSheetSceneLights.for_script(
-		str(sheet.external_source_path) if sheet != null else "")
+	return _typed_dictionaries(EventSheetSceneLights.for_script(
+		str(sheet.external_source_path) if sheet != null else ""))
 
 
 ## An untyped Array of Dictionaries as the typed Array the API promises. The readers behind the two
