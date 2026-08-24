@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,Jetzt führt nur noch der Besitzer di
 "Already set to run %d copies, tagged %s.","Bereits auf %d Kopien eingestellt, mit den Kennzeichen %s."
 "Set to run %d copies, tagged %s.","Auf %d Kopien eingestellt, mit den Kennzeichen %s."
 instance %d,Instanz %d
+casts shadows,wirft Schatten

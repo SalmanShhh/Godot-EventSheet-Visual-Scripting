@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,これからはこのオブジェク�
 "Already set to run %d copies, tagged %s.",すでに %d 個のコピーを実行する設定です。タグは %s です。
 "Set to run %d copies, tagged %s.",%d 個のコピーを実行するよう設定しました。タグは %s です。
 instance %d,インスタンス %d
+casts shadows,影を落とす

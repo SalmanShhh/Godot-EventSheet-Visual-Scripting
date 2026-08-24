@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,이제 이 오브젝트의 소유자�
 "Already set to run %d copies, tagged %s.",이미 %d 개의 사본을 실행하도록 설정되어 있습니다. 태그는 %s 입니다.
 "Set to run %d copies, tagged %s.",%d 개의 사본을 실행하도록 설정했습니다. 태그는 %s 입니다.
 instance %d,인스턴스 %d
+casts shadows,그림자를 드리움

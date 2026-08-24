@@ -58,6 +58,22 @@ const FUNCTION_PREFIX := "function:"
 ## the Call Function parameters instead of needing a second dispatch table.
 const FUNCTION_META_KEY := "eventsheet_function_name"
 
+## L1. The two things a light row built FOR one light of the open scene carries: the node it is
+## aimed at (pre-filled into the params dialog, exactly as a Functions entry pre-fills its function)
+## and the shelf it is offered on. Metadata rather than fields, because the copy is a picker entry
+## and the row it makes is the ordinary node-scoped row with its target answered.
+const LIGHT_TARGET_META := "eventsheet_light_target"
+const LIGHT_SHELF_META := "eventsheet_light_shelf"
+
+## L1. Where the lights of the open scene are offered: one folder, one sub-folder per light. The
+## sixteen Core lighting actions and the per-class groups are untouched beside it - this is the shelf
+## for "which of MY lights", which is the question a reader actually arrives with.
+const LIGHTS_GROUP := "Lights in this scene"
+
+## The separator between a shelf entry's facts - the middle dot every other two-fact reading in the
+## editor uses.
+const SHELF_BULLET := "·"
+
 ## Simple Mode (the newcomer view) hides the advanced "drop to code" + debug ACEs from the picker,
 ## so beginners aren't shown Run GDScript / Evaluate / Breakpoint / Assert / Print Rich. Keyed by
 ## "provider_id::ace_id" (definition.id == the descriptor's ace_id - see ace_adapter.gd).
@@ -621,6 +637,57 @@ static func multiplayer_group_key(definition: ACEDefinition) -> String:
 	return EventForgeMultiplayerACEs.SECTION_PLAYERS
 
 
+## L1. The shelf a light row is offered on, or "" for everything else - including the same verb
+## browsed under its own class, which stays where it was. Outranks the node-type filing for the same
+## reason the comparisons and the Multiplayer shelves do: what a row IS beats where it was filed.
+## Pure + static, so the filing is pinned without a tree.
+static func light_group_key(definition: ACEDefinition) -> String:
+	if definition == null:
+		return ""
+	var shelf: String = str(definition.metadata.get(LIGHT_SHELF_META, "")).strip_edges()
+	return "" if shelf.is_empty() else LIGHTS_GROUP + SUBCATEGORY_SEPARATOR + shelf
+
+
+## L1. Every light row the OPEN SCENE can take, as picker entries: one copy per light per verb its
+## class answers to, with the light already chosen. Which verbs a light can take is derived - a row
+## hosted on a class this light inherits - so a SpotLight3D is offered the Light3D words and its own
+## cone angle without either being listed anywhere.
+##
+## Pure + static (a sheet and a registry in, definitions out), so the shelf is pinned headless.
+static func light_row_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+	var out: Array[ACEDefinition] = []
+	if sheet == null or registry == null:
+		return out
+	var lights: Array[Dictionary] = EventSheetSceneLights.for_script(sheet.external_source_path)
+	if lights.is_empty():
+		return out
+	var light_verbs: Array[ACEDefinition] = []
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if EventForgeLightWords.is_light_class(str(definition.metadata.get("node_type", ""))):
+			light_verbs.append(definition)
+	for light: Dictionary in lights:
+		var shelf: String = light_shelf_label(light)
+		for definition: ACEDefinition in light_verbs:
+			if not ClassDB.is_parent_class(str(light["class"]), str(definition.metadata.get("node_type", ""))):
+				continue
+			# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate()
+			# would hand back a blank definition that still looks valid.
+			var offered: ACEDefinition = definition.copy()
+			offered.metadata[LIGHT_TARGET_META] = str(light["reference"])
+			offered.metadata[LIGHT_SHELF_META] = shelf
+			out.append(offered)
+	return out
+
+
+## L1. One light's line on the shelf: its name, the class it is, and whether it casts shadows -
+## the three facts that decide which row a reader wants and whether it will do anything.
+static func light_shelf_label(light: Dictionary) -> String:
+	var label: String = "%s   %s" % [str(light.get("name", "")), str(light.get("class", ""))]
+	if bool(light.get("shadows", false)):
+		label += " %s %s" % [SHELF_BULLET, EventSheetL10n.translate("casts shadows")]
+	return label
+
+
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
@@ -914,8 +981,9 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 
 
 ## The open sheet, when there is a dock to read it off. Null everywhere else (a bare picker in a
-## test, a headless run), which is exactly what the Functions page treats as "no script open".
-func _sheet_for_functions() -> EventSheetResource:
+## test, a headless run), which is exactly what the Functions page and the Lights shelf both treat
+## as "no script open".
+func _open_sheet() -> EventSheetResource:
 	if _host_node == null or not _host_node.has_method("get_current_sheet"):
 		return null
 	return _host_node.get_current_sheet() as EventSheetResource
@@ -1041,7 +1109,7 @@ static func function_matches_query(definition: ACEDefinition, query: String) -> 
 ## The Functions section, built as the FIRST thing on the object page: what the open file itself
 ## can do comes before what the engine and the packs can do.
 func _populate_function_cards(root: TreeItem) -> void:
-	var content: Dictionary = functions_page_content(_sheet_for_functions())
+	var content: Dictionary = functions_page_content(_open_sheet())
 	if content.is_empty():
 		return
 	var header: TreeItem = _objects_tree.create_item(root)
@@ -1322,9 +1390,17 @@ func _refresh_tree() -> void:
 	# here, as the ordinary Call Function row aimed at that function. Search only - browsing them
 	# is the object page's Functions section, and an unfiltered tree should not grow a second copy.
 	if filtering:
-		for function_definition: ACEDefinition in function_call_definitions(_sheet_for_functions(), _registry):
+		for function_definition: ACEDefinition in function_call_definitions(_open_sheet(), _registry):
 			if function_matches_query(function_definition, query):
 				definitions.append(function_definition)
+	# L1 - and so are the LIGHTS of the open scene: the same verbs, one copy per light, with the
+	# light already chosen. Browsed as well as searched, because "which of my lights" is the question
+	# a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
+	if not signals_only:
+		for light_definition: ACEDefinition in light_row_definitions(_open_sheet(), _registry):
+			if filtering and not (light_definition.display_name.to_lower().contains(query.to_lower()) 					or str(light_definition.metadata.get(LIGHT_TARGET_META, "")).to_lower().contains(query.to_lower())):
+				continue
+			definitions.append(light_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
 	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
 	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
@@ -1411,6 +1487,12 @@ func _refresh_tree() -> void:
 		var multiplayer_key: String = multiplayer_group_key(definition)
 		if not multiplayer_key.is_empty():
 			group_key = multiplayer_key
+			is_node_type_group = false
+		# L1 - a row the picker built for one light of the open scene is filed under that light,
+		# not under the class of light it is: the reader picked "Torch", not "PointLight2D".
+		var light_key: String = light_group_key(definition)
+		if not light_key.is_empty():
+			group_key = light_key
 			is_node_type_group = false
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)
@@ -1901,7 +1983,7 @@ func _item_tooltip(definition: ACEDefinition) -> String:
 	# the tooltip rather than on a popup of its own because a hover that opens a window is a hover
 	# that gets in the way of the arrow keys.
 	var mini: String = mini_page(definition,
-		EventSheetDocUsage.count(_sheet_for_functions(), definition.provider_id, definition.id))
+		EventSheetDocUsage.count(_open_sheet(), definition.provider_id, definition.id))
 	if not mini.is_empty():
 		tip += "\n" + mini
 	return tip
@@ -2634,7 +2716,7 @@ func _on_add_button_pressed() -> void:
 ## Picking one of the open script's functions: find its Call Function definition and commit that -
 ## same path as every other entry, so undo, recents and the params dialog behave identically.
 func _commit_function_call(function_name: String) -> void:
-	for definition: ACEDefinition in function_call_definitions(_sheet_for_functions(), _registry):
+	for definition: ACEDefinition in function_call_definitions(_open_sheet(), _registry):
 		if str(definition.metadata.get(FUNCTION_META_KEY, "")) == function_name:
 			_commit_definition(definition)
 			return
@@ -2654,6 +2736,13 @@ func _commit_definition(definition: ACEDefinition) -> void:
 		var initial_values: Dictionary = context.get("existing_params", {})
 		initial_values["function_name"] = target_function
 		context["existing_params"] = initial_values
+	# L1 - a light entry is the ordinary node-scoped row with its target already chosen, so the
+	# params dialog opens on the value instead of asking again which light was meant.
+	var aimed_light: String = str(definition.metadata.get(LIGHT_TARGET_META, ""))
+	if not aimed_light.is_empty():
+		var light_values: Dictionary = context.get("existing_params", {})
+		light_values["target"] = aimed_light
+		context["existing_params"] = light_values
 	# R38 - an alias row is the same descriptor with the boolean half of the form already answered.
 	# Taken (and cleared) here rather than stamped on the definition, because ACEDefinitions are
 	# shared across every tab for the session and must never carry one row's values.

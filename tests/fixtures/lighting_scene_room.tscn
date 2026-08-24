@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/lighting_scene_room.gd" id="1_room"]
+[ext_resource type="Script" path="res://tests/fixtures/lighting_stays_a_block.gd" id="2_wiring"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+
+[node name="Torch" type="PointLight2D" parent="."]
+shadow_enabled = true
+range_item_cull_mask = 3
+
+[node name="Moonlight" type="DirectionalLight2D" parent="."]
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Lantern" type="PointLight2D" parent="Props"]
+
+[node name="Door" type="StaticBody2D" parent="."]
+
+[node name="Wiring" type="Node2D" parent="."]
+script = ExtResource("2_wiring")

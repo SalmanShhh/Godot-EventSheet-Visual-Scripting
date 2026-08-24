@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,现在只有这个对象的所有者�
 "Already set to run %d copies, tagged %s.",已经设置为运行 %d 个副本，标记为 %s。
 "Set to run %d copies, tagged %s.",已设置为运行 %d 个副本，标记为 %s。
 instance %d,实例 %d
+casts shadows,投射阴影

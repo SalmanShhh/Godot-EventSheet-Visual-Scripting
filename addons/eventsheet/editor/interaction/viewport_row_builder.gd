@@ -13453,6 +13453,9 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
 	if global_owner.is_empty():
 		global_owner = _variable_owner_label(condition.provider_id, condition.ace_id, params_dict)
+	# L1 - and a question asked OF A LIGHT belongs to that light: "Torch > Is on", not "Light2D > Is on".
+	if global_owner.is_empty():
+		global_owner = _light_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
 	var read_condition: ACECondition = condition
 	if not global_read.is_empty():
@@ -13692,6 +13695,14 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# object whose function that message is rather than to the Multiplayer object in general.
 	if global_owner.is_empty():
 		global_owner = _message_owner_label(action.provider_id, action.ace_id, action_params)
+	# L1 - and again for a light row: the light IS the object, so "Torch > Set brightness to 1.2"
+	# rather than the class of light it happens to be. A light row is also evidence of the LIGHTING
+	# pattern, exactly as the hand-written line it was read from was - the row it opens as changed,
+	# what it is evidence of did not.
+	if not _light_host_class(action.provider_id, action.ace_id).is_empty():
+		_note_pattern(LIGHTING_PATTERN, ActionCodegen.generate_action(action))
+		if global_owner.is_empty():
+			global_owner = _light_owner_label(action.provider_id, action.ace_id, action_params)
 	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
 	var read_action: ACEAction = action
 	if not global_read.is_empty():
@@ -15907,6 +15918,37 @@ func _message_owner_label(provider_id: String, ace_id: String, params: Dictionar
 		if str(entry.get("name", "")) == named:
 			return _script_object_name()
 	return ""
+
+
+## L1. The pattern name a light row is evidence of - the same one the reading claims for the
+## hand-written line, so a lit file claims it whichever way its lines came in.
+const LIGHTING_PATTERN := "lighting"
+
+
+## L1. The light class a verb is hosted on, or "" when it is not a light verb at all. Read off
+## whichever of the two the registry can answer with: a row never needs the registry to compile (its
+## template is baked) and it must not need one to READ either, so a live editor answers from the
+## definition and a bare viewport from the descriptor, and the question is the same for both.
+func _light_host_class(provider_id: String, ace_id: String) -> String:
+	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
+	var host: String = ""
+	if definition != null:
+		host = str(definition.metadata.get("node_type", ""))
+	else:
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+		host = "" if descriptor == null else str(descriptor.node_type)
+	return host if EventForgeLightWords.is_light_class(host) else ""
+
+
+## L1. The object column a LIGHT row belongs in: the light it names, not the class of light it is.
+## "" when the row acts on the sheet's own node (there is no other light to name) or when the target
+## is an expression rather than a node reference.
+func _light_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
+	var aimed: String = str(params.get("target", "")).strip_edges()
+	if aimed.is_empty() or aimed == "self" or _light_host_class(provider_id, ace_id).is_empty():
+		return ""
+	var named: String = EventSheetSceneLights.reference_key(aimed)
+	return "" if named.is_empty() else named.get_slice("/", named.get_slice_count("/") - 1)
 
 
 func _variable_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:

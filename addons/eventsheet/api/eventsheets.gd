@@ -1813,8 +1813,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	"input": "Setting-Up-And-Rebinding-Controls",
 	"json": "Working-With-Files",
 	# U7. Lights are what a scene is LIT with, which is the graphics guide's subject - the same guide a
-	# reader lands on from the camera and screenshot rows.
+	# reader lands on from the camera and screenshot rows. L1's node-scoped light words are the same
+	# subject said the other way round (the light in the object column rather than in a field), so
+	# they land on the same page rather than splitting the reader's lighting into two.
 	"lighting": "Cameras-Graphics-And-Screenshots",
+	"light_node": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
 	"video": "Playing-Video",
 	"loop": "Working-With-Lists",

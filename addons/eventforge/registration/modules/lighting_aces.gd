@@ -24,6 +24,18 @@ const ENV_CAT := "Environment"
 const ENV := "$WorldEnvironment.environment"
 
 
+## L1. The on/off dropdown the two light switches share. `display_option_labels` is what makes the
+## ROW read "Set light off" instead of "Set light false": the KEY is still `true`/`false` (it is what
+## the template writes and what every saved row holds, both frozen), and only the word a reader sees
+## changes. The same two words the reading already gives a hand-written `enabled = false`, so a
+## picked row and a typed line say the same thing.
+static func _on_off_param(description: String) -> ACEParam:
+	var parameter: ACEParam = F.make_param("on", "bool", "true", "On", description, "",
+		[{"key": "true", "label": "on"}, {"key": "false", "label": "off"}])
+	parameter.display_option_labels = true
+	return parameter
+
+
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
@@ -32,9 +44,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Sets how bright a 2D light is. The row shows the fraction as a percentage.").featured())
 	descriptors.append(F.make_descriptor("Core", "SetLightColour", "Set Light Colour (2D)", ACEDescriptor.ACEType.ACTION, "{node}.color = {colour}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to change.", "expression"), F.make_param("colour", "Color", "Color.WHITE", "Colour", "The colour the light casts.", "color")], CAT, "Set light colour to {colour}")
 		.described("Sets the colour a 2D light casts."))
-	descriptors.append(F.make_descriptor("Core", "SetLightEnabled", "Set Light On/Off", ACEDescriptor.ACEType.ACTION, "{node}.enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to switch.", "expression"), F.make_param("on", "bool", "true", "On", "false turns the light off without hiding the node.", "", ["true", "false"])], CAT, "Set light {on}")
+	descriptors.append(F.make_descriptor("Core", "SetLightEnabled", "Set Light On/Off", ACEDescriptor.ACEType.ACTION, "{node}.enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The 2D light to switch.", "expression"), _on_off_param("Whether the light is lit. Off is different from hiding the node, which also hides its children.")], CAT, "Set light {on}")
 		.described("Switches a 2D light on or off. Different from hiding the node, which also hides its children."))
-	descriptors.append(F.make_descriptor("Core", "SetLightShadows", "Set Shadows On/Off", ACEDescriptor.ACEType.ACTION, "{node}.shadow_enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The light to change.", "expression"), F.make_param("on", "bool", "true", "On", "Whether the light casts shadows.", "", ["true", "false"])], CAT, "Set shadows {on}")
+	descriptors.append(F.make_descriptor("Core", "SetLightShadows", "Set Shadows On/Off", ACEDescriptor.ACEType.ACTION, "{node}.shadow_enabled = {on}", "", [F.make_param("node", "String", "$PointLight2D", "Light", "The light to change.", "expression"), _on_off_param("Whether the light casts shadows.")], CAT, "Set shadows {on}")
 		.described("Turns a light's shadows on or off - the cheapest lighting switch there is."))
 
 	# ── 3D lights ──

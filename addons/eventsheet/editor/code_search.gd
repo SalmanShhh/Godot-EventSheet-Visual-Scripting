@@ -97,11 +97,29 @@ static func matches(definition: ACEDefinition, query: String) -> bool:
 ## that instances a scene and names it first.
 const RANK_INCIDENTAL := 1000
 
+## The tier a row whose own NAME is the call sits in when its template does not lead with it. A
+## template can reach a call along the way and still be the row a reader came for: "Tween Property"
+## writes `create_tween()` first, and every other row that reaches `tween_property` uses a tween to
+## do something else (Fade Brightness walks a light). Between two incidental rows the name decides,
+## and a row that LEADS with the call needs no help from its name.
+const RANK_NAMED := 500
+
 
 static func match_rank(definition: ACEDefinition, query: String) -> int:
 	var calls: PackedStringArray = definition_calls(definition)
 	var leads: bool = calls.size() > 0 and calls[0] == normalize(query)
-	return (0 if leads else RANK_INCIDENTAL) + calls.size()
+	if leads:
+		return calls.size()
+	return (RANK_NAMED if is_named_for(definition, query) else RANK_INCIDENTAL) + calls.size()
+
+
+## True when the row's own display name IS the call, in words: "Tween Property" for `tween_property`,
+## "Queue Free" for `queue_free`. Compared with the punctuation and the case taken out of both, so
+## the two spellings of one idea are the same string.
+static func is_named_for(definition: ACEDefinition, query: String) -> bool:
+	if definition == null:
+		return false
+	return definition.display_name.to_lower().replace(" ", "_") == normalize(query).to_lower()
 
 
 ## Every row that writes the call, the ones the call is ABOUT first. The picker appends this list

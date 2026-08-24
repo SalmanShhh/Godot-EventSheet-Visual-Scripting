@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,"Désormais, seul le propriétaire de
 "Already set to run %d copies, tagged %s.","Déjà réglé pour lancer %d copies, étiquetées %s."
 "Set to run %d copies, tagged %s.","Réglé pour lancer %d copies, étiquetées %s."
 instance %d,instance %d
+casts shadows,projette des ombres

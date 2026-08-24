@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,Ora lo esegue solo il proprietario di
 "Already set to run %d copies, tagged %s.","Già impostato per eseguire %d copie, contrassegnate %s."
 "Set to run %d copies, tagged %s.","Impostato per eseguire %d copie, contrassegnate %s."
 instance %d,istanza %d
+casts shadows,proietta ombre

@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/lighting_scene_cave.gd" id="1_cave"]
+
+[node name="Cave" type="Node3D"]
+script = ExtResource("1_cave")
+
+[node name="Flashlight" type="SpotLight3D" parent="."]
+shadow_enabled = true
+
+[node name="Bulb" type="OmniLight3D" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]

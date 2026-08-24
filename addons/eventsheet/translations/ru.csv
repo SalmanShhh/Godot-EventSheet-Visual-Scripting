@@ -4547,3 +4547,4 @@ Only the owner of this object runs it now.,Теперь его выполняе�
 "Already set to run %d copies, tagged %s.",Уже настроено на запуск %d копий с метками %s.
 "Set to run %d copies, tagged %s.",Настроено на запуск %d копий с метками %s.
 instance %d,экземпляр %d
+casts shadows,отбрасывает тени
