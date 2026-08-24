@@ -18,5 +18,14 @@ range_item_cull_mask = 3
 
 [node name="Door" type="StaticBody2D" parent="."]
 
+[node name="Level" type="CanvasModulate" parent="."]
+color = Color(0.3, 0.3, 0.36, 1)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="NorthWall" type="LightOccluder2D" parent="Walls"]
+
+[node name="SouthWall" type="LightOccluder2D" parent="Walls"]
+
 [node name="Wiring" type="Node2D" parent="."]
 script = ExtResource("2_wiring")

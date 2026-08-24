@@ -29,6 +29,9 @@ const BAND_AUTOLOAD: String = "autoload"
 const BAND_HOST: String = "host"
 const BAND_SYNC: String = "sync"
 const BAND_SPAWNED: String = "spawned"
+const BAND_LIT_BY: String = "lit_by"
+const BAND_SHADOWS: String = "shadows"
+const BAND_ENVIRONMENT: String = "environment"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -38,15 +41,21 @@ const BAND_ATTACH: String = "attach"
 ## is the order a reader recites the head in.
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
-	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
+	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
+	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT,
+	BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
-## E2 - the bands that come from the SCENE rather than from the file, and the key each reads its
-## entries from. These are the two kinds a sheet can wear SEVERAL of (a scene may hold two
-## synchronizers), so they are built as a list instead of as one band per kind.
+## E2 / L4 / L6 - the bands that come from the SCENE rather than from the file, and the key each
+## reads its entries from. These are the kinds a sheet can wear SEVERAL of (a scene may hold two
+## synchronizers, and a lit room holds a light per band), so they are built as a list instead of as
+## one band per kind. Every one of them is read on open and stored nowhere.
 const SCENE_BANDS: Dictionary = {
 	BAND_SYNC: "synchronizers",
 	BAND_SPAWNED: "spawned_by",
+	BAND_LIT_BY: "lit_by",
+	BAND_SHADOWS: "shadow_facts",
+	BAND_ENVIRONMENT: "environment",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -61,6 +70,9 @@ const LEADERS: Dictionary = {
 	BAND_HOST: "host",
 	BAND_SYNC: "keeps in step",
 	BAND_SPAWNED: "spawned by",
+	BAND_LIT_BY: "lit by",
+	BAND_SHADOWS: "shadows",
+	BAND_ENVIRONMENT: "environment",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -234,6 +246,9 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 		var reading: Dictionary = entry
 		var band: Dictionary = _make(kind, str(reading.get("value", "")), str(reading.get("echo", "")))
 		band["reference"] = str(reading.get("reference", ""))
+		# L4 - a fact that is a PROBLEM wears the problem's colour and the problem's words. The
+		# reader composed both, so the band and the Doctor finding about the same scene agree.
+		band["warning"] = bool(reading.get("warning", false))
 		built.append(band)
 	return built
 
@@ -243,9 +258,16 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## of the file they came from. Empty for a sheet no scene runs, which is why nothing about
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
-	var facts: Dictionary = {"synchronizers": [], "spawned_by": []}
+	var facts: Dictionary = {"synchronizers": [], "spawned_by": [],
+		"lit_by": [], "shadow_facts": [], "environment": []}
 	if sheet == null:
 		return facts
+	var source_path: String = str(sheet.external_source_path)
+	# L4 / L6 - the lighting the scene already has: one band per light, the occluders that can block
+	# their shadows, and the environment resource the scene holds (and who else holds it).
+	facts["lit_by"] = EventSheetSceneLightingFacts.lit_by(source_path)
+	facts["shadow_facts"] = EventSheetSceneLightingFacts.shadow_bands(source_path)
+	facts["environment"] = EventSheetSceneLightingFacts.environment_bands(source_path)
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries
@@ -307,6 +329,10 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("Replication panel…")
 		BAND_SPAWNED:
 			return EventSheetL10n.translate("select the spawner")
+		BAND_LIT_BY, BAND_SHADOWS:
+			return EventSheetL10n.translate("select the light")
+		BAND_ENVIRONMENT:
+			return EventSheetL10n.translate("select the node")
 	return ""
 
 
@@ -458,6 +484,9 @@ static func _make(kind: String, value: String, echo: String) -> Dictionary:
 		# E2 - the thing OUTSIDE this file a band is about ("scene|node"), so its control can open
 		# the editor that owns the fact. "" for every band that stands for a line of the file.
 		"reference": "",
+		# L4 - whether this band's fact is a PROBLEM, in which case its words are the warning the
+		# Doctor raises about the same scene and the canvas draws them in the note colour.
+		"warning": false,
 		"control": control_label(kind),
 	}
 

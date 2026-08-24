@@ -35,10 +35,11 @@ func init(dock: Control) -> void:
 func handle(action: String) -> void:
 	if _dock._current_sheet == null:
 		return
-	# E2 - the two bands that stand for a fact of the SCENE name the node they are about after a
-	# colon. Both mean the same gesture: the other editor of that fact - the Replication panel, the
-	# Inspector - is over there, so open the scene and select the node.
-	for scene_band: String in [EventSheetHeadBands.BAND_SYNC, EventSheetHeadBands.BAND_SPAWNED]:
+	# E2 / L4 / L6 - the bands that stand for a fact of the SCENE name the node they are about after
+	# a colon. All of them mean the same gesture: the other editor of that fact - the Replication
+	# panel, the Inspector - is over there, so open the scene and select the node. Asked of the band
+	# model rather than listed here, so a scene band a later pass adds arrives already clickable.
+	for scene_band: Variant in EventSheetHeadBands.SCENE_BANDS.keys():
 		if not action.begins_with("%s:" % scene_band):
 			continue
 		var reference: String = action.trim_prefix("%s:" % scene_band)
