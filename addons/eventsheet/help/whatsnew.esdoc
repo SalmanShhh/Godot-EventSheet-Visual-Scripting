@@ -89,6 +89,30 @@ What changed in the build you have installed (v0.17.0), in the words the release
   its kind word, its shadow state, both cull masks and the spelling a row addresses it by. The list
   the picker shelf and the `lit by` bands are built from, and the one a pack asks before offering a
   light row of its own.
+- **A flame is a behaviour, not thirty lines nobody wants on a sheet.** **Light Flicker** walks a
+  light's brightness between two numbers on a noise field - related from frame to frame, which is
+  what reads as fire rather than as static - and optionally breathes its reach with it. **Light
+  Pulse** is the same two rows on a smooth wave instead: a beacon, a pickup, a rune. Both attach to
+  ANY light, 2D or 3D, because neither names a light class: each asks its host at start-up which
+  property it spells brightness with (`energy` or `light_energy`) and which of the three reaches it
+  has, so a project's own subclass of a light works with nothing added. The sheet keeps the two
+  moments a game cares about - **Start flickering after 1.5 s**, **Stop flickering and settle at
+  0.6** - plus the question **Is flickering**; the numbers a designer tunes (between, times a
+  second, also flicker reach) stay in the Inspector, where they can be dialled in while the game
+  runs.
+- **Day and night is one behaviour: a clock, three curves, and four moments.** **Day/Night Cycle**
+  owns the part every project writes the same way - advance a clock, turn it into a sun angle, lerp
+  the colours - and leaves the game the moments. A whole day passes every Day Length Minutes; the
+  sun turns with the hour (sunrise on the horizon, noon overhead, whatever hours the project sets,
+  because daylight and night are stretched over their own halves of the turn); and three Inspector
+  curves say how bright the sun, the ambient light and the sky itself are through it. Point it at a
+  light and at a WorldEnvironment for a 3D sky, or at the CanvasModulate that holds a 2D level's
+  darkness - both dimensions work off the one clock, the 2D half LIFTS the colour the scene was
+  authored with toward daylight rather than replacing it, and a target left empty is skipped. The
+  sheet gets **On sunrise**, **On sunset**, **On midnight** and **On the hour** carrying the hour it
+  struck; the questions **It is day** / **It is night**; the expression `time_of_day`; and the rows
+  **Set the time to 6:00** (which does not ring the twelve hours it skipped), **Run the clock 4
+  times faster**, **Pause the clock** and **Resume the clock**.
 
 ### Tooling
 
