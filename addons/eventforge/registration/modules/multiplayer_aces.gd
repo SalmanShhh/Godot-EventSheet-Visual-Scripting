@@ -79,9 +79,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.make_descriptor("Core", "SendMessageToEveryone", "Send Message To Everyone", ACEDescriptor.ACEType.ACTION, "{message}.rpc({args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Every peer runs it.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to everyone {args}")
 		.described("Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.").featured())
-	descriptors.append(F.make_descriptor("Core", "SendMessageToHost", "Send Message To The Host", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id(1{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to the host {args}")
+	descriptors.append(F.make_descriptor("Core", "SendMessageToHost", "Send Message To The Host", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id(1{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Only the host runs it.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to the host {args}")
 		.described("Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody."))
-	descriptors.append(F.make_descriptor("Core", "SendMessageToPeer", "Send Message To One Peer", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id({peer}{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message.", "expression"), F.make_param("peer", "String", "1", "Peer", "The peer id to send to.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to {peer} {args}")
+	descriptors.append(F.make_descriptor("Core", "SendMessageToPeer", "Send Message To One Peer", ACEDescriptor.ACEType.ACTION, "{message}.rpc_id({peer}{, args})", "", [F.make_param("message", "String", "print", "Message", "The function marked as a message. Only the peer you name runs it.", "expression"), F.make_param("peer", "String", "1", "Peer", "Who to send it to: the id an event handed you, or Sender to answer whoever asked.", "expression"), F.make_param("args", "String", "", "Values", "Values to send with the message, comma separated.", "expression")], CATEGORY, "Send {message} to {peer} {args}")
 		.described("Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about."))
 	descriptors.append(F.make_descriptor("Core", "IsHost", "Is Host", ACEDescriptor.ACEType.CONDITION, "multiplayer.is_server()", "", [], CATEGORY, "Is host")
 		.described("True on the peer that is hosting the game. Put everything that decides what is true behind this.").featured())
@@ -127,9 +127,9 @@ static func _connection_descriptors() -> Array[ACEDescriptor]:
 ## connects them in `_ready`, on the `multiplayer` object rather than on a node in the scene.
 static func _connection_triggers() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "OnPlayerJoined", "On Player Joined", ACEDescriptor.ACEType.TRIGGER, "", "peer_connected", [F.make_param("id", "int", "", "Player", "The id of the peer that just joined.")], CATEGORY, "On player joined {id}")
+	descriptors.append(F.make_descriptor("Core", "OnPlayerJoined", "On Player Joined", ACEDescriptor.ACEType.TRIGGER, "", "peer_connected", [F.make_param("id", "int", "", "Player", "The id of the peer that just joined. Whatever a new player needs is sent to this id.")], CATEGORY, "On player joined {id}")
 		.described("Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.").featured())
-	descriptors.append(F.make_descriptor("Core", "OnPlayerLeft", "On Player Left", ACEDescriptor.ACEType.TRIGGER, "", "peer_disconnected", [F.make_param("id", "int", "", "Player", "The id of the peer that just left.")], CATEGORY, "On player left {id}")
+	descriptors.append(F.make_descriptor("Core", "OnPlayerLeft", "On Player Left", ACEDescriptor.ACEType.TRIGGER, "", "peer_disconnected", [F.make_param("id", "int", "", "Player", "The id of the peer that just left. It is already gone, so nothing can be sent to it.")], CATEGORY, "On player left {id}")
 		.described("Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here."))
 	descriptors.append(F.make_descriptor("Core", "OnJoinedTheHost", "On Joined The Host", ACEDescriptor.ACEType.TRIGGER, "", "connected_to_server", [], CATEGORY, "On joined the host")
 		.described("Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game."))
@@ -209,7 +209,7 @@ static func _state_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "Sender", "Sender", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_remote_sender_id()", "", [], CATEGORY, "Sender")
 		.described("Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else."))
 	descriptors.append(F.make_descriptor("Core", "OwnerOf", "Owner Of", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_multiplayer_authority()", "", [
-		F.make_param("target", "String", "self", "Object", "The node to ask about.", "expression")
+		F.make_param("target", "String", "self", "Object", "The node to ask about. Its owner is the peer allowed to move and change it.", "expression")
 	], CATEGORY, "Owner of {target}")
 		.described("The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with."))
 	return descriptors
