@@ -314,6 +314,12 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_describe_dialog_itself()
 
 
+## The declared parameter behind a field key, or {} when nothing is known about it. One reader, so
+## every question about a parameter is asked of the same store in the same way.
+func _param_dict(key: String) -> Dictionary:
+	return _param_dicts.get(key, {})
+
+
 func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
 	var hint: String = str(param_dict.get("hint", ""))
@@ -390,6 +396,12 @@ func _ensure_hint_factories() -> void:
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
 			"feature_tag": _create_feature_tag_field,
+			# M6 - three fields that take any GDScript exactly as an expression param does, and are
+			# spelled apart from it only so the help strip has something to describe them BY: what a
+			# port is, which addresses reach which machines, what a player costs the host.
+			"net_address": _create_expression_field,
+			"net_port": _create_expression_field,
+			"max_players": _create_expression_field,
 			"editor_icon": _create_editor_icon_field,
 			"editor_preference": _create_editor_preference_field,
 			"project_setting": _create_project_setting_field,
@@ -599,7 +611,23 @@ static func minutes_seconds_as_seconds(value: String) -> String:
 ## descriptor): suggestions are read at dialog-open from the engine set + every export
 ## preset's custom_features, so a tag added in Project > Export appears immediately.
 func _create_feature_tag_field(key: String, default_value: Variant) -> Control:
-	return _create_autocomplete_field(key, EventSheetFeatureTags.suggestions(), default_value)
+	# The row's OWN suggestions lead - a networking row means host / client / dedicated_server long
+	# before it means "astc" - and the live pool follows, deduped. A descriptor that names none is
+	# offered exactly the pool it always was.
+	return _create_autocomplete_field(key, _declared_then(key, EventSheetFeatureTags.suggestions()), default_value)
+
+
+## A parameter's own declared suggestions first, then `pool`, with nothing said twice. The one place
+## a live picker widens a descriptor's list instead of replacing it.
+func _declared_then(key: String, pool: Array) -> Array:
+	var merged: Array = []
+	for declared: Variant in (_param_dict(key).get("autocomplete", []) as Array):
+		if not merged.has(declared):
+			merged.append(declared)
+	for entry: Variant in pool:
+		if not merged.has(entry):
+			merged.append(entry)
+	return merged
 
 
 func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
@@ -2128,7 +2156,7 @@ func _validate_expression_field(edit: Control) -> void:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
 	var key: String = _key_of_field(edit)
-	var param: Dictionary = _param_dicts.get(key, {})
+	var param: Dictionary = _param_dict(key)
 	if bool(lint_result.get("ok", true)):
 		# Valid GDScript - but a literal $node / get_node("…") path that does NOT exist in the edited
 		# scene is almost always a typo. Flag it amber (a warning, not a red error: the node may be
@@ -2347,12 +2375,12 @@ func _key_of_field(field: Control) -> String:
 
 ## The hint one parameter carries, read off the shipped descriptor this dialog built it from.
 func _hint_of(key: String) -> String:
-	return str((_param_dicts.get(key, {}) as Dictionary).get("hint", ""))
+	return str(_param_dict(key).get("hint", ""))
 
 
 ## A parameter as a sentence names it - its display name, or its id when it has none.
 func _param_label(key: String) -> String:
-	var param: Dictionary = _param_dicts.get(key, {})
+	var param: Dictionary = _param_dict(key)
 	return str(param.get("display_name", key)) if not param.is_empty() else key
 
 
@@ -2941,7 +2969,7 @@ func _note_for(key: String) -> Dictionary:
 	var lint_note: Dictionary = _field_notes.get(key, {})
 	if not lint_note.is_empty():
 		return lint_note
-	var param: Dictionary = _param_dicts.get(key, {})
+	var param: Dictionary = _param_dict(key)
 	if param.is_empty() or not is_instance_valid(_fields.get(key, null)):
 		return {}
 	var takes: String = str(EventSheetVariableOwners.VARIABLE_VERB_TAKES.get(_definition.id, "")) if _definition != null else ""
@@ -2955,7 +2983,7 @@ func _describe_field(key: String) -> void:
 	if _help_strip == null:
 		return
 	_focused_key = key
-	var param: Dictionary = _param_dicts.get(key, {})
+	var param: Dictionary = _param_dict(key)
 	var note: Dictionary = _note_for(key)
 	if note.is_empty():
 		# V6 - nothing is wrong, but there may still be a plainer way to read what was typed.

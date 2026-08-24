@@ -131,7 +131,15 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"bbcode_text": "Text with the engine's own markup - the buttons wrap the selection, and the preview under the box is what the label will show.",
 	"physics_layer_2d": "The 2D physics layers this row looks at, by their project names. Tick as many as apply.",
 	"physics_layer_3d": "The 3D physics layers this row looks at, by their project names. Tick as many as apply.",
-	"feature_tag": "A build feature tag - the engine's own set plus every tag your export presets declare.",
+	"feature_tag": "A build feature tag - the engine's own set plus every tag your export presets declare. host and client are tags you add to two presets yourself; dedicated_server comes from Godot's own server preset, whose build is run with --headless.",
+	# M6 - the four networking fields, answering what a reader would otherwise go and look up: which
+	# ports are free, why 127.0.0.1 only reaches this machine, what a player costs the host, and which
+	# peer kind a browser can open. They live here rather than in the descriptors so a pack that ships
+	# a hosting row of its own gets the same words for free.
+	"net_address": "Play as host + client puts both instances on this machine, which is what 127.0.0.1 is for. Across the internet the host has to forward its port on the router, or both sides go through a relay. A field or a variable works here as well as a literal - the player usually types it.",
+	"net_port": "7000 to 65535 are free for games; anything below 1024 needs admin rights on most systems. Over the internet the host forwards this one port on its router, which is the step people miss.",
+	"peer_kind": "How the game talks over the network, and both sides have to pick the same one. ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes browser to browser through a signalling server you run.",
+	"max_players": "Every connected player costs the host bandwidth on every tick, for every value it keeps in step, so this number is a budget as much as a limit.",
 	"editor_icon": "The name of an icon in the editor's own set; the picture beside the field is what it draws.",
 	"editor_preference": "An editor setting, by its full path. These are the editor's own preferences, not the project's.",
 	"project_setting": "A project setting, by its full path, as Project Settings spells it.",
@@ -156,6 +164,9 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"key_capture": "a key",
 	"minutes_seconds": "a length of time",
 	"bbcode_text": "text with markup",
+	"net_address": "text",
+	"net_port": "a number",
+	"max_players": "a number",
 }
 
 ## The phrase for a parameter that leans on its declared GDScript type instead of a hint.
