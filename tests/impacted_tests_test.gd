@@ -55,7 +55,9 @@ static func _test_the_overrides() -> bool:
 		for name: String in overrides[fragment]:
 			if not FileAccess.file_exists("res://tests/%s.gd" % name):
 				missing.append("%s -> %s" % [fragment, name])
-	var ok: bool = _check("every test the overrides name is a real one", missing, PackedStringArray())
+	# Without this the check above passes vacuously the day the table is renamed out from under it.
+	var ok: bool = _check("the override table was actually read", overrides.size() > 5, true)
+	ok = _check("every test the overrides name is a real one", missing, PackedStringArray()) and ok
 	ok = _check("a documentation change picks the documentation gates, and no code gate",
 		_pick(["docs/GUIDE-THEMING.md"]),
 		PackedStringArray(["doc_library_test", "docs_integrity_test", "docs_links_test",
