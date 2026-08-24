@@ -10,23 +10,27 @@
 # One entry, in full:
 #
 #     {
-#         "id": "leave_via_close",                                  # stable, used by the harness
-#         "ace_id": "LeaveGame",                                    # the row this spelling means
-#         "pattern": "^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$",
-#         "params": ["message"],                                    # captures that become row values
-#         "defaults": {"args": ""},                                 # values the row has, the line doesn't
+#         "id": "send_to_everyone",                                 # stable, used by the harness
+#         "ace_id": "SendMessageToEveryone",                        # the row this spelling means
+#         "pattern": "^rpc\\(&?\"(?<message>[A-Za-z_][A-Za-z0-9_]*)\",[ \\t]*(?<args>.+)\\)$",
+#         "params": ["message", "args"],                            # captures that become row values
+#         "defaults": {"peer": ""},                                 # values the row has, the line doesn't
 #         "guard": Callable(Family, "_is_peer_variable"),           # optional second opinion
-#         "shape": "{peer}.close()",                                # the canonical spelling
-#         "slots": {"peer": "peer"}                                 # what the harness fills it with
+#         "shape": "rpc(\"{message}\", {args})",                    # the canonical spelling
+#         "slots": {"message": "take_damage", "args": "10"}         # what the harness fills it with
 #     }
 #
+# A capture is only a PARAM if the row says it. Everything else the pattern catches - the `&` before
+# a quoted name, a receiver in front of the call, the variable a connection was held in - is part of
+# the author's spelling, and is left out of `params` precisely so that it rides back out untouched.
+#
 # THE SPELLING IS STORED BY CONSTRUCTION. The template handed back is the matched line with each
-# PARAM capture spliced out and replaced by its `{name}` slot - everything else (a receiver prefix,
-# an `&` before a quoted name, the author's own spacing) rides along verbatim. Substituting the
-# params back into that template is therefore the exact inverse of the splice, so the byte round-trip
-# is not a hope the harness checks per case: it is the shape of the mechanism. What the harness
-# checks is that a table AUTHOR did not break it - a param that is not a capture, a shape that does
-# not match its own pattern, an entry with nothing to test it with.
+# PARAM capture spliced out and replaced by its `{name}` slot - everything else (that receiver, that
+# `&`, the author's own spacing) rides along verbatim. Substituting the params back into that
+# template is therefore the exact inverse of the splice, so the byte round-trip is not a hope the
+# harness checks per case: it is the shape of the mechanism. What the harness checks is that a table
+# AUTHOR did not break it - a param that is not a capture, a shape with no sample value, an entry
+# with nothing to test it with.
 #
 # WHAT DOES NOT BELONG HERE: a family whose spelling is several statements that only mean something
 # together (the connection run: declare a peer, open it, hand it to the API), or one that has to read
