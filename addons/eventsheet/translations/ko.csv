@@ -4458,3 +4458,28 @@ runs in the editor too,에디터에서도 실행됩니다
 Close after row %d,%d 행 뒤에서 닫기
 every networking line reads as a row - %d of %d,모든 네트워크 줄이 행으로 읽힘 - %d개 중 %d개
 %d of %d networking lines read as rows,네트워크 %d개 중 %d개 줄이 행으로 읽힘
+%s added - pick a mode to keep a value in step.,%s 을(를) 추가했습니다 - 값을 동기화할 모드를 고르세요.
+%s cannot be kept in step.,%s 은(는) 동기화할 수 없습니다.
+%s is kept in step - %s.,%s 은(는) 동기화됩니다 - %s.
+%s is not in %s any more.,%s 은(는) 더 이상 %s 에 없습니다.
+%s is not in the open scene any more.,%s 은(는) 열린 씬에 더 이상 없습니다.
+%s is not kept in step any more.,%s 은(는) 더 이상 동기화되지 않습니다.
+%s selected in %s - its panels are the Inspector and Replication.,%s 을(를) %s 에서 선택했습니다 - 해당 패널은 인스펙터와 Replication 입니다.
+Add a synchronizer to %s,%s 에 싱크로나이저 추가
+Add a synchronizer to %s…,%s 에 싱크로나이저 추가…
+At spawn only,생성될 때만
+Keep %s in step,%s 동기화하기
+Off,끕
+On change,변경될 때
+Open %s to change what it keeps in step.,무엇을 동기화할지 바꾸려면 %s 을(를) 여세요.
+Replication panel…,Replication 패널…
+The scene is only editable inside the editor.,씬은 에디터 안에서만 편집할 수 있습니다.
+always,항상
+at spawn,생성될 때
+every %s s,%s 초마다
+from %s(),%s() 에서
+on change,변경될 때
+seen by chosen players,선택한 플레이어에게만 보임
+seen by everyone,모두에게 보임
+select the spawner,스포너 선택
+set by the owner,소유자가 설정합니다

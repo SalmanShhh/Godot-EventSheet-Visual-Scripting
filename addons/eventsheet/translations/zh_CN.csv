@@ -4458,3 +4458,28 @@ runs in the editor too,也在编辑器中运行
 Close after row %d,在第 %d 行后关闭
 every networking line reads as a row - %d of %d,每一行网络代码都读作行 - %d / %d
 %d of %d networking lines read as rows,%d / %d 行网络代码读作行
+%s added - pick a mode to keep a value in step.,已添加 %s - 请选择一种模式来保持某个值同步。
+%s cannot be kept in step.,%s 无法保持同步。
+%s is kept in step - %s.,%s 将保持同步 - %s。
+%s is not in %s any more.,%s 已不在 %s 中。
+%s is not in the open scene any more.,%s 已不在打开的场景中。
+%s is not kept in step any more.,%s 不再保持同步。
+%s selected in %s - its panels are the Inspector and Replication.,已在 %s 中选中 %s - 对应面板是检查器和 Replication。
+Add a synchronizer to %s,为 %s 添加同步器
+Add a synchronizer to %s…,为 %s 添加同步器…
+At spawn only,仅在生成时
+Keep %s in step,保持 %s 同步
+Off,关闭
+On change,变化时
+Open %s to change what it keeps in step.,打开 %s 以更改保持同步的内容。
+Replication panel…,Replication 面板…
+The scene is only editable inside the editor.,场景只能在编辑器内修改。
+always,始终
+at spawn,生成时
+every %s s,每 %s 秒
+from %s(),来自 %s()
+on change,变化时
+seen by chosen players,仅选定玩家可见
+seen by everyone,所有人可见
+select the spawner,选中生成器
+set by the owner,由所有者设置

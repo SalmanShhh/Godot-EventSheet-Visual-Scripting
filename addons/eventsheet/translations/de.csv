@@ -4458,3 +4458,28 @@ runs in the editor too,läuft auch im Editor
 Close after row %d,Nach Zeile %d schließen
 every networking line reads as a row - %d of %d,jede Netzwerkzeile liest sich als Zeile - %d von %d
 %d of %d networking lines read as rows,%d von %d Netzwerkzeilen lesen sich als Zeilen
+%s added - pick a mode to keep a value in step.,"%s hinzugefügt - wählen Sie einen Modus, um einen Wert synchron zu halten."
+%s cannot be kept in step.,%s kann nicht synchron gehalten werden.
+%s is kept in step - %s.,%s wird synchron gehalten - %s.
+%s is not in %s any more.,%s ist nicht mehr in %s.
+%s is not in the open scene any more.,%s ist nicht mehr in der geöffneten Szene.
+%s is not kept in step any more.,%s wird nicht mehr synchron gehalten.
+%s selected in %s - its panels are the Inspector and Replication.,%s in %s ausgewählt - seine Panels sind der Inspektor und Replication.
+Add a synchronizer to %s,Einen Synchronizer zu %s hinzufügen
+Add a synchronizer to %s…,Einen Synchronizer zu %s hinzufügen…
+At spawn only,Nur beim Erzeugen
+Keep %s in step,%s synchron halten
+Off,Aus
+On change,Bei Änderung
+Open %s to change what it keeps in step.,"Öffnen Sie %s, um zu ändern, was synchron gehalten wird."
+Replication panel…,Replication-Panel…
+The scene is only editable inside the editor.,Die Szene lässt sich nur im Editor bearbeiten.
+always,immer
+at spawn,beim Erzeugen
+every %s s,alle %s s
+from %s(),aus %s()
+on change,bei Änderung
+seen by chosen players,nur für ausgewählte Spieler sichtbar
+seen by everyone,für alle sichtbar
+select the spawner,den Spawner auswählen
+set by the owner,wird vom Besitzer gesetzt

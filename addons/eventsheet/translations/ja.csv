@@ -4458,3 +4458,28 @@ runs in the editor too,エディタでも実行されます
 Close after row %d,%d 行目の後で閉じる
 every networking line reads as a row - %d of %d,ネットワークの行はすべて行として読める - %d / %d
 %d of %d networking lines read as rows,ネットワークの %d / %d 行が行として読める
+%s added - pick a mode to keep a value in step.,%s を追加しました - 値を同期するモードを選んでください。
+%s cannot be kept in step.,%s は同期できません。
+%s is kept in step - %s.,%s は同期されます - %s。
+%s is not in %s any more.,%s はもう %s にありません。
+%s is not in the open scene any more.,%s は開いているシーンにもうありません。
+%s is not kept in step any more.,%s は同期されなくなりました。
+%s selected in %s - its panels are the Inspector and Replication.,%s を %s で選択しました - 対応するパネルはインスペクターと Replication です。
+Add a synchronizer to %s,%s にシンクロナイザーを追加
+Add a synchronizer to %s…,%s にシンクロナイザーを追加…
+At spawn only,生成時のみ
+Keep %s in step,%s を同期する
+Off,オフ
+On change,変化したとき
+Open %s to change what it keeps in step.,同期する内容を変えるには %s を開いてください。
+Replication panel…,Replication パネル…
+The scene is only editable inside the editor.,シーンはエディター内でのみ編集できます。
+always,常に
+at spawn,生成時
+every %s s,%s 秒ごと
+from %s(),%s() から
+on change,変化したとき
+seen by chosen players,選んだプレイヤーにのみ見えます
+seen by everyone,全員に見えます
+select the spawner,スポナーを選択
+set by the owner,所有者が設定します

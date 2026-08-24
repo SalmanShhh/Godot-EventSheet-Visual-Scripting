@@ -4458,3 +4458,28 @@ runs in the editor too,viene eseguito anche nell'editor
 Close after row %d,Chiudi dopo la riga %d
 every networking line reads as a row - %d of %d,ogni riga di rete si legge come una riga - %d di %d
 %d of %d networking lines read as rows,%d righe di rete su %d si leggono come righe
+%s added - pick a mode to keep a value in step.,%s aggiunto - scegli una modalità per mantenere un valore sincronizzato.
+%s cannot be kept in step.,%s non può essere mantenuto sincronizzato.
+%s is kept in step - %s.,%s viene mantenuto sincronizzato - %s.
+%s is not in %s any more.,%s non è più in %s.
+%s is not in the open scene any more.,%s non è più nella scena aperta.
+%s is not kept in step any more.,%s non viene più mantenuto sincronizzato.
+%s selected in %s - its panels are the Inspector and Replication.,%s selezionato in %s - i suoi pannelli sono l'Inspector e Replication.
+Add a synchronizer to %s,Aggiungi un sincronizzatore a %s
+Add a synchronizer to %s…,Aggiungi un sincronizzatore a %s…
+At spawn only,Solo alla creazione
+Keep %s in step,Mantieni %s sincronizzato
+Off,Disattivato
+On change,Al cambiamento
+Open %s to change what it keeps in step.,Apri %s per cambiare cosa viene mantenuto sincronizzato.
+Replication panel…,Pannello Replication…
+The scene is only editable inside the editor.,La scena si modifica solo dentro l'editor.
+always,sempre
+at spawn,alla creazione
+every %s s,ogni %s s
+from %s(),da %s()
+on change,al cambiamento
+seen by chosen players,visibile solo ai giocatori scelti
+seen by everyone,visibile a tutti
+select the spawner,seleziona lo spawner
+set by the owner,impostato dal proprietario

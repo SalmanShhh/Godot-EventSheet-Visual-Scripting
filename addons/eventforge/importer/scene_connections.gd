@@ -55,7 +55,7 @@ static func for_script(script_path: String) -> Dictionary:
 		_cache[key] = scoped
 		return scoped
 	var found: Dictionary = {}
-	for scene_path: String in _all_scene_paths():
+	for scene_path: String in scene_paths():
 		var text: String = FileAccess.get_file_as_string(scene_path)
 		if text.is_empty() or not text.contains(path):
 			continue
@@ -81,15 +81,15 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 	var root_uses_script: bool = false
 	for line: String in lines:
 		if line.begins_with("[ext_resource "):
-			if _attribute(line, "path") == script_path:
-				script_ids[_attribute(line, "id")] = true
+			if attribute(line, "path") == script_path:
+				script_ids[attribute(line, "id")] = true
 			continue
 		if not line.begins_with("[node "):
 			continue
-		var node_name: String = _attribute(line, "name")
+		var node_name: String = attribute(line, "name")
 		if node_name.is_empty():
 			continue
-		node_classes[node_name] = _attribute(line, "type")
+		node_classes[node_name] = attribute(line, "type")
 		if root_name.is_empty() and not line.contains("parent="):
 			root_name = node_name
 	if root_name.is_empty() or script_ids.is_empty():
@@ -98,7 +98,7 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 	var in_root: bool = false
 	for line: String in lines:
 		if line.begins_with("[node "):
-			in_root = _attribute(line, "name") == root_name and not line.contains("parent=")
+			in_root = attribute(line, "name") == root_name and not line.contains("parent=")
 			continue
 		if in_root and line.begins_with("script = ExtResource("):
 			var id: String = line.get_slice("\"", 1)
@@ -112,17 +112,17 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 	for line: String in lines:
 		if not line.begins_with("[connection "):
 			continue
-		var to_path: String = _attribute(line, "to")
+		var to_path: String = attribute(line, "to")
 		# `.` is the scene root; the editor also writes the root's own name for a self-connection, and a
 		# NodePath ending at the root reads the same. Anything else is another node's handler.
 		if not (to_path == "." or to_path == root_name or to_path.get_file() == root_name):
 			continue
-		var handler: String = _attribute(line, "method")
-		var signal_name: String = _attribute(line, "signal")
+		var handler: String = attribute(line, "method")
+		var signal_name: String = attribute(line, "signal")
 		if handler.is_empty() or signal_name.is_empty():
 			continue
 		# `from="."` is the root emitting its own signal - it has no separate source object to name.
-		var source: String = _attribute(line, "from")
+		var source: String = attribute(line, "from")
 		if source == "." or source == root_name:
 			source = ""
 		connections[handler] = {
@@ -139,8 +139,13 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 
 
 ## P4. Every node of one scene, in the order the scene file writes them (which is tree order), as
-## [{name, path, type, script_path}]. The scene view is built from this, and so is the scoped
-## connection read below - both need to know which node carries which script.
+## [{name, path, type, script_path, properties}]. The scene view is built from this, and so is the
+## scoped connection read below - both need to know which node carries which script.
+##
+## `properties` is every `key = value` line under the node's header, values kept as the raw text the
+## file holds (`NodePath("..")`, `PackedStringArray("res://a.tscn")`, `0.05`). A reader that wants a
+## scene fact - which node a synchronizer keeps in step, which scenes a spawner can make - reads it
+## from here instead of walking the file a second time.
 static func nodes_of_scene(scene_path: String) -> Array:
 	var nodes: Array = []
 	var text: String = FileAccess.get_file_as_string(scene_path)
@@ -150,29 +155,42 @@ static func nodes_of_scene(scene_path: String) -> Array:
 	var lines: PackedStringArray = text.split("\n")
 	for line: String in lines:
 		if line.begins_with("[ext_resource "):
-			resource_paths[_attribute(line, "id")] = _attribute(line, "path")
+			resource_paths[attribute(line, "id")] = attribute(line, "path")
 	var current: Dictionary = {}
 	for line: String in lines:
 		if line.begins_with("[node "):
-			var node_name: String = _attribute(line, "name")
+			var node_name: String = attribute(line, "name")
 			if node_name.is_empty():
 				current = {}
 				continue
-			var parent: String = _attribute(line, "parent")
+			var parent: String = attribute(line, "parent")
 			var node_path: String = "."
 			if not parent.is_empty():
 				node_path = node_name if parent == "." else "%s/%s" % [parent, node_name]
 			current = {
 				"name": node_name,
 				"path": node_path,
-				"type": _attribute(line, "type"),
-				"script_path": ""
+				"type": attribute(line, "type"),
+				"script_path": "",
+				"properties": {}
 			}
 			nodes.append(current)
 			continue
-		if current.is_empty() or not line.begins_with("script = ExtResource("):
+		if line.begins_with("["):
+			# Any other section ends the node's block: the lines under a `[sub_resource]` or a
+			# `[connection]` belong to it, never to the node that happened to be written above.
+			current = {}
 			continue
-		current["script_path"] = str(resource_paths.get(line.get_slice("\"", 1), ""))
+		if current.is_empty():
+			continue
+		var assignment: int = line.find(" = ")
+		if assignment <= 0:
+			continue
+		var key: String = line.substr(0, assignment).strip_edges()
+		var value: String = line.substr(assignment + 3).strip_edges()
+		(current["properties"] as Dictionary)[key] = value
+		if key == "script" and value.begins_with("ExtResource("):
+			current["script_path"] = str(resource_paths.get(value.get_slice("\"", 1), ""))
 	return nodes
 
 
@@ -196,14 +214,14 @@ static func _connections_in_scene(scene_path: String, script_path: String) -> Di
 	for line: String in FileAccess.get_file_as_string(scene_path).split("\n"):
 		if not line.begins_with("[connection "):
 			continue
-		var to_path: String = _attribute(line, "to")
+		var to_path: String = attribute(line, "to")
 		if not targets.has(to_path):
 			continue
-		var handler: String = _attribute(line, "method")
-		var signal_name: String = _attribute(line, "signal")
+		var handler: String = attribute(line, "method")
+		var signal_name: String = attribute(line, "signal")
 		if handler.is_empty() or signal_name.is_empty():
 			continue
-		var from_path: String = _attribute(line, "from")
+		var from_path: String = attribute(line, "from")
 		# A node emitting its own signal has no separate source object to name.
 		var source: String = "" if from_path == to_path or from_path == "." else from_path.get_file()
 		connections[handler] = {
@@ -218,8 +236,10 @@ static func _connections_in_scene(scene_path: String, script_path: String) -> Di
 	return connections
 
 
-## `key="value"` out of a .tscn header line, "" when the key is absent.
-static func _attribute(line: String, key: String) -> String:
+## `key="value"` out of a .tscn header line, "" when the key is absent. Public because this module
+## is the project's ONE reader of scene text: anything else that has to answer a question about a
+## `.tscn` asks through here rather than growing a second parser beside it.
+static func attribute(line: String, key: String) -> String:
 	var marker: String = "%s=\"" % key
 	var start: int = line.find(marker)
 	if start < 0:
@@ -229,8 +249,9 @@ static func _attribute(line: String, key: String) -> String:
 	return line.substr(start, end - start) if end > start else ""
 
 
-## Every .tscn in the project, found once per session.
-static func _all_scene_paths() -> PackedStringArray:
+## Every .tscn in the project, found once per session - the input set for any question that has to
+## be asked of every scene ("which one runs this script", "which spawner lists this scene").
+static func scene_paths() -> PackedStringArray:
 	if _scene_paths_scanned:
 		return _scene_paths
 	_scene_paths_scanned = true

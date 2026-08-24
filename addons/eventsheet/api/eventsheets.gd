@@ -2327,6 +2327,49 @@ static func networking_coverage_text(sheet: EventSheetResource) -> String:
 	return EventSheetReadingCoverage.networking_text(sheet)
 
 
+## Every property of this sheet's own object that a `MultiplayerSynchronizer` in its scene keeps in
+## step - the half of Godot's multiplayer that lives in the `.tscn` and in no line of the script.
+## One entry per property, in the order the replication config numbers them:
+##   {"name", "property_path", "mode", "synchronizer", "synchronizer_path", "scene_path",
+##    "node_path", "interval", "public_visibility"}
+## `name` is the bare property a variable row shows (`hp`), `property_path` the `NodePath` spelling
+## the config holds (`.:hp`), and `mode` one of "always" / "on change" / "at spawn" - the three the
+## Replication panel offers. `interval` is the synchronizer's `replication_interval` in seconds (0
+## for every frame) and `public_visibility` says whether every peer sees it.
+##
+## READ-ONLY and derived on every ask: nothing about replication is stored in the sheet, so a
+## `.gd` still round-trips byte-for-byte and a project with no scenes gets an empty list. Ordinary
+## Dictionaries, so a pack reading them needs nothing of this plugin at runtime.
+static func synced_properties(sheet: EventSheetResource) -> Array[Dictionary]:
+	return _typed_dictionaries(EventSheetSceneReplication.for_script(
+		str(sheet.external_source_path) if sheet != null else "").get("synced", []))
+
+
+## Every `MultiplayerSpawner` this sheet is about: the ones IN its own scene (which a Spawn row can
+## address) and the ones anywhere else whose spawnable list can make its scene (which is what
+## "spawned by" on the head stands for). One entry each:
+##   {"name", "node_path", "scene_path", "spawn_path", "spawn_limit", "spawn_function", "scenes",
+##    "relation"}
+## `relation` is "in_scene" or "spawns_this" - which of the two questions this entry answers - and
+## `spawn_function` is read from the scene's own GDScript, because Godot never stores a Callable in a
+## `.tscn`; it is "" when no line sets one. Same contract as `synced_properties`: read-only, derived,
+## and empty for a sheet no scene uses.
+static func spawners_of(sheet: EventSheetResource) -> Array[Dictionary]:
+	return _typed_dictionaries(EventSheetSceneReplication.for_script(
+		str(sheet.external_source_path) if sheet != null else "").get("spawners", []))
+
+
+## An untyped Array of Dictionaries as the typed Array the API promises. The readers behind the two
+## scene calls answer in plain Arrays (they are parsers, not editor code), and a caller of a public
+## method should not have to cast what it was handed.
+static func _typed_dictionaries(entries: Array) -> Array[Dictionary]:
+	var typed: Array[Dictionary] = []
+	for entry: Variant in entries:
+		if entry is Dictionary:
+			typed.append(entry as Dictionary)
+	return typed
+
+
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────
 
 

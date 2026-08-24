@@ -4458,3 +4458,28 @@ runs in the editor too,работает и в редакторе
 Close after row %d,Закрыть после строки %d
 every networking line reads as a row - %d of %d,каждая сетевая строка читается как строка - %d из %d
 %d of %d networking lines read as rows,строк сети читается как строки: %d из %d
+%s added - pick a mode to keep a value in step.,"%s добавлен - выберите режим, чтобы значение оставалось синхронным."
+%s cannot be kept in step.,%s нельзя держать синхронным.
+%s is kept in step - %s.,%s держится синхронным - %s.
+%s is not in %s any more.,%s больше нет в %s.
+%s is not in the open scene any more.,%s больше нет в открытой сцене.
+%s is not kept in step any more.,%s больше не держится синхронным.
+%s selected in %s - its panels are the Inspector and Replication.,%s выбран в %s - его панели: Инспектор и Replication.
+Add a synchronizer to %s,Добавить синхронизатор к %s
+Add a synchronizer to %s…,Добавить синхронизатор к %s…
+At spawn only,Только при появлении
+Keep %s in step,Держать %s синхронным
+Off,Выкл.
+On change,При изменении
+Open %s to change what it keeps in step.,"Откройте %s, чтобы изменить, что держится синхронным."
+Replication panel…,Панель Replication…
+The scene is only editable inside the editor.,Сцену можно менять только в редакторе.
+always,всегда
+at spawn,при появлении
+every %s s,каждые %s с
+from %s(),из %s()
+on change,при изменении
+seen by chosen players,видно только выбранным игрокам
+seen by everyone,видно всем
+select the spawner,выбрать спавнер
+set by the owner,задаётся владельцем
