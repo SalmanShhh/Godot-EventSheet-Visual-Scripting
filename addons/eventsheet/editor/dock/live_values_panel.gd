@@ -110,12 +110,15 @@ func ensure_window() -> void:
 
 ## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the
 ## editable tree + inline chips next to variable rows in every pane (rung 3).
-func update_values(values: Dictionary) -> void:
+func update_values(values: Dictionary, instance: String = "") -> void:
 	for pane: EventSheetViewport in [_dock._viewport, _dock._multi_view._split_viewport, _dock._detached_viewport]:
 		if pane != null:
-			pane.set_live_values(values)
+			pane.set_live_values(values, instance)
 	ensure_window()
-	label.text = "Streaming - double-click a value to edit it in the running game."
+	# M5 - with two copies of the game running, the tree below is whichever of them streamed last,
+	# so it says which one that was. The row chips show every instance side by side.
+	label.text = "Streaming - double-click a value to edit it in the running game." if instance.is_empty() \
+		else "Streaming from %s - double-click a value to edit it in the running game." % instance
 	# Sheet variables list flat (editable); dotted keys ("Sine.phase" - a behavior's
 	# debugger_properties section, the event-sheet debugger idea) group under one read-only
 	# section per behavior child, after the variables.
@@ -274,6 +277,11 @@ func _remove_selected_watch() -> void:
 ## panel) has to see the emptiness, or it stamps minutes-old numbers "live".
 func clear_live_values() -> void:
 	_last_values = {}
+	# The row chips are the other half of "this is no longer live" - a labelled chip left over from
+	# a finished run would go on naming a window that is not there any more.
+	for pane: EventSheetViewport in [_dock._viewport, _dock._multi_view._split_viewport, _dock._detached_viewport]:
+		if pane != null:
+			pane.clear_live_values()
 	_refresh_watches(_last_values)
 
 

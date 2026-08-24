@@ -2434,6 +2434,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# V6 - and who owns each variable the sheet names, so a row that touches `hp` can lead with the
 	# object that HAS an hp. Derived once per sweep: it reads the autoloads' scripts.
 	_row_builder._variable_owner_catalog.clear()
+	# M7 - and the four networking mistakes, which are read from the whole sheet and then hung under
+	# the rows they are about. Derived once per sweep for the same reason: it walks every row.
+	_row_builder._multiplayer_findings_cache.clear()
 	if sheet == null:
 		return root_rows
 	# ── The pattern registry ──────────────────────────────────────────────────────────────────
@@ -2888,9 +2891,15 @@ var _tooltip_helper: ViewportTooltipHelper = ViewportTooltipHelper.new()
 var _empty_state_helper: ViewportEmptyStateHelper = ViewportEmptyStateHelper.new()
 
 
-## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
-func set_live_values(values: Dictionary) -> void:
-	_live_values_helper.set_live_values(values)
+## Streamed name->value frame (debug runs). Redraws value chips on variable rows. `instance` names
+## which running copy of the game it came from, "" for a lone run.
+func set_live_values(values: Dictionary, instance: String = "") -> void:
+	_live_values_helper.set_live_values(values, instance)
+
+
+## The run ended: nothing streamed is live any more, so the chips go.
+func clear_live_values() -> void:
+	_live_values_helper.clear_live_values()
 
 
 ## The "= value" chip for a row, or "" (variable rows whose name has a live frame).

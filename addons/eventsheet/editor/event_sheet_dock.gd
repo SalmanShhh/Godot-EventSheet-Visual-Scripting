@@ -3111,8 +3111,8 @@ func _ensure_live_values_window() -> void:
 	_ensure_live_values_panel().ensure_window()
 
 
-func update_live_values(values: Dictionary) -> void:
-	_ensure_live_values_panel().update_values(values)
+func update_live_values(values: Dictionary, instance: String = "") -> void:
+	_ensure_live_values_panel().update_values(values, instance)
 	if _debugger_window != null:
 		_debugger_window.update_values(values)
 
@@ -5358,6 +5358,10 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 		fix_kind = str(metadata.get("variable_note_fix", fix_kind))
 		if metadata.has("variable_note_event"):
 			note_meta = metadata
+	# M7 - the three networking fixes ride the same note row and the same click, because they are
+	# the same gesture: a line under the row, a button at its right edge, one undo step.
+	if _apply_multiplayer_note_fix(fix_kind, wrong, note_meta):
+		return
 	if fix_kind == "retarget":
 		_retarget_variable_row(note_meta, right)
 		return
@@ -5371,6 +5375,59 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 		_set_status(EventSheetL10n.translate("Nothing to rename."))
 		return
 	_set_status(EventSheetL10n.translate("Renamed %s to %s.") % [wrong, right])
+
+
+## M7 - the button on a networking note. "Make heal a message…" opens the Message dialog on that
+## function, "Keep in step" hands the value to a synchronizer in the scene, and "Wrap in an owner
+## group" puts the event in a group only the owner of this object runs. True when the click was
+## one of those, so the variable-note fixes above stay exactly as they were.
+func _apply_multiplayer_note_fix(fix_kind: String, subject: String, note_meta: Dictionary) -> bool:
+	match fix_kind:
+		EventSheetMultiplayerFindings.FIX_MAKE_MESSAGE:
+			for entry: Variant in _current_sheet.functions:
+				var event_function: EventFunction = entry as EventFunction
+				if event_function != null and event_function.function_name.strip_edges() == subject:
+					_messages.open_message(event_function)
+					return true
+			return true
+		EventSheetMultiplayerFindings.FIX_KEEP_IN_STEP:
+			var written: Dictionary = _variables.keep_in_step(
+				subject, EventSheetSceneReplication.MODE_ALWAYS)
+			_set_status(str(written.get("message", "")), not bool(written.get("ok", false)))
+			if bool(written.get("ok", false)):
+				_refresh_after_edit()
+			return true
+		EventSheetMultiplayerFindings.FIX_OWNER_GROUP:
+			_wrap_event_in_owner_group(note_meta.get("variable_note_event", null) as EventRow)
+			return true
+	return false
+
+
+## M7 - "Wrap in an owner group". The event moves an object every peer keeps in step, so it belongs
+## behind `is_multiplayer_authority()`; a group that runs on the owner IS that guard, written once
+## on the group rather than as a condition on every row inside it. One undo step, through the funnel
+## every other mutation takes.
+func _wrap_event_in_owner_group(event_row: EventRow) -> void:
+	if event_row == null:
+		return
+	var location: Dictionary = _find_resource_location(event_row)
+	if location.is_empty():
+		_set_status(EventSheetL10n.translate("Couldn't find that event to group."), true)
+		return
+	var container: Array = location.get("container")
+	var made := EventGroup.new()
+	made.group_name = EventSheetL10n.translate("Only the owner")
+	made.name = made.group_name
+	made.runs_on = EventGroup.RUNS_ON_OWNER
+	if _perform_undoable_sheet_edit(EventSheetL10n.translate("Wrap in an owner group"), func() -> bool:
+			var at: int = container.find(event_row)
+			if at < 0:
+				return false
+			container.remove_at(at)
+			made.events.append(event_row)
+			container.insert(mini(at, container.size()), made)
+			return true):
+		_mark_dirty(EventSheetL10n.translate("Only the owner of this object runs it now."))
 
 
 ## V12 - "Change to Set value" on a type-mismatch note. The row is replaced with the verb that fits,
@@ -5903,6 +5960,19 @@ func _run_from_sheet() -> void:  # command_palette.gd + menu_bar.gd Run-Scene bu
 
 func _run_target_script_path() -> String:  # godot_workflow_test
 	return _author_actions._run_target_script_path()
+
+
+## M5 - "Play as host + client". Two copies of the game at once, one tagged `host` and one tagged
+## `client`, so a sheet can host itself and join itself and both windows are right there. The
+## setting is Godot's own (Debug > Run Multiple Instances) and the tooltip says how to take it
+## back; all this does is set it and then run, which is the Run Scene gesture unchanged.
+func _play_as_host_and_client() -> void:  # menu_bar.gd toolbar button
+	var applied: Dictionary = EventSheetRunInstances.apply_tags(EventSheetRunInstances.TEST_TAGS)
+	if not bool(applied.get("ok", false)):
+		_set_status(str(applied.get("reason", "")), true)
+		return
+	_set_status(str(applied.get("message", "")))
+	_run_from_sheet()
 
 
 # ── Session restore (open tabs survive an editor restart) → event_sheet_session_store.gd ──

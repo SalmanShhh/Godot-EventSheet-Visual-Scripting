@@ -397,7 +397,7 @@ static func run() -> bool:
 	all_passed = _check("the toolbar wraps instead of clipping",
 		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
 	all_passed = _check("grouping leaves a short toolbar",
-		toolbar_editor._toolbar.get_child_count() <= 21, true) and all_passed  # +1: the Simple Mode pill, +1: the Settings menu (Words), +3: the T15 Preview buttons
+		toolbar_editor._toolbar.get_child_count() <= 22, true) and all_passed  # +1: the Simple Mode pill, +1: the Settings menu (Words), +3: the T15 Preview buttons, +1: Play as host + client (M5)
 	var sheet_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetSheetMenu", true, false) as MenuButton
 	var add_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton

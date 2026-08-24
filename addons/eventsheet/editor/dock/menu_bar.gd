@@ -134,6 +134,10 @@ func build(root: Node) -> void:
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
 	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
+	# M5 - testing a networked game needs two copies of it running. Godot can already do that; this
+	# button is the one that finds the setting for you and says in its tooltip how to take it back.
+	_add_toolbar_button(_toolbar, "Play as host + client", _dock._play_as_host_and_client,
+		EventSheetRunInstances.tooltip(), "Play")
 	# T15 - Preview on the SHEET. The keys stay Godot's (F6 / F5) and the names are the ones an
 	# author coming from another event-sheet editor reaches for; while a game runs the first two
 	# relabel themselves Stop / Restart, so the strip never claims it will do something it will not.

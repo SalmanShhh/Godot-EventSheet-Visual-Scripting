@@ -9,6 +9,9 @@ extends RefCounted
 # works inside the owning node's `_draw` (which is exactly where `draw_chip` is called from).
 
 var _viewport: Control = null
+## M5. One frame per running copy of the game, keyed by the feature tag it was started with - "" for
+## a lone run, which is every game not being tested as two players at once. Insertion order is the
+## order the instances first streamed, so the chips stay in one order across frames.
 var _live_values: Dictionary = {}
 
 
@@ -16,15 +19,29 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
-## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
-func set_live_values(values: Dictionary) -> void:
-	_live_values = values
+## Streamed name->value frame (debug runs). Redraws value chips on variable rows. A lone run and a
+## labelled one never mix: a frame with no label replaces every labelled one and the other way
+## round, so a second run cannot leave a chip naming a window from the first.
+func set_live_values(values: Dictionary, instance: String = "") -> void:
+	var keys: Array = _live_values.keys()
+	var was_labelled: bool = not keys.is_empty() and not str(keys[0]).is_empty()
+	if was_labelled != (not instance.is_empty()):
+		_live_values.clear()
+	_live_values[instance] = values
 	_viewport.queue_redraw()
+
+
+## The run ended - the last frame stops counting as live.
+func clear_live_values() -> void:
+	_live_values.clear()
+	if _viewport != null:
+		_viewport.queue_redraw()
 
 
 ## The "now value" chip for a row, or "" (variable rows whose name has a live frame). V12 - "now",
 ## never "=": the declaration's own value never changes while the game runs, and a second "= 73" on
-## the row read as though it had.
+## the row read as though it had. M5 - with two copies of the game running there is one chip per
+## instance, each headed by the tag that copy was started with.
 func chip_for(row_data: EventRowData) -> String:
 	var variable_name: String = ""
 	if row_data.source_resource is LocalVariable:
@@ -34,9 +51,23 @@ func chip_for(row_data: EventRowData) -> String:
 		# is a badge or a scope word depending on how the row reads.
 		var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
 		variable_name = str(metadata.get("variable_name", "")).strip_edges()
-	if variable_name.is_empty() or not _live_values.has(variable_name):
+	return chip_text(_live_values, variable_name)
+
+
+## The chips one variable's row wears, side by side: "now 100" on its own for a lone run,
+## "host · now 100   client · now 90" while two copies stream. Static + pure, so the words are
+## pinned without a canvas.
+static func chip_text(frames: Dictionary, variable_name: String) -> String:
+	if variable_name.is_empty():
 		return ""
-	return "now %s" % str(_live_values[variable_name])
+	var chips: PackedStringArray = PackedStringArray()
+	for instance: Variant in frames:
+		var values: Dictionary = frames[instance] if frames[instance] is Dictionary else {}
+		if not values.has(variable_name):
+			continue
+		var now: String = "now %s" % str(values[variable_name])
+		chips.append(now if str(instance).is_empty() else "%s · %s" % [str(instance), now])
+	return "   ".join(chips)
 
 
 ## Draws "now value" after a variable row's sentence when a live frame carries its name. Called from

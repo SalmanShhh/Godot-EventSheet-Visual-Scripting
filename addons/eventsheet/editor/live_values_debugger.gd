@@ -6,8 +6,11 @@
 class_name EventSheetLiveValuesDebugger
 extends EditorDebuggerPlugin
 
-## Emitted on the editor side whenever a running game streams a values frame.
-signal values_received(values: Dictionary)
+## Emitted on the editor side whenever a running game streams a values frame. `instance` names WHICH
+## copy of the game it came from - the feature tag Run Multiple Instances started that one with
+## ("host", "client") - and is "" for a lone run, which is every game that is not being tested as
+## two players at once.
+signal values_received(values: Dictionary, instance: String)
 ## Emitted whenever a running game streams the set of event UIDs that fired since the last tick
 ## (debugging rung 3 - live event trace). The editor highlights those rows.
 signal fired_events_received(uids: PackedStringArray)
@@ -37,6 +40,10 @@ signal input_recorded(action: String, pressed: bool, frame: int)
 signal runtime_error_received(message: String, script_path: String, line: int)
 
 var _last_session_id: int = -1
+## M5. Session id -> the feature tag that copy of the game was started with. Read once when the
+## session opens, because the editor setting can be changed while a game runs and the chip must go
+## on saying which window it is describing.
+var _instance_labels: Dictionary = {}
 
 
 func _has_capture(capture: String) -> bool:
@@ -56,6 +63,10 @@ func _setup_session(session_id: int) -> void:
 	var timings: GDScript = load("res://addons/eventsheet/editor/trace_timings.gd")
 	if timings != null:
 		timings.reset()
+	# M5 - which copy of the game this is. Loaded BY PATH for the same reason the two stores above
+	# are: naming the class here would compile it into every editor start.
+	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
+	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)
 	var session: EditorDebuggerSession = get_session(session_id)
 	if session != null and not session.stopped.is_connected(_on_session_stopped):
 		session.stopped.connect(_on_session_stopped)
@@ -64,13 +75,14 @@ func _setup_session(session_id: int) -> void:
 ## The run ended. Announced rather than inferred: "no values have arrived recently" and "the game is
 ## gone" look identical from the receiving end, and only one of them means the numbers are stale.
 func _on_session_stopped() -> void:
+	_instance_labels.clear()
 	session_ended.emit()
 
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
 	_last_session_id = session_id
 	if message == "eventsheets:live_values":
-		values_received.emit(parse_payload(data))
+		values_received.emit(parse_payload(data), str(_instance_labels.get(session_id, "")))
 		return true
 	if message == "eventsheets:fired_events":
 		fired_events_received.emit(parse_fired(data))

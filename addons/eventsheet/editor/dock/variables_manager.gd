@@ -251,25 +251,61 @@ func _on_variable_sync_menu_id_pressed(id: int) -> void:
 	var mode: String = _dock.VARIABLE_SYNC_MODES.get(id, "")
 	if mode.is_empty():
 		return
-	var var_name: String = str(_context_variable.get("name", ""))
-	var entry: Dictionary = context_variable_sync_entry()
-	var synchronizers: Array = _scene_replication().get("synchronizers", [])
-	var holder: Dictionary = entry if not entry.is_empty() \
-		else (synchronizers[0] as Dictionary if not synchronizers.is_empty() else {})
-	if holder.is_empty():
+	var written: Dictionary = keep_in_step(str(_context_variable.get("name", "")), mode)
+	if str(written.get("message", "")).is_empty():
 		return
+	_dock._set_status(str(written.get("message", "")), not bool(written.get("ok", false)))
+	if bool(written.get("ok", false)):
+		_dock._refresh_after_edit()
+
+
+## E2 - puts one variable into one of the three replication modes, or takes it out of all of them.
+## The ONE writer behind every gesture that says "keep this in step": the row's submenu above, the
+## Add/Edit variable dialog's dropdown, and M7's one-click fix. Returns {ok, message}.
+##
+## A scene with no synchronizer at all gets one first, because "keep this in step" is one decision
+## and asking for it twice is a worse answer than making the node. Taking a value back OUT never
+## adds anything - there would be nothing to take it out of.
+func keep_in_step(variable_name: String, mode: String) -> Dictionary:
+	var var_name: String = variable_name.strip_edges()
+	if var_name.is_empty() or mode.is_empty():
+		return {"ok": false, "message": ""}
+	var holder: Dictionary = _synchronizer_holding(var_name)
+	if holder.is_empty() and mode != EventSheetSceneReplication.MODE_OFF:
+		var host: Dictionary = _scene_replication().get("host", {})
+		var added: Dictionary = EventSheetSceneReplication.add_synchronizer(
+			str(host.get("scene_path", "")), str(host.get("node_path", ".")))
+		if not bool(added.get("ok", false)):
+			return {"ok": false, "message": str(added.get("reason", ""))}
+		holder = _synchronizer_holding(var_name)
+	if holder.is_empty():
+		return {"ok": false, "message": ""}
+	var entry: Dictionary = EventSheetSceneReplication.entry_for(
+		_scene_replication().get("synced", []), var_name)
 	var written: Dictionary = EventSheetSceneReplication.write_mode(
 		str(holder.get("scene_path", "")),
 		str(holder.get("synchronizer_path", holder.get("node_path", ""))),
 		str(entry.get("property_path", ".:%s" % var_name)),
 		mode)
 	if not bool(written.get("ok", false)):
-		_dock._set_status(str(written.get("reason", "")), true)
-		return
-	_dock._set_status(EventSheetL10n.translate("%s is not kept in step any more.") % var_name
-		if mode == EventSheetSceneReplication.MODE_OFF
-		else EventSheetL10n.translate("%s is kept in step - %s.") % [var_name, EventSheetSceneReplication.mode_word(mode)])
-	_dock._refresh_after_edit()
+		return {"ok": false, "message": str(written.get("reason", ""))}
+	var said: String = EventSheetL10n.translate("%s is kept in step - %s.") % [
+		var_name, EventSheetSceneReplication.mode_word(mode)]
+	if mode == EventSheetSceneReplication.MODE_OFF:
+		said = EventSheetL10n.translate("%s is not kept in step any more.") % var_name
+	return {"ok": true, "message": said}
+
+
+## The synchronizer a mode would be written on: the one already carrying this variable, else the
+## scene's first. `{}` when the scene has none.
+func _synchronizer_holding(var_name: String) -> Dictionary:
+	var replication: Dictionary = _scene_replication()
+	var entry: Dictionary = EventSheetSceneReplication.entry_for(
+		replication.get("synced", []), var_name)
+	if not entry.is_empty():
+		return entry
+	var synchronizers: Array = replication.get("synchronizers", [])
+	return synchronizers[0] as Dictionary if not synchronizers.is_empty() else {}
 
 
 ## E2 - everything the scene says about the sheet in the tab, asked through the one reader (which
