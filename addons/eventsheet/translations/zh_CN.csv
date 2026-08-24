@@ -4533,3 +4533,12 @@ for %s,用于 %s
 Open %s to change what its spawner may spawn.,打开 %s 才能修改它的生成器可以生成什么。
 Let %s spawn %s,允许 %s 生成 %s
 On asked,被询问时
+%s is not a message: nothing will arrive. Mark the function as a message first.,%s 不是消息，什么都不会送达。请先把该函数标记为消息。
+Make %s a message…,把 %s 变成消息…
+"%s is changed in a group that runs on the host, but only the host will see the new value. Keep it in step, or send it.",%s 在只由主机运行的分组里被改变，但只有主机会看到新值。让它保持同步，或者把它发出去。
+Keep in step,保持同步
+"%s runs on every peer, and only the owner of this object should move it. Put the event in a group that runs on the owner.",%s 会在每个对等端运行，但只有这个对象的所有者才应该移动它。把事件放进一个由所有者运行的分组里。
+Wrap in an owner group,放进所有者分组
+"%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.",%s 谁都可以发送，而且它在不确认发送者的情况下写入 %s。任何玩家都可以自己发一条。
+Couldn't find that event to group.,找不到要分组的那个事件。
+Only the owner of this object runs it now.,现在只有这个对象的所有者会运行它。

@@ -4533,3 +4533,12 @@ for %s,%s용
 Open %s to change what its spawner may spawn.,스포너가 스폰할 수 있는 대상을 바꾸려면 %s을(를) 여세요.
 Let %s spawn %s,%s이(가) %s을(를) 스폰하도록 허용
 On asked,요청받을 때
+%s is not a message: nothing will arrive. Mark the function as a message first.,%s 은(는) 메시지가 아니므로 아무것도 도착하지 않습니다. 먼저 함수를 메시지로 표시하세요.
+Make %s a message…,%s 을(를) 메시지로 만들기…
+"%s is changed in a group that runs on the host, but only the host will see the new value. Keep it in step, or send it.","%s 은(는) 호스트에서만 실행되는 그룹에서 바뀌지만, 새 값은 호스트만 보게 됩니다. 동기화하거나 메시지로 보내세요."
+Keep in step,동기화하기
+"%s runs on every peer, and only the owner of this object should move it. Put the event in a group that runs on the owner.","%s 은(는) 모든 피어에서 실행되지만, 이 오브젝트를 움직여야 하는 것은 소유자뿐입니다. 이벤트를 소유자에서 실행되는 그룹에 넣으세요."
+Wrap in an owner group,소유자 그룹으로 감싸기
+"%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s 은(는) 누구나 보낼 수 있고, 보낸 사람을 확인하지 않은 채 %s 을(를) 쓵니다. 어떤 플레이어든 직접 보낼 수 있습니다."
+Couldn't find that event to group.,그룹으로 묶을 이벤트를 찾지 못했습니다.
+Only the owner of this object runs it now.,이제 이 오브젝트의 소유자만 실행합니다.

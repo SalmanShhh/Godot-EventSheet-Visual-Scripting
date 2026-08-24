@@ -4533,3 +4533,12 @@ for %s,%s 用
 Open %s to change what its spawner may spawn.,スポナーがスポーンできるものを変えるには %s を開いてください。
 Let %s spawn %s,%s に %s のスポーンを許可
 On asked,尋ねられたとき
+%s is not a message: nothing will arrive. Mark the function as a message first.,%s はメッセージではありません。何も届きません。先に関数をメッセージとして指定してください。
+Make %s a message…,%s をメッセージにする…
+"%s is changed in a group that runs on the host, but only the host will see the new value. Keep it in step, or send it.",%s はホストだけが実行するグループの中で変わりますが、新しい値を見られるのはホストだけです。同期させるか、メッセージで送ってください。
+Keep in step,同期させる
+"%s runs on every peer, and only the owner of this object should move it. Put the event in a group that runs on the owner.",%s はすべてのピアで実行されますが、このオブジェクトを動かしてよいのは所有者だけです。イベントを所有者で実行されるグループに入れてください。
+Wrap in an owner group,所有者のグループで囲む
+"%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.",%s は誰でも送れるうえ、送り主を確かめずに %s を書き換えます。プレイヤーが自分で送ることもできてしまいます。
+Couldn't find that event to group.,グループ化するイベントが見つかりませんでした。
+Only the owner of this object runs it now.,これからはこのオブジェクトの所有者だけが実行します。

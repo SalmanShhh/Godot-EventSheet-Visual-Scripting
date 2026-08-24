@@ -4533,3 +4533,12 @@ for %s,для %s
 Open %s to change what its spawner may spawn.,"Откройте %s, чтобы изменить, что может создавать её спавнер."
 Let %s spawn %s,Разрешить %s создавать %s
 On asked,По запросу
+%s is not a message: nothing will arrive. Mark the function as a message first.,%s не является сообщением: ничего не придёт. Сначала отметьте функцию как сообщение.
+Make %s a message…,Сделать %s сообщением…
+"%s is changed in a group that runs on the host, but only the host will see the new value. Keep it in step, or send it.","%s меняется в группе, которая выполняется только на хосте, но новое значение увидит только хост. Синхронизируйте его или отправьте сообщением."
+Keep in step,Синхронизировать
+"%s runs on every peer, and only the owner of this object should move it. Put the event in a group that runs on the owner.","%s выполняется на каждом пире, хотя двигать этот объект должен только его владелец. Поместите событие в группу, которая выполняется у владельца."
+Wrap in an owner group,Обернуть в группу владельца
+"%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s может отправить кто угодно, и оно записывает %s, не спрашивая, кто его отправил. Любой игрок может отправить его сам."
+Couldn't find that event to group.,Не удалось найти это событие для группировки.
+Only the owner of this object runs it now.,Теперь его выполняет только владелец этого объекта.

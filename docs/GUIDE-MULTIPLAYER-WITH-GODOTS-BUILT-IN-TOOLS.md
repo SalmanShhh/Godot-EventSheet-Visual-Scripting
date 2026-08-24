@@ -360,6 +360,74 @@ it says the things people go and look up:
 - **Scene** - the list is the spawner's own, from the Inspector. A path that is not in it yet is
   added when you press OK, because a spawner only replicates scenes it lists.
 
+## Testing it as two players
+
+A networked game needs two copies of itself running before anything about it can be seen. Godot can
+already do that - Debug ▸ Run Multiple Instances - and hardly anybody finds it, so the toolbar has a
+**Play as host + client** button beside Run Scene. One click sets that dialog to two instances, gives
+the first the feature tag `host` and the second the tag `client`, and then plays the scene this sheet
+is attached to. Nothing about it is this plugin's: the button writes the editor's own setting, the
+dialog shows what it wrote, and unticking **Enable Multiple Instances** there turns it off again.
+Anything else you had set per instance, such as launch arguments, is left exactly as it was.
+
+The tags are what let one project host itself and join itself. **Started as** is `OS.has_feature`,
+so an On ready event can ask which copy it is:
+
+<!-- caption: One project, two windows: the copy started with the host tag opens the game, the other joins it. -->
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	if OS.has_feature("host"):
+		var __peer := ENetMultiplayerPeer.new()
+		__peer.create_server(7000, 8)
+		multiplayer.multiplayer_peer = __peer
+```
+
+Put **Join a game at 127.0.0.1 port 7000** on the Else beneath it and both windows sort themselves
+out on launch. The same condition is how a dedicated server knows what it is: Godot's own Dedicated
+Server export preset sets the `dedicated_server` tag, and that build is run with `--headless`.
+
+While both are running, a variable row's live value grows one chip per instance, headed by the tag
+that copy was started with: `host · now 100   client · now 90`. A lone run is not labelled at all,
+because there is nothing to tell apart. Godot's own Debugger ▸ Network tab is where the per-message
+send and receive counts live; the editor keeps those to itself, so the sheet does not repeat them.
+
+## The four mistakes the Doctor knows
+
+Networking bugs are silent. The game runs, nothing is printed, and the other player sees nothing.
+Four of them cost every beginner an evening, and each one is a question the sheet can answer about
+itself, so the Project Doctor asks it and the sheet says the answer under the row it is about:
+
+- **Sent but not a message.** A Send row names a function of this sheet that carries no `@rpc`. It
+  compiles, and then nothing travels. The note offers **Make X a message…**, which is the Message
+  dialog on that function.
+- **Changed on the host, seen nowhere.** A variable written inside a group that runs on the host,
+  which no synchronizer keeps in step and no message carries. The host's copy changes and everybody
+  else goes on showing the old value. The note offers **Keep in step**, which hands the value to a
+  synchronizer in the scene - adding one if the scene has none yet.
+- **Moved by everyone.** A row that moves an object every peer keeps in step, with nothing saying
+  only its owner may. Each peer moves its own copy and the owner's corrections fight them. The note
+  offers **Wrap in an owner group**, which puts the event in a group that runs on the owner.
+- **Trusting the sender.** A message anyone may send that writes a value every peer keeps in step
+  without ever asking **Sender**. A player can send that message themselves, so the value is theirs
+  to choose. There is no one-click answer to this one: the note names the message and the value, and
+  what to do about it is a decision about your game.
+
+A sheet that says nothing about the network is never judged by any of them, so a single-player
+project grows no notes it did not have before.
+
+Tools ▸ Project Doctor gathers the same four into a **Multiplayer** section, over the whole project
+rather than the open sheet. It leads with one line - how many scripts touch the network and how much
+of what they say about it read as rows - then a line per script with networking the sheet could only
+show as code, naming the first such line, then the findings. Double-clicking any of them opens that
+script as a sheet; the Adopt offer lives on the block's own row, where the diff can be shown before
+anything changes. The section is registered through `EventSheets.register_doctor_check`, the same
+public seam a pack uses, so a pack that adds its own networking adds its scripts to this section
+rather than starting a second report.
+
 ## Slotting into a project you already wrote
 
 Everything above is also a READING. A networked project written before this plugin existed opens on

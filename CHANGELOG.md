@@ -757,6 +757,44 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   stays **Queue free** - it is the line every project writes to remove any node at all, and the
   networked meaning is in where it runs, not in the line.
 
+### Multiplayer - two players in one click, and the four mistakes nobody sees
+
+- **Play as host + client, from the toolbar.** Testing a networked game needs two copies of it
+  running, and Godot can already do that (Debug ▸ Run Multiple Instances) without anybody finding
+  it. A button beside Run Scene sets that dialog to two instances, tags the first `host` and the
+  second `client`, and plays the scene this sheet is attached to - so an **On ready ▸ Started as
+  host** event opens the game in one window while the other joins it. It writes the editor's OWN
+  setting, so that dialog shows what it did and unticking Enable Multiple Instances there turns it
+  off again; anything else set per instance, launch arguments included, is left alone. The tooltip
+  says all of that, because a button that changes a setting somewhere else has to.
+- **Live values say which window they came from.** With two copies streaming, a variable row wears
+  one chip per instance, headed by the tag that copy was started with: `host · now 100
+  client · now 90`. A lone run is not labelled, so a single-player game's chip reads exactly as it
+  did. The panel's own tree names whichever instance streamed last rather than flickering between
+  two games without saying so, and the chips go the moment the run ends. Per-message send and receive
+  counts stay where Godot keeps them, in Debugger ▸ Network: the editor never hands those to a
+  plugin, and inventing a number would be worse than pointing at the real one.
+- **The four networking mistakes, said under the row they are about.** *Sent but not a message* (a
+  Send row naming a function of this sheet with no `@rpc` - it compiles and then nothing travels),
+  *changed on the host, seen nowhere* (a value written in a host group that no synchronizer keeps in
+  step and no message carries), *moved by everyone* (a row moving a synced object with nothing saying
+  only its owner may), and *trusting the sender* (a message anyone may send that writes a synced
+  value without ever asking **Sender**). The first three carry a one-click fix - **Make X a
+  message…**, **Keep in step**, **Wrap in an owner group** - on the same amber note row and the same
+  click an unknown variable already uses. Keep in step now adds the synchronizer itself when the
+  scene has none, so the fix is one click rather than two answers to one question.
+- **Nothing is stored, and single player is untouched.** Every finding is derived from the rows, the
+  group attributes, the function annotations and the scene's replication config, so a fixed sheet
+  stops reporting one with nothing to clean up. A sheet that says nothing about the network at all is
+  never judged: the coverage census is the gate, so a project that never hosts grows no notes it did
+  not have before.
+- **The Doctor gained a Multiplayer section.** One line for the project - how many scripts touch the
+  network and how much of what they say about it read as rows - then a line per script with
+  networking the sheet could only show as code, naming the first such line and offering Adopt where
+  the diff can be shown, then the four findings. It ships as an EXTENSION check registered through
+  `EventSheets.register_doctor_check`, the same public seam a pack uses, so a pack that adds its own
+  networking adds its scripts to this section instead of starting a second report.
+
 ### Added - mirror and flip, in the same two words on every host that can do it
 
 - **Set Mirrored now means something on every node, not just a sprite.** The row shipped for

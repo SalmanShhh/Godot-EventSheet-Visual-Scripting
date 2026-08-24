@@ -4533,3 +4533,12 @@ for %s,für %s
 Open %s to change what its spawner may spawn.,"Öffne %s, um zu ändern, was sein Spawner spawnen darf."
 Let %s spawn %s,%s %s spawnen lassen
 On asked,Auf Nachfrage
+%s is not a message: nothing will arrive. Mark the function as a message first.,%s ist keine Nachricht: es kommt nichts an. Markiere die Funktion zuerst als Nachricht.
+Make %s a message…,%s zur Nachricht machen…
+"%s is changed in a group that runs on the host, but only the host will see the new value. Keep it in step, or send it.","%s wird in einer Gruppe geändert, die nur auf dem Host läuft - nur der Host sieht den neuen Wert. Halte den Wert im Gleichschritt, oder sende ihn."
+Keep in step,Im Gleichschritt halten
+"%s runs on every peer, and only the owner of this object should move it. Put the event in a group that runs on the owner.","%s läuft auf jedem Peer, aber bewegen darf dieses Objekt nur sein Besitzer. Lege das Ereignis in eine Gruppe, die auf dem Besitzer läuft."
+Wrap in an owner group,In eine Besitzer-Gruppe legen
+"%s may be sent by anyone, and it writes %s without asking who sent it. Any player could send it themselves.","%s darf jeder senden, und es schreibt %s, ohne zu fragen, wer es gesendet hat. Jeder Spieler könnte es selbst senden."
+Couldn't find that event to group.,Dieses Ereignis wurde zum Gruppieren nicht gefunden.
+Only the owner of this object runs it now.,Jetzt führt nur noch der Besitzer dieses Objekts es aus.
