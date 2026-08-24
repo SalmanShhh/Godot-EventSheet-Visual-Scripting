@@ -12,6 +12,15 @@ Lighting** at a `WorldEnvironment` for a 3D sky, or point World Lighting at the 
 that holds a 2D level's darkness. A target left empty is skipped, so a project can adopt the
 triggers alone and drive nothing at all.
 
+## Table of Contents
+
+1. [Where this pack shines](#where-this-pack-shines)
+2. [Core concepts](#core-concepts)
+3. [Setup](#setup)
+4. [ACE reference](#ace-reference)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
+
 ## Where this pack shines
 
 - **A world that keeps time.** Shops close, wolves come out, torches light themselves - all from
@@ -22,6 +31,25 @@ triggers alone and drive nothing at all.
   touch a row to change how dusk feels.
 - **Time as a mechanic.** *Set the time*, *Run the clock 4 times faster*, *Pause the clock* are the
   three verbs a bed, a cutscene and a debug key need.
+
+## Core concepts
+
+- **One clock, in hours.** `time_of_day` runs 0 to 24 and is the single source of truth; everything
+  else is read from it. `day_length_minutes` says how long a whole day takes in real minutes, and
+  `clock_scale` multiplies that rate without moving the hour.
+- **Daylight is stretched over its own half of the turn.** Sunrise to sunset fills the first half of
+  the sun's rotation and the night fills the second, whatever hours the project picks - so noon is
+  overhead in a four-hour day, a night shift or a polar summer alike.
+- **Two targets, and either dimension.** **Sun Light** is the light that plays the sun; **World
+  Lighting** is a `WorldEnvironment` (3D) or a `CanvasModulate` (2D). Either left empty is skipped,
+  so a project can take the triggers and drive nothing.
+- **Three curves, read across the whole day.** Each is sampled at `time_of_day / 24`, so the left
+  edge is midnight, the middle is noon and the right edge is midnight again. A curve nobody drew
+  falls back to the pack's own daylight shape.
+- **The moments are signals, and they only ring when the clock passes them.** *Set The Time* jumps
+  the hour and does NOT ring the ones it skipped - a jump is one moment, not the twelve it passed.
+- **Everything it writes is an ordinary property.** A rotation, a light's brightness, the ambient
+  energy, a CanvasModulate colour. There is no lighting system underneath it.
 
 ## Setup
 

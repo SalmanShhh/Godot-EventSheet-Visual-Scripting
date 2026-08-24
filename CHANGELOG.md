@@ -181,6 +181,28 @@
   clock, the 3D World object and the shared-environment trap, the table of what a project you
   already lit opens as, and the six traps worth knowing first. The concept map for people arriving
   from another event-sheet editor gains its lighting rows in the same pass.
+- **A guide each for the flame, the beacon and the clock.** `docs/Addons/Light-Flicker.md`,
+  `Light-Pulse.md` and `Day-Night-Cycle.md` document the three new packs to the same standard as the
+  other 84: what each is for, the Inspector knobs with their real defaults, sixteen numbered use
+  cases apiece (a torch that catches a beat late, a corridor light that fails when the generator
+  does, a lighthouse whose sweep is one number, a boss that can only be fought at midnight)
+  and the traps that bite - the behaviour must be a child of the light, a directional light has no
+  reach to breathe, `between` is a pair of absolute brightnesses rather than a range of a maximum.
+  The reference tables are drawn from the live registry, so they cannot drift from the packs.
+- **The figures on the front page are measured again.** 1,641 native ACEs and 64 triggers, 105
+  behavior packs with 87 guides between them, counted off this tree rather than carried forward -
+  plus the feature bullet the wave earned, in the words the sheet uses for it.
+
+### Translations
+
+- **The words two waves added speak all eight bundled languages.** 291 strings - every display name,
+  description, reads-as sentence, parameter label and dropdown option of the multiplayer vocabulary,
+  the light words, the darkness and World rows, and the sixteen frozen lighting actions beside them -
+  now carry a row in the template and a real translation in German, Spanish, French, Italian,
+  Japanese, Korean, Russian and Chinese. The four modules are held there by the ratchet that already
+  guards the eleven wholly-keyed ones, so a verb added to any of them tomorrow fails the suite
+  instead of quietly shipping in English: about three in ten of the shipped sentences are keyed now,
+  up from a quarter, and the direction is the point.
 
 ### Tooling
 

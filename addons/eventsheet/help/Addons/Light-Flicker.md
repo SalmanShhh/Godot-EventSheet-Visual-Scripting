@@ -9,6 +9,15 @@ its host which property that host spells brightness with - `energy` on a 2D ligh
 on a 3D one - and which of the three reaches it has, if any. A project's own subclass of a light
 resolves through the same question with nothing added here.
 
+## Table of Contents
+
+1. [Where this pack shines](#where-this-pack-shines)
+2. [Core concepts](#core-concepts)
+3. [Setup](#setup)
+4. [ACE reference](#ace-reference)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
+
 ## Where this pack shines
 
 - **Torches, campfires, braziers, candles.** The default numbers already read as a torch.
@@ -18,6 +27,24 @@ resolves through the same question with nothing added here.
   flickering after 1.5 s* lights it again a beat after whatever lit it.
 - **Tuning while the game runs.** Every number is an exported knob, so a flame is dialled in from
   the Inspector during play rather than by editing rows and pressing play again.
+
+## Core concepts
+
+- **It acts on its parent.** The behaviour is a child of the light and writes that light's own
+  properties. Put it anywhere else and it warns once on its first frame and then does nothing.
+- **The property is asked, not assumed.** On its first frame it asks the host which property spells
+  brightness - `energy` on a 2D light, `light_energy` on a 3D one - and which of the three reaches it
+  has, if any. That is why one pack covers both dimensions and a project's own subclass of a light.
+- **`between` is a pair of absolute brightnesses.** Both numbers are in the same units the light's own
+  brightness uses, so `Vector2(0.8, 1.2)` on a light authored at 1.0 brightens as often as it dims.
+  It is not a range around a maximum.
+- **Noise, not random.** The brightness walks a noise field, so each frame is related to the one
+  before it. That relation is the whole difference between fire and static.
+- **Stopping settles; it does not disable.** *Stop Flickering* leaves the light at the brightness the
+  row names and the behaviour in place, ready for the next *Start Flickering*.
+- **Reach is scaled, not set.** With *Also Flicker Reach* on, the radius the scene was authored with
+  is remembered on the first frame and breathed around, so a designer's own radius survives - and is
+  put back when the flame stops.
 
 ## Setup
 

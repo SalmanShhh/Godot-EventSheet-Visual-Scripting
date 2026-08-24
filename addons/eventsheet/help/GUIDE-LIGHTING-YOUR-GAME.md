@@ -53,7 +53,7 @@ this scene** shelf aimed at it.
 The row keeps the colour, because the colour is all Godot stores and all a re-save writes back. It
 READS as the darkness it makes:
 
-> **Level ▸ Set darkness to 82%, tinted #262e4d**
+> **Level ▸ Set darkness to 81%, tinted #26304d**
 
 The percentage is how much of the layer's light the tint takes away, measured with the engine's own
 reckoning of how bright a colour is - so a green-ish gloom reads darker than a blue one of the same
@@ -143,11 +143,12 @@ brightness, which is what a real flame does) and *Running*.
 **Light Pulse** rides a smooth cosine instead - a lighthouse, a pickup, a rune. Its knobs are
 *Between*, *Period Seconds* (the length of one whole breath) and *Running*.
 
-Both publish the same three words: **Start Flickering after N s** / **Stop Flickering and settle at
-N** / **Is Flickering** (and the pulse's own trio). Stopping settles the light at the brightness the
-row names, so a torch that goes out settles dark and one that is merely calmed settles lit - and a
-flame that was flickering its reach puts the reach back to whatever the scene was authored with,
-rather than leaving the radius of the frame it stopped on.
+Both publish the same three words: **Start Flickering** (the row reads *Start flickering after
+1.5 s*), **Stop Flickering** (*Stop flickering and settle at 0.6*) and **Is Flickering** - with
+**Start Pulsing**, **Stop Pulsing** and **Is Pulsing** as the pulse's own trio. Stopping settles the
+light at the brightness the row names, so a torch that goes out settles dark and one that is merely
+calmed settles lit - and a flame that was flickering its reach puts the reach back to whatever the
+scene was authored with, rather than leaving the radius of the frame it stopped on.
 
 ## Day and night, on a clock
 
@@ -163,8 +164,9 @@ from the hour, the brightnesses from the curves.
 
 The sheet gets the moments and the controls: triggers **On Sunrise**, **On Sunset**, **On
 Midnight** and **On The Hour** (which carries the hour it struck); actions **Set The Time**, **Run
-The Clock N Times Faster**, **Pause The Clock** and **Resume The Clock**; conditions **It Is Night**
-and **It Is Day**; and the expression **Time Of Day** for any value field.
+The Clock Faster** (the row reads *Run the clock 4 times faster*), **Pause The Clock** and **Resume
+The Clock**; conditions **It Is Night** and **It Is Day**; and the expression **Time Of Day** for any
+value field.
 
 A day that runs past midnight (a night shift, a polar summer) is stretched the same way as any
 other, so noon is still overhead rather than wherever twelve o'clock happens to fall.
@@ -172,8 +174,8 @@ other, so noon is still overhead rather than wherever twelve o'clock happens to 
 ## 3D: the World object
 
 A 3D scene's fog, glow and ambient light live on the `Environment` that a `WorldEnvironment` node
-holds. Those rows take that node as their object, so the column reads **World** and the sentence
-reads the word:
+holds. Those rows sit on the picker's **Atmosphere in this scene** shelf and take that node as their
+object, so the column reads **World** and the sentence reads the word:
 
 ```gdscript
 extends Node3D
