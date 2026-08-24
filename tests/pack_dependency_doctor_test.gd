@@ -5,9 +5,20 @@
 # (bare class via ClassDB AND project global classes, autoload:, pack:), fires-when-missing
 # with the exact message, silent-when-present, silent-when-unused, and the real repo
 # reporting zero pack-dependency findings (all shipped declarations are satisfied).
+#
+# THIS TEST WRITES INTO THE SHIPPED TREE. It makes a probe PACK under eventsheet_addons/ and takes it
+# away again, and while it stands, any other test that sweeps that folder - pack_icons_test asks
+# every pack for its own icon.svg - sees a pack that is nobody's and reports it. That is fine in one
+# process, where the two never overlap, and a race across two: the shards share one filesystem. So
+# this one has the machine to itself (see PARALLEL_UNSAFE below), which costs a second and removes a
+# red run that has nothing wrong with the tree.
 @tool
 class_name PackDependencyDoctorTest
 extends RefCounted
+
+## Runs in the serial tail rather than in a shard: it creates and deletes a pack directory in the
+## shipped tree, which a pack sweep in a neighbouring process would read mid-flight.
+const PARALLEL_UNSAFE: bool = true
 
 const PROBE_DIR := "res://eventsheet_addons/__dep_probe__"
 const PROBE_SCRIPT := "res://eventsheet_addons/__dep_probe__/dep_probe.gd"
