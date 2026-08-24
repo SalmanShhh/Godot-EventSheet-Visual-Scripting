@@ -33,6 +33,9 @@ extends RefCounted
 const TRANSLATIONS_DIR := "res://addons/eventsheet/translations"
 const TEMPLATE_FILE := "TEMPLATE.csv"
 
+## Where the vocabulary modules live, for the coverage ratchet below.
+const MODULES_DIR := "res://addons/eventforge/registration/modules"
+
 ## The bundled languages. English is the source, so it is not a file.
 const LOCALES: Array[String] = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
 
@@ -141,6 +144,7 @@ static func run() -> bool:
 	passed = _test_files_are_in_lockstep() and passed
 	passed = _test_every_language_cell_is_filled() and passed
 	passed = _test_wave_vocabulary_has_keys() and passed
+	passed = _test_covered_modules_stay_covered() and passed
 	passed = _test_menu_commands_have_keys() and passed
 	passed = _test_the_catalog_actually_translates() and passed
 	return passed
@@ -247,6 +251,64 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 		return
 	seen[trimmed] = true
 	strings.append(trimmed)
+
+
+# ── 3b. The ratchet: a module that is wholly keyed stays wholly keyed ──
+
+
+## The vocabulary modules whose EVERY user-facing string - display name, description, category,
+## reads-as sentence, parameter label, parameter description and dropdown option label - is a key
+## today. MEASURED, not declared: the check below computes the set and compares it to this list, so
+## the list can only ever be edited in two directions, and both are deliberate. A module that gains
+## an untranslated verb drops OUT and fails here, naming itself; a module that becomes covered turns
+## up as a surplus and is added, which is the moment the wave list above stops needing hand-editing.
+##
+## The rest of the vocabulary is not keyed yet (roughly a quarter of the shipped sentences are), and
+## a floor on a PERCENTAGE would not notice a new sentence added to a covered module - which is the
+## regression that actually happens. This is that gate.
+const FULLY_KEYED_MODULES: Array[String] = [
+	"clipboard_aces.gd", "cursor_canvas_aces.gd", "editor_author_aces.gd", "facing_aces.gd",
+	"game_mechanics_aces.gd", "resource_aces.gd", "spatial_aces.gd", "spatial_words_aces.gd",
+	"table_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
+]
+
+
+static func _test_covered_modules_stay_covered() -> bool:
+	var keys: Dictionary = {}
+	for key: String in _read_keys(TEMPLATE_FILE):
+		keys[key] = true
+	var covered: Array[String] = []
+	for path: String in _module_paths():
+		var seen: Dictionary = {}
+		var strings: PackedStringArray = PackedStringArray()
+		_collect(path, PackedStringArray(), seen, strings)
+		if strings.is_empty():
+			continue
+		var missing: int = 0
+		for text: String in strings:
+			if not keys.has(text):
+				missing += 1
+		if missing == 0:
+			covered.append(path.get_file())
+	covered.sort()
+	var expected: Array[String] = FULLY_KEYED_MODULES.duplicate()
+	expected.sort()
+	return _check("the vocabulary modules whose every word is keyed", covered, expected)
+
+
+## Every vocabulary module, found by scanning rather than listed, so a module added tomorrow is
+## measured the day it exists.
+static func _module_paths() -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
+	var dir: DirAccess = DirAccess.open(MODULES_DIR)
+	if dir == null:
+		return paths
+	for file_name: String in dir.get_files():
+		var name: String = file_name.trim_suffix(".remap")
+		if name.ends_with(".gd"):
+			paths.append("%s/%s" % [MODULES_DIR, name])
+	paths.sort()
+	return paths
 
 
 # ── 4. Menu commands ──
