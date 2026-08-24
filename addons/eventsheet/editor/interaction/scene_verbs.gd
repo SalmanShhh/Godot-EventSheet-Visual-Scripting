@@ -167,17 +167,6 @@ static func filter_of(sheet: EventSheetResource, function_name: String) -> Dicti
 	return {}
 
 
-## The synchronizer that asks one function whether a player may see it, "" when none does or when
-## the asking row acts on the sheet's own node.
-static func filter_synchronizer(sheet: EventSheetResource, function_name: String) -> String:
-	return str(filter_of(sheet, function_name).get("synchronizer", ""))
-
-
-## True when a function of this sheet is a visibility filter at all.
-static func is_visibility_filter(sheet: EventSheetResource, function_name: String) -> bool:
-	return not filter_of(sheet, function_name).is_empty()
-
-
 ## Every ACE action of a sheet, its functions and its nested events included. One walk, so a row
 ## nested three deep inside a function is as visible to this reading as one at the top.
 static func _actions_in(sheet: EventSheetResource) -> Array[ACEAction]:
@@ -193,6 +182,12 @@ static func _actions_in(sheet: EventSheetResource) -> Array[ACEAction]:
 
 static func _collect(events: Array, into: Array[ACEAction]) -> void:
 	for entry: Variant in events:
+		# A group is the commonest thing a reader does to a sheet, and it holds rows like any other
+		# level: a walk that skipped it would lose the row's own mark and under-report the public
+		# list the moment somebody tidied their events into folders.
+		if entry is EventGroup:
+			_collect(EventSheetGroupFacts.children(entry as EventGroup), into)
+			continue
 		var event: EventRow = entry as EventRow
 		if event == null:
 			continue

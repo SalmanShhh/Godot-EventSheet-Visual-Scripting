@@ -292,10 +292,16 @@ static func _test_the_visibility_filter_mark() -> bool:
 	var ok: bool = _check("the function a synchronizer asks is read off the row that asks it",
 		EventSheetSceneVerbs.visibility_filters_in(sheet), [{"name": "can_see", "synchronizer": "PlayerSync"}])
 	ok = _check("so the row can say which synchronizer asks it",
-		EventSheetSceneVerbs.filter_synchronizer(sheet, "can_see"), "PlayerSync") and ok
-	ok = _check("an ordinary function is not one", EventSheetSceneVerbs.is_visibility_filter(sheet, "welcome"), false) and ok
+		EventSheetSceneVerbs.filter_of(sheet, "can_see"), {"name": "can_see", "synchronizer": "PlayerSync"}) and ok
+	ok = _check("an ordinary function is not one", EventSheetSceneVerbs.filter_of(sheet, "welcome"), {}) and ok
 	ok = _check("and the list is public", EventSheets.sheet_visibility_filters(sheet),
 		[{"name": "can_see", "synchronizer": "PlayerSync"}]) and ok
+	# The commonest thing anybody does to a sheet is put its events in a group. The reading walks
+	# into one: a filter asked for inside a folder is asked for just the same, and a walk that only
+	# looked at the top level lost the function's mark and under-reported the public list.
+	_group_the_events(sheet)
+	ok = _check("a row inside a group is read the same way",
+		EventSheetSceneVerbs.visibility_filters_in(sheet), [{"name": "can_see", "synchronizer": "PlayerSync"}]) and ok
 	# Nothing is written into the `.gd` for the mark: take the asking row away and the function is an
 	# ordinary function again, with no annotation to clean up.
 	for entry: Variant in sheet.functions:
@@ -305,6 +311,26 @@ static func _test_the_visibility_filter_mark() -> bool:
 	ok = _check("a filter nobody asks stops being one",
 		EventSheetSceneVerbs.visibility_filters_in(sheet), []) and ok
 	return ok
+
+
+## Every row of the sheet moved inside a group, the functions' rows included - the first thing a
+## reader does to a sheet with more than a screenful in it.
+static func _group_the_events(sheet: EventSheetResource) -> void:
+	var top: Array[Resource] = [_grouped(sheet.events)]
+	sheet.events = top
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function == null:
+			continue
+		var body: Array[Resource] = [_grouped(event_function.events)]
+		event_function.events = body
+
+
+static func _grouped(rows: Array) -> EventGroup:
+	var group: EventGroup = EventGroup.new()
+	group.name = "Networking"
+	group.events.assign(rows)
+	return group
 
 
 static func _test_the_help_strip_explains_the_scene_field() -> bool:
