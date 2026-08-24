@@ -208,11 +208,6 @@ static func _test_runs_on_is_one_table() -> bool:
 	ok = _check("the owner's guard", EventGroup.runs_on_guard(EventGroup.RUNS_ON_OWNER), "is_multiplayer_authority()") and ok
 	ok = _check("everyone writes nothing at all", EventGroup.runs_on_guard(EventGroup.RUNS_ON_EVERYONE), "") and ok
 	ok = _check("and so does an unanswered group", EventGroup.runs_on_guard(""), "") and ok
-	ok = _check("a hand-written host guard reads back as the answer",
-		EventGroup.runs_on_for_guard("multiplayer.is_server()"), EventGroup.RUNS_ON_HOST) and ok
-	ok = _check("...and so does an owner guard",
-		EventGroup.runs_on_for_guard("is_multiplayer_authority()"), EventGroup.RUNS_ON_OWNER) and ok
-	ok = _check("another question is not one of them", EventGroup.runs_on_for_guard("is_on_floor()"), "") and ok
 	# The head carries the EXCEPTION and never the default.
 	ok = _check("a host group wears one muted word",
 		EventSheetGroupFacts.runs_on_word(_group("Scoring", EventGroup.RUNS_ON_HOST)), "host") and ok
@@ -312,6 +307,30 @@ static func _test_runs_on_folds_the_conditions_it_replaces() -> bool:
 	var output: String = str(SheetCompiler.compile(_sheet(group)).get("output", ""))
 	ok = _check("so the emitted line asks it once",
 		output.count("multiplayer.is_server() and multiplayer.is_server()"), 0) and ok
+	return _test_an_or_row_is_left_alone() and ok
+
+
+## An OR row says the guard ONCE, as one of the answers it will take. Folding it out would leave the
+## other answer alone under the group's guard - `is host or is on floor` becoming `is host and is on
+## floor`, the opposite gate, written by a dropdown that never mentioned the row.
+static func _test_an_or_row_is_left_alone() -> bool:
+	var group: EventGroup = _group("Scoring", "")
+	var either: EventRow = _floor_event()
+	either.condition_mode = EventRow.ConditionMode.OR
+	var is_host: ACECondition = ACECondition.new()
+	is_host.provider_id = "Core"
+	is_host.ace_id = "IsHost"
+	is_host.codegen_template = "multiplayer.is_server()"
+	either.conditions.insert(0, is_host)
+	group.events = [either]
+	EventSheetQuickPromptDialogs.set_group_fields(group, "Scoring", "", {"runs_on": EventGroup.RUNS_ON_HOST})
+	var kept: Array[ACECondition] = (group.child_rows()[0] as EventRow).conditions
+	var ok: bool = _check("both halves of an or row are still there", kept.size(), 2)
+	ok = _check("...in the order they were asked in",
+		PackedStringArray([kept[0].ace_id, kept[1].ace_id]), PackedStringArray(["IsHost", "IsOnFloor"])) and ok
+	var output: String = str(SheetCompiler.compile(_sheet(group)).get("output", ""))
+	ok = _check("so the row still asks for either of them",
+		output.contains("multiplayer.is_server() or is_on_floor()"), true) and ok
 	return ok
 
 

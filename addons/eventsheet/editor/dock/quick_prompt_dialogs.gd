@@ -313,6 +313,10 @@ func on_group_runs_on_chosen(menu_id: int) -> void:
 ## This takes it off every row the group now guards; a nested group that answers for itself keeps its
 ## own rows. That is what makes "Runs on: the host" the way to fold up a project that repeated an
 ## Is host condition on every event. Static + pure, so the fold is testable without the dialog.
+##
+## An OR row is left exactly as it is. Only an AND row says the guard twice: dropping one term of
+## `is host or is on floor` leaves `is on floor`, which the group then wraps in the host guard - the
+## opposite gate, written in one undo step by a dropdown that never mentioned the row.
 static func fold_runs_on_conditions(group: EventGroup, guard: String) -> void:
 	if group == null or guard.is_empty():
 		return
@@ -321,7 +325,7 @@ static func fold_runs_on_conditions(group: EventGroup, guard: String) -> void:
 			if (row as EventGroup).runs_on.strip_edges().is_empty():
 				fold_runs_on_conditions(row as EventGroup, guard)
 			continue
-		if not (row is EventRow):
+		if not (row is EventRow) or (row as EventRow).condition_mode != EventRow.ConditionMode.AND:
 			continue
 		var kept: Array[ACECondition] = []
 		for condition: ACECondition in (row as EventRow).conditions:
