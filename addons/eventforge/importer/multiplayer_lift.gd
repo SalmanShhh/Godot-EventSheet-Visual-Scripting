@@ -32,14 +32,14 @@ extends RefCounted
 #   Spawn         `<node>.spawn(<data>)`, claimed by the Spawn template itself (nothing here); the
 #                 four-line AUTO spawn (instance a scene, name it, place it, add it under the
 #                 spawner's own `spawn_path`) is a run, and lifts here.
-#   Triggers      `multiplayer.<signal>.connect(<handler>)` for MultiplayerAPI's five signals.
-#   Owner         `set_multiplayer_authority(…)`, read as a FACT about the script rather than
-#                 lifted to a row: it says who owns this object, which belongs on the sheet head.
+#   Triggers      `multiplayer.<signal>.connect(<handler>)` for the seven connection signals.
 
-## The five things the connection itself says, as the trigger each one lifts to. Keyed by SIGNAL and
-## gated on the connect line's source being `multiplayer` (see CONNECT_SOURCE), never by the signal
-## alone: `peer_connected` is a name any project could give its own signal, and a table keyed on the
-## bare name would relabel every such handler in every game as "On player joined".
+## The seven things the connection itself says, as the trigger each one lifts to - five off
+## `MultiplayerAPI` and the two `SceneMultiplayer` adds for the handshake, all on the same
+## `multiplayer` property. Keyed by SIGNAL and gated on the connect line's source being `multiplayer`
+## (see CONNECT_SOURCE), never by the signal alone: `peer_connected` is a name any project could give
+## its own signal, and a table keyed on the bare name would relabel every such handler in every game
+## as "On player joined".
 const SIGNAL_TRIGGERS: Dictionary = {
 	"peer_connected": "OnPlayerJoined",
 	"peer_disconnected": "OnPlayerLeft",
@@ -222,120 +222,6 @@ static func match_line(line: String) -> Dictionary:
 	if text == "get_tree().get_multiplayer().multiplayer_peer = null":
 		return {"ace_id": "LeaveGame", "params": {}, "template": text}
 	return _match_named_send(text)
-
-
-## Every `set_multiplayer_authority(…)` in a source, as the fact it is: who owns this object. One
-## entry per call - {owner, keeps_children, spelling, function} - where `owner` is the expression the
-## peer id comes from and `function` the function it was called in, which together are what the sheet
-## head's owner band says. Nothing is lifted or rewritten here: the call itself stays the ordinary
-## row it already reads as, and this only says what it MEANS.
-static func owner_readings(source: String) -> Array[Dictionary]:
-	var found: Array[Dictionary] = []
-	var current_function: String = ""
-	var header: RegEx = _regex("^func[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*\\(")
-	var call: RegEx = _regex("^[ \\t]*(?:self\\.)?set_multiplayer_authority\\((.*)\\)[ \\t]*$")
-	for line: String in source.split("\n"):
-		var header_match: RegExMatch = header.search(line)
-		if header_match != null:
-			current_function = header_match.get_string(1)
-			continue
-		var call_match: RegExMatch = call.search(line)
-		if call_match == null:
-			continue
-		var arguments: PackedStringArray = EventSheetBlockRegistry.split_params_top_level(call_match.get_string(1))
-		if arguments.is_empty() or arguments.size() > 2:
-			continue
-		found.append({
-			"owner": arguments[0].strip_edges(),
-			"keeps_children": arguments.size() < 2 or arguments[1].strip_edges() == "true",
-			"spelling": line.strip_edges(),
-			"function": current_function
-		})
-	return found
-
-
-## Every "only some peers run this" guard in a source, as the fact it is: which function it guards,
-## WHO it lets through, and which of the two shapes it was written in. One entry per guard -
-## {function, runs_on, form, spelling} - where `runs_on` is "owner" or "host" and `form` is
-## "early_return" or "whole_body".
-##
-## A reading, not a lift: both shapes already lift to rows of their own (the early return keeps its
-## `return`, the wrapping `if` becomes a condition on the body), and rewriting either into the other
-## would change a file the plugin promised not to touch. What the guard MEANS - this function runs on
-## the owner, that one on the host - is a fact about the function, which is where it belongs.
-static func guard_readings(source: String) -> Array[Dictionary]:
-	var found: Array[Dictionary] = []
-	var lines: PackedStringArray = source.split("\n")
-	var header: RegEx = _regex("^func[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*\\(")
-	var current_function: String = ""
-	var body_started: bool = false
-	for index: int in range(lines.size()):
-		var header_match: RegExMatch = header.search(lines[index])
-		if header_match != null:
-			current_function = header_match.get_string(1)
-			body_started = false
-			continue
-		var stripped: String = lines[index].strip_edges()
-		if stripped.is_empty() or stripped.begins_with("#"):
-			continue
-		var first_statement: bool = not body_started
-		body_started = true
-		if current_function.is_empty():
-			continue
-		var runs_on: String = _guard_subject(stripped)
-		if runs_on.is_empty():
-			continue
-		var form: String = ""
-		if stripped.begins_with("if not "):
-			if stripped.ends_with(": return") or _next_statement_is_return(lines, index):
-				form = "early_return"
-		elif first_statement and _wraps_rest_of_body(lines, index):
-			form = "whole_body"
-		if form.is_empty():
-			continue
-		found.append({"function": current_function, "runs_on": runs_on, "form": form, "spelling": stripped})
-	return found
-
-
-## "owner" / "host" / "" for an `if` line, whichever question it asks.
-static func _guard_subject(statement: String) -> String:
-	if not statement.begins_with("if "):
-		return ""
-	if statement.contains("is_multiplayer_authority()"):
-		return "owner"
-	if statement.contains("multiplayer.is_server()"):
-		return "host"
-	return ""
-
-
-## True when the statement after `index` is a bare `return` one level deeper - the early-return shape
-## written over two lines.
-static func _next_statement_is_return(lines: PackedStringArray, index: int) -> bool:
-	var guard_indent: int = _indent_of(lines[index])
-	for scan: int in range(index + 1, lines.size()):
-		if lines[scan].strip_edges().is_empty():
-			continue
-		return _indent_of(lines[scan]) > guard_indent and lines[scan].strip_edges() == "return"
-	return false
-
-
-## True when every remaining line of this function sits INSIDE the `if` at `index` - the shape that
-## wraps a whole body rather than bailing out of it.
-static func _wraps_rest_of_body(lines: PackedStringArray, index: int) -> bool:
-	var guard_indent: int = _indent_of(lines[index])
-	var saw_body: bool = false
-	for scan: int in range(index + 1, lines.size()):
-		var stripped: String = lines[scan].strip_edges()
-		if stripped.is_empty():
-			continue
-		if _indent_of(lines[scan]) <= guard_indent:
-			return saw_body
-		saw_body = true
-	return saw_body
-
-
-static func _indent_of(line: String) -> int:
-	return line.length() - line.lstrip(" \t").length()
 
 
 ## True when a line of code is part of the networking story - the filter behind the per-script

@@ -54,17 +54,6 @@ static func runs_on_guard(value: String) -> String:
 	return str(RUNS_ON_GUARDS.get(value.strip_edges(), ""))
 
 
-## The runs_on value a guard expression is the test for, or "" when the line asks something else.
-## The reverse of runs_on_guard, so a hand-written `if multiplayer.is_server():` and a group that
-## says "host" are recognised as the one fact.
-static func runs_on_for_guard(guard: String) -> String:
-	var wanted: String = guard.strip_edges()
-	for value: String in RUNS_ON_GUARDS:
-		if str(RUNS_ON_GUARDS[value]) == wanted:
-			return value
-	return ""
-
-
 func _init() -> void:
 	if group_uid.is_empty():
 		group_uid = _generate_short_uid()
