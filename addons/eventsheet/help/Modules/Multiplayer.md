@@ -123,7 +123,7 @@ Ships as is the template the row compiles to, so you can see exactly what lands 
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Host A Game | Opens this game to other players and makes this peer the host | `var __peer := {peer_kind}.new()` then `__peer.create_server({port}, {max_players})` then `multiplayer.multiplayer_peer = __peer` |
+| Host A Game | Opens this game to other players and makes this peer the host | `var __peer_… := {peer_kind}.new()` then `__peer_….create_server({port}, {max_players})` then `multiplayer.multiplayer_peer = __peer_…` (the tail of the name is this row's own, so two of these in one place are two peers) |
 | Join A Game | Asks a host to let this peer in | the same three lines with `create_client({address}, {port})` |
 | Leave The Game | Drops this peer's connection and puts the game back to single player | `multiplayer.multiplayer_peer = null` |
 | Spawn | Makes one copy of a scene on the host and on every peer at once | `{target}.spawn({data})` |

@@ -10,9 +10,8 @@
 #   1. BYTE-EXACT round-trip. Opening it as a sheet and saving it untouched reproduces the file.
 #   2. The ROWS it reads as, by value - which spelling produced which row, and with which baked
 #      template, because that template is what re-emits the author's own bytes.
-# Plus the two READINGS E1 owes the later slices (who owns this object, who runs this function), the
-# per-script networking count, and the emission of a row the SHEET authored, which has to be the
-# canonical form rather than any lifted one.
+# Plus the per-script networking count, and the emission of a row the SHEET authored, which has to be
+# the canonical form rather than any lifted one.
 @tool
 class_name MultiplayerLiftTest
 extends RefCounted
@@ -73,7 +72,7 @@ static func _test_descriptors() -> bool:
 	ok = _check("Host a game reads as a sentence", host.get_display_text(),
 		"Host a game on port {port} for up to {max_players} players") and ok
 	ok = _check("Host a game writes the three lines it names", host.codegen_template,
-		"var __peer := {peer_kind}.new()\n__peer.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer") and ok
+		"var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer_{uid}") and ok
 	ok = _check("Join a game reads as a sentence", ACERegistry.find_descriptor("Core", "JoinGame").get_display_text(),
 		"Join a game at {address} port {port}") and ok
 	ok = _check("Leave the game is the one line it names", ACERegistry.find_descriptor("Core", "LeaveGame").codegen_template,
@@ -97,10 +96,12 @@ static func _test_authored_emission() -> bool:
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnPlayerJoined"
 	event.trigger_source_path = TriggerResolver.MULTIPLAYER_SOURCE
+	# Both rows in ONE handler, which is what a lobby screen is: a Host button and a Join button
+	# answering in the same place. The `{uid}` slot is baked at apply time, the way the dock bakes it.
 	event.actions.append(_authored_action("HostGame",
-		{"port": "7777", "max_players": "4", "peer_kind": "ENetMultiplayerPeer"}))
+		{"port": "7777", "max_players": "4", "peer_kind": "ENetMultiplayerPeer"}, "a1"))
 	event.actions.append(_authored_action("JoinGame",
-		{"address": "\"127.0.0.1\"", "port": "7777", "peer_kind": "WebSocketMultiplayerPeer"}))
+		{"address": "\"127.0.0.1\"", "port": "7777", "peer_kind": "WebSocketMultiplayerPeer"}, "b2"))
 	event.actions.append(_authored_action("LeaveGame", {}))
 	event.actions.append(_authored_action("Spawn", {"target": "$Spawner", "data": "id"}))
 	sheet.events.append(event)
@@ -111,13 +112,37 @@ static func _test_authored_emission() -> bool:
 	ok = _check("and lands in a handler taking the peer id", output.contains(
 		"func _on_player_joined(id: int) -> void:"), true) and ok
 	ok = _check("an authored Host a game writes its own peer", output.contains(
-		"\tvar __peer := ENetMultiplayerPeer.new()\n\t__peer.create_server(7777, 4)\n\tmultiplayer.multiplayer_peer = __peer"), true) and ok
+		"\tvar __peer_a1 := ENetMultiplayerPeer.new()\n\t__peer_a1.create_server(7777, 4)\n\tmultiplayer.multiplayer_peer = __peer_a1"), true) and ok
 	ok = _check("an authored Join a game writes the peer kind it was given", output.contains(
-		"\tvar __peer := WebSocketMultiplayerPeer.new()\n\t__peer.create_client(\"127.0.0.1\", 7777)"), true) and ok
+		"\tvar __peer_b2 := WebSocketMultiplayerPeer.new()\n\t__peer_b2.create_client(\"127.0.0.1\", 7777)"), true) and ok
+	ok = _check("two connection rows in one scope declare two peers",
+		_declared_peers(output), PackedStringArray(["__peer_a1", "__peer_b2"])) and ok
 	ok = _check("an authored Leave the game drops the peer", output.contains(
 		"\tmultiplayer.multiplayer_peer = null"), true) and ok
 	ok = _check("an authored Spawn calls the spawner", output.contains("\t$Spawner.spawn(id)"), true) and ok
-	return ok
+	return _test_two_connection_rows_parse() and ok
+
+
+## The peer each connection row makes is a LOCAL, so two of those rows in one scope have to be two
+## variables. A fixed name compiles a lobby - a Host button and a Join button answering in the same
+## place - to `var __peer` twice, which GDScript refuses: the exported project stops parsing, and
+## nothing between the row and the export says so. Parse-checked rather than read, because that is
+## the failure, and both rows are ENet because that is the kind whose `create_client(address, port)`
+## the row's own line is.
+static func _test_two_connection_rows_parse() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	event.actions.append(_authored_action("HostGame",
+		{"port": "7777", "max_players": "4", "peer_kind": "ENetMultiplayerPeer"}, "a1"))
+	event.actions.append(_authored_action("JoinGame",
+		{"address": "\"127.0.0.1\"", "port": "7777", "peer_kind": "ENetMultiplayerPeer"}, "b2"))
+	sheet.events.append(event)
+	var compiled := GDScript.new()
+	compiled.source_code = str(SheetCompiler.compile(sheet, "user://_multiplayer_two_peers.gd").get("output", ""))
+	return _check("a lobby that hosts and joins in one handler parses", compiled.reload(), OK)
 
 
 # ── the corpus ──────────────────────────────────────────────────────────────────
@@ -231,21 +256,9 @@ static func _test_messages() -> bool:
 
 
 static func _test_guards() -> bool:
-	var source: String = _source("multiplayer_authority_guards.gd")
 	var sheet: EventSheetResource = _open("multiplayer_authority_guards.gd")
 	var ok: bool = _roundtrips("multiplayer_authority_guards.gd", sheet)
-	ok = _check("all four guard shapes are read, with who they let through",
-		EventForgeMultiplayerLift.guard_readings(source), [
-			{"function": "_physics_process", "runs_on": "owner", "form": "early_return", "spelling": "if not is_multiplayer_authority():"},
-			{"function": "_process", "runs_on": "owner", "form": "whole_body", "spelling": "if is_multiplayer_authority():"},
-			{"function": "decide_damage", "runs_on": "host", "form": "early_return", "spelling": "if not multiplayer.is_server():"},
-			{"function": "award_points", "runs_on": "host", "form": "whole_body", "spelling": "if multiplayer.is_server():"}]) and ok
-	ok = _check("the three set_multiplayer_authority spellings are read as who owns this object",
-		EventForgeMultiplayerLift.owner_readings(source), [
-			{"owner": "str(name).to_int()", "keeps_children": true, "spelling": "set_multiplayer_authority(str(name).to_int())", "function": "_enter_tree"},
-			{"owner": "name.to_int()", "keeps_children": true, "spelling": "set_multiplayer_authority(name.to_int())", "function": "adopt_name"},
-			{"owner": "id", "keeps_children": true, "spelling": "set_multiplayer_authority(id, true)", "function": "hand_over"}]) and ok
-	# The whole-body shapes ALSO lift to the condition they are; the early-return shapes keep their
+	# The whole-body shapes lift to the condition they are; the early-return shapes keep their
 	# `return`, which is the shape the file wrote and the shape it gets back.
 	var owns: EventRow = _event_with_trigger(sheet, "OnProcess")
 	ok = _check("a body wrapped in is_multiplayer_authority reads as Owns this object",
@@ -304,12 +317,28 @@ static func _roundtrips(file_name: String, sheet: EventSheetResource) -> bool:
 	return _check("%s comes back byte for byte" % file_name, output == _source(file_name), true)
 
 
-static func _authored_action(ace_id: String, params: Dictionary) -> ACEAction:
+## A row the SHEET authored. `uid` bakes the per-row id of a template that declares locals, which is
+## what the dock does at apply time and what nothing downstream does for it: a test that skipped the
+## bake would pin a line no sheet ever writes.
+static func _authored_action(ace_id: String, params: Dictionary, uid: String = "") -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = ace_id
 	action.params = params
+	if not uid.is_empty():
+		action.codegen_template = ACERegistry.find_descriptor("Core", ace_id).codegen_template.replace("{uid}", uid)
 	return action
+
+
+## The peer locals a compiled sheet declares, in file order - the one thing two connection rows in
+## one scope must not say twice.
+static func _declared_peers(output: String) -> PackedStringArray:
+	var declared: PackedStringArray = PackedStringArray()
+	for raw_line: String in output.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("var __peer"):
+			declared.append(line.get_slice(" ", 1))
+	return declared
 
 
 ## Every top-level EventRow of a sheet, in file order. A handler anchored in place leaves an

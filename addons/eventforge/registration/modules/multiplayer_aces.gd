@@ -17,7 +17,7 @@ extends RefCounted
 # Multiplayer, standing next to System, exactly as the Editor object does.
 #
 # E1 adds the other half of a networked script: joining a game at all. Hosting, joining, leaving,
-# the five things the connection itself tells a script, and the spawner's own verb. Each one names
+# the seven things the connection itself tells a script, and the spawner's own verb. Each one names
 # exactly the Godot call it compiles to (`ENetMultiplayerPeer.create_server`, `multiplayer_peer`,
 # `MultiplayerAPI`'s signals, `MultiplayerSpawner.spawn`) - nothing here is a networking layer, and
 # a project that already wrote those lines by hand opens on these same rows because the importer
@@ -64,8 +64,13 @@ const PEER_KINDS: Array = [
 ## connection, hand it to the scene tree. Kept as ONE row because they are one decision - a reader
 ## who splits them has a half-connected game - and as one row they are also the shape the importer
 ## puts back together when it finds the same three lines in a file it did not write.
-const HOST_TEMPLATE := "var __peer := {peer_kind}.new()\n__peer.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer"
-const JOIN_TEMPLATE := "var __peer := {peer_kind}.new()\n__peer.create_client({address}, {port})\nmultiplayer.multiplayer_peer = __peer"
+##
+## The peer local carries `{uid}` for the same reason the spawn run below does: the dock bakes a
+## fresh id into it at apply time, so two of these rows in one scope declare two variables. A fixed
+## name compiles a lobby with a Host row and a Join row in the same `_ready` to `var __peer` twice,
+## which is not GDScript at all - and nothing before the game is exported says so.
+const HOST_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer_{uid}"
+const JOIN_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_client({address}, {port})\nmultiplayer.multiplayer_peer = __peer_{uid}"
 
 ## M4. The four lines "Spawn a scene" writes: make the copy, name it, put it where it goes, and hand
 ## it to the node the spawner watches. Four because that is what Godot's AUTO spawn IS - a scene in
@@ -123,8 +128,9 @@ static func _connection_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## E1. The five things the connection itself says. Signal triggers like every other one: the sheet
-## connects them in `_ready`, on the `multiplayer` object rather than on a node in the scene.
+## E1. The five things `MultiplayerAPI` itself says. Signal triggers like every other one: the sheet
+## connects them in `_ready`, on the `multiplayer` object rather than on a node in the scene. M1 adds
+## the two `SceneMultiplayer` says about the handshake, on the same object, for seven in all.
 static func _connection_triggers() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.make_descriptor("Core", "OnPlayerJoined", "On Player Joined", ACEDescriptor.ACEType.TRIGGER, "", "peer_connected", [F.make_param("id", "int", "", "Player", "The id of the peer that just joined. Whatever a new player needs is sent to this id.")], CATEGORY, "On player joined {id}")
