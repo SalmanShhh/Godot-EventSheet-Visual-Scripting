@@ -131,6 +131,13 @@ strip.show_note("Unknown variable", "This sheet has no hpp.", EventSheetPopupUI.
 	[{"text": "Use hp", "pressed": func() -> void: name_edit.text = "hp"}])
 ```
 
+`probe_help_dialog(node) -> Dictionary` reads a BUILT dialog back: `strips` (one, or the shape is broken), `fields`, `wired`, `unwired` (the focusable fields the strip was never told to follow, by name), `follows_focus` (true when focusing each wired field in turn actually changes what the strip says), and the two reading lines as the reader sees them. It delivers focus by emitting `focus_entered` rather than grabbing it, so it runs in a headless test with no display server. Point it at your own dialog and the same gate the shipped ones pass applies to it:
+
+```gdscript
+var probe := EventSheetPopupUI.probe_help_dialog(my_dialog_body)
+assert(probe["strips"] == 1 and probe["unwired"].is_empty() and probe["follows_focus"])
+```
+
 `show_note(heading, body, tone := TONE_NORMAL, fixes := [])` is the shape to call: it sets the heading, the paragraph, the tone (`TONE_NORMAL` / `TONE_WARNING` / `TONE_ERROR`, which recolour the rule down the left edge) and the one-click fixes together, so a red rule from the last field can never stand over this field's description. The strip's current `tone` is readable, so a test pins the state without sampling a colour.
 
 ## 5. Codegen Services
