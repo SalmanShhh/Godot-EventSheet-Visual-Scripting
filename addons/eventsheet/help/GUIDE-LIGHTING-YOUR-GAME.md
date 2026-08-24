@@ -19,6 +19,7 @@ slotting all of that into a project that is already lit.
 - [Day and night, on a clock](#day-and-night-on-a-clock)
 - [3D: the World object](#3d-the-world-object)
 - [Opening a project that is already lit](#opening-a-project-that-is-already-lit)
+- [What the Doctor checks](#what-the-doctor-checks)
 - [The traps](#the-traps)
 
 ## The five knobs, and what Godot calls them
@@ -233,6 +234,40 @@ false` is a sentence half the objects in a game can say, so `$Door.enabled = fal
 block it is rather than being relabelled as somebody's torch. A node whose class cannot be
 established keeps its line verbatim - the row never guesses, and you can always check the claim
 against the scene in front of you.
+
+## What the Doctor checks
+
+Lighting fails without saying anything. The node is in the scene, the row runs, no error is printed,
+and the screen does not change - so **Tools ▸ Project Doctor** has a **Lighting** section that knows
+the five reasons, and every one of them is visible before the game is run once.
+
+| The finding | What is actually wrong | What to do |
+|-------------|------------------------|------------|
+| *Torch has no texture, so it lights nothing* | A `PointLight2D` lights the shape of its texture and has none | Give it one - a soft white circle is the whole of a torch |
+| *Candle casts shadows and no occluder's mask matches* | No `LightOccluder2D` shares a layer with the light's `shadow_item_cull_mask`, so no shadow is ever drawn | Add an occluder, or turn the shadows off and save the draw cost |
+| *Level darkens the layer to 82% and no light reaches it* | No light's `range_item_cull_mask` reaches what is drawn on the layer | Add a light, or check the range masks of the ones there are |
+| *… writes the world's environment, and this scene has no WorldEnvironment* | The row compiles, runs, and writes a property of nothing | Add a `WorldEnvironment` to the scene |
+| *… writes an environment file another scene also uses* | An environment `.tres` is a FILE, so the fog you set follows the player into every scene that loads it | One click: **Make the environment this scene's own** |
+
+The first three are facts of the `.tscn` and are found without a sheet at all, because a scene whose
+lighting is broken is broken whether or not anybody wrote a row about it. The last two are about the
+rows, so they also appear **in place** - an amber note under the event they are about, with the fix
+as a button at its right edge.
+
+The one repair that is a single step writes this row at the top of the sheet, on ready, because the
+copy has to exist before anything else writes through it:
+
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	$World.environment = $World.environment.duplicate()
+	$World.environment.fog_enabled = true
+```
+
+Nothing is stored and nothing is written while checking: each scene is read as text, measured and
+dropped. A project with no lighting in it reports nothing at all.
 
 ## The traps
 

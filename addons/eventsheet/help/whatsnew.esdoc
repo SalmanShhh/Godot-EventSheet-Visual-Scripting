@@ -113,6 +113,29 @@ What changed in the build you have installed (v0.17.0), in the words the release
   struck; the questions **It is day** / **It is night**; the expression `time_of_day`; and the rows
   **Set the time to 6:00** (which does not ring the twelve hours it skipped), **Run the clock 4
   times faster**, **Pause the clock** and **Resume the clock**.
+- **Five ways a light silently does nothing, found before the game is run once.** Lighting is the
+  part of a game that fails without a word: the node is in the scene, the row runs, no error is
+  printed, and the screen does not change. The Doctor gains a **Lighting** section that knows the
+  five reasons - a 2D point light with no texture (switched on, costing a draw, lighting nothing);
+  shadows turned on that no occluder's mask can block; a layer darkened to 82% that no light's RANGE
+  mask reaches, which is a different property from the shadow one and the easiest of the two to
+  confuse; an environment row aimed at a scene with no `WorldEnvironment` in it; and a run-time write
+  to an environment `.tres` other scenes load, with those scenes named. Three of them are facts of
+  the `.tscn` and need no sheet at all, because a scene whose lighting is broken is broken whether or
+  not anybody wrote a row about it. Nothing is stored and nothing is written: a scene is read as
+  text, measured and dropped, and a project with no lighting in it pays one substring test per scene
+  and reports nothing. The section is registered through `EventSheets.register_doctor_check`, the
+  same public seam a pack uses, so a weather system or a lantern kit adds its scenes to this section
+  rather than inventing a second report - and that is what puts it in all four runners at once (the
+  panel, the headless CLI, CI and the MCP server).
+- **A finding about a row is said under the row.** The two that need the rows as well as the scene
+  hang under the event they are about, in the same amber note an unknown variable already wears - one
+  note look and one fix click in the sheet rather than three. The shared-environment one carries its
+  repair: **Make the environment this scene's own**, written at the top of the sheet and on ready,
+  because the copy has to exist before anything writes through it and a row under no trigger at all
+  would take a fresh copy sixty times a second and still not be the first thing to happen. The
+  report offers the same click as a chip, and a sheet that has already taken the step is not told
+  about it again.
 - **A lifted light row is the row the picker would have authored, down to the byte.** An authored
   row spells its receiver `{target.}` - dot inside the braces - so that clearing the optional \"On
   node\" field emits `energy = 1.2` rather than a line starting with a dot. Lifted rows baked
