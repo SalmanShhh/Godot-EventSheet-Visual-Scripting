@@ -249,6 +249,10 @@ The picker wraps the native feature:
 | Text object | **Label** group (Set/Append/Get Text) |
 | Scroll To behavior (incl. camera shaking) | **Camera2D** group (Make Current, Set Zoom/Offset) + the **Juice** pack (trauma screenshake, smooth zoom, squash & stretch - auto-finds the camera) |
 | Set visible/invisible, opacity | **CanvasItem** group (Show, Hide, Set Color Tint, Is Visible) |
+| Shadow light behavior | Godot's own `PointLight2D` / `DirectionalLight2D`, addressed as the OBJECT: pick it off the picker's *Lights in this scene* shelf and the row reads **Torch ▸ Set brightness to 1.2**. One word each for brightness, colour, reach, on/off and shadows, in both dimensions - the code echo shows the property that light really has (`energy` vs `light_energy`, `enabled` vs `visible`) |
+| Shadow caster behavior | Godot's `LightOccluder2D` (scene setup, not events). The sheet head's **shadows** band says whether any occluder's mask really matches the shadows your lights cast, which is the "I turned shadows on and nothing happened" case, answered before you press play |
+| Layer effect: darkness / night tint | A `CanvasModulate` in the scene, on the *Darkness in this scene* shelf: **Level ▸ Set darkness to 82%, tinted #262e4d**. The row holds the colour (all Godot stores); the percentage is how it reads. **Fade Darkness** walks it over time |
+| Layout lighting / 3D fog and glow | The **World** object (a `WorldEnvironment`): Turn Fog On/Off, Set Fog Thickness, Turn Glow On/Off, Fade The Glow, Set Ambient Light - plus **Make The Environment This Scene's Own**, which is the row to write before any of them, since an environment `.tres` is shared between scenes |
 | System: `random()`, `choose()`, `clamp()`, `lerp()`, `distance()`, `angle()` | **Math & Random** expressions (Choose is literally `[…].pick_random()`) |
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
@@ -277,6 +281,8 @@ singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful ports of cu
 | HTN planner (custom addon) | **HTN Agent** (utility-driven Hierarchical Task Network - world-state blackboard + primitive/compound tasks whose methods carry preconditions, subtasks, and a utility score) |
 | (Simple) Abilities (custom addon) | **Simple Abilities** (grant abilities by id, cooldowns, stack charges with auto-regen, temporary auto-expiring abilities, custom data + tags for bulk ops) |
 | Drawing Canvas | **Drawing Canvas** (draw lines/circles/rings/rects/cones/stamps/textured ribbons and raycast line-of-sight fans onto a live texture - persistent paint or per-frame auto-clear; reusable DrawingPrefabResource formations; the **Decal Painter** pack projects the texture onto 3D surfaces) |
+| Flickering torch / pulsing beacon (hand-built with Sine + a lighting behavior) | **Light Flicker** (a flame on a noise field, optionally breathing its reach too) and **Light Pulse** (a smooth wave on a clock). Attach either under any light node, 2D or 3D - each asks its host which property it spells brightness with |
+| Day/night cycle (hand-built) | **Day/Night Cycle** (one clock, three Inspector curves, a sun light and either a `WorldEnvironment` or a `CanvasModulate` as targets; triggers On Sunrise / On Sunset / On Midnight / On The Hour, and Set The Time / Run The Clock N Times Faster / Pause / Resume) |
 
 Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
 automatically.

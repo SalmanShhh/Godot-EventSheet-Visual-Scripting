@@ -113,9 +113,73 @@ What changed in the build you have installed (v0.17.0), in the words the release
   struck; the questions **It is day** / **It is night**; the expression `time_of_day`; and the rows
   **Set the time to 6:00** (which does not ring the twelve hours it skipped), **Run the clock 4
   times faster**, **Pause the clock** and **Resume the clock**.
+- **A lifted light row is the row the picker would have authored, down to the byte.** An authored
+  row spells its receiver `{target.}` - dot inside the braces - so that clearing the optional \"On
+  node\" field emits `energy = 1.2` rather than a line starting with a dot. Lifted rows baked
+  `{target}.` instead, so a light row opened out of somebody's own file wrote `.energy = 1.2` the
+  moment that field was cleared, and their script stopped parsing. The recogniser engine now knows
+  the idiom: a shape that spells a param as the optional prefix takes the dot with it, and the
+  eleven member spellings of the lighting table are written that way. The bytes a lift re-emits are
+  unchanged - a row with its node still named writes exactly the line it was read from.
+- **Stopping a flame really puts the light's reach back.** *Stop Flickering* promises \"reach goes
+  back to whatever the scene was authored with\", and did not: the write was skipped for a scale of
+  1, which is precisely the scale that means \"back where you started\". A torch put out mid-flicker
+  kept the radius of the frame it died on, forever. The write is gated on the flame's own *Also
+  Flicker Reach* knob now, so a flame that was never scaling reach still leaves it alone.
+- **Light Pulse ships no plumbing for an effect it does not have.** The shared binding block was
+  emitted whole into both light packs, so the pulse carried two members it never filled, a branch it
+  never ran, and docstrings describing reach-scaling it does not do - in a pack the project ships as
+  an editable event sheet for people to read. The block now comes with or without its reach half,
+  and the pulse takes the half it uses.
+- **The scene's lighting facts drop when the scene changes.** What the `.tscn` says - which lights it
+  holds, which environment file it shares, and what class each node reference is - was read once and
+  kept for the session, while every fact beside it was already dropped on the editor's filesystem
+  ping. So a light added to the scene stayed invisible to the head bands and the picker shelf, and -
+  worse - a node deleted from the scene went on being claimed as a light by the lift while a new one
+  was refused, until the editor restarted. Both readers now drop with the rest.
+- **A dropped row opens on the engine's number, not on its widening.** Godot stores most of these
+  properties as float32 and hands the default back widened to a double, so *Set fog thickness*
+  arrived reading `0.00999999977648` and *Fade the glow* `0.30000001192093` - and emitted them into
+  the user's script. Both read the way a person types them (`0.01`, `0.3`), through one shared
+  helper that every module's \"what does this property start at\" question now goes through.
+- **`EventSheets.scene_lights(sheet)` hands back a list of your own.** It returned the session
+  cache's own Array, so a pack that sorted or filtered its \"read-only\" answer in place rearranged
+  the picker's shelf, the head's bands and the lift's guard for the rest of the session - exactly
+  what its two neighbours already guard against.
+- **The two cull-mask defaults are two numbers.** A scene file only stores a property it changed, so
+  an absent mask means the engine's default - which is layer 1 for the three 2D masks and EVERY
+  layer for a 3D light's `light_cull_mask`. One constant stood for all four and said so in its
+  comment and in the public API doc, which would have told anyone reading a 3D light's mask that it
+  reaches nothing but the first layer.
+- **The darkness lens says the percentage it really produces.** Three comments and the API doc
+  quoted a worked example (`Color(\"26304d\")`) as 70% dark where the lens reads 81%, so anyone
+  checking the implementation against its own documentation would have concluded it was broken. The
+  numbers are pinned by a test now, beside the value a dropped darkness row starts on.
+- **A guide for lighting a game.** `docs/GUIDE-LIGHTING-YOUR-GAME.md` walks it in the order a game
+  needs it: the five knobs and what Godot calls them in each dimension, making a night with a
+  darkness percentage, torches and the texture a 2D light needs, shadows that actually appear (and
+  the two 2D masks that are different questions), the flicker and pulse behaviours, the day/night
+  clock, the 3D World object and the shared-environment trap, the table of what a project you
+  already lit opens as, and the six traps worth knowing first. The concept map for people arriving
+  from another event-sheet editor gains its lighting rows in the same pass.
 
 ### Tooling
 
+- **A preloaded constant is an import, and reads as one.** Every one of the 105 pack recipes opens
+  with `@tool` and `const Lib := preload(…)`, and the reading accepted the annotation but not the
+  import - so a recipe whose body split cleanly was left with its prelude standing as a wall of
+  code, and three of them had been written into the dogfood gate's allowlist rather than fixed. A
+  `const` whose value is a `preload` is now class scaffolding like the annotations around it (a
+  `const SPEED := 200.0` is a number the game plays by and stays content, which keeps the rule as
+  conservative as it was), and the three allowlist entries are gone.
+- **One question about a scene is one read of it.** `nodes_of_scene` opened every `.tscn` twice - once
+  for its nodes and again, inside the freshly extracted `[ext_resource]` reader, for its files. It is
+  the project's hottest scene read (the scene view, the object facts, every lighting fact go through
+  it), so it now hands the reader the lines it already has.
+- **The picker walks the vocabulary once per shelf, not once per light.** Assembling the \"Lights in
+  this scene\" entries ran a full registry walk for every lighting node of the open scene, on every
+  keystroke of the search box: a thirty-torch room cost thirty walks per character typed. Which
+  verbs a shelf offers depends only on its class, so the answer is worked out once for the shelf.
 - **The test that writes into the shipped tree runs alone.** `pack_dependency_doctor_test` makes a probe pack under `eventsheet_addons/` and takes it away again; `pack_icons_test` asks every pack in that folder for its own icon. In one process they never overlap, and across two shards they are a race - the shards share one filesystem, so a red run appeared with nothing wrong in the tree. It declares `PARALLEL_UNSAFE` now, which is the repository's own mechanism for exactly this, and joins the serial tail. Adding four test files was enough to change the split and expose it.
 - **The slice playbook.** `docs/internal/SLICE-PLAYBOOK.md` is the working notes for one unit of work, written for whoever picks the next one up: the pace (iterate on the tests a change can plausibly break, run the full suite once before committing), the gate commands in the order they are worth running, the helpers to reach for before writing a third one, what a slice lands with, how a recogniser is written as a table entry, and the eighteen traps that have each already cost somebody an afternoon - the silent suite, the invisible new test file, the compile that writes to the sheet's own source path, the rotating dogfood sample that turns an unrelated file red the moment the corpus grows, and the per-compile scratch that changes what an unrelated file opens as minutes later.
 - **Every choice in every dropdown compiles, not just the one it opens on.** The built-in ACE gate walked 1,535 templates with their default values; it now also compiles each of the 3,658 OTHER items those templates' dropdowns offer. A dropdown is a promise that each of its items writes working code, and the item nobody picked while authoring is the one whose spelling was never tried. Two tables keep it honest: the lists whose choice constrains another parameter (a local's type has to agree with its value, and a Vector2 has no z), and the four choices that really do not compile - the WebSocket and WebRTC peer kinds on Host / Join a game - written down with their cause instead of hidden.
