@@ -36,6 +36,7 @@ static func run() -> bool:
 	ok = _test_the_crypt() and ok
 	ok = _test_the_refusals() and ok
 	ok = _test_the_guard_alone() and ok
+	ok = _test_the_receiver_can_be_cleared() and ok
 	return ok
 
 
@@ -70,11 +71,11 @@ static func _test_the_room() -> bool:
 	var sheet: EventSheetResource = _open(ROOM)
 	var ok: bool = _roundtrips(ROOM, sheet)
 	return _check("every hand-written light line in the room reads as its row", _rows_of(sheet), [
-		"LightSetBrightness target=$Torch value=1.2 | {target}.energy = {value}",
-		"LightSetColour target=torch value=Color(\"ffd9a1\") | {target}.color = {value}",
-		"LightShadowsOn target=$Torch | {target}.shadow_enabled = true",
-		"LightSetReach target=get_node(\"Props/Lantern\") value=1.5 | {target}.texture_scale = {value}",
-		"LightLitOff target=$Moonlight | {target}.enabled = false",
+		"LightSetBrightness target=$Torch value=1.2 | {target.}energy = {value}",
+		"LightSetColour target=torch value=Color(\"ffd9a1\") | {target.}color = {value}",
+		"LightShadowsOn target=$Torch | {target.}shadow_enabled = true",
+		"LightSetReach target=get_node(\"Props/Lantern\") value=1.5 | {target.}texture_scale = {value}",
+		"LightLitOff target=$Moonlight | {target.}enabled = false",
 		"LightFadeBrightness seconds=0.5 target=lantern value=1.0 | create_tween().tween_property({target}, \"energy\", {value}, {seconds})"
 	] as Array[String]) and ok
 
@@ -84,12 +85,12 @@ static func _test_the_cave() -> bool:
 	var sheet: EventSheetResource = _open(CAVE)
 	var ok: bool = _roundtrips(CAVE, sheet)
 	return _check("and the cave's lines read as the same words with the 3D properties", _rows_of(sheet), [
-		"LightSetBrightness3D target=$Flashlight value=2.0 | {target}.light_energy = {value}",
-		"LightSetReachSpot target=flashlight value=12.0 | {target}.spot_range = {value}",
-		"LightSetConeAngle target=flashlight value=30.0 | {target}.spot_angle = {value}",
-		"LightLit3DOff target=$Flashlight | {target}.visible = false",
-		"LightSetReachOmni target=$Bulb value=8.0 | {target}.omni_range = {value}",
-		"LightSetColour3D target=$Sun value=Color(0.9, 0.8, 0.7) | {target}.light_color = {value}",
+		"LightSetBrightness3D target=$Flashlight value=2.0 | {target.}light_energy = {value}",
+		"LightSetReachSpot target=flashlight value=12.0 | {target.}spot_range = {value}",
+		"LightSetConeAngle target=flashlight value=30.0 | {target.}spot_angle = {value}",
+		"LightLit3DOff target=$Flashlight | {target.}visible = false",
+		"LightSetReachOmni target=$Bulb value=8.0 | {target.}omni_range = {value}",
+		"LightSetColour3D target=$Sun value=Color(0.9, 0.8, 0.7) | {target.}light_color = {value}",
 		"LightFadeBrightness3D seconds=1.5 target=$Bulb value=0.0 | create_tween().tween_property({target}, \"light_energy\", {value}, {seconds})"
 	] as Array[String]) and ok
 
@@ -102,13 +103,13 @@ static func _test_the_crypt() -> bool:
 	var sheet: EventSheetResource = _open(CRYPT)
 	var ok: bool = _roundtrips(CRYPT, sheet)
 	return _check("the crypt's darkness and atmosphere lines read as their rows", _rows_of(sheet), [
-		"DarknessSet target=$Level value=Color(0.3, 0.3, 0.36) | {target}.color = {value}",
-		"DarknessSet target=level value=Color(\"111522\") | {target}.color = {value}",
+		"DarknessSet target=$Level value=Color(0.3, 0.3, 0.36) | {target.}color = {value}",
+		"DarknessSet target=level value=Color(\"111522\") | {target.}color = {value}",
 		"DarknessFade seconds=10.0 target=$Level value=Color(0.1, 0.1, 0.15) | create_tween().tween_property({target}, \"color\", {value}, {seconds})",
-		"WorldFogOn target=$World | {target}.environment.fog_enabled = true",
-		"WorldSetFogThickness target=$World value=0.03 | {target}.environment.fog_density = {value}",
-		"WorldSetAmbientLight target=$World value=0.15 | {target}.environment.ambient_light_energy = {value}",
-		"WorldGlowOn target=$World | {target}.environment.glow_enabled = true",
+		"WorldFogOn target=$World | {target.}environment.fog_enabled = true",
+		"WorldSetFogThickness target=$World value=0.03 | {target.}environment.fog_density = {value}",
+		"WorldSetAmbientLight target=$World value=0.15 | {target.}environment.ambient_light_energy = {value}",
+		"WorldGlowOn target=$World | {target.}environment.glow_enabled = true",
 		"WorldFadeGlow seconds=4.0 target=$World value=1.2 | create_tween().tween_property({target}.environment, \"glow_intensity\", {value}, {seconds})"
 	] as Array[String]) and ok
 
@@ -149,7 +150,46 @@ static func _test_the_guard_alone() -> bool:
 	})
 
 
+## THE RECEIVER, CLEARED. "On node" is an optional field - its own description says to leave it blank
+## for this node - so every line a row can emit with it empty has to parse. A lifted row carries its
+## own baked spelling rather than the descriptor's, which is exactly where the two can come apart:
+## `{target}.energy = {value}` reads the same on the row and emits `.energy = 1.2` the moment the
+## field is cleared. The idiom with the dot INSIDE the braces is what the picker's own row uses, and
+## these are the lines it leaves.
+static func _test_the_receiver_can_be_cleared() -> bool:
+	var sheet: EventSheetResource = _open(ROOM)
+	var emitted: Array[String] = []
+	for entry: Variant in sheet.events:
+		var event: EventRow = entry as EventRow
+		if event == null:
+			continue
+		for candidate: Variant in event.actions:
+			var action: ACEAction = candidate as ACEAction
+			if action == null or not str(action.codegen_template).begins_with(
+					EventForgeLiftTable.optional_prefix_slot("target")):
+				continue
+			var cleared: Dictionary = action.params.duplicate()
+			cleared["target"] = ""
+			emitted.append(_emit(str(action.codegen_template), cleared))
+	return _check("clearing On node leaves the line an authored row emits", emitted, [
+		"energy = 1.2",
+		"color = Color(\"ffd9a1\")",
+		"shadow_enabled = true",
+		"texture_scale = 1.5",
+		"enabled = false"
+	] as Array[String])
+
+
 # ── the walk ────────────────────────────────────────────────────────────────────
+
+
+## One row's line, through the compiler's own emitter rather than a copy of the substitution.
+static func _emit(template: String, params: Dictionary) -> String:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.codegen_template = template
+	action.params = params.duplicate()
+	return ActionCodegen.generate_action(action)
 
 
 static func _source(file_name: String) -> String:

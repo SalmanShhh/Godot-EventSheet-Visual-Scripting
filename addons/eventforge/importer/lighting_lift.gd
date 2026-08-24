@@ -193,7 +193,7 @@ static func _object_entry(ace_id: String, host_class: String, property: String, 
 		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, _literal(property)],
 		"params": ["target", "value"],
 		"guard": _guard_of(host_class),
-		"shape": "{target}.%s = {value}" % property,
+		"shape": "%s%s = {value}" % [EventForgeLiftTable.optional_prefix_slot("target"), property],
 		"slots": {"target": _fixture_node(host_class), "value": sample}
 	}
 
@@ -206,7 +206,7 @@ static func _switch_of(ace_id: String, host_class: String, property: String, wri
 		"pattern": "^%s\\.%s = %s$" % [TARGET, _literal(property), written],
 		"params": ["target"],
 		"guard": _guard_of(host_class),
-		"shape": "{target}.%s = %s" % [property, written],
+		"shape": "%s%s = %s" % [EventForgeLiftTable.optional_prefix_slot("target"), property, written],
 		"slots": {"target": _fixture_node(host_class)}
 	}
 
@@ -242,7 +242,7 @@ static func _value_entry(word: Dictionary, row: Dictionary) -> Dictionary:
 		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, property],
 		"params": ["target", "value"],
 		"guard": _guard_for(row),
-		"shape": "{target}.%s = {value}" % property,
+		"shape": "%s%s = {value}" % [EventForgeLiftTable.optional_prefix_slot("target"), property],
 		"slots": {
 			"target": _fixture_target(row),
 			"value": FIXTURE_COLOUR if str(word["kind"]) == W.KIND_COLOUR else FIXTURE_VALUE
@@ -261,7 +261,7 @@ static func _switch_entry(row: Dictionary, turned_on: bool) -> Dictionary:
 		"pattern": "^%s\\.%s = %s$" % [TARGET, property, written],
 		"params": ["target"],
 		"guard": _guard_for(row),
-		"shape": "{target}.%s = %s" % [property, written],
+		"shape": "%s%s = %s" % [EventForgeLiftTable.optional_prefix_slot("target"), property, written],
 		"slots": {"target": _fixture_target(row)}
 	}
 

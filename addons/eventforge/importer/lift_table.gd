@@ -32,6 +32,12 @@
 # AUTHOR did not break it - a param that is not a capture, a shape with no sample value, an entry
 # with nothing to test it with.
 #
+# THE ONE SLOT THAT IS NOT A PLAIN CAPTURE: a receiver. A node-scoped row addresses its node with the
+# optional prefix `{target.}` - dot inside the braces - so that clearing the field emits the bare
+# member operation rather than a line beginning with a dot. An entry whose shape spells a param that
+# way is spliced the same way, and the row a lift hands back is then the row the picker would have
+# authored, down to the byte.
+#
 # WHAT DOES NOT BELONG HERE: a family whose spelling is several statements that only mean something
 # together (the connection run: declare a peer, open it, hand it to the API), or one that has to read
 # the scene to know whether it is even looking at the right kind of node. Those stay hand-written
@@ -175,18 +181,41 @@ static func _params_of(entry: Dictionary, hit: RegExMatch) -> Dictionary:
 	return params
 
 
+## The OPTIONAL-PREFIX spelling of a param - `{target.}`, the receiver idiom every node-scoped
+## descriptor writes. The dot lives INSIDE the braces, so the emitter writes it only along with a
+## value: a row whose receiver is cleared emits `energy = 1.2`, where `{target}.` would leave the
+## dot behind and hand the author a line that does not parse.
+static func optional_prefix_slot(name: String) -> String:
+	return "{%s.}" % name
+
+
+## True when a shape answers for a param - under either spelling, the plain `{name}` or the
+## optional prefix `{name.}`. The one question the validator and the splice below both ask, so a
+## shape written in the receiver idiom cannot be sound to one of them and unknown to the other.
+static func shape_answers(shape: String, name: String) -> bool:
+	return shape.contains("{%s}" % name) or shape.contains(optional_prefix_slot(name))
+
+
 ## The matched line with every param capture spliced out for its slot. Spliced from the RIGHT so an
 ## earlier replacement cannot move a later span, which is what makes this the exact inverse of
-## substituting the params back in.
+## substituting the params back in. A param the entry's shape spells as the optional prefix takes
+## the dot AFTER it into the slot, because that dot is part of the idiom rather than part of the
+## line: the row a lift hands back must be the row the picker would have authored, and the picker's
+## is `{target.}energy = {value}`.
 static func _template_of(entry: Dictionary, hit: RegExMatch, text: String) -> String:
+	var shape: String = str(entry.get("shape", ""))
 	var spans: Array = []
 	for name: String in param_names(entry):
-		if hit.get_start(name) >= 0:
-			spans.append([hit.get_start(name), hit.get_end(name), name])
+		if hit.get_start(name) < 0:
+			continue
+		var prefix: bool = shape.contains(optional_prefix_slot(name)) \
+			and text.substr(hit.get_end(name), 1) == "."
+		spans.append([hit.get_start(name), hit.get_end(name) + (1 if prefix else 0), name, prefix])
 	spans.sort_custom(func(left: Array, right: Array) -> bool: return int(left[0]) > int(right[0]))
 	var template: String = text
 	for span: Array in spans:
-		template = template.substr(0, int(span[0])) + "{%s}" % str(span[2]) + template.substr(int(span[1]))
+		var slot: String = optional_prefix_slot(str(span[2])) if bool(span[3]) else "{%s}" % str(span[2])
+		template = template.substr(0, int(span[0])) + slot + template.substr(int(span[1]))
 	return template
 
 
@@ -229,12 +258,12 @@ static func _validate_slots(entry: Dictionary, id: String) -> PackedStringArray:
 	var shape: String = str(entry.get("shape", ""))
 	var slots: Dictionary = entry.get("slots", {})
 	for name: String in slots.keys():
-		if not shape.contains("{%s}" % name):
+		if not shape_answers(shape, name):
 			problems.append("%s: the shape has no {%s} for the sample value" % [id, name])
 	for name: String in param_names(entry):
-		if shape.contains("{%s}" % name) and not slots.has(name):
+		if shape_answers(shape, name) and not slots.has(name):
 			problems.append("%s: no sample value for {%s}" % [id, name])
-		elif not shape.contains("{%s}" % name) and not (entry.get("defaults", {}) as Dictionary).has(name):
+		elif not shape_answers(shape, name) and not (entry.get("defaults", {}) as Dictionary).has(name):
 			problems.append("%s: %s is neither in the shape nor given a default" % [id, name])
 	return problems
 
