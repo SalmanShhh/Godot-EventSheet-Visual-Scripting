@@ -609,6 +609,32 @@ more than once. Nothing a row draws or a dialog writes has moved; there is simpl
   rows. Who owns an object (`set_multiplayer_authority` in its three spellings) and who is allowed to
   run a function (the early-return and whole-body guards, for the owner and for the host) are read
   as facts about the script.
+- **The scene's half of multiplayer is read, and it is read where you already are.** Godot keeps the
+  list of properties a `MultiplayerSynchronizer` replicates in the `.tscn`, written by the Inspector
+  and the Replication panel, so a sheet that only read the `.gd` showed `hp` as an ordinary variable
+  while the running game shipped it across the network every frame. The head now carries a
+  **keeps in step** band per synchronizer - *PlayerSync · position, hp always · nickname at spawn ·
+  every 0.05 s · seen by everyone* - and a **spawned by** band when another scene's spawner lists
+  this one, each echoing the lines of the scene file it came from, and each opening that scene on
+  that node, because the Replication panel and the Inspector are the other editors of the same fact.
+- **The sync mark: 15px, and it says which mode.** A variable a synchronizer watches wears a box with
+  two short bars in it after its name - solid for *always*, dotted for *on change*, dashed for
+  *at spawn* - hovering "PlayerSync · on change". Editing the value in place says `set by the owner`
+  beside the field, because at runtime the value comes from whoever owns the object. **Nothing is
+  written into the script for any of it**: the marks and the bands are derived on every draw, so a
+  `.gd` still round-trips byte for byte and a project with no scenes gains nothing at all.
+- **Keep in step, from the row and from the dialog.** Right-click a variable ▸ **Keep in Step ▸**
+  Off / Always / On change / At spawn only (the submenu led by the synchronizer holding the mode, or
+  offering *Add a synchronizer to Player…* when the scene has none), and the same dropdown in
+  **Edit variable… ▸ More options**. Every write goes into the SCENE through `EditorInterface`, as one
+  step of the scene's own undo history - the Replication panel shows it immediately and Ctrl+Z there
+  takes it back, so the fact is never stored twice.
+- **`EventSheets.synced_properties(sheet)` and `EventSheets.spawners_of(sheet)`** publish the seam, so
+  a pack that adds its own networking reads the same scene facts the canvas does instead of writing a
+  second parser: every replicated property with its mode, interval and visibility, and every spawner
+  the sheet is about - the ones in its own scene and the ones elsewhere that can make it, told apart
+  by `relation`. `spawn_function` is read from the scene's GDScript, because Godot never stores a
+  Callable in a `.tscn`.
 - **Fixed: one plain helper between a `_ready` and its handlers no longer sinks the whole file.**
   A lobby autoload that connects its signals in `_ready`, then defines a helper, then its handlers,
   used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to

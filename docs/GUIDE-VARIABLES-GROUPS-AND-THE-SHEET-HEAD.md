@@ -26,10 +26,11 @@ row shown here comes with the code it compiles to, so you can check.
 13. [Picking with a test](#picking-with-a-test)
 14. [The parameters dialog](#the-parameters-dialog)
 15. [The sheet head, band by band](#the-sheet-head-band-by-band)
-16. [The Sheet Type dialog](#the-sheet-type-dialog)
-17. [Groups](#groups)
-18. [Regions](#regions)
-19. [Tips and common mistakes](#tips-and-common-mistakes)
+16. [What the scene adds: keeps in step, spawned by, and the sync mark](#what-the-scene-adds-keeps-in-step-spawned-by-and-the-sync-mark)
+17. [The Sheet Type dialog](#the-sheet-type-dialog)
+18. [Groups](#groups)
+19. [Regions](#regions)
+20. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## The variable sentence
 
@@ -547,6 +548,8 @@ opens with, in reading order. Nothing folds. One fact, one control and one code 
 | host | "acts on its parent" | `var host: Node2D · _enter_tree: host = get_parent()` | (none - it comes from the kind) |
 | remember | "high_score, unlocked kept between runs" | `@onready var __ef_remember_boot: bool = _ef_recall_remembered()` | (the row menu's Remember Between Runs) |
 | include | the included sheets, by file name | (no line - an include is merged at compile time) | `open` |
+| keeps in step | `PlayerSync · position, hp always · nickname at spawn · every 0.05 s · seen by everyone` | (no line of the script - the `.tscn`'s `MultiplayerSynchronizer`) | `Replication panel…` |
+| spawned by | `Spawner in level.tscn · from spawn_player()` | (no line of the script - the `.tscn`'s `MultiplayerSpawner`) | `select the spawner` |
 
 Under the stack sits a muted **+ add** row offering only the lines this sheet could have and does
 not: `+ add: icon · @tool · description`. Never autoload and never host - those come from choosing a
@@ -571,6 +574,48 @@ Three details the head is careful about:
 **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
 band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each
 prompt is a muted link, not a wizard, and each disappears as it is answered.
+
+## What the scene adds: keeps in step, spawned by, and the sync mark
+
+Godot's high-level multiplayer keeps half its story **outside the script**. A `MultiplayerSynchronizer`
+holds the list of properties it sends to the other players; a `MultiplayerSpawner` holds which scenes
+it can make. Both live in the `.tscn`, written by the Inspector and by Godot's Replication panel. So a
+sheet that only reads the `.gd` would show `hp` as an ordinary variable while the running game is
+quietly shipping it across the network twenty times a second.
+
+The sheet reads those facts instead. **Nothing is written into your script for any of it** - the marks
+and the bands are derived every time the canvas is drawn, so a `.gd` still round-trips byte for byte,
+and a project with no scenes gains nothing at all.
+
+**The two bands.** `keeps in step` appears once per synchronizer that watches this object, and says
+one fact each: which properties, in which mode, how often, and who sees them. `spawned by` appears
+when some other scene's spawner lists this scene. Both echo the file the fact came from, and both
+have the same control - open that scene and select that node, because Godot's own Replication panel
+and Inspector are the other editors of the same fact.
+
+**The sync mark.** A 15px badge after the variable's name, a box with two short bars in it. The
+stroke says which mode - the three the Replication panel offers:
+
+| Mark | Mode | What it means at runtime |
+|---|---|---|
+| solid | always | sent every frame, whether it changed or not |
+| dotted | on change | sent only when the value moves |
+| dashed | at spawn | sent once, with the object, and never again |
+
+Hovering names the synchronizer and the mode ("PlayerSync · on change"). Clicking the variable's
+**value** still edits the initial value the way it always did - with `set by the owner` beside the
+field, because at runtime the object's owner is where the value comes from and the other players
+receive it.
+
+**Changing it.** Right-click a variable row ▸ **Keep in Step ▸** Off / Always / On change / At spawn
+only. The submenu leads with the name of the synchronizer holding the mode, and offers
+`Add a synchronizer to Player…` when the scene has none. The same dropdown sits in **Edit variable… ▸
+More options ▸ Keep in step**. Either way the write goes into the **scene**, in one step of the
+scene's own undo history - so Ctrl+Z in the scene takes it back and the Replication panel shows it
+immediately. Nothing is stored twice.
+
+If no scene runs this script on a node, there is nothing to keep in step, and the menu says so rather
+than offering a switch that could not do anything.
 
 ## The Sheet Type dialog
 
