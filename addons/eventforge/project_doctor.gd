@@ -102,6 +102,10 @@ static func run() -> Dictionary:
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
+	# E4 - the Multiplayer section ships as an EXTENSION check, registered through the same public
+	# seam a pack uses, so "a pack adds its own networking scripts to this section" is the shipped
+	# path rather than a special case. Registering here is what puts it in all four runners.
+	EventSheetMultiplayerDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

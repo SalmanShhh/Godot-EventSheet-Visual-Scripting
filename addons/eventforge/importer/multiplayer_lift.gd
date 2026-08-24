@@ -345,10 +345,35 @@ static func is_networking_line(text: String) -> bool:
 	var stripped: String = text.strip_edges()
 	if stripped.is_empty() or stripped.begins_with("#"):
 		return false
+	# A mark inside a QUOTED RUN is a word in a message, a label, or a test's expectation - not a
+	# line that talks to the network. `rpc("take_damage", 10)` still counts, because the call itself
+	# is outside the quotes; `add_to_group("multiplayer")` does not, because nothing else is.
+	var code: String = outside_strings(stripped)
 	for mark: String in NETWORKING_MARKS:
-		if stripped.contains(mark):
+		if code.contains(mark):
 			return true
 	return false
+
+
+## One line with every quoted run removed, so what is left is only the code. Kept simple on purpose:
+## it answers "is this word part of the code or part of a string", which needs no parser.
+static func outside_strings(text: String) -> String:
+	var code: String = ""
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if quote.is_empty():
+			if character == "\"" or character == "'":
+				quote = character
+			else:
+				code += character
+		elif character == "\\":
+			index += 1
+		elif character == quote:
+			quote = ""
+		index += 1
+	return code
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────

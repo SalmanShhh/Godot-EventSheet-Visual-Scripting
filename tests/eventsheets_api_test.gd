@@ -254,8 +254,14 @@ static func run() -> bool:
 		int(report.get("errors", -1)) + int(report.get("warnings", -1)) + int(report.get("infos", -1)),
 		(report.get("findings", []) as Array).size()) and ok
 	EventSheets.unregister_doctor_check("api_test.probe")
-	ok = _check("unregister empties the Doctor's extension list",
-		EventSheetProjectDoctor._extension_checks.is_empty(), true) and ok
+	# Pinned by NAME rather than by an empty list: the Doctor's own Multiplayer section registers
+	# through this very seam (E4), so the list is never empty once a report has run - and "unregister
+	# removed MY check" is the promise, not "nobody else may use the seam".
+	var still_registered: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetProjectDoctor._extension_checks:
+		still_registered.append(str(entry.get("id", "")))
+	ok = _check("unregister takes the check off the Doctor's extension list",
+		still_registered.has("api_test.probe"), false) and ok
 
 	# ── Editor services against a live dock ──
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock

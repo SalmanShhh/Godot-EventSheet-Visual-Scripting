@@ -42,6 +42,15 @@ const OFFERED := {
 	"disabled-pack-in-use": [
 		{"id": "enable_pack", "label": "Switch %s back on"},
 	],
+	# E4/M7. Both land where the change belongs: Adopt shows the diff on the block's own row, and
+	# marking a message is the function row's gesture, so the chips say where rather than rewriting
+	# bytes from a report the reader is not looking at.
+	"multiplayer-reading": [
+		{"id": "adopt_block", "label": "Adopt this line in the sheet"},
+	],
+	"multiplayer-message": [
+		{"id": "make_message", "label": "Make %s a message…"},
+	],
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
@@ -157,6 +166,12 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"enable_pack":
 			EventSheetPackCatalog.set_enabled(subject, true)
 			return {"ok": true, "message": "%s is back on - its actions return to the picker on the next refresh." % subject}
+		# E4/M7. Two gestures that already exist on the row the finding points at - double-clicking
+		# the finding opens that sheet, and these say what to reach for once it is open.
+		"adopt_block":
+			return {"ok": true, "message": "Open %s: the script block's own row offers Adopt, which rewrites it into a row plus whatever the row does not cover, with the diff shown before anything changes." % str(finding.get("path", "")).get_file()}
+		"make_message":
+			return {"ok": true, "message": "Open %s, right-click the %s function row and choose Make it a message - the annotation is what makes a call travel." % [str(finding.get("path", "")).get_file(), subject]}
 		"open_pack":
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
 		"extract_to_variable":
