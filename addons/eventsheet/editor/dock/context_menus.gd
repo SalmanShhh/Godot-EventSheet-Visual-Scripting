@@ -132,6 +132,16 @@ func build_all() -> void:
 	# runs); "Show in Inspector" is the one tick that turns a variable into a designer knob.
 	_dock._variable_context_menu.add_item("Copy as Expression", _dock.VARIABLE_MENU_COPY_EXPRESSION)
 	_dock._variable_context_menu.add_check_item("Show in Inspector", _dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
+	# E2 - "Keep in step": whether a MultiplayerSynchronizer in this object's SCENE replicates this
+	# value, and in which of the three modes. Filled the moment it opens, because the answer is a
+	# fact of a file this dock does not own - and the submenu is named after the synchronizer that
+	# holds it, since that is the node the mode is written on.
+	_dock._variable_sync_submenu = PopupMenu.new()
+	_dock._variable_sync_submenu.name = "VariableSyncSubmenu"
+	_dock._variable_sync_submenu.about_to_popup.connect(_fill_variable_sync_submenu)
+	_dock._variable_sync_submenu.id_pressed.connect(_dock._on_variable_sync_menu_id_pressed)
+	_dock._variable_context_menu.add_submenu_node_item("Keep in Step", _dock._variable_sync_submenu,
+		_dock.VARIABLE_MENU_KEEP_IN_STEP)
 	# R2 - the two accessor events. A setter fires when the value is set, so it reads as a trigger;
 	# a getter gives a value, so it reads as an expression. Enabled only on a sheet-level (tree)
 	# variable that does not already have that accessor.
@@ -650,6 +660,16 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				can_export and _dock._variables.context_variable_exported())
 			menu.set_item_tooltip(inspector_index, "" if can_export
 				else "A local lives inside its event - it is never a property of the object.")
+		# E2 - a scene is where replication lives, so a script no scene runs has nothing to keep in
+		# step, and a local lives inside its event rather than on the object a synchronizer watches.
+		var sync_index: int = menu.get_item_index(_dock.VARIABLE_MENU_KEEP_IN_STEP)
+		if sync_index >= 0:
+			var scene_node: String = _dock._variables.context_variable_scene_node()
+			var syncable: bool = has_variable and not scene_node.is_empty() \
+				and str(_dock._variables._context_variable.get("scope", "")) != "local"
+			menu.set_item_disabled(sync_index, not syncable)
+			menu.set_item_tooltip(sync_index, "" if syncable
+				else "Replication is a fact of the scene, and no scene runs this script on an object yet.")
 		var copy_index: int = menu.get_item_index(_dock.VARIABLE_MENU_COPY_EXPRESSION)
 		if copy_index >= 0:
 			menu.set_item_disabled(copy_index, not has_variable)
@@ -694,3 +714,29 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				action_toggle_index,
 				"Enable Action" if _dock._context_ace_is_disabled() else "Disable Action"
 			)
+
+
+## E2 - the Keep in step submenu, built from the SCENE every time it opens. With a synchronizer it
+## leads with that node's name (the mode is written on it, so the reader has to know which one) and
+## then the four modes, ticked at the one that is true now. With none it is the single offer to add
+## one, because a scene with nothing to replicate cannot be asked in which mode.
+func _fill_variable_sync_submenu() -> void:
+	var menu: PopupMenu = _dock._variable_sync_submenu
+	menu.clear()
+	var entry: Dictionary = _dock._variables.context_variable_sync_entry()
+	if entry.is_empty() and _dock._variables.context_variable_synchronizer().is_empty():
+		menu.add_item(EventSheetL10n.translate("Add a synchronizer to %s…")
+			% _dock._variables.context_variable_scene_node(), _dock.VARIABLE_SYNC_ADD)
+		return
+	var holder: String = str(entry.get("synchronizer", "")) if not entry.is_empty() \
+		else _dock._variables.context_variable_synchronizer()
+	# A LABELLED separator, not an item: the synchronizer's name is what the four modes are written
+	# on, and a heading nobody can press is exactly what a separator is.
+	menu.add_separator(holder)
+	var current: String = str(entry.get("mode", EventSheetSceneReplication.MODE_OFF)) if not entry.is_empty() \
+		else EventSheetSceneReplication.MODE_OFF
+	for mode_id: int in [_dock.VARIABLE_SYNC_OFF, _dock.VARIABLE_SYNC_ALWAYS,
+			_dock.VARIABLE_SYNC_ON_CHANGE, _dock.VARIABLE_SYNC_AT_SPAWN]:
+		var mode: String = str(_dock.VARIABLE_SYNC_MODES[mode_id])
+		menu.add_radio_check_item(EventSheetSceneReplication.mode_menu_word(mode), mode_id)
+		menu.set_item_checked(menu.get_item_count() - 1, current == mode)

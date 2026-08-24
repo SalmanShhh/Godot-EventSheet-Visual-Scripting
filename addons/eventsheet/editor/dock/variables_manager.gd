@@ -205,6 +205,80 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_variable_inspector()
 
 
+## E2 - the scene's word about the variable the menu is open on: `{}` unless a synchronizer already
+## keeps it in step. A local never can - it lives inside an event, and a synchronizer replicates a
+## property of the object.
+func context_variable_sync_entry() -> Dictionary:
+	if _context_variable.is_empty() or str(_context_variable.get("scope", "")) == "local":
+		return {}
+	return EventSheetSceneReplication.entry_for(
+		_scene_replication().get("synced", []), str(_context_variable.get("name", "")))
+
+
+## E2 - the synchronizer this sheet's scene already has and could be asked to carry the variable, ""
+## when the scene has none (or when there is no scene at all).
+func context_variable_synchronizer() -> String:
+	if _context_variable.is_empty() or str(_context_variable.get("scope", "")) == "local":
+		return ""
+	var synchronizers: Array = _scene_replication().get("synchronizers", [])
+	return str((synchronizers[0] as Dictionary).get("name", "")) if not synchronizers.is_empty() else ""
+
+
+## E2 - the node a scene runs this sheet on: what "Add a synchronizer to X…" names, and where the
+## node would go. "" when no scene runs it, which is what gates the whole menu off - replication is
+## a fact of a scene, and a script nothing instantiates has no object to keep in step.
+func context_variable_scene_node() -> String:
+	return str((_scene_replication().get("host", {}) as Dictionary).get("node_name", "")).strip_edges()
+
+
+## E2 - "Keep in step ▸": puts the clicked variable in one of the three modes, takes it out of all
+## of them, or adds the synchronizer a scene has yet to be given. Every one of them is a change to
+## the SCENE, so the scene's own undo owns it and the status line says what happened either way.
+func _on_variable_sync_menu_id_pressed(id: int) -> void:
+	if _context_variable.is_empty():
+		return
+	if id == _dock.VARIABLE_SYNC_ADD:
+		var host: Dictionary = _scene_replication().get("host", {})
+		var added: Dictionary = EventSheetSceneReplication.add_synchronizer(
+			str(host.get("scene_path", "")), str(host.get("node_path", ".")))
+		if not bool(added.get("ok", false)):
+			_dock._set_status(str(added.get("reason", "")), true)
+			return
+		_dock._set_status(EventSheetL10n.translate("%s added - pick a mode to keep a value in step.")
+			% str(added.get("name", "")))
+		_dock._refresh_after_edit()
+		return
+	var mode: String = _dock.VARIABLE_SYNC_MODES.get(id, "")
+	if mode.is_empty():
+		return
+	var var_name: String = str(_context_variable.get("name", ""))
+	var entry: Dictionary = context_variable_sync_entry()
+	var synchronizers: Array = _scene_replication().get("synchronizers", [])
+	var holder: Dictionary = entry if not entry.is_empty() \
+		else (synchronizers[0] as Dictionary if not synchronizers.is_empty() else {})
+	if holder.is_empty():
+		return
+	var written: Dictionary = EventSheetSceneReplication.write_mode(
+		str(holder.get("scene_path", "")),
+		str(holder.get("synchronizer_path", holder.get("node_path", ""))),
+		str(entry.get("property_path", ".:%s" % var_name)),
+		mode)
+	if not bool(written.get("ok", false)):
+		_dock._set_status(str(written.get("reason", "")), true)
+		return
+	_dock._set_status(EventSheetL10n.translate("%s is not kept in step any more.") % var_name
+		if mode == EventSheetSceneReplication.MODE_OFF
+		else EventSheetL10n.translate("%s is kept in step - %s.") % [var_name, EventSheetSceneReplication.mode_word(mode)])
+	_dock._refresh_after_edit()
+
+
+## E2 - everything the scene says about the sheet in the tab, asked through the one reader (which
+## caches, so a menu that asks three questions costs one read).
+func _scene_replication() -> Dictionary:
+	var sheet: EventSheetResource = _dock._current_sheet
+	return EventSheetSceneReplication.for_script(str(sheet.external_source_path) if sheet != null else "")
+
+
 ## V8. "Copy as expression" - the name a parameter field or a hand-written line would need, on the
 ## clipboard. A global copies as `Game.Score`, because the bare name does not run anywhere else; an
 ## instance variable and a local copy bare, because that is what runs where they live.

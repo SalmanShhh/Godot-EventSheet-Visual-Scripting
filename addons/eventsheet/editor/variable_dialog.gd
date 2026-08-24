@@ -79,6 +79,10 @@ const FIELD_HELP: Dictionary = {
 		+ "sheet…\" makes one and registers it for you.",
 	"Type": "What the variable holds. It decides which rows can set it, and which literal the Initial value "
 		+ "field will accept.",
+	"Keep in step": "Whether a MultiplayerSynchronizer in this object's scene sends this value to the other players, "
+		+ "and how often: Always every frame, On change only when it moves, At spawn only once with the "
+		+ "object. The fact lives in the scene, so picking here writes the .tscn - the Replication panel "
+		+ "is the same switch, and either can be undone from the scene.",
 }
 
 ## Which field the strip is currently refusing to write, "" while it is merely describing one. The
@@ -87,6 +91,11 @@ var _refusal_field: String = ""
 
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
+## E2 - "Keep in step over the network": the mode a synchronizer in the scene holds this variable in.
+## Its items carry the mode string as metadata; an item that does nothing carries "", and the offer
+## to add a synchronizer carries this, which is no mode.
+const SYNC_ADD_CHOICE: String = "add"
+var _sync_option: OptionButton = null
 var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
 ## The Type dropdown wrapped with its muted GDScript-spelling note - the control @onready mode hides,
@@ -448,6 +457,12 @@ func init_dialog(parent_node: Node) -> void:
 	_exported_check.text = "Editable in the Inspector (a designer property)"
 	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector", _exported_check))
+	# E2 - the other question about who can see a value: does it travel to the other players. The
+	# answer lives in the scene's MultiplayerSynchronizer, so picking here writes the .tscn through
+	# the scene's own undo - not the sheet's - and the row's sync mark follows immediately.
+	_sync_option = OptionButton.new()
+	_sync_option.item_selected.connect(_on_sync_mode_chosen)
+	_attr_section.add_child(EventSheetPopupUI.form_row("Keep in step", _sync_option))
 	# ── BASIC tier: the friendly polish a designer reaches for first (Description is promoted to
 	# the always-visible form above; range / drawer / look controls live here) ──
 	_attr_range_edit = LineEdit.new()
@@ -744,6 +759,100 @@ static func type_description(stored_type: String) -> String:
 	return stored_type
 
 
+## E2 - fills the "Keep in step" dropdown from the SCENE. Off / Always / On change / At spawn only
+## when a synchronizer is there, the offer to add one when the scene has none, and disabled with the
+## reason when there is no scene at all or the variable is not one a synchronizer could watch (a
+## local, or one that does not exist yet - a config entry for a property nobody declared would be a
+## fact about nothing).
+func _refresh_sync_option() -> void:
+	if _sync_option == null:
+		return
+	_sync_option.clear()
+	var scene: Dictionary = _scene_replication()
+	var host_named: String = str((scene.get("host", {}) as Dictionary).get("node_name", ""))
+	var named: String = _name_edit.text.strip_edges() if _name_edit != null else ""
+	var can_ask: bool = not host_named.is_empty() and _scope != "local" \
+		and bool(_context.get("editing", false)) and not named.is_empty()
+	if host_named.is_empty():
+		_sync_option.add_item("No scene runs this script yet")
+		_sync_option.set_item_metadata(0, "")
+		_sync_option.disabled = true
+		return
+	if (scene.get("synchronizers", []) as Array).is_empty():
+		# The offer is the SECOND item on purpose: a dropdown whose only entry is already selected
+		# never reports a choice, so an offer alone would be a button that cannot be pressed.
+		_sync_option.add_item("Not kept in step - this scene has no synchronizer")
+		_sync_option.set_item_metadata(0, "")
+		_sync_option.add_item("Add a synchronizer to %s…" % host_named)
+		_sync_option.set_item_metadata(1, SYNC_ADD_CHOICE)
+		_sync_option.select(0)
+		_sync_option.disabled = not can_ask
+		return
+	var entry: Dictionary = EventSheetSceneReplication.entry_for(scene.get("synced", []), named)
+	var current: String = str(entry.get("mode", EventSheetSceneReplication.MODE_OFF))
+	for choice: Array in [
+		[EventSheetSceneReplication.MODE_OFF, "Off - stays on this machine"],
+		[EventSheetSceneReplication.MODE_ALWAYS, "Always - every frame"],
+		[EventSheetSceneReplication.MODE_ON_CHANGE, "On change - only when it moves"],
+		[EventSheetSceneReplication.MODE_AT_SPAWN, "At spawn only - once, with the object"],
+	]:
+		_sync_option.add_item(str(choice[1]))
+		_sync_option.set_item_metadata(_sync_option.item_count - 1, str(choice[0]))
+		if str(choice[0]) == current:
+			_sync_option.select(_sync_option.item_count - 1)
+	_sync_option.disabled = not can_ask
+	_sync_option.tooltip_text = "" if can_ask \
+		else "Add the variable first - a synchronizer keeps an existing property in step."
+
+
+## E2 - a mode picked in the dialog. The write goes straight to the scene, because the scene's undo
+## owns it: it cannot ride this dialog's Save, which writes the sheet.
+func _on_sync_mode_chosen(index: int) -> void:
+	var scene: Dictionary = _scene_replication()
+	var host: Dictionary = scene.get("host", {})
+	var mode: String = str(_sync_option.get_item_metadata(index)) if _sync_option != null else ""
+	if mode.is_empty():
+		return
+	if mode == SYNC_ADD_CHOICE:
+		var added: Dictionary = EventSheetSceneReplication.add_synchronizer(
+			str(host.get("scene_path", "")), str(host.get("node_path", ".")))
+		_say_sync_result(added, "%s added." % str(added.get("name", "")))
+		_refresh_sync_option()
+		return
+	var named: String = _name_edit.text.strip_edges()
+	var entry: Dictionary = EventSheetSceneReplication.entry_for(scene.get("synced", []), named)
+	var synchronizers: Array = scene.get("synchronizers", [])
+	var holder: Dictionary = entry if not entry.is_empty() \
+		else (synchronizers[0] as Dictionary if not synchronizers.is_empty() else {})
+	if holder.is_empty():
+		return
+	_say_sync_result(EventSheetSceneReplication.write_mode(
+		str(holder.get("scene_path", "")),
+		str(holder.get("synchronizer_path", holder.get("node_path", ""))),
+		str(entry.get("property_path", ".:%s" % named)),
+		mode), "%s · %s" % [named, EventSheetSceneReplication.mode_word(mode)])
+
+
+## The scene's answer said in the ONE strip, as a note or as a refusal - the same place every other
+## field of this dialog reports.
+func _say_sync_result(result: Dictionary, done: String) -> void:
+	if _help_strip == null:
+		return
+	if bool(result.get("ok", false)):
+		_help_strip.show_note("Keep in step", done)
+		return
+	_help_strip.show_note("Keep in step", str(result.get("reason", "")),
+		EventSheetPopupUI.HelpStrip.TONE_ERROR)
+
+
+## E2 - what the scene says about the sheet this dialog is writing into.
+func _scene_replication() -> Dictionary:
+	if not _sheet_provider.is_valid():
+		return EventSheetSceneReplication.for_script("")
+	var sheet: EventSheetResource = _sheet_provider.call() as EventSheetResource
+	return EventSheetSceneReplication.for_script(str(sheet.external_source_path) if sheet != null else "")
+
+
 ## P4 - every field says what it is THROUGH THE STRIP, so the form itself stays a list of questions.
 ## The two dropdowns describe each option as it is arrowed over, before it is picked.
 func _wire_help_strip() -> void:
@@ -759,6 +868,7 @@ func _wire_help_strip() -> void:
 		[_static_check, "Static"],
 		[_static_local_check, "Static local"],
 		[_exported_check, "Editable in the Inspector"],
+		[_sync_option, "Keep in step"],
 		[_global_target_option, "Write into"],
 	]:
 		_help_strip.follow(wired[0] as Control, str(wired[1]), field_help(str(wired[1])))
@@ -1264,6 +1374,7 @@ func open_for_edit(
 		_attr_advanced_toggle.button_pressed = has_advanced
 		_attr_advanced_section.visible = has_advanced
 		_attr_advanced_toggle.text = ("▾" if has_advanced else "▸") + _attr_advanced_toggle.text.substr(1)
+	_refresh_sync_option()
 	# Inspector attributes only apply to an exported var, so gate their disclosure on the toggle.
 	_update_attr_gating()
 	_refresh_const_ui()

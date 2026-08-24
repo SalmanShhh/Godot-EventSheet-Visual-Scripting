@@ -127,6 +127,22 @@ const VARIABLE_MENU_SORT_AZ := 14
 ## field or a script, and the one tick that puts a variable in the Inspector.
 const VARIABLE_MENU_COPY_EXPRESSION := 15
 const VARIABLE_MENU_SHOW_IN_INSPECTOR := 16
+const VARIABLE_MENU_KEEP_IN_STEP := 17
+## E2 - "Keep in step": the modes a MultiplayerSynchronizer in the scene can hold a variable in, and
+## the offer to add one to a scene that has none. Their own run of ids, because the submenu owns its
+## own id_pressed - the parent menu never sees them.
+const VARIABLE_SYNC_OFF := 60
+const VARIABLE_SYNC_ALWAYS := 61
+const VARIABLE_SYNC_ON_CHANGE := 62
+const VARIABLE_SYNC_AT_SPAWN := 63
+const VARIABLE_SYNC_ADD := 64
+## Which mode each of those ids means, so the menu, the dialog and the writer read one table.
+const VARIABLE_SYNC_MODES: Dictionary = {
+	VARIABLE_SYNC_OFF: EventSheetSceneReplication.MODE_OFF,
+	VARIABLE_SYNC_ALWAYS: EventSheetSceneReplication.MODE_ALWAYS,
+	VARIABLE_SYNC_ON_CHANGE: EventSheetSceneReplication.MODE_ON_CHANGE,
+	VARIABLE_SYNC_AT_SPAWN: EventSheetSceneReplication.MODE_AT_SPAWN,
+}
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -327,6 +343,8 @@ var _empty_space_context_menu: PopupMenu = null
 var _new_function_submenu: PopupMenu = null
 ## V8. The Add ▸ Variable submenu (Global / Local / Instance), on the canvas menu.
 var _add_variable_submenu: PopupMenu = null
+## E2. The variable row's Keep in step ▸ submenu, filled from the scene every time it opens.
+var _variable_sync_submenu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
@@ -2222,6 +2240,10 @@ func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dict
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
 	_variables._on_variable_context_menu_id_pressed(id)
+
+
+func _on_variable_sync_menu_id_pressed(id: int) -> void:
+	_variables._on_variable_sync_menu_id_pressed(id)
 
 
 func _create_variable_quickfix(variable_name: String) -> bool:
