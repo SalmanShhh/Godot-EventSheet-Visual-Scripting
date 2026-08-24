@@ -28,9 +28,12 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - README's test figures are measured off this tree rather than carried over: 17,695 assertions across 624 test files, counted the way the README's own figures always are - `[PASS]` lines from one full serial suite run, and `tests/*_test.gd`.
 - The message fixture's channel spelling is one Godot actually takes. `@rpc` reads its three option strings in any order, but the transfer CHANNEL is only ever the fourth argument, so `@rpc(\"authority\", \"unreliable_ordered\", 2)` is a parse error and not the subset it looks like. The corpus of hand-written multiplayer scripts carried exactly that line as its channel case, and the suite could not see it: the lift reads a fixture as TEXT, so a fixture that never parses still round-trips byte for byte. It now spells all four (`@rpc(\"authority\", \"call_remote\", \"unreliable_ordered\", 2)`), which is what the Message dialog already writes and the only shape a real project can carry. A fixture that is meant to be a spelling a project could really write only proves it under `--check-only`, which is now part of what a wave verifies before it lands.
 
-### Fixed - a behaviour you compiled earlier no longer decides how the next file opens
+### Fixed - a dropdown writes what it shows
 
 - **Configure Canvas wrote an undefined identifier the moment you touched its dropdown.** Its Coordinates default was `\"world\"` and its two options were the unquoted words, so picking either one (including re-picking the one already shown) emitted `configure(512, 512, false, world, true)`, which does not compile. The options carry their quotes now, and show the plain word in the list. Found by the option walk above on the day it was written.
+
+### Fixed - a behaviour you compiled earlier no longer decides how the next file opens
+
 - **A debug compile used to sink the next `.gd` you opened, too.** The event-trace flag is per-compile scratch of exactly the same kind as the host default, and the importer's two byte gates did not clear it either - so after compiling any sheet with the event trace on, the gate emitted a trace call for a line the file does not have, refused its own match, and dropped the whole opened file back to script blocks. There is now ONE reset for the whole scratch, called by every public emission entry point (the sweep above found this second case the day the reset was written, which is the argument for having it).
 - **Compiling a behaviour sheet used to sink the next `.gd` you opened.** The host-targeting default
   ({host.} templates aiming at the parent instead of self) is per-compile scratch that `compile()`
