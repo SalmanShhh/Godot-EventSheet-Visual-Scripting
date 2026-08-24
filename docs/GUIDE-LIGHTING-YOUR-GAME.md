@@ -160,7 +160,9 @@ skipped.
 Its Inspector holds *Day Length Minutes*, *Sunrise Hour*, *Sunset Hour*, *Time Of Day* (0-24,
 settable while the game runs), *Clock Scale*, and three `Curve`s you draw: sun brightness, ambient
 brightness and sky tint strength. The per-frame work is ordinary code - the sun's rotation comes
-from the hour, the brightnesses from the curves.
+from the hour, the brightnesses from the curves. Only a `DirectionalLight3D` is turned: its rotation
+is where the whole sky's light comes from, while a spot's rotation is where you aimed it, so a torch
+pointed at a door keeps pointing at the door and only its brightness follows the day.
 
 The sheet gets the moments and the controls: triggers **On Sunrise**, **On Sunset**, **On
 Midnight** and **On The Hour** (which carries the hour it struck); actions **Set The Time**, **Run

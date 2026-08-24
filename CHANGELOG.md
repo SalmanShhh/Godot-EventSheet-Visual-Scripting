@@ -204,6 +204,12 @@
   wrote it - so re-opening the file raised the same finding again, and taking the offer twice took
   the copy twice on every `_ready`. The line is now a lift of its own, on either spelling, and only
   when both halves name the same WorldEnvironment.
+- **Fixed: the day/night sun turns only the light that plays the sun.** *Sun Light* accepts any
+  light, and the property's own tooltip and the guide both promise that only a `DirectionalLight3D`
+  turns with the hour - but the clock wrote `rotation_degrees.x` on any 3D node it was handed, so a
+  spot aimed at a door swung a full revolution per game day. A directional light's rotation IS where
+  the sky's light comes from; every other light now keeps the angle it was given and follows the day
+  in brightness alone.
 
 ### Translations
 

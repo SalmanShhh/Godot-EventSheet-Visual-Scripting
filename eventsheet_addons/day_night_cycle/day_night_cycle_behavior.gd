@@ -196,13 +196,16 @@ func _drive_the_world() -> void:
 	if not world_lighting.is_empty():
 		_drive_the_sky(get_node_or_null(world_lighting), daylight)
 
-## Turns the sun and sets its brightness. Only a 3D light has an angle worth turning - a 2D
-## light lies flat on the screen - so the rotation is 3D only and the brightness is both, read
-## off whichever property this light spells brightness with.
+## Turns the sun and sets its brightness. Only a DIRECTIONAL 3D light has an angle worth
+## turning: its rotation is where the whole sky's light comes from, while a spot's rotation is
+## where somebody aimed it and a 2D light lies flat on the screen. So the turn belongs to a
+## DirectionalLight3D alone - point Sun Light at any other light and only its brightness moves,
+## which is exactly what that property's own tooltip promises - and the brightness is read off
+## whichever property this light spells brightness with.
 func _drive_the_sun(sun_node: Node, daylight: float) -> void:
 	if sun_node == null:
 		return
-	var sun_3d: Node3D = sun_node as Node3D
+	var sun_3d: DirectionalLight3D = sun_node as DirectionalLight3D
 	if sun_3d != null:
 		sun_3d.rotation_degrees.x = -360.0 * _sun_turn()
 	var brightness: String = "light_energy" if "light_energy" in sun_node else "energy"

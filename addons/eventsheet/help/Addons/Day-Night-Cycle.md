@@ -246,9 +246,10 @@ own golden hour.
   anywhere in the scene. That is what lets one behaviour drive a 2D level and a 3D sky.
 - **An unset target is skipped, silently and on purpose.** A project that only wants the triggers
   should leave both empty; nothing warns, because nothing is wrong.
-- **Only a 3D light turns.** A `DirectionalLight3D` gets its `rotation_degrees.x` written from the
-  hour. A 2D light lies flat on the screen and only its brightness changes - which is correct, not a
-  gap.
+- **Only a `DirectionalLight3D` turns.** It alone gets its `rotation_degrees.x` written from the
+  hour, because a directional light's rotation IS where the sky's light comes from. A spot's
+  rotation is where you aimed it and a 2D light lies flat on the screen, so both of those keep the
+  angle you gave them and only their brightness changes - which is correct, not a gap.
 - **Curves read left to right across the whole day.** 0 on the curve is midnight and 1 is midnight
   again, NOT sunrise to sunset. Draw the night half deliberately rather than leaving it at zero.
 - **`clock_scale` of 0 stops the clock.** It is the same stop that **Pause The Clock** does, with

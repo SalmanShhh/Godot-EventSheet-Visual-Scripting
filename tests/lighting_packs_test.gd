@@ -36,6 +36,7 @@ static func run() -> bool:
 	all_passed = _cycle_reads() and all_passed
 	all_passed = _packs_share_one_binding() and all_passed
 	all_passed = _the_clock_maths() and all_passed
+	all_passed = _the_sun_turns_only_what_it_says() and all_passed
 	all_passed = _the_light_verbs_run() and all_passed
 	all_passed = _the_flame_gives_the_reach_back() and all_passed
 	return all_passed
@@ -212,6 +213,37 @@ static func _the_clock_maths() -> bool:
 	all_passed = _check("Set The Time wraps past the end of the day", cycle.time_of_day, 2.0) and all_passed
 	cycle.run_the_clock(-5.0)
 	all_passed = _check("the clock never runs backwards", cycle.clock_scale, 0.0) and all_passed
+	cycle.free()
+	return all_passed
+
+
+## L5 - WHAT TURNS, AND WHAT KEEPS THE AIM SOMEBODY GAVE IT. Sun Light accepts any Light2D or Light3D,
+## and its own tooltip promises that a DirectionalLight3D turns with the hour while any other light
+## only changes brightness. A directional light's rotation IS where the sky's light comes from; a
+## spot's rotation is where a designer pointed it, and a torch aimed at a door must still be aimed at
+## the door after a game day. Called straight, because a rotation is a property write and needs no
+## frames - the same reason the flame's reach is pinned by calling the line that writes it.
+static func _the_sun_turns_only_what_it_says() -> bool:
+	var cycle: Node = load(CYCLE).new()
+	cycle.sunrise_hour = 6.0
+	cycle.sunset_hour = 18.0
+	cycle.time_of_day = 12.0
+	var spot: SpotLight3D = SpotLight3D.new()
+	spot.rotation_degrees = Vector3(-30.0, 0.0, 0.0)
+	spot.light_energy = 0.2
+	cycle._drive_the_sun(spot, 0.7)
+	# Snapped on BOTH sides: a light's energy and its angle are float32 stored and doubles compared,
+	# so the two numbers agree to a thousandth and disagree in the last bit either way.
+	var all_passed: bool = _check("a spot light keeps the aim a designer gave it",
+		snappedf(spot.rotation_degrees.x, 0.001), snappedf(-30.0, 0.001))
+	all_passed = _check("while its brightness still follows the day",
+		snappedf(spot.light_energy, 0.001), snappedf(0.7, 0.001)) and all_passed
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	cycle._drive_the_sun(sun, 0.7)
+	all_passed = _check("and the light that really plays the sun turns with the hour",
+		snappedf(sun.rotation_degrees.x, 0.001), snappedf(-90.0, 0.001)) and all_passed
+	spot.free()
+	sun.free()
 	cycle.free()
 	return all_passed
 
