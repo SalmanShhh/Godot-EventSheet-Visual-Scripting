@@ -151,11 +151,8 @@ static func nodes_of_scene(scene_path: String) -> Array:
 	var text: String = FileAccess.get_file_as_string(scene_path)
 	if text.is_empty():
 		return nodes
-	var resource_paths: Dictionary = {}
+	var resource_paths: Dictionary = resource_paths_of_scene(scene_path)
 	var lines: PackedStringArray = text.split("\n")
-	for line: String in lines:
-		if line.begins_with("[ext_resource "):
-			resource_paths[attribute(line, "id")] = attribute(line, "path")
 	var current: Dictionary = {}
 	for line: String in lines:
 		if line.begins_with("[node "):
@@ -234,6 +231,18 @@ static func _connections_in_scene(scene_path: String, script_path: String) -> Di
 			"scene_path": scene_path,
 		}
 	return connections
+
+
+## L6. The FILES one scene points at, as `ext_resource id -> res:// path`. A node property holding
+## `ExtResource("1_env")` says nothing on its own; this is the table that turns it into the
+## environment resource a reader can name, and the one place the answer is read from - which also
+## makes "who else uses this .tres" a question about a table rather than a second parser.
+static func resource_paths_of_scene(scene_path: String) -> Dictionary:
+	var paths: Dictionary = {}
+	for line: String in FileAccess.get_file_as_string(scene_path).split("\n"):
+		if line.begins_with("[ext_resource "):
+			paths[attribute(line, "id")] = attribute(line, "path")
+	return paths
 
 
 ## `key="value"` out of a .tscn header line, "" when the key is absent. Public because this module

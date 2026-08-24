@@ -3469,7 +3469,7 @@ Set ambient occlusion on,Oclusión ambiental activada
 Set bar width to {value},Poner el ancho de la barra en {value}
 Set camera distance to {value},Poner la distancia de cámara en {value}
 Set fog colour to {value},Poner el color de niebla en {value}
-Set fog density to {value},Poner la densidad de niebla en {value}
+Set fog thickness to {value},Poner el espesor de la niebla en {value}
 Set fog off,Niebla desactivada
 Set fog on,Niebla activada
 Set fog over the sky to {value},Poner la niebla sobre el cielo en {value}
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,Ahora solo lo ejecuta el dueño de es
 "Set to run %d copies, tagged %s.","Configurado para ejecutar %d copias, etiquetadas %s."
 instance %d,instancia %d
 casts shadows,proyecta sombras
+%d occluder blocks the light on this layer,%d oclusor bloquea la luz en esta capa
+%d occluders block the light on this layer,%d oclusores bloquean la luz en esta capa
+%s casts shadows and no occluder's mask matches - shadows never appear,%s proyecta sombras y ninguna máscara de oclusor coincide - las sombras nunca aparecen
+kept inside this scene - nothing else can see the change,guardado dentro de esta escena - nadie más ve el cambio
+used by this scene only,usado solo por esta escena
+shared with %d other scene,compartido con %d escena más
+shared with %d other scenes,compartido con %d escenas más
+also in,también en
+select the light,seleccionar la luz
+select the node,seleccionar el nodo
+tinted,teñido

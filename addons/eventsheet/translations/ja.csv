@@ -3469,7 +3469,7 @@ Set ambient occlusion on,アンビエントオクルージョンをオン
 Set bar width to {value},バーの幅を {value} にする
 Set camera distance to {value},カメラ距離を {value} にする
 Set fog colour to {value},霧の色を {value} にする
-Set fog density to {value},霧の濃さを {value} にする
+Set fog thickness to {value},霧の濃さを {value} にする
 Set fog off,霧をオフ
 Set fog on,霧をオン
 Set fog over the sky to {value},空にかかる霧を {value} にする
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,これからはこのオブジェク�
 "Set to run %d copies, tagged %s.",%d 個のコピーを実行するよう設定しました。タグは %s です。
 instance %d,インスタンス %d
 casts shadows,影を落とす
+%d occluder blocks the light on this layer,このレイヤーの光を %d 個のオクルーダーが遮ります
+%d occluders block the light on this layer,このレイヤーの光を %d 個のオクルーダーが遮ります
+%s casts shadows and no occluder's mask matches - shadows never appear,%s は影を落としますが、一致するオクルーダーのマスクがないため影は現れません
+kept inside this scene - nothing else can see the change,このシーン内に保持 - 他からは変更が見えません
+used by this scene only,このシーンだけが使用
+shared with %d other scene,他の %d 個のシーンと共有
+shared with %d other scenes,他の %d 個のシーンと共有
+also in,他にも
+select the light,ライトを選択
+select the node,ノードを選択
+tinted,色合い

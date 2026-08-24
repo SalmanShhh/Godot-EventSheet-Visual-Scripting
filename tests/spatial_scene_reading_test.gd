@@ -117,7 +117,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"rock ▸ Set shadows off",
 	# X9 - the world's look, under the Environment object
 	"Environment ▸ Set fog on",
-	"Environment ▸ Set fog density to 0.02",
+	"Environment ▸ Set fog thickness to 0.02",
 	"Environment ▸ Set glow on",
 	"Environment ▸ Set glow strength to 0.4",
 	"Environment ▸ Set ambient light to 30%",
@@ -521,7 +521,7 @@ static func _picked_matches_typed() -> bool:
 	var readings: PackedStringArray = _render(sheet).get("readings", PackedStringArray())
 	for expected: String in ["NameTag ▸ Set always face the camera on",
 			"NameTag ▸ Set world size to 0.004 (per pixel)", "NameTag ▸ Set see-through to 40%",
-			"Environment ▸ Set fog density to 0.02"]:
+			"Environment ▸ Set fog thickness to 0.02"]:
 		ok = _check("picked row reads \"%s\"" % expected, readings.has(expected), true) and ok
 	return ok
 

@@ -20,6 +20,7 @@ extends RefCounted
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 const ROOM: String = "lighting_scene_room.gd"
 const CAVE: String = "lighting_scene_cave.gd"
+const CRYPT: String = "lighting_scene_crypt.gd"
 const BLOCK: String = "lighting_stays_a_block.gd"
 
 ## The prefix every row this family lifts to shares. Used to ask a whole file whether ANY of it
@@ -32,6 +33,7 @@ static func run() -> bool:
 	ok = _test_the_scene_is_read() and ok
 	ok = _test_the_room() and ok
 	ok = _test_the_cave() and ok
+	ok = _test_the_crypt() and ok
 	ok = _test_the_refusals() and ok
 	ok = _test_the_guard_alone() and ok
 	return ok
@@ -89,6 +91,25 @@ static func _test_the_cave() -> bool:
 		"LightSetReachOmni target=$Bulb value=8.0 | {target}.omni_range = {value}",
 		"LightSetColour3D target=$Sun value=Color(0.9, 0.8, 0.7) | {target}.light_color = {value}",
 		"LightFadeBrightness3D seconds=1.5 target=$Bulb value=0.0 | create_tween().tween_property({target}, \"light_energy\", {value}, {seconds})"
+	] as Array[String]) and ok
+
+
+## L4 / L6 - the two lighting nodes that are not lights. The crypt darkens a layer and writes the
+## world's atmosphere by hand, in the spellings people really use: the `$` path and the variable the
+## CanvasModulate was held in, and every World line reaching through `.environment`. The same promise
+## holds: the colour is the value the row carries, and the file comes back byte for byte.
+static func _test_the_crypt() -> bool:
+	var sheet: EventSheetResource = _open(CRYPT)
+	var ok: bool = _roundtrips(CRYPT, sheet)
+	return _check("the crypt's darkness and atmosphere lines read as their rows", _rows_of(sheet), [
+		"DarknessSet target=$Level value=Color(0.3, 0.3, 0.36) | {target}.color = {value}",
+		"DarknessSet target=level value=Color(\"111522\") | {target}.color = {value}",
+		"DarknessFade seconds=10.0 target=$Level value=Color(0.1, 0.1, 0.15) | create_tween().tween_property({target}, \"color\", {value}, {seconds})",
+		"WorldFogOn target=$World | {target}.environment.fog_enabled = true",
+		"WorldSetFogThickness target=$World value=0.03 | {target}.environment.fog_density = {value}",
+		"WorldSetAmbientLight target=$World value=0.15 | {target}.environment.ambient_light_energy = {value}",
+		"WorldGlowOn target=$World | {target}.environment.glow_enabled = true",
+		"WorldFadeGlow seconds=4.0 target=$World value=1.2 | create_tween().tween_property({target}.environment, \"glow_intensity\", {value}, {seconds})"
 	] as Array[String]) and ok
 
 

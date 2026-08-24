@@ -112,6 +112,9 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 			# Display-only: the row sentence shows this param's option LABEL rather than the raw key
 			# it emits. Set only where the emitted value is always one of the options, so the label
 			# is a faithful reading (Part Of's named parts, never a comparison operator).
-			"display_option_labels": param.display_option_labels
+			"display_option_labels": param.display_option_labels,
+			# L4 - the reading lens the CANVAS puts this value through (a darkness colour reads as a
+			# percentage). Display-only: the value the row stores and emits is untouched.
+			"display_lens": param.display_lens
 		})
 	return output

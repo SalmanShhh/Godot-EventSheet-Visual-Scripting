@@ -76,7 +76,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"{env}.fog_density = {value}", "",
 		[F.make_param("env", "String", ENV, "Environment", "The environment whose look is being changed.", "expression"),
 			F.make_param("value", "String", "0.02", "Density", "How thick the fog is. Small numbers: 0.01 is a haze, 0.1 is a wall.", "expression")],
-		ENV_CAT, "Set fog density to {value}")
+		ENV_CAT, "Set fog thickness to {value}")
 		.described("Sets how thick the world's fog is. Ramp it up over time for a storm rolling in."))
 	descriptors.append(F.make_descriptor("Core", "SetFogColour", "Set Fog Colour", ACEDescriptor.ACEType.ACTION,
 		"{env}.fog_light_color = {colour}", "",

@@ -139,6 +139,9 @@ func format_display(params_dict: Dictionary = {}) -> String:
 ## dropdown that declared display_option_labels shows the matching option's LABEL instead of the raw
 ## key it emits, so "the up/down part of velocity" never renders as `the "y" part of velocity`. A
 ## value matching no option falls through unchanged (an option removed after the row was authored).
+## L4 - a param that declares a READING LENS is a different question and is answered on the canvas
+## (see EventForgeValueLens): a lens is a derived reading rather than a second spelling of the value,
+## so it is applied where the SENTENCE is drawn and never where a value is handed back.
 ## Static + pure so the viewport row builder, the picker preview and this method share ONE rule.
 static func display_value_for(parameter_dict: Dictionary, value: Variant) -> String:
 	var text: String = str(value)

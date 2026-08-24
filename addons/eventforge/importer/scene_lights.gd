@@ -7,11 +7,14 @@
 # derived on every ask. A sheet no scene uses simply has no lights, and its rows fall back to the
 # spellings a reader can verify for themselves.
 #
-# Two questions are answered here and nowhere else:
+# Three questions are answered here and nowhere else:
 #   - WHICH LIGHTS a sheet can point at, for the picker's "Lights in this scene" shelf and for the
 #     scene facts on the head;
 #   - WHAT CLASS one node reference is, which is the gate the lift guard asks before it claims that
-#     `$Torch.energy = 1.2` is a light row rather than somebody's own `energy` variable.
+#     `$Torch.energy = 1.2` is a light row rather than somebody's own `energy` variable;
+#   - WHICH NODES OF A CLASS a scene carries, which is how the two lighting nodes that are NOT
+#     lights are found - the CanvasModulate a layer's darkness sits on, the WorldEnvironment the
+#     atmosphere rows write through, and the occluders that decide whether a shadow is ever drawn.
 #
 # PURE + STATIC: a script path in, plain Dictionaries out. No dock, no canvas, no editor.
 @tool
@@ -23,12 +26,28 @@ extends RefCounted
 const MASK_PROPERTY_2D: String = "range_item_cull_mask"
 const MASK_PROPERTY_3D: String = "light_cull_mask"
 
+## L4. The OTHER 2D mask, and the one shadows are actually decided by: Godot matches a light's
+## `shadow_item_cull_mask` against a `LightOccluder2D.occluder_light_mask`, while the range mask
+## above only says which items the light LIGHTS. Two questions, two properties, and confusing them
+## is how "I turned shadows on and nothing happened" happens.
+const SHADOW_MASK_PROPERTY_2D: String = "shadow_item_cull_mask"
+
 ## The property that says a light casts shadows, in both dimensions.
 const SHADOW_PROPERTY: String = "shadow_enabled"
 
-## script path -> {"lights": Array, "classes": Dictionary}. Session-lifetime for the same reason the
-## replication reader caches: the picker and the lift ask per row and per line, and a scene does not
-## change under a running editor often enough to justify re-reading a project directory each time.
+## L4. What blocks a 2D light, and the property holding which lights it blocks.
+const OCCLUDER_CLASS: String = "LightOccluder2D"
+const OCCLUDER_MASK_PROPERTY: String = "occluder_light_mask"
+
+## The mask both sides fall back to when the scene file never wrote one - Godot's own default for
+## every one of these four properties. A file only stores a property it changed, so an absent line
+## means "1", never "nothing".
+const DEFAULT_MASK: int = 1
+
+## script path -> {"nodes": Array, "lights": Array, "classes": Dictionary}. Session-lifetime for the
+## same reason the replication reader caches: the picker and the lift ask per row and per line, and a
+## scene does not change under a running editor often enough to justify re-reading a project
+## directory each time.
 static var _cache: Dictionary = {}
 
 ## The node-path matcher, compiled once: the lift guard asks it of every candidate line of every
@@ -37,12 +56,37 @@ static var _path_regex: RegEx = null
 
 
 ## Every light in every scene that runs this script, in scene order. One entry each:
-##   {"name", "path", "class", "kind", "shadows", "masks", "reference", "scene_path"}
+##   {"name", "path", "class", "kind", "shadows", "masks", "shadow_masks", "reference",
+##    "scene_path", "properties"}
 ## `kind` is the plain word for the class (point / directional / omni / spot), `reference` the
-## spelling a row addresses it by (`$Torch`), and `masks` the raw text of the cull mask the file
-## holds - "" when the node never set one, which means the engine's default.
+## spelling a row addresses it by (`$Torch`), `masks` the raw text of the range cull mask the file
+## holds and `shadow_masks` the same for the shadow one - "" when the node never set one, which
+## means the engine's default.
 static func for_script(script_path: String) -> Array[Dictionary]:
 	return _read(script_path)["lights"]
+
+
+## L4/L6. EVERY node of those scenes in scene order, light or not, as
+##   {"name", "path", "class", "reference", "scene_path", "properties"}
+## `properties` is the raw text the scene file holds under the node's header, which is what a fact
+## about one node is read from (an occluder's mask, the environment resource a WorldEnvironment
+## points at). The lights above are these entries with the light facts worked out.
+static func nodes_for_script(script_path: String) -> Array[Dictionary]:
+	return _read(script_path)["nodes"]
+
+
+## Those of them that ARE one class, subclasses included - the scene's CanvasModulate, its
+## WorldEnvironment, its occluders. Empty for a class no scene of this script carries, which is what
+## makes a fact about a missing node absent rather than wrong.
+static func nodes_of_class(script_path: String, class_text: String) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if not ClassDB.class_exists(class_text):
+		return found
+	for node: Dictionary in nodes_for_script(script_path):
+		var node_class: String = str(node["class"])
+		if ClassDB.class_exists(node_class) and ClassDB.is_parent_class(node_class, class_text):
+			found.append(node)
+	return found
 
 
 ## Every node of those scenes as `reference -> class`, under each spelling a row can name it by: the
@@ -89,13 +133,14 @@ static func _node_path_regex() -> RegEx:
 	return _path_regex
 
 
-## Both answers for one script, read once. A path that is not a res:// script has neither.
+## Every answer for one script, read once. A path that is not a res:// script has none of them.
 static func _read(script_path: String) -> Dictionary:
 	var path: String = script_path.strip_edges()
 	if path.is_empty() or not path.begins_with("res://"):
-		return {"lights": [] as Array[Dictionary], "classes": {}}
+		return {"nodes": [] as Array[Dictionary], "lights": [] as Array[Dictionary], "classes": {}}
 	if _cache.has(path):
 		return _cache[path]
+	var nodes: Array[Dictionary] = []
 	var lights: Array[Dictionary] = []
 	var classes: Dictionary = {}
 	var host: String = str(EventSheetSceneReplication.host_node(path).get("node_path", "."))
@@ -105,31 +150,56 @@ static func _read(script_path: String) -> Dictionary:
 			var node_class: String = str(node.get("type", ""))
 			if node_class.is_empty():
 				continue
-			var reference: String = _reference_of(str(node.get("path", "")), host)
+			var found: Dictionary = _node_entry(node, node_class,
+				_reference_of(str(node.get("path", "")), host), scene_path)
+			nodes.append(found)
 			_note_spellings(classes, str(node.get("name", "")), str(node.get("path", "")), node_class)
-			if not EventForgeLightWords.is_light_class(node_class):
-				continue
-			lights.append(_light_entry(node, node_class, reference, scene_path))
-	var answer: Dictionary = {"lights": lights, "classes": classes}
+			if EventForgeLightWords.is_light_class(node_class):
+				lights.append(_light_facts(found))
+	var answer: Dictionary = {"nodes": nodes, "lights": lights, "classes": classes}
 	_cache[path] = answer
 	return answer
 
 
-## One light, as the picker and the head read it.
-static func _light_entry(node: Dictionary, node_class: String, reference: String, scene_path: String) -> Dictionary:
-	var properties: Dictionary = node.get("properties", {})
-	var mask_property: String = MASK_PROPERTY_3D if ClassDB.is_parent_class(node_class, EventForgeLightWords.ROOT_3D) \
-		else MASK_PROPERTY_2D
+## One node of a scene, whatever it is: what it is called, where it is, what class it is, the
+## spelling a row addresses it by, and the raw property text the file holds for it.
+static func _node_entry(node: Dictionary, node_class: String, reference: String, scene_path: String) -> Dictionary:
 	return {
 		"name": str(node.get("name", "")),
 		"path": str(node.get("path", "")),
 		"class": node_class,
-		"kind": EventForgeLightWords.kind_word(node_class),
-		"shadows": str(properties.get(SHADOW_PROPERTY, "false")).strip_edges() == "true",
-		"masks": str(properties.get(mask_property, "")).strip_edges(),
 		"reference": reference,
-		"scene_path": scene_path
+		"scene_path": scene_path,
+		"properties": node.get("properties", {})
 	}
+
+
+## The same entry with the LIGHT facts worked out - the plain kind word, whether it casts shadows,
+## and the two masks that decide what it reaches and what can block it.
+static func _light_facts(node: Dictionary) -> Dictionary:
+	var node_class: String = str(node["class"])
+	var properties: Dictionary = node["properties"]
+	var in_3d: bool = ClassDB.is_parent_class(node_class, EventForgeLightWords.ROOT_3D)
+	var found: Dictionary = node.duplicate()
+	found["kind"] = EventForgeLightWords.kind_word(node_class)
+	found["shadows"] = str(properties.get(SHADOW_PROPERTY, "false")).strip_edges() == "true"
+	found["masks"] = str(properties.get(MASK_PROPERTY_3D if in_3d else MASK_PROPERTY_2D, "")).strip_edges()
+	found["shadow_masks"] = "" if in_3d else str(properties.get(SHADOW_MASK_PROPERTY_2D, "")).strip_edges()
+	return found
+
+
+## The bits a mask property holds, with the engine's own default standing in for a property the
+## scene file never wrote. Two masks OVERLAP when they share a bit, which is the whole of Godot's
+## "does this occluder block that light" rule.
+static func mask_bits(mask_text: String) -> int:
+	var text: String = mask_text.strip_edges()
+	return DEFAULT_MASK if text.is_empty() or not text.is_valid_int() else text.to_int()
+
+
+## True when two masks share a layer - what Godot asks of a light's shadow mask and an occluder's
+## own mask before it draws a shadow at all.
+static func masks_overlap(one: String, other: String) -> bool:
+	return (mask_bits(one) & mask_bits(other)) != 0
 
 
 ## Every spelling one node answers to, pointed at its class: the bare name, the scene path, and both

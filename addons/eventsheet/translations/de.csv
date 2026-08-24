@@ -3469,7 +3469,7 @@ Set ambient occlusion on,Umgebungsverdeckung an
 Set bar width to {value},Balkenbreite auf {value} setzen
 Set camera distance to {value},Kameraabstand auf {value} setzen
 Set fog colour to {value},Nebelfarbe auf {value} setzen
-Set fog density to {value},Nebeldichte auf {value} setzen
+Set fog thickness to {value},Nebeldicke auf {value} setzen
 Set fog off,Nebel aus
 Set fog on,Nebel an
 Set fog over the sky to {value},Nebel über dem Himmel auf {value} setzen
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,Jetzt führt nur noch der Besitzer di
 "Set to run %d copies, tagged %s.","Auf %d Kopien eingestellt, mit den Kennzeichen %s."
 instance %d,Instanz %d
 casts shadows,wirft Schatten
+%d occluder blocks the light on this layer,%d Okkluder blockiert das Licht auf dieser Ebene
+%d occluders block the light on this layer,%d Okkluder blockieren das Licht auf dieser Ebene
+%s casts shadows and no occluder's mask matches - shadows never appear,"%s wirft Schatten, aber keine Okkluder-Maske passt - es erscheinen nie Schatten"
+kept inside this scene - nothing else can see the change,in dieser Szene gespeichert - sonst sieht niemand die Änderung
+used by this scene only,nur von dieser Szene genutzt
+shared with %d other scene,geteilt mit %d weiteren Szene
+shared with %d other scenes,geteilt mit %d weiteren Szenen
+also in,auch in
+select the light,das Licht auswählen
+select the node,den Node auswählen
+tinted,getönt

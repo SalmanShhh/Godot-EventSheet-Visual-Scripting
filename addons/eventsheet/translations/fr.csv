@@ -3469,7 +3469,7 @@ Set ambient occlusion on,Occlusion ambiante activée
 Set bar width to {value},Définir la largeur de la barre à {value}
 Set camera distance to {value},Définir la distance de caméra à {value}
 Set fog colour to {value},Définir la couleur du brouillard à {value}
-Set fog density to {value},Définir la densité du brouillard à {value}
+Set fog thickness to {value},Définir l'épaisseur du brouillard à {value}
 Set fog off,Brouillard désactivé
 Set fog on,Brouillard activé
 Set fog over the sky to {value},Définir le brouillard sur le ciel à {value}
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,"Désormais, seul le propriétaire de
 "Set to run %d copies, tagged %s.","Réglé pour lancer %d copies, étiquetées %s."
 instance %d,instance %d
 casts shadows,projette des ombres
+%d occluder blocks the light on this layer,%d occulteur bloque la lumière sur ce calque
+%d occluders block the light on this layer,%d occulteurs bloquent la lumière sur ce calque
+%s casts shadows and no occluder's mask matches - shadows never appear,%s projette des ombres et aucun masque d'occulteur ne correspond - les ombres n'apparaissent jamais
+kept inside this scene - nothing else can see the change,conservé dans cette scène - personne d'autre ne voit le changement
+used by this scene only,utilisé par cette scène uniquement
+shared with %d other scene,partagé avec %d autre scène
+shared with %d other scenes,partagé avec %d autres scènes
+also in,aussi dans
+select the light,sélectionner la lumière
+select the node,sélectionner le nœud
+tinted,teinté

@@ -684,10 +684,14 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		}, true)))
 	var value_text: String = str(band["value"])
 	if not value_text.is_empty():
-		var value_meta: Dictionary = band_meta.merged({
-			"text_color": reading_style.muted_text_color if bool(band["value_muted"]) \
-				else reading_style.primary_text_color
-		}, true)
+		# L4 - a band whose fact is a problem says so in the note colour, which is the colour the
+		# same finding wears everywhere else on the canvas. Nothing else about the band changes:
+		# it is still one fact, read from the scene, with the node it is about one click away.
+		var value_colour: Color = reading_style.muted_text_color if bool(band["value_muted"]) \
+			else reading_style.primary_text_color
+		if bool(band.get("warning", false)):
+			value_colour = reading_style.lift_note_badge_foreground_color
+		var value_meta: Dictionary = band_meta.merged({"text_color": value_colour}, true)
 		if is_name_band and not sheet.read_only:
 			# The name IS the rename control: F2 or a double-click renames the class everywhere.
 			value_meta["head_action"] = EventSheetHeadBands.BAND_NAME
@@ -13455,7 +13459,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		global_owner = _variable_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	# L1 - and a question asked OF A LIGHT belongs to that light: "Torch > Is on", not "Light2D > Is on".
 	if global_owner.is_empty():
-		global_owner = _light_owner_label(condition.provider_id, condition.ace_id, params_dict)
+		global_owner = _lighting_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
 	var read_condition: ACECondition = condition
 	if not global_read.is_empty():
@@ -13695,14 +13699,14 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# object whose function that message is rather than to the Multiplayer object in general.
 	if global_owner.is_empty():
 		global_owner = _message_owner_label(action.provider_id, action.ace_id, action_params)
-	# L1 - and again for a light row: the light IS the object, so "Torch > Set brightness to 1.2"
-	# rather than the class of light it happens to be. A light row is also evidence of the LIGHTING
-	# pattern, exactly as the hand-written line it was read from was - the row it opens as changed,
-	# what it is evidence of did not.
-	if not _light_host_class(action.provider_id, action.ace_id).is_empty():
+	# L1/L4/L6 - and again for a lighting row: the node IS the object, so "Torch > Set brightness to
+	# 1.2" and "Level > Set darkness to 70%" rather than the class each happens to be. A lighting row
+	# is also evidence of the LIGHTING pattern, exactly as the hand-written line it was read from
+	# was - the row it opens as changed, what it is evidence of did not.
+	if not _lighting_host_class(action.provider_id, action.ace_id).is_empty():
 		_note_pattern(LIGHTING_PATTERN, ActionCodegen.generate_action(action))
 		if global_owner.is_empty():
-			global_owner = _light_owner_label(action.provider_id, action.ace_id, action_params)
+			global_owner = _lighting_owner_label(action.provider_id, action.ace_id, action_params)
 	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
 	var read_action: ACEAction = action
 	if not global_read.is_empty():
@@ -15925,11 +15929,14 @@ func _message_owner_label(provider_id: String, ace_id: String, params: Dictionar
 const LIGHTING_PATTERN := "lighting"
 
 
-## L1. The light class a verb is hosted on, or "" when it is not a light verb at all. Read off
+## L1/L4/L6. The lighting class a verb is hosted on, or "" when it is not one of this vocabulary's
+## verbs at all - any light, the CanvasModulate a layer's darkness sits on, or the WorldEnvironment
+## the atmosphere rows write through. The same gate the lift asks before claiming a line, so a row
+## and the statement it was read from agree about which nodes lighting speaks for. Read off
 ## whichever of the two the registry can answer with: a row never needs the registry to compile (its
 ## template is baked) and it must not need one to READ either, so a live editor answers from the
 ## definition and a bare viewport from the descriptor, and the question is the same for both.
-func _light_host_class(provider_id: String, ace_id: String) -> String:
+func _lighting_host_class(provider_id: String, ace_id: String) -> String:
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	var host: String = ""
 	if definition != null:
@@ -15937,15 +15944,16 @@ func _light_host_class(provider_id: String, ace_id: String) -> String:
 	else:
 		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 		host = "" if descriptor == null else str(descriptor.node_type)
-	return host if EventForgeLightWords.is_light_class(host) else ""
+	return host if EventForgeLightingLift.addresses(host) else ""
 
 
-## L1. The object column a LIGHT row belongs in: the light it names, not the class of light it is.
-## "" when the row acts on the sheet's own node (there is no other light to name) or when the target
-## is an expression rather than a node reference.
-func _light_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
+## L1/L4/L6. The object column a lighting row belongs in: the node it names, not the class that node
+## is - "Torch ▸ Set brightness", "Level ▸ Set darkness", "World ▸ Turn fog on". "" when the row acts
+## on the sheet's own node (there is no other node to name) or when the target is an expression
+## rather than a node reference.
+func _lighting_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
 	var aimed: String = str(params.get("target", "")).strip_edges()
-	if aimed.is_empty() or aimed == "self" or _light_host_class(provider_id, ace_id).is_empty():
+	if aimed.is_empty() or aimed == "self" or _lighting_host_class(provider_id, ace_id).is_empty():
 		return ""
 	var named: String = EventSheetSceneLights.reference_key(aimed)
 	return "" if named.is_empty() else named.get_slice("/", named.get_slice_count("/") - 1)
@@ -16237,6 +16245,15 @@ func _read_number_words(shown: String) -> String:
 	return _read_colour_words(EventSheetSentence.number_lens(shown)) if _viewport.is_reading_mode() else shown
 
 
+## L4. One param value as the row shows it: through its declared READING LENS when it has one, and
+## through the general number and colour readings when it does not. A lens is the param's own answer
+## to "what does this value mean", so it stands INSTEAD of them rather than after them - a darkness
+## colour would otherwise arrive as colour words and no longer look like a colour at all.
+func _read_through_lens(lens: String, shown: String) -> String:
+	return EventForgeValueLens.read(lens, shown) if not lens.strip_edges().is_empty() \
+		else _read_number_words(shown)
+
+
 ## U1. A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
 ## opacity" - rather than as the Color call that built it. Only a value that IS a colour expression
 ## goes through the grammar: everything else is the author's own GDScript and stays exactly as typed.
@@ -16276,7 +16293,13 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# and `=` for equality - the same spellings an opened script's readings already use. Only
 			# the six operator tokens change; every other param value is the author's own GDScript.
 			shown = EventSheetGameCatalog.preview_param(shown)
-			shown = _read_number_words(EventForgeACEFactory.comparison_glyph(shown))
+			shown = EventForgeACEFactory.comparison_glyph(shown)
+			# L4 - a param that declares a READING LENS has its own answer for what its value means,
+			# so the lens REPLACES the general readings rather than running after them: a stored
+			# darkness colour says the percentage it makes, not the colour words U1 would find in it.
+			# Applied here, on the canvas, because a lens is a derived reading and not a second
+			# spelling - the row still stores and emits the author's own colour.
+			shown = _read_through_lens(EventForgeValueLens.lens_of(parameter as Dictionary), shown)
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
@@ -16296,8 +16319,10 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		var param_shown: String = _read_number_words(EventForgeACEFactory.comparison_glyph(
-			EventSheetGameCatalog.preview_param(
+		# L4 - the same reading lens the registry branch applies, so a builtin descriptor and the
+		# registry's copy of it say the same sentence about the same row.
+		var param_shown: String = _read_through_lens(param.display_lens,
+			EventForgeACEFactory.comparison_glyph(EventSheetGameCatalog.preview_param(
 				_translated_option_label(param.display_value(param_value), str(param_value)))))
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])

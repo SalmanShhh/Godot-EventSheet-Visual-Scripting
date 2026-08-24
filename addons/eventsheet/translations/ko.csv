@@ -3469,7 +3469,7 @@ Set ambient occlusion on,앰비언트 오클루전 켜기
 Set bar width to {value},바 너비를 {value} 로 설정
 Set camera distance to {value},카메라 거리를 {value} 로 설정
 Set fog colour to {value},안개 색을 {value} 로 설정
-Set fog density to {value},안개 농도를 {value} 로 설정
+Set fog thickness to {value},안개 짙기를 {value} 로 설정
 Set fog off,안개 끄기
 Set fog on,안개 켜기
 Set fog over the sky to {value},하늘에 걸리는 안개를 {value} 로 설정
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,이제 이 오브젝트의 소유자�
 "Set to run %d copies, tagged %s.",%d 개의 사본을 실행하도록 설정했습니다. 태그는 %s 입니다.
 instance %d,인스턴스 %d
 casts shadows,그림자를 드리움
+%d occluder blocks the light on this layer,이 레이어의 빛을 오클루더 %d개가 막습니다
+%d occluders block the light on this layer,이 레이어의 빛을 오클루더 %d개가 막습니다
+%s casts shadows and no occluder's mask matches - shadows never appear,%s은(는) 그림자를 드리우지만 일치하는 오클루더 마스크가 없어 그림자가 나타나지 않습니다
+kept inside this scene - nothing else can see the change,이 씬 안에 보관 - 다른 곳에서는 변경이 보이지 않습니다
+used by this scene only,이 씬에서만 사용
+shared with %d other scene,다른 씬 %d개와 공유
+shared with %d other scenes,다른 씬 %d개와 공유
+also in,또한
+select the light,라이트 선택
+select the node,노드 선택
+tinted,색조

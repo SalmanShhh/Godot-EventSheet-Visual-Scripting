@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/lighting_scene_crypt.gd" id="1_crypt"]
+[ext_resource type="Environment" path="res://tests/fixtures/lighting_environment.tres" id="2_mood"]
+
+[node name="Crypt" type="Node2D"]
+script = ExtResource("1_crypt")
+
+[node name="Level" type="CanvasModulate" parent="."]
+color = Color(0.3, 0.3, 0.36, 1)
+
+[node name="Candle" type="PointLight2D" parent="."]
+shadow_enabled = true
+shadow_item_cull_mask = 2
+
+[node name="Slab" type="LightOccluder2D" parent="."]
+
+[node name="World" type="WorldEnvironment" parent="."]
+environment = ExtResource("2_mood")

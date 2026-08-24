@@ -1818,6 +1818,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	# they land on the same page rather than splitting the reader's lighting into two.
 	"lighting": "Cameras-Graphics-And-Screenshots",
 	"light_node": "Cameras-Graphics-And-Screenshots",
+	# L4/L6. The darkness a layer wears and the world's own atmosphere are the same reader's question
+	# one step out from the lights, so the three modules land on the one page rather than three.
+	"scene_lighting": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
 	"video": "Playing-Video",
 	"loop": "Working-With-Lists",
@@ -2395,6 +2398,25 @@ static func synced_properties(sheet: EventSheetResource) -> Array[Dictionary]:
 static func spawners_of(sheet: EventSheetResource) -> Array[Dictionary]:
 	return _typed_dictionaries(EventSheetSceneReplication.for_script(
 		str(sheet.external_source_path) if sheet != null else "").get("spawners", []))
+
+
+## L4. Every light in the scene (or scenes) that run this sheet's script, in scene order. One entry
+## each:
+##   {"name", "path", "class", "kind", "shadows", "masks", "shadow_masks", "reference",
+##    "scene_path", "properties"}
+## `kind` is the plain word for the class - point / directional / omni / spot - and `reference` the
+## spelling a row addresses the light by (`$Torch`, `$Props/Lantern`, `self`). `masks` is the raw
+## text of the light's range cull mask and `shadow_masks` the same for its shadow mask, both `""`
+## when the scene file never wrote one, which means the engine's default; `properties` is every
+## property line the scene file holds for the node.
+##
+## The list the picker's "Lights in this scene" shelf and the head's `lit by` bands are built from,
+## and the one a pack asks before offering a light row of its own. READ-ONLY and derived on every
+## ask, exactly like `synced_properties`: nothing about the scene is stored in the sheet, so a `.gd`
+## still round-trips byte for byte, and a sheet no scene uses simply has no lights.
+static func scene_lights(sheet: EventSheetResource) -> Array[Dictionary]:
+	return EventSheetSceneLights.for_script(
+		str(sheet.external_source_path) if sheet != null else "")
 
 
 ## An untyped Array of Dictionaries as the typed Array the API promises. The readers behind the two

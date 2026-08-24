@@ -58,17 +58,31 @@ const FUNCTION_PREFIX := "function:"
 ## the Call Function parameters instead of needing a second dispatch table.
 const FUNCTION_META_KEY := "eventsheet_function_name"
 
-## L1. The two things a light row built FOR one light of the open scene carries: the node it is
-## aimed at (pre-filled into the params dialog, exactly as a Functions entry pre-fills its function)
-## and the shelf it is offered on. Metadata rather than fields, because the copy is a picker entry
-## and the row it makes is the ordinary node-scoped row with its target answered.
-const LIGHT_TARGET_META := "eventsheet_light_target"
-const LIGHT_SHELF_META := "eventsheet_light_shelf"
+## L1/L4/L6. The three things a row built FOR one node of the open scene carries: the node it is
+## aimed at (pre-filled into the params dialog, exactly as a Functions entry pre-fills its function),
+## the shelf it is offered on, and the group that shelf sits in. Metadata rather than fields, because
+## the copy is a picker entry and the row it makes is the ordinary node-scoped row with its target
+## answered.
+const SCENE_TARGET_META := "eventsheet_light_target"
+const SCENE_SHELF_META := "eventsheet_light_shelf"
+const SCENE_GROUP_META := "eventsheet_light_group"
 
-## L1. Where the lights of the open scene are offered: one folder, one sub-folder per light. The
-## sixteen Core lighting actions and the per-class groups are untouched beside it - this is the shelf
-## for "which of MY lights", which is the question a reader actually arrives with.
+## L1/L4/L6. Where the LIGHTING NODES of the open scene are offered: one folder per kind of thing,
+## one sub-folder per node. The sixteen Core lighting actions and the per-class groups are untouched
+## beside them - these are the shelves for "which of MY lights", which is the question a reader
+## actually arrives with, and its two neighbours for the darkness and the atmosphere.
 const LIGHTS_GROUP := "Lights in this scene"
+const DARKNESS_GROUP := "Darkness in this scene"
+const ATMOSPHERE_GROUP := "Atmosphere in this scene"
+
+## L1/L4/L6. The shelves themselves: the group each is titled with, and the class of node it offers.
+## An empty `root` means "any light", which is asked of ClassDB rather than of a list, so a light
+## class the engine adds - or one a project subclasses - is on the shelf without an edit here.
+const SCENE_SHELVES: Array[Dictionary] = [
+	{"group": LIGHTS_GROUP, "root": ""},
+	{"group": DARKNESS_GROUP, "root": "CanvasModulate"},
+	{"group": ATMOSPHERE_GROUP, "root": "WorldEnvironment"},
+]
 
 ## The separator between a shelf entry's facts - the middle dot every other two-fact reading in the
 ## editor uses.
@@ -637,53 +651,74 @@ static func multiplayer_group_key(definition: ACEDefinition) -> String:
 	return EventForgeMultiplayerACEs.SECTION_PLAYERS
 
 
-## L1. The shelf a light row is offered on, or "" for everything else - including the same verb
-## browsed under its own class, which stays where it was. Outranks the node-type filing for the same
-## reason the comparisons and the Multiplayer shelves do: what a row IS beats where it was filed.
-## Pure + static, so the filing is pinned without a tree.
-static func light_group_key(definition: ACEDefinition) -> String:
+## L1/L4/L6. The shelf a scene-lighting row is offered on, or "" for everything else - including the
+## same verb browsed under its own class, which stays where it was. Outranks the node-type filing for
+## the same reason the comparisons and the Multiplayer shelves do: what a row IS beats where it was
+## filed. Pure + static, so the filing is pinned without a tree.
+static func scene_lighting_group_key(definition: ACEDefinition) -> String:
 	if definition == null:
 		return ""
-	var shelf: String = str(definition.metadata.get(LIGHT_SHELF_META, "")).strip_edges()
-	return "" if shelf.is_empty() else LIGHTS_GROUP + SUBCATEGORY_SEPARATOR + shelf
+	var shelf: String = str(definition.metadata.get(SCENE_SHELF_META, "")).strip_edges()
+	if shelf.is_empty():
+		return ""
+	var group: String = str(definition.metadata.get(SCENE_GROUP_META, LIGHTS_GROUP)).strip_edges()
+	return group + SUBCATEGORY_SEPARATOR + shelf
 
 
-## L1. Every light row the OPEN SCENE can take, as picker entries: one copy per light per verb its
-## class answers to, with the light already chosen. Which verbs a light can take is derived - a row
-## hosted on a class this light inherits - so a SpotLight3D is offered the Light3D words and its own
-## cone angle without either being listed anywhere.
+## L1/L4/L6. Every row the OPEN SCENE's own lighting nodes can take, as picker entries: one copy per
+## node per verb its class answers to, with the node already chosen. Which verbs a node can take is
+## derived - a row hosted on a class that node inherits - so a SpotLight3D is offered the Light3D
+## words and its own cone angle, and a WorldEnvironment the atmosphere words, without either being
+## listed anywhere.
 ##
-## Pure + static (a sheet and a registry in, definitions out), so the shelf is pinned headless.
-static func light_row_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+## Pure + static (a sheet and a registry in, definitions out), so the shelves are pinned headless.
+static func scene_lighting_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
 	var out: Array[ACEDefinition] = []
 	if sheet == null or registry == null:
 		return out
-	var lights: Array[Dictionary] = EventSheetSceneLights.for_script(sheet.external_source_path)
-	if lights.is_empty():
-		return out
-	var light_verbs: Array[ACEDefinition] = []
-	for definition: ACEDefinition in registry.get_all_definitions():
-		if EventForgeLightWords.is_light_class(str(definition.metadata.get("node_type", ""))):
-			light_verbs.append(definition)
-	for light: Dictionary in lights:
-		var shelf: String = light_shelf_label(light)
-		for definition: ACEDefinition in light_verbs:
-			if not ClassDB.is_parent_class(str(light["class"]), str(definition.metadata.get("node_type", ""))):
-				continue
-			# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate()
-			# would hand back a blank definition that still looks valid.
-			var offered: ACEDefinition = definition.copy()
-			offered.metadata[LIGHT_TARGET_META] = str(light["reference"])
-			offered.metadata[LIGHT_SHELF_META] = shelf
-			out.append(offered)
+	for shelf_kind: Dictionary in SCENE_SHELVES:
+		var root: String = str(shelf_kind["root"])
+		for node: Dictionary in _scene_lighting_nodes(str(sheet.external_source_path), root):
+			var shelf: String = scene_node_shelf_label(node)
+			for definition: ACEDefinition in registry.get_all_definitions():
+				var node_type: String = str(definition.metadata.get("node_type", ""))
+				if not _shelf_offers(node_type, root):
+					continue
+				if not ClassDB.is_parent_class(str(node["class"]), node_type):
+					continue
+				# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so
+				# duplicate() would hand back a blank definition that still looks valid.
+				var offered: ACEDefinition = definition.copy()
+				offered.metadata[SCENE_TARGET_META] = str(node["reference"])
+				offered.metadata[SCENE_SHELF_META] = shelf
+				offered.metadata[SCENE_GROUP_META] = str(shelf_kind["group"])
+				out.append(offered)
 	return out
 
 
-## L1. One light's line on the shelf: its name, the class it is, and whether it casts shadows -
-## the three facts that decide which row a reader wants and whether it will do anything.
-static func light_shelf_label(light: Dictionary) -> String:
-	var label: String = "%s   %s" % [str(light.get("name", "")), str(light.get("class", ""))]
-	if bool(light.get("shadows", false)):
+## The nodes one shelf is about: every light of the scene when the shelf names no class, and the
+## nodes of that class when it does.
+static func _scene_lighting_nodes(source_path: String, root: String) -> Array[Dictionary]:
+	if root.is_empty():
+		return EventSheetSceneLights.for_script(source_path)
+	return EventSheetSceneLights.nodes_of_class(source_path, root)
+
+
+## True when a verb hosted on `node_type` belongs on a shelf whose own class is `root` - any light
+## for the lights shelf, that class or a subclass of it for the other two.
+static func _shelf_offers(node_type: String, root: String) -> bool:
+	if node_type.strip_edges().is_empty():
+		return false
+	if root.is_empty():
+		return EventForgeLightWords.is_light_class(node_type)
+	return ClassDB.class_exists(node_type) and ClassDB.is_parent_class(node_type, root)
+
+
+## L1/L4/L6. One node's line on the shelf: its name, the class it is, and - for a light - whether it
+## casts shadows. The facts that decide which row a reader wants and whether it will do anything.
+static func scene_node_shelf_label(node: Dictionary) -> String:
+	var label: String = "%s   %s" % [str(node.get("name", "")), str(node.get("class", ""))]
+	if bool(node.get("shadows", false)):
 		label += " %s %s" % [SHELF_BULLET, EventSheetL10n.translate("casts shadows")]
 	return label
 
@@ -1393,12 +1428,12 @@ func _refresh_tree() -> void:
 		for function_definition: ACEDefinition in function_call_definitions(_open_sheet(), _registry):
 			if function_matches_query(function_definition, query):
 				definitions.append(function_definition)
-	# L1 - and so are the LIGHTS of the open scene: the same verbs, one copy per light, with the
-	# light already chosen. Browsed as well as searched, because "which of my lights" is the question
-	# a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
+	# L1/L4/L6 - and so are the LIGHTING NODES of the open scene: the same verbs, one copy per node,
+	# with the node already chosen. Browsed as well as searched, because "which of my lights" is the
+	# question a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
 	if not signals_only:
-		for light_definition: ACEDefinition in light_row_definitions(_open_sheet(), _registry):
-			if filtering and not (light_definition.display_name.to_lower().contains(query.to_lower()) 					or str(light_definition.metadata.get(LIGHT_TARGET_META, "")).to_lower().contains(query.to_lower())):
+		for light_definition: ACEDefinition in scene_lighting_definitions(_open_sheet(), _registry):
+			if filtering and not (light_definition.display_name.to_lower().contains(query.to_lower()) 					or str(light_definition.metadata.get(SCENE_TARGET_META, "")).to_lower().contains(query.to_lower())):
 				continue
 			definitions.append(light_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
@@ -1488,9 +1523,9 @@ func _refresh_tree() -> void:
 		if not multiplayer_key.is_empty():
 			group_key = multiplayer_key
 			is_node_type_group = false
-		# L1 - a row the picker built for one light of the open scene is filed under that light,
-		# not under the class of light it is: the reader picked "Torch", not "PointLight2D".
-		var light_key: String = light_group_key(definition)
+		# L1/L4/L6 - a row the picker built for one node of the open scene is filed under that node,
+		# not under the class it is: the reader picked "Torch", not "PointLight2D".
+		var light_key: String = scene_lighting_group_key(definition)
 		if not light_key.is_empty():
 			group_key = light_key
 			is_node_type_group = false
@@ -2736,9 +2771,9 @@ func _commit_definition(definition: ACEDefinition) -> void:
 		var initial_values: Dictionary = context.get("existing_params", {})
 		initial_values["function_name"] = target_function
 		context["existing_params"] = initial_values
-	# L1 - a light entry is the ordinary node-scoped row with its target already chosen, so the
-	# params dialog opens on the value instead of asking again which light was meant.
-	var aimed_light: String = str(definition.metadata.get(LIGHT_TARGET_META, ""))
+	# L1/L4/L6 - a shelf entry is the ordinary node-scoped row with its target already chosen, so
+	# the params dialog opens on the value instead of asking again which node was meant.
+	var aimed_light: String = str(definition.metadata.get(SCENE_TARGET_META, ""))
 	if not aimed_light.is_empty():
 		var light_values: Dictionary = context.get("existing_params", {})
 		light_values["target"] = aimed_light

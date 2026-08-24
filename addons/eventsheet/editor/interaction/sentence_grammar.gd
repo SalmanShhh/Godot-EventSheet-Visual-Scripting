@@ -13798,7 +13798,7 @@ const ENVIRONMENT_SWITCHES: Dictionary = {
 ## X9. The environment knobs that carry a value, as {member: the sentence}. A closed family on
 ## purpose: an environment property nobody has a plain word for keeps the property write it is.
 const ENVIRONMENT_VALUES: Dictionary = {
-	"fog_density": "Set fog density to {value}",
+	"fog_density": "Set fog thickness to {value}",
 	"fog_light_color": "Set fog colour to {value}",
 	"fog_sky_affect": "Set fog over the sky to {value}",
 	"glow_intensity": "Set glow strength to {value}",

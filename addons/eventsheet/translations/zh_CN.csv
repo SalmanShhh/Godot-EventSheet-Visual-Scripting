@@ -3469,7 +3469,7 @@ Set ambient occlusion on,开启环境光遮蔽
 Set bar width to {value},将条宽设为 {value}
 Set camera distance to {value},将摄像机距离设为 {value}
 Set fog colour to {value},将雾颜色设为 {value}
-Set fog density to {value},将雾浓度设为 {value}
+Set fog thickness to {value},将雾的浓稠度设为 {value}
 Set fog off,关闭雾
 Set fog on,开启雾
 Set fog over the sky to {value},将天空上的雾设为 {value}
@@ -4548,3 +4548,14 @@ Only the owner of this object runs it now.,现在只有这个对象的所有者�
 "Set to run %d copies, tagged %s.",已设置为运行 %d 个副本，标记为 %s。
 instance %d,实例 %d
 casts shadows,投射阴影
+%d occluder blocks the light on this layer,%d 个遮挡器挡住了该层的光
+%d occluders block the light on this layer,%d 个遮挡器挡住了该层的光
+%s casts shadows and no occluder's mask matches - shadows never appear,%s 会投射阴影，但没有遮挡器的遮罩匹配 - 阴影永远不会出现
+kept inside this scene - nothing else can see the change,保存在本场景内 - 其他场景看不到改动
+used by this scene only,仅本场景使用
+shared with %d other scene,与另外 %d 个场景共用
+shared with %d other scenes,与另外 %d 个场景共用
+also in,也在
+select the light,选中该灯光
+select the node,选中该节点
+tinted,色调

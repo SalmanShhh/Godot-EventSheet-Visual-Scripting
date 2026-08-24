@@ -63,8 +63,8 @@ static func _test_the_picker_shelf() -> bool:
 	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
 	registry.refresh_from_sources([], true)
 	var shelves: Dictionary = {}
-	for offered: ACEDefinition in ACEPickerDialog.light_row_definitions(sheet, registry):
-		var key: String = ACEPickerDialog.light_group_key(offered)
+	for offered: ACEDefinition in ACEPickerDialog.scene_lighting_definitions(sheet, registry):
+		var key: String = ACEPickerDialog.scene_lighting_group_key(offered)
 		if not shelves.has(key):
 			shelves[key] = PackedStringArray()
 		var listed: PackedStringArray = shelves[key]
@@ -85,7 +85,7 @@ static func _test_the_picker_shelf() -> bool:
 			"LightSetColour3D", "LightColour3D", "LightLit3DOn", "LightLit3DOff", "LightIsLit3D",
 			"LightShadows3DOn", "LightShadows3DOff", "LightIsShadows3D"])) and ok
 	return _check("and a sheet no scene lights has no shelf at all",
-		ACEPickerDialog.light_row_definitions(EventSheetResource.new(), registry).size(), 0) and ok
+		ACEPickerDialog.scene_lighting_definitions(EventSheetResource.new(), registry).size(), 0) and ok
 
 
 ## The whole map, as one table of answers: for every light class, the property each of the five

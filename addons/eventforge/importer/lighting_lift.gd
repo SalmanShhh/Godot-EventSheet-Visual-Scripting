@@ -32,15 +32,25 @@ const TARGET: String = "(?<target>\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-
 ## The call a fade is written as - the one spelling that names no property of its own.
 const FADE_CALL: String = "tween_property"
 
+## L4/L6. The two lighting nodes that are not lights, and the member the World rows all write
+## through. A darkness line and a light's colour line are spelled identically (`X.color = ...`), so
+## which of them a line IS depends entirely on what the scene says X is - which is exactly what the
+## guard below asks, and why neither can be claimed without it.
+const DARKNESS_HOST: String = "CanvasModulate"
+const WORLD_HOST: String = "WorldEnvironment"
+const ENVIRONMENT_MEMBER: String = "environment"
+
 ## The sample node one class is given in a generated fixture, so every entry can write a line whose
-## target really is a light of the kind that entry is about. Doubles as the fixture's whole scene:
+## target really is a node of the kind that entry is about. Doubles as the fixture's whole scene:
 ## `lift_fixture_context` notes exactly these.
 const FIXTURE_NODES: Dictionary = {
 	"PointLight2D": "Torch",
 	"DirectionalLight2D": "Moonlight",
 	"OmniLight3D": "Bulb",
 	"SpotLight3D": "Flashlight",
-	"DirectionalLight3D": "Sun"
+	"DirectionalLight3D": "Sun",
+	DARKNESS_HOST: "Level",
+	WORLD_HOST: "World"
 }
 
 ## What a generated fixture sets a light to. One per kind of field, because a colour is written as a
@@ -80,8 +90,20 @@ static func note_source(source: String, script_path: String) -> void:
 		if declared.is_empty():
 			declared = str(target_classes.get(
 				EventSheetSceneLights.reference_key(hit.get_string("value")), ""))
-		if W.is_light_class(declared):
+		if addresses(declared):
 			target_classes[hit.get_string("name")] = declared
+
+
+## True when a class is one this vocabulary has rows for: any light, the CanvasModulate darkness
+## sits on, or the WorldEnvironment the atmosphere rows write through. The gate on which declared
+## variables are worth remembering - a `var speed: float` is nobody's light.
+static func addresses(class_text: String) -> bool:
+	var text: String = class_text.strip_edges()
+	if W.is_light_class(text):
+		return true
+	if not ClassDB.class_exists(text):
+		return false
+	return ClassDB.is_parent_class(text, DARKNESS_HOST) or ClassDB.is_parent_class(text, WORLD_HOST)
 
 
 ## The row one statement means, or {} when no spelling claims it. `line` is a single statement,
@@ -119,9 +141,96 @@ static func lift_entries() -> Array[Dictionary]:
 				entries.append(_value_entry(word, row))
 				if bool(word.get("fades", false)):
 					entries.append(_fade_entry(row))
+	entries.append_array(_scene_object_entries())
+	for mark: String in ["color", ENVIRONMENT_MEMBER]:
+		if not marks.has(mark):
+			marks.append(mark)
 	_entries = entries
 	_marks = marks
 	return _entries
+
+
+## L4/L6 - the two nodes that are not lights. The darkness pair writes a CanvasModulate's colour;
+## the World rows all write a property of the environment a WorldEnvironment holds, which is why
+## every one of their patterns goes through `.environment.` and none of them can be confused with a
+## light. Written out rather than derived, because these are not a WORD map with spellings per
+## class: each is one property with one plain sentence, and there is only one class to ask.
+static func _scene_object_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = [
+		_object_entry("DarknessSet", DARKNESS_HOST, "color", FIXTURE_COLOUR),
+		_tween_entry("DarknessFade", DARKNESS_HOST, "", "color", FIXTURE_COLOUR)
+	]
+	for switch: Array in [["WorldFogOn", "fog_enabled", "true"], ["WorldFogOff", "fog_enabled", "false"],
+			["WorldGlowOn", "glow_enabled", "true"], ["WorldGlowOff", "glow_enabled", "false"]]:
+		entries.append(_switch_of(str(switch[0]), WORLD_HOST, _through_environment(str(switch[1])),
+			str(switch[2])))
+	entries.append(_object_entry("WorldSetFogThickness", WORLD_HOST,
+		_through_environment("fog_density"), FIXTURE_VALUE))
+	entries.append(_object_entry("WorldSetAmbientLight", WORLD_HOST,
+		_through_environment("ambient_light_energy"), FIXTURE_VALUE))
+	entries.append(_tween_entry("WorldFadeGlow", WORLD_HOST, ".%s" % ENVIRONMENT_MEMBER,
+		"glow_intensity", FIXTURE_VALUE))
+	return entries
+
+
+## One property reached THROUGH the environment - the shape every World row's line has.
+static func _through_environment(property: String) -> String:
+	return "%s.%s" % [ENVIRONMENT_MEMBER, property]
+
+
+## A member path as a PATTERN reads it. A World row reaches through `environment.`, and an unescaped
+## dot in a regex matches any character at all - so without this, `fog_density` would also be claimed
+## off a line that spelled the reach some other way.
+static func _literal(member_path: String) -> String:
+	return member_path.replace(".", "\\.")
+
+
+## `<node>.<property> = <anything>` on a node the scene says is `host_class`.
+static func _object_entry(ace_id: String, host_class: String, property: String, sample: String) -> Dictionary:
+	return {
+		"id": "%s_%s_set" % [property.replace(".", "_"), host_class.to_lower()],
+		"ace_id": ace_id,
+		"pattern": "^%s\\.%s = (?<value>.+)$" % [TARGET, _literal(property)],
+		"params": ["target", "value"],
+		"guard": _guard_of(host_class),
+		"shape": "{target}.%s = {value}" % property,
+		"slots": {"target": _fixture_node(host_class), "value": sample}
+	}
+
+
+## `<node>.<property> = true` / `= false` - a switch, whose two answers are two rows.
+static func _switch_of(ace_id: String, host_class: String, property: String, written: String) -> Dictionary:
+	return {
+		"id": "%s_%s_%s" % [property.replace(".", "_"), host_class.to_lower(), written],
+		"ace_id": ace_id,
+		"pattern": "^%s\\.%s = %s$" % [TARGET, _literal(property), written],
+		"params": ["target"],
+		"guard": _guard_of(host_class),
+		"shape": "{target}.%s = %s" % [property, written],
+		"slots": {"target": _fixture_node(host_class)}
+	}
+
+
+## The one-line tween a fade is, for a node that is not a light. `reach` is what sits between the
+## node and the tweened property (`.environment` for the World rows, nothing for darkness), and the
+## VALUE capture is greedy so a `Color(0.3, 0.3, 0.36)` with commas in it is still one value.
+static func _tween_entry(ace_id: String, host_class: String, reach: String, property: String,
+		sample: String) -> Dictionary:
+	return {
+		"id": "%s_%s_fade" % [property, host_class.to_lower()],
+		"ace_id": ace_id,
+		"pattern": "^create_tween\\(\\)\\.tween_property\\((?<target>[^,]+)%s, \"%s\", "\
+			% [_literal(reach), property] + "(?<value>.+), (?<seconds>[^,)]+)\\)$",
+		"params": ["target", "value", "seconds"],
+		"guard": _guard_of(host_class),
+		"shape": "create_tween().tween_property({target}%s, \"%s\", {value}, {seconds})" % [reach, property],
+		"slots": {"target": _fixture_node(host_class), "value": sample, "seconds": FIXTURE_SECONDS}
+	}
+
+
+## The sample node one class answers to in a generated fixture.
+static func _fixture_node(host_class: String) -> String:
+	return "$%s" % str(FIXTURE_NODES.get(host_class, "Torch"))
 
 
 ## `<light>.energy = 1.2` - the property this class answers the word with, set to anything.
@@ -184,7 +293,13 @@ static func _entry_id(row: Dictionary, doing: String) -> String:
 ## this row's own host class. Bound rather than written per entry, because the question is the same
 ## one every time and only the class changes.
 static func _guard_for(row: Dictionary) -> Callable:
-	return Callable(EventForgeLightingLift, "_target_is").bind(str(row["host"]))
+	return _guard_of(str(row["host"]))
+
+
+## The same guard for a class named directly - what the darkness and World entries bind, since they
+## have one class each rather than a row per spelling.
+static func _guard_of(host_class: String) -> Callable:
+	return Callable(EventForgeLightingLift, "_target_is").bind(host_class)
 
 
 ## True when the line's target really is a light of `host_class`. The whole of the "never guess"
@@ -201,7 +316,7 @@ static func _target_is(captures: Dictionary, host_class: String) -> bool:
 ## The node a generated fixture line points at: one of this row's own classes, by the sample name
 ## `lift_fixture_context` notes for it.
 static func _fixture_target(row: Dictionary) -> String:
-	return "$%s" % str(FIXTURE_NODES.get(str(row["classes"][0]), "Torch"))
+	return _fixture_node(str(row["classes"][0]))
 
 
 ## The scene a GENERATED fixture cannot have: the harness builds `$Torch.energy = 1.2` out of the
