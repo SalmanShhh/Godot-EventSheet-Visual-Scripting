@@ -1,14 +1,17 @@
 # EventForge - the project-wide fact caches must be droppable, and the dock must drop them.
 #
-# THE CONTRACT: two reads behind what a row SAYS are project-wide and were kept for the whole
+# THE CONTRACT: several reads behind what a row SAYS are project-wide and were kept for the whole
 # session - the .tscn index that names the object a script drives (object labels, sheet titles,
-# thumbnails) and the Input Map read out of project.godot (every row that names an action). A scene
-# saved or an action added mid-session left both answering for a project that no longer exists.
+# thumbnails), the Input Map read out of project.godot (every row that names an action), and what
+# the scene says about its lighting (the head's bands, the picker's shelf, and the gate the lift
+# asks before claiming a line as a light row). A scene saved or an action added mid-session left
+# every one of them answering for a project that no longer exists.
 #
-# Both are now dropped from the dock's editor hooks: the filesystem ping drops the scene index and
-# the Input Map, and Project Settings changing drops the Input Map (adding an action there never
-# touches the filesystem scan, so the file hook alone could not see it). This pins the droppers
-# themselves AND the wiring, because a working clear that nothing calls is the bug it was.
+# They are now dropped from the dock's editor hooks: the filesystem ping drops the scene index, the
+# Input Map and the lighting reads, and Project Settings changing drops the Input Map (adding an
+# action there never touches the filesystem scan, so the file hook alone could not see it). This
+# pins the droppers themselves AND the wiring, because a working clear that nothing calls is the bug
+# it was - and it is the bug each of these was, one at a time.
 @tool
 class_name FactCacheInvalidationTest
 extends RefCounted
@@ -47,6 +50,21 @@ static func run() -> bool:
 		", ".join(EventSheetInputMapFacts.project_action_names()),
 		", ".join(warm_actions)) and all_passed
 
+	# ── The scene's LIGHTING drops and rebuilds ─────────────────────────────────────────────
+	# The same shape again, and the sharpest case of it: what class a node reference is, which is the
+	# gate the lift asks before claiming a line as a light row. Held for the session, a light added to
+	# the scene stayed invisible and a deleted one went on being claimed until the editor restarted.
+	var lit_script: String = "res://tests/fixtures/lighting_scene_room.gd"
+	var warm_lights: int = EventSheetSceneLights.for_script(lit_script).size()
+	all_passed = _check("the room's lights are read off its scene", warm_lights, 3) and all_passed
+	EventSheetSceneLights.clear_cache()
+	all_passed = _check("clear_cache() empties the scene read",
+		EventSheetSceneLights._cache.size(), 0) and all_passed
+	all_passed = _check("the next question re-reads the scene and answers the same",
+		EventSheetSceneLights.for_script(lit_script).size(), warm_lights) and all_passed
+	all_passed = _check("the class behind a node reference comes back too",
+		EventSheetSceneLights.class_of_reference(lit_script, "$Torch"), "PointLight2D") and all_passed
+
 	# ── The dock actually calls both ────────────────────────────────────────────────────────
 	# Source lint, not a live dock: constructing the dock needs a display server. What matters is
 	# that the two hooks name the droppers, and that both hooks are connected at all.
@@ -56,6 +74,10 @@ static func run() -> bool:
 		filesystem_hook.contains("ViewportRowBuilder.clear_scene_script_index()"), true) and all_passed
 	all_passed = _check("the filesystem hook drops the Input Map read",
 		filesystem_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed
+	all_passed = _check("the filesystem hook drops what the scene said about its lights",
+		filesystem_hook.contains("EventSheetSceneLights.clear_cache()"), true) and all_passed
+	all_passed = _check("and the environment-sharing scan behind the head's band",
+		filesystem_hook.contains("EventSheetSceneLightingFacts.clear_cache()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
 	all_passed = _check("the settings hook drops the Input Map read",
 		settings_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed

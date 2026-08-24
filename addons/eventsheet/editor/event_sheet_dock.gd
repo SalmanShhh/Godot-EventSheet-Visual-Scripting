@@ -553,6 +553,13 @@ func _on_translations_maybe_changed() -> void:
 	# by another tool writing the file) only lands here when the read is dropped. The editor rescans
 	# on both, so this hook covers the settings change as well as the file one.
 	EventSheetInputMapFacts.clear_cache()
+	# L4/L6 - and what the SCENE says about lighting: which lights it holds (the head's `lit by`
+	# bands and the picker's shelf), which environment file it shares, and - the one that matters
+	# most - what class each node reference is, because that is the gate the lift asks before it
+	# claims `$Torch.energy = 1.2` as a light row. Kept for the session, a light added to the scene
+	# was invisible and a deleted one went on being claimed until the editor restarted.
+	EventSheetSceneLights.clear_cache()
+	EventSheetSceneLightingFacts.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
