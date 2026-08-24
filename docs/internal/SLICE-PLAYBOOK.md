@@ -145,28 +145,36 @@ matchers, and they say so in a comment.
     memory has no file, so every annotation silently does nothing and a round-trip test written that
     way passes for the wrong reason. Write a real file (`user://` is fine) and `load()` it.
 12. **Adding a file can turn an unrelated file red.** The dogfood gate samples forty files a day from
-    a corpus of ~660, seeded by the day, so growing the corpus moves the sample. The failure names
+    a corpus of ~660 under `addons/` and `tools/`, seeded by the day, so growing OR SHRINKING the
+    corpus moves the sample - deleting your own scratch harnesses at the end of a slice is enough to
+    swap files in and out of it. Delete them before the run you intend to trust. The failure names
     the file and the seed; fix what it found, or write the cause down beside it in the gate's own
     known-list. Do not add an entry to make a red run green.
-13. **Writing a repo file from a script can turn it CRLF.** The tree is LF everywhere (`.gitattributes`
+13. **A table of literals reads as rows that say nothing.** The same gate measures the share of a
+    file's rows with no words of their own, and one line of a list or a dictionary standing alone is
+    one of those. A declarative table written out in full is therefore a readability regression in a
+    file of statements: eight recogniser entries took one importer file from 6% to 25% against a 12%
+    ceiling. Say the regularity once and build the rest (three audiences plus a builder, not six
+    entries) - which is the better code anyway, and is what the ceiling is really asking for.
+14. **Writing a repo file from a script can turn it CRLF.** The tree is LF everywhere (`.gitattributes`
     enforces it), `git add` normalises the file back so `git status` goes quiet, and meanwhile every
     reader that matches a line exactly (`@tool`, the preload head) sees `@tool\r` and stops
     recognising it. Write files with explicit LF endings.
-14. **Per-compile scratch is shared process-wide.** Anything the compiler stores in a static must be
+15. **Per-compile scratch is shared process-wide.** Anything the compiler stores in a static must be
     cleared by every public emission entry point, or a compile in one file changes what an unrelated
     file opens as, minutes later, with nothing naming the cause. `tests/compiler_state_leak_test.gd`
     sweeps for it; if you add a static, that test will tell you to classify it.
-15. **Local `const` in a function cannot hold a `PackedStringArray(...)` call** - it is not a constant
+16. **Local `const` in a function cannot hold a `PackedStringArray(...)` call** - it is not a constant
     expression. Use `const X: Array[String] = [...]`.
-16. **Statics are reached through the SCRIPT OBJECT, not the class name.** `MyClass.get("_x")` is a
+17. **Statics are reached through the SCRIPT OBJECT, not the class name.** `MyClass.get("_x")` is a
     parse error; `(load("res://...gd") as Object).get("_x")` works, and so does `set`. For reflection:
     `get_property_list()` entries with usage `PROPERTY_USAGE_SCRIPT_VARIABLE` are the script's own
     statics, `get_script_constant_map()` holds its consts, and `get_script_method_list()` flags say
     which methods are static.
-17. **A shared checkout is shared.** Another session may be committing to `main` while you work.
+18. **A shared checkout is shared.** Another session may be committing to `main` while you work.
     Stage explicit paths, never `git add -A`; never `git stash`; never `git checkout --` a file you
     did not edit.
-18. **Some tests deliberately lint invalid GDScript.** "Parse Error" lines naming fixtures mid-suite
+19. **Some tests deliberately lint invalid GDScript.** "Parse Error" lines naming fixtures mid-suite
     are expected noise, and a segfault AFTER the verdict line is a known harmless teardown flake.
 
 ---
