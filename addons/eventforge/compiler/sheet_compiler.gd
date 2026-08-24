@@ -80,6 +80,30 @@ static var _behavior_host_default: String = ""
 static var _compile_mutex: Mutex = Mutex.new()
 
 
+## Clears every per-compile static above, and is the ONLY place that does. Each public emission entry
+## point calls it first, so no caller can inherit what the last one left: the flags are shared
+## process-wide, and what they change is never visible where they were set. A behaviour compile
+## leaving `host` standing rewrote the importer's byte gate into `host.move_and_slide()` and dropped
+## an unrelated opened file back to verbatim blocks; a debug compile leaving the event-trace flag
+## standing stapled a trace call into the same gate. Both are the same bug, and one reset is the
+## answer to the whole class of them (tests/compiler_state_leak_test.gd sweeps for the next one).
+##
+## `sheet` is the compile about to run, for the one flag that is a SETTING of the sheet rather than
+## scratch; the text emitters pass nothing, because a gate never emits breakpoints.
+static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
+	_behavior_host_default = ""
+	_emit_breakpoints_flag = sheet != null and sheet.emit_breakpoints
+	_emit_event_trace_flag = false
+	_live_values_payload = ""
+	_live_values_receiver_pending = false
+	_error_reporter_pending = false
+	_throttle_process_emitted = false
+	_runtime_group_guards = {}
+	_runtime_group_members = []
+	_group_slugs = {}
+	_row_group_path = {}
+
+
 ## Compiles an event sheet resource to a GDScript output file.
 ## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header - used when the .gd IS the
 ## user's source of truth (Save As .gd), not a regenerated companion of a .tres sheet.
@@ -109,9 +133,9 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		(result["errors"] as Array[String]).append("Sheet is null")
 		return result
 
-	# Host-targeting default for {host.} templates - reset before the external-source path so a
-	# prior behavior compile never leaks "host" into a later non-behavior compile.
-	_behavior_host_default = ""
+	# Everything the LAST compile left in the scratch above, cleared before the external-source path
+	# so no branch of this function can inherit it (see _reset_per_compile_state).
+	_reset_per_compile_state(sheet)
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -119,13 +143,6 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	if not sheet.external_source_path.is_empty():
 		return _compile_external(sheet, result, output_path)
 
-	_emit_breakpoints_flag = sheet.emit_breakpoints
-	_emit_event_trace_flag = false
-	_throttle_process_emitted = false
-	_runtime_group_guards = {}
-	_runtime_group_members = []
-	_group_slugs = {}
-	_row_group_path = {}
 	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
 	# Include ORDER: an included (library) sheet's events run BEFORE the root sheet's own events -
@@ -716,21 +733,14 @@ static func _write_output_if_changed(path: String, output: String) -> bool:
 ## afterwards append as standard trigger functions at the end. Disabled blocks still emit -
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
-	_live_values_receiver_pending = false
-	_emit_breakpoints_flag = sheet.emit_breakpoints
-	_emit_event_trace_flag = false
-	_live_values_payload = ""
-	_throttle_process_emitted = false
-	# External mode is lossless, so it carries no synthesized debug members - the runtime-error
-	# reporter (like live values) rides sheet-native compiles only.
-	_error_reporter_pending = false
-	# Event groups dissolve into the trigger sections on this path too, so refill the per-compile slug
-	# map for THIS sheet (compile() returns into _compile_external before the main path's reset/collect
-	# runs). The `## @ace_group` declarations ride along verbatim in the preserved prelude rows - we only
-	# need _group_slugs populated so _emit_event_body re-emits the `# @group:` markers (else an imported
-	# grouped sheet would lose them on the next save).
-	_group_slugs = {}
-	_row_group_path = {}
+	# The scratch was cleared by the caller. External mode is lossless, so it carries no synthesized
+	# debug members either - the runtime-error reporter and live values ride sheet-native compiles
+	# only, and their flags stay off for this whole path.
+	#
+	# Event groups dissolve into the trigger sections here too, so refill the per-compile slug map for
+	# THIS sheet. The `## @ace_group` declarations ride along verbatim in the preserved prelude rows -
+	# we only need _group_slugs populated so _emit_event_body re-emits the `# @group:` markers (else an
+	# imported grouped sheet would lose them on the next save).
 	_collect_groups(sheet.events, [], {}, _group_slugs)
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires - the .gd file is the source of truth (write the equivalent code directly).")
@@ -1053,10 +1063,11 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
 ## these events, as text, with no side effects. The handler anchors only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
-## Both text emitters below clear _behavior_host_default first, exactly as compile() does. Their two
-## helpers are reached from _compile_external ONLY, where that default is always "" - so leaving a
-## previous BEHAVIOR compile's "host" standing would emit `host.velocity.y += …` for a line the file
-## spells `velocity.y += …`, the byte gate would refuse it, and every function in the opened file
+## Both text emitters below clear the per-compile scratch first, exactly as compile() does. Their two
+## helpers are reached from _compile_external ONLY, where that scratch is always at its defaults - so
+## leaving a previous BEHAVIOR compile's "host" standing would emit `host.velocity.y += …` for a line
+## the file spells `velocity.y += …` (and a previous DEBUG compile's event-trace flag would staple a
+## trace call into it), the byte gate would refuse the match, and every function in the opened file
 ## would fall back to a verbatim block. The gate has to emit what the compile of this sheet emits.
 ## `group_guards` is {EventRow: guard expression} - what a full compile fills from the group tree
 ## while flattening it. The anchored probe re-emits ONE handler with no groups around it, so a caller
@@ -1064,7 +1075,7 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 ## emission is exactly what it always was.
 static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary = {}) -> String:
 	_compile_mutex.lock()
-	_behavior_host_default = ""
+	_reset_per_compile_state()
 	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
@@ -1076,7 +1087,7 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
 	_compile_mutex.lock()
-	_behavior_host_default = ""
+	_reset_per_compile_state()
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], scratch)
