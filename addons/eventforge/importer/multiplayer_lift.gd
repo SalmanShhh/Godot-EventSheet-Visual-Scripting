@@ -29,7 +29,9 @@ extends RefCounted
 #                 through the sentence grammar, which names the message's own parameters
 #                 ("Send Take Damage to the host  amount = 10") - a row cannot say more than that,
 #                 and a lift is only worth making when the row reads at least as well as the line.
-#   Spawn         `<node>.spawn(<data>)`, claimed by the Spawn template itself (nothing here).
+#   Spawn         `<node>.spawn(<data>)`, claimed by the Spawn template itself (nothing here); the
+#                 four-line AUTO spawn (instance a scene, name it, place it, add it under the
+#                 spawner's own `spawn_path`) is a run, and lifts here.
 #   Triggers      `multiplayer.<signal>.connect(<handler>)` for MultiplayerAPI's five signals.
 #   Owner         `set_multiplayer_authority(…)`, read as a FACT about the script rather than
 #                 lifted to a row: it says who owns this object, which belongs on the sheet head.
@@ -64,7 +66,11 @@ const NETWORKING_MARKS: Array[String] = [
 	"peer_connected", "peer_disconnected", "connected_to_server", "connection_failed",
 	"server_disconnected", "peer_authenticating", "peer_authentication_failed",
 	"complete_auth(", "send_auth(", "disconnect_peer(", "refuse_new_connections",
-	"set_multiplayer_authority(", "get_multiplayer_authority()"
+	"set_multiplayer_authority(", "get_multiplayer_authority()",
+	# M4 - the scene side. `Multiplayer` above already covers a line naming either node class, so what
+	# is left is the calls and the properties those two nodes answer to.
+	"spawn_path", "spawn_function", "set_visibility_for(", "public_visibility",
+	"add_visibility_filter(", "remove_visibility_filter("
 ]
 
 ## The peer variables the file under lift declares: name -> the peer class it was made from. Filled
@@ -95,12 +101,22 @@ static func note_source(source: String) -> void:
 ## try and `depth` its indentation. Returns {ace_id, params, template, consumed} or {}.
 static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
 	var opener: String = _statement_at(lines, index, depth)
-	# Every statement of every opened file passes through here, so the impossible ones are rejected on
-	# a substring before any pattern runs: a run always opens on a peer being made or a connection
-	# being opened, and neither word can be missing from its own line.
-	if opener.is_empty() or not (opener.contains("MultiplayerPeer") or opener.contains("create_server(") \
-			or opener.contains("create_client(")):
+	if opener.is_empty():
 		return {}
+	# Every statement of every opened file passes through here, so the impossible ones are rejected on
+	# a substring before any pattern runs: a connection run always opens on a peer being made or a
+	# connection being opened, and a spawn run always opens on a scene being instanced.
+	if opener.contains("MultiplayerPeer") or opener.contains("create_server(") \
+			or opener.contains("create_client("):
+		return _match_connection_run(lines, index, depth, opener)
+	if opener.contains(".instantiate()"):
+		return _match_spawn_run(lines, index, depth, opener)
+	return {}
+
+
+## Hosting and joining: the two or three statements that only mean something together. `opener` is
+## the statement at `index`, already dedented by the caller.
+static func _match_connection_run(lines: PackedStringArray, index: int, depth: int, opener: String) -> Dictionary:
 	var consumed: int = 0
 	var peer_kind: String = ""
 	var declared: Dictionary = _match_peer_declaration(opener)
@@ -138,6 +154,57 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 		"params": params,
 		"template": "\n".join(template_lines),
 		"consumed": consumed
+	}
+
+
+## M4. The four lines a networked spawn IS: make the copy, name it, place it, and hand it to the
+## node the spawner watches. Deliberately the WHOLE shape and nothing looser - an `instantiate()`
+## followed by an `add_child` is the commonest run in every project ever written, networked or not,
+## and the one thing that makes THIS run a spawn is the last line reading `spawn_path` off a
+## spawner. A three-line version, an `add_child` onto any other parent, or a name and a position in
+## the other order stays the script block it is, and the per-script count says so.
+static func _match_spawn_run(lines: PackedStringArray, index: int, depth: int, opener: String) -> Dictionary:
+	# Group 1 is the whole head of the line - `var __spawn_a1 = load` - kept verbatim so the template
+	# re-emits the author's own spelling of it (`=` or `:=`, `load` or `preload`) rather than a
+	# canonical one the byte gate would then refuse.
+	var made: RegExMatch = _regex("^(var[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*:?=[ \\t]*(?:pre)?load)\\((.*)\\)\\.instantiate\\(\\)$").search(opener)
+	if made == null:
+		return {}
+	var holder: String = made.get_string(2)
+	var named: RegExMatch = _regex("^%s\\.name = (.+)$" % holder).search(_statement_at(lines, index + 1, depth))
+	if named == null:
+		return {}
+	var placed: RegExMatch = _regex("^%s\\.position = (.+)$" % holder).search(_statement_at(lines, index + 2, depth))
+	if placed == null:
+		return {}
+	var added: String = _statement_at(lines, index + 3, depth)
+	# Godot's own samples pass `true` for a readable name, which is what makes the copy's name the
+	# same on every peer - but the row says nothing about it either way, so both spellings lift and
+	# the one that was written is the one that comes back.
+	var tail: String = ".add_child(%s, true)" % holder
+	if not added.ends_with(tail):
+		tail = ".add_child(%s)" % holder
+		if not added.ends_with(tail):
+			return {}
+	var parent: String = added.substr(0, added.length() - tail.length())
+	var spawner: String = parent.get_slice(".get_node(", 0)
+	if spawner.is_empty() or parent != "%s.get_node(%s.spawn_path)" % [spawner, spawner]:
+		return {}
+	return {
+		"ace_id": "SpawnReplicatedScene",
+		"params": {
+			"target": spawner,
+			"scene": made.get_string(3).strip_edges(),
+			"name": named.get_string(1).strip_edges(),
+			"at": placed.get_string(1).strip_edges()
+		},
+		"template": "\n".join(PackedStringArray([
+			"%s({scene}).instantiate()" % made.get_string(1),
+			"%s.name = {name}" % holder,
+			"%s.position = {at}" % holder,
+			"{target}.get_node({target}.spawn_path)%s" % tail
+		])),
+		"consumed": 4
 	}
 
 

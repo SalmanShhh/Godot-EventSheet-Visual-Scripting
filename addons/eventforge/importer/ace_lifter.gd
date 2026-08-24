@@ -1525,7 +1525,14 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"tree_exited": "OnTreeExited",
 	"renamed": "OnRenamed",
 	"child_entered_tree": "OnChildEnteredTree",
-	"child_exiting_tree": "OnChildExitingTree"
+	"child_exiting_tree": "OnChildExitingTree",
+	# M4. The scene side's three. Keyed on the bare signal like every other entry here, and safe for
+	# the same reason: a project with a `spawned` signal of its own reads as "On spawned" either way -
+	# through this table, or through the `signal:<name>` fallback - so the words a reader gets are the
+	# same, and the connect line re-emits from the author's own spelling regardless.
+	"spawned": "OnSpawned",
+	"despawned": "OnDespawned",
+	"synchronized": "OnSynchronized"
 }
 
 ## W18. Two editor signals that only mean what the Editor object says they mean when they came off
@@ -3096,7 +3103,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# it says which of the two a reader means - so the bare line reads as Kick, and Reject authors.
 	# Started as writes `OS.has_feature(tag)`, which is exactly Platform Has Feature's line; that row
 	# already speaks for every feature test in every project, multiplayer tag or not.
-	"RejectPlayer", "StartedAs"
+	"RejectPlayer", "StartedAs",
+	# M4. Despawn writes `queue_free()`, which is the line every project writes to remove any node at
+	# all - the networked meaning is in WHERE it runs (on the owner, with a spawner watching), not in
+	# the line. Admitted to the index it would relabel every removal in every project as a networking
+	# row, so it authors only and a bare `queue_free()` keeps the row it already had.
+	"Despawn"
 ]
 
 
