@@ -4568,3 +4568,294 @@ Make the environment this scene's own,让环境成为这个场景自己的
 "Lighting: %d lit scene(s), %d with something that will not show at run time.",光照：%d 个有光照的场景，其中 %d 个含有运行时看不到的东西。
 This sheet already takes its own copy.,这张事件表已经取了自己的副本。
 This scene has its own environment now - the change stops here.,这个场景现在有了自己的环境 - 改动到此为止。
+Send Message To Everyone,向所有人发送消息
+"Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.",在游戏中的每个对等端上运行一条消息；若消息如此指定，也包括本端。函数必须先被标记为消息。
+Send {message} to everyone {args},将 {message} 发送给所有人 {args}
+Message,消息
+The function marked as a message. Every peer runs it.,被标记为消息的函数。每个对等端都会运行它。
+"Values to send with the message, comma separated.",随消息一起发送的值，用逗号分隔。
+Send Message To The Host,向主机发送消息
+"Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.",只在主机上运行消息 - 主机是决定什么为真的那一端，所以作弊无法被直接发给所有人。
+Send {message} to the host {args},将 {message} 发送给主机 {args}
+The function marked as a message. Only the host runs it.,被标记为消息的函数。只有主机会运行它。
+Send Message To One Peer,向单个对等端发送消息
+"Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.",只在你指定的那个对等端上运行消息 - 用于私下回复，或把纠正结果发回给相关玩家。
+Send {message} to {peer} {args},将 {message} 发送给 {peer} {args}
+The function marked as a message. Only the peer you name runs it.,被标记为消息的函数。只有你指定的对等端会运行它。
+Peer,对等端
+"Who to send it to: the id an event handed you, or Sender to answer whoever asked.",发送给谁：事件交给你的 id，或用 发送方 回复提出请求的那一端。
+Is Host,是主机
+True on the peer that is hosting the game. Put everything that decides what is true behind this.,在托管游戏的那一端为真。凡是决定什么为真的逻辑，都放在这个条件后面。
+Owns This Object,拥有此对象
+True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.,当本端就是可以移动和改动该对象的那一端时为真 - 也就是玩家自己的角色，而不是别人手里的副本。
+My ID,我的 ID
+This peer's own id. The host is always 1; everyone else gets a number when they join.,本端自己的 id。主机始终是 1，其他人加入时各自拿到一个编号。
+MyID,我的ID
+Host A Game,主持一局游戏
+Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.,把这局游戏对其他玩家开放，并让本端成为主机 - 主机的答案会被所有人当作真的。此时还没有人连上；有人加入时会由「玩家加入时」告诉你。
+Host a game on port {port} for up to {max_players} players,在端口 {port} 上主持一局最多 {max_players} 名玩家的游戏
+Port,端口
+The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.,玩家连接的端口。1024 到 65535 之间随你挑，但两边必须用同一个号。
+Players,玩家数
+"How many peers may connect. The host is not one of them, so 4 here means the host plus four others.",可以连入的对等端数量。主机不算在内，所以这里填 4 表示主机再加四个人。
+Using,通信方式
+How the game talks over the network. ENet unless the game runs in a browser.,游戏在网络上通信的方式。除非游戏跑在浏览器里，否则用 ENet。
+ENet - desktop and mobile,ENet - 桌面与移动端
+WebSocket - also works in a browser,WebSocket - 浏览器里也能用
+"WebRTC - browser, peer to peer",WebRTC - 浏览器，点对点
+Join A Game,加入一局游戏
+Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.,请求主机放本端进去。答复稍后以「加入主机时」或「加入失败时」到来 - 这一行执行的当下还没有任何连接。
+Join a game at {address} port {port},加入 {address} 端口 {port} 的游戏
+Address,地址
+"Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.",主机在哪里。127.0.0.1 就是本机；在家庭网络里是主机的局域网地址，通过互联网则是主机对外公布的地址。
+The port the host opened. It has to be the same number the host used.,主机开放的端口。必须和主机用的号一致。
+How the game talks over the network. It has to match what the host is using.,游戏在网络上通信的方式。必须与主机所用的一致。
+Leave The Game,离开游戏
+"Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.",断开本端的连接，把游戏退回单人。若在主机上执行，所有人的游戏都会结束，因为再没有人回应他们了。
+Leave the game,离开游戏
+Spawn,生成
+Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.,在主机和每个对等端上同时生成一份场景副本。只有主机可以调用；其他人接收这份副本。
+Spawn {data},生成 {data}
+Spawner,生成器
+"The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.",负责生成副本的 MultiplayerSpawner。由它决定是哪个场景、放在树的什么位置。
+What to send,要发送的内容
+"What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.",交给生成器去做什么。若生成器有读取它的生成函数，就填一个普通值；若它的场景列表已经够用，就什么都不填。
+Kick Player,踢出玩家
+Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.,由主机断开某位玩家的连接。只有主机可以这么做 - 想踢人的客户端应向主机发消息，由主机决定。
+Kick player {id},踢出玩家 {id}
+Player,玩家
+"The peer id to drop. On player left then runs on everybody, the dropped peer included.",要断开的对等端 id。之后「玩家离开时」会在所有人身上运行，包括被踢的那一端。
+Stop Accepting Players,停止接纳玩家
+"Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.",在不结束游戏的前提下关闭大厅：已经进来的人照旧，其他人再也进不来。比赛开始时，或最后一个位置被占时执行。
+Stop accepting players,停止接纳玩家
+Relay Messages Between Players,在玩家之间转发消息
+"Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.",主机是否在客户端之间转发消息。在由主机决定什么为真的游戏里，关闭更安全 - 这样客户端之间无法背着主机私聊。
+Relay messages between players {on},将玩家之间的消息转发设为 {on}
+Relay,转发
+"On, the host passes a message from one client on to another. Off, a client can only reach the host.",开启后，主机会把一个客户端的消息转给另一个客户端。关闭时，客户端只能连到主机。
+Accept Player,接纳玩家
+"Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.",为某个对等端完成握手：它算作已加入，并触发「玩家加入时」。既没被接纳也没被拒绝的对等端只会一直等着，所以每次握手都需要这两者之一。
+Accept player {id},接纳玩家 {id}
+The peer whose handshake is finished - the id On player authenticating gave you.,要完成握手的对等端 - 也就是「玩家验证时」交给你的 id。
+Reject Player,拒绝玩家
+Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.,把没能证明自己身份的对等端挡回去。那一端会收到「加入失败时」，游戏里的其他人不会知道。
+Reject player {id},拒绝玩家 {id}
+"The peer to turn away. It never counted as joined, so On player left does not run for it.",要拒绝的对等端。它从未算作加入，所以「玩家离开时」不会为它运行。
+Send Auth,发送验证数据
+"Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.",发送握手一方希望另一方核对的字节 - 密码、令牌、版本号。它们在对等端算作加入之前就已传送，因此这不是普通消息。
+Send auth {data} to player {id},将验证数据 {data} 发送给玩家 {id}
+Who to send it to. A client answering the host sends to 1.,发送给谁。回复主机的客户端发给 1。
+Data,数据
+"The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.",要发送的字节。var_to_bytes(...) 把一个值变成字节，另一端用 bytes_to_var(...) 读回来。
+Give To Player,移交给玩家
+"Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.",把一个对象移交给某位玩家：从此只有那一端可以移动它，「拥有此对象」也只在那里为真。请在每个对等端上执行 - 只由主机自己决定，会让其他人对谁拥有什么各执一词。
+Give {target} to player {id},将 {target} 移交给玩家 {id}
+The node whose owner changes. Its children follow it unless one was given an owner of its own.,所有者发生变化的节点。它的子节点会跟着走，除非某个子节点被单独指定了所有者。
+The peer that may now move and change it. Everybody else keeps a copy they may only read.,从现在起可以移动和改动它的那一端。其他人保留一份只能读取的副本。
+Is Connected,已连接
+"True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.",一旦本端真的身处一局游戏中就为真 - 自己在主持，或已被主机接纳。加入请求还没有回音时保持为假，而那正是大厅界面该继续等待的时刻。
+Is connected,已连接
+Started As,以何种身份启动
+"True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.",当这个构建带有指定的导出标签时为真，于是同一个项目既能自己当主机、自己加入，也能作为无界面服务器运行。真正的服务器构建从 Dedicated Server 导出预设拿到标签，并以 --headless 启动。
+Started as {tag},以 {tag} 身份启动
+Tag,标签
+The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.,这个构建导出时带的功能标签。host 和 client 是你自己给两个预设加的标签；dedicated_server 由 Godot 自带的服务器预设设置。
+"The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.",游戏中所有其他对等端的 id，返回为一个列表。本端不在其中 - 那是「我的 ID」。
+Player Count,玩家数量
+How many other peers are in the game. Add one for this peer when the number a player reads should include them.,游戏中其他对等端的数量。若玩家看到的数字应把自己算上，请再加一。
+Player count,玩家数量
+Sender,发送方
+"Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.",在消息内部，发出该消息的对等端 id - 这是消息唯一无法伪造的东西，所以在相信它的要求之前先核对它。在其他地方它是 0。
+Owner Of,所有者
+"The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.",拥有某个对象的对等端 id - 也就是可以移动它的那一端。在有人转交之前它是 1，因为一开始一切都属于主机。
+Owner of {target},{target} 的所有者
+The node to ask about. Its owner is the peer allowed to move and change it.,要询问的节点。它的所有者就是可以移动和改动它的那一端。
+On Player Joined,玩家加入时
+"Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.",当另一个对等端连上时运行 - 在主机上，也在每个已经在游戏里的对等端上。由主机来发放新玩家所需要的东西。
+On player joined {id},玩家 {id} 加入时
+The id of the peer that just joined. Whatever a new player needs is sent to this id.,刚刚加入的对等端 id。新玩家需要的东西就发给这个 id。
+On Player Left,玩家离开时
+"Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.",当某个对等端断开时运行，无论是退出、崩溃还是掉线。属于那位玩家的东西在这里清理。
+On player left {id},玩家 {id} 离开时
+"The id of the peer that just left. It is already gone, so nothing can be sent to it.",刚刚离开的对等端 id。它已经走了，什么都发不过去。
+On Joined The Host,加入主机时
+Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.,在加入方的对等端上运行，一旦主机接纳它就触发。大厅界面在这里让位给游戏。
+On joined the host,加入主机时
+On Join Failed,加入失败时
+"Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.",在试图加入的对等端上运行，当主机始终没有回应或拒绝了它 - 地址不对、端口不对，或者这局游戏不再接纳玩家。
+On join failed,加入失败时
+On The Host Left,主机离开时
+Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.,当主机消失时，在每个仍在线的对等端上运行。对他们来说这局已经结束：在这里把他们送回菜单。
+On the host left,主机离开时
+On Player Authenticating,玩家验证时
+Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.,在对等端还在证明自己身份时于主机上运行，早于「玩家加入时」。用「接纳玩家」或「拒绝玩家」来回应；对方发来的字节通过验证回调到达。
+On player authenticating {id},玩家 {id} 验证时
+The id of the peer that is trying to join. It is not in the game yet.,正在尝试加入的对等端 id。它还没进入游戏。
+On Authentication Failed,验证失败时
+"Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.",当某个对等端始终没能证明自己身份时运行 - 答案不对，或者没人及时回应。该端会被断开；在这里显示原因。
+On authentication failed {id},玩家 {id} 验证失败时
+The id of the peer whose handshake did not finish.,握手未能完成的对等端 id。
+Spawn A Scene,生成一个场景
+"Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.",在主机和每个对等端上同时生成一份场景副本。只有主机可以执行，其他人从生成器那里收到副本 - 所以这个场景必须在该生成器的列表里。
+Spawn {scene} named {name} at {at},在 {at} 生成名为 {name} 的 {scene}
+The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.,负责盯着这份副本的 MultiplayerSpawner：它带着场景列表，以及副本要挂到的路径。
+"The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.",要创建的场景，取自该生成器可生成的场景列表。若还不在列表里，应用这一行时会被加进去。
+"What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.",副本要叫什么名字。通常用玩家的 id 来命名，因为副本正是靠它把该玩家设为自己的所有者。
+"Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.",放在哪里 - 2D 场景用一个点，3D 场景用 Vector3。它在副本进入树之前就设好，所以副本不会先出现在原点。
+Despawn,移除
+"Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.",把这份副本从所有地方移出游戏。请在拥有该对象的那一端执行：当初生成它的生成器会看到它离开，并在其他每一端把它移除，无需手工发送任何东西。
+Show To Player,对某位玩家显示
+"Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.",让某位玩家看到这个同步器所同步的内容。可见性是按对等端决定的，所以游戏可以把一手牌、一支被侦察到的单位，或者没有别人在的房间，只留给它所属的那位玩家。
+Show to player {id},对玩家 {id} 显示
+The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.,从现在起可以看到它的那一端。它开始接收这个同步器所同步的内容。
+Hide From Player,对某位玩家隐藏
+"Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.",不再向某位玩家发送这个同步器所同步的内容。该端上的节点不会被删除，只是不再收到 - 这样本不该被看到的值，也无法从数据包里读出来。
+Hide from player {id},对玩家 {id} 隐藏
+The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.,不再看到它的那一端。在重新显示之前，这个节点的任何内容都不会发给它。
+Show To Everyone,对所有人显示
+"Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.",把这个同步器恢复为所有玩家都能看到，无论之前按端做过什么显示或隐藏。它本来就是这个初始设置，所以这一行是用来撤销隐藏，而不是游戏必须先写的一句。
+Show to everyone,对所有人显示
+Ask A Function Who May See It,让函数决定谁能看到
+"Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.",把「谁能看到」这个问题交给一个函数，而不是逐个玩家去回答。玩家进出时会被反复询问，所以像同一房间、同一队伍这样的规则会自己保持成立，不需要任何一行去说。
+Ask {filter} who may see it,让 {filter} 决定谁能看到
+"The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.",负责回答的函数。它会收到某位玩家的 id，若该玩家可以看到这个节点就返回 true - 填本事件表里的函数名，不带括号。
+On Spawned,生成时
+"Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.",当这个生成器造出一份副本的那一刻，在包括主机在内的每个对等端上运行。这里是把副本接进游戏其余部分的地方：往记分板加个名字，把摄像机对准它。
+On spawned {node},{node} 生成时
+"The copy that has just been made - the same node, on every peer that got it.",刚刚生成的副本 - 在收到它的每个对等端上都是同一个节点。
+On Despawned,移除时
+"Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.",当这个生成器把一份副本撤走时，在每个对等端上运行 - 无论是所有者主动移除，还是它所属的玩家离开了游戏。指向那份副本的东西在这里清理。
+On despawned {node},{node} 移除时
+"The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.",正在离开的副本。这段运行时它仍在树里，所以还能问出它原本是什么。
+On Synchronized,同步到达时
+Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.,当某个对等端刚收到这个同步器所同步属性的新值时运行。凡是要对「收到的」值作出反应，而不是对本端自己改的值作出反应，都放在这里。
+On synchronized,同步到达时
+Set Brightness,设置亮度
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.",灯光有多亮，用倍数表示：0.5 是一半，2.0 是两倍。写入 `Light2D.energy`。
+Set brightness to {value},将亮度设为 {value}
+Brightness,亮度
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double.",灯光有多亮，用倍数表示：0.5 是一半，2.0 是两倍。
+Reads brightness back: `Light2D.energy`. Use it in any value field.,读回亮度：`Light2D.energy`。可用于任何取值字段。
+brightness,亮度
+Fade Brightness,渐变亮度
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.",让亮度随时间走到新值，而不是一步跳过去 - 一个 tween，不必保存任何状态。写入 `Light2D.energy`。
+Fade to {value} over {seconds} s,用 {seconds} 秒渐变到 {value}
+The light to fade. Leave it as self to fade the light this sheet is on.,要渐变的灯光。保留 self 就作用于本事件表所挂的那盏灯。
+The brightness to arrive at.,最终要到达的亮度。
+How long the fade takes.,渐变持续多久。
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.",灯光有多亮，用倍数表示：0.5 是一半，2.0 是两倍。写入 `Light3D.light_energy`。
+Reads brightness back: `Light3D.light_energy`. Use it in any value field.,读回亮度：`Light3D.light_energy`。可用于任何取值字段。
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.",让亮度随时间走到新值，而不是一步跳过去 - 一个 tween，不必保存任何状态。写入 `Light3D.light_energy`。
+Set Colour,设置颜色
+The colour the light casts. Writes `Light2D.color`.,灯光投出的颜色。写入 `Light2D.color`。
+Set colour to {value},将颜色设为 {value}
+The colour the light casts.,灯光投出的颜色。
+Reads the light's colour back: `Light2D.color`. Use it in any value field.,读回灯光的颜色：`Light2D.color`。可用于任何取值字段。
+The colour the light casts. Writes `Light3D.light_color`.,灯光投出的颜色。写入 `Light3D.light_color`。
+Reads the light's colour back: `Light3D.light_color`. Use it in any value field.,读回灯光的颜色：`Light3D.light_color`。可用于任何取值字段。
+Set Reach,设置照射范围
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.",光能照多远：2D 灯光是贴图的缩放，3D 灯光是米。写入 `PointLight2D.texture_scale`。
+Set reach to {value},将照射范围设为 {value}
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one.",光能照多远：2D 灯光是贴图的缩放，3D 灯光是米。
+Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.,读回照射范围：`PointLight2D.texture_scale`。可用于任何取值字段。
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.",光能照多远：2D 灯光是贴图的缩放，3D 灯光是米。写入 `OmniLight3D.omni_range`。
+Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.,读回照射范围：`OmniLight3D.omni_range`。可用于任何取值字段。
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.",光能照多远：2D 灯光是贴图的缩放，3D 灯光是米。写入 `SpotLight3D.spot_range`。
+Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.,读回照射范围：`SpotLight3D.spot_range`。可用于任何取值字段。
+Set Cone Angle,设置锥角
+"How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.",聚光灯的锥体张开多大，以中心轴起算的角度（度）。写入 `SpotLight3D.spot_angle`。
+Set cone angle to {value},将锥角设为 {value}
+Cone Angle,锥角
+"How wide the spot's cone opens, in degrees from its centre line.",聚光灯的锥体张开多大，以中心轴起算的角度（度）。
+Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.,读回锥角：`SpotLight3D.spot_angle`。可用于任何取值字段。
+cone angle,锥角
+Turn On,打开
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.",灯是否亮着。2D 灯光用 `enabled` 开关；3D 灯光没有这个属性，改用 `visible`。写入 `Light2D.enabled`。
+Turn on,打开
+Turn Off,关闭
+Turn off,关闭
+Is On,已打开
+True while is on. Reads `Light2D.enabled`.,灯亮着时为真。读取 `Light2D.enabled`。
+Is on,已打开
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.",灯是否亮着。2D 灯光用 `enabled` 开关；3D 灯光没有这个属性，改用 `visible`。写入 `Light3D.visible`。
+True while is on. Reads `Light3D.visible`.,灯亮着时为真。读取 `Light3D.visible`。
+Turn Shadows On,打开阴影
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.,灯光是否投下阴影 - 这是最省开销的一个光照开关。写入 `Light2D.shadow_enabled`。
+Turn shadows on,打开阴影
+Turn Shadows Off,关闭阴影
+Turn shadows off,关闭阴影
+Is Casting Shadows,正在投射阴影
+True while is casting shadows. Reads `Light2D.shadow_enabled`.,灯光正在投射阴影时为真。读取 `Light2D.shadow_enabled`。
+Is casting shadows,正在投射阴影
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.,灯光是否投下阴影 - 这是最省开销的一个光照开关。写入 `Light3D.shadow_enabled`。
+True while is casting shadows. Reads `Light3D.shadow_enabled`.,灯光正在投射阴影时为真。读取 `Light3D.shadow_enabled`。
+Set Darkness,设置黑暗程度
+Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.,一次性把整个 2D 图层调暗 - 让关卡读起来像夜晚的那一行。写入 `CanvasModulate.color`；这一行会把颜色读回成它让图层暗了多少。
+Set darkness to {value},将黑暗程度设为 {value}
+Darkness,黑暗程度
+"How dark the layer goes, and what colour the dark is. The row shows the percentage; the file keeps the colour.",图层会暗到什么程度，以及这份黑暗是什么颜色。行里显示百分比，文件里保存的是颜色。
+Fade Darkness,渐变黑暗程度
+"Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.",让图层的黑暗随时间走到新值，而不是一步跳过去 - 一个 tween，不必保存任何状态。黄昏、正在合拢的洞口、一盏渐渐熄灭的灯。
+Fade darkness to {value} over {seconds} s,用 {seconds} 秒把黑暗程度渐变到 {value}
+The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.,要渐变的黑暗。保留 self 就作用于本事件表所挂的那个 CanvasModulate。
+The darkness to arrive at.,最终要到达的黑暗程度。
+Turn Fog On,打开雾
+Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.,打开世界的雾 - 一行就能把晴天变成雾天。写入 `Environment.fog_enabled`。
+Turn fog on,打开雾
+Turn Fog Off,关闭雾
+Switches the world's fog off again. Writes `Environment.fog_enabled`.,把世界的雾重新关掉。写入 `Environment.fog_enabled`。
+Turn fog off,关闭雾
+Turn Glow On,打开辉光
+"Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.",打开世界的辉光 - 霓虹、火焰和魔法之所以显得明亮，靠的就是它。写入 `Environment.glow_enabled`。
+Turn glow on,打开辉光
+Turn Glow Off,关闭辉光
+Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.,把世界的辉光重新关掉 - 顺便把帧数还回来。写入 `Environment.glow_enabled`。
+Turn glow off,关闭辉光
+Set Fog Thickness,设置雾的浓稠度
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.,设置世界中雾的浓稠程度。随时间逐渐调高，就像风暴正在逼近。写入 `Environment.fog_density`。
+Thickness,浓稠度
+Set Ambient Light,设置环境光
+Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.,设置在没有任何灯照到时场景本身有多少光 - 它是其他所有光之下的底。写入 `Environment.ambient_light_energy`。
+Light,光
+"How much light everything gets regardless of the lights, as a fraction.",不管有没有灯，所有东西都能得到的光，用倍数表示。
+Fade The Glow,渐变辉光
+"Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.",让世界的辉光随时间走到新的强度 - Boss 房间渐亮，法术慢慢消散。一个 tween，不必保存任何状态。
+Fade the glow to {value} over {seconds} s,用 {seconds} 秒把辉光渐变到 {value}
+The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.,要渐变的 WorldEnvironment。保留 self 就作用于本事件表所挂的那个。
+How much bright things bleed by the end. Around 1 is strong.,最终明亮物体溢出多少光。1 左右算强。
+Make The Environment This Scene's Own,让环境成为这个场景自己的
+"Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.",在任何东西改动环境之前，先给这个场景一份自己的副本。没有它，运行时写下的每一行雾或辉光都会改动共享的 `.tres` 文件，改动就会跟着玩家进入每一个加载该文件的场景。
+The WorldEnvironment to give its own copy. Leave it blank for this node.,要获得自有副本的 WorldEnvironment。留空表示当前节点。
+Set Light Energy (2D),设置灯光强度（2D）
+Sets how bright a 2D light is. The row shows the fraction as a percentage.,设置 2D 灯光有多亮。行里把倍数显示为百分比。
+The 2D light to change.,要修改的 2D 灯光。
+Energy,强度
+"How bright, as a fraction: 0.5 is half, 2.0 is double.",有多亮，用倍数表示：0.5 是一半，2.0 是两倍。
+Set Light Colour (2D),设置灯光颜色（2D）
+Sets the colour a 2D light casts.,设置 2D 灯光投出的颜色。
+Set light colour to {colour},将灯光颜色设为 {colour}
+Set Light On/Off,开关灯光
+"Switches a 2D light on or off. Different from hiding the node, which also hides its children.",打开或关闭 2D 灯光。这和隐藏节点不同，隐藏还会把它的子节点一起藏起来。
+Set light {on},将灯光设为 {on}
+The 2D light to switch.,要开关的 2D 灯光。
+"Whether the light is lit. Off is different from hiding the node, which also hides its children.",灯是否亮着。关掉它和隐藏节点不同，隐藏还会把子节点一起藏起来。
+Set Shadows On/Off,开关阴影
+Turns a light's shadows on or off - the cheapest lighting switch there is.,打开或关闭某盏灯的阴影 - 这是最省开销的一个光照开关。
+Set shadows {on},将阴影设为 {on}
+The light to change.,要修改的灯光。
+Whether the light casts shadows.,灯光是否投下阴影。
+Set Light Energy (3D),设置灯光强度（3D）
+Sets how bright a 3D light is. The row shows the fraction as a percentage.,设置 3D 灯光有多亮。行里把倍数显示为百分比。
+The 3D light to change.,要修改的 3D 灯光。
+Set Light Colour (3D),设置灯光颜色（3D）
+Sets the colour a 3D light casts - the one knob that turns midday into sunset.,设置 3D 灯光投出的颜色 - 把正午变成日落的那一个旋钮。
+Set Layer Tint,设置图层色调
+Tints a whole 2D layer at once - the one row that makes a level read as night.,一次性给整个 2D 图层上色 - 让关卡读起来像夜晚的那一行。
+Set layer tint to {colour},将图层色调设为 {colour}
+Canvas modulate,CanvasModulate
+The CanvasModulate node that tints the layer.,为图层上色的 CanvasModulate 节点。
+The tint laid over everything on the layer.,覆在图层上所有内容之上的色调。
+Sets how much light a 3D scene has with no light shining on it.,设置在没有任何灯照到时 3D 场景本身有多少光。
+World environment,WorldEnvironment
+The WorldEnvironment node holding the environment.,持有该环境的 WorldEnvironment 节点。
+Set fog colour to {colour},将雾颜色设为 {colour}

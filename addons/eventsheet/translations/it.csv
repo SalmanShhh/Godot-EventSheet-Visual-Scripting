@@ -4568,3 +4568,294 @@ Make the environment this scene's own,Rendi l'ambiente proprio di questa scena
 "Lighting: %d lit scene(s), %d with something that will not show at run time.","Illuminazione: %d scena/e illuminata/e, %d con qualcosa che non si vedrà in esecuzione."
 This sheet already takes its own copy.,Questo foglio prende già una copia sua.
 This scene has its own environment now - the change stops here.,Questa scena ha ora il suo ambiente - la modifica si ferma qui.
+Send Message To Everyone,Invia messaggio a tutti
+"Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.","Esegue un messaggio su ogni peer della partita, incluso questo quando il messaggio lo prevede. La funzione deve prima essere contrassegnata come messaggio."
+Send {message} to everyone {args},Invia {message} a tutti {args}
+Message,Messaggio
+The function marked as a message. Every peer runs it.,La funzione contrassegnata come messaggio. La esegue ogni peer.
+"Values to send with the message, comma separated.","I valori da inviare con il messaggio, separati da virgole."
+Send Message To The Host,Invia messaggio all'host
+"Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.","Esegue un messaggio solo sull'host - il peer che decide che cosa è vero, così i trucchi non possono essere inviati direttamente a tutti."
+Send {message} to the host {args},Invia {message} all'host {args}
+The function marked as a message. Only the host runs it.,La funzione contrassegnata come messaggio. La esegue solo l'host.
+Send Message To One Peer,Invia messaggio a un peer
+"Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.","Esegue un messaggio solo sul peer indicato - una risposta privata, o una correzione rimandata al giocatore a cui si riferisce."
+Send {message} to {peer} {args},Invia {message} a {peer} {args}
+The function marked as a message. Only the peer you name runs it.,La funzione contrassegnata come messaggio. La esegue solo il peer indicato.
+Peer,Peer
+"Who to send it to: the id an event handed you, or Sender to answer whoever asked.","A chi inviarlo: l'id che un evento ti ha passato, oppure Mittente per rispondere a chi ha chiesto."
+Is Host,È l'host
+True on the peer that is hosting the game. Put everything that decides what is true behind this.,Vero sul peer che ospita la partita. Metti dietro a questa condizione tutto ciò che decide che cosa è vero.
+Owns This Object,Possiede questo oggetto
+True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.,"Vero quando questo peer è quello autorizzato a muovere e modificare questo oggetto - il personaggio del giocatore stesso, non la copia che ne hanno gli altri."
+My ID,Il mio ID
+This peer's own id. The host is always 1; everyone else gets a number when they join.,L'id di questo peer. L'host è sempre 1; tutti gli altri ricevono un numero quando entrano.
+MyID,MioID
+Host A Game,Ospita una partita
+Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.,Apre questa partita agli altri giocatori e rende questo peer l'host - quello le cui risposte tutti prendono per vere. Non è ancora connesso nessuno; All'ingresso di un giocatore te lo dice.
+Host a game on port {port} for up to {max_players} players,Ospita una partita sulla porta {port} per un massimo di {max_players} giocatori
+Port,Porta
+The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.,La porta a cui si collegano i giocatori. Puoi scegliere qualsiasi valore da 1024 a 65535; entrambi i lati devono usare lo stesso numero.
+Players,Giocatori
+"How many peers may connect. The host is not one of them, so 4 here means the host plus four others.","Quanti peer possono collegarsi. L'host non è uno di questi, quindi 4 qui significa l'host più altri quattro."
+Using,Connessione
+How the game talks over the network. ENet unless the game runs in a browser.,"Come la partita comunica in rete. ENet, a meno che il gioco non giri in un browser."
+ENet - desktop and mobile,ENet - desktop e mobile
+WebSocket - also works in a browser,WebSocket - funziona anche nel browser
+"WebRTC - browser, peer to peer","WebRTC - browser, da peer a peer"
+Join A Game,Entra in una partita
+Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.,Chiede a un host di far entrare questo peer. La risposta arriva più tardi come All'ingresso nell'host o Al fallimento dell'ingresso - nel momento in cui questa riga viene eseguita non è collegato ancora nulla.
+Join a game at {address} port {port},Entra in una partita su {address} porta {port}
+Address,Indirizzo
+"Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.","Dove si trova l'host. 127.0.0.1 è questa stessa macchina; in una rete di casa è l'indirizzo locale dell'host, e su internet è l'indirizzo che l'host ha reso noto."
+The port the host opened. It has to be the same number the host used.,La porta che l'host ha aperto. Deve essere lo stesso numero usato dall'host.
+How the game talks over the network. It has to match what the host is using.,Come la partita comunica in rete. Deve corrispondere a ciò che usa l'host.
+Leave The Game,Esci dalla partita
+"Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.","Chiude la connessione di questo peer e riporta la partita a giocatore singolo. Sull'host questo termina la partita per tutti, perché non resta più nessuno a rispondere loro."
+Leave the game,Esci dalla partita
+Spawn,Genera
+Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.,Crea una copia di una scena sull'host e su ogni peer contemporaneamente. Solo l'host può chiamarlo; tutti gli altri ricevono la copia.
+Spawn {data},Genera {data}
+Spawner,Generatore
+"The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.",Il MultiplayerSpawner che crea le copie. Decide quale scena e dove finisce nell'albero.
+What to send,Che cosa inviare
+"What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.","Che cosa viene chiesto di creare al generatore. Un valore semplice quando il generatore ha una funzione di spawn che lo legge, oppure niente del tutto quando basta il suo elenco di scene."
+Kick Player,Espelli giocatore
+Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.,Chiude dall'host la connessione di un giocatore. Solo l'host può farlo - un client che vuole far espellere qualcuno invia un messaggio all'host e lascia decidere a lui.
+Kick player {id},Espelli il giocatore {id}
+Player,Giocatore
+"The peer id to drop. On player left then runs on everybody, the dropped peer included.","L'id del peer da disconnettere. All'uscita di un giocatore viene poi eseguito su tutti, compreso il peer espulso."
+Stop Accepting Players,Smetti di accettare giocatori
+"Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.","Chiude la lobby senza terminare la partita: chi è già dentro resta e nessun altro entra. Eseguilo quando la partita inizia, o quando l'ultimo posto è occupato."
+Stop accepting players,Smetti di accettare giocatori
+Relay Messages Between Players,Inoltra i messaggi tra i giocatori
+"Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.","Se l'host inoltra i messaggi tra i client. Disattivato è l'impostazione più sicura per una partita in cui è l'host a decidere che cosa è vero, perché così nessun client può parlare con un altro alle sue spalle."
+Relay messages between players {on},Inoltra i messaggi tra i giocatori {on}
+Relay,Inoltro
+"On, the host passes a message from one client on to another. Off, a client can only reach the host.","Attivo, l'host passa un messaggio da un client a un altro. Disattivo, un client può raggiungere solo l'host."
+Accept Player,Accetta il giocatore
+"Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.","Completa la stretta di mano di un peer: conta come entrato e viene eseguito All'ingresso di un giocatore. Un peer che non viene mai accettato né rifiutato resta semplicemente in attesa, quindi ogni stretta di mano ha bisogno di una delle due."
+Accept player {id},Accetta il giocatore {id}
+The peer whose handshake is finished - the id On player authenticating gave you.,Il peer di cui si completa la stretta di mano - l'id che ti ha passato All'autenticazione di un giocatore.
+Reject Player,Rifiuta il giocatore
+Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.,Rifiuta un peer che non ha dimostrato chi è. Quel peer vede Al fallimento dell'ingresso; nessun altro nella partita ne viene a sapere.
+Reject player {id},Rifiuta il giocatore {id}
+"The peer to turn away. It never counted as joined, so On player left does not run for it.","Il peer da rifiutare. Non è mai contato come entrato, quindi All'uscita di un giocatore non viene eseguito per lui."
+Send Auth,Invia le credenziali
+"Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.","Invia i byte che un lato della stretta di mano vuole far verificare all'altro - una password, un token, un numero di versione. Viaggiano prima che il peer conti come entrato, ed è per questo che non è un messaggio ordinario."
+Send auth {data} to player {id},Invia le credenziali {data} al giocatore {id}
+Who to send it to. A client answering the host sends to 1.,A chi inviarlo. Un client che risponde all'host invia a 1.
+Data,Dati
+"The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.",I byte da inviare. var_to_bytes(...) li ricava da un valore e bytes_to_var(...) li rilegge dall'altra parte.
+Give To Player,Assegna a un giocatore
+"Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.","Affida un oggetto a un giocatore: da quel momento è quel peer a poterlo muovere, e Possiede questo oggetto è vero solo lì. Eseguilo su ogni peer - un host che decide da solo lascia gli altri in disaccordo su chi possiede cosa."
+Give {target} to player {id},Assegna {target} al giocatore {id}
+The node whose owner changes. Its children follow it unless one was given an owner of its own.,"Il nodo il cui proprietario cambia. I figli lo seguono, a meno che a uno non sia stato dato un proprietario suo."
+The peer that may now move and change it. Everybody else keeps a copy they may only read.,Il peer che d'ora in poi può muoverlo e modificarlo. Tutti gli altri tengono una copia che possono solo leggere.
+Is Connected,È connesso
+"True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.","Vero appena questo peer è davvero in una partita - che la ospiti o che sia stato accettato da un host. Resta falso finché un ingresso è ancora in attesa di risposta, che è proprio quando una schermata di lobby deve continuare ad aspettare."
+Is connected,È connesso
+Started As,Avviato come
+"True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.","Vero quando questa build porta il tag di esportazione indicato, così un solo progetto può ospitarsi, entrare in se stesso o girare senza finestra come server. Una vera build server prende il tag dal preset di esportazione Dedicated Server e si avvia con --headless."
+Started as {tag},Avviato come {tag}
+Tag,Tag
+The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.,Il tag di funzionalità con cui questa build è stata esportata. host e client sono tag che aggiungi tu a due preset; dedicated_server lo imposta il preset server di Godot stesso.
+"The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.","Gli id di tutti gli ALTRI peer della partita, come elenco. Questo peer non c'è - quello è Il mio ID."
+Player Count,Numero di giocatori
+How many other peers are in the game. Add one for this peer when the number a player reads should include them.,Quanti altri peer ci sono nella partita. Aggiungi uno per questo peer quando il numero che legge un giocatore deve comprenderlo.
+Player count,Numero di giocatori
+Sender,Mittente
+"Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.","Dentro a un messaggio, l'id del peer che l'ha inviato - l'unica cosa su cui un messaggio non può mentire, quindi controllalo prima di fidarti di ciò che chiede. Ovunque altrove vale 0."
+Owner Of,Proprietario di
+"The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.","L'id del peer che possiede un oggetto - quello autorizzato a muoverlo. Vale 1 finché qualcuno non lo cede, perché all'inizio l'host possiede tutto."
+Owner of {target},Proprietario di {target}
+The node to ask about. Its owner is the peer allowed to move and change it.,Il nodo su cui si sta chiedendo. Il suo proprietario è il peer autorizzato a muoverlo e modificarlo.
+On Player Joined,All'ingresso di un giocatore
+"Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.",Viene eseguito quando un altro peer si collega - sull'host e su ogni peer già in partita. È l'host a distribuire ciò di cui ha bisogno un nuovo giocatore.
+On player joined {id},All'ingresso del giocatore {id}
+The id of the peer that just joined. Whatever a new player needs is sent to this id.,L'id del peer appena entrato. Tutto ciò di cui ha bisogno un nuovo giocatore viene inviato a questo id.
+On Player Left,All'uscita di un giocatore
+"Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.","Viene eseguito quando un peer si disconnette, comunque sia andata - uscito, andato in crash o connessione persa. Qui si ripulisce ciò che apparteneva a quel giocatore."
+On player left {id},All'uscita del giocatore {id}
+"The id of the peer that just left. It is already gone, so nothing can be sent to it.","L'id del peer appena uscito. Se n'è già andato, quindi non gli si può più inviare nulla."
+On Joined The Host,All'ingresso nell'host
+Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.,"Viene eseguito sul peer che entra, appena l'host lo ha accettato. Qui la schermata di lobby lascia il posto alla partita."
+On joined the host,All'ingresso nell'host
+On Join Failed,Al fallimento dell'ingresso
+"Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.","Viene eseguito sul peer che entra quando l'host non ha mai risposto o lo ha rifiutato - indirizzo sbagliato, porta sbagliata, o una partita che non accetta giocatori."
+On join failed,Al fallimento dell'ingresso
+On The Host Left,All'uscita dell'host
+Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.,Viene eseguito su ogni peer rimasto quando l'host se ne va. Per loro la partita è finita: qui li rimandi al menu.
+On the host left,All'uscita dell'host
+On Player Authenticating,All'autenticazione di un giocatore
+Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.,Viene eseguito sull'host mentre un peer sta ancora dimostrando chi è - prima di All'ingresso di un giocatore. Rispondi con Accetta il giocatore o Rifiuta il giocatore; i byte inviati dal peer arrivano tramite il callback di autenticazione.
+On player authenticating {id},All'autenticazione del giocatore {id}
+The id of the peer that is trying to join. It is not in the game yet.,L'id del peer che sta provando a entrare. Non è ancora in partita.
+On Authentication Failed,Al fallimento dell'autenticazione
+"Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.","Viene eseguito quando un peer non ha mai dimostrato chi era - risposta sbagliata, o nessuna risposta in tempo. Il peer viene disconnesso; qui si mostra il motivo."
+On authentication failed {id},Al fallimento dell'autenticazione del giocatore {id}
+The id of the peer whose handshake did not finish.,L'id del peer la cui stretta di mano non è arrivata in fondo.
+Spawn A Scene,Genera una scena
+"Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.","Crea una copia di una scena sull'host e su ogni peer contemporaneamente. Solo l'host può eseguirlo, tutti gli altri ricevono la copia dal generatore - ed è per questo che la scena deve essere nel suo elenco."
+Spawn {scene} named {name} at {at},Genera {scene} chiamata {name} in {at}
+The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.,Il MultiplayerSpawner che sorveglia la copia: porta l'elenco delle scene e il percorso sotto cui finisce una copia.
+"The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.","La scena da creare, dall'elenco delle scene che quel generatore può generare. Una che non è ancora nell'elenco vi viene aggiunta quando questa riga viene applicata."
+"What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.","Come chiamare la copia. Di solito le si dà il nome dell'id del giocatore, perché è proprio questo che permette alla copia di rendere quel giocatore il suo proprietario."
+"Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.","Dove metterla - un punto per una scena 2D, un Vector3 per una 3D. Viene impostato prima che la copia entri nell'albero, quindi non compare mai prima nell'origine."
+Despawn,Rimuovi
+"Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.","Toglie questa copia dalla partita ovunque. Eseguilo sul peer che possiede l'oggetto: il generatore che l'ha creata la vede sparire e la rimuove su ogni altro peer, quindi non c'è nulla da inviare a mano."
+Show To Player,Mostra a un giocatore
+"Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.","Permette a un giocatore di vedere ciò che questo sincronizzatore tiene allineato. La visibilità si decide per peer, così una partita può tenere una mano di carte, un'unità avvistata o una stanza dove non c'è nessun altro lontana da tutti tranne che dal giocatore a cui appartiene."
+Show to player {id},Mostra al giocatore {id}
+The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.,Il peer che d'ora in poi può vederlo. Inizia a ricevere tutto ciò che questo sincronizzatore tiene allineato.
+Hide From Player,Nascondi a un giocatore
+"Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.","Smette di inviare a un giocatore ciò che questo sincronizzatore tiene allineato. Il nodo non viene cancellato su quel peer, semplicemente non arriva più - così un valore che non doveva vedere non può nemmeno essere letto dai pacchetti."
+Hide from player {id},Nascondi al giocatore {id}
+The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.,Il peer che smette di vederlo. Per questo nodo non gli viene inviato più nulla finché non gli viene mostrato di nuovo.
+Show To Everyone,Mostra a tutti
+"Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.","Riporta questo sincronizzatore a essere visto da ogni giocatore, qualunque cosa fosse stata mostrata o nascosta per singolo peer. È l'impostazione con cui parte, quindi questa riga annulla un nascondimento invece di essere qualcosa che una partita deve dire per prima."
+Show to everyone,Mostra a tutti
+Ask A Function Who May See It,Chiedi a una funzione chi può vederlo
+"Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.","Affida a una funzione la domanda su chi può vederlo, invece di rispondere giocatore per giocatore. Viene richiesta di nuovo mentre i giocatori vanno e vengono, così una regola come stessa stanza o stessa squadra si mantiene vera da sola, senza che una riga lo dica."
+Ask {filter} who may see it,Chiedi a {filter} chi può vederlo
+"The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.","La funzione che risponde. Riceve l'id di un giocatore e restituisce true quando quel giocatore può vedere questo nodo - una funzione di questo foglio, indicata senza parentesi."
+On Spawned,Alla generazione
+"Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.","Viene eseguito su ogni peer nel momento in cui questo generatore crea una copia, host compreso. Qui una copia viene collegata al resto della partita: un nome aggiunto a una classifica, una telecamera puntata su di lei."
+On spawned {node},Alla generazione di {node}
+"The copy that has just been made - the same node, on every peer that got it.","La copia appena creata - lo stesso nodo, su ogni peer che l'ha ricevuta."
+On Despawned,Alla rimozione
+"Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.","Viene eseguito su ogni peer mentre questo generatore toglie una copia, sia che il suo proprietario l'abbia rimossa sia che il giocatore a cui apparteneva abbia lasciato la partita. Qui si ripulisce ciò che puntava a quella copia."
+On despawned {node},Alla rimozione di {node}
+"The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.","La copia che se ne va. Mentre questo viene eseguito è ancora nell'albero, quindi le si può ancora chiedere che cos'era."
+On Synchronized,Alla sincronizzazione
+Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.,Viene eseguito su un peer a cui sono appena stati inviati nuovi valori per le proprietà che questo sincronizzatore tiene allineate. Giusto per tutto ciò che deve rispondere a un valore ARRIVATO invece che a uno cambiato dal peer stesso.
+On synchronized,Alla sincronizzazione
+Set Brightness,Imposta la luminosità
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.","Quanto è luminosa la luce, come frazione: 0.5 è la metà, 2.0 il doppio. Scrive `Light2D.energy`."
+Set brightness to {value},Imposta la luminosità a {value}
+Brightness,Luminosità
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double.","Quanto è luminosa la luce, come frazione: 0.5 è la metà, 2.0 il doppio."
+Reads brightness back: `Light2D.energy`. Use it in any value field.,Rilegge la luminosità: `Light2D.energy`. Usalo in qualsiasi campo valore.
+brightness,luminosità
+Fade Brightness,Dissolvi la luminosità
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.","Porta la luminosità a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da conservare. Scrive `Light2D.energy`."
+Fade to {value} over {seconds} s,Dissolvi a {value} in {seconds} s
+The light to fade. Leave it as self to fade the light this sheet is on.,La luce da dissolvere. Lascialo su self per agire sulla luce a cui è attaccato questo foglio.
+The brightness to arrive at.,La luminosità a cui arrivare.
+How long the fade takes.,Quanto dura la dissolvenza.
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.","Quanto è luminosa la luce, come frazione: 0.5 è la metà, 2.0 il doppio. Scrive `Light3D.light_energy`."
+Reads brightness back: `Light3D.light_energy`. Use it in any value field.,Rilegge la luminosità: `Light3D.light_energy`. Usalo in qualsiasi campo valore.
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.","Porta la luminosità a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da conservare. Scrive `Light3D.light_energy`."
+Set Colour,Imposta il colore
+The colour the light casts. Writes `Light2D.color`.,Il colore che la luce emette. Scrive `Light2D.color`.
+Set colour to {value},Imposta il colore a {value}
+The colour the light casts.,Il colore che la luce emette.
+Reads the light's colour back: `Light2D.color`. Use it in any value field.,Rilegge il colore della luce: `Light2D.color`. Usalo in qualsiasi campo valore.
+The colour the light casts. Writes `Light3D.light_color`.,Il colore che la luce emette. Scrive `Light3D.light_color`.
+Reads the light's colour back: `Light3D.light_color`. Use it in any value field.,Rilegge il colore della luce: `Light3D.light_color`. Usalo in qualsiasi campo valore.
+Set Reach,Imposta la portata
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.","Fin dove arriva la luce: una scala per la texture di una luce 2D, metri per una 3D. Scrive `PointLight2D.texture_scale`."
+Set reach to {value},Imposta la portata a {value}
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one.","Fin dove arriva la luce: una scala per la texture di una luce 2D, metri per una 3D."
+Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.,Rilegge la portata: `PointLight2D.texture_scale`. Usalo in qualsiasi campo valore.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.","Fin dove arriva la luce: una scala per la texture di una luce 2D, metri per una 3D. Scrive `OmniLight3D.omni_range`."
+Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.,Rilegge la portata: `OmniLight3D.omni_range`. Usalo in qualsiasi campo valore.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.","Fin dove arriva la luce: una scala per la texture di una luce 2D, metri per una 3D. Scrive `SpotLight3D.spot_range`."
+Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.,Rilegge la portata: `SpotLight3D.spot_range`. Usalo in qualsiasi campo valore.
+Set Cone Angle,Imposta l'angolo del cono
+"How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.","Quanto si apre il cono del faretto, in gradi dal suo asse. Scrive `SpotLight3D.spot_angle`."
+Set cone angle to {value},Imposta l'angolo del cono a {value}
+Cone Angle,Angolo del cono
+"How wide the spot's cone opens, in degrees from its centre line.","Quanto si apre il cono del faretto, in gradi dal suo asse."
+Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.,Rilegge l'angolo del cono: `SpotLight3D.spot_angle`. Usalo in qualsiasi campo valore.
+cone angle,angolo del cono
+Turn On,Accendi
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.","Se la luce è accesa. Una luce 2D si commuta con `enabled`; una 3D non ha quella proprietà, quindi si commuta con `visible`. Scrive `Light2D.enabled`."
+Turn on,Accendi
+Turn Off,Spegni
+Turn off,Spegni
+Is On,È accesa
+True while is on. Reads `Light2D.enabled`.,Vero finché la luce è accesa. Legge `Light2D.enabled`.
+Is on,È accesa
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.","Se la luce è accesa. Una luce 2D si commuta con `enabled`; una 3D non ha quella proprietà, quindi si commuta con `visible`. Scrive `Light3D.visible`."
+True while is on. Reads `Light3D.visible`.,Vero finché la luce è accesa. Legge `Light3D.visible`.
+Turn Shadows On,Attiva le ombre
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.,Se la luce proietta ombre - l'interruttore di illuminazione più economico che ci sia. Scrive `Light2D.shadow_enabled`.
+Turn shadows on,Attiva le ombre
+Turn Shadows Off,Disattiva le ombre
+Turn shadows off,Disattiva le ombre
+Is Casting Shadows,Proietta ombre
+True while is casting shadows. Reads `Light2D.shadow_enabled`.,Vero finché la luce proietta ombre. Legge `Light2D.shadow_enabled`.
+Is casting shadows,Proietta ombre
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.,Se la luce proietta ombre - l'interruttore di illuminazione più economico che ci sia. Scrive `Light3D.shadow_enabled`.
+True while is casting shadows. Reads `Light3D.shadow_enabled`.,Vero finché la luce proietta ombre. Legge `Light3D.shadow_enabled`.
+Set Darkness,Imposta l'oscurità
+Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.,Oscura un intero livello 2D in una volta - l'unica riga che fa leggere un livello come notte. Scrive `CanvasModulate.color`; la riga rilegge il colore come quanto rende scuro il livello.
+Set darkness to {value},Imposta l'oscurità a {value}
+Darkness,Oscurità
+"How dark the layer goes, and what colour the dark is. The row shows the percentage; the file keeps the colour.",Quanto diventa scuro il livello e di che colore è il buio. La riga mostra la percentuale; il file conserva il colore.
+Fade Darkness,Dissolvi l'oscurità
+"Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.","Porta l'oscurità del livello a un nuovo valore nel tempo invece di saltarci - un tween, nessuno stato da conservare. Il crepuscolo, l'imbocco di una grotta che si chiude, una luce che si spegne."
+Fade darkness to {value} over {seconds} s,Dissolvi l'oscurità a {value} in {seconds} s
+The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.,L'oscurità da dissolvere. Lascialo su self per agire sul CanvasModulate a cui è attaccato questo foglio.
+The darkness to arrive at.,L'oscurità a cui arrivare.
+Turn Fog On,Attiva la nebbia
+Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.,Attiva la nebbia del mondo - l'unica riga che trasforma una giornata limpida in una nebbiosa. Scrive `Environment.fog_enabled`.
+Turn fog on,Attiva la nebbia
+Turn Fog Off,Disattiva la nebbia
+Switches the world's fog off again. Writes `Environment.fog_enabled`.,Disattiva di nuovo la nebbia del mondo. Scrive `Environment.fog_enabled`.
+Turn fog off,Disattiva la nebbia
+Turn Glow On,Attiva il bagliore
+"Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.","Attiva il bagliore del mondo - quello che fa sembrare luminosi neon, fuoco e magia. Scrive `Environment.glow_enabled`."
+Turn glow on,Attiva il bagliore
+Turn Glow Off,Disattiva il bagliore
+Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.,Disattiva di nuovo il bagliore del mondo - e restituisce i fotogrammi. Scrive `Environment.glow_enabled`.
+Turn glow off,Disattiva il bagliore
+Set Fog Thickness,Imposta lo spessore della nebbia
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.,Imposta quanto è densa la nebbia del mondo. Aumentala col tempo per una tempesta in arrivo. Scrive `Environment.fog_density`.
+Thickness,Spessore
+Set Ambient Light,Imposta la luce ambientale
+Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.,Imposta quanta luce ha la scena senza che nessuna luce la illumini - il pavimento sotto tutte le altre luci. Scrive `Environment.ambient_light_energy`.
+Light,Luce
+"How much light everything gets regardless of the lights, as a fraction.","Quanta luce riceve tutto a prescindere dalle luci, come frazione."
+Fade The Glow,Dissolvi il bagliore
+"Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.","Porta il bagliore del mondo a una nuova intensità nel tempo - una sala del boss che si illumina, un incantesimo che svanisce. Un tween, nessuno stato da conservare."
+Fade the glow to {value} over {seconds} s,Dissolvi il bagliore a {value} in {seconds} s
+The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.,Il WorldEnvironment da dissolvere. Lascialo su self per agire su quello a cui è attaccato questo foglio.
+How much bright things bleed by the end. Around 1 is strong.,Quanto le cose luminose sbordano alla fine. Intorno a 1 è forte.
+Make The Environment This Scene's Own,Rendi l'ambiente proprio di questa scena
+"Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.","Dà a questa scena una copia propria dell'ambiente prima che qualcosa lo cambi. Senza, ogni riga di nebbia o bagliore scritta a runtime cambia il file `.tres` condiviso, e la modifica segue il giocatore in ogni altra scena che lo carica."
+The WorldEnvironment to give its own copy. Leave it blank for this node.,Il WorldEnvironment a cui dare una copia propria. Lascia vuoto per questo nodo.
+Set Light Energy (2D),Imposta l'intensità della luce (2D)
+Sets how bright a 2D light is. The row shows the fraction as a percentage.,Imposta quanto è luminosa una luce 2D. La riga mostra la frazione come percentuale.
+The 2D light to change.,La luce 2D da modificare.
+Energy,Intensità
+"How bright, as a fraction: 0.5 is half, 2.0 is double.","Quanto luminosa, come frazione: 0.5 è la metà, 2.0 il doppio."
+Set Light Colour (2D),Imposta il colore della luce (2D)
+Sets the colour a 2D light casts.,Imposta il colore che una luce 2D emette.
+Set light colour to {colour},Imposta il colore della luce su {colour}
+Set Light On/Off,Accendi o spegni la luce
+"Switches a 2D light on or off. Different from hiding the node, which also hides its children.","Accende o spegne una luce 2D. È diverso dal nascondere il nodo, che nasconde anche i suoi figli."
+Set light {on},Imposta la luce su {on}
+The 2D light to switch.,La luce 2D da commutare.
+"Whether the light is lit. Off is different from hiding the node, which also hides its children.","Se la luce è accesa. Spegnerla è diverso dal nascondere il nodo, che nasconde anche i suoi figli."
+Set Shadows On/Off,Attiva o disattiva le ombre
+Turns a light's shadows on or off - the cheapest lighting switch there is.,Attiva o disattiva le ombre di una luce - l'interruttore di illuminazione più economico che ci sia.
+Set shadows {on},Imposta le ombre su {on}
+The light to change.,La luce da modificare.
+Whether the light casts shadows.,Se la luce proietta ombre.
+Set Light Energy (3D),Imposta l'intensità della luce (3D)
+Sets how bright a 3D light is. The row shows the fraction as a percentage.,Imposta quanto è luminosa una luce 3D. La riga mostra la frazione come percentuale.
+The 3D light to change.,La luce 3D da modificare.
+Set Light Colour (3D),Imposta il colore della luce (3D)
+Sets the colour a 3D light casts - the one knob that turns midday into sunset.,Imposta il colore che una luce 3D emette - l'unica manopola che trasforma il mezzogiorno in tramonto.
+Set Layer Tint,Imposta la tinta del livello
+Tints a whole 2D layer at once - the one row that makes a level read as night.,Colora un intero livello 2D in una volta - l'unica riga che fa leggere un livello come notte.
+Set layer tint to {colour},Imposta la tinta del livello su {colour}
+Canvas modulate,CanvasModulate
+The CanvasModulate node that tints the layer.,Il nodo CanvasModulate che colora il livello.
+The tint laid over everything on the layer.,La tinta stesa su tutto ciò che sta sul livello.
+Sets how much light a 3D scene has with no light shining on it.,Imposta quanta luce ha una scena 3D senza che nessuna luce la illumini.
+World environment,WorldEnvironment
+The WorldEnvironment node holding the environment.,Il nodo WorldEnvironment che contiene l'ambiente.
+Set fog colour to {colour},Imposta il colore della nebbia su {colour}

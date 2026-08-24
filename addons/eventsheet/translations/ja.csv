@@ -4568,3 +4568,294 @@ Make the environment this scene's own,環境をこのシーン専用にする
 "Lighting: %d lit scene(s), %d with something that will not show at run time.",ライティング: 照明のあるシーン %d 件、うち %d 件に実行時には見えないものがあります。
 This sheet already takes its own copy.,このシートはすでに自分のコピーを取っています。
 This scene has its own environment now - the change stops here.,このシーンは自分の環境を持つようになりました - 変更はここで止まります。
+Send Message To Everyone,全員にメッセージを送る
+"Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.",ゲーム内のすべてのピアでメッセージを実行します。メッセージがそう指定していれば自分自身でも実行されます。関数を先にメッセージとして印を付けておく必要があります。
+Send {message} to everyone {args},{message} を全員に送る {args}
+Message,メッセージ
+The function marked as a message. Every peer runs it.,メッセージとして印を付けた関数。すべてのピアが実行します。
+"Values to send with the message, comma separated.",メッセージと一緒に送る値。カンマ区切りです。
+Send Message To The Host,ホストにメッセージを送る
+"Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.",ホストだけでメッセージを実行します。ホストは何が正しいかを決めるピアなので、チートを全員に直接送ることはできません。
+Send {message} to the host {args},{message} をホストに送る {args}
+The function marked as a message. Only the host runs it.,メッセージとして印を付けた関数。ホストだけが実行します。
+Send Message To One Peer,1 つのピアにメッセージを送る
+"Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.",名前を指定した 1 つのピアだけでメッセージを実行します。個別の返信や、その相手のプレイヤーへ送り返す修正に使います。
+Send {message} to {peer} {args},{message} を {peer} に送る {args}
+The function marked as a message. Only the peer you name runs it.,メッセージとして印を付けた関数。指定したピアだけが実行します。
+Peer,ピア
+"Who to send it to: the id an event handed you, or Sender to answer whoever asked.",送り先。イベントが渡してくれた id か、問い合わせてきた相手に返すなら 送信者 を指定します。
+Is Host,ホストである
+True on the peer that is hosting the game. Put everything that decides what is true behind this.,ゲームをホストしているピアで真になります。何が正しいかを決める処理は、すべてこの条件の後ろに置きます。
+Owns This Object,このオブジェクトを所有している
+True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.,このピアが、このオブジェクトを動かして変更してよい側であるときに真になります。他の全員が持っているコピーではなく、そのプレイヤー自身のキャラクターということです。
+My ID,自分の ID
+This peer's own id. The host is always 1; everyone else gets a number when they join.,このピア自身の id。ホストは常に 1 で、それ以外は参加したときに番号をもらいます。
+MyID,自分のID
+Host A Game,ゲームをホストする
+Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.,このゲームを他のプレイヤーに開き、このピアをホストにします。ホストの答えを全員が正しいものとして扱います。この時点ではまだ誰も接続していません。誰かが入ってきたら「プレイヤー参加時」が知らせます。
+Host a game on port {port} for up to {max_players} players,ポート {port} で最大 {max_players} 人のゲームをホストする
+Port,ポート
+The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.,プレイヤーが接続してくるポート。1024 から 65535 までなら自由に選べます。両側で同じ番号を使う必要があります。
+Players,プレイヤー数
+"How many peers may connect. The host is not one of them, so 4 here means the host plus four others.",接続できるピアの数。ホストはこの数に含まれないので、4 ならホスト＋4 人です。
+Using,通信方式
+How the game talks over the network. ENet unless the game runs in a browser.,ゲームがネットワークでやり取りする方法。ブラウザで動かすのでなければ ENet です。
+ENet - desktop and mobile,ENet - デスクトップとモバイル
+WebSocket - also works in a browser,WebSocket - ブラウザでも動く
+"WebRTC - browser, peer to peer",WebRTC - ブラウザ、ピアツーピア
+Join A Game,ゲームに参加する
+Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.,ホストにこのピアを入れてもらうよう頼みます。答えはあとから「ホストに参加したとき」または「参加に失敗したとき」として届きます。この行が走った時点ではまだ何も接続されていません。
+Join a game at {address} port {port},{address} のポート {port} のゲームに参加する
+Address,アドレス
+"Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.",ホストの場所。127.0.0.1 は同じマシン、家庭内ネットワークならホストのローカルアドレス、インターネット越しならホストが公開したアドレスです。
+The port the host opened. It has to be the same number the host used.,ホストが開いたポート。ホストが使った番号と同じである必要があります。
+How the game talks over the network. It has to match what the host is using.,ゲームがネットワークでやり取りする方法。ホストが使っているものと一致させる必要があります。
+Leave The Game,ゲームを抜ける
+"Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.",このピアの接続を切り、ゲームをシングルプレイヤーに戻します。ホストで実行すると、答える相手がいなくなるため全員のゲームが終わります。
+Leave the game,ゲームを抜ける
+Spawn,生成
+Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.,ホストとすべてのピアで同時にシーンのコピーを 1 つ作ります。呼び出せるのはホストだけで、ほかの全員はコピーを受け取ります。
+Spawn {data},{data} を生成する
+Spawner,スポーナー
+"The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.",コピーを作る MultiplayerSpawner。どのシーンを、ツリーのどこに置くかを決めます。
+What to send,送る内容
+"What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.",スポーナーに何を作らせるか。スポーナーがそれを読むスポーン関数を持つなら単純な値を、シーンの一覧だけで足りるなら何も指定しません。
+Kick Player,プレイヤーを追い出す
+Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.,ホストから 1 人のプレイヤーの接続を切ります。できるのはホストだけです。誰かを追い出したいクライアントは、ホストにメッセージを送って判断を委ねます。
+Kick player {id},プレイヤー {id} を追い出す
+Player,プレイヤー
+"The peer id to drop. On player left then runs on everybody, the dropped peer included.",切断するピアの id。そのあと「プレイヤー退出時」が、追い出されたピアも含めて全員で走ります。
+Stop Accepting Players,プレイヤーの受け入れをやめる
+"Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.",ゲームを終わらせずにロビーを閉じます。すでに入っている人はそのままで、これ以上は誰も入れません。試合が始まったときや、最後の席が埋まったときに実行します。
+Stop accepting players,プレイヤーの受け入れをやめる
+Relay Messages Between Players,プレイヤー間のメッセージを中継する
+"Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.",ホストがクライアント同士のメッセージを転送するかどうか。ホストが何を正しいとするか決めるゲームでは、オフのほうが安全です。クライアントが裏で別のクライアントと話せなくなるからです。
+Relay messages between players {on},プレイヤー間のメッセージの中継を {on} にする
+Relay,中継
+"On, the host passes a message from one client on to another. Off, a client can only reach the host.",オンにすると、ホストがあるクライアントのメッセージを別のクライアントへ渡します。オフだと、クライアントはホストにしか届きません。
+Accept Player,プレイヤーを受け入れる
+"Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.",1 つのピアの握手を完了します。参加したものとして扱われ、「プレイヤー参加時」が走ります。受け入れも拒否もされないピアはただ待ち続けるので、どの握手にもどちらか一方が必要です。
+Accept player {id},プレイヤー {id} を受け入れる
+The peer whose handshake is finished - the id On player authenticating gave you.,握手を完了するピア。「プレイヤー認証中」が渡してくれた id です。
+Reject Player,プレイヤーを拒否する
+Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.,自分が誰かを証明できなかったピアを追い返します。そのピアには「参加に失敗したとき」が届き、ゲーム内のほかの誰にも伝わりません。
+Reject player {id},プレイヤー {id} を拒否する
+"The peer to turn away. It never counted as joined, so On player left does not run for it.",追い返すピア。参加したことにはなっていないので、「プレイヤー退出時」はこのピアには走りません。
+Send Auth,認証データを送る
+"Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.",握手の一方が相手に確認してほしいバイト列を送ります。パスワード、トークン、バージョン番号など。ピアが参加したものとして扱われる前にやり取りされるため、これは通常のメッセージではありません。
+Send auth {data} to player {id},認証データ {data} をプレイヤー {id} に送る
+Who to send it to. A client answering the host sends to 1.,送り先。ホストに答えるクライアントは 1 に送ります。
+Data,データ
+"The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.",送るバイト列。var_to_bytes(...) が値からバイト列を作り、受け取った側は bytes_to_var(...) で読み戻します。
+Give To Player,プレイヤーに渡す
+"Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.",オブジェクトを 1 人のプレイヤーに渡します。それ以降はそのピアだけが動かせるようになり、「このオブジェクトを所有している」もそこでのみ真になります。すべてのピアで実行してください。ホストだけで決めると、誰が何を所有しているかで食い違いが残ります。
+Give {target} to player {id},{target} をプレイヤー {id} に渡す
+The node whose owner changes. Its children follow it unless one was given an owner of its own.,所有者が変わるノード。子ノードも一緒に移りますが、個別に所有者を与えられた子は例外です。
+The peer that may now move and change it. Everybody else keeps a copy they may only read.,これ以降それを動かして変更してよいピア。ほかの全員は読むだけのコピーを持ちます。
+Is Connected,接続している
+"True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.",このピアが本当にゲームの中にいると真になります。自分がホストしているか、ホストに受け入れられた状態です。参加の返事待ちのあいだは偽のままで、ロビー画面が待ち続けるのはまさにその瞬間です。
+Is connected,接続している
+Started As,起動時のタグ
+"True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.",このビルドが指定した書き出しタグを持つときに真になります。1 つのプロジェクトが自分をホストしたり、自分に参加したり、ヘッドレスのサーバーとして動いたりできます。本物のサーバービルドは Dedicated Server の書き出しプリセットからタグを受け取り、--headless で起動します。
+Started as {tag},{tag} として起動している
+Tag,タグ
+The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.,このビルドを書き出したときの機能タグ。host と client は自分で 2 つのプリセットに付けるタグで、dedicated_server は Godot 自身のサーバープリセットが付けます。
+"The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.",ゲーム内のほかのピアすべての id をリストで返します。このピア自身は含まれません。それは「自分の ID」です。
+Player Count,プレイヤー数
+How many other peers are in the game. Add one for this peer when the number a player reads should include them.,ゲームにいるほかのピアの数。プレイヤーに見せる数に自分自身も含めたいときは 1 を足してください。
+Player count,プレイヤー数
+Sender,送信者
+"Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.",メッセージの中で、それを送ってきたピアの id。メッセージが唯一ごまかせない情報なので、要求を信じる前にこれを確認してください。それ以外の場所では 0 です。
+Owner Of,所有者
+"The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.",オブジェクトを所有しているピアの id。動かしてよい側です。誰かが譲るまでは 1 で、最初はすべてホストのものだからです。
+Owner of {target},{target} の所有者
+The node to ask about. Its owner is the peer allowed to move and change it.,問い合わせる対象のノード。その所有者が、それを動かして変更してよいピアです。
+On Player Joined,プレイヤー参加時
+"Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.",別のピアが接続したときに走ります。ホストでも、すでにゲームにいるすべてのピアでも走ります。新しいプレイヤーに必要なものを配るのはホストの役目です。
+On player joined {id},プレイヤー {id} が参加したとき
+The id of the peer that just joined. Whatever a new player needs is sent to this id.,いま参加したピアの id。新しいプレイヤーに必要なものは、この id 宛てに送ります。
+On Player Left,プレイヤー退出時
+"Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.",ピアの接続が切れたときに走ります。終了、クラッシュ、回線切断のいずれでも同じです。そのプレイヤーのものだったものは、ここで片づけます。
+On player left {id},プレイヤー {id} が退出したとき
+"The id of the peer that just left. It is already gone, so nothing can be sent to it.",いま退出したピアの id。すでにいないので、何も送ることはできません。
+On Joined The Host,ホストに参加したとき
+Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.,参加する側のピアで、ホストに受け入れられた時点で走ります。ロビー画面からゲームへ切り替えるのはここです。
+On joined the host,ホストに参加したとき
+On Join Failed,参加に失敗したとき
+"Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.",参加しようとしたピアで、ホストが答えなかったか拒否したときに走ります。アドレス違い、ポート違い、あるいはプレイヤーを受け入れていないゲームです。
+On join failed,参加に失敗したとき
+On The Host Left,ホストが去ったとき
+Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.,ホストがいなくなったとき、残っているすべてのピアで走ります。その人たちにとってゲームは終わりです。ここでメニューに戻します。
+On the host left,ホストが去ったとき
+On Player Authenticating,プレイヤー認証中
+Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.,ピアがまだ自分の身元を証明している最中、ホストで走ります。「プレイヤー参加時」より前です。「プレイヤーを受け入れる」か「プレイヤーを拒否する」で答えてください。ピアが送ってきたバイト列は認証コールバックで届きます。
+On player authenticating {id},プレイヤー {id} の認証中
+The id of the peer that is trying to join. It is not in the game yet.,参加しようとしているピアの id。まだゲームには入っていません。
+On Authentication Failed,認証に失敗したとき
+"Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.",ピアが自分の身元を証明できなかったときに走ります。答えが違ったか、時間内に誰も答えなかった場合です。そのピアは切断され、理由を見せるのはここです。
+On authentication failed {id},プレイヤー {id} の認証に失敗したとき
+The id of the peer whose handshake did not finish.,握手が完了しなかったピアの id。
+Spawn A Scene,シーンを生成する
+"Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.",ホストとすべてのピアで同時にシーンのコピーを 1 つ作ります。実行できるのはホストだけで、ほかの全員はスポーナーからコピーを受け取ります。だからそのシーンはスポーナーの一覧に入っている必要があります。
+Spawn {scene} named {name} at {at},{scene} を {name} という名前で {at} に生成する
+The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.,コピーを見張る MultiplayerSpawner。シーンの一覧と、コピーが置かれるパスを持っています。
+"The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.",作るシーン。そのスポーナーが生成してよいシーンの一覧から選びます。まだ一覧にないものは、この行を適用したときに追加されます。
+"What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.",コピーに付ける名前。プレイヤーの id を名前にするのが定番で、そうすることでコピーがそのプレイヤーを所有者にできます。
+"Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.",どこに置くか。2D シーンなら座標、3D シーンなら Vector3 です。コピーがツリーに入る前に設定されるので、いったん原点に現れることはありません。
+Despawn,消す
+"Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.",このコピーをすべての場所からゲームの外に出します。オブジェクトを所有しているピアで実行してください。作ったスポーナーがそれを見て、ほかのすべてのピアからも取り除くので、手で送るものはありません。
+Show To Player,プレイヤーに見せる
+"Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.",このシンクロナイザーが同期している内容を、1 人のプレイヤーに見せます。可視性はピアごとに決まるので、手札や偵察した部隊、誰もいない部屋などを、持ち主のプレイヤー以外には見せずにおけます。
+Show to player {id},プレイヤー {id} に見せる
+The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.,これ以降それを見てよいピア。このシンクロナイザーが同期している内容が届くようになります。
+Hide From Player,プレイヤーから隠す
+"Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.",このシンクロナイザーが同期している内容を、1 人のプレイヤーに送るのをやめます。そのピアでノードが削除されるわけではなく、届かなくなるだけです。見せるつもりのなかった値をパケットから読み取られることもありません。
+Hide from player {id},プレイヤー {id} から隠す
+The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.,それが見えなくなるピア。ふたたび見せるまで、このノードに関しては何も送られません。
+Show To Everyone,全員に見せる
+"Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.",このシンクロナイザーを、ピアごとの表示・非表示にかかわらず、全員に見える状態へ戻します。もともとその設定で始まるので、この行は非表示を取り消すためのもので、最初に書いておく必要のあるものではありません。
+Show to everyone,全員に見せる
+Ask A Function Who May See It,誰に見せるかを関数に決めさせる
+"Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.",誰に見せるかという問いを、プレイヤーごとに答える代わりに関数へ委ねます。プレイヤーの出入りに合わせて何度でも問い直されるので、同じ部屋・同じチームといった規則が、行を書かなくても自動的に保たれます。
+Ask {filter} who may see it,{filter} に誰が見てよいかを尋ねる
+"The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.",答える関数。プレイヤーの id を 1 つ渡され、そのプレイヤーがこのノードを見てよいときに true を返します。この事件表の関数を、かっこなしの名前で指定します。
+On Spawned,生成されたとき
+"Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.",このスポーナーがコピーを作った瞬間、ホストを含むすべてのピアで走ります。コピーをゲームの他の部分につなぐ場所です。スコアボードに名前を足したり、カメラを向けたり。
+On spawned {node},{node} が生成されたとき
+"The copy that has just been made - the same node, on every peer that got it.",いま作られたコピー。受け取ったすべてのピアで同じノードです。
+On Despawned,消えたとき
+"Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.",このスポーナーがコピーを取り除いていくあいだ、すべてのピアで走ります。所有者が消した場合でも、持ち主のプレイヤーがゲームを抜けた場合でも同じです。そのコピーを指していたものは、ここで片づけます。
+On despawned {node},{node} が消えたとき
+"The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.",いなくなるコピー。これが走っているあいだはまだツリーにいるので、何だったのかを尋ねることができます。
+On Synchronized,同期を受け取ったとき
+Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.,このシンクロナイザーが同期しているプロパティに、新しい値が送られてきたピアで走ります。自分で変えた値ではなく、届いた値に反応させたいものはここに置きます。
+On synchronized,同期を受け取ったとき
+Set Brightness,明るさを設定
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.",ライトの明るさを倍率で表します。0.5 で半分、2.0 で 2 倍です。`Light2D.energy` に書き込みます。
+Set brightness to {value},明るさを {value} にする
+Brightness,明るさ
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double.",ライトの明るさを倍率で表します。0.5 で半分、2.0 で 2 倍です。
+Reads brightness back: `Light2D.energy`. Use it in any value field.,明るさを読み取ります: `Light2D.energy`。どの値の欄でも使えます。
+brightness,明るさ
+Fade Brightness,明るさをフェードさせる
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.",明るさを一気に変えるのではなく、時間をかけて新しい値まで運びます。トゥイーン 1 つで、覚えておく状態はありません。`Light2D.energy` に書き込みます。
+Fade to {value} over {seconds} s,{seconds} 秒かけて {value} にする
+The light to fade. Leave it as self to fade the light this sheet is on.,フェードさせるライト。self のままにすると、この事件表が付いているライトが対象になります。
+The brightness to arrive at.,たどり着く明るさ。
+How long the fade takes.,フェードにかける時間。
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.",ライトの明るさを倍率で表します。0.5 で半分、2.0 で 2 倍です。`Light3D.light_energy` に書き込みます。
+Reads brightness back: `Light3D.light_energy`. Use it in any value field.,明るさを読み取ります: `Light3D.light_energy`。どの値の欄でも使えます。
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.",明るさを一気に変えるのではなく、時間をかけて新しい値まで運びます。トゥイーン 1 つで、覚えておく状態はありません。`Light3D.light_energy` に書き込みます。
+Set Colour,色を設定
+The colour the light casts. Writes `Light2D.color`.,ライトが放つ色。`Light2D.color` に書き込みます。
+Set colour to {value},色を {value} にする
+The colour the light casts.,ライトが放つ色。
+Reads the light's colour back: `Light2D.color`. Use it in any value field.,ライトの色を読み取ります: `Light2D.color`。どの値の欄でも使えます。
+The colour the light casts. Writes `Light3D.light_color`.,ライトが放つ色。`Light3D.light_color` に書き込みます。
+Reads the light's colour back: `Light3D.light_color`. Use it in any value field.,ライトの色を読み取ります: `Light3D.light_color`。どの値の欄でも使えます。
+Set Reach,届く範囲を設定
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.",光がどこまで届くか。2D ライトではテクスチャの倍率、3D ライトではメートルです。`PointLight2D.texture_scale` に書き込みます。
+Set reach to {value},届く範囲を {value} にする
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one.",光がどこまで届くか。2D ライトではテクスチャの倍率、3D ライトではメートルです。
+Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.,届く範囲を読み取ります: `PointLight2D.texture_scale`。どの値の欄でも使えます。
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.",光がどこまで届くか。2D ライトではテクスチャの倍率、3D ライトではメートルです。`OmniLight3D.omni_range` に書き込みます。
+Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.,届く範囲を読み取ります: `OmniLight3D.omni_range`。どの値の欄でも使えます。
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.",光がどこまで届くか。2D ライトではテクスチャの倍率、3D ライトではメートルです。`SpotLight3D.spot_range` に書き込みます。
+Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.,届く範囲を読み取ります: `SpotLight3D.spot_range`。どの値の欄でも使えます。
+Set Cone Angle,コーンの角度を設定
+"How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.",スポットライトのコーンがどれだけ開くか。中心線からの角度 (度) です。`SpotLight3D.spot_angle` に書き込みます。
+Set cone angle to {value},コーンの角度を {value} にする
+Cone Angle,コーンの角度
+"How wide the spot's cone opens, in degrees from its centre line.",スポットライトのコーンがどれだけ開くか。中心線からの角度 (度) です。
+Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.,コーンの角度を読み取ります: `SpotLight3D.spot_angle`。どの値の欄でも使えます。
+cone angle,コーンの角度
+Turn On,点ける
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.",ライトが点いているかどうか。2D ライトは `enabled` で切り替えますが、3D ライトにはそのプロパティがないため `visible` で切り替えます。`Light2D.enabled` に書き込みます。
+Turn on,点ける
+Turn Off,消す
+Turn off,消す
+Is On,点いている
+True while is on. Reads `Light2D.enabled`.,ライトが点いているあいだ真になります。`Light2D.enabled` を読みます。
+Is on,点いている
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.",ライトが点いているかどうか。2D ライトは `enabled` で切り替えますが、3D ライトにはそのプロパティがないため `visible` で切り替えます。`Light3D.visible` に書き込みます。
+True while is on. Reads `Light3D.visible`.,ライトが点いているあいだ真になります。`Light3D.visible` を読みます。
+Turn Shadows On,影を点ける
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.,ライトが影を落とすかどうか。ライティングの中でいちばん安上がりなスイッチです。`Light2D.shadow_enabled` に書き込みます。
+Turn shadows on,影を点ける
+Turn Shadows Off,影を消す
+Turn shadows off,影を消す
+Is Casting Shadows,影を落としている
+True while is casting shadows. Reads `Light2D.shadow_enabled`.,ライトが影を落としているあいだ真になります。`Light2D.shadow_enabled` を読みます。
+Is casting shadows,影を落としている
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.,ライトが影を落とすかどうか。ライティングの中でいちばん安上がりなスイッチです。`Light3D.shadow_enabled` に書き込みます。
+True while is casting shadows. Reads `Light3D.shadow_enabled`.,ライトが影を落としているあいだ真になります。`Light3D.shadow_enabled` を読みます。
+Set Darkness,暗さを設定
+Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.,2D レイヤー全体を一度に暗くします。レベルを夜として読ませる、たった 1 行です。`CanvasModulate.color` に書き込み、その色をレイヤーをどれだけ暗くするかとして読み返します。
+Set darkness to {value},暗さを {value} にする
+Darkness,暗さ
+"How dark the layer goes, and what colour the dark is. The row shows the percentage; the file keeps the colour.",レイヤーがどれだけ暗くなるか、そしてその暗さの色。行にはパーセントが出ますが、ファイルが持つのは色です。
+Fade Darkness,暗さをフェードさせる
+"Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.",レイヤーの暗さを一気に変えるのではなく、時間をかけて新しい値まで運びます。トゥイーン 1 つで、覚えておく状態はありません。夕暮れ、閉じていく洞窟の入口、消えていく明かり。
+Fade darkness to {value} over {seconds} s,暗さを {seconds} 秒かけて {value} にする
+The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.,フェードさせる暗さ。self のままにすると、この事件表が付いている CanvasModulate が対象になります。
+The darkness to arrive at.,たどり着く暗さ。
+Turn Fog On,霧を出す
+Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.,ワールドの霧をオンにします。晴れた日を霧の日に変える、たった 1 行です。`Environment.fog_enabled` に書き込みます。
+Turn fog on,霧を出す
+Turn Fog Off,霧を消す
+Switches the world's fog off again. Writes `Environment.fog_enabled`.,ワールドの霧をふたたびオフにします。`Environment.fog_enabled` に書き込みます。
+Turn fog off,霧を消す
+Turn Glow On,グローを出す
+"Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.",ワールドのグローをオンにします。ネオンや炎、魔法が明るく見えるのはこれのおかげです。`Environment.glow_enabled` に書き込みます。
+Turn glow on,グローを出す
+Turn Glow Off,グローを消す
+Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.,ワールドのグローをふたたびオフにします。フレームレートも返ってきます。`Environment.glow_enabled` に書き込みます。
+Turn glow off,グローを消す
+Set Fog Thickness,霧の濃さを設定
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.,ワールドの霧の濃さを設定します。時間とともに上げていけば、嵐が近づいてくる感じになります。`Environment.fog_density` に書き込みます。
+Thickness,濃さ
+Set Ambient Light,環境光を設定
+Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.,どのライトにも照らされていないときにシーンが持つ明るさを設定します。ほかのすべての光の下限にあたります。`Environment.ambient_light_energy` に書き込みます。
+Light,光
+"How much light everything gets regardless of the lights, as a fraction.",ライトに関係なく全体が受け取る光の量を、倍率で表します。
+Fade The Glow,グローをフェードさせる
+"Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.",ワールドのグローの強さを、時間をかけて新しい値まで運びます。ボス部屋が明るくなる、呪文が消えていく。トゥイーン 1 つで、覚えておく状態はありません。
+Fade the glow to {value} over {seconds} s,グローを {seconds} 秒かけて {value} にする
+The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.,フェードさせる WorldEnvironment。self のままにすると、この事件表が付いているものが対象になります。
+How much bright things bleed by the end. Around 1 is strong.,最終的に明るいものがどれだけにじむか。1 前後で強めです。
+Make The Environment This Scene's Own,環境をこのシーン専用にする
+"Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.",何かが環境を変える前に、このシーン専用のコピーを与えます。これがないと、実行時の霧やグローの行が共有の `.tres` ファイルを書き換え、その変更が同じファイルを読み込むほかのシーンにもプレイヤーについて回ります。
+The WorldEnvironment to give its own copy. Leave it blank for this node.,自分のコピーを持たせる WorldEnvironment。このノードを対象にするなら空のままにします。
+Set Light Energy (2D),光の強さを設定 (2D)
+Sets how bright a 2D light is. The row shows the fraction as a percentage.,2D ライトの明るさを設定します。行では倍率をパーセントで表示します。
+The 2D light to change.,変更する 2D ライト。
+Energy,強さ
+"How bright, as a fraction: 0.5 is half, 2.0 is double.",明るさを倍率で。0.5 で半分、2.0 で 2 倍です。
+Set Light Colour (2D),光の色を設定 (2D)
+Sets the colour a 2D light casts.,2D ライトが放つ色を設定します。
+Set light colour to {colour},光の色を {colour} にする
+Set Light On/Off,ライトのオン/オフを設定
+"Switches a 2D light on or off. Different from hiding the node, which also hides its children.",2D ライトをオン・オフします。ノードを非表示にするのとは別です。非表示にすると子ノードも隠れます。
+Set light {on},ライトを {on} にする
+The 2D light to switch.,切り替える 2D ライト。
+"Whether the light is lit. Off is different from hiding the node, which also hides its children.",ライトが点いているかどうか。オフにするのはノードを非表示にするのとは別で、非表示にすると子ノードも隠れます。
+Set Shadows On/Off,影のオン/オフを設定
+Turns a light's shadows on or off - the cheapest lighting switch there is.,ライトの影をオン・オフします。ライティングの中でいちばん安上がりなスイッチです。
+Set shadows {on},影を {on} にする
+The light to change.,変更するライト。
+Whether the light casts shadows.,ライトが影を落とすかどうか。
+Set Light Energy (3D),光の強さを設定 (3D)
+Sets how bright a 3D light is. The row shows the fraction as a percentage.,3D ライトの明るさを設定します。行では倍率をパーセントで表示します。
+The 3D light to change.,変更する 3D ライト。
+Set Light Colour (3D),光の色を設定 (3D)
+Sets the colour a 3D light casts - the one knob that turns midday into sunset.,3D ライトが放つ色を設定します。真昼を夕暮れに変える、唯一のつまみです。
+Set Layer Tint,レイヤーの色味を設定
+Tints a whole 2D layer at once - the one row that makes a level read as night.,2D レイヤー全体を一度に色付けします。レベルを夜として読ませる、たった 1 行です。
+Set layer tint to {colour},レイヤーの色味を {colour} にする
+Canvas modulate,CanvasModulate
+The CanvasModulate node that tints the layer.,レイヤーを色付けする CanvasModulate ノード。
+The tint laid over everything on the layer.,レイヤー上のすべてに重ねる色味。
+Sets how much light a 3D scene has with no light shining on it.,どのライトにも照らされていないときに 3D シーンが持つ明るさを設定します。
+World environment,WorldEnvironment
+The WorldEnvironment node holding the environment.,環境を保持している WorldEnvironment ノード。
+Set fog colour to {colour},霧の色を {colour} にする

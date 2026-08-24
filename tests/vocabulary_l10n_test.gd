@@ -54,6 +54,12 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/editor_author_aces.gd",
 	"res://addons/eventforge/registration/modules/spatial_words_aces.gd",
 	"res://addons/eventforge/registration/modules/cursor_canvas_aces.gd",
+	# Playing together, and lighting a game: three modules that shipped whole, so the whole of each
+	# is owed. The frozen lighting module beside them (lighting_aces.gd) predates both waves and was
+	# keyed at the same time, which is why it is not listed here but is held by the ratchet below.
+	"res://addons/eventforge/registration/modules/multiplayer_aces.gd",
+	"res://addons/eventforge/registration/modules/light_node_aces.gd",
+	"res://addons/eventforge/registration/modules/scene_lighting_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -263,12 +269,13 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 ## an untranslated verb drops OUT and fails here, naming itself; a module that becomes covered turns
 ## up as a surplus and is added, which is the moment the wave list above stops needing hand-editing.
 ##
-## The rest of the vocabulary is not keyed yet (roughly a quarter of the shipped sentences are), and
+## The rest of the vocabulary is not keyed yet (about three in ten of the shipped sentences are), and
 ## a floor on a PERCENTAGE would not notice a new sentence added to a covered module - which is the
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_MODULES: Array[String] = [
 	"clipboard_aces.gd", "cursor_canvas_aces.gd", "editor_author_aces.gd", "facing_aces.gd",
-	"game_mechanics_aces.gd", "resource_aces.gd", "spatial_aces.gd", "spatial_words_aces.gd",
+	"game_mechanics_aces.gd", "light_node_aces.gd", "lighting_aces.gd", "multiplayer_aces.gd",
+	"resource_aces.gd", "scene_lighting_aces.gd", "spatial_aces.gd", "spatial_words_aces.gd",
 	"table_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
 ]
 

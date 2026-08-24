@@ -4568,3 +4568,294 @@ Make the environment this scene's own,환경을 이 씬 전용으로 만들기
 "Lighting: %d lit scene(s), %d with something that will not show at run time.","조명: 조명이 있는 씬 %d개, 그중 %d개에 실행 시 보이지 않을 문제가 있습니다."
 This sheet already takes its own copy.,이 시트는 이미 자체 사본을 가져옵니다.
 This scene has its own environment now - the change stops here.,이제 이 씬은 자체 환경을 가집니다 - 변경은 여기서 멈춥니다.
+Send Message To Everyone,모두에게 메시지 보내기
+"Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.",게임 안의 모든 피어에서 메시지를 실행합니다. 메시지가 그렇게 지정하면 이 피어도 포함됩니다. 함수를 먼저 메시지로 표시해야 합니다.
+Send {message} to everyone {args},{message} 을(를) 모두에게 보내기 {args}
+Message,메시지
+The function marked as a message. Every peer runs it.,메시지로 표시된 함수. 모든 피어가 실행합니다.
+"Values to send with the message, comma separated.",메시지와 함께 보낼 값. 쉼표로 구분합니다.
+Send Message To The Host,호스트에게 메시지 보내기
+"Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.","호스트에서만 메시지를 실행합니다. 호스트는 무엇이 참인지 정하는 피어여서, 치트를 모두에게 곧바로 보낼 수 없습니다."
+Send {message} to the host {args},{message} 을(를) 호스트에게 보내기 {args}
+The function marked as a message. Only the host runs it.,메시지로 표시된 함수. 호스트만 실행합니다.
+Send Message To One Peer,한 피어에게 메시지 보내기
+"Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.","지정한 한 피어에서만 메시지를 실행합니다. 개인 응답이나, 해당 플레이어에게 되돌려 보내는 보정에 씁니다."
+Send {message} to {peer} {args},{message} 을(를) {peer} 에게 보내기 {args}
+The function marked as a message. Only the peer you name runs it.,메시지로 표시된 함수. 지정한 피어만 실행합니다.
+Peer,피어
+"Who to send it to: the id an event handed you, or Sender to answer whoever asked.","보낼 대상. 이벤트가 건네준 id, 또는 요청한 상대에게 답하려면 보낸 피어."
+Is Host,호스트임
+True on the peer that is hosting the game. Put everything that decides what is true behind this.,게임을 호스팅하는 피어에서 참입니다. 무엇이 참인지 정하는 처리는 모두 이 조건 뒤에 두세요.
+Owns This Object,이 개체를 소유함
+True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.,"이 피어가 이 오브젝트를 움직이고 바꿀 수 있는 쪽일 때 참입니다. 다른 모두가 가진 사본이 아니라, 그 플레이어 자신의 캐릭터라는 뜻입니다."
+My ID,내 ID
+This peer's own id. The host is always 1; everyone else gets a number when they join.,"이 피어 자신의 id. 호스트는 항상 1이고, 나머지는 참가할 때 번호를 받습니다."
+MyID,내ID
+Host A Game,게임 호스팅하기
+Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.,"이 게임을 다른 플레이어에게 열고 이 피어를 호스트로 만듭니다. 호스트의 답을 모두가 참으로 받아들입니다. 아직 아무도 접속하지 않았으며, 누군가 들어오면 「플레이어 참가 시」가 알려 줍니다."
+Host a game on port {port} for up to {max_players} players,포트 {port} 에서 최대 {max_players} 명으로 게임 호스팅
+Port,포트
+The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.,"플레이어가 접속할 포트. 1024 부터 65535 사이라면 마음대로 고르면 되고, 양쪽이 같은 번호를 써야 합니다."
+Players,플레이어 수
+"How many peers may connect. The host is not one of them, so 4 here means the host plus four others.","접속할 수 있는 피어 수. 호스트는 여기에 포함되지 않으므로, 4 는 호스트와 다른 네 명을 뜻합니다."
+Using,통신 방식
+How the game talks over the network. ENet unless the game runs in a browser.,게임이 네트워크로 통신하는 방식. 브라우저에서 돌리는 게 아니라면 ENet 입니다.
+ENet - desktop and mobile,ENet - 데스크톱과 모바일
+WebSocket - also works in a browser,WebSocket - 브라우저에서도 동작
+"WebRTC - browser, peer to peer","WebRTC - 브라우저, 피어 투 피어"
+Join A Game,게임에 참가하기
+Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.,호스트에게 이 피어를 받아 달라고 요청합니다. 답은 나중에 「호스트에 참가 시」 또는 「참가 실패 시」로 옵니다. 이 행이 실행되는 순간에는 아직 아무것도 연결되지 않았습니다.
+Join a game at {address} port {port},{address} 포트 {port} 의 게임에 참가
+Address,주소
+"Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.","호스트의 위치. 127.0.0.1 은 같은 컴퓨터이고, 가정 내 네트워크라면 호스트의 로컬 주소, 인터넷 너머라면 호스트가 알린 주소입니다."
+The port the host opened. It has to be the same number the host used.,호스트가 연 포트. 호스트가 쓴 번호와 같아야 합니다.
+How the game talks over the network. It has to match what the host is using.,게임이 네트워크로 통신하는 방식. 호스트가 쓰는 것과 같아야 합니다.
+Leave The Game,게임 나가기
+"Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.",이 피어의 연결을 끊고 게임을 싱글 플레이로 되돌립니다. 호스트에서 실행하면 답해 줄 상대가 없어지므로 모두의 게임이 끝납니다.
+Leave the game,게임 나가기
+Spawn,생성
+Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.,"호스트와 모든 피어에서 동시에 씬 사본을 하나 만듭니다. 호출할 수 있는 쪽은 호스트뿐이고, 나머지는 사본을 받습니다."
+Spawn {data},{data} 생성
+Spawner,스포너
+"The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.",사본을 만드는 MultiplayerSpawner. 어떤 씬을 트리의 어디에 둘지 정합니다.
+What to send,보낼 내용
+"What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.","스포너에게 무엇을 만들라고 할지. 스포너에 이를 읽는 스폰 함수가 있으면 단순한 값을, 씬 목록만으로 충분하면 아무것도 넣지 않습니다."
+Kick Player,플레이어 내보내기
+Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.,"호스트에서 한 플레이어의 연결을 끊습니다. 호스트만 할 수 있으며, 누군가를 내보내고 싶은 클라이언트는 호스트에 메시지를 보내 판단을 맡깁니다."
+Kick player {id},플레이어 {id} 내보내기
+Player,플레이어
+"The peer id to drop. On player left then runs on everybody, the dropped peer included.",연결을 끊을 피어의 id. 그 뒤 「플레이어 퇴장 시」가 내보내진 피어를 포함해 모두에게서 실행됩니다.
+Stop Accepting Players,플레이어 받기 중단
+"Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.","게임을 끝내지 않고 로비를 닫습니다. 이미 들어온 사람은 그대로 있고, 더는 아무도 들어오지 못합니다. 경기가 시작될 때나 마지막 자리가 찼을 때 실행하세요."
+Stop accepting players,플레이어 받기 중단
+Relay Messages Between Players,플레이어끼리 메시지 중계
+"Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.",호스트가 클라이언트끼리의 메시지를 전달할지 여부. 호스트가 무엇이 참인지 정하는 게임에서는 끄는 쪽이 더 안전합니다. 클라이언트가 뒤에서 서로 이야기할 수 없기 때문입니다.
+Relay messages between players {on},플레이어끼리 메시지 중계를 {on} 로 설정
+Relay,중계
+"On, the host passes a message from one client on to another. Off, a client can only reach the host.",켜면 호스트가 한 클라이언트의 메시지를 다른 클라이언트에게 전달합니다. 끄면 클라이언트는 호스트에게만 닿습니다.
+Accept Player,플레이어 수락
+"Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.","한 피어의 핸드셰이크를 끝냅니다. 참가한 것으로 세어지고 「플레이어 참가 시」가 실행됩니다. 수락도 거절도 되지 않은 피어는 그냥 기다리므로, 모든 핸드셰이크에는 둘 중 하나가 필요합니다."
+Accept player {id},플레이어 {id} 수락
+The peer whose handshake is finished - the id On player authenticating gave you.,핸드셰이크를 끝낼 피어. 「플레이어 인증 중」이 건네준 id 입니다.
+Reject Player,플레이어 거절
+Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.,"자신이 누구인지 증명하지 못한 피어를 돌려보냅니다. 그 피어에게는 「참가 실패 시」가 오고, 게임 안의 다른 누구도 알지 못합니다."
+Reject player {id},플레이어 {id} 거절
+"The peer to turn away. It never counted as joined, so On player left does not run for it.",돌려보낼 피어. 참가한 적이 없으므로 「플레이어 퇴장 시」는 이 피어에 대해 실행되지 않습니다.
+Send Auth,인증 데이터 보내기
+"Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.","핸드셰이크의 한쪽이 상대에게 확인받고 싶은 바이트를 보냅니다. 비밀번호, 토큰, 버전 번호 같은 것입니다. 피어가 참가로 인정되기 전에 오가므로 보통의 메시지가 아닙니다."
+Send auth {data} to player {id},인증 데이터 {data} 를 플레이어 {id} 에게 보내기
+Who to send it to. A client answering the host sends to 1.,보낼 대상. 호스트에 답하는 클라이언트는 1 로 보냅니다.
+Data,데이터
+"The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.","보낼 바이트. var_to_bytes(...) 가 값을 바이트로 만들고, 반대편에서는 bytes_to_var(...) 로 다시 읽습니다."
+Give To Player,플레이어에게 넘기기
+"Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.","오브젝트를 한 플레이어에게 넘깁니다. 그때부터 그 피어만 이를 움직일 수 있고, 「이 개체를 소유함」도 거기서만 참입니다. 모든 피어에서 실행하세요. 호스트 혼자 정하면 나머지는 누가 무엇을 소유하는지 서로 다르게 알게 됩니다."
+Give {target} to player {id},{target} 을(를) 플레이어 {id} 에게 넘기기
+The node whose owner changes. Its children follow it unless one was given an owner of its own.,"소유자가 바뀌는 노드. 자식 노드도 따라가지만, 따로 소유자를 지정받은 자식은 예외입니다."
+The peer that may now move and change it. Everybody else keeps a copy they may only read.,이제부터 그것을 움직이고 바꿀 수 있는 피어. 나머지는 읽기만 가능한 사본을 갖습니다.
+Is Connected,연결됨
+"True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.","이 피어가 실제로 게임 안에 있으면 참입니다. 직접 호스팅 중이거나 호스트에게 수락된 상태입니다. 참가 응답을 기다리는 동안에는 거짓이며, 로비 화면이 계속 기다려야 하는 순간이 바로 그때입니다."
+Is connected,연결됨
+Started As,시작 태그
+"True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.","이 빌드가 지정한 내보내기 태그를 가지면 참입니다. 하나의 프로젝트가 스스로 호스팅하거나, 스스로에게 참가하거나, 헤드리스 서버로 돌 수 있습니다. 진짜 서버 빌드는 Dedicated Server 내보내기 프리셋에서 태그를 받고 --headless 로 실행합니다."
+Started as {tag},{tag} 로 시작함
+Tag,태그
+The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.,"이 빌드를 내보낼 때의 기능 태그. host 와 client 는 두 프리셋에 직접 붙이는 태그이고, dedicated_server 는 Godot 자체의 서버 프리셋이 붙입니다."
+"The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.","게임 안의 다른 피어 모두의 id 를 리스트로 돌려줍니다. 이 피어 자신은 들어 있지 않으며, 그건 「내 ID」입니다."
+Player Count,플레이어 수
+How many other peers are in the game. Add one for this peer when the number a player reads should include them.,게임에 있는 다른 피어의 수. 플레이어에게 보여 줄 숫자에 자신도 포함하려면 1 을 더하세요.
+Player count,플레이어 수
+Sender,보낸 피어
+"Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.","메시지 안에서, 그 메시지를 보낸 피어의 id. 메시지가 유일하게 속일 수 없는 정보이므로, 요청을 믿기 전에 이것부터 확인하세요. 그 밖의 곳에서는 0 입니다."
+Owner Of,소유자
+"The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.","오브젝트를 소유한 피어의 id. 움직일 수 있는 쪽입니다. 누군가 넘겨주기 전까지는 1 인데, 처음에는 모든 것이 호스트의 것이기 때문입니다."
+Owner of {target},{target} 의 소유자
+The node to ask about. Its owner is the peer allowed to move and change it.,물어볼 대상 노드. 그 소유자가 노드를 움직이고 바꿀 수 있는 피어입니다.
+On Player Joined,플레이어 참가 시
+"Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.","다른 피어가 접속하면 실행됩니다. 호스트에서도, 이미 게임에 있는 모든 피어에서도 실행됩니다. 새 플레이어에게 필요한 것을 나눠 주는 쪽은 호스트입니다."
+On player joined {id},플레이어 {id} 참가 시
+The id of the peer that just joined. Whatever a new player needs is sent to this id.,방금 참가한 피어의 id. 새 플레이어에게 필요한 것은 이 id 로 보냅니다.
+On Player Left,플레이어 퇴장 시
+"Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.",피어의 연결이 끊기면 실행됩니다. 종료든 크래시든 접속 유실이든 마찬가지입니다. 그 플레이어의 것이던 것은 여기서 정리하세요.
+On player left {id},플레이어 {id} 퇴장 시
+"The id of the peer that just left. It is already gone, so nothing can be sent to it.",방금 나간 피어의 id. 이미 떠났으므로 아무것도 보낼 수 없습니다.
+On Joined The Host,호스트에 참가 시
+Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.,"참가하는 쪽 피어에서, 호스트가 받아들인 순간 실행됩니다. 로비 화면을 게임으로 넘기는 곳이 여기입니다."
+On joined the host,호스트에 참가 시
+On Join Failed,참가 실패 시
+"Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.","참가하려던 피어에서, 호스트가 답하지 않았거나 거절했을 때 실행됩니다. 주소가 틀렸거나, 포트가 틀렸거나, 플레이어를 받지 않는 게임인 경우입니다."
+On join failed,참가 실패 시
+On The Host Left,호스트 이탈 시
+Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.,"호스트가 사라지면 남아 있는 모든 피어에서 실행됩니다. 그들에게 게임은 끝난 것이니, 여기서 메뉴로 돌려보내세요."
+On the host left,호스트 이탈 시
+On Player Authenticating,플레이어 인증 중
+Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.,피어가 아직 자신이 누구인지 증명하는 동안 호스트에서 실행됩니다. 「플레이어 참가 시」보다 앞입니다. 「플레이어 수락」이나 「플레이어 거절」로 답하세요. 피어가 보낸 바이트는 인증 콜백으로 도착합니다.
+On player authenticating {id},플레이어 {id} 인증 중
+The id of the peer that is trying to join. It is not in the game yet.,참가하려는 피어의 id. 아직 게임 안에는 없습니다.
+On Authentication Failed,인증 실패 시
+"Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.","피어가 끝내 자신을 증명하지 못했을 때 실행됩니다. 답이 틀렸거나, 제때 아무도 답하지 않은 경우입니다. 해당 피어는 끊기며, 이유를 보여 주는 곳이 여기입니다."
+On authentication failed {id},플레이어 {id} 인증 실패 시
+The id of the peer whose handshake did not finish.,핸드셰이크가 끝나지 않은 피어의 id.
+Spawn A Scene,씬 생성하기
+"Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.","호스트와 모든 피어에서 동시에 씬 사본을 하나 만듭니다. 실행할 수 있는 쪽은 호스트뿐이고 나머지는 스포너에서 사본을 받으므로, 그 씬은 스포너 목록에 들어 있어야 합니다."
+Spawn {scene} named {name} at {at},{scene} 을(를) {name} 이름으로 {at} 에 생성
+The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.,사본을 지켜보는 MultiplayerSpawner. 씬 목록과 사본이 놓일 경로를 지니고 있습니다.
+"The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.",만들 씬. 그 스포너가 생성할 수 있는 씬 목록에서 고릅니다. 아직 목록에 없는 씬은 이 행을 적용할 때 추가됩니다.
+"What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.","사본에 붙일 이름. 보통 플레이어의 id 를 이름으로 쓰는데, 그래야 사본이 그 플레이어를 소유자로 삼을 수 있기 때문입니다."
+"Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.","어디에 놓을지. 2D 씬이면 좌표, 3D 씬이면 Vector3 입니다. 사본이 트리에 들어가기 전에 설정되므로 원점에 먼저 나타나는 일이 없습니다."
+Despawn,없애기
+"Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.",이 사본을 모든 곳에서 게임 밖으로 뺍니다. 오브젝트를 소유한 피어에서 실행하세요. 만든 스포너가 이를 보고 다른 모든 피어에서도 제거하므로 손으로 보낼 것이 없습니다.
+Show To Player,플레이어에게 보이기
+"Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.","이 싱크로나이저가 맞춰 두는 내용을 한 플레이어가 볼 수 있게 합니다. 가시성은 피어마다 정해지므로, 손패나 정찰한 유닛, 아무도 없는 방 같은 것을 주인 플레이어 외에는 감출 수 있습니다."
+Show to player {id},플레이어 {id} 에게 보이기
+The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.,이제부터 그것을 볼 수 있는 피어. 이 싱크로나이저가 맞춰 두는 내용을 받기 시작합니다.
+Hide From Player,플레이어에게 감추기
+"Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.","이 싱크로나이저가 맞춰 두는 내용을 한 플레이어에게 보내지 않습니다. 그 피어에서 노드가 지워지는 것은 아니고, 그저 오지 않게 됩니다. 보여 줄 생각이 없던 값을 패킷에서 읽어 갈 수도 없습니다."
+Hide from player {id},플레이어 {id} 에게 감추기
+The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.,그것을 더 이상 보지 못하게 되는 피어. 다시 보이게 할 때까지 이 노드에 관해서는 아무것도 보내지 않습니다.
+Show To Everyone,모두에게 보이기
+"Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.","이 싱크로나이저를 피어별 표시·숨김과 관계없이 모두에게 보이는 상태로 되돌립니다. 원래 그 설정으로 시작하므로, 이 행은 숨김을 되돌리는 용도이지 게임이 먼저 말해 두어야 하는 것은 아닙니다."
+Show to everyone,모두에게 보이기
+Ask A Function Who May See It,누가 볼 수 있는지 함수에 묻기
+"Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.","누가 볼 수 있는지를 플레이어마다 답하는 대신 함수에 맡깁니다. 플레이어가 드나들 때마다 다시 물으므로, 같은 방이나 같은 팀 같은 규칙이 행 하나 없이도 스스로 유지됩니다."
+Ask {filter} who may see it,{filter} 에게 누가 볼 수 있는지 묻기
+"The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.","답하는 함수. 플레이어의 id 를 하나 받고, 그 플레이어가 이 노드를 볼 수 있으면 true 를 돌려줍니다. 이 시트의 함수를 괄호 없이 이름으로 지정합니다."
+On Spawned,생성되었을 때
+"Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.","이 스포너가 사본을 만든 순간 호스트를 포함한 모든 피어에서 실행됩니다. 사본을 게임의 나머지 부분과 이어 주는 자리입니다. 점수판에 이름을 넣거나, 카메라를 그쪽으로 돌리거나."
+On spawned {node},{node} 생성 시
+"The copy that has just been made - the same node, on every peer that got it.",방금 만들어진 사본. 이를 받은 모든 피어에서 같은 노드입니다.
+On Despawned,없어졌을 때
+"Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.","이 스포너가 사본을 치우는 동안 모든 피어에서 실행됩니다. 소유자가 없앴든, 주인 플레이어가 게임을 나갔든 마찬가지입니다. 그 사본을 가리키던 것은 여기서 정리하세요."
+On despawned {node},{node} 제거 시
+"The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.","사라지는 사본. 이것이 실행되는 동안에는 아직 트리에 있으므로, 무엇이었는지 물어볼 수 있습니다."
+On Synchronized,동기화되었을 때
+Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.,이 싱크로나이저가 맞춰 두는 속성에 새 값이 막 전달된 피어에서 실행됩니다. 자기가 바꾼 값이 아니라 도착한 값에 반응해야 하는 것은 여기에 두세요.
+On synchronized,동기화되었을 때
+Set Brightness,밝기 설정
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.","빛이 얼마나 밝은지를 배율로 나타냅니다. 0.5 는 절반, 2.0 은 두 배입니다. `Light2D.energy` 에 씁니다."
+Set brightness to {value},밝기를 {value} 로 설정
+Brightness,밝기
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double.","빛이 얼마나 밝은지를 배율로 나타냅니다. 0.5 는 절반, 2.0 은 두 배입니다."
+Reads brightness back: `Light2D.energy`. Use it in any value field.,밝기를 읽어 옵니다: `Light2D.energy`. 어떤 값 칸에서든 쓸 수 있습니다.
+brightness,밝기
+Fade Brightness,밝기 페이드
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.",밝기를 단번에 바꾸지 않고 시간을 들여 새 값까지 옮깁니다. 트윈 하나면 되고 따로 기억할 상태가 없습니다. `Light2D.energy` 에 씁니다.
+Fade to {value} over {seconds} s,{seconds} 초에 걸쳐 {value} 로
+The light to fade. Leave it as self to fade the light this sheet is on.,페이드할 조명. self 로 두면 이 시트가 붙어 있는 조명이 대상이 됩니다.
+The brightness to arrive at.,도달할 밝기.
+How long the fade takes.,페이드에 걸리는 시간.
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.","빛이 얼마나 밝은지를 배율로 나타냅니다. 0.5 는 절반, 2.0 은 두 배입니다. `Light3D.light_energy` 에 씁니다."
+Reads brightness back: `Light3D.light_energy`. Use it in any value field.,밝기를 읽어 옵니다: `Light3D.light_energy`. 어떤 값 칸에서든 쓸 수 있습니다.
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.",밝기를 단번에 바꾸지 않고 시간을 들여 새 값까지 옮깁니다. 트윈 하나면 되고 따로 기억할 상태가 없습니다. `Light3D.light_energy` 에 씁니다.
+Set Colour,색 설정
+The colour the light casts. Writes `Light2D.color`.,조명이 내는 색. `Light2D.color` 에 씁니다.
+Set colour to {value},색을 {value} 로 설정
+The colour the light casts.,조명이 내는 색.
+Reads the light's colour back: `Light2D.color`. Use it in any value field.,조명의 색을 읽어 옵니다: `Light2D.color`. 어떤 값 칸에서든 쓸 수 있습니다.
+The colour the light casts. Writes `Light3D.light_color`.,조명이 내는 색. `Light3D.light_color` 에 씁니다.
+Reads the light's colour back: `Light3D.light_color`. Use it in any value field.,조명의 색을 읽어 옵니다: `Light3D.light_color`. 어떤 값 칸에서든 쓸 수 있습니다.
+Set Reach,도달 범위 설정
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.","빛이 어디까지 닿는지. 2D 조명에서는 텍스처 배율, 3D 조명에서는 미터입니다. `PointLight2D.texture_scale` 에 씁니다."
+Set reach to {value},도달 범위를 {value} 로 설정
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one.","빛이 어디까지 닿는지. 2D 조명에서는 텍스처 배율, 3D 조명에서는 미터입니다."
+Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.,도달 범위를 읽어 옵니다: `PointLight2D.texture_scale`. 어떤 값 칸에서든 쓸 수 있습니다.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.","빛이 어디까지 닿는지. 2D 조명에서는 텍스처 배율, 3D 조명에서는 미터입니다. `OmniLight3D.omni_range` 에 씁니다."
+Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.,도달 범위를 읽어 옵니다: `OmniLight3D.omni_range`. 어떤 값 칸에서든 쓸 수 있습니다.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.","빛이 어디까지 닿는지. 2D 조명에서는 텍스처 배율, 3D 조명에서는 미터입니다. `SpotLight3D.spot_range` 에 씁니다."
+Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.,도달 범위를 읽어 옵니다: `SpotLight3D.spot_range`. 어떤 값 칸에서든 쓸 수 있습니다.
+Set Cone Angle,원뿔 각도 설정
+"How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.",스포트라이트의 원뿔이 얼마나 벌어지는지. 중심선에서의 각도(도)입니다. `SpotLight3D.spot_angle` 에 씁니다.
+Set cone angle to {value},원뿔 각도를 {value} 로 설정
+Cone Angle,원뿔 각도
+"How wide the spot's cone opens, in degrees from its centre line.",스포트라이트의 원뿔이 얼마나 벌어지는지. 중심선에서의 각도(도)입니다.
+Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.,원뿔 각도를 읽어 옵니다: `SpotLight3D.spot_angle`. 어떤 값 칸에서든 쓸 수 있습니다.
+cone angle,원뿔 각도
+Turn On,켜기
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.","조명이 켜져 있는지 여부. 2D 조명은 `enabled` 로 켜고 끄지만, 3D 조명에는 그런 속성이 없어 `visible` 로 켜고 끕니다. `Light2D.enabled` 에 씁니다."
+Turn on,켜기
+Turn Off,끄기
+Turn off,끄기
+Is On,켜져 있음
+True while is on. Reads `Light2D.enabled`.,조명이 켜져 있는 동안 참입니다. `Light2D.enabled` 를 읽습니다.
+Is on,켜져 있음
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.","조명이 켜져 있는지 여부. 2D 조명은 `enabled` 로 켜고 끄지만, 3D 조명에는 그런 속성이 없어 `visible` 로 켜고 끕니다. `Light3D.visible` 에 씁니다."
+True while is on. Reads `Light3D.visible`.,조명이 켜져 있는 동안 참입니다. `Light3D.visible` 를 읽습니다.
+Turn Shadows On,그림자 켜기
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.,조명이 그림자를 드리우는지 여부. 조명 관련 스위치 중 가장 값싼 하나입니다. `Light2D.shadow_enabled` 에 씁니다.
+Turn shadows on,그림자 켜기
+Turn Shadows Off,그림자 끄기
+Turn shadows off,그림자 끄기
+Is Casting Shadows,그림자를 드리움
+True while is casting shadows. Reads `Light2D.shadow_enabled`.,조명이 그림자를 드리우는 동안 참입니다. `Light2D.shadow_enabled` 를 읽습니다.
+Is casting shadows,그림자를 드리움
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.,조명이 그림자를 드리우는지 여부. 조명 관련 스위치 중 가장 값싼 하나입니다. `Light3D.shadow_enabled` 에 씁니다.
+True while is casting shadows. Reads `Light3D.shadow_enabled`.,조명이 그림자를 드리우는 동안 참입니다. `Light3D.shadow_enabled` 를 읽습니다.
+Set Darkness,어둠 설정
+Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.,"2D 레이어 전체를 한 번에 어둡게 합니다. 레벨을 밤처럼 읽히게 하는 단 한 줄입니다. `CanvasModulate.color` 에 쓰고, 그 색을 레이어를 얼마나 어둡게 하는지로 읽어 냅니다."
+Set darkness to {value},어둠을 {value} 로 설정
+Darkness,어둠
+"How dark the layer goes, and what colour the dark is. The row shows the percentage; the file keeps the colour.","레이어가 얼마나 어두워지는지, 그리고 그 어둠의 색. 행에는 퍼센트가 보이지만 파일이 간직하는 것은 색입니다."
+Fade Darkness,어둠 페이드
+"Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.","레이어의 어둠을 단번에 바꾸지 않고 시간을 들여 새 값까지 옮깁니다. 트윈 하나면 되고 따로 기억할 상태가 없습니다. 해 질 녘, 닫히는 동굴 입구, 꺼져 가는 불빛."
+Fade darkness to {value} over {seconds} s,어둠을 {seconds} 초에 걸쳐 {value} 로
+The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.,페이드할 어둠. self 로 두면 이 시트가 붙어 있는 CanvasModulate 가 대상이 됩니다.
+The darkness to arrive at.,도달할 어둠.
+Turn Fog On,안개 켜기
+Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.,월드의 안개를 켭니다. 맑은 날을 안개 낀 날로 바꾸는 단 한 줄입니다. `Environment.fog_enabled` 에 씁니다.
+Turn fog on,안개 켜기
+Turn Fog Off,안개 끄기
+Switches the world's fog off again. Writes `Environment.fog_enabled`.,월드의 안개를 다시 끕니다. `Environment.fog_enabled` 에 씁니다.
+Turn fog off,안개 끄기
+Turn Glow On,글로우 켜기
+"Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.","월드의 글로우를 켭니다. 네온과 불, 마법이 밝게 보이는 건 이것 덕분입니다. `Environment.glow_enabled` 에 씁니다."
+Turn glow on,글로우 켜기
+Turn Glow Off,글로우 끄기
+Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.,월드의 글로우를 다시 끕니다. 프레임도 돌려받습니다. `Environment.glow_enabled` 에 씁니다.
+Turn glow off,글로우 끄기
+Set Fog Thickness,안개 짙기 설정
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.,월드 안개가 얼마나 짙은지 설정합니다. 시간에 따라 올리면 폭풍이 몰려오는 느낌이 납니다. `Environment.fog_density` 에 씁니다.
+Thickness,짙기
+Set Ambient Light,환경광 설정
+Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.,어떤 조명도 비추지 않을 때 씬이 갖는 빛의 양을 설정합니다. 다른 모든 빛 아래에 깔리는 바닥입니다. `Environment.ambient_light_energy` 에 씁니다.
+Light,빛
+"How much light everything gets regardless of the lights, as a fraction.",조명과 상관없이 모든 것이 받는 빛의 양을 배율로 나타냅니다.
+Fade The Glow,글로우 페이드
+"Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.","월드 글로우의 세기를 시간에 걸쳐 새 값까지 옮깁니다. 보스 방이 환해지고, 주문이 잦아드는 식입니다. 트윈 하나면 되고 따로 기억할 상태가 없습니다."
+Fade the glow to {value} over {seconds} s,글로우를 {seconds} 초에 걸쳐 {value} 로
+The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.,페이드할 WorldEnvironment. self 로 두면 이 시트가 붙어 있는 것이 대상이 됩니다.
+How much bright things bleed by the end. Around 1 is strong.,마지막에 밝은 것이 얼마나 번지는지. 1 언저리면 강한 편입니다.
+Make The Environment This Scene's Own,환경을 이 씬 전용으로 만들기
+"Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.","무언가가 환경을 바꾸기 전에 이 씬만의 사본을 만들어 줍니다. 이것이 없으면 실행 중에 쓰는 안개나 글로우 행이 공유 `.tres` 파일을 바꾸고, 그 변경이 같은 파일을 불러오는 다른 모든 씬까지 플레이어를 따라다닙니다."
+The WorldEnvironment to give its own copy. Leave it blank for this node.,자체 사본을 갖게 할 WorldEnvironment. 이 노드를 대상으로 하려면 비워 두세요.
+Set Light Energy (2D),빛 세기 설정 (2D)
+Sets how bright a 2D light is. The row shows the fraction as a percentage.,2D 조명이 얼마나 밝은지 설정합니다. 행에서는 배율을 퍼센트로 보여 줍니다.
+The 2D light to change.,바꿀 2D 조명.
+Energy,세기
+"How bright, as a fraction: 0.5 is half, 2.0 is double.","밝기를 배율로. 0.5 는 절반, 2.0 은 두 배입니다."
+Set Light Colour (2D),빛 색상 설정 (2D)
+Sets the colour a 2D light casts.,2D 조명이 내는 색을 설정합니다.
+Set light colour to {colour},빛 색상을 {colour} 로 설정
+Set Light On/Off,조명 켜기/끄기 설정
+"Switches a 2D light on or off. Different from hiding the node, which also hides its children.",2D 조명을 켜거나 끕니다. 노드를 숨기는 것과는 다릅니다. 노드를 숨기면 자식까지 함께 숨습니다.
+Set light {on},조명을 {on} 로 설정
+The 2D light to switch.,켜고 끌 2D 조명.
+"Whether the light is lit. Off is different from hiding the node, which also hides its children.","조명이 켜져 있는지 여부. 끄는 것은 노드를 숨기는 것과 달라서, 숨기면 자식까지 함께 숨습니다."
+Set Shadows On/Off,그림자 켜기/끄기 설정
+Turns a light's shadows on or off - the cheapest lighting switch there is.,조명의 그림자를 켜거나 끕니다. 조명 관련 스위치 중 가장 값싼 하나입니다.
+Set shadows {on},그림자를 {on} 로 설정
+The light to change.,바꿀 조명.
+Whether the light casts shadows.,조명이 그림자를 드리우는지 여부.
+Set Light Energy (3D),빛 세기 설정 (3D)
+Sets how bright a 3D light is. The row shows the fraction as a percentage.,3D 조명이 얼마나 밝은지 설정합니다. 행에서는 배율을 퍼센트로 보여 줍니다.
+The 3D light to change.,바꿀 3D 조명.
+Set Light Colour (3D),빛 색상 설정 (3D)
+Sets the colour a 3D light casts - the one knob that turns midday into sunset.,3D 조명이 내는 색을 설정합니다. 한낮을 노을로 바꾸는 단 하나의 손잡이입니다.
+Set Layer Tint,레이어 색조 설정
+Tints a whole 2D layer at once - the one row that makes a level read as night.,2D 레이어 전체에 한 번에 색을 입힙니다. 레벨을 밤처럼 읽히게 하는 단 한 줄입니다.
+Set layer tint to {colour},레이어 색조를 {colour} 로 설정
+Canvas modulate,CanvasModulate
+The CanvasModulate node that tints the layer.,레이어에 색을 입히는 CanvasModulate 노드.
+The tint laid over everything on the layer.,레이어 위의 모든 것에 덧씌우는 색조.
+Sets how much light a 3D scene has with no light shining on it.,어떤 조명도 비추지 않을 때 3D 씬이 갖는 빛의 양을 설정합니다.
+World environment,WorldEnvironment
+The WorldEnvironment node holding the environment.,환경을 지니고 있는 WorldEnvironment 노드.
+Set fog colour to {colour},안개 색을 {colour} 로 설정

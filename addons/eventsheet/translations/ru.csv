@@ -4568,3 +4568,294 @@ Make the environment this scene's own,Сделать окружение собс
 "Lighting: %d lit scene(s), %d with something that will not show at run time.","Освещение: освещённых сцен - %d, из них %d с тем, что не будет видно во время игры."
 This sheet already takes its own copy.,Этот лист уже берёт собственную копию.
 This scene has its own environment now - the change stops here.,Теперь у этой сцены собственное окружение - изменение дальше не уйдёт.
+Send Message To Everyone,Отправить сообщение всем
+"Runs a message on every peer in the game, including this one when the message says so. The function must be marked as a message first.","Выполняет сообщение на каждом участнике игры, включая этого, если сообщение так задано. Сначала функцию нужно пометить как сообщение."
+Send {message} to everyone {args},Отправить {message} всем {args}
+Message,Сообщение
+The function marked as a message. Every peer runs it.,"Функция, помеченная как сообщение. Её выполняет каждый участник."
+"Values to send with the message, comma separated.","Значения, отправляемые вместе с сообщением, через запятую."
+Send Message To The Host,Отправить сообщение хосту
+"Runs a message on the host only - the peer that decides what is true, so cheats cannot be sent straight to everybody.","Выполняет сообщение только на хосте - участнике, который решает, что истинно, поэтому читы нельзя разослать сразу всем."
+Send {message} to the host {args},Отправить {message} хосту {args}
+The function marked as a message. Only the host runs it.,"Функция, помеченная как сообщение. Её выполняет только хост."
+Send Message To One Peer,Отправить сообщение одному участнику
+"Runs a message on one named peer only - a private reply, or a correction sent back to the player it is about.","Выполняет сообщение только на одном названном участнике - личный ответ или поправка, отправленная тому игроку, о ком речь."
+Send {message} to {peer} {args},Отправить {message} участнику {peer} {args}
+The function marked as a message. Only the peer you name runs it.,"Функция, помеченная как сообщение. Её выполняет только названный участник."
+Peer,Участник
+"Who to send it to: the id an event handed you, or Sender to answer whoever asked.","Кому отправить: id, который дало событие, или Отправитель - чтобы ответить тому, кто спросил."
+Is Host,Является хостом
+True on the peer that is hosting the game. Put everything that decides what is true behind this.,"Истина на участнике, который ведёт игру. Всё, что решает, что истинно, ставьте за этим условием."
+Owns This Object,Владеет этим объектом
+True when this peer is the one allowed to move and change this object - the player's own character rather than everybody else's copy of it.,"Истина, когда именно этот участник вправе двигать и менять этот объект - собственный персонаж игрока, а не чужая копия."
+My ID,Мой ID
+This peer's own id. The host is always 1; everyone else gets a number when they join.,Собственный id этого участника. Хост всегда 1; остальные получают номер при входе.
+MyID,МойID
+Host A Game,Создать игру
+Opens this game to other players and makes this peer the host - the one whose answers everybody else takes as true. Nobody is connected yet; On player joined tells you when somebody is.,"Открывает эту игру для других игроков и делает этого участника хостом - тем, чьи ответы все считают истиной. Пока никто не подключён; «При входе игрока» скажет, когда кто-то войдёт."
+Host a game on port {port} for up to {max_players} players,Создать игру на порту {port} максимум для {max_players} игроков
+Port,Порт
+The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.,"Порт, к которому подключаются игроки. Подойдёт любой от 1024 до 65535; на обеих сторонах должен быть один и тот же номер."
+Players,Игроки
+"How many peers may connect. The host is not one of them, so 4 here means the host plus four others.","Сколько участников может подключиться. Хост в это число не входит, поэтому 4 здесь - это хост плюс четверо."
+Using,Способ связи
+How the game talks over the network. ENet unless the game runs in a browser.,"Как игра общается по сети. ENet, если только игра не работает в браузере."
+ENet - desktop and mobile,ENet - для ПК и мобильных
+WebSocket - also works in a browser,WebSocket - работает и в браузере
+"WebRTC - browser, peer to peer","WebRTC - браузер, напрямую между участниками"
+Join A Game,Присоединиться к игре
+Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.,Просит хост впустить этого участника. Ответ придёт позже как «При входе к хосту» или «При неудачном входе» - в момент выполнения строки соединения ещё нет.
+Join a game at {address} port {port},Присоединиться к игре {address} порт {port}
+Address,Адрес
+"Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.","Где находится хост. 127.0.0.1 - это та же машина; в домашней сети - локальный адрес хоста, а через интернет - тот адрес, который хост объявил."
+The port the host opened. It has to be the same number the host used.,"Порт, который открыл хост. Номер должен совпадать с тем, что задал хост."
+How the game talks over the network. It has to match what the host is using.,"Как игра общается по сети. Должно совпадать с тем, что использует хост."
+Leave The Game,Покинуть игру
+"Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.","Разрывает соединение этого участника и возвращает игру к одиночной. На хосте это заканчивает игру для всех, потому что отвечать им больше некому."
+Leave the game,Покинуть игру
+Spawn,Породить
+Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.,Создаёт одну копию сцены на хосте и на каждом участнике сразу. Вызывать может только хост; все остальные получают копию.
+Spawn {data},Породить {data}
+Spawner,Порождатель
+"The MultiplayerSpawner that makes the copies. It decides which scene, and where in the tree it goes.","MultiplayerSpawner, который создаёт копии. Он решает, какая это сцена и куда в дереве она попадёт."
+What to send,Что отправить
+"What the spawner is told to make. A plain value when the spawner has a spawn function to read it, or nothing at all when its scene list is enough.","Что поручают создать порождателю. Простое значение, когда у порождателя есть функция спавна, которая его читает, или ничего, когда достаточно его списка сцен."
+Kick Player,Отключить игрока
+Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.,"Отключает игрока со стороны хоста. Это может только хост - клиент, который хочет кого-то выгнать, отправляет хосту сообщение и оставляет решение за ним."
+Kick player {id},Отключить игрока {id}
+Player,Игрок
+"The peer id to drop. On player left then runs on everybody, the dropped peer included.","Id участника, которого отключают. Затем «При выходе игрока» срабатывает у всех, включая отключённого."
+Stop Accepting Players,Больше не принимать игроков
+"Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.","Закрывает лобби, не заканчивая игру: все, кто уже вошёл, остаются, а новых не пускают. Выполняйте, когда матч начался или занято последнее место."
+Stop accepting players,Больше не принимать игроков
+Relay Messages Between Players,Пересылать сообщения между игроками
+"Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.","Пересылает ли хост сообщения между клиентами. Выключено безопаснее для игры, где хост решает, что истинно: тогда клиенты не могут общаться между собой у него за спиной."
+Relay messages between players {on},Пересылка сообщений между игроками {on}
+Relay,Пересылка
+"On, the host passes a message from one client on to another. Off, a client can only reach the host.",Включено - хост передаёт сообщение от одного клиента другому. Выключено - клиент может достучаться только до хоста.
+Accept Player,Принять игрока
+"Finishes the handshake for one peer: it counts as joined, and On player joined runs. A peer that is never accepted or rejected simply waits, so every handshake needs one of the two.","Завершает рукопожатие для одного участника: он считается вошедшим, и срабатывает «При входе игрока». Участник, которого не приняли и не отклонили, просто ждёт, поэтому каждому рукопожатию нужно одно из двух."
+Accept player {id},Принять игрока {id}
+The peer whose handshake is finished - the id On player authenticating gave you.,"Участник, чьё рукопожатие завершают, - тот id, который дало «При проверке игрока»."
+Reject Player,Отклонить игрока
+Turns away a peer that did not prove who it is. That peer sees On join failed; nobody else in the game hears about it.,"Отклоняет участника, который не подтвердил, кто он. Этот участник получает «При неудачном входе»; больше в игре об этом никто не узнает."
+Reject player {id},Отклонить игрока {id}
+"The peer to turn away. It never counted as joined, so On player left does not run for it.","Участник, которого отклоняют. Он никогда не считался вошедшим, поэтому «При выходе игрока» для него не сработает."
+Send Auth,Отправить данные проверки
+"Sends the bytes one side of the handshake wants the other to check - a password, a token, a version number. They travel before the peer counts as joined, which is why this is not an ordinary message.","Отправляет байты, которые одна сторона рукопожатия хочет дать проверить другой, - пароль, токен, номер версии. Они идут до того, как участник считается вошедшим, поэтому это не обычное сообщение."
+Send auth {data} to player {id},Отправить данные проверки {data} игроку {id}
+Who to send it to. A client answering the host sends to 1.,"Кому отправить. Клиент, отвечающий хосту, отправляет на 1."
+Data,Данные
+"The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.","Байты для отправки. var_to_bytes(...) делает их из значения, а bytes_to_var(...) читает обратно на другой стороне."
+Give To Player,Передать игроку
+"Hands one object to one player: from then on that peer is the one allowed to move it, and Owns this object is true only there. Run it on every peer - a host that decides alone leaves the others disagreeing about who owns what.","Передаёт объект одному игроку: с этого момента двигать его вправе только этот участник, и «Владеет этим объектом» истинно лишь там. Выполняйте на каждом участнике - хост, решивший в одиночку, оставит остальных в разногласии о том, кому что принадлежит."
+Give {target} to player {id},Передать {target} игроку {id}
+The node whose owner changes. Its children follow it unless one was given an owner of its own.,"Узел, у которого меняется владелец. Дети следуют за ним, если только кому-то из них не назначили собственного владельца."
+The peer that may now move and change it. Everybody else keeps a copy they may only read.,"Участник, которому теперь можно двигать и менять объект. У всех остальных остаётся копия только для чтения."
+Is Connected,Подключён
+"True once this peer is really in a game - hosting one, or accepted by a host. It stays false while a join is still being answered, which is the moment a lobby screen has to keep waiting.","Истина, как только участник действительно в игре - ведёт её сам или принят хостом. Пока ответ на вход ещё не пришёл, остаётся ложью, и именно тогда экран лобби должен продолжать ждать."
+Is connected,Подключён
+Started As,Запущен как
+"True when this build carries the named export tag, so one project can host itself, join itself, or run headless as a server. A real server build gets its tag from the Dedicated Server export preset and is run with --headless.","Истина, когда сборка несёт названный тег экспорта, так что один проект может сам себя вести, сам к себе присоединяться или работать без окна как сервер. Настоящая серверная сборка получает тег из пресета экспорта Dedicated Server и запускается с --headless."
+Started as {tag},Запущен как {tag}
+Tag,Тег
+The feature tag this build was exported with. host and client are tags you add to two presets yourself; dedicated_server is the one Godot's own server preset sets.,"Тег возможности, с которым собрана эта сборка. host и client - теги, которые вы сами добавляете двум пресетам; dedicated_server ставит собственный серверный пресет Godot."
+"The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.",Список id всех ОСТАЛЬНЫХ участников игры. Самого этого участника в нём нет - это «Мой ID».
+Player Count,Число игроков
+How many other peers are in the game. Add one for this peer when the number a player reads should include them.,"Сколько в игре других участников. Прибавьте единицу за этого участника, если число, которое видит игрок, должно включать и его."
+Player count,Число игроков
+Sender,Отправитель
+"Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.","Внутри сообщения - id участника, который его отправил; единственное, о чём сообщение не может солгать, поэтому проверьте его, прежде чем верить просьбе. Везде в другом месте это 0."
+Owner Of,Владелец
+"The id of the peer that owns an object - the one allowed to move it. It is 1 until somebody gives it away, because the host owns everything to begin with.","Id участника, которому принадлежит объект, - того, кому можно его двигать. Пока никто его не передал, это 1: вначале хосту принадлежит всё."
+Owner of {target},Владелец {target}
+The node to ask about. Its owner is the peer allowed to move and change it.,"Узел, о котором спрашивают. Его владелец - тот участник, которому можно двигать и менять узел."
+On Player Joined,При входе игрока
+"Runs when another peer connects - on the host, and on every peer already in the game. The host is the one that hands out what a new player needs.","Срабатывает, когда подключается другой участник, - на хосте и у всех, кто уже в игре. Именно хост раздаёт то, что нужно новому игроку."
+On player joined {id},При входе игрока {id}
+The id of the peer that just joined. Whatever a new player needs is sent to this id.,"Id участника, который только что вошёл. Всё, что нужно новому игроку, отправляется на этот id."
+On Player Left,При выходе игрока
+"Runs when a peer disconnects, however it went - quit, crash or lost connection. Clean up whatever belonged to that player here.","Срабатывает, когда участник отключается - вышел, вылетел или потерял связь. Здесь убирают всё, что принадлежало этому игроку."
+On player left {id},При выходе игрока {id}
+"The id of the peer that just left. It is already gone, so nothing can be sent to it.","Id участника, который только что вышел. Его уже нет, поэтому отправить ему ничего нельзя."
+On Joined The Host,При входе к хосту
+Runs on the joining peer once the host has accepted it. This is where a lobby screen gives way to the game.,"Срабатывает на входящем участнике, как только хост его принял. Здесь экран лобби уступает место игре."
+On joined the host,При входе к хосту
+On Join Failed,При неудачном входе
+"Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players.","Срабатывает на входящем участнике, когда хост не ответил или отказал - неверный адрес, неверный порт или игра, которая не принимает игроков."
+On join failed,При неудачном входе
+On The Host Left,Когда хост ушёл
+Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here.,"Срабатывает у всех оставшихся участников, когда хост исчезает. Для них игра окончена: здесь верните их в меню."
+On the host left,Когда хост ушёл
+On Player Authenticating,При проверке игрока
+Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback.,"Срабатывает на хосте, пока участник ещё подтверждает, кто он, - до «При входе игрока». Ответьте на это «Принять игрока» или «Отклонить игрока»; присланные участником байты приходят через колбэк проверки."
+On player authenticating {id},При проверке игрока {id}
+The id of the peer that is trying to join. It is not in the game yet.,"Id участника, который пытается войти. В игре его пока нет."
+On Authentication Failed,При неудачной проверке
+"Runs when a peer never proved who it was - the wrong answer, or nobody answered in time. The peer is dropped; this is where the reason is shown.","Срабатывает, когда участник так и не подтвердил, кто он, - неверный ответ или никто не ответил вовремя. Участника отключают; здесь показывают причину."
+On authentication failed {id},При неудачной проверке игрока {id}
+The id of the peer whose handshake did not finish.,"Id участника, чьё рукопожатие не завершилось."
+Spawn A Scene,Породить сцену
+"Makes one copy of a scene on the host and on every peer at once. Only the host may run it, and everybody else receives the copy from the spawner - which is why the scene has to be in that spawner's list.","Создаёт одну копию сцены на хосте и на каждом участнике сразу. Выполнять может только хост, остальные получают копию от порождателя - поэтому сцена должна быть в его списке."
+Spawn {scene} named {name} at {at},Породить {scene} с именем {name} в {at}
+The MultiplayerSpawner that watches for the copy: it carries the list of scenes and the path a copy goes under.,"MultiplayerSpawner, который следит за копией: у него список сцен и путь, под которым копия появится."
+"The scene to make, from the spawner's own list of the scenes it may spawn. One that is not in the list yet is added to it when this row is applied.","Сцена, которую нужно создать, из списка сцен, доступных этому порождателю. Той, которой в списке ещё нет, добавят туда при применении строки."
+"What to call the copy. Naming it after the player's id is the usual choice, because that is what lets the copy make that player its owner.",Как назвать копию. Обычно её называют по id игрока - именно это позволяет копии сделать его своим владельцем.
+"Where to put it - a point for a 2D scene, a Vector3 for a 3D one. It is set before the copy joins the tree, so it never shows up at the origin first.","Куда её поместить - точка для 2D-сцены, Vector3 для 3D. Значение задаётся до того, как копия попадёт в дерево, поэтому она никогда не мелькает в начале координат."
+Despawn,Убрать
+"Takes this copy out of the game everywhere. Run it on the peer that owns the object: the spawner that made it sees it go and removes it on every other peer, so nothing has to be sent by hand.","Убирает эту копию из игры везде. Выполняйте на участнике, которому принадлежит объект: породивший её порождатель заметит это и уберёт её у всех остальных, ничего вручную слать не нужно."
+Show To Player,Показать игроку
+"Lets one player see what this synchronizer keeps in step. Visibility is decided per peer, so a game can keep a hand of cards, a scouted unit or a room nobody else is in away from everybody but the player it belongs to.","Позволяет одному игроку видеть то, что этот синхронизатор держит согласованным. Видимость решается для каждого участника отдельно, поэтому руку карт, разведанный отряд или комнату, где больше никого нет, можно скрыть от всех, кроме её владельца."
+Show to player {id},Показать игроку {id}
+The peer that may see it from now on. It starts receiving whatever this synchronizer keeps in step.,"Участник, которому теперь можно это видеть. Он начинает получать всё, что синхронизатор держит согласованным."
+Hide From Player,Скрыть от игрока
+"Stops sending one player anything this synchronizer keeps in step. The node is not deleted on that peer, it simply stops arriving - so a value they were never meant to see cannot be read out of the packets either.","Перестаёт отправлять одному игроку то, что синхронизатор держит согласованным. Узел у него не удаляется - он просто перестаёт приходить, так что значение, которого он видеть не должен, нельзя вычитать и из пакетов."
+Hide from player {id},Скрыть от игрока {id}
+The peer that stops seeing it. Nothing is sent to them for this node until it is shown again.,"Участник, который перестаёт это видеть. По этому узлу ему ничего не отправляют, пока не покажут снова."
+Show To Everyone,Показать всем
+"Puts this synchronizer back to being seen by every player, whatever was shown or hidden per peer before. That is the setting it starts on, so this row is how hiding is undone rather than something a game has to say first.","Возвращает синхронизатор к тому, что его видят все игроки, что бы ни было показано или скрыто по участникам. С этой настройки он и начинает, поэтому строка отменяет скрытие, а не задаёт что-то заранее."
+Show to everyone,Показать всем
+Ask A Function Who May See It,"Спросить функцию, кому это видно"
+"Hands the who-may-see-it question to a function instead of answering it player by player. It is asked again as players come and go, so a rule like same room or same team keeps itself true with no row saying so.","Передаёт вопрос «кому это видно» функции вместо того, чтобы отвечать на него игрок за игроком. Его задают снова, когда игроки приходят и уходят, так что правило вроде «та же комната» или «та же команда» держится само, без единой строки."
+Ask {filter} who may see it,"Спросить {filter}, кому это видно"
+"The function that answers. It is handed one player's id and returns true when that player may see this node - a function of this sheet, named without its brackets.","Функция, которая отвечает. Ей передают id игрока, и она возвращает true, когда этому игроку можно видеть узел, - функция этого листа, названная без скобок."
+On Spawned,При порождении
+"Runs on every peer the moment this spawner makes a copy, the host included. It is where a copy is joined up to the rest of the game: a name added to a scoreboard, a camera pointed at it.","Срабатывает у каждого участника в момент, когда порождатель создаёт копию, включая хост. Здесь копию подключают к остальной игре: имя в таблице счёта, камера, наведённая на неё."
+On spawned {node},При порождении {node}
+"The copy that has just been made - the same node, on every peer that got it.","Только что созданная копия - тот же самый узел у каждого участника, который его получил."
+On Despawned,При удалении
+"Runs on every peer as this spawner takes a copy away, whether its owner despawned it or the player it belonged to left the game. Clean up whatever was pointing at that copy here.","Срабатывает у каждого участника, пока порождатель убирает копию, - неважно, убрал ли её владелец или игрок, которому она принадлежала, вышел из игры. Здесь убирают всё, что на неё ссылалось."
+On despawned {node},При удалении {node}
+"The copy that is going away. It is still in the tree while this runs, so it can still be asked what it was.","Копия, которая уходит. Пока это выполняется, она ещё в дереве, поэтому её ещё можно спросить, чем она была."
+On Synchronized,При синхронизации
+Runs on a peer that has just been sent new values for the properties this synchronizer keeps in step. Right for anything that has to answer a value that ARRIVED rather than one this peer changed itself.,"Срабатывает у участника, которому только что прислали новые значения свойств, согласуемых этим синхронизатором. Подходит для всего, что должно откликаться на ПРИШЕДШЕЕ значение, а не на изменённое самим участником."
+On synchronized,При синхронизации
+Set Brightness,Задать яркость
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light2D.energy`.","Насколько ярок свет, в долях: 0.5 - вдвое слабее, 2.0 - вдвое ярче. Пишет `Light2D.energy`."
+Set brightness to {value},Задать яркость {value}
+Brightness,Яркость
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double.","Насколько ярок свет, в долях: 0.5 - вдвое слабее, 2.0 - вдвое ярче."
+Reads brightness back: `Light2D.energy`. Use it in any value field.,Читает яркость обратно: `Light2D.energy`. Годится для любого поля значения.
+brightness,яркость
+Fade Brightness,Плавно изменить яркость
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light2D.energy`.","Ведёт яркость к новому значению во времени, а не прыжком - один твин, никакого состояния. Пишет `Light2D.energy`."
+Fade to {value} over {seconds} s,Плавно к {value} за {seconds} с
+The light to fade. Leave it as self to fade the light this sheet is on.,"Свет, который плавно меняют. Оставьте self, чтобы менять тот свет, к которому прикреплён этот лист."
+The brightness to arrive at.,"Яркость, к которой нужно прийти."
+How long the fade takes.,Сколько длится переход.
+"How bright the light is, as a fraction: 0.5 is half, 2.0 is double. Writes `Light3D.light_energy`.","Насколько ярок свет, в долях: 0.5 - вдвое слабее, 2.0 - вдвое ярче. Пишет `Light3D.light_energy`."
+Reads brightness back: `Light3D.light_energy`. Use it in any value field.,Читает яркость обратно: `Light3D.light_energy`. Годится для любого поля значения.
+"Walks brightness to a new value over time instead of jumping to it - one tween, no state to keep. Writes `Light3D.light_energy`.","Ведёт яркость к новому значению во времени, а не прыжком - один твин, никакого состояния. Пишет `Light3D.light_energy`."
+Set Colour,Задать цвет
+The colour the light casts. Writes `Light2D.color`.,"Цвет, который даёт свет. Пишет `Light2D.color`."
+Set colour to {value},Задать цвет {value}
+The colour the light casts.,"Цвет, который даёт свет."
+Reads the light's colour back: `Light2D.color`. Use it in any value field.,Читает цвет света обратно: `Light2D.color`. Годится для любого поля значения.
+The colour the light casts. Writes `Light3D.light_color`.,"Цвет, который даёт свет. Пишет `Light3D.light_color`."
+Reads the light's colour back: `Light3D.light_color`. Use it in any value field.,Читает цвет света обратно: `Light3D.light_color`. Годится для любого поля значения.
+Set Reach,Задать дальность
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `PointLight2D.texture_scale`.","Как далеко достаёт свет: масштаб текстуры для 2D-света, метры для 3D. Пишет `PointLight2D.texture_scale`."
+Set reach to {value},Задать дальность {value}
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one.","Как далеко достаёт свет: масштаб текстуры для 2D-света, метры для 3D."
+Reads reach back: `PointLight2D.texture_scale`. Use it in any value field.,Читает дальность обратно: `PointLight2D.texture_scale`. Годится для любого поля значения.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `OmniLight3D.omni_range`.","Как далеко достаёт свет: масштаб текстуры для 2D-света, метры для 3D. Пишет `OmniLight3D.omni_range`."
+Reads reach back: `OmniLight3D.omni_range`. Use it in any value field.,Читает дальность обратно: `OmniLight3D.omni_range`. Годится для любого поля значения.
+"How far the light gets: a scale for a 2D light's texture, metres for a 3D one. Writes `SpotLight3D.spot_range`.","Как далеко достаёт свет: масштаб текстуры для 2D-света, метры для 3D. Пишет `SpotLight3D.spot_range`."
+Reads reach back: `SpotLight3D.spot_range`. Use it in any value field.,Читает дальность обратно: `SpotLight3D.spot_range`. Годится для любого поля значения.
+Set Cone Angle,Задать угол конуса
+"How wide the spot's cone opens, in degrees from its centre line. Writes `SpotLight3D.spot_angle`.","Насколько широко раскрывается конус прожектора, в градусах от его оси. Пишет `SpotLight3D.spot_angle`."
+Set cone angle to {value},Задать угол конуса {value}
+Cone Angle,Угол конуса
+"How wide the spot's cone opens, in degrees from its centre line.","Насколько широко раскрывается конус прожектора, в градусах от его оси."
+Reads cone angle back: `SpotLight3D.spot_angle`. Use it in any value field.,Читает угол конуса обратно: `SpotLight3D.spot_angle`. Годится для любого поля значения.
+cone angle,угол конуса
+Turn On,Включить
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light2D.enabled`.","Горит ли свет. 2D-свет переключается через `enabled`; у 3D-света такого свойства нет, поэтому он переключается через `visible`. Пишет `Light2D.enabled`."
+Turn on,Включить
+Turn Off,Выключить
+Turn off,Выключить
+Is On,Включён
+True while is on. Reads `Light2D.enabled`.,"Истина, пока свет включён. Читает `Light2D.enabled`."
+Is on,Включён
+"Whether the light is lit. A 2D light switches with `enabled`; a 3D light has no such property, so it switches with `visible`. Writes `Light3D.visible`.","Горит ли свет. 2D-свет переключается через `enabled`; у 3D-света такого свойства нет, поэтому он переключается через `visible`. Пишет `Light3D.visible`."
+True while is on. Reads `Light3D.visible`.,"Истина, пока свет включён. Читает `Light3D.visible`."
+Turn Shadows On,Включить тени
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light2D.shadow_enabled`.,Отбрасывает ли свет тени - самый дешёвый переключатель в освещении. Пишет `Light2D.shadow_enabled`.
+Turn shadows on,Включить тени
+Turn Shadows Off,Выключить тени
+Turn shadows off,Выключить тени
+Is Casting Shadows,Отбрасывает тени
+True while is casting shadows. Reads `Light2D.shadow_enabled`.,"Истина, пока свет отбрасывает тени. Читает `Light2D.shadow_enabled`."
+Is casting shadows,Отбрасывает тени
+Whether the light casts shadows - the cheapest lighting switch there is. Writes `Light3D.shadow_enabled`.,Отбрасывает ли свет тени - самый дешёвый переключатель в освещении. Пишет `Light3D.shadow_enabled`.
+True while is casting shadows. Reads `Light3D.shadow_enabled`.,"Истина, пока свет отбрасывает тени. Читает `Light3D.shadow_enabled`."
+Set Darkness,Задать темноту
+Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.,"Затемняет весь 2D-слой разом - одна строка, от которой уровень читается как ночь. Пишет `CanvasModulate.color`; строка читает этот цвет обратно как меру того, насколько темнее стал слой."
+Set darkness to {value},Задать темноту {value}
+Darkness,Темнота
+"How dark the layer goes, and what colour the dark is. The row shows the percentage; the file keeps the colour.",Насколько темнеет слой и какого цвета эта темнота. Строка показывает проценты; файл хранит цвет.
+Fade Darkness,Плавно изменить темноту
+"Walks the layer's darkness to a new value over time instead of jumping to it - one tween, no state to keep. Dusk, a cave mouth closing, a light going out.","Ведёт темноту слоя к новому значению во времени, а не прыжком - один твин, никакого состояния. Сумерки, закрывающийся вход в пещеру, гаснущий свет."
+Fade darkness to {value} over {seconds} s,Плавно к темноте {value} за {seconds} с
+The darkness to fade. Leave it as self to fade the CanvasModulate this sheet is on.,"Темнота, которую плавно меняют. Оставьте self, чтобы менять тот CanvasModulate, к которому прикреплён этот лист."
+The darkness to arrive at.,"Темнота, к которой нужно прийти."
+Turn Fog On,Включить туман
+Switches the world's fog on - the one row that turns a clear day into a misty one. Writes `Environment.fog_enabled`.,"Включает туман в мире - одна строка, которая превращает ясный день в туманный. Пишет `Environment.fog_enabled`."
+Turn fog on,Включить туман
+Turn Fog Off,Выключить туман
+Switches the world's fog off again. Writes `Environment.fog_enabled`.,Снова выключает туман в мире. Пишет `Environment.fog_enabled`.
+Turn fog off,Выключить туман
+Turn Glow On,Включить свечение
+"Switches the world's glow on - what makes neon, fire and magic read as bright. Writes `Environment.glow_enabled`.","Включает свечение в мире - именно оно делает неон, огонь и магию яркими. Пишет `Environment.glow_enabled`."
+Turn glow on,Включить свечение
+Turn Glow Off,Выключить свечение
+Switches the world's glow off again - and gives the frames back. Writes `Environment.glow_enabled`.,Снова выключает свечение в мире - и возвращает кадры. Пишет `Environment.glow_enabled`.
+Turn glow off,Выключить свечение
+Set Fog Thickness,Задать густоту тумана
+Sets how thick the world's fog is. Ramp it up over time for a storm rolling in. Writes `Environment.fog_density`.,Задаёт густоту тумана в мире. Наращивайте её со временем - и надвигается буря. Пишет `Environment.fog_density`.
+Thickness,Густота
+Set Ambient Light,Задать окружающий свет
+Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.,"Задаёт, сколько света у сцены, когда на неё ничего не светит, - пол под всеми остальными источниками. Пишет `Environment.ambient_light_energy`."
+Light,Свет
+"How much light everything gets regardless of the lights, as a fraction.","Сколько света получает всё независимо от источников, в долях."
+Fade The Glow,Плавно изменить свечение
+"Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.","Ведёт свечение мира к новой силе во времени - зал босса, который разгорается, гаснущее заклинание. Один твин, никакого состояния."
+Fade the glow to {value} over {seconds} s,Плавно к свечению {value} за {seconds} с
+The WorldEnvironment to fade. Leave it as self to fade the one this sheet is on.,"WorldEnvironment, который плавно меняют. Оставьте self, чтобы менять тот, к которому прикреплён этот лист."
+How much bright things bleed by the end. Around 1 is strong.,Насколько сильно яркие вещи растекаются к концу. Около 1 - сильно.
+Make The Environment This Scene's Own,Сделать окружение собственным для этой сцены
+"Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.","Даёт этой сцене собственную копию окружения до того, как что-либо его изменит. Без этого любая строка тумана или свечения во время игры меняет общий файл `.tres`, и изменение следует за игроком во все другие сцены, которые его загружают."
+The WorldEnvironment to give its own copy. Leave it blank for this node.,"WorldEnvironment, которому дают собственную копию. Оставьте пустым для этого узла."
+Set Light Energy (2D),Задать яркость света (2D)
+Sets how bright a 2D light is. The row shows the fraction as a percentage.,Задаёт яркость 2D-света. Строка показывает долю в процентах.
+The 2D light to change.,"2D-свет, который меняют."
+Energy,Яркость
+"How bright, as a fraction: 0.5 is half, 2.0 is double.","Насколько ярко, в долях: 0.5 - вдвое слабее, 2.0 - вдвое ярче."
+Set Light Colour (2D),Задать цвет света (2D)
+Sets the colour a 2D light casts.,"Задаёт цвет, который даёт 2D-свет."
+Set light colour to {colour},Задать цвет света {colour}
+Set Light On/Off,Включить или выключить свет
+"Switches a 2D light on or off. Different from hiding the node, which also hides its children.","Включает или выключает 2D-свет. Это не то же самое, что скрыть узел, - скрытие прячет и его детей."
+Set light {on},Задать свет {on}
+The 2D light to switch.,"2D-свет, который переключают."
+"Whether the light is lit. Off is different from hiding the node, which also hides its children.","Горит ли свет. Выключить - не то же самое, что скрыть узел: скрытие прячет и его детей."
+Set Shadows On/Off,Включить или выключить тени
+Turns a light's shadows on or off - the cheapest lighting switch there is.,Включает или выключает тени источника света - самый дешёвый переключатель в освещении.
+Set shadows {on},Задать тени {on}
+The light to change.,"Свет, который меняют."
+Whether the light casts shadows.,Отбрасывает ли свет тени.
+Set Light Energy (3D),Задать яркость света (3D)
+Sets how bright a 3D light is. The row shows the fraction as a percentage.,Задаёт яркость 3D-света. Строка показывает долю в процентах.
+The 3D light to change.,"3D-свет, который меняют."
+Set Light Colour (3D),Задать цвет света (3D)
+Sets the colour a 3D light casts - the one knob that turns midday into sunset.,"Задаёт цвет, который даёт 3D-свет, - единственная ручка, превращающая полдень в закат."
+Set Layer Tint,Задать оттенок слоя
+Tints a whole 2D layer at once - the one row that makes a level read as night.,"Тонирует весь 2D-слой разом - одна строка, от которой уровень читается как ночь."
+Set layer tint to {colour},Задать оттенок слоя {colour}
+Canvas modulate,CanvasModulate
+The CanvasModulate node that tints the layer.,"Узел CanvasModulate, который тонирует слой."
+The tint laid over everything on the layer.,"Оттенок, наложенный на всё, что есть на слое."
+Sets how much light a 3D scene has with no light shining on it.,"Задаёт, сколько света у 3D-сцены, когда на неё ничего не светит."
+World environment,WorldEnvironment
+The WorldEnvironment node holding the environment.,"Узел WorldEnvironment, который держит окружение."
+Set fog colour to {colour},Задать цвет тумана {colour}
