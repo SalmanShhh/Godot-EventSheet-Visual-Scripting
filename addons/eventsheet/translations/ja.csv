@@ -4483,3 +4483,11 @@ seen by chosen players,選んだプレイヤーにのみ見えます
 seen by everyone,全員に見えます
 select the spawner,スポナーを選択
 set by the owner,所有者が設定します
+owner,所有者
+Everyone,全員
+The host,ホスト
+The owner,所有者
+"Every peer runs these events. Right for anything a player sees or hears, and for a game with no networking in it.",すべてのピアがこれらのイベントを実行します。プレイヤーが見聞きするものや、ネットワークを使わないゲームに適しています。
+Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,ゲームをホストを呼んだピアだけが実行します。何が正しいかを決める処理に適しており、他のピアはメッセージや同期された値で結果を知ります。
+"Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.",このオブジェクトを所有するピアだけが実行します。各プレイヤーが自分のキャラクターを操作する処理に適しており、他人のキャラクターを動かせません。
+Who runs the events in this group - right-click the head to change it.,このグループのイベントを実行する相手です。見出しを右クリックすると変更できます。

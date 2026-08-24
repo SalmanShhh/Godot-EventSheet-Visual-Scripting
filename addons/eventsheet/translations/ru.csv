@@ -4483,3 +4483,11 @@ seen by chosen players,видно только выбранным игрокам
 seen by everyone,видно всем
 select the spawner,выбрать спавнер
 set by the owner,задаётся владельцем
+owner,владелец
+Everyone,Все
+The host,Хост
+The owner,Владелец
+"Every peer runs these events. Right for anything a player sees or hears, and for a game with no networking in it.","Эти события выполняет каждый участник. Подходит для всего, что игрок видит или слышит, и для игры без сети."
+Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,"Их выполняет только участник, вызвавший Создать игру. Подходит для всего, что решает, что истинно; остальные узнают результат через сообщение или синхронизированное значение."
+"Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Их выполняет только участник, которому принадлежит этот объект. Подходит для того, чем каждый игрок управляет у своего персонажа, чтобы никто не двигал чужого."
+Who runs the events in this group - right-click the head to change it.,Кто выполняет события этой группы - измените правым кликом по заголовку.

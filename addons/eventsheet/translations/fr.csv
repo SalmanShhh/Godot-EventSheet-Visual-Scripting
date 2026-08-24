@@ -4483,3 +4483,11 @@ seen by chosen players,visible seulement par les joueurs choisis
 seen by everyone,visible par tout le monde
 select the spawner,sélectionner le spawner
 set by the owner,défini par le propriétaire
+owner,proprietaire
+Everyone,Tout le monde
+The host,L'hote
+The owner,Le proprietaire
+"Every peer runs these events. Right for anything a player sees or hears, and for a game with no networking in it.","Chaque pair execute ces evenements. Convient a tout ce qu'un joueur voit ou entend, et a un jeu sans reseau."
+Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,Seul le pair qui a appele Heberger une partie les execute. Convient a tout ce qui decide de ce qui est vrai ; les autres apprennent le resultat par un message ou par une valeur tenue a jour.
+"Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.","Seul le pair proprietaire de cet objet les execute. Convient a ce que chaque joueur controle sur son propre personnage, pour que personne ne deplace celui d'un autre."
+Who runs the events in this group - right-click the head to change it.,Qui execute les evenements de ce groupe - clic droit sur l'en-tete pour le changer.

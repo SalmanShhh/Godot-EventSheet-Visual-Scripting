@@ -4483,3 +4483,11 @@ seen by chosen players,仅选定玩家可见
 seen by everyone,所有人可见
 select the spawner,选中生成器
 set by the owner,由所有者设置
+owner,所有者
+Everyone,所有人
+The host,主机
+The owner,所有者
+"Every peer runs these events. Right for anything a player sees or hears, and for a game with no networking in it.",每个对等端都会运行这些事件。适合玩家能看到或听到的一切，也适合不联机的游戏。
+Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.,只有调用了主持游戏的对等端会运行它们。适合一切决定真实结果的处理；其他端通过消息或同步的值得知结果。
+"Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.",只有拥有该对象的对等端会运行它们。适合每个玩家对自己角色的操作，这样没人能移动别人的角色。
+Who runs the events in this group - right-click the head to change it.,谁来运行该组中的事件 - 右键单击标题可以更改。
