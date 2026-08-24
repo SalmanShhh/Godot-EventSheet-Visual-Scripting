@@ -30,13 +30,14 @@ static func run() -> bool:
 	return all_passed
 
 
-## The eight tutorials the Manual opens with, and the shape of a step. Six shipped first; W24 added
-## the two contributor tutorials (reading the editor's own code, and adding a word to the vocabulary),
-## so the pin moved from six to eight and stays a VALUE rather than a range.
+## The nine tutorials the Manual opens with, and the shape of a step. Six shipped first; W24 added
+## the two contributor tutorials (reading the editor's own code, and adding a word to the
+## vocabulary), and the multiplayer wave added the networked one - so the pin has moved six to eight
+## to nine, and stays a VALUE rather than a range.
 static func _test_tutorial_catalogue() -> bool:
 	var all_passed: bool = true
-	all_passed = _check("eight tutorials ship",
-		EventSheetDocTutorials.tutorials().size(), 8) and all_passed
+	all_passed = _check("nine tutorials ship",
+		EventSheetDocTutorials.tutorials().size(), 9) and all_passed
 	# R35. Writing a tool is something a beginner has to be able to FIND, not just be capable of.
 	all_passed = _check("the editor-tool tutorial is one of them",
 		str(EventSheetDocTutorials.tutorial("make-an-editor-tool").get("title", "")),
@@ -59,6 +60,23 @@ static func _test_tutorial_catalogue() -> bool:
 	all_passed = _check("and names the real control",
 		str(EventSheetDocTutorials.step("first-event", 2).get("control", "")),
 		"Add Action") and all_passed
+	# The networked one. Its last step is the only place in the catalogue that names a toolbar
+	# button rather than a menu, so the label is pinned: a renamed button would leave the step
+	# pointing at nothing, and the pulse resolves controls BY LABEL.
+	all_passed = _check("the networked-game tutorial is one of them",
+		str(EventSheetDocTutorials.tutorial("first-networked-game").get("title", "")),
+		"Your first networked game") and all_passed
+	all_passed = _check("it walks ten steps",
+		EventSheetDocTutorials.step_count("first-networked-game"), 10) and all_passed
+	all_passed = _check("step 3 opens the game",
+		str(EventSheetDocTutorials.step("first-networked-game", 2).get("check", "")),
+		"sheet_hosts_a_game") and all_passed
+	all_passed = _check("and asks for it on the real control",
+		str(EventSheetDocTutorials.step("first-networked-game", 2).get("control", "")),
+		"Add Action") and all_passed
+	all_passed = _check("the last step is the two-window button",
+		str(EventSheetDocTutorials.step("first-networked-game", 9).get("control", "")),
+		"Play as host + client") and all_passed
 	all_passed = _check("a tutorial this build does not carry is an empty answer",
 		EventSheetDocTutorials.tutorial("zz-no-such-tutorial").is_empty(), true) and all_passed
 	all_passed = _check("and has no steps to walk",
@@ -120,6 +138,73 @@ static func _test_step_completion() -> bool:
 	extras.external_source_path = "res://game/player.gd"
 	all_passed = _check("a sheet opened from a script completes the open step",
 		EventSheetDocTutorials.step_done("sheet_is_opened_script", extras), true) and all_passed
+	# The networked tutorial's steps. Each is the same walk asking about a different id, so the
+	# fixture grows one row at a time and every step is pinned by the VALUE it answers with.
+	var networked: EventSheetResource = EventSheetResource.new()
+	var lobby: EventRow = EventRow.new()
+	networked.events.append(lobby)
+	all_passed = _check("an empty sheet hosts nothing",
+		EventSheetDocTutorials.step_done("sheet_hosts_a_game", networked), false) and all_passed
+	var host: ACEAction = ACEAction.new()
+	host.ace_id = "HostGame"
+	lobby.actions.append(host)
+	all_passed = _check("a Host a game row completes the hosting step",
+		EventSheetDocTutorials.step_done("sheet_hosts_a_game", networked), true) and all_passed
+	all_passed = _check("but not the joining one",
+		EventSheetDocTutorials.step_done("sheet_joins_a_game", networked), false) and all_passed
+	var started_as: ACECondition = ACECondition.new()
+	started_as.ace_id = "StartedAs"
+	lobby.conditions.append(started_as)
+	all_passed = _check("Started as completes the which-copy-is-this step",
+		EventSheetDocTutorials.step_done("sheet_starts_as_a_tag", networked), true) and all_passed
+	# The older row writes the same OS.has_feature line, so it answers the same step.
+	var platform_feature: EventSheetResource = EventSheetResource.new()
+	var asked: EventRow = EventRow.new()
+	var feature: ACECondition = ACECondition.new()
+	feature.ace_id = "HasOSFeature"
+	asked.conditions.append(feature)
+	platform_feature.events.append(asked)
+	all_passed = _check("and so does the older Platform has feature row",
+		EventSheetDocTutorials.step_done("sheet_starts_as_a_tag", platform_feature), true) and all_passed
+	# A trigger is not a condition or an action, so the walk has to read the row's own trigger id.
+	var joined: EventRow = EventRow.new()
+	joined.trigger_id = "OnPlayerJoined"
+	networked.events.append(joined)
+	all_passed = _check("On player joined completes the hear-a-player step",
+		EventSheetDocTutorials.step_done("sheet_hears_a_player", networked), true) and all_passed
+	# The Send row legitimately lands inside the function the step before it made, so functions are
+	# walked too - and a group's rows are walked through the group.
+	var message: EventFunction = EventFunction.new()
+	message.function_name = "take_damage"
+	message.annotation_lines = PackedStringArray(["@rpc(\"any_peer\", \"call_local\", \"reliable\")"])
+	networked.functions.append(message)
+	all_passed = _check("an @rpc function completes the message step",
+		EventSheetDocTutorials.step_done("sheet_has_message", networked), true) and all_passed
+	all_passed = _check("marking one is not sending one",
+		EventSheetDocTutorials.step_done("sheet_sends_a_message", networked), false) and all_passed
+	var inside_function: EventRow = EventRow.new()
+	var send: ACEAction = ACEAction.new()
+	send.ace_id = "SendMessageToEveryone"
+	inside_function.actions.append(send)
+	message.events.append(inside_function)
+	all_passed = _check("a Send row inside a function completes the sending step",
+		EventSheetDocTutorials.step_done("sheet_sends_a_message", networked), true) and all_passed
+	all_passed = _check("and no group has said who runs it yet",
+		EventSheetDocTutorials.step_done("sheet_group_runs_on", networked), false) and all_passed
+	var group: EventGroup = EventGroup.new()
+	var grouped: EventRow = EventRow.new()
+	var join: ACEAction = ACEAction.new()
+	join.ace_id = "JoinGame"
+	grouped.actions.append(join)
+	group.events.append(grouped)
+	networked.events.append(group)
+	all_passed = _check("a row inside a group is still a row of the sheet",
+		EventSheetDocTutorials.step_done("sheet_joins_a_game", networked), true) and all_passed
+	all_passed = _check("a group with no answer is not an answer",
+		EventSheetDocTutorials.step_done("sheet_group_runs_on", networked), false) and all_passed
+	group.runs_on = EventGroup.RUNS_ON_HOST
+	all_passed = _check("saying the host runs it completes the who-runs-what step",
+		EventSheetDocTutorials.step_done("sheet_group_runs_on", networked), true) and all_passed
 	# A step with no check is never "done": it is one the reader reads and presses Next on, and
 	# reporting it complete the moment it appears would be the card lying about what happened.
 	all_passed = _check("a step with no check is never done on its own",
@@ -165,7 +250,7 @@ static func _test_walking_the_steps() -> bool:
 	for block: Dictionary in list:
 		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 2:
 			chapters += 1
-	all_passed = _check("the list has one chapter per tutorial", chapters, 8) and all_passed
+	all_passed = _check("the list has one chapter per tutorial", chapters, 9) and all_passed
 	all_passed = _check("the list lives at a frozen id",
 		EventSheetDocTutorials.LIST_DOC_ID, "reference:tutorials") and all_passed
 	all_passed = _check("and one tutorial at its own",

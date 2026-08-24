@@ -42,9 +42,9 @@ const ACTION_NEXT := "tutorial_next"
 const PROGRESS_SECTION := "eventsheets"
 const PROGRESS_KEY := "tutorial_progress"
 
-## The six tutorials, in reading order. `minutes` is the honest estimate the list prints beside
-## each one; `control` is the EXACT label of the toolbar control the step asks for, so the pulse
-## resolves it by that label rather than through a map somebody has to keep up to date.
+## The tutorials, in reading order. `minutes` is the honest estimate the list prints beside each
+## one; `control` is the EXACT label of the toolbar control the step asks for, so the pulse resolves
+## it by that label rather than through a map somebody has to keep up to date.
 const TUTORIALS: Array[Dictionary] = [
 	{
 		"id": "first-event",
@@ -240,6 +240,64 @@ const TUTORIALS: Array[Dictionary] = [
 		],
 	},
 	{
+		"id": "first-networked-game",
+		"title": "Your first networked game",
+		"minutes": 10,
+		"lead": "Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.",
+		"steps": [
+			{
+				"text": "Every networked game starts as two copies of itself. Press E and give this sheet an On Ready event: both copies will run it, and the next step is what tells them apart.",
+				"control": "Add Event",
+				"check": "sheet_has_event",
+			},
+			{
+				"text": "Ask which copy this is: press C and pick Multiplayer ▸ Started As, with the tag host. It compiles to OS.has_feature(\"host\"), so the answer comes from how the copy was started rather than from anything the game stores.",
+				"control": "Add Condition",
+				"check": "sheet_starts_as_a_tag",
+			},
+			{
+				"text": "Open the game: press A and pick Multiplayer ▸ Host A Game, port 7000, up to 4 players. Nobody is connected when that row finishes - hosting only means the door is open.",
+				"control": "Add Action",
+				"check": "sheet_hosts_a_game",
+			},
+			{
+				"text": "Now the copy that knocks. Add ▸ Add 'Else' under that event, then give the Else a Multiplayer ▸ Join A Game action at 127.0.0.1, port 7000 - the same port the host opened, and 127.0.0.1 means this same machine.",
+				"control": "Add",
+				"check": "sheet_joins_a_game",
+			},
+			{
+				"text": "Hear the other player arrive: press E and pick Multiplayer ▸ Players ▸ On Player Joined. It runs on the host, and it hands you that player's id as a chip every row underneath can use.",
+				"control": "Add Event",
+				"check": "sheet_hears_a_player",
+			},
+			{
+				"text": "Give the game something to say. Add ▸ Function…, name it take_damage with one parameter, then right-click its row ▸ Make It A Message…. Four questions in words - who may send it, where it runs, how it travels, and on which channel - and what they write is Godot's own @rpc line.",
+				"control": "Add",
+				"check": "sheet_has_message",
+			},
+			{
+				"text": "Send it: press A and pick Multiplayer ▸ Send Message To Everyone. One dialog lists the messages this sheet marks, gives you a field per parameter, and its To dropdown decides which of the three send rows gets written.",
+				"control": "Add Action",
+				"check": "sheet_sends_a_message",
+			},
+			{
+				"text": "Say who runs what. Select the rows that DECIDE something, right-click ▸ Group Selection into New Group, then right-click the group's head ▸ Runs On ▸ The host. One word on the head instead of a condition on every row, and the compiler wraps those events in multiplayer.is_server().",
+				"control": "",
+				"check": "sheet_group_runs_on",
+			},
+			{
+				"text": "Give the players a value to agree on: Add ▸ Instance Variable…, and call it hp. In a sheet attached to a scene, right-click that row ▸ Keep in Step ▸ Always hands the value to a MultiplayerSynchronizer - a scratch sheet has no scene, so that half is the one thing to do again in a project of your own.",
+				"control": "Add",
+				"check": "sheet_has_variable",
+			},
+			{
+				"text": "Now play it as two players: press Play as host + client. It sets Godot's own Run Multiple Instances to two copies, tags one host and the other client, and plays the scene - one window opens the game, the other joins it, and each live value then wears one chip per window.",
+				"control": "Play as host + client",
+				"check": "",
+			},
+		],
+	},
+	{
 		"id": "read-the-editor",
 		"title": "Read the editor's code as events",
 		"minutes": 6,
@@ -390,6 +448,24 @@ static func step_done(check: String, sheet: EventSheetResource) -> bool:
 			return not sheet.uses_addons.is_empty() or not sheet.includes.is_empty()
 		"sheet_is_opened_script":
 			return sheet.external_source_path.strip_edges().to_lower().ends_with(".gd")
+		# The networking walk. Each of these is the same question about a different id, so they
+		# share one answer rather than growing a walk apiece.
+		"sheet_hosts_a_game":
+			return _any_ace(sheet, ["HostGame"])
+		"sheet_joins_a_game":
+			return _any_ace(sheet, ["JoinGame"])
+		"sheet_starts_as_a_tag":
+			# Both rows write OS.has_feature, and a reader who reached for the older one has
+			# answered the step: the question is which build this is, not which row asked it.
+			return _any_ace(sheet, ["StartedAs", "HasOSFeature"])
+		"sheet_hears_a_player":
+			return _any_ace(sheet, ["OnPlayerJoined", "OnPlayerLeft"])
+		"sheet_sends_a_message":
+			return _any_ace(sheet, EventSheetMessageFacts.SEND_ACE_IDS)
+		"sheet_has_message":
+			return not EventSheetMessageFacts.messages_in(sheet).is_empty()
+		"sheet_group_runs_on":
+			return _any_in(sheet.events, "runs_on")
 	return false
 
 
@@ -399,8 +475,30 @@ static func _any_event(sheet: EventSheetResource, what: String) -> bool:
 	return _any_in(sheet.events, what)
 
 
-static func _any_in(rows: Array, what: String) -> bool:
+## True when any row of the sheet names one of these ace ids - as its trigger, as a condition or as
+## an action. Functions are walked too, because the row a step asks for legitimately lands inside
+## the function the step before it made.
+static func _any_ace(sheet: EventSheetResource, ace_ids: PackedStringArray) -> bool:
+	if _any_in(sheet.events, "ace", ace_ids):
+		return true
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null and _any_in(event_function.events, "ace", ace_ids):
+			return true
+	return false
+
+
+static func _any_in(rows: Array, what: String, ace_ids: PackedStringArray = []) -> bool:
 	for entry: Variant in rows:
+		# A group is scaffolding around rows, so every question is asked of what is INSIDE it -
+		# except the one question that is about the group itself.
+		var group: EventGroup = entry as EventGroup
+		if group != null:
+			if what == "runs_on" and not group.runs_on.strip_edges().is_empty():
+				return true
+			if _any_in(group.child_rows(), what, ace_ids):
+				return true
+			continue
 		var event: EventRow = entry as EventRow
 		if event == null:
 			continue
@@ -413,7 +511,22 @@ static func _any_in(rows: Array, what: String) -> bool:
 			"action":
 				if not event.actions.is_empty():
 					return true
-		if _any_in(event.sub_events, what):
+			"ace":
+				if ace_ids.has(event.trigger_id):
+					return true
+				if _names_ace(event.conditions, ace_ids) or _names_ace(event.actions, ace_ids):
+					return true
+		if _any_in(event.sub_events, what, ace_ids):
+			return true
+	return false
+
+
+## True when any of these picked rows is one of the named ace ids. A script block carries no
+## `ace_id` at all, which is why the answer is read off the resource rather than assumed.
+static func _names_ace(instances: Array, ace_ids: PackedStringArray) -> bool:
+	for entry: Variant in instances:
+		var instance: Resource = entry as Resource
+		if instance != null and ace_ids.has(str(instance.get("ace_id"))):
 			return true
 	return false
 
