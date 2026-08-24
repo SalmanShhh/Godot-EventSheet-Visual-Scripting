@@ -1605,7 +1605,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			source_prefix = "get_window()."
 		elif source_path == TriggerResolver.MULTIPLAYER_SOURCE:
 			# E1. The scene tree's own MultiplayerAPI (peer_connected, server_disconnected, …) - the
-			# five connection triggers connect here. `multiplayer` is a property of every node, which
+			# seven connection triggers connect here. `multiplayer` is a property of every node, which
 			# is why the line needs no lookup at all and reads exactly as a hand-written one does.
 			source_prefix = "multiplayer."
 		elif source_path.begins_with(TriggerResolver.MEMBER_SOURCE_PREFIX):

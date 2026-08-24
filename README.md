@@ -72,7 +72,7 @@ Everything is in the **[documentation index](docs/README.md)** and inside the ed
 - **Debug it like any GDScript.** Output is plain code - real breakpoints, step through the generated `.gd`. F9 conditional breakpoints and a paused-at-row jump work from the sheet; Live Values / Event Trace are optional on top.
 - **A sheet is just `.gd`.** No `.tres`. Open any `.gd` as a sheet, edit it either way, paste GDScript and it converts to events, call sheet-built classes from regular code.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, and the System/Keyboard/Mouse/Gamepad/Touch/Audio vocabularies are all designed against C3 conventions on purpose.
-- **Multiplayer is Godot's own, in sentences.** Host a game, Join a game, Leave the game, the five things the connection tells you, `@rpc` messages, who is the host and who owns an object - each row is exactly the `ENetMultiplayerPeer` / `MultiplayerAPI` call it names, and a networked project you already wrote opens as those rows without changing a byte.
+- **Multiplayer is Godot's own, in sentences.** Host a game, Join a game, Leave the game, the seven events the connection fires, `@rpc` messages, who is the host and who owns an object - each row is exactly the `ENetMultiplayerPeer` / `MultiplayerAPI` call it names, and a networked project you already wrote opens as those rows without changing a byte.
 - **Scales.** A custom-drawn virtualized viewport keeps 10,000+ rows fluid with no per-row widgets.
 
 **Cons**

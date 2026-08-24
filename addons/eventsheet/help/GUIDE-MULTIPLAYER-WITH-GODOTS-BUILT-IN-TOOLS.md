@@ -75,8 +75,10 @@ means "I knocked"; what happened next arrives as an event.
 
 ## The events the connection fires
 
-Seven, one per `MultiplayerAPI` signal, connected in `_ready` exactly as a hand-written script
-connects them. **Add event ▸ Multiplayer** sorts them onto three shelves:
+Seven, all off the `multiplayer` property every node has: five that `MultiplayerAPI` declares, and
+the two `SceneMultiplayer` adds for the handshake (*On player authenticating*, *On authentication
+failed*). Each is connected in `_ready` exactly as a hand-written script connects them.
+**Add event ▸ Multiplayer** sorts them onto three shelves:
 
 - **Players** - *On player joined*, *On player left*, *On player authenticating*,
   *On authentication failed*. Each hands you that player's id as a chip every row beneath can use.

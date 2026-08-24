@@ -792,6 +792,43 @@ to exactly what it compiled to before.
   used to lift nothing at all: the run re-anchored past the helper, a handler below still lifted to
   an event, and its connect line was then written twice - failing the byte-verify and reverting every
   function in the file to a script block. Handlers now wait for the `_ready` that wires them.
+- **Fixed: a lobby with a Host row and a Join row in one place now compiles.** Both rows declared
+  their peer as `__peer`, so two of them in one scope - the shape a lobby screen IS - emitted
+  `var __peer` twice, which GDScript refuses: the exported project stopped parsing and nothing
+  between the row and the export said so. The peer local carries the per-row id every other
+  multi-statement row already bakes, and the emitted file is parse-checked by the suite.
+- **Fixed: \"Runs on: the host\" no longer flips an *or* row's meaning.** Saying who runs a group takes
+  the same test off the rows it now guards, so it is not compiled twice - but it was taking it off an
+  OR row too, turning `is host or is on floor` into `is on floor` under a host guard: the opposite
+  gate, in one undo step, with nothing said. Only an AND row says the guard twice, and only an AND
+  row is folded.
+- **Fixed: Keep in step works on a project that has never replicated anything.** Adding the
+  synchronizer puts it in the scene the EDITOR is holding, and the reader was re-reading the `.tscn`
+  on disk - where an unsaved node is not - so the mode was written nowhere, the status line said
+  nothing, and the row's own menu went on offering to add the synchronizer it had just added. The
+  scene reader now reads the open scene from the editor and the file only for scenes nobody is
+  looking at, which also means a mode written a second ago shows on the row without saving first.
+- **Fixed: a visibility filter inside a group is still a visibility filter.** The reading behind the
+  function row's *visibility filter can_see for PlayerSync* mark walked events and sub-events but not
+  groups, so tidying those events into a folder took the mark off the function and dropped it from
+  `EventSheets.sheet_visibility_filters` as well.
+- **Fixed: closing one of two test windows keeps the other's chips labelled.** With **Play as host +
+  client** running, quitting one window cleared every instance label, so the surviving game's Live
+  Values chips lost the tag naming which window they came from. Only that session's label goes now.
+- **Fixed: the Replication panel band cannot select a node in the wrong scene.** Revealing a node in
+  a scene that was not open re-read the edited scene root straight after asking for it to open, and a
+  scene that opens a frame later left it selecting a same-named node in the previous scene and
+  reporting success.
+- **Fixed: Play as host + client speaks the eight shipped languages.** Its toolbar tooltip and all
+  three of its status lines were English literals no translation gate could see, because a file with
+  no `translate()` call in it passes a sweep that reads the calls. They carry template rows and
+  translations now.
+- **Fixed: the wave's own dead code and two stale figures.** Five functions no caller ever had - two
+  readings the head and the lift were going to use, a guard lookup, and two one-line wrappers around
+  a reading that is already public - are gone rather than pinned by tests that made them look
+  shipped. The head's *owner* band and the guard-to-*runs on* lift are unbuilt, and say so. *Five*
+  became *seven* where the connection triggers are counted, and the guide no longer credits
+  `MultiplayerAPI` with the two signals `SceneMultiplayer` adds.
 
 ### Added - mirror and flip, in the same two words on every host that can do it
 

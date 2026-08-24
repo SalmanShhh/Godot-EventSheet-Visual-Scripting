@@ -85,7 +85,7 @@ static func animation_event_handler_name(event_name: String) -> String:
 		safe = safe.replace("__", "_")
 	return "_on_%s" % (safe if not safe.is_empty() else "event")
 
-## E1. The trigger source path the five connection triggers carry, expanded by the emitter into the
+## E1. The trigger source path the seven connection triggers carry, expanded by the emitter into the
 ## `multiplayer.` prefix of their `_ready` connect line. A global source like "@tree" / "@window"
 ## rather than a node path, because `multiplayer` is the scene tree's own MultiplayerAPI and there is
 ## no node to look up.
@@ -260,7 +260,8 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# Connected on the root window (the "@window" global source), not self.
 			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
 		"OnPlayerJoined":
-			# E1. The five things the connection itself says, off MultiplayerAPI's own signals. They
+			# E1. The seven things the connection itself says - five off MultiplayerAPI's own signals and
+			# the two SceneMultiplayer adds for the handshake, all on the same property. They
 			# connect on the "@multiplayer" global source (`multiplayer.` in the emitted line), not on
 			# self and not on a node: `multiplayer` is a property every node already has, and it is the
 			# spelling every hand-written multiplayer script uses - which is what lets the importer read
