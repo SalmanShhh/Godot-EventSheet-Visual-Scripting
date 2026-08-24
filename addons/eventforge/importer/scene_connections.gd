@@ -151,8 +151,11 @@ static func nodes_of_scene(scene_path: String) -> Array:
 	var text: String = FileAccess.get_file_as_string(scene_path)
 	if text.is_empty():
 		return nodes
-	var resource_paths: Dictionary = resource_paths_of_scene(scene_path)
 	var lines: PackedStringArray = text.split("\n")
+	# Off the lines already in hand, never off the file again: this is the project's hottest scene
+	# read (the scene view, the object facts, every lighting fact), and re-opening the file for its
+	# `[ext_resource]` table doubled the I/O of every one of them.
+	var resource_paths: Dictionary = resource_paths_in(lines)
 	var current: Dictionary = {}
 	for line: String in lines:
 		if line.begins_with("[node "):
@@ -238,8 +241,14 @@ static func _connections_in_scene(scene_path: String, script_path: String) -> Di
 ## environment resource a reader can name, and the one place the answer is read from - which also
 ## makes "who else uses this .tres" a question about a table rather than a second parser.
 static func resource_paths_of_scene(scene_path: String) -> Dictionary:
+	return resource_paths_in(FileAccess.get_file_as_string(scene_path).split("\n"))
+
+
+## The same table off lines a caller ALREADY holds - what the node walk above passes its own read, so
+## one question about a scene stays one read of it.
+static func resource_paths_in(lines: PackedStringArray) -> Dictionary:
 	var paths: Dictionary = {}
-	for line: String in FileAccess.get_file_as_string(scene_path).split("\n"):
+	for line: String in lines:
 		if line.begins_with("[ext_resource "):
 			paths[attribute(line, "id")] = attribute(line, "path")
 	return paths

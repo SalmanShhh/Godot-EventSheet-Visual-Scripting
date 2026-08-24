@@ -678,13 +678,19 @@ static func scene_lighting_definitions(sheet: EventSheetResource, registry: Even
 		return out
 	for shelf_kind: Dictionary in SCENE_SHELVES:
 		var root: String = str(shelf_kind["root"])
-		for node: Dictionary in _scene_lighting_nodes(str(sheet.external_source_path), root):
+		var nodes: Array[Dictionary] = _scene_lighting_nodes(str(sheet.external_source_path), root)
+		if nodes.is_empty():
+			continue
+		# The registry is walked ONCE per shelf, not once per node: this runs on every keystroke of
+		# the search box, and a room with thirty torches was thirty full walks of the vocabulary per
+		# character typed. Which verbs a shelf offers depends only on its class, so the answer is the
+		# same for every node on it.
+		var vocabulary: Array[ACEDefinition] = _shelf_vocabulary(registry, root)
+		for node: Dictionary in nodes:
 			var shelf: String = scene_node_shelf_label(node)
-			for definition: ACEDefinition in registry.get_all_definitions():
-				var node_type: String = str(definition.metadata.get("node_type", ""))
-				if not _shelf_offers(node_type, root):
-					continue
-				if not ClassDB.is_parent_class(str(node["class"]), node_type):
+			for definition: ACEDefinition in vocabulary:
+				if not ClassDB.is_parent_class(str(node["class"]),
+						str(definition.metadata.get("node_type", ""))):
 					continue
 				# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so
 				# duplicate() would hand back a blank definition that still looks valid.
@@ -694,6 +700,16 @@ static func scene_lighting_definitions(sheet: EventSheetResource, registry: Even
 				offered.metadata[SCENE_GROUP_META] = str(shelf_kind["group"])
 				out.append(offered)
 	return out
+
+
+## The verbs one shelf can offer at all - the registry's node-scoped rows whose host class belongs on
+## a shelf of this class. Which of them a particular NODE takes is the narrower question above.
+static func _shelf_vocabulary(registry: EventSheetACERegistry, root: String) -> Array[ACEDefinition]:
+	var offered: Array[ACEDefinition] = []
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if _shelf_offers(str(definition.metadata.get("node_type", "")), root):
+			offered.append(definition)
+	return offered
 
 
 ## The nodes one shelf is about: every light of the scene when the shelf names no class, and the
@@ -1432,8 +1448,13 @@ func _refresh_tree() -> void:
 	# with the node already chosen. Browsed as well as searched, because "which of my lights" is the
 	# question a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
 	if not signals_only:
+		var light_query: String = query.to_lower()
 		for light_definition: ACEDefinition in scene_lighting_definitions(_open_sheet(), _registry):
-			if filtering and not (light_definition.display_name.to_lower().contains(query.to_lower()) 					or str(light_definition.metadata.get(SCENE_TARGET_META, "")).to_lower().contains(query.to_lower())):
+			# Either half of the entry answers a search: the verb ("brightness") and the node it is
+			# aimed at ("Torch"), because both are things a reader types looking for this row.
+			if filtering and not (light_definition.display_name.to_lower().contains(light_query) \
+					or str(light_definition.metadata.get(SCENE_TARGET_META, "")) \
+						.to_lower().contains(light_query)):
 				continue
 			definitions.append(light_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
