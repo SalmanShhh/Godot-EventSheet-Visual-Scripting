@@ -191,6 +191,21 @@ matchers, and they say so in a comment.
     in every file. One new word in a picker shelf label is one append to nine files; forgetting it
     fails the suite in a place that names the locale, not the feature.
 
+22. **Keying a vocabulary module means two lists, not one.** `vocabulary_l10n_test.gd` sweeps what a
+    wave OWES (`NEW_MODULES` / `EXTENDED_MODULES`) and separately MEASURES which modules are wholly
+    keyed, comparing that measured set against `FULLY_KEYED_MODULES`. So finishing a module's
+    translations fails the ratchet as a SURPLUS until the list gains it in the same commit. The
+    failure prints two sorted arrays and nothing else - the difference between them is the module you
+    just finished. Translate whole modules rather than scattered strings for the same reason: a
+    module that is 90% keyed is held by nothing.
+
+23. **A number quoted in a guide is a claim no gate checks.** Prose is swept for dashes, links,
+    indexing and display names, never for arithmetic, so a percentage or a hex colour in a guide can
+    contradict the code fence three lines under it and ship. Where the implementation already pins a
+    worked example - the darkness lens's `Color("26304d")` reads `81%, tinted #26304d`, pinned in
+    `scene_lighting_facts_test.gd` - quote THAT example rather than inventing a second one, and use
+    the same one in every guide that needs it.
+
 ---
 
 ## 7. House style, in one place
