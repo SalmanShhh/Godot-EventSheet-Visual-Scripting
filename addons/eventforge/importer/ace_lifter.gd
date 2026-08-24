@@ -222,6 +222,9 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# E1 - and its network peers, for the same reason: `peer.create_server(…)` only means "host a
 	# game" when `peer` really is a multiplayer peer this file declared.
 	EventForgeMultiplayerLift.note_source(source)
+	# M3 - and the groups' own "who runs it", resolved per slug (a group inherits its parent's
+	# answer), so the guard the compiler wrote in front of each event can be taken back off.
+	_note_group_guards(source)
 	_lift_host_class = str(sheet.host_class).strip_edges()
 	# The trailing run: function blocks, their @ace annotation blocks, blank separators,
 	# and a final top-level comment block - EventForge's emission layout in row form.
@@ -421,7 +424,8 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# fills, which this per-function probe does not have.
 						if bool(lift.get("ok", false)) and not gate_exempt \
 								and not (lift.get("events", []) as Array).is_empty() \
-								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []))) != _strip_group_markers(row.code):
+								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
+									_group_guards_for(lift.get("events", [])))) != _strip_group_markers(row.code):
 							lift = {"ok": false}
 						if bool(lift.get("ok", false)):
 							saw_function = true
@@ -852,6 +856,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 		group.collapsed = bool(fields.get("collapsed", false))
 		group.expanded = not group.collapsed
 		group.runtime_toggleable = bool(fields.get("toggleable", false))
+		group.runs_on = str(fields.get("runs_on", ""))
 		groups[slug] = group
 		parent_of[slug] = str(fields.get("parent", ""))
 	var output: Array = []
@@ -1921,6 +1926,11 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				expression = block_head.substr(3, block_head.length() - 4)
 			elif is_elif:
 				expression = block_head.substr(5, block_head.length() - 6)
+			# M3 - a group that says who runs it wears its guard on every event under it. The guard is
+			# the GROUP's fact, so it comes off here and rides the EventGroup instead; re-emission puts
+			# back exactly the term that was taken away, which is what keeps the file byte-identical.
+			if is_if:
+				expression = _without_group_guard(expression, pending_group_slug)
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
@@ -2208,6 +2218,68 @@ static func _top_level_colon(text: String, from: int) -> int:
 			return index
 		index += 1
 	return -1
+
+
+## M3. Every group slug in a source mapped to the guard its events are wrapped in - its own runs_on
+## answer, or the nearest ancestor's. Filled once per lift, for the same reason the peer variables
+## are: it is one fact about the file being read.
+static var _group_runs_on: Dictionary = {}
+
+
+## Records that mapping. A source with no groups, or none that says who runs it, leaves it empty and
+## every expression below passes through untouched.
+static func _note_group_guards(source: String) -> void:
+	_group_runs_on = {}
+	if not source.contains("runs_on=\""):
+		return
+	var registry: Dictionary = _recover_group_declarations(source)
+	for slug: String in registry:
+		var walk: String = slug
+		var seen: Dictionary = {}
+		while not walk.is_empty() and registry.has(walk) and not seen.has(walk):
+			seen[walk] = true
+			var guard: String = EventGroup.runs_on_guard(str((registry[walk] as Dictionary).get("runs_on", "")))
+			if not guard.is_empty():
+				_group_runs_on[slug] = guard
+				break
+			walk = str((registry[walk] as Dictionary).get("parent", ""))
+
+
+## M3. The runs_on guard each of a handler's lifted events sits behind, keyed by the row it guards.
+## A full compile fills this while flattening the group tree; the PER-FUNCTION probe re-emits one
+## handler with no groups around it, so without this it would read a body that lifted perfectly as a
+## mismatch and leave the whole function raw.
+static func _group_guards_for(events: Array) -> Dictionary:
+	var guards: Dictionary = {}
+	if _group_runs_on.is_empty():
+		return guards
+	for event: Variant in events:
+		if not (event is EventRow) or not (event as EventRow).has_meta("__group_slug"):
+			continue
+		var guard: String = str(_group_runs_on.get(str((event as EventRow).get_meta("__group_slug")), ""))
+		if not guard.is_empty():
+			guards[event] = guard
+	return guards
+
+
+## `expression` with the leading runs_on guard of `slug`'s group taken off, unwrapping the brackets
+## the compiler puts around an Or list that sits behind a guard - so `a or b` splits as the Or block
+## it was, rather than lifting as one opaque term. Unchanged when the group says nothing about who
+## runs it, or when the expression does not open on that guard.
+static func _without_group_guard(expression: String, slug: String) -> String:
+	var guard: String = str(_group_runs_on.get(slug, ""))
+	if guard.is_empty():
+		return expression
+	if expression == guard:
+		return ""
+	if not expression.begins_with(guard + " and "):
+		return expression
+	var rest: String = expression.substr(guard.length() + 5)
+	if rest.begins_with("(") and rest.ends_with(")") and _split_top_level(rest, " or ").size() == 1:
+		var inner: String = rest.substr(1, rest.length() - 2)
+		if _split_top_level(inner, " or ").size() > 1:
+			return inner
+	return rest
 
 
 ## Stamps a pending `# @group:<slug>` breadcrumb onto a freshly lifted event (any row kind -

@@ -99,6 +99,18 @@ const ROW_MENU_FOLD_ALL_REGIONS := 60
 const ROW_MENU_REGION_TO_GROUP := 61
 const ROW_MENU_REGION_REMOVE := 62
 const ROW_MENU_GROUP_TO_REGION := 63
+## M3 - "Runs on" on the group head, and the three answers behind it. The three have their own run
+## of ids because the submenu owns its own id_pressed: the row menu never sees them.
+const ROW_MENU_GROUP_RUNS_ON := 64
+const GROUP_RUNS_ON_EVERYONE := 70
+const GROUP_RUNS_ON_HOST := 71
+const GROUP_RUNS_ON_OWNER := 72
+## Which answer each of those ids means, so the menu and the writer read one table.
+const GROUP_RUNS_ON_VALUES: Dictionary = {
+	GROUP_RUNS_ON_EVERYONE: "",
+	GROUP_RUNS_ON_HOST: EventGroup.RUNS_ON_HOST,
+	GROUP_RUNS_ON_OWNER: EventGroup.RUNS_ON_OWNER
+}
 ## What the colour picker opens on when a group or a region carries no colour of its own yet.
 const DEFAULT_STRUCTURE_COLOR := Color(0.55, 0.45, 0.85, 1.0)
 const VARIABLE_MENU_EDIT := 1
@@ -345,6 +357,7 @@ var _new_function_submenu: PopupMenu = null
 var _add_variable_submenu: PopupMenu = null
 ## E2. The variable row's Keep in step ▸ submenu, filled from the scene every time it opens.
 var _variable_sync_submenu: PopupMenu = null
+var _group_runs_on_submenu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
@@ -2244,6 +2257,10 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 
 func _on_variable_sync_menu_id_pressed(id: int) -> void:
 	_variables._on_variable_sync_menu_id_pressed(id)
+
+
+func _on_group_runs_on_menu_id_pressed(id: int) -> void:
+	_quick_prompts.on_group_runs_on_chosen(id)
 
 
 func _create_variable_quickfix(variable_name: String) -> bool:

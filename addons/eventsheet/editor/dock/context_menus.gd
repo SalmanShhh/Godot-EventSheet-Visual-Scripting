@@ -114,6 +114,14 @@ func build_all() -> void:
 	_dock._row_more_submenu.id_pressed.connect(_dock._on_row_context_menu_id_pressed)
 	_dock._row_context_menu.add_child(_dock._row_more_submenu)
 
+	# M3 - the group head's "Runs on". Built once and parented to the ROW menu, because the row menu
+	# is where a group head is right-clicked; it is filled from the group under the cursor each time.
+	_dock._group_runs_on_submenu = PopupMenu.new()
+	_dock._group_runs_on_submenu.name = "GroupRunsOnSubmenu"
+	_dock._group_runs_on_submenu.about_to_popup.connect(_fill_group_runs_on_submenu)
+	_dock._group_runs_on_submenu.id_pressed.connect(_dock._on_group_runs_on_menu_id_pressed)
+	_dock._row_context_menu.add_child(_dock._group_runs_on_submenu)
+
 	_dock._variable_context_menu = PopupMenu.new()
 	_dock._variable_context_menu.add_item("Edit Variable", _dock.VARIABLE_MENU_EDIT)
 	_dock._variable_context_menu.add_item("Rename Everywhere…", _dock.VARIABLE_MENU_RENAME)
@@ -341,6 +349,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# dialog, the on/off tick, the folds, then the things you do TO a group. Duplicate and Delete
 		# are the universal items below, so the group menu does not repeat them.
 		menu.add_item("Edit Group…", _dock.ROW_MENU_EDIT_GROUP)
+		# M3 - who runs this group over a network, without opening the dialog for the one answer.
+		# Filled as it opens, ticked at what the group says now.
+		menu.add_submenu_node_item("Runs On", _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
 		menu.add_check_item("Active On Start", _dock.ROW_MENU_GROUP_ENABLED)
 		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
 		menu.add_item("Open All / Close All Groups", _dock.ROW_MENU_FOLD_ALL_GROUPS)
@@ -714,6 +725,20 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				action_toggle_index,
 				"Enable Action" if _dock._context_ace_is_disabled() else "Disable Action"
 			)
+
+
+## M3 - the Runs on submenu: the three answers, ticked at the one this group carries now. Built as
+## it opens, from the group under the cursor, so a second group's head never shows the first's answer.
+func _fill_group_runs_on_submenu() -> void:
+	var menu: PopupMenu = _dock._group_runs_on_submenu
+	menu.clear()
+	var group: EventGroup = _dock._context_group()
+	var current: String = group.runs_on.strip_edges() if group != null else ""
+	for mode_id: int in [_dock.GROUP_RUNS_ON_EVERYONE, _dock.GROUP_RUNS_ON_HOST, _dock.GROUP_RUNS_ON_OWNER]:
+		var value: String = str(_dock.GROUP_RUNS_ON_VALUES[mode_id])
+		var choices: Array[Dictionary] = EventSheetGroupFacts.runs_on_choices()
+		menu.add_radio_check_item(str(choices[EventSheetGroupFacts.runs_on_index(value)].get("label", "")), mode_id)
+		menu.set_item_checked(menu.get_item_count() - 1, current == value)
 
 
 ## E2 - the Keep in step submenu, built from the SCENE every time it opens. With a synchronizer it

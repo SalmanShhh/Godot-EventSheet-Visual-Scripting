@@ -1058,12 +1058,18 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 ## previous BEHAVIOR compile's "host" standing would emit `host.velocity.y += …` for a line the file
 ## spells `velocity.y += …`, the byte gate would refuse it, and every function in the opened file
 ## would fall back to a verbatim block. The gate has to emit what the compile of this sheet emits.
-static func emit_anchored_trigger_text(events: Array) -> String:
+## `group_guards` is {EventRow: guard expression} - what a full compile fills from the group tree
+## while flattening it. The anchored probe re-emits ONE handler with no groups around it, so a caller
+## that took a group's guard off a row hands it back here; every other caller passes nothing and the
+## emission is exactly what it always was.
+static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary = {}) -> String:
 	_compile_mutex.lock()
 	_behavior_host_default = ""
+	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_anchored_trigger_function(events, lines, [], scratch)
+	_runtime_group_guards = {}
 	_compile_mutex.unlock()
 	return "\n".join(lines)
 
@@ -1433,17 +1439,35 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 			parts.append("collapsed=true")
 		if group.runtime_toggleable:
 			parts.append("toggleable=true")
+		# M3 - who runs it, written only when the answer is not "everybody". A single-player sheet
+		# therefore emits exactly the header it always emitted.
+		if not EventGroup.runs_on_guard(group.runs_on).is_empty():
+			parts.append("runs_on=\"%s\"" % group.runs_on.strip_edges())
 		lines.append("## @ace_group(%s)" % ", ".join(parts))
+
+
+## M3. The guards a row inherits from its groups, joined as one and-chain in the order they gate:
+## the runtime switch, then who runs it. Either half may be empty, and both empty means no guard.
+static func _joined_group_guard(runtime_guard: String, runs_on_guard: String) -> String:
+	var terms: PackedStringArray = PackedStringArray()
+	for guard: String in [runtime_guard, runs_on_guard]:
+		if not guard.strip_edges().is_empty():
+			terms.append(guard)
+	return " and ".join(terms)
 
 
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
 ## group is dropped but leaves a breadcrumb comment - group-disable semantics), and group comments
 ## collected as deferred comment lines.
-static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "") -> void:
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
-			if not runtime_guard.is_empty():
-				_runtime_group_guards[row] = runtime_guard
+			# M3 - the two group guards a row can inherit, as the one and-chain the emitter wraps its
+			# conditions in: the runtime switch first (a group that is off runs nothing at all), then
+			# who runs it. Either alone is the whole guard; neither leaves the row exactly as it was.
+			var guards: String = _joined_group_guard(runtime_guard, runs_on_guard)
+			if not guards.is_empty():
+				_runtime_group_guards[row] = guards
 			# Tag the row with its group's slug so _emit_event_body can emit a `# @group:` marker before
 			# it - the breadcrumb the importer reconstructs the EventGroup from.
 			if not group_slug.is_empty():
@@ -1465,7 +1489,13 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 							already_known = true
 					if not already_known:
 						_runtime_group_members.append([child_guard, group.enabled])
-				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""))
+				# M3 - who runs it inherits exactly as the switch does, and the INNERMOST answer wins:
+				# an owner group inside a host group is the owner's, because that is the one the
+				# reader put closest to the rows.
+				var child_runs_on: String = EventGroup.runs_on_guard(group.runs_on)
+				if child_runs_on.is_empty():
+					child_runs_on = runs_on_guard
+				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""), child_runs_on)
 			else:
 				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
 				# in the generated code. Disabling a group intentionally excludes its events (the

@@ -177,6 +177,7 @@ var _group_name_edit: LineEdit = null
 var _group_desc_edit: LineEdit = null
 var _group_enabled_check: CheckBox = null
 var _group_runtime_check: CheckBox = null
+var _group_runs_on: OptionButton = null
 var _group_color_button: ColorPickerButton = null
 var _group_help_strip: EventSheetPopupUI.HelpStrip = null
 var _group_edit_target: EventGroup = null
@@ -186,7 +187,7 @@ var _group_color_seed: Color = Color(0, 0, 0, 0)
 
 ## The facts a group HAS, in the order the dialog asks for them. One table, so the dialog, its help
 ## strip and the tests all read the same list.
-const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Active on start", "Can be switched at runtime", "Colour"]
+const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Runs on", "Active on start", "Can be switched at runtime", "Colour"]
 
 
 ## G4 - the ONE group dialog: name, description, active on start, switchable at runtime, colour.
@@ -203,6 +204,7 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_desc_edit.text = group.description
 	_group_enabled_check.button_pressed = group.enabled
 	_group_runtime_check.button_pressed = group.runtime_toggleable
+	_group_runs_on.select(EventSheetGroupFacts.runs_on_index(group.runs_on))
 	_group_color_seed = group.custom_color if group.custom_color.a > 0.0 else _dock.DEFAULT_STRUCTURE_COLOR
 	_group_color_button.color = _group_color_seed
 	_refresh_group_reading()
@@ -233,25 +235,45 @@ func _build_group_edit_dialog() -> void:
 	_group_desc_edit.placeholder_text = "Damage, hits and death."
 	_group_desc_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
+	# M3 - who runs this group's events over a network. A dropdown, described choice by choice, and
+	# the answer is stored on the group rather than repeated as a condition on every event inside it.
+	_group_runs_on = OptionButton.new()
+	for choice: Dictionary in EventSheetGroupFacts.runs_on_choices():
+		_group_runs_on.add_item(str(choice.get("label", "")))
+	_group_runs_on.item_selected.connect(func(_index: int) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[2], _group_runs_on))
 	_group_enabled_check = CheckBox.new()
-	_group_enabled_check.text = GROUP_FIELD_ORDER[2]
+	_group_enabled_check.text = GROUP_FIELD_ORDER[3]
 	_group_enabled_check.toggled.connect(func(_on: bool) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("", _group_enabled_check))
 	_group_runtime_check = CheckBox.new()
-	_group_runtime_check.text = GROUP_FIELD_ORDER[3]
+	_group_runtime_check.text = GROUP_FIELD_ORDER[4]
 	_group_runtime_check.toggled.connect(func(_on: bool) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("", _group_runtime_check))
 	_group_color_button = ColorPickerButton.new()
 	_group_color_button.custom_minimum_size = Vector2(120.0, 0.0)
-	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[4], _group_color_button))
+	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[5], _group_color_button))
 	for followed: Array in [
 		[_group_name_edit, GROUP_FIELD_ORDER[0]],
 		[_group_desc_edit, GROUP_FIELD_ORDER[1]],
-		[_group_enabled_check, GROUP_FIELD_ORDER[2]],
-		[_group_runtime_check, GROUP_FIELD_ORDER[3]],
-		[_group_color_button, GROUP_FIELD_ORDER[4]],
+		[_group_enabled_check, GROUP_FIELD_ORDER[3]],
+		[_group_runtime_check, GROUP_FIELD_ORDER[4]],
+		[_group_color_button, GROUP_FIELD_ORDER[5]],
 	]:
 		_group_help_strip.follow(followed[0] as Control, str(followed[1]), _group_field_help(str(followed[1])))
+	# The one dropdown here describes its CHOICE, not the field: what "the host" costs a client is a
+	# different paragraph from what "everyone" costs the host, and the strip follows whichever is
+	# highlighted - the same way the Add variable dialog's Scope list reads.
+	_group_help_strip.follow_option(_group_runs_on, func(index: int) -> Dictionary:
+		var choices: Array[Dictionary] = EventSheetGroupFacts.runs_on_choices()
+		if index < 0 or index >= choices.size():
+			return {}
+		var choice: Dictionary = choices[index]
+		return {
+			"heading": "%s - %s" % [GROUP_FIELD_ORDER[2], str(choice.get("label", ""))],
+			"body": str(choice.get("description", ""))
+		}
+	)
 	box.add_child(_group_help_strip)
 	_group_edit_dialog.add_child(EventSheetPopupUI.margined(box))
 	_group_edit_dialog.confirmed.connect(_apply_group_edit)
@@ -275,6 +297,46 @@ static func _group_field_help(field: String) -> String:
 	return ""
 
 
+## M3. Writes the answer a reader picked from the head's Runs on submenu. One undo step, through the
+## same path the dialog's Apply takes, so the two gestures can never write the fact two ways.
+func on_group_runs_on_chosen(menu_id: int) -> void:
+	var group: EventGroup = _dock._context_group()
+	if group == null or not _dock.GROUP_RUNS_ON_VALUES.has(menu_id):
+		_dock._set_status("Right-click a group head to say who runs it.", true)
+		return
+	apply_group_edit(group, group.display_name(), group.description,
+		{"runs_on": str(_dock.GROUP_RUNS_ON_VALUES[menu_id])})
+
+
+## M3. Once a group says who runs it, the same test written on one of its own events is the group's
+## word said twice - and it would compile twice, `multiplayer.is_server() and multiplayer.is_server()`.
+## This takes it off every row the group now guards; a nested group that answers for itself keeps its
+## own rows. That is what makes "Runs on: the host" the way to fold up a project that repeated an
+## Is host condition on every event. Static + pure, so the fold is testable without the dialog.
+static func fold_runs_on_conditions(group: EventGroup, guard: String) -> void:
+	if group == null or guard.is_empty():
+		return
+	for row: Variant in group.child_rows():
+		if row is EventGroup:
+			if (row as EventGroup).runs_on.strip_edges().is_empty():
+				fold_runs_on_conditions(row as EventGroup, guard)
+			continue
+		if not (row is EventRow):
+			continue
+		var kept: Array[ACECondition] = []
+		for condition: ACECondition in (row as EventRow).conditions:
+			if condition == null or ConditionCodegen.generate_condition(condition) != guard:
+				kept.append(condition)
+		(row as EventRow).conditions = kept
+
+
+## M3. The line a runs_on answer writes around the group's events, or "" for everyone - which writes
+## nothing at all, and is why a single-player sheet compiles to exactly what it always did.
+static func _runs_on_code_line(value: String) -> String:
+	var guard: String = EventGroup.runs_on_guard(value)
+	return "" if guard.is_empty() else "if %s:" % guard
+
+
 ## The strip's READS AS line: the head this dialog is about to write, and - for a switchable group -
 ## the row that can now reach it.
 func _refresh_group_reading() -> void:
@@ -289,13 +351,21 @@ func _refresh_group_reading() -> void:
 		reads += "  %s" % description
 	if not _group_enabled_check.button_pressed:
 		reads += "  (off)"
-	var in_code: String = ""
+	var runs_on: String = str((EventSheetGroupFacts.runs_on_choices()[_group_runs_on.selected] as Dictionary).get("value", ""))
+	if not runs_on.is_empty():
+		reads += "  %s" % runs_on
+	# The IN CODE line says every line this dialog is about to write: the flag a switchable group
+	# declares, and the guard a runs_on group wraps its events in. Either alone is the whole answer.
+	var code_lines: PackedStringArray = PackedStringArray()
 	if _group_runtime_check.button_pressed:
-		in_code = "var __group_%s_active: bool = %s" % [
+		code_lines.append("var __group_%s_active: bool = %s" % [
 			SheetCompiler.guard_token(name_text),
 			"true" if _group_enabled_check.button_pressed else "false"
-		]
-	_group_help_strip.set_reading(reads, in_code)
+		])
+	var guard_line: String = _runs_on_code_line(runs_on)
+	if not guard_line.is_empty():
+		code_lines.append(guard_line)
+	_group_help_strip.set_reading(reads, "  ".join(code_lines))
 
 
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
@@ -304,9 +374,11 @@ func _apply_group_edit() -> void:
 		return
 	var target: EventGroup = _group_edit_target
 	_group_edit_target = null
-	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, group_edit_extras(
+	var extras: Dictionary = group_edit_extras(
 		_group_enabled_check.button_pressed, _group_runtime_check.button_pressed,
-		_group_color_button.color, _group_color_seed))
+		_group_color_button.color, _group_color_seed)
+	extras["runs_on"] = str((EventSheetGroupFacts.runs_on_choices()[_group_runs_on.selected] as Dictionary).get("value", ""))
+	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, extras)
 
 
 ## G4 - what Apply asks `set_group_fields` to change beyond the name and the description. The colour
@@ -351,6 +423,9 @@ static func set_group_fields(group: EventGroup, new_name: String, new_desc: Stri
 		group.enabled = bool(extras["enabled"])
 	if extras.has("runtime_toggleable"):
 		group.runtime_toggleable = bool(extras["runtime_toggleable"])
+	if extras.has("runs_on"):
+		group.runs_on = str(extras["runs_on"]).strip_edges()
+		fold_runs_on_conditions(group, EventGroup.runs_on_guard(group.runs_on))
 	if extras.has("custom_color"):
 		group.custom_color = extras["custom_color"]
 	return resolved_name

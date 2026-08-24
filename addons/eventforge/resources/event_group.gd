@@ -27,6 +27,42 @@ static var _uid_counter: int = 0
 ## every contained event with it - feature flags / debug switches / cheap state
 ## machines at RUNTIME. Off (default) keeps groups zero-cost compile-time organization.
 @export var runtime_toggleable: bool = false
+## M3. WHO runs this group's events over a network: "" / "everyone" (nobody is left out, and
+## nothing at all is emitted), "host", or "owner". The commonest multiplayer mistake is a rule that
+## runs on every peer when it should run once, and repeating an Is host condition on every event is
+## how that mistake gets made - so the answer is asked once, of the group.
+@export var runs_on: String = ""
+
+## M3. The three answers, as the values written into the `## @ace_group(...)` header.
+const RUNS_ON_EVERYONE := "everyone"
+const RUNS_ON_HOST := "host"
+const RUNS_ON_OWNER := "owner"
+
+## M3. The GDScript test each answer compiles to, and the ONE table behind all of it: the compiler's
+## guard, the word the head shows, the dialog's dropdown, the menu, and the reading that recognises
+## a hand-written guard all resolve here, so none of them can mean something the others do not.
+## "everyone" is deliberately absent - it is the answer that writes nothing.
+const RUNS_ON_GUARDS: Dictionary = {
+	RUNS_ON_HOST: "multiplayer.is_server()",
+	RUNS_ON_OWNER: "is_multiplayer_authority()"
+}
+
+
+## The test a runs_on value compiles to, or "" for everyone / a value nothing recognises. Single
+## player is untouched either way: `multiplayer.is_server()` is true with no peer connected.
+static func runs_on_guard(value: String) -> String:
+	return str(RUNS_ON_GUARDS.get(value.strip_edges(), ""))
+
+
+## The runs_on value a guard expression is the test for, or "" when the line asks something else.
+## The reverse of runs_on_guard, so a hand-written `if multiplayer.is_server():` and a group that
+## says "host" are recognised as the one fact.
+static func runs_on_for_guard(guard: String) -> String:
+	var wanted: String = guard.strip_edges()
+	for value: String in RUNS_ON_GUARDS:
+		if str(RUNS_ON_GUARDS[value]) == wanted:
+			return value
+	return ""
 
 
 func _init() -> void:

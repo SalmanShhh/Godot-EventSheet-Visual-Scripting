@@ -5903,6 +5903,22 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
+	# M3 - who runs this group, as ONE muted word beside the name. Everyone says nothing: the head
+	# carries the exception, so a sheet that never hosts anything looks exactly as it did.
+	var runs_on: String = EventSheetGroupFacts.runs_on_word(group)
+	if not runs_on.is_empty():
+		spans.append(
+			_make_span(
+				runs_on,
+				SemanticSpan.SpanType.COMMENT,
+				{
+					"line_index": 0,
+					"group_runs_on": true,
+					"text_color": reading_style.muted_text_color,
+					"hover_note": EventSheetL10n.translate("Who runs the events in this group - right-click the head to change it.")
+				}
+			)
+		)
 	# G1 - the line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.

@@ -98,6 +98,45 @@ static func object_list_text(object_labels: PackedStringArray) -> String:
 	return ", ".join(shown)
 
 
+## M3. The one muted word a head shows for who runs a group, or "" for everyone. A head says the
+## EXCEPTION and never the default, so a sheet with no networking in it reads exactly as it always
+## did. The two words are spelled as literals rather than looked up, so the translation gate can see
+## them - the value they come from is a stored string, which it cannot.
+static func runs_on_word(group: EventGroup) -> String:
+	match "" if group == null else group.runs_on.strip_edges():
+		EventGroup.RUNS_ON_HOST:
+			return EventSheetL10n.translate("host")
+		EventGroup.RUNS_ON_OWNER:
+			return EventSheetL10n.translate("owner")
+	return ""
+
+
+## M3. The three answers to "who runs this group", each as the word a reader picks, the line under
+## it, and the value stored on the group. ONE list: the Edit group dropdown, the head's Runs on
+## submenu, the help strip and the tests all read it, so a wording change lands everywhere at once.
+## Everyone stores "" - it is the default, and it is the answer that emits nothing at all.
+static func runs_on_choices() -> Array[Dictionary]:
+	return [
+		{"value": "", "label": EventSheetL10n.translate("Everyone"),
+			"description": EventSheetL10n.translate("Every peer runs these events. Right for anything a player sees or hears, and for a game with no networking in it.")},
+		{"value": EventGroup.RUNS_ON_HOST, "label": EventSheetL10n.translate("The host"),
+			"description": EventSheetL10n.translate("Only the peer that called Host a game runs them. Right for anything that decides what is true; the others learn the result through a message or a value kept in step.")},
+		{"value": EventGroup.RUNS_ON_OWNER, "label": EventSheetL10n.translate("The owner"),
+			"description": EventSheetL10n.translate("Only the peer that owns this object runs them. Right for what each player controls about their own character, so nobody moves anybody else's.")}
+	]
+
+
+## The index of a group's answer in that list - what a dropdown selects, and never -1: a value
+## nothing recognises reads as everyone, which is what it compiles to.
+static func runs_on_index(value: String) -> int:
+	var wanted: String = value.strip_edges()
+	var choices: Array[Dictionary] = runs_on_choices()
+	for index: int in range(choices.size()):
+		if str(choices[index].get("value", "")) == wanted:
+			return index
+	return 0
+
+
 ## Every group in an event list, outermost first, depth-first - the order a picker lists them in.
 static func collect(events: Array, into: Array[EventGroup] = []) -> Array[EventGroup]:
 	for entry: Variant in events:
