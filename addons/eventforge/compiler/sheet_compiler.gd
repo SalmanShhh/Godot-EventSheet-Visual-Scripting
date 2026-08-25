@@ -1887,7 +1887,7 @@ static func _emit_event_body(
 			elif condition != null and condition.enabled and condition.codegen_template.strip_edges().is_empty() and (not condition.ace_id.is_empty() or not condition.provider_id.is_empty()):
 				# Unresolvable ACE (addon uninstalled / stale provider_id|ace_id). Fail CLOSED so a
 				# vanished gate can never silently run the event body unconditionally every tick.
-				warnings.append("Condition %s/%s could not be resolved (addon missing or stale) \u2014 gate forced closed (if false)." % [condition.provider_id, condition.ace_id])
+				warnings.append("Condition %s/%s could not be resolved (addon missing or stale) - gate forced closed (if false)." % [condition.provider_id, condition.ace_id])
 				condition_texts.append("false")
 		var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 		var joined_conditions: String = joiner.join(condition_texts)
