@@ -28,20 +28,20 @@ signal path_complete
 ## @ace_name("On Waypoint Reached")
 signal waypoint_reached
 
-## Drive the sibling FPS Controller (or the body itself) automatically. Off = paths still compute; read Path Move X/Z and steer yourself.
-@export var auto_control: bool = true
-## The built-in driver's speed (m/s). A driver sibling uses its own speed.
-@export var move_speed: float = 4.0
-## The built-in driver's gravity (a driver sibling applies its own).
-@export var gravity: float = 9.8
-## The navigation agent's radius (match your collider).
-@export var agent_radius: float = 0.5
 ## The navigation agent's height.
 @export var agent_height: float = 1.8
-## How close (m) counts as having arrived at the target.
-@export var target_desired_distance: float = 1.0
+## The navigation agent's radius (match your collider).
+@export var agent_radius: float = 0.5
+## Drive the sibling FPS Controller (or the body itself) automatically. Off = paths still compute; read Path Move X/Z and steer yourself.
+@export var auto_control: bool = true
 ## Agents steer around each other (applies to the built-in driver; a driver sibling owns its own velocity).
 @export var avoidance_enabled: bool = false
+## The built-in driver's gravity (a driver sibling applies its own).
+@export var gravity: float = 9.8
+## The built-in driver's speed (m/s). A driver sibling uses its own speed.
+@export var move_speed: float = 4.0
+## How close (m) counts as having arrived at the target.
+@export var target_desired_distance: float = 1.0
 
 # --- Internal state ---
 var _agent: NavigationAgent3D = null

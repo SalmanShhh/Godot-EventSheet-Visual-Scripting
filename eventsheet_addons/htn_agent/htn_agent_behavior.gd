@@ -25,15 +25,15 @@ signal plan_complete
 ## @ace_name("On Plan Failed")
 signal plan_failed
 
-## Goal to plan for - a compound or primitive task name.
-@export var root_task: String = ""
 ## Mark Failed re-plans from the root instead of giving up.
 @export var auto_replan_on_fail: bool = true
-var world_state: Dictionary = {}
-var primitives: Dictionary = {}
 var compounds: Dictionary = {}
 var plan: Array = []
 var plan_index: int = 0
+var primitives: Dictionary = {}
+## Goal to plan for - a compound or primitive task name.
+@export var root_task: String = ""
+var world_state: Dictionary = {}
 
 ## An HTN method - a way to accomplish a compound task, with preconditions + an ordered subtask list.
 class HTNMethod:

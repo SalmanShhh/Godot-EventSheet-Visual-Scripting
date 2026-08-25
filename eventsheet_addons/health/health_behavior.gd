@@ -39,21 +39,21 @@ signal on_health_pool_absorbed
 ## @ace_name("On Health Pool Depleted")
 signal on_health_pool_depleted
 
-## Starting max HP; current_health initialises to this.
-@export_range(1, 10000, 1) var max_health: float = 100.0
-## Start invulnerable: takeDamage is a no-op while true.
-@export var invulnerable: bool = false
+var _invincible_until: int = 0
+var current_health: float = 100.0
 ## queue_free the host the moment health reaches 0 (after On Death fires).
 @export var destroy_on_death: bool = false
-var current_health: float = 100.0
+var health_absorption_rate: float = 1.0
+var health_pools: Dictionary = {}
+## Start invulnerable: takeDamage is a no-op while true.
+@export var invulnerable: bool = false
 var is_dead_flag: bool = false
 var last_damage: float = 0.0
 var last_heal: float = 0.0
-var health_absorption_rate: float = 1.0
-var health_pools: Dictionary = {}
-var last_trigger_pool_type: String = ""
 var last_pool_damage_absorbed: float = 0.0
-var _invincible_until: int = 0
+var last_trigger_pool_type: String = ""
+## Starting max HP; current_health initialises to this.
+@export_range(1, 10000, 1) var max_health: float = 100.0
 
 ## A named health pool (shield / armour) - typed so the absorption + decay hot paths read
 ## fields directly instead of float()-casting an untyped Dictionary entry every frame.

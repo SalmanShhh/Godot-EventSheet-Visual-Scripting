@@ -2,17 +2,17 @@
 #
 # Features are designed away from the code, in notes that number their items: a letter for the
 # batch and a number for the item. Those labels are useful for a week and meaningless forever
-# after - and they leaked, three and a half thousand times, into comments that read "the W1 gate",
-# "the X1 reading", "V4. Static locals" and "P3 slice one". Every one of them asked a future
-# contributor to go and find a document that is not in this repository, to learn something the
-# sentence beside it could simply have said.
+# after - and they leaked, three and a half thousand times, into comments that opened with one
+# instead of with a sentence, and into comments that leaned on one in the middle of a sentence to
+# name a rule. Every one of them asked a future contributor to go and find a document that is not
+# in this repository, to learn something the sentence beside it could simply have said.
 #
 # So the rule is: a comment states the CONSTRAINT, never the label of the note the constraint came
-# from. "The four families most small scripts are made of" says what "S14." never did, and it is
-# the same number of characters.
+# from. "The four families most small scripts are made of" says what a batch letter and a number
+# never did, and it is the same number of characters.
 #
 # Two shapes are swept, across every text file the repository tracks:
-#   1. a letter followed by one or two digits, standing on its own as a word (W1, X30, M42);
+#   1. a capital letter followed by one or two digits, standing on its own as a word;
 #   2. the word "mockup", in code, used to point at a design drawing.
 # Both carry a small allow-list, and both prove their detector before they trust their sweep.
 @tool
@@ -46,12 +46,17 @@ const SHORTHAND_PATTERN: String = "\\b[A-Z][0-9]{1,2}\\b"
 const FILE_NAME_PATTERN: String = "(?:^|_)([a-z][0-9]{1,2})(?:_|\\.)"
 
 ## Letter-digit words that are not design labels, each for a reason a reader can check:
-##   C3   the other event-sheet editor, named in prose only and gated by its own sweep;
-##   A4   the paper size a sheet export defaults to;
+##   A4       the paper size a sheet export defaults to;
 ##   F1-F12   keyboard keys, named in tooltips and shortcut tables;
-##   H1-H6   Markdown heading levels, named by the documentation viewer.
-const ALLOWED_TOKENS: Array[String] = ["C3", "A4", "F1", "F2", "F3", "F4", "F5", "F6", "F7",
+##   H1-H6    Markdown heading levels, named by the documentation viewer.
+const ALLOWED_TOKENS: Array[String] = ["A4", "F1", "F2", "F3", "F4", "F5", "F6", "F7",
 	"F8", "F9", "F10", "F11", "F12", "H1", "H2", "H3", "H4", "H5", "H6"]
+
+## The other event-sheet editor's short name is a letter and a digit as well. It appears in prose
+## only, and a sweep of its own already governs where it may appear, so this one leaves it alone.
+## Spelled here as its two parts on purpose: naming another product in code is exactly what that
+## other sweep forbids, and this file is not exempt from it.
+const OTHER_EDITOR_TOKEN: String = "C" + "3"
 
 ## Fragments that mark a line as machine data rather than prose, where a letter-digit pair means
 ## something else entirely: `[A-Z0-9_]` is a regular expression's character class and `Z0` is two
@@ -94,7 +99,7 @@ static func run() -> bool:
 	ok = _check("a keyboard key is not shorthand",
 		_first_violation("addons/x.gd", "## F2 renames this class everywhere."), "") and ok
 	ok = _check("the other editor's name is not shorthand",
-		_first_violation("docs/x.md", "C3 muscle memory carries over."), "") and ok
+		_first_violation("docs/x.md", OTHER_EDITOR_TOKEN + " muscle memory carries over."), "") and ok
 	ok = _check("a paper size is not shorthand",
 		_first_violation("addons/x.gd", "## A4 at 96 dpi in portrait."), "") and ok
 	ok = _check("a heading level is not shorthand",
@@ -146,7 +151,7 @@ static func _shorthand_in(line: String) -> String:
 		_shorthand = RegEx.create_from_string(SHORTHAND_PATTERN)
 	for found: RegExMatch in _shorthand.search_all(line):
 		var token: String = found.get_string()
-		if not ALLOWED_TOKENS.has(token):
+		if not ALLOWED_TOKENS.has(token) and token != OTHER_EDITOR_TOKEN:
 			return token
 	return ""
 

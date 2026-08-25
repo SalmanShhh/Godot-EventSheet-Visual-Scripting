@@ -23,12 +23,12 @@ signal on_purchased(entry_id: String, price: float)
 ## @ace_category("Priced Tables")
 signal on_purchase_refused(entry_id: String, reason: String)
 
+## The fallback purse, used ONLY when no wallet node and no CurrencyLedger autoload answer. It is one number for every currency (this table's own money), which is enough for a prototype or a single-shop game; install a shared wallet the moment you have two tables.
+@export var local_wallet: float = 0.0
 ## Optional: drop a PriceTableResource (.tres) here to load its entries on ready - the data-driven way to stock a table without events. You can also load one later (or a different one) with Load Price Table.
 @export var price_table: Resource = null
 ## The group this table looks in for a wallet node before it tries the CurrencyLedger autoload. Any node in the group that has a balance(currency) and a spend(currency, amount) function qualifies - that is the whole contract, so your own purse works too.
 @export var wallet_group: String = "wallet"
-## The fallback purse, used ONLY when no wallet node and no CurrencyLedger autoload answer. It is one number for every currency (this table's own money), which is enough for a prototype or a single-shop game; install a shared wallet the moment you have two tables.
-@export var local_wallet: float = 0.0
 
 # The live table: one record per entry in the order the table lists them, plus an id index into
 # the SAME dictionaries (a Dictionary is a reference, so a write through either is seen by both).

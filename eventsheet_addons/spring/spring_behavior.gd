@@ -22,14 +22,14 @@ signal spring_reached(spring_name: String)
 ## @ace_name("On Spring Started")
 signal spring_started(spring_name: String)
 
-## Spring force toward the target (higher = snappier).
-@export_range(1, 1000, 1) var default_stiffness: float = 170.0
+var color_springs: Dictionary = {}
 ## 0 = oscillate forever, 1 = no overshoot.
 @export_range(0, 1, 0.01) var default_damping: float = 0.85
 ## Distance + speed below which a spring counts as settled.
 @export var default_precision: float = 0.01
+## Spring force toward the target (higher = snappier).
+@export_range(1, 1000, 1) var default_stiffness: float = 170.0
 var springs: Dictionary = {}
-var color_springs: Dictionary = {}
 
 ## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).
 class SpringEntry:

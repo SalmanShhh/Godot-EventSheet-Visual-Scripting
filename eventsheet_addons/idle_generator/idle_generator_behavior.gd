@@ -21,23 +21,23 @@ signal on_purchased
 ## @ace_name("On Cycle Complete")
 signal on_cycle_complete
 
+var _cycle_progress: float = 0.0
+var _pending: float = 0.0
 ## Cost of the FIRST unit. Each further unit costs cost_growth times more.
 @export var base_cost: float = 10.0
-## How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price.
-@export var cost_growth: float = 1.15
 ## Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0.
 @export var base_output: float = 1.0
+## How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price.
+@export var cost_growth: float = 1.15
+## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.
+@export var cycle_time: float = 0.0
+var last_bought: int = 0
+var last_collected: float = 0.0
+var last_spent: float = 0.0
 ## A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier.
 @export var output_multiplier: float = 1.0
 ## How many are owned. Set a starting count here, or leave 0 and buy them in play.
 @export var owned: int = 0
-## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.
-@export var cycle_time: float = 0.0
-var _cycle_progress: float = 0.0
-var _pending: float = 0.0
-var last_spent: float = 0.0
-var last_bought: int = 0
-var last_collected: float = 0.0
 
 func _process(delta: float) -> void:
 	if cycle_time <= 0.0 or owned <= 0:

@@ -18,30 +18,30 @@ func _enter_tree() -> void:
 ## @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)
 
-## Travel speed in pixels per second.
-@export var speed: float = 300.0
 ## Change in speed per second along the direction of motion.
 @export var acceleration: float = 0.0
+## Rotates the host to face its direction of motion.
+@export var align_rotation: bool = true
+var distance_travelled: float = 0.0
+## When off, the bullet stops moving.
+@export var enabled_movement: bool = true
 ## Downward pull added to vertical speed each second.
 @export var gravity: float = 0.0
 ## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward.
 @export_range(0, 360, 1) var gravity_angle: float = 90.0
-## Rotates the host to face its direction of motion.
-@export var align_rotation: bool = true
-## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through a thin wall between two frames.
-@export var stepping: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
+var launched: bool = false
+## Travel speed in pixels per second.
+@export var speed: float = 300.0
 ## Also stop the sweep on Area2D nodes, which it ignores by default.
 @export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through a thin wall between two frames.
+@export var stepping: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
-## When off, the bullet stops moving.
-@export var enabled_movement: bool = true
-var distance_travelled: float = 0.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0
-var launched: bool = false
 
 func _process(delta: float) -> void:
 	if host == null or not enabled_movement:

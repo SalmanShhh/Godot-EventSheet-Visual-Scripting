@@ -20,13 +20,13 @@ signal on_button_pressed
 
 ## On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI.
 @export var auto_connect_buttons: bool = true
-## How long a toast stays before fading (seconds).
-@export_range(0.2, 10, 0.1) var toast_seconds: float = 2.0
+var last_button_name: String = ""
 ## The colour a Set Needle needle is drawn in while the value is inside its warning mark.
 @export var needle_colour: Color = Color(0.66000002622604, 0.80000001192093, 1.0, 1.0)
 ## The colour a Set Needle needle turns once the value has drifted past its warning mark.
 @export var needle_warning_colour: Color = Color(1.0, 0.44999998807907, 0.37999999523163, 1.0)
-var last_button_name: String = ""
+## How long a toast stays before fading (seconds).
+@export_range(0.2, 10, 0.1) var toast_seconds: float = 2.0
 var ui_cache: Dictionary = {}
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).

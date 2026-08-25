@@ -123,12 +123,14 @@ static func _test_the_blame_is_the_pick_mapping_asked_backwards() -> bool:
 static func _test_the_pin_helper_reports_the_way_it_promises() -> bool:
 	var ok: bool = true
 	ok = Pins.check_value("red_run_report_test", "a table where every pin holds passes",
-		Pins.check("probe", {"a": 1, "b": 2}, func(key: String) -> Variant:
-			return 1 if key == "a" else 2), true) and ok
-	print("  (the two [FAIL] lines under this one are a probe, and are not counted)")
+		Pins.check("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
+			func(key: String) -> Variant: return 1 if key == "a" else 2), true) and ok
+	# The two [FAIL] lines this prints are the helper failing ON PURPOSE, so they carry a name that
+	# says so - a red-run report reads names out of the logs, and "probe" in one would be a lead
+	# somebody follows.
 	ok = Pins.check_value("red_run_report_test", "a table with two wrong pins fails, having walked both",
-		Pins.check("probe", {"a": 1, "b": 2}, func(_key: String) -> Variant:
-			return 9), false) and ok
+		Pins.check("deliberate_probe_not_a_failure", {"a": 1, "b": 2},
+			func(_key: String) -> Variant: return 9), false) and ok
 	ok = Pins.check_value("red_run_report_test", "a typed array equals the plain one beside it",
-		Pins.check_value("probe", "same strings", PackedStringArray(["x"]), ["x"]), true) and ok
+		Pins.check_value("deliberate_probe_not_a_failure", "same strings", PackedStringArray(["x"]), ["x"]), true) and ok
 	return ok

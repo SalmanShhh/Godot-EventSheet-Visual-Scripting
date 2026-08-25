@@ -27,20 +27,20 @@ signal on_shape_drawn
 ## @ace_category("Touch Gestures")
 signal on_stroke_started
 
-## How far the finger must travel, in pixels, before the drag counts as a swipe.
-@export_range(10.0, 600.0, 5.0) var swipe_min_distance: float = 100.0
-## How long the finger may take. A slow drag over the same distance is a drag, not a swipe.
-@export_range(0.05, 3.0, 0.05) var swipe_max_seconds: float = 0.4
+## Print every swipe and every match to the Output panel while tuning the thresholds.
+@export var debug_logging: bool = false
 ## Off: four directions (left, right, up, down). On: the four diagonals as well (up left, up right, down left, down right).
 @export var eight_way: bool = false
-## How far a stroke may sit from a taught shape and still count, 0 to 1. Higher is more forgiving and more likely to confuse two similar shapes.
-@export_range(0.02, 0.8, 0.01) var shape_tolerance: float = 0.22
 ## How many gathered points a stroke needs before it is worth matching. A tap gathers one or two.
 @export_range(4, 64, 1) var minimum_stroke_points: int = 8
 ## A Touch Shape Library data asset holding the taught shapes. Leave it empty to teach shapes that only live for this run.
 @export var shape_library: Resource = null
-## Print every swipe and every match to the Output panel while tuning the thresholds.
-@export var debug_logging: bool = false
+## How far a stroke may sit from a taught shape and still count, 0 to 1. Higher is more forgiving and more likely to confuse two similar shapes.
+@export_range(0.02, 0.8, 0.01) var shape_tolerance: float = 0.22
+## How long the finger may take. A slow drag over the same distance is a drag, not a swipe.
+@export_range(0.05, 3.0, 0.05) var swipe_max_seconds: float = 0.4
+## How far the finger must travel, in pixels, before the drag counts as a swipe.
+@export_range(10.0, 600.0, 5.0) var swipe_min_distance: float = 100.0
 
 # How many points every stroke is smoothed to before it is compared. Fixed, because two
 # strokes can only be compared point for point when they have the same number of points.

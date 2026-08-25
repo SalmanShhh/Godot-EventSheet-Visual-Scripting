@@ -43,40 +43,40 @@ signal waypoint_reached
 ## @ace_name("On Nav Graph Built")
 signal nav_graph_built
 
-## Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself.
-@export var auto_control: bool = true
 ## How close (px, horizontally) counts as reaching a waypoint.
 @export var arrive_distance: float = 10.0
-## The furthest safe drop (px) the graph will route through.
-@export var max_fall_distance: float = 320.0
-## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
-@export var jump_height_override: float = 0.0
-## Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time).
-@export var jump_distance_override: float = 0.0
-## Draw the active path as a line in the world.
-@export var debug_draw: bool = false
-## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
-@export var variable_jump: bool = true
-## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
-@export var ledge_restriction: bool = false
-## With Ledge Restriction on, drops up to this many pixels are still allowed (0 = no drops at all).
-@export var ledge_leniency: float = 0.0
-## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
-@export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
+## Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself.
+@export var auto_control: bool = true
 ## Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires.
 @export var coyote_time: float = 0.12
+## Draw the active path as a line in the world.
+@export var debug_draw: bool = false
+## The fallback driver's gravity.
+@export var fallback_gravity: float = 980.0
+## The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived.
+@export var fallback_jump_velocity: float = -400.0
+## No movement sibling? The built-in fallback driver moves the CharacterBody2D itself at this speed.
+@export var fallback_move_speed: float = 200.0
+## Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time).
+@export var jump_distance_override: float = 0.0
+## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
+@export var jump_height_override: float = 0.0
+## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
+@export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
+## With Ledge Restriction on, drops up to this many pixels are still allowed (0 = no drops at all).
+@export var ledge_leniency: float = 0.0
+## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
+@export var ledge_restriction: bool = false
+## The furthest safe drop (px) the graph will route through.
+@export var max_fall_distance: float = 320.0
 ## While following a node (Find Path To Node), how often the route may refresh.
 @export var repath_interval: float = 0.5
 ## The route only refreshes when the followed node has moved at least this many pixels from where the current path was aimed.
 @export var repath_threshold: float = 24.0
 ## No progress toward the current waypoint for this long fires On Waypoint Stuck and re-routes from wherever the agent actually is.
 @export var stuck_timeout: float = 1.5
-## No movement sibling? The built-in fallback driver moves the CharacterBody2D itself at this speed.
-@export var fallback_move_speed: float = 200.0
-## The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived.
-@export var fallback_jump_velocity: float = -400.0
-## The fallback driver's gravity.
-@export var fallback_gravity: float = 980.0
+## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
+@export var variable_jump: bool = true
 
 # --- Internal state (the graph lives per agent) ---
 var _tilemap: TileMapLayer = null

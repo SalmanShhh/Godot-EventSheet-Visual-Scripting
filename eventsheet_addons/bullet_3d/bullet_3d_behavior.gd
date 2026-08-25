@@ -18,25 +18,25 @@ func _enter_tree() -> void:
 ## @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)
 
-## Units per second the bullet travels along the host's forward (-Z).
-@export var speed: float = 10.0
+var distance_travelled: float = 0.0
+## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.
+@export var enabled_movement: bool = true
 ## Downward acceleration pulling the bullet's vertical velocity down each second.
 @export var gravity: float = 0.0
-## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through thin geometry between two frames.
-@export var stepping: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
+var launched: bool = false
+## Units per second the bullet travels along the host's forward (-Z).
+@export var speed: float = 10.0
 ## Also stop the sweep on Area3D nodes, which it ignores by default.
 @export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through thin geometry between two frames.
+@export var stepping: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
-var distance_travelled: float = 0.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0
 var vel_z: float = 0.0
-var launched: bool = false
-## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.
-@export var enabled_movement: bool = true
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it
 # lives here). Any direction works - the arc bends toward it; normalized before use.

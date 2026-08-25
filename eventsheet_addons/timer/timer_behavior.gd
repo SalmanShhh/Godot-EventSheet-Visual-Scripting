@@ -21,9 +21,9 @@ signal timer_finished
 
 ## Length of the countdown in seconds; the timer resets to this each time it repeats.
 @export var duration: float = 1.0
+var remaining: float = 0.0
 ## When on, the timer restarts after firing On Timer instead of stopping.
 @export var repeating: bool = false
-var remaining: float = 0.0
 var running: bool = false
 
 func _process(delta: float) -> void:
