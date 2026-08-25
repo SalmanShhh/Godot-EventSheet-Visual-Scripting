@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Fixed - what this pass's own review found
+
+- **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting
+  `//` and then matched every other line, so wrapping a declaration in `/* … */` - which is how
+  anybody switches a uniform off while they try the shader without it - left the text inside reading
+  exactly like a declaration. The picker shelved a dial no material has, a hand-written
+  `set_shader_parameter` for it lifted to a picked row instead of the free-string one, and the health
+  check that exists to catch a name the shader does not declare cleared it. Block comments are taken
+  out before anything is matched, and a line holding two declarations now gives up both rather than
+  the first: a dial nothing reports is one every check downstream then calls a typo.
+- **Member and node completion survives the next keystroke.** After `hp.` the list was that type's
+  members, and after `hp.h` it was the sheet's whole vocabulary again, because the position was read
+  off the last character typed rather than off where the caret sits. Accepting from it wrote
+  `hp.health` - a member `hp` has never had - since the popup replaces only the word under the caret.
+  The same one letter lost the scene's paths after `$` and its unique names after `%`. The position
+  is now read from what comes BEFORE the word being typed, and a `%` that follows a value is still
+  the modulo operator however much is typed after it.
+- **The `effect` band stops counting.** "Who else wears this material" is a scan of every scene in
+  the project, sliced a few milliseconds per frame so opening a sheet never waits for it, and a band
+  asked mid-scan says "counting…". Nothing told anyone when the scan finished, and a band's words are
+  worked out while its rows are built - so on the first sheet of a session the band said "counting…"
+  until an unrelated edit rebuilt it, and the amber note about turning a dial twelve nodes share was
+  silently absent. The scan now says when it is done and the view builds its rows again.
+- **A slice of that scan waits for a real frame.** It re-armed itself with a deferred call, and
+  Godot's message queue flush is re-entrant - so on a big project the whole scan could run inside one
+  frame's flush, which is the stall the slice budget exists to prevent. The next slice rides the
+  frame signal instead, which is one slice per frame exactly.
+- **A two-word search keeps the shelves it names.** The scene shelves - a dial of a material one of
+  your nodes wears, a verb aimed at one of its lights - were filtered by testing the whole query as
+  one substring, while the rest of the picker matches word by word. So "boss dissolve", object then
+  verb and the shape this vocabulary is FOR, dropped every shelf and left the general list. Both
+  shelves now run the same per-word test through one shared answer.
+- **Double-clicking a Call row's function name completes it.** The sheet's inline value editor
+  worked out a field's kind from the parameter's hint alone, while the parameters dialog asked the
+  completion seam - which is the half that knows a hint-less `function_name` field still names a
+  function of this sheet. One question, one answer, in the row and in the dialog.
+- **An edit drops the completion lists it changed.** They are held against the sheet OBJECT and the
+  undo funnel commits by replacing that object, so the drop was being handed a brand-new resource
+  with no entries and erased nothing; every superseded version's lists sat there until the cap
+  evicted something still in use. The drop now happens while the sheet those lists were built for is
+  still the current one.
+- **Two readings of "what completes at this caret" become one.** The lint helper the completion seam
+  replaced had no callers left outside the tests, and its own regex disagreed with the seam about a
+  partly typed member name - so four tests went on pinning the behaviour of the path nobody used,
+  which is what made the seam's own gap above look covered. It is gone; the tests ask the function
+  that answers each question.
+- **Two budgets that could not fail, and three figures that flattered the pass.** The Project Doctor's audit budget was set above the whole
+  band the code it guards used to measure at, so losing the entire 40-second saving would still have
+  passed; it is 65 s now, measured 41 to 48 across seven runs and set under the old band on purpose.
+  The Add picker's budget was measured with no sheet in the picker, so the scene shelves - the one
+  path that builds an entry per node per dial per verb on every keystroke - answered null before
+  doing any work; it is measured with a sheet whose scene really wears materials, the shelf count is
+  pinned beside the time, and the per-keystroke tree rebuild has a budget of its own. Three published
+  performance figures were below the lowest run recorded in the tests beside them and now match what
+  was measured.
+- **The pack count is one number again.** One half of the moving-in guide said 105 packs and the
+  other said 111; 111 is what the tree holds.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
@@ -10,15 +68,15 @@
   first time a test asks for it - 1,000 scripts in the seven shapes real files come in (variables,
   regions, plain functions, networked rows, lighting rows, effect rows, and code no lift will
   claim), 300 scenes of which three carry 2,000 nodes, 100 shaders declaring eight described dials
-  each, one 2,000-line controller, and the 105 packs this repository already ships. It is
+  each, one 2,000-line controller, and the 111 packs this repository already ships. It is
   deterministic - every file is derived from its index, so two machines write identical bytes and a
   number measured on one means something on the other - it takes 1.2 seconds to write and 2
   milliseconds to find again, and it is never committed, so nothing here grew by 1,401 files.
 - **Eleven budgets, each measured three or more times on a quiet machine before it was written
   down.** What the editor costs on that fixture: enabling the plugin **270 ms**; the first sheet tab
   of a session **2,310 ms**, of which **2,050 ms** is the once-per-session registries no later tab
-  pays; opening the 2,000-line script as 1,441 rows **5,600 ms** and rebuilding those rows, which is
-  what an edit costs, **2,100 ms**; the Add picker over all 5,129 registered rows **390 ms**; one
+  pays; opening the 2,000-line script as 1,441 rows **5,800 ms** and rebuilding those rows, which is
+  what an edit costs, **2,350 ms**; the Add picker over all 5,129 registered rows **510 ms**; one
   keystroke in a completing field **2.2 ms**, comfortably inside a frame; the lights and material
   wearers of a 2,000-node scene **20 ms** cold and **0.03 ms** warm; 100 shaders **180 ms** cold and
   **0.2 ms** warm; the whole Project Doctor audit of this repository **41 s**. Every one of them is
