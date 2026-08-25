@@ -109,6 +109,19 @@ static func pick(changed: PackedStringArray) -> PackedStringArray:
 	return names
 
 
+## The mapping asked BACKWARDS: which of these changed files would have picked `test_name`. One
+## failing test plus an afternoon of edits is the moment this answers - "of the forty files you
+## touched, these three are the ones that reach this test". Same rules, so an answer here and an
+## answer from `pick` can never disagree.
+static func blamed_files(test_name: String, changed: PackedStringArray) -> PackedStringArray:
+	var blamed: PackedStringArray = PackedStringArray()
+	var wanted: String = test_name.trim_suffix(".gd")
+	for path: String in changed:
+		if pick(PackedStringArray([path])).has(wanted):
+			blamed.append(path)
+	return blamed
+
+
 ## What git says has changed: staged, unstaged and UNTRACKED alike, which is why this reads `status`
 ## rather than `diff` - a brand-new test file is exactly the change most worth running. Empty (with a
 ## word about why) when git cannot be reached, so the tool says "I do not know" rather than "nothing".
