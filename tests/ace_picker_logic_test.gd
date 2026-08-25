@@ -164,6 +164,23 @@ static func run() -> bool:
 	all_passed = _check("no twin id for a non-mapped ACE",
 		ACEPickerDialog._reactive_twin_id(no_twin).is_empty(), true) and all_passed
 
+	# A SCENE SHELF entry answers a search word by word, the way the registry's own search does.
+	# "boss dissolve" is object then verb - the shape the scene shelves exist for - and no one
+	# entry's text holds that whole string, so testing the query as one substring dropped every
+	# shelf the moment a second word was typed and left the reader the general vocabulary.
+	var shelved: ACEDefinition = ACEDefinition.new()
+	shelved.provider_id = "Core"
+	shelved.id = "EffectSetDial"
+	shelved.display_name = "effect.dissolve  ·  Set Effect Dial"
+	shelved.metadata = {ACEPickerDialog.SCENE_TARGET_META: "$Boss"}
+	for query: String in ["dissolve", "boss", "boss dissolve", "dissolve boss", "  boss   set  ", ""]:
+		all_passed = _check("a shelf entry answers \"%s\"" % query,
+			ACEPickerDialog.shelf_matches_query(shelved, query), true) and all_passed
+	all_passed = _check("and answers no when one of the words is not its own",
+		ACEPickerDialog.shelf_matches_query(shelved, "boss glow"), false) and all_passed
+	all_passed = _check("nothing at all answers nothing",
+		ACEPickerDialog.shelf_matches_query(null, "boss"), false) and all_passed
+
 	return all_passed
 
 

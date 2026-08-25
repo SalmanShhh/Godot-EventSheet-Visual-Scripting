@@ -1235,6 +1235,26 @@ static func function_call_definitions(sheet: EventSheetResource, registry: Event
 	return out
 
 
+## Whether a search query should turn up one of the SCENE SHELF entries - a dial of a material one
+## of the scene's nodes wears, or a verb aimed at one of its lights. Either half of the entry
+## answers: the verb ("dissolve", "brightness") and the node it is aimed at ("Boss", "Torch"),
+## because both are things a reader types looking for the row.
+##
+## EVERY WORD has to appear, which is the same per-token test the registry's own search runs. A
+## whole-query substring test dropped every shelf the moment a second word was typed: "boss
+## dissolve" is object then verb, the shape this vocabulary is FOR, and no one entry's text contains
+## that string. Static + pure so a shelf's searchable-ness is pinned without a picker window.
+static func shelf_matches_query(definition: ACEDefinition, query: String) -> bool:
+	if definition == null:
+		return false
+	var haystack: String = ("%s %s" % [definition.display_name,
+		str(definition.metadata.get(SCENE_TARGET_META, ""))]).to_lower()
+	for word: String in query.to_lower().split(" ", false):
+		if not haystack.contains(word):
+			return false
+	return true
+
+
 ## Whether a search query should turn up one of the script's functions: part of the entry's own
 ## words ("Call Award Points"), part of the GDScript name a coder would type ("award_points"), or
 ## the same in-order subsequence the rest of the picker's search accepts. Static + pure so the
@@ -1556,25 +1576,12 @@ func _refresh_tree() -> void:
 	var dial_shelves: Array[ACEDefinition] = [] as Array[ACEDefinition]
 	if not signals_only:
 		dial_shelves = effect_dial_definitions(_open_sheet(), _registry)
-		var dial_query: String = query.to_lower()
 		for dial_definition: ACEDefinition in dial_shelves:
-			# Either half of the entry answers a search: the dial ("dissolve") and the node it is
-			# aimed at ("Boss"), because both are things a reader types looking for this row.
-			if filtering and not (dial_definition.display_name.to_lower().contains(dial_query) \
-					or str(dial_definition.metadata.get(SCENE_TARGET_META, "")) \
-						.to_lower().contains(dial_query)):
-				continue
-			definitions.append(dial_definition)
-	if not signals_only:
-		var light_query: String = query.to_lower()
+			if not filtering or shelf_matches_query(dial_definition, query):
+				definitions.append(dial_definition)
 		for light_definition: ACEDefinition in scene_lighting_definitions(_open_sheet(), _registry):
-			# Either half of the entry answers a search: the verb ("brightness") and the node it is
-			# aimed at ("Torch"), because both are things a reader types looking for this row.
-			if filtering and not (light_definition.display_name.to_lower().contains(light_query) \
-					or str(light_definition.metadata.get(SCENE_TARGET_META, "")) \
-						.to_lower().contains(light_query)):
-				continue
-			definitions.append(light_definition)
+			if not filtering or shelf_matches_query(light_definition, query):
+				definitions.append(light_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
 	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
 	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
