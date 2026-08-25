@@ -2274,6 +2274,9 @@ static func _list_files_with_extension(extension: String) -> PackedStringArray:
 				found.append(full_path)
 			entry = directory.get_next()
 		directory.list_dir_end()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and this order is the order findings appear in the report.
+	found.sort()
 	return found
 
 
@@ -2665,6 +2668,9 @@ static func _skill_tree_assets() -> PackedStringArray:
 					found.append(full_path)
 			entry = directory.get_next()
 		directory.list_dir_end()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and this order is the order findings appear in the report.
+	found.sort()
 	return found
 
 
@@ -2710,6 +2716,10 @@ static func _walk_project_scripts() -> PackedStringArray:
 				scripts.append(full_path)
 			entry = directory.get_next()
 		directory.list_dir_end()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and forty-odd checks derive finding order and "first user" picks
+	# from this list.
+	scripts.sort()
 	return scripts
 
 

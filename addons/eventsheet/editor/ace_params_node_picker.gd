@@ -281,23 +281,38 @@ static func scan_scene_files(query: String, base_dir: String = "res://") -> Arra
 		var directory: DirAccess = DirAccess.open(directory_path)
 		if directory == null:
 			continue
+		# Name order, always - the listing arrives in filesystem order (near-alphabetical on NTFS,
+		# hash order on ext4), and the scan stops at NODE_PICKER_SCENE_SCAN_CAP, so an unsorted walk
+		# fills the cap with different scenes on different platforms.
+		var subdirectories: PackedStringArray = PackedStringArray()
+		var scene_names: PackedStringArray = PackedStringArray()
 		directory.list_dir_begin()
 		var entry: String = directory.get_next()
 		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
 			if directory.current_is_dir():
 				if not entry.begins_with("."):
-					pending.append(full_path)
+					subdirectories.append(entry)
 			elif entry.get_extension() == "tscn":
-				var content: String = FileAccess.get_file_as_string(full_path)
-				for regex_match: RegExMatch in header_regex.search_all(content):
-					var node_name: String = regex_match.get_string(1)
-					var node_class: String = regex_match.get_string(2)
-					if node_name.to_lower().contains(lowered) or node_class.to_lower().contains(lowered):
-						hits.append({"file": full_path, "node": node_name, "class": node_class})
-						if hits.size() >= NODE_PICKER_SCENE_SCAN_CAP:
-							break
+				scene_names.append(entry)
 			entry = directory.get_next()
+		directory.list_dir_end()
+		subdirectories.sort()
+		scene_names.sort()
+		# The stack pops from the back, so subdirectories go on reversed to come off in name order.
+		for index in range(subdirectories.size() - 1, -1, -1):
+			pending.append(directory_path.path_join(subdirectories[index]))
+		for scene_name: String in scene_names:
+			var full_path: String = directory_path.path_join(scene_name)
+			var content: String = FileAccess.get_file_as_string(full_path)
+			for regex_match: RegExMatch in header_regex.search_all(content):
+				var node_name: String = regex_match.get_string(1)
+				var node_class: String = regex_match.get_string(2)
+				if node_name.to_lower().contains(lowered) or node_class.to_lower().contains(lowered):
+					hits.append({"file": full_path, "node": node_name, "class": node_class})
+					if hits.size() >= NODE_PICKER_SCENE_SCAN_CAP:
+						break
+			if hits.size() >= NODE_PICKER_SCENE_SCAN_CAP:
+				break
 	return hits
 
 

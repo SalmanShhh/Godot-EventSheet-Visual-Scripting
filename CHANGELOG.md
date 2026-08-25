@@ -66,6 +66,16 @@
   a material's "worn by" sentence and every other list derived from the project scan answered in a
   different order on Linux than on Windows. Continuous integration on ubuntu caught it; the list is
   sorted once where it is collected, and every consumer answers the same everywhere.
+- **Every other project-wide listing reads in path order too.** The scene-list fix above was one
+  walk of thirty-nine; an audit of the rest found eight more whose order reached something a person
+  sees - the Find window's results, the Doctor's finding order and its "first user" picks, the
+  export report's failure list, the MCP server's sheet listing, a method track's first-file-wins
+  animation fact, a signal note's jump target, the scene that names a script-without-a-class_name,
+  and the node picker's capped cross-scene scan, which filled its cap with different scenes per
+  platform. Each is now sorted once at its collection point; walks whose order truly cannot matter
+  (existence checks, counting sweeps, deletion sweeps) are left as they are, and a new
+  `listing_order_test` pins the project-wide listings as path-sorted so a walk that loses its sort
+  fails at home before it fails on somebody else's OS.
 - **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting
   `//` and then matched every other line, so wrapping a declaration in `/* … */` - which is how
   anybody switches a uniform off while they try the shader without it - left the text inside reading

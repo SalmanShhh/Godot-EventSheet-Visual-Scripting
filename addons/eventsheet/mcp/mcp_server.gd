@@ -101,6 +101,10 @@ func _handle_tool_call(message: Dictionary) -> Dictionary:
 func _tool_list_sheets() -> Dictionary:
 	var sheets: Array = []
 	_scan_for_sheets("res://", sheets)
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), so an unsorted listing answers the same question differently per
+	# platform.
+	sheets.sort()
 	return {"sheets": sheets}
 
 
