@@ -71,6 +71,13 @@ const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard"]
 ## The provider an entry belongs to unless it says otherwise. Every builtin family is Core.
 const DEFAULT_PROVIDER: String = "Core"
 
+## The node spellings a row can address a node by, as a pattern fragment: `$Path`, `%Unique`,
+## `get_node("Path")` and the bare variable the node was held in. All four are the author's own text
+## and ride back out untouched, which is why the receiver they sit in is not part of any sentence.
+## Here rather than in one family because every node-scoped family needs exactly these four.
+const NODE_REFERENCE: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
+	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*"
+
 ## One compiled RegEx per pattern for the life of the session: these run on every statement of every
 ## opened file, and recompiling per line was the entire cost of the hand-written matchers.
 static var _compiled: Dictionary = {}
@@ -188,6 +195,15 @@ static func _params_of(entry: Dictionary, hit: RegExMatch) -> Dictionary:
 ## dot behind and hand the author a line that does not parse.
 static func optional_prefix_slot(name: String) -> String:
 	return "{%s.}" % name
+
+
+## The same idiom as a PATTERN: the receiver a node-scoped line opens with, as one optional capture.
+## Optional because "On node" is optional on every one of these rows - leave it blank and the line is
+## the bare member operation, `energy = 1.2` or `material.set_shader_parameter(…)`, which is the
+## commonest shape a sheet attached to its own node writes. `name` is the capture, so a line naming
+## the same node twice can be matched with one group per mention and a guard asked whether they agree.
+static func receiver(name: String = "target") -> String:
+	return "(?:(?<%s>%s)\\.)?" % [name, NODE_REFERENCE]
 
 
 ## True when a shape answers for a param - under either spelling, the plain `{name}` or the

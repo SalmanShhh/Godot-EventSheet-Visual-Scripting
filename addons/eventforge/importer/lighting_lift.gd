@@ -25,12 +25,6 @@ extends RefCounted
 
 const W := preload("res://addons/eventforge/registration/light_words.gd")
 
-## The node spellings a row can address a light by. All four are the author's own text and ride back
-## out untouched: the row shows the light it names, so `target` IS a value, and which of the four
-## spellings was used is part of the line rather than part of the sentence.
-const NODE_TEXT: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
-	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*"
-
 ## The call a fade is written as - the one spelling that names no property of its own.
 const FADE_CALL: String = "tween_property"
 
@@ -73,11 +67,6 @@ const FIXTURE_SECONDS: String = "0.5"
 ## on its own whether `torch` is a light or somebody's campfire counter.
 static var target_classes: Dictionary = {}
 
-## The declaration shapes a class can be read off: `@onready var torch: PointLight2D = $Torch`,
-## `@export var lamp: OmniLight3D`, `@onready var torch := $Torch`. The type wins when there is one;
-## otherwise the node the variable holds is looked up in the scene.
-static var _declaration: RegEx = null
-
 ## The entries and their prefilter, built once for the life of the session: these run on every
 ## statement of every opened file, and rebuilding the table per line was the whole cost of it.
 static var _entries: Array[Dictionary] = []
@@ -89,17 +78,14 @@ static var _marks: PackedStringArray = PackedStringArray()
 ## nothing to say yes to.
 static func note_source(source: String, script_path: String) -> void:
 	target_classes = EventSheetSceneLights.classes_for_script(script_path).duplicate()
-	if _declaration == null:
-		_declaration = RegEx.create_from_string("(?m)^[ \\t]*(?:@onready[ \\t]+|@export[ \\t]+)?"\
-			+ "var[ \\t]+(?<name>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*"\
-			+ "(?::[ \\t]*(?<type>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*)?(?::?=[ \\t]*(?<value>[^\\n]+))?$")
-	for hit: RegExMatch in _declaration.search_all(source):
-		var declared: String = hit.get_string("type").strip_edges()
+	for declaration: Dictionary in EventSheetSceneLights.declarations(source):
+		# The declared TYPE wins when there is one - `@onready var lamp: OmniLight3D` says so
+		# outright; otherwise the node the variable holds is looked up in the scene.
+		var declared: String = str(declaration["type"])
 		if declared.is_empty():
-			declared = str(target_classes.get(
-				EventSheetSceneLights.reference_key(hit.get_string("value")), ""))
+			declared = str(target_classes.get(str(declaration["value_key"]), ""))
 		if addresses(declared):
-			target_classes[hit.get_string("name")] = declared
+			target_classes[str(declaration["name"])] = declared
 
 
 ## True when a class is one this vocabulary has rows for: any light, the CanvasModulate darkness
@@ -192,8 +178,8 @@ static func _own_environment_entry() -> Dictionary:
 	return {
 		"id": "%s_%s_own" % [ENVIRONMENT_MEMBER, WORLD_HOST.to_lower()],
 		"ace_id": "WorldOwnEnvironment",
-		"pattern": "^%s%s = %s%s\\.duplicate\\(\\)$" % [_receiver(), ENVIRONMENT_MEMBER,
-			_receiver("holder"), ENVIRONMENT_MEMBER],
+		"pattern": "^%s%s = %s%s\\.duplicate\\(\\)$" % [EventForgeLiftTable.receiver(), ENVIRONMENT_MEMBER,
+			EventForgeLiftTable.receiver("holder"), ENVIRONMENT_MEMBER],
 		"params": ["target"],
 		"defaults": BLANK_RECEIVER,
 		"guard": Callable(EventForgeLightingLift, "_copies_its_own_world"),
@@ -225,22 +211,13 @@ static func _literal(member_path: String) -> String:
 	return member_path.replace(".", "\\.")
 
 
-## The receiver a node-scoped line opens with, as one OPTIONAL capture. Optional because "On node" is
-## an optional field on every one of these rows: leave it blank and the line is the bare member
-## operation, `energy = 1.2`, which is the commonest shape a lit sheet writes and has to read back as
-## the row that wrote it. `name` is the capture, so a line naming the same node twice can be matched
-## with one group per mention and the guard asked whether they agree.
-static func _receiver(name: String = "target") -> String:
-	return "(?:(?<%s>%s)\\.)?" % [name, NODE_TEXT]
-
-
 ## `<node>.<property> = <anything>` on a node the scene says is `host_class`, or the same line with
 ## the receiver left off, on a sheet attached to a node of that class.
 static func _object_entry(ace_id: String, host_class: String, property: String, sample: String) -> Dictionary:
 	return {
 		"id": "%s_%s_set" % [property.replace(".", "_"), host_class.to_lower()],
 		"ace_id": ace_id,
-		"pattern": "^%s%s = (?<value>.+)$" % [_receiver(), _literal(property)],
+		"pattern": "^%s%s = (?<value>.+)$" % [EventForgeLiftTable.receiver(), _literal(property)],
 		"params": ["target", "value"],
 		"defaults": BLANK_RECEIVER,
 		"guard": _guard_of(host_class),
@@ -254,7 +231,7 @@ static func _switch_of(ace_id: String, host_class: String, property: String, wri
 	return {
 		"id": "%s_%s_%s" % [property.replace(".", "_"), host_class.to_lower(), written],
 		"ace_id": ace_id,
-		"pattern": "^%s%s = %s$" % [_receiver(), _literal(property), written],
+		"pattern": "^%s%s = %s$" % [EventForgeLiftTable.receiver(), _literal(property), written],
 		"params": ["target"],
 		"defaults": BLANK_RECEIVER,
 		"guard": _guard_of(host_class),
@@ -291,7 +268,7 @@ static func _value_entry(word: Dictionary, row: Dictionary) -> Dictionary:
 	return {
 		"id": _entry_id(row, "set"),
 		"ace_id": "LightSet%s" % str(row["id_stem"]),
-		"pattern": "^%s%s = (?<value>.+)$" % [_receiver(), property],
+		"pattern": "^%s%s = (?<value>.+)$" % [EventForgeLiftTable.receiver(), property],
 		"params": ["target", "value"],
 		"defaults": BLANK_RECEIVER,
 		"guard": _guard_for(row),
@@ -311,7 +288,7 @@ static func _switch_entry(row: Dictionary, turned_on: bool) -> Dictionary:
 	return {
 		"id": _entry_id(row, written),
 		"ace_id": "Light%s%s" % [str(row["id_stem"]), "On" if turned_on else "Off"],
-		"pattern": "^%s%s = %s$" % [_receiver(), property, written],
+		"pattern": "^%s%s = %s$" % [EventForgeLiftTable.receiver(), property, written],
 		"params": ["target"],
 		"defaults": BLANK_RECEIVER,
 		"guard": _guard_for(row),

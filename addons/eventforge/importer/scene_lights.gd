@@ -72,6 +72,9 @@ static var _scenes: Dictionary = {}
 ## opened file, and recompiling a pattern per line was the whole cost of the hand-written matchers.
 static var _path_regex: RegEx = null
 
+## The declaration matcher behind `declarations`, compiled once for the same reason.
+static var _declaration_regex: RegEx = null
+
 
 ## Every light in every scene that runs this script, in scene order. One entry each:
 ##   {"name", "path", "class", "kind", "shadows", "masks", "shadow_masks", "reference",
@@ -147,6 +150,27 @@ static func reference_key(text: String) -> String:
 	return trimmed if _node_path_regex().search(trimmed) != null else ""
 
 
+## The `var` declarations one FILE makes about nodes, as [{"name", "type", "value_key"}]: the
+## variable's own name, the class it was declared with ("" when there is none) and the node its value
+## names reduced to a lookup key ("" when the value is not a plain node reference). Every family that
+## lifts node-scoped lines needs this and needs it identically - a line naming `torch` cannot say on
+## its own what `torch` is, and the declaration either says outright or names the node the scene can
+## be asked about. One matcher, compiled once, because it runs over every opened file.
+static func declarations(source: String) -> Array[Dictionary]:
+	if _declaration_regex == null:
+		_declaration_regex = RegEx.create_from_string("(?m)^[ \\t]*(?:@onready[ \\t]+|@export[ \\t]+)?"\
+			+ "var[ \\t]+(?<name>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*"\
+			+ "(?::[ \\t]*(?<type>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*)?(?::?=[ \\t]*(?<value>[^\\n]+))?$")
+	var declared: Array[Dictionary] = []
+	for hit: RegExMatch in _declaration_regex.search_all(source):
+		declared.append({
+			"name": hit.get_string("name"),
+			"type": hit.get_string("type").strip_edges(),
+			"value_key": reference_key(hit.get_string("value"))
+		})
+	return declared
+
+
 ## Drops the cache. The editor calls this when the filesystem changes; tests call it between
 ## fixtures.
 static func clear_cache() -> void:
@@ -202,7 +226,7 @@ static func _scene(scene_path: String, host_path: String = ".") -> Dictionary:
 		if node_class.is_empty():
 			continue
 		var found: Dictionary = _node_entry(node, node_class,
-			_reference_of(str(node.get("path", "")), host_path), scene_path)
+			reference_of(str(node.get("path", "")), host_path), scene_path)
 		nodes.append(found)
 		if EventForgeLightWords.is_light_class(node_class):
 			lights.append(_light_facts(found))
@@ -264,8 +288,10 @@ static func _note_spellings(classes: Dictionary, node_name: String, node_path: S
 
 ## How a row addresses one node from the script's own node: `$Torch` for a child, `self` for the
 ## node the script is on. A node OUTSIDE the script's own branch keeps its scene path, which is what
-## the file holds and what the reader can check.
-static func _reference_of(node_path: String, host_path: String) -> String:
+## the file holds and what the reader can check. Public because it is the one spelling rule every
+## scene reader here needs: a row picked for a light and a row picked for a material have to address
+## the same node with the same text or the two families disagree about somebody's scene.
+static func reference_of(node_path: String, host_path: String) -> String:
 	if node_path == host_path or node_path == ".":
 		return SELF_REFERENCE
 	var below: String = "%s/" % host_path

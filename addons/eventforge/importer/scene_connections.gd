@@ -254,6 +254,37 @@ static func resource_paths_in(lines: PackedStringArray) -> Dictionary:
 	return paths
 
 
+## The resources a scene keeps INSIDE itself, as `id -> {"type", "properties"}`. A node property
+## holding `SubResource("2_mat")` points at one of these rather than at a file, which is what happens
+## the moment somebody makes a material in the Inspector instead of saving one - so a reader that
+## only followed `ExtResource` would say a node wears nothing while the scene plainly shows it does.
+## Same shape and same rule as the node walk above: values are the raw text the file holds.
+static func sub_resources_of_scene(scene_path: String) -> Dictionary:
+	return sub_resources_in(FileAccess.get_file_as_string(scene_path).split("\n"))
+
+
+## The same table off lines a caller already holds.
+static func sub_resources_in(lines: PackedStringArray) -> Dictionary:
+	var resources: Dictionary = {}
+	var current: Dictionary = {}
+	for line: String in lines:
+		if line.begins_with("[sub_resource "):
+			current = {"type": attribute(line, "type"), "properties": {}}
+			resources[attribute(line, "id")] = current
+			continue
+		if line.begins_with("["):
+			# Any other section ends this block, exactly as it ends a node's: the lines under the
+			# next header belong to it, never to the resource written above.
+			current = {}
+			continue
+		var assignment: int = line.find(" = ")
+		if current.is_empty() or assignment <= 0:
+			continue
+		(current["properties"] as Dictionary)[line.substr(0, assignment).strip_edges()] = \
+			line.substr(assignment + 3).strip_edges()
+	return resources
+
+
 ## `key="value"` out of a .tscn header line, "" when the key is absent. Public because this module
 ## is the project's ONE reader of scene text: anything else that has to answer a question about a
 ## `.tscn` asks through here rather than growing a second parser beside it.
