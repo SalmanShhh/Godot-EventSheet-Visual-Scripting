@@ -3215,6 +3215,16 @@ static func _node_name_of(text: String) -> String:
 ## Notes, never warnings: a menu is a working menu, and these are things the author cannot see rather
 ## than contracts they broke. The project's own scripts only - this plugin's menus have their own
 ## gate, and a note about somebody else's shipped addon is not the reader's to act on.
+static func check_menu_ids(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if not source.contains("add_item("):
+			continue
+		for note: Dictionary in menu_id_notes(source.split("\n")):
+			_add(findings, "info", str(note.get("check", "")), script_path, str(note.get("message", "")))
+			(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
+
+
 ## The two things that go wrong with a game's modes: one nothing can get out of, and one nothing
 ## uses. Asked only of the AUTOLOAD scripts, because that is where a game's own state belongs (the
 ## engine's own guide says so) and it is where the modes band offers to declare them - so this costs
@@ -3231,16 +3241,6 @@ static func check_game_modes(findings: Array[Dictionary]) -> void:
 			_add(findings, str(finding.get("severity", "info")), str(finding.get("kind", "")),
 				script_path, str(finding.get("message", "")))
 			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))
-
-
-static func check_menu_ids(findings: Array[Dictionary]) -> void:
-	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
-		if not source.contains("add_item("):
-			continue
-		for note: Dictionary in menu_id_notes(source.split("\n")):
-			_add(findings, "info", str(note.get("check", "")), script_path, str(note.get("message", "")))
-			(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
 
 
 ## The menu notes one file's lines are worth, as {check, message, subject} in file order. Pure and

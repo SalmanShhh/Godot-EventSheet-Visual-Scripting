@@ -7,6 +7,13 @@ class_name WhileLoopTest
 extends RefCounted
 
 
+## Where this test's compiles land. `compile()` always WRITES its result somewhere, and with no path
+## given it writes to `res://event_sheet_generated.gd` at the project root - a script left in the
+## repository, which the gates that sweep every file of it then report as a real one. Under `user://`
+## the write is still made and still real; it just lands nowhere anybody sweeps.
+const OUT_PATH: String = "user://__eventsheets_while_loop_probe.gd"
+
+
 static func run() -> bool:
 	var ok: bool = true
 
@@ -40,7 +47,7 @@ static func _compile_loop(kind: int, collection_value: String, iterator_name: St
 	action.params = {"var_name": "remaining", "amount": "-1"}
 	event.actions.append(action)
 	sheet.events.append(event)
-	return str(SheetCompiler.compile(sheet).get("output", ""))
+	return str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
