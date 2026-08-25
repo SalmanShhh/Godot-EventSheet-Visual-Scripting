@@ -67,6 +67,16 @@ static func max_count() -> int:
 	return _max_count
 
 
+## Every row this run counted, in no particular order. The one way out of the tally: whoever writes
+## the run to disk needs the roll call, and reaching into the dictionary from outside would make two
+## owners of it.
+static func counted_uids() -> PackedStringArray:
+	var uids: PackedStringArray = PackedStringArray()
+	for uid: Variant in _counts.keys():
+		uids.append(str(uid))
+	return uids
+
+
 ## The busiest rows of the run. Not "fired a lot" in the absolute - hot is relative to whatever
 ## this run's busiest row did, so the tint means the same thing in a menu sheet and a bullet-hell.
 static func is_hot(uid: String) -> bool:

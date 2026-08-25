@@ -60,9 +60,10 @@ func _toggle_split_view() -> void:
 	_split_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_split_viewport.set_ace_registry(_dock._ace_registry)
 	_split_viewport.adopt_shared_state(_dock._viewport.get_shared_state())
-	# View > Row Hit Counts is a per-pane flag, and the reader asked for it once. A new pane that
-	# ignored it would show the same sheet with the chips missing.
+	# The gutter lenses are per-pane flags, and the reader asked for them once. A new pane that
+	# ignored them would show the same sheet with the chips missing.
 	_split_viewport.show_hit_counts = _dock._viewport.show_hit_counts
+	_split_viewport.show_costs = _dock._viewport.show_costs
 	_split_scroll.add_child(_split_viewport)
 	_connect_view_signals(_split_viewport)
 	_split_viewport.set_sheet(_dock._current_sheet)

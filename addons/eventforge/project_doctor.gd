@@ -117,6 +117,7 @@ static func run() -> Dictionary:
 	EventSheetLightingDoctor.ensure_registered()
 	EventSheetEffectsDoctor.ensure_registered()
 	EventSheetInteropDoctor.ensure_registered()
+	EventSheetPerformanceDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

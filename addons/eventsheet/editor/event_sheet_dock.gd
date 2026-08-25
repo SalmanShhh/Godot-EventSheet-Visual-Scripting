@@ -302,6 +302,7 @@ var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grou
 var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # The Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
 var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
 var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
+var _optimiser: EventSheetOptimiser = EventSheetOptimiser.new()  # the performance findings' fixes, as ordinary undoable row edits (dock/optimiser.gd)
 ## The Start page. Loaded BY PATH on first open: it names the Manual's tutorials, and the dock is
 ## constructed at every editor boot - naming it here would pull the whole help corpus into that boot.
 var _start_page: RefCounted = null
@@ -437,6 +438,7 @@ func _init() -> void:
 	_project_bar_glue.init(self)
 	_run_controls.init(self)
 	_beginner_toolbar.init(self)
+	_optimiser.init(self)
 	_verb_properties.init(self)
 	_object_properties.init(self)
 	_instance_variables.init(self)
@@ -623,6 +625,10 @@ func setup(sheet: EventSheetResource = null) -> void:
 
 ## Opens a sheet in a tab - activating its existing tab if already open, else adding one.
 func _open_sheet_in_tab(sheet: EventSheetResource, path: String) -> void:
+	# The last profiled run, joined ONCE. It is read here rather than in the draw loop or on a
+	# keystroke because that is the whole overlay contract: one parse per editor session, and every
+	# question after it a dictionary lookup.
+	EventSheetRunProfile.load_stored()
 	for i in range(_open_tabs.size()):
 		if _open_tabs[i].get("sheet") == sheet:
 			_activate_tab(i)
@@ -2781,8 +2787,9 @@ func _toggle_detached_view() -> void:
 	_detached_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detached_viewport.set_ace_registry(_ace_registry)
 	_detached_viewport.adopt_shared_state(_viewport.get_shared_state())
-	# The hit-counts lens is a per-pane flag; a new pane inherits the choice already made.
+	# The gutter lenses are per-pane flags; a new pane inherits the choices already made.
 	_detached_viewport.show_hit_counts = _viewport.show_hit_counts
+	_detached_viewport.show_costs = _viewport.show_costs
 	detached_scroll.add_child(_detached_viewport)
 	_connect_view_signals(_detached_viewport)
 	add_child(_detached_window)
@@ -3108,6 +3115,9 @@ func _on_debug_session_ended() -> void:
 	_ensure_live_values_panel().clear_live_values()
 	if _debugger_window != null:
 		_debugger_window.clear_live_values()
+	# And the run's numbers go to disk, so tomorrow's editor opens the sheet already annotated. The
+	# live tallies are untouched - the run only stops being "this run" when a new one starts.
+	EventSheetRunProfile.save_run()
 
 
 # ── The Debugger window (Inspect · Watch · Profile · Breakpoints) ───────────────────────
@@ -3371,6 +3381,9 @@ func _toggle_event_trace() -> void:
 ## so the toggle and the tick can never drift onto two different items.
 const HIT_COUNTS_VIEW_ID := 9601
 
+## The same, for the costs lens - the profiled run's milliseconds in that same gutter chip.
+const COSTS_VIEW_ID := 9605
+
 ## The View-menu ids the Project bar and the beginner Add toolbar are registered under,
 ## kept beside the one above for the same reason: the toggle and the tick must never drift apart.
 const PROJECT_BAR_VIEW_ID := 9603
@@ -3412,23 +3425,106 @@ func _open_start_page() -> void:
 ## View > Row Hit Counts: the gutter chip that says how many times each event fired since Run.
 ## SHIPS UNTICKED, and that is the design - with it off the sheet is the program and nothing else.
 func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
-	# ONE target state for every pane, decided from the main viewport. Flipping each pane's own flag
-	# would desynchronise them the moment a split pane is opened while the lens is on (a fresh pane
-	# ships OFF), and the tick would then report whichever pane happened to be iterated last.
-	var showing: bool = not (_viewport != null and _viewport.show_hit_counts)
+	var showing: bool = _set_gutter_lens("show_hit_counts", view_popup, HIT_COUNTS_VIEW_ID)
+	if not showing:
+		_set_status("Row Hit Counts off - the gutter is back to event numbers only.")
+	elif EventSheetRunProfile.has_numbers():
+		_set_status("Row Hit Counts on: x-counts in the gutter, warm for the busiest rows, x0 for never fired (%s)." % EventSheetRunProfile.label())
+	else:
+		_set_status("Row Hit Counts on - no traced run yet. Tools > Event Trace (live highlight), then run the game.")
+
+
+## View > Costs In The Sheet: the same gutter chip, showing the profiled run's milliseconds per fire.
+## SHIPS UNTICKED like its sibling, and reads the LAST run when no game is running - which is the
+## state a reader is in whenever they sit down to make something faster.
+func _toggle_row_costs(view_popup: PopupMenu) -> void:
+	EventSheetRunProfile.load_stored()
+	var showing: bool = _set_gutter_lens("show_costs", view_popup, COSTS_VIEW_ID)
+	# The costs lens also decides whether the optimiser's notes hang under their rows, and a note is
+	# a ROW - so the panes rebuild rather than merely repaint. This is the one gesture that changes
+	# what the sheet is made of, which is why it is a menu tick and not something that happens to you.
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.rebuild_rows()
+	if not showing:
+		_set_status("Costs in the sheet off - the gutter is back to event numbers only.")
+	elif EventSheetRunProfile.has_numbers():
+		_set_status("Costs in the sheet on: milliseconds per fire in the gutter, amber over %.0f ms, red over %.0f (%s)." % [
+			EventSheetRunProfile.COST_WARM_MS, EventSheetRunProfile.COST_HOT_MS, EventSheetRunProfile.label()])
+	else:
+		_set_status("Costs in the sheet on - nothing measured yet. Run with profiler, play for a while, then stop.")
+
+
+## ONE target state for every pane, decided from the main viewport. Flipping each pane's own flag
+## would desynchronise them the moment a split pane is opened while a lens is on (a fresh pane ships
+## OFF), and the tick would then report whichever pane happened to be iterated last.
+func _set_gutter_lens(flag: String, view_popup: PopupMenu, menu_id: int) -> bool:
+	var showing: bool = not (_viewport != null and bool(_viewport.get(flag)))
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view == null:
 			continue
-		view.show_hit_counts = showing
+		view.set(flag, showing)
 		view.queue_redraw()
 	if view_popup != null:
-		view_popup.set_item_checked(view_popup.get_item_index(HIT_COUNTS_VIEW_ID), showing)
-	if not showing:
-		_set_status("Row Hit Counts off - the gutter is back to event numbers only.")
-	elif EventSheetTraceHitCounts.has_run():
-		_set_status("Row Hit Counts on: x-counts in the gutter, warm for the busiest rows, x0 for never fired since Run.")
-	else:
-		_set_status("Row Hit Counts on - no traced run yet. Tools > Event Trace (live highlight), then run the game.")
+		view_popup.set_item_checked(view_popup.get_item_index(menu_id), showing)
+	return showing
+
+
+## Toolbar / Tools > Run with profiler: arm the trace (which carries the timings) and play. The
+## numbers land in the gutter when the run stops, and survive the editor closing.
+func _run_with_profiler() -> void:
+	if _current_sheet != null:
+		_current_sheet.emit_event_trace = true
+	EventSheetRunProfile.forget()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.show_costs = true
+	_set_status("Run with profiler: play for a while, then stop - the gutter shows what each row cost.")
+	_run_controls.activate("preview_layout")
+
+
+## The optimiser's window, built the first time it is asked for and kept, like every other dialog.
+var _optimise_dialog: EventSheetOptimiseDialog = null
+
+
+func _optimiser_dialog() -> EventSheetOptimiseDialog:
+	if _optimise_dialog == null:
+		_optimise_dialog = EventSheetOptimiseDialog.new()
+		_optimise_dialog.init(self)
+	return _optimise_dialog
+
+
+## Tools > Optimise this sheet…: every finding, the safe ones ticked, applied as one undo step.
+func open_optimiser() -> void:
+	_optimiser_dialog().open_batch()
+
+
+## The finding one note row is about, found again by asking the sheet. The note carries WHERE it was
+## (the event, the lane, the slot) rather than the finding itself, because the funnel replaces
+## resources as it commits and a held finding would be about rows that no longer exist.
+func _finding_for_note(fix_kind: String, note_meta: Dictionary) -> Dictionary:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var index: int = int(note_meta.get("variable_note_index", -1))
+	var lane: String = str(note_meta.get("variable_note_lane", ""))
+	for finding: Dictionary in _optimiser.findings():
+		if str(finding.get("fix", "")) != fix_kind or not is_same(finding.get("event"), event_row):
+			continue
+		if index >= 0 and (int(finding.get("index", -1)) != index or str(finding.get("lane", "")) != lane):
+			continue
+		return finding
+	return {}
+
+
+## Tools > Clear Measured Costs: forget every number, this session's and the stored run's, and put
+## the gutter back to event numbers. "Clear" has to mean the file too, or the word is a lie.
+func _clear_measured_costs() -> void:
+	EventSheetRunProfile.forget()
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view != null:
+			view.queue_redraw()
+	if _debugger_window != null:
+		_debugger_window.refresh()
+	_set_status("Measured costs cleared - the gutter is back to event numbers.")
 
 
 ## Tools > Reset Hit Counts: start the tally over without restarting the game (the "now do it
@@ -3456,7 +3552,10 @@ func _open_why_didnt_this_fire() -> void:
 	var panel: GDScript = load("res://addons/eventsheet/editor/docs/doc_why_panel.gd")
 	if panel == null:
 		return
-	panel.open_for_row(self, row, _ensure_live_values_panel()._last_values)
+	# The sheet goes in so the answer can name what is elsewhere in it - the group this row sits in,
+	# and the row that switches that group off.
+	panel.open_for_row(self, row, _ensure_live_values_panel()._last_values,
+		_context_row.event_number if _context_row != null else 0, _current_sheet)
 
 
 ## Row menu > Explain this reading: opens the pattern's Manual page, where the hand-written
@@ -5425,6 +5524,23 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 ## those, so the variable-note fixes above stay exactly as they were.
 func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dictionary) -> bool:
 	match fix_kind:
+		EventSheetPerformanceFindings.FIX_HOIST, EventSheetPerformanceFindings.FIX_EVERY_N:
+			# Diff first, always: the confirm shows the line before and the line after, and nothing
+			# is written until the reader has read it.
+			_optimiser_dialog().confirm_one(_finding_for_note(fix_kind, note_meta))
+			return true
+		EventSheetPerformanceFindings.FIX_TIME_SLICER:
+			open_add_behavior_dialog(EventSheetL10n.translate("Time Slicer"))
+			return true
+		EventSheetPerformanceFindings.FIX_OBJECT_POOL:
+			open_add_behavior_dialog(EventSheetL10n.translate("Object Pool"))
+			return true
+		ViewportRowBuilder.FIX_PUT_BACK:
+			if not _optimiser.put_back(note_meta.get("variable_note_event", null) as EventRow):
+				_set_status(EventSheetL10n.translate("There is nothing recorded to put back on this row."), true)
+			else:
+				_refresh_after_edit()
+			return true
 		EventSheetLightingFindings.FIX_OWN_ENVIRONMENT:
 			give_the_scene_its_own_environment(subject)
 			return true
