@@ -187,6 +187,10 @@ target does not have goes **amber** with the nearest one offered - a warning, no
 the method may be reached some other way. That is what stops a rename somewhere else rotting a typed
 string silently until the game runs.
 
+**Connect Signal reads the same way.** Once the row names a source, its **Signal** dropdown lists
+that object's signals - what its script declares, then what its class emits - rather than this
+sheet's own. A row with no source still offers the sheet's, exactly as before.
+
 ### RawCode blocks - drop in GDScript directly
 
 For anything the above doesn't cover, a **RawCode block** is a pass-through row: the lines you write are

@@ -1420,11 +1420,24 @@ func _create_signal_reference_field(key: String, default_value: Variant, quoted:
 
 ## Host-class signals (ClassDB) + `signal x` declarations in the sheet's class-level
 ## GDScript blocks, sorted and deduplicated.
+##
+## A row that names a SOURCE asks that object instead: Connect Signal aimed at `$Hurtbox` wants the
+## signals `$Hurtbox` has, not the ones this sheet has, and offering the wrong list is how a typed
+## string ends up naming a signal nothing emits.
 func _signal_options() -> Array[String]:
 	var names: Array[String] = []
 	var sheet: EventSheetResource = _lint_sheet()
 	if sheet == null:
 		return names
+	var source: String = _opening_value("source", _opening_value("target"))
+	if not source.is_empty() and source != "self":
+		for member: Dictionary in EventSheetScriptMembers.signals_for(sheet, source):
+			var offered: String = str(member["name"])
+			if not names.has(offered):
+				names.append(offered)
+		if not names.is_empty():
+			names.sort()
+			return names
 	for entry in sheet.events:
 		if entry is SignalRow and (entry as SignalRow).enabled:
 			var row_signal: String = (entry as SignalRow).signal_name

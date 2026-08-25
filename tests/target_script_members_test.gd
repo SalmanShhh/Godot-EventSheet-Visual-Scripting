@@ -98,6 +98,14 @@ static func run() -> bool:
 			ACEPickerDialog.scene_lighting_group_key(health_changed).begins_with(
 				ACEPickerDialog.SIGNALS_GROUP), true) and ok
 
+	# ── And the signal half of the same question ────────────────────────────────────────────
+	ok = _check("a row aimed at a node offers that node's signals",
+		_names(EventSheetScriptMembers.signals_for(sheet, "$Hero")).slice(0, 2),
+		PackedStringArray(["died", "health_changed"])) and ok
+	ok = _check("with what its engine class emits after them",
+		_member(EventSheetScriptMembers.signals_for(sheet, "$Hero"), "tree_exiting").get("from", ""),
+		"CharacterBody2D") and ok
+
 	# ── The amber re-pick: a name the target no longer has ──────────────────────────────────
 	ok = _check("the nearest name is what a typo is offered",
 		ACEParamsDialog.closest_of("take_damag", PackedStringArray(["take_damage", "heal"])),

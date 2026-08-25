@@ -55,7 +55,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
   open scene, an Autoload, a class the project declares. The field stays editable, so a name
   reflection cannot see is still typeable and a run-time target keeps the free-text row it had; a
   name the target does not have goes amber with the nearest one offered, which is what stops a rename
-  somewhere else rotting a typed string silently.
+  somewhere else rotting a typed string silently. Connect Signal reads the same way: once the row
+  names a source, its Signal dropdown lists that object's signals rather than this sheet's own.
 - **Every signal your own scripts declare is an event waiting to be picked.** Add event grows a
   \"Signals in this project\" shelf: one folder per scripted node of the open scene, one per Autoload,
   each declared signal listed with its parameters and its `##` line. Picking one lands the event
