@@ -19,7 +19,7 @@
 #     test already runs. Running it twice would cost the suite a minute and a half for one number.
 #   - the whole-project scanners (the Doctor's sheet list, the picker's vocabulary, the shared
 #     resource index) cannot be pointed at the fixture: `res://` is fixed when the process starts.
-#     Those are measured on this repository, which carries 105 packs and every demo, and each pin
+#     Those are measured on this repository, which carries 111 packs and every demo, and each pin
 #     below says which corpus it used.
 #
 # COLD BOOT IS MEASURED IN ITS OWN PROCESS. By the time any test runs, half the plugin is compiled
@@ -64,9 +64,21 @@ const BIG_SHEET_OPEN_BUDGET_MS: int = 14000
 ## that makes the WALK itself slower.
 const BIG_SHEET_REBUILD_BUDGET_MS: int = 6000
 
-## The Add picker's whole tree, built with every pack in this repository loaded. Measured 392, 396
-## and 469 ms over 5,129 registered rows.
+## The Add picker's whole tree, built with every pack in this repository loaded and a sheet whose
+## scene wears shader materials, so the scene shelves are built rather than skipped. Measured 498,
+## 508 and 514 ms over 5,129 registered rows - it was 392-469 while the shelves were being skipped,
+## and the difference is the work this budget did not cover before.
 const PICKER_OPEN_BUDGET_MS: int = 1500
+
+## The same tree built again per typed character, which is what the search box costs. The shelves
+## are derived from the scene on every refresh, so a keystroke pays for them however narrow the
+## filter, and this is the number a change to them moves. Measured 113, 116 and 116 ms.
+const PICKER_KEYSTROKE_BUDGET_MS: int = 350
+
+## A sheet of this repository whose attached scene really wears shader materials. The huge fixture
+## cannot answer this one: its scenes live under `user://` and the readers behind the shelves follow
+## `res://`, which is fixed when the process starts.
+const WEARING_SHEET: String = "res://tests/fixtures/effect_scene_boss.gd"
 
 ## ONE KEYSTROKE in a completing field, with the kind's list already built. Sub-frame is the design
 ## target and 16 ms is the frame; measured 2.1-2.6 ms, so the pin is the TARGET rather than the
@@ -100,6 +112,19 @@ const KEYSTROKE_SAMPLES: int = 20
 ## Prefixes a reader types on the way to a name, so the per-keystroke figure covers a growing filter
 ## rather than the same lookup twenty times.
 const TYPED_PREFIXES: Array[String] = ["h", "he", "hea", "heal", "healt", "health"]
+
+
+## A stand-in for the dock. The picker asks whatever it hangs on for the open sheet, and the scene
+## shelves are built from the scene that sheet's script is attached to - so without one the shelf
+## half of a tree refresh answers null and measures as free.
+class SheetHost:
+	extends Node
+
+	var sheet: EventSheetResource = null
+
+
+	func get_current_sheet() -> EventSheetResource:
+		return sheet
 
 
 static func run() -> bool:
@@ -218,22 +243,46 @@ static func _pin_opening_the_big_script(project: Dictionary, editor: EventSheetE
 
 ## The Add picker with every pack in this repository in it. Measured on the repository rather than
 ## the fixture because the vocabulary comes from `res://`, which no test can move.
+##
+## THE PICKER IS GIVEN A SHEET, and that is half the measurement. The scene shelves - one entry per
+## wearing node per declared dial per verb, and the same for the scene's lights - are built inside
+## the tree refresh, which runs again on every keystroke of the search box. A picker with no sheet
+## answers null before it does any of that work, so the number then covers the tree as it was rather
+## than as it is. The sheet is one of this repository's own effect fixtures, whose scene really
+## wears materials; the shelf count is pinned beside the time so the budget cannot quietly go back
+## to measuring nothing.
 static func _pin_the_picker(editor: EventSheetEditor) -> bool:
 	var registry: EventSheetACERegistry = editor.get_ace_registry()
 	var loaded: int = registry.get_all_definitions().size()
 	var passed: bool = _check("the picker's vocabulary is fully loaded (%d rows)" % loaded,
 		loaded > 1000, true)
-	var host: Node = Node.new()
+	var host: SheetHost = SheetHost.new()
+	host.sheet = EventSheetResource.new()
+	host.sheet.external_source_path = WEARING_SHEET
 	var picker: ACEPickerDialog = ACEPickerDialog.new()
 	picker.init_dialog(host, registry)
 	picker._context = {"mode": "append_action", "signals_only": false, "selected_resource": null}
+	var shelved: int = ACEPickerDialog.effect_dial_definitions(host.sheet, registry).size()
+	passed = _check("the sheet really grows dial shelves (%d entries)" % shelved,
+		shelved > 0, true) and passed
 	var start_usec: int = Time.get_ticks_usec()
 	picker._refresh_tree()
 	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
-	host.free()
-	return _check("the picker opens over %d rows under %d ms (took %.1f ms)" % [
+	passed = _check("the picker opens over %d rows under %d ms (took %.1f ms)" % [
 		loaded, PICKER_OPEN_BUDGET_MS, elapsed_ms],
 		elapsed_ms <= float(PICKER_OPEN_BUDGET_MS), true) and passed
+	# And the tree built again per typed character, which is what the search box costs: the shelves
+	# are rebuilt from the scene every time, so a keystroke pays for them however narrow the filter.
+	var typed_start_usec: int = Time.get_ticks_usec()
+	for prefix: String in TYPED_PREFIXES:
+		picker._search.text = prefix
+		picker._refresh_tree()
+	var per_keystroke_ms: float = float(Time.get_ticks_usec() - typed_start_usec) / 1000.0 \
+		/ float(TYPED_PREFIXES.size())
+	host.free()
+	return _check("a search keystroke rebuilds the tree under %d ms (took %.1f ms)" % [
+		PICKER_KEYSTROKE_BUDGET_MS, per_keystroke_ms],
+		per_keystroke_ms <= float(PICKER_KEYSTROKE_BUDGET_MS), true) and passed
 
 
 ## One keystroke in a completing field. The list is built first, outside the clock, because that is
