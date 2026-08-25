@@ -233,6 +233,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# runner emits it with the test's name, so the trigger has a real signal behind it and the
 			# name arrives as the handler's argument - not a bare hook nobody can raise by hand.
 			return _signal_backed("_on_test_started", "test_name: String", "test_started", "")
+		"OnSomethingWentWrong":
+			# A script error, anywhere in the running game. Signal-backed on the sheet itself the same
+			# way the test start is: the compiler declares `signal something_went_wrong(report)` and
+			# emits a logger that announces each failing line to it once per run. It is not a debugger
+			# feature - it ships, because the player is not in the editor.
+			return _signal_backed("_on_something_went_wrong", "report: String", "something_went_wrong", "")
 		"OnPostTick":
 			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
 			# frame - for logic that must run after everything else updated (a camera that follows after

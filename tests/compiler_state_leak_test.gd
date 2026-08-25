@@ -43,7 +43,7 @@ const SWEPT_STATICS: Array[String] = [
 	"_behavior_host_default", "_emit_breakpoints_flag", "_emit_event_trace_flag",
 	"_error_reporter_pending", "_group_slugs", "_live_values_payload",
 	"_live_values_receiver_pending", "_row_group_path", "_runtime_group_guards",
-	"_runtime_group_members", "_throttle_process_emitted"
+	"_runtime_group_members", "_throttle_process_emitted", "_trouble_reporter_pending"
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a

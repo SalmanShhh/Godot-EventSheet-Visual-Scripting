@@ -31,20 +31,29 @@ const NO_SESSION_LINE := "No live values yet. Turn on Tools > Live Values (and T
 
 
 ## THE assembly: one event row plus the latest streamed values -> everything the panel shows.
-## Returns {streaming, headline, verdict_line, blocker_index, conditions: [{label, expression,
-## verdict, seen, note}]}. Pure and static - no editor, no session, no drawing.
-static func build_report(event_row: EventRow, values: Dictionary, streaming: bool = true) -> Dictionary:
+## Returns {streaming, headline, verdict_line, blocker_index, trigger, facts, conditions: [{label,
+## expression, verdict, seen, note}]}. Pure and static - no editor, no session, no drawing.
+##
+## `sheet` is optional and only widens the answer: it is what lets the report say who switched off
+## the group this row is in. Every fact it adds is something the sheet SAYS plus something the run
+## COUNTED - never a guess about which of them was the cause.
+static func build_report(event_row: EventRow, values: Dictionary, streaming: bool = true,
+		sheet: EventSheetResource = null) -> Dictionary:
 	var report: Dictionary = {
 		"streaming": streaming and not values.is_empty(),
 		"headline": "",
 		"verdict_line": "",
 		"blocker_index": -1,
+		"trigger": "",
+		"facts": PackedStringArray(),
 		"conditions": [],
 	}
 	if event_row == null:
 		report["headline"] = "No event row."
 		return report
 	report["headline"] = _headline_for(event_row)
+	report["trigger"] = trigger_line(event_row)
+	report["facts"] = cross_references(sheet, event_row)
 	if not bool(report["streaming"]):
 		report["verdict_line"] = NO_SESSION_LINE
 		# The conditions are still listed - reading WHICH conditions gate a row is useful with the
@@ -65,6 +74,89 @@ static func build_report(event_row: EventRow, values: Dictionary, streaming: boo
 			unknown_count += 1
 	report["verdict_line"] = _verdict_line(event_row, (report["conditions"] as Array).size(), false_count, unknown_count)
 	return report
+
+
+## What the RUN says about the row itself, before any condition is read: a trigger that arrived
+## twelve times is fine and the answer is below it; a trigger that never arrived is the whole answer
+## and no amount of reading conditions will say so. "" when no run has counted anything, because a
+## count nobody took is not a zero.
+static func trigger_line(event_row: EventRow) -> String:
+	if event_row == null or not EventSheetRunProfile.has_numbers():
+		return ""
+	var count: int = EventSheetRunProfile.calls_for(event_row.event_uid)
+	var named: String = "This row" if event_row.trigger_id.strip_edges().is_empty() else "The trigger"
+	if count == 0:
+		return "%s never ran at all (%s) - so nothing below it was ever asked." % [named, EventSheetRunProfile.label()]
+	if count == 1:
+		return "%s ran once (%s) - it is not the trigger." % [named, EventSheetRunProfile.label()]
+	return "%s ran %s times (%s) - it is not the trigger." % [
+		named, EventSheetTraceHitCounts.format_count(count), EventSheetRunProfile.label()]
+
+
+## The plain facts about this row that live somewhere ELSE in the sheet - the ones a reader would
+## have to go and find. Facts only: what the sheet says, and what the run counted. Never a sentence
+## joining them into a cause, because the panel does not know which of them mattered.
+static func cross_references(sheet: EventSheetResource, event_row: EventRow) -> PackedStringArray:
+	var facts: PackedStringArray = PackedStringArray()
+	if sheet == null or event_row == null:
+		return facts
+	var group: EventGroup = _group_holding(sheet.events, event_row)
+	if group == null:
+		return facts
+	if not group.enabled:
+		facts.append("The %s group it is in is switched off, so none of its rows are compiled at all." % group.display_name())
+	elif group.runtime_toggleable:
+		var switched: PackedStringArray = _rows_switching(sheet.events, group.display_name())
+		if not switched.is_empty():
+			facts.append("The %s group it is in can be switched off while the game runs, and %s." % [
+				group.display_name(), ", ".join(switched)])
+	return facts
+
+
+## The innermost group holding this row, or null when it sits at the top of the sheet.
+static func _group_holding(items: Array, event_row: EventRow, inside: EventGroup = null) -> EventGroup:
+	for item: Variant in items:
+		if item is EventGroup:
+			var found: EventGroup = _group_holding(EventSheetGroupFacts.children(item as EventGroup),
+				event_row, item as EventGroup)
+			if found != null:
+				return found
+			continue
+		var row: EventRow = item as EventRow
+		if row == null:
+			continue
+		if is_same(row, event_row):
+			return inside
+		var nested: EventGroup = _group_holding(row.sub_events, event_row, inside)
+		if nested != null:
+			return nested
+	return null
+
+
+## The rows anywhere in this sheet that switch a named group off or on, said as what they are.
+static func _rows_switching(items: Array, group_name: String) -> PackedStringArray:
+	var said: PackedStringArray = PackedStringArray()
+	for item: Variant in items:
+		if item is EventGroup:
+			said.append_array(_rows_switching(EventSheetGroupFacts.children(item as EventGroup), group_name))
+			continue
+		var row: EventRow = item as EventRow
+		if row == null:
+			continue
+		for action: Variant in row.actions:
+			if not (action is Resource) or str((action as Resource).get("ace_id")) != "SetGroupActive":
+				continue
+			var params: Variant = (action as Resource).get("params")
+			if not (params is Dictionary):
+				continue
+			if str((params as Dictionary).get("group", "")).replace("\"", "").strip_edges() != group_name:
+				continue
+			var word: String = "a row switches it %s" % (
+				"on" if str((params as Dictionary).get("active", "true")).contains("true") else "off")
+			if not said.has(word):
+				said.append(word)
+		said.append_array(_rows_switching(row.sub_events, group_name))
+	return said
 
 
 ## The row named the way the reader names it, plus what kind of gate it is. A trigger row that
@@ -217,10 +309,11 @@ static var _window: Window = null
 
 ## Opens the panel for one row. `values` is the latest streamed Live Values frame ({} = no
 ## running game, which the panel states plainly rather than filling in).
-static func open_for_row(host: Control, event_row: EventRow, values: Dictionary, event_number: int = 0) -> void:
+static func open_for_row(host: Control, event_row: EventRow, values: Dictionary, event_number: int = 0,
+		sheet: EventSheetResource = null) -> void:
 	if host == null or event_row == null:
 		return
-	var report: Dictionary = build_report(event_row, values, not values.is_empty())
+	var report: Dictionary = build_report(event_row, values, not values.is_empty(), sheet)
 	if _window == null or not is_instance_valid(_window):
 		_window = Window.new()
 		_window.title = "Why didn't this fire?"
@@ -231,8 +324,46 @@ static func open_for_row(host: Control, event_row: EventRow, values: Dictionary,
 		host.add_child(_window)
 	for stale: Node in _window.get_children():
 		stale.queue_free()
-	_window.add_child(EventSheetPopupUI.margined(build_body(report, event_number)))
+	var body: Control = build_body(report, event_number)
+	body.add_child(_buttons(host, report, event_row))
+	_window.add_child(EventSheetPopupUI.margined(body))
 	_window.popup_centered()
+
+
+## The two ways out of the answer: go and look at the row, and watch the value the answer named.
+## Both are gestures the editor already has - the panel only points at them.
+static func _buttons(host: Control, report: Dictionary, event_row: EventRow) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	var jump: Button = Button.new()
+	jump.text = EventSheetL10n.translate("Jump to this row")
+	jump.pressed.connect(func() -> void:
+		if is_instance_valid(_window):
+			_window.hide()
+		var view: Object = host.call("_active_view") if host.has_method("_active_view") else null
+		if view != null and view.has_method("reveal_resource"):
+			view.call("reveal_resource", event_row))
+	row.add_child(jump)
+	var watched: String = watchable_name(report)
+	if not watched.is_empty():
+		var watch: Button = Button.new()
+		watch.text = EventSheetL10n.translate("Watch %s") % watched
+		watch.pressed.connect(func() -> void:
+			if host.has_method("_ensure_live_values_panel"):
+				host.call("_ensure_live_values_panel").add_watch(watched))
+		row.add_child(watch)
+	return row
+
+
+## The name worth watching: the one the blocking condition was about. "" when nothing said no, or
+## when what said no was not about a value the stream carries.
+static func watchable_name(report: Dictionary) -> String:
+	var blocker: int = int(report.get("blocker_index", -1))
+	var entries: Array = report.get("conditions", [])
+	if blocker < 0 or blocker >= entries.size():
+		return ""
+	var seen: String = str((entries[blocker] as Dictionary).get("seen", ""))
+	var at: int = seen.find(" = ")
+	return "" if at <= 0 else seen.substr(0, at)
 
 
 ## The report as controls. Split from open_for_row so a render harness can shoot the body
@@ -246,7 +377,14 @@ static func build_body(report: Dictionary, event_number: int = 0) -> Control:
 		"live" if bool(report.get("streaming", false)) else "game not running"))
 	box.add_child(title_row)
 	box.add_child(EventSheetPopupUI.hint_label(str(report.get("headline", ""))))
+	# What the run counted comes before what the conditions said: a trigger that never arrived is the
+	# whole answer, and reading three condition verdicts to reach it wastes the reader's time.
+	var trigger: String = str(report.get("trigger", ""))
+	if not trigger.is_empty():
+		box.add_child(EventSheetPopupUI.hint_label(trigger))
 	box.add_child(EventSheetPopupUI.hint_label(str(report.get("verdict_line", ""))))
+	for fact: String in PackedStringArray(report.get("facts", PackedStringArray())):
+		box.add_child(EventSheetPopupUI.hint_label(fact))
 	var rows: Array = []
 	var entries: Array = report.get("conditions", [])
 	for index: int in range(entries.size()):

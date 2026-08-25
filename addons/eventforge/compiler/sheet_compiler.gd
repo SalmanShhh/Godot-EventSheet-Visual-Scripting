@@ -60,6 +60,17 @@ static var _throttle_process_emitted: bool = false
 # Whether the current debug compile still needs the runtime-error reporter ARMED in _ready
 # (OS.add_logger of the emitted Logger subclass). Cleared once injected, like the receiver flag.
 static var _error_reporter_pending: bool = false
+# Whether this compile carries the On Something Went Wrong trigger, and therefore needs the signal
+# declared, the logger armed in _ready, and the reporter class emitted. Unlike the flag above this
+# one is nothing to do with debugging: it ships in the build, because the player is not in the
+# editor and a game that can say what broke can save the report or skip the broken thing.
+static var _trouble_reporter_pending: bool = false
+
+## The signal that trigger arrives on, and the id of the trigger itself. Frozen: an author's own
+## `signal something_went_wrong(report)` is the same channel, which is what lets a hand-written
+## reporter open as the row.
+const TROUBLE_SIGNAL: String = "something_went_wrong"
+const TROUBLE_TRIGGER_ID: String = "OnSomethingWentWrong"
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -104,6 +115,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_live_values_payload = ""
 	_live_values_receiver_pending = false
 	_error_reporter_pending = false
+	_trouble_reporter_pending = false
 	_throttle_process_emitted = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
@@ -317,6 +329,15 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("")
 		lines.append("## Emitted by a test runner as this test begins - On Test Start events handle it.")
 		lines.append("signal test_started(test_name: String)")
+	# The channel On Something Went Wrong arrives on, declared for the same reason: a sheet that
+	# asks to hear about trouble cannot also be asked to declare the wire it comes down. Unlike the
+	# editor's own error strip this one is in the SHIPPED game, so a build can save the report, show
+	# the player something, or skip the broken thing and keep playing.
+	_trouble_reporter_pending = _wants_trouble_reporter(all_events)
+	if _trouble_reporter_pending and not _declares_signal_named(signal_rows, TROUBLE_SIGNAL):
+		lines.append("")
+		lines.append("## Emitted when a script error happens while the game runs - On Something Went Wrong events handle it.")
+		lines.append("signal %s(report: String)" % TROUBLE_SIGNAL)
 	# Custom Block API rows (preloads, region markers, registered pack kinds) emit before the
 	# variables so a `const … := preload(…)` can be referenced by a variable default below.
 	var custom_block_rows: Array = []
@@ -549,6 +570,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			declared_signals.append((signal_entry as SignalRow).signal_name)
 	if sheet.test_mode:
 		declared_signals.append("test_started")  # emitted above; On Test Start connects to it
+	if _trouble_reporter_pending:
+		declared_signals.append(TROUBLE_SIGNAL)  # emitted above; On Something Went Wrong connects to it
 	var connect_context: Dictionary = {
 		"self_class": "Node" if sheet.behavior_mode else (sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"),
 		"declared_signals": declared_signals
@@ -657,6 +680,31 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("\t\t_said[location] = true")
 		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
 		lines.append("\t\tEngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])")
+
+	# The SHIPPED reporter, emitted only for a sheet that carries the On Something Went Wrong
+	# trigger. The same idea as the one above and none of its conditions: no debugger, no editor,
+	# no session - it runs wherever the game runs, which is the whole point of it. Each failing line
+	# is reported once per run, so a row that fails every tick cannot drown the handler it feeds.
+	#
+	# Asked of the EVENTS rather than of the pending flag, exactly as the reporter above asks the
+	# sheet: the trigger functions were emitted further up and consumed that flag when they armed it.
+	if _wants_trouble_reporter(all_events):
+		lines.append("")
+		lines.append("## Announces each script error to this sheet, once per failing line, wherever the game")
+		lines.append("## is running - in the editor or in a build a player is holding.")
+		lines.append("class __EventSheetsTroubleReporter extends Logger:")
+		lines.append("\tvar sheet: Object = null")
+		lines.append("\tvar _said: Dictionary = {}")
+		lines.append("")
+		lines.append("\tfunc _log_error(_function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:")
+		lines.append("\t\tif error_type != ERROR_TYPE_SCRIPT or not is_instance_valid(sheet):")
+		lines.append("\t\t\treturn")
+		lines.append("\t\tvar location: String = \"%s:%d\" % [file, line]")
+		lines.append("\t\tif _said.has(location):")
+		lines.append("\t\t\treturn")
+		lines.append("\t\t_said[location] = true")
+		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
+		lines.append("\t\tsheet.call_deferred(\"emit_signal\", \"%s\", \"%%s (%%s)\" %% [message, location])" % TROUBLE_SIGNAL)
 
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
@@ -1688,7 +1736,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			has_ready_group = true
 	# No OnReady events but connections/receiver needed → synthesize a `_ready`.
 	if not has_ready_group and (not ready_connections.is_empty() or _live_values_receiver_pending \
-			or _error_reporter_pending):
+			or _error_reporter_pending or _trouble_reporter_pending):
 		# On the external (opened-file) path, honor the SOURCE's own spacing and header spelling
 		# when the lift recorded them: a connects-only `_ready` leaves no OnReady event to carry
 		# the usual __source_leading_blanks, so its gap (and a non-canonical header) ride the first
@@ -1715,6 +1763,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if _error_reporter_pending:
 			_emit_error_reporter_arming(lines)
 			_error_reporter_pending = false
+		if _trouble_reporter_pending:
+			_emit_trouble_reporter_arming(lines)
+			_trouble_reporter_pending = false
 		_emit_ready_connections(ready_connections, lines, source_map, result)
 
 	for key: String in trigger_order:
@@ -1764,6 +1815,10 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			_emit_error_reporter_arming(lines)
 			had_body = true
 			_error_reporter_pending = false
+		if function_name == "_ready" and _trouble_reporter_pending:
+			_emit_trouble_reporter_arming(lines)
+			had_body = true
+			_trouble_reporter_pending = false
 		if function_name == "_process" and not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 			# Live-values stream and/or the event trace: throttled, debug-session-only, before user logic.
 			# The trace's frame ruler: how many fires had happened by the top of THIS frame.
@@ -2959,6 +3014,32 @@ static func _emit_error_reporter_arming(lines: PackedStringArray) -> void:
 	lines.append("\tif EngineDebugger.is_active() and not __EventSheetsErrorReporter.armed:")
 	lines.append("\t\t__EventSheetsErrorReporter.armed = true")
 	lines.append("\t\tOS.add_logger(__EventSheetsErrorReporter.new())")
+
+
+## The three lines that put the shipped reporter on the engine's error channel. No debugger test:
+## this one is for the build, and a build has no debugger.
+static func _emit_trouble_reporter_arming(lines: PackedStringArray) -> void:
+	lines.append("\tvar __trouble := __EventSheetsTroubleReporter.new()")
+	lines.append("\t__trouble.sheet = self")
+	lines.append("\tOS.add_logger(__trouble)")
+
+
+## True when any event of this sheet asks to hear about trouble. Walked once, before anything is
+## emitted, because the answer decides a declaration at the top of the file and a line in _ready.
+static func _wants_trouble_reporter(events: Array) -> bool:
+	for entry: Variant in events:
+		if entry is EventGroup:
+			if _wants_trouble_reporter((entry as EventGroup).child_rows()):
+				return true
+			continue
+		var event_row: EventRow = entry as EventRow
+		if event_row == null:
+			continue
+		if event_row.enabled and event_row.trigger_id.strip_edges() == TROUBLE_TRIGGER_ID:
+			return true
+		if _wants_trouble_reporter(event_row.sub_events):
+			return true
+	return false
 
 
 static func _emit_enum_line(enum_row: EnumRow) -> String:

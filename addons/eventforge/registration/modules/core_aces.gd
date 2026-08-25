@@ -38,6 +38,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react."))
 	descriptors.append(F.make_descriptor("Core", "OnCloseRequested", "On Close Requested", ACEDescriptor.ACEType.TRIGGER, "", "close_requested", [], "Signals / Scene / Input", "On window close requested", "Node")
 		.described("Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting."))
+	descriptors.append(F.make_descriptor("Core", "OnSomethingWentWrong", "On Something Went Wrong", ACEDescriptor.ACEType.TRIGGER, "", "something_went_wrong", [F.make_param("report", "String")], "Run Context", "On something went wrong ([b]report[/b])")
+		.described("Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a \"please send this\" dialog, or just skip the broken thing and keep playing."))
 	descriptors.append(F.make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [F.make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}", "Area2D")
 		.described("Runs when a physics body enters this 2D Area, e.g. detecting the player walking into a trigger."))
 	descriptors.append(F.make_descriptor("Core", "OnAreaEntered", "On Area Entered", ACEDescriptor.ACEType.TRIGGER, "", "area_entered", [F.make_param("area", "Area2D")], "Signals / Scene / Input", "On area entered {area}", "Area2D")
