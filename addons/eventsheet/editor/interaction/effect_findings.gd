@@ -369,7 +369,7 @@ static func _shared_material(wearer: Dictionary, reference: String, ace: Resourc
 		return {}
 	# The count comes from the project index, which is the one place that question is answered. A scan
 	# still running answers nothing, and a finding is not raised on an answer that is not in yet.
-	if not EventSheetProjectShareIndex.is_ready():
+	if not EventSheetProjectShareIndex.scenes_ready():
 		return {}
 	var others: Array[Dictionary] = EventSheetProjectShareIndex.other_wearers(material_path,
 		"%s|%s" % [str(wearer.get("scene_path", "")), str(wearer.get("path", ""))])

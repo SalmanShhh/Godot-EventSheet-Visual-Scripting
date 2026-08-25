@@ -43,7 +43,7 @@ static func effect_bands(script_path: String,
 		return bands
 	# Starting the scan HERE is what keeps it off the open: the answer for this frame is whatever the
 	# index already has, and the slices that finish it run on the frames after.
-	var counted: bool = EventSheetProjectShareIndex.request()
+	var counted: bool = EventSheetProjectShareIndex.request_scenes()
 	for wearer: Dictionary in EventSheetSceneEffects.for_script(script_path):
 		bands.append(_band(wearer, counted, copied.has(
 			EventSheetSceneEffects.reference_key_of(str(wearer.get("reference", ""))))))

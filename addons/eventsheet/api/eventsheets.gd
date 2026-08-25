@@ -1131,8 +1131,26 @@ static func scenes_using_resource(resource_path: String,
 		own_scene: String = "") -> PackedStringArray:
 	if resource_path.strip_edges().is_empty():
 		return PackedStringArray()
-	EventSheetProjectShareIndex.build_now()
+	EventSheetProjectShareIndex.build_scenes_now()
 	return EventSheetProjectShareIndex.other_holders(resource_path, own_scene)
+
+
+## Every project script that calls a function of this name, in path order, leaving out `own_script`.
+##
+## The question behind "called by combat.gd, boss_ai.gd" on a function's head, and the one a rename
+## has to answer before it changes anything: sheets it can rewrite, hand-written code it must not.
+## Matched BY NAME - a script calling `take_damage` on anything is listed - because reading the types
+## instead would need the whole project's inference to be right, and being quietly wrong about who
+## calls a function is worse than being plainly approximate. Say so wherever the answer is shown.
+##
+## Comes from the same one indexed scan of the project as `scenes_using_resource`, so this BLOCKS on
+## the first ask if that scan has not finished. A band that must not wait asks
+## `EventSheetProjectShareIndex.request()` for readiness first.
+static func scripts_calling(function_name: String, own_script: String = "") -> PackedStringArray:
+	if function_name.strip_edges().is_empty():
+		return PackedStringArray()
+	EventSheetProjectShareIndex.build_now()
+	return EventSheetProjectShareIndex.callers_of(function_name, own_script)
 
 
 # ── Extension seams (custom features plug in here) ─────────────────────────────────────

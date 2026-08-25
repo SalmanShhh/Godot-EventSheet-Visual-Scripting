@@ -4884,3 +4884,11 @@ shared with %d other node,他の %d 個のノードと共有
 shared with %d other nodes,他の %d 個のノードと共有
 a material of its own,自分専用のマテリアル
 also worn by,ほかの着用
+called by %s,%s から呼ばれています
+"Hand-written code was not changed - check these, which call %s by that name: %s",手書きのコードは変更していません - その名前で %s を呼んでいる次のファイルを確認してください: %s
+"Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.",Interop: このプロジェクトの %d 個のスクリプトのうち %d 個を測定し、その内容の %d%% が行として読めます。プラグインを入れても何も変わっていません - スクリプトはシートとして開くまでコードのままです。この数値は何も決めません。境目の動きを見るためのものです。
+%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.,%s は %s を同梱の振る舞いに任せられます - 開けば、何が変わるかを変える前に行が教えてくれます。
+"%s is marked to stay code: never offered anything, never counted, opened read-only.",%s は「コードのまま」と印が付いています: 何も提案せず、数にも入れず、読み取り専用で開きます。
+"%s reads as rows: %d%% - %d function(s) opened, %d still code.",%s が行として読める割合: %d%% - %d 個の関数が開き、%d 個はコードのままです。
+%d other script(s) call something it declares.,他の %d 個のスクリプトが、これが宣言しているものを呼んでいます。
+"%s is marked to stay code - showing it as code, and leaving it alone.",%s は「コードのまま」と印が付いています - コードとして表示し、手を触れません。

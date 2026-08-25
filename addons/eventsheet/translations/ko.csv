@@ -4884,3 +4884,11 @@ shared with %d other node,다른 노드 %d개와 공유
 shared with %d other nodes,다른 노드 %d개와 공유
 a material of its own,자체 머티리얼
 also worn by,또한 착용
+called by %s,%s에서 호출함
+"Hand-written code was not changed - check these, which call %s by that name: %s",직접 작성한 코드는 바뀌지 않았습니다 - 그 이름으로 %s 를 호출하는 다음 파일을 확인하세요: %s
+"Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop: 이 프로젝트의 스크립트 %d개 중 %d개를 측정했고, 그 내용의 %d%%가 행으로 읽힙니다. 플러그인을 설치해도 바뀐 것은 없습니다 - 시트로 열기 전까지 스크립트는 코드 그대로입니다. 이 점수는 아무것도 결정하지 않습니다. 경계가 움직이는 것을 보기 위한 숫자입니다."
+%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.,%s 는 %s 를 기본 제공 동작에 넘길 수 있습니다 - 열어 보면 무엇이 바뀔지 행이 먼저 알려 줍니다.
+"%s is marked to stay code: never offered anything, never counted, opened read-only.","%s 는 코드로 남기기로 표시되어 있습니다: 아무것도 제안하지 않고, 집계하지 않으며, 읽기 전용으로 엽니다."
+"%s reads as rows: %d%% - %d function(s) opened, %d still code.","%s 가 행으로 읽히는 비율: %d%% - 함수 %d개가 열렸고, %d개는 아직 코드입니다."
+%d other script(s) call something it declares.,다른 스크립트 %d개가 이 파일이 선언한 것을 호출합니다.
+"%s is marked to stay code - showing it as code, and leaving it alone.","%s 는 코드로 남기기로 표시되어 있습니다 - 코드로 보여 주고, 그대로 둡니다."

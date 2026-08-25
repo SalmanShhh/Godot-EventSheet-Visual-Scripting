@@ -3358,8 +3358,45 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 				"line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
+	var callers: String = called_by_words(event_function.function_name,
+		str((_viewport._sheet as EventSheetResource).external_source_path) if _viewport._sheet != null else "")
+	if not callers.is_empty():
+		spans.append(_make_span(callers, SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "define_function",
+			"lane": "action",
+			"line_index": 0,
+			"natural_width": true,
+			"text_color": _viewport._get_reading_style().muted_text_color
+		}))
 	_append_message_spans(spans, event_function)
 	return spans
+
+
+## How many files the project has, so the band can name a few and count the rest rather than
+## enumerating a hundred - the same rule every read-from-the-project band follows.
+const CALLERS_NAMED: int = 3
+
+
+## "called by combat.gd · boss_ai.gd" - who else in the project calls this function, off the one
+## project index. "" when nobody does, and "" while the index is still counting: a band says a fact
+## or says nothing, and the view is built again when the count lands.
+##
+## Matched BY NAME, which is what the index can honestly answer, so a rename reads this as the list
+## to CHECK rather than as a list to act on. Static + pure over a name, so it is pinned headless.
+static func called_by_words(function_name: String, own_script: String) -> String:
+	if function_name.strip_edges().is_empty() or not EventSheetProjectShareIndex.request():
+		return ""
+	var callers: PackedStringArray = EventSheetProjectShareIndex.callers_of(function_name, own_script)
+	if callers.is_empty():
+		return ""
+	var named: PackedStringArray = PackedStringArray()
+	for index in range(mini(callers.size(), CALLERS_NAMED)):
+		named.append(callers[index].get_file())
+	var words: String = EventSheetL10n.translate("called by %s") % " · ".join(named)
+	if callers.size() > CALLERS_NAMED:
+		words += " · " + EventSheetL10n.translate("%d more") % (callers.size() - CALLERS_NAMED)
+	return words
 
 
 ## What a MESSAGE says about itself at the right of its own row: the three `@rpc` choices in the

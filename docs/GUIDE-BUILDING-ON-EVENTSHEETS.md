@@ -251,6 +251,15 @@ var elsewhere: PackedStringArray = EventSheets.scenes_using_resource(
 
 A `.tres` is one object at run time, so a material, an environment or a curve written from a row is written for everything holding the same file - which is the failure behind several of the shipped checks. Ask this rather than walking the scenes yourself: the first call blocks until the scan finishes, every call after it is a table lookup, and nobody pays for a second scan.
 
+The same scan answers "who else calls this function", which is what a function's head band says and what a rename has to say before it changes anything:
+
+```gdscript
+# Every project script that calls a function of this name, leaving out the file asking.
+var callers: PackedStringArray = EventSheets.scripts_calling("take_damage", "res://player.gd")
+```
+
+The match is **by name**, and anything showing the answer should say so: reading the types instead would need the whole project's inference to be right, and being quietly wrong about who calls a function is worse than being plainly approximate. A file listed here may be calling a different function that happens to share the name - which is exactly why the plugin lists them and renames nothing outside a sheet.
+
 ## 6b. Localisation Services
 
 The editor UI translates through one shared layer (see the "Translating the editor into your
@@ -365,6 +374,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
 | Health | `scenes_using_resource(resource_path: String, own_scene := "")` - every OTHER scene of the project that loads this file, from ONE indexed scan shared by everything that asks and dropped whole on the editor's filesystem signal. The first ask blocks until the scan finishes; every ask after it is a table lookup | `PackedStringArray` | no |
+| Health | `scripts_calling(function_name: String, own_script := "")` - every project script that calls a function of this name, off the same one scan. Matched BY NAME, so show it as a list to check rather than to act on | `PackedStringArray` | no |
 | Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` / `row_menu_items_for(resource)` | `void` / `Array[Dictionary]` | no (shows when open) |
 | Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` / `simple_aces()` | `ACEDefinition` / `Array[ACEDefinition]` | no (joins next refresh) |
 | Seams | `param_spec(config: Dictionary)` - normalizes one param/field config: `default` and `default_value` are interchangeable, `options` takes a plain list / a `{value: label}` dictionary / ready-made pairs, and `hint: "comparison"` expands to the whole labeled operator dropdown seeded to `==`. `simple_ace()` and `simple_block_kind()` run every param through it | `Dictionary` | no |

@@ -47,6 +47,19 @@ static var _holders: Dictionary = {}
 ## scenes could never say.
 static var _wearers: Dictionary = {}
 
+## function name -> the project scripts that call it, in path order. The answer to "who else calls
+## this?", which a function's own head band says and a rename has to say before it changes anything.
+##
+## BY NAME, and the wording everywhere says so: a script calling `take_damage` on something is filed
+## under `take_damage` whatever it was holding. Reading the types instead would need the whole
+## project's type inference to be right, and being quietly wrong about who calls a function is worse
+## than being plainly approximate about it - a rename listing one file too many costs a glance, and
+## one too few costs a broken game.
+static var _callers: Dictionary = {}
+
+## The call pattern, built once for the whole scan (see _call_regex).
+static var _calls_regex: RegEx = null
+
 ## The scenes to read, and how far down them the scan has got. A COPY of the project's scene list,
 ## never the list itself: `EventSheetSceneConnections.scene_paths()` hands back the static it caches,
 ## and reading scenes off it in place emptied the one index the whole plugin asks "which scenes are
@@ -55,6 +68,19 @@ static var _wearers: Dictionary = {}
 static var _pending: PackedStringArray = PackedStringArray()
 static var _next: int = 0
 static var _started: bool = false
+
+## The scripts to read, and how far down THEM the scan has got. A second list rather than a longer
+## first one, and read strictly after it, because the two halves answer different questions and one
+## of them has a caller that blocks: "which scenes hold this file" must not wait on a pass over every
+## script in the project to be able to answer.
+static var _pending_scripts: PackedStringArray = PackedStringArray()
+static var _next_script: int = 0
+
+## file identity -> the names that file calls. The scan is dropped whole whenever the filesystem
+## changes, and re-reading a thousand unchanged scripts on the strength of one saved file is most of
+## what a rebuild would otherwise cost. Keyed by `path|mtime|size`, so an entry is either current or
+## unreachable; it outlives `clear_cache` on purpose, which is what makes the rebuild cheap.
+static var _calls_by_file: Dictionary = {}
 
 ## Whether a slice is already scheduled, so a hundred questions in one frame arm one pump and not a
 ## hundred.
@@ -74,18 +100,36 @@ static var _when_counted: Array[Callable] = []
 static func request() -> bool:
 	if not _started:
 		_started = true
+		# ONE scan, two halves: every scene, then every script. One module, one cache, one drop - and
+		# the halves in that order because the scene answers have a caller that blocks on them.
 		_pending = EventSheetSceneConnections.scene_paths().duplicate()
+		_pending_scripts = EventSheets.project_scripts()
 		_next = 0
+		_next_script = 0
 		_holders.clear()
 		_wearers.clear()
+		_callers.clear()
 	if is_ready():
 		return true
 	_arm()
 	return false
 
 
-## True when every scene has been read and the counts below are final.
+## The same, for a reader that only needs the SCENE half - "who else holds this file", "who else
+## wears this material". It answers as soon as the scenes are read rather than waiting on the pass
+## over every script, which is a question those readers never asked.
+static func request_scenes() -> bool:
+	request()
+	return scenes_ready()
+
+
+## True when everything has been read and every answer below is final.
 static func is_ready() -> bool:
+	return scenes_ready() and _next_script >= _pending_scripts.size()
+
+
+## True when the SCENE half is final - which is all "who else holds this file" needs.
+static func scenes_ready() -> bool:
 	return _started and _next >= _pending.size()
 
 
@@ -105,13 +149,24 @@ static func stop_telling(listener: Callable) -> void:
 ## calls this a slice at a time; a caller with no frames to give calls `build_now()` instead.
 static func advance(budget_msec: int = SLICE_BUDGET_MSEC) -> bool:
 	var deadline: int = Time.get_ticks_msec() + maxi(budget_msec, 1)
-	while _next < _pending.size() and Time.get_ticks_msec() < deadline:
-		_read_scene(_pending[_next])
-		_next += 1
-	if _next < _pending.size():
+	if not _advance_scenes(deadline):
+		return false
+	while _next_script < _pending_scripts.size() and Time.get_ticks_msec() < deadline:
+		_read_script(_pending_scripts[_next_script])
+		_next_script += 1
+	if _next_script < _pending_scripts.size():
 		return false
 	_sort_holders()
 	return true
+
+
+## The scene half of one slice, and whether that finished it. Its own function because the scene
+## answers have a caller that blocks on them and must not be carried on into the script half.
+static func _advance_scenes(deadline: int) -> bool:
+	while _next < _pending.size() and Time.get_ticks_msec() < deadline:
+		_read_scene(_pending[_next])
+		_next += 1
+	return _next >= _pending.size()
 
 
 ## The whole scan, now. What a headless run, a health check and a test use, and what the one shipped
@@ -121,6 +176,16 @@ static func build_now() -> void:
 	request()
 	while not advance(1000):
 		pass
+
+
+## The SCENE half, now - what "who else holds this file" blocks on. The script half is left to the
+## slices, because a question about scenes should not pay for a pass over every script in the
+## project: on this repository that is a second of waiting for an answer that was already there.
+static func build_scenes_now() -> void:
+	request()
+	while not _advance_scenes(Time.get_ticks_msec() + 1000):
+		pass
+	_sort_holders()
 
 
 ## Every scene holding one resource file, in path order. Empty while the scan is still running, which
@@ -155,13 +220,30 @@ static func other_wearers(material_path: String, own_reference: String) -> Array
 	return others
 
 
+## Every project script that calls a function of this name, in path order, leaving out `own_script` -
+## which is nearly always the file the question is being asked about, and "this file calls it" is not
+## news. Empty while the scan is still running, which is why `is_ready()` is asked beside it rather
+## than an empty answer being read as "nobody".
+static func callers_of(function_name: String, own_script: String = "") -> PackedStringArray:
+	var callers: PackedStringArray = PackedStringArray()
+	if function_name.strip_edges().is_empty():
+		return callers
+	for script_path: String in _callers.get(function_name, PackedStringArray()):
+		if script_path != own_script:
+			callers.append(script_path)
+	return callers
+
+
 ## Drops the scan, so the next question starts a fresh one. The editor calls this when the filesystem
 ## changes; tests call it between fixtures, for the same reason every reader beside this one does.
 static func clear_cache() -> void:
 	_holders.clear()
 	_wearers.clear()
+	_callers.clear()
 	_pending = PackedStringArray()
+	_pending_scripts = PackedStringArray()
 	_next = 0
+	_next_script = 0
 	_started = false
 
 
@@ -188,13 +270,55 @@ static func _read_scene(scene_path: String) -> void:
 			"name": str(node.get("name", ""))})
 
 
+## Every name ONE script calls, filed under that name. A declaration is not a call - `func hurt(` and
+## `signal hurt(` are where the name lives, not where it is used - so the two are the only shapes
+## taken back out; a name inside a comment or a string is left in, because sorting those out would
+## cost a parse and the answer is a list to glance at, never a list anything acts on by itself.
+static func _read_script(script_path: String) -> void:
+	for name: String in _names_called_by(script_path):
+		if not _callers.has(name):
+			_callers[name] = PackedStringArray()
+		var callers: PackedStringArray = _callers[name]
+		if not callers.has(script_path):
+			callers.append(script_path)
+			_callers[name] = callers
+
+
+## The names one file calls, read once per version of that file. The scan is dropped whenever
+## anything in the project changes, so without this a saved file cost a fresh read of every other
+## script in the project as well.
+static func _names_called_by(script_path: String) -> PackedStringArray:
+	var stamp: String = EventForgeFileStamp.of(script_path)
+	if _calls_by_file.has(stamp):
+		return _calls_by_file[stamp]
+	var names: PackedStringArray = PackedStringArray()
+	for called: RegExMatch in _call_regex().search_all(FileAccess.get_file_as_string(script_path)):
+		var name: String = called.get_string(1)
+		if not names.has(name):
+			names.append(name)
+	_calls_by_file[stamp] = names
+	return names
+
+
+## Compiled once and shared: this runs over every script of the project, and building the same
+## pattern a thousand times is the whole cost of the pass.
+static func _call_regex() -> RegEx:
+	if _calls_regex == null:
+		_calls_regex = RegEx.create_from_string("(?<!func )(?<!signal )\\b([A-Za-z_][A-Za-z0-9_]*)[ \\t]*\\(")
+	return _calls_regex
+
+
 ## Path order, once, at the end of the scan - so two runs of it answer in the same order however the
-## filesystem happened to hand the scenes over.
+## filesystem happened to hand the files over.
 static func _sort_holders() -> void:
 	for resource_path: Variant in _holders.keys():
 		var holders: PackedStringArray = _holders[resource_path]
 		holders.sort()
 		_holders[resource_path] = holders
+	for function_name: Variant in _callers.keys():
+		var callers: PackedStringArray = _callers[function_name]
+		callers.sort()
+		_callers[function_name] = callers
 
 
 ## Schedules the next slice on the editor's own next frame. It costs no node, no timer and nothing

@@ -4884,3 +4884,11 @@ shared with %d other node,与另外 %d 个节点共用
 shared with %d other nodes,与另外 %d 个节点共用
 a material of its own,自己的材质
 also worn by,也被使用于
+called by %s,由 %s 调用
+"Hand-written code was not changed - check these, which call %s by that name: %s",手写代码未被修改 - 请检查这些以该名称调用 %s 的文件: %s
+"Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.",Interop: 本项目共 %d 个脚本，已测量 %d 个，其中 %d%% 的内容可读作行。安装插件本身没有改变任何东西 - 在你把脚本作为事件表打开之前，它仍然只是代码。这个分数不决定任何事，它只是让你看见界线的移动。
+%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.,%s 可以把 %s 交给随附的行为 - 打开它，行会在任何改动之前告诉你将会改变什么。
+"%s is marked to stay code: never offered anything, never counted, opened read-only.",%s 已标记为保持代码：不做任何提议，不计入统计，以只读方式打开。
+"%s reads as rows: %d%% - %d function(s) opened, %d still code.",%s 可读作行的比例：%d%% - 已打开 %d 个函数，%d 个仍是代码。
+%d other script(s) call something it declares.,另有 %d 个脚本调用了它声明的内容。
+"%s is marked to stay code - showing it as code, and leaving it alone.",%s 已标记为保持代码 - 以代码显示，并保持原样。

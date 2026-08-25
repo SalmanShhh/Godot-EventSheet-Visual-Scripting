@@ -162,9 +162,32 @@ func rename_everywhere(old_name: String, new_name: String) -> bool:
 	if not _dock._current_sheet_path.is_empty():
 		touched = rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
 	_dock._refresh_title_strip()
-	_dock._set_status("Renamed %s → %s%s." % [old_name, new_name,
-		" (also in: %s)" % ", ".join(touched) if not touched.is_empty() else ""])
+	_dock._set_status("Renamed %s → %s%s.%s" % [old_name, new_name,
+		" (also in: %s)" % ", ".join(touched) if not touched.is_empty() else "",
+		hand_written_callers_note(old_name,
+			str(_dock._current_sheet.external_source_path) if _dock._current_sheet != null else "")])
 	return true
+
+
+## What a rename must say about the code it did NOT touch: the project's own scripts that call the
+## old name, listed so the one decision the plugin must not make alone is made by somebody who can.
+##
+## It renames nothing outside a sheet, on purpose. Hand-written code is not the plugin's to rewrite,
+## and the index answers BY NAME - the words say "check", because a file listed here may be calling a
+## different function that happens to share the name. "" when nothing calls it, and "" while the
+## project index is still counting: a silent answer beats a wrong one.
+static func hand_written_callers_note(old_name: String, own_script: String) -> String:
+	if not EventSheetProjectShareIndex.request():
+		return ""
+	var callers: PackedStringArray = EventSheetProjectShareIndex.callers_of(old_name, own_script)
+	if callers.is_empty():
+		return ""
+	var names: PackedStringArray = PackedStringArray()
+	for path: String in callers:
+		names.append(path.get_file())
+	return " " + EventSheetL10n.translate(
+		"Hand-written code was not changed - check these, which call %s by that name: %s") % [
+			old_name, ", ".join(names)]
 
 
 ## Rewrites + saves every candidate sheet whose `includes` lists the open sheet (closed sheets save

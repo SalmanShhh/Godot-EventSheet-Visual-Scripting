@@ -4884,3 +4884,11 @@ shared with %d other node,geteilt mit %d weiterem Knoten
 shared with %d other nodes,geteilt mit %d weiteren Knoten
 a material of its own,ein eigenes Material
 also worn by,auch getragen von
+called by %s,aufgerufen von %s
+"Hand-written code was not changed - check these, which call %s by that name: %s","Handgeschriebener Code wurde nicht geändert - prüfe diese Dateien, die %s unter diesem Namen aufrufen: %s"
+"Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop: %d Skript(e) in diesem Projekt, %d gemessen, und %d%% ihres Inhalts liest sich als Zeilen. Die Installation des Plugins hat nichts geändert - ein Skript bleibt Code, bis du es als Blatt öffnest. Die Zahl entscheidet nichts; sie zeigt nur, wie sich die Naht bewegt."
+%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.,"%s könnte %s an ein mitgeliefertes Verhalten übergeben - öffne es, und die Zeile sagt vorher, was sich ändern würde."
+"%s is marked to stay code: never offered anything, never counted, opened read-only.","%s ist als ""bleibt Code"" markiert: kein Angebot, keine Zählung, nur lesend geöffnet."
+"%s reads as rows: %d%% - %d function(s) opened, %d still code.","%s liest sich als Zeilen: %d%% - %d Funktion(en) geöffnet, %d weiterhin Code."
+%d other script(s) call something it declares.,"%d andere Skript(e) rufen etwas auf, das es deklariert."
+"%s is marked to stay code - showing it as code, and leaving it alone.","%s ist als ""bleibt Code"" markiert - wird als Code gezeigt und in Ruhe gelassen."

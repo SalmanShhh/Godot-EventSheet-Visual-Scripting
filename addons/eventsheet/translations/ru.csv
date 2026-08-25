@@ -4884,3 +4884,11 @@ shared with %d other node,общий ещё с %d узлом
 shared with %d other nodes,общий ещё с %d узлами
 a material of its own,собственный материал
 also worn by,также носят
+called by %s,вызывается из %s
+"Hand-written code was not changed - check these, which call %s by that name: %s","Рукописный код не изменён - проверьте эти файлы, которые вызывают %s под этим именем: %s"
+"Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop: %d скрипт(ов) в этом проекте, измерено %d, и %d%% их содержимого читается как строки. Установка плагина ничего не изменила - скрипт остаётся кодом, пока вы не откроете его как лист. Это число ничего не решает; оно показывает, как движется граница."
+%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.,"%s мог бы передать %s готовому поведению - откройте, и строка скажет, что изменится, прежде чем что-то изменится."
+"%s is marked to stay code: never offered anything, never counted, opened read-only.","%s помечен как остающийся кодом: ничего не предлагается, ничего не считается, открывается только для чтения."
+"%s reads as rows: %d%% - %d function(s) opened, %d still code.","%s читается как строки: %d%% - открыто функций: %d, осталось кодом: %d."
+%d other script(s) call something it declares.,"Ещё %d скрипт(ов) вызывают то, что он объявляет."
+"%s is marked to stay code - showing it as code, and leaving it alone.",%s помечен как остающийся кодом - показан как код и оставлен в покое.
