@@ -52,6 +52,13 @@ jobs:
       - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
         run: |
           ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true
-          echo "PASS: $(grep -cE '^\[PASS\]' full.log)  FAIL: $(grep -cE '^\[FAIL\]' full.log)"
-          FAILURES=$(grep -E '^\[FAIL\]' full.log || true)
+          # [FAIL] lines can be indented (nested reporters), and a test may print one ON PURPOSE
+          # to prove the red-run report formats it - such a line names itself with the
+          # deliberate_probe_not_a_failure marker and does not count. Same filter as
+          # tools/run_tests_parallel.ps1 and tools/test_report.gd.
+          FAILURES=$(grep -F '[FAIL]' full.log | grep -v 'deliberate_probe_not_a_failure' || true)
+          echo "PASS: $(grep -cE '^\[PASS\]' full.log)  FAIL: $(printf '%s' "$FAILURES" | grep -c . || true)"
           if [ -n "$FAILURES" ]; then echo "Failures:"; echo "$FAILURES"; exit 1; fi
+          # The verdict line is the only always-right signal: a test that crashes mid-run prints
+          # zero [FAIL] lines, so the absence of failures alone does not make a run green.
+          grep -qxF 'All tests passed.' full.log
