@@ -51,6 +51,8 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Families | **Families** - declare a sheet as a Family (Sheet Type → Family) for family-scoped iteration; see the **Family Arena** showcase. Godot node groups / a behavior shared across nodes remain the lower-level path |
 | Layouts | Scenes |
 | Layers | CanvasLayers / scene tree order |
+| Effects on an object | A `ShaderMaterial` on the node, and **the shader file names its own dials**: every `uniform` a `.gdshader` declares becomes a picker entry on the nodes wearing it, so the row reads **Boss ▸ Set `effect.dissolve` to 0.7** and a dial the shader does not have cannot be typed. Six packs ship the commonest ones ready-made (Hit Flash, Dissolve, Outline, Grayscale, Wave), each installing its shader into your project as a file you can edit |
+| Effects on a layer | The **Screen FX** pack: one `CanvasLayer` holding a `ColorRect` whose shader reads the frame so far. Shockwave, an awaited Fade you build a scene transition out of, Blur and Chromatic pulse - and the rectangle hides itself whenever every effect is idle, so an unused layer draws nothing |
 | The expression language | **GDScript** - there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
 | Functions (event sheets) | Sheet functions - callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** action) |
@@ -253,6 +255,9 @@ The picker wraps the native feature:
 | Shadow caster behavior | Godot's `LightOccluder2D` (scene setup, not events). The sheet head's **shadows** band says whether any occluder's mask really matches the shadows your lights cast, which is the "I turned shadows on and nothing happened" case, answered before you press play |
 | Layer effect: darkness / night tint | A `CanvasModulate` in the scene, on the *Darkness in this scene* shelf: **Level ▸ Set darkness to 81%, tinted #26304d**. The row holds the colour (all Godot stores); the percentage is how it reads. **Fade Darkness** walks it over time |
 | Layout lighting / 3D fog and glow | The **World** object (a `WorldEnvironment`): Turn Fog On/Off, Set Fog Thickness, Turn Glow On/Off, Fade The Glow, Set Ambient Light - plus **Make The Environment This Scene's Own**, which is the row to write before any of them, since an environment `.tres` is shared between scenes |
+| Set effect parameter (object effect) | **Set Effect Dial**, whose dial list is read out of the `.gdshader` the node's material runs: **Boss ▸ Set `effect.dissolve` to 0.7**, with **Fade Effect Dial** for walking it over time and the dial readable back as an expression or a condition. A name the shader stops declaring grows an amber note with the right name as a one-click fix, where a typed string would just stop working. **Make The Effect This Node's Own** is the row to write first, since a material `.tres` is shared exactly the way an environment is |
+| Set layer effect parameter | The **Screen FX** pack's four rows on the one full-screen rectangle. **Fade To** carries `await`, so the rows under it are what happens after the fade has landed - which is a scene transition written as two rows in one event |
+| Set effect parameter, everywhere at once | **Set Global Shader Parameter**, Godot's own project-wide uniform (Project Settings ▸ Shader Globals) - one number every shader in the game reads, for wind, wetness or the time of day. The Doctor says when a name was never declared, which is the case where every shader quietly reads zero |
 | System: `random()`, `choose()`, `clamp()`, `lerp()`, `distance()`, `angle()` | **Math & Random** expressions (Choose is literally `[…].pick_random()`) |
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
@@ -264,13 +269,16 @@ The picker wraps the native feature:
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
 
-**76 are bundled**:
+**111 are bundled** (93 with a guide of their own, the other 18 companion data assets and loaders
+documented inside their partner's guide):
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D), Rotate, Fade, Bound To, Wrap** (Follow now
 emits On Reached Target, Car On Drift Started / Recovered; Bound To is C3's "Bound to layout",
 Wrap adds circular arenas), the motion packs (**Spring**, **Tween**, and **Juice** for
-camera/game-feel - trauma screenshake, smooth zoom, squash & stretch), the **Save System**
-singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful ports of custom C3 addons:
+camera/game-feel - trauma screenshake, smooth zoom, squash & stretch), the shader effects
+(**Hit Flash, Dissolve, Outline, Grayscale, Wave** and the full-screen **Screen FX**), the
+**Save System** singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful ports of
+custom C3 addons:
 
 | Construct 3 addon | Godot EventSheets pack |
 | --- | --- |
@@ -283,6 +291,8 @@ singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful ports of cu
 | Drawing Canvas | **Drawing Canvas** (draw lines/circles/rings/rects/cones/stamps/textured ribbons and raycast line-of-sight fans onto a live texture - persistent paint or per-frame auto-clear; reusable DrawingPrefabResource formations; the **Decal Painter** pack projects the texture onto 3D surfaces) |
 | Flickering torch / pulsing beacon (hand-built with Sine + a lighting behavior) | **Light Flicker** (a flame on a noise field, optionally breathing its reach too) and **Light Pulse** (a smooth wave on a clock). Attach either under any light node, 2D or 3D - each asks its host which property it spells brightness with |
 | Day/night cycle (hand-built) | **Day/Night Cycle** (one clock, three Inspector curves, a sun light and either a `WorldEnvironment` or a `CanvasModulate` as targets; triggers On Sunrise / On Sunset / On Midnight / On The Hour, and Set The Time / Run The Clock N Times Faster / Pause / Resume) |
+| Effects on an object (the built-in effect list) | **Hit Flash**, **Dissolve**, **Outline**, **Grayscale** and **Wave** - five shader packs with one-word verbs (Flash white for 0.15 s, Dissolve over 0.8 s, Outline yellow at 2 px, Grayscale to 1 over 0.25 s, Wave at 0.03 over 0.4 s). Adding one copies its `.gdshader` and a `.tres` into `res://effects/` and dresses the node in it through the editor's own undo, so the look is a file you own from the first add. Each takes its own copy of the material before turning a dial, unless you turn `own_material` off because sharing IS the effect |
+| Effects on a layer (the full-screen effect list) | **Screen FX** - the pack ships the whole `CanvasLayer` scene, and adding it drops that in rather than a bare node |
 
 Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
 automatically.

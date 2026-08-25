@@ -981,6 +981,21 @@ to the function it names, the same jump the Outline panel makes.
   delta)` is one verb - `Ease colour toward white at 5` - claimed only when the line reads the very
   member it writes, so an ordinary blend from somewhere else stays the Set it is.
 
+- **A shader dial reads as the dial it turns, when the project can prove which one it is.**
+  `material.set_shader_parameter(&"dissolve", 0.7)` reads `Set effect.dissolve to 0.7`, the `effect.`
+  lead muted the way an autoload's name is muted on a global's row. The one-line
+  `create_tween().tween_method(func(v): material.set_shader_parameter(&"dissolve", v), 0.0, 1.0, 0.8)`
+  reads `Fade effect.dissolve`, keeping your own lambda argument's name; `material =
+  material.duplicate()` reads `Make the effect this node's own`; `material =
+  preload("res://effects/frozen.tres")` reads `Set effect`. The receiver rides along exactly as you
+  wrote it - nothing, `$Sprite`, `%Aura`, `get_node("Aura")`, or the variable you were holding the
+  node in - and so does the way you quoted the name, so a `&"dissolve"` stays a StringName and an
+  `"amount"` stays a plain string. The claim is gated on the project twice: the attached scene has to
+  say that node wears a material, AND that material's `.gdshader` has to declare that name. A node
+  wearing nothing, or a name no shader has heard of, falls through to the free-string **Set Effect
+  Parameter** row that shipped before this - which claims nothing about any shader, and is the honest
+  reading of a name nothing can check. The Doctor is what tells you which of the two you have.
+
 - **`match` patterns read as the conditions they are.** A match on plain values already reads as the
   if / else-if / else chain a reader knows. The patterns that say something a plain value cannot join
   the same chain now: `["move", var x, var y]` is `event is a list of 3 starting "move"` with `x` and
