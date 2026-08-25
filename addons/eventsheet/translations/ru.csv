@@ -4862,3 +4862,9 @@ Set fog colour to {colour},Задать цвет тумана {colour}
 "%s declares no dial called %s, so this row does nothing when the game runs.","%s не объявляет параметр с именем %s, поэтому эта строка ничего не делает при запуске игры."
 Picked %s.,Выбрано %s.
 "any material, name typed","любой материал, имя вводится"
+built-in,встроенное
+property,свойство
+method,метод
+parameter,параметр
+enum value,значение перечисления
+"Tab or Enter accepts, Escape keeps what you typed","Tab или Enter принимает, Escape оставляет набранное"

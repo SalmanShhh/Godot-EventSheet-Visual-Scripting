@@ -4862,3 +4862,9 @@ Set fog colour to {colour},Nebelfarbe auf {colour} setzen
 "%s declares no dial called %s, so this row does nothing when the game runs.","%s deklariert keinen Regler namens %s, deshalb bewirkt diese Zeile nichts, wenn das Spiel läuft."
 Picked %s.,%s gewählt.
 "any material, name typed","beliebiges Material, Name getippt"
+built-in,eingebaut
+property,Eigenschaft
+method,Methode
+parameter,Parameter
+enum value,Aufzählungswert
+"Tab or Enter accepts, Escape keeps what you typed","Tab oder Enter übernimmt, Escape behält das Getippte"

@@ -4862,3 +4862,9 @@ Set fog colour to {colour},将雾颜色设为 {colour}
 "%s declares no dial called %s, so this row does nothing when the game runs.",%s 没有声明名为 %s 的调节项，因此这一行在游戏运行时不会有任何效果。
 Picked %s.,已选择 %s。
 "any material, name typed",任意材质，手动输入名称
+built-in,内置
+property,属性
+method,方法
+parameter,参数
+enum value,枚举值
+"Tab or Enter accepts, Escape keeps what you typed",Tab 或 Enter 采用，Escape 保留已输入内容

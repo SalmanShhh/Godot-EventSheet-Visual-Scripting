@@ -4862,3 +4862,9 @@ Set fog colour to {colour},Imposta il colore della nebbia su {colour}
 "%s declares no dial called %s, so this row does nothing when the game runs.","%s non dichiara alcun controllo chiamato %s, quindi questa riga non fa nulla quando il gioco è in esecuzione."
 Picked %s.,%s scelto.
 "any material, name typed","qualsiasi materiale, nome digitato"
+built-in,integrato
+property,proprietà
+method,metodo
+parameter,parametro
+enum value,valore di enumerazione
+"Tab or Enter accepts, Escape keeps what you typed","Tab o Invio accetta, Esc conserva quanto digitato"

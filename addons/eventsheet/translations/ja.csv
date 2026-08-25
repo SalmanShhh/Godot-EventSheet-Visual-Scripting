@@ -4862,3 +4862,9 @@ Set fog colour to {colour},霧の色を {colour} にする
 "%s declares no dial called %s, so this row does nothing when the game runs.",%s には %s というダイヤルが宣言されていないため、この行はゲーム実行時に何もしません。
 Picked %s.,%s を選びました。
 "any material, name typed",任意のマテリアル、名前は手入力
+built-in,組み込み
+property,プロパティ
+method,メソッド
+parameter,パラメータ
+enum value,列挙値
+"Tab or Enter accepts, Escape keeps what you typed",Tab または Enter で確定、Escape で入力した内容を保持

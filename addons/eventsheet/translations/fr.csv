@@ -4862,3 +4862,9 @@ Set fog colour to {colour},Régler la couleur du brouillard sur {colour}
 "%s declares no dial called %s, so this row does nothing when the game runs.","%s ne déclare aucun réglage nommé %s, donc cette ligne ne fait rien quand le jeu tourne."
 Picked %s.,%s choisi.
 "any material, name typed","n'importe quel matériau, nom saisi"
+built-in,intégré
+property,propriété
+method,méthode
+parameter,paramètre
+enum value,valeur d'énumération
+"Tab or Enter accepts, Escape keeps what you typed","Tab ou Entrée accepte, Échap conserve ce qui est tapé"

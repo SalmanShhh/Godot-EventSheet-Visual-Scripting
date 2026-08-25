@@ -4862,3 +4862,9 @@ Set fog colour to {colour},안개 색을 {colour} 로 설정
 "%s declares no dial called %s, so this row does nothing when the game runs.",%s 에는 %s 라는 다이얼이 선언되어 있지 않아 이 행은 게임 실행 시 아무 일도 하지 않습니다.
 Picked %s.,%s 을(를) 선택했습니다.
 "any material, name typed","모든 머티리얼, 이름 직접 입력"
+built-in,내장
+property,속성
+method,메서드
+parameter,매개변수
+enum value,열거 값
+"Tab or Enter accepts, Escape keeps what you typed","Tab 또는 Enter로 적용, Escape로 입력한 내용 유지"
