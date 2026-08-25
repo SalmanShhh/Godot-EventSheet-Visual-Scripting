@@ -66,7 +66,8 @@ static func run() -> bool:
 	# two Traversal Kits (+2), on the colour-palette asset (+1) and the two gesture packs (+2).
 	# Recomputed as base + deltas.
 	# Lighting: Light Flicker, Light Pulse and Day/Night Cycle (+3). Recomputed as base + deltas.
-	all_passed = _check("the fleet was scanned (105 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3) and all_passed
+	# Effects: Hit Flash, Dissolve, Outline, Grayscale, Wave and Screen FX (+6). Same recomputation.
+	all_passed = _check("the fleet was scanned (111 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -79,9 +80,14 @@ static func run() -> bool:
 	# two that read it back (Combo Has Animation, Animation For Combo).
 	# lighting: +3 Light Flicker (start, stop, is flickering), +3 Light Pulse (the same three), and
 	# +6 Day/Night Cycle (set the time, run the clock faster, pause, resume, it is day, it is night).
+	# effects: +3 Hit Flash (flash, stop, is flashing), +4 Dissolve (dissolve, appear, is gone, burnt
+	# away), +4 Outline (outline, no outline, fade outline, is outlined), +4 Grayscale (grayscale,
+	# recolour, is gray, grayness), +4 Wave (wave, settle, is waving, wave strength) and +7 Screen FX
+	# (shockwave, fade to, fade back, blur, chromatic pulse, clear, is running).
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
-		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6) and all_passed
+		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
+		+ 3 + 4 + 4 + 4 + 4 + 7) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

@@ -208,6 +208,142 @@ static func light_binding_lines(reach_knob: String = "") -> PackedStringArray:
 	return lines
 
 
+# ── Shared shader-effect runtime ─────────────────────────────────────────────────────────
+# The five node effect packs (hit flash, dissolve, outline, grayscale, wave) each ship one shader
+# and turn its dials. Everything under the verbs is the same question in all five - which material
+# am I allowed to write on, and how does one dial get from here to there over time - so it is one
+# block emitted verbatim into each of them, and a fix lands once.
+
+
+## The block every shader-effect pack opens with: the private-copy knob, the material it writes
+## through, and the three helpers its verbs are made of. Everything here is `_`-prefixed apart from
+## the knob, so none of it publishes as vocabulary.
+##
+## `pack_name` and `shader_file` are only spoken in the one warning a mis-set node produces, and
+## naming them there is what makes that warning worth reading.
+static func effect_material_lines(pack_name: String, shader_file: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray([
+		"## Give this node its own copy of the material before anything turns a dial on it. A material",
+		"## is a RESOURCE, so every node pointing at the same file SHARES it: turn a dial on one goblin",
+		"## and every goblin wearing that file turns with it. On is the safe answer and the one you",
+		"## almost always want. Off when a whole row of nodes really should react together, which is the",
+		"## one case where sharing is the feature rather than the bug.",
+		"@export var own_material: bool = true",
+		"",
+		"## The material this behaviour writes through, resolved on first use so the copy is taken once.",
+		"var _worn: ShaderMaterial = null",
+		"",
+		"## The dial walks running right now, keyed by dial name, so a second call on the same dial",
+		"## replaces the first instead of the two of them fighting over it.",
+		"var _walks: Dictionary = {}",
+		"",
+		"## Whether the missing-material warning has been said. A setup mistake is worth saying once;",
+		"## saying it per dial per call is a log nobody can read past to find it.",
+		"var _warned: bool = false",
+		"",
+		"## The material to write on, copied on first use when own_material is on. Null means the parent",
+		"## wears no ShaderMaterial at all: attaching the pack copies %s into the project and assigns it," % shader_file,
+		"## so a null here means it was cleared afterwards.",
+		"func _effect_material() -> ShaderMaterial:",
+		"\tif _worn != null:",
+		"\t\treturn _worn",
+		"\tif host == null:",
+		"\t\treturn null",
+		"\tvar found: ShaderMaterial = host.material as ShaderMaterial",
+		"\tif found == null:",
+		"\t\tif not _warned:",
+		"\t\t\t_warned = true",
+		"\t\t\tpush_warning(\"%s needs its parent to wear the %s material. Add the pack again, or set the material in the Inspector.\")" % [pack_name, shader_file],
+		"\t\treturn null",
+		"\t_worn = found.duplicate() if own_material else found",
+		"\thost.material = _worn",
+		"\t_seed_dials()",
+		"\treturn _worn",
+		""
+	])
+	lines.append_array(seed_dials_lines("_worn"))
+	lines.append_array(PackedStringArray([
+		"",
+		"## Turns one dial straight away, ending any walk that was moving it.",
+		"func _set_dial(dial: String, value: Variant) -> void:",
+		"\tvar used: ShaderMaterial = _effect_material()",
+		"\tif used == null:",
+		"\t\treturn",
+		"\t_stop_walk(dial)",
+		"\tused.set_shader_parameter(dial, value)",
+		"",
+		"## Walks one dial to a value over a number of seconds and hands the tween back, so a verb can",
+		"## wait on it or hang something off its end. No time at all - or no scene tree to run a tween",
+		"## in - is a straight set rather than a tween nobody can see. A walk replaces whatever walk was",
+		"## already on that dial.",
+		"func _walk_dial(dial: String, to_value: float, seconds: float) -> Tween:",
+		"\tvar used: ShaderMaterial = _effect_material()",
+		"\tif used == null:",
+		"\t\treturn null",
+		"\t_stop_walk(dial)",
+		"\tif seconds <= 0.0 or not is_inside_tree():",
+		"\t\tused.set_shader_parameter(dial, to_value)",
+		"\t\treturn null",
+		"\tvar walk: Tween = create_tween()",
+		"\t# `shader_parameter/<name>` is how Godot addresses a uniform as a property, which is what lets",
+		"\t# one tween move it with no per-frame code here at all.",
+		"\twalk.tween_property(used, \"shader_parameter/\" + dial, to_value, seconds)",
+		"\t_walks[dial] = walk",
+		"\treturn walk",
+		"",
+		"## Ends the walk on one dial, if there is one, leaving the dial wherever it had got to.",
+		"func _stop_walk(dial: String) -> void:",
+		"\tvar walk: Tween = _walks.get(dial, null)",
+		"\tif walk != null and walk.is_valid():",
+		"\t\twalk.kill()",
+		"\t_walks.erase(dial)",
+		"",
+		"## What a dial reads right now. An un-set uniform reads back as null rather than as the value",
+		"## the shader declares for it, which is the fault every effect pack hits once, so the value the",
+		"## caller knows the shader starts at is what an unwritten dial answers with.",
+		"func _dial(dial: String, when_unset: float) -> float:",
+		"\tvar used: ShaderMaterial = _worn",
+		"\tif used == null and host != null:",
+		"\t\tused = host.material as ShaderMaterial",
+		"\tif used == null:",
+		"\t\treturn when_unset",
+		"\tvar held: Variant = used.get_shader_parameter(dial)",
+		"\treturn when_unset if held == null else float(held)"
+	]))
+	return lines
+
+
+## The one-time seeding block, for any pack that walks a dial on a material it holds in `member`.
+##
+## Godot answers get_shader_parameter with NULL for a uniform nothing has written yet - not with the
+## value the file declares - so `shader_parameter/<dial>` is not a property a tween can even address
+## until something has written it once. The engine knows the declared value and is asked for it here.
+## This is the fault every effect pack hits exactly once, which is why it is one block rather than
+## six: the five node packs seed on the first write, and the screen layer seeds when it starts.
+static func seed_dials_lines(member: String) -> PackedStringArray:
+	return PackedStringArray([
+		"## Writes every dial the shader declares, once, before anything reads or walks one. An un-set",
+		"## uniform reads back as null rather than as the shader's own value, and a tween cannot even",
+		"## address `shader_parameter/<dial>` until it has been written.",
+		"func _seed_dials() -> void:",
+		"\tif %s == null or %s.shader == null:" % [member, member],
+		"\t\treturn",
+		"\tfor declared: Dictionary in %s.shader.get_shader_uniform_list():" % member,
+		"\t\tvar dial: String = str(declared.get(\"name\", \"\"))",
+		"\t\tif dial.is_empty() or %s.get_shader_parameter(dial) != null:" % member,
+		"\t\t\tcontinue",
+		"\t\tvar starts_at: Variant = RenderingServer.shader_get_parameter_default(",
+		"\t\t\t%s.shader.get_rid(), dial)" % member,
+		"\t\t# A renderer that draws nothing - a headless run, a dedicated server - knows no shader",
+		"\t\t# defaults and answers null. The declared TYPE is still known, so an empty one of that is",
+		"\t\t# written instead: the dial is addressable, and its value is never seen because nothing",
+		"\t\t# is being drawn.",
+		"\t\tif starts_at == null:",
+		"\t\t\tstarts_at = type_convert(starts_at, int(declared.get(\"type\", TYPE_NIL)))",
+		"\t\t%s.set_shader_parameter(dial, starts_at)" % member
+	])
+
+
 # ── Shared Juice runtime blocks ──────────────────────────────────────────────────────────
 # The screen-FX overlay (bundled shader + build/visibility helpers) is identical in the 2D and 3D
 # Juice packs; single-sourcing it here means a fix (or the un-set-uniform-null crash fix) lands ONCE

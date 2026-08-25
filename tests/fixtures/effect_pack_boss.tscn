@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/effect_pack_boss.gd" id="1_boss"]
+[ext_resource type="Material" path="res://tests/fixtures/effect_pack_material.tres" id="2_burn"]
+[ext_resource type="Script" path="res://eventsheet_addons/dissolve/dissolve_behavior.gd" id="3_dissolve"]
+[ext_resource type="Script" path="res://eventsheet_addons/hit_flash/hit_flash_behavior.gd" id="4_flash"]
+
+[node name="Boss" type="Sprite2D"]
+material = ExtResource("2_burn")
+script = ExtResource("1_boss")
+
+[node name="DissolveBehavior" type="Node" parent="."]
+script = ExtResource("3_dissolve")
+
+[node name="HitFlashBehavior" type="Node" parent="."]
+script = ExtResource("4_flash")

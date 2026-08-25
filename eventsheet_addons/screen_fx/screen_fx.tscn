@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/screen_fx/screen_fx.gd" id="1_screen_fx"]
+[ext_resource type="Shader" path="res://eventsheet_addons/screen_fx/screen_fx.gdshader" id="2_screen_fx_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_screen_fx"]
+shader = ExtResource("2_screen_fx_shader")
+
+[node name="ScreenFx" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_screen_fx")
+
+[node name="Screen" type="ColorRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_screen_fx")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
