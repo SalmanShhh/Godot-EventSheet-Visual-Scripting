@@ -4868,3 +4868,19 @@ method,메서드
 parameter,매개변수
 enum value,열거 값
 "Tab or Enter accepts, Escape keeps what you typed","Tab 또는 Enter로 적용, Escape로 입력한 내용 유지"
+Textures,텍스처
+Make the effect this node's own,이 노드만의 이펙트로 만들기
+This node has its own material now - the dials stop here.,이제 이 노드는 자체 머티리얼을 가집니다 - 다이얼은 여기서 멈춥니다.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s이(가) %s(으)로 화면을 덮고 있지만 모든 다이얼이 아직 정지 상태입니다 - 화면 전체가 매 프레임 쓸데없이 셰이더를 거쳐 다시 그려집니다. 이펙트가 켜질 때까지 숨기세요.
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.",%s은(는) 씬에서 머티리얼을 착용하지 않으므로 %s을(를) 설정해도 아무것에도 닿지 않습니다 - 이 노드를 향한 모든 이펙트 행은 아무 일도 하지 않습니다. 인스펙터에서 ShaderMaterial을 주세요.
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s은(는) %s도 착용하고 있으며, 머티리얼은 하나의 객체입니다 - 이 행이 돌리는 모든 다이얼은 그들에게도 돌아갑니다. 먼저 이 노드에 자체 사본을 주세요."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","프로젝트 설정 > Shader Globals에 %s이(가) 선언되어 있지 않으므로, 이 행이 아무리 자주 실행되어도 그것을 읽는 모든 셰이더는 0을 봅니다. 거기서 선언하세요."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","이펙트: 머티리얼을 착용한 씬 %d개, 그중 런타임에 보이지 않을 것이 %d개."
+kept inside this scene - nothing else wears it,이 씬 안에 보관됨 - 다른 것은 착용하지 않음
+its own copy at runtime,런타임에 자체 사본
+counting…,세는 중…
+worn by this node only,이 노드만 착용
+shared with %d other node,다른 노드 %d개와 공유
+shared with %d other nodes,다른 노드 %d개와 공유
+a material of its own,자체 머티리얼
+also worn by,또한 착용

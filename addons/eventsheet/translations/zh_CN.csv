@@ -4868,3 +4868,19 @@ method,方法
 parameter,参数
 enum value,枚举值
 "Tab or Enter accepts, Escape keeps what you typed",Tab 或 Enter 采用，Escape 保留已输入内容
+Textures,纹理
+Make the effect this node's own,让这个节点拥有自己的效果
+This node has its own material now - the dials stop here.,这个节点现在有了自己的材质 - 旋钮到此为止。
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s 用 %s 覆盖了整个屏幕，而每个旋钮都还处于静止状态 - 整个屏幕每一帧都在白白地通过着色器重绘。在效果开启之前把它隐藏起来。
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.",%s 在场景里没有材质，所以设置 %s 什么也碰不到 - 每一条指向它的效果行都不起作用。在检查器里给它一个 ShaderMaterial。
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.",%s 也被 %s 使用，而材质是同一个对象 - 这一行拧动的每个旋钮，也会为它们拧动。请先让这个节点拥有自己的副本。
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.",项目设置 > Shader Globals 中没有声明 %s，所以无论这一行运行多少次，读取它的每个着色器看到的都是零。请在那里声明它。
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.",效果：%d 个场景带有材质，其中 %d 个含有运行时不会显示的东西。
+kept inside this scene - nothing else wears it,保存在这个场景里 - 没有别的节点使用它
+its own copy at runtime,运行时使用自己的副本
+counting…,统计中…
+worn by this node only,只有这个节点使用
+shared with %d other node,与另外 %d 个节点共用
+shared with %d other nodes,与另外 %d 个节点共用
+a material of its own,自己的材质
+also worn by,也被使用于

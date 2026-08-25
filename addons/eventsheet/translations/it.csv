@@ -4868,3 +4868,19 @@ method,metodo
 parameter,parametro
 enum value,valore di enumerazione
 "Tab or Enter accepts, Escape keeps what you typed","Tab o Invio accetta, Esc conserva quanto digitato"
+Textures,Texture
+Make the effect this node's own,Rendi l'effetto proprio di questo nodo
+This node has its own material now - the dials stop here.,Questo nodo ora ha il proprio materiale - le manopole si fermano qui.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s copre lo schermo con %s e ogni manopola è ancora a riposo - tutto lo schermo viene ridisegnato attraverso lo shader a ogni frame per nulla. Nascondilo finché un effetto non lo accende.
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s non indossa alcun materiale nella scena, quindi impostare %s non raggiunge nulla - ogni riga di effetto rivolta a esso non fa nulla. Dagli uno ShaderMaterial nell'Inspector."
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s è indossato anche da %s, e un materiale è un solo oggetto - ogni manopola che questa riga gira gira anche per loro. Dai prima a questo nodo la sua copia."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","Impostazioni progetto > Shader Globals non dichiara alcun %s, quindi ogni shader che lo legge vede zero per quante volte questa riga venga eseguita. Dichiaralo lì."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Effetti: %d scena/e che indossano un materiale, %d con qualcosa che non si vedrà in esecuzione."
+kept inside this scene - nothing else wears it,tenuto dentro questa scena - nient'altro lo indossa
+its own copy at runtime,la propria copia in esecuzione
+counting…,conteggio…
+worn by this node only,indossato solo da questo nodo
+shared with %d other node,condiviso con %d altro nodo
+shared with %d other nodes,condiviso con altri %d nodi
+a material of its own,un materiale proprio
+also worn by,indossato anche da

@@ -4868,3 +4868,19 @@ method,Methode
 parameter,Parameter
 enum value,Aufzählungswert
 "Tab or Enter accepts, Escape keeps what you typed","Tab oder Enter übernimmt, Escape behält das Getippte"
+Textures,Texturen
+Make the effect this node's own,Effekt zur eigenen Kopie dieses Knotens machen
+This node has its own material now - the dials stop here.,Dieser Knoten hat jetzt sein eigenes Material - die Regler enden hier.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,"%s bedeckt den Bildschirm mit %s und jeder Regler steht noch in Ruhe - der ganze Bildschirm wird jeden Frame umsonst durch den Shader gezeichnet. Blende es aus, bis ein Effekt es einschaltet."
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s trägt in der Szene kein Material, also greift das Setzen von %s ins Leere - jede Effektzeile auf diesen Knoten tut nichts. Gib ihm im Inspektor ein ShaderMaterial."
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s wird auch von %s getragen, und ein Material ist ein einziges Objekt - jeder Regler, den diese Zeile dreht, dreht sich auch für sie. Gib diesem Knoten zuerst seine eigene Kopie."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","Projekteinstellungen > Shader Globals deklarieren kein %s, also sieht jeder Shader, der es liest, null, so oft diese Zeile auch läuft. Deklariere es dort."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Effekte: %d Szene(n) mit einem Material, %d mit etwas, das zur Laufzeit nicht zu sehen sein wird."
+kept inside this scene - nothing else wears it,in dieser Szene gehalten - nichts anderes trägt es
+its own copy at runtime,zur Laufzeit seine eigene Kopie
+counting…,wird gezählt…
+worn by this node only,nur von diesem Knoten getragen
+shared with %d other node,geteilt mit %d weiterem Knoten
+shared with %d other nodes,geteilt mit %d weiteren Knoten
+a material of its own,ein eigenes Material
+also worn by,auch getragen von

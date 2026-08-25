@@ -4868,3 +4868,19 @@ method,método
 parameter,parámetro
 enum value,valor de enumeración
 "Tab or Enter accepts, Escape keeps what you typed","Tab o Intro acepta, Escape conserva lo escrito"
+Textures,Texturas
+Make the effect this node's own,Hacer que el efecto sea propio de este nodo
+This node has its own material now - the dials stop here.,Este nodo ya tiene su propio material - los controles se detienen aquí.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s cubre la pantalla con %s y todos los controles siguen en reposo - toda la pantalla se redibuja a través del shader en cada fotograma para nada. Ocúltalo hasta que un efecto lo active.
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s no lleva ningún material en la escena, así que ajustar %s no llega a nada - cada fila de efecto dirigida a él no hace nada. Dale un ShaderMaterial en el Inspector."
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s también lo llevan %s, y un material es un solo objeto - cada control que gira esta fila gira también para ellos. Primero dale a este nodo su propia copia."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","Configuración del proyecto > Shader Globals no declara ningún %s, así que cada shader que lo lee ve cero por muchas veces que se ejecute esta fila. Decláralo allí."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Efectos: %d escena(s) con un material, %d con algo que no se verá en tiempo de ejecución."
+kept inside this scene - nothing else wears it,guardado dentro de esta escena - nada más lo lleva
+its own copy at runtime,su propia copia en tiempo de ejecución
+counting…,contando…
+worn by this node only,solo lo lleva este nodo
+shared with %d other node,compartido con %d nodo más
+shared with %d other nodes,compartido con %d nodos más
+a material of its own,un material propio
+also worn by,también lo llevan

@@ -4868,3 +4868,19 @@ method,метод
 parameter,параметр
 enum value,значение перечисления
 "Tab or Enter accepts, Escape keeps what you typed","Tab или Enter принимает, Escape оставляет набранное"
+Textures,Текстуры
+Make the effect this node's own,Сделать эффект собственным для этого узла
+This node has its own material now - the dials stop here.,Теперь у этого узла свой материал - регуляторы дальше не идут.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,"%s закрывает экран шейдером %s, а все регуляторы всё ещё в покое - весь экран впустую перерисовывается через шейдер каждый кадр. Скройте его, пока эффект не включится."
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s не носит материала в сцене, поэтому установка %s ни во что не попадает - каждая строка эффекта, нацеленная на него, ничего не делает. Дайте ему ShaderMaterial в инспекторе."
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s носят также %s, а материал - это один объект: каждый регулятор, который крутит эта строка, крутится и у них. Сначала дайте этому узлу собственную копию."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","В «Параметры проекта > Shader Globals» не объявлено %s, поэтому каждый шейдер, который его читает, видит ноль, сколько бы раз ни выполнялась эта строка. Объявите его там."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Эффекты: сцен с материалом - %d, из них с тем, что не покажется во время выполнения - %d."
+kept inside this scene - nothing else wears it,хранится внутри этой сцены - больше его никто не носит
+its own copy at runtime,собственная копия во время выполнения
+counting…,подсчёт…
+worn by this node only,носит только этот узел
+shared with %d other node,общий ещё с %d узлом
+shared with %d other nodes,общий ещё с %d узлами
+a material of its own,собственный материал
+also worn by,также носят

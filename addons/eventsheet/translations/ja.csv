@@ -4868,3 +4868,19 @@ method,メソッド
 parameter,パラメータ
 enum value,列挙値
 "Tab or Enter accepts, Escape keeps what you typed",Tab または Enter で確定、Escape で入力した内容を保持
+Textures,テクスチャ
+Make the effect this node's own,このノード専用のエフェクトにする
+This node has its own material now - the dials stop here.,このノードは自分のマテリアルを持つようになりました - ダイヤルはここで止まります。
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s が %s で画面を覆っていますが、どのダイヤルもまだ静止しています - 画面全体が毎フレーム無駄にシェーダーを通して描き直されます。エフェクトが有効になるまで非表示にしてください。
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.",%s はシーンでマテリアルを持っていないため、%s を設定しても何にも届きません - このノードを狙うエフェクト行はすべて何もしません。インスペクターで ShaderMaterial を与えてください。
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.",%s は %s も身につけており、マテリアルは 1 つのオブジェクトです - この行が回すダイヤルは、それらでも回ります。まずこのノードに自分のコピーを与えてください。
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.",プロジェクト設定 > Shader Globals に %s は宣言されていないため、この行が何度実行されても、それを読むシェーダーはすべてゼロを見ます。そこで宣言してください。
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.",エフェクト: マテリアルを持つシーン %d 件、そのうち実行時に表示されないものが %d 件。
+kept inside this scene - nothing else wears it,このシーンの中に保持 - ほかに着ているものはありません
+its own copy at runtime,実行時に自分のコピー
+counting…,集計中…
+worn by this node only,このノードだけが着用
+shared with %d other node,他の %d 個のノードと共有
+shared with %d other nodes,他の %d 個のノードと共有
+a material of its own,自分専用のマテリアル
+also worn by,ほかの着用

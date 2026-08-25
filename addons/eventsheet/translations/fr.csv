@@ -4868,3 +4868,19 @@ method,méthode
 parameter,paramètre
 enum value,valeur d'énumération
 "Tab or Enter accepts, Escape keeps what you typed","Tab ou Entrée accepte, Échap conserve ce qui est tapé"
+Textures,Textures
+Make the effect this node's own,Donner à ce nœud son propre effet
+This node has its own material now - the dials stop here.,Ce nœud a maintenant son propre matériau - les réglages s'arrêtent ici.
+%s covers the screen with %s and every dial is still at rest - the whole screen redraws through the shader each frame for nothing. Hide it until an effect turns it on.,%s couvre l'écran avec %s et tous les réglages sont encore au repos - tout l'écran est redessiné à travers le shader à chaque image pour rien. Masquez-le jusqu'à ce qu'un effet l'active.
+"%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s ne porte aucun matériau dans la scène, donc régler %s ne touche rien - chaque ligne d'effet qui le vise ne fait rien. Donnez-lui un ShaderMaterial dans l'inspecteur."
+"%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s est aussi porté par %s, et un matériau est un seul objet - chaque réglage que cette ligne tourne tourne aussi pour eux. Donnez d'abord à ce nœud sa propre copie."
+"Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","Paramètres du projet > Shader Globals ne déclare aucun %s, donc chaque shader qui le lit voit zéro, quel que soit le nombre de fois où cette ligne s'exécute. Déclarez-le là."
+"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Effets : %d scène(s) portant un matériau, %d avec quelque chose qui ne s'affichera pas à l'exécution."
+kept inside this scene - nothing else wears it,gardé dans cette scène - rien d'autre ne le porte
+its own copy at runtime,sa propre copie à l'exécution
+counting…,comptage…
+worn by this node only,porté par ce nœud seulement
+shared with %d other node,partagé avec %d autre nœud
+shared with %d other nodes,partagé avec %d autres nœuds
+a material of its own,un matériau à lui
+also worn by,également porté par
