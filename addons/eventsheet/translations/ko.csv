@@ -5005,3 +5005,20 @@ Runs,실행됨
 Stopped,멈춤
 Shown,표시
 Hidden,숨김
+no such animation,그런 애니메이션이 없습니다
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,이 씬에는 %s 라는 애니메이션이 없습니다. 이름을 잘못 쓰면 아무것도 재생되지 않고 알림도 없습니다 - 의도한 것을 고르세요.
+the queue never comes,대기열은 결코 오지 않습니다
+%s s in,%s 초 지점
+frame %d,프레임 %d
+%s s into %s,%s 의 %s 초 지점
+loop,반복
+%s s,%s 초
+%d more in %s,%s 에 %d 개 더
+%d in %s,%s 에 %d 개
+uses,사용
+animations,애니메이션
+%s is not an animation of this scene - the row plays nothing,%s 는 이 씬의 애니메이션이 아닙니다 - 이 행은 아무것도 재생하지 않습니다
+%s loops - the queue never comes,%s 는 반복됩니다 - 대기열은 결코 오지 않습니다
+%s is inside %s (scaled %s) - its own 10 is the world's %s,%s 는 %s 안에 있습니다 (배율 %s) - 자체의 10 은 월드에서 %s 입니다
+%s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s 는 음수 배율로 뒤집혀 있습니다 - 충돌 모양과 레이캐스트도 그림과 함께 뒤집힙니다. 대신 스프라이트를 뒤집으세요
+"%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s 는 (%s, %s) 로 배율이 다르고 회전합니다 - 찌그러집니다. 콜라이더가 아니라 그림을 조절하세요"

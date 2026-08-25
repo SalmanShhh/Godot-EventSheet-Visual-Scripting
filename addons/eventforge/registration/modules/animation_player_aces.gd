@@ -23,15 +23,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place."))
 	descriptors.append(F.make_descriptor("Core", "SeekAnimation", "Seek Animation", ACEDescriptor.ACEType.ACTION, "seek({time}, true)", "", [F.make_param("time", "float", "0.0", "Time", "Seconds from the animation's start to jump to.", "expression")], CAT, "seek animation to {time}s", "AnimationPlayer")
 		.described("Jumps the play head to a time in seconds (and updates the pose immediately) - scrub, restart from a beat, or sync to another clock."))
-	descriptors.append(F.make_descriptor("Core", "QueueAnimation", "Queue Animation", ACEDescriptor.ACEType.ACTION, "queue({animation})", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to play once the current one finishes.", "expression")], CAT, "queue animation {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "QueueAnimation", "Queue Animation", ACEDescriptor.ACEType.ACTION, "queue({animation})", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to play once the current one finishes.", "animation_reference")], CAT, "queue animation {animation}", "AnimationPlayer")
 		.described("Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer."))
 	descriptors.append(F.make_descriptor("Core", "PauseAnimation", "Pause Animation", ACEDescriptor.ACEType.ACTION, "pause()", "", [], CAT, "pause animation", "AnimationPlayer")
 		.described("Freezes the animation at its current position (Play resumes from here) - a hit-pause on a specific frame, or a photo mode."))
-	descriptors.append(F.make_descriptor("Core", "SetAnimationTime", "Set Current Animation", ACEDescriptor.ACEType.ACTION, "current_animation = {animation}", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to make current (assigning it also plays it).", "expression")], CAT, "set current animation to {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "SetAnimationTime", "Set Current Animation", ACEDescriptor.ACEType.ACTION, "current_animation = {animation}", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to make current (assigning it also plays it).", "animation_reference")], CAT, "set current animation to {animation}", "AnimationPlayer")
 		.described("Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments."))
 
 	# ── Conditions ──
-	descriptors.append(F.make_descriptor("Core", "HasAnimation", "Has Animation", ACEDescriptor.ACEType.CONDITION, "has_animation({animation})", "", [F.make_param("animation", "String", "\"attack\"", "Animation", "Clip name to check for.", "expression")], CAT, "has animation {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "HasAnimation", "Has Animation", ACEDescriptor.ACEType.CONDITION, "has_animation({animation})", "", [F.make_param("animation", "String", "\"attack\"", "Animation", "Clip name to check for.", "animation_reference")], CAT, "has animation {animation}", "AnimationPlayer")
 		.described("True when this player owns a clip by that name - guard a Play so a missing animation never errors."))
 
 	# ── Expressions ──
@@ -70,7 +70,46 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	_combo_timing(descriptors)
 	_animation_events(descriptors)
+	_picked_names(descriptors)
 	return descriptors
+
+
+## ── the rows that name an animation the scene really has ────────────────────────────────────────
+##
+## An animation name is a string, and `play("atack")` plays nothing and says nothing. Both rows here
+## take their names from the scene's own list, which is what makes the misspelling impossible to
+## reach the game unnoticed.
+##
+## PLAY THEN is the chain everybody writes by hand: play this, and when it ends play that. Godot
+## spells it `play()` followed by `queue()`, and the row owns both lines so the waiting is not a
+## timer somebody has to guess the length of.
+##
+## PAST A MARKER is the keyframed answer to "which frame is the hit on". A skeletal swing has no
+## frame 3 to click; it has named moments on a timeline, and the moment moves when the animator
+## retimes it - so the row asks the animation where its marker is rather than storing a number.
+static func _picked_names(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "PlayThenQueue", "Play Then", ACEDescriptor.ACEType.ACTION,
+		"play(&{animation})\nqueue(&{next})", "",
+		[
+			F.make_param("animation", "String", "\"attack\"", "Animation",
+				"The clip to play now.", "animation_reference"),
+			F.make_param("next", "String", "\"idle\"", "Then",
+				"The clip that plays the moment the first one ends.", "animation_reference")
+		],
+		CAT, "Play {animation} then {next}", "AnimationPlayer")
+		.described("Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.").featured())
+	descriptors.append(F.make_descriptor("Core", "AnimationPastMarker", "Reached Marker", ACEDescriptor.ACEType.CONDITION,
+		"{target.}current_animation == {animation} and {target.}current_animation_position >= {target.}get_animation({animation}).get_marker_time({marker})", "",
+		[
+			F.make_param("animation", "String", "\"attack\"", "Animation",
+				"The clip whose timeline the moment lives on.", "animation_reference"),
+			F.make_param("marker", "String", "\"impact\"", "Marker",
+				"The named moment on that clip's timeline.", "marker_reference"),
+			F.make_param("target", "String", "", "On node",
+				"Ask another AnimationPlayer instead of this one. Leave blank for this node.", "expression")
+		],
+		CAT, "{animation} has reached {marker}", "AnimationPlayer")
+		.described("True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.").featured())
 
 
 ## ── the two timing tricks every combo game writes ───────────────────────────────────────────────
@@ -126,7 +165,7 @@ static func _animation_events(descriptors: Array[ACEDescriptor]) -> void:
 		"", "frame_changed",
 		[
 			F.make_param("animation", "String", "\"attack\"", "Animation", "The clip the frame belongs to.", "animation_reference"),
-			F.make_param("frame", "String", "3", "Frame", "Which frame of that clip to answer.", "expression")
+			F.make_param("frame", "String", "3", "Frame", "Which frame of that clip to answer.", "animation_frame")
 		],
 		CAT, "On animation {animation} frame {frame}", "AnimatedSprite2D")
 		.described("Runs the moment a sprite animation reaches one frame of one clip - the hit frame, the footstep, the frame a shell drops on. Applying it adds the clip-and-frame question as a condition you can see and edit."))
@@ -134,7 +173,7 @@ static func _animation_events(descriptors: Array[ACEDescriptor]) -> void:
 		"{target.}animation == {animation} and {target.}frame == {frame}", "",
 		[
 			F.make_param("animation", "String", "\"attack\"", "Animation", "The clip to ask about.", "animation_reference"),
-			F.make_param("frame", "String", "3", "Frame", "The frame index to ask about.", "expression"),
+			F.make_param("frame", "String", "3", "Frame", "The frame index to ask about.", "animation_frame"),
 			F.make_param("target", "String", "", "On node", "Ask another AnimatedSprite2D instead of this one. Leave blank for this node.", "expression")
 		],
 		CAT, "animation is {animation} frame {frame}", "AnimatedSprite2D")

@@ -86,6 +86,26 @@ your `.gd` file.
 | Ramped | A value that drifts over time and stops at a limit - see [the note below](#the-ramped-value). | a clamped drift from **Start**, by **Per Minute**, bounded by **Limit** |
 | Tiles | A distance in tiles, sized by the `eventforge/tile_size` project setting (default 16). | `({count} * float(ProjectSettings.get_setting("eventforge/tile_size", 16.0)))` |
 
+### The same four, as whole statements
+
+An expression is a value; most of the time what you actually write is a whole line, whose subject
+appears twice - `hp = clampf(hp, 0, max_hp)`. These four rows are those lines. Each template IS the
+call its echo shows, so a hand-written one opens as the row and saves back byte for byte.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Keep Between | Holds a value inside a range whatever else does to it. | `{var_name} = clampf({var_name}, {low}, {high})` |
+| Move Toward (each tick) | Eases a value toward another by a share of the gap every tick. | `{var_name} = lerp({var_name}, {target}, {weight})` |
+| Rescale | Puts a number measured on one scale onto another, into a value you name. | `{into} = remap({amount}, {in_low}, {in_high}, {out_low}, {out_high})` |
+| Wrap Around | Sends a value round a loop instead of letting it run off the end. | `{var_name} = wrapf({var_name}, {low}, {high})` |
+
+**Each tick is not per second.** Move Toward (each tick) closes a SHARE of the remaining gap every
+frame, so it slows as it arrives and never quite lands - which is what you want for a camera zoom
+settling or a bar catching up. It also moves further on a fast machine than on a slow one. When the
+speed has to be the same everywhere, use **Move Toward (smooth)** instead, which says the same thing
+per second and is frame-rate independent. The row shows the weight as the percentage it is (0.1
+reads "10%"); the file holds the number, because that is what `lerp` takes.
+
 #### The Ramped value
 
 Ramped is the difficulty curve as a number. Its full emitted form is long because it reads the clock and

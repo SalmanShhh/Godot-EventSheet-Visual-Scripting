@@ -98,6 +98,69 @@
   trigger emits not one line of any of it, and the Doctor asks about it once per project - with
   "Never ask again" beside the question, remembered in the project.
 
+### Math and space - the words, with the call in the echo
+
+- **Keep between, Move toward, Rescale, Wrap around.** The four functions every game leans on and
+  the four names beginners bounce off, as whole statements rather than expressions to assemble by
+  hand. Each template IS the call its echo shows, so somebody's hand-written
+  `hp = clampf(hp, 0, max_hp)` opens as the Keep row and saves back byte for byte, and the row
+  dropped from the picker writes exactly the line they would have typed.
+- **10% is a reading, not a second value.** `lerp` takes the fraction and the row emits the
+  fraction; the percentage is how the canvas says 0.1 out loud, through the same lens family that
+  reads a darkness colour as "81% dark". The strip teaches the one thing the shape hides: a share of
+  the gap each tick eases in and never quite arrives, and the frame-rate-independent form of the
+  same idea is the row beside it.
+- **THE UNIT RIDES THE VALUE.** A plain number in an angle field is degrees - there is no unit
+  picker, because the unit is already in what was typed. Radians are not locked out: write `PI/4`,
+  or say it out loud (`1.2 rad`), and the field keeps what you meant with exactly the one conversion
+  that makes it true. The row always SHOWS which unit it ended up meaning, so the sentence and the
+  code can never quietly disagree, and a per-project setting flips what a bare number means for
+  teams that think in radians (what is written after that, never what is already stored).
+- **Every move says whose space it means.** "Move forward 240/s · its own facing" is
+  `position += transform.x * …`; "Move right 20/s · the world's way" is `global_position += …`.
+  Both spellings lift. The 3D leg of the same rule already shipped, whose dropdown is the basis
+  expression itself.
+- **The three turns.** Turn around a point at a rate (the orbit everybody hand-rolls with sine and
+  cosine), Face a target at a top speed (which never overshoots), and Swing by an amount over a time
+  about the node's own origin - which is where the hinge is, and the row says so.
+- **The transform facts a scene can be asked about, said where they bite.** The head names the
+  scaled thing this node sits inside and does the reader's own arithmetic ("its own 10 is the
+  world's 20"), the body mirrored by a negative scale whose shapes and raycasts flip with the art
+  (with the sprite's own flip named as the fix), and the node scaled unevenly that turns and will
+  therefore shear. All three are read from the scene at open, stored nowhere, and gone the moment
+  their cause is.
+
+### Animations - the name is picked, never typed
+
+- **An animation name comes off the scene.** The attached scene lists what really exists - an
+  AnimationPlayer's clips with their lengths and loop modes, an AnimatedSprite's flipbooks with
+  their real frame counts and the named markers on a keyframed timeline - and every animation field
+  is completed from that list, grouped by the node that declares each name and saying how long it
+  runs or that it loops. A name the scene has never heard of goes amber with the nearest real one
+  offered as the fix, because `play("atack")` plays nothing and reports nothing. A name built while
+  the game runs is still typeable, so the shipped free-string rows keep working.
+- **Play X then Y.** One row plays an animation with the next one queued behind it, so the waiting
+  is the engine's own rather than a timer somebody guessed the length of. An animation that LOOPS
+  never finishes, so a queue behind one is never reached - and that is now said while the row is
+  being written, and on the head, rather than found at run time.
+- **The `animations` band.** One line per animation node, naming the clips THIS sheet plays with
+  their lengths and counting the rest ("uses idle loop · swing 0.8 s · 127 more in Anim"). The full
+  list stays one click away; a character with a hundred and thirty-one clips is still a one-line
+  fact.
+- **The frame field is the animation.** A flipbook's frame number now has the strip of its own
+  frames under it - one cell per frame, numbered from 0 the way Godot numbers them, the chosen one
+  lit, hovering a cell shows it large and the arrow keys step one frame. A long strip scrolls. The
+  plain number box never goes away. A keyframed clip has no frames at all, so it never gets a strip:
+  its moments are the named markers on its timeline, and the new "has reached" row asks the
+  animation where its marker is rather than storing a number - retiming it in the Animation panel
+  moves the moment and the row does not change.
+- **`play("attack")` and `queue(&"idle")` open as the rows they are.** Godot takes a plain string
+  or a StringName in both calls and everybody picks by habit; the shipped templates wrote one form
+  of each, so half the animation code in the world stayed a wall of text. Both spellings now lift,
+  and the file gets its own bytes back.
+- New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
+  sheet order, with the row that holds it.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

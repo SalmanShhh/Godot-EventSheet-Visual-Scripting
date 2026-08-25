@@ -5005,3 +5005,20 @@ Runs,Gira
 Stopped,Ferma
 Shown,Visibile
 Hidden,Nascosto
+no such animation,nessuna animazione con questo nome
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,Questa scena non ha nessuna animazione chiamata %s. Un nome sbagliato non riproduce nulla e non segnala nulla - scegli quella che intendevi.
+the queue never comes,la coda non arriva mai
+%s s in,a %s s
+frame %d,fotogramma %d
+%s s into %s,a %s s in %s
+loop,ciclo
+%s s,%s s
+%d more in %s,altre %d in %s
+%d in %s,%d in %s
+uses,usa
+animations,animazioni
+%s is not an animation of this scene - the row plays nothing,%s non e un'animazione di questa scena - la riga non riproduce nulla
+%s loops - the queue never comes,%s va in ciclo - la coda non arriva mai
+%s is inside %s (scaled %s) - its own 10 is the world's %s,%s si trova dentro %s (scalato %s) - i suoi 10 nel mondo sono %s
+%s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s e specchiato da una scala negativa - le sue forme e i suoi raggi si ribaltano con la grafica; ribalta invece lo sprite
+"%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s e scalato (%s, %s) e ruotato - si deformera; scala la grafica, non il collider"

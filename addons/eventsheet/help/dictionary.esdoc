@@ -220,6 +220,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_accelerometer` | [Acceleration](ace:Core/TouchAcceleration) | Touch | Vocabulary |
 | `get_action_strength` | [Action Strength](ace:Core/GetActionStrength) | Input | Vocabulary |
 | `get_actions` | [All Input Actions](ace:Core/InputActionsList) | Input | Vocabulary |
+| `get_animation` | [Reached Marker](ace:Core/AnimationPastMarker) | Animation | Vocabulary |
 | `get_as_text` | 's contents | Object | Object expressions |
 | `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
 | `get_base_control` | [Add Window](ace:Core/AddEditorWindow) | Editor Tools: Panels & menus | Vocabulary |
@@ -296,6 +297,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_locale_language` | [Speak](ace:Core/SpeakText) | Accessibility | Vocabulary |
 | `get_locale_name` | [Current Language Name](ace:Core/CurrentLanguageName) | Translation | Vocabulary |
 | `get_magnetometer` | [Magnetic Field](ace:Core/TouchMagneticField) | Touch | Vocabulary |
+| `get_marker_time` | [Reached Marker](ace:Core/AnimationPastMarker) | Animation | Vocabulary |
 | `get_message` | [Language Has Text For](ace:Core/LanguageHasTextFor) | Translation | Vocabulary |
 | `get_meta` | [Get Metadata](ace:Core/GetMeta) | Metadata | Vocabulary |
 | `get_modified_time` | [Watch Data File](ace:Core/WatchDataFile) | Files | Vocabulary |
@@ -635,7 +637,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `relative` | [Mouse Move Delta (event)](ace:Core/MouseMotionDelta) | Mouse | Vocabulary |
 | `release_focus` | [Release Focus](ace:Core/ReleaseFocus) | UI | Vocabulary |
 | `reload_current_scene` | [Restart Layout](ace:Core/ReloadScene) | Scene | Vocabulary |
-| `remap` | [Remap Range](ace:Core/RemapValue) | Helpers | Vocabulary |
+| `remap` | [Rescale](ace:Core/RescaleInto) | Math & Random | Vocabulary |
 | `remote_path` | [Copy Place To](ace:Core/CopyPlaceTo) | Nodes: Hierarchy | Vocabulary |
 | `remove_absolute` | [Delete File](ace:Core/DeleteFile) | Files | Vocabulary |
 | `remove_at` | [Delete At](ace:Core/ArrayRemoveAt) | Variables: Array | Vocabulary |
@@ -854,7 +856,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `window_set_mode` | [Set Fullscreen Mode](ace:Core/SetFullscreen) | Display | Vocabulary |
 | `window_set_size` | [Set Window Size](ace:Core/SetWindowSize) | Display | Vocabulary |
 | `window_set_vsync_mode` | [Set VSync Enabled](ace:Core/WindowSetVSync) | Game Window | Vocabulary |
-| `wrapf` | [Is Between Angles](ace:Core/IsBetweenAngles) | Math & Random | Vocabulary |
+| `wrapf` | [Wrap Around](ace:Core/WrapAround) | Math & Random | Vocabulary |
 | `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
 | `x` | [Face Direction Of Movement](ace:Core/FaceDirectionOfMovement) | Facing | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |

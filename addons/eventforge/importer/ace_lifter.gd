@@ -21,6 +21,17 @@
 class_name EventSheetACELifter
 extends RefCounted
 
+## The families that recognise a spelling by what it MEANS rather than by its shape, asked in this
+## order before the general reverse index. Each answers `match_line(line)` with the row that spelling
+## is, or {} when it does not claim it - so adding a family here is adding one line, and a family
+## that reads the scene to be sure (a light, a shader dial) simply says nothing when it cannot be.
+const SPELLING_FAMILIES: Array[GDScript] = [
+	preload("res://addons/eventforge/importer/multiplayer_lift.gd"),
+	preload("res://addons/eventforge/importer/lighting_lift.gd"),
+	preload("res://addons/eventforge/importer/effect_lift.gd"),
+	preload("res://addons/eventforge/importer/animation_lift.gd"),
+]
+
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
 ## `_ready` connection map - see _parse_connections/_lift_function).
 const LIFECYCLE_TRIGGERS: Dictionary = {
@@ -2852,31 +2863,18 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if line.strip_edges().begins_with("#"):
 		_append_raw_line(event, pending_raw, blank_box, line)
 		return
-	# The networking spellings the generic index has no words for (`rpc(&"f", …)` reads as
-	# "Call rpc" through it). Asked FIRST so the row that knows what the line is about wins, with the
-	# spelling it matched baked on so emission writes the author's bytes back.
-	var networked: Dictionary = EventForgeMultiplayerLift.match_line(line)
-	if not networked.is_empty():
+	# The families that know what a line is ABOUT are asked first, each with the spelling it matched
+	# baked on so emission writes the author's bytes back. They win over the general index because it
+	# reads a line by its shape alone: `rpc(&"f", …)` is "Call rpc" to it, and a light's `energy = 1.2`
+	# is a property write. A family whose guard cannot confirm what it is looking at (the node is not
+	# a light, the shader has never heard of that dial) simply does not claim the line, which falls
+	# through to the general index and stays whatever it already was.
+	for family: GDScript in SPELLING_FAMILIES:
+		var spelled: Dictionary = family.call("match_line", line)
+		if spelled.is_empty():
+			continue
 		_flush_raw(event, pending_raw, blank_box)
-		event.actions.append(_matched_spelling_action(networked, blank_box))
-		return
-	# The lighting spellings, on the same footing and for the same reason: the row that knows
-	# the node is a light wins, with the author's own spelling baked on. Its guard reads the attached
-	# scene, so a line whose target cannot be shown to be a light falls straight through to the
-	# general index below and stays whatever it was.
-	var lit: Dictionary = EventForgeLightingLift.match_line(line)
-	if not lit.is_empty():
-		_flush_raw(event, pending_raw, blank_box)
-		event.actions.append(_matched_spelling_action(lit, blank_box))
-		return
-	# The shader spellings, on the same footing: a line naming a dial the node's own shader really
-	# declares becomes the picked row that says which dial it is. A line whose node wears no material,
-	# or whose name the shader has never heard of, falls straight through to the general index and
-	# stays the shipped free-string row - which is the honest reading of a name nothing can confirm.
-	var turned: Dictionary = EventForgeEffectLift.match_line(line)
-	if not turned.is_empty():
-		_flush_raw(event, pending_raw, blank_box)
-		event.actions.append(_matched_spelling_action(turned, blank_box))
+		event.actions.append(_matched_spelling_action(spelled, blank_box))
 		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():

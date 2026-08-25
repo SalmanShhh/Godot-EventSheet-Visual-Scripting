@@ -2712,6 +2712,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Current State Is** (`state: String, target: String`) - True while a blend tree's state machine is in the named state - what a landing recovery or an attack window branches on.
 - **Is Between** (`animation: String, from_time: String, to_time: String, target: String`) - True while the play head is inside a slice of one clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on.
 - **Is Animation Frame** (`animation: String, frame: String, target: String`) - True when a sprite is showing one particular frame of one particular clip - the question under On Animation Frame, on its own for a per-tick check.
+- **Reached Marker** (`animation: String, marker: String, target: String`) - True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.
 
 #### Actions
 - **Set Animation Speed** (`scale: float, target: String`) - Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place.
@@ -2723,6 +2724,7 @@ Animation control vocabulary (drive an AnimationPlayer from events).
 - **Set Image** (`path: String, target: String`) - Shows a different image on this sprite.
 - **Play One-Shot Animation** (`name: String, target: String`) - Fires a one-shot animation on a blend tree - a shot, a hit reaction, a wave - over whatever the character is already doing.
 - **Pause For** (`seconds: String, target: String`) - Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.
+- **Play Then** (`animation: String, next: String, target: String`) - Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.
 
 #### Expressions
 - **Animation Position** (`target: String`) - How many seconds into the current animation the play head is - sync an effect to a frame or drive a progress bar.
@@ -3981,6 +3983,15 @@ Loop control vocabulary
 - **Loop Index** - Counts 0, 1, 2… for the current loop pass. Name the loop's index "loop_index" (the Loop index field on For Each / Repeat / While) and read it here.
 - **Loop Index Of** (`name: String`) - Reads a NAMED loop's counter, for nested loops: give the outer loop a distinct index name and read it from inside the inner one.
 
+### Math Words (`res://addons/eventforge/registration/modules/math_words_aces.gd`)
+the four value-shaping words, with the call in the echo.
+
+#### Actions
+- **Keep Between** (`var_name: String, low: String, high: String`) - Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.
+- **Move Toward (each tick)** (`var_name: String, target: String, weight: String`) - Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.
+- **Rescale** (`into: String, amount: String, in_low: String, in_high: String, out_low: String, out_high: String`) - Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.
+- **Wrap Around** (`var_name: String, low: String, high: String`) - Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.
+
 ### Mesh (`res://addons/eventforge/registration/modules/mesh_aces.gd`)
 Mesh vocabulary (build and swap 3D meshes from events).
 
@@ -4504,6 +4515,16 @@ the two lighting objects that are not lights.
 - **Set Ambient Light** (`value: String, target: String`) - Sets how much light the scene has with no light shining on it - the floor under every other light. Writes `Environment.ambient_light_energy`.
 - **Fade The Glow** (`target: String, value: String, seconds: String`) - Walks the world's glow to a new strength over time - a boss room brightening, a spell fading out. One tween, no state to keep.
 - **Make The Environment This Scene's Own** (`target: String`) - Gives this scene its own copy of the environment before anything changes it. Without it, every fog or glow row written at run time changes the shared `.tres` file, so the change follows the player into every other scene that loads it.
+
+### Space Words (`res://addons/eventforge/registration/modules/space_words_aces.gd`)
+every move says WHOSE SPACE it means, and the three turns.
+
+#### Actions
+- **Move Forward** (`speed: String, delta_t: String, target: String`) - Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.
+- **Move (the world's way)** (`direction: String, speed: String, delta_t: String, target: String`) - Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.
+- **Turn Around** (`centre: String, degrees_per_second: String, delta_t: String`) - Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.
+- **Face** (`target: String, degrees_per_second: String, delta_t: String`) - Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.
+- **Swing** (`degrees: String, seconds: String, target: String`) - Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.
 
 ### Spatial (`res://addons/eventforge/registration/modules/spatial_aces.gd`)
 Spatial vocabulary (screen/world, random geometry, surfaces, grids, falloff).

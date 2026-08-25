@@ -5005,3 +5005,20 @@ Runs,运行
 Stopped,停止
 Shown,显示
 Hidden,隐藏
+no such animation,没有这个动画
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,此场景没有名为 %s 的动画。拼错的名字不会播放任何内容，也不会报错 - 请选择你想要的那个。
+the queue never comes,队列永远不会到来
+%s s in,第 %s 秒
+frame %d,第 %d 帧
+%s s into %s,%s 中第 %s 秒
+loop,循环
+%s s,%s 秒
+%d more in %s,%s 中还有 %d 个
+%d in %s,%s 中有 %d 个
+uses,使用
+animations,动画
+%s is not an animation of this scene - the row plays nothing,%s 不是此场景的动画 - 该行不会播放任何内容
+%s loops - the queue never comes,%s 是循环的 - 队列永远不会到来
+%s is inside %s (scaled %s) - its own 10 is the world's %s,%s 位于 %s 内部（缩放 %s） - 它自己的 10 在世界中是 %s
+%s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s 因负缩放而镜像 - 它的碰撞形状和射线也会随图像一起翻转；请改为翻转精灵
+"%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s 被缩放为 (%s, %s) 且发生旋转 - 它会被斜切；请缩放图像而不是碰撞体"

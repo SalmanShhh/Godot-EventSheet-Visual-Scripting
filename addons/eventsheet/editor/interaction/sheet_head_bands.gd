@@ -33,10 +33,18 @@ const BAND_LIT_BY: String = "lit_by"
 const BAND_SHADOWS: String = "shadows"
 const BAND_ENVIRONMENT: String = "environment"
 const BAND_EFFECT: String = "effect"
+const BAND_ANIMATIONS: String = "animations"
+const BAND_TRANSFORM: String = "transform"
 const BAND_MODES: String = "modes"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
+
+## The row that plays one animation with another queued behind it, and the parameter holding the one
+## that plays FIRST. Named here because the head asks whether that first animation loops - a queue
+## behind a looping animation is never reached.
+const CHAIN_ACE: String = "PlayThenQueue"
+const CHAIN_LEAD_PARAM: String = "animation"
 
 ## Reading order: the name leads, then what it extends, then the annotations, then the prose, then
 ## the facts that live outside the file. This is the file's own order with the name promoted, which
@@ -44,7 +52,7 @@ const BAND_ATTACH: String = "attach"
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
-	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT,
+	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
 	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
@@ -59,6 +67,8 @@ const SCENE_BANDS: Dictionary = {
 	BAND_SHADOWS: "shadow_facts",
 	BAND_ENVIRONMENT: "environment",
 	BAND_EFFECT: "effect",
+	BAND_ANIMATIONS: "animations",
+	BAND_TRANSFORM: "transform",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -77,6 +87,8 @@ const LEADERS: Dictionary = {
 	BAND_SHADOWS: "shadows",
 	BAND_ENVIRONMENT: "environment",
 	BAND_EFFECT: "effect",
+	BAND_ANIMATIONS: "animations",
+	BAND_TRANSFORM: "transform",
 	BAND_MODES: "modes",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
@@ -269,7 +281,7 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	var facts: Dictionary = {"synchronizers": [], "spawned_by": [],
-		"lit_by": [], "shadow_facts": [], "environment": [], "effect": []}
+		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [], "transform": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
@@ -283,6 +295,17 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	# dial row into twelve. The sheet's own rows say which nodes have already been given a copy.
 	facts["effect"] = EventSheetSceneEffectFacts.effect_bands(source_path,
 		EventSheetEffectFindings.nodes_given_their_own_copy(sheet))
+	# And what it can PLAY: the animations the rows name, with a count of the rest, per node. The
+	# names the sheet uses are read once here and handed in, because the same list is what says
+	# which of them the scene has never heard of.
+	var animation_values: Array[Dictionary] = EventForgeSheetParamValues.of_hint(sheet,
+		EventSheetCompletions.FIELD_ANIMATION)
+	facts["animations"] = EventSheetSceneAnimations.bands(source_path,
+		_values_of(animation_values), _chain_leads(animation_values))
+	# And the transform facts that are about to bite: this node sitting inside something scaled, a
+	# body mirrored by a negative scale, a node scaled unevenly and turned. A scene with nothing
+	# scaled grows none of them.
+	facts["transform"] = EventSheetSceneTransformFacts.bands(source_path)
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries
@@ -532,3 +555,24 @@ static func _quoted_argument(line: String) -> String:
 	if closing < 0:
 		return ""
 	return line.substr(opening + 1, closing - opening - 1)
+
+
+## The distinct values of a walk's entries, first mention first - the names a band spells.
+static func _values_of(entries: Array[Dictionary]) -> PackedStringArray:
+	var values: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in entries:
+		var value: String = str(entry.get("value", "")).strip_edges()
+		if not value.is_empty() and not values.has(value):
+			values.append(value)
+	return values
+
+
+## The animations of a walk that a row plays with something QUEUED behind them - the first half of a
+## chain row. Read out of the same walk as the names above, because the chain question is about the
+## same rows and paying for a second one would be paying twice for one answer.
+static func _chain_leads(entries: Array[Dictionary]) -> PackedStringArray:
+	var leads: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in entries:
+		if str(entry.get("ace_id", "")) == CHAIN_ACE and str(entry.get("param", "")) == CHAIN_LEAD_PARAM:
+			leads.append(str(entry.get("value", "")))
+	return leads

@@ -28,6 +28,15 @@ const LENS_DARKNESS: String = "darkness"
 ## needs the number it is fading to.
 const LENS_DARKNESS_PERCENT: String = "darkness_percent"
 
+## An angle, said with the unit it really means: a plain number as degrees, a value written in
+## radians as radians. The VALUE stays whatever the author wrote - `deg_to_rad(45.0)`, `PI/4` - so
+## the code is theirs and the reading is the fact.
+const LENS_ANGLE: String = "angle"
+
+## A weight between 0 and 1, said as the percentage it is: `0.1` reads "10% of the way". The number
+## stays the number, because `lerp` takes the fraction and the row must emit what it says.
+const LENS_FRACTION: String = "fraction_percent"
+
 ## A shader dial's name, read behind the lead that says WHAT the name is: `effect.dissolve` rather
 ## than a bare `dissolve` a reader would have to guess is a dial and not a variable. The same device
 ## an autoload's members are read with, and the same one the expression fields accept.
@@ -51,7 +60,20 @@ static func read(lens: String, value: String) -> String:
 			return darkness_percent(value)
 		LENS_EFFECT_DIAL:
 			return effect_dial(value)
+		LENS_ANGLE:
+			return EventForgeAngleUnits.reading(value)
+		LENS_FRACTION:
+			return fraction_percent(value)
 	return value
+
+
+## `0.1` as "10%", `0.25` as "25%". Only a plain number is read: an expression is the author's own
+## and a percentage for it would be a guess at something this cannot work out.
+static func fraction_percent(value: String) -> String:
+	var text: String = value.strip_edges()
+	if not text.is_valid_float():
+		return value
+	return "%s%%" % String.num(text.to_float() * 100.0, 2).trim_suffix("0").trim_suffix("0").trim_suffix(".")
 
 
 ## `dissolve` as `effect.dissolve`. Only a plain name is led: anything else is an expression the
@@ -84,7 +106,12 @@ static func leads_a_name(text: String) -> bool:
 ## Dictionary the registry hands the canvas, so the row builder and the definition share one reading
 ## of the field.
 static func lens_of(parameter_dict: Dictionary) -> String:
-	return str(parameter_dict.get("display_lens", "")).strip_edges()
+	var declared: String = str(parameter_dict.get("display_lens", "")).strip_edges()
+	if not declared.is_empty():
+		return declared
+	# An angle field is an angle field: every one of them wants the same reading, and asking each
+	# descriptor to say so again would be a hundred places for one of them to forget.
+	return LENS_ANGLE if str(parameter_dict.get("hint", "")).strip_edges() == LENS_ANGLE else ""
 
 
 ## `Color("26304d")` as "81%, tinted #26304d" - how dark the layer is, and what colour the dark is.

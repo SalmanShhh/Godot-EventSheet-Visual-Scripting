@@ -59,6 +59,14 @@ extends Resource
 @export var display_lens: String = ""
 
 
+## The same field, set inline and handed back - so a parameter that wants a lens can be written in
+## the descriptor's own argument list rather than pulled out into a variable first, exactly as
+## `described()` and `featured()` are written on a descriptor.
+func with_lens(lens: String) -> ACEParam:
+	display_lens = lens
+	return self
+
+
 ## The label a value should be SHOWN as in a row sentence: the matching option's label when this
 ## param opted into label display, and the value itself otherwise (including a value that matches no
 ## option, which can only mean the row was authored before an option was removed).

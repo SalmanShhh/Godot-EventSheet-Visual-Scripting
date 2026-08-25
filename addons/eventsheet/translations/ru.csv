@@ -5005,3 +5005,20 @@ Runs,Работает
 Stopped,Остановлена
 Shown,Показана
 Hidden,Скрыта
+no such animation,нет такой анимации
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,В этой сцене нет анимации с именем %s. Опечатка ничего не воспроизведёт и ни о чём не сообщит - выберите нужную.
+the queue never comes,очередь никогда не наступит
+%s s in,на %s с
+frame %d,кадр %d
+%s s into %s,на %s с в %s
+loop,цикл
+%s s,%s с
+%d more in %s,ещё %d в %s
+%d in %s,%d в %s
+uses,использует
+animations,анимации
+%s is not an animation of this scene - the row plays nothing,%s не является анимацией этой сцены - строка ничего не воспроизводит
+%s loops - the queue never comes,%s зациклена - очередь никогда не наступит
+%s is inside %s (scaled %s) - its own 10 is the world's %s,%s находится внутри %s (масштаб %s) - его собственные 10 в мире равны %s
+%s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s отражён отрицательным масштабом - его формы и лучи переворачиваются вместе с графикой; лучше отразите спрайт
+"%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s масштабирован (%s, %s) и повёрнут - он будет скошен; масштабируйте графику, а не коллайдер"

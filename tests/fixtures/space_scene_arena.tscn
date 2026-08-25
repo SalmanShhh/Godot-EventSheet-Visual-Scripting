@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/space_scene_arena.gd" id="1_arena"]
+
+[node name="Arena" type="Node2D"]
+
+[node name="Body" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+
+[node name="Arm" type="Node2D" parent="Body"]
+script = ExtResource("1_arena")
+
+[node name="Enemy" type="CharacterBody2D" parent="."]
+scale = Vector2(-1, 1)
+
+[node name="HitBox" type="Area2D" parent="."]
+rotation = 0.5
+scale = Vector2(2, 1)

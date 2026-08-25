@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/animation_scene_hero.gd" id="1_w31ma"]
+
+[sub_resource type="Animation" id="Animation_bvivg"]
+resource_name = "die"
+length = 0.5
+
+[sub_resource type="Animation" id="Animation_7kqv8"]
+resource_name = "idle"
+length = 1.2
+loop_mode = 1
+
+[sub_resource type="Animation" id="Animation_v641b"]
+resource_name = "swing"
+length = 0.8
+markers = [{
+"color": Color(1, 1, 1, 1),
+"name": &"impact",
+"time": 0.35
+}]
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_06oju"]
+_data = {
+&"die": SubResource("Animation_bvivg"),
+&"idle": SubResource("Animation_7kqv8"),
+&"swing": SubResource("Animation_v641b")
+}
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_6yqyd"]
+size = Vector2(16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wfkr1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}],
+"loop": 0,
+"name": &"hurt",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}, {
+"duration": 1.0,
+"texture": SubResource("PlaceholderTexture2D_6yqyd")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
+}]
+
+[node name="Hero" type="Node2D" unique_id=1261587819]
+script = ExtResource("1_w31ma")
+
+[node name="Anim" type="AnimationPlayer" parent="." unique_id=2053419118]
+libraries/ = SubResource("AnimationLibrary_06oju")
+
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=953821298]
+sprite_frames = SubResource("SpriteFrames_wfkr1")
+animation = &"walk"

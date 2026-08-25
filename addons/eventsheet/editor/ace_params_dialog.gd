@@ -410,6 +410,8 @@ func _ensure_hint_factories() -> void:
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"animation_reference": _create_animation_field,
+			"marker_reference": _create_marker_field,
+			"animation_frame": _create_animation_frame_field,
 			"method_reference": _create_method_reference_field,
 			"property_reference": _create_property_reference_field,
 			"physics_layer_2d": _create_physics_layer_2d_field,
@@ -1282,33 +1284,38 @@ func _create_method_reference_field(key: String, default_value: Variant) -> Cont
 		func(name: String) -> String: return str(described.get(name, "")))
 	var edit: LineEdit = _fields.get(key) as LineEdit
 	if edit != null:
-		edit.text_changed.connect(func(_typed: String) -> void: _validate_member_field(edit, names))
-		_validate_member_field(edit, names)
+		var heading: String = EventSheetL10n.translate("no such method")
+		var body: String = EventSheetL10n.translate("This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.")
+		edit.text_changed.connect(func(_typed: String) -> void: _validate_named_field(edit, names, heading, body))
+		_validate_named_field(edit, names, heading, body)
 	return row
 
 
-## Amber when the row names a method the target no longer has - which is what a rename somewhere else
-## does to a typed string, silently, until the game runs. A WARNING and not an error on purpose: the
-## name may be reached some other way, and refusing to save somebody's row over a guess would be
-## worse than saying so. The nearest name is offered as the fix, which is nearly always the rename.
-func _validate_member_field(edit: LineEdit, known: PackedStringArray) -> void:
+## Amber when the row names something the project no longer has - a method after a rename, an
+## animation after a retitle. Which it IS, the caller says in its own words; the RULE is the same
+## everywhere, which is why there is one of these. A WARNING and not an error on purpose: the name
+## may be reached some other way, and refusing to save somebody's row over a guess would be worse
+## than saying so. The nearest name is offered as the fix, which is nearly always the rename.
+func _validate_named_field(edit: LineEdit, known: PackedStringArray, heading: String,
+		body_format: String) -> bool:
 	var typed: String = edit.text.strip_edges()
-	# An expression rather than a plain name (a variable holding one, a call) is not this check's
-	# business - it cannot be looked up, and a warning about it would be noise on every row using one.
+	# An expression rather than a plain name (a variable holding one, a call, a name joined at run
+	# time) is not this check's business - it cannot be looked up, and a warning about it would be
+	# noise on every row using one.
 	if typed.is_empty() or known.has(typed) or not _is_plain_identifier(typed):
 		edit.remove_theme_color_override("font_color")
 		_record_expression_note(edit, "", "", "", "", "")
-		return
+		return false
 	edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
-	var nearest: String = closest_of(typed, known)
-	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING,
-		EventSheetL10n.translate("no such method"),
-		EventSheetL10n.translate("This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.") % typed,
-		"", nearest)
+	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING, heading,
+		body_format % typed, "", closest_of(typed, known))
+	return true
 
 
+## A name this dialog can look up: a bare identifier, or one written as the string literal every
+## animation row takes (`"walk"`, `&"walk"`). Anything else is an expression.
 static func _is_plain_identifier(text: String) -> bool:
-	return RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$").search(text) != null
+	return RegEx.create_from_string("^(&?\"[A-Za-z_][A-Za-z0-9_]*\")|([A-Za-z_][A-Za-z0-9_]*)$").search(text) != null
 
 
 ## The nearest name in a list, within two edits - the same rule the unknown-identifier fix follows,
@@ -2076,33 +2083,125 @@ static func format_quoted_literal(value: String) -> String:
 var animation_scene_root_override: Node = null  # tests inject a tree here
 
 
+## The animation name, PICKED off the scene rather than typed. The scene lists what really exists -
+## an AnimationPlayer's clips, an AnimatedSprite's flipbooks - so the list is grouped by the node
+## that declares each one and every entry says how long it runs, or that it loops. The field stays
+## a free text box: a name built at run time is still typeable, which is what keeps the shipped
+## free-string rows usable. A name the scene has never heard of goes amber with the nearest one
+## offered, because a misspelled animation plays nothing and says nothing.
 func _create_animation_field(key: String, default_value: Variant) -> Control:
-	var container: HBoxContainer = HBoxContainer.new()
-	var name_edit: LineEdit = LineEdit.new()
-	name_edit.text = str(default_value)
-	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.add_child(name_edit)
+	var described: Dictionary = {}
+	var known: PackedStringArray = PackedStringArray()
+	for source: Dictionary in EventSheetSceneAnimations.for_script(_sheet_source_path()):
+		for entry: Variant in (source.get("animations", []) as Array):
+			var animation: Dictionary = entry
+			var quoted: String = format_quoted_literal(str(animation.get("name", "")))
+			known.append(quoted)
+			described[quoted] = "%s · %s" % [EventSheetSceneAnimations.reading(animation),
+				str(source.get("name", ""))]
+	if known.is_empty():
+		known = _live_scene_animations()
+	var row: Control = _create_autocomplete_field(key, Array(known), default_value,
+		func(name: String) -> String: return str(described.get(name, "")))
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit != null and not known.is_empty():
+		edit.text_changed.connect(func(_typed: String) -> void: _judge_animation(edit, known))
+		_judge_animation(edit, known)
+	return row
+
+
+## What can be wrong with an animation name, in the order a reader needs to hear it. The name being
+## one the scene does not have comes first - nothing else matters until it is right. After that comes
+## the one thing the scene can say about a name that IS right: a clip queued behind a LOOPING one is
+## never reached, because `queue` waits for the current animation to finish and a looping animation
+## never finishes. Caught here, at authoring, rather than as a mystery when the game runs.
+func _judge_animation(edit: LineEdit, known: PackedStringArray) -> void:
+	if _validate_named_field(edit, known, EventSheetL10n.translate("no such animation"),
+			EventSheetL10n.translate("This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.")):
+		return
+	# Asked of the DEFINITION rather than of the fields built so far: the chain's second field comes
+	# after this one, so a form still being built has not met it yet and the note would only appear
+	# the second time somebody typed.
+	if _key_of_field(edit) != EventSheetHeadBands.CHAIN_LEAD_PARAM or not _has_param("next"):
+		return
+	var found: Dictionary = EventSheetSceneAnimations.find(
+		EventSheetSceneAnimations.for_script(_sheet_source_path()), edit.text)
+	if found.is_empty() or not bool((found["animation"] as Dictionary).get("loop", false)):
+		return
+	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING,
+		EventSheetL10n.translate("the queue never comes"),
+		EventSheetSceneAnimations.queue_never_comes(
+			str((found["animation"] as Dictionary).get("name", ""))), "", "")
+
+
+## The frame number, with the animation's own frames beside it to pick from. The strip is only ever
+## built for a flipbook that really has frames: a keyframed clip has none, and the field is then the
+## plain number box it always was. Whatever the reader clicks, the row stores the number.
+func _create_animation_frame_field(key: String, default_value: Variant) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	var edit: LineEdit = LineEdit.new()
+	edit.text = str(default_value)
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(edit)
+	column.add_child(edit)
+	_fields[key] = edit
+	var found: Dictionary = EventSheetSceneAnimations.find(
+		EventSheetSceneAnimations.for_script(_sheet_source_path()), _opening_value("animation"))
+	if not found.is_empty():
+		var strip: Control = EventSheetFrameStrip.build(found["animation"],
+			EventSheetSceneAnimations.frames_of(found["source"]), edit)
+		if strip != null:
+			column.add_child(strip)
+	return column
+
+
+## The named moments of the animation the row is about - what a keyframed clip has instead of
+## frames. The animation comes from the row's own sibling field, so the list is never a mix of two
+## clips'; retiming the marker in the Animation panel moves the moment and the row does not change.
+func _create_marker_field(key: String, default_value: Variant) -> Control:
+	var described: Dictionary = {}
+	var known: PackedStringArray = PackedStringArray()
+	var found: Dictionary = EventSheetSceneAnimations.find(
+		EventSheetSceneAnimations.for_script(_sheet_source_path()), _opening_value("animation"))
+	if not found.is_empty():
+		for marker: Variant in ((found["animation"] as Dictionary).get("markers", []) as Array):
+			var quoted: String = format_quoted_literal(str((marker as Dictionary).get("name", "")))
+			known.append(quoted)
+			described[quoted] = EventSheetL10n.translate("%s s in") % String.num(
+				float((marker as Dictionary).get("time", 0.0)), 2)
+	return _create_autocomplete_field(key, Array(known), default_value,
+		func(name: String) -> String: return str(described.get(name, "")))
+
+
+## The animations of the tree a test (or a live editor) hands over, when the sheet is not attached
+## to a scene the reader above can find. The names come back quoted, exactly as the picked ones do.
+func _live_scene_animations() -> PackedStringArray:
 	var scene_root: Node = animation_scene_root_override
 	if scene_root == null and Engine.is_editor_hint():
 		scene_root = EditorInterface.get_edited_scene_root()
-	var known: PackedStringArray = animation_options_from(scene_root)
-	if not known.is_empty():
-		var picker: OptionButton = OptionButton.new()
-		picker.add_item("(animations)")
-		for animation_name: String in known:
-			picker.add_item(animation_name)
-			# Real entries are tagged - position-proof against future separators.
-			picker.set_item_metadata(picker.item_count - 1, animation_name)
-		picker.item_selected.connect(func(index: int) -> void:
-			var tagged: Variant = picker.get_item_metadata(index)
-			if tagged is String:
-				name_edit.text = format_quoted_literal(tagged)
-		)
-		container.add_child(picker)
-	if _dialog is AcceptDialog:
-		(_dialog as AcceptDialog).register_text_enter(name_edit)
-	_fields[key] = name_edit
-	return container
+	var quoted: PackedStringArray = PackedStringArray()
+	for animation_name: String in animation_options_from(scene_root):
+		quoted.append(format_quoted_literal(animation_name))
+	return quoted
+
+
+## True when the row being edited has a parameter by this name at all - asked of the descriptor, so
+## the answer does not depend on how far through building the form we are.
+func _has_param(param_id: String) -> bool:
+	if _definition == null:
+		return false
+	for parameter: Variant in _definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param_id:
+			return true
+	return false
+
+
+## The script the sheet being edited is, which is what every scene reading is asked about.
+func _sheet_source_path() -> String:
+	var sheet: EventSheetResource = _lint_sheet()
+	return str(sheet.external_source_path) if sheet != null else ""
 
 
 ## Every animation name on every AnimationPlayer under root (sorted, deduped) -
@@ -2910,6 +3009,18 @@ func _lint_context_healthy() -> bool:
 	return bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
 
 
+## One committed value with its UNIT settled, for an angle field - and untouched for every other
+## field there is. A plain number is degrees and these templates write the `deg_to_rad` themselves,
+## so a plain number is stored exactly as it was typed; a reader who wrote PI or said "rad" gets the
+## one conversion that makes their own expression true, rather than having their radians silently
+## read as degrees. Nothing is stored twice and nothing is guessed: the value IS the code.
+func _angled(key: String, value: Variant) -> Variant:
+	if not (value is String) or str((_param_dicts.get(key, {}) as Dictionary).get("hint", "")) \
+			!= EventForgeAngleUnits.LENS_HINT:
+		return value
+	return EventForgeAngleUnits.stored(str(value), EventForgeAngleUnits.DEGREES)
+
+
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
@@ -2936,7 +3047,7 @@ func _on_confirmed() -> void:
 func _commit(chain: bool) -> void:
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
-		values[str(key)] = _extract_value(_fields[key])
+		values[str(key)] = _angled(str(key), _extract_value(_fields[key]))
 	_remembered_values[_definition.id] = values.duplicate(true)
 	# Recent values: every committed STRING value joins its parameter's project-wide ring, so the
 	# suggestion combo can offer it next time (bools/checkboxes have nothing worth ringing).

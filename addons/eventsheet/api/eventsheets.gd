@@ -565,6 +565,24 @@ static func sheet_variables(sheet: EventSheetResource) -> Array[Dictionary]:
 	return EventSheetVariableOwners.catalog(sheet)
 
 
+## Every value the sheet's rows hold in a parameter of one HINT, in sheet order - the sheet's own
+## events first, then its functions'. Entries are
+## `{"value", "param", "provider_id", "ace_id", "event"}`.
+##
+## "Which animations does this sheet play", "which groups does it name", "which input actions does
+## it use" are one question asked of a different hint, and this is the one walk that answers all of
+## them: a pack that ships a hint of its own gets the same answer as a builtin one. `distinct` is
+## the same walk with the values deduplicated, first mention first - what a band or a picker wants,
+## where the same name used by six rows is one name.
+static func values_for_hint(sheet: EventSheetResource, hint: String) -> Array[Dictionary]:
+	return EventForgeSheetParamValues.of_hint(sheet, hint)
+
+
+## The distinct values of `values_for_hint`, first mention first.
+static func distinct_values_for_hint(sheet: EventSheetResource, hint: String) -> PackedStringArray:
+	return EventForgeSheetParamValues.distinct(sheet, hint)
+
+
 ## Every function a sheet publishes as a MESSAGE - the ones carrying an `@rpc` annotation, which
 ## is what makes a call travel to the other peers. Entries are
 ## `{"name", "params", "annotation", "words", "note"}`, in declaration order: the function name, its
@@ -2006,9 +2024,14 @@ const MODULE_GUIDE_OVERRIDES := {
 	"keyboard": "Reading-Keyboard-Mouse-And-Gamepad",
 	"loops": "Working-With-Lists",
 	"math_random": "Doing-Math-And-Randomness",
+	# The value-shaping statements (keep between, move toward, rescale, wrap) read beside the
+	# expressions they are the statement forms of, so one guide covers both.
+	"math_words": "Doing-Math-And-Randomness",
 	"metadata": "Finding-And-Rearranging-Nodes",
 	"mouse": "Reading-Keyboard-Mouse-And-Gamepad",
 	"movement": "Making-Things-Move-In-2D",
+	# The moves that name their space and the three turns are 2D movement, whatever else they say.
+	"space_words": "Making-Things-Move-In-2D",
 	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.

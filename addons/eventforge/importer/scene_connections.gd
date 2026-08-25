@@ -217,7 +217,7 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 	var text: String = FileAccess.get_file_as_string(scene_path)
 	if text.is_empty():
 		return nodes
-	var lines: PackedStringArray = text.split("\n")
+	var lines: PackedStringArray = folded(text.split("\n"))
 	# Off the lines already in hand, never off the file again: this is the project's hottest scene
 	# read (the scene view, the object facts, every lighting fact), and re-opening the file for its
 	# `[ext_resource]` table doubled the I/O of every one of them.
@@ -326,7 +326,63 @@ static func resource_paths_in(lines: PackedStringArray) -> Dictionary:
 ## only followed `ExtResource` would say a node wears nothing while the scene plainly shows it does.
 ## Same shape and same rule as the node walk above: values are the raw text the file holds.
 static func sub_resources_of_scene(scene_path: String) -> Dictionary:
-	return sub_resources_in(FileAccess.get_file_as_string(scene_path).split("\n"))
+	return sub_resources_in(folded(FileAccess.get_file_as_string(scene_path).split("\n")))
+
+
+## The file's lines with every value the writer WRAPPED joined back onto its own line. A scene keeps
+## a long value over several lines - a SpriteFrames `animations = [{ … }, { … }]`, an Animation's
+## `markers = [{ … }]`, a dictionary of metadata - and a reader walking raw lines sees the assignment
+## end at `[{` and the rest as orphan text. Joining them here means every reader below gets whole
+## values and none of them grows a second parser to cope. Brackets are counted outside quotes only,
+## so a path or a name holding one cannot unbalance the count.
+static func folded(lines: PackedStringArray) -> PackedStringArray:
+	var joined: PackedStringArray = PackedStringArray()
+	var pending: String = ""
+	var depth: int = 0
+	for line: String in lines:
+		if depth > 0:
+			pending += line.strip_edges()
+			depth += _bracket_depth(line)
+			if depth <= 0:
+				joined.append(pending)
+				pending = ""
+				depth = 0
+			continue
+		var opened: int = _bracket_depth(line) if line.find(" = ") > 0 else 0
+		if opened <= 0:
+			joined.append(line)
+			continue
+		pending = line.strip_edges()
+		depth = opened
+	if not pending.is_empty():
+		joined.append(pending)
+	return joined
+
+
+## How far one line opens or closes the brackets it holds, ignoring anything inside a quoted string.
+##
+## The quote-aware walk below is per-CHARACTER, and this runs on every line of every scene in the
+## project - which is the hottest read there is. So it is only reached when the line's brackets do
+## not already balance by a native count, which almost every line's do: a balanced line cannot be a
+## continuation whatever its quotes hold, and the count is six native calls against a GDScript loop
+## over every character of the file.
+static func _bracket_depth(line: String) -> int:
+	if line.count("[") + line.count("{") + line.count("(") \
+			== line.count("]") + line.count("}") + line.count(")"):
+		return 0
+	var depth: int = 0
+	var quoted: bool = false
+	for index: int in line.length():
+		var character: String = line[index]
+		if character == "\"" and (index == 0 or line[index - 1] != "\\"):
+			quoted = not quoted
+		elif quoted:
+			continue
+		elif character == "[" or character == "{" or character == "(":
+			depth += 1
+		elif character == "]" or character == "}" or character == ")":
+			depth -= 1
+	return depth
 
 
 ## The same table off lines a caller already holds.
