@@ -37,6 +37,10 @@ static func run() -> bool:
 	ok = _test_the_screen_effect() and ok
 	ok = _test_the_fix() and ok
 	ok = _test_the_report() and ok
+	# Dropped on the way out too: a share index left warm here answers questions later tests
+	# never asked - a serial run had verb headers growing "called by" chips their assertions
+	# do not expect, while the sharded runner hid it by putting the tests in separate processes.
+	_fresh()
 	return ok
 
 

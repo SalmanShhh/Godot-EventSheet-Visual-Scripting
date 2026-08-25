@@ -175,6 +175,10 @@ static func run() -> bool:
 	all_passed = _check("the Project Settings hook is connected",
 		dock_source.contains("ProjectSettings.connect(\"settings_changed\", _on_project_settings_changed)"),
 		true) and all_passed
+	# The rebuild above proved clearing works; what it built must not outlive the test. A warm
+	# share index makes later tests' verb headers grow "called by" chips their assertions do
+	# not expect - seen only in a serial run, where every test shares this one process.
+	EventSheetProjectShareIndex.clear_cache()
 	return all_passed
 
 

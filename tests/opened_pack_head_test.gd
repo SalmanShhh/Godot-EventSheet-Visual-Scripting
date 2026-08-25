@@ -30,6 +30,11 @@ const PACK_PATH := "res://eventsheet_addons/fps_controller/fps_controller_behavi
 
 
 static func run() -> bool:
+	# These assertions pin verb headers WITHOUT "called by" chips, which is what a cold share
+	# index renders. Several earlier tests legitimately build that index (the effects Doctor,
+	# the lighting facts, the callers question all do), so the precondition is established
+	# here rather than hoped for - in one serial process, hope reads someone else's cache.
+	EventSheetProjectShareIndex.clear_cache()
 	var ok: bool = true
 	var source: String = FileAccess.open(PACK_PATH, FileAccess.READ).get_as_text()
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK_PATH)

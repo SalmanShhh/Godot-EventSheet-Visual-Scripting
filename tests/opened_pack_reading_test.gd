@@ -19,6 +19,9 @@ extends RefCounted
 
 
 static func run() -> bool:
+	# The pinned headers carry no "called by" chips - a cold share index's rendering. Earlier
+	# tests legitimately build that index, so the cold start is made here, not assumed.
+	EventSheetProjectShareIndex.clear_cache()
 	var ok: bool = true
 
 	# ── A read-only preview: one verb of each kind, one documented hidden helper ──
