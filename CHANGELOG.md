@@ -35,8 +35,12 @@
   the .gd round-trips byte-identically), and making one inert built its words there and then. So the
   one case that reaches 1,500 rows, an opened script, was the one case the laziness never applied
   to. The span builder gets its own pointer at the row's event, which nothing that writes ever looks
-  at. **A 4,000-line script: 11,500 ms -> 7,400 ms to open, and 5,700 ms -> 2,400 ms to rebuild** -
-  and the rebuild is what the canvas pays after every single edit. It now has a budget of its own.
+  at, and the verb a row's body belongs to rides on the row the way its kind already did - so a
+  `return` inside one of the editor's own callbacks still reads as the answer to that callback's
+  question however late its words are built. The one head that COUNTS what the rows recognised, a
+  read-only pack preview's Include bar, still reads them up front, because it is composed while they
+  are being built. **A 4,000-line script: 11,500 ms -> 7,400 ms to open, and 5,700 ms -> 2,400 ms to
+  rebuild** - and the rebuild is what the canvas pays after every single edit. It now has a budget.
 - **A warm read of a file costs nothing now.** Every by-file reader worked out its own
   `path|mtime|size` identity before it could consult its cache, and a size means opening the file -
   so a "cached" answer still cost real I/O, and a row build asking about a shader once per dial per

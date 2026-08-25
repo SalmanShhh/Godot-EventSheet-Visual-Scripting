@@ -3550,7 +3550,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 			if child_row != null:
 				# Mark the subtree BEFORE any span build: a condition-less row inside a verb body must
 				# read "Always" (it runs when the verb is called), not the sheet's "Every Tick".
-				_mark_verb_body(child_row, _current_verb_kind())
+				_mark_verb_body(child_row, _current_verb_kind(), _current_verb_function)
 				# Runs HERE, before the body is made inert: the sub-event pair is derived from the
 				# EventRow the row points at, and an inert row has already dropped that pointer.
 				var body_rows: Array[EventRowData] = [child_row]
@@ -3626,6 +3626,13 @@ func _make_row_inert(row_data: EventRowData) -> void:
 	# Handing the span builder its own pointer keeps both promises: nothing that WRITES can find the
 	# resource, and the words are still built the moment the row is laid out.
 	row_data.reading_resource = row_data.source_resource
+	# The ONE head that counts what the rows recognised - a read-only pack preview's Include bar,
+	# which says how much of the file reads as events and how many shapes it claimed - is composed
+	# while the rows are still being built, so on that sheet the rows have to have been read by then.
+	# A pack is a bounded file and this is its preview. Every other opened file has no such bar and
+	# stays lazy, which is the case worth being lazy for: a two-thousand-line script.
+	if _viewport != null and _viewport._sheet != null and _viewport._sheet.read_only:
+		_ensure_event_spans(row_data)
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)
@@ -3634,11 +3641,17 @@ func _make_row_inert(row_data: EventRowData) -> void:
 ## Flags a row and its whole subtree as living inside a published verb's body, so a condition-less
 ## event reads "Always" (it runs when the verb is called) instead of the sheet-level "Every Tick"
 ## (which is only true of the sheet's own events, since a sheet compiles into _process).
-func _mark_verb_body(row_data: EventRowData, verb_kind: int = EventSheetSentence.VerbKind.ACTION) -> void:
+## The verb itself rides along beside its kind, because two readings need the function and not only
+## what sort of function it is: a `return` inside one of the editor's own callbacks answers that
+## callback's question, and a handler row's menu is the menu of the handler it sits in. Both used to
+## read the verb the walk was inside; the words are built later than that walk now.
+func _mark_verb_body(row_data: EventRowData, verb_kind: int = EventSheetSentence.VerbKind.ACTION,
+		verb_function: EventFunction = null) -> void:
 	row_data.in_verb_body = true
 	row_data.verb_kind = verb_kind
+	row_data.verb_function = verb_function
 	for child: EventRowData in row_data.children:
-		_mark_verb_body(child, verb_kind)
+		_mark_verb_body(child, verb_kind, verb_function)
 
 
 ## True when a published verb's body should render as LIVE, editable event rows. On an AUTHORED sheet (one
@@ -5920,7 +5933,7 @@ func _append_property_body_rows(row: EventRowData, body: String, indent: int, ui
 			return false
 		# Marked BEFORE the spans are resolved: a `return` inside a getter answers with a value, and
 		# only the verb kind recorded here tells the grammar to say "Set return value to".
-		_mark_verb_body(body_row, verb_kind)
+		_mark_verb_body(body_row, verb_kind, _current_verb_function)
 		_mark_property_reading(body_row, "%s_%d" % [uid_base, index])
 		row.children.append(body_row)
 		index += 1
@@ -8965,7 +8978,7 @@ func _append_control_setup_rows(row_data: EventRowData, event_row: EventRow, run
 		member_row.row_uid = stand_in.event_uid
 		# A line that shapes a dialog runs when the dialog is made - "Always", never the sheet-level
 		# "Every Tick", which is what a condition-less row means out at the top and never means here.
-		_mark_verb_body(member_row, EventSheetSentence.VerbKind.ACTION)
+		_mark_verb_body(member_row, EventSheetSentence.VerbKind.ACTION, _current_verb_function)
 		_ensure_subtree_spans(member_row)
 		_make_row_inert(member_row)
 		row_data.children.append(member_row)
@@ -11745,7 +11758,7 @@ func _build_undo_step_rows(event_row: EventRow, anchor_base: String, indent: int
 			body_row.row_uid = "%s_edit%d_%d" % [anchor_base, action_index, built]
 			# A line of the edit runs when the edit runs - "Always", never the sheet's "Every Tick",
 			# which is what a condition-less row means at sheet level and never means in here.
-			_mark_verb_body(body_row, EventSheetSentence.VerbKind.ACTION)
+			_mark_verb_body(body_row, EventSheetSentence.VerbKind.ACTION, _current_verb_function)
 			_ensure_subtree_spans(body_row)
 			_make_row_inert(body_row)
 			rows.append(body_row)
@@ -12985,9 +12998,14 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		event = row_data.reading_resource as EventRow
 	if event != null:
 		# Spans are built LAZILY, long after the walk that knew which published verb owns this row - so
-		# the row carries the answer and puts it back for the duration of the build.
+		# the row carries the answer and puts it back for the duration of the build. Both halves of
+		# it: the KIND (a `return` in a condition answers yes or no) and the verb itself (a `return`
+		# in one of the editor's own callbacks answers that callback's question).
 		var outer_kind: int = _verb_kind_override
+		var outer_verb: EventFunction = _current_verb_function
 		_verb_kind_override = row_data.verb_kind
+		if row_data.verb_function is EventFunction:
+			_current_verb_function = row_data.verb_function as EventFunction
 		_pending_grammar_breakpoint = false
 		_pending_patterns = {}
 		row_data.spans = _build_event_spans(event, row_data.in_verb_body,
@@ -13007,6 +13025,7 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.breakpoint_enabled = true
 			_pending_grammar_breakpoint = false
 		_verb_kind_override = outer_kind
+		_current_verb_function = outer_verb
 		if not row_data.picking_object.is_empty():
 			_apply_picking_note(row_data)
 

@@ -33,6 +33,11 @@ var source_resource: Resource = null
 ## not, on the open and again on every edit. So the pointer the SPAN BUILDER needs lives here, where
 ## nothing that writes ever looks.
 var reading_resource: Resource = null
+## The published verb whose body this row sits in, or null on a row that belongs to the sheet
+## itself. Carried on the row for the same reason `verb_kind` is: the words are built long after the
+## walk that knew which verb owns them, and a `return` inside one of the editor's own callbacks
+## reads as the ANSWER to that callback's question rather than as a plain return.
+var verb_function: Resource = null
 var row_uid: String = ""
 var debug_state: String = ""
 # Set by the viewport from EventSheetDiagnostics: a non-empty message paints a red error
