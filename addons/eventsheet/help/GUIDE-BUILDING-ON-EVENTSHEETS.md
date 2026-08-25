@@ -364,6 +364,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Health | `doctor()` | `Dictionary` | no |
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
+| Health | `scenes_using_resource(resource_path: String, own_scene := "")` - every OTHER scene of the project that loads this file, from ONE indexed scan shared by everything that asks and dropped whole on the editor's filesystem signal. The first ask blocks until the scan finishes; every ask after it is a table lookup | `PackedStringArray` | no |
 | Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` / `row_menu_items_for(resource)` | `void` / `Array[Dictionary]` | no (shows when open) |
 | Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` / `simple_aces()` | `ACEDefinition` / `Array[ACEDefinition]` | no (joins next refresh) |
 | Seams | `param_spec(config: Dictionary)` - normalizes one param/field config: `default` and `default_value` are interchangeable, `options` takes a plain list / a `{value: label}` dictionary / ready-made pairs, and `hint: "comparison"` expands to the whole labeled operator dropdown seeded to `==`. `simple_ace()` and `simple_block_kind()` run every param through it | `Dictionary` | no |
@@ -395,6 +396,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `preload_block_for(asset_path)` - a preload Custom Block row with a safe constant name | `CustomBlockRow` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
+| Seams | `pack_shipped_assets(pack_script_path: String)` - what a pack brings besides its script, as `{shader, scene}` (each `""` when it ships none). DERIVED from the pack's own folder: the one `.gdshader` beside the script is its shader and the one `.tscn` is the scene adding it drops in, so an asset ships by being in the folder with nothing to declare | `Dictionary` | no |
+| Seams | `install_pack_effect(shipped_shader: String, into_folder := "res://effects")` - copies that shader into the author's project and makes sure a material wears it, answering `{ok, shader_path, material_path, created}`. Nothing is ever overwritten, so a second node added later finds the author's edited copy and uses it, and `created` names only what this call really wrote | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |
@@ -842,6 +845,24 @@ EventSheets.register_simple_ace({
 ```
 
 It joins every sheet's picker for the session, so re-register on plugin load. The `id` is a contract the moment a sheet uses it: renaming it breaks saved sheets exactly as renaming an `ace_id` would.
+
+### 28. Ship a shader (or a whole scene) with your pack
+
+**Scenario:** your behavior is a shader effect, so the pack does nothing until a `.gdshader` is in the author's project and a material wearing it is on their node.
+
+You declare none of that. Put the file in the pack's own folder: the one `.gdshader` beside the script is the pack's shader, and the one `.tscn` beside it is the scene that adding the pack drops in instead of a bare node - which is how a pack whose script extends something other than `Node` joins a scene at all.
+
+```gdscript
+var shipped: Dictionary = EventSheets.pack_shipped_assets(
+	"res://eventsheet_addons/hit_flash/hit_flash_behavior.gd")
+# -> {"shader": "res://eventsheet_addons/hit_flash/hit_flash.gdshader", "scene": ""}
+
+var installed: Dictionary = EventSheets.install_pack_effect(str(shipped["shader"]))
+# -> {"ok": true, "shader_path": "res://effects/hit_flash.gdshader",
+#     "material_path": "res://effects/hit_flash_material.tres", "created": [...]}
+```
+
+Adding the pack from the Object bar already does this and dresses the node through the editor's own undo, so Ctrl+Z takes the whole thing back. The two calls are public so your own tooling can do it on its own terms - a setup wizard, or a test installing into `user://`. Nothing is ever overwritten: the copy in `res://effects/` is the author's file from the first add, their edits to it survive every later add, and a node already wearing a `ShaderMaterial` of its own keeps it.
 
 ## 9. Testing Your Extension
 
