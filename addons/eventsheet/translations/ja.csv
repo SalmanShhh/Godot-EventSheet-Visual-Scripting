@@ -4926,3 +4926,82 @@ Bytes,バイト列
 Next Raw Packet,次の生パケット
 "The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.",接続で待っている次の生パケット（バイト列）。読む理由があるのは、自分で生のバイト列を送るゲームだけです - 通常のメッセージがこの経路で届くことはありません。
 Next raw packet,次の生パケット
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.",%s は毎フレーム検索されますが、決して動きません。準備完了時に一度だけ覚えれば、行の読み方は変わりません。
+Remember it once,一度だけ覚える
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.",これはグループ内のすべてのオブジェクトを毎秒60回調べます。頻度を下げるか、何かが変わったときに調べましょう。
+Re-check every %s s,%s 秒ごとに再確認
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.",距離の測定は毎フレーム平方根の計算を伴います。数値と比べるだけなら、二乗した距離を比べても答えは同じで、費用は安く済みます。
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.",このループは 1 フレームで %d 回まわります。Time Slicer ビヘイビアが、指定した予算に従ってその処理を複数フレームに分けます。
+Add the Time Slicer…,Time Slicer を追加…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,こちらは毎フレーム新しいコピーを作り、別の行がそれを解放しています。Object Pool ビヘイビアなら同じコピーを何度も渡し直します。
+Add the Object Pool…,Object Pool を追加…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.",テキストは変わっていなくても毎フレーム書き込まれています。値を変えるイベントの下に移せば、変わったときだけ書き込まれます。
+Fixed - run the game with the profiler to see whether it helped.,修正しました。プロファイラ付きでゲームを実行して、効果があったか確認しましょう。
+"Fixed - the last run never measured this row, so there is nothing to compare.",修正しました。直近の実行ではこの行が一度も計測されなかったため、比べるものがありません。
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,修正しました。現在は 1 回あたり %.2f ms です。比較できる以前の計測はありません。
+Fixed: %.2f -> %.2f ms a fire.,修正: 1 回あたり %.2f -> %.2f ms。
+This did not help: %.2f -> %.2f ms a fire. Put it back?,効果はありませんでした: 1 回あたり %.2f -> %.2f ms。元に戻しますか？
+This did not help: still %.2f ms a fire. Put it back?,効果はありませんでした: 1 回あたり %.2f ms のままです。元に戻しますか？
+%s - run the game with the profiler to see what it saved.,%s - プロファイラ付きでゲームを実行して、どれだけ節約できたか確認しましょう。
+Apply the safe fixes,安全な修正を適用
+Put the fix back,修正を元に戻す
+Remember the node once,ノードを一度だけ覚える
+Ask less often,頻度を下げる
+Optimise this row,この行を最適化
+Optimise this sheet,このシートを最適化
+Apply %d safe fixes,安全な修正を %d 件適用
+WHAT CHANGES,変わるもの
+Now,現在
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,このシートには、無駄にフレームを使っているものはありません。プロファイラ付きでゲームを実行し、ゲームが大きくなったらまた見てください。
+Nothing to do,することはありません
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.",オプティマイザは実行ではなくシートを読みます。毎フレームの処理がないシートは、ゲームを実行したかどうかにかかわらず指摘を受けません。
+ONE AT A TIME,ひとつずつ
+Finding,指摘
+Why not in the batch,一括に入らない理由
+Safe fixes · %d row(s),安全な修正 · %d 行
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.",チェックした修正は、ゲームの振る舞いを今とまったく同じに保ちます。変わるのは出力されるコードだけで、取り消し 1 ステップとして適用されます。下のものは処理の「いつ」を変えるため、ひとつずつ開きます。
+"%d row(s) optimised, as one undo step.",%d 行を最適化しました (取り消し 1 ステップ)。
+Nothing was changed.,何も変更されませんでした。
+"No profiled run has measured this row, so there is no number beside it yet.",この行を計測したプロファイル実行はまだないため、隣に数字はありません。
+The last profiled run measured %.2f ms a fire here.,直近のプロファイル実行では、ここは 1 回あたり %.2f ms でした。
+changes how often the row runs,行が実行される頻度が変わる
+adds a behaviour to the scene,シーンにビヘイビアを追加する
+"a decision about the game, not a line to rewrite",書き換える一行ではなく、ゲームについての判断
+Safe fix,安全な修正
+Changes the timing,タイミングが変わる
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.",ゲームの振る舞いは今とまったく同じです。変わるのは出力される行だけで、Ctrl+Z で元に戻ります。行の読み方も変わりません。
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.",こちらは処理の「いつ」を変えるため、単独で適用し、その効果は次のプロファイル実行で計測します。
+Jump to this row,この行へ移動
+Watch %s,%s を監視
+Costs In The Sheet,シート上のコスト
+Run With Profiler,プロファイラ付きで実行
+Clear Measured Costs,計測したコストを消去
+Optimise This Sheet…,このシートを最適化…
+⏱ Run with profiler,⏱ プロファイラ付きで実行
+Put it back,元に戻す
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask",なぜ実行されなかった？ まずゲームを実行してから聞いてください
+There is nothing recorded to put back on this row.,この行には元に戻せる記録がありません。
+"%s is declared and nothing uses it: no group runs in it, and no row goes to it.",%s は宣言されていますが、どこにも使われていません。この中で動くグループも、ここへ移る行もありません。
+Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.,%s へ移る行はありますが、そこから出る行がひとつもありません。このモードに入ったプレイヤーは出られません。
+Name at least one mode.,モードを少なくとも 1 つ指定してください。
+Edit modes,モードを編集
+Edit modes…,モードを編集…
+%d mode(s) declared - groups can now say which one they run in.,モードを %d 個宣言しました。グループはどのモードで動くかを言えるようになりました。
+Every mode,すべてのモード
+"These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.",これらのイベントは、ゲームが何をしていても動きます。ポーズメニュー自身の行や、モードのないゲームに向いています。
+These events run only while the game is in %s. Every row inside stops asking for itself.,これらのイベントは、ゲームが %s のあいだだけ動きます。中の行はそれぞれ自分で尋ねる必要がなくなります。
+modes,モード
+The events in this group run only while the game is in this mode - right-click the head to change it.,このグループのイベントは、ゲームがこのモードのあいだだけ動きます。ヘッダを右クリックで変更できます。
+the %s mode,%s モード
+Runs in,動くモード
+Playing,プレイ中
+Paused,一時停止
+Modes,モード
+Starts in,開始モード
+Policy for,対象モード
+Runs,動く
+Stopped,止まる
+Shown,表示
+Hidden,非表示

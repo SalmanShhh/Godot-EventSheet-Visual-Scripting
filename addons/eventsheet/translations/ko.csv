@@ -4926,3 +4926,82 @@ Bytes,바이트
 Next Raw Packet,다음 원시 패킷
 "The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.",연결에서 기다리는 다음 원시 패킷(바이트). 스스로 원시 바이트를 보내는 게임만 읽을 이유가 있습니다 - 일반 메시지는 결코 이 길로 도착하지 않습니다.
 Next raw packet,다음 원시 패킷
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.",%s 은(는) 매 프레임 검색되지만 절대 움직이지 않습니다. 준비 시점에 한 번만 기억하면 행은 그대로 읽힙니다.
+Remember it once,한 번만 기억하기
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.","이것은 그룹의 모든 오브젝트를 초당 60번 살펴봅니다. 덜 자주 묻거나, 무언가 바뀔 때 물어보세요."
+Re-check every %s s,%s초마다 다시 확인
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.",거리를 재면 매 프레임 제곱근 계산이 듭니다. 숫자와 비교만 한다면 제곱한 거리끼리 비교해도 답은 같고 비용은 적습니다.
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.",이 반복문은 한 프레임에 %d번 돕니다. Time Slicer 비헤이비어가 정해 둔 예산에 맞춰 그 작업을 여러 프레임에 나눕니다.
+Add the Time Slicer…,Time Slicer 추가…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,이 행은 매 프레임 새 복사본을 만들고 다른 행이 그것을 해제합니다. Object Pool 비헤이비어는 같은 복사본을 다시 내어 줍니다.
+Add the Object Pool…,Object Pool 추가…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.",텍스트는 바뀌지 않아도 매 프레임 기록됩니다. 값을 바꾸는 이벤트 아래로 옮기면 바뀔 때마다 한 번씩만 기록됩니다.
+Fixed - run the game with the profiler to see whether it helped.,고쳤습니다. 프로파일러로 게임을 실행해 효과가 있었는지 확인하세요.
+"Fixed - the last run never measured this row, so there is nothing to compare.",고쳤습니다. 마지막 실행에서 이 행이 한 번도 측정되지 않아 비교할 값이 없습니다.
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,고쳤습니다. 지금은 1회당 %.2f ms입니다. 비교할 이전 측정값은 없었습니다.
+Fixed: %.2f -> %.2f ms a fire.,수정: 1회당 %.2f -> %.2f ms.
+This did not help: %.2f -> %.2f ms a fire. Put it back?,효과가 없었습니다: 1회당 %.2f -> %.2f ms. 되돌릴까요?
+This did not help: still %.2f ms a fire. Put it back?,효과가 없었습니다: 여전히 1회당 %.2f ms입니다. 되돌릴까요?
+%s - run the game with the profiler to see what it saved.,%s - 프로파일러로 게임을 실행해 얼마나 아꼈는지 확인하세요.
+Apply the safe fixes,안전한 수정 적용
+Put the fix back,수정 되돌리기
+Remember the node once,노드를 한 번만 기억하기
+Ask less often,덜 자주 묻기
+Optimise this row,이 행 최적화
+Optimise this sheet,이 시트 최적화
+Apply %d safe fixes,안전한 수정 %d건 적용
+WHAT CHANGES,무엇이 바뀌는가
+Now,지금
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,"이 시트에는 쓰지 않아도 될 프레임을 쓰는 것이 없습니다. 프로파일러로 게임을 실행하고, 게임이 커진 뒤에 다시 보세요."
+Nothing to do,할 일 없음
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.",옵티마이저는 실행이 아니라 시트를 읽습니다. 매 프레임 작업이 없는 시트는 게임을 실행했든 아니든 지적이 나오지 않습니다.
+ONE AT A TIME,하나씩
+Finding,발견
+Why not in the batch,일괄 적용에 없는 이유
+Safe fixes · %d row(s),안전한 수정 · %d행
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.","체크한 수정은 게임의 동작을 지금과 똑같이 유지합니다. 바뀌는 것은 출력되는 코드뿐이며, 실행 취소 한 단계로 적용됩니다. 아래 항목들은 일이 일어나는 시점을 바꾸므로 하나씩 엽니다."
+"%d row(s) optimised, as one undo step.",%d행을 최적화했습니다 (실행 취소 한 단계).
+Nothing was changed.,아무것도 바뀌지 않았습니다.
+"No profiled run has measured this row, so there is no number beside it yet.",이 행을 측정한 프로파일 실행이 없어 아직 옆에 숫자가 없습니다.
+The last profiled run measured %.2f ms a fire here.,마지막 프로파일 실행에서 여기는 1회당 %.2f ms였습니다.
+changes how often the row runs,행이 실행되는 빈도가 바뀜
+adds a behaviour to the scene,씬에 비헤이비어를 추가함
+"a decision about the game, not a line to rewrite",고쳐 쓸 한 줄이 아니라 게임에 대한 결정
+Safe fix,안전한 수정
+Changes the timing,타이밍이 바뀜
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.",게임의 동작은 지금과 완전히 같습니다. 바뀌는 것은 출력되는 줄뿐이고 Ctrl+Z로 되돌릴 수 있습니다. 행이 읽히는 방식도 그대로입니다.
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.","이 항목은 작업이 일어나는 시점을 바꾸므로 단독으로 적용하고, 효과는 다음 프로파일 실행에서 측정합니다."
+Jump to this row,이 행으로 이동
+Watch %s,%s 감시
+Costs In The Sheet,시트의 비용
+Run With Profiler,프로파일러로 실행
+Clear Measured Costs,측정된 비용 지우기
+Optimise This Sheet…,이 시트 최적화…
+⏱ Run with profiler,⏱ 프로파일러로 실행
+Put it back,되돌리기
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask",왜 실행되지 않았나? 먼저 게임을 실행한 뒤에 물어보세요
+There is nothing recorded to put back on this row.,이 행에는 되돌릴 수 있는 기록이 없습니다.
+"%s is declared and nothing uses it: no group runs in it, and no row goes to it.","%s 은(는) 선언되어 있지만 아무도 쓰지 않습니다. 이 안에서 도는 그룹도, 이리로 가는 행도 없습니다."
+Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.,%s(으)로 가는 행은 있지만 거기서 나오는 행이 하나도 없습니다. 이 모드에 도달한 플레이어는 갇힙니다.
+Name at least one mode.,모드를 최소한 하나는 지정하세요.
+Edit modes,모드 편집
+Edit modes…,모드 편집…
+%d mode(s) declared - groups can now say which one they run in.,모드를 %d개 선언했습니다. 이제 그룹이 어느 모드에서 도는지 말할 수 있습니다.
+Every mode,모든 모드
+"These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.",이 이벤트들은 게임이 무엇을 하든 실행됩니다. 일시정지 메뉴 자체의 행이나 모드가 없는 게임에 알맞습니다.
+These events run only while the game is in %s. Every row inside stops asking for itself.,이 이벤트들은 게임이 %s일 때만 실행됩니다. 안의 모든 행은 스스로 묻기를 그만둡니다.
+modes,모드
+The events in this group run only while the game is in this mode - right-click the head to change it.,이 그룹의 이벤트는 게임이 이 모드일 때만 실행됩니다. 머리 행을 오른쪽 클릭해 바꾸세요.
+the %s mode,%s 모드
+Runs in,실행 모드
+Playing,플레이
+Paused,일시정지
+Modes,모드
+Starts in,시작 모드
+Policy for,정책 대상
+Runs,실행됨
+Stopped,멈춤
+Shown,표시
+Hidden,숨김

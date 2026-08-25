@@ -41,6 +41,7 @@ const FIELD_SIGNAL := "signal_reference"
 ## the cache keys on the whole kind, so both are held and neither is a guess.
 const FIELD_METHOD := "method_reference"
 const FIELD_GROUP := "group_reference"
+const FIELD_MODE := "mode_reference"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
 const FIELD_SHADER_DIAL := "shader_dial"
@@ -204,6 +205,8 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _method_entries(sheet, argument)
 		FIELD_GROUP:
 			return _group_entries()
+		FIELD_MODE:
+			return _mode_entries(sheet)
 		FIELD_INPUT_ACTION:
 			return _input_action_entries()
 		FIELD_NODE:
@@ -313,6 +316,21 @@ static func _signal_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 
 ## Every node group the project declares plus the ones the open scene uses, each with how many
 ## nodes of that scene are in it.
+## The game's declared modes, as the enum members a row stores, with the word each one reads as.
+## Read from the sheet that declares them or, for every other sheet, from the project's autoloads -
+## the same answer the parameter dialog's dropdown offers, through the one seam.
+static func _mode_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for member: String in EventSheetModeFacts.project_members(sheet):
+		var word: String = EventSheetModeFacts.word_for(member)
+		entries.append({
+			"text": EventSheetModeFacts.member_for(word),
+			"detail": word,
+			"kind": KIND_ENUM,
+		})
+	return entries
+
+
 static func _group_entries() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	var scene_root: Node = _scene_root()

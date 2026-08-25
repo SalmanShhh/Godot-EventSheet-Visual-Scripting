@@ -280,6 +280,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Procedural": "FastNoiseLite",
 	"Rendering": "Environment",
 	"Run Context": "PlayScene",
+	# The game's own mode is not a class the engine has an icon for, so it borrows the one every
+	# state machine in the editor wears: the graph node a state IS.
+	"Game State": "GraphNode",
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",

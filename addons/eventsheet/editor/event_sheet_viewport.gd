@@ -1563,6 +1563,11 @@ var show_event_numbers: bool = true
 ## only decides whether they are drawn.
 var show_hit_counts: bool = false
 
+## Costs In The Sheet (View menu, SHIPS OFF): the same gutter chip, showing the profiled run's
+## milliseconds per fire instead of the fire count. One overlay, two numbers, one place to look -
+## and the same rule as above: with both flags false the gutter is what it always was.
+var show_costs: bool = false
+
 ## How much of a variable row is drawn: the sentence alone, the sentence with the declaration
 ## echoed at the right edge (the shipped default), or the declaration as the whole row. A View-menu
 ## dial, per view, never a row on the sheet; Simple Mode pins it to the sentence.
@@ -1958,6 +1963,7 @@ func _draw() -> void:
 	_renderer.show_event_numbers = show_event_numbers
 	# Same once-per-frame rule as the numbers above: the hit-count lens is constant across a frame.
 	_renderer.show_hit_counts = show_hit_counts
+	_renderer.show_costs = show_costs
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")
@@ -3579,7 +3585,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	# left behind - the one-off form of the hit-count lens. Silent unless a traced run has actually
 	# streamed: an unknown count is never dressed up as a zero.
 	if bool(hit.get("gutter", false)) and hovered_error_row != null and hovered_error_row.source_resource is EventRow:
-		var hit_count_hover: String = EventSheetTraceHitCounts.tooltip_for(
+		var hit_count_hover: String = EventSheetRunProfile.tooltip_for(
 			(hovered_error_row.source_resource as EventRow).event_uid, hovered_error_row.event_number)
 		if not hit_count_hover.is_empty():
 			return hit_count_hover

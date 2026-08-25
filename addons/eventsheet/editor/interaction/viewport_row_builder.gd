@@ -97,6 +97,7 @@ const NOTE_MARK := "⚠"
 const FINDINGS_MULTIPLAYER := "multiplayer"
 const FINDINGS_LIGHTING := "lighting"
 const FINDINGS_EFFECTS := "effects"
+const FINDINGS_PERFORMANCE := "performance"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -6107,6 +6108,22 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
+	# And which MODE of the game it runs in, the same way and for the same reason: one muted word,
+	# said only when the answer is not "every one of them".
+	var runs_in: String = EventSheetGroupFacts.runs_in_word(group)
+	if not runs_in.is_empty():
+		spans.append(
+			_make_span(
+				runs_in,
+				SemanticSpan.SpanType.COMMENT,
+				{
+					"line_index": 0,
+					"group_runs_in": true,
+					"text_color": reading_style.muted_text_color,
+					"hover_note": EventSheetL10n.translate("The events in this group run only while the game is in this mode - right-click the head to change it.")
+				}
+			)
+		)
 	# The line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.
@@ -6358,6 +6375,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	for note_row: EventRowData in _build_finding_note_rows(
 			EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row),
 			row_data.row_uid, indent + 1):
+		row_data.children.append(note_row)
+	# And what this row spends every frame, with the receipt of any fix already applied to it. Both
+	# hang here ONLY while the costs lens is on: a sheet nobody asked about performance grows no
+	# notes about it, which is the same rule the gutter chips live under.
+	for note_row: EventRowData in _build_performance_note_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
 	# A `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
@@ -8875,6 +8897,8 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 	if not _sheet_findings_cache.has(family):
 		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
 		match family:
+			FINDINGS_PERFORMANCE:
+				_sheet_findings_cache[family] = EventSheetPerformanceFindings.findings(sheet)
 			FINDINGS_LIGHTING:
 				_sheet_findings_cache[family] = EventSheetLightingFindings.findings(sheet)
 			FINDINGS_EFFECTS:
@@ -8912,6 +8936,34 @@ func _build_finding_note_rows(found: Array[Dictionary], uid: String, indent: int
 				"variable_note_param": str(finding.get("param", ""))
 			}, false))
 	return rows
+
+
+## What this row spends, said under it: the optimiser's findings about it, and - once a fix has been
+## applied - the receipt saying what that fix actually did. Both only while the costs lens is on.
+##
+## The receipt comes FIRST: a reader who just changed something wants the answer to "did that work"
+## before they are offered anything else to change.
+func _build_performance_note_rows(event_row: EventRow, uid: String, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if event_row == null or _viewport == null or not bool(_viewport.get("show_costs")):
+		return rows
+	var sheet: EventSheetResource = _viewport._sheet
+	var sheet_path: String = "" if sheet == null else str(sheet.external_source_path)
+	var receipt: String = EventSheetOptimiserReceipts.reading(sheet_path, event_row.event_uid)
+	if not receipt.is_empty():
+		rows.append(_build_variable_note_row(uid, indent, receipt,
+			EventSheetL10n.translate("Put it back") if EventSheetOptimiserReceipts.disappointed(sheet_path, event_row.event_uid) else "",
+			{"variable_note_fix": FIX_PUT_BACK, "variable_note_event": event_row,
+				"variable_note_name": ""}, false))
+	rows.append_array(_build_finding_note_rows(
+		EventSheetPerformanceFindings.for_event(_sheet_findings(FINDINGS_PERFORMANCE), event_row),
+		uid, indent))
+	return rows
+
+
+## The fix id the receipt note's button carries. It belongs to the optimiser, not to a family of
+## findings, which is why it is named here beside the note that offers it.
+const FIX_PUT_BACK := "put_the_fix_back"
 
 
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:

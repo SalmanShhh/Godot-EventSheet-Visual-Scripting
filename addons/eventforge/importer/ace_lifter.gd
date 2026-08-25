@@ -885,6 +885,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 		group.expanded = not group.collapsed
 		group.runtime_toggleable = bool(fields.get("toggleable", false))
 		group.runs_on = str(fields.get("runs_on", ""))
+		group.runs_in = str(fields.get("runs_in", ""))
 		groups[slug] = group
 		parent_of[slug] = str(fields.get("parent", ""))
 	var output: Array = []
@@ -2326,19 +2327,30 @@ static var _group_runs_on: Dictionary = {}
 ## every expression below passes through untouched.
 static func _note_group_guards(source: String) -> void:
 	_group_runs_on = {}
-	if not source.contains("runs_on=\""):
+	if not source.contains("runs_on=\"") and not source.contains("runs_in=\""):
 		return
 	var registry: Dictionary = _recover_group_declarations(source)
 	for slug: String in registry:
 		var walk: String = slug
 		var seen: Dictionary = {}
+		# Both answers ride the same walk up the tree, each taken from the NEAREST ancestor that
+		# gives one - the rule the compiler follows on the way down - and joined in the order the
+		# compiler joins them: who runs it, then which mode.
+		var found: Dictionary = {"runs_on": "", "runs_in": ""}
 		while not walk.is_empty() and registry.has(walk) and not seen.has(walk):
 			seen[walk] = true
-			var guard: String = EventGroup.runs_on_guard(str((registry[walk] as Dictionary).get("runs_on", "")))
-			if not guard.is_empty():
-				_group_runs_on[slug] = guard
-				break
-			walk = str((registry[walk] as Dictionary).get("parent", ""))
+			var declared: Dictionary = registry[walk]
+			if str(found["runs_on"]).is_empty():
+				found["runs_on"] = EventGroup.runs_on_guard(str(declared.get("runs_on", "")))
+			if str(found["runs_in"]).is_empty():
+				found["runs_in"] = EventGroup.runs_in_guard(str(declared.get("runs_in", "")))
+			walk = str(declared.get("parent", ""))
+		var terms: PackedStringArray = PackedStringArray()
+		for key: String in ["runs_on", "runs_in"]:
+			if not str(found[key]).is_empty():
+				terms.append(str(found[key]))
+		if not terms.is_empty():
+			_group_runs_on[slug] = " and ".join(terms)
 
 
 ## The runs_on guard each of a handler's lifted events sits behind, keyed by the row it guards.

@@ -4926,3 +4926,82 @@ Bytes,Octets
 Next Raw Packet,Prochain paquet brut
 "The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.","Le prochain paquet brut en attente sur la connexion, sous forme d'octets. Seul un jeu qui envoie lui-même des octets bruts a une raison de le lire - les messages ordinaires n'arrivent jamais par cette voie."
 Next raw packet,Prochain paquet brut
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.","%s est recherché à chaque image et ne bouge jamais. Mémorisez-le une seule fois, au démarrage, et la ligne se lit pareil."
+Remember it once,Le mémoriser une fois
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.","Ceci examine chaque objet du groupe, soixante fois par seconde. Demandez moins souvent, ou demandez quand quelque chose change."
+Re-check every %s s,Revérifier toutes les %s s
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.","Mesurer une distance coûte une racine carrée par image. Si vous la comparez seulement à un nombre, comparer les distances au carré répond pareil pour moins cher."
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.","%d tours de cette boucle se font en une seule image. Le comportement Time Slicer étale ce travail sur plusieurs, selon un budget que vous fixez."
+Add the Time Slicer…,Ajouter le Time Slicer…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,Ceci crée une nouvelle copie à chaque image pendant qu'une autre ligne en libère une. Le comportement Object Pool redistribue les mêmes copies à la place.
+Add the Object Pool…,Ajouter l'Object Pool…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.","Le texte est écrit à chaque image, même s'il n'a pas changé. Déplacez ceci sous l'événement qui change la valeur et il sera écrit une fois par changement."
+Fixed - run the game with the profiler to see whether it helped.,Corrigé - lancez le jeu avec le profileur pour voir si cela a aidé.
+"Fixed - the last run never measured this row, so there is nothing to compare.","Corrigé - la dernière exécution n'a jamais mesuré cette ligne, il n'y a donc rien à comparer."
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,Corrigé - cela coûte maintenant %.2f ms par déclenchement ; il n'y avait aucune mesure avant pour comparer.
+Fixed: %.2f -> %.2f ms a fire.,Corrigé : %.2f -> %.2f ms par déclenchement.
+This did not help: %.2f -> %.2f ms a fire. Put it back?,Cela n'a pas aidé : %.2f -> %.2f ms par déclenchement. Revenir en arrière ?
+This did not help: still %.2f ms a fire. Put it back?,Cela n'a pas aidé : toujours %.2f ms par déclenchement. Revenir en arrière ?
+%s - run the game with the profiler to see what it saved.,%s - lancez le jeu avec le profileur pour voir ce que cela a économisé.
+Apply the safe fixes,Appliquer les correctifs sûrs
+Put the fix back,Annuler le correctif
+Remember the node once,Mémoriser le nœud une fois
+Ask less often,Demander moins souvent
+Optimise this row,Optimiser cette ligne
+Optimise this sheet,Optimiser cette feuille
+Apply %d safe fixes,Appliquer %d correctifs sûrs
+WHAT CHANGES,CE QUI CHANGE
+Now,Maintenant
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,Rien dans cette feuille ne dépense une image qu'il n'aurait pas dû. Lancez le jeu avec le profileur et regardez à nouveau quand le jeu aura grandi.
+Nothing to do,Rien à faire
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.","L'optimiseur lit la feuille, pas l'exécution : une feuille sans travail par image n'obtient aucun constat, que le jeu ait été lancé ou non."
+ONE AT A TIME,UNE À LA FOIS
+Finding,Constat
+Why not in the batch,Pourquoi pas dans le lot
+Safe fixes · %d row(s),Correctifs sûrs · %d ligne(s)
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.","Chaque correctif coché laisse le jeu se comporter exactement comme maintenant - seul le code émis change. Ils s'appliquent en UNE seule étape d'annulation. Ceux du dessous changent QUAND une chose arrive, ils s'ouvrent donc un par un."
+"%d row(s) optimised, as one undo step.","%d ligne(s) optimisée(s), en une seule étape d'annulation."
+Nothing was changed.,Rien n'a été changé.
+"No profiled run has measured this row, so there is no number beside it yet.","Aucune exécution profilée n'a mesuré cette ligne, il n'y a donc pas encore de chiffre à côté."
+The last profiled run measured %.2f ms a fire here.,La dernière exécution profilée a mesuré ici %.2f ms par déclenchement.
+changes how often the row runs,change la fréquence d'exécution de la ligne
+adds a behaviour to the scene,ajoute un comportement à la scène
+"a decision about the game, not a line to rewrite","une décision sur le jeu, pas une ligne à réécrire"
+Safe fix,Correctif sûr
+Changes the timing,Change le moment
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.","Le jeu se comporte exactement comme maintenant - seule la ligne émise change, et Ctrl+Z la remet. La ligne se lit toujours pareil."
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.",Celui-ci change QUAND le travail se produit ; il est donc appliqué seul et son effet est mesuré à la prochaine exécution profilée.
+Jump to this row,Aller à cette ligne
+Watch %s,Surveiller %s
+Costs In The Sheet,Coûts dans la feuille
+Run With Profiler,Lancer avec le profileur
+Clear Measured Costs,Effacer les coûts mesurés
+Optimise This Sheet…,Optimiser cette feuille…
+⏱ Run with profiler,⏱ Lancer avec le profileur
+Put it back,Revenir en arrière
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask","Pourquoi cela ne s'est-il pas déclenché ? Lancez d'abord le jeu, puis demandez"
+There is nothing recorded to put back on this row.,Rien n'est enregistré à annuler sur cette ligne.
+"%s is declared and nothing uses it: no group runs in it, and no row goes to it.","%s est déclaré et rien ne l'utilise : aucun groupe n'y tourne, et aucune ligne n'y va."
+Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.,Des lignes vont vers %s et aucune n'en sort jamais. Un joueur qui atteint ce mode y reste bloqué.
+Name at least one mode.,Nommez au moins un mode.
+Edit modes,Modifier les modes
+Edit modes…,Modifier les modes…
+%d mode(s) declared - groups can now say which one they run in.,%d mode(s) déclaré(s) - les groupes peuvent maintenant dire dans lequel ils tournent.
+Every mode,Tous les modes
+"These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.","Ces événements tournent quoi que fasse le jeu. C'est ce qu'il faut pour les lignes d'un menu de pause, et pour un jeu sans modes."
+These events run only while the game is in %s. Every row inside stops asking for itself.,Ces événements ne tournent que pendant que le jeu est en %s. Chaque ligne à l'intérieur cesse de le demander elle-même.
+modes,modes
+The events in this group run only while the game is in this mode - right-click the head to change it.,Les événements de ce groupe ne tournent que pendant que le jeu est dans ce mode - clic droit sur l'en-tête pour le changer.
+the %s mode,le mode %s
+Runs in,Tourne dans
+Playing,En jeu
+Paused,En pause
+Modes,Modes
+Starts in,Commence en
+Policy for,Règle pour
+Runs,Tourne
+Stopped,Arrêtée
+Shown,Affichée
+Hidden,Masquée

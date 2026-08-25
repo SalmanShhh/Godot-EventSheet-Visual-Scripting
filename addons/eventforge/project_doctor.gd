@@ -103,6 +103,7 @@ static func run() -> Dictionary:
 	check_imported_rows(sheet_paths, findings)
 	check_task_notes(findings)
 	check_menu_ids(findings)
+	check_game_modes(findings)
 	check_animation_method_tracks(findings)
 	check_plugin_reading_health(findings)
 	check_facing_follows(sheet_paths, findings)
@@ -117,6 +118,7 @@ static func run() -> Dictionary:
 	EventSheetLightingDoctor.ensure_registered()
 	EventSheetEffectsDoctor.ensure_registered()
 	EventSheetInteropDoctor.ensure_registered()
+	EventSheetPerformanceDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -3213,6 +3215,24 @@ static func _node_name_of(text: String) -> String:
 ## Notes, never warnings: a menu is a working menu, and these are things the author cannot see rather
 ## than contracts they broke. The project's own scripts only - this plugin's menus have their own
 ## gate, and a note about somebody else's shipped addon is not the reader's to act on.
+## The two things that go wrong with a game's modes: one nothing can get out of, and one nothing
+## uses. Asked only of the AUTOLOAD scripts, because that is where a game's own state belongs (the
+## engine's own guide says so) and it is where the modes band offers to declare them - so this costs
+## one open per autoload rather than a walk of the project.
+static func check_game_modes(findings: Array[Dictionary]) -> void:
+	var importer := GDScriptImporter.new()
+	for script_path: String in EventSheetModeFacts.autoload_scripts():
+		if not FileAccess.get_file_as_string(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
+			continue
+		var sheet: EventSheetResource = importer.import_external(script_path)
+		if sheet == null:
+			continue
+		for finding: Dictionary in EventSheetModeFacts.findings(sheet):
+			_add(findings, str(finding.get("severity", "info")), str(finding.get("kind", "")),
+				script_path, str(finding.get("message", "")))
+			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))
+
+
 static func check_menu_ids(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
 		var source: String = FileAccess.get_file_as_string(script_path)

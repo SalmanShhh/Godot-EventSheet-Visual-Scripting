@@ -92,6 +92,12 @@ const OFFERED := {
 		{"id": "unpin_before_free", "label": "Unpin before %s goes"},
 		{"id": "guard_pin_anchor", "label": "Ask whether %s is still there"},
 	],
+	# A suggestion, so its second chip is the answer "no". A game that swallows its own errors on
+	# purpose is a decision, not an oversight, and being asked about it every week is what makes a
+	# Doctor report something people stop reading.
+	"no-error-report": [
+		{"id": "never_ask_error_report", "label": "Never ask again"},
+	],
 }
 
 
@@ -140,6 +146,8 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 	match fix_id:
 		"add_input_action":
 			return _add_input_action(subject)
+		"never_ask_error_report":
+			return _never_ask_error_report()
 		"pick_input_action":
 			return {"ok": true, "message": "Pick the control this row means in Project ▸ Input Map, then re-run the check."}
 		"create_function":
@@ -251,6 +259,15 @@ static func _extract_to_variable(literal: String, sheet_path: String, dock: Vari
 
 ## Registers one control with the project's Input Map, with no events bound - the row stops
 ## pointing at nothing, and binding a key is the next thing the reader does in Project ▸ Input Map.
+## Remembered in the PROJECT rather than for the reader: whether this game wants to hear about its
+## own errors is a fact about the game, and the answer should travel with it.
+static func _never_ask_error_report() -> Dictionary:
+	ProjectSettings.set_setting(EventSheetPerformanceDoctor.SUGGEST_SETTING, false)
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		ProjectSettings.save()
+	return {"ok": true, "message": "Noted - this project will not be asked about error reports again."}
+
+
 static func _add_input_action(action_name: String) -> Dictionary:
 	if action_name.is_empty():
 		return {"ok": false, "message": "That finding names no control to add."}

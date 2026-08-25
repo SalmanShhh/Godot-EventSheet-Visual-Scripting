@@ -43,7 +43,7 @@ const SWEPT_STATICS: Array[String] = [
 	"_behavior_host_default", "_emit_breakpoints_flag", "_emit_event_trace_flag",
 	"_error_reporter_pending", "_group_slugs", "_live_values_payload",
 	"_live_values_receiver_pending", "_row_group_path", "_runtime_group_guards",
-	"_runtime_group_members", "_throttle_process_emitted"
+	"_runtime_group_members", "_throttle_process_emitted", "_trouble_reporter_pending"
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a
@@ -74,6 +74,11 @@ static func run() -> bool:
 	ok = _test_a_behaviour_compile_leaves_a_plain_file_alone() and ok
 	ok = _test_the_sweep_can_fail() and ok
 	return ok
+
+
+## Where the probes' own compiles land. Under `user://`, because a compile with no output path
+## writes to the sheet's own source and a sheet naming none lands in the project root.
+const UNNAMED_OUTPUT: String = "user://__eventsheets_state_leak_probe.gd"
 
 
 ## The swept set, by name. Reflection finds the statics; this pins which ones they are, so the day
@@ -251,6 +256,11 @@ static func _plain_sheet() -> EventSheetResource:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "StateLeakProbe"
 	sheet.functions = [_probe_function()]
+	# Under `user://` for the same reason the opened sheet's source path is: compiling with no output
+	# path writes the result to the sheet's own source, and a plain sheet that names none lands in the
+	# PROJECT ROOT - a script left in the repository, which the next gate to sweep every file of it
+	# reports as a real one. The probes are about emitted TEXT; where it lands is nobody's question.
+	sheet.external_source_path = UNNAMED_OUTPUT
 	return sheet
 
 
@@ -287,6 +297,7 @@ static func _compile_a_behaviour_sheet() -> void:
 	behavior.host_class = "CharacterBody2D"
 	behavior.custom_class_name = "StateLeakBehaviourProbe"
 	behavior.functions = [_probe_function()]
+	behavior.external_source_path = UNNAMED_OUTPUT
 	SheetCompiler.compile(behavior, "")
 
 

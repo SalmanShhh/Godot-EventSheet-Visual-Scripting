@@ -20,6 +20,84 @@
   spellings as the honest leftovers now name what is left: the `var error = ...` spelling that
   checks what a call answered, and a `create_client` that binds its own local port.
 
+### Game state - the game's mode, declared once instead of asked a hundred times
+
+- **Modes are four ordinary declarations, and that is the whole design.** An enum, a variable, a
+  signal and a stack - lines anybody could have typed, and which most hand-written projects already
+  have. Nothing is stored anywhere else. A project that wrote them by hand is already using this and
+  does not know it; a project that never asked for modes has none of it, and no band, no vocabulary
+  and no findings appear anywhere.
+- **The modes band on the sheet head**, reading the enum and the mode the game opens in - "Playing ·
+  Paused · Cutscene · Menu - starts in Menu" - with **Edit modes…** beside it. The dialog writes the
+  four declarations as undoable rows, and asks each mode's policy once: does the tree keep
+  processing, is the mouse shown. Those two are Godot's own documented pause pattern; "does gameplay
+  input reach the game" is the first of them, and the strip says so rather than offering a third
+  dropdown that writes the same line.
+- **Groups say which mode they run in.** One muted word on the group head, the same shape and the
+  same guard path as "runs on host", so a whole group of rows stops asking for itself and the one
+  row that would have forgotten cannot. It rides in the group's own annotation and comes back on
+  open.
+- **Go to mode · In mode · Push mode · Go back.** Going to a mode is ONE plain assignment, because
+  the announcement lives in the mode variable's own setter - which is where Godot puts "and tell
+  everybody", and what makes a hand-written `mode = Mode.PLAYING` already correct. Push and Go back
+  are the stack a game grows the first time a menu opens over a pause that sits over playing: the
+  escape-key bug, answered in the vocabulary.
+- **On entering X / On leaving X**, sharing one handler off the one signal, with leaving written
+  first - always, so nobody discovers the order by bug.
+- **What a running game shows.** Live Values streams the mode and the stack as names rather than
+  numbers, and keeps the trail: "Menu › Playing › Cutscene", the how-did-we-get-here answer, kept in
+  the editor so the game carries no history nobody reads to play it. "Why didn't this fire?" gains
+  the line it could not say before: it runs in Playing, the game was in Cutscene.
+- **Doctor finds the two mode bugs**: a mode rows can reach and never leave (the softlock, found at
+  authoring rather than by a player), and a mode nothing uses at all.
+
+### Performance - what the frame is being spent on, on the row that spends it
+
+- **Milliseconds in the gutter.** The trace already knew how long each row's fires took; it kept the
+  numbers in a panel and lost them when the editor closed. They are now a chip in the left margin
+  beside the event number - one number per row, amber over a millisecond a fire, red over four -
+  and they SURVIVE: the run is written to disk when the game stops and read back once when a sheet
+  opens, so a profiled run you took last night is still on the rows this morning. Nothing is ever
+  measured in the editor, and with the lens off the gutter is exactly what it always was.
+- **Counts and costs are one overlay.** Hit counts and costs share the chip and the tooltip, which
+  carries both plus which run they came from. A row that fired twenty times a frame is called out in
+  amber; a row that never fired keeps its hollow red mark, now in the colour that means "look here".
+- **Run with profiler.** One button on the run strip (and in Tools): it arms the trace, clears the
+  old numbers, turns the costs lens on and plays. Play for a while, stop, and the sheet is
+  annotated. Tools also has Clear Measured Costs, which deletes the stored run as well as this
+  session's - "clear" has to mean the file too, or the word is a lie.
+- **The optimiser: Doctor › Performance, and Tools › Optimise This Sheet…** The six classic ways a
+  frame gets spent, read out of the sheet rather than out of a run: a node path resolved every frame,
+  a group scanned every frame, a distance measured with a square root, a big literal loop in one
+  tick, a row making copies while another frees them, and a label rewritten every frame. Each is a
+  note under the row it is about (while the costs lens is on) and a line in the Doctor.
+- **Fixes are visible, undoable row edits, with the diff shown first.** Two of them the plugin
+  performs: a constant lookup becomes a variable resolved once at ready time (the row keeps reading
+  the same, the emitted line changes), and a per-frame scan gains a "re-check every 0.2 s" condition
+  the author could have added themselves. The confirm shows the line now and the line after, so what
+  is approved is what happens. The safe ones apply together as ONE undo step; the ones that change
+  timing stay one at a time, with the reason they are not in the batch stated beside them.
+- **Receipts.** A fixed row wears what the fix actually did after the next profiled run - "2.40 ->
+  0.30 ms a fire" - and says just as plainly when it did not help, with a way to put it back. An
+  optimiser that never shows its receipts teaches superstition.
+
+### Troubleshooting - the two questions a stuck game gets asked
+
+- **"Why didn't this fire?" knows about the run and about the rest of the sheet.** The answer now
+  opens with what the run counted for the row itself, because a trigger that never arrived is the
+  whole answer and reading three condition verdicts to reach it wastes your time. Under it, the plain
+  facts from elsewhere in the sheet: the group this row sits in, whether it is switched off, and
+  whether another row switches it off while the game runs. Facts, never a sentence joining them into
+  a cause. Two buttons: jump to the row, and watch the value the blocking condition was about. With
+  no run at all the menu item says so - "Run the game first, then ask".
+- **On Something Went Wrong.** The first thing here that works in a BUILD. A sheet carrying this
+  trigger declares a signal, arms a logger with the engine, and hears about every script error the
+  running game hits - once per failing line, with what failed and where. A shipped game can save the
+  report, show the player a "please send this", or skip the broken cosmetic and keep playing. The
+  editor's error strip only ever helped while you were the one running it. A sheet without the
+  trigger emits not one line of any of it, and the Doctor asks about it once per project - with
+  "Never ask again" beside the question, remembered in the project.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

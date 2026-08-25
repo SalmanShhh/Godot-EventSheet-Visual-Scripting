@@ -17,6 +17,14 @@ extends RefCounted
 ## above the 900+ extension range so the shared dispatcher recognises it as neither.
 const ROW_MENU_WHY_DIDNT_FIRE := 9700
 
+
+## What that item is CALLED, which depends on whether there is anything to answer from. Static, so
+## the wording is pinned without a menu, a dock or a display server.
+static func why_label() -> String:
+	if EventSheetRunProfile.has_numbers():
+		return "Why didn't this fire?"
+	return "Why didn't this fire? Run the game first, then ask"
+
 ## The id for "Find all references", which rides four menus (variable / condition / action / the
 ## row's More ▸). Same rule as above: far outside every shared dispatcher's range.
 const ROW_MENU_FIND_ALL_REFERENCES := 9710
@@ -443,7 +451,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	var why_row: EventRow = row_data.source_resource as EventRow if row_data != null else null
 	if is_event and why_row != null and not why_row.conditions.is_empty():
 		menu.add_separator()
-		menu.add_item("Why didn't this fire?", ROW_MENU_WHY_DIDNT_FIRE)
+		# With no run to read, the item says what to do about that instead of opening a panel that
+		# can only apologise. Honest, and one word shorter than the apology.
+		menu.add_item(why_label(), ROW_MENU_WHY_DIDNT_FIRE)
 	# ── The pattern items (appended block - keep together) ────────────────────────────────────
 	# An event a reading claimed a pattern on can say why it was read that way, and - when a shipped
 	# behavior could take the shape over and this build knows how - offer to do it, preview first.

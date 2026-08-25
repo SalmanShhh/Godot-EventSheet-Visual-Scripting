@@ -22,6 +22,8 @@ const BUTTONS: Array = [
 		"Run the project's main scene (F5) - the whole game from its start, not just this layout."],
 	["debug_layout", "🐞 Debug layout",
 		"Run this layout with the sheet's own debugger armed: Event Trace lights the rows as they fire, Live Values streams the variables, and rows with a breakpoint pause the game."],
+	["run_profiler", "⏱ Run with profiler",
+		"Run this layout with the trace armed and the costs lens on. Play for a while, stop, and every row wears what one fire of it cost - kept until you clear it, and still there when you open the editor tomorrow."],
 ]
 
 ## What the first two buttons say instead while a game is running.
@@ -91,6 +93,11 @@ func activate(button_id: String) -> void:
 			if running:
 				_stop()
 			_play_current()
+		"run_profiler":
+			# The dock owns this one: arming the trace is the small half, and clearing the old numbers
+			# and turning the costs lens on is the half that makes the button mean what it says.
+			if _dock != null and _dock.has_method("_run_with_profiler"):
+				_dock.call("_run_with_profiler")
 	refresh()
 
 

@@ -26,6 +26,44 @@ var _last_values: Dictionary = {}
 var watch_tree: Tree = null
 var watch_input: LineEdit = null
 
+## Where the game has BEEN: every mode it changed to, in order, as the streamed frames go past.
+## Kept here rather than recorded in the game, because the editor is already being told the mode
+## every quarter second and a game should not carry a history nobody reads to play it. Mode bugs are
+## invisibility bugs - nothing crashed, the group just never ran - and "how did we get here" is the
+## question they present as.
+var _mode_trail: PackedStringArray = PackedStringArray()
+
+## How many transitions the trail keeps. Enough to answer how the game reached the mode it is stuck
+## in; not so many that the line stops being readable.
+const MODE_TRAIL_LENGTH: int = 8
+
+
+## One streamed frame -> the trail. Only a CHANGE is recorded: the frames arrive four times a
+## second and a trail of the same mode eighty times answers nothing.
+func note_mode(values: Dictionary) -> void:
+	var now: String = str(values.get("mode", "")).strip_edges()
+	if now.is_empty():
+		return
+	if not _mode_trail.is_empty() and _mode_trail[_mode_trail.size() - 1] == now:
+		return
+	_mode_trail.append(now)
+	while _mode_trail.size() > MODE_TRAIL_LENGTH:
+		_mode_trail.remove_at(0)
+
+
+## How the game got where it is: "Menu › Playing › Cutscene". Empty until a mode has streamed, and
+## static over the trail so the sentence is pinned without a debug session.
+static func trail_reading(trail: PackedStringArray) -> String:
+	var said: PackedStringArray = PackedStringArray()
+	for member: String in trail:
+		said.append(EventSheetModeFacts.word_for(member))
+	return " › ".join(said)
+
+
+## The trail as the panel has it - what the Why panel and the tests read.
+func mode_trail() -> PackedStringArray:
+	return _mode_trail
+
 
 ## Wired by the plugin entry point so value edits can flow back to the running game.
 func setdebugger(debugger: EventSheetLiveValuesDebugger) -> void:
@@ -119,6 +157,12 @@ func update_values(values: Dictionary, instance: String = "") -> void:
 	# so it says which one that was. The row chips show every instance side by side.
 	label.text = "Streaming - double-click a value to edit it in the running game." if instance.is_empty() \
 		else "Streaming from %s - double-click a value to edit it in the running game." % instance
+	# And how the game got to the mode it is in, when it has one. The single most useful line in this
+	# window for a game with modes, and it costs the game nothing: the editor was being told anyway.
+	var trail: String = trail_reading(_mode_trail)
+	if not trail.is_empty():
+		label.text += "  %s" % trail
+	note_mode(values)
 	# Sheet variables list flat (editable); dotted keys ("Sine.phase" - a behavior's
 	# debugger_properties section, the event-sheet debugger idea) group under one read-only
 	# section per behavior child, after the variables.

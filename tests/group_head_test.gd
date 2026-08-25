@@ -201,9 +201,9 @@ static func _test_group_locals() -> bool:
 
 static func _test_dialog_fields() -> bool:
 	var passed: bool = true
-	passed = _check("the dialog asks for six facts, in order",
+	passed = _check("the dialog asks for seven facts, in order",
 		", ".join(EventSheetQuickPromptDialogs.GROUP_FIELD_ORDER),
-		"Name, Description, Runs on, Active on start, Can be switched at runtime, Colour") and passed
+		"Name, Description, Runs on, Active on start, Can be switched at runtime, Colour, Runs in") and passed
 	var group: EventGroup = _group("Combat", "old text")
 	group.enabled = true
 	group.runtime_toggleable = false

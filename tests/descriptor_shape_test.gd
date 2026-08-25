@@ -59,7 +59,8 @@ const EMPTY_IS_AN_ANSWER: Array[String] = ["args", "prompt"]
 ## these - a group, a variable, a node or an input action that this project happens to have is a
 ## guess, and the picker is what fills them in.
 const PICKED_FROM_THE_PROJECT: Array[String] = ["group_reference", "variable_reference",
-	"scene_node", "input_action", "function_reference", "signal_reference", "sheet_function"]
+	"scene_node", "input_action", "function_reference", "signal_reference", "sheet_function",
+	"mode_reference"]
 
 ## The same idea, for the one parameter that carries no hint saying so: the function a Call row
 ## calls is a function of THIS sheet, and the picker is what lists them. A default would name a

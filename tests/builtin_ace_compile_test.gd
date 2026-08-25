@@ -114,6 +114,12 @@ const NOT_STANDALONE: Array[String] = [
 	# The same is true of the 2D twins: the point query and the tile lookup are each one synthesized
 	# helper, gated the same way in cursor_and_canvas_reading_test.
 	"ObjectUnderCursor2D", "TileUnderCursor",
+	# The four mode rows name the four declarations the Edit modes dialog writes onto the sheet -
+	# the Mode enum, the `mode` variable, the `mode_changed` signal and the `mode_stack` - none of
+	# which exists in a class this harness wraps by hand. Same reason as the once-memory helpers
+	# above; their round trip is gated by game_state_test, which compiles a sheet that really
+	# declares them, opens the result and recompiles it byte for byte.
+	"GoToMode", "InMode", "PushMode", "GoBackMode",
 ]
 
 

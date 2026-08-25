@@ -379,6 +379,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
 | `glow_enabled` | [Set Glow On/Off](ace:Core/SetGlow) | Environment | Vocabulary |
 | `glow_intensity` | [Set Glow Strength](ace:Core/SetGlowStrength) | Environment | Vocabulary |
+| `go_back` | [Go Back](ace:Core/GoBackMode) | Game State | Vocabulary |
 | `goto_line` | [Open Script At Line](ace:Core/OpenScriptAtLine) | Editor Tools: Panels & menus | Vocabulary |
 | `grab_focus` | [Set Focus](ace:Core/GrabFocus) | UI | Vocabulary |
 | `gravity` | [Set World Gravity](ace:Core/SetWorldGravity) | Physics | Vocabulary |
@@ -612,6 +613,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `push_error` | [Push Error](ace:Core/PushError) | Debug | Vocabulary |
 | `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
 | `push_input` | [Send Input To Surface](ace:Core/SendInputToSurface) | World-space UI | Vocabulary |
+| `push_mode` | [Push Mode](ace:Core/PushMode) | Game State | Vocabulary |
 | `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
 | `put_packet` | [Send Raw Bytes](ace:Core/SendRawBytes) | Multiplayer | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |

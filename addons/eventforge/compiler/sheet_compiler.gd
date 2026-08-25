@@ -60,6 +60,17 @@ static var _throttle_process_emitted: bool = false
 # Whether the current debug compile still needs the runtime-error reporter ARMED in _ready
 # (OS.add_logger of the emitted Logger subclass). Cleared once injected, like the receiver flag.
 static var _error_reporter_pending: bool = false
+# Whether this compile carries the On Something Went Wrong trigger, and therefore needs the signal
+# declared, the logger armed in _ready, and the reporter class emitted. Unlike the flag above this
+# one is nothing to do with debugging: it ships in the build, because the player is not in the
+# editor and a game that can say what broke can save the report or skip the broken thing.
+static var _trouble_reporter_pending: bool = false
+
+## The signal that trigger arrives on, and the id of the trigger itself. Frozen: an author's own
+## `signal something_went_wrong(report)` is the same channel, which is what lets a hand-written
+## reporter open as the row.
+const TROUBLE_SIGNAL: String = "something_went_wrong"
+const TROUBLE_TRIGGER_ID: String = "OnSomethingWentWrong"
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -104,6 +115,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_live_values_payload = ""
 	_live_values_receiver_pending = false
 	_error_reporter_pending = false
+	_trouble_reporter_pending = false
 	_throttle_process_emitted = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
@@ -317,6 +329,15 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("")
 		lines.append("## Emitted by a test runner as this test begins - On Test Start events handle it.")
 		lines.append("signal test_started(test_name: String)")
+	# The channel On Something Went Wrong arrives on, declared for the same reason: a sheet that
+	# asks to hear about trouble cannot also be asked to declare the wire it comes down. Unlike the
+	# editor's own error strip this one is in the SHIPPED game, so a build can save the report, show
+	# the player something, or skip the broken thing and keep playing.
+	_trouble_reporter_pending = _wants_trouble_reporter(all_events)
+	if _trouble_reporter_pending and not _declares_signal_named(signal_rows, TROUBLE_SIGNAL):
+		lines.append("")
+		lines.append("## Emitted when a script error happens while the game runs - On Something Went Wrong events handle it.")
+		lines.append("signal %s(report: String)" % TROUBLE_SIGNAL)
 	# Custom Block API rows (preloads, region markers, registered pack kinds) emit before the
 	# variables so a `const … := preload(…)` can be referenced by a variable default below.
 	var custom_block_rows: Array = []
@@ -426,6 +447,13 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		var payload_parts: PackedStringArray = PackedStringArray()
 		for live_key: Variant in live_keys:
 			payload_parts.append("\"%s\", %s" % [str(live_key), str(live_key)])
+		# The game's MODE is a plain class-level `var` rather than an exported one - which mode a game
+		# is in is not a knob a designer turns - so it is not in the list above. It is also the first
+		# value anybody watching a running game wants, so a sheet that declares modes streams it and
+		# its stack, as the NAMES rather than as the numbers a reader would have to count out.
+		if _declares_modes(all_events):
+			payload_parts.append("\"mode\", Mode.keys()[mode]")
+			payload_parts.append("\"mode_stack\", mode_stack.map(func(__m: int) -> String: return Mode.keys()[__m])")
 		if payload_parts.is_empty():
 			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream - add some or turn the toggle off.")
 		else:
@@ -549,6 +577,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			declared_signals.append((signal_entry as SignalRow).signal_name)
 	if sheet.test_mode:
 		declared_signals.append("test_started")  # emitted above; On Test Start connects to it
+	if _trouble_reporter_pending:
+		declared_signals.append(TROUBLE_SIGNAL)  # emitted above; On Something Went Wrong connects to it
 	var connect_context: Dictionary = {
 		"self_class": "Node" if sheet.behavior_mode else (sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"),
 		"declared_signals": declared_signals
@@ -657,6 +687,31 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("\t\t_said[location] = true")
 		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
 		lines.append("\t\tEngineDebugger.send_message.call_deferred(\"eventsheets:runtime_error\", [message, file, line])")
+
+	# The SHIPPED reporter, emitted only for a sheet that carries the On Something Went Wrong
+	# trigger. The same idea as the one above and none of its conditions: no debugger, no editor,
+	# no session - it runs wherever the game runs, which is the whole point of it. Each failing line
+	# is reported once per run, so a row that fails every tick cannot drown the handler it feeds.
+	#
+	# Asked of the EVENTS rather than of the pending flag, exactly as the reporter above asks the
+	# sheet: the trigger functions were emitted further up and consumed that flag when they armed it.
+	if _wants_trouble_reporter(all_events):
+		lines.append("")
+		lines.append("## Announces each script error to this sheet, once per failing line, wherever the game")
+		lines.append("## is running - in the editor or in a build a player is holding.")
+		lines.append("class __EventSheetsTroubleReporter extends Logger:")
+		lines.append("\tvar sheet: Object = null")
+		lines.append("\tvar _said: Dictionary = {}")
+		lines.append("")
+		lines.append("\tfunc _log_error(_function: String, file: String, line: int, code: String, rationale: String, _editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:")
+		lines.append("\t\tif error_type != ERROR_TYPE_SCRIPT or not is_instance_valid(sheet):")
+		lines.append("\t\t\treturn")
+		lines.append("\t\tvar location: String = \"%s:%d\" % [file, line]")
+		lines.append("\t\tif _said.has(location):")
+		lines.append("\t\t\treturn")
+		lines.append("\t\t_said[location] = true")
+		lines.append("\t\tvar message: String = rationale if not rationale.is_empty() else code")
+		lines.append("\t\tsheet.call_deferred(\"emit_signal\", \"%s\", \"%%s (%%s)\" %% [message, location])" % TROUBLE_SIGNAL)
 
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
@@ -1011,6 +1066,8 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		return
 	if _emit_menu_match(events, lines, source_map, result["warnings"]):
 		return
+	if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
+		return
 	var handler_body_start: int = lines.size()
 	_emit_event_body(events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, handler_body_start):
@@ -1065,6 +1122,54 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 		if not _has_statement(lines, case_body_start):
 			lines.append("\t\t\tpass")
 	return true
+
+
+## The mode-change handler's body: every On leaving row first, then every On entering row, each
+## under the test that says which mode it is about. Returns false (emitting nothing) unless EVERY
+## event in the group is one of those two, which is what keeps every other trigger on the ordinary
+## body path.
+##
+## ONE handler, because the engine raises one signal for a change and two same-named functions do not
+## parse - the same shape the notification match above has, for the same reason. The ORDER is the
+## feature: leaving fires before entering, always, so the room is emptied before the next one is
+## filled and nobody discovers that by bug.
+static func _emit_mode_change_body(events: Array, lines: PackedStringArray, source_map: Array,
+		warnings: Array) -> bool:
+	var leaving: Array = []
+	var entering: Array = []
+	for event_entry: Variant in events:
+		var event_row: EventRow = event_entry as EventRow
+		if event_row == null:
+			return false
+		match event_row.trigger_id:
+			MODE_LEAVING_TRIGGER_ID:
+				leaving.append(event_row)
+			MODE_ENTERING_TRIGGER_ID:
+				entering.append(event_row)
+			_:
+				return false
+	if leaving.is_empty() and entering.is_empty():
+		return false
+	var wrote: bool = false
+	for pass_entry: Array in [[leaving, "from_mode"], [entering, "to_mode"]]:
+		for event_entry: Variant in pass_entry[0] as Array:
+			var event_row: EventRow = event_entry as EventRow
+			var member: String = str(event_row.trigger_params.get("mode", "")).strip_edges()
+			if member.is_empty():
+				warnings.append("A mode trigger names no mode - the row was skipped.")
+				continue
+			lines.append("\tif %s == Mode.%s:" % [str(pass_entry[1]), member])
+			var body_start: int = lines.size()
+			_emit_event_body([event_row], lines, source_map, 2, warnings)
+			if not _has_statement(lines, body_start):
+				lines.append("\t\tpass")
+			wrote = true
+	return wrote
+
+
+## The two triggers that answer a change of mode. They share one handler, so they share one key.
+const MODE_ENTERING_TRIGGER_ID: String = "OnEnteringMode"
+const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
 
 
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
@@ -1461,14 +1566,20 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 		# therefore emits exactly the header it always emitted.
 		if not EventGroup.runs_on_guard(group.runs_on).is_empty():
 			parts.append("runs_on=\"%s\"" % group.runs_on.strip_edges())
+		# And which MODE of the game it runs in, written only when the group named one. A sheet with
+		# no modes therefore emits exactly the header it always emitted.
+		if not group.runs_in.strip_edges().is_empty():
+			parts.append("runs_in=\"%s\"" % group.runs_in.strip_edges())
 		lines.append("## @ace_group(%s)" % ", ".join(parts))
 
 
 ## The guards a row inherits from its groups, joined as one and-chain in the order they gate:
-## the runtime switch, then who runs it. Either half may be empty, and both empty means no guard.
-static func _joined_group_guard(runtime_guard: String, runs_on_guard: String) -> String:
+## the runtime switch, then who runs it, then which mode the game is in. Any of them may be empty,
+## and all empty means no guard at all.
+static func _joined_group_guard(runtime_guard: String, runs_on_guard: String,
+		runs_in_guard: String = "") -> String:
 	var terms: PackedStringArray = PackedStringArray()
-	for guard: String in [runtime_guard, runs_on_guard]:
+	for guard: String in [runtime_guard, runs_on_guard, runs_in_guard]:
 		if not guard.strip_edges().is_empty():
 			terms.append(guard)
 	return " and ".join(terms)
@@ -1477,13 +1588,14 @@ static func _joined_group_guard(runtime_guard: String, runs_on_guard: String) ->
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
 ## group is dropped but leaves a breadcrumb comment - group-disable semantics), and group comments
 ## collected as deferred comment lines.
-static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "") -> void:
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "", runs_in_guard: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
-			# The two group guards a row can inherit, as the one and-chain the emitter wraps its
+			# The three group guards a row can inherit, as the one and-chain the emitter wraps its
 			# conditions in: the runtime switch first (a group that is off runs nothing at all), then
-			# who runs it. Either alone is the whole guard; neither leaves the row exactly as it was.
-			var guards: String = _joined_group_guard(runtime_guard, runs_on_guard)
+			# who runs it, then which mode the game has to be in. Any one alone is the whole guard;
+			# none of them leaves the row exactly as it was.
+			var guards: String = _joined_group_guard(runtime_guard, runs_on_guard, runs_in_guard)
 			if not guards.is_empty():
 				_runtime_group_guards[row] = guards
 			# Tag the row with its group's slug so _emit_event_body can emit a `# @group:` marker before
@@ -1513,7 +1625,12 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 				var child_runs_on: String = EventGroup.runs_on_guard(group.runs_on)
 				if child_runs_on.is_empty():
 					child_runs_on = runs_on_guard
-				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""), child_runs_on)
+				# Which mode inherits the same way and for the same reason: the innermost answer is
+				# the one the reader put closest to the rows.
+				var child_runs_in: String = EventGroup.runs_in_guard(group.runs_in)
+				if child_runs_in.is_empty():
+					child_runs_in = runs_in_guard
+				_flatten_trigger_rows(group.child_rows(), into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""), child_runs_on, child_runs_in)
 			else:
 				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
 				# in the generated code. Disabling a group intentionally excludes its events (the
@@ -1688,7 +1805,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			has_ready_group = true
 	# No OnReady events but connections/receiver needed → synthesize a `_ready`.
 	if not has_ready_group and (not ready_connections.is_empty() or _live_values_receiver_pending \
-			or _error_reporter_pending):
+			or _error_reporter_pending or _trouble_reporter_pending):
 		# On the external (opened-file) path, honor the SOURCE's own spacing and header spelling
 		# when the lift recorded them: a connects-only `_ready` leaves no OnReady event to carry
 		# the usual __source_leading_blanks, so its gap (and a non-canonical header) ride the first
@@ -1715,6 +1832,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if _error_reporter_pending:
 			_emit_error_reporter_arming(lines)
 			_error_reporter_pending = false
+		if _trouble_reporter_pending:
+			_emit_trouble_reporter_arming(lines)
+			_trouble_reporter_pending = false
 		_emit_ready_connections(ready_connections, lines, source_map, result)
 
 	for key: String in trigger_order:
@@ -1764,6 +1884,10 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			_emit_error_reporter_arming(lines)
 			had_body = true
 			_error_reporter_pending = false
+		if function_name == "_ready" and _trouble_reporter_pending:
+			_emit_trouble_reporter_arming(lines)
+			had_body = true
+			_trouble_reporter_pending = false
 		if function_name == "_process" and not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 			# Live-values stream and/or the event trace: throttled, debug-session-only, before user logic.
 			# The trace's frame ruler: how many fires had happened by the top of THIS frame.
@@ -1809,6 +1933,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if _emit_notification_match(events, lines, source_map, result["warnings"]):
 			continue
 		if _emit_menu_match(events, lines, source_map, result["warnings"]):
+			continue
+		if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
+			had_body = true
 			continue
 		if split_events.is_empty():
 			had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body
@@ -2959,6 +3086,46 @@ static func _emit_error_reporter_arming(lines: PackedStringArray) -> void:
 	lines.append("\tif EngineDebugger.is_active() and not __EventSheetsErrorReporter.armed:")
 	lines.append("\t\t__EventSheetsErrorReporter.armed = true")
 	lines.append("\t\tOS.add_logger(__EventSheetsErrorReporter.new())")
+
+
+## The three lines that put the shipped reporter on the engine's error channel. No debugger test:
+## this one is for the build, and a build has no debugger.
+static func _emit_trouble_reporter_arming(lines: PackedStringArray) -> void:
+	lines.append("\tvar __trouble := __EventSheetsTroubleReporter.new()")
+	lines.append("\t__trouble.sheet = self")
+	lines.append("\tOS.add_logger(__trouble)")
+
+
+## True when this sheet declares the game's modes: the `Mode` enum and both the members the mode
+## vocabulary leans on. All three, because streaming one of them without the others would emit a
+## line naming something the file does not have.
+static func _declares_modes(events: Array) -> bool:
+	var has_enum: bool = false
+	var declared: Dictionary = {}
+	for entry: Variant in events:
+		if entry is EnumRow and (entry as EnumRow).enum_name.strip_edges() == "Mode":
+			has_enum = (entry as EnumRow).enabled
+		elif entry is LocalVariable:
+			declared[(entry as LocalVariable).name.strip_edges()] = true
+	return has_enum and declared.has("mode") and declared.has("mode_stack")
+
+
+## True when any event of this sheet asks to hear about trouble. Walked once, before anything is
+## emitted, because the answer decides a declaration at the top of the file and a line in _ready.
+static func _wants_trouble_reporter(events: Array) -> bool:
+	for entry: Variant in events:
+		if entry is EventGroup:
+			if _wants_trouble_reporter((entry as EventGroup).child_rows()):
+				return true
+			continue
+		var event_row: EventRow = entry as EventRow
+		if event_row == null:
+			continue
+		if event_row.enabled and event_row.trigger_id.strip_edges() == TROUBLE_TRIGGER_ID:
+			return true
+		if _wants_trouble_reporter(event_row.sub_events):
+			return true
+	return false
 
 
 static func _emit_enum_line(enum_row: EnumRow) -> String:

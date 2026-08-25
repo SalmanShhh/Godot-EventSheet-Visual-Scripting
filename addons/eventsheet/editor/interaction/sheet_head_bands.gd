@@ -33,6 +33,7 @@ const BAND_LIT_BY: String = "lit_by"
 const BAND_SHADOWS: String = "shadows"
 const BAND_ENVIRONMENT: String = "environment"
 const BAND_EFFECT: String = "effect"
+const BAND_MODES: String = "modes"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -44,7 +45,7 @@ const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT,
-	BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
+	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
 ## The bands that come from the SCENE rather than from the file, and the key each
@@ -76,6 +77,7 @@ const LEADERS: Dictionary = {
 	BAND_SHADOWS: "shadows",
 	BAND_ENVIRONMENT: "environment",
 	BAND_EFFECT: "effect",
+	BAND_MODES: "modes",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -157,6 +159,11 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	head["host"] = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""
 	head["remembered"] = remembered_variables(sheet)
 	head["includes"] = PackedStringArray(sheet.includes)
+	# The game's own modes, when this sheet is the one that declares them. Read from the sheet's own
+	# declarations - a sheet that never declared any grows no band, which is every sheet in a project
+	# that does not think in modes.
+	head["modes"] = EventSheetModeFacts.band_reading(sheet)
+	head["modes_echo"] = EventSheetModeFacts.band_echo(sheet)
 	return head
 
 
@@ -307,6 +314,12 @@ static func addable(head_facts: Dictionary) -> PackedStringArray:
 	for kind: String in [BAND_ICON, BAND_TOOL, BAND_DESCRIPTION]:
 		if _band(kind, head_facts).is_empty():
 			offers.append(kind)
+	# Modes are offered only on the sheet a whole game's state would live on - an Autoload, which is
+	# what the engine's own guide says global state is for. Offering them on every enemy's sheet
+	# would be inviting a hundred games to have a hundred modes.
+	if str(head_facts.get("modes", "")).strip_edges().is_empty() \
+			and not str(head_facts.get("autoload", "")).strip_edges().is_empty():
+		offers.append(BAND_MODES)
 	return offers
 
 
@@ -320,6 +333,8 @@ static func add_label(kind: String) -> String:
 			return EventSheetL10n.translate("description")
 		BAND_TOOL:
 			return "@tool"
+		BAND_MODES:
+			return EventSheetL10n.translate("modes")
 	return kind
 
 
@@ -341,6 +356,8 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("select the light")
 		BAND_ENVIRONMENT, BAND_EFFECT:
 			return EventSheetL10n.translate("select the node")
+		BAND_MODES:
+			return EventSheetL10n.translate("Edit modes…")
 	return ""
 
 
@@ -384,6 +401,13 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 				return {}
 			return _make(kind, EventSheetL10n.translate("acts on its parent"),
 				"var host: %s · _enter_tree: host = get_parent()" % host_class)
+		BAND_MODES:
+			# One fact, and it really is one: what the modes of this game ARE, which includes the one
+			# it opens on. The line it stands for is the enum, in the emitter's own words.
+			var listed: String = str(head_facts.get("modes", "")).strip_edges()
+			if listed.is_empty():
+				return {}
+			return _make(kind, listed, str(head_facts.get("modes_echo", "")))
 		BAND_REMEMBER:
 			var remembered: PackedStringArray = head_facts.get("remembered", PackedStringArray())
 			if remembered.is_empty():

@@ -4926,3 +4926,82 @@ Bytes,字节
 Next Raw Packet,下一个原始数据包
 "The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.",连接上等待的下一个原始数据包，以字节形式。只有自己发送原始字节的游戏才有理由读它 - 普通消息从不经这条路到达。
 Next raw packet,下一个原始数据包
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.",%s 每帧都要查找一次，却从不移动。在就绪时记住它一次，这一行读起来完全一样。
+Remember it once,记住一次
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.",这会每秒六十次地查看组里的每个对象。少问几次，或者在有变化时再问。
+Re-check every %s s,每 %s 秒重新检查
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.",测量距离每帧都要开一次平方根。如果只是拿它跟一个数字比较，比较距离的平方能得出同样的答案，代价更低。
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.",这个循环在一帧里要转 %d 次。Time Slicer 行为会按你设定的预算把这些工作分摊到多帧。
+Add the Time Slicer…,添加 Time Slicer…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,这里每帧都在新建一份副本，另一行又把它释放掉。Object Pool 行为会改为反复发放同一批副本。
+Add the Object Pool…,添加 Object Pool…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.",即使文本没有变化，也在每帧被写入。把它移到改变该值的事件下面，就只在每次变化时写入一次。
+Fixed - run the game with the profiler to see whether it helped.,已修复 - 带上性能分析器运行游戏，看看有没有效果。
+"Fixed - the last run never measured this row, so there is nothing to compare.",已修复 - 上一次运行从未测量过这一行，所以无从比较。
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,已修复 - 现在每次触发花费 %.2f 毫秒；此前没有可比较的测量结果。
+Fixed: %.2f -> %.2f ms a fire.,已修复：每次触发 %.2f -> %.2f 毫秒。
+This did not help: %.2f -> %.2f ms a fire. Put it back?,没有帮助：每次触发 %.2f -> %.2f 毫秒。要还原吗？
+This did not help: still %.2f ms a fire. Put it back?,没有帮助：每次触发仍是 %.2f 毫秒。要还原吗？
+%s - run the game with the profiler to see what it saved.,%s - 带上性能分析器运行游戏，看看省下了多少。
+Apply the safe fixes,应用安全的修复
+Put the fix back,还原此修复
+Remember the node once,记住该节点一次
+Ask less often,少问几次
+Optimise this row,优化此行
+Optimise this sheet,优化此事件表
+Apply %d safe fixes,应用 %d 项安全的修复
+WHAT CHANGES,会改变什么
+Now,现在
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,这张表里没有任何东西在白白浪费一帧。带上性能分析器运行游戏，等游戏长大些再来看看。
+Nothing to do,无事可做
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.",优化器读的是事件表，不是运行记录：没有逐帧工作的表不会产生任何发现，无论游戏是否运行过。
+ONE AT A TIME,一次一个
+Finding,发现
+Why not in the batch,为什么不在批量里
+Safe fixes · %d row(s),安全的修复 · %d 行
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.",每一项勾选的修复都让游戏的行为与现在完全一致，改变的只是生成的代码。它们作为一个撤销步骤一起应用。下面那些会改变事情发生的时机，所以要一个个打开。
+"%d row(s) optimised, as one undo step.",已优化 %d 行，作为一个撤销步骤。
+Nothing was changed.,没有任何改动。
+"No profiled run has measured this row, so there is no number beside it yet.",还没有任何一次性能分析运行测量过这一行，所以旁边暂时没有数字。
+The last profiled run measured %.2f ms a fire here.,上一次性能分析运行在这里测得每次触发 %.2f 毫秒。
+changes how often the row runs,会改变该行运行的频率
+adds a behaviour to the scene,会往场景里添加一个行为
+"a decision about the game, not a line to rewrite",这是关于游戏的决定，不是一行待改写的代码
+Safe fix,安全的修复
+Changes the timing,会改变时机
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.",游戏的行为与现在完全一致 - 改变的只是生成的那一行，Ctrl+Z 就能还原。这一行读起来也不变。
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.",这一项会改变工作发生的时机，所以单独应用，效果在下一次性能分析运行时测量。
+Jump to this row,跳到这一行
+Watch %s,监视 %s
+Costs In The Sheet,表内成本
+Run With Profiler,带性能分析器运行
+Clear Measured Costs,清除已测量的成本
+Optimise This Sheet…,优化此事件表…
+⏱ Run with profiler,⏱ 带性能分析器运行
+Put it back,还原
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask",为什么没有触发？先运行游戏，然后再问
+There is nothing recorded to put back on this row.,这一行没有可以还原的记录。
+"%s is declared and nothing uses it: no group runs in it, and no row goes to it.",%s 已声明但无人使用：没有组在其中运行，也没有行会切换到它。
+Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.,有行会切换到 %s，却没有任何一行离开它。进入该模式的玩家会被卡住。
+Name at least one mode.,至少要命名一个模式。
+Edit modes,编辑模式
+Edit modes…,编辑模式…
+%d mode(s) declared - groups can now say which one they run in.,已声明 %d 个模式 - 现在组可以说明自己在哪个模式中运行。
+Every mode,所有模式
+"These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.",无论游戏在做什么，这些事件都会运行。适合暂停菜单自己的行，也适合没有模式的游戏。
+These events run only while the game is in %s. Every row inside stops asking for itself.,这些事件只在游戏处于 %s 时运行。里面的每一行都不必再自己去问。
+modes,模式
+The events in this group run only while the game is in this mode - right-click the head to change it.,这个组里的事件只在游戏处于该模式时运行 - 右键点击组头可以更改。
+the %s mode,%s 模式
+Runs in,运行于
+Playing,游戏中
+Paused,已暂停
+Modes,模式
+Starts in,开始于
+Policy for,策略适用于
+Runs,运行
+Stopped,停止
+Shown,显示
+Hidden,隐藏

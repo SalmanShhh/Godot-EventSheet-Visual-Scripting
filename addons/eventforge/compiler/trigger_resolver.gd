@@ -44,6 +44,12 @@ static func get_trigger_key(event: EventRow) -> String:
 		# name is part of the key. Two rows sharing a name are one function, which is what lets a
 		# single "hit" key drive several things.
 		return "%s::%s::%s" % [provider_id, trigger_id, animation_event_name_of(event)]
+	if trigger_id == MODE_ENTERING_TRIGGER_ID or trigger_id == MODE_LEAVING_TRIGGER_ID:
+		# Entering and leaving are ONE handler: the engine raises one signal for a change, and two
+		# same-named functions do not parse. Which mode each row is about, and which side of the
+		# change it answers, become the tests inside it - which is also what lets the emitter put
+		# every leaving row before every entering one.
+		trigger_id = "OnModeChanged"
 	if trigger_id.begins_with(NOTIFICATION_PREFIX):
 		# Every notification a sheet reacts to shares ONE `_notification` handler: the engine calls
 		# that single function for every notification, and two same-named functions do not parse.
@@ -117,6 +123,12 @@ static func menu_item_id_of(event: EventRow) -> String:
 static func menu_handler_name(menu_variable: String) -> String:
 	var bare: String = menu_variable.strip_edges().replace("self.", "").replace(".", "_").lstrip("_")
 	return "_on_%s_id_pressed" % (bare if not bare.is_empty() else "menu")
+
+
+## The two triggers that answer a change of the game's mode. They share one handler and therefore
+## one key; the mode each row names rides in its trigger params, as the menu's item does.
+const MODE_ENTERING_TRIGGER_ID: String = "OnEnteringMode"
+const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
 
 
 ## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
@@ -233,6 +245,18 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# runner emits it with the test's name, so the trigger has a real signal behind it and the
 			# name arrives as the handler's argument - not a bare hook nobody can raise by hand.
 			return _signal_backed("_on_test_started", "test_name: String", "test_started", "")
+		MODE_ENTERING_TRIGGER_ID, MODE_LEAVING_TRIGGER_ID:
+			# The game's mode changed. Signal-backed on the sheet itself, like the two above: the
+			# Edit modes dialog declares `signal mode_changed(from_mode: int, to_mode: int)` and the
+			# Go to / Push rows emit it, so both halves of the question - what we left and what we
+			# are entering - arrive as the handler's arguments.
+			return _signal_backed("_on_mode_changed", "from_mode: int, to_mode: int", "mode_changed", "")
+		"OnSomethingWentWrong":
+			# A script error, anywhere in the running game. Signal-backed on the sheet itself the same
+			# way the test start is: the compiler declares `signal something_went_wrong(report)` and
+			# emits a logger that announces each failing line to it once per run. It is not a debugger
+			# feature - it ships, because the player is not in the editor.
+			return _signal_backed("_on_something_went_wrong", "report: String", "something_went_wrong", "")
 		"OnPostTick":
 			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
 			# frame - for logic that must run after everything else updated (a camera that follows after

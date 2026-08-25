@@ -208,8 +208,10 @@ static func _toolbar_and_preview_buttons() -> bool:
 	var preview_ids: PackedStringArray = PackedStringArray()
 	for entry: Variant in EventSheetRunControls.BUTTONS:
 		preview_ids.append(str((entry as Array)[0]))
-	all_passed = _check("the sheet offers three Preview gestures",
-		" ".join(preview_ids), "preview_layout preview_project debug_layout") and all_passed
+	all_passed = _check("the sheet offers the run gestures, profiler last",
+		" ".join(preview_ids), "preview_layout preview_project debug_layout run_profiler") and all_passed
+	all_passed = _check("the profiler run keeps its name while a game is running - it is not a stop button",
+		EventSheetRunControls.label_for("run_profiler", true), "⏱ Run with profiler") and all_passed
 	all_passed = _check("Preview layout says what it does while nothing is running",
 		EventSheetRunControls.label_for("preview_layout", false), "▶ Preview layout") and all_passed
 	all_passed = _check("and becomes Stop once a game is",

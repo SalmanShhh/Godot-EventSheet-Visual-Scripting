@@ -111,6 +111,36 @@ static func runs_on_word(group: EventGroup) -> String:
 	return ""
 
 
+## The one muted word a head shows for which MODE a group runs in, or "" for a group that runs in
+## every one. Same rule as the word above: the head says the exception and never the default, so a
+## game with no modes reads exactly as it always did. The word is the group's own stored spelling,
+## which is the word the author picked out of the declared list.
+static func runs_in_word(group: EventGroup) -> String:
+	return "" if group == null else group.runs_in.strip_edges()
+
+
+## Which modes a group can say it runs in: every one the project declares, plus the answer that
+## means all of them. ONE list, read by the Edit group dropdown, the head's submenu and the tests.
+static func runs_in_choices(sheet: EventSheetResource) -> Array[Dictionary]:
+	var choices: Array[Dictionary] = [{"value": "", "label": EventSheetL10n.translate("Every mode"),
+		"description": EventSheetL10n.translate("These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.")}]
+	for word: String in EventSheetModeFacts.project_words(sheet):
+		choices.append({"value": word, "label": word,
+			"description": EventSheetL10n.translate("These events run only while the game is in %s. Every row inside stops asking for itself.") % word})
+	return choices
+
+
+## The index of a group's answer in that list, and never -1: a mode nothing declares any more reads
+## as every mode, which is safer than silently pointing a dropdown at the wrong row.
+static func runs_in_index(sheet: EventSheetResource, value: String) -> int:
+	var wanted: String = value.strip_edges()
+	var choices: Array[Dictionary] = runs_in_choices(sheet)
+	for index: int in range(choices.size()):
+		if str(choices[index].get("value", "")) == wanted:
+			return index
+	return 0
+
+
 ## The three answers to "who runs this group", each as the word a reader picks, the line under
 ## it, and the value stored on the group. ONE list: the Edit group dropdown, the head's Runs on
 ## submenu, the help strip and the tests all read it, so a wording change lands everywhere at once.

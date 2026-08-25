@@ -65,6 +65,8 @@ func handle(action: String) -> void:
 		EventSheetHeadBands.BAND_INCLUDE:
 			_dock._set_status(EventSheetL10n.translate(
 				"Sheet ▸ Sheet Type… ▸ More is where the included sheets are listed."))
+		EventSheetHeadBands.BAND_MODES:
+			_dock.open_modes_dialog()
 		EventSheetHeadBands.BAND_ATTACH:
 			_dock._attach_behavior_to_selection()
 		"add":

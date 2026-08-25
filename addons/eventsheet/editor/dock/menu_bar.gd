@@ -614,6 +614,33 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9602:
 			_dock._reset_row_hit_counts())
+	# ── The costs half of the same gutter (appended block - keep together) ─────────────────────
+	# Counts say how OFTEN a row ran; costs say what one run of it took. One chip shows one of them,
+	# the tooltip both, and the toggle sits beside its sibling because it is the same margin and the
+	# same question asked the other way. Ids 9605/9606/9607 are clear of every block above.
+	view_popup.add_check_item("Costs In The Sheet", _dock.COSTS_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(_dock.COSTS_VIEW_ID), false)
+	view_popup.set_item_tooltip(view_popup.get_item_index(_dock.COSTS_VIEW_ID),
+		"Show what one fire of each event costs, in milliseconds, in the left margin - amber over 1 ms, red over 4. The numbers come from the last profiled run (this session's or the one before it); nothing is ever measured in the editor.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == _dock.COSTS_VIEW_ID:
+			_dock._toggle_row_costs(view_popup))
+	tools_popup.add_item("Run With Profiler", 9606)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9606),
+		"Arm the Event Trace and play this layout. Play for a while, stop, and every row wears what it cost - kept until you clear it, and still there next time you open the editor.")
+	tools_popup.add_item("Optimise This Sheet…", 9608)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9608),
+		"Every classic way this sheet spends a frame it did not have to, with the fix beside it. The safe ones apply together as one undo step; the rest open one at a time, showing what would change before anything does.")
+	tools_popup.add_item("Clear Measured Costs", 9607)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(9607),
+		"Forget every measured number - this session's and the stored run's - and put the gutter back to event numbers.")
+	tools_popup.id_pressed.connect(func(id: int) -> void:
+		if id == 9606:
+			_dock._run_with_profiler()
+		elif id == 9607:
+			_dock._clear_measured_costs()
+		elif id == 9608:
+			_dock.open_optimiser())
 	# ── Run Tests… (appended block - keep together) ────────────────────────────────────────────
 	# Test sheets, run and reported. It belongs beside Test Bench: that item plays a behavior and
 	# tells you nothing, this one runs every Test sheet in the project and says what each claim

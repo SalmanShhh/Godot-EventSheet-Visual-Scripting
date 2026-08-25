@@ -404,6 +404,7 @@ func _ensure_hint_factories() -> void:
 			"key_capture": _create_key_capture_field,
 			"input_action": _create_input_action_field,
 			"group_reference": _create_group_reference_field,
+			"mode_reference": _create_mode_reference_field,
 			"scene_node": _create_scene_node_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
@@ -958,6 +959,20 @@ func _create_group_reference_field(key: String, default_value: Variant) -> Contr
 	return _create_autocomplete_field(key, group_choices(scene_root), default_value,
 		func(group_value: String) -> String:
 			return EventSheetParamFieldFactory.node_group_note(group_value, scene_root))
+
+
+## The game's declared modes (hint "mode_reference"): an editable suggest-combo of the modes some
+## sheet of this project declares, offered as the ENUM MEMBER the row stores. Free text stays
+## allowed, because a mode may be about to be declared - and a row naming one nobody has is exactly
+## what the Doctor says out loud rather than what the field forbids.
+func _create_mode_reference_field(key: String, default_value: Variant) -> Control:
+	var suggestions: Array = []
+	for member: String in EventSheetModeFacts.project_members(_lint_sheet()):
+		suggestions.append(EventSheetModeFacts.member_for(EventSheetModeFacts.word_for(member)))
+	return _create_autocomplete_field(key, suggestions, default_value,
+		func(member_value: String) -> String:
+			var word: String = EventSheetModeFacts.word_for(member_value)
+			return "" if word.is_empty() else EventSheetL10n.translate("the %s mode") % word)
 
 
 ## The codegen template of the ACE being edited, or "" when the dialog has no definition.

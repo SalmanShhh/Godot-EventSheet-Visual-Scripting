@@ -3289,6 +3289,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **On Draw** - Runs when this object is asked to paint itself - the only place the drawing actions may be used. Ask for a repaint with Queue Redraw.
 - **On Input On This Element** - Runs when input lands on this UI element - a click, a drag or a key while it has focus. Ends with Consume Input when nothing behind it should also react.
 - **On Close Requested** - Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting.
+- **On Something Went Wrong** (`report: String`) - Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a "please send this" dialog, or just skip the broken thing and keep playing.
 - **On Body Entered** (`body: Node`) - Runs when a physics body enters this 2D Area, e.g. detecting the player walking into a trigger.
 - **On Area Entered** (`area: Area2D`) - Runs when another 2D Area overlaps this one, e.g. a hitbox touching a hurtbox.
 - **On Body Exited** (`body: Node`) - Runs when a physics body leaves this 2D Area, e.g. the player stepping out of a zone.
@@ -3730,6 +3731,21 @@ the game shapes every project writes by hand
 
 #### Expressions
 - **Mission Time Left** (`var_name: String`) - Gives the time left as text a player can read - "2:41" - ready to drop into a HUD label.
+
+### Game State (`res://addons/eventforge/registration/modules/game_state_aces.gd`)
+the game's own mode: going to one, asking about one, and coming back.
+
+#### Triggers
+- **On Entering Mode** (`mode: String`) - Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.
+- **On Leaving Mode** (`mode: String`) - Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.
+
+#### Conditions
+- **In Mode** (`mode: String`) - True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own "runs in" word does this for every row inside it.
+
+#### Actions
+- **Go To Mode** (`mode: String`) - Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.
+- **Push Mode** (`mode: String`) - Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.
+- **Go Back** - Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.
 
 ### Gradient Curve (`res://addons/eventforge/registration/modules/gradient_curve_aces.gd`)
 Gradient & Curve vocabulary (smooth colour ramps and shaped 0-1 curves).
