@@ -31,6 +31,11 @@ const PROGRESS_DIR: String = "res://.godot/test_progress/"
 ## bracket rather than the start of the line.
 const FAIL_PATTERN: String = "^\\s*\\[FAIL\\]\\s*(?<test>[A-Za-z0-9_]+)?:?\\s*(?<detail>.*)$"
 
+## A test may print a `[FAIL]` line ON PURPOSE, to prove this report formats one correctly. Such a
+## line names itself with this marker and is skipped here, so a green run never reports a failure -
+## a report that cries wolf once is a report nobody reads the next time it is right.
+const DELIBERATE_PROBE_MARKER: String = "deliberate_probe_not_a_failure"
+
 ## How many failing assertions to print per test. A test that fails forty times has one cause, and
 ## printing forty of them buries the report it is meant to be.
 const MAX_DETAIL_LINES: int = 4
@@ -122,6 +127,8 @@ static func _collect_failures(log_text: String, failures: Dictionary) -> void:
 	if pattern == null:
 		return
 	for line: String in log_text.split("\n"):
+		if line.contains(DELIBERATE_PROBE_MARKER):
+			continue
 		var found: RegExMatch = pattern.search(line)
 		if found == null:
 			continue

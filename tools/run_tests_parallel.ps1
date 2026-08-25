@@ -40,7 +40,20 @@ New-Item -ItemType Directory -Force $logDir | Out-Null
 # this one would otherwise be reported as this run's crash.
 Remove-Item (Join-Path $root ".godot\test_progress\*.log") -ErrorAction SilentlyContinue
 
+# A test may print a [FAIL] line ON PURPOSE, to prove tools/test_report.gd formats one correctly.
+# Such a line names itself with this marker, and is not counted as a failure here: a shard printing
+# "2 fail" beside its own green verdict is exactly what teaches a reader to distrust the verdict
+# line, and the verdict line is the only thing in this output that is always right.
+$DeliberateProbeMarker = "deliberate_probe_not_a_failure"
+
 function Count-Of([string]$text, [string]$needle) { ([regex]::Matches($text, [regex]::Escape($needle))).Count }
+
+function Count-Failures([string]$text) {
+	if (-not $text) { return 0 }
+	@($text -split "`n" | Where-Object {
+		$_.Contains("[FAIL]") -and -not $_.Contains($DeliberateProbeMarker)
+	}).Count
+}
 
 function Run-Godot([string]$log, [string]$err) {
 	Start-Process -FilePath $Godot -ArgumentList @("--headless", "--path", "`"$root`"", "--script", "tests/run_tests.gd") `
@@ -50,7 +63,7 @@ function Run-Godot([string]$log, [string]$err) {
 function Verdict-Of($job) {
 	$out = (Get-Content $job.Log -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $job.Err -Raw -ErrorAction SilentlyContinue)
 	$verdict = if ($out -and $out.Contains("All tests passed.")) { "green" } else { "RED" }
-	@{ Verdict = $verdict; Pass = (Count-Of $out "[PASS]"); Fail = (Count-Of $out "[FAIL]") }
+	@{ Verdict = $verdict; Pass = (Count-Of $out "[PASS]"); Fail = (Count-Failures $out) }
 }
 
 # One import up front so the shards never race each other on a cold .godot/ cache.

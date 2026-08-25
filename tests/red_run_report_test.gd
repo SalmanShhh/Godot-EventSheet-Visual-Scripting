@@ -40,13 +40,16 @@ const TRAILS: Dictionary = {
 
 ## Log lines, and the test the report files each under. The indented shape is the one that matters:
 ## a nested reporter writes `  [FAIL] ...`, and an anchor at the start of the line reports a clean
-## run on a failing suite.
+## run on a failing suite. The last line is a failure printed ON PURPOSE, by the helper's own proof
+## below: it must be claimed by nobody, or a green run reports failures and the verdict line stops
+## being believed.
 const LOG_LINES: Dictionary = {
 	"[FAIL] light_words_test: the sentence is one word - expected \"on\", got \"true\"":
 		"light_words_test",
 	"  [FAIL] nested_test: something - expected 1, got 2": "nested_test",
 	"[PASS] light_words_test: not a failure at all": "",
 	"nothing to do with a test": "",
+	"[FAIL] deliberate_probe_not_a_failure: \"b\" - expected 2, got 9": "",
 }
 
 
