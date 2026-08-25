@@ -23,6 +23,10 @@ extends RefCounted
 
 const Pins := preload("res://tests/pin_table.gd")
 
+## The seam's own script object. Statics are reached through the script rather than the class name,
+## and the cache is what says whether a list was rebuilt or handed back.
+const CompletionsScript := preload("res://addons/eventsheet/editor/autocomplete/completion_sources.gd")
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -38,7 +42,46 @@ static func run() -> bool:
 	ok = _test_a_list_is_built_once_and_only_filtered() and ok
 	ok = _test_a_pack_can_add_a_source() and ok
 	ok = _test_the_public_surface() and ok
+	ok = _test_an_edit_drops_the_lists_of_the_sheet_it_replaced() and ok
 	return ok
+
+
+## An edit drops what it changed, while the sheet those lists were built for is still findable.
+##
+## The lists are held against the sheet OBJECT, and the undo funnel commits by REPLACING that object
+## with a snapshot duplicate - so a drop made after the swap is handed a brand-new resource with no
+## entries and erases nothing. The superseded version's lists then sit there until the cap evicts
+## them, pushing out project-wide lists that are still being asked for. Counted through the cache
+## itself, because the answer a list gives is the same either way; what is measured is whether it
+## was rebuilt.
+static func _test_an_edit_drops_the_lists_of_the_sheet_it_replaced() -> bool:
+	EventSheetCompletions.clear_cache()
+	var dock: EventSheetDock = EventSheetDock.new()
+	dock.setup(_fixture())
+	var edited: EventSheetResource = dock._current_sheet
+	EventSheetCompletions.for_field(edited, EventSheetCompletions.FIELD_VARIABLE, "")
+	var held_before: int = _lists_held_for(edited)
+	# What the funnel does on commit, and on every undo and redo after it.
+	dock._restore_sheet_snapshot(edited.duplicate(true))
+	var ok: bool = Pins.check_value("completions_invalidation",
+		"an edit drops the lists of the sheet it replaced",
+		PackedStringArray([str(held_before), str(_lists_held_for(edited))]),
+		PackedStringArray(["1", "0"]))
+	dock.free()
+	EventSheetCompletions.clear_cache()
+	return ok
+
+
+## How many built lists the cache is holding for one sheet. Reached through the script object, which
+## is the only way to a static, and read rather than counted from outside: a list handed back by
+## `for_field` is ranked into a fresh array every time, so identity says nothing about the cache.
+static func _lists_held_for(sheet: EventSheetResource) -> int:
+	var prefix: String = "%d|" % sheet.get_instance_id()
+	var held: int = 0
+	for key: Variant in (CompletionsScript as Object).get("_cache").keys():
+		if str(key).begins_with(prefix):
+			held += 1
+	return held
 
 
 ## The four calls a pack actually holds, through the public class rather than the implementation.
@@ -125,9 +168,14 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 		"hp.": "",
 		"$Sprite": "Sprite",
 	}, func(text: String) -> Variant: return EventSheetCompletions.trailing_word(text))
+	# The receiver is what the caret sits BEHIND, and the word being typed after the dot is no part
+	# of it: `hp.` and `hp.hea` reach through the same `hp`.
 	ok = Pins.check("completions_member_receiver", {
 		"hp.": "hp",
+		"hp.hea": "hp",
+		"if body.": "body",
 		"$Sprite.": "$Sprite",
+		"$Sprite.mod": "$Sprite",
 		"%Health.": "%Health",
 		"health + ": "",
 		"hp": "",
@@ -138,6 +186,18 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 		"target = %": false,
 		"%": false,
 	}, func(text: String) -> Variant: return EventSheetCompletions.is_modulo_context(text)) and ok
+	# Which sigil the caret sits behind, which is the whole of "am I addressing a node". A typed
+	# name does not move the caret out of that position, and a `%` after a value is a modulo however
+	# much is typed after it.
+	ok = Pins.check("completions_node_sigil", {
+		"$": "$",
+		"$Spr": "$",
+		"= %": "%",
+		"= %Spr": "%",
+		"score %": "",
+		"score %Spr": "",
+		"hp": "",
+	}, func(text: String) -> Variant: return EventSheetCompletions.node_sigil(text)) and ok
 	var sheet: EventSheetResource = _fixture()
 	# The sheet's own variable leads its host class's members, and a function's parameter is offered
 	# by name - the one thing the flat vocabulary used to be missing.
@@ -150,6 +210,40 @@ static func _test_the_expression_field_reads_the_caret() -> bool:
 		var answered: Array[Dictionary] = EventSheetCompletions.for_field(sheet,
 			EventSheetCompletions.FIELD_EXPRESSION, typed)
 		return answered[0] if not answered.is_empty() else {}) and ok
+	return _test_a_position_survives_the_next_keystroke(sheet) and ok
+
+
+## WHERE the caret is, as opposed to what has been typed there. A member list that turns back into
+## the sheet's own vocabulary on the next keystroke is worse than no list at all: the popup replaces
+## only the word under the caret, so accepting an entry from the flat list writes a top-level name
+## after the dot - `hp.health`, a member `hp` has never had. The same for the two node sigils, where
+## one typed letter used to lose the scene's paths.
+static func _test_a_position_survives_the_next_keystroke(sheet: EventSheetResource) -> bool:
+	var scene_root: Node = Node2D.new()
+	scene_root.name = "Level"
+	var sprite: Node2D = Node2D.new()
+	sprite.name = "Sprite"
+	scene_root.add_child(sprite)
+	sprite.owner = scene_root
+	sprite.unique_name_in_owner = true
+	EventSheetCompletions.scene_root_override = scene_root
+	EventSheetCompletions.clear_cache()
+	var ok: bool = Pins.check("completions_position_survives_typing", {
+		"State.": "member:IDLE,member:RUN",
+		"State.R": "member:RUN",
+		"if State.": "member:IDLE,member:RUN",
+		"$": "node:Sprite",
+		"$Spr": "node:Sprite",
+		"= %Spr": "node:Sprite",
+	}, func(typed: String) -> Variant:
+		var said: PackedStringArray = PackedStringArray()
+		for entry: Dictionary in EventSheetCompletions.for_field(sheet,
+				EventSheetCompletions.FIELD_EXPRESSION, typed):
+			said.append("%s:%s" % [str(entry.get("kind", "")), str(entry.get("text", ""))])
+		return ",".join(said))
+	EventSheetCompletions.scene_root_override = null
+	EventSheetCompletions.clear_cache()
+	scene_root.free()
 	return ok
 
 

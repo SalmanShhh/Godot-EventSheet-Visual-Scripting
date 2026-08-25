@@ -6554,8 +6554,10 @@ func _refresh_after_edit() -> void:
 	if _viewport == null:
 		return
 	# A variable added, a function renamed, a group declared: the edit that changed the sheet is the
-	# only thing that can change what its fields complete with, so the built lists go here and
-	# nowhere else. A keystroke in a field must never pay for this.
+	# only thing that can change what its fields complete with, so the built lists go here. A
+	# keystroke in a field must never pay for this. The undo funnel drops them a moment EARLIER,
+	# before it swaps the sheet object the lists are keyed by; this covers every caller that
+	# refreshes a sheet it edited in place.
 	EventSheetCompletions.invalidate(_current_sheet)
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
@@ -6857,6 +6859,11 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 		return
 	# The History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
 	_ensure_history_panel().note_restored(snapshot)
+	# What a field completes with is held against the sheet OBJECT, and the line below replaces that
+	# object with a fresh duplicate - so the drop has to happen while the sheet those lists were
+	# built for is still the current one. Afterwards it drops nothing at all, and every superseded
+	# version's lists sit in the cache pushing out ones that are still being asked for.
+	EventSheetCompletions.invalidate(_current_sheet)
 	_current_sheet = snapshot.duplicate(true)
 	if not _current_sheet_path.is_empty():
 		_current_sheet.take_over_path(_current_sheet_path)

@@ -465,6 +465,12 @@ static func _project_files() -> PackedStringArray:
 ## The expression candidates for one caret position. Member position and `$`/`%` position are
 ## answered live (they are cheap, and depend on the token the caret sits behind); the flat
 ## vocabulary is the cached pool.
+##
+## The position is read from what comes BEFORE the word being typed, never from the last character:
+## `hp.` and `hp.he` are the same position, and a reader who has typed two letters of a member name
+## is more sure of what they want than one who has typed none. Reading the last character instead
+## meant the list turned back into the sheet's own vocabulary the moment anything was typed, and
+## accepting from it wrote a top-level name after the dot.
 static func _expression_pool(sheet: EventSheetResource, text_before_caret: String) -> Array[Dictionary]:
 	var receiver: String = member_receiver(text_before_caret)
 	if not receiver.is_empty():
@@ -473,12 +479,10 @@ static func _expression_pool(sheet: EventSheetResource, text_before_caret: Strin
 			members.append({"text": str(candidate.get("label", "")), "detail": receiver,
 				"kind": KIND_MEMBER})
 		return members
-	var addressing_a_node: bool = text_before_caret.ends_with("$") \
-		or (text_before_caret.ends_with("%") and not is_modulo_context(text_before_caret))
-	if addressing_a_node:
-		# The sigil is already typed, so the entries drop theirs - and the one that was typed picks
-		# which spelling is on offer: `$` the paths, `%` the unique names.
-		var sigil: String = text_before_caret.right(1)
+	# The sigil is already typed, so the entries drop theirs - and the one that was typed picks
+	# which spelling is on offer: `$` the paths, `%` the unique names.
+	var sigil: String = node_sigil(text_before_caret)
+	if not sigil.is_empty():
 		var addressed: Array[Dictionary] = []
 		for entry: Dictionary in _pool(null, FIELD_NODE):
 			var text: String = str(entry.get("text", ""))
@@ -573,12 +577,31 @@ static func is_modulo_context(text_before_caret: String) -> bool:
 	return _is_word_character(last) or ")]\"'".contains(last)
 
 
-## The token a member access reaches through - `hp` in `health + hp.`, `$Sprite` in `$Sprite.` -
-## and "" when the caret is not in member position.
+## What comes before the identifier being typed: `health + ma` gives `health + `, `$Spr` gives `$`.
+## Where the caret IS, as opposed to what has been typed there - and the two have to be asked apart,
+## because a position that changes as soon as a letter is typed is a position nobody can type in.
+static func _before_the_typed_word(text: String) -> String:
+	return text.substr(0, text.length() - trailing_word(text).length())
+
+
+## The node sigil the caret sits behind - `$` for a path, `%` for a unique name - and "" when it
+## sits behind neither. A `%` that follows a value is the modulo operator and stays one however much
+## of a name is typed after it, which is the one question that tells `score % 10` from `%HealthBar`.
+static func node_sigil(text_before_caret: String) -> String:
+	var head: String = _before_the_typed_word(text_before_caret)
+	if head.ends_with("$"):
+		return "$"
+	return "%" if head.ends_with("%") and not is_modulo_context(head) else ""
+
+
+## The token a member access reaches through - `hp` in `health + hp.`, `$Sprite` in `$Sprite.he` -
+## and "" when the caret is not in member position. The word being typed after the dot is not part
+## of the question: `hp.` and `hp.health` reach through the same `hp`.
 static func member_receiver(text: String) -> String:
-	if not text.ends_with("."):
+	var head: String = _before_the_typed_word(text)
+	if not head.ends_with("."):
 		return ""
-	var head: String = text.substr(0, text.length() - 1)
+	head = head.substr(0, head.length() - 1)
 	var word: String = trailing_word(head)
 	if word.is_empty():
 		return ""
