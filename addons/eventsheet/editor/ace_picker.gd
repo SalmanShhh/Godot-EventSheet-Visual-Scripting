@@ -2319,6 +2319,13 @@ func _on_search_gui_input(input_event: InputEvent) -> void:
 				_select_first_match()
 			_tree.grab_focus()
 			_search.accept_event()
+	elif key_event.keycode == KEY_TAB and not _search.text.strip_edges().is_empty():
+		# Tab steps INTO the best match's parameters: the same commit Enter makes, landing on the
+		# parameters dialog with whatever the typed sentence already answered in place. Without this
+		# Tab is the ordinary move-to-next-control, which from a search box with a result under it
+		# is not what the hand means.
+		_activate_first_match()
+		_search.accept_event()
 	elif key_event.keycode == KEY_ESCAPE:
 		close()
 		_search.accept_event()
