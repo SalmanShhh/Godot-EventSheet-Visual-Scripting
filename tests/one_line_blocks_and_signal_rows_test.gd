@@ -7,7 +7,9 @@
 #        was the one place still spelling the word.
 #   An `await` says which tick or which signal it waits for.
 #   A lambda handed to `connect` reads as the trigger event it is, with the lambda's body as its
-#        rows; the connect line keeps a muted note, so nothing is hidden.
+#        rows. At the top of `_ready` it LIFTS - it becomes that event, and re-emits as the
+#        statement it was written as; anywhere else the connect line stays a statement and keeps a
+#        muted note beside the same reading, so nothing is hidden either way.
 #   A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does, and the
 #        file it came from re-emits BYTE FOR BYTE - the one thing that must never be traded away.
 #
@@ -43,6 +45,7 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await host.tree_exited
 	await get_tree().create_timer(0.5).timeout
+	host.renamed.connect(func(): $Timer.stop())
 
 
 func guards() -> void:
@@ -152,25 +155,31 @@ static func _awaits(rows: PackedStringArray) -> bool:
 ## ── a connected lambda IS a trigger event ────────────────────────────────────────────────────
 static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray) -> bool:
 	var ok: bool = true
-	ok = _check("the connect line keeps a muted note naming what it wires",
-		_reading_at(rows, "connects Timer On Timeout").contains("connects Timer On Timeout"), true) and ok
-	ok = _check("the one-line lambda's trigger is a row of its own",
-		_reading_at(rows, "➜Timer On Timeout"), "➜Timer On Timeout | ") and ok
-	ok = _check("and the lambda's body is its action row",
-		_reading_at(rows, "Subtract 1 from seconds left"), " | Subtract 1 from seconds left") and ok
+	# A lambda at the top of `_ready` is LIFTED: it is the event, so it reads the way every other
+	# trigger event reads - the trigger cell on the left, what it does on the right - rather than as
+	# a view drawn over a line of code.
+	ok = _check("the one-line lambda is the event, body and all",
+		_reading_at(rows, "➜Timer On Timeout"),
+		"➜Timer On Timeout | Subtract 1 from seconds left") and ok
 	ok = _check("a multi-line lambda's trigger carries its payload chip",
-		_reading_at(rows, "➜host On collision with"), "➜host On collision withbody | ") and ok
+		_reading_at(rows, "➜host On collision with"),
+		"➜host On collision withbody | Add 1 to seconds left") and ok
 	# The payload used to be crammed INSIDE the trigger cell ("On Hit   body"), because a chip after a
 	# trigger cell drew as a sliver. It is now the same span a declared handler's trigger row draws,
 	# so one event reads one way whether it was wired with a func or with a lambda.
 	ok = _check("and that chip is the shared trigger-payload span, not words inside the cell",
-		_span_kinds(view, "On collision with"), "|trigger|trigger_payload") and ok
-	ok = _check("and its first statement is an action row",
-		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
+		_span_kinds(view, "On collision with"), "|trigger|trigger_payload|action") and ok
 	# Re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
 	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
-	ok = _check("and the branch inside that lambda is a sub-event of it",
-		_reading_at(rows, "Stop"), "OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
+	ok = _check("and the branch in its body is a row under the same trigger",
+		_reading_at(rows, "Stop timer"),
+		"➜host On collision withbody > OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
+	# A lambda the lift cannot claim - one written after other setup, where emission could not put
+	# the statement back - stays a statement, and the view still reads it as the event it is.
+	ok = _check("a connect the lift cannot claim keeps a muted note naming what it wires",
+		_has_reading(rows, "connects host On Renamed"), true) and ok
+	ok = _check("and its lambda still draws the trigger it wires",
+		_reading_at(rows, "➜host On Renamed"), "➜host On Renamed | ") and ok
 	ok = _check("a connect handed a NAMED function is left exactly as it was",
 		_connect_parts("timer.timeout.connect(_on_timeout)"), "") and ok
 	ok = _check("a connect whose lambda body is empty is refused",
@@ -280,6 +289,15 @@ static func _reading_at(readings: PackedStringArray, needle: String) -> String:
 		if reading.contains(needle):
 			return reading
 	return "no row containing \"%s\"" % needle
+
+
+## Whether ANY row's reading says this. A `contains` against `_reading_at` cannot ask it: the miss
+## message quotes the needle back, so such a check passed whether the row was there or not.
+static func _has_reading(readings: PackedStringArray, needle: String) -> bool:
+	for reading: String in readings:
+		if reading.contains(needle):
+			return true
+	return false
 
 
 ## Condition cells that still spell a conjunction, swept span by span over the EVENT rows of a whole

@@ -440,9 +440,11 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 							if header.begins_with("func _ready("):
 								ready_lifted = true
 							var lift_events: Array = lift.get("events", [])
-							if lift_events.is_empty() and header.begins_with("func _ready("):
-								# Connects-only `_ready`: remember its gap (and any non-canonical
-								# header spelling) for the stamp below - see the declarations above.
+							if header.begins_with("func _ready(") and not _has_trigger(lift_events, "OnReady"):
+								# A `_ready` that lifted to no OnReady event of its own - it held
+								# nothing but connections, or nothing but connect lambdas. Emission
+								# synthesizes it, so its gap (and any non-canonical header spelling)
+								# have to be remembered here - see the declarations above.
 								connects_ready_blanks = pending_blank_count
 								if header != "func _ready() -> void:":
 									connects_ready_header = header
@@ -452,8 +454,9 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 							# function's FIRST event (only when >1, so ordinary single-blank sources stay
 							# meta-free). The first lifted function's gap is owned by the boundary-detach path
 							# below, so this only governs gaps BETWEEN lifted sections and never double-counts.
-							if pending_blank_count > 1 and not lift_events.is_empty() and lift_events[0] is EventRow:
-								(lift_events[0] as EventRow).set_meta("__source_leading_blanks", pending_blank_count)
+							var gap_bearer: Resource = _gap_bearing_event(lift_events)
+							if pending_blank_count > 1 and gap_bearer != null:
+								gap_bearer.set_meta("__source_leading_blanks", pending_blank_count)
 							if lifted_events.is_empty() and lifted_functions.is_empty():
 								first_section_blanks = pending_blank_count
 							lifted_events.append_array(lift_events)
@@ -734,10 +737,8 @@ static func _revert_lift(sheet: EventSheetResource, backup: Array[Resource], fun
 ## reproduces it instead of falling back to its default single separator. Events emit before
 ## trailing functions on the opened-file path, so the first event wins when there is one.
 static func _stamp_leading_blanks(lift_events: Array, lift_functions: Array, count: int) -> void:
-	var target: Resource = null
-	if not lift_events.is_empty() and lift_events[0] is EventRow:
-		target = lift_events[0] as Resource
-	elif not lift_functions.is_empty() and lift_functions[0] is EventFunction:
+	var target: Resource = _gap_bearing_event(lift_events)
+	if target == null and not lift_functions.is_empty() and lift_functions[0] is EventFunction:
 		target = lift_functions[0] as Resource
 	# A gap the run actually MEASURED always wins. The scan sees a real blank row between the
 	# boundary and the first lifted function and records its count there; this call only fills in
@@ -745,6 +746,17 @@ static func _stamp_leading_blanks(lift_events: Array, lift_functions: Array, cou
 	if target == null or target.has_meta("__source_leading_blanks"):
 		return
 	target.set_meta("__source_leading_blanks", count)
+
+
+## The first lifted event that owns the gap before its own function - which is the first one that is
+## not a connect LAMBDA. A lambda's event is a statement INSIDE `_ready`, so the blank lines above
+## `_ready` are not its to carry; stamping them on it left the gap on a row emission never reads and
+## re-emitted the file one line short.
+static func _gap_bearing_event(lift_events: Array) -> Resource:
+	for event: Variant in lift_events:
+		if event is EventRow and not (event as EventRow).has_meta(SheetCompiler.LAMBDA_CONNECT_ID_META):
+			return event as Resource
+	return null
 
 
 ## True when any row after `index` still carries code rather than comments or blank separators.
@@ -1759,6 +1771,9 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var scene_connected: bool = false
 	# The emitting node's class as the scene declares it, so the row can draw its picture.
 	var source_class: String = ""
+	# The events `_ready`'s leading connect-LAMBDAS lifted to. They are siblings of whatever the
+	# rest of `_ready` becomes, not part of it: each is its own trigger.
+	var lambda_rows: Array = []
 	var index: int = 1
 	# A lifecycle header the canonical table missed but that still NAMES a lifecycle function is
 	# beginner spelling (`func _physics_process(delta):` - untyped param, no return arrow). It
@@ -1794,10 +1809,21 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# claimed lines are skipped: a connect the map could not read would otherwise vanish from
 			# the file (emission regenerates only what a lifted trigger asked for), and the whole file
 			# would revert on the byte-verify rather than lift with that line kept as a statement.
-			while index < function_lines.size() and _is_known_connect_line(function_lines[index], connections):
-				index += 1
+			# A connect whose handler is a LAMBDA has no named function to find, so it is read here
+			# instead: the body becomes the event's rows and the wrapper is kept verbatim. Only in
+			# this leading run, because emission writes every connection at the top of `_ready` - a
+			# lambda from the middle of it would come back somewhere it never was.
+			while index < function_lines.size():
+				if _is_known_connect_line(function_lines[index], connections):
+					index += 1
+					continue
+				var lambda_lift: Dictionary = _lift_connect_lambda(function_lines, index, lenient_ifs)
+				if not bool(lambda_lift.get("ok", false)):
+					break
+				lambda_rows.append_array(lambda_lift.get("events", []) as Array)
+				index = int(lambda_lift.get("next", index))
 			if index >= function_lines.size():
-				return {"ok": true, "events": []}  # connects-only _ready
+				return {"ok": true, "events": lambda_rows}  # connects-only _ready
 	else:
 		var header_regex: RegEx = RegEx.new()
 		header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> void:$")
@@ -1867,7 +1893,50 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			(event as EventRow).set_meta("__scene_connected", true)
 			if not source_class.is_empty():
 				(event as EventRow).set_meta("__scene_source_class", source_class)
-	return {"ok": true, "events": events}
+	return {"ok": true, "events": lambda_rows + events}
+
+
+## One `signal.connect(func(…): …)` statement in `_ready` → {ok, events, next}. The body becomes the
+## event's own rows and the wrapper is kept verbatim, so emission substitutes the body back between
+## the two halves and the line comes back exactly as it was written.
+##
+## Every row of one lambda carries the same group token, which is what keeps a second lambda on the
+## same signal from being folded into the first at emission - and what lets a body that reads as
+## several rows (a statement and then a branch) belong to one wiring.
+static func _lift_connect_lambda(function_lines: PackedStringArray, index: int, lenient_ifs: bool) -> Dictionary:
+	var parts: Dictionary = EventForgeConnectLambdaLift.match_statement(function_lines, index)
+	if parts.is_empty():
+		return {"ok": false}
+	var signal_name: String = str(parts.get("signal", ""))
+	var trigger_id: String = str(CORE_SIGNAL_TRIGGERS.get(signal_name, "signal:%s" % signal_name))
+	var trigger_provider: String = "Core" if CORE_SIGNAL_TRIGGERS.has(signal_name) else ""
+	var depth: int = int(parts.get("depth", 1))
+	var body_lines: PackedStringArray = function_lines
+	var body_start: int = int(parts.get("body_start", index + 1))
+	var body_end: int = int(parts.get("body_end", index + 1))
+	if bool(parts.get("inline", false)):
+		# An inline body has no line of its own; give it one at the indent the block form would
+		# have used, so one body grammar reads both shapes.
+		body_lines = PackedStringArray(["%s%s" % ["\t".repeat(depth + 1), str(parts.get("inline_body", ""))]])
+		body_start = 0
+		body_end = 1
+	var parsed: Dictionary = _parse_body(body_lines, body_start, depth + 1, trigger_id,
+		trigger_provider, str(parts.get("params", "")), str(parts.get("source", "")),
+		_build_reverse_entries(), lenient_ifs, false, trigger_id)
+	if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) != body_end:
+		return {"ok": false}
+	var events: Array = parsed.get("rows", [])
+	if events.is_empty() or not (events[0] is EventRow):
+		return {"ok": false}
+	var lead: EventRow = events[0] as EventRow
+	if _is_plain_collector(lead) and lead.actions.is_empty():
+		return {"ok": false}
+	lead.set_meta(SheetCompiler.LAMBDA_CONNECT_META, EventForgeConnectLambdaLift.spelling_of(parts))
+	for event: Variant in events:
+		if not (event is EventRow):
+			return {"ok": false}
+		(event as EventRow).set_meta(SheetCompiler.LAMBDA_CONNECT_ID_META, lead.event_uid)
+	return {"ok": true, "events": events, "next": int(parts.get("next", index + 1))}
 
 
 ## Recursive body grammar (the reverse of _emit_event_body): at each depth,
@@ -2576,6 +2645,15 @@ static func _is_known_connect_line(line: String, connections: Dictionary) -> boo
 	return claimed is Dictionary and str((claimed as Dictionary).get("line", "")) == line
 
 
+## Whether any of these lifted rows is an event on one named trigger. Asked of a `_ready` lift, whose
+## rows may now be a mixture: its own OnReady body, and one event per connect lambda it wired.
+static func _has_trigger(events: Array, trigger_id: String) -> bool:
+	for event: Variant in events:
+		if event is EventRow and (event as EventRow).trigger_id == trigger_id:
+			return true
+	return false
+
+
 static func _make_event(trigger_id: String, trigger_provider: String = "Core", trigger_args: String = "", trigger_source: String = "") -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = trigger_provider
@@ -2792,29 +2870,31 @@ static func _matched_spelling_action(matched: Dictionary, blank_box: Array) -> A
 ## part comment and part code can be neither - which is why most comments in real bodies were
 ## still rendering as code even after comment runs learned to lift.
 static func _append_raw_line(event: EventRow, pending_raw: PackedStringArray, blank_box: Array, line: String) -> void:
-	if not pending_raw.is_empty() and not _shared_comment_marker(pending_raw).is_empty():
-		var joined: PackedStringArray = pending_raw.duplicate()
-		joined.append(line)
-		if _shared_comment_marker(joined).is_empty():
-			_flush_raw(event, pending_raw, blank_box)
+	if not pending_raw.is_empty() and _is_comment_run(pending_raw) and not _is_comment_line(line):
+		_flush_raw(event, pending_raw, blank_box)
 	pending_raw.append(line)
 
 
-## Splits a run of comment lines wherever it changes character - a commented-out statement next to a
-## note about the code. The concatenation of the groups is always the input, so emission is unchanged.
-static func _split_comment_run(pending_raw: PackedStringArray, marker: String) -> Array[PackedStringArray]:
-	var groups: Array[PackedStringArray] = []
+## Splits a run of comment lines wherever it changes character - a commented-out statement beside a
+## note about the code, or a `# ` note broken by the bare `#` that separates two paragraphs of it.
+## Each group is {marker, lines} and carries its own marker, which is what lets those spellings sit
+## in one run at all: the concatenation of the groups is always the input, so emission is unchanged.
+static func _split_comment_run(pending_raw: PackedStringArray) -> Array[Dictionary]:
+	var groups: Array[Dictionary] = []
 	var current: PackedStringArray = PackedStringArray()
+	var current_marker: String = ""
 	var current_is_code: bool = false
 	for line: String in pending_raw:
+		var marker: String = _comment_marker_of(line)
 		var is_code: bool = not CommentRow.code_text(line.substr(marker.length())).is_empty()
-		if not current.is_empty() and is_code != current_is_code:
-			groups.append(current)
+		if not current.is_empty() and (is_code != current_is_code or marker != current_marker):
+			groups.append({"marker": current_marker, "lines": current})
 			current = PackedStringArray()
 		current.append(line)
+		current_marker = marker
 		current_is_code = is_code
 	if not current.is_empty():
-		groups.append(current)
+		groups.append({"marker": current_marker, "lines": current})
 	return groups
 
 
@@ -2827,18 +2907,18 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	# `<indent># <text>`, which is byte-identical only for lines starting with exactly "# ";
 	# anything else (a `#comment` with no space, a `##` doc line) stays verbatim rather than risk
 	# the round-trip.
-	var comment_marker: String = _shared_comment_marker(pending_raw)
-	if not comment_marker.is_empty():
+	if _is_comment_run(pending_raw):
 		# A run that mixes a commented-out STATEMENT with a note about it is two different things
 		# said in the same marker: one is a row somebody switched off, the other is prose. Split at
 		# that boundary so each becomes its own comment row - which is also what lets the switched-off
 		# one be read, dragged and switched back on by itself. Byte-neutral: consecutive comment rows
-		# re-emit their lines in order with the same marker.
+		# re-emit their lines in order with their own marker.
 		var first_note: bool = true
-		for group: PackedStringArray in _split_comment_run(pending_raw, comment_marker):
+		for group: Dictionary in _split_comment_run(pending_raw):
+			var comment_marker: String = str(group["marker"])
 			var note: CommentRow = CommentRow.new()
 			var note_lines: PackedStringArray = PackedStringArray()
-			for comment_line: String in group:
+			for comment_line: String in (group["lines"] as PackedStringArray):
 				note_lines.append(comment_line.substr(comment_marker.length()))
 			note.text = "
 ".join(note_lines)
@@ -3005,25 +3085,33 @@ static func _no_line_at_indent(run: PackedStringArray, indent: int, interior: Pa
 ## The comment marker EVERY line of a run shares, or "" when the run is not all comments (or the
 ## lines disagree). A run must be uniform, because emission writes one marker before every line -
 ## claiming a mixed run would rewrite half of it.
-static func _shared_comment_marker(pending_raw: PackedStringArray) -> String:
-	if pending_raw.is_empty():
+static func _comment_marker_of(line: String) -> String:
+	if not line.begins_with("#"):
 		return ""
-	var marker: String = ""
+	if line.begins_with("## "):
+		return "## "
+	if line.begins_with("##"):
+		return "##"
+	if line.begins_with("# "):
+		return "# "
+	return "#"
+
+
+static func _is_comment_line(line: String) -> bool:
+	return line.begins_with("#")
+
+
+## Whether every line of a run is a comment. The MARKERS need not agree: a paragraph of `# ` notes
+## broken by the bare `#` that separates two of them is one run of comments and reads as one, and
+## before the split below carried a marker per group that whole run - and the function it sat in -
+## stayed a wall of code.
+static func _is_comment_run(pending_raw: PackedStringArray) -> bool:
+	if pending_raw.is_empty():
+		return false
 	for line: String in pending_raw:
-		if not line.begins_with("#"):
-			return ""
-		var line_marker: String = "#"
-		if line.begins_with("## "):
-			line_marker = "## "
-		elif line.begins_with("##"):
-			line_marker = "##"
-		elif line.begins_with("# "):
-			line_marker = "# "
-		if marker.is_empty():
-			marker = line_marker
-		elif marker != line_marker:
-			return ""
-	return marker
+		if not _is_comment_line(line):
+			return false
+	return true
 
 
 ## Carries a captured run of author-facing blank lines onto the visible row/action that follows it,

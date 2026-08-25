@@ -17,6 +17,20 @@
   was no gap to measure, so emission fell back to its default separator and added a blank line the
   file never had - which failed the whole-file check and reverted every function in it. The
   no-gap-at-all case is now recorded like every other gap.
+- **`signal.connect(func(): …)` becomes the event it is.** A handler written as a named function
+  already opened as a trigger event; one written as a lambda inside the connect call had no name to
+  find, so it stayed a line of code with a reading drawn over it. A lambda at the top of `_ready` now
+  LIFTS: the signal, the emitter and the lambda's own parameters become the row, its body becomes
+  the rows under it, and the statement is written back exactly as it was typed - the receiver
+  spelling, the spacing, the one-line-versus-block shape are all kept, so re-emitting is
+  substituting the body back between the two halves. Editing the row writes code, and a body that
+  outgrows one line is written in the shape that holds it rather than dropped. A lambda the lift
+  cannot re-spell - one written after other setup in `_ready`, where the statement could not come
+  back where it was - stays the statement it already is, and reads exactly as it did.
+- **A comment paragraph no longer costs a function its rows.** A run of `# ` notes broken by the
+  bare `#` that separates two paragraphs of it stopped being read as comments at all, so the whole
+  function it sat in reverted to a wall of code. The run splits where its marker changes, each part
+  keeping its own, and the bare line is written back as the line it is.
 
 ### Fixed - what this pass's own review found
 

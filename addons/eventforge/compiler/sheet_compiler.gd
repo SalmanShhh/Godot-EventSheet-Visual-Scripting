@@ -36,6 +36,13 @@ const TILE_CURSOR_HELPER: String = "__eventsheets_tile_under"
 ## opened file hand the member back to the row instead of reading it as an ordinary private member.
 const STATIC_LOCAL_MARKER: String = "# @static_local:%s"
 
+## An event lifted from `signal.connect(func(…): …)` carries the kept spelling of that statement
+## (LAMBDA_CONNECT_META) and a token of its own (LAMBDA_CONNECT_ID_META). Wiring and handler are one
+## statement there, so the event is written into `_ready` whole and gets no handler function; the
+## token is what keeps two lambdas on the SAME signal from being folded into one.
+const LAMBDA_CONNECT_META: String = "__source_lambda_connect"
+const LAMBDA_CONNECT_ID_META: String = "__lambda_connect_id"
+
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
@@ -1542,6 +1549,40 @@ static func _scan_declared_signals(raw_blocks: Array) -> Array:
 ## connect_context: {self_class: String, declared_signals: Array} - self-connections are
 ## validated against these at compile time (emitting a connect to a missing signal would
 ## make the whole generated script fail to parse).
+## The connection lines at the top of `_ready`, written into `lines`. One entry is either a finished
+## line (an authored connect, or the exact one a lifted handler was wired with) or the events of a
+## connect LAMBDA, whose body is emitted between the two halves of its kept spelling. Shared by the
+## synthesized `_ready` and the one an OnReady event already owns, so the two cannot drift.
+static func _emit_ready_connections(ready_connections: Array, lines: PackedStringArray,
+		source_map: Array, result: Dictionary) -> void:
+	for connection: Variant in ready_connections:
+		if not (connection is Array):
+			lines.append(str(connection))
+			continue
+		var lambda_events: Array = connection as Array
+		var event_row: EventRow = lambda_events[0] as EventRow
+		var body: PackedStringArray = PackedStringArray()
+		var body_map: Array = []
+		var open: String = str((event_row.get_meta(LAMBDA_CONNECT_META, {}) as Dictionary).get("open", "\t"))
+		var depth: int = open.length() - open.lstrip("\t").length()
+		_emit_event_body(lambda_events, body, body_map, depth + 1, result["warnings"])
+		var written: PackedStringArray = EventForgeConnectLambdaLift.emitted_lines(
+			event_row.get_meta(LAMBDA_CONNECT_META, {}), body)
+		var start_index: int = lines.size()
+		lines.append_array(written)
+		# The body's own line numbers are relative to `body`; shift them onto the lines just written
+		# (past the opening half), or onto the one line an inline statement collapsed into.
+		for entry: Variant in body_map:
+			var mapped: Dictionary = entry as Dictionary
+			if written.size() == 1:
+				mapped["start"] = start_index + 1
+				mapped["end"] = start_index + 1
+			else:
+				mapped["start"] = int(mapped.get("start", 1)) + start_index + 1
+				mapped["end"] = int(mapped.get("end", 1)) + start_index + 1
+			source_map.append(mapped)
+
+
 static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}, deferred_comment_lines: PackedStringArray = PackedStringArray()) -> void:
 	var flattened: Array = []
 	_flatten_trigger_rows(event_rows, flattened, deferred_comment_lines)
@@ -1556,6 +1597,11 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if not event_row.enabled:
 			continue
 		var key: String = TriggerResolver.get_trigger_key(event_row)
+		# An event lifted from a connect LAMBDA is its own wiring, body and all - two lambdas on the
+		# same signal are two statements in `_ready` and must never be folded into one handler. Its
+		# own token in the key is what keeps them apart.
+		if event_row.has_meta(LAMBDA_CONNECT_ID_META):
+			key = "%s#%s" % [key, str(event_row.get_meta(LAMBDA_CONNECT_ID_META))]
 		if not grouped.has(key):
 			grouped[key] = []
 			trigger_order.append(key)
@@ -1565,13 +1611,18 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 	# known up front (handlers used to be generated but never connected - they only fired
 	# when the user wired the signal manually in the scene).
 	var signatures: Dictionary = {}
-	var ready_connections: PackedStringArray = PackedStringArray()
+	var ready_connections: Array = []
 	for key: String in trigger_order:
 		var events: Array = grouped.get(key, [])
 		if events.is_empty():
 			continue
 		var signature: Dictionary = TriggerResolver.resolve_trigger(events[0])
 		signatures[key] = signature
+		# A lambda-wired event IS its connect line: the wiring and the handler are one statement, so
+		# the whole group goes into `_ready` and no separate handler function is written for it.
+		if (events[0] as EventRow).has_meta(LAMBDA_CONNECT_META):
+			ready_connections.append(events)
+			continue
 		var signal_name: String = str(signature.get("signal_name", ""))
 		var function_name: String = str(signature.get("function_name", ""))
 		if signal_name.is_empty() or function_name.is_empty():
@@ -1664,12 +1715,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if _error_reporter_pending:
 			_emit_error_reporter_arming(lines)
 			_error_reporter_pending = false
-		for connection_line: String in ready_connections:
-			lines.append(connection_line)
+		_emit_ready_connections(ready_connections, lines, source_map, result)
 
 	for key: String in trigger_order:
 		var events: Array = grouped.get(key, [])
 		if events.is_empty():
+			continue
+		# The lambda-wired events were written into `_ready` above, wiring and body together.
+		if (events[0] as EventRow).has_meta(LAMBDA_CONNECT_META):
 			continue
 		var signature: Dictionary = signatures.get(key, {})
 		var function_name: String = str(signature.get("function_name", ""))
@@ -1735,8 +1788,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			_live_values_payload = ""
 		if function_name == "_ready" and not ready_connections.is_empty():
 			# Signal connections run before the user's OnReady logic.
-			for connection_line: String in ready_connections:
-				lines.append(connection_line)
+			_emit_ready_connections(ready_connections, lines, source_map, result)
 			had_body = true
 		# Sibling isolation (the async-events rule): in a SHARED per-frame handler, an await
 		# in one event would suspend the whole function - its sibling events below would
@@ -1834,11 +1886,11 @@ static func _emit_event_body(
 			continue
 		if event_item is CommentRow:
 			var comment_row: CommentRow = event_item as CommentRow
-			if comment_row.enabled and not comment_row.text.strip_edges().is_empty():
+			if comment_row.writes_a_line():
 				_emit_leading_body_blanks(comment_row, lines)
 				var comment_start: int = lines.size() + 1
 				for comment_line: String in comment_row.text.split("\n"):
-					lines.append("%s# %s" % [indent, comment_line])
+					lines.append("%s%s%s" % [indent, comment_row.emit_marker(), comment_line])
 					had_body = true
 				source_map.append({"uid": str(comment_row.get_instance_id()), "start": comment_start, "end": lines.size(), "kind": "comment"})
 			# Comments are transparent to else-chaining (annotating a chain shouldn't break it).
@@ -2091,7 +2143,7 @@ static func _emit_event_body(
 			elif action_item is CommentRow:
 				# Action-cell comment: annotates the flow, compiles to comment lines.
 				var action_comment: CommentRow = action_item as CommentRow
-				if action_comment.enabled and not action_comment.text.strip_edges().is_empty():
+				if action_comment.writes_a_line():
 					_emit_leading_body_blanks(action_comment, lines)
 					var action_comment_start: int = lines.size() + 1
 					# The marker is whatever the source used, so a `#no space` note re-emits as written rather

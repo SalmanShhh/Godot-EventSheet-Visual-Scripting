@@ -164,6 +164,30 @@ static func run() -> bool:
 	var roundtrip5: String = str(SheetCompiler.compile(imported5, "user://sb_rt5.gd").get("output", ""))
 	ok = _check("inferred-local lift round-trips byte-identically", roundtrip5 == source5, true) and ok
 
+	# ── A comment run whose markers differ. A paragraph of `# ` notes broken by the bare `#` that
+	# separates two of them is the ordinary way anyone writes a long note, and it used to stop the
+	# run being read as comments at all - which left the whole function it sat in a wall of code.
+	# The run splits at the change instead, each part keeping its own marker, so the bytes are the
+	# same and the notes are rows. ──
+	var noted: String = "extends Node\n\n\nfunc explain():\n\t# the first paragraph\n\t#\n\t# the second one\n\tpass\n"
+	var noted_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(noted)
+	var noted_function: EventFunction = null
+	for entry: Variant in noted_sheet.functions:
+		if entry is EventFunction:
+			noted_function = entry as EventFunction
+	ok = _check("the function around a broken comment run lifts", noted_function != null, true) and ok
+	var notes: Array = []
+	if noted_function != null:
+		for event_entry: Variant in noted_function.events:
+			for action: Variant in (event_entry as EventRow).actions:
+				if action is CommentRow:
+					notes.append((action as CommentRow).text)
+	ok = _check("its paragraphs arrive as comment rows", notes,
+		["the first paragraph", "", "the second one"]) and ok
+	noted_sheet.external_source_path = "user://sb_noted.gd"
+	ok = _check("and the broken run round-trips byte-identically",
+		str(SheetCompiler.compile(noted_sheet, "user://sb_noted.gd").get("output", "")), noted) and ok
+
 	return ok
 
 

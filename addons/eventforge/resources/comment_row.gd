@@ -31,6 +31,15 @@ func emit_marker() -> String:
 	return source_marker if not source_marker.is_empty() else "# "
 
 
+## Whether this row is a line of the file. An authored comment with nothing written in it is not -
+## it is an empty row somebody has not filled in yet, and emitting it would leave a stray `# ` in the
+## generated script. A comment that came from an opened file IS, even when it says nothing: the bare
+## `#` that separates two paragraphs of a note is a real line, and dropping it silently failed the
+## round-trip and left the whole function it sat in reading as code.
+func writes_a_line() -> bool:
+	return enabled and (not text.strip_edges().is_empty() or not source_marker.is_empty())
+
+
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:
 	return "comment"
