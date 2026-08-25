@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Material" path="res://tests/fixtures/effect_screen_material.tres" id="1_screen"]
+
+[node name="ScreenEffects" type="CanvasLayer"]
+
+[node name="Full" type="ColorRect" parent="."]
+material = ExtResource("1_screen")
+anchors_preset = 15
+
+[node name="Resting" type="ColorRect" parent="."]
+material = ExtResource("1_screen")
+visible = false

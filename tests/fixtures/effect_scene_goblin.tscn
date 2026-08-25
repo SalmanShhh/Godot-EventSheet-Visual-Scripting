@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/effect_scene_goblin.gd" id="1_goblin"]
+[ext_resource type="Material" path="res://tests/fixtures/effect_shared_material.tres" id="2_shared"]
+
+[node name="Goblin" type="Sprite2D"]
+material = ExtResource("2_shared")
+script = ExtResource("1_goblin")
+
+[node name="Torch" type="Sprite2D" parent="."]
+material = ExtResource("2_shared")

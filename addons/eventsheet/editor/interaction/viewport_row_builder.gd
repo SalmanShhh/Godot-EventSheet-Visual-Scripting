@@ -8841,7 +8841,11 @@ func _build_finding_note_rows(found: Array[Dictionary], uid: String, indent: int
 				# finding whose repair is a whole new row leaves these at their empty answers.
 				"variable_note_to": str(finding.get("to", "")),
 				"variable_note_lane": str(finding.get("lane", "")),
-				"variable_note_index": int(finding.get("index", -1))
+				"variable_note_index": int(finding.get("index", -1)),
+				# And WHICH parameter of that row holds the name, because the same mistake can be
+				# made in two rows that spell it differently - a picked dial row keeps the name
+				# bare, the frozen free-string row keeps it quoted.
+				"variable_note_param": str(finding.get("param", ""))
 			}, false))
 	return rows
 

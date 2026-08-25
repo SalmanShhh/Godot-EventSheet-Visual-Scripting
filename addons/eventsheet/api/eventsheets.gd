@@ -1116,6 +1116,25 @@ static func project_scripts() -> PackedStringArray:
 	return EventSheetProjectDoctor._project_scripts()
 
 
+## Every scene of the project that loads one resource FILE, in path order, leaving out `own_scene`.
+##
+## The question behind "shared with N other scenes": a `.tres` is one object, so a material, an
+## environment or a curve written at run time is written for everything holding the same file. Any
+## check or head band asking it should ask HERE rather than walking the scenes itself - the answer
+## comes from one indexed scan of the project, shared by everything that asks and dropped whole when
+## the editor's filesystem signal fires.
+##
+## The scan is time-sliced across idle frames, so this BLOCKS on the first ask if it is not finished.
+## A band that must not wait asks `EventSheetProjectShareIndex.request()` for readiness first and
+## says "counting…" until it answers true.
+static func scenes_using_resource(resource_path: String,
+		own_scene: String = "") -> PackedStringArray:
+	if resource_path.strip_edges().is_empty():
+		return PackedStringArray()
+	EventSheetProjectShareIndex.build_now()
+	return EventSheetProjectShareIndex.other_holders(resource_path, own_scene)
+
+
 # ── Extension seams (custom features plug in here) ─────────────────────────────────────
 
 ## Row context-menu items: [{label, filter: Callable(resource)->bool, action: Callable(resource)}].

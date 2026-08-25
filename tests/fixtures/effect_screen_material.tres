@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://tests/fixtures/effect_screen.gdshader" id="1_screen"]
+
+[resource]
+shader = ExtResource("1_screen")
+shader_parameter/blur = 0.0

@@ -40,10 +40,11 @@ const DARKNESS_PROPERTY: String = "color"
 ## the first of the Doctor's five findings.
 const TEXTURE_PROPERTY: String = "texture"
 
-## environment resource path -> the other scenes holding it, sorted. The project scan behind it
-## reads every `.tscn` once, which is why the answer is kept: the head asks on every open, and a
-## project's scenes do not change under a running editor.
-static var _sharers: Dictionary = {}
+
+## script path -> the one scene running it. Kept for the session because the question behind it
+## reads every `.tscn` in the project, and it is asked by every family of findings on every rebuild
+## of the canvas - which made it one of the few genuinely per-frame project scans in the editor.
+static var _attached: Dictionary = {}
 
 
 ## THE scene this script is attached to, or "" when there is not exactly one. Every band below is a
@@ -53,8 +54,12 @@ static var _sharers: Dictionary = {}
 ## scene, because the question there is "could this row mean that node", not "what is this sheet's
 ## scene", and answering it too narrowly would refuse a line somebody really wrote.
 static func attached_scene(script_path: String) -> String:
+	if _attached.has(script_path):
+		return _attached[script_path]
 	var scenes: PackedStringArray = EventSheetSceneReplication.scenes_using(script_path)
-	return scenes[0] if scenes.size() == 1 else ""
+	var found: String = scenes[0] if scenes.size() == 1 else ""
+	_attached[script_path] = found
+	return found
 
 
 ## The `lit by` bands: one per light of the attached scene, in scene order. Each is one light, so a
@@ -296,32 +301,27 @@ static func environment_echo(holder: Dictionary, resource_path: String, others: 
 	return "%s · %s %s" % [written, EventSheetL10n.translate("also in"), ", ".join(names)]
 
 
-## Every OTHER scene of the project loading one resource file, sorted. Cached for the session: this
-## is a read of every `.tscn` there is, asked once per open and answered from a table after that.
+## Every OTHER scene of the project loading one resource file, sorted. The scan behind it is the
+## project-wide index shared with the effect facts: one read of every `.tscn` files EVERY resource at
+## once, where a per-resource cache read them all again for the next question asked.
+##
+## This asker BLOCKS on its first question, which is what it has always done - a lit sheet's head is
+## composed in one pass with nothing to say "counting…" through yet. The effect band opposite takes
+## the same index a slice at a time and does not block; moving this one onto that path is a change to
+## how the head is built rather than to what it says.
 static func scenes_sharing(resource_path: String, own_scene: String) -> PackedStringArray:
 	if resource_path.is_empty():
 		return PackedStringArray()
-	if not _sharers.has(resource_path):
-		var holders: PackedStringArray = PackedStringArray()
-		for scene_path: String in EventSheetSceneConnections.scene_paths():
-			for held: Variant in EventSheetSceneConnections.resource_paths_of_scene(scene_path).values():
-				if str(held) == resource_path:
-					holders.append(scene_path)
-					break
-		holders.sort()
-		_sharers[resource_path] = holders
-	var others: PackedStringArray = PackedStringArray()
-	for scene_path: String in _sharers[resource_path] as PackedStringArray:
-		if scene_path != own_scene:
-			others.append(scene_path)
-	return others
+	EventSheetProjectShareIndex.build_now()
+	return EventSheetProjectShareIndex.other_holders(resource_path, own_scene)
 
 
 ## Drops the project scan, so the next ask reads the scenes again. Called between fixtures by the
 ## tests, for the same reason the readers beside this one expose one: a session-lifetime answer is
 ## right while the editor runs and wrong the moment a suite swaps the project under it.
 static func clear_cache() -> void:
-	_sharers.clear()
+	_attached.clear()
+	EventSheetProjectShareIndex.clear_cache()
 
 
 ## The scene and node a band is about, in the "scene|node" spelling the head's gestures read.

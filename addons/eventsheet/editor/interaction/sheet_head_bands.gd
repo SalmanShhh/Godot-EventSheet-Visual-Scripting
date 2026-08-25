@@ -32,6 +32,7 @@ const BAND_SPAWNED: String = "spawned"
 const BAND_LIT_BY: String = "lit_by"
 const BAND_SHADOWS: String = "shadows"
 const BAND_ENVIRONMENT: String = "environment"
+const BAND_EFFECT: String = "effect"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -42,7 +43,7 @@ const BAND_ATTACH: String = "attach"
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
-	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT,
+	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT,
 	BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
@@ -56,6 +57,7 @@ const SCENE_BANDS: Dictionary = {
 	BAND_LIT_BY: "lit_by",
 	BAND_SHADOWS: "shadow_facts",
 	BAND_ENVIRONMENT: "environment",
+	BAND_EFFECT: "effect",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -73,6 +75,7 @@ const LEADERS: Dictionary = {
 	BAND_LIT_BY: "lit by",
 	BAND_SHADOWS: "shadows",
 	BAND_ENVIRONMENT: "environment",
+	BAND_EFFECT: "effect",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -259,7 +262,7 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	var facts: Dictionary = {"synchronizers": [], "spawned_by": [],
-		"lit_by": [], "shadow_facts": [], "environment": []}
+		"lit_by": [], "shadow_facts": [], "environment": [], "effect": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
@@ -268,6 +271,11 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	facts["lit_by"] = EventSheetSceneLightingFacts.lit_by(source_path)
 	facts["shadow_facts"] = EventSheetSceneLightingFacts.shadow_bands(source_path)
 	facts["environment"] = EventSheetSceneLightingFacts.environment_bands(source_path)
+	# And what it WEARS: the material file behind each node's effect, the shader at the end of the
+	# chain, and how many other nodes of the project wear the same file - the count that turns one
+	# dial row into twelve. The sheet's own rows say which nodes have already been given a copy.
+	facts["effect"] = EventSheetSceneEffectFacts.effect_bands(source_path,
+		EventSheetEffectFindings.nodes_given_their_own_copy(sheet))
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries
@@ -331,7 +339,7 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("select the spawner")
 		BAND_LIT_BY, BAND_SHADOWS:
 			return EventSheetL10n.translate("select the light")
-		BAND_ENVIRONMENT:
+		BAND_ENVIRONMENT, BAND_EFFECT:
 			return EventSheetL10n.translate("select the node")
 	return ""
 

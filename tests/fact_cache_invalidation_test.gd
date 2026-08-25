@@ -66,6 +66,37 @@ static func run() -> bool:
 		str(EventSheetSceneLights.classes_for_script(lit_script).get(
 			EventSheetSceneLights.reference_key("$Torch"), "")), "PointLight2D") and all_passed
 
+	# ── What the scene says about its EFFECTS drops and rebuilds ───────────────────────────
+	# Three reads, one chain: which node wears which material, which shader is at the end of it, and
+	# which nodes of the whole project wear the same file. A uniform renamed in the shader has to
+	# reach the rows naming it, and a scene saved has to restart the project-wide count.
+	var worn_script: String = "res://tests/fixtures/effect_scene_goblin.gd"
+	var warm_wearers: int = EventSheetSceneEffects.for_script(worn_script).size()
+	all_passed = _check("the goblin's wearing nodes are read off its scene",
+		warm_wearers, 2) and all_passed
+	var warm_dials: int = EventForgeShaderUniforms.names_of(
+		"res://tests/fixtures/effect_dissolve.gdshader").size()
+	EventSheetProjectShareIndex.build_now()
+	var warm_shared: int = EventSheetProjectShareIndex.wearers_of(
+		"res://tests/fixtures/effect_shared_material.tres").size()
+	all_passed = _check("and every node of the project wearing the shared material",
+		warm_shared, 3) and all_passed
+	EventSheetSceneEffects.clear_cache()
+	EventForgeShaderUniforms.clear_cache()
+	EventSheetProjectShareIndex.clear_cache()
+	all_passed = _check("clear_cache() empties all three", PackedStringArray([
+		str(EventSheetSceneEffects._cache.size()), str(EventForgeShaderUniforms._cache.size()),
+		str(EventSheetProjectShareIndex.is_ready())]),
+		PackedStringArray(["0", "0", "false"])) and all_passed
+	EventSheetProjectShareIndex.build_now()
+	all_passed = _check("the next question re-reads the files and answers the same",
+		PackedStringArray([str(EventSheetSceneEffects.for_script(worn_script).size()),
+			str(EventForgeShaderUniforms.names_of(
+				"res://tests/fixtures/effect_dissolve.gdshader").size()),
+			str(EventSheetProjectShareIndex.wearers_of(
+				"res://tests/fixtures/effect_shared_material.tres").size())]),
+		PackedStringArray([str(warm_wearers), str(warm_dials), str(warm_shared)])) and all_passed
+
 	# ── The dock actually calls both ────────────────────────────────────────────────────────
 	# Source lint, not a live dock: constructing the dock needs a display server. What matters is
 	# that the two hooks name the droppers, and that both hooks are connected at all.
@@ -79,6 +110,12 @@ static func run() -> bool:
 		filesystem_hook.contains("EventSheetSceneLights.clear_cache()"), true) and all_passed
 	all_passed = _check("and the environment-sharing scan behind the head's band",
 		filesystem_hook.contains("EventSheetSceneLightingFacts.clear_cache()"), true) and all_passed
+	all_passed = _check("the filesystem hook drops what the scene said about its effects",
+		filesystem_hook.contains("EventSheetSceneEffects.clear_cache()"), true) and all_passed
+	all_passed = _check("and the shader files' own dials",
+		filesystem_hook.contains("EventForgeShaderUniforms.clear_cache()"), true) and all_passed
+	all_passed = _check("and the project-wide scan behind every sharing count",
+		filesystem_hook.contains("EventSheetProjectShareIndex.clear_cache()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
 	all_passed = _check("the settings hook drops the Input Map read",
 		settings_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed

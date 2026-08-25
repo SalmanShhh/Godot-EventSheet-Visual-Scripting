@@ -560,6 +560,13 @@ func _on_translations_maybe_changed() -> void:
 	# was invisible and a deleted one went on being claimed until the editor restarted.
 	EventSheetSceneLights.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
+	# And what it says about EFFECTS: which node wears which material, which shader is at the end of
+	# that chain, and what dials the shader declares. All three are reads of files that just changed -
+	# a uniform renamed in the shader has to reach the rows naming it, and the project-wide "who else
+	# wears this file" scan has to start again rather than answer with yesterday's scenes.
+	EventSheetSceneEffects.clear_cache()
+	EventForgeShaderUniforms.clear_cache()
+	EventSheetProjectShareIndex.clear_cache()
 	# And what a FIELD can be completed with. Half of those lists are answers about the project - the
 	# Input Map, the node groups, the scene's nodes, the project's classes and its files - so a file
 	# added, a scene saved or an action declared in Project Settings changes them with nothing in any
@@ -5419,13 +5426,36 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetEffectFindings.FIX_PICK_DIAL:
 			_repick_effect_dial(note_meta)
 			return true
+		EventSheetEffectFindings.FIX_OWN_MATERIAL:
+			give_the_node_its_own_material(subject)
+			return true
 	return false
+
+
+## "Make the effect this node's own". The rows turn dials on a material file other nodes wear, so
+## every one of them turns for those nodes too; this writes the row that takes a copy first, on
+## ready, above everything that reads through it. One undo step, through the funnel every other
+## mutation takes.
+func give_the_node_its_own_material(target: String) -> bool:
+	if _current_sheet == null:
+		return false
+	if not _perform_undoable_sheet_edit(
+			EventSheetL10n.translate("Make the effect this node's own"), func() -> bool:
+				return EventSheetEffectFindings.insert_own_material(_current_sheet, target)):
+		_set_status(EventSheetL10n.translate("This sheet already takes its own copy."))
+		return false
+	_mark_dirty(EventSheetL10n.translate("This node has its own material now - the dials stop here."))
+	return true
 
 
 ## "Use dissolve" on an effect note: the row names a dial its shader does not declare, and one
 ## declared name is close enough to be what was meant. Rewrites that ONE row's dial - the re-pick, in
 ## one click and one undo step. The row is found by its lane and slot rather than held across the
 ## funnel, which replaces resources as it commits.
+##
+## Written back into the slot THIS row keeps the name in, and in the shape it keeps it: a picked dial
+## row holds it bare in `dial`, the frozen free-string row holds it quoted in `param`, and a line
+## lifted with a name the shader never had is always the second of those.
 func _repick_effect_dial(note_meta: Dictionary) -> void:
 	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
 	var slot: int = int(note_meta.get("variable_note_index", -1))
@@ -5436,13 +5466,17 @@ func _repick_effect_dial(note_meta: Dictionary) -> void:
 		== "condition" else event_row.actions
 	if slot >= lane.size() or not (lane[slot] is Resource):
 		return
+	var dial_param: String = str(note_meta.get("variable_note_param", ""))
+	if dial_param.is_empty():
+		dial_param = EventForgeEffectDialACEs.DIAL_PARAM
 	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Use %s") % picked, func() -> bool:
 			var row: Resource = lane[slot] as Resource
 			var params: Variant = row.get("params")
 			if not (params is Dictionary):
 				return false
 			var written: Dictionary = (params as Dictionary).duplicate()
-			written[EventForgeEffectDialACEs.DIAL_PARAM] = picked
+			written[dial_param] = picked if dial_param == EventForgeEffectDialACEs.DIAL_PARAM \
+				else "\"%s\"" % picked
 			row.set("params", written)
 			return true):
 		return
