@@ -18,7 +18,9 @@
 # gives back the name, the type, the hints as the author wrote them, the default text, and the `//`
 # comment block directly above it as the description. A declaration SPLIT ACROSS LINES is left alone
 # rather than guessed at: nothing here may claim a dial it cannot name exactly, because a wrong name
-# is the very failure this exists to prevent.
+# is the very failure this exists to prevent. For the same reason a declaration wrapped in
+# `/* … */` is not one: that is how a uniform is switched off while somebody tries the shader
+# without it, and reading it would put a dial on the picker that no material has.
 #
 # CACHED BY path|mtime|size, exactly like the ACE definition cache, and for the same reason: the
 # picker asks per keystroke and the lift asks per line, while a shader file changes when somebody
@@ -58,6 +60,17 @@ const SCOPE_INSTANCE: String = "instance"
 ## The comment marker a description is written with. Godot's shader language takes C-style comments,
 ## and the block directly above a uniform is where an author already writes what it is for.
 const COMMENT_MARKER: String = "//"
+
+## The two halves of a C-style block comment. A uniform is commented OUT with these while somebody
+## tries the shader without it, so the text between them is not a declaration however exactly it is
+## spelled - which is the one mistake this file cannot afford to make.
+const BLOCK_OPEN: String = "/*"
+const BLOCK_CLOSE: String = "*/"
+
+## What one statement ends at. A line may hold more than one declaration, and each is matched on its
+## own so a second one is read rather than silently missed - a dial nothing here reports is a dial
+## every check downstream then calls a typo.
+const STATEMENT_END: String = ";"
 
 ## The editors a dial is turned in. Which one a dial gets is DERIVED from its own declaration -
 ## Godot's Inspector obeys the same hints, and a dial that edits as a slider there has no business
@@ -169,22 +182,72 @@ static func parse(source: String) -> Array[Dictionary]:
 			+ "[ \\t]+(?<name>[A-Za-z_][A-Za-z0-9_]*)[ \\t]*(?<array>\\[[^\\]]*\\])?"
 			+ "[ \\t]*(?::[ \\t]*(?<hints>[^=;]+?))?[ \\t]*(?:=[ \\t]*(?<default>[^;]+?))?[ \\t]*;")
 	var about: PackedStringArray = PackedStringArray()
-	var lines: PackedStringArray = source.split("\n")
+	var lines: PackedStringArray = _lines_without_block_comments(source)
 	for index: int in range(lines.size()):
 		var line: String = lines[index].strip_edges()
 		if line.begins_with(COMMENT_MARKER):
 			about.append(line.substr(COMMENT_MARKER.length()).strip_edges())
 			continue
-		var hit: RegExMatch = _declaration.search(line)
-		if hit == null:
-			# Only a BLANK line keeps a description alive: a note written two statements above a
-			# uniform is about the statement it sits over, not about the dial further down.
-			if not line.is_empty():
-				about.clear()
+		# Only a BLANK line keeps a description alive: a note written two statements above a uniform
+		# is about the statement it sits over, not about the dial further down.
+		if line.is_empty():
 			continue
-		uniforms.append(_entry(hit, " ".join(about), index + 1))
+		for statement: String in _statements(line):
+			var hit: RegExMatch = _declaration.search(statement)
+			if hit != null:
+				uniforms.append(_entry(hit, " ".join(about), index + 1))
 		about.clear()
 	return uniforms
+
+
+## The source with every `/* … */` taken out and its line count kept, so a dial's line number still
+## points at the line it is declared on.
+##
+## THIS IS THE FILE'S WHOLE PROMISE. Commenting a uniform out while trying the shader without it is
+## the ordinary way to do it, and the text inside those markers is spelled exactly like the
+## declaration it used to be - so a parse that reads it swears the shader declares a dial it does
+## not, and then the picker shelves it, the lift claims a line for it and the health check clears it.
+##
+## `//` tails are left exactly where they are: the block of them above a uniform is its description,
+## and the parse above is what reads them.
+static func _lines_without_block_comments(source: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var inside: bool = false
+	for line: String in source.split("\n"):
+		var kept: String = ""
+		var index: int = 0
+		while index < line.length():
+			if inside:
+				var close: int = line.find(BLOCK_CLOSE, index)
+				if close < 0:
+					break
+				inside = false
+				index = close + BLOCK_CLOSE.length()
+				continue
+			var opens_at: int = line.find(BLOCK_OPEN, index)
+			var tail_at: int = line.find(COMMENT_MARKER, index)
+			if tail_at >= 0 and (opens_at < 0 or tail_at < opens_at):
+				kept += line.substr(index)
+				break
+			if opens_at < 0:
+				kept += line.substr(index)
+				break
+			kept += line.substr(index, opens_at - index)
+			inside = true
+			index = opens_at + BLOCK_OPEN.length()
+		lines.append(kept)
+	return lines
+
+
+## The statements one line holds, each with the `;` it ended at put back. The matcher is anchored to
+## the start of what it is handed, so a second declaration on the line needs its own turn: matching
+## the line as a whole reads the first and drops the rest, and an unanchored pattern would match
+## `uniform` in the middle of a longer word instead.
+static func _statements(line: String) -> PackedStringArray:
+	var statements: PackedStringArray = PackedStringArray()
+	for part: String in line.split(STATEMENT_END, false):
+		statements.append(part.strip_edges() + STATEMENT_END)
+	return statements
 
 
 ## One matched declaration as the entry a caller reads. The hint text is kept as the author wrote

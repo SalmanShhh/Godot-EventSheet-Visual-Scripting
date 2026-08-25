@@ -24,8 +24,10 @@ const BOSS: String = "effect_scene_boss.gd"
 const DISSOLVE_SHADER: String = FIXTURE_DIR + "effect_dissolve.gdshader"
 
 ## A shader written the way people write them, with every declaration shape in it: a hinted float, a
-## colour, a texture with two hints, an int with a step, a global, an array, a bare one, and a
-## comment that belongs to the statement above rather than to the uniform two lines down.
+## colour, a texture with two hints, an int with a step, a global, an array, a bare one, a note
+## trailing the line it belongs to, two declarations sharing a line, a note in the middle of one, a
+## uniform COMMENTED OUT the ordinary way, and a comment that belongs to the statement above rather
+## than to the uniform two lines down.
 const SOURCE: String = """shader_type canvas_item;
 
 // How much has burned away.
@@ -36,6 +38,13 @@ uniform int steps : hint_range(1, 16, 1) = 8;
 global uniform float wind_strength;
 uniform float weights[4];
 uniform bool lit;
+uniform float speed = 2.0; // how fast the edge creeps
+uniform float glow = 0.5; uniform float haze = 0.25;
+
+/*
+uniform float ghost = 1.0;
+*/
+uniform float /* left over from the first try */ shimmer = 0.1;
 
 // This note is about the function, not about anything below it.
 void fragment() {
@@ -58,6 +67,9 @@ static func run() -> bool:
 
 ## Every declaration, as the fields a row is built from. Pinned by VALUE, because a hint read wrong
 ## is a field edited wrong and a default read wrong is a row that opens on a number nobody chose.
+## The whole list is the pin, so `ghost` - the uniform wrapped in `/* … */` - failing to be in it is
+## as much a measurement as every dial that is: a dial nobody declares is one the picker shelves,
+## the lift claims a line for and the health check then clears.
 static func _test_the_parser() -> bool:
 	var read: Array[String] = []
 	for uniform: Dictionary in EventForgeShaderUniforms.parse(SOURCE):
@@ -72,7 +84,11 @@ static func _test_the_parser() -> bool:
 		"steps int hints=hint_range(1, 16, 1) default=8 scope= colour=false texture=false about=",
 		"wind_strength float hints= default= scope=global colour=false texture=false about=",
 		"weights float hints= default= scope= colour=false texture=false about=",
-		"lit bool hints= default= scope= colour=false texture=false about="
+		"lit bool hints= default= scope= colour=false texture=false about=",
+		"speed float hints= default=2.0 scope= colour=false texture=false about=",
+		"glow float hints= default=0.5 scope= colour=false texture=false about=",
+		"haze float hints= default=0.25 scope= colour=false texture=false about=",
+		"shimmer float hints= default=0.1 scope= colour=false texture=false about="
 	] as Array[String])
 	# The two hints a field is derived from, kept apart from the author's own hint text: the ends of
 	# a slider, and whether four numbers are a colour.
@@ -234,7 +250,8 @@ static func _test_the_editors() -> bool:
 	# derived editors is one. It takes the ordinary value field, where the list can be written.
 	ok = _check("every declaration shape picks its own editor", kinds, PackedStringArray([
 		"dissolve=slider", "tint=color", "noise=texture", "steps=stepper", "wind_strength=number",
-		"weights=expression", "lit=toggle"])) and ok
+		"weights=expression", "lit=toggle", "speed=number", "glow=number", "haze=number",
+		"shimmer=number"])) and ok
 	ok = _check("a dial nothing is known about takes the ordinary value field",
 		EventForgeShaderUniforms.editor_kind({}), "expression") and ok
 	# The value a field OPENS on when the row has none: the shader's own starting value, written as
