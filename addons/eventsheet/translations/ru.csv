@@ -4896,3 +4896,5 @@ no such method,нет такого метода
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","У этого объекта нет метода с именем %s. Возможно, его переименовали или до него добираются иначе - выберите тот, который имелся в виду."
 New preset…,Новый пресет…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Копирует выбранный пресет в новый файл и открывает его. В пустой папке появятся Low, Medium и High."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s не привязано ни к одному устройству - нажать его невозможно. Задайте привязку в настройках проекта или позвольте это сделать странице управления.
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s ничего не говорит о %s, поэтому его выбор оставляет это значение таким, каким его задал прошлый пресет."

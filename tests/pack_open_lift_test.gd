@@ -89,10 +89,17 @@ static func run() -> bool:
 	# rendering: +7 Game Settings quality verbs (apply a preset, step one, the folder's paths and
 	# words, the preset in force, the word to show, and the question about it). The Quality Preset
 	# asset itself adds none - it is data.
+	# options menus: +30 more Game Settings verbs - the binding pair (bind a control, why a control
+	# and a setting disagree), the page four (a setting's page, its label, the settings on a page,
+	# the rows built from them) plus the focus pair (wire the order, what nothing can reach), the
+	# way-back four (apply with one, keep, go back, seconds left), and eighteen for rebinding: the
+	# Input Map's own actions, the two binding words, the unbound list and its question, the two
+	# conflict readings, whether a row is listening, listen, the three answers, cancel, the two
+	# resets, save, load, and the page built from the Input Map.
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
 		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7) and all_passed
+		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

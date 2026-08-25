@@ -4896,3 +4896,5 @@ no such method,nessun metodo con questo nome
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","Questo oggetto non ha un metodo chiamato %s. Potrebbe essere stato rinominato, o raggiunto in altro modo - scegli quello che intendevi."
 New preset…,Nuovo preset…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copia il preset scelto in un nuovo file e lo apre. Una cartella vuota riceve Low, Medium e High."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s non ha alcuna associazione su nessun dispositivo - nessuno può premerlo. Assegnalo nelle impostazioni del progetto, oppure lascia che lo faccia una pagina dei comandi."
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s non dice nulla su %s, quindi sceglierlo lascia quel valore dove l'ha messo il preset precedente."

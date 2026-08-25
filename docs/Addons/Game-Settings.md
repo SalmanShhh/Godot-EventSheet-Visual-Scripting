@@ -18,8 +18,9 @@ one hand-wired control per setting.
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Where the values live](#where-the-values-live)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [The options screen](#the-options-screen)
+7. [Use cases](#use-cases)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this pack shines
 
@@ -102,7 +103,7 @@ draw them:
 
 | Name | Parameters | What it does |
 |------|------------|--------------|
-| Declare Setting | Setting Name, Default Value, Kind, Choices | Names a setting once. Declaring the same name again replaces the declaration and keeps any value already set. |
+| Declare Setting | Setting Name, Default Value, Kind, Choices, Page, Label | Names a setting once, and says which options page it belongs on. Declaring the same name again replaces the declaration and keeps any value already set. |
 | Set Setting | Setting Name, Value | Changes a declared setting and fires On Setting Changed. Setting the value it already holds does nothing; an undeclared name is refused with a warning. |
 | Apply All Settings | - | Re-fires On Setting Changed for every declared setting, with the value in force now. |
 | Reset Settings To Defaults | - | Forgets every set or loaded value and re-applies them all. |
@@ -110,6 +111,22 @@ draw them:
 | Save All Settings | - | Writes every declared setting's current value into `user://settings.cfg`. |
 | Apply Quality | Preset | Writes every value one quality preset stands for, as ordinary Set Setting changes. Takes a preset file or a path to one; the field lists `res://settings/quality/`. |
 | Apply Quality One Step | Step | Moves to the preset one step lighter (-1) or heavier (+1) and applies it. Stops at the ends rather than wrapping. |
+| Bind To Setting | Control, Setting Name | Ties one control to one setting, both ways: it shows the value at once, moving it writes the setting, and anything else changing the setting moves it back. |
+| Menu Rows From Declarations | Container, Page | Fills a container with one labelled, bound row per setting declared for that page, focus neighbours wired. A control already there and NAMED after a setting is used instead of a generated one. |
+| Wire The Focus Order | Controls | Points every control in a list at the next and previous one, so a pad and the Tab key walk the page in the order it is drawn. |
+| Apply With A Way Back | Seconds | Remembers every setting as it stands and starts a countdown. Nothing answering it puts them all back. |
+| Keep These Settings | - | The player said yes: the countdown stops, the way back is forgotten, On Settings Kept fires. |
+| Go Back To The Working Settings | - | Puts every setting back the way it was, through ordinary Set Setting changes, and fires On Settings Reverted. |
+| Controls Page From The Input Map | Container | Fills a container with one row per project action: its name, its keyboard binding, its pad binding and a reset, all kept current. |
+| Listen For A New Binding | Action, Device | Waits for a key, mouse button or pad button and gives it to this action. A taken key fires On Binding Conflict instead. |
+| Take The Binding Anyway | - | The first answer to a conflict: this action takes the key, and the one that had it is left without it. |
+| Swap The Binding | - | The second answer: the two actions trade keys on that device, so nobody is left without one. |
+| Pick Another Key | - | The third answer: forget the key that was taken and go on listening. |
+| Stop Listening For A Binding | - | Stops waiting and leaves every binding as it was. |
+| Reset One Binding | Action | Puts one action back to the bindings your project ships with, on every device. |
+| Reset Every Binding | - | The same for every action - the page-level Reset All. |
+| Save Bindings | - | Writes every action's bindings into `user://settings.cfg`, in the section `bindings`. |
+| Load Bindings | - | Reads them back into the Input Map. An action with nothing saved keeps the binding you designed. |
 
 ### Conditions
 
@@ -119,6 +136,8 @@ draw them:
 | Setting Is | Setting Name, Value | The setting currently holds this value. Usable anywhere, at any time. |
 | Setting Is Declared | Setting Name | The setting has been declared at all. |
 | Quality Is | Word | The quality in force goes by this word. "Custom" is true whenever the values match no preset file. |
+| Control Has No Binding | Action | The action has no binding left on any device - what the amber mark on a Controls page row is for. |
+| Waiting For A Key | - | A row is listening for a key or button right now. |
 
 ### Expressions
 
@@ -133,12 +152,28 @@ draw them:
 | Quality Preset Names | - | The words those presets go by, in the same order - drop it straight into a dropdown. |
 | Quality Preset Path | - | The preset file whose values are all in force, or nothing when none matches. |
 | Quality Name | - | The word to show a player: the matching preset's, or "Custom". |
+| Binding Mismatch | Control, Setting Name | Why a control and a setting do not belong together, in one sentence, or nothing at all when they do. |
+| Setting Page | Setting Name | Which options page the setting was declared for. |
+| Setting Label | Setting Name | The words a menu shows: the declared label, or the name opened out (`screen_shake` reads Screen shake). |
+| Settings On Page | Page | Every setting declared for that page, in declared order. |
+| Unreachable Controls | Container | The names of the controls a keyboard or pad cannot get to. Empty is the answer you want. |
+| Seconds Left To Keep | - | How long the player has left to answer Apply With A Way Back, or 0 when nothing is waiting. |
+| Project Actions | - | Every action your project declares in its Input Map, leaving out the engine's own `ui_` ones. |
+| Keyboard Binding Of | Action | The key or mouse button it answers to, in words. Blank when it has none. |
+| Pad Binding Of | Action | The gamepad button it answers to, in words. Blank when it has none. |
+| Unbound Actions | - | Every action with no binding left on any device. |
+| Conflicting Control | - | The action that already answers to the key just pressed, while a conflict waits. |
+| Pending Binding Words | - | That key, in words, while the conflict waits. |
 
 ### Triggers
 
 | Name | Payload | Fires when |
 |------|---------|------------|
 | On Setting Changed | `setting_name`, `value` | A setting actually changes, and once per setting on Apply All Settings / Reset Settings To Defaults. |
+| On Settings Kept | - | The player answered Apply With A Way Back with Keep These Settings. |
+| On Settings Reverted | - | The way back was taken: by Go Back, or by the countdown running out. |
+| On Binding Changed | `action` | An action's bindings changed - rebound, swapped, taken from, or reset. |
+| On Binding Conflict | `action`, `taken_by` | The key a player pressed already belongs to another action. Nothing has changed yet. |
 
 The payload is the signal's own arguments, so the row can read `setting_name` and `value` directly -
 there is no "what changed last" expression to get wrong when two settings change in one frame.
@@ -156,6 +191,75 @@ which is what players expect of a volume slider.
 The pack also ships the usual `save_state` / `load_state` seam, so the Save System can snapshot the
 values with everything else if you want settings inside a slot too. Only the values travel: the
 declarations belong to your game's code, so a build that added a setting keeps its new default.
+
+Rebindings live in the same file, in the section `bindings` - **Save Bindings** and **Load Bindings**
+put them there and take them back, so one save covers the volume and the jump key together.
+
+## The options screen
+
+Every options menu is the same four pages and the same glue written twice per option. This pack takes
+the glue.
+
+**One control, one row, both directions.** A slider that writes `music_volume` and a `music_volume`
+that moves the slider are one fact seen twice, so they are one row:
+
+- On ready: **Bind** *MusicSlider* **to setting music_volume**
+- On ready: **Bind** *FullscreenCheck* **to setting fullscreen**
+
+The control shows the value the moment it is bound, so nothing has to be poked into it at startup. A
+quality preset, **Reset Settings To Defaults** or a second menu still open all move it back, because
+the binding hangs off the announcement rather than off the menu. A dropdown with no items yet takes
+the setting's declared choices. What the setting *does* stays where it belongs: an ordinary **On
+setting changed** event branched by name.
+
+If the pair do not fit - a checkbox bound to a percent - the output log says which is which as it
+binds, and **Binding Mismatch** hands you the same sentence to show in your own words:
+
+> `music_volume is a percent and wants a slider - this is a checkbox.`
+
+**The page builds itself.** Declare a setting with a page, and it has a row:
+
+- **Declare setting screen_shake** default **on** kind **Yes/No** page **Accessibility**
+- On ready: **Menu rows on** *AccessibilityPage* **from the Accessibility declarations**
+
+That is the whole of adding an option later: one Declare row, no scene edit and no new binding glue.
+The generated rows are plain Godot controls in a plain container - restyle them, theme them, move
+them. A control you made yourself and NAMED after a setting is used instead of a generated one, so a
+designed slider simply replaces its row; there is no lock-in in either direction.
+
+**The focus neighbours are wired as the page is built.** A pad's up and down and the Tab key walk the
+page in the order it is drawn, from the first frame. Call **Wire The Focus Order** yourself after
+adding controls to a hand-made page, and ask **Unreachable Controls** what a keyboard cannot get to -
+an options menu that needs a mouse is a bug found at certification rather than in the studio.
+
+**Video changes get a way back.** Apply a screen mode the monitor cannot show and the menu you need
+in order to undo it is the thing you cannot see. So apply first, ask second, and take silence for a
+no:
+
+- On **Apply pressed**: **Apply with a way back for 10 s**, then your Set Setting rows
+- On **Settings reverted**: close the dialog - the countdown has already put every value back
+
+Show **Seconds Left To Keep** in the label so the countdown is visible, and answer it with **Keep
+These Settings**.
+
+**The Controls page comes from the Input Map.**
+
+- On ready: **Controls page on** *ControlsList* **from the Input Map**
+
+One row per action your project declares, keyboard and pad in separate columns, a reset on each row.
+Actions added to the project later appear on their own. Pressing a binding listens for a new one, and
+a key that is already taken fires **On Binding Conflict** rather than quietly stacking two actions on
+one key - nothing has changed at that point, and there are exactly three answers to offer:
+
+| Row | What the player gets |
+|-----|----------------------|
+| **Swap the binding** | The two actions trade keys. Nobody is left without one, so offer it first. |
+| **Take the binding anyway** | This action takes the key; the other is left without it, turns up in **Unbound Actions**, and its row goes amber. |
+| **Pick another key** | Nothing changes and the row goes on listening. |
+
+Doctor's Options section asks the two questions nobody thinks to: an action with **no binding on any
+device**, and a quality preset that **says nothing about a setting its neighbours answer for** (which
+is what makes Low after High a different Low from Low after Medium).
 
 ## Use cases
 

@@ -4896,3 +4896,5 @@ no such method,没有这个方法
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",该对象没有名为 %s 的方法。它可能被改名了，或者通过别的方式被调用 - 请选择你想要的那个。
 New preset…,新建预设…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",把选中的预设复制成新文件并打开。空文件夹会得到 Low、Medium 和 High。
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 在任何设备上都没有绑定 - 没人能按下它。请在项目设置中绑定，或让控制页面来绑定。
+"%s says nothing about %s, so picking it leaves that where the last preset put it.",%s 没有提到 %s，所以选它会让该项停留在上一个预设留下的值。

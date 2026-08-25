@@ -43,6 +43,47 @@ What changed in the build you have installed (v0.17.0), in the words the release
   `motion_blur` and filling it in is all it takes for every preset file to have a motion blur field.
   New: `EventSheetQualityPresets`, and the Quality Preset companion resource.
 
+### Options menus - one declaration, one control, and the conflict answered
+
+- **Bind to setting: one row, both directions.** A slider that writes `music_volume` and a
+  `music_volume` that moves the slider are one fact seen twice, so they are one row. The control
+  shows the value in force the moment it is bound, and anything else that changes the setting - a
+  quality preset, Reset To Defaults, a second menu still open - moves the control back, because the
+  binding hangs off the announcement rather than off the menu. A dropdown with no items of its own
+  takes the setting's declared choices.
+- **The pair have to fit, and the reason is a sentence.** A checkbox bound to a percent says
+  `music_volume is a percent and wants a slider - this is a checkbox.` in the output log as it binds,
+  and Binding Mismatch hands the same words to a row. A control the pack does not recognise is never
+  complained about - a custom one may show anything, and a wrong guess costs more than no guess.
+- **The menu grows itself.** A setting declared with a page has a row on it: Menu Rows From
+  Declarations fills a container with one labelled, bound control per declaration, so adding an
+  option later is ONE Declare row with no scene edit and no new glue. The rows are plain Godot
+  controls in a plain container, and a control you made yourself and NAMED after a setting is used
+  instead of a generated one - no lock-in in either direction. Declare is now the single entry point
+  for an option of any kind: difficulty, motion blur, invert Y are one Declare row plus one On
+  Setting Changed reaction each.
+- **The focus neighbours are wired as the page is built.** A pad's up and down and the Tab key walk
+  the page in the order it is drawn, from the first frame, and Unreachable Controls names anything a
+  keyboard cannot get to. An options menu that needs a mouse is a bug found at certification rather
+  than in the studio.
+- **Apply with a way back.** Apply a screen mode the monitor cannot show and the menu you need in
+  order to undo it is the thing you cannot see. Apply With A Way Back remembers every value and
+  starts a countdown; Keep These Settings answers it, and silence puts everything back through
+  ordinary Set Setting changes (so the menu follows) and fires On Settings Reverted. Seconds Left To
+  Keep is the countdown label.
+- **Rebinding, with the conflict answered at bind time.** Controls Page From The Input Map builds one
+  row per action your project declares - keyboard and pad in their own columns, a reset on each row,
+  actions added later appearing on their own. A key something else already answers to fires On
+  Binding Conflict instead of quietly stacking two actions on one key, and the three answers are
+  three rows: Swap The Binding (the two trade, nobody ends up without a key), Take The Binding Anyway
+  (honest rather than tidy - the other action really has lost its key and turns up in Unbound
+  Actions), and Pick Another Key. Bindings save into the same `user://settings.cfg` as everything
+  else, and a reset restores what the project ships with.
+- **Doctor > Options** asks the two questions nobody thinks to: an action with no binding on any
+  device, and a quality preset that says nothing about a setting its neighbours answer for - which is
+  what makes Low after High a different Low from Low after Medium. Both read small files (Project
+  Settings and the quality folder), so a project with neither pays almost nothing.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

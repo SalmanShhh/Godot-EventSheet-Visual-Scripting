@@ -4896,3 +4896,5 @@ no such method,そのメソッドはありません
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",このオブジェクトに %s というメソッドはありません。名前が変わったか、別の方法で呼ばれているのかもしれません - 意図したものを選んでください。
 New preset…,新しいプリセット…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s はどのデバイスにも割り当てがありません - 誰も押せません。プロジェクト設定で割り当てるか、コントロールページに割り当てさせてください。
+"%s says nothing about %s, so picking it leaves that where the last preset put it.",%s は %s について何も言っていないため、選んでも直前のプリセットが決めた値のまま残ります。
