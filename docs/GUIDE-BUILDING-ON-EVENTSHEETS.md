@@ -240,6 +240,17 @@ EventSheets.register_doctor_check("my_pack.missing_tables", func(sheet_paths: Pa
 
 A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` scratch files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
 
+Two corpora are worth knowing about. `EventSheets.project_scripts()` is every `.gd` outside `addons/` - the list to scan when the failure lives in emitted code, because `sheet_paths` finds only `.tres` sheets while `.gd` is the default format. And when a check is about a resource being **shared**:
+
+```gdscript
+# Which OTHER scenes load this file. One indexed scan of the project, shared by everything
+# that asks, dropped whole when the editor's filesystem signal fires.
+var elsewhere: PackedStringArray = EventSheets.scenes_using_resource(
+	"res://art/goblin_burn.tres", "res://levels/cave.tscn")
+```
+
+A `.tres` is one object at run time, so a material, an environment or a curve written from a row is written for everything holding the same file - which is the failure behind several of the shipped checks. Ask this rather than walking the scenes yourself: the first call blocks until the scan finishes, every call after it is a table lookup, and nobody pays for a second scan.
+
 ## 6b. Localisation Services
 
 The editor UI translates through one shared layer (see the "Translating the editor into your

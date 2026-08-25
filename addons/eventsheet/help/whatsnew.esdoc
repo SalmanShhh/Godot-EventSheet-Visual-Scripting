@@ -104,6 +104,38 @@ What changed in the build you have installed (v0.17.0), in the words the release
   scene and never the bare row (which could only ask for the name back), and the reverse index leaves
   its template alone, because deciding a line means that row takes a question only the project can
   answer. The dial rows declare it; the copy row does not, because it names nothing.
+- **The dial's own declaration picks the editor its value is typed in.** Godot's Inspector already
+  obeys those hints, so the dialog obeys the same ones: `hint_range` gives a slider with the shader's
+  ends (and a stepper when the values are whole), `source_color` gives the colour editor - now
+  opening on the saved swatch shelf, which every colour field in the dialog gained with it - a
+  `sampler2D` gives a texture file field with Browse that ships the `preload` the line needs, a `bool`
+  gives a tick, and a `vecN` gives one box per axis. An unanswered field opens on the value the
+  SHADER starts the dial at, written as the GDScript the row emits (`vec4(1.0, 0.6, 0.2, 1.0)` opens
+  as `Color(1.0, 0.6, 0.2, 1.0)`). Nothing here is a table of dial names: it is the parsed
+  declaration read back, and a declaration nothing recognises - or a value the derived editor could
+  not hold without changing it, like `hp / 100.0` in a slider's slot - keeps the ordinary value
+  field. Never a dead end.
+- **The head says what the node wears, and who else wears it.** A new `effect` band per wearing node
+  of the attached scene: the material file, the shader at the end of the chain, every further
+  `next_pass` in the order it is drawn, and **shared with 11 other nodes** when the `.tres` is worn
+  elsewhere - the sharpest trap in Godot shader work, said before the game is run once. A material
+  the scene keeps inside itself reads *kept inside this scene - nothing else wears it*, and a sheet
+  that already writes **Make the effect this node's own** reads *its own copy at runtime* instead of
+  a warning.
+- **That count never delays an open.** \"Who else uses this file\" is a question about every scene in
+  the project, so it runs ONE indexed scan, shared by the effect band and the lighting environment
+  band alike, built a few milliseconds per idle frame and dropped whole when the editor's filesystem
+  signal fires. A band asked while it is still running says *counting…* and is right a moment later;
+  nothing waits for it. The lighting band's own per-resource cache is gone - one walk now files every
+  resource of every scene at once, where the old one re-read them all for the next question asked.
+- **Doctor ▸ Effects**, five checks, all through the same public seam a pack registers with: a dial
+  the shader does not declare (with the one-click re-pick), dials turned on a material other nodes
+  wear (with the row that gives this node its own copy), effect rows on a node wearing no material at
+  all, a `RenderingServer` global that Project Settings ▸ Shader Globals never declared, and a
+  full-screen rect whose shader samples the screen sitting visible with every dial still at rest. The
+  dial checks read the same `.gdshader` parse everything else reads - there is exactly one reader of
+  uniform lines in the plugin - and the first four also appear as amber notes under the row they are
+  about, so the same sentence meets a reader wherever they meet the problem.
 
 ### Lighting - the light is the object
 

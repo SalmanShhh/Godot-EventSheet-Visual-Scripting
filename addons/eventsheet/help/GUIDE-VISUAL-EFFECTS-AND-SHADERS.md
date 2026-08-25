@@ -19,9 +19,12 @@ nothing in the engine ever tells you why. Reading the dial names out of the shad
 - [The dials are read from the shader](#the-dials-are-read-from-the-shader)
 - [What a dial row reads like](#what-a-dial-row-reads-like)
 - [The four verbs](#the-four-verbs)
+- [The field a dial edits in](#the-field-a-dial-edits-in)
 - [The shared-material trap](#the-shared-material-trap)
+- [What the head says about the effect](#what-the-head-says-about-the-effect)
 - [A dial the shader no longer has](#a-dial-the-shader-no-longer-has)
 - [Opening a project that already has shader code](#opening-a-project-that-already-has-shader-code)
+- [Doctor: the five silent failures](#doctor-the-five-silent-failures)
 - [What is read, and what is left alone](#what-is-read-and-what-is-left-alone)
 
 ## The dials are read from the shader
@@ -90,6 +93,33 @@ exists at run time - one you built in code, or one handed to you by something el
 can be asked what its dials are called. Where a name can be checked, pick it; where it cannot, the
 sheet does not pretend it did.
 
+## The field a dial edits in
+
+Godot's Inspector already decides how a uniform wants to be edited, from the hints on its own
+declaration. The Parameters dialog obeys the same hints, off the same file, so a dial edits in the
+sheet exactly as it edits in the Inspector:
+
+| The declaration | The field you get |
+|-----------------|-------------------|
+| `uniform float dissolve : hint_range(0.0, 1.0)` | a slider with those ends, and the number beside it |
+| `uniform int steps : hint_range(1, 16, 1)` | a stepper, because the values are whole |
+| `uniform vec4 edge_tint : source_color` | the colour editor, opening on your saved swatches |
+| `uniform sampler2D burn_noise` | a texture file field with **Browse…** |
+| `uniform bool lit` | a tick |
+| `uniform vec2 offset` | one box per axis |
+| anything else | the ordinary value field |
+
+None of that is a list of dial names kept somewhere: it is the declaration read back. A shader nobody
+here has seen gets the right field the first time.
+
+**Open on what the shader starts it at.** A value field you have not answered opens on the uniform's
+own default, written as the GDScript the row will emit - so `= vec4(1.0, 0.6, 0.2, 1.0)` opens as the
+swatch for `Color(1.0, 0.6, 0.2, 1.0)`, the way the Inspector opens on it.
+
+**Never a dead end.** A dial is still a value, and a value can be an expression. Type `hp / 100.0`
+into a slider's slot and the field goes back to being the ordinary value box, with its `ƒx` picker
+and its completions - the derived editor is for the common answer, not a cage around the rare one.
+
 ## The shared-material trap
 
 A `.tres` material is a **file**. Two nodes pointing at the same file share every dial on it, so
@@ -106,6 +136,32 @@ material = material.duplicate()
 
 Put it under an **On ready** trigger, before any row that turns a dial. Once it is there, every dial
 row after it is about this node and nothing else.
+
+## What the head says about the effect
+
+The head of the sheet grows one **effect** band per node of the attached scene that wears a material,
+and each band is three facts and nothing else:
+
+> **effect**  `goblin.tres (dissolve.gdshader) · shared with 11 other nodes`
+> *effect_scene_goblin.tscn: Sprite2D "Goblin", material = "res://goblin.tres" · uniform dissolve, edge_tint · also worn by Torch, Orc*
+
+The file, the shader at the end of the chain, and who else wears it. The echo beside it is the
+node's own line of the `.tscn`, the dials that shader declares (the names your rows may use), and
+the nodes a dial row would move as well as this one. When the material hands the drawing on to
+another one (`next_pass`), every pass is named in the order it is drawn - two passes chained the
+wrong way round look identical in the Inspector and differ only on screen.
+
+Three other readings you will meet:
+
+- *kept inside this scene - nothing else wears it* - the material is a sub-resource, so there is
+  nobody to share it with.
+- *its own copy at runtime* - this sheet already writes **Make the effect this node's own** for that
+  node, so the count no longer applies. The band answers instead of warning.
+- *counting…* - "who else wears this file" is a question about every scene in the project, and the
+  answer is built a few milliseconds per idle frame rather than while you wait. It arrives a moment
+  after the sheet opens. Nothing you can do is blocked on it.
+
+Clicking the band selects the node in its scene, where the Inspector is.
 
 ## A dial the shader no longer has
 
@@ -139,6 +195,27 @@ bytes back - the `&` or not, the receiver you used, your spacing:
 The receiver you used is part of the line rather than part of the sentence, which is why it rides
 back out untouched. So does the way you quoted the name: a `&"dissolve"` stays a StringName and a
 `"amount"` stays a plain string.
+
+## Doctor: the five silent failures
+
+Every one of these runs today without an error and shows nothing on the screen. They are the
+**Effects** section of the Project Doctor, and the first four also appear as amber notes under the row
+they are about, so the same sentence meets you wherever you meet the problem.
+
+| The finding | What is actually wrong | The step |
+|-------------|------------------------|----------|
+| A dial the shader does not have | the uniform was renamed, or mistyped | **Use dissolve** rewrites that row |
+| Dials turned on a shared material | the `.tres` is worn elsewhere, and they all move | **Make the effect this node's own** is inserted on ready |
+| Effect rows on a node wearing no material | every row reaches through a null | assign a `ShaderMaterial` in the Inspector |
+| A global the project does not declare | `RenderingServer.global_shader_parameter_set("wind_strength", …)` with nothing declared, so every shader reading it sees zero | declare it in **Project Settings ▸ Shader Globals** |
+| A screen effect left drawing | a full-screen rect whose shader samples the screen, visible with every dial still at rest | hide it until an effect turns it on |
+
+The two with a single step to take carry it as a button; the other three are a material to assign, a
+setting to write and a rect to hide, and a wrong guess in a fix button costs more than no guess.
+
+The dial checks read the same `.gdshader` parse everything else here reads: there is exactly one
+reader of uniform lines in the plugin, so a project can never be told two different things about the
+same file.
 
 ## What is read, and what is left alone
 
