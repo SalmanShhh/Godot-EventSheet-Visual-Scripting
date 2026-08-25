@@ -560,6 +560,11 @@ func _on_translations_maybe_changed() -> void:
 	# was invisible and a deleted one went on being claimed until the editor restarted.
 	EventSheetSceneLights.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
+	# And what a FIELD can be completed with. Half of those lists are answers about the project - the
+	# Input Map, the node groups, the scene's nodes, the project's classes and its files - so a file
+	# added, a scene saved or an action declared in Project Settings changes them with nothing in any
+	# sheet having moved.
+	EventSheetCompletions.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
@@ -6506,6 +6511,10 @@ func _surround_selection_with_region() -> void:
 func _refresh_after_edit() -> void:
 	if _viewport == null:
 		return
+	# A variable added, a function renamed, a group declared: the edit that changed the sheet is the
+	# only thing that can change what its fields complete with, so the built lists go here and
+	# nowhere else. A keystroke in a field must never pay for this.
+	EventSheetCompletions.invalidate(_current_sheet)
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
 	_theme_manager._sync_active_theme_binding()

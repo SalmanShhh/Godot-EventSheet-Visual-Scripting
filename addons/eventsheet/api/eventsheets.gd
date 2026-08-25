@@ -418,6 +418,56 @@ static func describe_inspector(type_name: String, attributes: Dictionary, export
 	return EventSheetInspectorPreviewCard.describe(type_name, attributes, exported, constant)
 
 
+# ── Autocomplete ───────────────────────────────────────────────────────────────────────
+
+
+## Every name a field of this kind could hold, ranked best first: `[{"text", "detail", "kind"}]`,
+## where `text` is what typing the entry inserts, `detail` the line that explains it, and `kind` a
+## stable id naming what sort of thing it is ("variable", "function", "file", ...). THE completion
+## seam - the expression boxes, the inline value editor in the sheet, the name fields and the file
+## fields all ask this one call, so a name completes the same way wherever it is typed.
+##
+## `field_kind` is the parameter's own `hint` wherever a parameter has one ("expression",
+## "input_action", "group_reference", "scene_node", "variable_reference", "signal_reference",
+## "shader_dial", "scene_path", "audio_path"), so a pack shipping a hint gets completion without
+## doing anything. Three kinds have no hint behind them and are named directly: "function_name",
+## "class_name" and "file". A kind may carry an argument after a colon - "file:PackedScene",
+## "enum_value:State" - exactly as the hints already do.
+##
+## `prefix` is what the reader has typed. For "expression" pass the whole text BEFORE THE CARET
+## (`hp.` and `hp` want different answers, and only that can tell them apart); for every other kind
+## pass the word itself. An unknown kind answers with nothing, which is what keeps an unrecognised
+## hint a plain typed field rather than a wrong list.
+##
+## Fast by contract: each kind's list is built once per sheet and only FILTERED per keystroke.
+static func completions_for(sheet: EventSheetResource, field_kind: String, prefix: String = "") -> Array[Dictionary]:
+	return EventSheetCompletions.for_field(sheet, field_kind, prefix)
+
+
+## Adds (or replaces) the source behind one field kind. `source` is
+## `Callable(sheet: EventSheetResource, field_kind: String) -> Array` and returns entries shaped
+## like completions_for's (a plain Array of Strings is accepted for the simplest case). It is asked
+## BEFORE the built-in for that kind, so a pack can sharpen a kind the plugin already answers as
+## well as add one of its own. The result is cached exactly like a built-in's, so a source is free
+## to be slow: it is asked when a field is first completed, not on every keystroke.
+static func register_completion_source(field_kind: String, source: Callable) -> void:
+	EventSheetCompletions.register_source(field_kind, source)
+
+
+static func unregister_completion_source(field_kind: String) -> void:
+	EventSheetCompletions.unregister_source(field_kind)
+
+
+## Rides the completion popup on one of YOUR dialog's fields, with the same keyboard model every
+## field in this editor uses: Tab or Enter accepts the highlighted entry, Escape closes and keeps
+## what was typed, Up and Down move. The entries come from completions_for for `field_kind`, in the
+## context of the sheet currently open. Returns the popup, so a caller that wants a list of its own
+## can drive it directly.
+static func attach_completions(field: LineEdit, field_kind: String) -> EventSheetCompletionPopup:
+	return EventSheetCompletionPopup.attach(field, field_kind,
+		func() -> EventSheetResource: return current_sheet())
+
+
 # ── Codegen ────────────────────────────────────────────────────────────────────────────
 
 

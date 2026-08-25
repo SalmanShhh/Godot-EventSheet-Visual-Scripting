@@ -819,9 +819,12 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 			edit.text = pool[picked_id]
 			edit.caret_column = edit.text.length()
 			edit.grab_focus())
-	# Down-arrow from the field opens the suggestions (keyboard-first authoring).
+	# Down-arrow from the field opens the suggestions (keyboard-first authoring) - unless the field
+	# already carries the completion popup, whose Down moves ITS highlight. One key, one meaning.
 	edit.gui_input.connect(func(event: InputEvent) -> void:
 		var key_event: InputEventKey = event as InputEventKey
+		if EventSheetCompletionPopup.rides(edit):
+			return
 		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
 			shown["pool"] = PackedStringArray(suggestions_provider.call())
 			fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider)

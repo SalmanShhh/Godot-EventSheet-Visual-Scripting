@@ -312,16 +312,19 @@ func _add_expression_field(form: VBoxContainer, label_text: String, placeholder:
 	return edit
 
 
-## Completion for the pick-filter Where / Order-by fields: sheet variables / functions / host members
-## (the shared lint symbol provider the on-save check uses) plus the current For-Each iterator name, so
-## "item.health" and distance expressions complete against the same vocabulary they're validated against.
+## Completion for the pick-filter Where / Order-by fields: the one completion seam's expression
+## vocabulary (the same names the row's own value fields offer, validated by the same lint) plus the
+## current For-Each iterator name, so "item.health" and distance expressions complete against
+## exactly what they are checked against.
 func _populate_pick_completion(edit: CodeEdit) -> void:
 	if edit == null:
 		return
 	var before: String = _dock._text_before_caret(edit)
-	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(before, _dock._current_sheet):
-		var label: String = str(candidate.get("label", ""))
-		edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
+	for entry: Dictionary in EventSheetCompletions.for_field(_dock._current_sheet,
+			EventSheetCompletions.FIELD_EXPRESSION, before):
+		var label: String = str(entry.get("text", ""))
+		edit.add_code_completion_option(
+			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))), label, label)
 	# The iterator (the loop variable) isn't a sheet symbol - surface it unless we're after a dot.
 	if not before.strip_edges().ends_with("."):
 		var iterator: String = _pick_iterator_edit.text.strip_edges()

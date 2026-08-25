@@ -36,11 +36,6 @@ var _identity_card: PanelContainer = null
 var _ships_as: Label = null
 var _more_toggle: Button = null
 var _more_card: PanelContainer = null
-# As-you-type host suggestions (IntelliSense-style): an unfocusable popup under the field, so the
-# caret never leaves the LineEdit; Up/Down highlight, Enter accepts, Escape dismisses.
-var _host_suggest: PopupMenu = null
-var _host_suggest_items: PackedStringArray = PackedStringArray()
-var _host_suggest_index: int = -1
 var _icon_file_dialog: EditorFileDialog = null
 
 ## One plain-English line per type, shown under the dropdown - what the choice MEANS, not its jargon.
@@ -410,15 +405,17 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_host_edit = _dock._add_sheet_type_field(ident_box, "Extends", "CharacterBody2D")
 	var host_row: HBoxContainer = _sheet_type_host_edit.get_parent()
 	_host_label = host_row.get_child(0)
-	# As-you-type suggestions: an unfocusable popup under the field (the caret stays in the LineEdit),
-	# listing matching classes with their editor icons. Up/Down highlight, Enter accepts, Escape closes.
-	_host_suggest = PopupMenu.new()
-	_host_suggest.unfocusable = true
-	_host_suggest.id_pressed.connect(func(index: int) -> void: _accept_host_suggestion(index))
-	_sheet_type_host_edit.add_child(_host_suggest)
-	_sheet_type_host_edit.text_changed.connect(func(text: String) -> void: _refresh_host_suggestions(text))
-	_sheet_type_host_edit.focus_exited.connect(func() -> void: _host_suggest.hide())
-	_sheet_type_host_edit.gui_input.connect(_on_host_edit_input)
+	# As-you-type class suggestions, through the ONE completion popup every field in this editor
+	# uses: the caret stays in the LineEdit, Tab or Enter accepts, Escape keeps what was typed. The
+	# list is this field's own curated one - the classes that make sense to extend - carrying each
+	# class's editor icon, the same visual language as Godot's Create Node dialog.
+	EventSheetCompletionPopup.attach_entries(_sheet_type_host_edit, func(typed: String) -> Array[Dictionary]:
+		var offered: Array[Dictionary] = []
+		for candidate: String in host_candidates(typed):
+			offered.append({"text": candidate, "detail": "", "kind": EventSheetCompletions.KIND_CLASS,
+				"icon": _class_icon(candidate)})
+		return offered)
+	_sheet_type_host_edit.text_changed.connect(func(_text: String) -> void: _refresh_identity_preview())
 	# "Choose…" fills the host field from the curated shortlist - pick by meaning, type only if you
 	# already know the exact class.
 	_host_menu = MenuButton.new()
@@ -534,69 +531,14 @@ func _refresh_type_ui() -> void:
 		_sheet_type_dialog.reset_size()
 
 
-## Rebuilds the suggestion popup for the typed host text. Shown only while the field has focus and
-## there is something to offer; an exact match or no match closes it, so it never lingers as noise.
-func _refresh_host_suggestions(typed: String) -> void:
-	if _host_suggest == null or not _sheet_type_host_edit.has_focus():
-		return
-	_host_suggest_items = host_candidates(typed)
-	_host_suggest_index = -1
-	if _host_suggest_items.is_empty():
-		_host_suggest.hide()
-		return
-	_host_suggest.clear()
-	for candidate: String in _host_suggest_items:
-		# The editor's own class icon when it has one (a Script glyph for project classes) - the same
-		# visual language as Godot's Create Node dialog, so classes are recognizable at a glance.
-		var icon_name: String = candidate if _dock.has_theme_icon(candidate, "EditorIcons") else "Script"
-		if _dock.has_theme_icon(icon_name, "EditorIcons"):
-			_host_suggest.add_icon_item(_dock.get_theme_icon(icon_name, "EditorIcons"), candidate)
-		else:
-			_host_suggest.add_item(candidate)
-	_host_suggest.position = Vector2i(_sheet_type_host_edit.get_screen_position() + Vector2(0.0, _sheet_type_host_edit.size.y))
-	_host_suggest.reset_size()
-	if not _host_suggest.visible:
-		_host_suggest.popup()
-
-
-func _accept_host_suggestion(index: int) -> void:
-	if index < 0 or index >= _host_suggest_items.size():
-		return
-	_sheet_type_host_edit.text = _host_suggest_items[index]
-	_sheet_type_host_edit.caret_column = _sheet_type_host_edit.text.length()
-	_host_suggest.hide()
-	_sheet_type_host_edit.grab_focus()
-	_refresh_identity_preview()
-
-
-## Keyboard-first suggestion flow while the caret STAYS in the field: Down opens/advances the
-## highlight, Up retreats, Enter accepts the highlighted (or only) match, Escape dismisses without
-## touching the dialog. Plain typing keeps flowing to the LineEdit untouched.
-func _on_host_edit_input(event: InputEvent) -> void:
-	var key_event: InputEventKey = event as InputEventKey
-	if key_event == null or not key_event.pressed:
-		return
-	match key_event.keycode:
-		KEY_DOWN:
-			if not _host_suggest.visible:
-				_refresh_host_suggestions(_sheet_type_host_edit.text)
-			elif _host_suggest_index < _host_suggest_items.size() - 1:
-				_host_suggest_index += 1
-				_host_suggest.set_focused_item(_host_suggest_index)
-			_sheet_type_host_edit.accept_event()
-		KEY_UP:
-			if _host_suggest.visible and _host_suggest_index > 0:
-				_host_suggest_index -= 1
-				_host_suggest.set_focused_item(_host_suggest_index)
-				_sheet_type_host_edit.accept_event()
-		KEY_ENTER, KEY_KP_ENTER:
-			if _host_suggest.visible:
-				_accept_host_suggestion(_host_suggest_index if _host_suggest_index >= 0 else 0)
-				_sheet_type_host_edit.accept_event()
-		KEY_ESCAPE:
-			if _host_suggest.visible:
-				_host_suggest.hide()
-				_sheet_type_host_edit.accept_event()
+## The editor's own icon for a class, or its Script glyph for one the editor has no picture of -
+## the same visual language as Godot's Create Node dialog, so a class is recognisable at a glance.
+## Null outside the editor, where a suggestion is simply drawn as text.
+func _class_icon(class_id: String) -> Texture2D:
+	if _dock == null:
+		return null
+	var icon_name: String = class_id if _dock.has_theme_icon(class_id, "EditorIcons") else "Script"
+	return _dock.get_theme_icon(icon_name, "EditorIcons") if _dock.has_theme_icon(icon_name, "EditorIcons") else null
 
 
 ## The FileSystem picker for the class icon - browse res:// images instead of typing a path.

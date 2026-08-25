@@ -335,14 +335,19 @@ func validate_raw_code() -> void:
 		_dock._raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
 
 
-## Supplies sheet variables/functions and host-class members as completion candidates.
+## Contributes the SHEET's own names to Godot's completion in a Script block. The block keeps the
+## engine's popup and the engine's keys - it is a GDScript editor, and a reader typing in one
+## already knows how it behaves - so what the plugin adds is the vocabulary, through the same
+## completion seam every other field asks.
 func populate_raw_code_completion() -> void:
 	if _dock._raw_code_edit == null:
 		return
-	# Context-aware: `host.` / typed-variable. / $Behavior. offer that type's members.
-	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(_dock._text_before_caret(_dock._raw_code_edit), _dock._current_sheet):
-		var label: String = str(candidate.get("label", ""))
-		_dock._raw_code_edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
+	var before_caret: String = _dock._text_before_caret(_dock._raw_code_edit)
+	for entry: Dictionary in EventSheetCompletions.for_field(_dock._current_sheet,
+			EventSheetCompletions.FIELD_EXPRESSION, before_caret):
+		var label: String = str(entry.get("text", ""))
+		_dock._raw_code_edit.add_code_completion_option(
+			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))), label, label)
 	_dock._raw_code_edit.update_code_completion_options(true)
 	_dock._raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_dock._text_before_caret(_dock._raw_code_edit), _dock._current_sheet))
 

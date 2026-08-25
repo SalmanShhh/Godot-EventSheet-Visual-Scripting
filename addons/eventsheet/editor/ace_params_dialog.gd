@@ -697,6 +697,10 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	# Keyboard flow: Enter in any plain field presses OK (type, Enter, done).
 	if _dialog is AcceptDialog:
 		(_dialog as AcceptDialog).register_text_enter(edit)
+	# A plain field still completes when the parameter says what it takes. A Call row's
+	# `function_name` is the one that matters most: it names a function of this sheet and always
+	# did, with no hint ever saying so, so it was the one field in the dialog you had to remember.
+	_attach_completions(edit, EventSheetCompletions.kind_for_param(hint, key))
 	_fields[key] = edit
 	if field_type != TYPE_STRING and not (default_value is String):
 		return edit
@@ -790,6 +794,18 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 			if not pool.has(suggestion_text):
 				pool.append(suggestion_text)
 		return pool, note_provider))
+	# And the same list WHILE TYPING, through the one completion popup: the ▾ is for browsing, this
+	# is for the reader who already knows most of the name. Same keys here as in every other
+	# completing field - Tab or Enter accepts, Escape keeps what was typed.
+	EventSheetCompletionPopup.attach_entries(edit, func(typed: String) -> Array[Dictionary]:
+		var offered: Array[Dictionary] = []
+		for suggestion_text: String in suggestion_texts:
+			offered.append({
+				"text": suggestion_text,
+				"detail": str(note_provider.call(suggestion_text)) if note_provider.is_valid() else "",
+				"kind": EventSheetCompletions.KIND_VARIABLE,
+			})
+		return EventSheetCompletions.rank(offered, typed))
 	_fields[key] = edit
 	return row
 
@@ -1454,8 +1470,21 @@ func _build_path_field_base(key: String, default_value: Variant) -> Dictionary:
 	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
 	if _dialog is AcceptDialog:
 		(_dialog as AcceptDialog).register_text_enter(path_edit)
+	# Browse is for finding a file; this is for the reader who knows roughly where it lives. The
+	# hint says which resource type the field takes, so a scene field offers scenes and a sound
+	# field offers sounds rather than every path in the project.
+	_attach_completions(path_edit, _hint_of(key))
 	_fields[key] = path_edit
 	return {"container": container, "edit": path_edit}
+
+
+## Rides the one completion popup on a field of this dialog, for whatever kind the parameter is.
+## An empty kind attaches nothing, which is what leaves a parameter nobody can describe an ordinary
+## typed field rather than one offering somebody else's list.
+func _attach_completions(field: LineEdit, field_kind: String) -> void:
+	if field == null or field_kind.strip_edges().is_empty():
+		return
+	EventSheetCompletionPopup.attach(field, field_kind, _lint_context_provider)
 
 
 func _create_audio_path_field(key: String, default_value: Variant) -> Control:
@@ -2035,12 +2064,10 @@ static func _is_inside_string_literal(text: String, index: int) -> bool:
 
 ## True when a trailing `%` is the modulo / string-format operator (preceded by a value: an
 ## identifier, number, `)`, `]`, or a closing quote) rather than the start of a `%Name` reference.
+## The reading itself lives beside the completion seam, which asks the same question about the same
+## caret; this stays as the name the node-path checks already call it by.
 static func _looks_like_modulo(before_caret: String) -> bool:
-	var stem: String = before_caret.substr(0, before_caret.length() - 1).rstrip(" 	")
-	if stem.is_empty():
-		return false
-	var last: String = stem.substr(stem.length() - 1)
-	return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_)]\"'".contains(last)
+	return EventSheetCompletions.is_modulo_context(before_caret)
 
 
 ## The first node reference in `expression` that does NOT resolve in `scene_root`, or "" when every
@@ -2402,23 +2429,27 @@ func _param_label(key: String) -> String:
 	return str(param.get("display_name", key)) if not param.is_empty() else key
 
 
-## Fills the completion popup with sheet variables/functions + host members (same source
-## as the GDScript-block editor, so the vocabulary matches everywhere).
+## Fills the completion popup from the one completion seam - the same names, in the same order,
+## that the sheet's inline value editor and every other completing field get. A code box keeps
+## Godot's OWN popup (a reader writing GDScript already knows its keys, and this editor should not
+## teach a second set for the same box); what the plugin contributes to it is the names.
 func _populate_expression_completion(edit: CodeEdit) -> void:
 	if not _lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var before_caret: String = edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
-	# Context-aware: `host.` / typed-variable. / $Behavior. offer that type's members.
-	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(before_caret, sheet):
+	# The seam reads the caret's context itself: `host.` / a typed variable / `$Behavior.` offer
+	# that type's members, `$` and `%` the scene's two spellings, everything else the flat list.
+	for entry: Dictionary in EventSheetCompletions.for_field(sheet,
+			EventSheetCompletions.FIELD_EXPRESSION, before_caret):
+		var text: String = str(entry.get("text", ""))
 		edit.add_code_completion_option(
-			int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)),
-			str(candidate.get("label", "")),
-			str(candidate.get("label", ""))
-		)
-	# The expressions dictionary, while typing (event-sheet style): every EXPRESSION verb the
+			EventSheetCompletions.code_edit_kind(str(entry.get("kind", ""))), text, text)
+	# The expressions dictionary, while typing (an event-sheet reflex): every EXPRESSION verb the
 	# picker window lists also autocompletes right in the field - display name shown, the code
-	# fragment inserted. Skipped in member (`x.`) position, where only that type's members apply.
+	# FRAGMENT inserted. These stay beside the seam rather than inside it because what they insert
+	# is a filled template built by the dictionary, not a name. Skipped in member (`x.`) position,
+	# where only that type's members apply.
 	if _registry != null and not text_before_dot(before_caret):
 		for expression_definition: ACEDefinition in _registry.get_all_definitions():
 			if expression_definition.ace_type == ACEDefinition.ACEType.EXPRESSION:
@@ -2427,16 +2458,6 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 					expression_definition.display_name,
 					_expression_picker._expression_template(expression_definition)
 				)
-	# Right after a `$`, offer the edited scene's node paths so a path can be typed-and-picked, not only
-	# selected through the 🔍 picker. The `$` is already typed, so the inserted text is the bare path.
-	if before_caret.ends_with("$") and Engine.is_editor_hint():
-		for node_path: String in scene_node_paths(EditorInterface.get_edited_scene_root()):
-			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "$" + node_path, node_path)
-	# Right after a `%`, offer the scene's unique names (the stable, refactor-proof references) - unless
-	# the `%` is the modulo / string-format operator (a % b, "%d" % x).
-	if before_caret.ends_with("%") and Engine.is_editor_hint() and not _looks_like_modulo(before_caret):
-		for unique_name: String in scene_unique_names(EditorInterface.get_edited_scene_root()):
-			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "%" + unique_name, unique_name)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
 

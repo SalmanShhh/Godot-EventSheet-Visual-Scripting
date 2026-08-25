@@ -367,6 +367,10 @@ func init_dialog(parent_node: Node) -> void:
 	_onready_type_edit.tooltip_text = "The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant."
 	_onready_type_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_onready_type_edit.visible = false
+	# The one completion popup, on the one field in this dialog that takes a name rather than a
+	# choice: the project's own classes first, then the engine's. Same keys as everywhere else -
+	# Tab or Enter accepts, Escape keeps what was typed.
+	EventSheetCompletionPopup.attach(_onready_type_edit, EventSheetCompletions.FIELD_CLASS, Callable())
 	type_row.add_child(_onready_type_edit)
 	form.add_child(type_row)
 

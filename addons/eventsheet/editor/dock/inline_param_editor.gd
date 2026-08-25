@@ -30,6 +30,11 @@ var _field_edit_field: LineEdit = null
 var _field_edit_raw: Resource = null
 var _field_edit_index: int = -1
 var _field_edit_part: String = ""
+## The completion popup riding the inline value field, and the field kind it is currently
+## completing for. Typing in the sheet is never blinder than typing in the dialog showing the same
+## parameter, which is what this one line buys.
+var _param_edit_completions: EventSheetCompletionPopup = null
+var _param_edit_kind: String = ""
 
 
 ## Double-clicking a highlighted value opens this one-field editor at the mouse. Keyboard flows
@@ -53,8 +58,19 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		box.add_child(_param_edit_hint)
 		_param_edit_popup.add_child(box)
 		_dock.add_child(_param_edit_popup)
+		# The one completion popup, on the sheet's own value editor - so typing in a row is never
+		# blinder than typing in the dialog that shows the same parameter. It asks the seam for
+		# whatever kind of field the parameter is, which is re-read per open just below.
+		_param_edit_completions = EventSheetCompletionPopup.attach_entries(_param_edit_field,
+			func(typed: String) -> Array[Dictionary]:
+				return EventSheetCompletions.for_field(_dock._current_sheet, _param_edit_kind, typed))
 	_param_edit_target = ace
 	_param_edit_key = param_id
+	_param_edit_kind = field_kind_of(_dock._ace_registry, ace, param_id)
+	if _param_edit_completions != null:
+		# An expression keeps what is already written and swaps only the word under the caret; every
+		# other field holds one value, so accepting replaces it whole.
+		_param_edit_completions.replaces_word = _param_edit_kind == EventSheetCompletions.FIELD_EXPRESSION
 	_param_edit_field.text = current_text
 	# Name the param being edited (placeholder when empty + tooltip always), so a blind popup never
 	# leaves the user guessing which value they're typing - e.g. the ghost row's follow-up hop lands
@@ -72,6 +88,23 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_popup.popup(Rect2i(popup_at, Vector2i(200, 36)))
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
+
+
+## What KIND of field one parameter is - its own `hint`, which is what the completion seam is keyed
+## by. "" for a row whose verb this build has no descriptor for (a lifted row from a pack that is
+## not installed), and an empty kind completes nothing, which is the right answer: a list guessed
+## for a parameter nobody can describe would be worse than no list. Static and registry-in, so a
+## test can pin it without a dock.
+static func field_kind_of(registry: EventSheetACERegistry, ace: Resource, param_id: String) -> String:
+	if registry == null or ace == null or param_id.is_empty():
+		return ""
+	var definition: ACEDefinition = registry.find_definition(str(ace.get("provider_id")), str(ace.get("ace_id")))
+	if definition == null:
+		return ""
+	for parameter: Variant in definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param_id:
+			return str((parameter as Dictionary).get("hint", ""))
+	return ""
 
 
 ## Ctrl+Enter = the bulk commit (Enter alone commits just this row via text_submitted).
