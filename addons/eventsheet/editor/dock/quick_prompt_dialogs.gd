@@ -178,6 +178,10 @@ var _group_desc_edit: LineEdit = null
 var _group_enabled_check: CheckBox = null
 var _group_runtime_check: CheckBox = null
 var _group_runs_on: OptionButton = null
+var _group_runs_in: OptionButton = null
+## The modes this project declares, read ONCE when the dialog opens rather than on every keystroke:
+## the list comes from the autoload scripts, and a keystroke may not go to disk.
+var _group_runs_in_choices: Array[Dictionary] = []
 var _group_color_button: ColorPickerButton = null
 var _group_help_strip: EventSheetPopupUI.HelpStrip = null
 var _group_edit_target: EventGroup = null
@@ -187,7 +191,7 @@ var _group_color_seed: Color = Color(0, 0, 0, 0)
 
 ## The facts a group HAS, in the order the dialog asks for them. One table, so the dialog, its help
 ## strip and the tests all read the same list.
-const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Runs on", "Active on start", "Can be switched at runtime", "Colour"]
+const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Runs on", "Active on start", "Can be switched at runtime", "Colour", "Runs in"]
 
 
 ## The ONE group dialog: name, description, active on start, switchable at runtime, colour.
@@ -205,6 +209,12 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_enabled_check.button_pressed = group.enabled
 	_group_runtime_check.button_pressed = group.runtime_toggleable
 	_group_runs_on.select(EventSheetGroupFacts.runs_on_index(group.runs_on))
+	# The mode list is rebuilt on every open: a mode declared a minute ago has to be pickable now.
+	_group_runs_in_choices = EventSheetGroupFacts.runs_in_choices(_dock._current_sheet)
+	_group_runs_in.clear()
+	for choice: Dictionary in _group_runs_in_choices:
+		_group_runs_in.add_item(str(choice.get("label", "")))
+	_group_runs_in.select(EventSheetGroupFacts.runs_in_index(_dock._current_sheet, group.runs_in))
 	_group_color_seed = group.custom_color if group.custom_color.a > 0.0 else _dock.DEFAULT_STRUCTURE_COLOR
 	_group_color_button.color = _group_color_seed
 	_refresh_group_reading()
@@ -242,6 +252,12 @@ func _build_group_edit_dialog() -> void:
 		_group_runs_on.add_item(str(choice.get("label", "")))
 	_group_runs_on.item_selected.connect(func(_index: int) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[2], _group_runs_on))
+	# And which MODE of the game these events run in - the same shape, and the same reason: asked
+	# once of the group rather than repeated as an In mode condition on every event inside it. The
+	# list is empty for a project that declares no modes, so it reads as one choice: every mode.
+	_group_runs_in = OptionButton.new()
+	_group_runs_in.item_selected.connect(func(_index: int) -> void: _refresh_group_reading())
+	box.add_child(EventSheetPopupUI.form_row(GROUP_FIELD_ORDER[6], _group_runs_in))
 	_group_enabled_check = CheckBox.new()
 	_group_enabled_check.text = GROUP_FIELD_ORDER[3]
 	_group_enabled_check.toggled.connect(func(_on: bool) -> void: _refresh_group_reading())
@@ -259,6 +275,7 @@ func _build_group_edit_dialog() -> void:
 		[_group_enabled_check, GROUP_FIELD_ORDER[3]],
 		[_group_runtime_check, GROUP_FIELD_ORDER[4]],
 		[_group_color_button, GROUP_FIELD_ORDER[5]],
+		[_group_runs_in, GROUP_FIELD_ORDER[6]],
 	]:
 		_group_help_strip.follow(followed[0] as Control, str(followed[1]), _group_field_help(str(followed[1])))
 	# The one dropdown here describes its CHOICE, not the field: what "the host" costs a client is a
@@ -294,6 +311,8 @@ static func _group_field_help(field: String) -> String:
 			return "Adds the flag Set group active flips, so this group can be turned on and off while the game runs."
 		"Colour":
 			return "Paints the bracket down the group's body, so a big sheet reads by colour."
+		"Runs in":
+			return "Which mode of the game these events run in. Said once here instead of as an In mode condition on every event inside, which is how one of them gets forgotten."
 	return ""
 
 
@@ -358,6 +377,9 @@ func _refresh_group_reading() -> void:
 	var runs_on: String = str((EventSheetGroupFacts.runs_on_choices()[_group_runs_on.selected] as Dictionary).get("value", ""))
 	if not runs_on.is_empty():
 		reads += "  %s" % runs_on
+	var runs_in: String = _chosen_mode()
+	if not runs_in.is_empty():
+		reads += "  %s" % runs_in
 	# The IN CODE line says every line this dialog is about to write: the flag a switchable group
 	# declares, and the guard a runs_on group wraps its events in. Either alone is the whole answer.
 	var code_lines: PackedStringArray = PackedStringArray()
@@ -369,6 +391,9 @@ func _refresh_group_reading() -> void:
 	var guard_line: String = _runs_on_code_line(runs_on)
 	if not guard_line.is_empty():
 		code_lines.append(guard_line)
+	var mode_guard: String = EventGroup.runs_in_guard(runs_in)
+	if not mode_guard.is_empty():
+		code_lines.append("if %s: …" % mode_guard)
 	_group_help_strip.set_reading(reads, "  ".join(code_lines))
 
 
@@ -382,7 +407,17 @@ func _apply_group_edit() -> void:
 		_group_enabled_check.button_pressed, _group_runtime_check.button_pressed,
 		_group_color_button.color, _group_color_seed)
 	extras["runs_on"] = str((EventSheetGroupFacts.runs_on_choices()[_group_runs_on.selected] as Dictionary).get("value", ""))
+	extras["runs_in"] = _chosen_mode()
 	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, extras)
+
+
+## The mode the dropdown is on, out of the list read when the dialog opened. "" for every mode,
+## which is both the first entry and the answer a project with no modes can only give.
+func _chosen_mode() -> String:
+	if _group_runs_in == null or _group_runs_in.selected < 0 \
+			or _group_runs_in.selected >= _group_runs_in_choices.size():
+		return ""
+	return str(_group_runs_in_choices[_group_runs_in.selected].get("value", ""))
 
 
 ## What Apply asks `set_group_fields` to change beyond the name and the description. The colour
@@ -430,6 +465,11 @@ static func set_group_fields(group: EventGroup, new_name: String, new_desc: Stri
 	if extras.has("runs_on"):
 		group.runs_on = str(extras["runs_on"]).strip_edges()
 		fold_runs_on_conditions(group, EventGroup.runs_on_guard(group.runs_on))
+	if extras.has("runs_in"):
+		group.runs_in = str(extras["runs_in"]).strip_edges()
+		# And the same tidying the answer above does: an In mode condition on every event inside a
+		# group that now says the same thing is the repetition the group was asked to end.
+		fold_runs_on_conditions(group, EventGroup.runs_in_guard(group.runs_in))
 	if extras.has("custom_color"):
 		group.custom_color = extras["custom_color"]
 	return resolved_name

@@ -3499,6 +3499,18 @@ func open_optimiser() -> void:
 	_optimiser_dialog().open_batch()
 
 
+## The Edit modes dialog, built the first time the modes band is clicked and kept afterwards.
+var _modes_dialog: EventSheetModesDialog = null
+
+
+## The head's modes band ▸ Edit modes…: the game's modes, declared once, as ordinary rows.
+func open_modes_dialog() -> void:
+	if _modes_dialog == null:
+		_modes_dialog = EventSheetModesDialog.new()
+		_modes_dialog.init(self)
+	_modes_dialog.open()
+
+
 ## The finding one note row is about, found again by asking the sheet. The note carries WHERE it was
 ## (the event, the lane, the slot) rather than the finding itself, because the funnel replaces
 ## resources as it commits and a held finding would be about rows that no longer exist.

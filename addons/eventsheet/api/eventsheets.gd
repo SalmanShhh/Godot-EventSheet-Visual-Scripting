@@ -1938,6 +1938,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	"rendering": "Cameras-Graphics-And-Screenshots",
 	"resource": "Reading-Spreadsheets-And-Data-Assets",
 	"spatial": "Working-With-Vectors-And-Directions",
+	# The game's own mode is the other half of pausing: what a mode DOES to the game on entering is
+	# the pause flag and the mouse, so its vocabulary reads beside them rather than on a page of its
+	# own that a reader looking for "how do I pause during a cutscene" would never open.
+	"game_state": "Scenes-Pausing-And-Turning-Nodes-Off",
 	"system": "Timers-Waiting-And-Cooldowns",
 	"table": "Reading-Spreadsheets-And-Data-Assets",
 	"testing": "Testing-Your-Game",

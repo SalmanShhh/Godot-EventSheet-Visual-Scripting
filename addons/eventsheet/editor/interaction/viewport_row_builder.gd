@@ -6100,6 +6100,22 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
+	# And which MODE of the game it runs in, the same way and for the same reason: one muted word,
+	# said only when the answer is not "every one of them".
+	var runs_in: String = EventSheetGroupFacts.runs_in_word(group)
+	if not runs_in.is_empty():
+		spans.append(
+			_make_span(
+				runs_in,
+				SemanticSpan.SpanType.COMMENT,
+				{
+					"line_index": 0,
+					"group_runs_in": true,
+					"text_color": reading_style.muted_text_color,
+					"hover_note": EventSheetL10n.translate("The events in this group run only while the game is in this mode - right-click the head to change it.")
+				}
+			)
+		)
 	# The line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.

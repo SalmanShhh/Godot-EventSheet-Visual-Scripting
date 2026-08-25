@@ -32,6 +32,11 @@ static var _uid_counter: int = 0
 ## runs on every peer when it should run once, and repeating an Is host condition on every event is
 ## how that mistake gets made - so the answer is asked once, of the group.
 @export var runs_on: String = ""
+## WHICH MODE of the game this group's events run in: "" (always), or the name of a mode the Game
+# sheet declares. The same shape as the answer above, and for the same reason: the commonest way a
+## mode goes wrong is one rule that forgot to ask, and repeating an In mode condition on every event
+## is how that gets forgotten - so the answer is asked once, of the group.
+@export var runs_in: String = ""
 
 ## The three answers, as the values written into the `## @ace_group(...)` header.
 const RUNS_ON_EVERYONE := "everyone"
@@ -52,6 +57,14 @@ const RUNS_ON_GUARDS: Dictionary = {
 ## player is untouched either way: `multiplayer.is_server()` is true with no peer connected.
 static func runs_on_guard(value: String) -> String:
 	return str(RUNS_ON_GUARDS.get(value.strip_edges(), ""))
+
+
+## The test a runs_in value compiles to, or "" for a group that runs in every mode. The enum member
+## is derived from the word the group carries, so "Game Over" and GAME_OVER are the same answer and
+## the guard reads as the In mode condition it replaces.
+static func runs_in_guard(value: String) -> String:
+	var member: String = value.strip_edges().replace(" ", "_").to_upper()
+	return "" if member.is_empty() else "mode == Mode.%s" % member
 
 
 func _init() -> void:
