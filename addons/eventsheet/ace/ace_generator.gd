@@ -19,6 +19,11 @@ const COMMON_METHOD_IGNORE := {
 	"to_string": true
 }
 
+## The one word a row may carry in front of the call it makes: the caller waits for the verb to
+## finish before its next row runs. Lifted off before the node path is parameterized and put back
+## after, so "waits" and "which node" stay two separate facts about the same line.
+const AWAIT_PREFIX: String = "await "
+
 var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 ## Set per generate_from_object() call from the provider's @ace_expose_all(node) marker; when "node",
 ## un-annotated methods get a synthesized $Provider.method() template (node-targeted) instead of the
@@ -159,10 +164,19 @@ static func _apply_template_overrides(definition: ACEDefinition, overrides: Dict
 ## via $-autocomplete. This is the "the ACE acts on the object instance you picked" model,
 ## expressed as a Godot node path. Only a bare $Identifier prefix is parameterized - $"Quoted",
 ## %Unique, and multi-segment $A/B paths are already explicit and stay verbatim.
+##
+## A verb the caller WAITS ON authors its template with `await` in front ("await $ScreenFx.fade_to()"),
+## because whether a row waits is part of the line rather than of the node. The wait is lifted off,
+## the node path behind it is parameterized as usual, and the wait is put back - so an awaited verb
+## retargets exactly like every other one instead of being frozen to the path it was authored with.
 static func _parameterize_node_target(definition: ACEDefinition) -> void:
 	if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
 		return
 	var template: String = str(definition.metadata.get("codegen_template", ""))
+	var waits: String = ""
+	if template.begins_with(AWAIT_PREFIX):
+		waits = AWAIT_PREFIX
+		template = template.substr(AWAIT_PREFIX.length())
 	if not template.begins_with("$"):
 		return
 	var dot: int = template.find(".")
@@ -182,7 +196,7 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
 		if str((existing_param as Dictionary).get("id", "")) == node_param_id:
 			node_param_id = "on_node"
 			break
-	definition.metadata["codegen_template"] = "{%s}.%s" % [node_param_id, template.substr(dot + 1)]
+	definition.metadata["codegen_template"] = "%s{%s}.%s" % [waits, node_param_id, template.substr(dot + 1)]
 	var target_param: Dictionary = {
 		"id": node_param_id,
 		"display_name": "On node",

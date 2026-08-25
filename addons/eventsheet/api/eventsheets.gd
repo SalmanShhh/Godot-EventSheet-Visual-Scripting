@@ -2032,7 +2032,7 @@ const _UNIT_WORD_CHARACTERS: String = "abcdefghijklmnopqrstuvwxyz0123456789"
 ## Words that are acronyms in a guide file name, so `fps_controller` derives FPS-Controller
 ## rather than Fps-Controller.
 const _GUIDE_ACRONYMS := {
-	"2d": "2D", "3d": "3D", "ai": "AI", "fps": "FPS", "htn": "HTN", "hud": "HUD",
+	"2d": "2D", "3d": "3D", "ai": "AI", "fps": "FPS", "fx": "FX", "htn": "HTN", "hud": "HUD",
 	"npc": "NPC", "uhtn": "UHTN", "ui": "UI",
 }
 
@@ -2082,6 +2082,25 @@ static func open_online_doc(relative_path: String, anchor: String = "") -> bool:
 		return false
 	OS.shell_open(url)
 	return true
+
+
+## What a pack brings with it besides its script: `{"shader": path, "scene": path}`, each "" when the
+## pack ships none. Derived from the pack's own folder - the one `.gdshader` beside the script is its
+## shader and the one `.tscn` beside it is the scene adding the pack drops in - so a pack author
+## ships an asset by putting it in the folder, with nothing to declare.
+static func pack_shipped_assets(pack_script_path: String) -> Dictionary:
+	return EventSheetPackAssets.shipped_by(pack_script_path)
+
+
+## Copies a pack's shipped shader into the author's project and makes sure a material wears it,
+## answering `{"ok", "shader_path", "material_path", "created"}`. Nothing is ever overwritten, so
+## adding the pack to a second node finds the first node's files and uses them; `created` names only
+## what this call really wrote. `into_folder` defaults to `res://effects`.
+##
+## This is what adding an effect pack to an object does, exposed so a pack's own tooling can do it
+## on its own terms - a wizard that sets a project up, a test that installs into `user://`.
+static func install_pack_effect(shipped_shader: String, into_folder: String = EventSheetPackAssets.DEFAULT_FOLDER) -> Dictionary:
+	return EventSheetPackAssets.install(shipped_shader, into_folder)
 
 
 ## The docs/Addons guide file name (no extension) for a pack directory: the override when the

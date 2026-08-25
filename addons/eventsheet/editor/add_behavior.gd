@@ -7,6 +7,9 @@ extends RefCounted
 #   as a behavior node   - a Node carrying the pack's script is added under the object in the
 #                          scene, with the properties the dialog collected already set. This is
 #                          how every pack works, and it is the first option for that reason.
+#                          A pack that ships a SCENE of its own (a full-screen effects layer needs
+#                          a CanvasLayer with a rectangle under it, which a bare Node cannot be)
+#                          has that scene dropped in instead, and is otherwise identical.
 #   written into this script - only where the pack declares `## @ace_inline_capable`: the pack's
 #                          knobs become the script's own instance variables, so a small shape
 #                          (a cooldown, a wrap, a pin) lives in the file rather than in a
@@ -52,9 +55,10 @@ static func attach_node(pack: Dictionary, host: Node, values: Dictionary) -> Dic
 	var pack_script: Script = load(script_path)
 	if pack_script == null:
 		return {"ok": false, "message": "%s did not load." % script_path.get_file()}
-	var behavior: Node = Node.new()
-	behavior.name = str(pack.get("name", "Behavior")).replace(" ", "")
-	behavior.set_script(pack_script)
+	var shipped: Dictionary = EventSheetPackAssets.shipped_by(script_path)
+	var behavior: Node = _pack_node(pack, pack_script, str(shipped.get("scene", "")))
+	if behavior == null:
+		return {"ok": false, "message": "%s ships a scene of its own and it did not open." % str(pack.get("name", "The pack"))}
 	host.add_child(behavior)
 	behavior.owner = host.owner if host.owner != null else host
 	var applied: PackedStringArray = PackedStringArray()
@@ -68,10 +72,49 @@ static func attach_node(pack: Dictionary, host: Node, values: Dictionary) -> Dic
 	var message: String = "Added %s to %s." % [str(pack.get("name", "")), host.name]
 	if not applied.is_empty():
 		message += " Set %s." % ", ".join(applied)
+	# A pack that brings its own SCENE has already dressed itself - the scene names the shader its own
+	# nodes wear - so only a pack that is a bare behaviour needs its effect installing on the host.
+	if str(shipped.get("scene", "")).is_empty():
+		message += _install_shipped_effect(str(shipped.get("shader", "")), host)
 	var requirement: String = host_requirement(pack)
 	if not requirement.is_empty() and not host.is_class(requirement):
 		message += " Note: this pack expects a %s - the Doctor will say so until it has one." % requirement
 	return {"ok": true, "message": message, "node": behavior}
+
+
+## The node a pack joins the scene as: its own scene when it ships one, otherwise a bare Node
+## carrying its script. Null only when a shipped scene refuses to open, which is worth saying rather
+## than silently falling back to a Node the pack's script cannot even be set on.
+static func _pack_node(pack: Dictionary, pack_script: Script, shipped_scene: String) -> Node:
+	if not shipped_scene.is_empty():
+		var packed: PackedScene = ResourceLoader.load(shipped_scene, "PackedScene") as PackedScene
+		return null if packed == null else packed.instantiate()
+	var behavior: Node = Node.new()
+	behavior.name = str(pack.get("name", "Behavior")).replace(" ", "")
+	behavior.set_script(pack_script)
+	return behavior
+
+
+## Copies a pack's shader into the project and puts its material on the node, and says in plain
+## words what that did. The empty string when the pack ships no shader, which is most of them.
+static func _install_shipped_effect(shipped_shader: String, host: Node) -> String:
+	if shipped_shader.is_empty():
+		return ""
+	var effect: Dictionary = EventSheetPackAssets.install(shipped_shader)
+	if not bool(effect.get("ok", false)):
+		return " %s could not be copied into the project - check that res://effects is writable." % shipped_shader.get_file()
+	var created: PackedStringArray = effect.get("created", PackedStringArray())
+	EventSheetPackAssets.notice_new_files(created)
+	var material_path: String = str(effect.get("material_path", ""))
+	var said: String = " Used the %s already in %s." % [material_path.get_file(), EventSheetPackAssets.DEFAULT_FOLDER]
+	if not created.is_empty():
+		said = " Copied %s into %s - it is yours to edit." % [
+			", ".join(created), EventSheetPackAssets.DEFAULT_FOLDER]
+	if EventSheetPackAssets.wear_material(host, material_path):
+		return said + " %s wears it now." % host.name
+	if host is CanvasItem and (host as CanvasItem).material is ShaderMaterial:
+		return said + " %s already wears a shader material, so that one was left alone." % host.name
+	return said + " Put it on a 2D node or a Control to see it - %s cannot wear a material." % host.name
 
 
 ## The pack's shape written into a sheet instead of attached: its knobs become the sheet's own
