@@ -76,6 +76,20 @@
   (existence checks, counting sweeps, deletion sweeps) are left as they are, and a new
   `listing_order_test` pins the project-wide listings as path-sorted so a walk that loses its sort
   fails at home before it fails on somebody else's OS.
+- **A warm project index no longer leaks "called by" chips into another test's rows.** Six
+  assertions failed on continuous integration and nowhere else, and the reason was never the
+  platform: the serial suite runs in one process, one test built the project share index and left
+  it ready, and every function head two later tests rendered grew a "called by ..." chip their
+  pinned spans never asked for - while the sharded local run split leaker and victims into
+  different processes and stayed green. The leaker now clears what it warmed, and the two tests
+  that pin function heads start from a cold index either way, so the suite answers the same
+  however the tests are grouped.
+- **The bridge autoload resolves on a fresh checkout.** `project.godot` names the EventForgeBridge
+  autoload by the script's uid, but uid sidecars were ignored wholesale - so every fresh checkout
+  invented a new uid for the script, booted with "Unrecognized UID" and a failed autoload, and
+  rewrote `project.godot` to a value no other machine shares. The one sidecar that line depends on
+  is now committed (a narrow exception to the `*.uid` ignore), so every checkout resolves the same
+  uid and the file stays byte-stable through an import.
 - **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting
   `//` and then matched every other line, so wrapping a declaration in `/* … */` - which is how
   anybody switches a uniform off while they try the shader without it - left the text inside reading

@@ -31,6 +31,10 @@ const PACK_PATH := "res://eventsheet_addons/fps_controller/fps_controller_behavi
 
 static func run() -> bool:
 	var ok: bool = true
+	# The pinned head spans assume a COLD project share index: the index is a process-wide static,
+	# and one a prior test built and left ready adds a "called by ..." chip to every function head
+	# rendered here - so the rows read differently depending on which tests shared the process.
+	EventSheetProjectShareIndex.clear_cache()
 	var source: String = FileAccess.open(PACK_PATH, FileAccess.READ).get_as_text()
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK_PATH)
 	sheet.read_only = true

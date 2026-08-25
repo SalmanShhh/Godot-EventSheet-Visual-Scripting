@@ -20,6 +20,10 @@ extends RefCounted
 
 static func run() -> bool:
 	var ok: bool = true
+	# The pinned head spans assume a COLD project share index: the index is a process-wide static,
+	# and one a prior test built and left ready adds a "called by ..." chip to every function head
+	# rendered here - so the rows read differently depending on which tests shared the process.
+	EventSheetProjectShareIndex.clear_cache()
 
 	# ── A read-only preview: one verb of each kind, one documented hidden helper ──
 	var sheet: EventSheetResource = _preview_sheet()
