@@ -1451,7 +1451,15 @@ func _refresh_tree() -> void:
 		return
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
-	var query: String = _search.text.strip_edges()
+	# The whole sentence a reader typed - object, verb and value - filtered by its WORDS. A value
+	# ("0.4", "\"boss\"") is not a word any row's name contains, so leaving it in the filter is what
+	# made "boss fla 0.4" find nothing; it is what the row will be SET to, and it is picked up again
+	# at commit. A query that is nothing but a value still searches for it literally, because then
+	# it is the only thing the reader gave us to go on.
+	var typed: String = _search.text.strip_edges()
+	var query: String = EventSheetQuickAdd.words_query(typed)
+	if query.is_empty():
+		query = typed
 	var mode: String = str(_context.get("mode", "new_event"))
 	var signals_only: bool = bool(_context.get("signals_only", false))
 	var is_event_mode: bool = mode in ["new_event", "new_condition_event", "new_sub_condition_event"]
@@ -2568,40 +2576,20 @@ func _find_definition_item(provider_id: String, ace_id: String) -> TreeItem:
 	return null
 
 
-## Relevance score of a definition against a search query (higher = better), so type-and-Enter targets
-## the best match. Tiers: exact display name > name prefix > a name word starting with the query >
-## substring in the name > substring elsewhere in the search text (category / keywords). A small length
-## penalty breaks ties toward the shorter, more specific name ("Hide" over "Hide And Disable"). A score
-## of 0 means no textual hit (the row matched only via synonym/fuzzy expansion).
+## Relevance of one row against a whole typed sentence (higher = better), so type-and-Enter targets
+## what the reader meant. Every WORD has to hit something - the row's name, the node it is aimed at,
+## its category or keywords - and each hit scores by how squarely it lands, which is what lets
+## "boss fla 0.4" pick out Boss's Flash verb over everything else the three words touch. A VALUE in
+## the query nudges the rows that have somewhere to put it. The reading itself is
+## EventSheetQuickAdd, pure and pinned by a table there.
 static func _score_match(query: String, definition: ACEDefinition) -> int:
 	if definition == null:
 		return 0
-	var q: String = query.to_lower().strip_edges()
-	if q.is_empty():
+	var scored: int = EventSheetQuickAdd.score(query, definition.display_name,
+		str(definition.metadata.get(SCENE_TARGET_META, "")), definition.get_search_text())
+	if scored <= 0:
 		return 0
-	var name: String = definition.display_name.to_lower()
-	var score: int = 0
-	if name == q:
-		score = 1000
-	elif name.begins_with(q):
-		score = 600
-	elif _word_starts_with(name, q):
-		score = 400
-	elif name.find(q) != -1:
-		score = 250
-	elif definition.get_search_text().to_lower().find(q) != -1:
-		score = 100
-	if score > 0:
-		score -= mini(name.length(), 99)
-	return score
-
-
-## True when any whitespace-separated word of `text` begins with `prefix` (a word-start match).
-static func _word_starts_with(text: String, prefix: String) -> bool:
-	for word: String in text.split(" ", false):
-		if word.begins_with(prefix):
-			return true
-	return false
+	return scored + EventSheetQuickAdd.value_bonus(query, definition.parameters)
 
 
 func _on_item_activated() -> void:
@@ -2904,6 +2892,9 @@ func _commit_function_call(function_name: String) -> void:
 func _commit_definition(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
+	# Read before the window closes: the sentence the reader typed is what carries the values, and
+	# "boss fla 0.4" means the 0.4 as much as it means the verb.
+	var typed: String = _search.text.strip_edges() if _search != null else ""
 	close()
 	note_recent(definition.provider_id, definition.id)
 	var context: Dictionary = _context.duplicate(true)
@@ -2932,6 +2923,14 @@ func _commit_definition(definition: ACEDefinition) -> void:
 		alias_values.merge(_pending_alias_prefill, true)
 		context["existing_params"] = alias_values
 		_pending_alias_prefill = {}
+	# And the values the query itself carried: a number or a quoted string in the search box lands
+	# in the first parameter that can take it and is not already answered, so the parameters dialog
+	# opens with it in place. Last, so nothing the picker chose deliberately is overwritten.
+	var answered: Dictionary = context.get("existing_params", {})
+	var from_query: Dictionary = EventSheetQuickAdd.prefill(typed, definition.parameters, answered)
+	if not from_query.is_empty():
+		answered.merge(from_query, true)
+		context["existing_params"] = answered
 	ace_selected.emit(definition, context)
 
 

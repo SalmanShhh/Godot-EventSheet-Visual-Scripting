@@ -141,26 +141,11 @@ func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -
 ## Splits a quick-add query's trailing parameter text into positional values, QUOTE-AWARE: a
 ## `"`-opened run stays ONE token with its quotes kept (param values are raw GDScript expressions, so
 ## a string param needs them), while unquoted runs split on spaces. The naive split(" ") mis-filled
-## `play "jump land"` as two params ("jump / land"). An unterminated quote is forgiven - the rest of
-## the text becomes the final token. Static + pure (headless-testable); the same tokenizer the Ghost
-## Row's zero-dialog add reuses.
+## `play "jump land"` as two params ("jump / land"). Kept as the name the bar, the Ghost Row and the
+## gate already call it by; the splitting itself lives with the rest of the quick-add reading, so
+## the bar and the picker's own sentence filter cannot come to disagree about what one token is.
 static func tokenize_quick_params(rest: String) -> PackedStringArray:
-	var tokens: PackedStringArray = PackedStringArray()
-	var current: String = ""
-	var in_quotes: bool = false
-	for character in rest:
-		if character == "\"":
-			in_quotes = not in_quotes
-			current += character
-		elif character == " " and not in_quotes:
-			if not current.is_empty():
-				tokens.append(current)
-				current = ""
-		else:
-			current += character
-	if not current.is_empty():
-		tokens.append(current)
-	return tokens
+	return EventSheetQuickAdd.tokenize(rest)
 
 
 ## The ghost row's before-you-type suggestions: the most-used verbs of the kind the add key
