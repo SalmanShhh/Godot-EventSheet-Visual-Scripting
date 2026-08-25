@@ -105,6 +105,8 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | To pin a table of input to expected | `tests/pin_table.gd` - `Pins.check(name, {input: expected}, callable)`, one failure line for all of them, whole table walked |
 | To leave evidence when a byte gate refuses | `tests/repro_bundle.gd` - `Repro.dump(test, case, expected, actual, input_path)` |
 | To know why a run was red | `tools/test_report.gd` - the assertion, the changed files that map to it, the rerun line, and any test that crashed |
+| To cache anything you read out of a file | `EventForgeFileStamp.of(path)` - the `path\|mtime\|size` identity, worked out once per file per session and dropped on the editor's filesystem ping. Never stat the file yourself: doing it per question means a warm cache still costs I/O |
+| The nodes of a scene | `EventSheetSceneConnections.nodes_of_scene(path)` - one parse per file, held and handed back BY REFERENCE to every reader. Read it, never write to it |
 | A project far bigger than this one to measure on | `tests/huge_project_fixture.gd` - `HugeProject.build()` returns the manifest of 1,000 scripts, 300 scenes (three of them 2,000 nodes) and 100 shaders, written deterministically under `user://` on first ask and found again in 2 ms |
 | What a cold editor start costs | `tests/cold_boot_probe.gd`, run as its OWN process - the suite cannot measure boot from inside itself, because by then everything is compiled and warm |
 | Where a timing budget goes | `tests/huge_project_budget_test.gd` for anything on the fixture; beside the code for anything else (the row rebuild lives in `lift_perf_test.gd`, the Doctor audit in `project_doctor_test.gd`). Measure three times on a quiet machine first, write the measurements into the constant's own comment, and set the budget at roughly double |
@@ -283,3 +285,10 @@ OUTPUT keeps its own single-blank formatting by design.
 And the one that is easy to forget while adding something: **the codebase should read as though it
 were always this size.** Prefer one shared helper to three near-copies, delete the branch you
 replace, fold special cases into data tables, and say in the commit what you removed.
+
+25. **A default argument cannot tell "nothing was passed" from "the answer was empty".** Two Doctor
+    readers took the pins their caller had already worked out `if not known_pins.is_empty()`, and
+    re-read the whole file from scratch otherwise - so every file with NO pins in it, which is
+    almost all of them, paid for the pin grammar three times over instead of none. It cost 46 of the
+    audit's 85 seconds and nothing in either function looked wrong. When the empty answer is a real
+    answer, the caller has to be the one that decides not to ask.
