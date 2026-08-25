@@ -371,6 +371,11 @@ static func scene_paths() -> PackedStringArray:
 		return _scene_paths
 	_scene_paths_scanned = true
 	_collect_scene_paths("res://")
+	# Path order, always. The directory walk hands files back in whatever order the filesystem
+	# keeps them - close to alphabetical on NTFS, hash order on ext4 - and every list derived
+	# from this one (a scan, a "worn by" sentence, a band's count) would inherit that difference
+	# across machines. Sorted once here, every consumer answers the same on every platform.
+	_scene_paths.sort()
 	return _scene_paths
 
 
