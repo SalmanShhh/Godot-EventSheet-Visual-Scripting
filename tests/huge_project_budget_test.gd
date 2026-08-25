@@ -53,6 +53,17 @@ const FIRST_OPEN_BUDGET_MS: int = 5000
 ## the clock starts, because what they cost is the budget above rather than this one.
 const BIG_SHEET_OPEN_BUDGET_MS: int = 14000
 
+## REBUILDING those 1,441 rows, which is what the canvas pays after every edit - the number a reader
+## feels most often, and the one nothing pinned until now. Measured 2,327, 2,337 and 2,358 ms.
+##
+## The rows of an opened script are made INERT (nothing may write to a published verb's body), and
+## making one inert used to build its words there and then, so a long file paid for every row it had
+## whether or not anyone had scrolled to it. On a 4,000-line script that was 5,700 ms a rebuild and
+## is now 2,400. This budget is measured on the fixture's own 2,000-line script, which is under the
+## viewport's eager-span threshold and so pays for its words either way; what it catches is a change
+## that makes the WALK itself slower.
+const BIG_SHEET_REBUILD_BUDGET_MS: int = 6000
+
 ## The Add picker's whole tree, built with every pack in this repository loaded. Measured 392, 396
 ## and 469 ms over 5,129 registered rows.
 const PICKER_OPEN_BUDGET_MS: int = 1500
@@ -192,9 +203,17 @@ static func _pin_opening_the_big_script(project: Dictionary, editor: EventSheetE
 	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
 	var rows: int = editor.get_viewport_control().get_total_row_count()
 	var passed: bool = _check("the big script opened as rows (built %d)" % rows, rows > 100, true)
-	return _check("opening a %d-line script under %d ms (took %.1f ms)" % [
+	passed = _check("opening a %d-line script under %d ms (took %.1f ms)" % [
 		source.split("\n").size(), BIG_SHEET_OPEN_BUDGET_MS, elapsed_ms],
 		elapsed_ms <= float(BIG_SHEET_OPEN_BUDGET_MS), true) and passed
+	# And the same rows built again, which is what an edit costs: the sheet is unchanged, so this is
+	# purely the walk plus the words, with every by-file answer already warm.
+	var rebuild_start_usec: int = Time.get_ticks_usec()
+	editor.get_viewport_control().call("_refresh_rows")
+	var rebuild_ms: float = float(Time.get_ticks_usec() - rebuild_start_usec) / 1000.0
+	return _check("rebuilding those %d rows under %d ms (took %.1f ms)" % [
+		rows, BIG_SHEET_REBUILD_BUDGET_MS, rebuild_ms],
+		rebuild_ms <= float(BIG_SHEET_REBUILD_BUDGET_MS), true) and passed
 
 
 ## The Add picker with every pack in this repository in it. Measured on the repository rather than

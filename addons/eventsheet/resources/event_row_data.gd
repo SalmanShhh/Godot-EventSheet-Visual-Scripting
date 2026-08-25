@@ -25,6 +25,14 @@ var spans: Array[SemanticSpan] = []
 var line_count: int = 1
 var children: Array[EventRowData] = []
 var source_resource: Resource = null
+## The resource a row READS from once it has given up its editing identity. A published verb's body
+## renders for reading but must not be addressable - every mutation path guards on
+## `source_resource`, so an inert row nulls it. Its spans are still built from the row's own event,
+## though, and building them all up front to beat the null defeated the whole point of building
+## spans lazily: a two-thousand-line script paid for the words of every row it had, on screen or
+## not, on the open and again on every edit. So the pointer the SPAN BUILDER needs lives here, where
+## nothing that writes ever looks.
+var reading_resource: Resource = null
 var row_uid: String = ""
 var debug_state: String = ""
 # Set by the viewport from EventSheetDiagnostics: a non-empty message paints a red error

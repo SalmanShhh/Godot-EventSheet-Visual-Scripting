@@ -257,9 +257,17 @@ static func run() -> bool:
 	ok = _check("lifted functions render their body as child rows", body_rows_built > 0, true) and ok
 	ok = _check("every function-body row is inert (source nulled - no drag/delete/edit reaches it)", all_body_inert, true) and ok
 	# Regression: a row is made inert by NULLING source_resource, but event-row spans are built LAZILY
-	# and resolve FROM that resource - so nulling before building them left every body row drawing as a
-	# blank band. Invisible while verb bodies defaulted to folded; obvious the moment they open.
-	ok = _check("every function-body event row actually renders (spans built before it was made inert)",
+	# and resolve FROM that resource - so nulling and forgetting left every body row drawing as a
+	# blank band. Invisible while verb bodies defaulted to folded; obvious the moment they open. The
+	# fix is a READING pointer the span builder uses and nothing that writes ever looks at, which is
+	# also what lets these rows stay lazy: a long file must not pay for the words of rows nobody has
+	# scrolled to. So the pin is that the words ARRIVE when the row is laid out, and that the pointer
+	# they come from is there to be used.
+	ok = _check("every function-body event row keeps the pointer its words are built from",
+		_inert_rows_can_read(body_roots), true) and ok
+	for body_root: Variant in body_roots:
+		_ensure_spans_deep(dock._active_view(), body_root as EventRowData)
+	ok = _check("and every one of them really renders once it is laid out",
 		_event_rows_have_spans(body_roots), true) and ok
 	# A verb at root OPENS by default - its steps are the point, and the fold hint is gone with it.
 	ok = _check("a verb opens by default (no click needed to read what it does)",
@@ -451,6 +459,31 @@ static func _count_and_check_inert(rows: Array) -> Array:
 ## True when every EVENT row in the subtree has spans. A span-less event row draws as an empty band -
 ## exactly what nulling source_resource before the lazy span build used to produce. Only EVENT rows are
 ## checked: a blank-line separator block legitimately carries no spans.
+## True when every inert EVENT row in the tree still holds the resource its words are built from.
+## An inert row gives up `source_resource` so nothing can write to it; what it must NOT give up is
+## the pointer the span builder reads, or it draws as a blank band the moment it is laid out.
+static func _inert_rows_can_read(rows: Array) -> bool:
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data == null:
+			continue
+		if row_data.row_type == EventRowData.RowType.EVENT \
+				and row_data.source_resource == null and row_data.reading_resource == null:
+			return false
+		if not _inert_rows_can_read(row_data.children):
+			return false
+	return true
+
+
+## Lays a row and its whole subtree out, the way scrolling to it would.
+static func _ensure_spans_deep(view: EventSheetViewport, row_data: EventRowData) -> void:
+	if row_data == null:
+		return
+	view._ensure_event_spans(row_data)
+	for child: EventRowData in row_data.children:
+		_ensure_spans_deep(view, child)
+
+
 static func _event_rows_have_spans(rows: Array) -> bool:
 	for entry: Variant in rows:
 		var row_data: EventRowData = entry

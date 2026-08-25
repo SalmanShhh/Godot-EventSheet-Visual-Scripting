@@ -3591,6 +3591,9 @@ func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 		return
 	if first_step.source_resource != null:
 		return  # a live body row: its actions must stay addressable where they are
+	# The one row of a verb body whose words are needed at BUILD time rather than at draw time: they
+	# are about to move into the header, so they have to exist. Every other body row stays lazy.
+	_ensure_event_spans(first_step)
 	var moved: Array[SemanticSpan] = []
 	for span: SemanticSpan in first_step.spans:
 		if span == null or not (span.metadata is Dictionary):
@@ -3616,10 +3619,13 @@ func _merge_first_body_step_into_header(row_data: EventRowData) -> void:
 ## display the function's conditions/actions/raw blocks for reading, but their resources live in
 ## event_function.events, not sheet.events, so any write would alias or corrupt the .gd. Read-only reveal.
 func _make_row_inert(row_data: EventRowData) -> void:
-	# Resolve the spans BEFORE dropping the resource. Event-row spans are built LAZILY, and
-	# _ensure_event_spans reads them off source_resource - so nulling first leaves the row permanently
-	# blank. That went unseen only while verb bodies defaulted to folded and were never laid out.
-	_ensure_event_spans(row_data)
+	# The resource moves to the READING pointer rather than being resolved into spans here. Event-row
+	# spans are built lazily and the builder reads them off the row's resource, so simply nulling
+	# would leave the row permanently blank - and building them all here instead cost a long file the
+	# words of every row it has, on the open and again on every edit, for rows nobody had scrolled to.
+	# Handing the span builder its own pointer keeps both promises: nothing that WRITES can find the
+	# resource, and the words are still built the moment the row is laid out.
+	row_data.reading_resource = row_data.source_resource
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)
@@ -12970,14 +12976,21 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		return
 	if not row_data.spans.is_empty():
 		return
-	if row_data.source_resource is EventRow:
+	# An INERT row - a published verb's body, rendered for reading and addressable by nothing - has
+	# given its editing pointer up and keeps a reading one. Taking it here is what lets those rows
+	# stay lazy like every other: they used to have their words built the moment they were made
+	# inert, which on a long file was every row of it whether anyone ever scrolled to it.
+	var event: EventRow = row_data.source_resource as EventRow
+	if event == null:
+		event = row_data.reading_resource as EventRow
+	if event != null:
 		# Spans are built LAZILY, long after the walk that knew which published verb owns this row - so
 		# the row carries the answer and puts it back for the duration of the build.
 		var outer_kind: int = _verb_kind_override
 		_verb_kind_override = row_data.verb_kind
 		_pending_grammar_breakpoint = false
 		_pending_patterns = {}
-		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body,
+		row_data.spans = _build_event_spans(event, row_data.in_verb_body,
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		row_data.spans = _split_function_reference_spans(row_data.spans)
