@@ -38,6 +38,10 @@ const CATALOG_ABSENT := "user://translation_quality_absent.csv"
 
 const TRANSLATIONS_SETTING := "internationalization/locale/translations"
 
+## Where `compile()` puts its result when it is given no output path - the one file at the project
+## root that is a passing build artifact rather than a script this repo is written in.
+const GENERATED_COMPILE_OUTPUT := "res://event_sheet_generated.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -539,6 +543,13 @@ static func _test_doctor_gate() -> bool:
 	for finding: Dictionary in unmarked_findings:
 		var path: String = str(finding.get("path"))
 		if path.begins_with("res://tests/") or path.begins_with("res://tools/"):
+			continue
+		# `compile()` always writes somewhere, and with no path given it writes HERE - so any test in
+		# the suite that compiles without naming an output leaves this file at the project root while
+		# it runs. It is gitignored, it says DO NOT EDIT in its own header, and it is gone by the next
+		# compile: a build artifact passing through, not a script this repo is written in. Excluded by
+		# name rather than by folder, because the project root is where everything real also lives.
+		if path == GENERATED_COMPILE_OUTPUT:
 			continue
 		accused.append(path)
 	accused.sort()

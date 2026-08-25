@@ -26,7 +26,11 @@ extends RefCounted
 # reading tests' sources do: the lifter's byte gate compares against what the COMPILER would emit,
 # and the compiler puts ONE blank line between functions.
 
-const SOURCE_PATH := "user://eventforge_spatial_words_reading.gd"
+## Named after THIS test, not the sibling it was started from. The two write a source here, open it
+## and compile it back byte-for-byte; sharing one path meant that whenever the parallel runner put
+## them in different shards, each was liable to read the other's file mid-round-trip and report a
+## byte difference in code neither of them had touched.
+const SOURCE_PATH := "user://eventforge_spatial_scene_reading.gd"
 
 ## The first spelling needs a SCENE: a `rotate_y` reads as an orbit only when the scene says the
 ## node it turns holds nothing but a camera rig. The fixture rig beside this file is that scene, and
