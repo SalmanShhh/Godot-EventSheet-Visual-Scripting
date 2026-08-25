@@ -9,6 +9,13 @@ extends SceneTree
 
 const TESTS_DIR := "res://tests/"
 
+## The compiler's default output path. A test that compiles a sheet without naming one writes here,
+## in the project ROOT, and leaves the file behind - and while it is there it is one more script in
+## res://, so a later test that walks the project's scripts counts it and a test that lists what the
+## project ships names it. Which tests see it then depends on which ran first in the same process,
+## which the sharding decides, so it is swept after every test rather than left to luck.
+const STRAY_COMPILE_OUTPUT := "res://event_sheet_generated.gd"
+
 # Tests that mutate shared state (filesystem / plugin enablement / workspace) must run AFTER everything
 # else, in this order, so they never tear down state an earlier test still needs.
 const DEFERRED_LAST: Array[String] = [
@@ -45,6 +52,7 @@ func _init() -> void:
 		else:
 			push_error("Test %s did not return a bool from run()." % test_file)
 			passed = false
+		_sweep_stray_output()
 		_mark_finished(test_file)
 	if passed:
 		print("All tests passed.")
@@ -52,6 +60,13 @@ func _init() -> void:
 	else:
 		push_error("Some tests failed.")
 		quit(1)
+
+
+## Takes the default-path compile artifact back off disk if the test just run left one, so the next
+## test walks the project this repository actually ships.
+func _sweep_stray_output() -> void:
+	if FileAccess.file_exists(STRAY_COMPILE_OUTPUT):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(STRAY_COMPILE_OUTPUT))
 
 
 # ── the crash sentinel ──────────────────────────────────────────────────────────
