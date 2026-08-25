@@ -238,6 +238,17 @@
   await shape the shipped `Wait` rows already use. Any pack verb may now author `await` in front of
   its own template and still keep the retargetable **On node** slot every pack row carries - the wait
   and the node are two separate facts about one line.
+- New guide: **Visual Effects and Shaders**, whose worked examples draw themselves - eight of them are
+  written as the compiled shape a sheet produces, so the Manual renders them as live, insertable rows
+  in the reader's own theme and the suite compiles every one of them on every run. It covers the dials
+  and the muted `effect.` lead, fading, the field a dial edits in, the shared-material trap and the row
+  that fixes it, the global uniform every shader can read, the six packs, the full-screen layer, what
+  the head band says, the amber note for a dial a shader stopped declaring, the table of what a project
+  with shader code already in it opens as, and the five Doctor findings. Six new pack guides beside it;
+  the five picked dial rows joined the module reference a dial row's F1 lands on; the effect rows joined
+  the concept map and the reading list in **Using EventSheets With Existing Code**; and the API guide
+  gained `pack_shipped_assets`, `install_pack_effect` and `scenes_using_resource`, with a worked example
+  of shipping a shader with a pack.
 
 ### Lighting - the light is the object
 

@@ -6,6 +6,78 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Performance - a project ten times this one, and what the editor costs on it
+
+- **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
+  measured on this repository, which is large by most standards and is still not the tree the plugin
+  has to survive: a game two years in. So a generator writes that tree instead, under `user://`, the
+  first time a test asks for it - 1,000 scripts in the seven shapes real files come in (variables,
+  regions, plain functions, networked rows, lighting rows, effect rows, and code no lift will
+  claim), 300 scenes of which three carry 2,000 nodes, 100 shaders declaring eight described dials
+  each, one 2,000-line controller, and the 105 packs this repository already ships. It is
+  deterministic - every file is derived from its index, so two machines write identical bytes and a
+  number measured on one means something on the other - it takes 1.2 seconds to write and 2
+  milliseconds to find again, and it is never committed, so nothing here grew by 1,401 files.
+- **Eleven budgets, each measured three or more times on a quiet machine before it was written
+  down.** What the editor costs on that fixture: enabling the plugin **270 ms**; the first sheet tab
+  of a session **2,310 ms**, of which **2,050 ms** is the once-per-session registries no later tab
+  pays; opening the 2,000-line script as 1,441 rows **5,600 ms** and rebuilding those rows, which is
+  what an edit costs, **2,100 ms**; the Add picker over all 5,129 registered rows **390 ms**; one
+  keystroke in a completing field **2.2 ms**, comfortably inside a frame; the lights and material
+  wearers of a 2,000-node scene **20 ms** cold and **0.03 ms** warm; 100 shaders **180 ms** cold and
+  **0.2 ms** warm; the whole Project Doctor audit of this repository **41 s**. Every one of them is
+  now a test, and `tests/run_perf.gd` runs them.
+- **Boot is measured in a process that has never booted.** By the time any test runs, half the
+  plugin is compiled and every registry is warm, so the work an editor start really does measures as
+  zero from inside the suite - which is how a 2-second boot regression hid twice. A probe now runs
+  as its own subprocess, loads the plugin the way the editor does and reports what it cost, and the
+  budget over it is set far below the number the lazy-boot contract exists to prevent rather than
+  just above today's.
+- **An opened script stops paying for the words of rows nobody has scrolled to.** The canvas builds
+  a row's words lazily on purpose, and above 1,500 rows it builds them for the rows on screen and no
+  others - except that a published verb's body rows are made INERT (nothing may write to them, so
+  the .gd round-trips byte-identically), and making one inert built its words there and then. So the
+  one case that reaches 1,500 rows, an opened script, was the one case the laziness never applied
+  to. The span builder gets its own pointer at the row's event, which nothing that writes ever looks
+  at, and the verb a row's body belongs to rides on the row the way its kind already did - so a
+  `return` inside one of the editor's own callbacks still reads as the answer to that callback's
+  question however late its words are built. The one head that COUNTS what the rows recognised, a
+  read-only pack preview's Include bar, still reads them up front, because it is composed while they
+  are being built. **A 4,000-line script: 11,500 ms -> 7,400 ms to open, and 5,700 ms -> 2,400 ms to
+  rebuild** - and the rebuild is what the canvas pays after every single edit. It now has a budget.
+- **A warm read of a file costs nothing now.** Every by-file reader worked out its own
+  `path|mtime|size` identity before it could consult its cache, and a size means opening the file -
+  so a \"cached\" answer still cost real I/O, and a row build asking about a shader once per dial per
+  row paid it thousands of times. The identity is held per file for the session and dropped on the
+  editor's filesystem ping, like every other cache here. **100 warm shader reads: 90 ms -> 0.2 ms.**
+- **The scene is parsed once, not once per reader.** The lights reader, the material reader, the
+  replication reader, the scene view and the connection read each re-read and re-parsed the same
+  `.tscn` for themselves; each then cached only what it had DERIVED. One parse is held per file and
+  handed to all of them. **The lights and material wearers of a 2,000-node scene: 270 ms -> 20 ms
+  cold**, and the budget over it came down from 900 ms to 150.
+- **Which scenes load a script is an index, not a search.** Asking it read every scene file in the
+  project, so opening a twelve-line script cost 104 ms that nothing about the file explained, and a
+  whole-project sweep was quadratic - a thousand scripts meeting three hundred scenes. One pass over
+  the scenes now answers it for all of them.
+- **The events overlay stops repainting an editor nobody is touching.** Its Scene-dock half lies
+  over the dock's Tree and follows it, and a Tree announces neither its scrolling nor its layout -
+  so the mark polls. It was repainting on every poll: walking the whole dock and measuring a string
+  per badge, sixty times a second, forever. It now paints when the Tree has actually moved.
+- **The Project Doctor's audit is roughly half of what it was: 85 s -> 41 s** on this repository,
+  with the same 175 findings. Three things were doing it: the pin reading ran over every file three
+  times because \"the pins I was handed are empty\" and \"I was handed no pins\" were the same thing to
+  it (46 s of the 85, on a project where almost no file pins anything); every check that wanted the
+  project's script list walked the directory tree again for it (forty walks at 57 ms); and the scene
+  read above sat under three of the sections. The pin grammar also stops asking five bracket-aware
+  matchers about lines that carry no `=` at all.
+- **One number is still pinned where it is rather than where it ought to be**, and is named here so
+  the next pass has a target instead of a feeling: the once-per-session registries - every
+  descriptor, the reverse index every lift matches against, the compiled matchers, the block kinds -
+  are **2,050 ms of the first sheet tab's 2,310**, and about half of that is the plugin's own
+  compile. They are correctly built once, and they are built on the main thread on purpose (the lift
+  runs on a worker and may only read them), so making that wait smaller means building them in
+  slices rather than making any one of them faster.
+
 ### Autocomplete - one list of names, one set of keys, everywhere
 
 - **One seam behind every completing field.** `EventSheets.completions_for(sheet, field_kind,
@@ -170,6 +242,17 @@ What changed in the build you have installed (v0.17.0), in the words the release
   await shape the shipped `Wait` rows already use. Any pack verb may now author `await` in front of
   its own template and still keep the retargetable **On node** slot every pack row carries - the wait
   and the node are two separate facts about one line.
+- New guide: **Visual Effects and Shaders**, whose worked examples draw themselves - eight of them are
+  written as the compiled shape a sheet produces, so the Manual renders them as live, insertable rows
+  in the reader's own theme and the suite compiles every one of them on every run. It covers the dials
+  and the muted `effect.` lead, fading, the field a dial edits in, the shared-material trap and the row
+  that fixes it, the global uniform every shader can read, the six packs, the full-screen layer, what
+  the head band says, the amber note for a dial a shader stopped declaring, the table of what a project
+  with shader code already in it opens as, and the five Doctor findings. Six new pack guides beside it;
+  the five picked dial rows joined the module reference a dial row's F1 lands on; the effect rows joined
+  the concept map and the reading list in **Using EventSheets With Existing Code**; and the API guide
+  gained `pack_shipped_assets`, `install_pack_effect` and `scenes_using_resource`, with a worked example
+  of shipping a shader with a pack.
 
 ### Lighting - the light is the object
 
