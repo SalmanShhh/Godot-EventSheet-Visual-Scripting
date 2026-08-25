@@ -2,7 +2,7 @@
 class_name EventSheetRunControls
 extends RefCounted
 
-# T15 - PREVIEW ON THE SHEET. A reader coming from another event-sheet editor reaches for Preview on
+# PREVIEW ON THE SHEET. A reader coming from another event-sheet editor reaches for Preview on
 # the sheet, not for the editor's own play bar at the top of the window. Three buttons:
 #
 #   ▶  Preview layout   run the scene this sheet belongs to      (Godot's F6)

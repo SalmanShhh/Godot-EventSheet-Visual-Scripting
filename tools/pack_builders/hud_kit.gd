@@ -199,7 +199,7 @@ static func build() -> bool:
 	])))
 	_default(sheet, "color", "Color.WHITE")
 
-	# Y24. A meter with a CENTRE rather than a floor: balance on a rail or in a manual, a tug-of-war
+	# A meter with a CENTRE rather than a floor: balance on a rail or in a manual, a tug-of-war
 	# bar, a lean, a tuning dial. A bar cannot show it - what matters is how far from the middle the
 	# needle has drifted and which side it is on - so this builds the needle itself the first time it
 	# is asked, inside whatever named Control the sheet points it at.

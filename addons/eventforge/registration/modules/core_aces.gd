@@ -84,7 +84,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs after this node has been removed from the scene tree."))
 	descriptors.append(F.make_descriptor("Core", "OnRenamed", "On Renamed", ACEDescriptor.ACEType.TRIGGER, "", "renamed", [], "Signals / Scene / Input", "On renamed", "Node")
 		.described("Runs when this node's name changes in the scene tree."))
-	# X12. The two ends of "something joined / left this object" - the pair a spawn counter, an
+	# The two ends of "something joined / left this object" - the pair a spawn counter, an
 	# inventory panel and a socket check are all written from. The words are the hierarchy's own
 	# ("added" / "leaving"), not the signal names, because the signal names are what a reader has to
 	# translate every time they meet them.
@@ -113,7 +113,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when this node belongs to the named group, for tagging and identifying objects."))
 	descriptors.append(F.make_descriptor("Core", "CompareVar", "Compare variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), F.make_param("op", "String", "==", "Operator", "Comparison operator.", "", F.COMPARISON_OPTIONS), F.make_param("value", "String", "0", "Value", "Comparison value.", "expression")], "Variables", "{var_name} {op} {value}")
 		.described("True when a variable compares against a value as you specify, for branching on game state."))
-	# V7. The boolean family's missing half. "Set boolean" / "Toggle boolean" / "Is boolean set" is
+	# The boolean family's missing half. "Set boolean" / "Toggle boolean" / "Is boolean set" is
 	# the trio anyone who has driven an event sheet reaches for, and only the middle one existed:
 	# testing a flag meant Compare variable with `== true` beside it, which says the same thing in
 	# three more words. The template is the bare name, because a boolean IS the question.
@@ -127,7 +127,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Actions
 	descriptors.append(F.make_descriptor("Core", "SetVar", "Set value", ACEDescriptor.ACEType.ACTION, "{var_name} = {value}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to set.", "variable_reference"), F.make_param("value", "String", "0", "Value", "Value to assign.", "expression")], "Variables", "Set {var_name} to {value}")
 		.described("Sets a variable to a value you give, the basic way to store game state."))
-	# V7. Set value with the two answers a boolean has already in the list, so a flag is set by
+	# Set value with the two answers a boolean has already in the list, so a flag is set by
 	# picking a word rather than by typing one. Same template as Set value, deliberately - the code
 	# is identical and only the ROW is clearer, which is why it stays out of the reverse index
 	# (ace_lifter.REVERSE_LIFT_EXCLUDED_ACE_IDS): `x = y` must keep lifting back to Set value.
@@ -187,7 +187,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Smoothly eases horizontal speed toward a target, giving gradual acceleration and braking."))
 	descriptors.append(F.make_descriptor("Core", "AccelerateVelocityY", "Accelerate Velocity Y Toward", ACEDescriptor.ACEType.ACTION, "{host.}velocity.y = move_toward({host.}velocity.y, {target_speed}, {rate} * {delta_t})", "", [F.make_param("target_speed", "String", "0.0", "Target speed", "Vertical speed to ease toward.", "expression"), F.make_param("rate", "String", "1500.0", "Rate", "Max change per second.", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta`.", "expression")], "Movement", "Accelerate y toward {target_speed} at {rate} (per second)", "CharacterBody2D")
 		.described("Smoothly eases vertical speed toward a target value over time."))
-	# S9. The three movement steps a hand-rolled controller is made of that had no row of their own -
+	# The three movement steps a hand-rolled controller is made of that had no row of their own -
 	# capping the speed, turning toward an angle over time, and letting one body pass through another.
 	# Their templates are EXACTLY the lines the reading recognises, so a picked row and a typed line
 	# are the same bytes and read the same sentence.
@@ -265,7 +265,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetScreenSize", "Screen Size", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.screen_get_size()", "", [], "Utility: Window", "screen size")
 		.described("Returns the size of the player's monitor in pixels."))
 	# (Set Mouse Mode lives in device_aces under "Mouse" - not duplicated here.)
-	# T12. The row wears the words the reading uses for it - an opened script's
+	# The row wears the words the reading uses for it - an opened script's
 	# `DisplayServer.clipboard_set(x)` reads `Browser ▸ Copy x to clipboard` - so a picked row and a
 	# typed line say the same sentence. Id, section and emitted line are frozen and unchanged.
 	descriptors.append(F.make_descriptor("Core", "SetClipboard", "Copy To Clipboard", ACEDescriptor.ACEType.ACTION, "DisplayServer.clipboard_set({text})", "", [F.make_param("text", "String", "\"\"", "Text", "Text to copy to the OS clipboard.", "expression")], "Utility: Window", "copy {text} to clipboard")
@@ -282,7 +282,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Time formatting (turn seconds into clock text; read the system clock) ──
 	descriptors.append(F.make_descriptor("Core", "FormatTime", "Format Time (mm:ss)", ACEDescriptor.ACEType.EXPRESSION, "(\"%02d:%02d\" % [int({seconds}) / 60, int({seconds}) % 60])", "", [F.make_param("seconds", "String", "0.0", "Seconds", "Total seconds to format.", "expression")], "Utility: Time", "format {seconds} as mm:ss")
 		.described("Turns a number of seconds into a tidy mm:ss string for timers and clocks."))
-	# T26. Both belong to the Date object a reader of event sheets looks for, and both say the name a
+	# Both belong to the Date object a reader of event sheets looks for, and both say the name a
 	# row shows them under. The ids and the templates are frozen; only the words changed.
 	descriptors.append(F.make_descriptor("Core", "GetSystemTime", "Date: Time Text", ACEDescriptor.ACEType.EXPRESSION, "Time.get_time_string_from_system()", "", [], "Utility: Time", "Date.TimeString")
 		.described("Returns the player's current clock time as a text string."))

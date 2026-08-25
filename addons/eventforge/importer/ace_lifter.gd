@@ -30,11 +30,11 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _input(event: InputEvent) -> void:": "OnInput",
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
 	"func _unhandled_key_input(event: InputEvent) -> void:": "OnUnhandledKeyInput",
-	# R26. The callback a clickable body gets when input lands ON it. It is an input handler like the
+	# The callback a clickable body gets when input lands ON it. It is an input handler like the
 	# three above - the body branches on the event exactly the same way - so it lifts to a trigger
 	# rather than staying the raw handler it used to be.
 	"func _input_event(viewport: Viewport, event: InputEvent, shape_idx: int) -> void:": "OnInputEvent",
-	# W8. The same callback for a UI element: input that landed on THIS Control, after the ones above
+	# The same callback for a UI element: input that landed on THIS Control, after the ones above
 	# have passed on it. A tool's whole canvas is one of these, and it branches on the event exactly
 	# like the handlers above, so it lifts to a trigger and its branches read as Mouse / Keyboard.
 	"func _gui_input(event: InputEvent) -> void:": "OnControlInput",
@@ -49,15 +49,15 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _run() -> void:": "OnEditorRun",
 	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport",
 	"func _on_files_imported(paths: PackedStringArray) -> void:": "OnFileImported",
-	# X24. The half of Make Noise that RECEIVES. A guard's `hear` is a handler the noise maker calls
+	# The half of Make Noise that RECEIVES. A guard's `hear` is a handler the noise maker calls
 	# by name, so an opened stealth script reads it as the reaction it is rather than as a helper.
 	"func hear(at: Variant) -> void:": "OnNoiseHeard",
-	# Y18 / Y16. The same seam, twice more: an enemy told who to come for, and a door tried without
+	# The same seam, twice more: an enemy told who to come for, and a door tried without
 	# its key. Both are handlers something else calls by name, so an opened level reads them as the
 	# reactions they are rather than as two helpers nobody can see the caller of.
 	"func alerted(who: Variant) -> void:": "OnAlerted",
 	"func locked_door_tried(key: Variant) -> void:": "OnLockedDoorTried",
-	# R30 / R34. The editor's own callbacks. An opened plugin or gizmo script is one of the least
+	# The editor's own callbacks. An opened plugin or gizmo script is one of the least
 	# readable files there is until these read as what the editor calls them for: an object was
 	# selected, the 2D overlay is being painted, input landed in the viewport, a gizmo is redrawing.
 	"func _edit(object: Object) -> void:": "OnEditorObjectSelected",
@@ -66,7 +66,7 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _redraw() -> void:": "OnDrawGizmo"
 }
 
-## R30. The two tree callbacks that mean something DIFFERENT on an EditorPlugin: `_enter_tree` is not
+## The two tree callbacks that mean something DIFFERENT on an EditorPlugin: `_enter_tree` is not
 ## "on created" there, it is the moment the plugin was switched on. Keyed on the trigger the header
 ## table already resolved, so the rename is a display-level re-pin and the emitted function is the
 ## same one either way (see TriggerResolver).
@@ -107,7 +107,7 @@ static var progress_functions_done: int = 0
 ## raw (unlifted) sheet - exactly the state a file that cannot lift at all ends in.
 static var cancel_requested: bool = false
 
-## M42 - the res:// path of the file being lifted, when the caller knows it. Used for exactly one
+## The res:// path of the file being lifted, when the caller knows it. Used for exactly one
 ## question the source text cannot answer: which scene(s) wire signals to this script, so a handler
 ## the Godot editor connected reads as the trigger it is rather than as a nameless helper. The
 ## importer sets it around the lift and clears it after; a caller that hands over a bare sheet with
@@ -219,14 +219,14 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# The file's own object-typed members, read before any line is matched: they are what tells
 	# `candidate == host` apart from `i == 1` (see _is_object_expression).
 	_object_reference_names = _object_names_from_source(source)
-	# E1 - and its network peers, for the same reason: `peer.create_server(…)` only means "host a
+	# And its network peers, for the same reason: `peer.create_server(…)` only means "host a
 	# game" when `peer` really is a multiplayer peer this file declared.
 	EventForgeMultiplayerLift.note_source(source)
-	# L7 - and the lights of the file's own scene, for the same reason again: `$Torch.enabled = false`
+	# And the lights of the file's own scene, for the same reason again: `$Torch.enabled = false`
 	# only means "turn the light off" when the scene says Torch is a light. Nothing else can say so,
 	# and a row that guessed would relabel somebody's door.
 	EventForgeLightingLift.note_source(source, _scene_source_path_of(sheet))
-	# M3 - and the groups' own "who runs it", resolved per slug (a group inherits its parent's
+	# And the groups' own "who runs it", resolved per slug (a group inherits its parent's
 	# answer), so the guard the compiler wrote in front of each event can be taken back off.
 	_note_group_guards(source)
 	_lift_host_class = str(sheet.host_class).strip_edges()
@@ -266,7 +266,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 			pending_header_text = "\n".join(annotation_lines)
 	# `_ready`'s leading connect lines reveal which functions are signal handlers
 	# (and for which signal/source node). Emission regenerates the connects.
-	# M42 - and so does the project's own scene wiring, for a handler the editor connected instead of
+	# And so does the project's own scene wiring, for a handler the editor connected instead of
 	# `_ready`. A handler sitting at the END of the file never reaches the mid-file pass below, so the
 	# scene map has to seed this one too or the commonest shape of all (a UI script whose only
 	# functions are `_on_*` handlers) still opens as a list of helpers.
@@ -1521,7 +1521,7 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"area_exited": "OnAreaExited",
 	"timeout": "OnTimeout",
 	"animation_finished": "OnAnimationFinished",
-	# Y3. The sprite's own "I just moved to another frame". The clip-and-frame question stays a
+	# The sprite's own "I just moved to another frame". The clip-and-frame question stays a
 	# condition inside the handler, so a lifted row and a picked one hold the same two resources.
 	"frame_changed": "OnAnimationFrame",
 	"tree_entered": "OnTreeEntered",
@@ -1530,7 +1530,7 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"renamed": "OnRenamed",
 	"child_entered_tree": "OnChildEnteredTree",
 	"child_exiting_tree": "OnChildExitingTree",
-	# M4. The scene side's three. Keyed on the bare signal like every other entry here, and safe for
+	# The scene side's three. Keyed on the bare signal like every other entry here, and safe for
 	# the same reason: a project with a `spawned` signal of its own reads as "On spawned" either way -
 	# through this table, or through the `signal:<name>` fallback - so the words a reader gets are the
 	# same, and the connect line re-emits from the author's own spelling regardless.
@@ -1539,7 +1539,7 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"synchronized": "OnSynchronized"
 }
 
-## W18. Two editor signals that only mean what the Editor object says they mean when they came off
+## Two editor signals that only mean what the Editor object says they mean when they came off
 ## the editor's OWN objects. Keyed by the connect line's source FIRST and the signal second on
 ## purpose: `settings_changed` is a name any project could give its own object, and a table keyed on
 ## the bare signal would relabel every such handler in every game as "On preferences changed".
@@ -1556,11 +1556,11 @@ const EDITOR_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
 ## reproduce the author's own spelling instead of the canonical one - the byte-verify is absolute,
 ## and rewriting a hand-written `$Hurtbox` connect as `get_node("Hurtbox")` would fail it.
 static func _parse_connect_line(line: String) -> Dictionary:
-	# W18. The two editor objects a tool connects to are call chains, not identifiers, so they are
+	# The two editor objects a tool connects to are call chains, not identifiers, so they are
 	# spelled out rather than allowed as a general `x.y()` alternative - widening the pattern to any
 	# call chain would start claiming connect lines in every project that this reading has no words for.
 	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
-	# Q7. The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
+	# The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
 	# a handler wired with it is still exactly this shape - refusing the line only stranded the whole
 	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
 	# flags without the compiler ever having to understand them.
@@ -1615,7 +1615,7 @@ static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 ## mid-file anchor pass reads this wider map instead. Position-blind on purpose: the byte-verify is
 ## what decides whether a handler actually lifts.
 static func _parse_all_connections(sheet: EventSheetResource) -> Dictionary:
-	# M42 - the wiring a project did in the Godot editor lives in the .tscn, not here. Those handlers
+	# The wiring a project did in the Godot editor lives in the .tscn, not here. Those handlers
 	# are read FIRST so a connect actually written in the file still wins: the code is the closer
 	# authority on its own bytes, and only a code connect has a line to re-emit.
 	var connections: Dictionary = EventSheetSceneConnections.for_script(_scene_source_path_of(sheet)).duplicate(true)
@@ -1670,7 +1670,7 @@ static func _loose_lifecycle_match(header: String) -> RegExMatch:
 ## pack ships (`host = get_parent() as <Class>` plus the null warning). The compiler emits that block
 ## from the sheet's host metadata, never from an event, so it must stay a raw row: lifting it would
 ## emit the same function twice. The match is strict on all four lines, so a hand-modified
-## `_enter_tree` - the case P8 is actually about - lifts to its trigger as normal.
+## `_enter_tree` - the case this rule is actually about - lifts to its trigger as normal.
 static func _is_host_binding_body(function_lines: PackedStringArray) -> bool:
 	var lines: PackedStringArray = function_lines.duplicate()
 	while lines.size() > 0 and lines[lines.size() - 1].strip_edges().is_empty():
@@ -1741,10 +1741,10 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_source: String = ""
 	# The connect line VERBATIM, so emission reproduces the author's own spelling of it.
 	var connect_line: String = ""
-	# M42 - true when the wiring lives in the .tscn instead. There is no connect line to reproduce and
+	# True when the wiring lives in the .tscn instead. There is no connect line to reproduce and
 	# none may be invented: the script's bytes must come back exactly as they went in.
 	var scene_connected: bool = false
-	# M42 - the emitting node's class as the scene declares it, so the row can draw its picture.
+	# The emitting node's class as the scene declares it, so the row can draw its picture.
 	var source_class: String = ""
 	var index: int = 1
 	# A lifecycle header the canonical table missed but that still NAMES a lifecycle function is
@@ -1773,7 +1773,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# emit the function a second time and fail the byte-verify - reverting the WHOLE file to
 			# code blocks. Left raw, it keeps reading as the one-line "Host binding" row it already is.
 			return {"ok": false}
-		# R30. On an EditorPlugin the same two callbacks are the plugin being switched on and off.
+		# On an EditorPlugin the same two callbacks are the plugin being switched on and off.
 		if _lift_host_class == "EditorPlugin" and PLUGIN_LIFECYCLE_TRIGGERS.has(trigger_id):
 			trigger_id = str(PLUGIN_LIFECYCLE_TRIGGERS[trigger_id])
 		if function_lines[0].begins_with("func _ready()"):
@@ -1807,14 +1807,14 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		trigger_args = header_match.get_string(2)
 		var editor_signals: Dictionary = EDITOR_SOURCE_SIGNAL_TRIGGERS.get(trigger_source, {}) as Dictionary
 		if editor_signals.has(signal_name):
-			# W18. An editor signal off an editor object. The source is the editor itself rather than a
+			# An editor signal off an editor object. The source is the editor itself rather than a
 			# node in the scene, so it is cleared here: the resolver knows where to reconnect it, and a
 			# leftover path would have emission reach for get_node("EditorInterface…").
 			trigger_id = str(editor_signals[signal_name])
 			trigger_source = ""
 		elif trigger_source == EventForgeMultiplayerLift.CONNECT_SOURCE \
 				and EventForgeMultiplayerLift.SIGNAL_TRIGGERS.has(signal_name):
-			# E1. MultiplayerAPI's own signals, off the `multiplayer` object the connect line names.
+			# MultiplayerAPI's own signals, off the `multiplayer` object the connect line names.
 			# The source moves to the global "@multiplayer" token the resolver knows how to write
 			# back, exactly as an editor signal's does - `multiplayer` is a property, not a node, so
 			# a leftover path would have emission reach for get_node("multiplayer").
@@ -1847,7 +1847,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		for event: Variant in events:
 			(event as EventRow).set_meta("__source_connect_line", connect_line)
 	if scene_connected:
-		# M42 - the .tscn already holds this wiring. Emission must add NOTHING: a generated
+		# The .tscn already holds this wiring. Emission must add NOTHING: a generated
 		# `<node>.<signal>.connect(<handler>)` would both duplicate the connection at runtime and
 		# fail the byte-verify, reverting the whole file to code blocks.
 		for event: Variant in events:
@@ -1937,7 +1937,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				expression = block_head.substr(3, block_head.length() - 4)
 			elif is_elif:
 				expression = block_head.substr(5, block_head.length() - 6)
-			# M3 - a group that says who runs it wears its guard on every event under it. The guard is
+			# A group that says who runs it wears its guard on every event under it. The guard is
 			# the GROUP's fact, so it comes off here and rides the EventGroup instead; re-emission puts
 			# back exactly the term that was taken away, which is what keeps the file byte-identical.
 			if is_if:
@@ -2109,7 +2109,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
-			# E1 - a networking run that only means something as a group: the two or three lines that
+			# A networking run that only means something as a group: the two or three lines that
 			# open a game are ONE row, so they are claimed together before any single line is. The
 			# matched spelling rides back as the row's baked template, which is what re-emits the
 			# author's own bytes instead of the canonical three-line form.
@@ -2231,7 +2231,7 @@ static func _top_level_colon(text: String, from: int) -> int:
 	return -1
 
 
-## M3. Every group slug in a source mapped to the guard its events are wrapped in - its own runs_on
+## Every group slug in a source mapped to the guard its events are wrapped in - its own runs_on
 ## answer, or the nearest ancestor's. Filled once per lift, for the same reason the peer variables
 ## are: it is one fact about the file being read.
 static var _group_runs_on: Dictionary = {}
@@ -2256,7 +2256,7 @@ static func _note_group_guards(source: String) -> void:
 			walk = str((registry[walk] as Dictionary).get("parent", ""))
 
 
-## M3. The runs_on guard each of a handler's lifted events sits behind, keyed by the row it guards.
+## The runs_on guard each of a handler's lifted events sits behind, keyed by the row it guards.
 ## A full compile fills this while flattening the group tree; the PER-FUNCTION probe re-emits one
 ## handler with no groups around it, so without this it would read a body that lifted perfectly as a
 ## mismatch and leave the whole function raw.
@@ -2645,7 +2645,7 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		condition.ace_id = str(matched.get("ace_id", ""))
 		condition.params = matched.get("params", {})
 		condition.negated = negated
-		# K4 - both spellings of an inverted comparison are the SAME row: `not (hp <= 0)` lifts to the
+		# Both spellings of an inverted comparison are the SAME row: `not (hp <= 0)` lifts to the
 		# comparison with the invert on, reading `hp > 0` exactly as a file that wrote the short form
 		# does, so the Compare dialog, the operator glyphs and the invert toggle all still apply. The
 		# file's own spelling is remembered on the row, because the compiler writes the opposite
@@ -2718,7 +2718,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if line.strip_edges().begins_with("#"):
 		_append_raw_line(event, pending_raw, blank_box, line)
 		return
-	# E1 - the networking spellings the generic index has no words for (`rpc(&"f", …)` reads as
+	# The networking spellings the generic index has no words for (`rpc(&"f", …)` reads as
 	# "Call rpc" through it). Asked FIRST so the row that knows what the line is about wins, with the
 	# spelling it matched baked on so emission writes the author's bytes back.
 	var networked: Dictionary = EventForgeMultiplayerLift.match_line(line)
@@ -2726,7 +2726,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 		_flush_raw(event, pending_raw, blank_box)
 		event.actions.append(_matched_spelling_action(networked, blank_box))
 		return
-	# L7 - the lighting spellings, on the same footing and for the same reason: the row that knows
+	# The lighting spellings, on the same footing and for the same reason: the row that knows
 	# the node is a light wins, with the author's own spelling baked on. Its guard reads the attached
 	# scene, so a line whose target cannot be shown to be a light falls straight through to the
 	# general index below and stays whatever it was.
@@ -2750,7 +2750,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	event.actions.append(action)
 
 
-## E1 / L7. One matched spelling as the row it is, for every family that recognises the author's own
+## One matched spelling as the row it is, for every family that recognises the author's own
 ## text rather than the canonical template. The template the matcher handed back is BAKED onto the
 ## action, where it outranks the descriptor's canonical one - so a row lifted from a hand-written
 ## file writes that file's own line, and a row the sheet authored writes the canonical form. One
@@ -3043,11 +3043,11 @@ static func _build_reverse_entries() -> Array:
 	return built
 
 
-## U6 / U7 / U12. The picker categories kept OUT of the reverse index, because the sentence grammar
+## The picker categories kept OUT of the reverse index, because the sentence grammar
 ## already has a better sentence for every line they write. Frozen alongside the readings: adding a
 ## category here is a promise that the reading covers it, and dropping one back in would silently
 ## swap those rows' words.
-## X1 / X3 / X5 join them: every row on the 3D page writes a line the sentence grammar reads in the
+## Join them: every row on the 3D page writes a line the sentence grammar reads in the
 ## sheet's own words - "Move forward at speed", "Is within 45° of facing enemy" - where the lifted row
 ## could only repeat the template with the raw basis expression in it. The move template is the other
 ## half of the reason: `global_position += {direction} * {speed} * {delta_t}` is a GENERAL spelling,
@@ -3057,20 +3057,20 @@ const REVERSE_LIFT_EXCLUDED_CATEGORIES: PackedStringArray = [
 	"AJAX", "Lighting", "Video", "3D: Move & Turn", "3D: Place", "3D: See"
 ]
 
-## U12. The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
+## The same promise, for two rows that live in a category most of whose verbs SHOULD lift. A
 ## positional sound's two knobs read under the player they belong to, which the lifted row cannot say.
 const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"AudioSetHearingDistance", "AudioSetFalloff",
-	# X27. The two mission-clock rows whose templates are a plain Set and a plain Add. Their VALUE is
+	# The two mission-clock rows whose templates are a plain Set and a plain Add. Their VALUE is
 	# the minutes:seconds field the picker offers, not a new spelling - so admitting them to the
 	# reverse index would have them claim every assignment and every increment in every project, and
 	# the shipped countdown reading already says what those lines are.
 	"StartMissionTimer", "AddMissionTime",
-	# V7. The boolean pair. `x = y` is Set value's own template and `{var_name}` alone would claim
+	# The boolean pair. `x = y` is Set value's own template and `{var_name}` alone would claim
 	# every bare identifier in every file - both rows say a CLEARER sentence about a line that
 	# already lifts, so they author only and the general spellings keep their existing rows.
 	"SetBool", "IsBoolSet",
-	# X22 / X25 / X28 / X29. Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
+	# Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
 	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
 	# right for the row that writes it and hopelessly general for the index that reads lines BACK:
 	# admitted, they would claim every assignment, every resource load and every list length in
@@ -3082,7 +3082,7 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# (Its sibling OpenInputWindow needs no entry here: a template spanning two lines can never match
 	# the single lines the reverse index is asked about, so the tail widens nothing.)
 	"StartListeningForControl", "StopListeningForControl", "CloseInputWindow", "CountMashPress",
-	# Y2. Buffer Input, now that it is counted in SECONDS, writes `{input} = <now> + {seconds}` -
+	# Buffer Input, now that it is counted in SECONDS, writes `{input} = <now> + {seconds}` -
 	# which is the SAME line Open Input Window writes as its second one. That template spans two
 	# lines and so never enters the index itself, and the window is put back together by the
 	# reading; admitting the one-line buffer would have it claim the deadline line first and
@@ -3091,18 +3091,18 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# `Engine.get_physics_frames() + {frames}` means one thing and nothing else writes it.
 	"BufferInput",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
-	# Y16. The keycard rows, out for exactly the reason the secrets rows above are: `list.append(x)`,
+	# The keycard rows, out for exactly the reason the secrets rows above are: `list.append(x)`,
 	# `(a in b)` and `(not a in b)` are the list operations every project writes, and a keycard row
 	# admitted to the index would speak for all of them. They author the same bytes either way; which
 	# WORDS a line reads in is settled by the reading, which asks what the line is about (a list named
 	# for keys, a key name beside it) before it says the word "key" at all.
 	"PickUpKey", "HasKey", "NeedsKey",
-	# W6. Add Item authors one line of a menu; `x.add_item("y", 1)` is written by dropdowns, lists
+	# Add Item authors one line of a menu; `x.add_item("y", 1)` is written by dropdowns, lists
 	# and trees as well, and the whole point of the menu reading is that the RUN of those lines is
 	# one bar naming the menu's items in order. Admitted to the reverse index the row would claim
 	# each line separately, and the bar would never see a run to collapse.
 	"MenuAddItem",
-	# Y19 / Y21. The facing rows exist once per HOST, because `flip_h` lives on four unrelated classes
+	# The facing rows exist once per HOST, because `flip_h` lives on four unrelated classes
 	# and the picker must offer the row only where the node can do it. That is a picker fact, not a
 	# reading one: `flip_h = true` is one line whichever class wrote it, so exactly ONE row speaks for
 	# it in the reverse index and the rest of the host table authors only. The kept ones are the
@@ -3112,13 +3112,13 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	"IsMirroredAnimatedSprite2D", "IsMirroredSprite3D", "IsMirroredTextureRect",
 	"IsFlippedAnimatedSprite2D", "IsFlippedSprite3D", "IsFlippedTextureRect",
 	"IsMirroredSpatial", "IsMirroredControl", "SetMirroredLabel3D",
-	# M1. Two Multiplayer rows whose template is another row's template, letter for letter. Reject
+	# Two Multiplayer rows whose template is another row's template, letter for letter. Reject
 	# player writes the same `disconnect_peer(id)` line Kick player writes, and only the event above
 	# it says which of the two a reader means - so the bare line reads as Kick, and Reject authors.
 	# Started as writes `OS.has_feature(tag)`, which is exactly Platform Has Feature's line; that row
 	# already speaks for every feature test in every project, multiplayer tag or not.
 	"RejectPlayer", "StartedAs",
-	# M4. Despawn writes `queue_free()`, which is the line every project writes to remove any node at
+	# Despawn writes `queue_free()`, which is the line every project writes to remove any node at
 	# all - the networked meaning is in WHERE it runs (on the owner, with a spawner watching), not in
 	# the line. Admitted to the index it would relabel every removal in every project as a networking
 	# row, so it authors only and a bare `queue_free()` keeps the row it already had.
@@ -3259,7 +3259,7 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# `{var_name} {op} {value}` says what `i == 1` actually asks. Same bytes either way.
 		if str((entry as Dictionary).get("ace_id", "")) == "IsSameObject" and not _reads_as_object_identity(params):
 			continue
-		# Y16. A keycard is a name in a list, so `keys.append("red_key")` is Push Back's spelling
+		# A keycard is a name in a list, so `keys.append("red_key")` is Push Back's spelling
 		# exactly. Push Back steps aside for the one shape that is unmistakably about keys - a list
 		# named for keys, with a key name going into it - which leaves the line for the reading that
 		# says "Pick up key". Every other append in every project still reads as Push Back, and the
@@ -3270,13 +3270,13 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 	return {}
 
 
-## Y16. The generic list rows that must NOT claim a keycard line, because the reading has better
+## The generic list rows that must NOT claim a keycard line, because the reading has better
 ## words for it. Frozen alongside the keycard reading: dropping an id back out here would silently
 ## swap those rows' words back to the list spelling.
 const KEYCARD_SHADOWED_ACES: Dictionary = {"ArrayAppend": true}
 
 
-## Y16. Whether a matched row is about KEYS rather than about a list: it names a list called `keys`
+## Whether a matched row is about KEYS rather than about a list: it names a list called `keys`
 ## (or `<colour>_keys`) AND a key beside it - a quoted name ending `_key`, or the `needs_key` a door
 ## carries. Both halves are required, so a `keys.append(score)` is still a plain push back and an
 ## `inventory.append("red_key")` still reads as the inventory line it is.

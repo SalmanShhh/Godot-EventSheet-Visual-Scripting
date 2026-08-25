@@ -91,7 +91,7 @@ extends Node2D
 	var lone_rows: Array = viewport._build_rows_from_sheet(lone)
 	all_passed = _check("a lone extends still makes a head",
 		_band_kinds(lone_rows), "name | extends | attach") and all_passed
-	# C5 - a sheet with nothing named yet asks, rather than showing an empty strip.
+	# A sheet with nothing named yet asks, rather than showing an empty strip.
 	all_passed = _check("a sheet with no class_name and no file asks to be named",
 		_band_texts(lone_rows, "name"), "▣ | Untitled | name it | # no class_name yet") and all_passed
 	all_passed = _check("and it offers to be attached to a node",

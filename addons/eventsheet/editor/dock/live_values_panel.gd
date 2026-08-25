@@ -115,7 +115,7 @@ func update_values(values: Dictionary, instance: String = "") -> void:
 		if pane != null:
 			pane.set_live_values(values, instance)
 	ensure_window()
-	# M5 - with two copies of the game running, the tree below is whichever of them streamed last,
+	# With two copies of the game running, the tree below is whichever of them streamed last,
 	# so it says which one that was. The row chips show every instance side by side.
 	label.text = "Streaming - double-click a value to edit it in the running game." if instance.is_empty() \
 		else "Streaming from %s - double-click a value to edit it in the running game." % instance

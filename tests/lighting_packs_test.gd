@@ -217,7 +217,7 @@ static func _the_clock_maths() -> bool:
 	return all_passed
 
 
-## L5 - WHAT TURNS, AND WHAT KEEPS THE AIM SOMEBODY GAVE IT. Sun Light accepts any Light2D or Light3D,
+## WHAT TURNS, AND WHAT KEEPS THE AIM SOMEBODY GAVE IT. Sun Light accepts any Light2D or Light3D,
 ## and its own tooltip promises that a DirectionalLight3D turns with the hour while any other light
 ## only changes brightness. A directional light's rotation IS where the sky's light comes from; a
 ## spot's rotation is where a designer pointed it, and a torch aimed at a door must still be aimed at
@@ -270,7 +270,7 @@ static func _the_light_verbs_run() -> bool:
 	return all_passed
 
 
-## L3 - THE REACH A FLAME BORROWS, AND GIVES BACK, with a real light on the other end of the promise.
+## THE REACH A FLAME BORROWS, AND GIVES BACK, with a real light on the other end of the promise.
 ## `Stop Flickering` tells the author "reach goes back to whatever the scene was authored with", and
 ## the verbs above are called with NO light attached, which is exactly the case where every reach
 ## line is skipped - so the promise was shipped untested and was false. No tree and no frames are

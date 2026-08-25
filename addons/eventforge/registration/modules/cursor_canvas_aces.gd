@@ -66,7 +66,7 @@ static func _reach_param(default_value: String) -> ACEParam:
 		"How far into the scene the ray reaches, in metres.", "expression")
 
 
-## X2. Whether the pointer is over one particular object, and the click that lands on it. Both write
+## Whether the pointer is over one particular object, and the click that lands on it. Both write
 ## the same masked ray the aimed-floor words do, so a project only ever gains one helper.
 static func _add_cursor_words(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "CursorIsOverObject3D", "Cursor Is Over Object (3D)",
@@ -89,7 +89,7 @@ static func _add_cursor_words(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Fires when a mouse button goes down over this object in the 3D world - click-to-select, click-to-attack, click-to-open. Lives in an input event, beside the other On ... pressed rows."))
 
 
-## X30. Where on the floor a cursor points, what is there, and how steep it is - for the OS pointer
+## Where on the floor a cursor points, what is there, and how steep it is - for the OS pointer
 ## and for any crosshair object, which is what makes gamepad and touch cursors first-class.
 static func _add_floor_words(descriptors: Array[ACEDescriptor]) -> void:
 	var answers: Array[Array] = [
@@ -125,7 +125,7 @@ static func _add_floor_words(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when the ground faces further than this from straight up - the buildable test a placement preview tints itself with."))
 
 
-## X30, the 2D twins. The same aiming question asked of a flat game: what is under the cursor, and
+## The 2D twins. The same aiming question asked of a flat game: what is under the cursor, and
 ## which tile is under it. A 2D canvas has no camera ray to cast, so the object question is a POINT
 ## query and the tile question is a map lookup - but both share the one-helper discipline the 3D
 ## words use, so a project that asks both gains one small function for each rather than the query
@@ -148,7 +148,7 @@ static func _add_flat_cursor_words(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Which cell of a tilemap layer the mouse is over, as map coordinates - the number Set Tile At, Erase Tile At and Cell Is Empty all take. Tile painting, build grids and \"which square did I click\" start here."))
 
 
-## X20. Canvas space: where something is on screen, how far apart two screen points are in PIXELS,
+## Canvas space: where something is on screen, how far apart two screen points are in PIXELS,
 ## and the pick that keeps whichever instance is nearest the crosshair.
 static func _add_canvas_words(descriptors: Array[ACEDescriptor]) -> void:
 	for axis: String in ["X", "Y"]:

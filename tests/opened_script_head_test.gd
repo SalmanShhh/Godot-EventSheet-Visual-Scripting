@@ -1,4 +1,4 @@
-# Godot EventSheets - the head of an opened PLAIN SCRIPT, read in the event-sheet grammar (M34).
+# Godot EventSheets - the head of an opened PLAIN SCRIPT, read in the event-sheet grammar.
 #
 # A behavior pack introduces itself as one. Everybody else's .gd is a game script, and the head it
 # used to show said "Script" and then listed GDScript type names: `Array[String] names = []`,
@@ -46,7 +46,7 @@ static func _test_a_script_with_a_class_name() -> bool:
 	var view: EventSheetViewport = _open(PLAYER_PATH)
 	var rows: Array = view.get_flat_rows()
 
-	# C1 - the head is the file's own first lines. The name and the class are BANDS, each echoing the
+	# The head is the file's own first lines. The name and the class are BANDS, each echoing the
 	# line it stands for; the Include bar under them carries only what no line of the file says.
 	ok = _check("an opened script opens on the band that names it",
 		_texts(_row_at(rows, 0)), "▣ | PlayerAvatar | class_name PlayerAvatar") and ok

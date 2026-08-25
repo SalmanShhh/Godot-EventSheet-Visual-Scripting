@@ -1,4 +1,4 @@
-# Godot EventSheets - W6. A menu built in code, read as the menu it is.
+# Godot EventSheets - A menu built in code, read as the menu it is.
 #
 # Two halves are pinned here, and both of them are VALUES. The first is the words: the add_item run
 # reads as ONE bar naming its items in order, and every `match id:` arm reads as the trigger
@@ -14,7 +14,7 @@
 class_name MenuReadingTest
 extends RefCounted
 
-## The mockup's own example: a menu built in a run, answered by a lambda, with one arm on an id no
+## The worked example: a menu built in a run, answered by a lambda, with one arm on an id no
 ## item ever declared - the branch that can never run.
 const LAMBDA_PATH := "user://w6_menu_lambda.gd"
 const LAMBDA_SOURCE := """@tool

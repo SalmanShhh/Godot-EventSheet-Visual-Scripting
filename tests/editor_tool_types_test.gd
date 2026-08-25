@@ -1,4 +1,4 @@
-# Godot EventSheets - R33. The rest of the editor-tool family: the three Sheet Type entries the
+# Godot EventSheets - The rest of the editor-tool family: the three Sheet Type entries the
 # dialog gained (Editor plugin / Import tool / Export hook), the starters each arrives with, the
 # On File Imported trigger and its lift, the Include bar's own buttons, and the Doctor's
 # "touches nodes outside the open layout" refinement.
@@ -25,7 +25,7 @@ static func run() -> bool:
 ## identity line each previews. A type with a hint but no host would ship as a plain Node script.
 static func _test_type_table() -> bool:
 	var passed: bool = true
-	# 10 shipped types (R33), +2 from W17: Editor add-on and Command tool.
+	# 10 shipped types, +2 later ones: Editor add-on and Command tool.
 	passed = _check("hint count covers every type",
 		EventSheetSheetTypeDialog.TYPE_HINTS.size(), 10 + 2) and passed
 	passed = _check("Editor plugin hint",

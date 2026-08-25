@@ -1,4 +1,4 @@
-# EventForge - R9. A Timer NODE reads as the sheet's Timer behavior: `$Timer.start(2.0)` is
+# EventForge - A Timer NODE reads as the sheet's Timer behavior: `$Timer.start(2.0)` is
 # `Start timer "Timer" for 2 seconds (once)`, `stop()` is `Stop timer "Timer"`, `is_stopped()` asks the
 # behavior's own question, and `time_left` is its clock expression. The node's name is the tag and the
 # object is the script's OWN object, because the timer belongs to it. A receiver that cannot prove a tag

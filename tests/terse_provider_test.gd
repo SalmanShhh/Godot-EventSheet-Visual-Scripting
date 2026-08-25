@@ -1,4 +1,4 @@
-# Godot EventSheets - the terse provider dialect (v0.11 chapter 4, P1).
+# Godot EventSheets - the terse provider dialect (v0.11 chapter 4).
 #
 # Three authoring shortcuts, all additive to the frozen annotation vocabulary:
 # - plain `##` prose above a member IS its description (@ace_description still wins),

@@ -1,4 +1,4 @@
-# Y19 / Y20 / Y21 - mirror and flip, on every host that can do it.
+# Mirror and flip, on every host that can do it.
 #
 # Six gates, each pinning VALUES:
 #   1. the readings - every spelling of "this thing faces the other way", in the sheet's own words
@@ -37,7 +37,7 @@ static var CONTEXT: Dictionary = {
 
 ## Gate 1. Every mirroring statement, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# Y19 - the whole object, said four ways
+	# The whole object, said four ways
 	"body.scale.x = -1.0": "body ▸ Set mirrored (whole object)",
 	"body.scale.x = 1.0": "body ▸ Set not mirrored (whole object)",
 	"body.scale.x = -body.scale.x": "body ▸ Set mirrored (whole object)",
@@ -50,18 +50,18 @@ static var STATEMENT_READINGS: Dictionary = {
 		"body ▸ Set mirrored to target is to the left (whole object)",
 	"body.scale.x = -1.0 if target.global_position.x > global_position.x else 1.0":
 		"body ▸ Set mirrored to target is to the right (whole object)",
-	# Y19 - the host the note changes for
+	# The host the note changes for
 	"mesh.scale.x = -mesh.scale.x": "mesh ▸ Set mirrored (flips the mesh's winding)",
 	"panel.scale.x = -1.0": "panel ▸ Set mirrored (UI)",
-	# Y19 - the flag hosts, and the value that decides it
+	# The flag hosts, and the value that decides it
 	"sprite.flip_h = true": "sprite ▸ Set mirrored",
 	"sprite.flip_h = dir < 0": "sprite ▸ Set mirrored when dir < 0",
 	"sprite.flip_h = facing_left": "sprite ▸ Set mirrored to facing left",
 	"sprite.flip_v = is_upside_down": "sprite ▸ Set flipped to is upside down",
-	# Y19 - the honest 3D turn
+	# The honest 3D turn
 	"mesh.rotate_y(PI)": "mesh ▸ Turn around",
 	"mesh.rotate_y(deg_to_rad(180))": "mesh ▸ Turn around",
-	# Y20 - what has to come along
+	# What has to come along
 	"ray.target_position.x = absf(ray.target_position.x) * signf(scale.x)":
 		"ray ▸ Ray follows facing",
 	"muzzle.position.x = absf(muzzle.position.x) * signf(scale.x)":
@@ -70,7 +70,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"plate.scale.x = signf(scale.x)": "plate ▸ Keeps its text upright",
 	"anim_tree.set(\"parameters/Locomotion/blend_position\", signf(scale.x))":
 		"Player ▸ Animation ▸ Faces the way it moves",
-	# Y21 - the rest of the hosts, each in its own honest line
+	# The rest of the hosts, each in its own honest line
 	"mesh.scale.x = -absf(mesh.scale.x) if mirrored else absf(mesh.scale.x)":
 		"mesh ▸ Set mirrored to mirrored (flips the mesh's winding)",
 	"panel.scale.x = -1.0 if mirror_ui else 1.0": "panel ▸ Set mirrored to mirror ui (UI)",

@@ -1,6 +1,6 @@
 # Godot EventSheets - the three traversal shapes read, claimed, and gated against the packs.
 #
-# Y7 a ledge grab, Y8 the three wall moves, Y11 a water volume. Each is a shape several lines make
+# A ledge grab, the three wall moves, a water volume. Each is a shape several lines make
 # TOGETHER - a probe pair, a wall the body is touching, a flag raised on the way into a volume - so
 # each is answered from a walk of the file and claimed in the pattern registry.
 #
@@ -9,7 +9,7 @@
 #      ray is not a ledge, a velocity write in a file that never touches a wall is not a wall move,
 #      and `velocity *= 0.9` on its own is a slowdown, not a swim. The negative pins are the point.
 #   2. THE WORDS. The exact sentence each shape reads as, pinned by VALUE.
-#   3. THE PACKS. Every verb the mockup's hand-written shapes turn into is a shipped row on the
+#   3. THE PACKS. Every verb the hand-written shapes turn into is a shipped row on the
 #      Traversal Kit (2D) and its 3D twin - pack parity, pinned by the published ACE names.
 #
 # The RUNTIME half (a grab that happens at a real lip, a wall jump that pushes away, a swimmer that
@@ -83,7 +83,7 @@ static func run() -> bool:
 	return ok
 
 
-## Y7. The pair is the gate: one cast that hits and a higher one that is clear, in one question.
+## The pair is the gate: one cast that hits and a higher one that is clear, in one question.
 static func _ledge_reading() -> bool:
 	var ok: bool = true
 	ok = _check("two casts, one negated, read as the ledge test",
@@ -109,7 +109,7 @@ static func _ledge_reading() -> bool:
 	return ok
 
 
-## Y8. The wall the body is touching is the gate; which moves it carries is what the claim says.
+## The wall the body is touching is the gate; which moves it carries is what the claim says.
 static func _wall_reading() -> bool:
 	var ok: bool = true
 	var normals: PackedStringArray = PackedStringArray(["wall_normal"])
@@ -136,7 +136,7 @@ static func _wall_reading() -> bool:
 	return ok
 
 
-## Y11. The volume is the gate: a flag with water in its name, raised AND lowered, in a file that
+## The volume is the gate: a flag with water in its name, raised AND lowered, in a file that
 ## actually swims.
 static func _swim_reading() -> bool:
 	var ok: bool = true

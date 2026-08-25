@@ -2,7 +2,7 @@
 class_name EventSheetObjectFacts
 extends RefCounted
 
-# Q1/Q2 - what an object IS, as opposed to what one file does with it.
+# What an object IS, as opposed to what one file does with it.
 #
 # The census (viewport_reading_rows.gd) answers "what does THIS sheet do with this object": how many
 # rows name it, which verbs, which signals. That is half the question a reader has. The other half -
@@ -18,7 +18,7 @@ extends RefCounted
 # Display-free and static, so a test pins the exact answers without a display server.
 
 
-## Node types whose texture is worth using as an object's picture (Q10).
+## Node types whose texture is worth using as an object's picture.
 const PICTURE_TYPES: PackedStringArray = [
 	"Sprite2D", "Sprite3D", "AnimatedSprite2D", "AnimatedSprite3D", "TextureRect", "TextureButton"
 ]
@@ -207,7 +207,7 @@ static func _group_argument(line: String) -> String:
 ##    "children": Array[{name, type, script}],
 ##    "picture": String}
 ## `behaviors` are the pack nodes mounted under the root, `families` the root's persistent groups,
-## `picture` the first texture found on or under the root (Q10). {} for a path that is not readable.
+## `picture` the first texture found on or under the root. {} for a path that is not readable.
 static func scene_facts(scene_path: String) -> Dictionary:
 	var path: String = scene_path.strip_edges()
 	if path.is_empty() or path.get_extension().to_lower() != "tscn":
@@ -224,14 +224,14 @@ static func _read_scene_facts(path: String) -> Dictionary:
 	var facts: Dictionary = {
 		"root": "", "root_type": "", "root_script": "", "behaviors": [],
 		"families": PackedStringArray(), "children": [], "picture": "",
-		# X14. Every node in the file, root first, as {name, type, parent} - the scene's own tree, kept
+		# Every node in the file, root first, as {name, type, parent} - the scene's own tree, kept
 		# apart from `children` because that list deliberately drops the nodes that ARE behaviors and a
 		# tree that hid them would not be the tree.
 		"tree": [],
-		# X14. The instances this scene has `editable_children` turned on for, by their node path -
+		# The instances this scene has `editable_children` turned on for, by their node path -
 		# the ones whose insides were changed HERE rather than in the file they came from.
 		"editable": PackedStringArray(),
-		# X13. The RemoteTransforms on this object, as {node, target, flags}. A node that copies its
+		# The RemoteTransforms on this object, as {node, target, flags}. A node that copies its
 		# place onto another one is a fact ABOUT the object - the answer to "why does that thing
 		# follow me when it is not my child" - so the head says it rather than leaving it in a
 		# property name nobody outside Godot's docs has met.
@@ -259,7 +259,7 @@ static func _read_scene_facts(path: String) -> Dictionary:
 			}
 			nodes.append(current)
 			continue
-		# X14. `[editable path="Turret"]` is Godot's record that an INSTANCE was opened up and changed
+		# `[editable path="Turret"]` is Godot's record that an INSTANCE was opened up and changed
 		# in this scene, which is the one thing a reader of that instance's tree has to know.
 		if line.begins_with("[editable "):
 			var editable_path: String = _attribute(line, "path")
@@ -326,7 +326,7 @@ static func _pack_name_of(script_path: String, node_type: String, packs: Diction
 	return str(packs.get(folder, ""))
 
 
-## X13. Which parts of a place a RemoteTransform actually copies, as the tick chips a row wears.
+## Which parts of a place a RemoteTransform actually copies, as the tick chips a row wears.
 ## Godot's default for all three is ON, so a scene that says nothing about them copies everything -
 ## which is why the answer is built from what the file turned OFF.
 static func _follower_flags(node: Dictionary) -> String:
@@ -405,7 +405,7 @@ static func script_path_for_entry(entry: Dictionary, sheet_source_path: String) 
 	return ""
 
 
-## Everything ONE census entry IS, for the Object properties popup (Q1):
+## Everything ONE census entry IS, for the Object properties popup:
 ##   {"variables", "functions", "triggers", "behaviors", "families"}
 ## The first three come from the object's own script, the last two from the scene it is placed in
 ## plus its own `add_to_group` lines - which is where Godot keeps each of them.
@@ -449,7 +449,7 @@ static func facts_for_entry(entry: Dictionary, sheet_source_path: String) -> Dic
 	}
 
 
-## Q4 - what a sheet is ABOUT, for the places that name it: the tab, the Open Sheets list, the window
+## What a sheet is ABOUT, for the places that name it: the tab, the Open Sheets list, the window
 ## title and the recents. Returns {"name", "note", "icon_class", "file"}.
 ##
 ## The name is the one the Include bar already shows, resolved by the same ladder so a tab and the head
@@ -499,7 +499,7 @@ static func is_global_script(script_path: String) -> bool:
 	return false
 
 
-## X14. A scene instance is a ready-made hierarchy, and a row that makes one should be able to say
+## A scene instance is a ready-made hierarchy, and a row that makes one should be able to say
 ## what it just made. This is that tree, as indented lines: the root and `levels` levels beneath it,
 ## in file order, with an "edited inside" mark on any instance this scene opened up and changed.
 ## Empty for a path that is not a readable .tscn, which is the cue to leave the hover as it was.
@@ -534,7 +534,7 @@ static func scene_tree_lines(scene_path: String, levels: int = 2) -> PackedStrin
 	return lines
 
 
-## X14. The `res://….tscn` a spawn expression names, "" when the expression names no scene file. Both
+## The `res://….tscn` a spawn expression names, "" when the expression names no scene file. Both
 ## spellings a scene arrives in are read - `preload("…")` and `load("…")` - plus a bare path, which is
 ## what a row holds when the scene came from the picker.
 static func scene_path_in(expression: String) -> String:
@@ -548,7 +548,7 @@ static func scene_path_in(expression: String) -> String:
 
 
 ## The texture one NAMED node of a scene carries, "" when that node has none (or is not there). What
-## lets a `$Sprite2D` row wear its own picture rather than the scene's (Q10).
+## lets a `$Sprite2D` row wear its own picture rather than the scene's.
 static func picture_of_node(scene_path: String, node_name: String) -> String:
 	var facts: Dictionary = scene_facts(scene_path)
 	if facts.is_empty():

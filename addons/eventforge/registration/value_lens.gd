@@ -17,7 +17,7 @@
 class_name EventForgeValueLens
 extends RefCounted
 
-## L4. Godot's own darkness: a CanvasModulate multiplies everything under it by its colour, so how
+## Godot's own darkness: a CanvasModulate multiplies everything under it by its colour, so how
 ## much LIGHT that colour carries is how much of the layer survives, and `1 - that` is how dark it
 ## reads. The light a colour carries is `Color.get_luminance()` - the engine's own weighting of the
 ## three channels, which is why `Color(0.3, 0.3, 0.36)` reads 70% dark rather than 64%: green is

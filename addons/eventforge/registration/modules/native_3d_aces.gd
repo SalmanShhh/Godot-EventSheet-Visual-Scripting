@@ -9,7 +9,7 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
-## X19. UI standing in the WORLD is its own section of the picker: name tags, health bars over heads,
+## UI standing in the WORLD is its own section of the picker: name tags, health bars over heads,
 ## and the screens a SubViewport paints onto a surface.
 const UI_CAT := "World-space UI"
 
@@ -68,7 +68,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "WorldRaycastPoint3D", "World Raycast Point (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to})).get(\"position\", Vector3.ZERO)", "", [F.make_param("from", "String", "Vector3(0, 0, 0)", "From", "Ray start (Vector3 expression).", "expression"), F.make_param("to", "String", "Vector3(0, 0, 0)", "To", "Ray end (Vector3 expression).", "expression")], "Raycast 3D", "world raycast point {from} -> {to}", "Node3D")
 		.described("Returns the world point where a ray between two points first hits something."))
 
-	# ── U8 - the first-person block, and the three directions an object's own axes point in ──
+	# ── the first-person block, and the three directions an object's own axes point in ───────
 	descriptors.append(F.make_descriptor("Core", "MouseLook", "Mouse Look", ACEDescriptor.ACEType.ACTION,
 		"rotate_y(-{relative}.x * {sensitivity})\n{camera}.rotate_x(-{relative}.y * {sensitivity})\n{camera}.rotation.x = clamp({camera}.rotation.x, -{limit}, {limit})", "",
 		[F.make_param("relative", "String", "Vector2.ZERO", "Movement", "How far the pointer moved this frame.", "expression"),
@@ -84,7 +84,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ObjectUp", "Up Direction", ACEDescriptor.ACEType.EXPRESSION, "{node}.global_transform.basis.y", "", [F.make_param("node", "String", "self", "Object", "The object whose own axes are asked about.", "expression")], "Native 3D", "up", "Node3D")
 		.described("The direction out of an object's own top, as a unit vector."))
 
-	# ── X4 / X6 - orbiting, the camera arm, and the third-person run ──
+	# ── orbiting, the camera arm, and the third-person run ────────────
 	#
 	# Each template writes the EXACT shape the reading recognises, so a row dropped from the picker
 	# and the same shape typed by hand are the same bytes and read as the same row.
@@ -108,7 +108,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Native 3D", "Move relative to the camera along [i]{input}[/i] at [i]{speed}[/i]", "CharacterBody3D")
 		.described("Steers a body the way the camera is facing: pushing forward walks away from the camera, whichever way it has been turned. Flattened to the ground, so looking down does not drive the body into the floor. Follow it with Move And Slide.").featured())
 
-	# ── X8 - what a mesh lets through: how far away it is still drawn, how see-through it is, and
+	# ── what a mesh lets through: how far away it is still drawn, how see-through it is, and
 	# whether it casts a shadow at all. The three knobs a reader tunes by eye. ──
 	descriptors.append(F.make_descriptor("Core", "SetVisibleRange", "Set Visible Range", ACEDescriptor.ACEType.ACTION,
 		"visibility_range_begin = {near}\nvisibility_range_end = {far}", "",
@@ -130,7 +130,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Native 3D", "Set shadows on", "GeometryInstance3D")
 		.described("Makes a 3D object cast a shadow again after Set Shadows Off."))
 
-	# ── X19 - UI that lives in the world: name tags, health bars over heads, and the screens a
+	# ── UI that lives in the world: name tags, health bars over heads, and the screens a
 	# SubViewport paints onto a surface. ──
 	# The first five take the node the way the Lighting rows do rather than being host-scoped: the
 	# three knobs live on Label3D and on SpriteBase3D, which share no base class that HAS them, so a

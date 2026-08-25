@@ -9,7 +9,7 @@
 class_name FullExportCoverageTest
 extends RefCounted
 
-## Canonical source: one variable per P1 family, exactly as the emitter spells them.
+## Canonical source: one variable per hint family, exactly as the emitter spells them.
 const COVERAGE_SOURCE := """extends Node
 
 ## Speed in pixels per second.

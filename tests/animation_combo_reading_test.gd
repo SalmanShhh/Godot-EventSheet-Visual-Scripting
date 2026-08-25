@@ -4,13 +4,13 @@ extends RefCounted
 
 # Pins batch fourteen's animation-combo readings and the vocabulary behind them:
 #
-#   Y1  the hand-written combo DETECTOR - a pressed-list, a countdown that empties it, and a `match`
+#   The hand-written combo DETECTOR - a pressed-list, a countdown that empties it, and a `match`
 #       on the joined list - read as the Combo Box behaviour it is: the push and the window as one
 #       Press input row, every arm of the match as its own On combo TRIGGER, and the clip each arm
 #       plays as the Set animation row the sheet already had
-#   Y2  the two timing tricks around it - the slice of one clip another move may cancel it in, the
+#   The two timing tricks around it - the slice of one clip another move may cancel it in, the
 #       three time-scale lines that are one hit-stop, and a press remembered for six frames
-#   Y3  the animation-driven events - the sprite frame a clip reaches, and the function an
+#   The animation-driven events - the sprite frame a clip reaches, and the function an
 #       animation's METHOD TRACK calls, which no line of the script says anything about
 #
 # Six gates, in the order they matter:
@@ -91,7 +91,7 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 	"BufferInput": "{input} = Time.get_ticks_msec() / 1000.0 + {seconds}",
 	"IsInputBuffered": "(Time.get_ticks_msec() / 1000.0 <= {input})",
 	"ConsumeBufferedInput": "{input} = Time.get_ticks_msec() / 1000.0 - 1.0",
-	# Y2's hit-stop was NOT minted here: the Juice module already shipped this exact template, and a
+	# The hit-stop was NOT minted here: the Juice module already shipped this exact template, and a
 	# second row writing the same three lines under a second name would be the one thing the whole
 	# vocabulary is meant to prevent. The reading says the shipped row's words.
 	"Hitstop": "Engine.time_scale = {scale}\nawait get_tree().create_timer({seconds}, true, false, true).timeout\nEngine.time_scale = 1.0"
@@ -156,7 +156,7 @@ static func _context() -> Dictionary:
 static func _grammar_values() -> bool:
 	var ok: bool = true
 	var context: Dictionary = _context()
-	# Y1 - the push and the window, and the two ways the pair is refused.
+	# The push and the window, and the two ways the pair is refused.
 	var pressed: Dictionary = EventSheetSentence.combo_press_parts("combo.append(button)",
 		"combo_timer = 0.5", context)
 	ok = _check("the push and the window read as one press",
@@ -169,20 +169,20 @@ static func _grammar_values() -> bool:
 	ok = _check("a push with something other than the window under it is refused",
 		EventSheetSentence.combo_press_parts("combo.append(button)", "hp = 100", context)
 			.is_empty(), true) and ok
-	# Y1 - the subject that makes a `match` a combo detector rather than a switch on a string.
+	# The subject that makes a `match` a combo detector rather than a switch on a string.
 	var subject: Dictionary = EventSheetSentence.combo_match_subject("\",\".join(combo)")
 	ok = _check("the joined buffer names the list it joins", str(subject.get("list", "")), "combo") and ok
 	ok = _check("and the separator it joins them with", str(subject.get("separator", "")), ",") and ok
 	ok = _check("a match on a plain value is not a combo detector",
 		EventSheetSentence.combo_match_subject("state").is_empty(), true) and ok
-	# Y1 - one arm, as the trigger it is, with the inputs put back in the order they are pressed.
+	# One arm, as the trigger it is, with the inputs put back in the order they are pressed.
 	var arm: Dictionary = EventSheetSentence.combo_arm_words("\"punch,punch,kick\"", ",", "0.5")
 	ok = _check("an arm reads as the move its inputs spell",
 		str(arm.get("text", "")), "Combo Box ▸ On combo \"punch punch kick\"") and ok
 	ok = _check("and carries the window as its note", str(arm.get("note", "")), "within 0.5 s") and ok
 	ok = _check("the catch-all arm is not a combo",
 		EventSheetSentence.combo_arm_words("_", ",", "0.5").is_empty(), true) and ok
-	# Y2 - the freeze, and the missing flag that means it is not one.
+	# The freeze, and the missing flag that means it is not one.
 	var frozen: Dictionary = EventSheetSentence.freeze_time_parts("Engine.time_scale = 0.05",
 		"await get_tree().create_timer(0.08, true, false, true).timeout",
 		"Engine.time_scale = 1.0", context)
@@ -194,7 +194,7 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.freeze_time_parts("Engine.time_scale = 0.05",
 			"await get_tree().create_timer(0.08, true, false, false).timeout",
 			"Engine.time_scale = 1.0", context).is_empty(), true) and ok
-	# Y2 - the per-object twin, and the pause and play that are on two different players.
+	# The per-object twin, and the pause and play that are on two different players.
 	var paused: Dictionary = EventSheetSentence.animation_pause_parts("anim.pause()",
 		"await get_tree().create_timer(0.08, true, false, true).timeout", "anim.play()", context)
 	ok = _check("one player held still and let go reads as one row",
@@ -203,7 +203,7 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.animation_pause_parts("anim.pause()",
 			"await get_tree().create_timer(0.08, true, false, true).timeout",
 			"other.play()", context).is_empty(), true) and ok
-	# Y2 - the cancel window, and the pair that only fences one side.
+	# The cancel window, and the pair that only fences one side.
 	var window: Dictionary = EventSheetSentence.animation_window_pieces(
 		"anim.current_animation_position > 0.3 and anim.current_animation_position < 0.6", context)
 	ok = _check("a floor and a ceiling on one play head read as the window they are",
@@ -218,7 +218,7 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.animation_window_pieces(
 			"anim.current_animation_position > 0.3 and other.current_animation_position < 0.6",
 			context).is_empty(), true) and ok
-	# Y1 - which end of the clip a play starts from, said out loud.
+	# Which end of the clip a play starts from, said out loud.
 	ok = _check("the plain play restarts from the top",
 		_spoken(EventSheetSentence.statement("anim.play(\"uppercut\")", context)),
 		"Set animation to \"uppercut\" (play from beginning)") and ok
@@ -260,7 +260,7 @@ static func _pattern_claims(patterns: Dictionary) -> bool:
 	return ok
 
 
-## Y3, gate six: the other half of the contract. What an animation CALLS is written in the scene or
+## Gate six: the other half of the contract. What an animation CALLS is written in the scene or
 ## the resource that holds it, and nothing in the script says so - which is the whole reason both the
 ## reading and the Doctor have to go and look.
 static func _animation_events() -> bool:
@@ -306,7 +306,7 @@ tracks/0/keys = {"times": PackedFloat32Array(0.35), "transitions": PackedFloat32
 	other.trigger_params = {"event_name": "footstep"}
 	ok = _check("two differently named events are two different functions",
 		TriggerResolver.get_trigger_key(named) == TriggerResolver.get_trigger_key(other), false) and ok
-	# Y3's 2D half: the sprite's own signal, with the clip-and-frame question left as a condition.
+	# The 2D half: the sprite's own signal, with the clip-and-frame question left as a condition.
 	var frame_event: EventRow = EventRow.new()
 	frame_event.trigger_provider_id = "Core"
 	frame_event.trigger_id = "OnAnimationFrame"
@@ -315,7 +315,7 @@ tracks/0/keys = {"times": PackedFloat32Array(0.35), "transitions": PackedFloat32
 	return ok
 
 
-## Y3, the Doctor: a method track that names a function nobody wrote. The bug it catches is the one
+## The Doctor: a method track that names a function nobody wrote. The bug it catches is the one
 ## with no symptom at all - the key plays, nothing is called, and nothing is reported.
 static func _method_track_doctor() -> bool:
 	var findings: Array[Dictionary] = []
@@ -335,7 +335,7 @@ static func _method_track_doctor() -> bool:
 	return ok
 
 
-## Y1's authoring half: the move list as a table. The pack gained the one row that joins a sequence
+## The authoring half: the move list as a table. The pack gained the one row that joins a sequence
 ## to a clip, and the emitted pack is what a project actually loads.
 static func _combo_box_move_table() -> bool:
 	var ok: bool = true
@@ -353,7 +353,7 @@ static func _combo_box_move_table() -> bool:
 	return ok
 
 
-## Y3, the authoring half end to end: a sheet built out of the two new triggers compiles to GDScript
+## The authoring half end to end: a sheet built out of the two new triggers compiles to GDScript
 ## that PARSES, wires the sprite's signal in _ready, and declares the function the method track has to
 ## call. A trigger that resolves correctly and then emits something Godot will not load is the failure
 ## the resolver checks above cannot see.

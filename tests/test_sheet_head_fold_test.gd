@@ -2,7 +2,7 @@
 class_name TestSheetHeadFoldTest
 extends RefCounted
 
-# W9. The two things a test sheet says that are the HARNESS rather than the test:
+# The two things a test sheet says that are the HARNESS rather than the test:
 #
 #   var passed := true        the verdict bookkeeping every gate opens with
 #   static func _check(...)   the eleven lines every file in the folder carries a copy of

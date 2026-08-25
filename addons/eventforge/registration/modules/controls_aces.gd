@@ -1,4 +1,4 @@
-# EventForge module - Controls (R23-R29): analog, gamepads by number, touch and gestures,
+# EventForge module - Controls: analog, gamepads by number, touch and gestures,
 # rebinding at runtime, simulated input and handheld sensors.
 #
 # The device vocabulary (device_aces.gd) says whether a key or a button is down. These are the
@@ -79,7 +79,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## R24 - analog in the Gamepad object's words. The sheet has always shown stick travel as a percent
+## Analog in the Gamepad object's words. The sheet has always shown stick travel as a percent
 ## (0 to 100 for a trigger, -100 to 100 for a stick), so these carry the * 100 rather than making a
 ## reader learn that Godot counts the same thing from 0 to 1.
 static func _gamepad_analog(descriptors: Array[ACEDescriptor]) -> void:
@@ -95,7 +95,7 @@ static func _gamepad_analog(descriptors: Array[ACEDescriptor]) -> void:
 		.described("How hard a trigger or a control is held, 0 to 100 (Godot counts the same pull from 0 to 1).").featured())
 
 
-## R25 - gamepads by number. Godot's `event.device` IS the gamepad number the sheet already counts
+## Gamepads by number. Godot's `event.device` IS the gamepad number the sheet already counts
 ## from 0, so a two-player script stops reading as arithmetic.
 static func _gamepads_by_number(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "GamepadEventButtonPressed", "On Gamepad Button Pressed", ACEDescriptor.ACEType.CONDITION, "(event is InputEventJoypadButton and event.pressed and event.device == {device} and event.button_index == {button})", "", [F.make_param("device", "String", "0", "Gamepad", "Gamepad number (0 = the first one).", "expression"), F.make_param("button", "String", "JOY_BUTTON_A", "Button", "Which button.", "", BUTTON_OPTIONS)], GAMEPAD, "On gamepad {device} button {button} pressed")
@@ -108,7 +108,7 @@ static func _gamepads_by_number(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Rumbles one numbered gamepad for a moment - the sheet's phrasing for the thing every hit and every pickup wants."))
 
 
-## R26 - touch and gestures. Godot's InputEvent classes carry exactly what the Touch object's
+## Touch and gestures. Godot's InputEvent classes carry exactly what the Touch object's
 ## sentences say; the payload chips are the event's own fields.
 static func _touch_and_gestures(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "TouchDragEvent", "On Drag", ACEDescriptor.ACEType.CONDITION, "(event is InputEventScreenDrag)", "", [], TOUCH, "On drag")
@@ -127,7 +127,7 @@ static func _touch_and_gestures(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True on the second click of a double-click, used inside an input event - open the item, rename the file."))
 
 
-## R27 - rebinding at runtime, one action per row: wait for the next key, clear, bind, reset,
+## Rebinding at runtime, one action per row: wait for the next key, clear, bind, reset,
 ## deadzone, save and load. Together they are the whole of a controls screen.
 static func _rebinding(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "InputWaitForNextKey", "Wait For The Next Key Or Button", ACEDescriptor.ACEType.ACTION, "var {name} = await get_window().window_input", "", [F.make_param("name", "String", "ev", "Into", "The name to remember the key or button under.", "expression")], KEYBOARD, "Wait for the next key or button into {name}")
@@ -150,7 +150,7 @@ static func _rebinding(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Puts saved bindings back on start-up. Does nothing when there is no saved file, so a first run keeps the project's own.").featured())
 
 
-## R28 - simulated input, the pointer and "stop this input here". One event per idea.
+## Simulated input, the pointer and "stop this input here". One event per idea.
 static func _simulated_input(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "SimulateControlPressed", "Simulate Control Pressed", ACEDescriptor.ACEType.ACTION, "Input.action_press({action})", "", [F.make_param("action", "String", F.default_input_action(), "Control", "The control to press.", "input_action", F.input_action_options())], SYSTEM, "Simulate control {action} pressed")
 		.described("Presses a control as though the player had - how an AI, a replay or a tutorial drives the same code the player does.").featured())
@@ -174,7 +174,7 @@ static func _simulated_input(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Teleports the pointer - snap it to a menu item, re-centre it after a cutscene."))
 
 
-## R29 - handheld sensors. The four Godot exposes, in the Touch object's words. They all report zero
+## Handheld sensors. The four Godot exposes, in the Touch object's words. They all report zero
 ## on a desktop, which is said where it is needed rather than left as a surprise.
 static func _sensors(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "TouchAcceleration", "Acceleration", ACEDescriptor.ACEType.EXPRESSION, "Input.get_accelerometer()", "", [], TOUCH, "acceleration")
@@ -189,7 +189,7 @@ static func _sensors(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Tilt as a condition - X above zero is tilted to the right, Y is tilted forward. Reports 0 on desktop.").featured())
 
 
-## X22 - the two SHAPES games make of the raw sensors, beside the sensors they refine. Tilt-to-steer
+## The two SHAPES games make of the raw sensors, beside the sensors they refine. Tilt-to-steer
 ## is a stored neutral point, the subtraction, and one axis fed into movement; gyro aim is the
 ## rotation rate fed into yaw and pitch, which is mouse look with a different hand on it. The
 ## calibration row is first on purpose: without it a tilt game measures from whatever "flat" the

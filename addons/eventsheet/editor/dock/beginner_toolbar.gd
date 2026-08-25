@@ -2,7 +2,7 @@
 class_name EventSheetBeginnerToolbar
 extends RefCounted
 
-# T18 - THE BEGINNER TOOLBAR. The eight Add gestures as buttons, above the canvas, on in Simple mode
+# THE BEGINNER TOOLBAR. The eight Add gestures as buttons, above the canvas, on in Simple mode
 # and off otherwise (View ▸ Add toolbar turns it on by hand at any time).
 #
 # Adding things is keys, the Add menu, right-click and the Ghost Row - all of which a beginner on day
@@ -65,7 +65,7 @@ func build(root: Node, run_controls: EventSheetRunControls) -> Control:
 		button.tooltip_text = tooltip_for(str(record[0]))
 		button.pressed.connect(activate.bind(str(record[0])))
 		_strip.add_child(button)
-	# The Preview buttons of T15 finish the strip: on day one, "how do I add something" and "how do I
+	# The Preview buttons finish the strip: on day one, "how do I add something" and "how do I
 	# see it run" are the same question asked twice.
 	_strip.add_child(VSeparator.new())
 	for entry: Variant in EventSheetRunControls.BUTTONS:

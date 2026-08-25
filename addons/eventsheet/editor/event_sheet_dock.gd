@@ -84,14 +84,14 @@ const ROW_MENU_DATA_CLASS_REMOVE_FIELD := 51
 const ROW_MENU_ADD_TIMELINE_BELOW := 52
 ## Paste Special: paste the clipboard snippet retargeted (dock/paste_special_dialog.gd).
 const ROW_MENU_PASTE_SPECIAL := 53
-## G4 - the group head's own verbs: the one Edit group dialog, the Active-on-start tick, the
+## The group head's own verbs: the one Edit group dialog, the Active-on-start tick, the
 ## whole-sheet fold, a local variable of this group, and unwrapping the group off its rows.
 const ROW_MENU_EDIT_GROUP := 54
 const ROW_MENU_GROUP_ENABLED := 55
 const ROW_MENU_FOLD_ALL_GROUPS := 56
 const ROW_MENU_GROUP_ADD_LOCAL := 57
 const ROW_MENU_UNGROUP := 58
-## R2 - the region verbs. A region is two lines of the file, so what it offers is its own list:
+## The region verbs. A region is two lines of the file, so what it offers is its own list:
 ## rename the fence, fold it, turn it into a group (or a group into it), colour it, or drop the
 ## pair and keep the rows.
 const ROW_MENU_REGION_RENAME := 59
@@ -99,10 +99,10 @@ const ROW_MENU_FOLD_ALL_REGIONS := 60
 const ROW_MENU_REGION_TO_GROUP := 61
 const ROW_MENU_REGION_REMOVE := 62
 const ROW_MENU_GROUP_TO_REGION := 63
-## M3 - "Runs on" on the group head, and the three answers behind it. The three have their own run
+## "Runs on" on the group head, and the three answers behind it. The three have their own run
 ## of ids because the submenu owns its own id_pressed: the row menu never sees them.
 const ROW_MENU_GROUP_RUNS_ON := 64
-## M2 - "Make it a message…" on a function's own row: the annotation belongs to the function, so the
+## "Make it a message…" on a function's own row: the annotation belongs to the function, so the
 ## gesture belongs to the row that declares it.
 const ROW_MENU_MAKE_MESSAGE := 65
 const GROUP_RUNS_ON_EVERYONE := 70
@@ -131,19 +131,19 @@ const VARIABLE_MENU_GRID_IMPORT := 9
 ## keys,en catalog, one row per key) written by the same codec (dock/grid_csv_dialog.gd).
 const VARIABLE_MENU_TEXT_EXPORT := 10
 const VARIABLE_MENU_TEXT_IMPORT := 11
-## R2 - the two accessor events a property can have. "Add setter" writes the `set(value):` block that
+## The two accessor events a property can have. "Add setter" writes the `set(value):` block that
 ## reads as an `On <name> set` trigger, "Add getter" the `get:` block that reads as an expression.
 const VARIABLE_MENU_ADD_SETTER := 12
 const VARIABLE_MENU_ADD_GETTER := 13
-## V2 - the variable list reads in AUTHOR order, so alphabetical is something you ask for. It writes
+## The variable list reads in AUTHOR order, so alphabetical is something you ask for. It writes
 ## the order rather than sorting the view, which is why it lands through the undo funnel.
 const VARIABLE_MENU_SORT_AZ := 14
-## V8. The two verbs the variable row menu was missing: the name as code, ready to paste into a
+## The two verbs the variable row menu was missing: the name as code, ready to paste into a
 ## field or a script, and the one tick that puts a variable in the Inspector.
 const VARIABLE_MENU_COPY_EXPRESSION := 15
 const VARIABLE_MENU_SHOW_IN_INSPECTOR := 16
 const VARIABLE_MENU_KEEP_IN_STEP := 17
-## E2 - "Keep in step": the modes a MultiplayerSynchronizer in the scene can hold a variable in, and
+## "Keep in step": the modes a MultiplayerSynchronizer in the scene can hold a variable in, and
 ## the offer to add one to a scene that has none. Their own run of ids, because the submenu owns its
 ## own id_pressed - the parent menu never sees them.
 const VARIABLE_SYNC_OFF := 60
@@ -162,9 +162,9 @@ const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
 const EMPTY_MENU_INSERT_SNIPPET := 4
-## R32. An Inspector button and the empty function it calls, written in one step.
+## An Inspector button and the empty function it calls, written in one step.
 const EMPTY_MENU_ADD_INSPECTOR_BUTTON := 5
-## V8. The Add submenu names the three scopes, because "add a variable" is really three different
+## The Add submenu names the three scopes, because "add a variable" is really three different
 ## questions and the answer decides where the declaration goes.
 const EMPTY_MENU_ADD_LOCAL_VARIABLE := 6
 const EMPTY_MENU_ADD_INSTANCE_VARIABLE := 7
@@ -174,7 +174,7 @@ const NEW_FUNCTION_MENU_PLAIN := 0
 const NEW_FUNCTION_MENU_ACTION := 1
 const NEW_FUNCTION_MENU_CONDITION := 2
 const NEW_FUNCTION_MENU_EXPRESSION := 3
-## M2 - New Function ▸ Message…: the same dialog for the name and the parameters, then the three
+## New Function ▸ Message…: the same dialog for the name and the parameters, then the three
 ## questions an `@rpc` answers, because a message IS a function before it is anything else.
 const NEW_FUNCTION_MENU_MESSAGE := 4
 const ACE_DRAG_KINDS := ["condition", "action"]
@@ -299,10 +299,10 @@ var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new() 
 var _sheet_diff: EventSheetSheetDiff = EventSheetSheetDiff.new()  # "What Changed Since Save" - rows a save would touch (dock/sheet_diff.gd)
 var _variable_grouping: EventSheetVariableGrouping = EventSheetVariableGrouping.new()  # drag-onto-variable folders + rename popup (dock/variable_grouping.gd)
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add (dock/menu_bar.gd)
-var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # T13 the Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
-var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # T15 Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
-var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # T18 the eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
-## T14 the Start page. Loaded BY PATH on first open: it names the Manual's tutorials, and the dock is
+var _project_bar_glue: EventSheetProjectBarGlue = EventSheetProjectBarGlue.new()  # The Project bar (the Object bar's other tab): when it shows, and where each entry goes (dock/project_bar_glue.gd)
+var _run_controls: EventSheetRunControls = EventSheetRunControls.new()  # Preview layout / Preview project / Debug layout, routed to the editor's own run commands (dock/run_controls.gd)
+var _beginner_toolbar: EventSheetBeginnerToolbar = EventSheetBeginnerToolbar.new()  # The eight Add gestures as buttons above the canvas, on in Simple mode (dock/beginner_toolbar.gd)
+## The Start page. Loaded BY PATH on first open: it names the Manual's tutorials, and the dock is
 ## constructed at every editor boot - naming it here would pull the whole help corpus into that boot.
 var _start_page: RefCounted = null
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
@@ -319,16 +319,16 @@ var _queries: EventSheetDockQueries = EventSheetDockQueries.new()  # dock/sheet_
 var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()
 var _extract_ops: EventSheetExtractOps = EventSheetExtractOps.new()  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
-var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # R33: Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
-var _pending_built_here: Dictionary = {}  # W19: a recorded "show the events behind this" waiting for its file to finish opening
-var _this_editor_bar: EventSheetThisEditorBar = EventSheetThisEditorBar.new()  # W20: Enabled / Reload / Output / plugin.cfg + the read-only guard on a sheet that is part of the running editor (dock/this_editor_bar.gd)
+var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
+var _pending_built_here: Dictionary = {}  # A recorded "show the events behind this" waiting for its file to finish opening
+var _this_editor_bar: EventSheetThisEditorBar = EventSheetThisEditorBar.new()  # Enabled / Reload / Output / plugin.cfg + the read-only guard on a sheet that is part of the running editor (dock/this_editor_bar.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
 var _verb_properties: EventSheetVerbProperties = EventSheetVerbProperties.new()  # a published verb's header click: the ACE properties popup (kind, category, inputs, inserts) (dock/verb_properties_popup.gd)
 var _object_properties: EventSheetObjectProperties = EventSheetObjectProperties.new()  # a row's object-name click: the object popup (type, path, rows, signals) (dock/object_properties_popup.gd)
 var _instance_variables: EventSheetInstanceVariableTable = EventSheetInstanceVariableTable.new()  # the object's variables as an editable table on Object properties and the Properties bar (dock/instance_variable_table.gd)
-var _hierarchy_edits: EventSheetHierarchyEdits = EventSheetHierarchyEdits.new()  # X15: what the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
+var _hierarchy_edits: EventSheetHierarchyEdits = EventSheetHierarchyEdits.new()  # What the Hierarchy pane's gestures write - Add child + flags dialog, Remove from parent (dock/hierarchy_edits.gd)
 var _global_variables: EventSheetGlobalVariables = EventSheetGlobalVariables.new()  # Add ▸ Global variable…: one value the project shares, written into an autoload (dock/global_variables.gd)
 var _find_results: EventSheetFindResultsBar = EventSheetFindResultsBar.new()  # Find all references: the results bar under the sheet, grouped by sheet with event numbers (dock/find_results_bar.gd)
 var _properties_bar: EventSheetPropertiesBar = EventSheetPropertiesBar.new()  # the selected condition/action/object/group as fields edited in place, beside the canvas (dock/properties_bar.gd)
@@ -342,7 +342,7 @@ var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDial
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
 var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
-var _messages: EventSheetMessageDialog = EventSheetMessageDialog.new()  # M2: Make it a message… (the @rpc words) + the Send dialog whose To dropdown picks the Send ACE (dock/message_dialog.gd)
+var _messages: EventSheetMessageDialog = EventSheetMessageDialog.new()  # Make it a message… (the @rpc words) + the Send dialog whose To dropdown picks the Send ACE (dock/message_dialog.gd)
 var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
 var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
@@ -360,9 +360,9 @@ var _row_more_submenu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
 var _new_function_submenu: PopupMenu = null
-## V8. The Add ▸ Variable submenu (Global / Local / Instance), on the canvas menu.
+## The Add ▸ Variable submenu (Global / Local / Instance), on the canvas menu.
 var _add_variable_submenu: PopupMenu = null
-## E2. The variable row's Keep in step ▸ submenu, filled from the scene every time it opens.
+## The variable row's Keep in step ▸ submenu, filled from the scene every time it opens.
 var _variable_sync_submenu: PopupMenu = null
 var _group_runs_on_submenu: PopupMenu = null
 var _context_row: EventRowData = null
@@ -431,7 +431,7 @@ func _init() -> void:
 	# Preview-glue helper MUST be wired before _build_ui(): _build_ui calls
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
-	# T13 / T15 / T18 - all three are reached from _build_ui() (the View items, the Preview buttons
+	# All three are reached from _build_ui() (the View items, the Preview buttons
 	# and the beginner strip), so their back-references have to be wired before it. init() only
 	# stores _dock; nothing here builds or scans anything.
 	_project_bar_glue.init(self)
@@ -532,7 +532,7 @@ func _ready() -> void:
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
 ## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
 func _on_translations_maybe_changed() -> void:
-	# Q1/Q9/Q10 - the object facts, the signal fan-out and the thumbnails are all reads of files that
+	# The object facts, the signal fan-out and the thumbnails are all reads of files that
 	# just changed, so they are dropped here rather than kept for a session that has outlived them.
 	# Each rebuilds lazily on the next question, which costs one scan and never a wrong answer.
 	EventSheetObjectFacts.clear_cache()
@@ -542,7 +542,7 @@ func _on_translations_maybe_changed() -> void:
 	# dropped with them; a pack dropped into the project appears on the next row that asks.
 	EventSheetViewportReadingRows.clear_pack_index()
 	EventSheetEditorToolCensus.clear_cache()
-	# T13 - the Project bar keeps no watcher of its own: it listens to exactly this ping, and only
+	# The Project bar keeps no watcher of its own: it listens to exactly this ping, and only
 	# when it is open, so a hidden bar costs nothing on a filesystem change.
 	_project_bar_glue.on_filesystem_changed()
 	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
@@ -553,7 +553,7 @@ func _on_translations_maybe_changed() -> void:
 	# by another tool writing the file) only lands here when the read is dropped. The editor rescans
 	# on both, so this hook covers the settings change as well as the file one.
 	EventSheetInputMapFacts.clear_cache()
-	# L4/L6 - and what the SCENE says about lighting: which lights it holds (the head's `lit by`
+	# And what the SCENE says about lighting: which lights it holds (the head's `lit by`
 	# bands and the picker's shelf), which environment file it shares, and - the one that matters
 	# most - what class each node reference is, because that is the gate the lift asks before it
 	# claims `$Torch.energy = 1.2` as a light row. Kept for the session, a light added to the scene
@@ -691,7 +691,7 @@ func pulse_control(control_label: String) -> bool:
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
 		return
-	# V15 - the workspace this tab was opened as part of is the tab's own, not the live state's, so
+	# The workspace this tab was opened as part of is the tab's own, not the live state's, so
 	# it is carried across rather than dropped on every sync.
 	var group: String = str((_open_tabs[_active_tab_index] as Dictionary).get("group", ""))
 	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path,
@@ -717,7 +717,7 @@ func _refresh_tab_bar() -> void:
 		return
 	_suppress_tab_signal = true
 	_tab_bar.clear_tabs()
-	# Q4 - a tab is named for what the sheet is ABOUT, with the object's own picture; the FILE it is
+	# A tab is named for what the sheet is ABOUT, with the object's own picture; the FILE it is
 	# stored in rides on the tooltip, which is where a storage detail belongs.
 	var name_counts: Dictionary = {}
 	for tab: Dictionary in _open_tabs:
@@ -735,7 +735,7 @@ func _refresh_tab_bar() -> void:
 		if int(name_counts.get(str(title.get("name", "")), 0)) > 1:
 			shown = "%s · %s" % [shown, str(title.get("file", path)).get_file()]
 		_tab_bar.add_tab(shown)
-		# V15 - a tab opened as part of a scene workspace says which group it belongs to, where the
+		# A tab opened as part of a scene workspace says which group it belongs to, where the
 		# rest of the storage details already live.
 		var group_note: String = str(tab.get("group", "")).strip_edges()
 		var tooltip: String = _tab_tooltip(title, path)
@@ -786,7 +786,7 @@ func get_open_sheets_state() -> Dictionary:
 			"title": _format_tab_title(tab.get("sheet"), p, bool(tab.get("dirty", false))),
 			"path": p,
 			"dirty": bool(tab.get("dirty", false)),
-			# V20 - the health card's first line on the hover, where sheets are picked. Only this
+			# The health card's first line on the hover, where sheets are picked. Only this
 			# line: the rest of the card asks the Doctor, and a hover must never sweep the project.
 			"health": EventSheetReadingCoverage.chip_text(tab.get("sheet")),
 			"group": str(tab.get("group", "")),
@@ -819,7 +819,7 @@ func reopen_sheet_path(path: String) -> void:
 	_load_sheet_from_path(path)
 
 
-## Q4 - the file behind a tab, plus the note that says what kind of sheet it is ("addon pack",
+## The file behind a tab, plus the note that says what kind of sheet it is ("addon pack",
 ## "global"). The hover is where a reader asks "which file is this, again?".
 static func _tab_tooltip(title: Dictionary, path: String) -> String:
 	var file_path: String = str(title.get("file", "")).strip_edges()
@@ -831,7 +831,7 @@ static func _tab_tooltip(title: Dictionary, path: String) -> String:
 	return file_path if note.is_empty() else "%s · %s" % [file_path, note]
 
 
-## Q4/Q10 - the tab's mark: the object's own sprite when its scene has one, else its class icon.
+## The tab's mark: the object's own sprite when its scene has one, else its class icon.
 static func _tab_icon(title: Dictionary) -> Texture2D:
 	var icon_class: String = str(title.get("icon_class", ""))
 	var picture: Texture2D = EventSheetObjectThumbnails.thumbnail_for(
@@ -1234,7 +1234,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	_input_dispatch.unhandled_key_input(event)
 
 
-## W19 - "show the events behind this". Ctrl+Shift+Alt on any control the plugin built opens the
+## "show the events behind this". Ctrl+Shift+Alt on any control the plugin built opens the
 ## sheet that built it, scrolled to the row. Handled here rather than on each control because the
 ## question is asked OF a control and answered BY the dock, and because a chord this deliberate must
 ## work over the whole editor rather than only where somebody remembered to connect it.
@@ -1828,7 +1828,7 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 	_ace_apply._on_ace_picker_selected(definition, context)
 
 
-## S27. The Add event dialog's "(none - runs every tick)" entry: a blank event, which is a real
+## The Add event dialog's "(none - runs every tick)" entry: a blank event, which is a real
 ## event that runs every tick.
 func _on_picker_blank_event_selected(context: Dictionary) -> void:
 	_ace_apply.add_blank_event(context)
@@ -1854,7 +1854,7 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 	_ace_apply._on_ace_params_confirmed(definition, values, context)
 
 
-## K2 - the Compare dialog confirmed. It answers with an ACE ID rather than a definition, because
+## The Compare dialog confirmed. It answers with an ACE ID rather than a definition, because
 ## which of the five comparison conditions the row becomes is exactly what the dialog decides; the
 ## row is then applied through the ordinary path, so undo, replace-in-place and the picker's context
 ## all behave as they do for any other condition.
@@ -2203,7 +2203,7 @@ func _rename_variable_references(old_name: String, new_name: String) -> int:  # 
 	return _rename.rename_variable_references(old_name, new_name)
 
 
-## V8 - the muted line an inline rename shows before anything is written: what committing will
+## The muted line an inline rename shows before anything is written: what committing will
 ## rewrite, counted across the open tabs and the project, and the two keys that finish or abandon it.
 ## Asked once as the field opens (the count is of the OLD name, so typing cannot change it).
 func _variable_rename_note(variable_name: String) -> String:
@@ -2237,7 +2237,7 @@ func _on_add_global_variable_requested() -> void:
 
 
 func _on_add_project_global_requested() -> void:  # Add ▸ Global Variable… (V)
-	# G3 - with a group head selected, V means what it means everywhere else: "declare something
+	# With a group head selected, V means what it means everywhere else: "declare something
 	# HERE". Here is the group, so the variable is one of its locals rather than a project global.
 	var selected: Resource = _active_view().get_selected_context().get("source_resource", null) if _active_view() != null else null
 	if selected is EventGroup:
@@ -2247,7 +2247,7 @@ func _on_add_project_global_requested() -> void:  # Add ▸ Global Variable… (
 	_global_variables.open()
 
 
-## V5 - the Add variable dialog was confirmed with Scope ▸ Global: the answers it collected go to the
+## The Add variable dialog was confirmed with Scope ▸ Global: the answers it collected go to the
 ## global writer, which opens the chosen autoload and adds the line there in one undo step.
 func _on_variable_dialog_global_requested(var_name: String, type_name: String, value_text: String, target: Dictionary) -> void:  # _variable_dlg.project_global_requested
 	_global_variables.add_global(var_name, type_name, value_text, target)
@@ -2371,11 +2371,11 @@ func _apply_simple_mode_gates() -> void:
 	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
 	# Bar brings it back at any time.
 	_properties_bar.set_open(not _simple_mode)
-	# T13 / T18 - Simple mode is the audience flag, so it is what decides these two by default. An
+	# Simple mode is the audience flag, so it is what decides these two by default. An
 	# explicit View-menu choice still wins; these only re-resolve the "nobody said" case.
 	_project_bar_glue.apply_visibility()
 	_beginner_toolbar.apply_visibility()
-	# V13 - Simple Mode pins the variable dial at the sentence. Expert mode does not push it back:
+	# Simple Mode pins the variable dial at the sentence. Expert mode does not push it back:
 	# the reader's own choice of dial is theirs to keep.
 	if _simple_mode:
 		set_variable_row_view(EventSheetCodeEcho.VIEW_SENTENCE)
@@ -2492,7 +2492,7 @@ func _toggle_compact_rows(view_popup: PopupMenu) -> void:
 		else "Comfortable rows - the default breathing room.")
 
 
-## M9 - View ▾ "Humanized Names". Three states, two of them the user's: AUTO (nothing stored, the
+## View ▾ "Humanized Names". Three states, two of them the user's: AUTO (nothing stored, the
 ## default) means the lens follows the surface - on where a sheet is being READ (an opened pack, a
 ## .gd preview, the Reading lens), off where one is being AUTHORED - and an explicit choice, once
 ## made, applies everywhere and persists per-project per-user (editor metadata, not repo state),
@@ -2540,7 +2540,7 @@ func _toggle_humanized_names(view_popup: PopupMenu) -> void:
 		else "Raw names - variables read exactly as they are spelled in the file.")
 
 
-## M46 - View ▾ "Familiar Words". OFF by default and stored as a plain on/off (unlike the
+## View ▾ "Familiar Words". OFF by default and stored as a plain on/off (unlike the
 ## humanized-names lens, which has an AUTO state): this one does not respell the user's own names, it
 ## swaps a handful of Godot nouns for the words other event-sheet editors use - scene becomes
 ## layout, pausing becomes a time scale of 0, a CanvasLayer becomes a layer - with the Godot word
@@ -2551,7 +2551,7 @@ func _familiar_words_enabled() -> bool:
 	return _stored_familiar_words()
 
 
-## S24 - whether the sheet NAMES the patterns its readings claimed. On by default, because naming
+## Whether the sheet NAMES the patterns its readings claimed. On by default, because naming
 ## the pattern is the teaching moment and a beginner is exactly who needs it; turning it off shows
 ## the plain statement sentences underneath, which is how a doubter checks the claim. Persisted per
 ## project per user in editor metadata, exactly like Familiar Words.
@@ -2604,7 +2604,7 @@ func _apply_familiar_words_pref() -> void:
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.familiar_words = stored
-	# T13 - the Project bar's headings follow the same toggle the rows do, so the reader never sees
+	# The Project bar's headings follow the same toggle the rows do, so the reader never sees
 	# one surface using Godot's word while the other uses theirs.
 	_project_bar_glue.refresh_reading_prefs()
 
@@ -2719,7 +2719,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:  # also reused by 
 func _open_row_in_split(row_data: EventRowData) -> void:
 	_multi_view._open_row_in_split(row_data)
 
-# ── Multi-view P2: detached window (a pane on another monitor) ────────────────────────
+# ── Multi-view: detached window (a pane on another monitor) ────────────────────────
 var _detached_window: Window = null
 var _detached_viewport: EventSheetViewport = null
 
@@ -2767,7 +2767,7 @@ func _close_detached_view() -> void:
 	_detached_window = null
 	_detached_viewport = null
 
-# ── Multi-view P3: linked panes (follow selection) ─────────────────────────────────────
+# ── Multi-view: linked panes (follow selection) ─────────────────────────────────────
 var _linked_views: bool = false
 var _mirroring_selection: bool = false
 
@@ -3337,13 +3337,13 @@ func _toggle_event_trace() -> void:
 ## so the toggle and the tick can never drift onto two different items.
 const HIT_COUNTS_VIEW_ID := 9601
 
-## The View-menu ids the Project bar (T13) and the beginner Add toolbar (T18) are registered under,
+## The View-menu ids the Project bar and the beginner Add toolbar are registered under,
 ## kept beside the one above for the same reason: the toggle and the tick must never drift apart.
 const PROJECT_BAR_VIEW_ID := 9603
 const ADD_TOOLBAR_VIEW_ID := 9604
 
 
-# ── T13 / T14 / T15 / T18: the project-level surfaces ─────────────────────────────────────────
+# ── the project-level surfaces ────────────────────────────────────────────────────────────────
 ## View ▸ Project bar. The bar is a TAB of the Object bar, not a dock of its own.
 func _toggle_project_bar() -> void:
 	_project_bar_glue.set_shown(_project_bar_glue.bar() == null)
@@ -3425,7 +3425,7 @@ func _open_why_didnt_this_fire() -> void:
 	panel.open_for_row(self, row, _ensure_live_values_panel()._last_values)
 
 
-## S24 - Row menu > Explain this reading: opens the pattern's Manual page, where the hand-written
+## Row menu > Explain this reading: opens the pattern's Manual page, where the hand-written
 ## shape and the events it reads as sit side by side. A pattern reading is a claim spanning several
 ## lines, and this is the reader's way to go and check it.
 func explain_pattern_reading() -> void:
@@ -3436,7 +3436,7 @@ func explain_pattern_reading() -> void:
 	EventSheetPatternManual.open_page(str(claim.get("pattern", "")))
 
 
-## S20 - Row menu > Adopt behavior: the preview-first swap of a hand-written pattern for the shipped
+## Row menu > Adopt behavior: the preview-first swap of a hand-written pattern for the shipped
 ## one. Nothing changes until the reader has read what would.
 func adopt_pattern_behavior() -> void:
 	var claim: Dictionary = _context_pattern_claim(true)
@@ -3555,7 +3555,7 @@ var _group_color_picker: ColorPickerButton = null
 var _group_color_target: Resource = null
 
 
-## G2 - a mark on a group head was clicked. The switch turns the group on and off; the ring before
+## A mark on a group head was clicked. The switch turns the group on and off; the ring before
 ## it makes the group switchable at runtime, which is what Set group active needs to reach it.
 func _on_group_action_requested(action: String, group: EventGroup) -> void:  # _viewport.group_action_requested
 	if group == null:
@@ -3573,7 +3573,7 @@ func _context_group() -> EventGroup:
 	return (_context_row.source_resource as EventGroup) if _context_row != null else null
 
 
-## G4 - Edit group…: everything a group is, in the one dialog.
+## Edit group…: everything a group is, in the one dialog.
 func _open_group_editor_for_context() -> void:
 	var group: EventGroup = _context_group()
 	if group == null:
@@ -3582,7 +3582,7 @@ func _open_group_editor_for_context() -> void:
 	_on_group_edit_requested(group)
 
 
-## G4 - Active on start, straight off the head's own switch. Off compiles the group out.
+## Active on start, straight off the head's own switch. Off compiles the group out.
 func _toggle_group_enabled() -> void:
 	var group: EventGroup = _context_group()
 	if group == null:
@@ -3598,7 +3598,7 @@ func _toggle_group_enabled() -> void:
 		_mark_dirty("Group \"%s\" is %s." % [group.group_name, "active on start" if switched_on else "off - it and its rows compile out"])
 
 
-## G4 - Open all / Close all groups: one gesture for the whole sheet, folding when anything is open
+## Open all / Close all groups: one gesture for the whole sheet, folding when anything is open
 ## and opening when everything is shut, so the key is a toggle rather than two commands.
 func _toggle_all_group_folds() -> void:
 	var view: EventSheetViewport = _active_view()
@@ -3611,7 +3611,7 @@ func _toggle_all_group_folds() -> void:
 	_set_status("Groups opened." if opening else "Groups closed.")
 
 
-## G3 - V (or Add local variable…) with a group head selected: a Local of THIS group, which the
+## V (or Add local variable…) with a group head selected: a Local of THIS group, which the
 ## compiler emits as a class member under the group's own header.
 func _add_group_local_variable() -> void:
 	var group: EventGroup = _context_group()
@@ -3629,7 +3629,7 @@ func _add_group_local_variable_for(group: EventGroup) -> void:
 	_variable_dlg.open_for_edit("local", {"group": group}, "", "int", "0", false, "Add Variable")
 
 
-## G4 - Ungroup: the rows the group held move up into its place, in order, and the group itself
+## Ungroup: the rows the group held move up into its place, in order, and the group itself
 ## goes. One undo step, and nothing inside it changes.
 func _ungroup_context_group() -> void:
 	var group: EventGroup = _context_group()
@@ -3656,7 +3656,7 @@ func _ungroup_context_group() -> void:
 		_mark_dirty("Ungrouped \"%s\" - %d row(s) kept." % [group.group_name, moved])
 
 
-## G2 - the "Make switchable" offer in the Set/Is Group Active dialog: the row names a group of this
+## The "Make switchable" offer in the Set/Is Group Active dialog: the row names a group of this
 ## sheet that cannot be switched yet, and one click makes it one. Takes the value the field holds
 ## (the quoted snake_case the template concatenates) and answers whether anything changed.
 func _make_group_switchable(value: String) -> bool:
@@ -3686,7 +3686,7 @@ func _set_group_runtime_toggleable(group: EventGroup, switchable: bool) -> bool:
 
 
 ## Event-sheet-style group colors: tint the selected group's accent/background (clear = theme).
-## R2 - a region's colour comes through the same picker: it is the same gesture on the same kind of
+## A region's colour comes through the same picker: it is the same gesture on the same kind of
 ## row, and the only difference is that a fence stores its colour as the `#rrggbb` its marker line
 ## carries rather than as a Color.
 func _open_group_color_picker() -> void:
@@ -3747,7 +3747,7 @@ func _apply_group_color(value: Color) -> void:
 		_refresh_after_edit()
 		_mark_dirty("Color updated.")
 
-# ── R2/R3: the region verbs ────────────────────────────────────────────────────────────────────
+# ── the region verbs ───────────────────────────────────────────────────────────────────────────
 
 
 ## The opening fence the row menu is acting on, or null when the clicked row is not one.
@@ -3758,7 +3758,7 @@ func _context_region() -> CustomBlockRow:
 	return fence if EventSheetRegionFacts.is_opening_fence(fence) else null
 
 
-## R2 - Rename Region: the fence's own name, edited in place on the row (the same edit F2 reaches
+## Rename Region: the fence's own name, edited in place on the row (the same edit F2 reaches
 ## once the title is selected). Only the label changes; the file gains no line and loses none.
 func _begin_region_rename() -> void:
 	var opener: CustomBlockRow = _context_region()
@@ -3773,7 +3773,7 @@ func _begin_region_rename() -> void:
 		_set_status("Couldn't start renaming that region.", true)
 
 
-## R2 - Turn Into Group: the fenced rows become an EventGroup and the two fence lines go. One undo
+## Turn Into Group: the fenced rows become an EventGroup and the two fence lines go. One undo
 ## step, and nothing inside moves.
 func _turn_region_into_group() -> void:
 	var opener: CustomBlockRow = _context_region()
@@ -3798,7 +3798,7 @@ func _turn_region_into_group() -> void:
 	_mark_dirty("\"%s\" is a group now - the rows are unchanged." % made[0].display_name())
 
 
-## R2 - Turn Into Region: the group's header goes and its rows sit between two fences instead. The
+## Turn Into Region: the group's header goes and its rows sit between two fences instead. The
 ## menu item already said why it could not happen, so the refusal here is only a backstop.
 func _turn_group_into_region() -> void:
 	var group: EventGroup = _context_group()
@@ -3821,7 +3821,7 @@ func _turn_group_into_region() -> void:
 		_mark_dirty("\"%s\" is a #region now - the rows are unchanged." % name_before)
 
 
-## R2 - Remove Region: both fences go, everything they held stays exactly where it was.
+## Remove Region: both fences go, everything they held stays exactly where it was.
 func _remove_context_region() -> void:
 	var opener: CustomBlockRow = _context_region()
 	if opener == null:
@@ -3845,7 +3845,7 @@ func _remove_context_region() -> void:
 	_mark_dirty("Region removed - %d row(s) kept." % kept[0])
 
 
-## R2 - Fold all / Unfold all regions: one gesture for the whole sheet, folding when anything is
+## Fold all / Unfold all regions: one gesture for the whole sheet, folding when anything is
 ## open and opening when everything is shut, so the item is a toggle rather than two commands.
 func _toggle_all_region_folds() -> void:
 	var view: EventSheetViewport = _active_view()
@@ -3856,7 +3856,7 @@ func _toggle_all_region_folds() -> void:
 	_set_status("Regions opened." if opening else "Regions closed.")
 
 
-## R3 - the fix on an unmatched opener's amber note: writes the missing `#endregion` after the last
+## The fix on an unmatched opener's amber note: writes the missing `#endregion` after the last
 ## row before the next head. The note stands for no resource of its own, so the fence it is about is
 ## resolved from the row's uid - the same uid the note was built with.
 func _close_orphan_region(note_row: EventRowData) -> void:
@@ -4409,7 +4409,7 @@ func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
 		_bookmarks_panel = EventSheetBookmarksPanel.new(self)
 	return _bookmarks_panel
 
-# ── U16 the minimap column - drawn by dock/minimap.gd ────────────────────────────────
+# ── the minimap column - drawn by dock/minimap.gd ────────────────────────────────────
 # Three states, two of them the user's: AUTO (nothing stored, the default) shows the column on a
 # sheet long enough to need one and hides it on a short one, and an explicit choice, once made,
 # holds for every sheet and persists per-project per-user (editor metadata, never repo state).
@@ -4477,7 +4477,7 @@ func _open_outline_panel() -> void:
 	_ensure_outline_panel().open()
 
 
-# ── U18 History panel - extracted to dock/history_panel.gd ───────────────────────────
+# ── History panel - extracted to dock/history_panel.gd ───────────────────────────────
 var _history_panel: EventSheetHistoryPanel = null
 
 
@@ -4491,7 +4491,7 @@ func _open_history_panel() -> void:
 	_ensure_history_panel().open()
 
 
-# ── U17 Sheet map - extracted to dock/sheet_map_panel.gd ─────────────────────────────
+# ── Sheet map - extracted to dock/sheet_map_panel.gd ─────────────────────────────────
 var _sheet_map_panel: EventSheetSheetMapPanel = null
 
 
@@ -4799,7 +4799,7 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_open_insert_snippet()
 
 
-## R32. The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button
+## The `@export_tool_button` line and the empty function it calls, in ONE undo step. The button
 ## is a labelled function, which is the shape the sheet already emits for one - so nothing new is
 ## written to the file and the line round-trips exactly as an authored button always has.
 func add_inspector_button(label: String) -> bool:
@@ -4834,7 +4834,7 @@ func _on_new_function_submenu_id_pressed(id: int) -> void:
 		NEW_FUNCTION_MENU_EXPRESSION:
 			_function_dialog_glue._open_function_dialog_new("expression", true)
 		NEW_FUNCTION_MENU_MESSAGE:
-			# M2 - name and parameters first (a message is a function), then the Message dialog on the
+			# Name and parameters first (a message is a function), then the Message dialog on the
 			# function that was just added.
 			_function_dialog_glue.open_function_dialog_for_new_message()
 
@@ -5189,7 +5189,7 @@ func _apply_property_drop(target_event: Resource, node_reference: String, proper
 ## always compile, so an action that assigns to a variable auto-declares it, and a preload
 ## const can never redefine an existing top-level name (deduped by path, suffixed on clash).
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
-	# P4 - ONE scene dropped on the empty space of a READING opens that scene as a sheet. On an
+	# ONE scene dropped on the empty space of a READING opens that scene as a sheet. On an
 	# editable sheet a dropped scene means what it always meant (the action that creates it), and on a
 	# row it names that row's target; but a reading cannot take an action at all, so there the gesture
 	# can only mean "read this scene too".
@@ -5341,12 +5341,12 @@ func open_verb_properties(event_function: Resource) -> void:
 	_verb_properties.open_for(event_function)
 
 
-## N10 - a click on a row's object name opens that object's popup.
+## A click on a row's object name opens that object's popup.
 func open_object_properties(object_label: String) -> void:
 	_object_properties.open_for(object_label)
 
 
-## V12 - the button on a variable note. An unknown name offers "Use hp", which rewrites every use of
+## The button on a variable note. An unknown name offers "Use hp", which rewrites every use of
 ## the misspelling in the sheet to the one it declares; a variable of the wrong kind offers "Change
 ## to Set value", which swaps the verb for the one that fits. One undo step either way.
 func _apply_variable_note_fix(note_row: EventRowData) -> void:
@@ -5365,7 +5365,7 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 		fix_kind = str(metadata.get("variable_note_fix", fix_kind))
 		if metadata.has("variable_note_event"):
 			note_meta = metadata
-	# M7 / L8 - the networking and lighting fixes ride the same note row and the same click, because
+	# The networking and lighting fixes ride the same note row and the same click, because
 	# they are the same gesture: a line under the row, a button at its right edge, one undo step.
 	if _apply_finding_note_fix(fix_kind, wrong, note_meta):
 		return
@@ -5384,7 +5384,7 @@ func _apply_variable_note_fix(note_row: EventRowData) -> void:
 	_set_status(EventSheetL10n.translate("Renamed %s to %s.") % [wrong, right])
 
 
-## M7 / L8 - the button on a networking or lighting note. "Make heal a message…" opens the Message
+## The button on a networking or lighting note. "Make heal a message…" opens the Message
 ## dialog on that function, "Keep in step" hands the value to a synchronizer in the scene, "Wrap in an
 ## owner group" puts the event in a group only the owner of this object runs, and "Make the
 ## environment this scene's own" writes the row that takes the copy. True when the click was one of
@@ -5414,7 +5414,7 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 	return false
 
 
-## L8 - "Make the environment this scene's own". A WorldEnvironment usually points at a `.tres`, and a
+## "Make the environment this scene's own". A WorldEnvironment usually points at a `.tres`, and a
 ## `.tres` is a FILE: writing fog into it at run time writes it for every other scene that loads the
 ## same file, so the change follows the player out of the room. The copy has to exist BEFORE anything
 ## writes through it, which is why the row goes in an event of its own at the top of the sheet. One
@@ -5431,7 +5431,7 @@ func give_the_scene_its_own_environment(target: String) -> bool:
 	return true
 
 
-## M7 - "Wrap in an owner group". The event moves an object every peer keeps in step, so it belongs
+## "Wrap in an owner group". The event moves an object every peer keeps in step, so it belongs
 ## behind `is_multiplayer_authority()`; a group that runs on the owner IS that guard, written once
 ## on the group rather than as a condition on every row inside it. One undo step, through the funnel
 ## every other mutation takes.
@@ -5458,7 +5458,7 @@ func _wrap_event_in_owner_group(event_row: EventRow) -> void:
 		_mark_dirty(EventSheetL10n.translate("Only the owner of this object runs it now."))
 
 
-## V12 - "Change to Set value" on a type-mismatch note. The row is replaced with the verb that fits,
+## "Change to Set value" on a type-mismatch note. The row is replaced with the verb that fits,
 ## carrying what was typed across to whatever that verb calls it, through the very path the
 ## Parameters dialog's OK takes - so the swap is one undo step and one writer.
 func _retarget_variable_row(note_meta: Dictionary, to_ace_id: String) -> void:
@@ -5485,14 +5485,14 @@ func _retarget_variable_row(note_meta: Dictionary, to_ace_id: String) -> void:
 	})
 
 
-## V10 - the Inspector's "Instance variables · N" lands here: the open sheet's own object popup,
+## The Inspector's "Instance variables · N" lands here: the open sheet's own object popup,
 ## which is where the instance-variable table lives. Named on the dock (not reached through the
 ## popup helper) because the plugin calls it by name from outside the editor.
 func open_instance_variables() -> void:
 	open_object_properties(EventSheetVariableOwners.owner_of_sheet(_current_sheet))
 
 
-## X15 - the four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test
+## The four Hierarchy-pane gestures. Thin delegates so the pane, the canvas drop and any test
 ## all reach the same writer (dock/hierarchy_edits.gd).
 func hierarchy_add_child(parent_label: String, child_label: String) -> void:
 	if _ensure_sheet_for_editing():
@@ -5504,7 +5504,7 @@ func hierarchy_edit_flags(parent_label: String, child_label: String) -> void:
 		_hierarchy_edits.flags_requested(parent_label, child_label)
 
 
-## X11 - the flags chip on an Add child ROW. The pane's gesture writes a new run; this one edits
+## The flags chip on an Add child ROW. The pane's gesture writes a new run; this one edits
 ## the run the chip sits on, in place.
 func hierarchy_edit_row_flags(payload: Dictionary) -> void:
 	if _ensure_sheet_for_editing():
@@ -5520,7 +5520,7 @@ func hierarchy_edit_scene(child_label: String) -> void:
 	_hierarchy_edits.edit_scene_requested(child_label)
 
 
-## N10 - show only the rows that use one object, through the SAME filter lens the Filter button
+## Show only the rows that use one object, through the SAME filter lens the Filter button
 ## drives, so there is one notion of "the sheet is filtered" and one way out of it. Asking for the
 ## object that is already highlighted clears the filter, which is what makes the rail entry a toggle.
 func highlight_object_rows(object_label: String) -> void:
@@ -5573,7 +5573,7 @@ func _toggle_follow_scene_selection(view_popup: PopupMenu) -> void:
 	_set_status("Follow Scene Selection %s." % ("ON" if now_on else "OFF"))
 
 
-## Q12 - HOVER previews before a click pins: the object's rows glow while the pointer rests on its
+## HOVER previews before a click pins: the object's rows glow while the pointer rests on its
 ## bar entry and forget the moment it leaves, so a reader can sweep the bar without committing to
 ## anything. A preview never touches the filter lens, which is what makes it a preview.
 func preview_object_rows(object_label: String) -> void:
@@ -5582,7 +5582,7 @@ func preview_object_rows(object_label: String) -> void:
 	_viewport.set_object_preview(object_label.strip_edges())
 
 
-## Q1/Q12 - Add condition / Add action for ONE object: the picker opens with the object step already
+## Add condition / Add action for ONE object: the picker opens with the object step already
 ## answered, so the row lands on that object instead of on whatever the reader picks next. The scope
 ## is the object's CLASS, because that is what the picker's verbs are grouped by.
 func add_row_for_object(object_label: String, as_action: bool) -> void:
@@ -5602,7 +5602,7 @@ func add_row_for_object(object_label: String, as_action: bool) -> void:
 		false, selected_resource, context)
 
 
-## Q12 - an object dragged off the Object bar and dropped on the canvas: the sheet's way of "start
+## An object dragged off the Object bar and dropped on the canvas: the sheet's way of "start
 ## using an object". The drop selects where it lands, then opens the picker already scoped to that
 ## object - Add action when it landed in an event's action lane, Add condition anywhere else.
 func apply_object_bar_drop(object_label: String, target_event: Resource, on_action_lane: bool) -> void:
@@ -5610,18 +5610,18 @@ func apply_object_bar_drop(object_label: String, target_event: Resource, on_acti
 		return
 	if target_event != null and _active_view() != null:
 		_active_view().select_resource(target_event)
-	# X25 - an object the reader marked `secret` in its properties has one event worth writing, so
+	# An object the reader marked `secret` in its properties has one event worth writing, so
 	# dropping it OFFERS that event first. An offer, not a rule: dismissing the dialog falls through
 	# to the picker the drop has always opened, and nothing is written until the reader says yes.
 	if EventSheetObjectProperties.is_secret(_source_path_for_secrets(), object_label):
 		_open_secret_counter_offer(object_label, on_action_lane)
 		return
-	# Y16 - the same offer for a door: a body the reader named a key for wants the event that TRIES
+	# The same offer for a door: a body the reader named a key for wants the event that TRIES
 	# it when the player walks in, which is the one row that both opens it and refuses it.
 	if not EventSheetObjectProperties.needs_key_of(_source_path_for_secrets(), object_label).is_empty():
 		_open_locked_door_offer(object_label, on_action_lane)
 		return
-	# Y11 - the same offer for the second mark: an area marked `water` has two events worth writing,
+	# The same offer for the second mark: an area marked `water` has two events worth writing,
 	# the way in and the way out, and dropping it offers the pair before the picker.
 	if EventSheetObjectProperties.is_water(_source_path_for_secrets(), object_label):
 		_open_water_rows_offer(object_label, on_action_lane)
@@ -5693,7 +5693,7 @@ var _door_offer_label: String = ""
 var _door_offer_on_action_lane: bool = false
 
 
-## Y16. The offer a locked door's drop opens, built exactly like the secret one above: one sentence
+## The offer a locked door's drop opens, built exactly like the secret one above: one sentence
 ## naming the key it wants, "Add the door event" to write it, and Cancel to get the ordinary drop.
 func _open_locked_door_offer(object_label: String, on_action_lane: bool) -> void:
 	_door_offer_label = object_label
@@ -5744,7 +5744,7 @@ var _water_offer_label: String = ""
 var _water_offer_on_action_lane: bool = false
 
 
-## Y11. The offer a water volume's drop opens: one sentence saying what the two rows would be, "Add
+## The offer a water volume's drop opens: one sentence saying what the two rows would be, "Add
 ## them" to write the pair, and Cancel to get the ordinary drop instead. Same shape as the secret
 ## offer, built with the shared popup helpers.
 func _open_water_rows_offer(object_label: String, on_action_lane: bool) -> void:
@@ -5791,7 +5791,7 @@ func _on_water_rows_offer_accepted() -> void:
 	_mark_dirty(EventSheetL10n.translate("Marking %s as water.") % object_label)
 
 
-## T13 - something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what
+## Something dragged off the PROJECT bar and dropped on the canvas. The bar already decided what
 ## dropping it MEANS (it refuses the drag for anything the sheet has no gesture for); this turns that
 ## into the picker the reader would have opened by hand, with the object step already answered:
 ##   a class or base class -> start an event on it
@@ -5817,7 +5817,7 @@ func apply_project_entry_drop(payload: Dictionary, target_event: Resource) -> vo
 			_set_status("Added a Go to layout action for %s." % label)
 
 
-## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action
+## An Input Map action dragged off the bar's INPUT section and dropped on the canvas. An action
 ## is not an object: there is exactly one thing a reader means by dropping "jump" on a sheet, so this
 ## writes that event outright instead of opening the picker. It lands after the event it was dropped
 ## on, or at the end when it was dropped on empty canvas.
@@ -5851,7 +5851,7 @@ func _insert_input_action_event(action_name: String, target_event: Resource) -> 
 	return true
 
 
-## Q1 - open the file that says what an object IS, as a sheet. Goes through the same navigation the
+## Open the file that says what an object IS, as a sheet. Goes through the same navigation the
 ## Include bar's "open as a sheet" uses, so Alt+Left walks back the way a reader expects.
 func open_object_file_as_sheet(script_path: String) -> void:
 	var path: String = script_path.strip_edges()
@@ -5862,7 +5862,7 @@ func open_object_file_as_sheet(script_path: String) -> void:
 	_navigate.open_or_focus(path)
 
 
-## N10 - reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
+## Reveal an object in the Godot scene dock. Only meaningful while the scene holding it is the
 ## one open in the editor, which is why the popup's button is disabled otherwise; this still guards,
 ## because a scene can be closed between the popup opening and the button being pressed.
 func select_object_in_scene(node_path: String) -> void:
@@ -5883,7 +5883,7 @@ func select_object_in_scene(node_path: String) -> void:
 	EditorInterface.get_selection().add_node(found)
 
 
-## N10 - open the .gd behind the sheet at the first line that names the object, so "Show in code"
+## Open the .gd behind the sheet at the first line that names the object, so "Show in code"
 ## lands ON the object rather than at the top of the file.
 func show_object_in_code(object_label: String) -> void:
 	if _current_sheet == null or _current_sheet.external_source_path.is_empty():
@@ -5990,7 +5990,7 @@ func _run_target_script_path() -> String:  # godot_workflow_test
 	return _author_actions._run_target_script_path()
 
 
-## M5 - "Play as host + client". Two copies of the game at once, one tagged `host` and one tagged
+## "Play as host + client". Two copies of the game at once, one tagged `host` and one tagged
 ## `client`, so a sheet can host itself and join itself and both windows are right there. The
 ## setting is Godot's own (Debug > Run Multiple Instances) and the tooltip says how to take it
 ## back; all this does is set it and then run, which is the Run Scene gesture unchanged.
@@ -6270,7 +6270,7 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_properties_bar.refresh()
 
 
-## V12 - writes a variable's initial value from the row's own inline field, through the undo funnel.
+## Writes a variable's initial value from the row's own inline field, through the undo funnel.
 ## Refuses a literal the declared type cannot hold and says why, because the row must never show a
 ## value the file does not have. Handles both kinds of declaration: a sheet-level entry in the
 ## variables dictionary, and a `var` line placed in the event list.
@@ -6326,7 +6326,7 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		if entry_updated:
 			_mark_dirty("Updated entry.")
 		return
-	# W12 - the same edit for a table or list written as a VALUE, whose entries are still one
+	# The same edit for a table or list written as a VALUE, whose entries are still one
 	# verbatim row each: the chip rewrites that row's line and leaves every other line alone.
 	if edit_kind.begins_with("literal_entry_line:"):
 		var literal_updated: bool = _perform_undoable_sheet_edit("Edit Entry", func() -> bool:
@@ -6335,13 +6335,13 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		if literal_updated:
 			_mark_dirty("Updated entry.")
 		return
-	# V12 - a variable's value, edited in place on its row. The type word beside it is the guide rail:
+	# A variable's value, edited in place on its row. The type word beside it is the guide rail:
 	# a literal that does not fit is refused here rather than written as something the row does not
 	# say (the field already turned amber while it was being typed).
 	if edit_kind == "variable_value":
 		_apply_variable_value_edit(row_data, new_value)
 		return
-	# V8 - a variable's NAME, edited in place. Committing is Rename Everywhere: the declaration, every
+	# A variable's NAME, edited in place. Committing is Rename Everywhere: the declaration, every
 	# use of it in this sheet, and every sheet that includes this one - the same writer the row menu's
 	# dialog calls, so the inline field is that gesture without the dialog.
 	if edit_kind == "variable_rename":
@@ -6498,7 +6498,7 @@ func _mark_dirty(message: String) -> void:
 	_dirty = true
 	_refresh_title_strip()
 	_set_status("%s%s" % [message, " *" if _dirty else ""])
-	# Live edit (V8): an edit made while a game is running is one keystroke from being in it. The
+	# Live edit: an edit made while a game is running is one keystroke from being in it. The
 	# offer re-words itself here rather than on a timer, so it is never stale and never guessed at.
 	_live_edit_bar.refresh()
 	if EventSheetLiveEdit.is_running() and EventSheetLiveEdit.auto_apply_enabled():
@@ -6566,13 +6566,13 @@ func _refresh_title_strip() -> void:
 	_refresh_preview_banner()
 
 
-## Q4 - a sheet is named for the OBJECT it is about, not for the file it is stored in: the tab, the
+## A sheet is named for the OBJECT it is about, not for the file it is stored in: the tab, the
 ## Open Sheets list, the window title and the recents all read "Player" where they read "player.gd".
 ## The file is still one hover away (_tab_tooltip / _format_sheet_path_hint).
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
 		return "No Sheet Loaded"
-	# P4 - a scene opened as one sheet is named after the SCENE, extension and all: it is not one
+	# A scene opened as one sheet is named after the SCENE, extension and all: it is not one
 	# script's tab, and the file name is the thing the reader picked in the FileSystem.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):
 		return EventSheetSceneSheet.scene_path_of(sheet).get_file()
@@ -6774,7 +6774,7 @@ func _capture_sheet_snapshot() -> EventSheetResource:
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if snapshot == null:
 		return
-	# U18 - the History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
+	# The History marker follows the snapshot, so Ctrl+Z from anywhere moves it too.
 	_ensure_history_panel().note_restored(snapshot)
 	_current_sheet = snapshot.duplicate(true)
 	if not _current_sheet_path.is_empty():
@@ -6804,7 +6804,7 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
 	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
 	_undo_redo_adapter.commit_action()
-	# U18 - the same step, written into the History panel's log in the name the edit gave itself.
+	# The same step, written into the History panel's log in the name the edit gave itself.
 	_ensure_history_panel().record(action_name, before, after, _selected_event_number())
 	return true
 
@@ -6924,7 +6924,7 @@ func _scene_node_for_object(object_label: String) -> Node:
 	return found
 
 
-# ── V12. Arrange by, and saved views (appended block - keep together) ─────────────────────────
+# ── Arrange by, and saved views (appended block - keep together) ──────────────────────────────
 # Display only from end to end: the arrangement re-groups the ROWS a view has built, never the
 # sheet, so the events array keeps its order, the emitted GDScript cannot move and the byte
 # round-trip is untouched. Every pane of the same sheet is arranged together, because "arranged by
@@ -6937,7 +6937,7 @@ func arrangement_mode() -> int:
 	return view.arrangement_mode if view != null else EventSheetArrangement.MODE_FILE_ORDER
 
 
-## V13 - the View dial for variable rows: sentence / both / code. Per view, like every other lens.
+## The View dial for variable rows: sentence / both / code. Per view, like every other lens.
 func variable_row_view() -> int:
 	var view: EventSheetViewport = _active_view()
 	return view.variable_row_view if view != null else EventSheetCodeEcho.VIEW_BOTH
@@ -7040,7 +7040,7 @@ func delete_saved_view(name: String) -> void:
 		_set_status(EventSheetL10n.translate("Forgot the view %s.") % name)
 
 
-# ── V13. Starter events per object, and the same events for another object (appended block) ───
+# ── Starter events per object, and the same events for another object (appended block) ────────
 # Two gestures on the Object bar's right-click menu. Both are ordinary sheet edits through the one
 # undo funnel - the starters ADD events (a trigger each, and the sheet's own "+ Add action"
 # placeholder waiting under it), the duplicate COPIES the events an object already has and points
@@ -7152,7 +7152,7 @@ func _on_duplicate_events_confirmed() -> void:
 	_mark_dirty(EventSheetL10n.translate("Duplicated %d event(s).") % int(made["count"]))
 
 
-# ── V15. Scene workspaces (appended block - keep together) ────────────────────────────────────
+# ── Scene workspaces (appended block - keep together) ─────────────────────────────────────────
 # The unit of work is the scene, so it opens as one: the scene-as-sheet plus every script in it, in
 # tree order, as a named tab group that is remembered. Tabs stay individually closable - a
 # workspace is a way of OPENING, never a cage - and nothing is written into the project.
@@ -7200,7 +7200,7 @@ func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
 	_set_status(EventSheetL10n.translate("Workspace %s: %d sheet(s).") % [name, opened])
 
 
-# ── V16. Export the sheet as a picture (appended block - keep together) ───────────────────────
+# ── Export the sheet as a picture (appended block - keep together) ────────────────────────────
 # Sheet ▸ Export ▸ Image (PNG) / PDF / Markdown with figures. The picture is the CANVAS, captured
 # as it is being read - current theme, density, arrangement, lenses, event numbers - so an exported
 # sheet and the sheet on screen can never be two different readings of the same file. The canvas is
@@ -7344,7 +7344,7 @@ func capture_sheet_picture() -> Image:
 	return stitched
 
 
-# ── V20. The sheet's health card (appended block - keep together) ─────────────────────────────
+# ── The sheet's health card (appended block - keep together) ──────────────────────────────────
 # How this sheet is doing, at a glance: how much of it reads as events, its patterns and which of
 # them a shipped behaviour could take over, what the Doctor says about it, its Test Sheets and how
 # they last went, and how much of it nothing uses. Every line clicks through to the panel that owns

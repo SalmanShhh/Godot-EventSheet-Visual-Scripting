@@ -43,7 +43,7 @@ static func is_identifier(text: String) -> bool:
 	return not (text[0] >= "0" and text[0] <= "9")
 
 
-## M9. A variable/parameter identifier as a human would say it.
+## A variable/parameter identifier as a human would say it.
 ## `export_knob` shows the name with Godot's Inspector capitalisation, so a knob reads on the
 ## sheet exactly as it reads in the Inspector ("coyote_time" -> "Coyote Time"); everything else
 ## reads as lowercase words ("_coyote_timer" -> "coyote timer"). A leading underscore is a
@@ -75,7 +75,7 @@ static func axis_letter(part: String) -> String:
 	return ""
 
 
-## M10. A simple property chain read possessively, the way an event sheet writes Player.X.
+## A simple property chain read possessively, the way an event sheet writes Player.X.
 ##   host.velocity.x  -> host's velocity X
 ##   event.relative.x -> event's relative X
 ##   direction.x      -> direction X        (two parts ending in an axis: the axis is a
@@ -83,7 +83,7 @@ static func axis_letter(part: String) -> String:
 ##   host.wall_normal -> host's wall normal
 ## Only simple identifier chains qualify. Anything holding a call, an index, an operator or a
 ## literal is returned verbatim: a half-translated expression reads worse than the code.
-## `humanize` runs each non-axis part through humanize_identifier (so the lens composes with M9);
+## `humanize` runs each non-axis part through humanize_identifier (so the lens composes with the humanized-name lens);
 ## pass false to keep the raw component names.
 static func possessive_chain(raw_chain: String, humanize: bool = true) -> String:
 	var text: String = raw_chain.strip_edges()
@@ -95,7 +95,7 @@ static func possessive_chain(raw_chain: String, humanize: bool = true) -> String
 	for part: String in parts:
 		if not is_identifier(part):
 			return raw_chain
-	# M38. A SCREAMING_CASE tail is a CONSTANT, not a possession: `State.PATROL` is one exact spelling
+	# A SCREAMING_CASE tail is a CONSTANT, not a possession: `State.PATROL` is one exact spelling
 	# the user typed, and "state's patrol" would be a name nobody wrote. The constant lens decides
 	# what such a token reads as; this lens leaves it exactly as it found it.
 	var tail_part: String = parts[parts.size() - 1]
@@ -118,7 +118,7 @@ static func possessive_chain(raw_chain: String, humanize: bool = true) -> String
 	return "%s %s" % [head, " ".join(tail)]
 
 
-## Every simple identifier chain inside a value expression, read possessively (M10), with the
+## Every simple identifier chain inside a value expression, read possessively, with the
 ## rest of the expression left exactly as written. Used where a sentence shows a value: the
 ## chains become the event-sheet words and the operators around them stay code.
 static func possessive_in_expression(expression: String, humanize: bool = true) -> String:
@@ -177,7 +177,7 @@ static func is_rewritable_name(token: String) -> bool:
 	return token.to_upper() != token or token.to_lower() == token
 
 
-## M9 + M10 over a whole value expression: every name reads as words and every chain reads
+## Over a whole value expression: every name reads as words and every chain reads
 ## possessively, while operators, numbers and literals stay exactly as written.
 ##   "direction.x * speed + push_x" -> "direction X * speed + push x"
 ## An expression holding a call or a string literal is returned verbatim - the lens does not
@@ -208,13 +208,13 @@ static func humanize_expression(expression: String, knob_names: Dictionary = {})
 	return output
 
 
-## S11 / S13. The file types an image, a sound or a scene is named by, so a file name survives the
+## The file types an image, a sound or a scene is named by, so a file name survives the
 ## spelling lens whole. Curated on purpose: only the extensions a game project actually ships, so a
 ## real property chain can never be mistaken for a file.
 const ASSET_FILE_TYPES: PackedStringArray = [
 	"png", "jpg", "jpeg", "webp", "svg", "bmp", "exr", "hdr", "ktx",
 	"wav", "ogg", "mp3", "tscn", "scn", "tres", "res", "gd", "json", "csv", "ttf", "otf",
-	# U12 - the one video format Godot plays, and the two other sound files a project ships. A film
+	# The one video format Godot plays, and the two other sound files a project ships. A film
 	# read possessively ("intro's ogv") is the same mistake `jump.wav` was.
 	"ogv", "flac", "aac"
 ]
@@ -233,7 +233,7 @@ static func is_asset_file_name(token: String) -> bool:
 static func _humanized_token(token: String, knob_names: Dictionary) -> String:
 	if token.is_empty():
 		return token
-	# S11 / S13. A FILE is not a chain: `jump.wav` is one thing with a name, and reading it
+	# A FILE is not a chain: `jump.wav` is one thing with a name, and reading it
 	# possessively ("jump's wav") turns the one word a reader recognises into two they do not.
 	if is_asset_file_name(token):
 		return token
@@ -244,7 +244,7 @@ static func _humanized_token(token: String, knob_names: Dictionary) -> String:
 	return humanize_identifier(token, knob_names.has(token))
 
 
-## M9 + M10 applied to the sentence layer's OUTPUT. The sentence layer decides what a statement
+## Applied to the sentence layer's OUTPUT. The sentence layer decides what a statement
 ## SAYS (its verb, its word order, which piece is a name and which is a value); this lens only
 ## rewrites how the names inside it are SPELLED, so the two can evolve independently.
 ##
@@ -273,7 +273,7 @@ static func apply_to_pieces(pieces: Array, enabled: bool, knob_names: Dictionary
 	return output
 
 
-## M9 + M10 over a FINISHED sentence - an ACE row's display text, where the verb and the
+## Over a FINISHED sentence - an ACE row's display text, where the verb and the
 ## connective words come from a display template and only the parameter values are the user's
 ## names. That makes this lens deliberately narrower than humanize_expression:
 ##
@@ -335,7 +335,7 @@ static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	return humanize_identifier(token, knob_names.has(token))
 
 
-## M27. `delta` is the event-sheet `dt` - the same number under the name a sheet reader writes. Applied
+## `delta` is the event-sheet `dt` - the same number under the name a sheet reader writes. Applied
 ## to a FINISHED sentence (an ACE row's display text), where the grammar's own rewriting never runs,
 ## so a lifted `Add gravity * delta to velocity` row reads like the hand-written line beside it.
 ## Only the whole word is replaced: `delta_v` and `_delta` are somebody's own names.
@@ -353,7 +353,7 @@ static func dt_words(text: String) -> String:
 static var _dt_regex: RegEx = null
 
 
-## M12. The leading NOT of a condition sentence, removed so the `not` mark in the badge column can
+## The leading NOT of a condition sentence, removed so the `not` mark in the badge column can
 ## carry the inversion instead of the word. Returns the sentence unchanged when it does not
 ## start with a negation. `had_not` in the returned dictionary tells the caller whether to draw
 ## the mark: { "text": String, "negated": bool }.
@@ -375,7 +375,7 @@ static func strip_leading_not(sentence: String) -> Dictionary:
 	return {"text": sentence, "negated": false}
 
 
-## M16. A function's snake_case name as its display name ("add_look" -> "Add Look").
+## A function's snake_case name as its display name ("add_look" -> "Add Look").
 ## A name the pack already published under an @ace_name keeps that name; the caller passes it
 ## as `published_name` and this is only the fallback.
 static func function_display_name(function_name: String, published_name: String = "") -> String:
@@ -384,7 +384,7 @@ static func function_display_name(function_name: String, published_name: String 
 	return humanize_identifier(function_name, true)
 
 
-## M16. One argument chip for a function call: "x = event's relative X" when the parameter name
+## One argument chip for a function call: "x = event's relative X" when the parameter name
 ## is known, otherwise the bare argument value. The value itself goes through the possessive
 ## lens so a chain argument reads the same as it would anywhere else.
 static func call_argument_chip(parameter_name: String, argument_value: String, humanize: bool = true) -> String:

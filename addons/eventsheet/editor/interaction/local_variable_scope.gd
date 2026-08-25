@@ -1,4 +1,4 @@
-# Godot EventSheets - R41. WHERE A LOCAL VARIABLE CAN BE SEEN.
+# Godot EventSheets - WHERE A LOCAL VARIABLE CAN BE SEEN.
 #
 # An event sheet declares a local at the top of an event, and that local is visible from there to the
 # end of the body it was declared in, and inside everything nested under it - nothing else. A
@@ -75,7 +75,7 @@ static func out_of_scope_name(sheet: EventSheetResource, target_event: EventRow,
 	return ""
 
 
-## R41. The first local the drop would STRAND - a name the dragged rows declare that a row staying
+## The first local the drop would STRAND - a name the dragged rows declare that a row staying
 ## behind still uses, from somewhere the declaration would no longer reach - or "" when the move is
 ## safe. Moving a declaration is allowed to change what the sheet says; it is not allowed to leave a
 ## use of the name with nothing to read.

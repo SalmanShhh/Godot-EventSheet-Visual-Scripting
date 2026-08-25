@@ -11,11 +11,11 @@ extends CanvasLayer
 ## @ace_category("Debug Overlay")
 signal overlay_toggled(shown: bool)
 
-## Start hidden: rows still record, nothing is drawn until you press the toggle key.
-@export_group("Debug Overlay")
-@export var start_hidden: bool = false
 ## Key that shows and hides the overlay while the game runs, by name (F3, F1, Tab, Escape). Leave blank for no key.
+@export_group("Debug Overlay")
 @export var toggle_key: String = "F3"
+## Start hidden: rows still record, nothing is drawn until you press the toggle key.
+@export var start_hidden: bool = false
 
 # The drawing surface is a plain Control child whose `draw` signal we paint from, so the
 # whole overlay stays one dependency-free script with no second file to ship. It is null

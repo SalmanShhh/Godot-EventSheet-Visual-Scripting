@@ -5,10 +5,10 @@ extends RefCounted
 # Pins the two readings batch eleven adds - the last two families a plain Godot script is made of
 # that had no words of their own:
 #
-#   V4  data assets: a Resource script is a DATA TYPE (its @exports are Fields), a field read off
+#   Data assets: a Resource script is a DATA TYPE (its @exports are Fields), a field read off
 #       one reads with the possessive, `load("x.tres") as Type` is "the data asset x.tres", and
 #       ResourceSaver.save is "Save data asset r as path"
-#   V5  the window, render and screenshot lines: size / title / fullscreen / vsync on the Window
+#   The window, render and screenshot lines: size / title / fullscreen / vsync on the Window
 #       object, the frame cap and the anti-aliasing level on System, a screenshot as one phrase and
 #       a saved picture as one row
 #
@@ -62,7 +62,7 @@ func _ready() -> void:
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# V5 - the window
+	# The window
 	"get_window().size = Vector2i(1280, 720)": "Window ▸ Set size to 1280 × 720",
 	"get_window().title = \"My Game\"": "Window ▸ Set title to \"My Game\"",
 	"get_window().mode = Window.MODE_FULLSCREEN": "Window ▸ Set fullscreen on",
@@ -74,12 +74,12 @@ static var STATEMENT_READINGS: Dictionary = {
 	# The picked row writes the switch as a ternary; both spellings are one sentence.
 	"DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if true else DisplayServer.VSYNC_DISABLED)":
 		"Window ▸ Set vsync on",
-	# V5 - the render and screenshot half
+	# The render and screenshot half
 	"Engine.max_fps = 60": "System ▸ Set max FPS to 60",
 	"get_viewport().msaa_2d = Viewport.MSAA_4X": "System ▸ Set anti-aliasing to 4×",
 	"get_viewport().msaa_3d = Viewport.MSAA_DISABLED": "System ▸ Set anti-aliasing to off",
 	"img.save_png(\"user://shot.png\")": "System ▸ Save image img as shot.png",
-	# V4 - the data assets
+	# The data assets
 	"ResourceSaver.save(stats, \"res://data/slime.tres\")":
 		"System ▸ Save data asset stats as slime.tres"
 }
@@ -158,7 +158,7 @@ static func _grammar_values() -> bool:
 	return ok
 
 
-## V4. Which declared types ARE data assets - the question the possessive rests on. Resource itself
+## Which declared types ARE data assets - the question the possessive rests on. Resource itself
 ## and every engine Resource subclass; a node class and a number are not.
 static func _type_words() -> bool:
 	var ok: bool = true
@@ -168,7 +168,7 @@ static func _type_words() -> bool:
 	ok = _check("CharacterBody2D is not a data type",
 		EventSheetSentence.is_data_asset_type("CharacterBody2D"), false) and ok
 	ok = _check("int is not a data type", EventSheetSentence.is_data_asset_type("int"), false) and ok
-	# V5. A picture reads as a picture whichever of Godot's two spellings holds it.
+	# A picture reads as a picture whichever of Godot's two spellings holds it.
 	ok = _check("an Image is an image", EventSheetSentence.type_word("Image"), "image") and ok
 	ok = _check("a Texture2D is an image", EventSheetSentence.type_word("Texture2D"), "image") and ok
 	return ok

@@ -324,7 +324,7 @@ static func _string_literal_mask(text: String) -> PackedByteArray:
 	return mask
 
 
-# ── R2: a region and a group are the same idea said two ways ───────────────────────────────────
+# ── a region and a group are the same idea said two ways ───────────────────────────────────────
 #
 # Both directions are ONE edit on the container the rows already live in, and nothing inside moves:
 # the byte change is the two fence lines against the one group. A group carries two things a region

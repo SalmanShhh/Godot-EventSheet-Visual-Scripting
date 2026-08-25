@@ -408,7 +408,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
   declares them lists none (its globals are already its rows), and neither does a read-only preview,
   whose head gathers the same list into one folder.
 - **A global counts as used however the row that uses it is stored.** The list behind these rows -
-  and behind the `Global variables used here` folder an opened preview has carried since R40 - only
+  and behind the `Global variables used here` folder an opened preview has carried from the start - only
   matched a qualified `Game.Score` string. A row that has been through the picker files the object
   and the property in separate cells, so the most ordinary way to touch a global (`Game > Set Score
   to 0`) counted as no use at all and the folder under-reported. The object column is now paired
@@ -1969,7 +1969,7 @@ one the logic is right and the wiring is not.
   plugin's `plugin.cfg` AND `tools/pack_builders/` beside it), so a project that merely installed
   the plugin never sees any of it. The listing is read when the folder is first opened and forgotten
   when it is folded: a session that never opens it pays nothing.
-- **The plugin's own bar** (W20). A file of the running editor opens read-only with
+- **The plugin's own bar**. A file of the running editor opens read-only with
   `part of this editor · read-only` and an **Edit anyway** chip; `plugin.gd` also carries
   **Enabled ●** (the plugin list's live state), **Reload ↻** (disable and enable through the editor),
   **Output ▾** (the editor log filtered to what the reload printed) and **plugin.cfg ▸** (the
@@ -1979,11 +1979,11 @@ one the logic is right and the wiring is not.
   **A saved file that does not parse is NOT reloaded**: the version already running keeps running
   and the bar goes red saying so, which is the one thing that makes editing the editor from inside
   itself survivable.
-- **\"Show the events behind this\"** (W19). Ctrl+Shift+Alt on any control the plugin built opens the
+- **\"Show the events behind this\"**. Ctrl+Shift+Alt on any control the plugin built opens the
   file that built it as a sheet, at the row that names it. No registry: a control carries the file
   that made it and the words it was made with, and the row is found by those words. Written only
   while the This-editor folder is on, so a shipped editor in a game project carries nothing.
-- **Dogfood gates** (W22). New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
+- **Dogfood gates**. New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
   a day (seeded by the day, so a run is fast and a week covers the editor) must open, round-trip
   byte-exact, add no script block, and stay under a *wordless-row* ceiling measured per role group
   on the current tree rather than guessed. A wordless row is one with no words of its own - an entry
@@ -1993,7 +1993,7 @@ one the logic is right and the wiring is not.
   the folder is on. Two pre-existing byte round-trip drifts were found by the new gate; both are
   fixed at their roots (see Fixed below), the gate's exception list is empty, and it now enforces
   the lossless contract on the whole corpus it samples.
-- **A contributor's door** (W24). The Start page gains a card - \"This is the editor's own project -
+- **A contributor's door**. The Start page gains a card - \"This is the editor's own project -
   open its source as sheets\" - in the plugin's repository only, and the Manual gains two tutorials:
   *Read the editor's code as events* and *Add a word to the vocabulary*. New guide:
   **The Editor, Read as Events**.
@@ -4706,7 +4706,7 @@ in the right-hand lane, where the reader expects a step.
   \"Answer\" / \"Give back\" split. A bare `return` in an action still reads **Stop event**.
 - A call to one of the sheet's OWN functions inside a return cell reads by its Function name -
   **Set return value to Can Stand Up** rather than `_can_stand_up()`, with `Call <Name>` plus argument
-  chips when it takes any (the same M16 rule the Call rows already follow).
+  chips when it takes any (the same rule the Call rows already follow).
 - A no-argument `get_thing()` now reads as the property it is (`host.get_wall_normal().x` ->
   `host's wall normal X`), and a condition made of `and` / `or` conjuncts reads each one through the
   grammar (`host != null and host.is_on_wall()` -> `host exists and host is on wall`).

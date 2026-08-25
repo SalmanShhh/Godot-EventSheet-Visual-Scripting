@@ -2,7 +2,7 @@
 class_name EventSheetEditorToolBar
 extends RefCounted
 
-# R33 - the four buttons an editor tool's Include bar carries, and what they do.
+# The four buttons an editor tool's Include bar carries, and what they do.
 #
 # A tool sheet is the one kind of sheet whose "play it" gesture is not Run Scene: an editor script is
 # run from the script editor's File > Run, a plugin has to be ticked in Project Settings, and neither
@@ -31,7 +31,7 @@ const KIND_RELOAD := "editor_tool_reload"
 const KIND_OUTPUT := "editor_tool_output"
 const KIND_ENABLE := "editor_tool_enable"
 
-## W9 / W10 / W11. The buttons the three TOOLING files carry. They share the `editor_tool_` prefix on
+## The buttons the three TOOLING files carry. They share the `editor_tool_` prefix on
 ## purpose: that prefix is what the viewport's input handler already routes here, so a tooling file's
 ## bar is wired the moment its buttons exist. Frozen with the four above.
 const KIND_TEST_RUN := "editor_tool_test_run"
@@ -71,7 +71,7 @@ static func applies_to(sheet: EventSheetResource) -> bool:
 		return false
 	if sheet.host_class.strip_edges() in ["EditorScript", "EditorPlugin"]:
 		return true
-	# W17. The other editor shapes - a Properties bar add-on, an importer, a thumbnail maker, a
+	# The other editor shapes - a Properties bar add-on, an importer, a thumbnail maker, a
 	# debugger panel, a context menu. They are never RUN (see runnable_sheet below), but Reload and
 	# Output are exactly as useful on them: a reader edits one, reloads, and reads what it printed.
 	return EventSheetScriptIntent.ADDON_HOSTS.has(sheet.host_class.strip_edges())
@@ -95,7 +95,7 @@ static func is_plugin_sheet(sheet: EventSheetResource) -> bool:
 static func buttons_for(sheet: EventSheetResource, script_path: String = "") -> Array[Dictionary]:
 	var buttons: Array[Dictionary] = []
 	if not applies_to(sheet):
-		# W9/W10 - a file that is not an editor tool may still be a test sheet or a command
+		# A file that is not an editor tool may still be a test sheet or a command
 		# tool, whose own bar lives beside this one.
 		return tool_file_buttons(sheet, script_path)
 	if runnable_sheet(sheet):
@@ -107,7 +107,7 @@ static func buttons_for(sheet: EventSheetResource, script_path: String = "") -> 
 	return buttons
 
 
-## W9 / W10 / W11. The bar a TOOLING file carries: a test runs, a command tool runs with arguments
+## The bar a TOOLING file carries: a test runs, a command tool runs with arguments
 ## and shows what it printed, a pack recipe builds its pack and opens the built one beside it. Static
 ## and value-driven for the same reason the four above are - a test pins the exact words.
 static func tool_file_buttons(sheet: EventSheetResource, script_path: String = "") -> Array[Dictionary]:
@@ -301,7 +301,7 @@ func activate(kind: String) -> bool:
 	return true
 
 
-## W9. Run ▸ on a test sheet's bar: runs THIS test, headless, in a second copy of the very editor
+## Run ▸ on a test sheet's bar: runs THIS test, headless, in a second copy of the very editor
 ## binary that is running now - which is exactly what the suite does, so a row that says it passed
 ## here passes there. Each Check row is then coloured from the `[PASS]` / `[FAIL]` lines the run
 ## printed, matched by the check's own label.
@@ -353,7 +353,7 @@ static func _printed_lines(printed: String) -> PackedStringArray:
 	return lines
 
 
-## W10. Run with arguments… ▸ : asks for the words that would follow `--` on the command line, then
+## Run with arguments… ▸ : asks for the words that would follow `--` on the command line, then
 ## runs the tool headless in this same editor binary and files what it printed under Output.
 func ask_for_arguments() -> void:
 	var target: String = script_path()
@@ -397,7 +397,7 @@ func run_command_tool(target: String, arguments: String) -> void:
 	_dock._set_status("%s finished with code %d - %d line(s) in Output." % [target.get_file(), exit_code, printed.size()])
 
 
-## W11. Build pack ▸ : runs THIS recipe's `build()` and nothing else, so a reader changing one pack
+## Build pack ▸ : runs THIS recipe's `build()` and nothing else, so a reader changing one pack
 ## never waits for the other ninety-four.
 func build_pack() -> void:
 	var target: String = script_path()
@@ -419,7 +419,7 @@ func build_pack() -> void:
 		_dock._set_status("%s did not build - Output has what it printed." % target.get_file(), true)
 
 
-## W11. Open built pack ▸ : opens the pack this recipe emits, beside the recipe, for the comparison
+## Open built pack ▸ : opens the pack this recipe emits, beside the recipe, for the comparison
 ## the drift gate makes in one direction and a reader makes in the other.
 func open_built_pack() -> void:
 	var built: String = built_pack_path(_dock._current_sheet)

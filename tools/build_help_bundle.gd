@@ -165,7 +165,7 @@ static func whats_new_text() -> String:
 		EventSheets.docs_version())
 
 
-## The dictionary page's exact bytes (U22), generated from the reading's own idiom tables and the
+## The dictionary page's exact bytes, generated from the reading's own idiom tables and the
 ## vocabulary this build loads. It is baked here for the same reason What's new is: it is derived
 ## from code rather than written under docs/, so it travels in its own file inside the bundle. The
 ## registry is built here once, which is what lets the page name the row a call is about.

@@ -466,7 +466,7 @@ static func _glossary_hits(wanted: String) -> Array[Dictionary]:
 	return hits
 
 
-## U20 - the glossary answers GODOT words too. A reader who types `queue_free` is asking the same
+## The glossary answers GODOT words too. A reader who types `queue_free` is asking the same
 ## question the glossary answers for someone arriving from another event-sheet editor ("what is
 ## this called here"), so the answer wears the same tag: the rows that write that call, named the
 ## way the sheet names them, with the reading's own idiom words when a table names it as well.

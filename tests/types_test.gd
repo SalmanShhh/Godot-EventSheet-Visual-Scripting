@@ -62,7 +62,7 @@ static func _test_registry_shape() -> bool:
 		ACEDescriptor.ACEType.CONDITION,
 		ACEDescriptor.ACEType.EXPRESSION, ACEDescriptor.ACEType.EXPRESSION]) and ok
 
-	# The picker sections the mockup's click paths name. The conversions ship next to the silent
+	# The picker sections the click paths name. The conversions ship next to the silent
 	# ones they replace, which is the whole point of where they landed.
 	ok = _check("Text Is A Number sits with the text comparisons",
 		str(by_id["TextIsANumber"].category), "Compare: Text") and ok

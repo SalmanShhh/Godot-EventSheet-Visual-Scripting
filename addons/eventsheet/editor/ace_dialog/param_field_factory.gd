@@ -132,7 +132,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"physics_layer_2d": "The 2D physics layers this row looks at, by their project names. Tick as many as apply.",
 	"physics_layer_3d": "The 3D physics layers this row looks at, by their project names. Tick as many as apply.",
 	"feature_tag": "A build feature tag - the engine's own set plus every tag your export presets declare. host and client are tags you add to two presets yourself; dedicated_server comes from Godot's own server preset, whose build is run with --headless.",
-	# M6 - the four networking fields, answering what a reader would otherwise go and look up: which
+	# The four networking fields, answering what a reader would otherwise go and look up: which
 	# ports are free, why 127.0.0.1 only reaches this machine, what a player costs the host, and which
 	# peer kind a browser can open. They live here rather than in the descriptors so a pack that ships
 	# a hosting row of its own gets the same words for free.
@@ -140,7 +140,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"net_port": "7000 to 65535 are free for games; anything below 1024 needs admin rights on most systems. Over the internet the host forwards this one port on its router, which is the step people miss.",
 	"peer_kind": "How the game talks over the network, and both sides have to pick the same one. ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes browser to browser through a signalling server you run.",
 	"max_players": "Every connected player costs the host bandwidth on every tick, for every value it keeps in step, so this number is a budget as much as a limit.",
-	# M4 - the one networking field that edits the SCENE as well as the row, so it says what pressing
+	# The one networking field that edits the SCENE as well as the row, so it says what pressing
 	# OK is about to do while the field still has focus.
 	"spawn_scene": "A scene the spawner is allowed to make. The list is the spawner's own, from the Inspector; a scene that is not in it yet is added when you press OK, as one step of the scene's undo. A spawner only copies scenes it lists - one it does not know is made here and nowhere else.",
 	"editor_icon": "The name of an icon in the editor's own set; the picture beside the field is what it draws.",

@@ -1,4 +1,4 @@
-# M4 / E3 - the scene's own two nodes as a hand-written script says them: a spawner that makes one
+# The scene's own two nodes as a hand-written script says them: a spawner that makes one
 # copy for everybody, the three visibility calls a synchronizer takes, the function it is handed to
 # answer per player, and the three signals the pair raises. Everything else about them lives in the
 # .tscn, which is why the script is this short.

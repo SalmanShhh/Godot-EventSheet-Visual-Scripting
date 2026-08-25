@@ -1,15 +1,15 @@
 # EventForge - a pack opened as a sheet READS like an event sheet.
 #
 # Three things are pinned here, all of them pure view state over an unchanged .gd:
-#   M3  a published verb reads as a TRIGGER: its name and input chips sit in the CONDITION lane -
+#   A published verb reads as a TRIGGER: its name and input chips sit in the CONDITION lane -
 #       `ƒ Functions ▸ On <name>  chips` - because "when does this run?" is answered by "when it is
 #       called". The kind stays a muted word for a condition/expression verb; no category chip, no ★,
 #       no "gives back", no description caption. A BBCode display name draws styled, never as raw tags.
 #       Its picker metadata answers in the ACE properties panel instead (EventSheetVerbProperties).
-#   M4  unpublished helpers are the SAME Function block (no "internal" badge) with their doc comment
+#   Unpublished helpers are the SAME Function block (no "internal" badge) with their doc comment
 #       as the right-lane caption, gathered under one closed "Helpers" bar - only in a read-only
 #       preview, and only as a re-parenting of already-built rows.
-#   M6  Reading mode on open: no "+ Add condition" / "+ Add action" scaffolding, and a body-only row
+#   Reading mode on open: no "+ Add condition" / "+ Add action" scaffolding, and a body-only row
 #       inside a verb leaves its left cell blank instead of saying "Always".
 #
 # Values, never counts: each assertion pins the exact strings a reader sees.
@@ -28,7 +28,7 @@ static func run() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 
-	# ── M3: the header IS [ƒ, name, input chips] ──
+	# ── the header IS [ƒ, name, input chips] ──────
 	var action_row: EventRowData = _row_by_uid(view, "define_fn_take_damage")
 	ok = _check("a published verb's header reads as a Function block",
 		_span_texts(action_row), PackedStringArray(["ƒ", "On Take damage", "amount"])) and ok
@@ -55,7 +55,7 @@ static func run() -> bool:
 	ok = _check("condition and expression wash differently",
 		_tint_rgb(condition_row) != _tint_rgb(expression_row), true) and ok
 
-	# ── M4: a hidden helper is the same block, with its doc comment in the RIGHT lane ──
+	# ── a hidden helper is the same block, with its doc comment in the RIGHT lane ──────
 	var helpers_bar_early: EventRowData = _row_by_uid(view, "helpers_group_")
 	# Read off the bar's children: the bar ships CLOSED, so its helpers are not in the flat (visible) list.
 	var helper_row: EventRowData = helpers_bar_early.children[0] if helpers_bar_early != null and not helpers_bar_early.children.is_empty() else null
@@ -72,7 +72,7 @@ static func run() -> bool:
 	ok = _check("the Helpers bar owns no resource (it is a lens, not a row)",
 		helpers_bar != null and helpers_bar.source_resource == null, true) and ok
 
-	# ── M6: Reading mode - no add scaffolding, no "Always" on a body-only row ──
+	# ── Reading mode - no add scaffolding, no "Always" on a body-only row ──────
 	ok = _check("no '+ Add condition' anywhere in a read-only preview", _any_span_contains(view, "+ Add condition"), false) and ok
 	ok = _check("no '+ Add action' anywhere in a read-only preview", _any_span_contains(view, "+ Add action"), false) and ok
 	ok = _check("no '+ Add parameter' cell in a read-only preview", _any_span_contains(view, "+ Add parameter"), false) and ok

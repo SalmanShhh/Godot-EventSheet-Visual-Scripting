@@ -1,4 +1,4 @@
-# Godot EventSheets - finding a row by the Godot call it writes (U23)
+# Godot EventSheets - finding a row by the Godot call it writes
 #
 # The picker searches display names, categories and synonyms, which is the right answer for someone
 # who thinks in the sheet's words. Someone who thinks in GDScript types `queue_free` and finds

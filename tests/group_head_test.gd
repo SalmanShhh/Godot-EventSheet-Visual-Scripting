@@ -66,7 +66,7 @@ static func _test_head_spans() -> bool:
 		_span_text(head, "group_action", "toggleable"), ViewportRowBuilder.GROUP_TOGGLEABLE_GLYPH) and passed
 	passed = _check("and the switch says it is on",
 		_span_text(head, "group_action", "enabled"), ViewportRowBuilder.HEAD_SWITCH_ON_GLYPH) and passed
-	# G1 - the head echoes the very line the compiler declares this group on, character for
+	# The head echoes the very line the compiler declares this group on, character for
 	# character, so the row and the file cannot disagree about what the group is.
 	passed = _check("the head echoes its own declaration",
 		_span_text(head, "group_echo", true),
@@ -263,7 +263,7 @@ static func _test_pinned_head() -> bool:
 	passed = _check("the innermost name is the title, not a crumb",
 		str(deep.get("title", "")), "Combat") and passed
 
-	# G5 - the trail is broken back into the names it is made of, so each can be armed as a door.
+	# The trail is broken back into the names it is made of, so each can be armed as a door.
 	# The elision stands for names rather than being one, so it points at nothing.
 	var crumbs: Array = deep.get("crumbs", []) as Array
 	passed = _check("a deep trail is three crumbs", crumbs.size(), 3) and passed
@@ -316,7 +316,7 @@ static func _test_pinned_head() -> bool:
 # ── 7. Open all / Close all ──
 
 
-## G4 - the one gesture that folds every group and unfolds them again. What it SAYS has to be what
+## The one gesture that folds every group and unfolds them again. What it SAYS has to be what
 ## it just did: the question "is anything open?" has a different answer after the fold than before,
 ## so it is asked once, up front.
 static func _test_open_all_close_all() -> bool:

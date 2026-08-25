@@ -1,4 +1,4 @@
-# Godot EventSheets - U16 the minimap column, and U18 the History panel's log.
+# Godot EventSheets - the minimap column, and the History panel's log.
 #
 # Both are pictures of something the editor already holds, so both are pinned the same way: build
 # the rows (or the edits) by hand, ask the pure part what it says about them, and compare VALUES.
@@ -19,7 +19,7 @@ static func run() -> bool:
 	return passed
 
 
-# ── U16. One bar per row, tinted by what the row IS ───────────────────────────────────────────
+# ── One bar per row, tinted by what the row IS ────────────────────────────────────────────────
 
 
 static func _bar_kinds() -> bool:
@@ -85,7 +85,7 @@ static func _auto_show_rule() -> bool:
 	return passed
 
 
-# ── U18. The History list, in the words the edits gave themselves ─────────────────────────────
+# ── The History list, in the words the edits gave themselves ──────────────────────────────────
 
 
 static func _history_labels() -> bool:

@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSceneEventsDockMark
 extends Control
-# The events overlay's Scene-dock half (V14): the ⌗ badge and its event count drawn at the right
+# The events overlay's Scene-dock half: the ⌗ badge and its event count drawn at the right
 # edge of every Scene-dock row whose node has events, with the node's triggers on hover.
 #
 # A mouse-transparent Control laid over the dock's own Tree by scene_events_overlay - it draws and
@@ -72,7 +72,7 @@ func visible_rows() -> Array:
 	return rows
 
 
-## The triggers of whichever badge the pointer is over - the hover the mockup asks for.
+## The triggers of whichever badge the pointer is over - what hovering a badge answers.
 func _get_tooltip(at_position: Vector2) -> String:
 	for row: Dictionary in visible_rows():
 		if (row.get("rect", Rect2()) as Rect2).has_point(at_position):

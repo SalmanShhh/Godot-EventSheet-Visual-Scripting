@@ -1,4 +1,4 @@
-# Godot EventSheets - what the SCENE says about the lights a sheet can address (L1/L2/L7).
+# Godot EventSheets - what the SCENE says about the lights a sheet can address.
 #
 # A light row names a node, and the only place that says what kind of node it is - and therefore
 # which property the row really writes - is the `.tscn`. So this is a reader, in the same shape as
@@ -26,7 +26,7 @@ extends RefCounted
 const MASK_PROPERTY_2D: String = "range_item_cull_mask"
 const MASK_PROPERTY_3D: String = "light_cull_mask"
 
-## L4. The OTHER 2D mask, and the one shadows are actually decided by: Godot matches a light's
+## The OTHER 2D mask, and the one shadows are actually decided by: Godot matches a light's
 ## `shadow_item_cull_mask` against a `LightOccluder2D.occluder_light_mask`, while the range mask
 ## above only says which items the light LIGHTS. Two questions, two properties, and confusing them
 ## is how "I turned shadows on and nothing happened" happens.
@@ -35,7 +35,7 @@ const SHADOW_MASK_PROPERTY_2D: String = "shadow_item_cull_mask"
 ## The property that says a light casts shadows, in both dimensions.
 const SHADOW_PROPERTY: String = "shadow_enabled"
 
-## L4. What blocks a 2D light, and the property holding which lights it blocks.
+## What blocks a 2D light, and the property holding which lights it blocks.
 const OCCLUDER_CLASS: String = "LightOccluder2D"
 const OCCLUDER_MASK_PROPERTY: String = "occluder_light_mask"
 
@@ -84,7 +84,7 @@ static func for_script(script_path: String) -> Array[Dictionary]:
 	return _read(script_path)["lights"]
 
 
-## L4/L6. EVERY node of those scenes in scene order, light or not, as
+## EVERY node of those scenes in scene order, light or not, as
 ##   {"name", "path", "class", "reference", "scene_path", "properties"}
 ## `properties` is the raw text the scene file holds under the node's header, which is what a fact
 ## about one node is read from (an occluder's mask, the environment resource a WorldEnvironment
@@ -100,7 +100,7 @@ static func nodes_of_class(script_path: String, class_text: String) -> Array[Dic
 	return _of_class(nodes_for_script(script_path), class_text)
 
 
-## L8. The same two questions asked of ONE SCENE rather than of a script's scenes: the lights it
+## The same two questions asked of ONE SCENE rather than of a script's scenes: the lights it
 ## holds, and its nodes of a class. The Doctor audits scenes a sheet may never have been opened on -
 ## a scene whose lighting is broken is broken whether or not anybody wrote a row about it - so it
 ## reads them by scene, and both entry points come out of the one walk below.

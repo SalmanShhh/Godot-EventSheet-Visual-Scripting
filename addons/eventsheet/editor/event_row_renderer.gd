@@ -16,7 +16,7 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
-# K4. The "or" divider between two OR'd conditions: the rule sits this far above the line it divides
+# The "or" divider between two OR'd conditions: the rule sits this far above the line it divides
 # from the one before (the same 3px pad the layout gives a line's spans, so the rule lands in the
 # middle of the gap), inset from the lane's edges, with this much air between the word and its rule.
 const OR_DIVIDER_GAP := 3.0
@@ -43,7 +43,7 @@ const VARIABLE_ROW_RULE_WIDTH := 2.0
 ## lilac, so the break reads without competing with the rows it separates.
 const BLOCK_HAIRLINE_ALPHA := 0.45
 
-# R1 - how a region fence paints in its own colour: the faintest wash behind the opening head, a
+# How a region fence paints in its own colour: the faintest wash behind the opening head, a
 # firm rule at the left edge of both fences, and the dash rhythm the badge and the body rule share.
 # Alphas, not colours: the hue is always the region's own, so no theme token is involved.
 const REGION_ROW_WASH_ALPHA := 0.06
@@ -454,7 +454,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var editing_select_anchor: int = int(layout.get("editing_select_anchor", -1))
 	var selected_span_indices: Array = layout.get("selected_span_indices", [])
 	var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
-	# R41 - the other uses of the hovered variable, in ITS scope, lit up alongside the one under the
+	# The other uses of the hovered variable, in ITS scope, lit up alongside the one under the
 	# cursor. The set arrives per row, because the uses are spread across rows.
 	var match_span_indices: Array = Array(layout.get("match_span_indices", PackedInt32Array()))
 	var total_selected_spans: int = int(layout.get("total_selected_spans", 0))
@@ -515,7 +515,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			group_tint = row_data.custom_color
 		_draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
 	elif row_data.row_type == EventRowData.RowType.REGION:
-		# R1 - a region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
+		# A region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
 		# solid 2px rule on the head, and nothing but that rule on the closing tick, so the fences
 		# read as the two lines of the file they are.
 		_draw_region_row_chrome(control, row_rect, row_data.custom_color,
@@ -543,7 +543,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	if row_data.variable_row:
 		_draw_variable_row_wash(control, row_rect, reading_style)
 	if row_data.rule_below:
-		# V2 - the hairline that closes a block (the globals this sheet only uses, above the ones it
+		# The hairline that closes a block (the globals this sheet only uses, above the ones it
 		# declares). Drawn in the variable rule's own colour, quietly, so no theme has to dress a
 		# second token for a line one pixel tall.
 		var hairline: Color = reading_style.variable_row_rule_color
@@ -583,7 +583,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	_draw_indent_guides(control, row_rect, row_data.indent, reading_style.indent_guide_color)
-	# M15 - the tree connector from a parent event down to this sub-event, on top of the indent
+	# The tree connector from a parent event down to this sub-event, on top of the indent
 	# stops above. Draw-only: it reserves no width and is never measured, so it cannot move a
 	# glyph; the guide geometry itself lives in its own helper.
 	EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color)
@@ -643,12 +643,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill, match_span_indices, reading_style)
-	# V8 - what the open inline editor has to say before it is committed ("renames 6 uses in 2
+	# What the open inline editor has to say before it is committed ("renames 6 uses in 2
 	# sheets · Enter to apply · Esc"). Drawn AFTER the spans and measured from the field's own rect,
 	# so it claims no layout: an editor's note is a hint, not a cell.
 	_draw_editing_note(control, row_data, editing_span_index, str(layout.get("editing_note", "")),
 		font, font_size, reading_style)
-	# K4 - drawn OVER the condition cells: the rule lands in the gap between two condition lines,
+	# Drawn OVER the condition cells: the rule lands in the gap between two condition lines,
 	# and a cell's own plate is painted after the row's background, so a divider under it would be
 	# covered by the very cells it separates.
 	_draw_or_dividers(control, row_data, condition_lane_rect, font, font_size, reading_style)
@@ -678,7 +678,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
 
 
-## K4. Where an "or" divider sits on a row: the y of the rule, and the x range it may use. Measured
+## Where an "or" divider sits on a row: the y of the rule, and the x range it may use. Measured
 ## from the TOP of the first span on the line being divided, so the rule lands in the gap between two
 ## conditions instead of on either of them. {} when that line has no condition span on this row (a
 ## sliced row, a fold) - nothing is ever ruled across an empty lane. Static and pure: the geometry is
@@ -706,7 +706,7 @@ static func or_divider_geometry(row_data: EventRowData, line_index: int, lane_re
 	}
 
 
-## K4. The word "or" and a hairline, drawn between each pair of OR'd conditions. It replaces the badge
+## The word "or" and a hairline, drawn between each pair of OR'd conditions. It replaces the badge
 ## the second condition used to wear: a badge says something about the row it is on, and "or" is
 ## about the pair. The theme's OR pair dresses it, so a preset that restyled the badge restyles this
 ## without knowing it changed.
@@ -904,7 +904,7 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 		control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
 
 
-## R1 - a region fence's chrome. The opener wears the faintest wash of the region's own colour and
+## A region fence's chrome. The opener wears the faintest wash of the region's own colour and
 ## a solid rule at its left edge; the closing tick wears the rule alone, over nothing, so it reads
 ## as the end of the dashed rule running down the body rather than as another row.
 func _draw_region_row_chrome(control: Control, row_rect: Rect2, accent: Color, closing: bool,
@@ -1029,7 +1029,7 @@ func _draw_spans(
 				selected_outline.a = SPAN_SELECT_OUTLINE_ALPHA
 				control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
 		elif match_span_indices.has(span_index) and span_index != hovered_span_index and not is_add_affordance:
-			# R41 - a use of the hovered variable somewhere else in its scope: a tint far softer than
+			# A use of the hovered variable somewhere else in its scope: a tint far softer than
 			# the cursor's own hover, so the eye finds every one of them without the sheet lighting up.
 			var match_rect: Rect2 = block_unions[span_index] if in_block else span.rect
 			var match_fill: Color = hover_fill
@@ -1054,7 +1054,7 @@ func _draw_spans(
 			_draw_badge_span(control, span, font, font_size, metadata)
 			continue
 		var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
-		# V12 - the type word is the guide rail on a variable's value: while the field is being typed
+		# The type word is the guide rail on a variable's value: while the field is being typed
 		# into, a literal the declared type cannot hold turns amber with the reason on the row, never
 		# a modal. The value is still whatever the file says until Enter.
 		if span_index == editing_span_index and metadata.has("variable_type_name") \
@@ -1121,7 +1121,7 @@ func _draw_spans(
 				# column the user can drag narrow needs to degrade legibly at any width.
 				var label_limit: float = min(object_column_width - 6.0, text_width)
 				_draw_text(control, Vector2(text_x, baseline_y), _elide(object_label, label_limit, font, draw_font_size), label_limit, font, draw_font_size, object_color)
-				# W14 - the variable's OWN name, muted, after the class the object column now says.
+				# The variable's OWN name, muted, after the class the object column now says.
 				# The class is what the object is; the name is which one, and a reader who goes looking
 				# for it in the code needs both. Drawn INSIDE the column and only when the column has
 				# room left, so every row's text still starts on the same edge.
@@ -1139,7 +1139,7 @@ func _draw_spans(
 			else:
 				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
 				text_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
-				# W14 - the variable's OWN name, muted, beside the class the object column now says.
+				# The variable's OWN name, muted, beside the class the object column now says.
 				# The class is what the object is; the name is which one, and a reader who goes
 				# looking for it in the code needs both. Flow mode only: in column mode the column is
 				# the class's, and a second word in it would push every row's text out of alignment.
@@ -1157,7 +1157,7 @@ func _draw_spans(
 			# just be a ragged staircase marking a boundary that does not exist.
 			if object_column_width > 0.0:
 				_draw_object_column_separator(control, span, text_x, event_style)
-			# N10 - the drawn bounds of the object column, so ONE click on the name can open the
+			# The drawn bounds of the object column, so ONE click on the name can open the
 			# object popup. The label is not a span of its own (it is drawn inside the leading edge
 			# of the condition/action cell), so the same trick the colour swatch uses applies: the
 			# renderer, which is the only thing that knows where the text actually landed, stamps
@@ -1169,7 +1169,7 @@ func _draw_spans(
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
-		# V13 - the code echo rests at a fraction of its colour so the sentence leads, and comes up
+		# The code echo rests at a fraction of its colour so the sentence leads, and comes up
 		# to full the moment the pointer is on the row it belongs to.
 		if row_data.hovered and bool(metadata.get("code_echo", false)) and not bbcode_segments.is_empty():
 			bbcode_segments = opaque_segments(bbcode_segments)
@@ -1317,7 +1317,7 @@ func _draw_spans(
 			)
 
 
-## V8. The muted line beside an open inline editor, starting one gap past the field it belongs to
+## The muted line beside an open inline editor, starting one gap past the field it belongs to
 ## and clipped to the row. Nothing at all when no field is open or the field has nothing to say -
 ## which is every edit but a rename.
 func _draw_editing_note(control: Control, row_data: EventRowData, editing_span_index: int,
@@ -1648,16 +1648,16 @@ const BADGE_MARK_SVGS: Dictionary = {
 	# its knob at the right when the line is there, at the left and hollow when it is not.
 	"◍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.4\" y=\"7.2\" width=\"19.2\" height=\"9.6\" rx=\"4.8\" fill=\"#fff\"/><circle cx=\"16.8\" cy=\"12\" r=\"3.1\" fill=\"#000\" fill-opacity=\"0.55\"/></svg>",
 	"◌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"3.5\" y=\"8.3\" width=\"17\" height=\"7.4\" rx=\"3.7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"7.9\" cy=\"12\" r=\"2.4\" fill=\"#fff\"/></svg>",
-	# G2 - the ring a group head wears BEFORE its switch: this switch can be thrown while the game
+	# The ring a group head wears BEFORE its switch: this switch can be thrown while the game
 	# runs, by Set group active. A plain ring, so it qualifies the switch instead of competing with it.
 	"◎": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"7.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/></svg>",
-	# E2 - the sync mark: a box with two short bars in it, saying this value is kept in step across
+	# The sync mark: a box with two short bars in it, saying this value is kept in step across
 	# the network. The STROKE says how - solid for always, dotted for on change, dashed for at spawn,
 	# the three modes the Replication panel offers - so the three tell apart at 15px without a word.
 	"⚌": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
 	"⚍": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"1.8 2.6\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-dasharray=\"0.6 3.1\"/></svg>",
 	"⚏": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"2.6\" y=\"2.6\" width=\"18.8\" height=\"18.8\" rx=\"4.4\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.9\" stroke-dasharray=\"4 3\"/><path d=\"M7 9.6h10M7 14.4h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"butt\" stroke-dasharray=\"3.4 2.6\"/></svg>",
-	# G1 - the folder a group head leads with when the editor's own Folder texture is unavailable
+	# The folder a group head leads with when the editor's own Folder texture is unavailable
 	# (headless, or object icons turned off): a tab and a body, the file-manager idiom.
 	"▤": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M3.2 6.6a1.6 1.6 0 0 1 1.6-1.6h4.1l1.9 2.2h7.4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.8a1.6 1.6 0 0 1-1.6-1.6z\" fill=\"#fff\"/></svg>",
 }

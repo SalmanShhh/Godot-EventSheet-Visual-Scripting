@@ -5,8 +5,8 @@ extends RefCounted
 # Pins the batch-eight PATTERN readings - the shapes several lines make together, which no single
 # line can decide:
 #
-#   S4  a number counted down by a delta and asked about against zero reads as a countdown
-#   S2  a list drained behind an is_empty guard with an instantiate fallback reads as a pool
+#   A number counted down by a delta and asked about against zero reads as a countdown
+#   A list drained behind an is_empty guard with an instantiate fallback reads as a pool
 #
 # Two gates: the whole-file facts (which names are countdowns, which lists are pools) and the
 # sentences the grammar builds once it has them. Both are values, pinned literally, so a reading
@@ -26,7 +26,7 @@ static func run() -> bool:
 	return ok
 
 
-## S3. A function of alternating waits and actions wears a sequence chip saying how long it takes.
+## A function of alternating waits and actions wears a sequence chip saying how long it takes.
 static func _wait_sequences() -> bool:
 	var ok: bool = true
 	var intro: PackedStringArray = PackedStringArray([
@@ -57,7 +57,7 @@ static func _wait_sequences() -> bool:
 	return ok
 
 
-## S5. Saving and loading, in the words a reader whose only storage rows were Set item / Item has.
+## Saving and loading, in the words a reader whose only storage rows were Set item / Item has.
 static func _local_storage_sentences() -> bool:
 	var ok: bool = true
 	var context: Dictionary = {"script_object": "Player"}
@@ -85,7 +85,7 @@ static func _local_storage_sentences() -> bool:
 	return ok
 
 
-## S6. The sentences the sheet has for identity and family.
+## The sentences the sheet has for identity and family.
 static func _existence_sentences() -> bool:
 	var ok: bool = true
 	var context: Dictionary = {"script_object": "Player", "variable_types": {"items": "Array"}}
@@ -102,7 +102,7 @@ static func _existence_sentences() -> bool:
 	return ok
 
 
-## S7. The list and table shapes that read as calls today.
+## The list and table shapes that read as calls today.
 static func _list_and_table_sentences() -> bool:
 	var ok: bool = true
 	var context: Dictionary = {"script_object": "Player", "variable_types": {"items": "Array"}}
@@ -175,7 +175,7 @@ static func _claims() -> bool:
 	return ok
 
 
-## S4. Both halves are required: counted down by a delta AND compared against zero.
+## Both halves are required: counted down by a delta AND compared against zero.
 static func _countdown_facts() -> bool:
 	var ok: bool = true
 	var lines: PackedStringArray = PackedStringArray([
@@ -201,7 +201,7 @@ static func _countdown_facts() -> bool:
 	return ok
 
 
-## S4. The four sentences a countdown reads in, with the file's own facts in the context.
+## The four sentences a countdown reads in, with the file's own facts in the context.
 static func _countdown_sentences() -> bool:
 	var ok: bool = true
 	var context: Dictionary = {
@@ -230,7 +230,7 @@ static func _countdown_sentences() -> bool:
 	return ok
 
 
-## S2. The pooled-Create line, in both orders of the ternary that writes it.
+## The pooled-Create line, in both orders of the ternary that writes it.
 static func _pool_facts() -> bool:
 	var ok: bool = true
 	var taken: Dictionary = EventSheetPatternReadings.pool_take_parts(

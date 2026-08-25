@@ -2,7 +2,7 @@
 class_name ReadingVectorsColoursTest
 extends RefCounted
 
-# U1. Vectors and colours are the two value types every game line touches, and until this batch a
+# Vectors and colours are the two value types every game line touches, and until this batch a
 # reader met them as the Godot methods that built them: `normalized()`, `dot()`, `darkened(0.2)`.
 # Each operation now reads as the word an event sheet already has for it, with Godot's own spelling
 # one hover away.
@@ -40,7 +40,7 @@ func _process(delta: float) -> void:
 	print(dir, dist, up, dot, ang, side, c)
 """
 
-## Every reading the opened file must contain, one per shape U1 claims.
+## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set tint to red, 20% darker",
 	"System ▸ Set tint to red at 50% opacity",
@@ -91,7 +91,7 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"Color.from_string(\"#ff8800\", Color.WHITE)": "colour from \"#ff8800\""
 }
 
-## The statements U1 settles, as "object ▸ sentence".
+## The statements this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
 	"modulate = modulate.lerp(Color.WHITE, 5 * delta)": "Player ▸ Ease colour toward white at 5",
 	"self_modulate = self_modulate.lerp(Color.RED, fade * delta)":

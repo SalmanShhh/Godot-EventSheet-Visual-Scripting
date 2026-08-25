@@ -1,4 +1,4 @@
-# EventForge - R30. A setter that names the node it sets reads on THAT node. `n.position =
+# EventForge - A setter that names the node it sets reads on THAT node. `n.position =
 # n.position.snapped(Vector2(8, 8))` inside a For each is `n ▸ Set position to position snapped to
 # 8, 8`: the object column says whose position it is, the value drops the receiver it would only be
 # repeating, and `snapped` reads as the grid it pulls the value onto - the same words the

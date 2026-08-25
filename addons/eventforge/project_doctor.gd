@@ -102,7 +102,7 @@ static func run() -> Dictionary:
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
-	# E4 / L8 - the Multiplayer and Lighting sections ship as EXTENSION checks, registered through the
+	# The Multiplayer and Lighting sections ship as EXTENSION checks, registered through the
 	# same public seam a pack uses, so "a pack adds its own networking scripts to that section" is the
 	# shipped path rather than a special case. Registering here is what puts them in all four runners.
 	EventSheetMultiplayerDoctor.ensure_registered()
@@ -670,7 +670,7 @@ const _LIVE_SHEET_WRITES: PackedStringArray = [
 ]
 
 
-## W4. The undo funnel is ONE door: every edit to the open sheet goes through it, and one that does
+## The undo funnel is ONE door: every edit to the open sheet goes through it, and one that does
 ## not is a change the user's Ctrl+Z cannot take back - the same fault the editor-tool check above
 ## names, one level in. Advisory, never an error: a helper may legitimately write to a sheet it made
 ## itself, and the note says which line to look at.
@@ -709,7 +709,7 @@ static func sheet_edit_outside_funnel(source: String) -> String:
 	return ""
 
 
-## R32 / R33. The three mistakes every FIRST editor tool makes, beside the undo one above. Each is a
+## The three mistakes every FIRST editor tool makes, beside the undo one above. Each is a
 ## note, never an error: all three are legal Godot, and each is occasionally exactly what the author
 ## meant - a tool that really does want to walk the whole project, a generator that really does want
 ## to throw away what it made, a preview that really is supposed to animate while you edit.
@@ -731,7 +731,7 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		if output.contains("get_tree().get_nodes_in_group(") or output.contains("get_tree().call_group("):
 			_add(findings, "info", "editor-tool-scope", sheet_path,
 				"This editor tool reaches for nodes through get_tree(), which in the editor is the editor's own tree and not the layout you have open. Walk Editor.OpenLayout (the edited scene root) instead, or the tool will find nothing - or the wrong thing.")
-		# 1b. R33 - the same mistake one step subtler, and the one every first tool makes. A tool that
+		# 1b. The same mistake one step subtler, and the one every first tool makes. A tool that
 		# CHANGES the scene while addressing nodes by path is addressing them against itself: an
 		# EditorScript or an EditorPlugin is not in the scene you have open, so `get_node("Player")`
 		# resolves in the editor's own tree (or nowhere at all) and the edit lands outside the layout.
@@ -744,19 +744,19 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		if output.contains("queue_free()") and not output.contains("create_action("):
 			_add(findings, "info", "editor-tool-destroy", sheet_path,
 				"This editor tool calls Destroy while running in the editor, so it deletes from the layout you have open. Register an undo step around it, or the only way back is closing the scene without saving.")
-		# 3. Ticking in the editor with no way to switch it off - the R32 guard.
+		# 3. Ticking in the editor with no way to switch it off - the guard.
 		if _ticks_without_editor_guard(output):
 			_add(findings, "info", "editor-tool-tick", sheet_path,
 				"This tool runs every tick in the editor, so it is running right now while you edit. Add a Preview in editor toggle - an exported true/false plus a Stop event when the sheet is in the editor and the toggle is off - so you can switch it off.")
 
 
-## U9. The spellings that hand a function to a thread, and the group of them the reading calls
+## The spellings that hand a function to a thread, and the group of them the reading calls
 ## "Run in the background".
 const _BACKGROUND_HANDOFFS: PackedStringArray = [
 	".start(", "WorkerThreadPool.add_task(", "WorkerThreadPool.add_group_task("
 ]
 
-## U9. The steps that reach the scene tree. None of them is safe off the main thread, and every one
+## The steps that reach the scene tree. None of them is safe off the main thread, and every one
 ## of them is a step a reader would think nothing of - which is exactly why the note is worth making.
 const _SCENE_TOUCHES: PackedStringArray = [
 	"add_child(", "remove_child(", "queue_free()", "get_node(", "get_node_or_null(", "get_tree()",
@@ -764,7 +764,7 @@ const _SCENE_TOUCHES: PackedStringArray = [
 ]
 
 
-## U9. Work that has left the main thread must not touch the scene tree - Godot's nodes are not
+## Work that has left the main thread must not touch the scene tree - Godot's nodes are not
 ## thread-safe, and the failure is a crash that happens one run in twenty rather than an error.
 ##
 ## The check is deliberately narrow: a file that hands a NAMED function to a thread, and that
@@ -783,7 +783,7 @@ static func check_background_thread_safety(sheet_paths: PackedStringArray, findi
 				"%s runs in the background, and its rows reach the scene tree. Nodes are not thread-safe: a crash from this happens one run in twenty rather than every time. Work out the answer in the background and let the main thread do the node steps - a signal fired when the work is done is the usual shape." % function_name)
 
 
-## U9. Every function name this file hands to a thread, from the `f.bind(...)` and bare-name
+## Every function name this file hands to a thread, from the `f.bind(...)` and bare-name
 ## spellings both. Empty when the file starts no background work at all, which is the common case
 ## and costs one substring search.
 static func _backgrounded_function_names(output: String) -> PackedStringArray:
@@ -804,7 +804,7 @@ static func _backgrounded_function_names(output: String) -> PackedStringArray:
 	return handed
 
 
-## U9. True when the named function's own body reaches the scene tree. The body is the lines from its
+## True when the named function's own body reaches the scene tree. The body is the lines from its
 ## `func` header to the next top-level `func`, which is all a text walk can honestly claim.
 static func _function_body_touches_tree(output: String, function_name: String) -> bool:
 	var lines: PackedStringArray = output.split("\n")
@@ -822,7 +822,7 @@ static func _function_body_touches_tree(output: String, function_name: String) -
 	return false
 
 
-## R33. True when a compiled @tool script MUTATES the scene and reaches its nodes by path without
+## True when a compiled @tool script MUTATES the scene and reaches its nodes by path without
 ## ever anchoring on the edited scene root. Both halves are required: looking things up by path is
 ## perfectly fine in a tool that only reads, and mutating is fine once the walk starts from the open
 ## layout - it is the combination that silently edits the wrong tree.
@@ -839,7 +839,7 @@ static func _touches_nodes_outside_open_layout(output: String) -> bool:
 	return output.contains("get_node(") or output.contains("get_node_or_null(")
 
 
-## R32. True when a compiled @tool script has a per-frame handler and NO editor guard in it. The guard
+## True when a compiled @tool script has a per-frame handler and NO editor guard in it. The guard
 ## is the shipped pattern - `Engine.is_editor_hint()` reached in the same file - so a tool that already
 ## checks where it is running is left alone whatever it does with the answer.
 static func _ticks_without_editor_guard(output: String) -> bool:
@@ -1009,7 +1009,7 @@ static func _is_per_frame_trigger(trigger_id: String) -> bool:
 	return trigger_id == "OnProcess" or trigger_id == "OnPhysicsProcess"
 
 
-## S27. A BLANK top-level event runs every tick - that is what blank means in an event sheet. When
+## A BLANK top-level event runs every tick - that is what blank means in an event sheet. When
 ## such an event does nothing but set values (no conditions, no sub-events, every action a Set), it
 ## is almost always meant to run ONCE, at the start, and the every-tick repeat is a surprise. Note
 ## tier, because a per-tick set is legal and sometimes deliberate.
@@ -1301,7 +1301,7 @@ static func check_param_type_mismatches(sheet_paths: PackedStringArray, findings
 				_scan_param_types(entry as EventRow, sheet_path, findings)
 
 
-## V12 - the two notes a variable row grows on the canvas, said again where a whole project is
+## The two notes a variable row grows on the canvas, said again where a whole project is
 ## audited: a `variable_reference` naming something this sheet does not declare (an error, because
 ## the emitted line names an identifier that is not there) and a variable handed to a verb that wants
 ## another kind (a warning, because it compiles and only misbehaves).
@@ -1355,7 +1355,7 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings)
 
 
-## R3 - a `#region` fence with no partner, in the same words the row shows under the orphan itself.
+## A `#region` fence with no partner, in the same words the row shows under the orphan itself.
 ## A warning, never an error: the file still compiles, and the fence only fails to fold.
 static func check_region_fences(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
@@ -2028,7 +2028,7 @@ static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 			"Vocabulary doc is stale - regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
 
 
-## T9. A Godot group and the inheritance set of the same name are the two halves of one idea, and
+## A Godot group and the inheritance set of the same name are the two halves of one idea, and
 ## they drift: a script joins the "enemy" group without extending Enemy, and the first row that
 ## calls an Enemy function on it fails at runtime with "Invalid call". The check says which script,
 ## which group and which base class, once per stray.
@@ -2102,7 +2102,7 @@ static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 			_collect_usage_text(event.sub_events, into)
 
 
-## R23 - a control the project's scripts ask for that the Input Map does not have. `is_action_pressed("dash")`
+## A control the project's scripts ask for that the Input Map does not have. `is_action_pressed("dash")`
 ## when there is no `dash` is the typo every beginner makes: it compiles, it prints nothing, and the
 ## key simply never works. The fix is one line in Project Settings, which is why the finding names it.
 ##
@@ -2133,7 +2133,7 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 		findings[findings.size() - 1]["subject"] = missing[0]
 
 
-## R27 - bindings changed at runtime but never saved. A rebind screen that calls
+## Bindings changed at runtime but never saved. A rebind screen that calls
 ## `InputMap.action_add_event` without ever writing the result anywhere loses every remap the moment
 ## the game closes, and the player has to do it again on every launch. The one thing every first
 ## rebind screen forgets.
@@ -2155,7 +2155,7 @@ static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: 
 			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
 
 
-## X29 - sounds played with nothing for a player who cannot hear them to read. OPT IN: a project
+## Sounds played with nothing for a player who cannot hear them to read. OPT IN: a project
 ## that has not decided to caption its audio would get one note per script for a decision it has not
 ## made, which is how a Doctor stops being read. Turn it on with `eventsheets/doctor/caption_sounds`
 ## and it names, per script, how many one-shot sounds are played beyond the captions it shows.
@@ -2470,7 +2470,7 @@ static func check_unresolved_conflicts(findings: Array[Dictionary]) -> void:
 			EventSheetConflictRegions.doctor_message(EventSheetConflictRegions.find(source), script_path.get_file()))
 
 
-## W22 - PLUGIN READING HEALTH, and only in the editor's own repo. One note per role group of the
+## PLUGIN READING HEALTH, and only in the editor's own repo. One note per role group of the
 ## editor's own source: how many of its files were read, what share of their rows say nothing of
 ## their own, and which file in the group reads worst - so the note is clickable straight into it.
 ##
@@ -2511,7 +2511,7 @@ static func check_shared_sheet_includes(findings: Array[Dictionary]) -> void:
 			_add(findings, "info", "shared-sheet-includes", script_path, message)
 
 
-## Y12 / Y13. THE SKILL TREE ASSETS: the two ways a tree is wrong before it is ever played, and the
+## THE SKILL TREE ASSETS: the two ways a tree is wrong before it is ever played, and the
 ## one way it is pointless.
 ##
 ## A skill tree is a graph written as text, and text cannot check itself. A `requires` cell naming
@@ -2537,7 +2537,7 @@ static func check_skill_trees(findings: Array[Dictionary]) -> void:
 		check_skill_tree_rows(asset_path, asset.get("skills") as Array, sources, findings)
 
 
-## Y12 / Y13. The three checks, run against one tree's ROWS - the shape a test can hand in directly
+## The three checks, run against one tree's ROWS - the shape a test can hand in directly
 ## rather than through a saved asset, and the shape a project's own `.tres` arrives in.
 static func check_skill_tree_rows(asset_path: String, rows: Array, sources: String,
 		findings: Array[Dictionary]) -> void:
@@ -2572,7 +2572,7 @@ static func check_skill_tree_rows(asset_path: String, rows: Array, sources: Stri
 			"\"%s\" grants nothing and no script asks whether it is unlocked, so buying it costs points and changes nothing. Fill in its Grants cell, or read it somewhere with Upgrades > Is Unlocked." % id)
 
 
-## Y12. The prerequisite ids one skill row names, as the asset's comma-separated cell spells them.
+## The prerequisite ids one skill row names, as the asset's comma-separated cell spells them.
 static func skill_tree_requires(row: Dictionary) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	for part: String in str(row.get("requires", "")).split(","):
@@ -2582,7 +2582,7 @@ static func skill_tree_requires(row: Dictionary) -> PackedStringArray:
 	return out
 
 
-## Y12. What a skill grants, or "" when its cell is blank.
+## What a skill grants, or "" when its cell is blank.
 static func _skill_tree_grants(rows: Array, id: String) -> String:
 	for entry: Variant in rows:
 		if entry is Dictionary and str((entry as Dictionary).get("id", "")).strip_edges() == id:
@@ -2590,7 +2590,7 @@ static func _skill_tree_grants(rows: Array, id: String) -> String:
 	return ""
 
 
-## Y12. Whether following a skill's prerequisites ever comes back to the skill itself. Breadth
+## Whether following a skill's prerequisites ever comes back to the skill itself. Breadth
 ## first with a visited set, so a tree that is merely wide is walked once and a cycle is caught the
 ## moment it closes rather than by a depth limit.
 static func skill_tree_cycle(start: String, requires: Dictionary) -> bool:
@@ -2611,7 +2611,7 @@ static func skill_tree_cycle(start: String, requires: Dictionary) -> bool:
 	return false
 
 
-## Y12. Every project script's text as one string - what the "grants nothing" check asks whether a
+## Every project script's text as one string - what the "grants nothing" check asks whether a
 ## skill id appears in. Read once per doctor run, and only when a candidate is found.
 static func _skill_tree_sources() -> String:
 	var joined: PackedStringArray = PackedStringArray()
@@ -2620,7 +2620,7 @@ static func _skill_tree_sources() -> String:
 	return "\n".join(joined)
 
 
-## Y12. Whether a `.tres` is a skill tree, decided from its TEXT. A saved resource stores its
+## Whether a `.tres` is a skill tree, decided from its TEXT. A saved resource stores its
 ## property names, so the three a tree has are readable without loading anything - which matters,
 ## because loading every `.tres` in a project to find out would be slow and would report a stale
 ## reference in an unrelated asset as though the Doctor had gone looking for trouble.
@@ -2630,7 +2630,7 @@ static func _is_skill_tree_text(path: String) -> bool:
 		and text.contains("\nstarting_points = ")
 
 
-## Y12. Every `.tres` in the project whose shape is a skill tree - a `skills` list beside a
+## Every `.tres` in the project whose shape is a skill tree - a `skills` list beside a
 ## `tree_name` and a `starting_points`. Found by shape rather than by class so a tree still reports
 ## when the pack that reads it has been removed from the project.
 static func _skill_tree_assets() -> PackedStringArray:
@@ -2685,7 +2685,7 @@ static func _project_scripts() -> PackedStringArray:
 ## `event_number` is the sheet's own margin number for the row the finding is about (0 when the
 ## finding is about a file rather than a row). It is what lets a finding be quoted the way the
 ## editor, the bookmarks and the Find results quote a row: "event 4".
-## V7. The one wait a beginner reaches for that does not do what its name promises. `OS.delay_msec`
+## The one wait a beginner reaches for that does not do what its name promises. `OS.delay_msec`
 ## and `OS.delay_usec` STOP the whole process while they count - no drawing, no input, no physics -
 ## so a script that "waits half a second" this way freezes the game for half a second and then jumps.
 ## The sheet's own Wait row is a coroutine and lets the frame finish, which is what everybody means.
@@ -2707,7 +2707,7 @@ static func check_blocking_waits(_sheet_paths: PackedStringArray, findings: Arra
 				_quoted_sample(blocking), "stops" if blocking.size() == 1 else "stop"])
 
 
-## V7. Every blocking delay a source holds, as the call text, once each. Comment lines are set aside
+## Every blocking delay a source holds, as the call text, once each. Comment lines are set aside
 ## the way every other source sweep here sets them aside.
 static func blocking_wait_calls(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
@@ -2725,7 +2725,7 @@ static func blocking_wait_calls(source: String) -> PackedStringArray:
 	return found
 
 
-## Y3 - THE SILENT-NOTHING BUG: an animation's method track calls a function by name, and nothing in
+## THE SILENT-NOTHING BUG: an animation's method track calls a function by name, and nothing in
 ## the project defines it.
 ##
 ## A method track is a real contract between an animation and a script, and it is the only contract in
@@ -2773,7 +2773,7 @@ static func _add(findings: Array[Dictionary], severity: String, check: String, p
 	findings.append({"severity": severity, "check": check, "path": path, "message": message, "event": event_number})
 
 
-## S22 - THE PATTERN SMELLS: a pattern the readings recognised, missing its other half.
+## THE PATTERN SMELLS: a pattern the readings recognised, missing its other half.
 ##
 ## Once a reading knows a shape it knows the shape's parts, and a missing part is the classic
 ## beginner bug - the countdown that never restarts, the pooled object that is never returned, the
@@ -2802,7 +2802,7 @@ static func scan_pattern_smells(sheet: EventSheetResource, sheet_path: String,
 		return
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
-	# X21 / X24 / X27 - the three notes that accuse a MISSING half, which is exactly what a claim
+	# The three notes that accuse a MISSING half, which is exactly what a claim
 	# cannot describe. Run before the early return below: a sheet whose shapes are all incomplete
 	# claims nothing, and that is precisely the sheet these notes are for.
 	scan_game_shape_smells(sheet, sheet_path, findings)
@@ -2916,7 +2916,7 @@ static func _sheet_uses_ace(sheet: EventSheetResource, ace_id: String) -> bool:
 	return false
 
 
-## X21 / X24 / X27 - THREE ADVISORY NOTES on the game shapes, each one a HALF that is missing.
+## THREE ADVISORY NOTES on the game shapes, each one a HALF that is missing.
 ##
 ## Unlike the pattern smells above these cannot read the claim registry, because a claim requires
 ## the whole shape and what is being accused here is exactly a shape that is NOT whole: a pity
@@ -2927,12 +2927,12 @@ static func scan_game_shape_smells(sheet: EventSheetResource, sheet_path: String
 	if sheet == null:
 		return
 	var lines: PackedStringArray = EventSheetViewportReadingRows.ordered_code_lines(sheet)
-	# X21. The pity counter that never resets - the guarantee then fires on EVERY roll after the
+	# The pity counter that never resets - the guarantee then fires on EVERY roll after the
 	# first cap hit, which is the single most common bug in a hand-written pity system.
 	for counter: String in (EventSheetPatternReadings.pity_facts(lines).get("unreset", {}) as Dictionary):
 		_add(findings, "info", "pity-counter-never-resets", sheet_path,
 			"%s grows the odds and is guaranteed at a cap, but nothing puts it back to zero on the win - after the first guarantee it fires every roll." % counter)
-	# X24. The meter that only fills. Read from the file's lines first (a hand-written pair) and
+	# The meter that only fills. Read from the file's lines first (a hand-written pair) and
 	# from the sheet's own rows second (a Fill Meter row with no Drain Meter row anywhere).
 	for filled: String in _filled_without_drain(lines):
 		_add(findings, "info", "meter-never-drains", sheet_path,
@@ -2940,13 +2940,13 @@ static func scan_game_shape_smells(sheet: EventSheetResource, sheet_path: String
 	if _sheet_uses_ace(sheet, "FillMeter") and not _sheet_uses_ace(sheet, "DrainMeter"):
 		_add(findings, "info", "meter-never-drains", sheet_path,
 			"This sheet fills a meter and never drains one - a meter that only goes up reaches its cap and stays there.")
-	# X27. The mission clock the player cannot see. Pressure nobody can read is not pressure.
+	# The mission clock the player cannot see. Pressure nobody can read is not pressure.
 	if _sheet_uses_ace(sheet, "StartMissionTimer") and not _sheet_uses_ace(sheet, "MissionTimeLeft"):
 		_add(findings, "info", "mission-timer-not-shown", sheet_path,
 			"A mission timer starts here and no row shows the time left - drop Mission Time Left into a HUD label so the player can feel the deadline.")
 
 
-## X24. The meters a FILE fills without ever draining, as the names it fills. The reading answers
+## The meters a FILE fills without ever draining, as the names it fills. The reading answers
 ## which pairs are complete; anything filled at a per-frame rate and missing from that answer is a
 ## one-way meter.
 static func _filled_without_drain(lines: PackedStringArray) -> PackedStringArray:
@@ -2991,7 +2991,7 @@ static func _events_by_uid(sheet: EventSheetResource) -> Dictionary:
 	return found
 
 
-# ── X17: the three hierarchy footguns ────────────────────────────────────────────
+# ── the three hierarchy footguns ─────────────────────────────────────────────────
 #
 # Reparenting is where a beginner meets the scene tree's sharp edges, and all three of these fail at
 # RUN time with an engine message that names a line inside Godot rather than the row that caused it.
@@ -3003,7 +3003,7 @@ static func _events_by_uid(sheet: EventSheetResource) -> Dictionary:
 # accuses working code is a lint people switch off.
 
 
-## X17 (1). The loop variable of a `for c in x.get_children():` walk whose body moves THAT child.
+## Footgun one of three. The loop variable of a `for c in x.get_children():` walk whose body moves THAT child.
 ## Godot's child list is live: taking a child out mid-walk shifts every child after it down one, so
 ## the loop skips the next one - the classic "it only reparented half of them" bug. Iterating a
 ## `.duplicate()` (or the sheet's For Each Child row, which always snapshots) is the whole fix, so a
@@ -3042,7 +3042,7 @@ static func _moves_child(stripped: String, child_name: String) -> bool:
 	return false
 
 
-## X17 (2). A reparent of SELF inside `_ready`. The node's own parent is still adding its children at
+## Footgun two of three. A reparent of SELF inside `_ready`. The node's own parent is still adding its children at
 ## that moment, so Godot refuses the move outright ("parent node is busy setting up children") and
 ## the game dies on the first frame. Deferring it to after the tree settles is the accepted fix.
 static func self_reparent_in_ready(source: String) -> PackedStringArray:
@@ -3064,7 +3064,7 @@ static func self_reparent_in_ready(source: String) -> PackedStringArray:
 	return found
 
 
-## X17 (3). A variable that keeps hold of a node while the file also frees that node's PARENT. A
+## Footgun three of three. A variable that keeps hold of a node while the file also frees that node's PARENT. A
 ## child is destroyed with its parent (that is Godot's default, and the hierarchy's "destroy with
 ## parent" tick), so the variable is left pointing at nothing and the next line that touches it is a
 ## "previously freed instance" crash. An `is_instance_valid` check before the use is the fix, so a
@@ -3162,7 +3162,7 @@ static func _node_name_of(text: String) -> String:
 
 
 ## The three notes, over every script the project owns. Advisory, each naming what to reach for.
-## W6. The two ways a menu built in code goes quietly wrong, both of them invisible to any test of
+## The two ways a menu built in code goes quietly wrong, both of them invisible to any test of
 ## the handlers themselves - every handler works, and the ROUTING is what is broken:
 ##
 ##   an arm on an id nothing adds   a branch of real code the menu can never reach
@@ -3182,7 +3182,7 @@ static func check_menu_ids(findings: Array[Dictionary]) -> void:
 			(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
 
 
-## W6. The menu notes one file's lines are worth, as {check, message, subject} in file order. Pure and
+## The menu notes one file's lines are worth, as {check, message, subject} in file order. Pure and
 ## static so a test can pin the words without a project to walk: the walk above is only the loop that
 ## finds the files.
 static func menu_id_notes(lines: PackedStringArray) -> Array[Dictionary]:
@@ -3208,7 +3208,7 @@ static func menu_id_notes(lines: PackedStringArray) -> Array[Dictionary]:
 	return notes
 
 
-## Y6. The verbs the Pin behavior packs are started with - the pack half of "this object rides that
+## The verbs the Pin behavior packs are started with - the pack half of "this object rides that
 ## one". The arithmetic half is the shape reader's answer, so the two together are every spelling a
 ## pin has.
 const _PIN_VERBS: PackedStringArray = [
@@ -3217,7 +3217,7 @@ const _PIN_VERBS: PackedStringArray = [
 ]
 
 
-## Y6. Every object this file pins itself to, however the pin is written - the arithmetic (a place or
+## Every object this file pins itself to, however the pin is written - the arithmetic (a place or
 ## an angle copied off another object) and the Pin pack's own verbs. Sorted, so a note reads the same
 ## on every machine. Pure and static, so a test pins the answer without a project to walk.
 static func pinned_anchors(source: String) -> PackedStringArray:
@@ -3244,7 +3244,7 @@ static func pinned_anchors(source: String) -> PackedStringArray:
 	return found
 
 
-## Y6. The objects this file BOTH parents itself to AND pins itself to. Being a child already carries
+## The objects this file BOTH parents itself to AND pins itself to. Being a child already carries
 ## the object; the pin then writes its place a second time from the same source, and the two fight
 ## every frame - which is what "it drifts twice as fast" is.
 ## `known_pins` is `pinned_anchors(source)` where the caller already has it - the walk behind it is a
@@ -3263,7 +3263,7 @@ static func double_follow_anchors(source: String,
 	return found
 
 
-## Y6. A pin whose anchor this file frees, with no Unpin and no validity question anywhere. The pin
+## A pin whose anchor this file frees, with no Unpin and no validity question anywhere. The pin
 ## goes on reading a place off a node that is gone.
 ##
 ## The bail-outs are deliberately WHOLE-FILE and deliberately generous: a file that unpins anything,
@@ -3362,7 +3362,7 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 				"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
 					% [held, held])
 			(findings[findings.size() - 1] as Dictionary)["subject"] = held
-		# Y6. The two ways the pin words and the child words get crossed. Notes, never warnings:
+		# The two ways the pin words and the child words get crossed. Notes, never warnings:
 		# both mechanisms are honest and both files run - they just do a thing the author did not
 		# mean, and there is nowhere else a person would be told.
 		# One grammar walk for both notes: each of them would otherwise ask for the same answer.
@@ -3379,7 +3379,7 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 			(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
 
 
-# ── Y20: what mirroring has to drag along ────────────────────────────────────────
+# ── what mirroring has to drag along ─────────────────────────────────────────────
 #
 # Mirroring a BODY mirrors its children; mirroring a SPRITE mirrors the picture and nothing else.
 # That one sentence is behind two of the most common "why does this only work facing right" bug
@@ -3388,7 +3388,7 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 # incomplete - and both name the one edit that completes it.
 
 
-## Y20. The spellings that mirror a WHOLE object (its children come along), as a plain text test. The
+## The spellings that mirror a WHOLE object (its children come along), as a plain text test. The
 ## same shapes the reading claims, kept here so a hand-written line and a picked row are one check.
 static func mirrors_whole_object(source: String) -> bool:
 	for line: String in source.split("\n"):
@@ -3402,13 +3402,13 @@ static func mirrors_whole_object(source: String) -> bool:
 	return false
 
 
-## Y20. True when the only mirroring in this file is a sprite's own flag - the case where the picture
+## True when the only mirroring in this file is a sprite's own flag - the case where the picture
 ## turns and the hitbox, the muzzle and the ray all stay exactly where they were.
 static func mirrors_only_a_sprite(source: String) -> bool:
 	return source.contains("flip_h = ") and not mirrors_whole_object(source)
 
 
-## Y20. The casts this file declares whose reach is never signed by the facing. A ray is the classic
+## The casts this file declares whose reach is never signed by the facing. A ray is the classic
 ## one: `target_position` is a fixed offset, so a character that mirrors only its sprite attacks to
 ## the right forever. Returns the names in declaration order, "" none.
 static func rays_not_following_facing(source: String) -> PackedStringArray:
@@ -3427,7 +3427,7 @@ static func rays_not_following_facing(source: String) -> PackedStringArray:
 	return out
 
 
-## Y20. The text children this file holds that sit under something it mirrors WHOLE, with nothing
+## The text children this file holds that sit under something it mirrors WHOLE, with nothing
 ## putting them back upright. A mirrored parent writes its children's text backwards, which is the
 ## other half of the same sentence.
 static func labels_under_a_mirrored_body(source: String) -> PackedStringArray:
@@ -3460,7 +3460,7 @@ static func _declared_name_of_class(line: String, classes: Array) -> String:
 	return ""
 
 
-## Y20. The two facing notes, over the project's own scripts.
+## The two facing notes, over the project's own scripts.
 static func check_facing_follows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
 		var source: String = FileAccess.get_file_as_string(script_path)
@@ -3478,7 +3478,7 @@ static func check_facing_follows(_sheet_paths: PackedStringArray, findings: Arra
 			(findings[findings.size() - 1] as Dictionary)["subject"] = label_name
 
 
-# ── U3: the notes a project leaves itself ────────────────────────────────────────
+# ── the notes a project leaves itself ────────────────────────────────────────────
 #
 # A TODO or a FIXME is how a project tracks itself, and until now it was invisible outside the code.
 # Each one is a NOTE - never a warning: an unfinished thought is not a fault, it is a thing somebody
@@ -3491,7 +3491,7 @@ static func check_facing_follows(_sheet_paths: PackedStringArray, findings: Arra
 const _TASK_NOTE_SKIPPED_DIRS: PackedStringArray = ["addons", "eventsheet_addons"]
 
 
-## U3. Every TODO / FIXME / HACK / NOTE comment in the project's own scripts, one finding per line,
+## Every TODO / FIXME / HACK / NOTE comment in the project's own scripts, one finding per line,
 ## with the file and the line number so the report can jump straight to it.
 static func check_task_notes(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_script_paths():
@@ -3509,7 +3509,7 @@ static func check_task_notes(findings: Array[Dictionary]) -> void:
 					str(note.get("text", ""))], line_index + 1)
 
 
-## U3. The task note one line carries, as {"marker", "text"}, or {} when the line is not one.
+## The task note one line carries, as {"marker", "text"}, or {} when the line is not one.
 ##
 ## The `#` must open the comment part of the line, which is what a note IS - a `# TODO` written
 ## inside a string literal is content somebody wrote, not a note about the code. Kept here rather

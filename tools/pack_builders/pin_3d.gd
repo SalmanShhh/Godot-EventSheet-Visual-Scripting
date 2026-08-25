@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## Pin 3D: the Pin behavior's twin for a Node3D host, mode for mode. Y5 shipped it because pinning
+## Pin 3D: the Pin behavior's twin for a Node3D host, mode for mode. It exists because pinning
 ## is the most-written relationship in a game and 3D had none of it: a health bar over a head, a
 ## weapon in a hand, a camera target that lags, a lantern on a rope all needed the same arithmetic
 ## written again in three axes.

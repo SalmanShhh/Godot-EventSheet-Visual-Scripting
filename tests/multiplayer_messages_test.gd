@@ -1,7 +1,7 @@
 @tool
 class_name MultiplayerMessagesTest
 extends RefCounted
-# M2 - a message is a function that says who may call it, where it runs, and how it travels.
+# A message is a function that says who may call it, where it runs, and how it travels.
 #
 # Godot spells all four answers as strings inside `@rpc(...)`. The sheet reads them as words and
 # writes them back from words, so the one thing that must never slip is that the table runs BOTH

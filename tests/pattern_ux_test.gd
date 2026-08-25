@@ -1,4 +1,4 @@
-# Godot EventSheets - S19-S26: everything the editor SAYS about a pattern, pinned by value.
+# Godot EventSheets - everything the editor SAYS about a pattern, pinned by value.
 #
 # The registry is proved on its own by pattern_facts_test; this is the layer above it - the pre-pass
 # that claims a pattern from a real hand-written file, the chip that names it, the counts on the
@@ -78,7 +78,7 @@ static func _test_claims_from_a_real_file() -> bool:
 	return ok
 
 
-# ── S19 ──
+# ─────────
 
 
 static func _test_the_chip_names_the_pattern() -> bool:
@@ -92,7 +92,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	ok = _check("and the rows that only use its words do not",
 		_row_containing(rows, "Call Shoot").contains("⟡"), false) and ok
 
-	# S24 - the lens is what turns the whole thing off, and it is a SPAN-level lens: with it off the
+	# The lens is what turns the whole thing off, and it is a SPAN-level lens: with it off the
 	# sheet reads as its own plain sentences and nothing else about the row changes.
 	var plain: EventSheetViewport = _open(COUNTDOWN_PATH, true)
 	plain.patterns_lens = false
@@ -103,7 +103,7 @@ static func _test_the_chip_names_the_pattern() -> bool:
 	return ok
 
 
-# ── S25 ──
+# ─────────
 
 
 static func _test_the_coverage_chip_counts_them() -> bool:
@@ -130,7 +130,7 @@ static func _test_the_coverage_chip_counts_them() -> bool:
 	return ok
 
 
-# ── S24 ──
+# ─────────
 
 
 static func _test_the_hover_owes_its_evidence() -> bool:
@@ -150,7 +150,7 @@ static func _test_the_hover_owes_its_evidence() -> bool:
 	return ok
 
 
-# ── S20 ──
+# ─────────
 
 
 static func _test_the_adopt_plan() -> bool:
@@ -239,7 +239,7 @@ static func _test_the_adopt_refusals() -> bool:
 	return ok
 
 
-# ── S22 ──
+# ─────────
 
 
 static func _test_the_doctor_smells() -> bool:
@@ -274,7 +274,7 @@ static func _test_the_doctor_smells() -> bool:
 	return ok
 
 
-# ── S21 / S26 ──
+# ───────────────
 
 
 static func _test_the_manual_page() -> bool:
@@ -302,7 +302,7 @@ static func _test_the_manual_page() -> bool:
 	ok = _check("a pattern with no fixture has no section to show",
 		EventSheetPatternManual.pattern_blocks("tilemap").size(), 0) and ok
 
-	# S26 - the join from a verb to the patterns it belongs to, over the claims' own ace_ids.
+	# The join from a verb to the patterns it belongs to, over the claims' own ace_ids.
 	var sheet: EventSheetResource = _sheet(COUNTDOWN_PATH)
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)

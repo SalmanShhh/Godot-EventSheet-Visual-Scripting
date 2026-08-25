@@ -78,7 +78,7 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 					option_key = str(option_dict.get("label", ""))
 				if option_key.is_empty():
 					continue
-				# P1 - an option may declare the line that reads UNDER it in the dialog's list
+				# An option may declare the line that reads UNDER it in the dialog's list
 				# ("double speed, keeps momentum"). Optional, and empty for every option that
 				# does not carry one, so a list without notes renders exactly as it always did.
 				normalized_options.append({
@@ -106,14 +106,14 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 			"hint": param.hint,
 			"options": normalized_options,
 			"autocomplete": autocomplete_values,
-			# P3 - whether a blank is an answer. The dialog's strip says so at keystroke time
+			# Whether a blank is an answer. The dialog's strip says so at keystroke time
 			# rather than the commit failing later with nothing to point at.
 			"required": param.required,
 			# Display-only: the row sentence shows this param's option LABEL rather than the raw key
 			# it emits. Set only where the emitted value is always one of the options, so the label
 			# is a faithful reading (Part Of's named parts, never a comparison operator).
 			"display_option_labels": param.display_option_labels,
-			# L4 - the reading lens the CANVAS puts this value through (a darkness colour reads as a
+			# The reading lens the CANVAS puts this value through (a darkness colour reads as a
 			# percentage). Display-only: the value the row stores and emits is untouched.
 			"display_lens": param.display_lens
 		})

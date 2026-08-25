@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for M23 on an EDITABLE sheet: a statement carrying a
+# EventForge - render harness (dev tool) for a paired statement row on an EDITABLE sheet: a statement carrying a
 # ternary draws as the sub-event pair an event sheet would show - the check on the left, the
 # statement with that branch's value on the right, then Else - on a sheet you can author, with the
 # pair selected so the whole-pair highlight is visible. Run NON-headless:

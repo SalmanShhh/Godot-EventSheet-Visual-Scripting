@@ -42,7 +42,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "AnimationSpeed", "Animation Speed", ACEDescriptor.ACEType.EXPRESSION, "speed_scale", "", [], CAT, "animation speed", "AnimationPlayer")
 		.described("The player's current speed scale (1 = normal)."))
 
-	# S11 - the sprite rows an opened script already READS as its own words, so the picker writes the
+	# The sprite rows an opened script already READS as its own words, so the picker writes the
 	# exact shape the reading recognises.
 	descriptors.append(F.make_descriptor("Core", "SetFlipV", "Set Flipped", ACEDescriptor.ACEType.ACTION, "flip_v = {flipped}", "", [F.make_param("flipped", "String", "true", "Flipped", "Flip the sprite upside down.", "", ["true", "false"])], CAT, "Set flipped {flipped}", "Sprite2D")
 		.described("Turns this sprite upside down, or back the right way up."))
@@ -51,7 +51,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "AnimationIsPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], CAT, "Is playing", "AnimationPlayer")
 		.described("True while this animation player is running an animation."))
 
-	# ── X7 - the blend-tree rows the magic parameter strings hide ──
+	# ── the blend-tree rows the magic parameter strings hide ───────
 	#
 	# An AnimationTree is driven by writing values into paths like `parameters/Locomotion/blend_position`,
 	# which is exactly the kind of string an event sheet exists to hide. Set Blend and Go To State
@@ -73,7 +73,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## ── Y2 - the two timing tricks every combo game writes ──────────────────────────────────────────
+## ── the two timing tricks every combo game writes ───────────────────────────────────────────────
 ##
 ## A CANCEL WINDOW is a slice of one animation's clock: between 0.3 s and 0.6 s of "uppercut" the
 ## next move may interrupt this one. Written by hand it is two comparisons on
@@ -108,7 +108,7 @@ static func _combo_timing(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop, for when only the two characters trading blows should feel it. The wait ignores the game's time scale, so it un-pauses even during a slow-motion.").featured())
 
 
-## ── Y3 - animation-driven events ────────────────────────────────────────────────────────────────
+## ── animation-driven events ─────────────────────────────────────────────────────────────────────
 ##
 ## Half of game feel is the animation telling the game when: the hit lands on frame 3, the footstep
 ## plays on frame 6, the projectile leaves the hand at 0.4 s. Godot spells that two ways, and both

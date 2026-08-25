@@ -1,9 +1,9 @@
 # EventForge - the two readings of batch 5 that are about WIRING, pinned by VALUE on a real scene
 # fixture rather than on hand-built resources:
 #
-#   P5  a signal wired to ANOTHER object's function reads as the trigger calling it, the bound
+#   A signal wired to ANOTHER object's function reads as the trigger calling it, the bound
 #       values as ordinary parameter chips
-#   P4  a .tscn opens as ONE read-only sheet: the scene's own bar, then every script it uses under
+#   A .tscn opens as ONE read-only sheet: the scene's own bar, then every script it uses under
 #       its own object bar, with the wiring the scene file holds read as triggers
 #
 # Both are READINGS: the rows change, no file does. The byte round-trip of every script in the scene
@@ -40,7 +40,7 @@ static func _round_trips() -> bool:
 	return ok
 
 
-## ── P5: the three spellings of a callable, and the one that is NOT this reading ──────────────────
+## ── the three spellings of a callable, and the one that is NOT this reading ──────────────────────
 static func _callable_shapes() -> bool:
 	var ok: bool = true
 	var plain: Dictionary = ViewportRowBuilder.connect_call_parts("\t$StartButton.pressed.connect(player.reset)")
@@ -69,7 +69,7 @@ static func _callable_shapes() -> bool:
 	return ok
 
 
-## ── P5: what the rows actually say ───────────────────────────────────────────────────────────────
+## ── what the rows actually say ───────────────────────────────────────────────────────────────────
 static func _wired_call_rows() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(LEVEL_PATH)
@@ -86,7 +86,7 @@ static func _wired_call_rows() -> bool:
 	return ok
 
 
-## ── P4: the scene opens as one sheet, every script under its own object bar ──────────────────────
+## ── the scene opens as one sheet, every script under its own object bar ──────────────────────────
 static func _scene_sheet_rows() -> bool:
 	var ok: bool = true
 	var scene_sheet: EventSheetResource = EventSheetSceneSheet.build(SCENE_PATH)
@@ -118,7 +118,7 @@ static func _scene_sheet_rows() -> bool:
 	return ok
 
 
-## ── P4: opening a scene never writes to it ───────────────────────────────────────────────────────
+## ── opening a scene never writes to it ───────────────────────────────────────────────────────────
 static func _scene_file_untouched() -> bool:
 	var before: String = FileAccess.get_file_as_string(SCENE_PATH)
 	var scene_sheet: EventSheetResource = EventSheetSceneSheet.build(SCENE_PATH)

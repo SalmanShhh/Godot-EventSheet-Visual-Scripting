@@ -5,13 +5,13 @@ extends RefCounted
 # Pins the five reading gaps batch eleven closed - the families of line a finished Godot game is
 # full of that an event sheet already has words for:
 #
-#   V1  a RigidBody IS the Physics behavior: mass, gravity scale, the material's friction and
+#   A RigidBody IS the Physics behavior: mass, gravity scale, the material's friction and
 #       elasticity, the pushes, immovable, sleeping, damping, the joints, an area's world gravity
-#   V2  the Controls a form is made of: Text input, List, Check box, File chooser, Tabs, and the
+#   The Controls a form is made of: Text input, List, Check box, File chooser, Tabs, and the
 #       two formatted-text verbs
-#   V3  a PathFollow IS the Follow a Path behavior
-#   V6  the text words: the named format, zeropad, capitalised, and the regular expressions
-#   V7  the numbers a profiling script reads by name, and the wait that freezes the game
+#   A PathFollow IS the Follow a Path behavior
+#   The text words: the named format, zeropad, capitalised, and the regular expressions
+#   The numbers a profiling script reads by name, and the wait that freezes the game
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -49,7 +49,7 @@ func _on_hit(dir: Vector2) -> void:
 	OS.delay_msec(500)
 """
 
-## V1. The physics statements, as "object ▸ sentence". Each is claimed only on a body the sheet
+## The physics statements, as "object ▸ sentence". Each is claimed only on a body the sheet
 ## KNOWS is one, which the last two gates below check by asking a plain node the same questions.
 static var PHYSICS_STATEMENTS: Dictionary = {
 	"mass = 2.0": "Crate ▸ Physics  Set mass to 2",
@@ -72,14 +72,14 @@ static var PHYSICS_STATEMENTS: Dictionary = {
 	"zone.gravity = 200": "zone ▸ Physics  Set world gravity to 200"
 }
 
-## V1. The two questions a body answers.
+## The two questions a body answers.
 static var PHYSICS_CONDITIONS: Dictionary = {
 	"sleeping": "Crate ▸ Physics  Is sleeping",
 	"not sleeping": "Crate ▸ Physics  Is awake",
 	"freeze": "Crate ▸ Physics  Is immovable"
 }
 
-## V2. The form's own words, one Control at a time.
+## The form's own words, one Control at a time.
 static var UI_STATEMENTS: Dictionary = {
 	"name_edit.placeholder_text = \"Your name\"":
 		"name_edit ▸ Text input  Set placeholder to \"Your name\"",
@@ -95,7 +95,7 @@ static var UI_STATEMENTS: Dictionary = {
 	"tooltip_text = \"Heals 10 hp\"": "Inventory ▸ Set tooltip to \"Heals 10 hp\""
 }
 
-## V3. The path walk, in the Follow a Path behavior's words. The row belongs to the object that
+## The path walk, in the Follow a Path behavior's words. The row belongs to the object that
 ## MOVES, not to the follower node that carries the distance.
 static var PATH_STATEMENTS: Dictionary = {
 	"follow.progress += speed * delta": "Enemy ▸ Follow a Path  Move along path at speed",
@@ -106,7 +106,7 @@ static var PATH_STATEMENTS: Dictionary = {
 	"curve.add_point(spot)": "Enemy ▸ Follow a Path  Add path point spot"
 }
 
-## V6 / V7. The values that read as one word, and the one statement that says what it costs.
+## The values that read as one word, and the one statement that says what it costs.
 static var VALUE_READINGS: Dictionary = {
 	"Engine.get_frames_drawn()": "tickcount",
 	"Engine.get_frames_per_second()": "fps",
@@ -243,7 +243,7 @@ static func _opened_file() -> bool:
 	for forbidden: String in ["Set gravity_scale to 0.5", "Set freeze to true",
 			"Set linear_damp to 2"]:
 		ok = _check("no row still reads \"%s\"" % forbidden, whole.contains(forbidden), false) and ok
-	# V7. The Doctor sees the same line the reading warns about, so the finding and the chip can
+	# The Doctor sees the same line the reading warns about, so the finding and the chip can
 	# never disagree about which call blocks.
 	ok = _check("the Doctor names the blocking wait",
 		"|".join(EventSheetProjectDoctor.blocking_wait_calls(SOURCE)), "OS.delay_msec(500)") and ok

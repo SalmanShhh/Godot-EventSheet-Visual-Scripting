@@ -1,4 +1,4 @@
-# Godot EventSheets - R40: a global is declared once on an autoload and used everywhere.
+# Godot EventSheets - a global is declared once on an autoload and used everywhere.
 #
 # Pins the VALUES of the three answers: what an autoload DECLARES (read straight off its file, so a
 # file nobody has opened still answers), what the folded "Global variables used here" folder SAYS,

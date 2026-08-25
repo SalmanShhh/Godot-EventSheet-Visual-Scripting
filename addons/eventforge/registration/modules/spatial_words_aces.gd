@@ -52,7 +52,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## X1. Moving and turning: one of six directions at a speed, the three turns in degrees a second, and
+## Moving and turning: one of six directions at a speed, the three turns in degrees a second, and
 ## turning toward a facing rather than snapping to it.
 static func _append_move(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "MoveInDirection3D", "Move In Direction",
@@ -120,7 +120,7 @@ static func _append_move(descriptors: Array[ACEDescriptor]) -> void:
 		.described("The facing that looks along a direction - what Rotate Toward Facing turns toward."))
 
 
-## X5. Placing things in the world: on another object, and tilted onto the ground's slope.
+## Placing things in the world: on another object, and tilted onto the ground's slope.
 static func _append_place(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "SetPositionToObject3D",
 		"Set Position To Another Object", ACEDescriptor.ACEType.ACTION,
@@ -130,7 +130,7 @@ static func _append_place(descriptors: Array[ACEDescriptor]) -> void:
 			"expression")],
 		PAGE_PLACE, "Set position to [b]{other}[/b]", "Node3D")
 		.described("Puts a 3D node exactly where another one is - how a spawn point, a socket or a respawn marker is used."))
-	# X5. The snap-to-floor run, written exactly as the reading recognises it - the ray straight down
+	# The snap-to-floor run, written exactly as the reading recognises it - the ray straight down
 	# from where the object is, the cast, the is-empty guard and the hit taken back. Four lines,
 	# because that is what Godot needs; one row, because that is what it means.
 	descriptors.append(F.make_descriptor("Core", "PlaceOnGround3D",
@@ -154,7 +154,7 @@ static func _append_place(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Tilts a 3D node so its up points the way the ground does - the line that makes a dropped crate sit flat on a hill."))
 
 
-## X3. The facing questions: how far off facing something is, and which side of an object it is on.
+## The facing questions: how far off facing something is, and which side of an object it is on.
 static func _append_see(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "IsWithinAngleOfFacing3D",
 		"Is Within Angle Of Facing", ACEDescriptor.ACEType.CONDITION,
@@ -195,7 +195,7 @@ static func _append_see(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Asks whether a place is off this object's left side - the twin of Is To The Right Of."))
 
 
-## X31. Angle and distance, both ways: the point an angle and a distance name, a ring of things placed
+## Angle and distance, both ways: the point an angle and a distance name, a ring of things placed
 ## evenly around a circle, and the pair of locals that reads a place back as an angle and a distance.
 static func _append_polar(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "PointAtAngle", "Point At Angle",

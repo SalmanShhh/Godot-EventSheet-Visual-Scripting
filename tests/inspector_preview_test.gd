@@ -1,5 +1,5 @@
 # Godot EventSheets - the Inspector preview card's plain-sentence summary
-# (v0.11 chapter 2, P2). The sentence is the beginner-facing statement of what
+# (v0.11 chapter 2). The sentence is the beginner-facing statement of what
 # the Inspector will show, so it is pinned as EXACT STRINGS across a matrix of
 # attribute combinations - a wording drift is a test failure, not a surprise.
 @tool

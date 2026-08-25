@@ -1,4 +1,4 @@
-# R23 - the Input Map read as an object: which actions the project declares, what each one is bound
+# The Input Map read as an object: which actions the project declares, what each one is bound
 # to in the sheet's spelling, its deadzone as a percent, and which object its rows read on.
 #
 # Every check pins a VALUE (the exact words a bar or a row shows), never a count, because the point

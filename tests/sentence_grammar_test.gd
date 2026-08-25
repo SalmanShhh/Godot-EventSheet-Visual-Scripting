@@ -74,7 +74,7 @@ static func _statements() -> bool:
 	ok = _check("signal payload", _read("on_damaged.emit(amount, true)"),
 		"FPSController ▸ Signal On Damaged amount, true") and ok
 	ok = _check("wait", _read("await get_tree().create_timer(0.5).timeout"), "System ▸ ⏳ Wait 0.5 seconds") and ok
-	# R8 - the sheet's own action name, always on, with the layout named the way the file is named.
+	# The sheet's own action name, always on, with the layout named the way the file is named.
 	ok = _check("change scene", _read("get_tree().change_scene_to_file(\"res://menu.tscn\")"),
 		"System ▸ Go to layout Menu") and ok
 	# Refusals: a sentence that is almost right is worse than the code it replaced.
@@ -96,7 +96,7 @@ static func _conditions() -> bool:
 	ok = _check("key down", _read_condition("Input.is_action_pressed(&\"jump\")"), "Keyboard ▸ \"jump\" is down") and ok
 	ok = _check("key pressed", _read_condition("Input.is_action_just_pressed(\"jump\")"),
 		"Keyboard ▸ On \"jump\" pressed") and ok
-	# R4 - an approximate comparison is a QUESTION, and the sheet has a sentence for it. The ≈ glyph
+	# An approximate comparison is a QUESTION, and the sheet has a sentence for it. The ≈ glyph
 	# is still what the same call reads as inside a VALUE, where there is no question being asked.
 	ok = _check("zero approx", _read_condition("is_zero_approx(direction)"),
 		"System ▸ direction is about 0") and ok

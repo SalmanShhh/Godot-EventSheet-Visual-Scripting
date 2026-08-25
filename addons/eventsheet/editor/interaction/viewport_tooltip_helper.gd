@@ -206,7 +206,7 @@ static func fill_codegen_template(template: String, params: Dictionary) -> Strin
 	return filled
 
 
-## S19 - what the ⟡ chip says when the pointer rests on it: the pattern's one-line why, and the
+## What the ⟡ chip says when the pointer rests on it: the pattern's one-line why, and the
 ## promise that the Manual has a page about it. Two lines, because a chip is a name and a name on
 ## its own teaches nothing.
 static func pattern_chip_tooltip(pattern: String) -> String:
@@ -216,7 +216,7 @@ static func pattern_chip_tooltip(pattern: String) -> String:
 	return "%s\n%s" % [why, EventSheetL10n.translate("Open in the Manual")]
 
 
-## S24 - the EVIDENCE line a pattern-read row owes its reader: which pattern it was read as, and the
+## The EVIDENCE line a pattern-read row owes its reader: which pattern it was read as, and the
 ## exact source lines that were the grounds for saying so. A pattern reading is a claim spanning
 ## several lines, so unlike every other reading in this program it cannot be checked by looking at
 ## the one row - this is how it pays that back. "" when the event owns no claim.

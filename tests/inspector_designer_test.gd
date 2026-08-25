@@ -1,4 +1,4 @@
-# Godot EventSheets - the Inspector Designer (whole-sheet Inspector view, P3 slice one).
+# Godot EventSheets - the Inspector Designer (the whole-sheet Inspector view).
 #
 # Pins the entry collection (dict variables in the order the compiler emits them, then tree
 # variables in sheet order,
@@ -36,7 +36,7 @@ static func run() -> bool:
 	var entry_names: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in entries:
 		entry_names.append(str(entry.get("name")))
-	# V2 - the preview lists them in the order the compiler emits, which is the order they were
+	# The preview lists them in the order the compiler emits, which is the order they were
 	# WRITTEN: a preview in a different order than Godot will show is the wrong answer.
 	all_passed = _eq("dict vars come in author order, then tree vars; unexported ones are skipped",
 		entry_names, PackedStringArray(["speed", "difficulty", "loot"])) and all_passed

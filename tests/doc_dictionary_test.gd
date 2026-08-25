@@ -1,4 +1,4 @@
-# Godot EventSheets - U22 the generated GDScript-to-events dictionary, and U20 the page that
+# Godot EventSheets - the generated GDScript-to-events dictionary, and the page that
 # introduces it.
 #
 # The dictionary exists to be PROOF, so the gate is the whole point: the page is regenerated here

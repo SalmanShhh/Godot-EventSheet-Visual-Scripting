@@ -1,4 +1,4 @@
-# Godot EventSheets - L3/L5: the three lighting behaviours as rows on a sheet (preview module).
+# Godot EventSheets - the three lighting behaviours as rows on a sheet (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The sheet is authored the way a user authors one - the packs' own triggers, conditions and actions,

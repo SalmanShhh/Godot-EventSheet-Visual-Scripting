@@ -64,7 +64,7 @@ static func _has_cell(cells: PackedStringArray, needle: String) -> bool:
 	return false
 
 
-## N4 - a row reaching through a registered autoload names the autoload in the object column, with
+## A row reaching through a registered autoload names the autoload in the object column, with
 ## its "(global)" note, and leaves the bare member in the sentence. Both lanes: the action lane
 ## reads it through the shared grammar, the condition lane through a definition's display template,
 ## and the two must agree.
@@ -89,7 +89,7 @@ static func _autoloads_read_as_globals() -> bool:
 	return passed
 
 
-## N4 - a pack node mounted under the script's own node hands its rows to that object, with the
+## A pack node mounted under the script's own node hands its rows to that object, with the
 ## pack's display name as the leading chip.
 static func _packs_read_as_behaviours() -> bool:
 	var passed: bool = true
@@ -111,7 +111,7 @@ static func _packs_read_as_behaviours() -> bool:
 	return passed
 
 
-## N10 - the census is every object the file uses, once each, in rail order.
+## The census is every object the file uses, once each, in rail order.
 static func _census_lists_every_object() -> bool:
 	var passed: bool = true
 	var census: Array = EventSheetViewportReadingRows.object_census(_sheet())
@@ -147,7 +147,7 @@ static func _census_lists_every_object() -> bool:
 	return passed
 
 
-## N10 - what the object popup answers with, and which of its buttons can do what it says.
+## What the object popup answers with, and which of its buttons can do what it says.
 static func _object_popup_rows() -> bool:
 	var passed: bool = true
 	var sheet: EventSheetResource = _sheet()

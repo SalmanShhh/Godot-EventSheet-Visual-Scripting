@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetReplayRecorderPanel
 extends RefCounted
-# ⏺ Record - the replay recorder's window (V9).
+# ⏺ Record - the replay recorder's window.
 #
 # Record, play the game, Stop, Save as Test Sheet…. Every control the running game sees is reported
 # to the editor with the frame it happened on (the debug compile's replay-recording receiver) and

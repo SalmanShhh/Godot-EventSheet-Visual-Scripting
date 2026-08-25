@@ -170,7 +170,7 @@ The camera follows the midpoint between two players; binding both to the screen 
 neither one can sprint out of view and vanish.
 
 ```
-On Hit Bound -> P1 | show the "wait for your partner" nudge arrow
+On Hit Bound -> Player1 | show the "wait for your partner" nudge arrow
 ```
 
 ### 12. Breakout walls without walls

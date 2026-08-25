@@ -1,7 +1,7 @@
 # EventForge - the Custom Block API registry: kind_id -> EventSheetBlockKind descriptor.
 #
-# Built-in kinds register here in code (P1: Preload Resource + Region marker, the proof kinds).
-# P2 adds zero-config discovery of pack-defined kinds from res://eventsheet_addons/ (the same
+# Built-in kinds register here in code (Preload Resource + Region marker, the proof kinds).
+# Adds zero-config discovery of pack-defined kinds from res://eventsheet_addons/ (the same
 # scan that finds ACE providers). Duplicate kind_ids warn and keep the first registration so
 # resolution stays deterministic.
 @tool
@@ -518,7 +518,7 @@ class RegionBlockKind extends EventSheetBlockKind:
 		# and the block listings say the same words about the same fence, unnamed ones included.
 		return EventSheetRegionFacts.display_name(block)
 
-	# R1 - a region is a FOLD MARK, not a group: it holds no locals, it cannot be switched off, and
+	# A region is a FOLD MARK, not a group: it holds no locals, it cannot be switched off, and
 	# it is two plain lines of the file rather than a resource. Asking for the region look through
 	# the public hook is what stopped it borrowing the group bar's chrome.
 	func row_style(_entry: Resource) -> String:

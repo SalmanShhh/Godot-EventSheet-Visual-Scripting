@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetHealthCard
 extends RefCounted
-# THE SHEET HEALTH CARD (V20) - how one sheet is doing, at a glance, where the sheet is picked.
+# THE SHEET HEALTH CARD - how one sheet is doing, at a glance, where the sheet is picked.
 #
 #   player.gd                                                   health
 #   reads as events 100% · 4 patterns · 2 adoptable

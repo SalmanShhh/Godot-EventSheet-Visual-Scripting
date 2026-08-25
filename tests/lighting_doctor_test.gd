@@ -1,4 +1,4 @@
-# L8 - the five ways a light silently does nothing, and the section of the Doctor that says so.
+# The five ways a light silently does nothing, and the section of the Doctor that says so.
 #
 # Lighting is the part of a game that fails without a word: the node is in the scene, the row runs, no
 # error is printed, and the screen does not change. Every claim here is therefore a fact read off a

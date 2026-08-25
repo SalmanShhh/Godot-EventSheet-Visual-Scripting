@@ -2,7 +2,7 @@
 class_name EditorToolScopingTest
 extends RefCounted
 
-# Pins the three gates that keep the Editor object honest (R32 / R33 / R35):
+# Pins the three gates that keep the Editor object honest:
 #   1. the picker offers the Editor object on a @tool sheet and nowhere else - its rows call
 #      EditorInterface, which does not exist in a running game;
 #   2. a per-frame event on a @tool sheet says so, because "@tool means this is already running while

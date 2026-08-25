@@ -9,7 +9,7 @@ extends RefCounted
 # works inside the owning node's `_draw` (which is exactly where `draw_chip` is called from).
 
 var _viewport: Control = null
-## M5. One frame per running copy of the game, keyed by the feature tag it was started with - "" for
+## One frame per running copy of the game, keyed by the feature tag it was started with - "" for
 ## a lone run, which is every game not being tested as two players at once. Insertion order is the
 ## order the instances first streamed, so the chips stay in one order across frames.
 var _live_values: Dictionary = {}
@@ -38,9 +38,9 @@ func clear_live_values() -> void:
 		_viewport.queue_redraw()
 
 
-## The "now value" chip for a row, or "" (variable rows whose name has a live frame). V12 - "now",
+## The "now value" chip for a row, or "" (variable rows whose name has a live frame). "now",
 ## never "=": the declaration's own value never changes while the game runs, and a second "= 73" on
-## the row read as though it had. M5 - with two copies of the game running there is one chip per
+## the row read as though it had. With two copies of the game running there is one chip per
 ## instance, each headed by the tag that copy was started with.
 func chip_for(row_data: EventRowData) -> String:
 	var variable_name: String = ""

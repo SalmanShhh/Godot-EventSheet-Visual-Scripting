@@ -139,7 +139,7 @@ static func run() -> bool:
 	return ok
 
 
-## V2 - the folder strip over an OPENED `.gd`. An `@export_group("Movement")` is one folder whether
+## The folder strip over an OPENED `.gd`. An `@export_group("Movement")` is one folder whether
 ## the sheet keeps its variables in the dictionary or as rows of the event tree, so a run of
 ## consecutive member variables sharing one wears the same labelled, foldable strip - and the rows
 ## keep their indent, because a folder never pushes what it holds sideways.

@@ -1,4 +1,4 @@
-# Godot EventSheets - starter events per object type, and the same events for another object (V13).
+# Godot EventSheets - starter events per object type, and the same events for another object.
 #
 # Pins VALUES, not counts: exactly which starters each class offers and what each one READS as, that
 # a class nobody curated still derives its own from its signals, that a starter naming a signal the

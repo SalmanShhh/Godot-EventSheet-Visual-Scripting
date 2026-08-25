@@ -151,7 +151,7 @@ func _render() -> void:
 			_list.set_item_custom_fg_color(ridx, _MUTED)
 
 
-## V20 - what an open sheet says on hover, where a sheet is picked: where it is stored, how much of
+## What an open sheet says on hover, where a sheet is picked: where it is stored, how much of
 ## it reads as events, and the workspace it was opened as part of. Pure, so tests pin it.
 static func hover_text(entry: Dictionary) -> String:
 	var parts: PackedStringArray = PackedStringArray()

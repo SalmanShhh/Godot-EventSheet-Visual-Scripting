@@ -2,7 +2,7 @@
 class_name EventSheetProjectBarGlue
 extends RefCounted
 
-# T13 - what the Project bar MEANS. The bar itself is shell and gestures (it lists the project by
+# What the Project bar MEANS. The bar itself is shell and gestures (it lists the project by
 # kind and says what happened); this decides where each gesture goes, and every destination is
 # something that already exists:
 #
@@ -121,7 +121,7 @@ func _on_entry_activated(route: String, entry: Dictionary) -> void:
 			_reveal_in_filesystem(path)
 
 
-## W1 - a file of the RUNNING editor. It opens as a sheet like any .gd, which means read-only, and
+## A file of the RUNNING editor. It opens as a sheet like any .gd, which means read-only, and
 ## the status line says what that is and where the door out of it is. Nothing special happens on the
 ## way in: the bar on the sheet is what makes this file different, and it says so itself.
 func _open_this_editor_file(path: String) -> void:

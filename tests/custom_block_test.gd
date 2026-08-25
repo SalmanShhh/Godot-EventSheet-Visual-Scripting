@@ -68,7 +68,7 @@ static func run() -> bool:
 	all_passed = _check("the signal kind lifts back to a real SignalRow",
 		signal_claim.get("resource") is SignalRow and (signal_claim.get("resource") as SignalRow).signal_name == "hurt", true) and all_passed
 
-	# ── P2: pack-defined kinds register zero-config from eventsheet_addons/ ──
+	# ── pack-defined kinds register zero-config from eventsheet_addons/ ──────
 	var note_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("demo.note")
 	all_passed = _check("pack-defined kind auto-registers from eventsheet_addons/", note_kind != null, true) and all_passed
 	var note_importer: GDScriptImporter = GDScriptImporter.new()
@@ -230,7 +230,7 @@ static func run() -> bool:
 	all_passed = _check("a bridge-registered kind resolves like any other",
 		EventSheetBlockRegistry.get_kind("test.bridge_kind") == bridge_kind, true) and all_passed
 
-	# ── P3: every registered kind is reachable from the command palette ──
+	# ── every registered kind is reachable from the command palette ──────
 	var palette_titles: Array = []
 	for command: Dictionary in dock._command_palette_commands():
 		palette_titles.append(str(command.get("title", "")))

@@ -19,7 +19,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const CAT := "Editor Tools"
 
-## W23. The pages the rows below are filed on, all under the same "Editor Tools: " root the tool-sheet
+## The pages the rows below are filed on, all under the same "Editor Tools: " root the tool-sheet
 ## gate and the "Editor" object label test the prefix of. Everything that is a one-off CHORE - open a
 ## scene, select a node, ask the editor a question - stays on the flat root, because that is the page
 ## a reader lands on and it should not be empty; the rows that belong to one named surface get a page.
@@ -91,7 +91,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ExportHasFeature", "Export Has Feature", ACEDescriptor.ACEType.CONDITION, "features.has({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "A feature tag of the export preset (mobile, web, windows, or one you added yourself).", "feature_tag")], CAT_PIPELINE, "the export has feature {feature}")
 		.described("True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop."))
 
-	# ── The import reaction (R33). Deliberately shaped like the bake step above: a plain named
+	# ── The import reaction. Deliberately shaped like the bake step above: a plain named
 	# handler the editor's import hook calls, so an opened tool reads it straight back as this event.
 	descriptors.append(F.make_descriptor("Core", "OnFileImported", "On File Imported", ACEDescriptor.ACEType.TRIGGER, "", "_on_files_imported", [], CAT_PIPELINE, "On file imported")
 		.described("Runs just after Godot finishes importing assets - the paths that landed arrive as `paths`. The place to rename what a designer dropped in, check an atlas for the wrong settings, or write a manifest."))
@@ -100,7 +100,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# on its own is one the picker would offer everywhere and break everywhere else. Inside the event
 	# the identifier is simply there to write.)
 
-	# ── W10 / W23. The command tool: the four rows a script the Godot binary runs headless is made of.
+	# ── The command tool: the four rows a script the Godot binary runs headless is made of.
 	# The READING of each of these already ships (a hand-written tools/*.gd reads "Command tool ▸ On
 	# run", "Finish with code 1", "Command tool.Arguments"), and these are the picker's half of that
 	# same sentence: each row emits EXACTLY the line the reading recognises, so a tool authored here
@@ -117,7 +117,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## W23. Blurbs for the three pages this module opens. The root "Editor Tools" blurb is not named here:
+## Blurbs for the three pages this module opens. The root "Editor Tools" blurb is not named here:
 ## it is seeded elsewhere and the merge keeps the first answer registered for a name.
 static func section_descriptions() -> Dictionary:
 	return {

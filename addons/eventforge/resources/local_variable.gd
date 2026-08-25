@@ -14,7 +14,7 @@ extends Resource
 ## Mutually exclusive with @export / @onready / const. Set on lift from a `static var` line and byte-gated,
 ## so a hand-written static var opens as an editable row instead of a verbatim block.
 @export var is_static: bool = false
-## V4 - a Local by scope, a member in code. The row stays under the event that declares it and reads
+## A Local by scope, a member in code. The row stays under the event that declares it and reads
 ## "Static local number hits_taken = 0", but GDScript has no function-scope `static`, so the value can
 ## only survive between runs of the event as a class member: the compiler hoists the declaration to
 ## `var _hits_taken := 0` and rewrites the event's uses of the bare name to it. Byte-gated on lift

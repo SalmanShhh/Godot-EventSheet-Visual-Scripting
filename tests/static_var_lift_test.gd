@@ -1,4 +1,4 @@
-# EventForge (gap G4) - a class-level `static var` opens as a first-class editable variable row instead of a
+# EventForge - a class-level `static var` opens as a first-class editable variable row instead of a
 # verbatim block. On emit, LocalVariable.is_static emits `static var` in the plain-var branch (mutually
 # exclusive with @export/@onready/const); on lift, `_try_lift_variable` strips a `static ` prefix (mirroring
 # @onready) and flags is_static, gated by the existing emit-and-compare so a static var that cannot re-emit

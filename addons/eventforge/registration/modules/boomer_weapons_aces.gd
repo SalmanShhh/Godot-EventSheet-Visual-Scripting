@@ -1,4 +1,4 @@
-# EventForge module - Weapons in 3D (X25): hitscan, explosions, an arsenal and the secrets counter.
+# EventForge module - Weapons in 3D: hitscan, explosions, an arsenal and the secrets counter.
 #
 # The FPS Controller pack moves the player and the Bullet 3D pack throws things; what a fast 3D
 # shooter still writes out by hand is the ray from the middle of the screen with the damage on the
@@ -23,7 +23,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const WEAPONS := "Weapons 3D"
 
-## Y18. The other half of a level of this shape: what the things IN it do. Filed apart from the
+## The other half of a level of this shape: what the things IN it do. Filed apart from the
 ## weapons because a reader looking for "why did the second guard come running" is not looking on
 ## the same page as one looking for the shotgun.
 const ENEMIES := "Enemies 3D"
@@ -111,7 +111,7 @@ static func _secrets(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when this secret has already been counted - the guard on the chime and the pop-up."))
 
 
-## Y18. What a room full of enemies does. Alerting is the noise words aimed at somebody: a noise says
+## What a room full of enemies does. Alerting is the noise words aimed at somebody: a noise says
 ## "something happened over there", an alert says "it was HIM, go". Infighting is the one line in a
 ## hurt handler that turns a rocket splashed across a corridor into a brawl, and it is the reason a
 ## blast that catches two enemies is more interesting than one that catches one.
@@ -148,7 +148,7 @@ static func _enemies(descriptors: Array[ACEDescriptor]) -> void:
 		.described("Makes this one turn on whoever hurt it, but only when the attacker is one of its own kind - so a rocket that splashes two of them starts a fight, and a rocket from you does not make them attack you twice.").featured())
 
 
-## Y18. A pickup that comes back. Hiding it, waiting and showing it again is three lines and a state
+## A pickup that comes back. Hiding it, waiting and showing it again is three lines and a state
 ## nobody enjoys getting right twice; here it is the row it always meant to be.
 static func _pickups(descriptors: Array[ACEDescriptor]) -> void:
 	descriptors.append(F.make_descriptor("Core", "RespawnAfter", "Respawn After",

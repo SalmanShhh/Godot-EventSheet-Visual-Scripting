@@ -1,4 +1,4 @@
-# EventForge (gap G1) - a top-level-OR `if` reverse-lifts as an OR block. `if a or b:` used to lift as ONE
+# EventForge - a top-level-OR `if` reverse-lifts as an OR block. `if a or b:` used to lift as ONE
 # opaque Expression-Is-True term (byte-exact but flattened); now each top-level ` or ` term becomes its own
 # condition and the event's condition_mode is set to OR, so the row reads as an event-sheet "Or block". The
 # ` or ` split runs FIRST, matching GDScript precedence (`or` binds loosest): a mixed `a and b or c` is an

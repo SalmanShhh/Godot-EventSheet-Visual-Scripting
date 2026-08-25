@@ -38,19 +38,19 @@ const DEFAULTS: Dictionary = {
 	# Collapse / expand the selected block. Unbound by default - Left / Right already do it and are
 	# grammar - but it exists so the "another event-sheet editor" preset can put it on Ctrl+E.
 	"toggle_collapse": "",
-	# The three Preview gestures (T15). Godot's own run keys, so the sheet's buttons and the editor's
+	# The three Preview gestures. Godot's own run keys, so the sheet's buttons and the editor's
 	# play bar never disagree about what F5 means.
 	"preview_layout": "F6",
 	"preview_project": "F5",
 	"debug_layout": "",
 	"project_search": "Ctrl+Shift+F",
-	# R33. Run an editor tool from its own sheet. Ctrl+Shift+X because X is the "execute" chord every
+	# Run an editor tool from its own sheet. Ctrl+Shift+X because X is the "execute" chord every
 	# script editor uses, and a tool sheet is the only sheet where "run" means something other than
 	# playing the game.
 	"run_editor_tool": "Ctrl+Shift+X",
 	"history_back": "Alt+Left",
 	"history_forward": "Alt+Right",
-	# Live edit (V8): save AND ask the running game to reload it. Deliberately a sibling of Save
+	# Live edit: save AND ask the running game to reload it. Deliberately a sibling of Save
 	# rather than a chord on it - it is a different promise, and it does nothing at all when there
 	# is no game running.
 	"apply_to_running_game": "Ctrl+Alt+S",
@@ -125,7 +125,7 @@ const ORDER: Array = [
 static func label_for(action: String) -> String:
 	return str(LABELS.get(action, action.capitalize()))
 
-# ── Presets (T19) ─────────────────────────────────────────────────────────────────────────────
+# ── Presets ─────────────────────────────────────────────────────────────────────────────
 #
 # Muscle memory is the cheapest thing to honour. The keys are already MOSTLY the same as the ones an
 # author coming from another event-sheet editor has in their fingers - E / S / C / A / G / Q / V / B

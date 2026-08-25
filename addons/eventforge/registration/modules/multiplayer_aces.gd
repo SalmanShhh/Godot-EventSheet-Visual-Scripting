@@ -2,7 +2,7 @@
 class_name EventForgeMultiplayerACEs
 extends RefCounted
 
-# S10. Godot's high-level multiplayer as ONE object in the sheet's words.
+# Godot's high-level multiplayer as ONE object in the sheet's words.
 #
 # Once a game is connected, a networked script says four things: it sends a message, it asks whether
 # it is the host, it asks whether it owns the object it is running on, and it wants to know its own
@@ -16,7 +16,7 @@ extends RefCounted
 # Everything is filed under one category so the whole vocabulary reads and picks as one object -
 # Multiplayer, standing next to System, exactly as the Editor object does.
 #
-# E1 adds the other half of a networked script: joining a game at all. Hosting, joining, leaving,
+# Adds the other half of a networked script: joining a game at all. Hosting, joining, leaving,
 # the seven things the connection itself tells a script, and the spawner's own verb. Each one names
 # exactly the Godot call it compiles to (`ENetMultiplayerPeer.create_server`, `multiplayer_peer`,
 # `MultiplayerAPI`'s signals, `MultiplayerSpawner.spawn`) - nothing here is a networking layer, and
@@ -28,27 +28,27 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 ## The one category every row here is filed under, which is also the object label the canvas draws.
 const CATEGORY := "Multiplayer"
 
-## M1. The three shelves the Add event picker sorts the triggers onto, spelled as the picker's own
+## The three shelves the Add event picker sorts the triggers onto, spelled as the picker's own
 ## "Parent: Sub" section names. ONLY the picker reads them: every descriptor keeps CATEGORY, so the
 ## object column still says "Multiplayer" on every row.
 const SECTION_PLAYERS := "Multiplayer: Players"
 const SECTION_CONNECTION := "Multiplayer: Connection"
 const SECTION_SCENES := "Multiplayer: Scenes"
 
-## E3. The two ways a host can treat a message from a client, as the dropdown behind "Relay messages
+## The two ways a host can treat a message from a client, as the dropdown behind "Relay messages
 ## between players". The words are the reading; the keys are the booleans the line assigns.
 const RELAY_CHOICES: Array = [
 	{"key": "true", "label": "on", "note": "The host forwards a client's message on to the other clients."},
 	{"key": "false", "label": "off", "note": "A client reaches the host only, which is what a host-decides game wants."}
 ]
 
-## E3. The tags the Started As row suggests before it lists the project's own. host and client are
+## The tags the Started As row suggests before it lists the project's own. Host and client are
 ## what Play as host + client sets on the two test instances; dedicated_server is Godot's own.
 const SERVER_ROLE_TAGS: Array[String] = ["\"host\"", "\"client\"", "\"dedicated_server\""]
 
 ## The peer classes a game can talk over, as the dropdown behind "using". ENet is Godot's own
 ## default; the other two exist because a browser build cannot open a raw UDP socket.
-## M6. Each kind carries the line the dropdown shows UNDER it - what the choice costs and when it is
+## Each kind carries the line the dropdown shows UNDER it - what the choice costs and when it is
 ## the right one - so the reader picks on the facts rather than on the class name. The line is read by
 ## the params dialog through the option's own `note`, the same source a pack's dropdown uses.
 const PEER_KINDS: Array = [
@@ -72,7 +72,7 @@ const PEER_KINDS: Array = [
 const HOST_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer_{uid}"
 const JOIN_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_client({address}, {port})\nmultiplayer.multiplayer_peer = __peer_{uid}"
 
-## M4. The four lines "Spawn a scene" writes: make the copy, name it, put it where it goes, and hand
+## The four lines "Spawn a scene" writes: make the copy, name it, put it where it goes, and hand
 ## it to the node the spawner watches. Four because that is what Godot's AUTO spawn IS - a scene in
 ## the spawner's own list, added under its spawn path, copied from there onto every peer without a
 ## factory function anywhere. The name is set BEFORE the child goes in, because the name is what
@@ -103,7 +103,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## E1. Hosting, joining, leaving, and the spawner's verb - the actions a lobby is made of.
+## Hosting, joining, leaving, and the spawner's verb - the actions a lobby is made of.
 static func _connection_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	descriptors.append(F.make_descriptor("Core", "HostGame", "Host A Game", ACEDescriptor.ACEType.ACTION, HOST_TEMPLATE, "", [
@@ -128,8 +128,8 @@ static func _connection_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## E1. The five things `MultiplayerAPI` itself says. Signal triggers like every other one: the sheet
-## connects them in `_ready`, on the `multiplayer` object rather than on a node in the scene. M1 adds
+## The five things `MultiplayerAPI` itself says. Signal triggers like every other one: the sheet
+## connects them in `_ready`, on the `multiplayer` object rather than on a node in the scene. The lobby vocabulary adds
 ## the two `SceneMultiplayer` says about the handshake, on the same object, for seven in all.
 static func _connection_triggers() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -143,7 +143,7 @@ static func _connection_triggers() -> Array[ACEDescriptor]:
 		.described("Runs on the joining peer when the host never answered or refused it - the wrong address, the wrong port, or a game that is not accepting players."))
 	descriptors.append(F.make_descriptor("Core", "OnTheHostLeft", "On The Host Left", ACEDescriptor.ACEType.TRIGGER, "", "server_disconnected", [], CATEGORY, "On the host left")
 		.described("Runs on every remaining peer when the host goes away. The game is over for them: send them back to the menu here."))
-	# M1 - the two the handshake says, off the same object. A game that checks a password or a token
+	# The two the handshake says, off the same object. A game that checks a password or a token
 	# before a peer counts as joined hears about it here; a game that checks nothing never sees either.
 	descriptors.append(F.make_descriptor("Core", "OnPlayerAuthenticating", "On Player Authenticating", ACEDescriptor.ACEType.TRIGGER, "", "peer_authenticating", [F.make_param("id", "int", "", "Player", "The id of the peer that is trying to join. It is not in the game yet.")], CATEGORY, "On player authenticating {id}")
 		.described("Runs on the host while a peer is still proving who it is - before On player joined. Answer it with Accept player or Reject player; the bytes the peer sent arrive through the auth callback."))
@@ -152,7 +152,7 @@ static func _connection_triggers() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## E3. Lobby control and the authentication handshake: the rows a host needs once players are
+## Lobby control and the authentication handshake: the rows a host needs once players are
 ## actually arriving. Every one names the MultiplayerAPI call it compiles to, which is also the line
 ## the reading recognises when a project wrote it by hand.
 static func _lobby_descriptors() -> Array[ACEDescriptor]:
@@ -196,7 +196,7 @@ static func _relay_param() -> ACEParam:
 	return parameter
 
 
-## M1. What a script asks ABOUT the connection: whether there is one, which build this is, who else
+## What a script asks ABOUT the connection: whether there is one, which build this is, who else
 ## is in the game, and who sent the message being handled.
 static func _state_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -221,7 +221,7 @@ static func _state_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## M4 / E3. The two nodes Godot hands a networked scene to, as verbs. A `MultiplayerSpawner` makes
+## The two nodes Godot hands a networked scene to, as verbs. A `MultiplayerSpawner` makes
 ## one copy of a scene on every peer at once; a `MultiplayerSynchronizer` keeps the properties it
 ## lists in step and decides which players are allowed to see them at all. Both are configured in the
 ## Inspector and neither has ever had a word in the sheet - these are their rows, each naming the
@@ -258,7 +258,7 @@ static func _scene_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## M4. The three things the scene's own two nodes say. Signal triggers like every other one, but on
+## The three things the scene's own two nodes say. Signal triggers like every other one, but on
 ## the NODE rather than on `multiplayer`: the sheet connects them in `_ready` to the spawner or the
 ## synchronizer the event names, which is the spelling a hand-written project already uses.
 static func _scene_triggers() -> Array[ACEDescriptor]:
@@ -279,7 +279,7 @@ static func _scene_triggers() -> Array[ACEDescriptor]:
 static func section_descriptions() -> Dictionary:
 	return {
 		CATEGORY: "Playing together over a network: hosting and joining a game, what the connection tells you, the messages peers send each other, who is the host, and who owns which object.",
-		# M1 - the three shelves the Add event picker sorts these triggers onto. WHICH trigger lands on
+		# The three shelves the Add event picker sorts these triggers onto. WHICH trigger lands on
 		# which is derived from the trigger itself (ACEPickerDialog.multiplayer_group_key), so one added
 		# later is filed without a list being edited.
 		SECTION_PLAYERS: "What one player did: arrived, left, or is still proving who it is. Each of these hands you that player's id.",

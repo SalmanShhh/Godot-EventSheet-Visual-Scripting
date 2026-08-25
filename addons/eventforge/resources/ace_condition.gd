@@ -9,7 +9,7 @@ extends Resource
 @export var params: Dictionary = {}
 @export var parameters: Dictionary = {} # Backwards-compatible alias for early Phase 1 .tres files.
 @export var negated: bool = false
-## K4. An inverted comparison normally writes the OPPOSITE OPERATOR (`hp > 0`, not `not (hp <= 0)`) -
+## An inverted comparison normally writes the OPPOSITE OPERATOR (`hp > 0`, not `not (hp <= 0)`) -
 ## same question, one fewer pair of brackets. Both spellings are the same row and read the same way;
 ## this remembers that the file this row was lifted from wrote the long one, so re-emitting it
 ## reproduces the source byte for byte. False on every authored row, which keeps the flip the default.

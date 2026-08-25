@@ -1,12 +1,12 @@
-# EventForge - W12 / W13 / W14: the three readings a TOOL script needed most.
+# EventForge - the three readings a TOOL script needed most.
 #
-#   W12  a multi-line `{...}` / `[...]` used as a VALUE (returned, emitted, appended, declared)
+#   A multi-line `{...}` / `[...]` used as a VALUE (returned, emitted, appended, declared)
 #        reads as ONE row: the statement's own sentence, the word table / list where the literal
 #        sat, and each entry as a named chip. The orphan `}` / `})` / `],` row disappears into it.
-#   W13  a function handed around as a VALUE reads as an ƒ chip, a Callable local reads
+#   A function handed around as a VALUE reads as an ƒ chip, a Callable local reads
 #        `Local function`, `c.call(x)` reads Call c, `c.is_valid()` reads `c is set`, and a
 #        one-line map / filter lambda reads in the Array ACEs' own words.
-#   W14  a receiver whose declared CLASS the sheet knows names its object column by that class,
+#   A receiver whose declared CLASS the sheet knows names its object column by that class,
 #        humanized with the plugin prefix dropped, its own name muted beside it.
 #
 # All three are DISPLAY-ONLY, so the byte gates below are the point: the same sheet that renders
@@ -16,7 +16,7 @@
 class_name ValueLiteralRowsTest
 extends RefCounted
 
-## A function body holding the four shapes the mockup drew: a returned table, a table passed to a
+## A function body holding the four shapes a table can be written as: a returned table, a table passed to a
 ## call, a nested table, and a declared list. Every one of them is written over several lines, which
 ## is what the importer splits into one verbatim row per line.
 const LITERAL_SOURCE := """extends Node
@@ -50,7 +50,7 @@ func widths() -> Array:
 static func run() -> bool:
 	var ok: bool = true
 
-	# ── W12: the run is recognised, and the rows it consumes vanish into the lead ──
+	# ── the run is recognised, and the rows it consumes vanish into the lead ───────
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(LITERAL_SOURCE)
 	sheet.external_source_path = "user://w12_literal.gd"
 	ok = _check("the opened file reproduces byte-identically",
@@ -94,7 +94,7 @@ static func run() -> bool:
 	ok = _check("the statement BEFORE the literal is not part of the run",
 		(widths_groups["consumed"] as Dictionary).has(0), false) and ok
 
-	# ── W12: the classifier refuses what it cannot account for ──
+	# ── the classifier refuses what it cannot account for ───────
 	ok = _check("a wrapped CALL is not a literal",
 		EventSheetValueLiteralRows.groups(_raw_rows(["foo(", "\tbar,", ")"]))["leads"].is_empty(), true) and ok
 	ok = _check("an unbalanced run is refused",
@@ -107,7 +107,7 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.chip_text((nested.get("entries", []) as Array)[0], true),
 		"outer = table (inner = 1)") and ok
 
-	# ── W12: the fold, and the hover that never hides an entry ──
+	# ── the fold, and the hover that never hides an entry ───────
 	var long_run: Array = _raw_rows(["return {", "\t\"a\": 1,", "\t\"b\": 2,", "\t\"c\": 3,", "\t\"d\": 4,", "}"])
 	var long_lead: Dictionary = _lead(EventSheetValueLiteralRows.groups(long_run))
 	ok = _check("four entries is one more than the fold shows",
@@ -116,7 +116,7 @@ static func run() -> bool:
 		EventSheetValueLiteralRows.full_text(long_lead.get("entries", []), "{", true),
 		"table: a = 1 · b = 2 · c = 3 · d = 4") and ok
 
-	# ── W12 authoring: a chip edit rewrites ITS row, and the file still round-trips ──
+	# ── authoring: a chip edit rewrites ITS row, and the file still round-trips ──────
 	var edit_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(LITERAL_SOURCE)
 	edit_sheet.external_source_path = "user://w12_edited.gd"
 	var edit_event: EventRow = _event_of(edit_sheet, "snapshot")
@@ -138,7 +138,7 @@ static func run() -> bool:
 		str(SheetCompiler.compile(edit_sheet, "user://w12_edited.gd").get("output", "")),
 		LITERAL_SOURCE.replace("\t\t\"span_index\": span_index,", "\t\t\"span_index\": 7,")) and ok
 
-	# ── W12 measured: the plugin's own biggest file, before and after ──
+	# ── measured: the plugin's own biggest file, before and after ──────
 	# The number that matters is that the collapse CLAIMS the shape at all on real code: these are
 	# the rows that were bare literal entries and orphan brackets, and every one of them is now an
 	# entry chip on a row that says what the statement does.
@@ -147,7 +147,7 @@ static func run() -> bool:
 	ok = _check("and they take at least a hundred bare lines with them",
 		int(measured["claimed"]) >= 100, true) and ok
 
-	# ── W13: a function handed around as a value ──
+	# ── a function handed around as a value ───────
 	var function_context: Dictionary = {"function_params": {"_open_sheet_in_workspace": []}}
 	ok = _check("a bare function name is an ƒ chip",
 		EventSheetSentence.expression_text("_open_sheet_in_workspace", function_context),
@@ -173,7 +173,7 @@ static func run() -> bool:
 		"rows those where ready") and ok
 	ok = _check("a lambda with a BODY is left as code",
 		EventSheetSentence.lambda_over_list_words("rows.map(func(r):\n\treturn r.name)", {}), "") and ok
-	# W13, the way back: the words the chip shows name the function they came from, and words that
+	# The way back: the words the chip shows name the function they came from, and words that
 	# name nothing this sheet declares resolve to nothing rather than to a guess.
 	ok = _check("the chip's words name the function behind them",
 		EventSheetSentence.function_reference_name("ƒ Open Sheet In Workspace", function_context),
@@ -184,7 +184,7 @@ static func run() -> bool:
 		EventSheetSentence.function_reference_name("Open Sheet In Workspace", function_context), "") and ok
 	ok = _function_chip_span() and ok
 
-	# ── W14: the object column says what the receiver IS ──
+	# ── the object column says what the receiver IS ───────
 	ok = _check("the plugin prefix comes off and the acronym stays",
 		EventSheetViewportReadingRows.class_object_label("EventSheetACERegistry"), "ACE registry") and ok
 	ok = _check("a two-word class reads as two words",
@@ -208,7 +208,7 @@ static func run() -> bool:
 	return ok
 
 
-## W13. The ƒ chip on a real row is a span of its OWN, carrying the raw name a click jumps to -
+## The ƒ chip on a real row is a span of its OWN, carrying the raw name a click jumps to -
 ## and splitting it off changes not one word of what the row says. Both halves are pinned here,
 ## because a split that quietly dropped or reordered a word would still look like a working link.
 static func _function_chip_span() -> bool:

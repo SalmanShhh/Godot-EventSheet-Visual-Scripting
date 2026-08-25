@@ -1,4 +1,4 @@
-# Godot EventSheets - V2. The globals a sheet USES, as rows at the top of it.
+# Godot EventSheets - The globals a sheet USES, as rows at the top of it.
 #
 # A global is declared once, on an autoload, and read everywhere. Until these rows the only way to
 # see which ones a sheet touched was to read every parameter in it: the declaration lived in another

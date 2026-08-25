@@ -44,7 +44,7 @@ const KIND_TUTORIAL := "tutorial"
 const KIND_PATTERNS := "patterns"
 const KIND_PATTERN := "pattern"
 const KIND_DICTIONARY := "dictionary"
-## W21. The editor-building words: what this sheet calls each of Godot's editor concepts, and why.
+## The editor-building words: what this sheet calls each of Godot's editor concepts, and why.
 const KIND_EDITOR_WORDS := "editorwords"
 
 ## The kinds a "reference:" id may name, so an unknown one fails loudly instead of drawing blank.

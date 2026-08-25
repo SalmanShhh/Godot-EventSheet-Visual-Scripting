@@ -25,7 +25,7 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## V2 - "Sort A-Z" on a variable row's menu. The list reads in author order now, so alphabetical is a
+## "Sort A-Z" on a variable row's menu. The list reads in author order now, so alphabetical is a
 ## thing you ASK for - and asking WRITES it: the sheet's own dictionary is rebuilt in name order and
 ## the declarations placed in the event list are re-laid in name order at the very slots they already
 ## occupy, so nothing else in the file moves. One undo step, through the funnel.
@@ -74,7 +74,7 @@ func _on_add_global_variable_requested() -> void:
 	_dock._variable_dlg.open("global")
 
 
-## V8. "Instance variable…" on the Add submenu: the dialog with the sheet's own scope pre-set, which
+## "Instance variable…" on the Add submenu: the dialog with the sheet's own scope pre-set, which
 ## is the scope an author means nine times out of ten and had to pick by hand every time.
 func _on_add_instance_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
@@ -82,7 +82,7 @@ func _on_add_instance_variable_requested() -> void:
 	_dock._variable_dlg.open(EventSheetVariableSentence.SCOPE_INSTANCE)
 
 
-## P3. The Parameters dialog's "Add hpp…" fix: the Add variable dialog opens on the name that was
+## The Parameters dialog's "Add hpp…" fix: the Add variable dialog opens on the name that was
 ## typed into the parameter, so the answer to "that is not a variable" is one click and one form,
 ## not a cancel and a hunt through the Add menu. The Parameters dialog re-reads its variables the
 ## moment focus comes back to it, so the new name is in the list without anyone asking.
@@ -104,7 +104,7 @@ func _on_add_local_variable_requested() -> void:
 	_dock._variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
 
 
-## V4. A Local dragged to the top of the sheet stops belonging to one event and becomes a variable of
+## A Local dragged to the top of the sheet stops belonging to one event and becomes a variable of
 ## the object. The Add variable dialog opens on Instance with everything the local already said filled
 ## in, so what the reader confirms is the NEW SENTENCE - and the local is dropped only when they do,
 ## in the same undo step that writes the variable it became (see the promote_from_event context key).
@@ -153,7 +153,7 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 
 
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
-	# V2 - a "globals used here" row stands for a declaration in ANOTHER file. Editing it opens that
+	# A "globals used here" row stands for a declaration in ANOTHER file. Editing it opens that
 	# file as a sheet, where the declaration can actually change; there is nothing here to edit.
 	var declared_in: String = str(metadata.get("include_path", "")).strip_edges()
 	if not declared_in.is_empty():
@@ -205,7 +205,7 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_variable_inspector()
 
 
-## E2 - the scene's word about the variable the menu is open on: `{}` unless a synchronizer already
+## The scene's word about the variable the menu is open on: `{}` unless a synchronizer already
 ## keeps it in step. A local never can - it lives inside an event, and a synchronizer replicates a
 ## property of the object.
 func context_variable_sync_entry() -> Dictionary:
@@ -215,7 +215,7 @@ func context_variable_sync_entry() -> Dictionary:
 		_scene_replication().get("synced", []), str(_context_variable.get("name", "")))
 
 
-## E2 - the synchronizer this sheet's scene already has and could be asked to carry the variable, ""
+## The synchronizer this sheet's scene already has and could be asked to carry the variable, ""
 ## when the scene has none (or when there is no scene at all).
 func context_variable_synchronizer() -> String:
 	if _context_variable.is_empty() or str(_context_variable.get("scope", "")) == "local":
@@ -224,14 +224,14 @@ func context_variable_synchronizer() -> String:
 	return str((synchronizers[0] as Dictionary).get("name", "")) if not synchronizers.is_empty() else ""
 
 
-## E2 - the node a scene runs this sheet on: what "Add a synchronizer to X…" names, and where the
+## The node a scene runs this sheet on: what "Add a synchronizer to X…" names, and where the
 ## node would go. "" when no scene runs it, which is what gates the whole menu off - replication is
 ## a fact of a scene, and a script nothing instantiates has no object to keep in step.
 func context_variable_scene_node() -> String:
 	return str((_scene_replication().get("host", {}) as Dictionary).get("node_name", "")).strip_edges()
 
 
-## E2 - "Keep in step ▸": puts the clicked variable in one of the three modes, takes it out of all
+## "Keep in step ▸": puts the clicked variable in one of the three modes, takes it out of all
 ## of them, or adds the synchronizer a scene has yet to be given. Every one of them is a change to
 ## the SCENE, so the scene's own undo owns it and the status line says what happened either way.
 func _on_variable_sync_menu_id_pressed(id: int) -> void:
@@ -259,9 +259,9 @@ func _on_variable_sync_menu_id_pressed(id: int) -> void:
 		_dock._refresh_after_edit()
 
 
-## E2 - puts one variable into one of the three replication modes, or takes it out of all of them.
+## Puts one variable into one of the three replication modes, or takes it out of all of them.
 ## The ONE writer behind every gesture that says "keep this in step": the row's submenu above, the
-## Add/Edit variable dialog's dropdown, and M7's one-click fix. Returns {ok, message}.
+## Add/Edit variable dialog's dropdown, and the one-click fix. Returns {ok, message}.
 ##
 ## A scene with no synchronizer at all gets one first, because "keep this in step" is one decision
 ## and asking for it twice is a worse answer than making the node. Taking a value back OUT never
@@ -308,14 +308,14 @@ func _synchronizer_holding(var_name: String) -> Dictionary:
 	return synchronizers[0] as Dictionary if not synchronizers.is_empty() else {}
 
 
-## E2 - everything the scene says about the sheet in the tab, asked through the one reader (which
+## Everything the scene says about the sheet in the tab, asked through the one reader (which
 ## caches, so a menu that asks three questions costs one read).
 func _scene_replication() -> Dictionary:
 	var sheet: EventSheetResource = _dock._current_sheet
 	return EventSheetSceneReplication.for_script(str(sheet.external_source_path) if sheet != null else "")
 
 
-## V8. "Copy as expression" - the name a parameter field or a hand-written line would need, on the
+## "Copy as expression" - the name a parameter field or a hand-written line would need, on the
 ## clipboard. A global copies as `Game.Score`, because the bare name does not run anywhere else; an
 ## instance variable and a local copy bare, because that is what runs where they live.
 func _copy_context_variable_expression() -> void:
@@ -329,7 +329,7 @@ func _copy_context_variable_expression() -> void:
 	_dock._set_status(EventSheetL10n.translate("Copied %s.") % expression)
 
 
-## V8. "Show in Inspector" - the one gesture that adds `@export` to a variable, and the one that
+## "Show in Inspector" - the one gesture that adds `@export` to a variable, and the one that
 ## takes it away. Only a tree-placed variable carries the flag; a dict variable is exported through
 ## its descriptor, which the instance-variable table already writes.
 func _toggle_context_variable_inspector() -> void:
@@ -380,7 +380,7 @@ func context_variable_exported() -> bool:
 	return bool(descriptor.get("exported", descriptor.get("exposed", true)))
 
 
-## R2. "Add setter" / "Add getter" on a sheet variable's menu. Writes exactly the GDScript the reading
+## "Add setter" / "Add getter" on a sheet variable's menu. Writes exactly the GDScript the reading
 ## takes back apart: `set(value):` with `<name> = value` (which reads as the `On <name> set` trigger and
 ## one `Set <name> to value` action), or `get:` with `return <name>` (which reads as the expression block
 ## and its `Set return value to <name>`). The starting body is the do-nothing one on purpose - it is the
@@ -577,7 +577,7 @@ func _on_variable_dialog_confirmed(
 				"options": Array(combo_options),
 				"attributes": attributes
 			}
-			# V4 - a promoted Local: the declaration it was dragged out of goes in the same undo step
+			# A promoted Local: the declaration it was dragged out of goes in the same undo step
 			# that wrote the variable it became, so the value is never declared in two places at once.
 			var promoted_from: EventRow = context.get("promote_from_event") as EventRow
 			var promoted_index: int = int(context.get("promote_index", -1))
@@ -587,7 +587,7 @@ func _on_variable_dialog_confirmed(
 				return true
 			message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
 			return true
-		# G3 - a Local the dialog was opened FOR a group belongs to that group: the compiler emits it
+		# A Local the dialog was opened FOR a group belongs to that group: the compiler emits it
 		# as a class member under the group's own "group locals" header, so it keeps its value for as
 		# long as the group is on screen rather than for one pass of one event.
 		var owner_group: EventGroup = context.get("group") as EventGroup
@@ -630,7 +630,7 @@ func _on_variable_dialog_confirmed(
 		local_var.default_value = default_value
 		local_var.is_constant = resolved_constant
 		local_var.is_static = is_static and not resolved_constant
-		# V4 - the row stays a local; the flag only says the compiler must hoist its declaration to a
+		# The row stays a local; the flag only says the compiler must hoist its declaration to a
 		# private member so the value survives from one run of the event to the next.
 		local_var.static_local = bool(context.get("static_local", false))
 		message["text"] = "%s local variable %s." % [action_verb, var_name]
@@ -680,7 +680,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 	var attributes: Dictionary = {}
 	var index: int = int(metadata.get("variable_index", -1))
 	var owner_event: EventRow = null
-	# G3 - a Local declared by a GROUP is addressed through the group, not through an event: the row
+	# A Local declared by a GROUP is addressed through the group, not through an event: the row
 	# it draws on is the group's, so the edit path has to answer that shape too.
 	if scope == "local" and row_data.source_resource is EventGroup:
 		var owner_group: EventGroup = row_data.source_resource as EventGroup
@@ -789,7 +789,7 @@ func _edit_context_variable() -> void:
 		)
 		return
 	if scope == "local":
-		# G3 - a group's own local edits through its group, the same dialog, one branch earlier.
+		# A group's own local edits through its group, the same dialog, one branch earlier.
 		var owner_group: EventGroup = _context_variable.get("group", null)
 		if owner_group != null:
 			_dock._variable_dlg.open_for_edit(

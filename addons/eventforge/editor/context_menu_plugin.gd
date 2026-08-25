@@ -40,7 +40,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# easy to spot among Godot's native file actions.
 			if should_offer_open_as_sheet(slot, paths):
 				add_context_menu_item("Open as Event Sheet", _on_open_requested, _open_as_sheet_icon())
-			# V15 - a scene is a unit of work, not one file: "Open its sheets" opens the whole
+			# A scene is a unit of work, not one file: "Open its sheets" opens the whole
 			# layout and every script in it as one named tab group.
 			if should_offer_open_workspace(slot, paths):
 				add_context_menu_item("Open its sheets", _on_open_workspace_requested, _open_as_sheet_icon())
@@ -135,7 +135,7 @@ func _on_create_sheet_requested(targets: Variant) -> void:
 		create_sheet.call(directory_from_targets(targets))
 
 
-## V15 - "Open its sheets" on a scene. Only ever one scene at a time: a workspace is named after
+## "Open its sheets" on a scene. Only ever one scene at a time: a workspace is named after
 ## the scene it opens, so two scenes are two gestures.
 func _on_open_workspace_requested(targets: Variant) -> void:
 	if not open_workspace.is_valid() or not (targets is PackedStringArray):

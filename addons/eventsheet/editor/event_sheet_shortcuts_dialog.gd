@@ -34,7 +34,7 @@ func open() -> void:
 		# Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
 		intro.custom_minimum_size = Vector2(500.0, 0.0)
 		outer.add_child(intro)
-		# T19 - Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
+		# Preset ▾. A whole keyboard in one pick, for an author whose fingers already know
 		# another event-sheet editor's keys. The preset only rebinds what DIFFERS, and every key it
 		# touches stays rebindable underneath.
 		_preset_picker = OptionButton.new()

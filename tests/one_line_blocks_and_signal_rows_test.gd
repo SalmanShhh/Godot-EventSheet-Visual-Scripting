@@ -1,14 +1,14 @@
-# Godot EventSheets - M24 / M28 / M29 / M35: the four shapes an event-sheet reader expects to find
+# Godot EventSheets - the four shapes an event-sheet reader expects to find
 # where real GDScript writes something else.
 #
-#   M24  `and` never appears INSIDE a condition cell. Each top-level conjunct is a condition line of
+#   `and` never appears INSIDE a condition cell. Each top-level conjunct is a condition line of
 #        the one event (the shape a lifted `if a and b:` already draws), and a top-level `or` is the
 #        OR block. Pinned here for the reading the grammar INVENTS - a ternary's branch test - which
 #        was the one place still spelling the word.
-#   M28  An `await` says which tick or which signal it waits for.
-#   M29  A lambda handed to `connect` reads as the trigger event it is, with the lambda's body as its
+#   An `await` says which tick or which signal it waits for.
+#   A lambda handed to `connect` reads as the trigger event it is, with the lambda's body as its
 #        rows; the connect line keeps a muted note, so nothing is hidden.
-#   M35  A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does, and the
+#   A one-line `if` / `elif` / `else` lifts as the sub-event its indented twin does, and the
 #        file it came from re-emits BYTE FOR BYTE - the one thing that must never be traded away.
 #
 # The fixture is a real file opened the way the dock opens one (import_external), not a hand-built
@@ -96,7 +96,7 @@ static func run() -> bool:
 	return ok
 
 
-## ── M35: a one-line block draws the rows its indented twin draws ─────────────────────────────
+## ── a one-line block draws the rows its indented twin draws ──────────────────────────────────
 static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	ok = _check("a one-line guard clause is a sub-event, not a code cell",
@@ -119,13 +119,13 @@ static func _one_line_blocks(rows: PackedStringArray) -> bool:
 	return ok
 
 
-## ── M24: conjuncts stack, an `or` is the OR block ────────────────────────────────────────────
+## ── conjuncts stack, an `or` is the OR block ─────────────────────────────────────────────────
 static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	ok = _check("a ternary's `and` test stacks as two condition lines",
 		_reading_at(rows, "Return host's wall normal X"),
 		"host exists > host Is by wall | Return host's wall normal X") and ok
-	# K4 - the OR is ruled BETWEEN the two lines now, so neither of them carries a badge word.
+	# The OR is ruled BETWEEN the two lines now, so neither of them carries a badge word.
 	ok = _check("a ternary's `or` test is the OR block",
 		_reading_at(rows, "Return \"gold\""), "hp > 100 > seconds left > 9 | Return \"gold\"") and ok
 	ok = _check("no condition cell anywhere in the fixture spells `and`",
@@ -133,7 +133,7 @@ static func _stacked_conditions(view: EventSheetViewport, rows: PackedStringArra
 	return ok
 
 
-## ── M28: an await names the tick or the signal ───────────────────────────────────────────────
+## ── an await names the tick or the signal ────────────────────────────────────────────────────
 static func _awaits(rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	var ready_row: String = _reading_at(rows, "Wait one tick")
@@ -149,7 +149,7 @@ static func _awaits(rows: PackedStringArray) -> bool:
 	return ok
 
 
-## ── M29: a connected lambda IS a trigger event ───────────────────────────────────────────────
+## ── a connected lambda IS a trigger event ────────────────────────────────────────────────────
 static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray) -> bool:
 	var ok: bool = true
 	ok = _check("the connect line keeps a muted note naming what it wires",
@@ -167,7 +167,7 @@ static func _connected_lambdas(view: EventSheetViewport, rows: PackedStringArray
 		_span_kinds(view, "On collision with"), "|trigger|trigger_payload") and ok
 	ok = _check("and its first statement is an action row",
 		_reading_at(rows, "Add 1 to seconds left"), " | Add 1 to seconds left") and ok
-	# R9 re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
+	# Re-pinned this one: `$Timer.stop()` is the Timer behavior's own `Stop timer "Timer"` now,
 	# where it used to fall through to the generic Object ▸ Verb reading and say only "Stop".
 	ok = _check("and the branch inside that lambda is a sub-event of it",
 		_reading_at(rows, "Stop"), "OneLineBlocksFixture seconds left ≤ 0 | Stop timer \"Timer\"") and ok
@@ -215,7 +215,7 @@ static func _open_fixture() -> EventSheetResource:
 
 
 ## Every visible row as "condition lane | action lane". The condition lane joins its stacked cells
-## with " > " in line order, because M24 is exactly about a cell becoming several LINES.
+## with " > " in line order, because the pairing rule is exactly about a cell becoming several LINES.
 static func _readings(view: EventSheetViewport) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	_walk(view, view._root_rows, out)
@@ -320,7 +320,7 @@ static func _branchy_cells(readings: PackedStringArray) -> PackedStringArray:
 	return found
 
 
-## The M28 reading of one await expression as flat text, or "" when the grammar refuses it.
+## The reading of one await expression as flat text, or "" when the grammar refuses it.
 static func _await_reading(expression: String) -> String:
 	var reading: Dictionary = ViewportRowBuilder.await_reading(expression, false)
 	var text: String = ""
@@ -329,7 +329,7 @@ static func _await_reading(expression: String) -> String:
 	return text
 
 
-## "object/trigger/args" for a connect statement the M29 reader claims, "" when it refuses it.
+## "object/trigger/args" for a connect statement the reader claims, "" when it refuses it.
 static func _connect_parts(code: String) -> String:
 	var parts: Dictionary = ViewportRowBuilder.connect_lambda_parts(code)
 	if parts.is_empty():

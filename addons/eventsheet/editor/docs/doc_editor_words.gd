@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetDocEditorWords
 extends RefCounted
-# W21. The Manual's page for the editor-building words: what this sheet calls each of Godot's
+# The Manual's page for the editor-building words: what this sheet calls each of Godot's
 # editor concepts, what Godot itself calls it, and WHY the word was changed.
 #
 # The table is not written here. The words come from EventSheetWords, which is also what the

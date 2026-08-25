@@ -1,4 +1,4 @@
-# E1 - the multiplayer recognisers, measured against a corpus of HAND-WRITTEN multiplayer scripts.
+# The multiplayer recognisers, measured against a corpus of HAND-WRITTEN multiplayer scripts.
 #
 # WHY A CORPUS AND NOT A FIXTURE PER ASSERTION: a fixture written to suit the lifter cannot notice
 # that real code does not look like it. So tests/fixtures/multiplayer_*.gd are whole scripts in the
@@ -18,7 +18,7 @@ extends RefCounted
 
 const FIXTURE_DIR: String = "res://tests/fixtures/"
 
-## Every ace_id E1 adds. Checked for collisions against the WHOLE registry, because an id is a
+## Every ace_id the networking vocabulary adds. Checked for collisions against the WHOLE registry, because an id is a
 ## compatibility promise the moment it ships and two descriptors answering to one id is a silent
 ## coin toss over which template a row compiles through.
 const NEW_ACE_IDS: Array[String] = [

@@ -42,7 +42,7 @@ const OFFERED := {
 	"disabled-pack-in-use": [
 		{"id": "enable_pack", "label": "Switch %s back on"},
 	],
-	# E4/M7. Both land where the change belongs: Adopt shows the diff on the block's own row, and
+	# Both land where the change belongs: Adopt shows the diff on the block's own row, and
 	# marking a message is the function row's gesture, so the chips say where rather than rewriting
 	# bytes from a report the reader is not looking at.
 	"multiplayer-reading": [
@@ -54,7 +54,7 @@ const OFFERED := {
 	"pack-reading": [
 		{"id": "open_pack", "label": "Open the pack"},
 	],
-	# L8. The one lighting finding with a single step to take: an environment `.tres` is a FILE, so
+	# The one lighting finding with a single step to take: an environment `.tres` is a FILE, so
 	# writing fog into it at run time writes it for every scene that loads the same file. The chip
 	# writes the row that takes a copy first, at the top of the sheet the finding points at.
 	"lighting-shared-environment": [
@@ -63,7 +63,7 @@ const OFFERED := {
 	"repeated-literal": [
 		{"id": "extract_to_variable", "label": "⚡ Extract %s to a variable"},
 	],
-	# X17 - the three hierarchy footguns. Each has exactly one accepted answer, and the chip says it
+	# The three hierarchy footguns. Each has exactly one accepted answer, and the chip says it
 	# in the words the row would use rather than in Godot's.
 	"reparent-while-iterating": [
 		{"id": "walk_a_copy", "label": "Walk a copy of the children"},
@@ -74,7 +74,7 @@ const OFFERED := {
 	"freed-parent-reference": [
 		{"id": "guard_still_there", "label": "Ask whether %s is still there"},
 	],
-	# Y20 - the two things mirroring has to drag along. Each has exactly one accepted answer, and the
+	# The two things mirroring has to drag along. Each has exactly one accepted answer, and the
 	# chip says it in the words the row would use rather than in Godot's.
 	"ray-not-following-facing": [
 		{"id": "follow_facing", "label": "Put %s under the mirrored body"},
@@ -82,7 +82,7 @@ const OFFERED := {
 	"label-under-a-mirrored-body": [
 		{"id": "keep_upright", "label": "Keep %s upright"},
 	],
-	# Y6 - pin or child. Both mechanisms are honest, so neither chip removes one on the reader's
+	# Pin or child. Both mechanisms are honest, so neither chip removes one on the reader's
 	# behalf: each says which of the two answers this file wanted and where to make the change.
 	"double-follow": [
 		{"id": "unpin_it", "label": "Unpin it from %s"},
@@ -172,7 +172,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"enable_pack":
 			EventSheetPackCatalog.set_enabled(subject, true)
 			return {"ok": true, "message": "%s is back on - its actions return to the picker on the next refresh." % subject}
-		# E4/M7. Two gestures that already exist on the row the finding points at - double-clicking
+		# Two gestures that already exist on the row the finding points at - double-clicking
 		# the finding opens that sheet, and these say what to reach for once it is open.
 		"adopt_block":
 			return {"ok": true, "message": "Open %s: the script block's own row offers Adopt, which rewrites it into a row plus whatever the row does not cover, with the diff shown before anything changes." % str(finding.get("path", "")).get_file()}
@@ -180,13 +180,13 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Open %s, right-click the %s function row and choose Make it a message - the annotation is what makes a call travel." % [str(finding.get("path", "")).get_file(), subject]}
 		"open_pack":
 			return {"ok": true, "message": "Open %s and Sheet ▸ Publish New Version… lists what does not read yet, with the fix." % str(finding.get("path", "")).get_file()}
-		# L8. The same gesture the note row under the event offers, reached from the report instead:
+		# The same gesture the note row under the event offers, reached from the report instead:
 		# the sheet is opened and the row goes in at its top, on ready, through the dock's own funnel.
 		"own_environment":
 			return _own_environment(subject, str(finding.get("path", "")), dock)
 		"extract_to_variable":
 			return _extract_to_variable(subject, str(finding.get("path", "")), dock)
-		# X17. All three point at a line in an emitted script rather than at one row, so each names
+		# All three point at a line in an emitted script rather than at one row, so each names
 		# the one edit to make instead of rewriting bytes underneath the author.
 		"walk_a_copy":
 			return {"ok": true, "message": "Swap the walk for System ▸ For Each Child, which takes the snapshot for you - or add .duplicate() after the children so %s cannot shift the list it is walking." % subject}
@@ -194,7 +194,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Move this out of On start of layout into a row that runs after the tree has settled - the parent is still adding its children while _ready runs."}
 		"guard_still_there":
 			return {"ok": true, "message": "Put the rows that use %s under a condition asking whether it is still there - a child goes when its parent goes." % subject}
-		# Y20. Both are one edit in the SCENE, not in the sheet, so each names it rather than
+		# Both are one edit in the SCENE, not in the sheet, so each names it rather than
 		# rewriting bytes underneath the author.
 		"follow_facing":
 			return {"ok": true, "message": "Move %s under the node you mirror - a Set Mirrored (whole object) row turns everything beneath it, so the ray reaches the way the character faces." % subject}

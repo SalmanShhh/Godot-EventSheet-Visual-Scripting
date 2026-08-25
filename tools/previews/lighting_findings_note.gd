@@ -1,4 +1,4 @@
-# Godot EventSheets - L8: a lighting finding said under the row it is about (preview module).
+# Godot EventSheets - a lighting finding said under the row it is about (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The sheet is the hand-written crypt the suite measures, and nothing in the picture was authored for

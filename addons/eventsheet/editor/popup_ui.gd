@@ -768,7 +768,7 @@ static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArr
 	for index: int in range(suggestions.size()):
 		var suggestion: String = suggestions[index]
 		if needle.is_empty() or suggestion.to_lower().contains(needle):
-			# P1 - a choice may carry the line that explains it (an input action's keys, how many
+			# A choice may carry the line that explains it (an input action's keys, how many
 			# nodes are in a group). The item's ID still indexes the POOL, so what a pick inserts is
 			# the bare value however much the item shows.
 			popup.add_item(suggestion_item_text(suggestion, note_provider), index)

@@ -18,13 +18,13 @@ extends RefCounted
 const SCOPE_GLOBAL: String = "global"
 const SCOPE_INSTANCE: String = "instance"
 const SCOPE_LOCAL: String = "local"
-## V4 - a local by scope, a member in code: the row sits under its event like any other local, and the
+## A local by scope, a member in code: the row sits under its event like any other local, and the
 ## compiler hoists the declaration so the value survives from one run of that event to the next.
 const SCOPE_STATIC_LOCAL: String = "static_local"
 const SCOPE_CONSTANT: String = "constant"
 const SCOPE_STATIC: String = "static"
 const SCOPE_FIELD: String = "field"
-## W5 - the same `static var`, read in a class nothing is ever made of: there are no copies to share
+## The same `static var`, read in a class nothing is ever made of: there are no copies to share
 ## it between, so the word says what it IS there, one value the whole editor reads and writes.
 const SCOPE_SHARED: String = "shared"
 

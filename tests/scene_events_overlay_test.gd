@@ -1,4 +1,4 @@
-# Godot EventSheets - the events overlay (V14): which nodes have events, and which events.
+# Godot EventSheets - the events overlay: which nodes have events, and which events.
 #
 # Pins VALUES: the exact triggers a script's badge names, in file order and in the sheet's own
 # words; that a plain function is never counted as an event; that both connect spellings are read;

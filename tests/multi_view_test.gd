@@ -85,7 +85,7 @@ static func run() -> bool:
 	all_passed = _check("edits refresh the split pane too", split.get_flat_rows().size(), before + 1) and all_passed
 	all_passed = _check("edits refresh the primary too", primary.get_flat_rows().size(), before + 1) and all_passed
 
-	# P2: detached window - another full pane sharing state + the refresh bus.
+	# Detached window - another full pane sharing state + the refresh bus.
 	editor._toggle_detached_view()
 	var detached: EventSheetViewport = editor._detached_viewport
 	all_passed = _check("detached pane exists", detached != null, true) and all_passed
@@ -94,7 +94,7 @@ static func run() -> bool:
 	var detached_first: EventRowData = detached.get_flat_rows()[0].get("row")
 	all_passed = _check("detached pane shares breakpoints", detached_first.breakpoint_enabled, true) and all_passed
 
-	# P3: linked panes - selection mirrors across views (no recursion).
+	# Linked panes - selection mirrors across views (no recursion).
 	editor._toggle_linked_views()
 	primary._select_row(2, -1)
 	primary.selection_changed.emit(primary.get_flat_rows()[2].get("row"))

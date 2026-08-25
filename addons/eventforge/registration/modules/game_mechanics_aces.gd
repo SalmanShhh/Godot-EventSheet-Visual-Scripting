@@ -28,7 +28,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## X24. A meter is a number that moves at a SPEED and stops at a limit - the countdown's two-way
+## A meter is a number that moves at a SPEED and stops at a limit - the countdown's two-way
 ## twin. Both halves clamp, because a meter that overshoots its limit is a bug every project fixes
 ## the same way and nobody enjoys writing twice.
 static func _meter_descriptors() -> Array[ACEDescriptor]:
@@ -52,7 +52,7 @@ static func _meter_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## X24. Sound as a first-class event: one object makes a noise somewhere, and everything close
+## Sound as a first-class event: one object makes a noise somewhere, and everything close
 ## enough to hear it is told where. The walk over the hearers is what a hand-written script spells
 ## out; here it is one row, and the receiving half is a trigger.
 static func _stealth_descriptors() -> Array[ACEDescriptor]:
@@ -74,7 +74,7 @@ static func _stealth_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## X26. The two halves of every boss fight nobody wants to hand-write twice: the ladder of health
+## The two halves of every boss fight nobody wants to hand-write twice: the ladder of health
 ## thresholds each phase starts at, and the window after a hit when nothing lands.
 static func _boss_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -101,7 +101,7 @@ static func _boss_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## X27. A mission clock is an ordinary countdown with a deadline and an audience: the one thing it
+## A mission clock is an ordinary countdown with a deadline and an audience: the one thing it
 ## needs that a cooldown does not is to be READABLE, which is what m:ss is for.
 static func _mission_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

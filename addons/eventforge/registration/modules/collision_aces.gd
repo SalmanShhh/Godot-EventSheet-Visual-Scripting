@@ -17,7 +17,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── CharacterBody2D: slide results (valid after Move And Slide) ──
-	# R10. The display words are the sheet's own platform words, which is also what an opened script
+	# The display words are the sheet's own platform words, which is also what an opened script
 	# reads them as - one wording for the row whether it was picked here or typed in a .gd file.
 	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is By Wall", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is by wall", "CharacterBody2D")
 		.described("True when this 2D character is pressing against a wall."))
@@ -43,14 +43,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the surface direction from the character's last collision."))
 
 	# ── Area2D: overlap tests + lists (the common "am I touching X" queries) ──
-	# T23. The overlap questions say what the sheet's own rows say, so a picked row and the hand-written
+	# The overlap questions say what the sheet's own rows say, so a picked row and the hand-written
 	# `overlaps_body(x)` beside it read one sentence. The ids and the templates are frozen; only the
 	# words a reader sees changed.
 	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Is Overlapping Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {body}", "Area2D")
 		.described("True when this Area2D is overlapping the given physics body."))
 	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Is Overlapping Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "is overlapping {area}", "Area2D")
 		.described("True when this Area2D is overlapping the given other area."))
-	# T23. The platformer's own question: "is there ground just below me?" is a MOVE that is never
+	# The platformer's own question: "is there ground just below me?" is a MOVE that is never
 	# made - the body is asked where it would end up one pixel down, and nothing moves either way.
 	descriptors.append(F.make_descriptor("Core", "IsOverlappingAtOffset", "Is Overlapping At Offset", ACEDescriptor.ACEType.CONDITION, "test_move(transform, {offset})", "", [F.make_param("offset", "String", "Vector2(0, 1)", "Offset", "How far to look, from where the object is now - (0, 1) is one pixel down, which is the ground check.", "expression")], "Collisions", "is overlapping at offset {offset} (a solid)", "PhysicsBody2D")
 		.described("True when this body WOULD hit something solid if it moved by the offset - the ground check every platformer needs, and nothing actually moves.").featured())
@@ -82,7 +82,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when this 3D character is pressing against a wall."))
 	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is Touching Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is touching ceiling", "CharacterBody3D")
 		.described("True when this 3D character is touching a ceiling above."))
-	# R10 in 3D, where Y grows UPWARD: the same two questions ask the opposite sign, and the words
+	# In 3D, where Y grows UPWARD: the same two questions ask the opposite sign, and the words
 	# follow the axis rather than the sign, exactly as the reading of an opened 3D script does.
 	descriptors.append(F.make_descriptor("Core", "IsJumping3D", "Is Jumping (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}velocity.y > 0", "", [], "Collisions", "Is jumping", "CharacterBody3D")
 		.described("True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question."))

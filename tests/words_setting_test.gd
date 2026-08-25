@@ -54,8 +54,8 @@ static func run() -> bool:
 		EventSheetWords.word_for("not_a_word", true, {}), "not_a_word") and all_passed
 
 	# The page's own order and labels - what a reader sees down the left column. The eight GAME words
-	# lead, unchanged; W21 appended the twenty-four editor-building ones after them, which is the
-	# order the mockup fixed (the plugin, then its surfaces, then its shapes, then the code idioms).
+	# lead, unchanged; the editor-building wave appended its twenty-four words after them, which is the
+	# order the page fixes (the plugin, then its surfaces, then its shapes, then the code idioms).
 	var game_words: Array[String] = ["inheritance_set", "layout", "every_tick", "behavior",
 		"group", "collection", "destroy", "manual"]
 	var expected_keys: Array[String] = game_words.duplicate()

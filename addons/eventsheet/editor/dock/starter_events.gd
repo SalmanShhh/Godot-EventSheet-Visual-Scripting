@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetStarterEvents
 extends RefCounted
-# STARTER EVENTS (V13) - the four events you were going to type anyway.
+# STARTER EVENTS - the four events you were going to type anyway.
 #
 # A class knows its common events: a body is created, moves every physics tick, gets hit and dies; a
 # button is clicked; a timer times out; an area is collided with; an attached behaviour pack fires
@@ -175,7 +175,7 @@ static func missing_signal_rows(starters: Array, sheet: EventSheetResource) -> A
 	return rows
 
 
-# ── X25. The secrets counter one object marked `secret` is offered on drop ────────────────────
+# ── The secrets counter one object marked `secret` is offered on drop ─────────────────────────
 # An area marked a secret has exactly one event worth writing: when the player walks into it, count
 # it - once, however many times they walk back through. That is the shipped Mark Secret Found row,
 # and this is the whole event around it, built here rather than in the dock so it is pure and a
@@ -217,7 +217,7 @@ static func secret_counter_template() -> String:
 	return ""
 
 
-# ── Y16. The door event an object marked "needs key" is offered on drop ───────────────────────
+# ── The door event an object marked "needs key" is offered on drop ────────────────────────────
 # A body the reader named a key for has exactly one event worth writing: when the player walks into
 # it, try it - and the shipped Try Door row is the whole of trying it, because it opens the door when
 # the key fits and tells the door it was refused when it does not. Built here rather than in the dock
@@ -259,7 +259,7 @@ static func locked_door_template() -> String:
 	return ""
 
 
-# ── Y11. The water rows one area marked `water` is offered on drop ────────────────────────────
+# ── The water rows one area marked `water` is offered on drop ─────────────────────────────────
 # A volume the reader calls water has two events, not one: the way in and the way out. Together they
 # hold a flag that says "I am in the water", which is the fact every swimming rule is then written
 # against - the sheet can test it in any condition, and the swim reading recognises the pair.

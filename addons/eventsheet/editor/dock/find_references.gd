@@ -209,7 +209,7 @@ static func find_in_project(symbol: String, extra_sheets: Dictionary = {}) -> Ar
 	return find_in_project_rows(symbol, extra_sheets)
 
 
-## V8. The line an INLINE rename shows before anything is written: what committing will rewrite, and
+## The line an INLINE rename shows before anything is written: what committing will rewrite, and
 ## the two keys that commit or abandon it. Takes what find_in_project_rows returned, so the count in
 ## the field and the list in the Find results bar are the same walk - a rename that says "6 uses"
 ## and touches four would be worse than saying nothing.

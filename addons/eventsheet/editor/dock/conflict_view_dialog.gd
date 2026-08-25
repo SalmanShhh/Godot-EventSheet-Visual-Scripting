@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetConflictViewDialog
 extends RefCounted
-# The conflict view - a merge conflict shown as events, picked one event at a time (V10).
+# The conflict view - a merge conflict shown as events, picked one event at a time.
 #
 # Opening a script a merge left unresolved used to mean reading marker lines. This window shows the
 # conflicted region as two columns of events, OURS beside THEIRS: the events both sides agree on are

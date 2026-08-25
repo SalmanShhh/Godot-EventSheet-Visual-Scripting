@@ -2,7 +2,7 @@
 class_name EventSheetEditorSourceFacts
 extends RefCounted
 
-# W3 / W4 / W5 / W16. What a TOOL script's own shape says about it, answered once per rebuild.
+# What a TOOL script's own shape says about it, answered once per rebuild.
 #
 # Four shapes an editor is written in, none of which any single line can answer:
 #
@@ -147,7 +147,7 @@ static func source_text(sheet: EventSheetResource) -> String:
 	return FileAccess.get_file_as_string(path)
 
 
-# ── W3: a helper with a back-reference ────────────────────────────────────────────────────────
+# ── a helper with a back-reference ────────────────────────────────────────────────────────────
 
 
 ## {member, object, file} for a RefCounted whose `_init` only stores what it was handed and whose
@@ -296,7 +296,7 @@ static func _used_as_receiver(lines: PackedStringArray, member: String, init_at:
 	return false
 
 
-# ── W5: a shared store ────────────────────────────────────────────────────────────────────────
+# ── a shared store ────────────────────────────────────────────────────────────────────────────
 
 
 ## True when nothing of this class is ever made: at least one `static var`, no instance variable and
@@ -350,7 +350,7 @@ static func _frozen_constants(lines: PackedStringArray) -> Dictionary:
 	return found
 
 
-# ── W16: a vocabulary module, and a function that calls itself ────────────────────────────────
+# ── a vocabulary module, and a function that calls itself ─────────────────────────────────────
 
 
 ## Every vocabulary row the file publishes, in file order:
@@ -667,7 +667,7 @@ static func recursive_functions(lines: PackedStringArray) -> Dictionary:
 	return found
 
 
-## W16. The object a published row belongs to: the provider the module writes it under, else the
+## The object a published row belongs to: the provider the module writes it under, else the
 ## first half of an id spelled "Provider/Name". "" when neither is there.
 static func row_provider(row: Dictionary) -> String:
 	var provider: String = str(row.get("provider", "")).strip_edges()
@@ -678,7 +678,7 @@ static func row_provider(row: Dictionary) -> String:
 	return row_id.substr(0, at) if at > 0 else ""
 
 
-## W16. "Define condition Is Pinned" - the lead of a Define row, in the words a pack's own Define
+## "Define condition Is Pinned" - the lead of a Define row, in the words a pack's own Define
 ## rows use. Untranslated on purpose: the caller translates the two words it owns.
 static func define_lead_parts(row: Dictionary) -> PackedStringArray:
 	var name: String = str(row.get("name", ""))
@@ -687,7 +687,7 @@ static func define_lead_parts(row: Dictionary) -> PackedStringArray:
 	return PackedStringArray([str(row.get("kind", "")), name])
 
 
-## W16. The receipts a Define row carries after its name: the id it is addressed by, the category it
+## The receipts a Define row carries after its name: the id it is addressed by, the category it
 ## is filed under, and the values it takes. Each half is dropped when the module did not write it.
 static func define_detail(row: Dictionary, category_word: String, input_word: String) -> String:
 	var parts: PackedStringArray = PackedStringArray()

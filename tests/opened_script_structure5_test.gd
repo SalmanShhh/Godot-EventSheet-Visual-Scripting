@@ -1,4 +1,4 @@
-# EventForge - the engine callbacks that used to open as helper functions (P8), pinned by VALUE on a
+# EventForge - the engine callbacks that used to open as helper functions, pinned by VALUE on a
 # real fixture file:
 #
 #   _draw          reads as the object's own paint trigger (OnDraw)

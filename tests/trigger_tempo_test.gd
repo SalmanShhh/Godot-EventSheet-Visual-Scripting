@@ -15,7 +15,7 @@ const SIGNAL := [
 	"OnCloseRequested", "OnBodyEntered", "OnAreaEntered", "OnBodyExited", "OnAreaExited", "OnTimeout",
 	"OnAnimationFinished", "OnButtonPressed", "OnButtonToggled", "OnParticlesFinished", "OnTreeEntered",
 	"OnTreeExiting", "OnTreeExited", "OnRenamed", "OnChildEnteredTree", "OnSignal", "OnDraw",
-	# E1 - MultiplayerAPI's five connection signals.
+	# MultiplayerAPI's five connection signals.
 	"OnPlayerJoined", "OnPlayerLeft", "OnJoinedTheHost", "OnJoinFailed", "OnTheHostLeft",
 ]
 

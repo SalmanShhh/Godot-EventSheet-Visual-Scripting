@@ -76,7 +76,7 @@ static func run() -> bool:
 	behavior.clear_portals()
 	all_passed = _check("Clear Portals removes the link", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
 
-	# ── Ledge restriction (P2): walk-only routing, drops gated by leniency ─────────
+	# ── Ledge restriction: walk-only routing, drops gated by leniency ─────────
 	behavior.set("ledge_restriction", true)
 	all_passed = _check("restricted: the gap route is gone (jumps blocked)", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), true) and all_passed
 	all_passed = _check("restricted: walking the same platform still routes", behavior._astar(Vector2i(0, 4), Vector2i(7, 4)).is_empty(), false) and all_passed
@@ -86,7 +86,7 @@ static func run() -> bool:
 	behavior.set("ledge_restriction", false)
 	behavior.set("ledge_leniency", 0.0)
 
-	# ── The shared path budget (P2): over-budget requests defer, never crash ──────
+	# ── The shared path budget: over-budget requests defer, never crash ──────
 	behavior.set_max_paths_per_tick(0)
 	behavior.find_path_to(100.0, 100.0, "nearest")
 	all_passed = _check("over budget: the request defers (Is Path Pending)", behavior.is_path_pending(), true) and all_passed
@@ -95,15 +95,15 @@ static func run() -> bool:
 	all_passed = _check("Stop Pathfinding clears the pending request", behavior.is_path_pending(), false) and all_passed
 	behavior.set_max_paths_per_tick(8)
 
-	# ── The P2 surface exists ──────────────────────────────────────────────────────
+	# ── The surface exists ──────────────────────────────────────────────────────
 	for p2_method: String in ["set_ledge_restriction", "set_ledge_leniency", "set_jump_positioning", "set_coyote_time", "set_repath_interval", "set_repath_threshold", "set_max_paths_per_tick", "is_path_pending"]:
-		all_passed = _check("P2 method %s exists" % p2_method, behavior.has_method(p2_method), true) and all_passed
+		all_passed = _check("method %s exists" % p2_method, behavior.has_method(p2_method), true) and all_passed
 	for p2_signal: String in ["waypoint_stuck", "repathed"]:
-		all_passed = _check("P2 trigger %s exists" % p2_signal, behavior.has_signal(p2_signal), true) and all_passed
+		all_passed = _check("trigger %s exists" % p2_signal, behavior.has_signal(p2_signal), true) and all_passed
 	for p2_knob: String in ["jump_positioning", "coyote_time", "repath_interval", "repath_threshold", "stuck_timeout"]:
-		all_passed = _check("P2 knob %s exists" % p2_knob, behavior.get(p2_knob) != null, true) and all_passed
+		all_passed = _check("knob %s exists" % p2_knob, behavior.get(p2_knob) != null, true) and all_passed
 
-	# ── Hazards (P4): deadly blocks routing, danger costs through, both are instant ─
+	# ── Hazards: deadly blocks routing, danger costs through, both are instant ─
 	# A deadly strip over the gap-jump corridor severs the only crossing.
 	behavior.add_hazard(240.0, 128.0, 100.0, 34.0, true)
 	all_passed = _check("a deadly hazard over the only crossing severs the route", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), true) and all_passed
@@ -120,7 +120,7 @@ static func run() -> bool:
 	all_passed = _check("nearest-node never picks a node inside a deadly hazard", behavior._nearest_node(behavior._cell_world(Vector2i(3, 4)), 2) != Vector2i(3, 4), true) and all_passed
 	behavior.clear_hazards()
 
-	# ── Moving platforms (P4): a slow platform edge that survives regenerate ───────
+	# ── Moving platforms: a slow platform edge that survives regenerate ───────
 	var ferry: Node2D = Node2D.new()
 	behavior.add_moving_platform(ferry, 16.0, 144.0, 432.0, 80.0)
 	all_passed = _check("a platform links its endpoints' nearest nodes", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "platform") and all_passed
@@ -133,8 +133,8 @@ static func run() -> bool:
 	all_passed = _check("Clear Moving Platforms removes the edge", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
 	ferry.free()
 	for p4_method: String in ["add_hazard", "clear_hazards", "add_moving_platform", "clear_moving_platforms", "is_in_hazard"]:
-		all_passed = _check("P4 method %s exists" % p4_method, behavior.has_method(p4_method), true) and all_passed
-	all_passed = _check("P4 trigger hazard_entered exists", behavior.has_signal("hazard_entered"), true) and all_passed
+		all_passed = _check("hazard method %s exists" % p4_method, behavior.has_method(p4_method), true) and all_passed
+	all_passed = _check("hazard trigger hazard_entered exists", behavior.has_signal("hazard_entered"), true) and all_passed
 
 	# ── The universal AI drive seam: every input-reading movement pack carries it ─
 	all_passed = _check("variable jump ships on (toggleable)", behavior.get("variable_jump"), true) and all_passed

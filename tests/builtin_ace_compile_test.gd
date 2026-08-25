@@ -75,24 +75,24 @@ const NOT_STANDALONE: Array[String] = [
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
-	# R30. The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
+	# The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
 	# host and nowhere else, and this harness deliberately builds one host class (Node) rather than a
 	# per-ACE menagerie. Their templates are exercised by editor_object_reading_test, which opens a real
 	# hand-written plugin and gates the byte round-trip of what it re-emits.
 	"AddToolsMenuItem", "RemoveToolsMenuItem", "AddEditorDock", "RemoveEditorDock",
 	"AddEditorObjectType", "RemoveEditorObjectType", "AddEditorInspectorPlugin",
 	"RemoveEditorInspectorPlugin", "UpdateViewportOverlays", "EditorUndoHistory",
-	# W17 / W18. Same reason, three more EditorPlugin methods: the bottom-panel pair, and the command
+	# Same reason, three more EditorPlugin methods: the bottom-panel pair, and the command
 	# palette entry (whose Calls default names a function the plugin defines, exactly as the Tools
 	# menu item's does). Their round-trip is gated by editor_tool_shapes_test.
 	"AddBottomPanel", "RemoveBottomPanel", "AddCommandPaletteCommand",
-	# W6. Add Item acts on the MENU VARIABLE a tool made, which is a member of that tool's own script
+	# Add Item acts on the MENU VARIABLE a tool made, which is a member of that tool's own script
 	# and not of the one host class this harness builds by hand - the same reason as the plugin
 	# methods above. Its line, and the handler its trigger compiles into, are gated by
 	# menu_reading_test, which compiles the authored menu, opens the result and recompiles it byte
 	# for byte.
 	"MenuAddItem",
-	# W10. `quit()` is SceneTree's, and a command tool IS a SceneTree - it is the whole main loop,
+	# `quit()` is SceneTree's, and a command tool IS a SceneTree - it is the whole main loop,
 	# not a node in one. Same reason as the EditorPlugin methods above: the harness builds one host
 	# class by hand, and a row that only exists in a SceneTree script has no business compiling in a
 	# Node. Their round-trip is gated by editor_tool_shapes_test, which compiles the Command tool
@@ -103,7 +103,7 @@ const NOT_STANDALONE: Array[String] = [
 	"StopRetrying",  # ends with `break` - only compiles inside the Retry Up To N Times loop it belongs to
 	"RetryAttemptNumber",  # reads `attempt`, the Retry Up To N Times loop's own iterator
 	"RetryUpTo", "RetriesExhausted",  # call sheet-synthesized helpers over the retry's own three-state record
-	# X2 / X30. All five aimed-cursor words call ONE sheet-synthesized helper - the masked ray the
+	# All five aimed-cursor words call ONE sheet-synthesized helper - the masked ray the
 	# compiler writes into the file the first time any of them appears - so none of them compiles in
 	# a class this harness wraps by hand, exactly like the once-memory and retry helpers above. Their
 	# templates and the helper itself are gated by cursor_and_canvas_reading_test, which compiles them

@@ -270,7 +270,7 @@ static func _test_export_gate_compiles() -> bool:
 ## ── l10n-unmarked, judged against what the compiler REALLY emits ─────────────────────────────────
 static func _test_unmarked_on_emitted_code() -> bool:
 	var ok: bool = true
-	# Set Text on a Label sheet, dropped at a bare literal - the mockup's "before the fix" row.
+	# Set Text on a Label sheet, dropped at a bare literal - the "before the fix" row.
 	var bare: String = _compile_label_text("\"PLAY\"", "translation_quality_bare")
 	ok = _check("Set Text with a bare literal emits the sink the check looks for",
 		bare.contains("text = str(\"PLAY\")"), true) and ok

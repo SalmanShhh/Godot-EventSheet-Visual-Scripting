@@ -5,17 +5,17 @@ extends RefCounted
 # Pins the batch-nine "around objects" readings - the four families a project writes ABOUT an object
 # rather than about its behaviour, each of which an event sheet already has one row for:
 #
-#   T8   picking: which instances the rows below are about - nearest, farthest, random, by
+#   Picking: which instances the rows below are about - nearest, farthest, random, by
 #        comparison, top, bottom, by UID - each naming what it filled
-#   T10  layers and Z order: Set Z order, Move to top / bottom of layer, Move to layer, Set layer
+#   Layers and Z order: Set Z order, Move to top / bottom of layer, Move to layer, Set layer
 #        order, Set layer visible
-#   T11  text: Set font size / font colour / horizontal alignment / word wrap / font, and translated
-#   T12  the browser and the platform: Go to URL, Copy to clipboard, Request fullscreen, Alert, and
+#   Text: Set font size / font colour / horizontal alignment / word wrap / font, and translated
+#   The browser and the platform: Go to URL, Copy to clipboard, Request fullscreen, Alert, and
 #        Is on web / Is Android in the shipped Platform Info pack's own words
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
-#   2. the word for an inheritance set (T9), pinned in all three of its states;
+#   2. The word for an inheritance set, pinned in all three of its states;
 #   3. every pattern the file holds, claimed on the row that owns it;
 #   4. the promise all of it rests on - the file still saves byte-identically, because every reading
 #      here is a lens over a value the row already holds.
@@ -63,17 +63,17 @@ func aim() -> void:
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# T10 - where an object sits in the drawing order
+	# Where an object sits in the drawing order
 	"z_index = 5": "Player ▸ Set Z order to 5 (absolute)",
 	"z_as_relative = false": "Player ▸ Set Z order absolute",
 	"move_to_front()": "Player ▸ Move to top of layer",
 	"move_to_back()": "Player ▸ Move to bottom of layer",
-	# X10 - a reparent onto a KNOWN drawing layer is a layer move and keeps these words; a reparent
+	# A reparent onto a KNOWN drawing layer is a layer move and keeps these words; a reparent
 	# onto anything else is a move in the hierarchy, and reads as the Add child it is.
 	"label.reparent(hud_layer)": "label ▸ Move to layer hud_layer",
 	"reparent($\"../FX\")": "FX ▸ Add child Player keeping its place",
 	"hud_layer.layer = 10": "hud_layer ▸ Set layer order to 10",
-	# T11 - how its text is styled
+	# How its text is styled
 	"label.add_theme_font_size_override(\"font_size\", 32)": "label ▸ Set font size to 32",
 	"label.add_theme_color_override(\"font_color\", Color.RED)": "label ▸ Set font colour to red",
 	"label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER":
@@ -81,14 +81,14 @@ static var STATEMENT_READINGS: Dictionary = {
 	"label.autowrap_mode = TextServer.AUTOWRAP_WORD": "label ▸ Set word wrap on",
 	"label.autowrap_mode = TextServer.AUTOWRAP_OFF": "label ▸ Set word wrap off",
 	"label.label_settings.font = preload(\"res://ui/bold.ttf\")": "label ▸ Set font to bold.ttf",
-	# T12 - what it asks of the machine it runs on
+	# What it asks of the machine it runs on
 	"OS.shell_open(\"https://example.com\")": "Browser ▸ Go to URL \"https://example.com\"",
 	"DisplayServer.clipboard_set(code)": "Browser ▸ Copy code to clipboard",
 	"DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)":
 		"Browser ▸ Request fullscreen",
 	"DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)": "Browser ▸ Leave fullscreen",
 	"OS.alert(\"Saved!\")": "Browser ▸ Alert \"Saved!\"",
-	# T8 - which instances, and the name each pick filled
+	# Which instances, and the name each pick filled
 	"var victim = enemies.pick_random()": "System ▸ Pick a random Enemy → victim",
 	"var rich = enemies.filter(func(e): return e.gold > 50)":
 		"System ▸ Pick Enemy where gold > 50 → rich",
@@ -180,27 +180,27 @@ static func _grammar_values() -> bool:
 		ok = _check("condition %s" % expression,
 			_joined_pieces(EventSheetSentence.condition_pieces(expression, context)),
 			str(CONDITION_READINGS[expression])) and ok
-	# T11 - a translation key is not a call a reader thinks about.
+	# A translation key is not a call a reader thinks about.
 	ok = _check("a translation key reads as translated text",
 		EventSheetSentence.expression_text("tr(\"HELLO\")", context), "translated \"HELLO\"") and ok
-	# T10 - the layer number is only a drawing order on something that IS a layer.
+	# The layer number is only a drawing order on something that IS a layer.
 	var plain: Dictionary = _context()
 	plain["object_classes"] = {}
 	ok = _check("a plain node's layer number stays a number",
 		_joined_segments(EventSheetSentence.statement("hud_layer.layer = 10", plain)),
 		"hud_layer ▸ Set layer to 10") and ok
-	# T8 - a list nothing said the kind of is not picked from.
+	# A list nothing said the kind of is not picked from.
 	ok = _check("a pick from a list of unknown kind keeps its own words",
 		_joined_segments(EventSheetSentence.statement("var one = things.pick_random()", plain)),
 		"Local value one = things.pick_random()") and ok
-	# T12 - the editor tag stays the sheet's own "running in the editor" question.
+	# The editor tag stays the sheet's own "running in the editor" question.
 	ok = _check("the editor feature tag is not a platform",
 		_joined_pieces(EventSheetSentence.condition_pieces("OS.has_feature(\"editor\")", context)),
 		"System ▸ is in the editor") and ok
 	return ok
 
 
-## Gate two: T9's word for an inheritance set, in all three of its states. The whole point of the
+## Gate two: the word for an inheritance set, in all three of its states. The whole point of the
 ## setting is that ONE helper answers, so every place that says the word changes together.
 static func _inheritance_word() -> bool:
 	var ok: bool = true
@@ -219,7 +219,7 @@ static func _inheritance_word() -> bool:
 	ok = _check("a user who pinned Kind gets Kind whichever glossary is showing",
 		"%s/%s" % [EventSheetWords.word_for("inheritance_set", true, pinned),
 			EventSheetWords.word_for("inheritance_set", false, pinned)], "Kind/Kind") and ok
-	# T9 - a group whose members are the set's agrees; one that is not names the stray.
+	# A group whose members are the set's agrees; one that is not names the stray.
 	var agreement: Dictionary = EventSheetFamilyFacts.group_agreement("Enemy",
 		PackedStringArray(["Bat", "Slime"]), PackedStringArray(["Bat", "Slime"]))
 	ok = _check("a group with the set's own members agrees", agreement.get("matches", false), true) and ok

@@ -4,15 +4,15 @@ extends RefCounted
 
 # Pins batch thirteen's input readings and the vocabulary behind them:
 #
-#   X22  the sensor SHAPES - a stored neutral point (Set neutral to Touch.Acceleration), the tilt
+#   The sensor SHAPES - a stored neutral point (Set neutral to Touch.Acceleration), the tilt
 #        fed into movement (Steer by tilt x at ...), and the rotation rate fed into yaw and pitch
 #        (Aim by gyro), which is mouse look with the phone doing the turning
-#   X23  swipes and drawn shapes claimed as one pattern, with the behaviour that does the whole
+#   Swipes and drawn shapes claimed as one pattern, with the behaviour that does the whole
 #        thing offered as the adoption
-#   X25  a shooter's shots, blasts and wrapping weapon index, and the secrets counter beside them
-#   X28  the flag-and-deadline pair an input window is opened with, read as one row that says which
+#   A shooter's shots, blasts and wrapping weapon index, and the secrets counter beside them
+#   The flag-and-deadline pair an input window is opened with, read as one row that says which
 #        clock it is on
-#   X29  the options-screen shape - the live Input Map being rewritten and the settings the packs read
+#   The options-screen shape - the live Input Map being rewritten and the settings the packs read
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -89,7 +89,7 @@ static var SHIPPED_TEMPLATES: Dictionary = {
 	# No "On node" prefix on this one: its second line leads with a slot rather than a member, so the
 	# registry leaves the whole template alone - which is the spelling a hand-written gyro aim has.
 	"TouchAimByGyro": "rotate_y(-{rate}.y * delta)\n{camera}.rotate_x(-{rate}.x * delta)",
-	# X28's Prompt tail sits at the very END of both window templates and ships blank, which is what
+	# The Prompt tail sits at the very END of both window templates and ships blank, which is what
 	# lets the window own the prompt without moving a single byte of what a promptless window writes.
 	"OpenInputWindow": "{open_flag} = true\n{deadline} = Time.get_ticks_msec() / 1000.0 + {seconds}{prompt}",
 	"CloseInputWindow": "{open_flag} = false{prompt}",
@@ -134,7 +134,7 @@ static func run() -> bool:
 	return ok
 
 
-## X23. Teaching a shape and saving the library used to be two half-truths: teaching wrote into the
+## Teaching a shape and saving the library used to be two half-truths: teaching wrote into the
 ## library but nothing said so, and saving replaced the library wholesale and then did NOTHING at all
 ## when the resource had no file - the guide had to carry a trap paragraph for both. One write-through
 ## now serves teach, forget and save, and every refusal says why out loud. Both rows keep their ids.
@@ -207,7 +207,7 @@ static func _context() -> Dictionary:
 static func _grammar_values() -> bool:
 	var ok: bool = true
 	var context: Dictionary = _context()
-	# X22 - the calibration line, and the two ways it is refused.
+	# The calibration line, and the two ways it is refused.
 	ok = _check("the stored neutral point reads as the calibration row",
 		str(EventSheetSentence.tilt_neutral_parts("neutral = Input.get_accelerometer()", context)
 			.get("text", "")), "Set neutral to Touch.Acceleration") and ok
@@ -217,14 +217,14 @@ static func _grammar_values() -> bool:
 	ok = _check("a sensor read the file never measures a tilt from is refused",
 		EventSheetSentence.tilt_neutral_parts("shake = Input.get_accelerometer()", context).is_empty(),
 		true) and ok
-	# X22 - the tilt fed into movement, and the same line without a tilt behind it.
+	# The tilt fed into movement, and the same line without a tilt behind it.
 	ok = _check("the tilt fed into movement reads as steering",
 		str(EventSheetSentence.tilt_steer_parts("velocity.x = tilt.x * tilt_strength * delta", context)
 			.get("text", "")), "Steer by tilt x at tilt strength") and ok
 	ok = _check("a multiplication by something that is not a tilt is refused",
 		EventSheetSentence.tilt_steer_parts("velocity.x = wind.x * tilt_strength * delta", context)
 			.is_empty(), true) and ok
-	# X22 - the two halves of a gyro aim, and the note they share.
+	# The two halves of a gyro aim, and the note they share.
 	var turn: Dictionary = EventSheetSentence.gyro_aim_turn_parts("rotate_y(-rate.y * delta)", context)
 	ok = _check("the body's half of a gyro aim names the rate", str(turn.get("rate", "")), "rate") and ok
 	ok = _check("the camera's half names the camera",
@@ -236,7 +236,7 @@ static func _grammar_values() -> bool:
 	ok = _check("the gyro note says where each half happens and what drives it",
 		EventSheetSentence.gyro_aim_note(),
 		"yaw on the body, pitch on the camera · Touch.RotationRate") and ok
-	# X28 - the opened window, and the note that says which clock the deadline is on.
+	# The opened window, and the note that says which clock the deadline is on.
 	var opened: Dictionary = EventSheetSentence.input_window_parts("window_open = true",
 		"window_until = Time.get_ticks_msec() / 1000.0 + seconds", context)
 	ok = _check("the flag and the deadline read as one opened window",

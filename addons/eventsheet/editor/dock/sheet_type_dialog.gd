@@ -52,12 +52,12 @@ const TYPE_HINTS: Array[String] = [
 	"One always-on instance the whole game can call by name.",
 	"A data asset type: each saved file of it is edited in the Inspector.",
 	"Claims about your game that a runner checks and reports pass/fail on.",
-	# R33. The three tool types that are not "a chore you press Run on". They share the Editor Tools
+	# The three tool types that are not "a chore you press Run on". They share the Editor Tools
 	# vocabulary with index 3 and differ only in WHEN they run, which is what each line says first.
 	"A plugin the editor switches on: it adds a dock, a Tools menu item, an object type.",
 	"Runs when files are imported - fix up or check what just landed in the project.",
 	"Runs when the project is exported - stamp a build, bake a file, strip debug content.",
-	# W17. The two remaining shapes. The add-on line names the six classes rather than the concept,
+	# The two remaining shapes. The add-on line names the six classes rather than the concept,
 	# because "add-on" alone tells a reader nothing about which one they are choosing.
 	"A piece a plugin hands the editor: a Properties bar add-on, importer, thumbnail maker, debugger panel, context menu or view handle.",
 	"A script the Godot binary runs headless from the command line, with arguments and an exit code.",
@@ -81,7 +81,7 @@ const TYPE_LABELS: PackedStringArray = [
 	"Command Tool (runs headless from the command line)",  # extends SceneTree
 ]
 
-## C4. The order the KIND dropdown reads in: the six kinds most sheets are, then a divider, then the
+## The order the KIND dropdown reads in: the six kinds most sheets are, then a divider, then the
 ## kinds that make editor tooling. `-1` is the divider. The type INDEX is what a saved sheet
 ## round-trips through, so the list is reordered by carrying each index as the item's id rather than
 ## by renumbering anything.
@@ -92,7 +92,7 @@ const TYPE_ORDER: PackedInt32Array = [0, 1, 2, 4, 5, 6, -1, 3, 7, 8, 9, 10, 11]
 ## (Editor Tool) is here too: one table, so the dialog's preview line and the apply path cannot drift.
 ## An Import tool and an Export hook are both EditorScripts - a plain named handler the editor calls -
 ## while an Editor plugin is the engine's own EditorPlugin node.
-## W17 appends index 11 (Command tool). Index 10 (Editor add-on) is deliberately absent: it is the
+## Appends index 11 (Command tool). Index 10 (Editor add-on) is deliberately absent: it is the
 ## one tool type whose host the sheet DOES choose.
 const TOOL_TYPE_HOSTS: Dictionary = {
 	3: "EditorScript",
@@ -102,13 +102,14 @@ const TOOL_TYPE_HOSTS: Dictionary = {
 	11: "SceneTree",
 }
 
-## W17. The type indices that are tool sheets - every one of them forces `@tool` on, whether or not
+## The type indices that are tool sheets - every one of them forces `@tool` on, whether or not
 ## it also forces a host. Index 10 is here and not in TOOL_TYPE_HOSTS for exactly that reason.
 const TOOL_TYPE_INDICES: PackedInt32Array = [3, 7, 8, 9, 10, 11]
 
 ## What ticking each Editor-plugin capability seeds into the sheet: the trigger the editor calls, the
 ## action that adds the thing, and the action that takes it away again. Keyed by the checkbox order
-## the mockup fixed (dock, Tools menu item, custom object type, Inspector button).
+## the four shapes an editor add-on can take (dock, Tools menu item, custom object type,
+## Inspector button).
 const PLUGIN_CAPABILITIES: Array[Dictionary] = [
 	{"key": "dock", "label": "a dock", "add": "AddEditorDock", "remove": "RemoveEditorDock"},
 	{"key": "menu_item", "label": "a Tools menu item", "add": "AddToolsMenuItem", "remove": "RemoveToolsMenuItem"},
@@ -186,14 +187,14 @@ static func field_visibility(type_index: int) -> Dictionary:
 	# A Test sheet is not a type anyone instantiates by name - it is a script a runner starts - so it
 	# hides the class-name/icon pair a Create Node entry needs while keeping the description (what
 	# this test covers) and forcing its own host, like Editor Tool and Autoload do.
-	# R33. The four tool types (3 / 7 / 8 / 9) force their own host, so the host row hides for them the
+	# The four tool types (3 / 7 / 8 / 9) force their own host, so the host row hides for them the
 	# way it does for Autoload and Test; the Editor-plugin capability ticks are the one row only index
 	# 7 shows, because they are the only choice an EditorPlugin sheet makes that a script cannot.
 	return {
 		"name": type_index != 0 and type_index != 6,
 		"icon": type_index != 0 and type_index != 6,
 		"description": type_index != 0,
-		# W17. Index 10 (Editor add-on) joins the host-showing list: which of Godot's add-on classes it
+		# Index 10 (Editor add-on) joins the host-showing list: which of Godot's add-on classes it
 		# extends IS the choice that type makes, so hiding the field would hide the whole decision.
 		"host": type_index in [0, 1, 2, 5, 10],
 		"family": type_index in [1, 2],
@@ -225,7 +226,7 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 	elif type_index == 4:
 		effective_host = "Node"
 	elif type_index == 10 and effective_host.is_empty():
-		# W17. An add-on with nothing typed yet is most often a Properties bar add-on, and a preview
+		# An add-on with nothing typed yet is most often a Properties bar add-on, and a preview
 		# reading "extends Node" would be a lie about what the sheet will compile to.
 		effective_host = "EditorInspectorPlugin"
 	elif type_index == 5 and not EventSheetScriptIntent.is_resource_host(effective_host):
@@ -240,7 +241,7 @@ static func identity_preview(type_index: int, class_name_text: String, host_text
 	return "Ships as:  %s" % preview
 
 
-## R33. Which of the three EditorScript type indices a sheet already IS. All three compile to the
+## Which of the three EditorScript type indices a sheet already IS. All three compile to the
 ## same `@tool extends EditorScript`; what tells them apart is the moment the editor calls them, so
 ## the trigger the sheet carries is the honest answer. A tool with neither is the plain Editor Tool
 ## (index 3) - the one you press Run on. Static + value-driven so a test pins it without a dialog.
@@ -437,7 +438,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
 	_sheet_type_description_edit = _dock._add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
 	_sheet_type_autoload_edit = _dock._add_sheet_type_field(ident_box, "Autoload name", "GameState - a global name every sheet can call")
-	# C4 - "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
+	# "Runs in the editor too" reads as a field of the sheet's identity, not as a power option:
 	# it is one of the lines the head shows, so it is edited where the other lines are.
 	_sheet_type_tool_check = CheckBox.new()
 	_sheet_type_tool_check.text = "Runs in the editor too  -  @tool"
@@ -447,7 +448,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_family_check = CheckBox.new()
 	_sheet_type_family_check.text = "Family - one rule can target every instance at once"
 	ident_box.add_child(_sheet_type_family_check)
-	# R33. What an Editor plugin ADDS to the editor. Ticking a box is the whole authoring gesture: on
+	# What an Editor plugin ADDS to the editor. Ticking a box is the whole authoring gesture: on
 	# OK the sheet arrives with the pair of events that capability needs (add it when the plugin is
 	# enabled, take it away again when it is disabled). Seeding is additive and idempotent - a box
 	# whose actions are already on the sheet writes nothing, so reopening the dialog is safe.
@@ -484,7 +485,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_more_card = EventSheetPopupUI.titled_card("More options", more_box)
 	_more_card.visible = false
 	form.add_child(_more_card)
-	# C4 / P0 - ONE help strip at the foot, describing whatever field or kind is focused. No READS AS
+	# ONE help strip at the foot, describing whatever field or kind is focused. No READS AS
 	# line: the sheet's own head, right above this dialog, IS the preview of what these fields write.
 	_help_strip = EventSheetPopupUI.help_strip(
 		"Kind · %s" % TYPE_LABELS[0], TYPE_HINTS[0], "", "", 440.0)

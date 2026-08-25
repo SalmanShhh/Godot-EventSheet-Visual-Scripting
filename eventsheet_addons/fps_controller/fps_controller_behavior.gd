@@ -59,100 +59,64 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
-var _bob_base_y: float = 0.0
-var _bob_captured: bool = false
-var _bob_time: float = 0.0
-var _coyote_timer: float = 0.0
-var _firing_timer: float = 0.0
-var _jumps_left: int = 0
-var _sway_x: float = 0.0
-var _sway_y: float = 0.0
 var ai_move_x: float = 0.0
 var ai_move_z: float = 0.0
-var crouching: bool = false
-var head_base_y: float = 0.0
+var yaw: float = 0.0
 var pitch: float = 0.0
-var push_x: float = 0.0
-var push_z: float = 0.0
-var shape_base_y: float = 0.0
+var sprint_held: bool = false
+var _firing_timer: float = 0.0
+var _bob_time: float = 0.0
+var _bob_base_y: float = 0.0
+var _bob_captured: bool = false
+var _sway_x: float = 0.0
+var _sway_y: float = 0.0
+var was_on_floor: bool = true
+var _jumps_left: int = 0
+var _coyote_timer: float = 0.0
+var crouching: bool = false
+var sliding: bool = false
+var slide_time: float = 0.0
 var slide_dir_x: float = 0.0
 var slide_dir_z: float = 0.0
-var slide_time: float = 0.0
-var sliding: bool = false
-var sprint_held: bool = false
+var wall_riding: bool = false
+var wall_ride_time: float = 0.0
 var standing_height: float = 0.0
 var standing_radius: float = 0.0
-var wall_ride_time: float = 0.0
-var wall_riding: bool = false
-var was_on_floor: bool = true
-var yaw: float = 0.0
-## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
-@export_group("AI Driver")
-@export var ai_controlled: bool = false
-## How far the camera pulls back in third person (the SpringArm3D length).
-@export_group("Camera")
-@export var camera_distance: float = 3.5
-## Locks the mouse to the window for looking as soon as the scene starts.
-@export var capture_mouse_on_ready: bool = true
-## Starts in third-person camera when on, first-person when off.
-@export var third_person: bool = false
-## Capsule height while crouched (the feet stay planted).
-@export_group("Crouch & Slide")
-@export var crouch_height: float = 0.9
-## Multiplies move speed while crouched.
-@export var crouch_speed_multiplier: float = 0.5
-## Starting speed of a crouch slide, decaying to crouch-walk pace.
-@export var slide_boost_speed: float = 9.0
-## How long a crouch slide lasts, in seconds.
-@export var slide_duration: float = 0.9
-## Allows a crouch slide when crouching at speed.
-@export var slide_enabled: bool = true
-## Minimum horizontal speed needed to start a crouch slide.
-@export var slide_min_speed: float = 6.5
-## Grace window in seconds to still take the ground jump just after walking off a ledge (0 turns it off). A coyote jump is the floor jump, not a mid-air one, so it never spends the air-jump budget.
-@export_group("Jump")
-@export var coyote_time: float = 0.1
-## Upward velocity applied on a jump (and on a wall jump).
-@export var jump_velocity: float = 4.5
-## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
-@export var max_jumps: int = 1
-## Aim with the device's gyroscope as well as the mouse - the phone itself turns the view. Off on desktop, where the sensor reads 0 anyway.
-@export_group("Look")
-@export var gyro_aim: bool = false
-## How far a turn of the device moves the view, in mouse pixels per radian per second. Higher is twitchier.
-@export var gyro_sensitivity: float = 220.0
-## Look sensitivity in degrees turned per mouse pixel moved.
-@export var mouse_sensitivity: float = 0.12
-## Highest look angle in degrees (how far you can look up).
-@export var pitch_max: float = 80.0
-## Lowest look angle in degrees (how far you can look down).
-@export var pitch_min: float = -80.0
-## How much of the run you keep in mid-air, as a share: 1 turns on a coin the way you do on the ground, 0.35 lets you steer a jump without redirecting it, 0 is pure momentum. It is the difference between a floaty platformer and a shooter that rewards a good launch.
-@export_group("Movement")
-@export var air_control: float = 0.35
-## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
-@export var firing_move_speed: float = 2.5
-## Downward acceleration pulling the host to the floor, in metres per second squared.
-@export var gravity: float = 9.8
-## Landing with jump still held hops straight back off without ever planting a foot, and the landing frame keeps the speed it came in with - the bunny hop. Off, every landing settles to walking pace first.
-@export var keep_momentum: bool = true
+var shape_base_y: float = 0.0
+var head_base_y: float = 0.0
+var push_x: float = 0.0
+var push_z: float = 0.0
 ## Base walking speed in metres per second.
+@export_group("Movement")
 @export var move_speed: float = 5.0
 ## Multiplies move speed while the sprint key (Shift) is held.
 @export var sprint_multiplier: float = 1.6
-## Allows jumping off a wall while airborne.
-@export_group("Wall Tech")
-@export var wall_jump_enabled: bool = true
-## How hard a wall jump pushes away from the wall (the kick fades over about half a second).
-@export var wall_jump_push: float = 6.0
-## Allows riding a wall when airborne and pushing into it.
-@export var wall_ride_enabled: bool = true
-## Scales gravity while wall riding (lower means a slower slide down).
-@export var wall_ride_gravity_scale: float = 0.25
-## Longest a single wall ride can last, in seconds.
-@export var wall_ride_max_time: float = 1.5
-## Minimum horizontal speed needed to start or keep a wall ride.
-@export var wall_ride_min_speed: float = 3.0
+## Walking speed in metres per second while the firing window is open - the shooter's foot-planted slowdown. It replaces Move Speed as the base, so sprint and crouch still multiply it.
+@export var firing_move_speed: float = 2.5
+## How much of the run you keep in mid-air, as a share: 1 turns on a coin the way you do on the ground, 0.35 lets you steer a jump without redirecting it, 0 is pure momentum. It is the difference between a floaty platformer and a shooter that rewards a good launch.
+@export var air_control: float = 0.35
+## Landing with jump still held hops straight back off without ever planting a foot, and the landing frame keeps the speed it came in with - the bunny hop. Off, every landing settles to walking pace first.
+@export var keep_momentum: bool = true
+## Downward acceleration pulling the host to the floor, in metres per second squared.
+@export var gravity: float = 9.8
+## Upward velocity applied on a jump (and on a wall jump).
+@export_group("Jump")
+@export var jump_velocity: float = 4.5
+## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
+@export var max_jumps: int = 1
+## Grace window in seconds to still take the ground jump just after walking off a ledge (0 turns it off). A coyote jump is the floor jump, not a mid-air one, so it never spends the air-jump budget.
+@export var coyote_time: float = 0.1
+## Look sensitivity in degrees turned per mouse pixel moved.
+@export_group("Look")
+@export var mouse_sensitivity: float = 0.12
+## Aim with the device's gyroscope as well as the mouse - the phone itself turns the view. Off on desktop, where the sensor reads 0 anyway.
+@export var gyro_aim: bool = false
+## How far a turn of the device moves the view, in mouse pixels per radian per second. Higher is twitchier.
+@export var gyro_sensitivity: float = 220.0
+## Lowest look angle in degrees (how far you can look down).
+@export var pitch_min: float = -80.0
+## Highest look angle in degrees (how far you can look up).
+@export var pitch_max: float = 80.0
 ## How far a bobbing weapon rises and falls, in metres, at full running speed. Walk slower and the bob shrinks with you.
 @export_group("Weapon Feel")
 @export var bob_amount: float = 0.045
@@ -162,6 +126,42 @@ var yaw: float = 0.0
 @export var sway_amount: float = 0.002
 ## How quickly a swaying weapon catches back up, per second. Higher is a pistol, lower is a rocket launcher.
 @export var sway_speed: float = 10.0
+## Starts in third-person camera when on, first-person when off.
+@export_group("Camera")
+@export var third_person: bool = false
+## How far the camera pulls back in third person (the SpringArm3D length).
+@export var camera_distance: float = 3.5
+## Locks the mouse to the window for looking as soon as the scene starts.
+@export var capture_mouse_on_ready: bool = true
+## Capsule height while crouched (the feet stay planted).
+@export_group("Crouch & Slide")
+@export var crouch_height: float = 0.9
+## Multiplies move speed while crouched.
+@export var crouch_speed_multiplier: float = 0.5
+## Allows a crouch slide when crouching at speed.
+@export var slide_enabled: bool = true
+## Starting speed of a crouch slide, decaying to crouch-walk pace.
+@export var slide_boost_speed: float = 9.0
+## Minimum horizontal speed needed to start a crouch slide.
+@export var slide_min_speed: float = 6.5
+## How long a crouch slide lasts, in seconds.
+@export var slide_duration: float = 0.9
+## Allows riding a wall when airborne and pushing into it.
+@export_group("Wall Tech")
+@export var wall_ride_enabled: bool = true
+## Scales gravity while wall riding (lower means a slower slide down).
+@export var wall_ride_gravity_scale: float = 0.25
+## Longest a single wall ride can last, in seconds.
+@export var wall_ride_max_time: float = 1.5
+## Minimum horizontal speed needed to start or keep a wall ride.
+@export var wall_ride_min_speed: float = 3.0
+## Allows jumping off a wall while airborne.
+@export var wall_jump_enabled: bool = true
+## How hard a wall jump pushes away from the wall (the kick fades over about half a second).
+@export var wall_jump_push: float = 6.0
+## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
+@export_group("AI Driver")
+@export var ai_controlled: bool = false
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it lives
 # here). Designed for vertical flips - DOWN and UP are exact (walk on ceilings); a

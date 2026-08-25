@@ -36,11 +36,11 @@ signal on_stack_gained
 ## @ace_name("On Max Stacks Reached")
 signal on_max_stacks_reached
 
-var abilities: Dictionary = {}
-## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
-@export var ability_set: Resource = null
 ## Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
+## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
+@export var ability_set: Resource = null
+var abilities: Dictionary = {}
 var current_ability_id: String = ""
 
 ## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read

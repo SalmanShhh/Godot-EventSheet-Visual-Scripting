@@ -4,7 +4,7 @@
 # (globals + scene groups, sorted, deduped, engine-internal _groups skipped, quoted) and the
 # builtin group vocabulary carrying the hint on node-group params ONLY - a regex capture
 # group index stays a plain expression field, while the two event-group toggles take the same hint
-# pointed at the SHEET's own groups (G2) - which list the dialog offers is derived from the template.
+# pointed at the SHEET's own groups - which list the dialog offers is derived from the template.
 @tool
 class_name GroupReferenceParamTest
 extends RefCounted
@@ -46,7 +46,7 @@ static func run() -> bool:
 	all_passed = _check("a regex capture group index is NOT a node group", _param_hint(by_id, "RegexCaptureGroup", "group"), "expression") and all_passed
 	all_passed = _check("Run On Tagged's tag is a node group too", _param_hint(by_id, "CallOnTagged", "tag"), "group_reference") and all_passed
 
-	# ---- G2: the SAME hint, pointed at the sheet's own groups for the two group toggles ----
+	# ---- The SAME hint, pointed at the sheet's own groups for the two group toggles ----
 	# Which list the dialog offers is derived from what the template does with the value: Set/Is
 	# Group Active build the very "__group_<name>_active" member the compiler emits for a
 	# runtime-toggleable group, and nothing that means a NODE group ever does.

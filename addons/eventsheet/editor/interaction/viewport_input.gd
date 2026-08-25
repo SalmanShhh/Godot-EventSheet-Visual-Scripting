@@ -30,7 +30,7 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
-## W13 - go to the function a ƒ chip names. The same two calls the Outline makes when one of its
+## Go to the function a ƒ chip names. The same two calls the Outline makes when one of its
 ## entries is picked, so the chip and the panel land the reader in the very same place; a name whose
 ## function this sheet does not declare simply does nothing, which is what the chip promised.
 func _jump_to_function(function_name: String) -> bool:
@@ -45,7 +45,7 @@ func _jump_to_function(function_name: String) -> bool:
 	return true
 
 
-## P3 / S25 - the coverage chip's click: reveal the next place the chip counted and select it,
+## The coverage chip's click: reveal the next place the chip counted and select it,
 ## wrapping round at the end. The chip says how many there are; this is how a reader goes and looks
 ## at them, one click at a time, without leaving the sheet.
 ##
@@ -67,7 +67,7 @@ func _walk_to_next_script_block() -> bool:
 	return _viewport.reveal_resource(target)
 
 
-## S25 - the events that OWN a pattern claim, in sheet order and each one once, however many
+## The events that OWN a pattern claim, in sheet order and each one once, however many
 ## patterns it was claimed for. Resolved from the registry's row uids against the live sheet, so a
 ## claim left over from a shape that has since been edited away simply has nowhere to land.
 func _pattern_events(sheet: EventSheetResource) -> Array[EventRow]:
@@ -265,7 +265,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# Click the inline colour swatch -> open the colour picker directly (no params dialog). The
 		# renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
 		# it and the cell's ACE has a Color param, hand off to the dock's picker popup.
-		# R37 - the same swatch, the same picker, on a VARIABLE row. A colour is a colour wherever it
+		# The same swatch, the same picker, on a VARIABLE row. A colour is a colour wherever it
 		# is written; the write-back keeps the spelling the line already used.
 		if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
 				and (metadata["swatch_rect"] as Rect2).has_point(local_position) \
@@ -301,7 +301,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# its own path, and the dock's navigation probe already knows how to reach it, so this is the
 		# same jump Ctrl+Click makes anywhere else - just without the modifier, because the bar offers
 		# it in words.
-		# P4 - an object bar inside a scene view: a DOUBLE-click opens that node's script as its own
+		# An object bar inside a scene view: a DOUBLE-click opens that node's script as its own
 		# sheet, which is where editing happens. A scene view never writes anything itself, so this is
 		# the gesture that leads out of it.
 		if event.double_click and str(metadata.get("kind", "")) == "scene_object_open" and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
@@ -319,35 +319,35 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_walk_to_next_script_block()
 			_viewport.accept_event()
 			return
-		# S19 - the ⟡ chip names a pattern; clicking it opens that pattern's page in the Manual, with
+		# The ⟡ chip names a pattern; clicking it opens that pattern's page in the Manual, with
 		# the hand-written shape and the events shape side by side. The hover already promised this,
 		# so the click has to keep the promise.
 		if not event.double_click and str(metadata.get("kind", "")) == "pattern_chip":
 			EventSheetPatternManual.open_page(str(metadata.get("pattern", "")))
 			_viewport.accept_event()
 			return
-		# W13 - the ƒ chip names a function this sheet declares; clicking it goes there, the way the
+		# The ƒ chip names a function this sheet declares; clicking it goes there, the way the
 		# Outline does. One click, no modifier: the chip is the sheet's own word for "a function, by
 		# name", and a name a reader can see is a name they want to be at.
 		if not event.double_click and str(metadata.get("kind", "")) == "function_ref":
 			_jump_to_function(str(metadata.get("name", "")))
 			_viewport.accept_event()
 			return
-		# X11 - the flags… chip at the end of an Add child row reopens the four ticks the row was
+		# The flags… chip at the end of an Add child row reopens the four ticks the row was
 		# written with. One click, like every other chip that ends in an affordance; the viewport
 		# only names what was clicked, and the dock owns the dialog and the undoable write.
 		if not event.double_click and str(metadata.get("kind", "")) == "hierarchy_flags":
 			_viewport.hierarchy_flags_requested.emit(metadata.get("hierarchy_flags", {}))
 			_viewport.accept_event()
 			return
-		# R33. A tool sheet's own buttons, next to the coverage chip and read the same way: one click,
+		# A tool sheet's own buttons, next to the coverage chip and read the same way: one click,
 		# one thing happens. The viewport only names the button - compiling and running belong to the
 		# dock, which owns the sheet's path and its status line.
 		if not event.double_click and str(metadata.get("kind", "")).begins_with("editor_tool_"):
 			_viewport.editor_tool_action_requested.emit(str(metadata.get("kind", "")))
 			_viewport.accept_event()
 			return
-		# W20. The same one-click grammar on a sheet that is part of the running editor: Enabled,
+		# The same one-click grammar on a sheet that is part of the running editor: Enabled,
 		# Reload, Output, plugin.cfg, Edit anyway. The muted words beside them carry a kind too, so a
 		# click on "part of this editor · read-only" is swallowed here rather than selecting the bar.
 		if not event.double_click and str(metadata.get("kind", "")).begins_with("this_editor_"):
@@ -358,7 +358,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		# swatch, the `@tool` switch, the autoload band's Project Settings link, a new sheet's prompts
 		# and the "+ add" row. The name band is the exception - it renames on F2 or a double-click, so
 		# a single click there only selects, the way a click on a name anywhere else does.
-		# G2 - the two marks a group head ends with, read the same one-click way as the head bands':
+		# The two marks a group head ends with, read the same one-click way as the head bands':
 		# the switch turns the group on and off, the ring before it makes the group switchable at
 		# runtime. Both are marks, so a click on one is never a click on the title.
 		var group_action: String = str(metadata.get("group_action", ""))
@@ -367,13 +367,13 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.group_action_requested.emit(group_action, row_data.source_resource as EventGroup)
 			_viewport.accept_event()
 			return
-		# V12 - the fix beside an unknown-variable note, one click like the fence's.
+		# The fix beside an unknown-variable note, one click like the fence's.
 		if not event.double_click and str(metadata.get("variable_note", "")) == "fix":
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.variable_note_fix_requested.emit(row_data)
 			_viewport.accept_event()
 			return
-		# R3 - the fix beside an unmatched fence's note, read the same one-click way.
+		# The fix beside an unmatched fence's note, read the same one-click way.
 		if not event.double_click and metadata.has("region_fix"):
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport.region_fix_requested.emit(row_data)
@@ -398,7 +398,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.verb_properties_requested.emit(row_data.source_resource)
 			_viewport.accept_event()
 			return
-		# N10 - ONE click on a row's OBJECT name opens the object popup: what type it is, where in the
+		# ONE click on a row's OBJECT name opens the object popup: what type it is, where in the
 		# scene it lives, which verbs this file uses it with, which of its signals it listens to. The
 		# label is drawn inside the leading edge of the cell rather than as its own span, so the
 		# renderer stamps its drawn bounds and this hit-tests them - the same seam the colour swatch
@@ -533,19 +533,19 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.variable_group_rename_requested.emit(str(double_click_meta.get("variable_group")))
 				_viewport.accept_event()
 				return
-			# C4 - a double-click on the head's name band is the rename gesture the file's name
+			# A double-click on the head's name band is the rename gesture the file's name
 			# deserves: it renames the class everywhere, with the count said first.
 			if not str(double_click_meta.get("head_action", "")).is_empty():
 				_viewport.sheet_head_action_requested.emit(str(double_click_meta.get("head_action", "")))
 				_viewport.accept_event()
 				return
-			# V13 - the code echo is a door into the script: activating it opens the code panel at the
+			# The code echo is a door into the script: activating it opens the code panel at the
 			# very line the row writes.
 			if bool(double_click_meta.get("code_echo", false)):
 				_viewport.code_echo_activated.emit(row_data)
 				_viewport.accept_event()
 				return
-			# V12 - the VALUE is the one cell of a variable row that edits in place, with the type word
+			# The VALUE is the one cell of a variable row that edits in place, with the type word
 			# beside it as the guide rail. Everywhere else on the row still opens the dialog.
 			if bool(double_click_meta.get("variable_value_span", false)) and span_index >= 0:
 				_viewport._begin_edit(row_index, span_index)
@@ -617,7 +617,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		_viewport._clear_ace_drag()
 		_viewport.queue_redraw()
 		return
-	# V8 - a variable row let go on a parameter VALUE writes what that field would need: bare for an
+	# A variable row let go on a parameter VALUE writes what that field would need: bare for an
 	# instance variable or a local, `Game.Score` for a global, where the prefix is real code and
 	# cannot be dropped. Checked before the reorder below, because a variable dropped on a cell is an
 	# insertion into that cell and never a move of the declaration.
@@ -776,7 +776,7 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport.handle_enter_key()
 		_viewport.accept_event()
 	elif event.keycode == KEY_F2:
-		# C4 / V8 - F2 on a NAME renames it everywhere: the head's name band renames the class, a
+		# F2 on a NAME renames it everywhere: the head's name band renames the class, a
 		# variable row's name renames the variable in place with the count of what that will rewrite.
 		# Everywhere else it stays the plain begin-edit escape hatch.
 		if not _selected_head_action().is_empty():

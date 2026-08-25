@@ -1,4 +1,4 @@
-# EventForge - the engine's parse errors, mapped to the rows they belong to (P2).
+# EventForge - the engine's parse errors, mapped to the rows they belong to.
 #
 # An event sheet marks a broken event red with the reason. When an opened .gd does not compile, the
 # reason shown has to be the ENGINE'S own words on the engine's own line - so the report shape is

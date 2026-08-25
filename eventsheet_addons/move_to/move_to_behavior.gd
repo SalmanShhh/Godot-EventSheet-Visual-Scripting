@@ -25,18 +25,18 @@ signal path_blocked
 
 ## Pixels per second the host glides toward its target.
 @export var max_speed: float = 200.0
-var moving: bool = false
 ## When on, the host faces its direction of travel.
 @export var rotate_toward_motion: bool = false
-## Also stop the sweep on Area2D nodes, which it ignores by default.
-@export var step_hits_areas: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
 ## Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through a thin wall between two frames.
 @export var stepping: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Also stop the sweep on Area2D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
 ## Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it.
 @export var stop_on_step_hit: bool = true
 var waypoints: Array = []
+var moving: bool = false
 
 func _process(delta: float) -> void:
 	if moving and is_instance_valid(host) and not waypoints.is_empty():

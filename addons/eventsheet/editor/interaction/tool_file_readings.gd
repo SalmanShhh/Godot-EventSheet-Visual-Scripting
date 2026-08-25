@@ -2,7 +2,7 @@
 class_name EventSheetToolFiles
 extends RefCounted
 
-# W9 / W10 / W11. The three kinds of file a project's TOOLING is written in, read as the sheets they
+# The three kinds of file a project's TOOLING is written in, read as the sheets they
 # already are: a test, a command-line tool, and a behavior pack's recipe.
 #
 # Every one of them is a whole-FILE shape rather than a statement: a `quit(1)` means "finish with
@@ -182,7 +182,7 @@ static func _in_folder(script_path: String, folder: String) -> bool:
 	return script_path.get_base_dir().split("/").has(folder)
 
 
-# ── W9. Test sheets ───────────────────────────────────────────────────────────────────────────────
+# ── Test sheets ───────────────────────────────────────────────────────────────────────────────────
 
 
 ## The names a test folds its verdict through: every local declared `true` and later written as
@@ -332,7 +332,7 @@ static func head_chips(kind: String, check_count: int, head: Dictionary = {}) ->
 	return chips
 
 
-# ── W10. Command tools ────────────────────────────────────────────────────────────────────────────
+# ── Command tools ─────────────────────────────────────────────────────────────────────────────────
 
 
 ## The locals a folder walk fills: `var entry: String = dir.get_next()`. The `while not entry.is_empty()`
@@ -437,7 +437,7 @@ static func command_expression(text: String, context: Dictionary) -> String:
 	return ""
 
 
-# ── W11. Pack recipes ─────────────────────────────────────────────────────────────────────────────
+# ── Pack recipes ──────────────────────────────────────────────────────────────────────────────────
 
 
 ## What a recipe says about the behavior it builds, and the GDScript it builds it out of:

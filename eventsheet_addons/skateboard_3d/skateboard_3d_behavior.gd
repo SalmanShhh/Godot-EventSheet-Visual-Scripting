@@ -36,55 +36,55 @@ signal bailed
 ## @ace_category("Skateboard 3D")
 signal trick_done(trick: String, points: float)
 
-var _balance: float = 0.0
-var _balancing: bool = false
-var _banked_score: float = 0.0
-var _chain_multiplier: int = 1
-var _chain_score: float = 0.0
-var _grind_direction: float = 1.0
-var _grinding: bool = false
-var _manual: bool = false
-var _rail_offset: float = 0.0
-var _spin_turns: float = 0.0
-var _was_on_floor: bool = false
-var _zip_speed: float = 0.0
-var _zipline: bool = false
+## How much speed one push adds toward the top speed (m/s). A board keeps it - there is no per-tick acceleration here.
+@export var push_speed: float = 2.0
+## The fastest a push will take you (m/s). A slope can still carry you past it.
+@export var max_speed: float = 18.0
+## Upward speed an ollie gives you (m/s).
+@export var ollie_speed: float = 6.0
+## Downward acceleration (m/s²). Roll With The Slope projects this onto the surface.
+@export var gravity: float = 24.0
+## Terminal velocity - gravity never pulls you down faster than this.
+@export var max_fall_speed: float = 40.0
+## Rolling friction on the ground (m/s²). Low, because a board coasts.
+@export var friction: float = 1.4
+## How much of gravity the surface hands you. 1 is a real ramp, above 1 exaggerates it, 0 makes hills flat.
+@export_range(0, 3, 0.05) var slope_grip: float = 1.0
 ## How quickly the board swings flat onto the surface it is on. Higher is snappier, lower reads as suspension.
 @export var align_speed: float = 12.0
+## How steep a surface has to be for leaving it to count as a lip launch rather than an ordinary drop off an edge.
+@export_range(10, 89, 1) var lip_angle_degrees: float = 55.0
+## Extra upward speed a lip launch adds on top of the speed the transition already gave you (m/s). Leave at 0 for honest physics.
+@export var lip_boost: float = 0.0
+## Default turns per second a Spin or Flip trick turns at.
+@export var trick_spin_rate: float = 1.0
+## How far the board's up may be off the surface normal and still land clean. Wider is friendlier.
+@export_range(1, 90, 1) var landing_tolerance_degrees: float = 25.0
+## Default speed along a rail (m/s) when a grind is not keeping your momentum.
+@export var grind_speed: float = 10.0
+## How close to the rail's line the board has to be for Is Near Rail to say yes (m).
+@export var rail_snap_distance: float = 0.6
+## Upward speed a hop off a rail gives you (m/s).
+@export var hop_off_speed: float = 4.5
 ## How fast balance slides toward the edge per second while you are balancing. 0 is a free ride.
 @export var balance_drift: float = 0.8
 ## How hard one full steer pushes balance back toward the middle, per second.
 @export var balance_steer: float = 1.6
 ## How far out balance has to be before Is Losing Balance says yes. 1 is the bail.
 @export_range(0, 1, 0.05) var balance_warn: float = 0.6
-## Rolling friction on the ground (m/s²). Low, because a board coasts.
-@export var friction: float = 1.4
-## Downward acceleration (m/s²). Roll With The Slope projects this onto the surface.
-@export var gravity: float = 24.0
-## Default speed along a rail (m/s) when a grind is not keeping your momentum.
-@export var grind_speed: float = 10.0
-## Upward speed a hop off a rail gives you (m/s).
-@export var hop_off_speed: float = 4.5
-## How far the board's up may be off the surface normal and still land clean. Wider is friendlier.
-@export_range(1, 90, 1) var landing_tolerance_degrees: float = 25.0
-## How steep a surface has to be for leaving it to count as a lip launch rather than an ordinary drop off an edge.
-@export_range(10, 89, 1) var lip_angle_degrees: float = 55.0
-## Extra upward speed a lip launch adds on top of the speed the transition already gave you (m/s). Leave at 0 for honest physics.
-@export var lip_boost: float = 0.0
-## Terminal velocity - gravity never pulls you down faster than this.
-@export var max_fall_speed: float = 40.0
-## The fastest a push will take you (m/s). A slope can still carry you past it.
-@export var max_speed: float = 18.0
-## Upward speed an ollie gives you (m/s).
-@export var ollie_speed: float = 6.0
-## How much speed one push adds toward the top speed (m/s). A board keeps it - there is no per-tick acceleration here.
-@export var push_speed: float = 2.0
-## How close to the rail's line the board has to be for Is Near Rail to say yes (m).
-@export var rail_snap_distance: float = 0.6
-## How much of gravity the surface hands you. 1 is a real ramp, above 1 exaggerates it, 0 makes hills flat.
-@export_range(0, 3, 0.05) var slope_grip: float = 1.0
-## Default turns per second a Spin or Flip trick turns at.
-@export var trick_spin_rate: float = 1.0
+var _manual: bool = false
+var _grinding: bool = false
+var _zipline: bool = false
+var _zip_speed: float = 0.0
+var _rail_offset: float = 0.0
+var _grind_direction: float = 1.0
+var _balancing: bool = false
+var _balance: float = 0.0
+var _chain_score: float = 0.0
+var _chain_multiplier: int = 1
+var _banked_score: float = 0.0
+var _spin_turns: float = 0.0
+var _was_on_floor: bool = false
 
 # The rail this board is riding, and the surface it last stood on. The surface is kept
 # because the lip test only has an answer the frame AFTER the board has left it.

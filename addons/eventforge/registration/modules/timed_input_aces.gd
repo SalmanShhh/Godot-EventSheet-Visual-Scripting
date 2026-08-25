@@ -1,4 +1,4 @@
-# EventForge module - Timed inputs (X28): input windows, mashes, prompts and graded timing.
+# EventForge module - Timed inputs: input windows, mashes, prompts and graded timing.
 #
 # A dodge window, a finisher, a lockpick and a rhythm hit are all the same five words: open a window
 # for a moment, ask whether the control was pressed while it was open, grade how close to the end it
@@ -47,7 +47,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## Y2 - input buffering, the third timing trick a combo game writes.
+## Input buffering, the third timing trick a combo game writes.
 ##
 ## A window asks "was it pressed while I was listening"; a BUFFER asks the other way round - the
 ## player pressed a moment too early, and the game remembers the press for a moment so the move

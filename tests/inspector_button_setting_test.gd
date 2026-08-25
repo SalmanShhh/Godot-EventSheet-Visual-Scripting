@@ -1,4 +1,4 @@
-# EventForge - R32. An Inspector button is the smallest editor tool there is - one line - and it now
+# EventForge - An Inspector button is the smallest editor tool there is - one line - and it now
 # reads as one row: `button Bake  in the Inspector · calls Bake`. Until this it opened as a Script
 # block, because the structured export lift did not know `@export_tool_button` and the generic hinted
 # emission (`var bake: Variant = _bake`) could never reproduce a line that annotates no type.

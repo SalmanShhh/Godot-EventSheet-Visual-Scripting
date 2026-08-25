@@ -281,7 +281,7 @@ static func _plumbing_lines() -> PackedStringArray:
 	])
 
 
-## Y7 - the ledge verbs: the two-probe test, the grab, the two exits.
+## The ledge verbs: the two-probe test, the grab, the two exits.
 static func _append_ledge(sheet: EventSheetResource) -> void:
 	Lib.condition(sheet, "is_at_a_ledge", "Is At A Ledge", "Traversal 3D",
 		"True when the forward probe finds a wall at chest height and the higher probe finds nothing - a lip you could hang from. False while already hanging, and for a moment after a Drop so you do not re-grab the lip you just let go of.",
@@ -333,7 +333,7 @@ static func _append_ledge(sheet: EventSheetResource) -> void:
 		])))
 
 
-## Y8 - the wall verbs, all three built on the wall the body is already touching.
+## The wall verbs, all three built on the wall the body is already touching.
 static func _append_walls(sheet: EventSheetResource) -> void:
 	Lib.condition(sheet, "is_wall_sliding", "Is Wall Sliding", "Traversal 3D",
 		"True on the frames a Slide Down Wall actually slowed a fall.",
@@ -383,7 +383,7 @@ static func _append_walls(sheet: EventSheetResource) -> void:
 	_default(sheet, "min_speed", "3.0")
 
 
-## Y10 - the small verbs: ladders, vaults, crouching.
+## The small verbs: ladders, vaults, crouching.
 static func _append_ladders_and_vaults(sheet: EventSheetResource) -> void:
 	Lib.condition(sheet, "is_on_ladder", "Is On Ladder", "Traversal 3D",
 		"True while the host is standing inside an Area3D marked with the ladder group.",
@@ -454,7 +454,7 @@ static func _append_ladders_and_vaults(sheet: EventSheetResource) -> void:
 		])))
 
 
-## Y11 - water: the marked area, the two triggers, swimming, and the buoyancy push.
+## Water: the marked area, the two triggers, swimming, and the buoyancy push.
 static func _append_water(sheet: EventSheetResource) -> void:
 	Lib.condition(sheet, "is_in_water", "Is In Water", "Traversal 3D",
 		"True while the host is inside an Area3D marked with the water group.",

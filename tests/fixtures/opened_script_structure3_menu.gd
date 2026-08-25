@@ -1,6 +1,6 @@
 ## A hand-written UI script of the commonest kind: nothing connects anything, because the project
 ## wired both signals in the Godot editor - so the .tscn beside this file holds the connections and
-## these two functions are all the script has. Fixture for the scene-connection reading (M42).
+## these two functions are all the script has. Fixture for the scene-connection reading.
 class_name Structure3Menu
 extends Control
 

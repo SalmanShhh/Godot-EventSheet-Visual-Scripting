@@ -2,7 +2,7 @@
 class_name EventSheetBuiltHere
 extends RefCounted
 
-# W19 - "SHOW THE EVENTS BEHIND THIS": Ctrl+Shift+Alt-click any control the plugin built and the
+# "SHOW THE EVENTS BEHIND THIS": Ctrl+Shift+Alt-click any control the plugin built and the
 # sheet that built it opens, scrolled to the row that made it.
 #
 # "Where is this button made" is one of the two questions a contributor asks most, and today it is
@@ -16,7 +16,7 @@ extends RefCounted
 # pointing at the wrong row.
 #
 # NOTHING IS WRITTEN OUTSIDE THIS REPO. `mark` is a no-op unless the open project IS the editor's own
-# (the W1 gate), so a shipped editor in a game project carries no meta, no strings and no extra
+# (the gate), so a shipped editor in a game project carries no meta, no strings and no extra
 # bytes. The marking calls stay in the source either way, which is deliberate: a mark that had to be
 # added and removed would be wrong within a week.
 

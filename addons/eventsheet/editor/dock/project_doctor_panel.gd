@@ -131,7 +131,7 @@ func _run_project_doctor() -> void:
 	# Through the public API so extension-registered checks (EventSheets.register_doctor_check)
 	# report in the panel exactly like built-ins.
 	var report: Dictionary = EventSheets.doctor()
-	# T13 - the Project bar badges its entries from THIS run rather than running the audit itself: a
+	# The Project bar badges its entries from THIS run rather than running the audit itself: a
 	# scan of the whole project on every bar rebuild is exactly the cost that panel promised not to
 	# have. Handing the findings over here is what makes the badges free.
 	EventSheetProjectOutline.set_doctor_findings(report.get("findings", []))

@@ -2,7 +2,7 @@
 class_name MarkedPlaceIconTest
 extends RefCounted
 
-# X5. A place copied off a MARKED spot wears the mark: `crate.global_position = spawn.global_position`
+# A place copied off a MARKED spot wears the mark: `crate.global_position = spawn.global_position`
 # reads "crate ▸ Set position to spawn spawn point", and the value in it names the marker's own class
 # so the canvas can draw that class's picture beside it - the picture the scene tree shows the node by.
 #

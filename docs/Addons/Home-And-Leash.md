@@ -230,8 +230,8 @@ Plant home on player one and check player two against it, so the camera never ha
 between them.
 
 ```
-Every tick -> P2 | Home & Leash: Set home at  P1.global_position
-  Condition: P2 | Is Beyond Home  400, Straight line
+Every tick -> Player2 | Home & Leash: Set home at  Player1.global_position
+  Condition: Player2 | Is Beyond Home  400, Straight line
     -> show the "stay together" nudge
 ```
 

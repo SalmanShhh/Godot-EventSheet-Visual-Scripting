@@ -439,7 +439,7 @@ func _usage_block(provider_id: String, ace_id: String) -> Control:
 	return EventSheetPopupUI.panel_section(row)
 
 
-## S26 - the PATTERNS this verb is part of, as links to their pages. Derived from the claims on the
+## The PATTERNS this verb is part of, as links to their pages. Derived from the claims on the
 ## sheet that is open right now, exactly the way the usage count above is: a verb belongs to the
 ## Cooldown pattern because a Cooldown claim in front of this reader lists it, and nothing here is
 ## a hand-kept table that could go stale.

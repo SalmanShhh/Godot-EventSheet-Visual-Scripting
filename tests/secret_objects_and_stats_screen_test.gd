@@ -2,7 +2,7 @@
 class_name SecretObjectsAndStatsScreenTest
 extends RefCounted
 
-# Pins the four X25 leftovers - the pieces of the boomer-shooter shape that were named but not built:
+# Pins the four boomer-shooter leftovers - the pieces of the boomer-shooter shape that were named but not built:
 #
 #   A  the FPS Controller's firing slowdown: an exported firing speed, a window a weapon opens, and
 #      the tick's speed line folding it in without touching Set Move Speed
@@ -104,7 +104,7 @@ static func _secret_mark() -> bool:
 	ok = _check("the mark belongs to the file that made it",
 		EventSheetObjectProperties.is_secret("res://other.gd", "SecretRoom"), false) and ok
 	# The panel offers the mark as a WRITABLE row, and says what ticking it does. An area carries a
-	# second tick beside it (Y11's water mark), so the row is picked by the mark it writes.
+	# second tick beside it (the water mark), so the row is picked by the mark it writes.
 	var secret_row: Dictionary = {}
 	for row: Dictionary in EventSheetObjectProperties.property_rows(area, "", "res://level.gd"):
 		if str(row.get("mark", "")) == "secret":

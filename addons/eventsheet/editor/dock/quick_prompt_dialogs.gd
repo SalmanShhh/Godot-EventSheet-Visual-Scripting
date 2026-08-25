@@ -79,7 +79,7 @@ var _inspector_button_dialog: ConfirmationDialog = null
 var _inspector_button_edit: LineEdit = null
 
 
-## R32. The smallest editor tool there is: a button in the Inspector that runs one function. Prompts
+## The smallest editor tool there is: a button in the Inspector that runs one function. Prompts
 ## for what the button should SAY, then hands the label to the caller, which writes the
 ## `@export_tool_button` line and the empty function it calls in one undo step.
 func prompt_inspector_button(callback: Callable) -> void:
@@ -190,7 +190,7 @@ var _group_color_seed: Color = Color(0, 0, 0, 0)
 const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Runs on", "Active on start", "Can be switched at runtime", "Colour"]
 
 
-## G4 - the ONE group dialog: name, description, active on start, switchable at runtime, colour.
+## The ONE group dialog: name, description, active on start, switchable at runtime, colour.
 ## Everything a group IS, in one place, instead of a name field plus three separate menu items.
 ## Reached by double-click / slow-click / Enter on a group head, from Edit group..., and right
 ## after Add Group.
@@ -235,7 +235,7 @@ func _build_group_edit_dialog() -> void:
 	_group_desc_edit.placeholder_text = "Damage, hits and death."
 	_group_desc_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
-	# M3 - who runs this group's events over a network. A dropdown, described choice by choice, and
+	# Who runs this group's events over a network. A dropdown, described choice by choice, and
 	# the answer is stored on the group rather than repeated as a condition on every event inside it.
 	_group_runs_on = OptionButton.new()
 	for choice: Dictionary in EventSheetGroupFacts.runs_on_choices():
@@ -297,7 +297,7 @@ static func _group_field_help(field: String) -> String:
 	return ""
 
 
-## M3. Writes the answer a reader picked from the head's Runs on submenu. One undo step, through the
+## Writes the answer a reader picked from the head's Runs on submenu. One undo step, through the
 ## same path the dialog's Apply takes, so the two gestures can never write the fact two ways.
 func on_group_runs_on_chosen(menu_id: int) -> void:
 	var group: EventGroup = _dock._context_group()
@@ -308,7 +308,7 @@ func on_group_runs_on_chosen(menu_id: int) -> void:
 		{"runs_on": str(_dock.GROUP_RUNS_ON_VALUES[menu_id])})
 
 
-## M3. Once a group says who runs it, the same test written on one of its own events is the group's
+## Once a group says who runs it, the same test written on one of its own events is the group's
 ## word said twice - and it would compile twice, `multiplayer.is_server() and multiplayer.is_server()`.
 ## This takes it off every row the group now guards; a nested group that answers for itself keeps its
 ## own rows. That is what makes "Runs on: the host" the way to fold up a project that repeated an
@@ -334,7 +334,7 @@ static func fold_runs_on_conditions(group: EventGroup, guard: String) -> void:
 		(row as EventRow).conditions = kept
 
 
-## M3. The line a runs_on answer writes around the group's events, or "" for everyone - which writes
+## The line a runs_on answer writes around the group's events, or "" for everyone - which writes
 ## nothing at all, and is why a single-player sheet compiles to exactly what it always did.
 static func _runs_on_code_line(value: String) -> String:
 	var guard: String = EventGroup.runs_on_guard(value)
@@ -385,7 +385,7 @@ func _apply_group_edit() -> void:
 	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text, extras)
 
 
-## G4 - what Apply asks `set_group_fields` to change beyond the name and the description. The colour
+## What Apply asks `set_group_fields` to change beyond the name and the description. The colour
 ## rides along only when the swatch moved off the colour it opened on: the picker has to open on
 ## SOME colour, and a group that deliberately carries none must not come back tinted just because its
 ## description was edited. "Group Colour…" on the row menu is still how a group is given one.

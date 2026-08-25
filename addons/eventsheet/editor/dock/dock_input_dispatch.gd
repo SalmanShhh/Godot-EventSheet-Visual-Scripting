@@ -289,12 +289,12 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["add_sub_condition", true, _dock._on_add_sub_condition_key],
 		["add_variable", true, _dock._on_add_project_global_requested],
 		["add_function", true, _dock._open_function_dialog],
-		# T15 - Preview layout / project / debug. Godot's own run keys by default, so the sheet's
+		# Preview layout / project / debug. Godot's own run keys by default, so the sheet's
 		# buttons and the editor's play bar always mean the same thing.
 		["preview_layout", false, func() -> void: _dock._run_controls.activate("preview_layout")],
 		["preview_project", false, func() -> void: _dock._run_controls.activate("preview_project")],
 		["debug_layout", false, func() -> void: _dock._run_controls.activate("debug_layout")],
-		# T19 - unbound by default (Left / Right already collapse and expand, and those are grammar);
+		# Unbound by default (Left / Right already collapse and expand, and those are grammar);
 		# it exists so the "Another event-sheet editor" preset can put collapse/expand on Ctrl+E.
 		["toggle_collapse", true, _dock._toggle_selected_collapse],
 		["invert_condition", true, _dock._on_invert_condition_key],
@@ -318,7 +318,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 			_dock.accept_event()
 		elif key_event.keycode == KEY_G:
 			if key_event.shift_pressed:
-				# G4 - Ctrl+Shift+G: open all groups, or close them all when any is open. One key for
+				# Ctrl+Shift+G: open all groups, or close them all when any is open. One key for
 				# the whole sheet, beside the G that makes one.
 				_dock._toggle_all_group_folds()
 			else:

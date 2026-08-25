@@ -2,7 +2,7 @@
 class_name InputWindowPromptTest
 extends RefCounted
 
-# X28. The input WINDOW owns the prompt.
+# The input WINDOW owns the prompt.
 #
 # Before this, a prompt was a row of its own with no lifetime: something put a key on a label and
 # nothing ever took it off, so the label went on asking for a control long after the moment had

@@ -1,4 +1,4 @@
-# EventForge module - Accessibility for the GAME (X29): the options every project should be one row
+# EventForge module - Accessibility for the GAME: the options every project should be one row
 # from offering.
 #
 # The editor's own accessibility already ships. This is the player-facing half, and every ingredient

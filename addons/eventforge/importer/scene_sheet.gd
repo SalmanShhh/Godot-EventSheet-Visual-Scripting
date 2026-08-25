@@ -1,4 +1,4 @@
-# EventForge - a whole SCENE opened as one sheet (P4).
+# EventForge - a whole SCENE opened as one sheet.
 #
 # An event sheet belongs to a layout; a Godot scene has several scripts, one per node that carries
 # one. Opening the scene builds the reading of the whole layout in one place: the scene's own bar,

@@ -117,7 +117,7 @@ static func run() -> bool:
 	return passed
 
 
-## X16. The three behaviors the 3D page's rows describe, previewed. Each sampler is the SAME motion
+## The three behaviors the 3D page's rows describe, previewed. Each sampler is the SAME motion
 ## the tick walks, solved for a time rather than accumulated, so the values are exact and pinnable -
 ## which is the point: a preview that only looked about right would be a second implementation
 ## nobody could check against the first.

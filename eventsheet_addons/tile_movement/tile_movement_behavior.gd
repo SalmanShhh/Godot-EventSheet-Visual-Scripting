@@ -18,24 +18,24 @@ func _enter_tree() -> void:
 ## @ace_name("On Step Finished")
 signal step_finished
 
+## Pixel size of one grid tile - each step moves the host this many pixels.
+@export var tile_size: float = 64.0
+## Seconds to slide across one tile.
+@export var move_time: float = 0.15
+## When on, the arrow keys step the host one tile at a time.
+@export var default_controls: bool = true
 ## AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer).
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_y: float = 0.0
-## When on, the arrow keys step the host one tile at a time.
-@export var default_controls: bool = true
+var moving: bool = false
 var from_x: float = 0.0
 var from_y: float = 0.0
-## Seconds to slide across one tile.
-@export var move_time: float = 0.15
-var moving: bool = false
-var pending_x: float = 0.0
-var pending_y: float = 0.0
-var progress: float = 0.0
-## Pixel size of one grid tile - each step moves the host this many pixels.
-@export var tile_size: float = 64.0
 var to_x: float = 0.0
 var to_y: float = 0.0
+var progress: float = 0.0
+var pending_x: float = 0.0
+var pending_y: float = 0.0
 
 ## @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:

@@ -1,4 +1,4 @@
-# Godot EventSheets - the Look Gallery (v0.11 chapter 2, P1: choose by picture).
+# Godot EventSheets - the Look Gallery (v0.11 chapter 2: choose by picture).
 #
 # EventSheetInspectorLooks is the single source of truth for the Inspector-look
 # presets: the Variable dialog's dropdown, the gallery's picture tiles, and these

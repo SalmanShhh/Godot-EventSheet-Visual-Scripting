@@ -1,4 +1,4 @@
-# Godot EventSheets - R37: the ONE sentence a variable reads with, everywhere.
+# Godot EventSheets - the ONE sentence a variable reads with, everywhere.
 #
 # `<scope> <type> <name> = <value>`. Pins the VALUES, not counts: the chip for every scope, the type
 # word for every shape a reader meets, and the colour half of the row - the swatch that is always
@@ -50,7 +50,7 @@ static func run() -> bool:
 	ok = _check("a CharacterBody2D script keeps Instance variables",
 		EventSheetVariableSentence.is_resource_host("CharacterBody2D"), false) and ok
 
-	# ── The type words of R37 ──
+	# ── The type words ──
 	ok = _check("a declared float is a number", ViewportRowBuilder.friendly_type_word("float"), "number") and ok
 	ok = _check("a declared int is a whole number", ViewportRowBuilder.friendly_type_word("int"), "whole number") and ok
 	ok = _check("a String is text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok

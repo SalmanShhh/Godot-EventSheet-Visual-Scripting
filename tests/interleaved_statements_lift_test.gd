@@ -1,4 +1,4 @@
-# EventForge (gap G4) - a statement placed AFTER a nested block in the same body no longer collapses the
+# EventForge - a statement placed AFTER a nested block in the same body no longer collapses the
 # whole enclosing block to a verbatim code cell. `if outer: pre(); if inner: mid(); post()` used to lift to
 # ZERO structure (the whole outer block became one RawCodeRow) because the emitter writes an event's actions
 # before its sub-events, so a trailing statement had no home. Now a plain collector that appears after a

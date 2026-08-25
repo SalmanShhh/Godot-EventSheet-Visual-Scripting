@@ -469,7 +469,7 @@ static func _span_with(row_data: EventRowData, key: String, value: Variant) -> S
 # ── 6. Where the picker files a comparison ──
 
 
-## K2. One question, one entry: the owner's group keeps Compare variable (and Is boolean set beside
+## One question, one entry: the owner's group keeps Compare variable (and Is boolean set beside
 ## it), and every other comparison the dialog can write goes under one sub-folder. Nothing is
 ## deregistered and nothing is renamed - all twelve ids still resolve, so a sheet that already uses
 ## one still opens, and searching still finds each by its own name.

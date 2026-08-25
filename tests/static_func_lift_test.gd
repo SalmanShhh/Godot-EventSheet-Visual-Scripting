@@ -1,4 +1,4 @@
-# EventForge (gap G3) - a `static func` round-trips as a first-class editable EventFunction instead of a raw
+# EventForge - a `static func` round-trips as a first-class editable EventFunction instead of a raw
 # block. On emit, EventFunction.is_static prepends `static ` at the (single, shared) function-header emitter;
 # on lift, the header regex accepts an optional `static ` prefix and sets is_static, and the four
 # `begins_with("func ")` gates (importer chunker, trailing-run classifier, mid-file anchor, declaration

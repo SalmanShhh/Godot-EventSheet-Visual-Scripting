@@ -52,7 +52,7 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 	}
 
 
-## E1. The same census, filtered to the NETWORKING lines: {"read", "blocked", "total", "percent"}.
+## The same census, filtered to the NETWORKING lines: {"read", "blocked", "total", "percent"}.
 ## The one number the owner of an existing multiplayer project wants on opening it - how much of what
 ## this script says about the network arrived as rows, and how much of it the sheet can only show
 ## them as code. Counted through the very same walk as `measure`, so the two can never disagree
@@ -80,7 +80,7 @@ static func networking(sheet: EventSheetResource) -> Dictionary:
 	return {"read": total - blocked, "blocked": blocked, "total": total, "percent": percent}
 
 
-## E1. The networking count in words, for the head band and the Doctor's per-script line. "" when the
+## The networking count in words, for the head band and the Doctor's per-script line. "" when the
 ## script says nothing about the network at all, because "0 of 0" is a number with nothing in it.
 static func networking_text(sheet: EventSheetResource) -> String:
 	var coverage: Dictionary = networking(sheet)
@@ -124,7 +124,7 @@ static func chip_text(sheet: EventSheetResource) -> String:
 		EventSheetL10n.translate("reads as events"), blocks_text, pattern_chip_text(sheet)]
 
 
-## S25 - the two counts the chip grows once the readings have claimed something: how many DISTINCT
+## The two counts the chip grows once the readings have claimed something: how many DISTINCT
 ## patterns this file is made of, and how many of those a shipped behavior could take over. "" when
 ## nothing was claimed, because "0 patterns" is a number with nothing in it.
 ##
@@ -268,7 +268,7 @@ static func _walk(items: Array, top_level: bool, tally: Dictionary, networking_t
 			tally["total_lines"] = int(tally["total_lines"]) + 1
 
 
-## E1. Whether a row is part of the networking story: it is filed under the Multiplayer object, or
+## Whether a row is part of the networking story: it is filed under the Multiplayer object, or
 ## the LINE it compiles to answers the same question `is_networking_line` asks of a verbatim line. So
 ## a `peer.create_server(…)` the sheet could only claim as a Call Method row still counts against the
 ## number, and a row added to the Multiplayer object counts the moment it exists.
@@ -284,7 +284,7 @@ static func _networking_row(row: Variant) -> bool:
 	return false
 
 
-## E1. Whether an id belongs to the Multiplayer object. Asked of the registry rather than kept as a
+## Whether an id belongs to the Multiplayer object. Asked of the registry rather than kept as a
 ## list here, and it is the only question a TRIGGER can be asked: a trigger names a signal, so there
 ## is no inline template to read.
 static func _multiplayer_vocabulary(provider_id: String, ace_id: String) -> bool:

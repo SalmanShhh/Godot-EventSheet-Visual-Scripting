@@ -1,6 +1,6 @@
-# Godot EventSheets - R39: the object's instance variables as an editable table.
+# Godot EventSheets - the object's instance variables as an editable table.
 #
-# Pins the VALUES the table says about a sheet - one line per variable, the R37 type word, the
+# Pins the VALUES the table says about a sheet - one line per variable, the type word, the
 # initial value in the spelling the Add variable dialog writes back, and whether it wears the
 # Inspector tick - plus the rule that decides WHICH object gets the table (only the object the file
 # itself is, because the table writes into this file).
@@ -23,7 +23,7 @@ static func run() -> bool:
 		_names(rows), "speed, lives, alive, tint") and ok
 	ok = _check("a float reads number, and the value is the one the dialog writes back",
 		EventSheetInstanceVariableTable.row_text(rows[0]), "speed  number  200.0  Inspector") and ok
-	ok = _check("a declared int is a whole number (R37)",
+	ok = _check("a declared int is a whole number",
 		EventSheetInstanceVariableTable.row_text(rows[1]), "lives  whole number  3  Inspector") and ok
 	ok = _check("a variable with no Inspector tick does not claim one",
 		EventSheetInstanceVariableTable.row_text(rows[2]), "alive  boolean  true") and ok

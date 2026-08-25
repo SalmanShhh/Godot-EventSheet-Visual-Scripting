@@ -118,7 +118,7 @@ static func run() -> bool:
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
 	all_passed = _check("sheet .tres files are openable",
 		EventSheetWorkflow.is_openable_as_sheet("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
-	# V4 re-pin. A .tres that is not a SHEET may still be a DATA ASSET, and a data asset now opens
+	# Re-pin. A .tres that is not a SHEET may still be a DATA ASSET, and a data asset now opens
 	# as a table - one row per exported field, editable in place. A theme is exactly that, so what
 	# used to be the "not a sheet" case is now the "opens as a table" case. The refusal it was
 	# guarding is pinned below on a .tres that carries no script at all, which is the only .tres
@@ -397,16 +397,16 @@ static func run() -> bool:
 	all_passed = _check("the toolbar wraps instead of clipping",
 		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
 	all_passed = _check("grouping leaves a short toolbar",
-		toolbar_editor._toolbar.get_child_count() <= 22, true) and all_passed  # +1: the Simple Mode pill, +1: the Settings menu (Words), +3: the T15 Preview buttons, +1: Play as host + client (M5)
+		toolbar_editor._toolbar.get_child_count() <= 22, true) and all_passed  # +1: the Simple Mode pill, +1: the Settings menu (Words), +3: the Preview buttons, +1: Play as host + client
 	var sheet_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetSheetMenu", true, false) as MenuButton
 	var add_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 27  # +1: Import event sheet… (U21); +3: Health… + the Export and Workspaces submenus (V16/V15/V20); +New shared sheet… (V11), +Start page, +Preview entries (project UX 1), +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
+		sheet_menu != null and sheet_menu.get_popup().item_count == 27  # +1: Import event sheet…; +3: Health… + the Export and Workspaces submenus; +New shared sheet…, +Start page, +Preview entries (project UX 1), +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
 		and add_menu != null and add_menu.get_popup().item_count == 14 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind; +1: Global Variable… beside Instance Variable…; +2: separator + Pattern…
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 54, true) and all_passed  # +2: Follow Scene Selection + Debugger… (T16/T17); +3: the Arrange by and Saved Views submenus + Show Events in the Scene (V12/V14); +5: Ask…, separator, Reduced Motion, Speak This Row, Object Properties; +3: Minimap, Sheet Map…, History… (batch-10 UX 2); +1: Auto-apply while debugging (V8); +2: Project bar (T13) + Add toolbar (T18); +1: Patterns, +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3); +1: Variable rows (V13)
+		and view_menu != null and view_menu.get_popup().item_count == 54, true) and all_passed  # +2: Follow Scene Selection + Debugger…; +3: the Arrange by and Saved Views submenus + Show Events in the Scene; +5: Ask…, separator, Reduced Motion, Speak This Row, Object Properties; +3: Minimap, Sheet Map…, History… (batch-10 UX 2); +1: Auto-apply while debugging; +2: Project bar + Add toolbar; +1: Patterns, +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3); +1: Variable rows
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock
 	# keeps thin show_welcome / show_welcome_if_first_run delegates. Build via the helper directly.

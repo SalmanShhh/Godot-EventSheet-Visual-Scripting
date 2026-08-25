@@ -1,4 +1,4 @@
-# EventForge - R3. A whole tween chain written on ONE line reads as the step it takes, not as the
+# EventForge - A whole tween chain written on ONE line reads as the step it takes, not as the
 # chain call it happens to start with. `create_tween().set_loops(3).tween_property(self, "position",
 # p, 0.5)` is `Tween position to p in 0.5 seconds  repeat 3 times` - the property step is the row,
 # and `set_loops` is a muted note on it, exactly as the easing tail is a chip on it.

@@ -31,7 +31,7 @@ const WORDS := {
 	"collection": ["Array / Dictionary", "list / table", "list / table", []],
 	"destroy": ["queue_free", "Destroy", "Destroy", []],
 	"manual": ["the reader", "Manual", "Manual", []],
-	# W21. The editor-building nouns. Until now Familiar Words covered the GAME words (layout, object
+	# The editor-building nouns. Until now Familiar Words covered the GAME words (layout, object
 	# type, family) and a tool sheet mixed two vocabularies on one screen: half of it in the sheet's
 	# words, half in Godot's class names. These are the twenty-four a first tool meets, each with
 	# Godot's own spelling as the "off" side, so nothing is hidden - only renamed, and reversibly.
@@ -61,11 +61,11 @@ const WORDS := {
 	"workspace": ["one of the editor's top tabs", "Workspace", "Main screen", []],
 }
 
-## Display order on the Words page - the order the mockup approved, not the dictionary's.
+## Display order on the Words page - the order the page is read in, not the dictionary's.
 const KEY_ORDER: Array[String] = [
 	"inheritance_set", "layout", "every_tick", "behavior",
 	"group", "collection", "destroy", "manual",
-	# W21 - the editor-building words, in the mockup's own order (the plugin itself first, then its
+	# The editor-building words, in the page's own order (the plugin itself first, then its
 	# surfaces, then the shapes it can take, then the three code idioms a reader meets in tool code).
 	"editor_plugin", "editor_object", "editor_dock", "inspector", "scene_dock", "filesystem_dock",
 	"tools_menu", "undo_history", "editor_preferences", "project_settings", "style", "ui_element",
@@ -74,7 +74,7 @@ const KEY_ORDER: Array[String] = [
 	"behavior_of", "workspace",
 ]
 
-## W21. The keys W21 added, so the Manual's page and any test can name "the editor-building words"
+## The keys the editor-building wave added, so the Manual's page and any test can name "the editor-building words"
 ## without re-listing them. Everything before these is the game vocabulary the earlier batches shipped.
 const EDITOR_KEYS: Array[String] = [
 	"editor_plugin", "editor_object", "editor_dock", "inspector", "scene_dock", "filesystem_dock",
@@ -122,7 +122,7 @@ static func plain_default(key: String) -> String:
 	return str((WORDS[key] as Array)[2])
 
 
-## W21. The glossary lens both ways: hand it either spelling of a word and get the other one back.
+## The glossary lens both ways: hand it either spelling of a word and get the other one back.
 ## The lens's whole promise is that renaming a noun hides nothing - Godot's own term is one hover
 ## away from the sheet's, and the sheet's is one hover away from Godot's - so the lookup has to work
 ## from either side. "" when the word is not one of ours, so a caller can tell "no entry" from "the
@@ -135,7 +135,7 @@ static func godot_word(sheet_word: String) -> String:
 	return ""
 
 
-## M46. The glossary lens as a HOVER LINE. Hand it the exact text a row is showing and get back the
+## The glossary lens as a HOVER LINE. Hand it the exact text a row is showing and get back the
 ## one or two lines that say what the other vocabulary calls the same thing, or "" when the text is
 ## not one of the sheet's nouns (which is nearly every span, so the caller can use the empty string
 ## as "keep looking").

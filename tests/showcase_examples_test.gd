@@ -181,7 +181,7 @@ static func run() -> bool:
 		"res://demo/showcase/hierarchy_playground/hierarchy_playground.tscn",
 		["Horse", "Saddle", "Rider", "Head", "HealthBar", "Hat", "Squad", "Soldier1", "Crates", "Crate1", "CameraPivot", "Readout"]) and passed
 
-	# ── Y19 / Y20 / Y21 - Mirror and Flip ───────────────────────────────────────────────────────
+	# ── Mirror and Flip ─────────────────────────────────────────────────────────────────────────
 	#
 	# The RUNTIME behaviour was verified by a temp SceneTree harness (this suite has no main loop, so
 	# nothing here can step a frame). The recipe, and the numbers it produced, so anyone can repeat it:
@@ -196,7 +196,7 @@ static func run() -> bool:
 	#     $Mirror.scale.x -> -1.0
 	#     $Tiles.is_cell_flipped_h(Vector2i(2, 0)) -> true, and (1, 0) -> false (one tile, not the row)
 	#     $Mirror/View/Twin yaw -> 0 degrees, then 180 after one Turn Around
-	# That fourth number is the whole of Y20: the ray and the muzzle turn because they are children of
+	# That fourth number is the whole of the facing rule: the ray and the muzzle turn because they are children of
 	# the object that mirrored, and the plate does not because Keep Upright re-negates it.
 	passed = _check_sheet("mirror_hero", "res://demo/showcase/mirror_and_flip/hero.gd", [
 		"class_name MirrorHero",
@@ -222,7 +222,7 @@ static func run() -> bool:
 		"res://demo/showcase/mirror_and_flip/mirror_and_flip.tscn",
 		["Hero", "Tiles", "Panel", "PanelText", "Mirror", "View", "Twin", "TwinMesh", "Nose", "Eye", "Sun"]) and passed
 
-	# ── Y9 / Y22 / Y23 / Y24 - the two skate parks ──────────────────────────────────────────────
+	# ── the two skate parks ─────────────────────────────────────────────────────────────────────
 	#
 	# Both sheets are pinned on the pack CALLS rather than on any arithmetic, because that is the
 	# claim: a skate park has no skating math in it. The physics was verified by a temp non-headless
@@ -344,7 +344,7 @@ static func run() -> bool:
 		"res://demo/showcase/traversal_course_3d/traversal_course_3d.tscn",
 		["Ground", "LedgeTower", "WallLeft", "WallRight", "VaultBlock", "LadderWall", "Ladder",
 			"Pool", "Climber", "Jumper", "LadderBot", "Vaulter", "Diver", "Stone", "Readout"]) and passed
-	# Y1 / Y2 / Y3 - Combo Fighter: three combos driving three animations, a cancel window, a
+	# Combo Fighter: three combos driving three animations, a cancel window, a
 	# buffered punch, and a hit frame the uppercut's OWN animation calls. Every shape in it is one
 	# the reading recognises, which is why the tokens below are spelled exactly as the readings
 	# expect them: a builder that starts writing a different spelling lands here first.

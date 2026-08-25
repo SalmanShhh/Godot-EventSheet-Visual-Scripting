@@ -160,17 +160,17 @@ static func run() -> bool:
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
 
 	# New… menu, recomputed at the batch-13 merge as base + every parcel's delta. Base 23;
-	# W17 folded four flat Editor-Tools items into one submenu (-4 +1); kits 1 added four
+	# Folded four flat Editor-Tools items into one submenu (-4 +1); kits 1 added four
 	# game-shape starters + their section separator (+5); kits 2 added Boomer Arsenal and
-	# Game Options (+2); X25 added the Level Stats Screen starter beside them (+1); Y16 added the
-	# Keycard Door starter (+1); Y15 added the Skill Tree Screen starter beside it (+1).
+	# Game Options (+2); the Level Stats Screen starter joined them (+1); the
+	# Keycard Door starter followed (+1), and the Skill Tree Screen starter beside it (+1).
 	# 23 - 4 + 1 + 5 + 2 + 1 + 1 + 1 = 30.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
 		editor._starter._template_menu.item_count == 23 - 4 + 1 + 5 + 2 + 1 + 1 + 1
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
 	# The tool starters are VALUES rather than a count, so a renamed entry names itself. They now live
-	# in the submenu, which is where the mockup's "New Sheet ▸ Editor tool" list lives.
+	# in the submenu, which is where the "New Sheet ▸ Editor tool" list lives.
 	var tool_entries: PackedStringArray = PackedStringArray()
 	var shapes_menu: PopupMenu = editor._starter._build_editor_tool_menu()
 	for menu_index: int in range(shapes_menu.item_count):

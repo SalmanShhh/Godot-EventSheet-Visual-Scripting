@@ -1,5 +1,5 @@
-# EventSheet - reading-lens tests (M9 humanized names, M10 possessive chains, M12 NOT as a mark,
-# M16 function-call chips). Every case here is a VALUE pinned from the approved reading mockup;
+# EventSheet - reading-lens tests (humanized names, possessive chains, NOT as a mark,
+# Function-call chips). Every case here is a VALUE pinned from the approved reading;
 # the lenses are display-only, so nothing in this file touches a sheet or emitted GDScript.
 @tool
 class_name ViewportLensesTest
@@ -16,7 +16,7 @@ static func run() -> bool:
 	return passed
 
 
-## M9: a private state var reads as lowercase words; an @export knob reads with Godot's own
+## A private state var reads as lowercase words; an @export knob reads with Godot's own
 ## Inspector capitalisation, so the sheet and the Inspector say the same thing.
 static func _humanized_names() -> bool:
 	var passed: bool = true
@@ -37,7 +37,7 @@ static func _humanized_names() -> bool:
 	return passed
 
 
-## M10: `a.b.c` reads `a's b c`, axis components read as capitals, and a two-part chain ending
+## `a.b.c` reads `a's b c`, axis components read as capitals, and a two-part chain ending
 ## in an axis reads as the component it is rather than a possession.
 static func _possessive_chains() -> bool:
 	var passed: bool = true
@@ -59,7 +59,7 @@ static func _possessive_chains() -> bool:
 	return passed
 
 
-## M12: a sentence that leads with NOT loses the word (the red mark in the badge column carries
+## A sentence that leads with NOT loses the word (the red mark in the badge column carries
 ## the inversion), and a mid-sentence "is not" keeps its word, where it reads correctly.
 static func _not_as_a_mark() -> bool:
 	var passed: bool = true
@@ -80,7 +80,7 @@ static func _not_as_a_mark() -> bool:
 	return passed
 
 
-## M16: a call reads "Call <Display Name>" with one chip per argument, named by the function's
+## A call reads "Call <Display Name>" with one chip per argument, named by the function's
 ## own parameter names when they are known.
 static func _function_call_chips() -> bool:
 	var passed: bool = true

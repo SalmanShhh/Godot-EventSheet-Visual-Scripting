@@ -42,13 +42,13 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 		_apply_ace_definition(definition, {}, context)
 		return
 	var initial_values: Dictionary = context.get("existing_params", {})
-	# K2 - every comparison goes to the ONE Compare dialog, whichever of the five the picker offered:
+	# Every comparison goes to the ONE Compare dialog, whichever of the five the picker offered:
 	# what an author decides is what to compare, how, and to what, and the ACE that gets written is a
 	# consequence of the middle answer rather than a choice of its own.
 	if _opens_compare(definition):
 		_dock._compare.open(context, definition.id, initial_values, false)
 		return
-	# M2 - and every Send goes to the ONE Send dialog, whichever of the three the picker offered: what
+	# And every Send goes to the ONE Send dialog, whichever of the three the picker offered: what
 	# an author decides is which message, with what, and to whom, and the ACE that gets written is a
 	# consequence of the last answer rather than a choice of its own.
 	if _opens_send(definition):
@@ -66,7 +66,7 @@ static func _opens_compare(definition: ACEDefinition) -> bool:
 	return EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id)
 
 
-## M2 - True when this ACE is one of the three Send actions the Send dialog owns. One list (the
+## True when this ACE is one of the three Send actions the Send dialog owns. One list (the
 ## dialog's own), so the picker route and the row-edit route can never disagree about which rows open
 ## where.
 static func _opens_send(definition: ACEDefinition) -> bool:
@@ -75,7 +75,7 @@ static func _opens_send(definition: ACEDefinition) -> bool:
 	return EventSheetMessageFacts.SEND_ACE_IDS.has(definition.id)
 
 
-## M2 - the Send dialog's answer, applied through the ordinary route. The dialog names an ACE ID
+## The Send dialog's answer, applied through the ordinary route. The dialog names an ACE ID
 ## because choosing WHO runs the message IS choosing the action; everything downstream (undo,
 ## replace-in-place, the `{uid}` bake) behaves exactly as for a row applied from the picker.
 func _on_send_message_confirmed(ace_id: String, params: Dictionary, context: Dictionary) -> void:
@@ -87,7 +87,7 @@ func _on_send_message_confirmed(ace_id: String, params: Dictionary, context: Dic
 	_apply_ace_definition(definition, params, context)
 
 
-## K2 - the Compare dialog's answer, applied through the ordinary route. The dialog names an ACE ID
+## The Compare dialog's answer, applied through the ordinary route. The dialog names an ACE ID
 ## because choosing the operator IS choosing the condition; the definition is resolved here so
 ## everything downstream (undo, replace-in-place, the {uid} bake) behaves exactly as it does for a
 ## row applied from the picker.
@@ -173,9 +173,9 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 		edit_context["preselect_ace_id"] = definition.id
 		_dock._ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
 		return
-	# K2 - a comparison row opens in the Compare dialog it was written in, inversion and all, so
+	# A comparison row opens in the Compare dialog it was written in, inversion and all, so
 	# changing `hp <= 0` into `hp between 1 and 50` is one edit rather than a delete and a re-pick.
-	# M2 - and a Send row opens in the Send dialog it was written in, so changing "to everyone" into
+	# And a Send row opens in the Send dialog it was written in, so changing "to everyone" into
 	# "to the host" is one edit rather than a delete and a re-pick.
 	if _opens_send(definition):
 		_dock._messages.open_send(edit_context, definition.id, edit_context.get("existing_params", {}))
@@ -211,7 +211,7 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 			_dock._ace_picker.open(mode, false, selected_resource, {})
 
 
-## M4. A Spawn row naming a scene its spawner does not list yet makes the SCENE say so too: a
+## A Spawn row naming a scene its spawner does not list yet makes the SCENE say so too: a
 ## spawner only replicates a copy of a scene it knows, so the row would otherwise compile to a copy
 ## that appears on this peer and nowhere else. One step of the scene's own undo, beside the row's,
 ## because the Inspector's *Auto spawn list* is the other editor of that fact - and the dialog's help
@@ -508,7 +508,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 		EventSheetAceUsageStats.record(definition.provider_id, definition.id)
 
 
-## S27. A BLANK event, made where the Add event dialog was opened. A blank event is a real event
+## A BLANK event, made where the Add event dialog was opened. A blank event is a real event
 ## with no condition of its own, which in an event sheet means it runs every tick - so nothing is
 ## stamped onto the row (no trigger, no conditions) and the compiler reads the blank for what it is.
 ## Inserted by the same routes a conditioned new event takes, so undo and placement are identical.
@@ -566,7 +566,7 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
-	# Y3. On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
+	# On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
 	# every clip - so which frame the event answers is a condition under it, added here for the same
 	# reason the language gate is: visible in the sheet, editable, deletable, and a plain condition on
 	# disk. The sprite the trigger listens to is the sprite the question is asked of, so the target
@@ -814,7 +814,7 @@ func _group_children_array(group: EventGroup) -> Array:
 	return group.rows
 
 
-## V2 - one sheet-level variable dropped onto another: the declaration order in the sheet's own
+## One sheet-level variable dropped onto another: the declaration order in the sheet's own
 ## dictionary is rewritten, in one undo step. False when either row is not such a variable, which is
 ## the caller's cue to fall through to the ordinary resource move.
 func _move_sheet_variable(source_row: EventRowData, target_row: EventRowData, drop_mode: String) -> bool:
@@ -848,7 +848,7 @@ func _move_sheet_variable(source_row: EventRowData, target_row: EventRowData, dr
 	return true
 
 
-## V4 - one event's Local dropped somewhere else. Onto a row of another event it re-scopes: the
+## One event's Local dropped somewhere else. Onto a row of another event it re-scopes: the
 ## declaration moves to that event, which is the only thing "where a local lives" means. Onto the
 ## sheet head it is promoted through the Add variable dialog, so what the reader confirms is the new
 ## sentence rather than a silent move. True whenever the dragged row IS a local, move or not - a drop
@@ -928,7 +928,7 @@ func _on_rows_drop_requested(
 func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
 	if target_row == null or _dock._current_sheet == null or source_rows.is_empty():
 		return
-	# V4 - a Local row is a declaration INSIDE an event, not a row of the events array: dropped on
+	# A Local row is a declaration INSIDE an event, not a row of the events array: dropped on
 	# another event it re-scopes there, dropped on the sheet head it is promoted to a variable of the
 	# object. Neither move is one the resource walk below could make - and left to that walk, dragging
 	# a local would move its whole event - so a local answers here and never falls through.
@@ -938,7 +938,7 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 	var target_resource: Resource = target_row.source_resource
 	if target_resource == null:
 		return
-	# V2 - dragging a SHEET-LEVEL variable reorders the declarations. Those live in the sheet's own
+	# Dragging a SHEET-LEVEL variable reorders the declarations. Those live in the sheet's own
 	# dictionary rather than in an events array, so they cannot go through the resource-location walk
 	# below (every one of them answers with the sheet itself); the dictionary is re-laid instead.
 	if not copy_mode and source_rows.size() == 1 \

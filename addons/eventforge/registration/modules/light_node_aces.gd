@@ -1,4 +1,4 @@
-# EventForge module - L1/L2: the LIGHT is the object, not a parameter.
+# EventForge module - the LIGHT is the object, not a parameter.
 #
 # The sixteen Core lighting actions beside this file take the light as their first parameter, so a
 # row reads "Set light energy to 1.0" and which light that is lives two clicks away. These rows are

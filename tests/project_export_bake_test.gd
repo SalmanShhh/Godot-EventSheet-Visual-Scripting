@@ -45,7 +45,7 @@ static func run() -> bool:
 	var descriptors: Dictionary = {}
 	for descriptor: ACEDescriptor in EventForgeToolingACEs.get_descriptors():
 		descriptors[descriptor.ace_id] = descriptor
-	# W23 re-pin: the Editor Tools vocabulary now sits on PAGES, and the two moments the editor calls
+	# Re-pin: the Editor Tools vocabulary now sits on PAGES, and the two moments the editor calls
 	# a tool without being asked (a file imported, an export starting) share one. Still under the
 	# "Editor Tools" root, which is what the tool-sheet gate and the Editor object label test.
 	ok = _check("On Project Export is on the Editor Tools import-and-export page",

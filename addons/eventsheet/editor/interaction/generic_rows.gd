@@ -2,7 +2,7 @@
 class_name EventSheetGenericRows
 extends RefCounted
 
-# W22 - HOW MUCH OF AN OPENED FILE READS IN THE SHEET'S OWN WORDS, and how much of it merely opened.
+# HOW MUCH OF AN OPENED FILE READS IN THE SHEET'S OWN WORDS, and how much of it merely opened.
 #
 # The reading-coverage chip beside this one answers "did it open" - what share of the file arrived as
 # rows instead of a wall of code. That number reached 100% on the editor's own source long before the
@@ -56,7 +56,7 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 	return {"generic": generic, "rows": rows, "percent": percent}
 
 
-## W22 - the reading health of the editor's own source, per role group:
+## The reading health of the editor's own source, per role group:
 ##   [{role, files, percent, worst_percent, worst_path}]
 ## in ROLE_ORDER, skipping a group with no files. `per_role_limit` bounds how many files of a group
 ## are opened, because opening one means running the importer and the compiler over it - this answers

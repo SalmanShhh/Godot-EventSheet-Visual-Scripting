@@ -1,4 +1,4 @@
-# EventForge - W22, the dogfood gate: the editor reads ITSELF, measured and pinned.
+# EventForge - the dogfood gate: the editor reads ITSELF, measured and pinned.
 #
 # WHY THIS EXISTS, next to handwritten_lift_gate_test. That gate pins eleven hand-picked plugin files
 # for byte round-trip and for how little of them still renders as a wall of code, and both numbers
@@ -85,7 +85,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## THE W1 GATE ITSELF: both marks, or nothing. A game that installed the plugin has the descriptor
+## THE GATE ITSELF: both marks, or nothing. A game that installed the plugin has the descriptor
 ## and no pack recipes beside it, and must see none of this.
 static func _test_gate() -> bool:
 	var passed: bool = true

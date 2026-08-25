@@ -5,19 +5,19 @@ extends RefCounted
 # Pins the reading words batch seven added - the questions a real script asks that used to read as
 # the operators they are rather than as the sheet's own row:
 #
-#   R4   a range, an angle window, a distance, an area and an approximate equality each read as ONE
+#   A range, an angle window, a distance, an area and an approximate equality each read as ONE
 #        condition, in the sheet's name for it, with the note that says which end is left out
-#   R5   the cooldown-by-timestamp idiom reads as "X seconds have passed since", and writing the
+#   The cooldown-by-timestamp idiom reads as "X seconds have passed since", and writing the
 #        clock into a variable reads "Set ... to now"
-#   R6   a roll under a probability reads as a percentage chance, and the random calls read by the
+#   A roll under a probability reads as a percentage chance, and the random calls read by the
 #        sheet's own expression names under Familiar Words
-#   R7   the expression-name table, which also settles the length question: len(x) under Familiar
+#   The expression-name table, which also settles the length question: len(x) under Familiar
 #        Words, "length of x" otherwise
-#   R8   the scene-flow actions read as Go to layout / Restart layout / Pause the game / Unpause /
+#   The scene-flow actions read as Go to layout / Restart layout / Pause the game / Unpause /
 #        Set time scale / Quit game, always on, with the layout named the way the file is named
-#   R10  the platform words on a CharacterBody, including the two the sign of a vertical speed means
+#   The platform words on a CharacterBody, including the two the sign of a vertical speed means
 #        the OPPOSITE of in 3D
-#   R11  the layout edges and the on-screen question
+#   The layout edges and the on-screen question
 #
 # Three gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -73,27 +73,27 @@ func _physics_process(delta: float) -> void:
 
 ## Every reading the opened file must contain, one per shape this batch claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# R10 - the platform words, on a body
+	# The platform words, on a body
 	"CharacterBody2D ▸ Is on floor",
 	"CharacterBody2D ▸ Is touching ceiling",
 	"CharacterBody2D ▸ Is moving",
-	# R5 - the cooldown idiom, both halves. The name lens spells the variables as words on the
+	# The cooldown idiom, both halves. The name lens spells the variables as words on the
 	# canvas, which is why these read "last shot" where the grammar's own answer says "last_shot".
 	"System ▸ 0.5 seconds have passed since last shot",
 	"System ▸ Set last shot to now",
-	# R4 - one condition per question
+	# One condition per question
 	"CharacterBody2D ▸ angle is within 10° of target angle",
 	"CharacterBody2D ▸ is within 100 of (0, 0)",
 	"CharacterBody2D ▸ is inside area 0, 0 - 640 × 360",
 	"CharacterBody2D ▸ speed is about 0 (not moving)",
-	# R11 - the layout edge. The `or` of the two edges arrives as two lifted conditions (the
-	# importer files each comparison as its own row), so the shot the mockup draws - both edges
+	# The layout edge. The `or` of the two edges arrives as two lifted conditions (the
+	# importer files each comparison as its own row), so the reading - both edges
 	# collapsed into one line - is what a test written on the raw condition text gets; here the
 	# right-hand edge is the one this file proves reaches the canvas.
 	"CharacterBody2D ▸ Is outside layout (right)",
-	# R6 - a roll under a probability
+	# A roll under a probability
 	"System ▸ 30% chance",
-	# R8 - the scene-flow words, always on
+	# The scene-flow words, always on
 	"System ▸ Pause the game",
 	"System ▸ Set time scale to 0.5",
 	"System ▸ Go to layout Level 2",
@@ -112,13 +112,13 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 
 ## The condition readings the grammar must answer on its own, as "object ▸ sentence".
 static var CONDITION_READINGS: Dictionary = {
-	# R4 - the four spellings of a range, and the notes that say which end is left out
+	# The four spellings of a range, and the notes that say which end is left out
 	"x >= 0 and x <= width": "System ▸ x is between 0 and width",
 	"0 < hp and hp < max_hp": "Player ▸ hp is between 0 and max_hp (exclusive)",
 	"level in range(3, 6)": "System ▸ level is between 3 and 5",
 	"hour >= 9 and hour < 17": "System ▸ hour is between 9 and 17 (exclusive top)",
 	"width >= x and x >= 0": "System ▸ x is between 0 and width",
-	# R4 - angles, in degrees, with the radians the file holds one hover away
+	# Angles, in degrees, with the radians the file holds one hover away
 	"abs(angle_difference(rotation, target_angle)) < deg_to_rad(10)":
 		"Player ▸ angle is within 10° of target_angle",
 	"wrapf(a, 0, TAU) > deg_to_rad(30) and wrapf(a, 0, TAU) < deg_to_rad(60)":
@@ -126,25 +126,25 @@ static var CONDITION_READINGS: Dictionary = {
 	"fmod(a, TAU) > deg_to_rad(30) and fmod(a, TAU) < deg_to_rad(60)":
 		"System ▸ a is between angles 30° and 60°",
 	"angle_difference(a, b) > 0": "System ▸ a is clockwise from b",
-	# R4 - distances, areas and approximate equality
+	# Distances, areas and approximate equality
 	"position.distance_to(target) < 100": "Player ▸ is within 100 of target",
 	"position.distance_squared_to(target) < r * r": "Player ▸ is within r of target",
 	"Rect2(0, 0, 640, 360).has_point(position)": "Player ▸ is inside area 0, 0 - 640 × 360",
 	"is_equal_approx(speed, 0.0)": "System ▸ speed is about 0",
 	"is_zero_approx(velocity.length())": "Player ▸ speed is about 0 (not moving)",
 	"absf(a - b) < 0.001": "System ▸ a is about b",
-	# R5 - the two clocks
+	# The two clocks
 	"Time.get_ticks_msec() - last_shot > 500": "System ▸ 0.5 seconds have passed since last_shot",
 	"Time.get_unix_time_from_system() - started > 60":
 		"System ▸ 60 seconds have passed since started (clock time)",
-	# R10 - the platform words
+	# The platform words
 	"is_on_floor()": "Player ▸ Is on floor",
 	"is_on_wall()": "Player ▸ Is by wall",
 	"is_on_ceiling()": "Player ▸ Is touching ceiling",
 	"velocity.y < 0": "Player ▸ Is jumping",
 	"velocity.y > 0": "Player ▸ Is falling",
 	"velocity.x != 0": "Player ▸ Is moving",
-	# R11 - the layout edges and the screen
+	# The layout edges and the screen
 	"position.x < 0 or position.x > get_viewport_rect().size.x":
 		"Player ▸ Is outside layout (left or right)",
 	"position.y < 0": "Player ▸ Is outside layout (top)",
@@ -155,7 +155,7 @@ static var CONDITION_READINGS: Dictionary = {
 ## The statements whose sentence this batch settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
 	"last_shot = Time.get_ticks_msec()": "Player ▸ Set last_shot to now",
-	# T26 re-pin: the wall clock has a NAME of its own in the sheet now - the Date object's Now - so a
+	# Re-pin: the wall clock has a NAME of its own in the sheet now - the Date object's Now - so a
 	# variable filled from it says that, and the whole Date family reads alike. The game's own running
 	# clock above keeps "now", because no Date expression stands for a number that restarts with the game.
 	"started = Time.get_unix_time_from_system()": "Player ▸ Set started to Date.Now",
@@ -167,7 +167,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"get_tree().quit()": "System ▸ Quit game"
 }
 
-## R7 - one Godot spelling, one sheet name, and what the same value reads as with the glossary off.
+## One Godot spelling, one sheet name, and what the same value reads as with the glossary off.
 ## The pairs are [with Familiar Words, without].
 static var EXPRESSION_READINGS: Dictionary = {
 	"a.position.distance_to(b.position)": ["distance(a, b)", "distance from a.position to b.position"],
@@ -229,7 +229,7 @@ static func _grammar_values() -> bool:
 		var reading: Dictionary = EventSheetSentence.statement(code, context)
 		ok = _check("statement %s" % code, _joined_segments(reading),
 			str(STATEMENT_READINGS[code])) and ok
-	# R7 - the same value with the glossary on and off, so the table is pinned in both directions.
+	# The same value with the glossary on and off, so the table is pinned in both directions.
 	var familiar: Dictionary = context.duplicate()
 	familiar["familiar_words"] = true
 	for value: String in EXPRESSION_READINGS:
@@ -238,7 +238,7 @@ static func _grammar_values() -> bool:
 			str(pair[0])) and ok
 		ok = _check("plain %s" % value, EventSheetSentence.expression_text(value, context),
 			str(pair[1])) and ok
-	# R10 - the vertical words follow the AXIS. The same test means the opposite in 3D, and a body is
+	# The vertical words follow the AXIS. The same test means the opposite in 3D, and a body is
 	# the only thing they are claimed on at all.
 	var body_3d: Dictionary = _context()
 	body_3d["self_class"] = "CharacterBody3D"
@@ -253,7 +253,7 @@ static func _grammar_values() -> bool:
 	ok = _check("a plain node's vertical speed is not a jump",
 		_joined_pieces(EventSheetSentence.condition_pieces("velocity.y < 0", projectile)),
 		"Player ▸ velocity.y < 0") and ok
-	# R8 - the layout a path names, without the folder or the extension it is filed under.
+	# The layout a path names, without the folder or the extension it is filed under.
 	ok = _check("a scene path names its layout",
 		EventSheetSentence.layout_name("\"res://levels/level_2.tscn\""), "Level 2") and ok
 	ok = _check("a path that is not a literal keeps what it is",

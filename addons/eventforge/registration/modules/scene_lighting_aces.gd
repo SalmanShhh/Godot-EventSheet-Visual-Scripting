@@ -1,4 +1,4 @@
-# EventForge module - L4/L6: the two lighting objects that are not lights.
+# EventForge module - the two lighting objects that are not lights.
 #
 # A lit scene has three kinds of node in it. The lights themselves are the object of their own rows
 # (light_node_aces.gd beside this file). The other two are here:
@@ -60,7 +60,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## L4 - the darkness pair. Both rows store a COLOUR and read as a percentage: the set row says the
+## The darkness pair. Both rows store a COLOUR and read as a percentage: the set row says the
 ## tint as well, because that is the whole row, and the fade row leaves it off, because the row is
 ## already about where the darkness is going rather than what colour it is.
 static func _darkness_rows() -> Array[ACEDescriptor]:
@@ -88,7 +88,7 @@ static func _darkness_rows() -> Array[ACEDescriptor]:
 	]
 
 
-## L6 - the World rows. Every one of them writes a property of the ENVIRONMENT the scene's
+## The World rows. Every one of them writes a property of the ENVIRONMENT the scene's
 ## WorldEnvironment holds, which is why each template opens with the member rather than naming a
 ## node: the node is the row's object.
 static func _world_rows() -> Array[ACEDescriptor]:

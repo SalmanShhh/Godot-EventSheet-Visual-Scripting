@@ -31,15 +31,15 @@ static var _remembered_values: Dictionary = {}
 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
-## P0 - the ONE help strip at the foot. It describes whatever parameter is focused, validates it as
+## The ONE help strip at the foot. It describes whatever parameter is focused, validates it as
 ## it is typed, and shows the line of code the row becomes. It replaced the per-field description
 ## labels and their tooltips: four parameters read as four rows now, not four paragraphs.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
-## P0 - the title band: the row this dialog is writing, in the sheet's own colours, filled in live
+## The title band: the row this dialog is writing, in the sheet's own colours, filled in live
 ## from the fields. The window title carries the same sentence as plain text.
 var _title_label: RichTextLabel = null
 var _title_ace_label: Label = null
-## P3 - the reason OK is not the obvious next step, sitting beside it rather than replacing the
+## The reason OK is not the obvious next step, sitting beside it rather than replacing the
 ## button with a grey rectangle that explains nothing.
 var _ok_reason: Label = null
 var _fields: Dictionary = {}
@@ -110,7 +110,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	# append modes, where the target event is stable.
 	_add_another_button = _dialog.add_button("✚ Apply & Add Another", false, ADD_ANOTHER_ACTION)
 	_dialog.custom_action.connect(_on_custom_action)
-	# P3 - the "Add hpp…" fix opens the Add variable dialog over this one. Coming back, the variable
+	# The "Add hpp…" fix opens the Add variable dialog over this one. Coming back, the variable
 	# may exist, so the catalog is re-read and every field re-checked the moment focus returns.
 	_dialog.focus_entered.connect(_refresh_variable_context)
 	parent_node.add_child(_dialog)
@@ -357,19 +357,19 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		row.add_child(apply_check)
 		_batch_apply_checks[key] = apply_check
 	_form.add_child(row)
-	# P0 - no description under the field and no tooltip on it. The strip at the foot says both, for
+	# No description under the field and no tooltip on it. The strip at the foot says both, for
 	# the focused parameter only, and it is the one place a reader has to look.
 	# Drag the param's NAME to scrub its number (the Inspector gesture). Only arms while the field
 	# holds a plain number, so an expression can never be flattened into a literal by a stray drag.
 	EventSheetNumberScrub.attach(label, field)
 	# Dropdowns clip long entries instead of forcing the dialog wider. The field may BE the dropdown
-	# or be the dropdown wrapped with its muted code note (K1), so the value-bearing widget is asked
+	# or be the dropdown wrapped with its muted code note, so the value-bearing widget is asked
 	# for rather than assumed - a wrapped dropdown must clip exactly like a bare one.
 	var dropdown: OptionButton = _fields.get(key) as OptionButton
 	if dropdown != null:
 		dropdown.clip_text = true
 		dropdown.custom_minimum_size = Vector2(220.0, 0.0)
-	# P1 - the line under each choice, from whichever source the hint names.
+	# The line under each choice, from whichever source the hint names.
 	_attach_option_notes(key, param_dict, row, _option_notes_for(param_dict))
 	if hint == "input_action" or (hint == "group_reference" and not EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key)):
 		_attach_typed_choice_note(key, row, hint)
@@ -396,13 +396,13 @@ func _ensure_hint_factories() -> void:
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
 			"feature_tag": _create_feature_tag_field,
-			# M6 - three fields that take any GDScript exactly as an expression param does, and are
+			# Three fields that take any GDScript exactly as an expression param does, and are
 			# spelled apart from it only so the help strip has something to describe them BY: what a
 			# port is, which addresses reach which machines, what a player costs the host.
 			"net_address": _create_expression_field,
 			"net_port": _create_expression_field,
 			"max_players": _create_expression_field,
-			# M4 - the scenes the sheet's own spawners may make, read LIVE off the scene for the same
+			# The scenes the sheet's own spawners may make, read LIVE off the scene for the same
 			# reason the feature tags are: a list baked into the descriptor would be a snapshot of
 			# whatever the project looked like the day it shipped. Any path may still be typed - one
 			# the spawner does not list yet is added to its list when OK is pressed.
@@ -555,7 +555,7 @@ func _read_input_prompt_tail(container: Control) -> String:
 		(container.get_meta("input_prompt_action") as LineEdit).text)
 
 
-## X27. A length of time typed the way a player READS it - 3:00 - and stored as the seconds the
+## A length of time typed the way a player READS it - 3:00 - and stored as the seconds the
 ## emitted line needs. The visible field takes m:ss (or plain seconds, or any expression); a hidden
 ## mirror holds what actually ships, so the commit path reads seconds without knowing this field
 ## exists. A value that is not a time at all passes straight through, because the seconds slot is
@@ -586,7 +586,7 @@ func _create_minutes_seconds_field(key: String, default_value: Variant) -> Contr
 	return row
 
 
-## X27. "180.0" -> "3:00", so a stored length opens in the field a reader can check at a glance. A
+## "180.0" -> "3:00", so a stored length opens in the field a reader can check at a glance. A
 ## value that is not a plain number comes back as itself: an expression is not a time to reformat.
 static func seconds_as_minutes_seconds(value: String) -> String:
 	var text: String = value.strip_edges()
@@ -598,7 +598,7 @@ static func seconds_as_minutes_seconds(value: String) -> String:
 	return "%d:%02d" % [total / 60, total % 60]
 
 
-## X27. "3:00" -> "180.0", the seconds the emitted line carries. Anything that is not m:ss comes
+## "3:00" -> "180.0", the seconds the emitted line carries. Anything that is not m:ss comes
 ## back untouched, so a plain number and a variable name both ship exactly as typed.
 static func minutes_seconds_as_seconds(value: String) -> String:
 	var text: String = value.strip_edges()
@@ -669,7 +669,7 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	if autocomplete is Array and not autocomplete.is_empty():
 		return _create_autocomplete_field(key, autocomplete, default_value)
 	if options is Array and not options.is_empty():
-		# K1 - a dropdown whose words differ from the token it inserts shows that token muted beside
+		# A dropdown whose words differ from the token it inserts shows that token muted beside
 		# it: "≤  at most" reads as the row will read, `<=` says what the line will say. A list whose
 		# labels ARE its values is returned untouched.
 		return EventSheetPopupUI.code_noted_option(_create_options_field(key, options, default_value))
@@ -908,7 +908,7 @@ static func bbcode_wrap_selection(text: String, from: int, to: int, tag: String)
 ## when the dialog builds, so a group added a minute ago appears without a restart; free text
 ## stays allowed (expressions, variables, brand-new names).
 func _create_group_reference_field(key: String, default_value: Variant) -> Control:
-	# G2 - the same hint answers two questions. Set/Is Group Active name one of the SHEET's own
+	# The same hint answers two questions. Set/Is Group Active name one of the SHEET's own
 	# groups (its template builds the very `"__group_<name>_active"` member the compiler emits for a
 	# runtime-toggleable group), so it gets the sheet's group list and the offer to make a group
 	# switchable; every other group param means a NODE group and keeps the scene's list.
@@ -988,7 +988,7 @@ static func group_choices(scene_root: Node) -> Array:
 ## enumerated from the PROJECT'S Input Map when the dialog builds - NOT the snapshot baked into
 ## the definition at registry-refresh time, so actions added in Project Settings a minute ago
 ## appear without an editor restart. Free text stays allowed (expressions, variables).
-## R23 - and a "New action…" button beside it, because the moment a control is missing is the moment
+## And a "New action…" button beside it, because the moment a control is missing is the moment
 ## you are typing its name into this very field. It writes the action into project.godot through the
 ## Input Map's own facts (deadzone + an empty binding list - binding it is the Input Map's job) and
 ## refreshes the picker, so the name the row is about exists before the row does.
@@ -1007,7 +1007,7 @@ func _create_input_action_field(key: String, default_value: Variant) -> Control:
 	return row
 
 
-## W18. The editor-icon field: type or pick a name out of the editor's own icon set, and see the
+## The editor-icon field: type or pick a name out of the editor's own icon set, and see the
 ## icon itself beside the field while you choose. Drawing it is the point - a tool author is picking
 ## a PICTURE, and "Node2D" versus "Sprite2D" is a name only until you look at them.
 func _create_editor_icon_field(key: String, default_value: Variant) -> Control:
@@ -1064,7 +1064,7 @@ static func _editor_theme() -> Theme:
 	return interface.call("get_editor_theme") as Theme
 
 
-## W18. The Editor Settings path field: every path the user's own preferences actually carry, so a
+## The Editor Settings path field: every path the user's own preferences actually carry, so a
 ## tool author picks a real one instead of guessing at Godot's docs.
 func _create_editor_preference_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, editor_preference_choices(), default_value)
@@ -1088,7 +1088,7 @@ static func editor_preference_choices() -> Array:
 	return choices
 
 
-## W18. The Project Settings path field. The input/* rows are left out: an action belongs in an
+## The Project Settings path field. The input/* rows are left out: an action belongs in an
 ## input_action field, which already offers them with the quotes and the New action… door.
 func _create_project_setting_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, project_setting_choices(), default_value)
@@ -1530,7 +1530,7 @@ func _browse_for_scene(path_edit: LineEdit) -> void:
 	_scene_file_dialog.popup_file_dialog()
 
 
-## X29. The palette parameter: a path to a colour-palette data asset, with every colour SET that
+## The palette parameter: a path to a colour-palette data asset, with every colour SET that
 ## asset carries drawn SIDE BY SIDE underneath the field. Choosing a palette is a looking task -
 ## "Deuteranopia" is a word until the three colours it swaps in are on the screen next to the three
 ## it replaces - so the field shows the sets instead of describing them. Typing stays free (an
@@ -2110,7 +2110,7 @@ func _validation_scene_root() -> Node:
 	return EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 
 
-## X16. The node parameter, picked out of the layout that is open RIGHT NOW (hint "scene_node"): an
+## The node parameter, picked out of the layout that is open RIGHT NOW (hint "scene_node"): an
 ## editable suggest-combo whose choices are the tree the editor is showing, in the spellings a row
 ## writes. Enumerated when the dialog builds - never baked into the descriptor - so a node added a
 ## minute ago is in the list without an editor restart. Free text stays allowed (expressions,
@@ -2120,7 +2120,7 @@ func _create_scene_node_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, scene_node_choices(_validation_scene_root()), default_value)
 
 
-## M4. The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
+## The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
 ## combo rather than a dropdown: a project is allowed to spawn a scene the spawner does not list yet,
 ## and answering that with a refusal would be a wall where a code author has none - so the field
 ## takes any path, the help strip says the list does not hold this one, and OK adds it.
@@ -2233,13 +2233,13 @@ static func open_class_docs(docs_class: String) -> String:
 # a one-click "+ var" button (cancel → Add Variable → retype, collapsed to one click).
 # The dialog stays dock-agnostic: the dock injects a creator Callable(name) -> bool.
 var _variable_creator: Callable = Callable()
-## P3 - what the "Add hpp…" fix calls: the dock opens the Add variable dialog with the name already
+## What the "Add hpp…" fix calls: the dock opens the Add variable dialog with the name already
 ## filled in. Left invalid outside the dock, where the fix declares the variable outright instead.
 var _variable_adder: Callable = Callable()
-## G2 - what the "Make switchable" offer calls: the dock flips the named group's runtime toggle in
+## What the "Make switchable" offer calls: the dock flips the named group's runtime toggle in
 ## one undo step and answers whether it did. Left invalid (no offer shown) outside the dock.
 var _group_toggle_requester: Callable = Callable()
-## P3 - what the last check said about each field, as {param id -> note}. An expression field fills
+## What the last check said about each field, as {param id -> note}. An expression field fills
 ## its entry as it is typed (the lint runs there anyway); everything else is checked on demand. The
 ## strip and the reason beside OK both read from here, so one keystroke costs one check.
 var _field_notes: Dictionary = {}
@@ -2356,7 +2356,7 @@ static func undeclared_identifier_in_expression(expression: String, sheet: Event
 	return ""
 
 
-## P3 - what a failing expression field is complaining about, as the strip's note. The two buttons
+## What a failing expression field is complaining about, as the strip's note. The two buttons
 ## that used to grow beside the field ("+ var hp", "Use hp") are the note's FIXES now: one place a
 ## reader looks for a problem, one wording for it, and the same shape the parameter checks answer in.
 func _record_expression_note(edit: Control, level: String, heading: String, body: String,
@@ -2810,7 +2810,7 @@ func _is_reedit_flow() -> bool:
 
 # ── The row this dialog writes, and the strip that explains it ───────────────────────────────
 #
-# P0. The dialog used to be titled "<ACE name> Parameters" and to print each parameter's
+# The dialog used to be titled "<ACE name> Parameters" and to print each parameter's
 # description under its field. It never said the one thing the author is actually deciding: what
 # the ROW will read as once OK is pressed. The title band says it, filled in from the fields as
 # they are typed, in the sheet's own colours - and the strip at the foot says what the FOCUSED
@@ -3004,14 +3004,14 @@ func _describe_field(key: String) -> void:
 	var param: Dictionary = _param_dict(key)
 	var note: Dictionary = _note_for(key)
 	if note.is_empty():
-		# M4 - a Spawn row is the one row that edits the SCENE as well as itself, so the two things
+		# A Spawn row is the one row that edits the SCENE as well as itself, so the two things
 		# the scene has to say about it are said while the field that decides them still has focus.
 		var scene_note: Dictionary = _scene_verb_note(key, param)
 		if not scene_note.is_empty():
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 				str(scene_note.get("body", "")), str(scene_note.get("level", "")))
 			return
-		# V6 - nothing is wrong, but there may still be a plainer way to read what was typed.
+		# Nothing is wrong, but there may still be a plainer way to read what was typed.
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 			EventSheetParamFieldFactory.strip_body(param, _row_owner),
 			EventSheetPopupUI.HelpStrip.TONE_NORMAL, reading_offers())
@@ -3020,7 +3020,7 @@ func _describe_field(key: String) -> void:
 		str(note.get("level", "")), _fix_offers(key, note))
 
 
-## M4. What the SCENE has to say about the field being filled in, as `{"body", "level"}`, or {} for
+## What the SCENE has to say about the field being filled in, as `{"body", "level"}`, or {} for
 ## every other field of every other row. Two answers, and only ever one at a time: the *Scene* field
 ## warns that the spawner does not list this scene yet and that pressing OK will add it, and the
 ## *Spawner* field says how many copies that spawner is allowed to be watching. Both are read from
@@ -3054,7 +3054,7 @@ func _describe_dialog_itself() -> void:
 		doing if about.is_empty() else "%s  %s" % [about, doing])
 
 
-## V6. The plainer reading of what is already typed, as a button on the strip: a Set value whose
+## The plainer reading of what is already typed, as a button on the strip: a Set value whose
 ## expression only adds to (or subtracts from) the variable it sets IS an Add to / Subtract from, and
 ## the row says so in fewer words for the same emitted line. [] whenever the expression is anything
 ## else, and [] when this editor's registry cannot name the verb it would write.
@@ -3194,7 +3194,7 @@ func _watch_field(key: String, label: Control) -> void:
 		(field as ColorPickerButton).color_changed.connect(changed)
 
 
-## P1 - the line under each choice of a dropdown, from wherever the choices came from. The muted
+## The line under each choice of a dropdown, from wherever the choices came from. The muted
 ## caption beside the list shows the chosen one's line; arrowing the open list describes each choice
 ## in the strip BEFORE it is picked. A list with no lines is left exactly as it was.
 func _attach_option_notes(key: String, param_dict: Dictionary, row: HBoxContainer, notes: Dictionary) -> void:
@@ -3222,7 +3222,7 @@ func _attach_option_notes(key: String, param_dict: Dictionary, row: HBoxContaine
 		})
 
 
-## P1 - the line beside a field whose choices are typed rather than picked: an Input Map action's
+## The line beside a field whose choices are typed rather than picked: an Input Map action's
 ## keys, how many nodes of the open scene are in a node group. Live, because both answers change
 ## with what is in the box.
 func _attach_typed_choice_note(key: String, row: HBoxContainer, hint: String) -> void:

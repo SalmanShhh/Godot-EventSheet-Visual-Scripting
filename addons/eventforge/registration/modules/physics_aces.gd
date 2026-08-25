@@ -40,7 +40,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "BreakJoint3D", "Break Joint (3D)", ACEDescriptor.ACEType.ACTION, "node_b = NodePath(\"\")", "", [], "Joints", "Break the joint", "Joint3D")
 		.described("Snaps a 3D joint apart by clearing its second body, releasing the connection."))
 
-	# ── The Physics behavior's own settings (V1) ──
+	# ── The Physics behavior's own settings ──
 	# The words an opened rigid body already READS in, so a picked row and a hand-written line are the
 	# same bytes: mass, gravity scale, the material's friction and elasticity, the damping pair,
 	# immovable, the sleeping question, the spin, and an area's world gravity.
@@ -67,7 +67,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetWorldGravity", "Set World Gravity", ACEDescriptor.ACEType.ACTION, "gravity = {gravity}", "", [F.make_param("gravity", "String", "980.0", "Gravity", "How strongly this area pulls, in pixels per second squared.", "expression")], "Physics", "Set world gravity to {gravity}", "Area2D")
 		.described("Sets how strongly an area pulls the bodies inside it, for low-gravity rooms and updrafts."))
 
-	# ── The joints, named by what they DO (V1) ──
+	# ── The joints, named by what they DO ──
 	descriptors.append(F.make_descriptor("Core", "CreateRevoluteJoint", "Create Revolute Joint", ACEDescriptor.ACEType.ACTION, "add_child(PinJoint2D.new())", "", [], "Physics", "Create revolute joint")
 		.described("Adds a pin the two bodies turn around, like a hinge or an axle."))
 	descriptors.append(F.make_descriptor("Core", "CreateDistanceJoint", "Create Distance Joint", ACEDescriptor.ACEType.ACTION, "add_child(DampedSpringJoint2D.new())", "", [], "Physics", "Create distance joint")

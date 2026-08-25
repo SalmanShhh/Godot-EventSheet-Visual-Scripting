@@ -63,7 +63,7 @@ static func _test_field_visibility() -> bool:
 	ok = _check("Custom Resource shows identity + host, hides family",
 		EventSheetSheetTypeDialog.field_visibility(5),
 		{"name": true, "icon": true, "description": true, "host": true, "family": false, "autoload": false, "plugin_capabilities": false}) and ok
-	# R33 - the rest of the tool family. All three force their own host like Editor Tool does; only
+	# The rest of the tool family. All three force their own host like Editor Tool does; only
 	# the Editor plugin has capabilities to tick, because only a plugin can add anything to the editor.
 	ok = _check("Editor Plugin hides host (forced to EditorPlugin), shows the capability ticks",
 		EventSheetSheetTypeDialog.field_visibility(7),

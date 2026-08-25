@@ -1,4 +1,4 @@
-# Godot EventSheets - R35. What a sheet or a pack ADDS TO THE EDITOR, and the three places that say
+# Godot EventSheets - What a sheet or a pack ADDS TO THE EDITOR, and the three places that say
 # so: the Anatomy rail's EDITOR TOOLS section, a pack's Include bar, and the picker's pack card.
 #
 # The census has two doors because its two callers hold two different things - an authored sheet's
@@ -76,7 +76,7 @@ static func _test_anatomy_section() -> bool:
 		if str((organ as Dictionary).get("id", "")) == "editor_tools":
 			editor_tools = organ as Dictionary
 	passed = _check("the rail has an EDITOR TOOLS organ", editor_tools.is_empty(), false) and passed
-	passed = _check("its title is the mockup's words", str(editor_tools.get("title", "")), "Editor Tools") and passed
+	passed = _check("its title is the rail's own words", str(editor_tools.get("title", "")), "Editor Tools") and passed
 	var labels: PackedStringArray = PackedStringArray()
 	for entry: Variant in (editor_tools.get("entries", []) as Array):
 		labels.append(str((entry as Dictionary).get("label", "")))
@@ -91,7 +91,7 @@ static func _test_anatomy_section() -> bool:
 	return passed
 
 
-## R20. The Editor object's own reference page, in the fixed shape. The vocabulary is filed as the
+## The Editor object's own reference page, in the fixed shape. The vocabulary is filed as the
 ## "Editor Tools" section, so the page derives - what is pinned here is that it EXISTS and leads with
 ## a sentence, because a page that resolves to an empty table is the failure this checks for.
 static func _test_editor_reference_page() -> bool:

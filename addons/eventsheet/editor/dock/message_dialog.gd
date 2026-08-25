@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetMessageDialog
 extends RefCounted
-# M2 - the two dialogs a MESSAGE is authored through.
+# The two dialogs a MESSAGE is authored through.
 #
 # Godot's `@rpc` takes three choices and a channel, spelled as strings in an annotation most people
 # copy without reading. The MESSAGE dialog asks the three questions in words - who may send it,

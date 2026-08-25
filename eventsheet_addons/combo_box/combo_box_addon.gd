@@ -25,10 +25,10 @@ signal on_buffer_cleared
 
 ## How many recent inputs to remember. Older inputs drop off so stale history cannot complete a combo.
 @export_range(2, 64, 1) var buffer_length: int = 12
-## Print every input, buffer state, and match to the Output panel while tuning.
-@export var debug_logging: bool = false
 ## Default seconds allowed between two inputs of a combo (0 = no time limit). A combo can override this.
 @export_range(0.0, 5.0, 0.05) var default_timing: float = 0.5
+## Print every input, buffer state, and match to the Output panel while tuning.
+@export var debug_logging: bool = false
 
 # id -> {sequence:PackedStringArray, timing:float(-1 = use default), strict:bool, tags:PackedStringArray, priority:int, enabled:bool}.
 var _combos: Dictionary = {}
@@ -47,14 +47,14 @@ var _match_time: float = 0.0
 var _failed_id: String = ""
 var _fail_index: int = 0
 var _cleared_count: int = 0
-# Y24. The hit chain: what the run of moves landed so far is worth, what the next one will
+# The hit chain: what the run of moves landed so far is worth, what the next one will
 # be multiplied by, and the total that is already safe. The same three numbers a board's
 # trick chain keeps, in the same words.
 var _chain_score: float = 0.0
 var _chain_multiplier: int = 1
 var _banked_score: float = 0.0
 var _chain_last: String = ""
-# Y1 - combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.
+# Combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.
 # Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it
 # here makes those twenty one table rather than twenty copies of the same event.
 var _animations: Dictionary = {}
@@ -588,7 +588,7 @@ func _evaluate() -> void:
 		_match_time = _clock
 		if debug_logging:
 			print("[ComboBox] matched ", best_full)
-		# Y1 - the move this combo was wired to, played before the trigger fires so the
+		# The move this combo was wired to, played before the trigger fires so the
 		# animation and everything the trigger does start on the same frame.
 		_play_combo_animation(best_full)
 		on_combo_matched.emit()
@@ -596,7 +596,7 @@ func _evaluate() -> void:
 		on_partial_progress.emit()
 
 func _play_combo_animation(id: String) -> void:
-	# Y1. Plays the animation a combo was wired to, when it was wired to one and the player it
+	# Plays the animation a combo was wired to, when it was wired to one and the player it
 	# names is still alive. A combo with no animation, or one whose player has gone, plays nothing:
 	# detecting is this pack's job, and a missing animation must never stop the trigger firing.
 	if not _animations.has(id):

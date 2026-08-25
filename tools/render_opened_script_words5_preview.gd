@@ -1,4 +1,4 @@
-# EventForge - render harness (dev tool) for batch five's reading words (P6 / P8 / P9 / P11).
+# EventForge - render harness (dev tool) for batch five's reading words.
 # Opens the two words5 fixtures read-only in three stacked panes and screenshots them as one image: the
 # top pane is the script the SCENE ITSELF carries (its _ready reads On start of layout, and under it
 # the tick switches, the process mode, the wait-then and the named chips), the middle pane is that same

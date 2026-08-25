@@ -5,14 +5,14 @@ extends RefCounted
 # Pins the four Godot-systems patterns batch eight reads - the shapes several lines of a script make
 # together, each of which an event sheet already has rows for:
 #
-#   S8   loading a layout in the background: Load layout X in the background, X has finished
+#   Loading a layout in the background: Load layout X in the background, X has finished
 #        loading, and the progress the status array carries
-#   S9   the movement math a hand-rolled character body is built from, in the movement behaviors'
+#   The movement math a hand-rolled character body is built from, in the movement behaviors'
 #        own words: Apply gravity, Accelerate toward, Limit speed, Move, the collision switches,
 #        Set angle toward, Rotate toward
-#   S10  the high-level multiplayer messages: Send X to everyone / to the host / to a peer, Is host,
+#   The high-level multiplayer messages: Send X to everyone / to the host / to a peer, Is host,
 #        Owns this object, MyID
-#   S15  a navigation agent: Find path to, Move along path, Has arrived
+#   A navigation agent: Find path to, Move along path, Has arrived
 #
 # Three gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -90,9 +90,9 @@ func _on_agent_velocity_computed(safe: Vector2) -> void:
 ## stayed verbatim reads through the grammar. Both are pinned here on purpose: the point of this
 ## parcel is that the two say the same sentence, so a rename on either side has to be made on both.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# S8 - the background-loading idiom
+	# The background-loading idiom
 	"System ▸ layout Level 2 has finished loading",
-	# S9 - the movement words, on a character body
+	# The movement words, on a character body
 	"System ▸ Apply Gravity Gravity (per second)",
 	"System ▸ Accelerate x toward dir * Speed at Accel (per second)",
 	"System ▸ Limit Speed to Max Speed",
@@ -100,10 +100,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Disable collisions with 2",
 	"System ▸ Ignore collisions with platform",
 	"System ▸ Rotate toward target angle at 5 (per second)",
-	# S15 - the path words
+	# The path words
 	"System ▸ Has arrived",
-	# S10 - the messages
-	# M2 - a Send row belongs to the object whose function the message is (this file has no
+	# The messages
+	# A Send row belongs to the object whose function the message is (this file has no
 	# class_name, so its object is what it extends), whether the row is the grammar's reading of a
 	# typed line or the lifted Send action itself.
 	"CharacterBody2D ▸ Send Take Damage to the host   amount = 10",
@@ -122,26 +122,24 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 
 ## The condition readings the grammar must answer on its own, as "object ▸ sentence".
 static var CONDITION_READINGS: Dictionary = {
-	# S8 - the status enum, named by the layout rather than by the local it was read into
+	# The status enum, named by the layout rather than by the local it was read into
 	"st == ResourceLoader.THREAD_LOAD_LOADED": "System ▸ layout Level 2 has finished loading",
-	# S9 - what a slide collision hit
+	# What a slide collision hit
 	"c.get_collider().is_in_group(\"enemy\")": "c ▸ collided object is in family enemy",
-	# S10 - the two questions Godot's high-level multiplayer answers
+	# The two questions Godot's high-level multiplayer answers
 	"multiplayer.is_server()": "Multiplayer ▸ Is host",
 	"is_multiplayer_authority()": "Multiplayer ▸ Owns this object",
-	# S15 - the arrival question, about the object that is walking
+	# The arrival question, about the object that is walking
 	"agent.is_navigation_finished()": "Player ▸ Has arrived"
 }
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# S8
 	"ResourceLoader.load_threaded_request(\"res://levels/level_2.tscn\")":
 		"System ▸ Load layout Level 2 in the background",
 	"ResourceLoader.load_threaded_request(path)": "System ▸ Load layout Level 2 in the background",
 	"get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(path))":
 		"System ▸ Go to layout Level 2",
-	# S9
 	"velocity.y += gravity * delta": "Player ▸ Apply gravity gravity (per second)",
 	"velocity.x = move_toward(velocity.x, dir * speed, accel * delta)":
 		"Player ▸ Accelerate x toward dir * speed at accel (per second)",
@@ -152,11 +150,9 @@ static var STATEMENT_READINGS: Dictionary = {
 	"look_at(player.global_position)": "Player ▸ Set angle toward player.global_position",
 	"rotation = lerp_angle(rotation, target_angle, 5 * delta)":
 		"Player ▸ Rotate toward target_angle at 5 (per second)",
-	# S10
 	"take_damage.rpc(10)": "Player ▸ Send Take Damage to everyone   amount = 10",
 	"take_damage.rpc_id(1, 10)": "Player ▸ Send Take Damage to the host   amount = 10",
 	"take_damage.rpc_id(peer, 10)": "Player ▸ Send Take Damage to peer   amount = 10",
-	# S15
 	"agent.target_position = player.global_position": "Player ▸ Find path to player",
 	"velocity = global_position.direction_to(next) * speed":
 		"Player ▸ Move along path at speed (avoiding others)"
@@ -258,10 +254,10 @@ static func _grammar_values() -> bool:
 		var reading: Dictionary = EventSheetSentence.statement(code, context)
 		ok = _check("statement %s" % code, _joined_segments(reading),
 			str(STATEMENT_READINGS[code])) and ok
-	# S8 - the progress array read by index, as the one expression an event sheet has for it.
+	# The progress array read by index, as the one expression an event sheet has for it.
 	ok = _check("the progress array reads as the loading expression",
 		EventSheetSentence.expression_text("p[0] * 100", context), "System.LoadingProgress * 100") and ok
-	# S10 - the peer id, and the mode words an @rpc annotation carries.
+	# The peer id, and the mode words an @rpc annotation carries.
 	ok = _check("the peer id reads as the Multiplayer expression",
 		EventSheetSentence.expression_text("multiplayer.get_unique_id()", context),
 		"Multiplayer.MyID") and ok
@@ -270,18 +266,18 @@ static func _grammar_values() -> bool:
 		"from anyone · also here · reliable") and ok
 	ok = _check("an @rpc naming no mode says nothing",
 		EventSheetMessageFacts.words("@rpc()"), "") and ok
-	# S9 - the movement words are claimed on a BODY only. A plain node's velocity is a variable.
+	# The movement words are claimed on a BODY only. A plain node's velocity is a variable.
 	var plain: Dictionary = _context()
 	plain["self_class"] = "Node2D"
 	plain["nav_agents"] = {}
 	ok = _check("a plain node's vertical speed is not gravity",
 		_joined_segments(EventSheetSentence.statement("velocity.y += gravity * delta", plain)),
 		"Player ▸ Add gravity * dt to velocity.y") and ok
-	# S9 - a step that is not scaled by the frame time is not one of these words.
+	# A step that is not scaled by the frame time is not one of these words.
 	ok = _check("an unscaled vertical push is not gravity",
 		_joined_segments(EventSheetSentence.statement("velocity.y += 10", context)),
 		"Player ▸ Add 10 to velocity.y") and ok
-	# S15 - without the facts the file states, nothing claims a path.
+	# Without the facts the file states, nothing claims a path.
 	ok = _check("a nav step nothing declared an agent for keeps its code",
 		_joined_segments(EventSheetSentence.statement("agent.target_position = player.global_position", plain)),
 		"agent ▸ Set target_position to player.global_position") and ok

@@ -1,4 +1,4 @@
-# L7 - the lighting recognisers, measured against hand-written lit scripts and the scenes behind them.
+# The lighting recognisers, measured against hand-written lit scripts and the scenes behind them.
 #
 # WHY A SCENE AND NOT ONLY A SCRIPT: `$Torch.energy = 1.2` is a light row and `$Door.visible = false`
 # is not, and the only thing that can tell them apart is the `.tscn`. So the corpus is two whole
@@ -103,7 +103,7 @@ static func _test_the_cave() -> bool:
 	] as Array[String]) and ok
 
 
-## L4 / L6 - the two lighting nodes that are not lights. The crypt darkens a layer and writes the
+## The two lighting nodes that are not lights. The crypt darkens a layer and writes the
 ## world's atmosphere by hand, in the spellings people really use: the `$` path and the variable the
 ## CanvasModulate was held in, and every World line reaching through `.environment`. The same promise
 ## holds: the colour is the value the row carries, and the file comes back byte for byte.

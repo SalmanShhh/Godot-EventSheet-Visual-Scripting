@@ -34,13 +34,13 @@ static func get_trigger_key(event: EventRow) -> String:
 	if event.trigger_id.is_empty():
 		provider_id = EVERY_TICK_TRIGGER_PROVIDER_ID
 	if trigger_id == MENU_TRIGGER_ID:
-		# W6. Every item of ONE menu shares a single handler, for the same reason every notification
+		# Every item of ONE menu shares a single handler, for the same reason every notification
 		# shares `_notification`: the engine calls one function with the id that was chosen, and which
 		# item an event answers is a case inside it. The menu is therefore part of the key, and the
 		# item is not.
 		return "%s::%s::%s" % [provider_id, trigger_id, menu_variable_of(event)]
 	if trigger_id == ANIMATION_EVENT_TRIGGER_ID:
-		# Y3. Two animation events with different names are two functions the track can call, so the
+		# Two animation events with different names are two functions the track can call, so the
 		# name is part of the key. Two rows sharing a name are one function, which is what lets a
 		# single "hit" key drive several things.
 		return "%s::%s::%s" % [provider_id, trigger_id, animation_event_name_of(event)]
@@ -52,17 +52,17 @@ static func get_trigger_key(event: EventRow) -> String:
 	return "%s::%s::%s" % [provider_id, trigger_id, event.trigger_source_path]
 
 
-## W6. The trigger every menu item's event carries. The menu it belongs to and the item's id ride in
+## The trigger every menu item's event carries. The menu it belongs to and the item's id ride in
 ## its trigger params, because both of them are things the author typed rather than parts of the id.
 const MENU_TRIGGER_ID: String = "OnMenuItemChosen"
 
-## Y3. The trigger an animation's method track raises. The event's NAME is what the track calls, so
+## The trigger an animation's method track raises. The event's NAME is what the track calls, so
 ## it rides in the trigger params and becomes part of the handler name (and of the trigger key: two
 ## differently named animation events are two different functions, not two halves of one).
 const ANIMATION_EVENT_TRIGGER_ID: String = "OnAnimationEvent"
 
 
-## Y3. The plain-words event name an animation-event row carries ("hit frame"), "" for any other
+## The plain-words event name an animation-event row carries ("hit frame"), "" for any other
 ## trigger. Blank falls back to "event" so a half-filled row still compiles to something callable.
 static func animation_event_name_of(event: EventRow) -> String:
 	if effective_trigger_id(event) != ANIMATION_EVENT_TRIGGER_ID:
@@ -71,7 +71,7 @@ static func animation_event_name_of(event: EventRow) -> String:
 	return named if not named.is_empty() else "event"
 
 
-## Y3. The function an animation's method track calls for an event name: "hit frame" -> `_on_hit_frame`.
+## The function an animation's method track calls for an event name: "hit frame" -> `_on_hit_frame`.
 ## Everything about the name that is not an identifier collapses to an underscore, so the words the
 ## author typed and the function the track must name can never disagree.
 static func animation_event_handler_name(event_name: String) -> String:
@@ -85,7 +85,7 @@ static func animation_event_handler_name(event_name: String) -> String:
 		safe = safe.replace("__", "_")
 	return "_on_%s" % (safe if not safe.is_empty() else "event")
 
-## E1. The trigger source path the seven connection triggers carry, expanded by the emitter into the
+## The trigger source path the seven connection triggers carry, expanded by the emitter into the
 ## `multiplayer.` prefix of their `_ready` connect line. A global source like "@tree" / "@window"
 ## rather than a node path, because `multiplayer` is the scene tree's own MultiplayerAPI and there is
 ## no node to look up.
@@ -98,21 +98,21 @@ const MULTIPLAYER_SOURCE: String = "@multiplayer"
 const MEMBER_SOURCE_PREFIX: String = "member:"
 
 
-## W6. The menu variable a menu-item event names, "" for any other trigger.
+## The menu variable a menu-item event names, "" for any other trigger.
 static func menu_variable_of(event: EventRow) -> String:
 	if effective_trigger_id(event) != MENU_TRIGGER_ID:
 		return ""
 	return str(event.trigger_params.get("menu", "")).strip_edges()
 
 
-## W6. The item id a menu-item event answers, "" for any other trigger.
+## The item id a menu-item event answers, "" for any other trigger.
 static func menu_item_id_of(event: EventRow) -> String:
 	if effective_trigger_id(event) != MENU_TRIGGER_ID:
 		return ""
 	return str(event.trigger_params.get("item", "")).strip_edges()
 
 
-## W6. The handler name a menu's events share: `_on_<menu>_id_pressed`, with the menu's own spelling
+## The handler name a menu's events share: `_on_<menu>_id_pressed`, with the menu's own spelling
 ## reduced to a safe identifier fragment (`_dock._view_menu` -> `dock_view_menu`).
 static func menu_handler_name(menu_variable: String) -> String:
 	var bare: String = menu_variable.strip_edges().replace("self.", "").replace(".", "_").lstrip("_")
@@ -155,11 +155,11 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnUnhandledKeyInput":
 			return _lifecycle("_unhandled_key_input", "event: InputEvent")
 		"OnInputEvent":
-			# R26. Input that landed ON this body: the collision shape the click hit rides along, so
+			# Input that landed ON this body: the collision shape the click hit rides along, so
 			# the handler can tell which part of the object was picked.
 			return _lifecycle("_input_event", "viewport: Viewport, event: InputEvent, shape_idx: int")
 		"OnControlInput":
-			# W8. Input that landed on this UI element, after the global handlers passed on it.
+			# Input that landed on this UI element, after the global handlers passed on it.
 			return _lifecycle("_gui_input", "event: InputEvent")
 		"OnDraw":
 			# The object's own paint pass. Runs when the node is asked to redraw (`queue_redraw()`),
@@ -172,7 +172,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnCommandToolRun":
-			# W10. A command tool is a SceneTree script: the engine builds it and that IS the program,
+			# A command tool is a SceneTree script: the engine builds it and that IS the program,
 			# so `_init` is not "on created" the way it is on a node - it is the whole run. Same
 			# reasoning as OnPluginEnabled sharing _enter_tree: one engine callback, a different name
 			# because a reader of a command tool is looking for a different idea. The reading side
@@ -193,24 +193,24 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# connection spelled through EditorInterface would strand the whole handler as code.
 			return _lifecycle("_on_files_imported", "paths: PackedStringArray")
 		"OnNoiseHeard":
-			# X24. The receiving half of Make Noise. Not an engine virtual and deliberately not a
+			# The receiving half of Make Noise. Not an engine virtual and deliberately not a
 			# signal either: the noise maker walks the listening group and CALLS this by name, which
 			# is the only spelling that works when the listeners are not connected to anything and
 			# come and go with the level. Plain GDScript on both sides, so a compiled guard has zero
 			# plugin dependency and simply never runs when nothing makes a noise.
 			return _lifecycle("hear", "at: Variant")
 		"OnAlerted":
-			# Y18. The receiving half of Alert Enemies Within, built exactly like On Noise Heard above
+			# The receiving half of Alert Enemies Within, built exactly like On Noise Heard above
 			# and for the same reason: the alerter walks the group and CALLS this by name, because the
 			# enemies of a level are not connected to anything and come and go with it.
 			return _lifecycle("alerted", "who: Variant")
 		"OnLockedDoorTried":
-			# Y16. The door's own answer to being tried without its key. Try Door calls it by name on
+			# The door's own answer to being tried without its key. Try Door calls it by name on
 			# the door, so the handler is a plain function taking the key that was wanted - no signal
 			# to connect, and a door with no such event simply has nothing to run.
 			return _lifecycle("locked_door_tried", "key: Variant")
 		"OnPluginEnabled":
-			# R30. An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
+			# An EditorPlugin's `_enter_tree` is not "on created" - it is the moment the plugin was
 			# switched on, which is when a plugin hangs its dock and adds its menu items. Same function
 			# as OnEnterTree, a different name because a reader of a plugin looks for a different idea.
 			return _lifecycle("_enter_tree", "")
@@ -247,12 +247,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# "Language Just Changed" gate condition so only that notification runs.
 			return _lifecycle("_notification", "what: int")
 		"OnProjectFilesChanged":
-			# W18. The editor's own file watcher: EditorInterface.get_resource_filesystem() reports
+			# The editor's own file watcher: EditorInterface.get_resource_filesystem() reports
 			# every import, move, delete and add through one signal. Connected on that global source
 			# ("@editor_files"), not self - a tool script is not the filesystem.
 			return _signal_backed("_on_project_files_changed", "", "filesystem_changed", "@editor_files")
 		"OnPreferencesChanged":
-			# W18. The user changed something in Editor Settings. Same shape as the file watcher, on
+			# The user changed something in Editor Settings. Same shape as the file watcher, on
 			# the editor's settings object ("@editor_preferences").
 			return _signal_backed("_on_preferences_changed", "", "settings_changed", "@editor_preferences")
 		"OnCloseRequested":
@@ -260,7 +260,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# Connected on the root window (the "@window" global source), not self.
 			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
 		"OnPlayerJoined":
-			# E1. The seven things the connection itself says - five off MultiplayerAPI's own signals and
+			# The seven things the connection itself says - five off MultiplayerAPI's own signals and
 			# the two SceneMultiplayer adds for the handshake, all on the same property. They
 			# connect on the "@multiplayer" global source (`multiplayer.` in the emitted line), not on
 			# self and not on a node: `multiplayer` is a property every node already has, and it is the
@@ -276,7 +276,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnTheHostLeft":
 			return _signal_backed("_on_the_host_left", "", "server_disconnected", MULTIPLAYER_SOURCE)
 		"OnPlayerAuthenticating":
-			# M1. The handshake's two, on the same object. Each carries the peer id and nothing else -
+			# The handshake's two, on the same object. Each carries the peer id and nothing else -
 			# the bytes the peer sent reach the auth callback, not the signal, so a second argument
 			# here would be a connection Godot refuses at runtime.
 			return _signal_backed("_on_player_authenticating", "id: int", "peer_authenticating", MULTIPLAYER_SOURCE)
@@ -295,18 +295,18 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnAnimationFinished":
 			return _signal_backed("_on%s_animation_finished" % source_token, "anim_name: StringName", "animation_finished", source_path)
 		"OnAnimationFrame":
-			# Y3. The sprite says which frame it just moved to; WHICH frame the event answers is the
+			# The sprite says which frame it just moved to; WHICH frame the event answers is the
 			# condition under it, exactly as a notification's constant is a case under `_notification`.
 			# One handler per sprite, so every frame event on the same sprite shares it.
 			return _signal_backed("_on%s_frame_changed" % source_token, "", "frame_changed", source_path)
 		ANIMATION_EVENT_TRIGGER_ID:
-			# Y3. An animation METHOD TRACK calls a function on the script by name - there is no signal
+			# An animation METHOD TRACK calls a function on the script by name - there is no signal
 			# to connect, the animation itself is the caller. So the event compiles to that named
 			# function and nothing else, the same way the noise hook above does: plain GDScript on both
 			# sides, and a track that names it finds it.
 			return _lifecycle(animation_event_handler_name(animation_event_name_of(event)), "")
 		"OnSpawned":
-			# M4. The scene side's own three, on the NODE rather than on `multiplayer`: a spawner says
+			# The scene side's own three, on the NODE rather than on `multiplayer`: a spawner says
 			# what it just made and what it just took away, a synchronizer says that new values landed.
 			# Ordinary node signal triggers, so the `_ready` connect line reads exactly as a
 			# hand-written `$Spawner.spawned.connect(...)` does.
@@ -334,7 +334,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnChildExitingTree":
 			return _signal_backed("_on%s_child_exiting_tree" % source_token, "node: Node", "child_exiting_tree", source_path)
 		MENU_TRIGGER_ID:
-			# W6. One handler per MENU, connected to the menu variable itself. The item this event
+			# One handler per MENU, connected to the menu variable itself. The item this event
 			# answers becomes a case of that handler's `match id:` - see get_trigger_key and the
 			# emitter, exactly as the notification triggers work.
 			var menu_variable: String = menu_variable_of(event)

@@ -23,7 +23,7 @@ static func run() -> bool:
 	all_passed = _check("function-call object chip is ƒ",
 		viewport._object_label_for("Core", "CallFunction"), "ƒ") and all_passed
 
-	# M16 - a call to a known Function reads the familiar way: the word Call plus the function's
+	# A call to a known Function reads the familiar way: the word Call plus the function's
 	# friendly display name. What this has always guarded against is the RAW form leaking into the
 	# cell (`apply_physics()` - a code name and a pair of parentheses); that still holds, and the
 	# verb is still the display name. Only the leading word is new.

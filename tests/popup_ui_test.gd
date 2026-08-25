@@ -121,7 +121,7 @@ static func _test_reference_primitives() -> bool:
 		(card_body.get_child(0) as Label).text, "ABOUT QUEST") and all_passed
 	card.free()
 
-	# ── P4: the ONE help strip every dialog wears at its foot ──
+	# ── the ONE help strip every dialog wears at its foot ──────
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip(
 		"Scope · Instance", "One per Player.", "Instance whole number  hp = 100", "var hp: int = 100")
 	all_passed = _check("the strip's heading is small-caps", strip.heading_label.text, "SCOPE · INSTANCE") and all_passed
@@ -164,7 +164,7 @@ static func _test_reference_primitives() -> bool:
 	followed.free()
 	strip.free()
 
-	# ── K1: a dropdown whose words differ from the token it inserts shows that token, muted ──
+	# ── a dropdown whose words differ from the token it inserts shows that token, muted ──────
 	var operators: OptionButton = OptionButton.new()
 	for option: Dictionary in EventForgeACEFactory.COMPARISON_OPTIONS:
 		operators.add_item(str(option["label"]))

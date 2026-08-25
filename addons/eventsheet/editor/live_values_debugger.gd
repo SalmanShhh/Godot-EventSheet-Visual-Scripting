@@ -40,7 +40,7 @@ signal input_recorded(action: String, pressed: bool, frame: int)
 signal runtime_error_received(message: String, script_path: String, line: int)
 
 var _last_session_id: int = -1
-## M5. Session id -> the feature tag that copy of the game was started with. Read once when the
+## Session id -> the feature tag that copy of the game was started with. Read once when the
 ## session opens, because the editor setting can be changed while a game runs and the chip must go
 ## on saying which window it is describing.
 var _instance_labels: Dictionary = {}
@@ -63,7 +63,7 @@ func _setup_session(session_id: int) -> void:
 	var timings: GDScript = load("res://addons/eventsheet/editor/trace_timings.gd")
 	if timings != null:
 		timings.reset()
-	# M5 - which copy of the game this is. Loaded BY PATH for the same reason the two stores above
+	# Which copy of the game this is. Loaded BY PATH for the same reason the two stores above
 	# are: naming the class here would compile it into every editor start.
 	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")
 	_instance_labels[session_id] = "" if instances == null else instances.label_for_session(session_id)

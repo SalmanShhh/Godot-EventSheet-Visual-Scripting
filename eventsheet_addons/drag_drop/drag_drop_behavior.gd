@@ -27,27 +27,27 @@ signal drag_cancelled
 ## @ace_name("On Snapped")
 signal snapped
 
-var break_action: int = 0
-## Gap that auto-ends the drag; 0 disables.
-@export var break_distance: float = 0.0
-var distance_from_point: float = 0.0
-var dragging: bool = false
-var drop_reason: String = "manual"
-## Active at start; disabling mid-drag cancels silently.
-@export var enabled: bool = true
 ## Max catch-up speed (px/s); 0 = instant snap each tick.
 @export var follow_speed: float = 0.0
+## Gap that auto-ends the drag; 0 disables.
+@export var break_distance: float = 0.0
+## Active at start; disabling mid-drag cancels silently.
+@export var enabled: bool = true
+var dragging: bool = false
 var follow_uid: int = -1
+var distance_from_point: float = 0.0
+var throw_speed: float = 0.0
 var has_throw_override: bool = false
-var is_snapping_flag: bool = false
-var magnet_strength: float = 0.0
-var snap_mode: int = 0
+var drop_reason: String = "manual"
+var break_action: int = 0
 var snap_positions: Array = []
-var snap_radius: float = 0.0
 var snap_uids: Array[int] = []
+var snap_radius: float = 0.0
+var snap_mode: int = 0
+var magnet_strength: float = 0.0
+var is_snapping_flag: bool = false
 var snapped_uid: int = -1
 var throw_cursor: int = 0
-var throw_speed: float = 0.0
 
 ## Per-tick movement lock (8Direction style).
 @export_enum("free", "up_down", "left_right", "four_dir", "eight_dir") var directions: int = 0

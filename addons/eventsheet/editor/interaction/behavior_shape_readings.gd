@@ -2,7 +2,7 @@
 class_name EventSheetBehaviorShapes
 extends RefCounted
 
-# T1-T4. The hand-rolled BEHAVIOR shapes, read with the shipped behavior's own words.
+# The hand-rolled BEHAVIOR shapes, read with the shipped behavior's own words.
 #
 # A projectile script is three lines of vector arithmetic; a mover is a flag, a `move_toward` and a
 # distance compare; a spinner, a wrapper, a clamp, a pin and a fade are one line each. Every one of
@@ -59,17 +59,17 @@ const COMPARISON_SIGNS: Dictionary = {" >= ": "≥", " <= ": "≤", " > ": ">", 
 ## it a fade would be a guess.
 const FADE_PROPERTY := "modulate:a"
 
-## Y5. The declared types that mean "a POINT on another object rather than the object itself" - the
+## The declared types that mean "a POINT on another object rather than the object itself" - the
 ## marker a weapon hangs off, a rigged bone, the attachment Godot keeps glued to a Skeleton3D bone.
 ## A place copied from one of these is not "pin to hand", it is "pin to the Player's hand", which is
 ## what the author meant and what no line of the arithmetic says out loud.
 const SEAT_TYPES: PackedStringArray = ["Marker2D", "Marker3D", "Bone2D", "BoneAttachment3D"]
 
-## Y5. The declared types that mean "a point travelling a curve". Same idea, different sentence: the
+## The declared types that mean "a point travelling a curve". Same idea, different sentence: the
 ## host rides where the path has got to, so the reading says the path rather than the follower.
 const PATH_SEAT_TYPES: PackedStringArray = ["PathFollow2D", "PathFollow3D"]
 
-## T27. The line each shipped ACTION row stands for - both the rows the importer lifts a shape to and
+## The line each shipped ACTION row stands for - both the rows the importer lifts a shape to and
 ## the rows the picker writes it as. One table, read by the fact walk (so the file can tell it is a
 ## projectile even when every line of it was claimed) and by the row builder (so a picked row reads in
 ## the behavior's words). `{slot}` names the row's own params; `{host.}` and `{target}.` come off,
@@ -93,23 +93,23 @@ const ACE_LINES: Dictionary = {
 	"BoundToLayout": "position = position.clamp({low}, {high})",
 	"PinToObject": "global_position = {anchor}.global_position + {offset}",
 	"PinAngleToObject": "rotation = {anchor}.rotation",
-	# Y4. The two DISTANCE pin modes, which are still ONE line each, so the picker can author them
+	# The two DISTANCE pin modes, which are still ONE line each, so the picker can author them
 	# and a hand-written file reads as the same sentence. Rope and bar differ by one call - a rope
 	# CLAMPS the gap and so hangs slack below its length, a bar normalises it and so is held rigid at
 	# it. Neither spelling belongs to anything else, which is why these two got picker rows and the
-	# other four modes Y5 shipped did not.
+	# other four pin modes did not.
 	"PinToObjectRope": "global_position = {anchor}.global_position + (global_position - {anchor}.global_position).limit_length({length})",
 	"PinToObjectBar": "global_position = {anchor}.global_position + (global_position - {anchor}.global_position).normalized() * {length}"
 }
 
-## T27. The same for the CONDITION rows a shape is asked with.
+## The same for the CONDITION rows a shape is asked with.
 const ACE_CONDITION_LINES: Dictionary = {
 	"IsFartherThan": "{a}.distance_to({b}) > {distance}",
 	"HasArrived": "position.distance_to({destination}) < {tolerance}"
 }
 
 
-## T27. The line a row stands for, with its params put back in, or "" when a slot the line needs was
+## The line a row stands for, with its params put back in, or "" when a slot the line needs was
 ## never filled - in which case the row is not the shape, and guessing at the missing half would be
 ## worse than saying nothing. Longer slot names substitute first, so `{speed_var}` is never eaten by
 ## a `{speed}` that happens to share its opening.
@@ -186,7 +186,7 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 	return answers
 
 
-## Y4 / Y5 / Y6. The PIN half of the walk above, split out because it has a second caller that wants
+## The PIN half of the walk above, split out because it has a second caller that wants
 ## nothing else: the head bar's Pins folder. Running the whole of `facts()` for it would pay for the
 ## projectile walk, both fade passes and the nearest-in-family scan to answer one question about
 ## pinning, and on a long sheet that showed up in the rebuild budget.
@@ -212,7 +212,7 @@ static func pin_facts(lines: PackedStringArray) -> Dictionary:
 				pin_shown_anchors[str(pinned.get("anchor", ""))] = true
 			else:
 				bare_place_anchors[str(pinned.get("anchor", ""))] = true
-		# Y4/Y5. A rope, a bar and a soft follow are all pins to the object they name, and each of
+		# A rope, a bar and a soft follow are all pins to the object they name, and each of
 		# them reads on its own - the spellings are specific enough that nothing else writes them -
 		# so they corroborate an axis lock or a size copy beside them.
 		var reached: Dictionary = pin_reach_parts(text)
@@ -253,7 +253,7 @@ static func pin_facts(lines: PackedStringArray) -> Dictionary:
 	}
 
 
-## T1. `Vector2.RIGHT.rotated(rotation) * speed`, `Vector2.from_angle(rotation) * speed` and
+## `Vector2.RIGHT.rotated(rotation) * speed`, `Vector2.from_angle(rotation) * speed` and
 ## `transform.x * speed` are the three spellings of one sentence: fly at `speed` along an angle.
 ## Returns {angle, speed} for the assignment that writes it into `velocity`, or {} for anything else.
 static func angle_of_motion_parts(text: String) -> Dictionary:
@@ -283,7 +283,7 @@ static func angle_of_motion_parts(text: String) -> Dictionary:
 	return {}
 
 
-## T1. The step a bullet takes each frame: its own place moved by the velocity, or that same motion
+## The step a bullet takes each frame: its own place moved by the velocity, or that same motion
 ## swept through whatever is in the way.
 static func is_step_line(text: String) -> bool:
 	var grows_at: int = EventSheetSentence.top_level_index(text, " += ")
@@ -306,7 +306,7 @@ static func _is_velocity_step(value: String) -> bool:
 	return factor.strip_edges().trim_prefix("self.") == "velocity"
 
 
-## T3. `p = p.move_toward(destination, speed * delta)` and its two siblings (`lerp` toward the point,
+## `p = p.move_toward(destination, speed * delta)` and its two siblings (`lerp` toward the point,
 ## `direction_to(point) * speed` added to the place) - the one step a glide is made of. Returns
 ## {destination, speed} or {}.
 static func glide_parts(text: String) -> Dictionary:
@@ -360,7 +360,7 @@ static func glide_parts(text: String) -> Dictionary:
 	return {"destination": point, "speed": speed}
 
 
-## T3. The booleans that say a glide is RUNNING: set true on the same line run that fills a
+## The booleans that say a glide is RUNNING: set true on the same line run that fills a
 ## destination, and asked about somewhere else. Both halves are required, so an ordinary flag stays a
 ## flag and a destination filled with no flag beside it never invents one.
 static func move_to_flag_names(lines: PackedStringArray, destinations: Dictionary) -> Dictionary:
@@ -388,7 +388,7 @@ static func move_to_flag_names(lines: PackedStringArray, destinations: Dictionar
 	return found
 
 
-## T2. The variables a nearest-in-family loop FILLS - my own minimal recogniser for the loop, kept
+## The variables a nearest-in-family loop FILLS - my own minimal recogniser for the loop, kept
 ## deliberately small because the picking words themselves belong elsewhere. The shape asked for is
 ## the whole of it: a `for` over a group, a distance measured inside it, a `<` against a running
 ## best, and the winner handed to a variable afterwards.
@@ -401,7 +401,7 @@ static func turret_target_names(lines: PackedStringArray) -> Dictionary:
 	return found
 
 
-## T2. Every nearest-in-family loop the lines hold, as {family, range, target, evidence, best,
+## Every nearest-in-family loop the lines hold, as {family, range, target, evidence, best,
 ## nearest}. The minimal min-loop recogniser: the family the loop walks, the number the search starts
 ## from (which is the range), the local that holds the winner, and the variable it is handed to.
 ##
@@ -496,7 +496,7 @@ static func _declared_pair(text: String) -> Dictionary:
 	return {}
 
 
-## T4. `global_position = anchor.global_position + offset` - one place copied from another's, which
+## `global_position = anchor.global_position + offset` - one place copied from another's, which
 ## is what pinning IS. Returns {anchor, offset} or {}.
 static func pin_parts(text: String) -> Dictionary:
 	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
@@ -522,7 +522,7 @@ static func pin_parts(text: String) -> Dictionary:
 	return {"anchor": anchor, "offset": offset}
 
 
-## T4. `rotation = anchor.rotation` - the angle half of a pin. Returns the anchor or "".
+## `rotation = anchor.rotation` - the angle half of a pin. Returns the anchor or "".
 static func pin_angle_anchor(text: String) -> String:
 	var assign_at: int = EventSheetSentence.top_level_index(text, " = ")
 	if assign_at <= 0:
@@ -541,7 +541,7 @@ static func pin_angle_anchor(text: String) -> String:
 	return anchor if EventSheetSentence.is_identifier(anchor) and anchor != "self" else ""
 
 
-## Y4. The two DISTANCE pins, which are one shape with one call's difference:
+## The two DISTANCE pins, which are one shape with one call's difference:
 ##
 ##   rope  global_position = a.global_position + (global_position - a.global_position).limit_length(80.0)
 ##   bar   global_position = a.global_position + (global_position - a.global_position).normalized() * 80.0
@@ -586,7 +586,7 @@ static func pin_reach_parts(text: String) -> Dictionary:
 		else {"anchor": anchor, "length": bar_length, "mode": "bar"}
 
 
-## Y5. `global_position = global_position.lerp(anchor.global_position, 10 * delta)` - the follow that
+## `global_position = global_position.lerp(anchor.global_position, 10 * delta)` - the follow that
 ## LAGS, which is what makes a camera target or a pet feel alive rather than welded on. Returns
 ## {anchor, speed} or {}. Only a lerp of the object's OWN place toward another's counts; a lerp
 ## between two other points is arithmetic and reads as arithmetic.
@@ -617,7 +617,7 @@ static func pin_soft_parts(text: String) -> Dictionary:
 	return {} if speed.is_empty() else {"anchor": anchor, "speed": speed}
 
 
-## Y5. `global_position.x = anchor.global_position.x` - ONE axis of a place copied, which is a
+## `global_position.x = anchor.global_position.x` - ONE axis of a place copied, which is a
 ## shadow under a jumper or a bar that rides a lift. Returns {anchor, axis} or {}.
 ##
 ## Deliberately NOT a reading on its own: see `_pin_axis_statement` for the gate. The spelling is
@@ -641,7 +641,7 @@ static func pin_axis_parts(text: String) -> Dictionary:
 	return {} if anchor.is_empty() else {"anchor": anchor, "axis": axis}
 
 
-## Y5. `scale = anchor.scale` - the SIZE half of a pin, so a shadow swells as its owner lands.
+## `scale = anchor.scale` - the SIZE half of a pin, so a shadow swells as its owner lands.
 ## Returns the anchor or "". Gated in `_pin_size_statement` for the same reason the axis copy is:
 ## one object's scale set from another's is not, on its own, evidence of anything.
 static func pin_size_anchor(text: String) -> String:
@@ -658,7 +658,7 @@ static func pin_size_anchor(text: String) -> String:
 	return anchor if EventSheetSentence.is_identifier(anchor) and anchor != "self" else ""
 
 
-## Y5. The variables a file declares as a POINT ON another object rather than as the object - the
+## The variables a file declares as a POINT ON another object rather than as the object - the
 ## marker a weapon hangs off, a rigged bone, the attachment a skeleton keeps on one, a follower
 ## walking a curve. The TYPE is the evidence and the node path is the owner, so
 ## `@onready var hand: Marker2D = $Player/Hand` turns `global_position = hand.global_position` from
@@ -688,7 +688,7 @@ static func pin_seat_names(lines: PackedStringArray) -> Dictionary:
 	return seats
 
 
-## Y5. One declaration read as a seat, or {} when it is not one. Shared by the line walk above and by
+## One declaration read as a seat, or {} when it is not one. Shared by the line walk above and by
 ## the sheet walk beside it, because the importer LIFTS `@onready var hand: Marker2D = $Player/Hand`
 ## into a variable row - so in an opened file the type is no longer on any line the walk can see, and
 ## a reading that only worked on files the importer left alone would be one nobody ever met.
@@ -706,7 +706,7 @@ static func pin_seat_entry(name_text: String, type_text: String, value_text: Str
 	}
 
 
-## Y6. What this file says the object RIDES, as [{anchor, name, modes}] in file order - the fact
+## What this file says the object RIDES, as [{anchor, name, modes}] in file order - the fact
 ## behind the head bar's "pinned to X (rope)". One entry per anchor however many lines pin to it, so
 ## a file that copies a place and an angle from one object is pinned to it ONCE, in both.
 ##
@@ -747,7 +747,7 @@ static func pin_summaries(lines: PackedStringArray, known_facts: Dictionary = {}
 	return summaries
 
 
-## Y6. The one pin a line is, as {anchor, mode}, or {} for a line that pins nothing. The order is the
+## The one pin a line is, as {anchor, mode}, or {} for a line that pins nothing. The order is the
 ## reading's own: the distance modes before the plain copy, because a rope is also written as "the
 ## anchor's place plus something".
 static func _pin_summary_of(text: String, file_facts: Dictionary) -> Dictionary:
@@ -786,7 +786,7 @@ static func _pin_summary_of(text: String, file_facts: Dictionary) -> Dictionary:
 	return {"anchor": sized, "mode": "size"}
 
 
-## Y6. "position" and "angle" from one anchor are not two pins, they are the one pin the pack calls
+## "position" and "angle" from one anchor are not two pins, they are the one pin the pack calls
 ## "position and angle" - so the head bar says that, and the row's words and the knob's words match.
 static func _merged_pin_modes(modes: PackedStringArray) -> PackedStringArray:
 	if not (modes.has("position") and modes.has("angle")):
@@ -846,7 +846,7 @@ static func _is_gap_from(gap_text: String, anchor: String) -> bool:
 	return _place_owner(text.substr(minus_at + 3)) == anchor
 
 
-## T4. The tweens that fade alpha to nothing, as {"seconds": {local: the duration}, "destroys":
+## The tweens that fade alpha to nothing, as {"seconds": {local: the duration}, "destroys":
 ## {local: true}}. Two lines make the shape - the alpha step and the callback that follows it - so
 ## the file is what answers, exactly as the tween chain facts beside it do.
 static func fade_facts(lines: PackedStringArray) -> Dictionary:
@@ -869,7 +869,7 @@ static func fade_facts(lines: PackedStringArray) -> Dictionary:
 	return {"seconds": seconds, "destroys": destroys}
 
 
-## T4. `tw.tween_property(self, "modulate:a", 0.0, 1.0)` - the alpha step a fade out IS. Returns
+## `tw.tween_property(self, "modulate:a", 0.0, 1.0)` - the alpha step a fade out IS. Returns
 ## {local, seconds} or {}. Only a fade to NOTHING counts; a tween to half opacity is a tween.
 static func fade_step_parts(text: String) -> Dictionary:
 	var call: Dictionary = EventSheetSentence.call_parts(text)
@@ -925,7 +925,7 @@ static func condition(text: String, context: Dictionary) -> Dictionary:
 	return _move_to_flag_condition(text, context)
 
 
-## T2. `if target:` - the Turret behavior's own question about whether it is holding one, rather than
+## `if target:` - the Turret behavior's own question about whether it is holding one, rather than
 ## the existence check the line is written as. Only the variable the loop FILLED reads this way.
 static func _has_target_condition(text: String, context: Dictionary) -> Dictionary:
 	var held: String = text.strip_edges().trim_prefix("self.")
@@ -946,7 +946,7 @@ static func _shape(object_name: String, chip: String, pattern: String, template:
 	return reading
 
 
-## T1. The four bullet steps and the bounce, each gated on the file actually being a projectile.
+## The four bullet steps and the bounce, each gated on the file actually being a projectile.
 static func _bullet_statement(text: String, context: Dictionary) -> Dictionary:
 	if not bool(context.get("bullet_motion", false)):
 		return {}
@@ -983,7 +983,7 @@ static func _bullet_statement(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## T1. `position.distance_to(start) > range_px` - how far the bullet has flown, asked in the Bullet
+## `position.distance_to(start) > range_px` - how far the bullet has flown, asked in the Bullet
 ## behavior's own expression name. Gated on the origin being a variable this file DECLARES, so a
 ## distance to another object stays the distance it is.
 static func _distance_travelled_condition(text: String, context: Dictionary) -> Dictionary:
@@ -1016,7 +1016,7 @@ static func _distance_travelled_condition(text: String, context: Dictionary) -> 
 	return {}
 
 
-## T2. The two turret steps a single line writes: the turn toward the target, and letting go of it.
+## The two turret steps a single line writes: the turn toward the target, and letting go of it.
 ## The loop that ACQUIRES the target is a shape of its own and is claimed as the pattern's evidence
 ## rather than collapsed into a row here.
 static func _turret_statement(text: String, context: Dictionary) -> Dictionary:
@@ -1046,7 +1046,7 @@ static func _turret_statement(text: String, context: Dictionary) -> Dictionary:
 		{"rate": [EventSheetSentence.expression_text(rate, context), "value"]})
 
 
-## T2. True when an angle is measured toward one of the variables a nearest-in-family loop filled.
+## True when an angle is measured toward one of the variables a nearest-in-family loop filled.
 static func _aims_at_target(angle_text: String, targets: Dictionary) -> bool:
 	for method: String in [".angle_to_point(", ".angle_to("]:
 		var at: int = angle_text.find(method)
@@ -1062,7 +1062,7 @@ static func _aims_at_target(angle_text: String, targets: Dictionary) -> bool:
 	return false
 
 
-## T3. The three glide steps: aiming at a point, starting, and stopping.
+## The three glide steps: aiming at a point, starting, and stopping.
 static func _move_to_statement(text: String, context: Dictionary) -> Dictionary:
 	var destinations: Dictionary = context.get("move_to_destinations", {})
 	if destinations.is_empty():
@@ -1097,7 +1097,7 @@ static func _move_to_statement(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## T3. `if moving:` - the behavior's own state, asked in its own word.
+## `if moving:` - the behavior's own state, asked in its own word.
 static func _move_to_flag_condition(text: String, context: Dictionary) -> Dictionary:
 	var flag: String = text.strip_edges().trim_prefix("self.")
 	if not (context.get("move_to_flags", {}) as Dictionary).has(flag):
@@ -1105,7 +1105,7 @@ static func _move_to_flag_condition(text: String, context: Dictionary) -> Dictio
 	return _shape(EventSheetSentence.script_object(context), CHIP_MOVE_TO, "move_to", "Is moving", {})
 
 
-## T3. `global_position.distance_to(destination) < 1.0` - the arrival question, in the Move To
+## `global_position.distance_to(destination) < 1.0` - the arrival question, in the Move To
 ## behavior's own words rather than as the comparison it is written with.
 static func _arrived_condition(text: String, context: Dictionary) -> Dictionary:
 	var destinations: Dictionary = context.get("move_to_destinations", {})
@@ -1131,7 +1131,7 @@ static func _arrived_condition(text: String, context: Dictionary) -> Dictionary:
 	return {}
 
 
-## T4. The five one-liners - spin, wrap, bound, pin and fade - each the whole of a behavior.
+## The five one-liners - spin, wrap, bound, pin and fade - each the whole of a behavior.
 static func _one_liner_statement(text: String, context: Dictionary) -> Dictionary:
 	var object_name: String = EventSheetSentence.script_object(context)
 	var grows_at: int = EventSheetSentence.top_level_index(text, " += ")
@@ -1163,7 +1163,7 @@ static func _one_liner_statement(text: String, context: Dictionary) -> Dictionar
 	return _pin_statement(object_name, text, context)
 
 
-## T4. `position.x = wrapf(position.x, 0, screen.x)` - the layout's own edges, per axis.
+## `position.x = wrapf(position.x, 0, screen.x)` - the layout's own edges, per axis.
 static func _wrap_statement(object_name: String, target: String, value: String,
 		context: Dictionary) -> Dictionary:
 	if not target.begins_with("position.") and not target.begins_with("global_position."):
@@ -1184,7 +1184,7 @@ static func _wrap_statement(object_name: String, target: String, value: String,
 	return _shape(object_name, CHIP_WRAP, "wrap", template, {})
 
 
-## T4. `position = position.clamp(min, max)` - the layout's edges as a wall rather than a doorway.
+## `position = position.clamp(min, max)` - the layout's edges as a wall rather than a doorway.
 static func _bound_statement(object_name: String, target: String, value: String,
 		context: Dictionary) -> Dictionary:
 	if not OWN_PLACE_NAMES.has(target):
@@ -1205,8 +1205,8 @@ static func _bound_statement(object_name: String, target: String, value: String,
 	})
 
 
-## T4 / Y4 / Y5. `global_position = anchor.global_position + offset`, the angle copy beside it, and
-## the six modes Y4 and Y5 added around them. Order matters: a rope and a bar are ALSO written as
+## `global_position = anchor.global_position + offset`, the angle copy beside it, and
+## the six pin modes added around them. Order matters: a rope and a bar are ALSO written as
 ## "the anchor's place plus something", so the distance modes get their say before the plain copy
 ## claims the line as an offset nobody would recognise.
 static func _pin_statement(object_name: String, text: String, context: Dictionary) -> Dictionary:
@@ -1237,7 +1237,7 @@ static func _pin_statement(object_name: String, text: String, context: Dictionar
 	return _pin_size_statement(object_name, text, context)
 
 
-## Y5. The plain place copy, said in whichever of three sentences fits: riding a POINT on an object
+## The plain place copy, said in whichever of three sentences fits: riding a POINT on an object
 ## (a marker, a bone, a hand), riding where a PATH has got to, or riding the object itself.
 static func _pin_place_statement(object_name: String, pinned: Dictionary,
 		context: Dictionary) -> Dictionary:
@@ -1273,11 +1273,11 @@ static func _pin_place_statement(object_name: String, pinned: Dictionary,
 	})
 
 
-## Y5. `global_position = global_position.lerp(other.global_position, 10 * delta)` - the follow that
+## `global_position = global_position.lerp(other.global_position, 10 * delta)` - the follow that
 ## LAGS.
 ##
 ## GATED, and this one cost a shipped reading to learn. A CAMERA closing on a target is written with
-## exactly these bytes, and the sheet has had words for that since S18 - `Scroll toward target at 5
+## exactly these bytes, and the sheet has had words for that since the camera vocabulary landed - `Scroll toward target at 5
 ## (per second)` - so an ungated soft pin quietly took the camera's row away from it. The line simply
 ## does not say which of the two it is; the FILE does, by pinning that same anchor somewhere else or
 ## by declaring it as a point on somebody. Everything else keeps the reading it had.
@@ -1296,7 +1296,7 @@ static func _pin_soft_statement(object_name: String, text: String,
 	})
 
 
-## Y5. One axis of a place copied from another object - `global_position.x = anchor.global_position.x`.
+## One axis of a place copied from another object - `global_position.x = anchor.global_position.x`.
 ##
 ## GATED, hard. That spelling is one of the most general in the language: a health bar tracking a
 ## column, a parallax layer, a UI element, a solver step all write it, and a reading that claimed
@@ -1321,7 +1321,7 @@ static func _pin_axis_statement(object_name: String, text: String,
 		{"anchor": [_pin_anchor_words(anchor, context), "name"]})
 
 
-## Y5. `scale = anchor.scale`. Gated exactly as the axis copy is, and for the same reason: one
+## `scale = anchor.scale`. Gated exactly as the axis copy is, and for the same reason: one
 ## object's scale set from another's is a hundred ordinary things, and is only a pin in a file that
 ## has already pinned that anchor some other way.
 static func _pin_size_statement(object_name: String, text: String,
@@ -1355,7 +1355,7 @@ static func _pin_anchor_words(anchor: String, context: Dictionary) -> String:
 	return "%s's %s" % [str(seat.get("owner", "")), str(seat.get("point", ""))]
 
 
-## T4. The alpha step a fade out is written as, with the destroy the callback promises said out loud.
+## The alpha step a fade out is written as, with the destroy the callback promises said out loud.
 static func _fade_statement(text: String, context: Dictionary) -> Dictionary:
 	var step: Dictionary = fade_step_parts(text)
 	if step.is_empty():

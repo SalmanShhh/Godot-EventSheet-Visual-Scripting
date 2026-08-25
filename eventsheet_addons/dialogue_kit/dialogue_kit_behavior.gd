@@ -27,22 +27,22 @@ signal on_line_started
 ## @ace_name("On Line Finished")
 signal on_line_finished
 
-## Input action that advances the dialogue (blank = no built-in input; call Advance yourself).
-@export var advance_action: String = "ui_accept"
-## Typewriter speed; Advance mid-line completes it instantly.
-@export_range(1, 400, 1) var chars_per_second: float = 40.0
-var current_speaker: String = ""
-var current_text: String = ""
-var dialogue_active: bool = false
-var line_queue: Array = []
 ## The named panel (any CanvasItem under the host) shown while dialogue runs.
 @export var panel_name: String = "DialoguePanel"
-var revealed_chars: float = 0.0
 ## The named Label that shows who is talking.
 @export var speaker_label_name: String = "SpeakerLabel"
 ## The named Label the line types into.
 @export var text_label_name: String = "TextLabel"
+## Typewriter speed; Advance mid-line completes it instantly.
+@export_range(1, 400, 1) var chars_per_second: float = 40.0
+## Input action that advances the dialogue (blank = no built-in input; call Advance yourself).
+@export var advance_action: String = "ui_accept"
+var line_queue: Array = []
+var dialogue_active: bool = false
 var typing: bool = false
+var current_speaker: String = ""
+var current_text: String = ""
+var revealed_chars: float = 0.0
 var ui_cache: Dictionary = {}
 
 ## Named-descendant lookup under the host, cached (freed nodes fall out on the next miss).

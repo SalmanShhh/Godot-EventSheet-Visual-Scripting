@@ -2,7 +2,7 @@
 class_name EventSheetHierarchyEdits
 extends RefCounted
 
-# X15 - what the Hierarchy pane's gestures actually WRITE.
+# What the Hierarchy pane's gestures actually WRITE.
 #
 # Dropping an object into the pane, right-clicking ▸ flags…, and dragging a child out are three
 # gestures for one thing: a row that changes the tree while the game runs. Each one lands here, opens
@@ -49,7 +49,7 @@ func flags_requested(parent_label: String, child_label: String) -> void:
 		func(flags: Dictionary) -> void: _write_add_child(parent_label, child_label, flags))
 
 
-## X11. The flags chip on an Add child ROW: the same four ticks, seeded from what the run already
+## The flags chip on an Add child ROW: the same four ticks, seeded from what the run already
 ## says, and written back over the very lines the row stands for rather than appended beside them.
 func row_flags_requested(payload: Dictionary) -> void:
 	if payload.is_empty():

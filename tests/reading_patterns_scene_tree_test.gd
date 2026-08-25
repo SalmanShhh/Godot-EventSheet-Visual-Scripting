@@ -2,14 +2,14 @@
 class_name ReadingPatternsSceneTreeTest
 extends RefCounted
 
-# U2 / U4 / U5. The long tail of shapes a Godot script writes that an event sheet already has rows
+# The long tail of shapes a Godot script writes that an event sheet already has rows
 # for, and that used to open as the code they are:
 #
-#   U2  a `match` pattern that binds a name, destructures a list or picks a table apart reads as the
+#   A `match` pattern that binds a name, destructures a list or picks a table apart reads as the
 #       condition it is, with the names it binds as chips; a range that counts down or steps says
 #       which values the body sees
-#   U4  a pure-data inner class is a Data type bar, and `new` / `duplicate` / `is` are three words
-#   U5  the scene-tree idioms - the child named X, the layout, a unique name, X's path, and copying a
+#   A pure-data inner class is a Data type bar, and `new` / `duplicate` / `is` are three words
+#   The scene-tree idioms - the child named X, the layout, a unique name, X's path, and copying a
 #       node already in the scene, which is Clone object rather than Create object
 #
 # Three gates, in the order they matter: the grammar's own values, the whole path (a hand-written
@@ -58,23 +58,23 @@ func _process(_delta: float) -> void:
 
 ## Every reading the opened file must contain, one per shape this batch claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# U4 - the data type and the three words. A local's starting value is drawn as its own span, so
+	# The data type and the three words. A local's starting value is drawn as its own span, so
 	# the reading arrives with the `=` the declaration row puts in front of it.
 	"Data type Stats",
 	"= a new Stats",
 	"= a copy of stats",
-	# U5 - the scene tree
+	# The scene tree
 	"= the child named HUD",
 	"= Boss in the layout",
 	"= HealthBar (unique name)",
 	"= enemy's path",
 	"System ▸ Clone object enemy (→ copy, next to it)",
-	# U2 - the patterns, as the Else-if chain M37 built
+	# The patterns, as the Else-if chain reading built
 	"System ▸ event is a list of 3 starting \"move\"",
 	"System ▸ event is a table with type = \"hit\"",
 	"System ▸ event is text",
 	"amount → a",
-	# U2 - the two loop shapes
+	# The two loop shapes
 	"System ▸ For \"i\" from 10 down to 1",
 	"System ▸ For \"i\" from 0 to 90 step 10"
 ])
@@ -89,7 +89,7 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	"var other when other is String"
 ])
 
-## U2 - one match pattern, one condition sentence, over the subject `event`. The value is
+## One match pattern, one condition sentence, over the subject `event`. The value is
 ## "sentence | chip, chip" so the bindings are pinned as well as the words.
 static var PATTERN_READINGS: Dictionary = {
 	"[\"move\", var x, var y]": "event is a list of 3 starting \"move\" | x, y",
@@ -109,7 +109,7 @@ static var REFUSED_PATTERNS: PackedStringArray = PackedStringArray([
 	"[\"move\", ..]", "[var x, \"move\"]", "[compute()]", "{\"k\": compute()}", "var 1bad"
 ])
 
-## U4 / U5 - one value expression, one reading.
+## One value expression, one reading.
 static var EXPRESSION_READINGS: Dictionary = {
 	"Stats.new()": "a new Stats",
 	"stats.duplicate()": "a copy of stats",

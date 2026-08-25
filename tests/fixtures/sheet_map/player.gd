@@ -1,4 +1,4 @@
-# A fixture project for the Sheet map (U17): the object that raises the signal the HUD listens for.
+# A fixture project for the Sheet map: the object that raises the signal the HUD listens for.
 extends Node
 
 signal sheet_map_fixture_died

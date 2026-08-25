@@ -4,17 +4,17 @@ extends RefCounted
 
 # Pins the long tail of reading batch ten gave the sheet's own words to:
 #
-#   U6   HTTPRequest and JSON read as the AJAX and JSON objects - Request / Post / request succeeded
+#   HTTPRequest and JSON read as the AJAX and JSON objects - Request / Post / request succeeded
 #        / AJAX.LastData / JSON.Parse / JSON.ToString, and a run of indexes as one possessive address
-#   U7   a light's knobs read as the Light rows - light energy as a percentage, light colour, the
+#   A light's knobs read as the Light rows - light energy as a percentage, light colour, the
 #        on-off pair, shadows - plus the layer tint and the world's ambient light under System
-#   U8   the 3D words - Look at, and an object's own forward / right / up
-#   U9   threads read as Run <verb> in the background / Wait for it to finish, claimed as one pattern
+#   The 3D words - Look at, and an object's own forward / right / up
+#   Threads read as Run <verb> in the background / Wait for it to finish, claimed as one pattern
 #        with the behavior that could replace the shape
-#   U10  the signal steps that are ACTIONS - Wire / Unwire, the at-end-of-frame chip, a signal held
+#   The signal steps that are ACTIONS - Wire / Unwire, the at-end-of-frame chip, a signal held
 #        in a variable and fired by name, and the wired-up question
-#   U11  a call made by name, and a callable held in a value
-#   U12  a video player is the Video object, and how far a sound carries is a hearing distance
+#   A call made by name, and a callable held in a value
+#   A video player is the Video object, and how far a sound carries is a hearing distance
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -72,7 +72,7 @@ func chunk_of(index: int) -> void:
 ## Every reading the opened file must contain, one per shape these items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"AJAX ▸ Request \"https://example.com/scores\"",
-	# L1 - the light is the OBJECT now: a file whose own declaration says `lamp` is a PointLight2D
+	# The light is the OBJECT now: a file whose own declaration says `lamp` is a PointLight2D
 	# opens on the node-scoped light rows, which say the word and leave the property to the echo.
 	"lamp ▸ Set brightness to 0.5",
 	"lamp ▸ Turn shadows on",
@@ -81,7 +81,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Video ▸ Play",
 	"System ▸ Run Chunk Of in the background   index = 1",
 	"System ▸ ⏳ Wait for it to finish",
-	# U8 / U12 - the two runs whose lines only mean anything together, each ONE row. The look belongs
+	# The two runs whose lines only mean anything together, each ONE row. The look belongs
 	# to the script's own object, which this file names by the class it extends.
 	"Node3D ▸ Mouse look",
 	"System ▸ Crossfade music a → music b by t"
@@ -103,39 +103,39 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 
 ## The statements whose sentence these items settle, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# U6 - a request, and the same call carrying the POST verb and a body
+	# A request, and the same call carrying the POST verb and a body
 	"http.request(\"https://example.com/scores\")": "AJAX ▸ Request \"https://example.com/scores\"",
 	"http.request(\"https://example.com/post\", [], HTTPClient.METHOD_POST, payload)":
 		"AJAX ▸ Post payload to \"https://example.com/post\"",
-	# U7 - the light knobs, the layer tint and the world's ambient light
+	# The light knobs, the layer tint and the world's ambient light
 	"lamp.energy = 0.5": "lamp ▸ Set light energy to 50%",
 	"sun.light_energy = 2.0": "sun ▸ Set light energy to 200%",
 	"lamp.enabled = false": "lamp ▸ Set light off",
 	"lamp.enabled = true": "lamp ▸ Set light on",
 	"lamp.shadow_enabled = true": "lamp ▸ Set shadows on",
 	"lamp.shadow_enabled = false": "lamp ▸ Set shadows off",
-	# U1 re-pinned this one: a colour built from its channels reads as the colour, and a mix nobody has
+	# Re-pinned this one: a colour built from its channels reads as the colour, and a mix nobody has
 	# a word for keeps the channels rather than repeating the Color call that built them.
 	"tint.color = Color(0.2, 0.2, 0.4)": "System ▸ Set layer tint to 0.2, 0.2, 0.4 CanvasModulate",
-	# X9 re-homed this one: the world's ambient light is one of the ENVIRONMENT's knobs, and it now
+	# Re-homed this one: the world's ambient light is one of the ENVIRONMENT's knobs, and it now
 	# reads under the Environment object with the rest of them, in these same words.
 	"$WorldEnvironment.environment.ambient_light_energy = 0.3": "Environment ▸ Set ambient light to 30%",
-	# U8 - facing something
+	# Facing something
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
-	# U9 - work handed off the main thread, and the wait that joins it back up
+	# Work handed off the main thread, and the wait that joins it back up
 	"thread.start(bake.bind(level))": "System ▸ Run Bake in the background   level = level",
 	"thread.wait_to_finish()": "System ▸ ⏳ Wait for it to finish",
 	"WorkerThreadPool.add_task(chunk.bind(index))": "System ▸ Run Chunk in the background   index = index",
 	"WorkerThreadPool.add_group_task(row, 64)": "System ▸ Run Row in the background 64 times",
 	"WorkerThreadPool.wait_for_group_task_completion(id)": "System ▸ ⏳ Wait for it to finish",
-	# U10 - the signal steps that act
+	# The signal steps that act
 	"died.disconnect(on_died)": "Player ▸ Unwire On Died from On Died",
 	"sig.emit(10)": "System ▸ Fire sig   10",
-	# U11 - a call made by name
+	# A call made by name
 	"call(\"heal\", 5)": "Functions ▸ Call Heal   amount = 5 by name",
 	"callv(\"heal\", [5, self])":
 		"Functions ▸ Call Heal   amount = 5   source = self by name, with a list",
-	# U12 - the Video object, and how far a sound carries
+	# The Video object, and how far a sound carries
 	"film.stream = load(\"res://intro.ogv\")": "Video ▸ Set video to intro.ogv",
 	"film.play()": "Video ▸ Play",
 	"film.pause()": "Video ▸ Pause",
@@ -161,10 +161,10 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"-global_transform.basis.z": "Player's forward",
 	"global_transform.basis.x": "Player's right",
 	"cam.global_transform.basis.y": "cam's up",
-	# W13 re-pinned this from "the function Heal" to the ƒ chip: the condition lane already names
+	# Re-pinned this from "the function Heal" to the ƒ chip: the condition lane already names
 	# every function with that mark, and a function held as a VALUE is the same thing.
 	"Callable(self, \"heal\")": "ƒ Heal",
-	# M31's single index is untouched: one index already had a sentence, and a run is a different one.
+	# The single index is untouched: one index already had a sentence, and a run is a different one.
 	"inventory[\"potion\"]": "inventory's \"potion\""
 }
 
@@ -255,14 +255,14 @@ static func _grammar_values() -> bool:
 	ok = _check("the background pattern offers the behavior that does the whole shape",
 		str(EventSheetSentence.statement("thread.wait_to_finish()", context).get("adoptable", "")),
 		"background_runner") and ok
-	# U10 - the flag whose whole meaning is WHEN the handler runs says so, as a chip.
+	# The flag whose whole meaning is WHEN the handler runs says so, as a chip.
 	ok = _check("a deferred connection says when the handler runs",
 		_joined_segments(EventSheetSentence.statement("died.connect(on_died, CONNECT_DEFERRED)", context)),
 		"Player ▸ Wire On Died to On Died   at end of frame") and ok
-	# U10 - a signal held in a value declares as a signal, in the sheet's own word.
+	# A signal held in a value declares as a signal, in the sheet's own word.
 	ok = _check("a signal type reads as the sheet's word for it",
 		EventSheetSentence.type_word("Signal"), "signal") and ok
-	# U8 - the mouse-look run, recognised piece by piece, and the note that shows the file's values.
+	# The mouse-look run, recognised piece by piece, and the note that shows the file's values.
 	var turn: Dictionary = EventSheetSentence.mouse_look_turn_parts("rotate_y(-relative.x * 0.002)")
 	var pitch: Dictionary = EventSheetSentence.mouse_look_pitch_parts("cam.rotate_x(-relative.y * 0.002)")
 	ok = _check("the body's half of a mouse look is recognised",
@@ -277,7 +277,7 @@ static func _grammar_values() -> bool:
 	ok = _check("the note shows the file's own values",
 		EventSheetSentence.mouse_look_note(turn, pitch, "1.2", context),
 		"turn by -relative.x * 0.002, look up/down on cam, clamped ±1.2") and ok
-	# U12 - one fraction driving both faders is a crossfade; two unrelated volumes are not.
+	# One fraction driving both faders is a crossfade; two unrelated volumes are not.
 	ok = _check("two faders driven by one fraction read as a crossfade",
 		str(EventSheetSentence.crossfade_parts("music_a.volume_db = linear_to_db(1.0 - t)",
 			"music_b.volume_db = linear_to_db(t)", context).get("text", "")),
@@ -285,7 +285,7 @@ static func _grammar_values() -> bool:
 	ok = _check("two unrelated volumes are refused",
 		EventSheetSentence.crossfade_parts("music_a.volume_db = linear_to_db(0.5)",
 			"music_b.volume_db = linear_to_db(t)", context).is_empty(), true) and ok
-	# U11 - what a function's parameter chips say: the default a caller gets when it leaves the input
+	# What a function's parameter chips say: the default a caller gets when it leaves the input
 	# out, the sheet's word for nothing, and the ellipsis that marks the input which swallows the rest.
 	ok = _check("a defaulted input says its default",
 		ViewportRowBuilder.verb_param_chip_text(_param("amount", "int", "10")), "amount = 10") and ok

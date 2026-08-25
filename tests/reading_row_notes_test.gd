@@ -2,7 +2,7 @@
 class_name ReadingRowNotesTest
 extends RefCounted
 
-# U3. A note on one action is how a sheet comments a single step, and a trailing `# ...` is how
+# A note on one action is how a sheet comments a single step, and a trailing `# ...` is how
 # GDScript writes exactly that. Until this batch the note was swallowed into whatever value the lift
 # put the end of the line in ("Subtract 1  # ouch from hp"), and a TODO was invisible outside the
 # code. Three things now:

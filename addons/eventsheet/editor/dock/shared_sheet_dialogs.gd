@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSharedSheetDialogs
 extends RefCounted
-# Shared event sheets: the two gestures (V11).
+# Shared event sheets: the two gestures.
 #
 #  Sheet ▸ New shared sheet…   makes a script whose whole job is to be included, and asks the one
 #                              question that is answered per shared sheet rather than per includer:

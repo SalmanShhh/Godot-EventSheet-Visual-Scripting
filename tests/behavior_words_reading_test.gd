@@ -5,14 +5,14 @@ extends RefCounted
 # Pins the behaviors a hand-rolled script writes, read with the behavior's own words - the shapes
 # batch nine claims:
 #
-#   T5   a raycast cast at a target is ONE question: "<object> has line of sight to <target>"
-#   T6   the grab / release / follow trio is the Drag & Drop behavior, and an anchor preset is the
+#   A raycast cast at a target is ONE question: "<object> has line of sight to <target>"
+#   The grab / release / follow trio is the Drag & Drop behavior, and an anchor preset is the
 #        Anchor behavior's "Anchor to <corner>"
-#   T7   a collision shape switched off is the Solid going away, a one-way shape is the Jump-thru,
+#   A collision shape switched off is the Solid going away, a one-way shape is the Jump-thru,
 #        and a collision layer is the layer the Solid is on
-#   T23  `test_move(transform, offset)` is "Is overlapping at offset", the platformer's own question
-#   T25  a weighted draw, a seed and the noise are the Advanced Random object's rows
-#   T26  the system clock's calls and fields are the Date object's expressions
+#   `test_move(transform, offset)` is "Is overlapping at offset", the platformer's own question
+#   A weighted draw, a seed and the noise are the Advanced Random object's rows
+#   The system clock's calls and fields are the Date object's expressions
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -95,21 +95,21 @@ func load_all() -> void:
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# T6 - the drag trio
+	# The drag trio
 	"dragging = true": "Player ▸ Drag & Drop ▸ Start dragging",
 	"dragging = false": "Player ▸ Drag & Drop ▸ Drop",
 	"grab_offset = global_position - get_global_mouse_position()":
 		"Player ▸ Drag & Drop ▸ Remember the grab offset",
 	"global_position = get_global_mouse_position() + grab_offset":
 		"Player ▸ Drag & Drop ▸ Follow the cursor (keeping the grab offset)",
-	# T6 - the anchor words
+	# The anchor words
 	"set_anchors_preset(Control.PRESET_TOP_RIGHT)":
 		"Player ▸ Anchor ▸ Anchor to top right (of the window)",
 	"panel.set_anchors_preset(Control.PRESET_FULL_RECT)":
 		"panel ▸ Anchor ▸ Anchor to full rect (of the window)",
 	"anchor_left = 0.5": "Player ▸ Anchor ▸ Set left anchor to 0.5",
 	"offset_top = 8": "Player ▸ Anchor ▸ Set top margin to 8",
-	# T7 - what this body is to the others
+	# What this body is to the others
 	"$CollisionShape2D.one_way_collision = true":
 		"Player ▸ Jump-thru ▸ Set enabled (one-way: solid from above only)",
 	"$CollisionShape2D.one_way_collision = false": "Player ▸ Jump-thru ▸ Set disabled",
@@ -117,7 +117,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"$CollisionShape2D.disabled = false": "Player ▸ Solid ▸ Set enabled",
 	"set_collision_layer_value(1, true)": "Player ▸ Solid ▸ On layer 1",
 	"set_collision_layer_value(2, false)": "Player ▸ Solid ▸ Not on layer 2",
-	# T25 - the seeds
+	# The seeds
 	"rng.seed = hash(\"level-1\")": "Advanced Random ▸ Set seed to \"level-1\"",
 	"rng.seed = 12345": "Advanced Random ▸ Set seed to 12,345",
 	"noise.noise_type = FastNoiseLite.TYPE_PERLIN": "Advanced Random ▸ Set noise type to Perlin",
@@ -126,28 +126,28 @@ static var STATEMENT_READINGS: Dictionary = {
 
 ## The condition readings the grammar must answer on its own, as "object ▸ sentence".
 static var CONDITION_READINGS: Dictionary = {
-	# T6 - with the file's own drag proved, the flag is the behavior's question
+	# With the file's own drag proved, the flag is the behavior's question
 	"dragging": "Player ▸ Drag & Drop ▸ Is dragging",
 	"not dragging": "Player ▸ Drag & Drop ▸ Is not dragging",
-	# T23 - the platformer's "is there ground just below me"
+	# The platformer's "is there ground just below me"
 	"test_move(transform, Vector2(0, 1))": "Player ▸ Is overlapping at offset (0, 1) (a solid)",
 	"move_and_collide(Vector2(0, 1), true)": "Player ▸ Is overlapping at offset (0, 1) (a solid)",
-	# T23 - the overlap questions that already read, kept honest beside the new one
+	# The overlap questions that already read, kept honest beside the new one
 	"hurtbox.overlaps_body(other)": "hurtbox ▸ Is overlapping other"
 }
 
 ## The values whose whole-expression reading this parcel settles.
 static var EXPRESSION_READINGS: Dictionary = {
-	# T5 - the whole ray test as the one condition the Line of Sight behavior publishes
+	# The whole ray test as the one condition the Line of Sight behavior publishes
 	"not ray.is_colliding() or ray.get_collider() == t":
 		"Player has line of sight to t (within sight_range)",
-	# T25 - a list indexed by a weighted draw is one thought
+	# A list indexed by a weighted draw is one thought
 	"[\"coin\", \"gem\", \"nothing\"][rng.rand_weighted([70, 20, 10])]":
 		"choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",
-	# T25 - the noise, by the type the file stated
+	# The noise, by the type the file stated
 	"noise.get_noise_2d(x, y)": "AdvancedRandom.Perlin2d(x, y)",
 	"noise.get_noise_3d(x, y, z)": "AdvancedRandom.Perlin3d(x, y, z)",
-	# T26 - the clock and the calendar
+	# The clock and the calendar
 	"now.hour": "Date.Hour",
 	"now.minute": "Date.Minute",
 	"Time.get_unix_time_from_system()": "Date.Now",
@@ -172,10 +172,10 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"Advanced Random ▸ Set noise type to Perlin",
 	"System ▸ Set drop to choose weighted(\"coin\" 70, \"gem\" 20, \"nothing\" 10)",
 	"System ▸ Return CharacterBody2D has line of sight to t (within Sight Range)",
-	# T22 - the instantiate, the layer it went onto, where it was put and the property set on the way
+	# The instantiate, the layer it went onto, where it was put and the property set on the way
 	# in are ONE row; the Local row that holds the new object stays where the event declares it.
 	"System ▸ Create object enemy_scene on layer FX at spawn point's global position (as e)   rotation = angle",
-	# T23 - a loop over what an area is touching
+	# A loop over what an area is touching
 	"System ▸ For each a overlapping Area2D"
 ])
 

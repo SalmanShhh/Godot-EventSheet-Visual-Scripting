@@ -5,11 +5,11 @@ extends RefCounted
 # Pins the hand-rolled BEHAVIOR shapes - the arithmetic a script writes where a shipped behavior has
 # words:
 #
-#   T1  Bullet    the angle of motion, the acceleration, the gravity, the step, the bounce, and how
+#   Bullet    the angle of motion, the acceleration, the gravity, the step, the bounce, and how
 #                 far the projectile has flown
-#   T2  Turret    the nearest-in-family loop, holding a target, and turning toward it
-#   T3  Move To   gliding to a point, being under way, arriving, stopping
-#   T4  the five one-liners: Rotate, Wrap around layout, Bound to layout, Pin to, Fade out
+#   Turret    the nearest-in-family loop, holding a target, and turning toward it
+#   Move To   gliding to a point, being under way, arriving, stopping
+#   The five one-liners: Rotate, Wrap around layout, Bound to layout, Pin to, Fade out
 #
 # Four gates, in the order they matter:
 #   1. the recognisers' own values - one shape, one sentence, asserted literally;
@@ -92,7 +92,7 @@ func collect() -> void:
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# T1 - the Bullet behavior's four steps and its bounce
+	# The Bullet behavior's four steps and its bounce
 	"speed += accel * delta": "Coin ▸ Bullet  Set speed to speed accelerating by accel",
 	"velocity = Vector2.RIGHT.rotated(rotation) * speed":
 		"Coin ▸ Bullet  Set angle of motion to angle",
@@ -103,16 +103,16 @@ static var STATEMENT_READINGS: Dictionary = {
 	"position += velocity * delta": "Coin ▸ Bullet  Move",
 	"move_and_collide(velocity * delta)": "Coin ▸ Bullet  Move",
 	"velocity = velocity.bounce(normal)": "Coin ▸ Bullet  Bounce off solids",
-	# T2 - the turn toward the target the loop filled
+	# The turn toward the target the loop filled
 	"rotation = lerp_angle(rotation, global_position.angle_to_point(target.global_position), turn_rate * delta)":
 		"Coin ▸ Turret  Rotate toward target at turn_rate",
-	# T3 - the glide, its start and its stop
+	# The glide, its start and its stop
 	"position = position.move_toward(destination, speed * delta)":
 		"Coin ▸ Move To  Move toward destination at speed",
 	"destination = p": "Coin ▸ Move To  Move to position p at speed",
 	"moving = true": "Coin ▸ Move To  Start moving",
 	"moving = false": "Coin ▸ Move To  Stop",
-	# T4 - the five one-liners
+	# The five one-liners
 	"rotation_degrees += rotate_speed * delta":
 		"Coin ▸ Rotate  Rotate clockwise at rotate_speed (degrees per second)",
 	"position.x = wrapf(position.x, 0.0, screen.x)": "Coin ▸ Wrap  Wrap around layout horizontally",
@@ -159,7 +159,7 @@ static var EXPECTED_ROW_READINGS: PackedStringArray = PackedStringArray([
 ])
 
 
-## T27. The authoring half: {ace_id: [the params it is dropped with, the sentence the line it writes
+## The authoring half: {ace_id: [the params it is dropped with, the sentence the line it writes
 ## must read as]}. The gate below fills each descriptor's own TEMPLATE with those params and reads
 ## the result, so a template that drifts away from the shape stops being recognised and fails here
 ## rather than silently authoring a row that reads as arithmetic.
@@ -181,7 +181,7 @@ static var AUTHORING_PARITY: Dictionary = {
 	"PinToObject": [{"anchor": "anchor", "offset": "pin_offset"},
 		"Coin ▸ Pin  Pin to anchor (position · offset pin_offset)"],
 	"PinAngleToObject": [{"anchor": "anchor"}, "Coin ▸ Pin  Pin to anchor (angle)"],
-	# Y4. The two DISTANCE pin modes, the only two of the six that got picker rows - the other four
+	# The two DISTANCE pin modes, the only two of the six that got picker rows - the other four
 	# spellings are too general to hand the importer a template for, and are pack rows instead.
 	"PinToObjectRope": [{"anchor": "anchor", "length": "range_px"},
 		"Coin ▸ Pin  Pin to anchor (rope, max length range_px)"],
@@ -189,7 +189,7 @@ static var AUTHORING_PARITY: Dictionary = {
 		"Coin ▸ Pin  Pin to anchor (bar, length range_px)"]
 }
 
-## T27. The shapes whose AUTHORING is a row that already shipped, so adding a second entry with the
+## The shapes whose AUTHORING is a row that already shipped, so adding a second entry with the
 ## same template would put two rows with one meaning in the picker and let the more specific one
 ## quietly claim every line the general one was written for. The line each of those rows writes is
 ## pinned here all the same, because the reading has to keep recognising it.

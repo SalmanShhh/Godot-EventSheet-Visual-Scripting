@@ -28,18 +28,18 @@ signal plan_failed
 ## @ace_name("On Plan Loaded")
 signal plan_loaded(plan_name: String)
 
-## Mark Failed re-plans from the root instead of giving up.
-@export var auto_replan_on_fail: bool = true
-var compounds: Dictionary = {}
-var plan: Array = []
-var plan_index: int = 0
 ## Optional: a UHTNPlanResource (.tres) holding the whole plan - tasks, methods, preconditions, and utility scorers - authored in Inspector grids. Loaded automatically on ready; leave empty to build the network with the Add ... actions instead.
 @export var plan_resource: Resource = null
-var primitives: Dictionary = {}
 ## Goal to plan for - a compound or primitive task name. A loaded Plan Resource overrides this with its own root task.
 @export var root_task: String = ""
-var scorers: Dictionary = {}
+## Mark Failed re-plans from the root instead of giving up.
+@export var auto_replan_on_fail: bool = true
 var world_state: Dictionary = {}
+var primitives: Dictionary = {}
+var compounds: Dictionary = {}
+var scorers: Dictionary = {}
+var plan: Array = []
+var plan_index: int = 0
 
 ## An HTN method - a way to accomplish a compound task: preconditions, an ordered subtask list,
 ## and its rank source (a live utility scorer when `scorer` is set, else the fixed `utility`).

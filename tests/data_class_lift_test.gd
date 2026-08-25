@@ -69,7 +69,7 @@ static func run() -> bool:
 	ok = _check("the pack shows a data class row", class_row != null, true) and ok
 	ok = _check("it collapses to one header line", class_row.line_count if class_row != null else -1, 1) and ok
 	# The header reads like a regular event row (no dimmed "Data class" pill): what the class IS in the
-	# condition cell, its field count in the action cell. U4 re-pinned the words - a pure-data `class X:`
+	# condition cell, its field count in the action cell. The data-class wave re-pinned the words - a pure-data `class X:`
 	# is a data type this file declares, and "class" is GDScript's spelling of it, one double-click away
 	# in the code the bar opens.
 	ok = _check("the header shows the data type in the condition cell",

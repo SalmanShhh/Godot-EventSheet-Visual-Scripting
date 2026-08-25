@@ -1,4 +1,4 @@
-# Godot EventSheets - W9 / W10 / W11. The three files a project's TOOLING is written in, read as the
+# Godot EventSheets - The three files a project's TOOLING is written in, read as the
 # sheets they already are: a test, a command-line tool, and a behavior pack's recipe.
 #
 # Two things are pinned here and both are VALUES. The first is the exact sentence each shape reads as
@@ -9,7 +9,7 @@
 # string lists, the exact things a lift would corrupt).
 #
 # The fixtures are this repo's OWN files wherever possible - a real test, a real command tool, a real
-# pack recipe - because the claim W9 makes is about 612 real tests rather than about a made-up one.
+# pack recipe - because the claim this gate makes is about 612 real tests rather than about a made-up one.
 # A synthetic pair under user:// stands in for a game project's own tests folder, which is the other
 # half of the same claim.
 @tool
@@ -43,7 +43,7 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return false
 """
 
-## A command tool with every shape W10 names, in one file.
+## A command tool with every shape the reading names, in one file.
 const GAME_TOOL_PATH := "user://bake_atlas.gd"
 const GAME_TOOL_SOURCE := """@tool
 extends SceneTree
@@ -82,7 +82,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## W11. A recipe's head facts read on the BAR, so the six lines that state them draw no rows at all -
+## A recipe's head facts read on the BAR, so the six lines that state them draw no rows at all -
 ## and the very same lines in a file that is not a recipe keep every row they had. Both halves are
 ## pinned, because "no head rows" is also what a reading that silently stopped firing looks like.
 static func _test_head_rows() -> bool:

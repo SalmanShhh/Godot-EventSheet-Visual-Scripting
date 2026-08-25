@@ -1,4 +1,4 @@
-# L4 / L6 - the facts a lit scene already holds, and the two lighting objects that are not lights.
+# The facts a lit scene already holds, and the two lighting objects that are not lights.
 #
 # Lighting is the part of a game that fails without saying anything: the light is in the scene, the
 # row runs, and the screen does not change. Every claim here is therefore a fact READ off a `.tscn`

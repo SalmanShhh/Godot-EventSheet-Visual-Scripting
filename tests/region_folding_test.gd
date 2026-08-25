@@ -1,4 +1,4 @@
-# Godot EventSheets - collapsible regions (v0.11 chapter 3, P1).
+# Godot EventSheets - collapsible regions (v0.11 chapter 3).
 #
 # #region / #endregion fence rows pair into foldable ranges IN THE VIEW LAYER ONLY:
 # the sheet still stores flat fence rows, so emission and the byte round-trip are
@@ -47,7 +47,7 @@ static func run() -> bool:
 		var folded_rows: Array = viewport._build_rows_from_sheet(sheet)
 		var folded_opener: EventRowData = _region_rows_in(folded_rows)[0]
 		ok = _check("fold state seeds the rebuilt opener", folded_opener.folded, true) and ok
-		# The count names CONTENT rows; the closing fence is plumbing, not content. R1 - it takes the
+		# The count names CONTENT rows; the closing fence is plumbing, not content. It takes the
 		# description's place while the region is FOLDED, which is when "how much is in here" is the
 		# one thing worth knowing; open, the author's own description reads there instead.
 		ok = _check("a folded region names how much it holds",

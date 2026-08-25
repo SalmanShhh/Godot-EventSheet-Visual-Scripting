@@ -47,7 +47,7 @@ static func outline_entries(sheet: EventSheetResource) -> Array:
 	return entries
 
 
-## U3. The sheet's own TODO / FIXME / HACK / NOTE comments, under one "To do" folder at the end.
+## The sheet's own TODO / FIXME / HACK / NOTE comments, under one "To do" folder at the end.
 ##
 ## A note about work still to do is a place in the sheet somebody means to come back to, which is
 ## exactly what this panel is for. Last, so the structural walk above it never moves; the folder
@@ -150,7 +150,7 @@ func refresh() -> void:
 		return
 	tree.clear()
 	var root: TreeItem = tree.create_item()
-	# V12: the Outline follows the arrangement - when the sheet is read by object / trigger / group,
+	# The Outline follows the arrangement - when the sheet is read by object / trigger / group,
 	# so is its jump tree.
 	var view: EventSheetViewport = _dock._active_view()
 	var entries: Array = outline_entries(_dock._current_sheet)
@@ -211,7 +211,7 @@ func _on_entry_selected() -> void:
 		_dock._viewport.select_resource(target)
 
 
-## V12 - the Outline under an arrangement. When the sheet is being read Arranged By something, the
+## The Outline under an arrangement. When the sheet is being read Arranged By something, the
 ## jump tree IS that arrangement: one entry per header, its events beneath it, each still jumping to
 ## the event it stands for. `rows` are the view's built root rows and `mode` an EventSheetArrangement
 ## mode; file order (or nothing to arrange) falls back to the structural walk. Pure, so tests pin it.

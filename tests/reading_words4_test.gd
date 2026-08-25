@@ -2,7 +2,7 @@
 class_name ReadingWords4Test
 extends RefCounted
 
-# Pins the reading words for batch four's shapes (N5 - N11): what an object IS and HAS, the text and
+# Pins the reading words for batch four's shapes: what an object IS and HAS, the text and
 # math expression names, saving / files / JSON, the behaviour words a body, a camera and an emitter
 # read in, the input phases, and the debug verbs.
 #
@@ -92,9 +92,9 @@ func _process(_delta: float) -> void:
 		hp = 0
 """
 
-## Every reading the opened file must contain, one per shape N5 - N11 claims.
+## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# N6 - text and math in the reader's own expression names
+	# Text and math in the reader's own expression names
 	"System ▸ Set label to uppercase(label)",
 	"System ▸ Set label to left(label, 3)",
 	"System ▸ Set label to mid(label, 2, 4)",
@@ -103,13 +103,13 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Set label to hp & \": \" & label",
 	"System ▸ Set hp to hp ^ 2",
 	"System ▸ Set wave to split(label, \",\")",
-	# N7 - saving, files and JSON under the three objects that own them
+	# Saving, files and JSON under the three objects that own them
 	"Local Storage ▸ Set item save/score to hp",
 	"System ▸ Set hp to Local Storage.Item(\"save/score\") (or 0)",
 	"Local Storage ▸ Save \"save.cfg\"",
 	"JSON ▸ Set label to JSON.ToString(inventory)",
 	"JSON ▸ Set inventory to JSON.Parse(label)",
-	# N8 - the behaviour words, by the object's known class
+	# The behaviour words, by the object's known class
 	"ball ▸ Physics  Apply impulse velocity",
 	"ball ▸ Physics  Set velocity to velocity",
 	"lens ▸ Set zoom to 200%",
@@ -118,24 +118,24 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"sparks ▸ Particles  Restart",
 	"ReadingWords4Player ▸ Enable collisions with 2",
 	"ReadingWords4Player ▸ Set collisions off",
-	# N9 - the analogue read belongs to the pad, not to System
+	# The analogue read belongs to the pad, not to System
 	"Gamepad ▸ Set hp to strength of \"gas\"",
-	# N9 - the mouse question, and the release phase
+	# The mouse question, and the release phase
 	"Mouse ▸ left button is down",
 	"Keyboard ▸ On \"jump\" released",
-	# N5 - what an object is and has, and the comparison glyph
+	# What an object is and has, and the comparison glyph
 	"other ▸ is a Node2D",
 	"System ▸ inventory has key \"potion\"",
 	"System ▸ hp is one of 1, 2, 3",
 	"other ▸ has function Take Damage",
 	"ReadingWords4Player ▸ has child Ball",
 	"System ▸ hp ≥ 10",
-	# N6 - the two text questions, in the same words the value expressions read in
+	# The two text questions, in the same words the value expressions read in
 	"System ▸ label starts with \"a\"",
 	"System ▸ label contains \"b\"",
-	# N7 - the file test
+	# The file test
 	"File ▸ \"log.txt\" exists",
-	# N11 - the debug verbs
+	# The debug verbs
 	"System ▸ Report error \"no target\"",
 	# `printerr` writes a line to the output; `push_error` reports a fault. Two acts, two words.
 	"System ▸ Log error label",
@@ -199,11 +199,11 @@ static func _read_condition(expression: String) -> String:
 	return "" if result.is_empty() else "%s ▸ %s" % [str(result.get("object", "")), _joined(result)]
 
 
-## N7 / N8 / N11 in the action lane.
+## In the action lane.
 static func _statement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		# N7 - saving, files and JSON
+		# Saving, files and JSON
 		["config.set_value(\"save\", \"score\", score)",
 			"Local Storage ▸ Set item save/score to score"],
 		["s = config.get_value(\"save\", \"score\", 0)", "System ▸ Set s to Local Storage.Item(\"save/score\") (or 0)"],
@@ -218,7 +218,7 @@ static func _statement_values() -> bool:
 			"File ▸ Open \"log.txt\" for reading (as f)"],
 		["f.store_string(line)", "f ▸ Write line"],
 		["t = f.get_as_text()", "System ▸ Set t to f's contents"],
-		# N8 - the behaviour words, gated on the object's known class
+		# The behaviour words, gated on the object's known class
 		["ball.apply_impulse(dir * 300)", "ball ▸ Physics  Apply impulse dir * 300"],
 		["ball.apply_force(push)", "ball ▸ Physics  Apply force push"],
 		["ball.linear_velocity = v", "ball ▸ Physics  Set velocity to v"],
@@ -229,16 +229,16 @@ static func _statement_values() -> bool:
 		["sparks.emitting = false", "sparks ▸ Particles  Stop spraying"],
 		["sparks.restart()", "sparks ▸ Particles  Restart"],
 		["set_collision_mask_value(2, true)", "Player ▸ Enable collisions with 2"],
-		# T7 re-pin: which layers an object SITS on is what it is to the others, and the sheet's word
+		# Re-pin: which layers an object SITS on is what it is to the others, and the sheet's word
 		# for that is Solid. A project that named the layer says the name; this one did not.
 		["set_collision_layer_value(3, false)", "Player ▸ Solid ▸ Not on layer 3"],
 		["collision_layer = 0", "Player ▸ Set collisions off"],
 		["collision_mask = 0", "Player ▸ Set collisions off"],
-		# N9 - the analogue reads belong to the pad
+		# The analogue reads belong to the pad
 		["s = Input.get_action_strength(\"gas\")", "Gamepad ▸ Set s to strength of \"gas\""],
 		["s = Input.get_action_raw_strength(\"gas\")", "Gamepad ▸ Set s to raw strength of \"gas\""],
 		["x = Input.get_axis(\"left\", \"right\")", "Keyboard ▸ Set x to axis \"left\"/\"right\""],
-		# N11 - the debug verbs
+		# The debug verbs
 		["push_error(\"no target\")", "System ▸ Report error \"no target\""],
 		["printerr(x)", "System ▸ Log error x"],
 		["push_warning(x)", "System ▸ Warn x"],
@@ -250,11 +250,11 @@ static func _statement_values() -> bool:
 	return ok
 
 
-## N5 / N7 / N9 in the condition lane.
+## In the condition lane.
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		# N5 - what an object IS, what a table or a list HOLDS, what an object HAS
+		# What an object IS, what a table or a list HOLDS, what an object HAS
 		["body is Player", "body ▸ is a Player"],
 		["$Hurtbox is Area2D", "Hurtbox ▸ is a Area2D"],
 		["\"potion\" in inventory", "System ▸ inventory has key \"potion\""],
@@ -263,14 +263,14 @@ static func _condition_values() -> bool:
 		["body.has_method(\"take_damage\")", "body ▸ has function Take Damage"],
 		["has_node(\"Sprite2D\")", "Player ▸ has child Sprite2D"],
 		["$Hurtbox.has_node(\"Shape\")", "Hurtbox ▸ has child Shape"],
-		# N5 - the two comparison glyphs, wherever a comparison is shown
+		# The two comparison glyphs, wherever a comparison is shown
 		["rotation >= 1.5", "Player ▸ angle (radians) ≥ 1.5"],
 		["position.x <= 0", "Player ▸ X ≤ 0"],
 		["hp >= 10", " ▸ hp ≥ 10"],
-		# N7 - the storage and file questions
+		# The storage and file questions
 		["config.has_section_key(\"save\", \"score\")", "Local Storage ▸ has item save/score"],
 		["FileAccess.file_exists(\"user://logs/log.txt\")", "File ▸ \"log.txt\" exists"],
-		# N9 - the release, the two InputEvent spellings, and the raw device questions
+		# The release, the two InputEvent spellings, and the raw device questions
 		["Input.is_action_just_released(\"jump\")", "Keyboard ▸ On \"jump\" released"],
 		["event.is_action_pressed(\"pause\")", "Keyboard ▸ On \"pause\" pressed (this event)"],
 		["event.is_action_released(\"pause\")", "Keyboard ▸ On \"pause\" released (this event)"],
@@ -283,7 +283,7 @@ static func _condition_values() -> bool:
 	return ok
 
 
-## N6 - the expression names a migrating reader types into a field.
+## The expression names a migrating reader types into a field.
 static func _expression_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -292,8 +292,8 @@ static func _expression_values() -> bool:
 		["text.substr(0, 3)", "left(text, 3)"],
 		["text.substr(2, 4)", "mid(text, 2, 4)"],
 		["text.right(4)", "right(text, 4)"],
-		# M43 already reads `length()` as "length of x", which is the honest answer for a vector as
-		# well as for text - so N6 defers to it rather than implying a count with `len(...)`.
+		# Already reads `length()` as "length of x", which is the honest answer for a vector as
+		# well as for text - so the reading defers to it rather than implying a count with `len(...)`.
 		["text.length()", "length of text"],
 		["text.find(\"x\")", "find(text, \"x\")"],
 		["text.replace(\"a\", \"b\")", "replace(text, \"a\", \"b\")"],
@@ -351,7 +351,7 @@ static func _opened_file_reads() -> bool:
 	return ok
 
 
-## N11 - a bare `breakpoint` says nothing in words; the row wears the sheet's own mark instead.
+## A bare `breakpoint` says nothing in words; the row wears the sheet's own mark instead.
 static func _breakpoint_row_wears_the_mark() -> bool:
 	var reading: Dictionary = EventSheetSentence.statement("\tbreakpoint", CONTEXT)
 	var ok: bool = _check("a bare breakpoint is claimed", bool(reading.get("breakpoint", false)), true)

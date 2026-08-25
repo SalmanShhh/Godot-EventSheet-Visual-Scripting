@@ -1,4 +1,4 @@
-# EventForge - signals wired in the SCENE FILE, recovered for the lifter (M42).
+# EventForge - signals wired in the SCENE FILE, recovered for the lifter.
 #
 # Most real Godot projects connect signals in the editor rather than in code. The editor writes the
 # wiring into the .tscn, not into the script:
@@ -33,7 +33,7 @@ static var _cache: Dictionary = {}
 static var _scene_paths: PackedStringArray = PackedStringArray()
 static var _scene_paths_scanned: bool = false
 
-## P4. The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
+## The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
 ## view the question is a different one: not "what does this script's own scene say about it" but
 ## "what does THIS scene wire to this script", and the script may sit on any node rather than only on
 ## the root. Empty the rest of the time, which is every ordinary open - so a script opened on its own
@@ -138,7 +138,7 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 	return connections
 
 
-## P4. Every node of one scene, in the order the scene file writes them (which is tree order), as
+## Every node of one scene, in the order the scene file writes them (which is tree order), as
 ## [{name, path, type, script_path, properties}]. The scene view is built from this, and so is the
 ## scoped connection read below - both need to know which node carries which script.
 ##
@@ -194,7 +194,7 @@ static func nodes_of_scene(scene_path: String) -> Array:
 	return nodes
 
 
-## P4. The connections ONE scene wires to ONE script, wherever in the scene that script sits. Same
+## The connections ONE scene wires to ONE script, wherever in the scene that script sits. Same
 ## shape as the root-only read above, and the same rule about the file: the connect line lives in the
 ## .tscn, so nothing is claimed for emission and nothing is ever written back.
 static func _connections_in_scene(scene_path: String, script_path: String) -> Dictionary:
@@ -236,7 +236,7 @@ static func _connections_in_scene(scene_path: String, script_path: String) -> Di
 	return connections
 
 
-## L6. The FILES one scene points at, as `ext_resource id -> res:// path`. A node property holding
+## The FILES one scene points at, as `ext_resource id -> res:// path`. A node property holding
 ## `ExtResource("1_env")` says nothing on its own; this is the table that turns it into the
 ## environment resource a reader can name, and the one place the answer is read from - which also
 ## makes "who else uses this .tres" a question about a table rather than a second parser.

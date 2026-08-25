@@ -10,20 +10,20 @@ signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mo
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
 
-## Q12 - an object was dragged off the Object bar onto the canvas. `on_action_lane` says the drop
+## An object was dragged off the Object bar onto the canvas. `on_action_lane` says the drop
 ## landed in an existing event's action lane, which is what turns "start an event on it" into "do
 ## something to it here".
 signal object_bar_dropped(object_label: String, target_event: Resource, on_action_lane: bool)
 
-## R23 - an Input Map action dragged off the bar's INPUT section and dropped on the canvas: the sheet
+## An Input Map action dragged off the bar's INPUT section and dropped on the canvas: the sheet
 ## starts an "On <action> pressed" event for it, after the event it landed on.
 signal input_action_dropped(action_name: String, target_event: Resource)
 
-## X15 - a child dragged OUT of the Hierarchy pane and let go on the canvas. That gesture has exactly
+## A child dragged OUT of the Hierarchy pane and let go on the canvas. That gesture has exactly
 ## one meaning - Remove from parent - so the drop writes it rather than opening anything.
 signal hierarchy_child_dropped(child_label: String)
 
-## T13 - a Project bar entry dropped on the canvas. The payload carries what it IS and what dropping
+## A Project bar entry dropped on the canvas. The payload carries what it IS and what dropping
 ## it means; the dock decides how to write that, exactly as it does for the Object bar's drops.
 signal project_entry_dropped(payload: Dictionary, target_event: Resource)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
@@ -56,33 +56,33 @@ signal empty_space_double_clicked
 signal template_menu_requested
 ## Ctrl+Click on a cell the dock can resolve to a definition (see navigation_probe below).
 signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
-## R33. A button on a tool sheet's Include bar was pressed (Run now / Reload / Output / Enable
+## A button on a tool sheet's Include bar was pressed (Run now / Reload / Output / Enable
 ## plugin). The viewport never runs anything itself - it says which button, and the dock acts.
 signal editor_tool_action_requested(kind: String)
 
-## W20. A chip on the bar of a sheet that is part of the RUNNING editor was pressed (Enabled /
+## A chip on the bar of a sheet that is part of the RUNNING editor was pressed (Enabled /
 ## Reload / Output / plugin.cfg / Edit anyway). Kept apart from the tool bar's signal above because
 ## the two Reloads mean different things and must never be routed to the same handler.
 signal this_editor_action_requested(kind: String)
 
-## C2. A control on one of the sheet's HEAD bands was used - the name band's rename, the extends
+## A control on one of the sheet's HEAD bands was used - the name band's rename, the extends
 ## band's "change…", the icon swatch, the `@tool` switch, the autoload band's Project Settings link,
 ## the "attach to a node" prompt, the "+ add" row. The viewport only names the band; the dock owns
 ## every dialog and every undoable write.
 signal sheet_head_action_requested(action: String)
-## G2 - a mark on a GROUP head was clicked: "enabled" (the switch) or "toggleable" (the ring
+## A mark on a GROUP head was clicked: "enabled" (the switch) or "toggleable" (the ring
 ## before it). The viewport only names the mark; the group is the sheet's, so the dock writes it.
 signal group_action_requested(action: String, group: EventGroup)
-## R3 - the fix on an unmatched fence's amber note was clicked: write the missing `#endregion`
+## The fix on an unmatched fence's amber note was clicked: write the missing `#endregion`
 ## where the note says. The note stands for no resource, so the dock resolves the orphan fence from
 ## the row's uid rather than from a source the row does not have.
 signal region_fix_requested(note_row: EventRowData)
-## V12 - the "Use hp" beside an unknown-variable note: one click renames every use of the
+## The "Use hp" beside an unknown-variable note: one click renames every use of the
 ## misspelled name on that event to the one the sheet actually declares.
 signal variable_note_fix_requested(note_row: EventRowData)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
-## V13 - the code echo beside a variable row was activated: open the code panel at the line it is.
+## The code echo beside a variable row was activated: open the code panel at the line it is.
 signal code_echo_activated(row_data: EventRowData)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
 ## comments; single-line comment rows keep fast inline editing).
@@ -105,9 +105,9 @@ signal function_edit_requested(event_function: Resource)
 ## inputs) and everything else the verb is - kind, category, description, what it gives back, the
 ## line it inserts - answers in the ACE properties popup this asks the dock to open.
 signal verb_properties_requested(event_function: Resource)
-## N10 - a single click on a row's object name asks for that object's popup.
+## A single click on a row's object name asks for that object's popup.
 signal object_properties_requested(object_label: String)
-## X11 - the flags chip on an Add child row was clicked: the ticks it was written with travel in the
+## The flags chip on an Add child row was clicked: the ticks it was written with travel in the
 ## payload, and the dock opens them as the tick dialog and writes the answer back.
 signal hierarchy_flags_requested(payload: Dictionary)
 ## Emitted when a match action cell is double-clicked.
@@ -220,7 +220,7 @@ var _selected_span_indices: Dictionary = {}
 var _span_only_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
-## R41. {row index: [span indices]} - every use of the local variable under the cursor, in its scope.
+## {row index: [span indices]} - every use of the local variable under the cursor, in its scope.
 var _hover_match_spans: Dictionary = {}
 ## Bumped by every row rebuild. The hover answer is a function of (row, span, these rows), so this is
 ## what lets a repeat of the same hover be recognised as already answered - see _set_hover_state.
@@ -235,7 +235,7 @@ var _editing_caret: int = 0
 # Inline text selection (Shift+arrows / Ctrl+A while editing): -1 = none, else the
 # selection spans anchor..caret. Comment rows get the floating BBCode format bar on it.
 var _editing_select_anchor: int = -1
-## V8. What an inline editor has to say before it is committed - "renames 6 uses in 2 sheets · Enter
+## What an inline editor has to say before it is committed - "renames 6 uses in 2 sheets · Enter
 ## to apply · Esc". Muted, drawn beside the field, claiming no layout: it is a hint, not a cell.
 ## Settled ONCE when the edit begins (the count is of the OLD name, which does not change as the new
 ## one is typed) and cleared with the edit.
@@ -330,7 +330,7 @@ var show_add_event_footers: bool = true
 ## Object/module icons before names (rows + group folders). Toggleable (View menu) for users
 ## who prefer a text-only sheet; span builds read it, so flipping it rebuilds via set_sheet.
 var show_object_icons: bool = true
-## M9 - the humanized-names lens: "_coyote_timer" reads "coyote timer", an @export knob reads with
+## The humanized-names lens: "_coyote_timer" reads "coyote timer", an @export knob reads with
 ## its Inspector capitalisation, and the raw name stays on hover. Tri-state on purpose: -1 AUTO
 ## (the default) means "on where the sheet is being READ, off where it is being AUTHORED", which
 ## is the honest default for the two audiences - a reader wants the words, a programmer
@@ -338,14 +338,14 @@ var show_object_icons: bool = true
 ## View-menu choice, which persists and then applies everywhere. Span builds read this, so
 ## flipping it rebuilds via set_sheet, exactly like show_object_icons.
 var humanize_names_override: int = -1
-## M46 - the familiar-words glossary: the few Godot nouns other event-sheet editors have a different
+## The familiar-words glossary: the few Godot nouns other event-sheet editors have a different
 ## word for read in that word (scene -> layout, pause -> time scale 0, CanvasLayer -> layer), with
 ## the Godot word still one hover away. OFF by default and never automatic: unlike the humanized-names lens,
 ## this one teaches a SECOND vocabulary rather than respelling the user's own names, so it is only
 ## ever on because somebody asked for it in View ▾. Span builds read it, so flipping it rebuilds via
 ## set_sheet, exactly like show_object_icons.
 var familiar_words: bool = false
-## S24 - the Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
+## The Patterns lens: an event that a reading recognised as a known code pattern (a Cooldown,
 ## an Object pool, a Wait sequence) wears a muted ⟡ chip naming it, and its hover says what the
 ## evidence for that claim was. ON by default, because naming the pattern is the teaching moment and
 ## a beginner is exactly who needs it; View ▾ turns it off so a doubter can read the plain statement
@@ -437,7 +437,7 @@ func set_reading_mode(enabled: bool) -> void:
 	queue_redraw()
 
 
-## M9 - whether the humanized-names lens is running for this view right now. AUTO (-1, the
+## Whether the humanized-names lens is running for this view right now. AUTO (-1, the
 ## default) resolves to reading mode, so an opened pack or the Reading lens shows the words and an
 ## editable sheet shows the identifiers; an explicit View-menu choice overrides that everywhere.
 func humanize_names_enabled() -> bool:
@@ -446,14 +446,14 @@ func humanize_names_enabled() -> bool:
 	return is_reading_mode()
 
 
-## M46 - whether this view reads the few renamed nouns in their familiar words. Plain on/off: there is
+## Whether this view reads the few renamed nouns in their familiar words. Plain on/off: there is
 ## no reading surface where a second vocabulary is the honest default, so nothing resolves it for the
 ## user the way the humanized-names lens does.
 func familiar_words_enabled() -> bool:
 	return familiar_words
 
 
-## S24 - whether this view names the patterns its readings claimed. The claims are made either way
+## Whether this view names the patterns its readings claimed. The claims are made either way
 ## (the Doctor, the coverage chip and the Manual read them); this is only whether the sheet SAYS so.
 func patterns_lens_enabled() -> bool:
 	return patterns_lens
@@ -573,7 +573,7 @@ func get_total_row_count() -> int:
 	return _flat_rows.size()
 
 
-## U18 - the row uids one history step touched, washed while the pointer rests on that step in the
+## The row uids one history step touched, washed while the pointer rests on that step in the
 ## History panel. Display-only: nothing here changes a row, a resource or a byte.
 func set_row_highlight(uids: PackedStringArray) -> void:
 	_row_highlight.clear()
@@ -589,7 +589,7 @@ func clear_row_highlight() -> void:
 	queue_redraw()
 
 
-## U16 - the geometry the minimap column draws from. It paints the SAME rows the canvas holds, so
+## The geometry the minimap column draws from. It paints the SAME rows the canvas holds, so
 ## it reads them here instead of duplicating the flattened list (get_flat_rows deep-copies, which a
 ## per-frame column must never do). Index-checked, so a stale column cannot crash a rebuild.
 func get_row_data(index: int) -> EventRowData:
@@ -1555,7 +1555,7 @@ var show_event_numbers: bool = true
 ## only decides whether they are drawn.
 var show_hit_counts: bool = false
 
-## V13 - how much of a variable row is drawn: the sentence alone, the sentence with the declaration
+## How much of a variable row is drawn: the sentence alone, the sentence with the declaration
 ## echoed at the right edge (the shipped default), or the declaration as the whole row. A View-menu
 ## dial, per view, never a row on the sheet; Simple Mode pins it to the sentence.
 var variable_row_view: int = EventSheetCodeEcho.VIEW_BOTH
@@ -1645,12 +1645,12 @@ static func _event_number_owning(entries: Array, target: Resource, numbers: Dict
 var _lens_query: String = ""
 var _lens_hidden_count: int = 0
 
-# ── V12. Arrange by (view-only; applied in _build_rows_from_sheet) ────────────────────────────
+# ── Arrange by (view-only; applied in _build_rows_from_sheet) ─────────────────────────────────
 # 0 is file order - the untouched reading, and the default every sheet opens in.
 var arrangement_mode: int = 0
 
 
-## V16 - where each top-level group (a real one, or an Arrange-by header) starts and ends on the
+## Where each top-level group (a real one, or an Arrange-by header) starts and ends on the
 ## canvas: `[{"title": String, "from": int, "to": int}]` in canvas pixels, top to bottom. What "a
 ## figure per group" means when a sheet is exported as Markdown. Empty when the sheet has no groups
 ## at all, which is the caller's cue that the sheet IS one figure.
@@ -1695,11 +1695,11 @@ func clear_lens() -> void:
 	set_lens("")
 
 
-# ── Q12. The Object bar's hover preview (view-only, never the lens) ───────────────────────────
+# ── The Object bar's hover preview (view-only, never the lens) ────────────────────────────────
 # Hovering an object in the bar makes its events glow softly; nothing is hidden and nothing sticks,
 # which is the whole difference between a preview and the pinned filter a click applies.
 var _object_preview: String = ""
-# U18: row uids the hovered History step touched. Display-only, cleared when the pointer leaves.
+# Row uids the hovered History step touched. Display-only, cleared when the pointer leaves.
 var _row_highlight: Dictionary = {}
 
 
@@ -1962,11 +1962,11 @@ func _draw() -> void:
 		# Drag-handle affordance: grip dots on the hovered row's left edge so reordering is
 		# discoverable without being told. They brighten when the pointer is in the whole-event drag
 		# zone (the empty lane band, not on an ACE cell) - the cue that "grab here to move the event".
-		# Q12 - the Object bar's hover preview: a soft wash over the rows that object appears in.
+		# The Object bar's hover preview: a soft wash over the rows that object appears in.
 		var chrome_style: EventSheetChromeStyle = _get_chrome_style()
 		if not _object_preview.is_empty() and row_previews_object(row_data, _object_preview):
 			draw_rect(row_rect, chrome_style.object_bar_hover_wash_color, true)
-		# U18 - the rows one history step touched, lit while the pointer rests on that step.
+		# The rows one history step touched, lit while the pointer rests on that step.
 		if not _row_highlight.is_empty() and _row_highlight.has(row_data.statement_uid()):
 			draw_rect(row_rect, chrome_style.object_bar_hover_wash_color, true)
 		if index == _hovered_row_index and not _flat_rows.is_empty():
@@ -2027,7 +2027,7 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		var top: float = _get_row_top(start_index)
 		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
 		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
-		# V1 - the folder says its own name. A list the sheet builds leads its run with a folder
+		# The folder says its own name. A list the sheet builds leads its run with a folder
 		# STRIP that already carries the label (and the fold arrow); a run of declarations lifted
 		# from a file has no such row, so the outline writes the name itself rather than leaving an
 		# unlabelled bracket around three rows.
@@ -2035,7 +2035,7 @@ func _draw_variable_group_bubbles(width: float) -> void:
 			_draw_variable_group_label(str(run.get("group", "")), top)
 
 
-## G1/R1 - the structure brackets: a 2px rule in the block's own colour down the LEFT EDGE of its
+## The structure brackets: a 2px rule in the block's own colour down the LEFT EDGE of its
 ## body, from the head's bottom to its last row's bottom, so where a group or a region ends is
 ## visible without reading indents. Nested blocks inset 2px each, and rows are never pushed sideways
 ## for one. A group is SOLID and a region DASHED - the script editor's own fold stroke - which is the
@@ -2110,7 +2110,7 @@ func _draw_variable_group_label(group_name: String, run_top: float) -> void:
 	)
 
 
-## R1 - the drop glow: while a row/ACE drag is live, the region range the pointer would land INSIDE
+## The drop glow: while a row/ACE drag is live, the region range the pointer would land INSIDE
 ## is washed in its own colour, so "this drops into Debug helpers" is visible before the drop. The
 ## range's own outline is the dashed rule the bracket pass draws; this is only the target cue.
 func _draw_region_drop_glow(width: float) -> void:
@@ -2153,7 +2153,7 @@ func set_region_folds(folded: bool, include_groups: bool = false) -> void:
 	_folding.set_region_folds(folded, include_groups)
 
 
-## Folds or unfolds every event group on the sheet (G4's Open all / Close all).
+## Folds or unfolds every event group on the sheet (the Open all / Close all).
 func set_group_folds(folded: bool) -> void:
 	_folding.set_group_folds(folded)
 
@@ -2201,7 +2201,7 @@ func _gui_input(event: InputEvent) -> void:
 # so cells with no jump target keep Ctrl+Click's multi-select meaning.
 var navigation_probe: Callable = Callable()
 
-# V8. The dock installs this too: (variable_name: String) -> String, the muted line an inline rename
+# The dock installs this too: (variable_name: String) -> String, the muted line an inline rename
 # shows before anything is written ("renames 6 uses in 2 sheets · Enter to apply · Esc"). A
 # project-wide walk, so it is asked ONCE as the field opens and never per keystroke; unwired, the
 # field opens without a count rather than not opening.
@@ -2376,7 +2376,7 @@ func _refresh_rows() -> void:
 		if _row_disabled_state.has(state_uid):
 			line_row.disabled = bool(_row_disabled_state[state_uid])
 	# The two notes that name a GUTTER NUMBER, filled now that the numbers exist: an unmatched
-	# fence's "close after row N" (R3), and an Else row's "neither of N" (K4). Both are no-ops on a
+	# fence's "close after row N", and an Else row's "neither of N". Both are no-ops on a
 	# sheet that has neither, and both are safe to run again after a fold re-numbers the rows.
 	_row_builder.apply_numbered_labels(_flat_rows)
 	if _selected_row_index >= _flat_rows.size():
@@ -2416,25 +2416,25 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# and the clear wipes every one of them, leaving only whatever the span pass claims later.
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_patterns(sheet)
-	# T2. The nearest-in-family loop is a shape spread over a `for`, the compare inside it and the
+	# The nearest-in-family loop is a shape spread over a `for`, the compare inside it and the
 	# assignment after, so it is claimed from the file here for the same reason the readings above
 	# are: anywhere earlier and the clear on the line above would wipe it.
 	EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
-	# P4 - a whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
+	# A whole SCENE opened as one sheet: the scene's bar, then every script it uses under its own
 	# object bar, each read by this very function. A composite has no events of its own.
 	if EventSheetSceneSheet.is_scene_sheet(sheet):
 		return _build_scene_sheet_rows(sheet)
 	# Per-sweep class-uid counters: same-named class blocks suffix "-2"/"-3" in build order.
 	# Reset HERE (not lazily) so the suffixes stay stable across rebuilds.
 	_row_builder._class_uid_counts.clear()
-	# V13 - and the code echo's token colours, so a theme change reaches the next sweep's echoes.
+	# And the code echo's token colours, so a theme change reaches the next sweep's echoes.
 	_row_builder._code_echo_palette.clear()
-	# G1 - and the line each group declares itself on, which a head echoes at its right edge.
+	# And the line each group declares itself on, which a head echoes at its right edge.
 	_row_builder._group_declaration_lines.clear()
-	# V6 - and who owns each variable the sheet names, so a row that touches `hp` can lead with the
+	# And who owns each variable the sheet names, so a row that touches `hp` can lead with the
 	# object that HAS an hp. Derived once per sweep: it reads the autoloads' scripts.
 	_row_builder._variable_owner_catalog.clear()
-	# M7 / L8 - and the networking and lighting mistakes, read from the whole sheet and then hung under
+	# And the networking and lighting mistakes, read from the whole sheet and then hung under
 	# the rows they are about. Derived once per sweep for the same reason: each walks every row.
 	_row_builder._sheet_findings_cache.clear()
 	if sheet == null:
@@ -2447,7 +2447,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	EventSheetPatternFacts.clear(sheet)
 	EventSheetViewportReadingRows.claim_godot_systems_patterns(sheet)
 	EventSheetViewportReadingRows.claim_behavior_patterns(sheet)
-	# C0 - read the LEADING run of class scaffolding (prelude / annotations / host-binding) as the
+	# Read the LEADING run of class scaffolding (prelude / annotations / host-binding) as the
 	# sheet's HEAD: one band per line, so an opened .gd reads as its own first lines rather than as a
 	# wall of boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
 	# ONE multi-line RawCodeRow, so requiring ≥3 boilerplate lines (rather than ≥2 rows) is what makes the
@@ -2482,7 +2482,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		if not scaffold_rows.is_empty():
 			root_rows.append_array(_row_builder.build_head_band_rows(sheet, scaffold_rows))
 			event_start = scaffold_end
-	# V2 - the declarations, under the head that names the file and above the events that use them:
+	# The declarations, under the head that names the file and above the events that use them:
 	# first the globals this sheet only BORROWS (with a hairline closing that block), then the ones
 	# it declares itself. A reader meets `Game.Score` where it is used, not only where it lives.
 	root_rows.append_array(_row_builder.build_globals_used_here_rows(sheet))
@@ -2512,7 +2512,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# data model and emission stay flat). Runs before the footer so the trailing
 	# "Add event…" row can never be swallowed by an unclosed fence.
 	root_rows = _row_builder._pair_region_fences(root_rows)
-	# V2 - a run of consecutive member variables sharing one `@export_group` wears the labelled,
+	# A run of consecutive member variables sharing one `@export_group` wears the labelled,
 	# foldable strip the sheet's own variables wear. After the fence pairing and the read-only head,
 	# both of which walk a flat list of declarations and must not meet a strip in their place.
 	root_rows = _row_builder.group_variable_rows_by_folder(root_rows, sheet)
@@ -2523,13 +2523,13 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# A read-only preview gathers the pack's unpublished helpers under one closed "Helpers" bar, after
 	# the last published verb - the vocabulary reads first, the plumbing folds away. Pure view.
 	root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
-	# V12: the same events, re-grouped under headers by object / trigger / group. Display only - the
+	# The same events, re-grouped under headers by object / trigger / group. Display only - the
 	# events array keeps its order, the file is never rewritten, and every event keeps its number.
 	root_rows = _row_builder.arrange_rows(root_rows, sheet, arrangement_mode)
 	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)
-	# M23: a statement carrying a ternary reads as the sub-event pair an event sheet would draw,
+	# A statement carrying a ternary reads as the sub-event pair an event sheet would draw,
 	# never as an `if ... else` inside an action cell - on EVERY sheet, editable ones included, because
 	# a sheet reader must never meet an `if ... else` in an action cell. Pure view over the
 	# already-built rows: the resources, the emitted GDScript and the byte round-trip are untouched.
@@ -2543,7 +2543,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	return root_rows
 
 
-## P4. The whole layout in one place: the scene's own bar, then one script's reading after another in
+## The whole layout in one place: the scene's own bar, then one script's reading after another in
 ## tree order. Each member is read by the ordinary path, with `_sheet` pointed at it for the duration
 ## so every lens (the object map, the sheet's own functions) answers about the script being read
 ## rather than about the composite. Row uids are prefixed per member, because two scripts may well
@@ -3226,7 +3226,7 @@ func _set_hover_state(row_index: int, span_index: int) -> void:
 	queue_redraw()
 
 
-## R41. {row index: [span indices]} for every USE of the local variable the cursor is on, anywhere in
+## {row index: [span indices]} for every USE of the local variable the cursor is on, anywhere in
 ## that variable's scope. Hovering a name is how a reader asks "where does this go?", and a local's
 ## answer is bounded - its event and the events under it - so the highlight can show all of it.
 ##
@@ -3291,12 +3291,12 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 	_editing_row_index = row_index
 	_editing_span_index = resolved_span_index
 	# An ordinary edit has nothing to say before it commits; a cell that knows something the typist
-	# needs (E2 - a value the running game takes from whoever owns the object) carries the sentence
+	# needs (a value the running game takes from whoever owns the object) carries the sentence
 	# on the span, and a named gesture fills this in afterwards.
 	_editing_note = str(metadata.get("edit_note", ""))
 	# A placeholder span (an empty verb description / category showing "+ ...") starts the buffer EMPTY,
 	# not with the placeholder text - the user is filling in a blank field, not editing that prompt.
-	# W12 - a span whose TEXT is a reading edits the source it stands for: a table entry chip reads
+	# A span whose TEXT is a reading edits the source it stands for: a table entry chip reads
 	# `span index = 3` and is written `"span_index": 3`, and putting the reading in the field would
 	# have the user's first keystroke rewrite a quoted key into a bare one. `edit_text` is the
 	# characters the file actually holds; a span without one edits exactly what it shows.
@@ -3338,7 +3338,7 @@ func get_editing_context_for_test() -> Dictionary:
 	}
 
 
-## V8. F2 on a variable row: its NAME edits in place, with the muted count of what committing will
+## F2 on a variable row: its NAME edits in place, with the muted count of what committing will
 ## rewrite beside it. The count is a project-wide walk, so it comes from the dock through
 ## `rename_note_provider`; without one the field still opens, just without the count. False when the
 ## row is not a variable row (the key then means what it always meant - begin editing this cell).
@@ -3514,7 +3514,7 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 	if edit_kind.begins_with("decl_entry_line:"):
 		_apply_decl_entry_edit(row_data.source_resource, edit_kind, value)
 		return
-	# W12 - a chip of a multi-line table or list rewrites the one verbatim row its entry came from.
+	# A chip of a multi-line table or list rewrites the one verbatim row its entry came from.
 	if edit_kind.begins_with("literal_entry_line:"):
 		EventSheetValueLiteralRows.apply_entry_edit(row_data.source_resource, edit_kind, value)
 		return
@@ -3558,7 +3558,7 @@ static func _apply_decl_entry_edit(source: Resource, edit_kind: String, value: S
 ## template with the ACE's parameter values substituted) - the sheet continuously teaches
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
 func _get_tooltip(at_position: Vector2) -> String:
-	# G5 - the pinned head shows the last two parent names; the hover is where the whole chain is.
+	# The pinned head shows the last two parent names; the hover is where the whole chain is.
 	if _group_breadcrumb.covers(at_position):
 		return _group_breadcrumb.full_chain()
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
@@ -3588,7 +3588,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var span_note: String = str(metadata.get("hover_note", "")).strip_edges()
 	if not span_note.is_empty():
 		return span_note
-	# M46 - the glossary lens. A tool sheet reads in the editor-building words (Properties bar,
+	# The glossary lens. A tool sheet reads in the editor-building words (Properties bar,
 	# Panel (dock), Command tool, Shared store), and a reader who knows Godot's own name for the
 	# thing has nowhere to look it up. Hovering the word says it. Asked of the span TEXT rather than
 	# stamped on every reading, so a word renamed in Settings > Words keeps its hover with no
@@ -3597,7 +3597,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var glossary_help: String = _glossary_tooltip(hit)
 	if not glossary_help.is_empty():
 		return glossary_help
-	# S19 - the ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
+	# The ⟡ chip is a NAME, and a name on its own teaches nothing: hovering it says what the
 	# pattern is in one line and that the Manual has a page about it (which a click opens).
 	if kind == "pattern_chip":
 		var chip_help: String = ViewportTooltipHelper.pattern_chip_tooltip(str(metadata.get("pattern", "")))
@@ -3638,7 +3638,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
 			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
-			# S24 - a pattern reading is a claim spanning several lines, so every row of the event
+			# A pattern reading is a claim spanning several lines, so every row of the event
 			# that owns one carries the evidence for it right under the sentence: which pattern, and
 			# the exact source lines that were the grounds for saying so.
 			var evidence_line: String = ViewportTooltipHelper.pattern_evidence_line(
@@ -3646,9 +3646,9 @@ func _get_tooltip(at_position: Vector2) -> String:
 			if not evidence_line.is_empty():
 				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
-			# M39 - a Create object cell stands for two or three statements. Hover shows all of them, so
+			# A Create object cell stands for two or three statements. Hover shows all of them, so
 			# the shorter reading never costs the reader the ability to see what the file actually says.
-			# W12 - a folded literal shows its first three entries and says how many are left. The
+			# A folded literal shows its first three entries and says how many are left. The
 			# hover is the whole thing, so the shorter reading never costs the reader an entry.
 			var literal_hover: String = str(metadata.get("literal_full_text", ""))
 			if not literal_hover.is_empty():
@@ -3664,7 +3664,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 						created.params if not created.params.is_empty() else created.parameters)
 					if not created_code.strip_edges().is_empty():
 						create_lines.append(created_code)
-				# X14. A scene instance is a hierarchy somebody already built, so the row that makes
+				# A scene instance is a hierarchy somebody already built, so the row that makes
 				# one shows it: the root and two levels beneath it, read out of the .tscn as text.
 				# An instance this scene opened up and changed wears the "edited inside" mark, which
 				# is the one thing about such a child that is not in the file it came from.
@@ -3726,7 +3726,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 
 ## What a hovered mark means, or "" when the hovered span is not one. The text comes from the
 ## Manual's own legend table, so the hover and the legend page can never say two different things.
-## M46. What the OTHER vocabulary calls the hovered word, or "" when the hovered span is not one of
+## What the OTHER vocabulary calls the hovered word, or "" when the hovered span is not one of
 ## the sheet's nouns. The whole lens is one lookup on the span's own text, so nothing about a row
 ## has to know it is being read through a glossary.
 func _glossary_tooltip(hit: Dictionary) -> String:
@@ -3924,7 +3924,7 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 	var target_event: EventRow = row_data.source_resource as EventRow
 	if target_event == null:
 		return {"valid": true}
-	# R41. A local is visible to the event that declares it and to that event's sub-events, and to
+	# A local is visible to the event that declares it and to that event's sub-events, and to
 	# nothing else - so an action that USES one may not be dropped where the name means nothing. The
 	# refusal names the variable, because that is the one thing a reader has to move or rename.
 	var out_of_scope: String = _out_of_scope_drag_name(target_event)
@@ -3933,7 +3933,7 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 			"valid": false,
 			"message": EventSheetL10n.translate("%s is not visible here") % out_of_scope
 		}
-	# R41. The other half of the same promise: a Local row may be dragged into another event - that
+	# The other half of the same promise: a Local row may be dragged into another event - that
 	# MOVES the declaration - but not out from under rows that still use the name.
 	var stranded: String = _stranded_drag_name(target_event)
 	if not stranded.is_empty():
@@ -3968,7 +3968,7 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 	return {"valid": true}
 
 
-## R41. The local variable the rows being dragged USE that `target_event` cannot see, or "" when the
+## The local variable the rows being dragged USE that `target_event` cannot see, or "" when the
 ## drop keeps every name in scope. Answered per drag rather than cached: the sheet is what decides,
 ## and a drag is the only moment the question is asked.
 func _out_of_scope_drag_name(target_event: EventRow) -> String:
@@ -3984,7 +3984,7 @@ func _out_of_scope_drag_name(target_event: EventRow) -> String:
 	return EventSheetLocalScope.out_of_scope_name(_sheet as EventSheetResource, target_event, resources)
 
 
-## R41. The local a moved DECLARATION would strand - a name the dragged rows declare that a row
+## The local a moved DECLARATION would strand - a name the dragged rows declare that a row
 ## staying behind still uses - or "" when nothing is left without it.
 func _stranded_drag_name(target_event: EventRow) -> String:
 	if _drag_ace_entries.is_empty() or _sheet == null:
@@ -4038,7 +4038,7 @@ func _get_selected_span_count() -> int:
 	return total
 
 
-# ── M23: a ternary pair is ONE statement ────────────────────────────────────────────────────────
+# ── a ternary pair is ONE statement ─────────────────────────────────────────────────────────────
 # A statement carrying a ternary draws as a condition row, its branch rows and an Else - several rows
 # over ONE unchanged action inside ONE unchanged event. Every row of that reading carries the same
 # `ternary_anchor_uid`, and the four helpers below are the only places the rest of the editor has to
@@ -4536,14 +4536,14 @@ func _get_scroll_width() -> float:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	# Q12 - an object dragged off the Object bar is welcome anywhere on the canvas: that drag IS how
+	# An object dragged off the Object bar is welcome anywhere on the canvas: that drag IS how
 	# an event sheet starts using an object, and where it lands decides whether it opens Add condition
 	# (empty canvas or an event's own band) or Add action (an existing event's action lane).
-	# T13 - and a Project bar entry the same way: the bar refuses the drag outright for anything the
+	# And a Project bar entry the same way: the bar refuses the drag outright for anything the
 	# sheet has no gesture for, so a payload that got this far always means something.
 	if is_object_bar_drag(data) or is_input_action_drag(data) or is_project_bar_drag(data):
 		return true
-	# X15 - a child dragged out of the Hierarchy pane. Anywhere on the canvas will do: the gesture
+	# A child dragged out of the Hierarchy pane. Anywhere on the canvas will do: the gesture
 	# means "out of its parent", and where it lands says nothing more than that.
 	if is_hierarchy_child_drag(data):
 		return true
@@ -4562,11 +4562,11 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
-	# X15 - a Hierarchy-pane child let go on the canvas: Remove from parent, written straight.
+	# A Hierarchy-pane child let go on the canvas: Remove from parent, written straight.
 	if is_hierarchy_child_drag(data):
 		hierarchy_child_dropped.emit(str((data as Dictionary).get("label", "")))
 		return
-	# R23 - an Input Map action dropped on the canvas starts the event it is for: "On <action>
+	# An Input Map action dropped on the canvas starts the event it is for: "On <action>
 	# pressed". Where it lands only decides where the new event goes.
 	if is_input_action_drag(data):
 		var action_row_index: int = _find_row_index_at_y(at_position.y)
@@ -4574,7 +4574,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		input_action_dropped.emit(str((data as Dictionary).get("label", "")),
 			action_row.source_resource if action_row != null else null)
 		return
-	# T13 - something dropped off the PROJECT bar. What it means is decided by what it is, and the bar
+	# Something dropped off the PROJECT bar. What it means is decided by what it is, and the bar
 	# already said so in the payload: a class starts an event on it, a sound is a Play sound action, a
 	# scene is a Go to layout action. Where it landed only decides which event it joins.
 	if is_project_bar_drag(data):
@@ -4583,7 +4583,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		project_entry_dropped.emit(data as Dictionary,
 			project_row.source_resource if project_row != null else null)
 		return
-	# Q12 - an object dropped from the Object bar. Landing on an existing event's ACTION lane means
+	# An object dropped from the Object bar. Landing on an existing event's ACTION lane means
 	# "do something to it here"; landing anywhere else means "start an event on it".
 	if is_object_bar_drag(data):
 		var object_row_index: int = _find_row_index_at_y(at_position.y)
@@ -4662,7 +4662,7 @@ static func is_project_bar_drag(data: Variant) -> bool:
 
 
 ## True for the Object bar's own drag payload ({type: "eventsheet_object", label}).
-## X15 - the payload a Hierarchy-pane child chip hands its drag.
+## The payload a Hierarchy-pane child chip hands its drag.
 static func is_hierarchy_child_drag(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
@@ -4776,7 +4776,7 @@ static func _is_node_path_drag(data: Variant) -> bool:
 
 ## The {ace, param_id, current} under a logical position when it sits on an editable condition/action param
 ## VALUE, else {}. Shared by double-click-to-edit and the node-drop-onto-param gesture.
-## V8. What a parameter field must receive when this variable ROW is let go on it: bare for an
+## What a parameter field must receive when this variable ROW is let go on it: bare for an
 ## instance variable or a local, `Game.Score` for a global, because inside an expression the prefix
 ## is real code and cannot be dropped. "" for any row that is not a variable declaration, which is
 ## what keeps every other drag a reorder.

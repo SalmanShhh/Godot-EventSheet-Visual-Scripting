@@ -4,13 +4,13 @@ extends RefCounted
 
 # Pins the three families of line batch eight gave the sheet's own words to:
 #
-#   S16  a ShaderMaterial parameter IS an effect parameter - Set effect parameter / the effect
+#   A ShaderMaterial parameter IS an effect parameter - Set effect parameter / the effect
 #        parameter expression / Set effect / Remove effect, and the tween_method-with-a-shader-lambda
 #        idiom as ONE Tween effect parameter row on the material it drives
-#   S17  a tilemap cell IS a tile at a cell - Set tile at / Erase tile at with the layer and the
+#   A tilemap cell IS a tile at a cell - Set tile at / Erase tile at with the layer and the
 #        tileset said quietly, TileAt / PositionToTile / TileToPosition for the three coordinate
 #        questions, and a tile's custom data as one condition
-#   S18  the camera page - Make current, Set zoom, Set scroll limits (the run of limit_* writes read
+#   The camera page - Make current, Set zoom, Set scroll limits (the run of limit_* writes read
 #        as one row), Scroll toward, Set smoothing on
 #
 # Four gates, in the order they matter:
@@ -72,16 +72,16 @@ func tile_under_player() -> void:
 
 ## Every reading the opened file must contain, one per shape these three items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# S16 - the effect verbs
+	# The effect verbs
 	"sprite ▸ Set effect parameter flash to 1",
 	"sprite ▸ Remove effect",
 	"sprite ▸ Set effect to outline",
 	"mat ▸ Tween effect parameter dissolve from 0 to 1 in 0.5 seconds",
-	# S17 - the tile verbs and the tile question
+	# The tile verbs and the tile question
 	"tilemap ▸ Set tile at cell to 2, 0 (layer 0 · tileset 1)",
 	"tilemap ▸ Erase tile at cell (layer 0)",
 	"tilemap ▸ tile at cell has solid set",
-	# S18 - the camera page. The four adjacent limit writes are ONE row.
+	# The camera page. The four adjacent limit writes are ONE row.
 	"camera ▸ Make current",
 	"camera ▸ Set zoom to 200%",
 	"camera ▸ Set scroll limits 0 to 1920",
@@ -101,7 +101,6 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 
 ## The statements whose sentence these three items settle, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# S16
 	"sprite.material.set_shader_parameter(\"flash\", 1.0)":
 		"sprite ▸ Set effect parameter flash to 1",
 	"material.set_shader_parameter(&\"flash\", 1.0)":
@@ -110,13 +109,12 @@ static var STATEMENT_READINGS: Dictionary = {
 	"sprite.material = preload(\"res://outline.tres\")": "sprite ▸ Set effect to outline",
 	"tween.tween_method(func(v): mat.set_shader_parameter(\"dissolve\", v), 0.0, 1.0, 0.5)":
 		"mat ▸ Tween effect parameter dissolve from 0 to 1 in 0.5 seconds",
-	# S17 - both node generations
+	# Both node generations
 	"tilemap.set_cell(0, cell, 1, Vector2i(2, 0))":
 		"tilemap ▸ Set tile at cell to 2, 0 (layer 0 · tileset 1)",
 	"tilemap.set_cell(cell, 1, Vector2i(2, 0))": "tilemap ▸ Set tile at cell to 2, 0 (tileset 1)",
 	"tilemap.erase_cell(0, cell)": "tilemap ▸ Erase tile at cell (layer 0)",
 	"tilemap.erase_cell(cell)": "tilemap ▸ Erase tile at cell",
-	# S18
 	"camera.make_current()": "camera ▸ Make current",
 	"camera.zoom = Vector2(2, 2)": "camera ▸ Set zoom to 200%",
 	"camera.position_smoothing_enabled = true": "camera ▸ Set smoothing on",
@@ -217,10 +215,10 @@ static func _grammar_values() -> bool:
 	ok = _check("a camera row claims the camera pattern",
 		str(EventSheetSentence.statement("camera.make_current()", context).get("pattern", "")),
 		"camera") and ok
-	# S16 - the two spellings of an effect parameter name are the same parameter.
+	# The two spellings of an effect parameter name are the same parameter.
 	ok = _check("a StringName parameter reads as its bare name",
 		EventSheetSentence.effect_parameter_name("&\"flash\""), "flash") and ok
-	# S16 - an effect is named after the file it lives in.
+	# An effect is named after the file it lives in.
 	ok = _check("an effect resource is named after its file",
 		EventSheetSentence.effect_resource_name("preload(\"res://fx/outline.tres\")"), "outline") and ok
 	return ok

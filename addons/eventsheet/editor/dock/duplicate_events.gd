@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetDuplicateEvents
 extends RefCounted
-# DUPLICATE EVENTS FOR… (V13) - the events one object has, given to another object.
+# DUPLICATE EVENTS FOR… - the events one object has, given to another object.
 #
 # Replace object, in a batch: every top-level event that names the source object is copied once per
 # target, and each copy has the source's reference swapped for the target's - the same rewrite the

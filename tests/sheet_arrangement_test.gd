@@ -1,4 +1,4 @@
-# Godot EventSheets - Arrange by object / trigger / group, and saved views (V12).
+# Godot EventSheets - Arrange by object / trigger / group, and saved views.
 #
 # The arrangement is DISPLAY ONLY, and that is the first thing pinned here: the sheet's events array
 # comes out of an arrangement in exactly the order it went in, so the file, the emitted GDScript and

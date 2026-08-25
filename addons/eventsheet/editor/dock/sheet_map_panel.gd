@@ -1,4 +1,4 @@
-# Godot EventSheets - the Sheet map window (U17)
+# Godot EventSheets - the Sheet map window
 #
 # The graph sheet_map.gd derives, drawn: sheets, scenes and globals as boxes, and the four ways one
 # reaches another as lines between them. Click a box to open that sheet; click a line to run the

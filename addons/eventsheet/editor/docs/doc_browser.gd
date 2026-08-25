@@ -1212,7 +1212,7 @@ func _build_manual_group(root: TreeItem) -> void:
 	# another editor, then the behaviors by the names they are known by, then what changed.
 	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_LEGEND,
 			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_DICTIONARY,
-			# W21 - the editor-building words, beside the other two word pages: it answers the same
+			# The editor-building words, beside the other two word pages: it answers the same
 			# question ("what do you call this?") for the reader who is building a tool.
 			EventSheetDocReference.KIND_EDITOR_WORDS,
 			# The patterns index sits beside the behaviors index because the two answer the same

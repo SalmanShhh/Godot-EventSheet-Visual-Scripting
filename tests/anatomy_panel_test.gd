@@ -1,7 +1,7 @@
 # EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as nine
 # organs (the variables by scope - Instance · Globals used here · Locals in view - then Triggers ·
 # Actions · Conditions · Expressions · Editor Tools · Uses), fed by a pure
-# static census. Pins: variables grouped by scope and spelled as their rows' sentences (V9),
+# static census. Pins: variables grouped by scope and spelled as their rows' sentences,
 # SignalRow triggers with friendly names,
 # exposed EventFunctions classified like the Studio cards (internal helpers excluded), opened-pack
 # annotation shells feeding the same organs, Uses listing outside providers only (never Core), the
@@ -53,7 +53,7 @@ static func run() -> bool:
 	sheet.functions.append(helper)
 
 	var organs: Dictionary = _by_id(BehaviourAnatomyPanel.collect_anatomy(sheet))
-	# V9 - the variables read by SCOPE, in the sentence their rows use, not split by an exported flag.
+	# The variables read by SCOPE, in the sentence their rows use, not split by an exported flag.
 	ok = _check("the object's variables read as their rows' sentences", _labels(organs["instance"]),
 		["Instance number cooldown_left = 0.0", "Instance number max_health = 100.0"]) and ok
 	ok = _check("a sheet that touches no global has an empty globals organ",
@@ -96,8 +96,8 @@ static func run() -> bool:
 			header_count += 1
 		elif (row as Dictionary).get("resource") is Resource:
 			entry_with_resource += 1
-	# R35 added EDITOR TOOLS: what the sheet adds to the editor, beside what it adds to the game.
-	# V9 split the one variables organ into the three scopes a reader knows them by.
+	# Added EDITOR TOOLS: what the sheet adds to the editor, beside what it adds to the game.
+	# Split the one variables organ into the three scopes a reader knows them by.
 	ok = _check("nine organ headers always visible", header_count, 9) and ok
 	ok = _check("entries carry jumpable resources", entry_with_resource > 0, true) and ok
 	# Folding an organ hides its entries but keeps the header (view state only).

@@ -1,6 +1,6 @@
 # Godot EventSheets - the four game shapes read, claimed, authored and gated.
 #
-# X21 a pity system, X24 the stealth detection loop, X26 a boss fight's phase ladder, X27 a mission
+# A pity system, the stealth detection loop, a boss fight's phase ladder, a mission
 # clock. Each one is a shape several lines make TOGETHER, so each one is answered from a walk of the
 # whole file rather than line by line, and each one is claimed in the pattern registry.
 #
@@ -75,7 +75,7 @@ static func run() -> bool:
 	return ok
 
 
-## X21. All four halves, or nothing.
+## All four halves, or nothing.
 static func _pity_reading() -> bool:
 	var ok: bool = true
 	var facts: Dictionary = EventSheetPatternReadings.facts(PITY_SOURCE)
@@ -118,7 +118,7 @@ static func _pity_reading() -> bool:
 	return ok
 
 
-## X24. A meter is the PAIR, and a detection meter is the pair plus the question that gates it.
+## A meter is the PAIR, and a detection meter is the pair plus the question that gates it.
 static func _detection_reading() -> bool:
 	var ok: bool = true
 	var facts: Dictionary = EventSheetPatternReadings.facts(DETECTION_SOURCE)
@@ -157,7 +157,7 @@ static func _detection_reading() -> bool:
 	return ok
 
 
-## X26. The guard IS the trigger-once, and a plain health check is not a phase.
+## The guard IS the trigger-once, and a plain health check is not a phase.
 static func _boss_reading() -> bool:
 	var ok: bool = true
 	var facts: Dictionary = EventSheetPatternReadings.facts(BOSS_SOURCE)
@@ -188,7 +188,7 @@ static func _boss_reading() -> bool:
 	return ok
 
 
-## X27. Three halves - counted down, asked about, and SHOWN.
+## Three halves - counted down, asked about, and SHOWN.
 static func _mission_reading() -> bool:
 	var ok: bool = true
 	var facts: Dictionary = EventSheetPatternReadings.facts(MISSION_SOURCE)
@@ -274,7 +274,7 @@ static func _vocabulary() -> bool:
 	return ok
 
 
-## X27. The minutes:seconds field: typed as a player reads it, stored as the seconds that ship.
+## The minutes:seconds field: typed as a player reads it, stored as the seconds that ship.
 static func _minutes_seconds_field() -> bool:
 	var ok: bool = true
 	ok = _check("3:00 stores as seconds", ACEParamsDialog.minutes_seconds_as_seconds("3:00"), "180.0") and ok

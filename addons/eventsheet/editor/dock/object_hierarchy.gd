@@ -2,7 +2,7 @@
 class_name EventSheetObjectHierarchy
 extends RefCounted
 
-# X15 - the HIERARCHY section of the Object properties popup: an object's parent, its children, and
+# The HIERARCHY section of the Object properties popup: an object's parent, its children, and
 # the follow-flags each child carries, in one pane you can drag into.
 #
 # Godot already draws a tree - the Scene dock - but that tree knows nothing about the sheet's rows,
@@ -239,7 +239,7 @@ static func _read_remove_child(line: String, links: Dictionary) -> void:
 	(links["parent_of"] as Dictionary)[child] = ""
 
 
-## X13's first escape hatch: still a child, no longer following.
+## The first escape hatch: still a child, no longer following.
 static func _read_top_level(line: String, links: Dictionary) -> void:
 	var at: int = line.find(".top_level = ")
 	if at < 0:
@@ -250,7 +250,7 @@ static func _read_top_level(line: String, links: Dictionary) -> void:
 	(links["ignores"] as Dictionary)[child] = line.ends_with("true")
 
 
-## X11's partial-follow shape: a RemoteTransform node driving the child with one update flag off.
+## The partial-follow shape: a RemoteTransform node driving the child with one update flag off.
 ## The `remote_path` line names WHICH child the follower belongs to; the `update_*` lines that follow
 ## are its flags, so the two are read in order and joined by the follower's own local name.
 static func _read_remote_transform(line: String, links: Dictionary, follow_targets: Dictionary) -> void:

@@ -4,7 +4,7 @@ extends RefCounted
 
 # Pins the event-sheet NOUNS - the constants, the sprite and audio verbs, the collision family, the
 # angles and distances, the counts, the system values, the familiar-words glossary and the node
-# lookups (M38 - M47).
+# lookups.
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -80,13 +80,13 @@ func _physics_process(_delta: float) -> void:
 		hp = 4
 """
 
-## Every reading the opened file must contain, one per shape M38 - M47 claims.
+## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# M38 - constants have no namespace, and the ones with a symbol wear it
+	# Constants have no namespace, and the ones with a symbol wear it
 	"System ▸ Set state to CHASE",
 	"System ▸ Set dir to up",
 	"System ▸ Set reading to π / 2",
-	# M40 - the sprite / audio / visibility verbs, by the object's own class
+	# The sprite / audio / visibility verbs, by the object's own class
 	"sprite ▸ Set animation to \"run\" (play from beginning)",
 	"sprite ▸ Stop animation",
 	"sfx ▸ Play sound",
@@ -94,29 +94,29 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"ReadingNounsPlayer ▸ Set invisible",
 	"ReadingNounsPlayer ▸ Set opacity to 50%",
 	"ReadingNounsPlayer ▸ Set size to 200%",
-	# M43 - angles, distances and directions
+	# Angles, distances and directions
 	"ReadingNounsPlayer ▸ Set angle to 90",
 	"System ▸ Set reading to distance to boss",
-	# U1 re-pinned these two: a velocity's length IS the speed, and a normalized vector is the unit
+	# Re-pinned these two: a velocity's length IS the speed, and a normalized vector is the unit
 	# vector of the one it came from - both said as an event sheet says them rather than as the method
 	# names they were.
 	"System ▸ Set reading to the speed",
 	"System ▸ Set dir to unit vector of dir",
-	# M44 - counting
+	# Counting
 	"System ▸ Set hp to enemies (group) count",
-	# M45 - the system values
+	# The system values
 	"System ▸ Set reading to ViewportWidth",
 	"Mouse ▸ Set dir to mouse position",
 	"System ▸ Set reading to time",
 	"System ▸ Set reading to fps",
-	# R8 - the layout words are the action's own name, so they are on whatever the glossary says
+	# The layout words are the action's own name, so they are on whatever the glossary says
 	"System ▸ Go to layout Menu",
-	# M47 - a node lookup IS the object it names, and an "or null" one says it may not be there
+	# A node lookup IS the object it names, and an "or null" one says it may not be there
 	"Boss ▸ Subtract 10 from hp",
 	"$HUD/Score",
 	"may be missing",
 	"boss ▸ Set hp to 3",
-	# M41 - the collision family and the platform words
+	# The collision family and the platform words
 	"ReadingNounsPlayer ▸ Is by wall",
 	"ReadingNounsPlayer ▸ Is jumping",
 	"hud ▸ Is overlapping boss",
@@ -190,7 +190,7 @@ static func _read_condition(expression: String, context: Dictionary = CONTEXT) -
 	return _labelled(EventSheetSentence.condition(expression, context))
 
 
-## M38 - enum members, vector / colour constants, and the symbols.
+## Enum members, vector / colour constants, and the symbols.
 static func _constant_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -220,7 +220,7 @@ static func _constant_values() -> bool:
 	return ok
 
 
-## M40 / M47 - the verbs an event sheet writes instead of a property write or a call.
+## The verbs an event sheet writes instead of a property write or a call.
 static func _verb_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -239,7 +239,7 @@ static func _verb_values() -> bool:
 		["scale = Vector2(2, 2)", "Player ▸ Set size to 200%"],
 		# A non-uniform scale is two numbers, and one percentage would hide one of them
 		["scale = Vector2(2, 1)", "Player ▸ Set scale to (2, 1)"],
-		# M47 - a property set and read by name
+		# A property set and read by name
 		["boss.set(\"hp\", 3)", "boss ▸ Set hp to 3"],
 		["hp = boss.get(\"hp\")", "System ▸ Set hp to boss's hp"],
 		["get_node(\"Enemies/Boss\").hp -= 10", "Boss ▸ Subtract 10 from hp"],
@@ -251,7 +251,7 @@ static func _verb_values() -> bool:
 	return ok
 
 
-## M43 / M44 / M45 - angles, distances, counts and the system values.
+## Angles, distances, counts and the system values.
 static func _measurement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -261,7 +261,7 @@ static func _measurement_values() -> bool:
 		["reading = global_position.distance_to(boss)", "System ▸ Set reading to distance to boss"],
 		["reading = a.distance_to(b)", "System ▸ Set reading to distance from a to b"],
 		["reading = position.angle_to_point(p)", "System ▸ Set reading to angle to p"],
-		# U1 re-pinned all three: the words a reader has for each vector operation, in place of the
+		# Re-pinned all three: the words a reader has for each vector operation, in place of the
 		# method name and the mathematical sign the readings carried before.
 		["reading = velocity.length()", "System ▸ Set reading to the speed"],
 		["dir = dir.normalized()", "System ▸ Set dir to unit vector of dir"],
@@ -269,13 +269,13 @@ static func _measurement_values() -> bool:
 		["hp = get_tree().get_nodes_in_group(\"enemies\").size()", "System ▸ Set hp to enemies (group) count"],
 		# The name lens spells the property as words on the canvas; the grammar keeps the member it read.
 		["hp = get_child_count()", "System ▸ Set hp to child_count"],
-		# R11 renamed these two to the sheet's own expression names, which a reader TYPES.
+		# Renamed these two to the sheet's own expression names, which a reader TYPES.
 		["reading = get_viewport_rect().size.x", "System ▸ Set reading to ViewportWidth"],
 		["reading = get_viewport_rect().size.y", "System ▸ Set reading to ViewportHeight"],
 		["dir = get_viewport().get_mouse_position()", "Mouse ▸ Set dir to mouse position"],
 		["dir = get_global_mouse_position()", "Mouse ▸ Set dir to mouse position"],
 		["reading = Time.get_ticks_msec() / 1000.0", "System ▸ Set reading to time"],
-		# R5 - writing the clock into a variable is the sheet's "Set ... to now".
+		# Writing the clock into a variable is the sheet's "Set ... to now".
 		["reading = Time.get_ticks_msec()", "System ▸ Set reading to now"],
 		["reading = Engine.get_frames_per_second()", "System ▸ Set reading to fps"]
 	]:
@@ -283,7 +283,7 @@ static func _measurement_values() -> bool:
 	return ok
 
 
-## M41 / M44 / M47 in the condition lane.
+## In the condition lane.
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -302,7 +302,7 @@ static func _condition_values() -> bool:
 	]:
 		ok = _check("condition \"%s\" reads \"%s\"" % [str(pair[0]), str(pair[1])],
 			_read_condition(str(pair[0])), str(pair[1])) and ok
-	# M41/R10 - the vertical words follow the AXIS, not the sign: in 3D, where Y grows upward, the
+	# The vertical words follow the AXIS, not the sign: in 3D, where Y grows upward, the
 	# very same test means the opposite, and the reading says the opposite word.
 	var in_3d: Dictionary = CONTEXT.duplicate(true)
 	in_3d["self_class"] = "CharacterBody3D"
@@ -311,7 +311,7 @@ static func _condition_values() -> bool:
 		_read_condition("velocity.y < 0", in_3d), "Player ▸ Is falling") and ok
 	ok = _check("a 3D body rising reads as jumping",
 		_read_condition("velocity.y > 0", in_3d), "Player ▸ Is jumping") and ok
-	# M44 - the non-empty twin, which reads as the count rather than as a NOT mark
+	# The non-empty twin, which reads as the count rather than as a NOT mark
 	var pieces: Array = (EventSheetSentence.condition_pieces("not items.is_empty()", CONTEXT).get("pieces", []) as Array)
 	var joined: String = ""
 	for piece: Variant in pieces:
@@ -320,12 +320,12 @@ static func _condition_values() -> bool:
 	return ok
 
 
-## M46 - the glossary: nothing changes with it off, and each word only appears with it on.
+## The glossary: nothing changes with it off, and each word only appears with it on.
 static func _familiar_words() -> bool:
 	var ok: bool = true
 	var familiar: Dictionary = CONTEXT.duplicate(true)
 	familiar["familiar_words"] = true
-	# R8 moved the scene-flow words OUT of the glossary: they are the shipped rows' own action names,
+	# Moved the scene-flow words OUT of the glossary: they are the shipped rows' own action names,
 	# so they read the same either way, and only the layer noun is still a glossary word.
 	for entry: Array in [
 		["get_tree().change_scene_to_file(\"res://scenes/menu.tscn\")",
@@ -353,7 +353,7 @@ static func _opened_file_reads() -> bool:
 	return ok
 
 
-## M46 - the toggle is off unless somebody asks for it, and turning it on changes exactly its words.
+## The toggle is off unless somebody asks for it, and turning it on changes exactly its words.
 static func _toggle_defaults_off() -> bool:
 	var ok: bool = true
 	var plain: EventSheetViewport = EventSheetViewport.new()

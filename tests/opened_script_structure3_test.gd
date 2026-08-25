@@ -1,10 +1,10 @@
-# EventForge - the third batch of event-sheet habits Godot spells differently (M36/M37/M39/M42),
+# EventForge - the third batch of event-sheet habits Godot spells differently,
 # pinned by VALUE on real fixture files rather than on hand-built resources:
 #
-#   M36  a For-each whose ENTIRE body is one `if` is the event-sheet picking, and reads as one event
-#   M37  a `match` on a plain value reads as the if / else-if / else chain an event-sheet user knows
-#   M39  instantiate + add_child (+ the first position) is the event-sheet single Create object
-#   M42  a signal the Godot editor wired in the .tscn reads as the trigger it is
+#   A For-each whose ENTIRE body is one `if` is the event-sheet picking, and reads as one event
+#   A `match` on a plain value reads as the if / else-if / else chain an event-sheet user knows
+#   Instantiate + add_child (+ the first position) is the event-sheet single Create object
+#   A signal the Godot editor wired in the .tscn reads as the trigger it is
 #
 # All four are READINGS. The rows in the sheet, the GDScript that comes back out, and every byte of
 # it are unchanged - which is the first thing asserted here, on both fixtures, because a reading that
@@ -38,7 +38,7 @@ static func _round_trips() -> bool:
 	return ok
 
 
-## ── M42: the wiring lives in the .tscn, and the handler reads as the trigger it is ───────────────
+## ── the wiring lives in the .tscn, and the handler reads as the trigger it is ────────────────────
 static func _scene_connections() -> bool:
 	var ok: bool = true
 	var connections: Dictionary = EventSheetSceneConnections.for_script(MENU_PATH)
@@ -63,7 +63,7 @@ static func _scene_connections() -> bool:
 	return ok
 
 
-## ── M36: which loops ARE picking, and what the note says ─────────────────────────────────────────
+## ── which loops ARE picking, and what the note says ──────────────────────────────────────────────
 static func _picking_grammar() -> bool:
 	var ok: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
@@ -140,7 +140,7 @@ static func _picking_grammar() -> bool:
 	return ok
 
 
-## ── M37: which matches read as a chain ───────────────────────────────────────────────────────────
+## ── which matches read as a chain ────────────────────────────────────────────────────────────────
 static func _else_if_grammar() -> bool:
 	var ok: bool = true
 	ok = _check("a string pattern is plain", ViewportRowBuilder.is_plain_match_pattern("\"a\""), true) and ok
@@ -161,31 +161,31 @@ static func _rows() -> bool:
 	var ok: bool = true
 	var rows: PackedStringArray = _read_rows(ARENA_PATH)
 	var joined: String = "\n".join(rows)
-	# M42 - the two handlers lead with the node that emits, named and pictured from the scene.
+	# The two handlers lead with the node that emits, named and pictured from the scene.
 	ok = _check("the button reads as its trigger",
 		joined.contains("StartButton> On Pressed"), true) and ok
 	ok = _check("the timer reads as its trigger",
 		joined.contains("WaveTimer> On Timeout"), true) and ok
-	# M36 - one event, the group as the object, the if as its condition, its body as the actions.
+	# One event, the group as the object, the if as its condition, its body as the actions.
 	ok = _check("the group loop and its if are ONE event",
 		_row_containing(rows, "(group \"enemies\")"),
 		"i2 [Enemy> (group \"enemies\") hp < 10 | enemy> Flee]") and ok
 	ok = _check("an if/else inside a children loop keeps its Else",
 		_row_containing(rows, "(children)"),
 		"i2 [Child> (children) Is visible | child> Set invisible]") and ok
-	# M37 - first case states the test, later cases are an Else carrying theirs, `_` is a plain Else.
+	# First case states the test, later cases are an Else carrying theirs, `_` is a plain Else.
 	ok = _check("the first case states its test",
 		_row_containing(rows, "difficulty = \"easy\""),
 		"i2 [System> difficulty = \"easy\" | Set reward to 10]") and ok
-	# K4 - the OR mark on each line became a rule drawn between them, so the words are just the tests.
+	# The OR mark on each line became a rule drawn between them, so the words are just the tests.
 	ok = _check("a multi-value case is an Else with an OR block",
 		_row_containing(rows, "difficulty = \"normal\""),
 		"i2 [System> Else | System> difficulty = \"normal\" | System> difficulty = \"hard\" | Set reward to 25]") and ok
 	ok = _check("the default is a plain Else",
 		_row_containing(rows, "Set reward to 0"),
 		"i2 [System> Else | Set reward to 0]") and ok
-	# M39 - three statements, one row, named after the scene's root and carrying the local name.
-	# T22 re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
+	# Three statements, one row, named after the scene's root and carrying the local name.
+	# Re-pin: a property set on the way IN is part of making the thing, so it rides the same row as
 	# a chip rather than following it as an action of its own.
 	ok = _check("the spawn trio reads as one Create object",
 		_row_containing(rows, "Create object"),

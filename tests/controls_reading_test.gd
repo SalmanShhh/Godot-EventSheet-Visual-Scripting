@@ -1,4 +1,4 @@
-# R24 / R25 / R29 - the controls reading: a stick, a gamepad and a sensor in the words the Gamepad
+# The controls reading: a stick, a gamepad and a sensor in the words the Gamepad
 # and Touch objects already use, and the exact-match check spelled out.
 #
 # Every check pins the exact TEXT a row shows.
@@ -16,7 +16,7 @@ static func run() -> bool:
 	return passed
 
 
-## R24 / R25 - the stick, the gamepad's name, and how many are plugged in.
+## The stick, the gamepad's name, and how many are plugged in.
 static func _check_analog_values() -> bool:
 	var passed: bool = _pin("a stick read names its axis the way the Gamepad object does",
 		EventSheetSentence.expression_text("Input.get_joy_axis(0, JOY_AXIS_LEFT_X)"),
@@ -35,7 +35,7 @@ static func _check_analog_values() -> bool:
 	return passed
 
 
-## R29 - the four sensors.
+## The four sensors.
 static func _check_sensor_values() -> bool:
 	var passed: bool = _pin("the accelerometer reads as acceleration",
 		EventSheetSentence.expression_text("Input.get_accelerometer()"), "acceleration")
@@ -61,7 +61,7 @@ static func _check_value_objects() -> bool:
 	return passed
 
 
-## R24 - `Input.is_action_pressed("accelerate", true)`. The bare `true` is the one flag in this
+## `Input.is_action_pressed("accelerate", true)`. The bare `true` is the one flag in this
 ## vocabulary that means nothing to a reader until it is spelled out.
 static func _check_exact_match_condition() -> bool:
 	var reading: Dictionary = EventSheetSentence.condition("Input.is_action_pressed(\"accelerate\", true)")

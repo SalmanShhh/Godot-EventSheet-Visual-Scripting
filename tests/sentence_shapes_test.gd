@@ -78,7 +78,7 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Add amount to coyote timer",
 	"System ▸ Set coyote timer to max(coyote timer - amount, 0)",
 	"host ▸ Set position X to amount * 2",
-	# R41 - a local whose value has to be worked out declares at the top of its event with the number's
+	# A local whose value has to be worked out declares at the top of its event with the number's
 	# own starting value, and the work stays where the line is, as the Set action it is.
 	"Local number remaining = 0",
 	"System ▸ Set remaining to amount",
@@ -208,7 +208,7 @@ static func _picked_matches_typed() -> bool:
 	sheet.events.append(event_row)
 	var readings: PackedStringArray = _render(sheet)
 	# `Fixture ▸ Destroy` rather than `System ▸ Destroy`: this sheet declares a class_name, so its own
-	# object has a name (M25), and a row acting on the script itself says that name.
+	# object has a name, and a row acting on the script itself says that name.
 	for expected: String in ["host ▸ does not exist", "System ▸ Set coyote timer to 0",
 			"Fixture ▸ Signal On Jumped", "Fixture ▸ Destroy", "System ▸ Stop event",
 			"host ▸ Set position X to 1"]:

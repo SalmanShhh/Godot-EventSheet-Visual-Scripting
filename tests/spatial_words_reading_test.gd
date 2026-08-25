@@ -5,11 +5,11 @@ extends RefCounted
 # Pins the batch-thirteen 3D words - the four families a 3D project writes that read as arithmetic
 # today, each of which the sheet already has one sentence for:
 #
-#   X1   moving and turning: one of six directions at a speed, the three turns in degrees a second,
+#   Moving and turning: one of six directions at a speed, the three turns in degrees a second,
 #        turning toward a facing, the facing a direction makes, and Look At's up-vector fold
-#   X3   facing: how far off facing something is, and which side of an object something is on
-#   X5   placing: standing where another object stands, and tilting onto the ground's slope
-#   X31  angle and distance: the point an angle and a distance name, one loop step's share of a full
+#   Facing: how far off facing something is, and which side of an object something is on
+#   Placing: standing where another object stands, and tilting onto the ground's slope
+#   Angle and distance: the point an angle and a distance name, one loop step's share of a full
 #        turn, and the ring / spiral claim built out of the pair
 #
 # Five gates, in the order they matter:
@@ -53,14 +53,14 @@ func drop() -> void:
 
 ## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# X1 - one of six directions, at a speed, per second
+	# One of six directions, at a speed, per second
 	"global_position += -transform.basis.z * speed * delta":
 		"Player ▸ Move forward at speed per second",
 	"global_position += transform.basis.x * 2.0 * delta": "Player ▸ Move right at 2 per second",
 	"position += basis.y * lift * delta": "Player ▸ Move up at lift per second",
 	"position += -basis.x * strafe * delta": "Player ▸ Move left at strafe per second",
 	"global_position += wind * 3.0 * delta": "Player ▸ Move along wind at 3 per second",
-	# X1 - the three turns, and the axis each one is about. Which word goes with which sign is the
+	# The three turns, and the axis each one is about. Which word goes with which sign is the
 	# ENGINE's answer: a positive `rotate_y` turns an object to its own left, which is
 	# counter-clockwise seen from above, so that is what the bare spelling reads as.
 	"rotate_y(deg_to_rad(turn_rate * delta))":
@@ -75,12 +75,12 @@ static var STATEMENT_READINGS: Dictionary = {
 	# Turning about DOWN is the same turn about up, backwards - so the words swap, not the amount.
 	"rotate_object_local(Vector3.DOWN, deg_to_rad(turn_rate * delta))":
 		"Player ▸ Rotate clockwise at turn_rate°/s · yaw (in its own space)",
-	# X1 - turning toward a facing, and facing something with an up vector worth saying
+	# Turning toward a facing, and facing something with an up vector worth saying
 	"basis = basis.slerp(desired, 5.0 * delta)": "Player ▸ Rotate toward desired at 5 per second",
 	"look_at(target.global_position)": "Player ▸ Look at target",
 	"look_at(target.global_position, Vector3.UP)": "Player ▸ Look at target",
 	"look_at(target.global_position, wall_normal)": "Player ▸ Look at target (up is wall_normal)",
-	# X5 - standing where another object stands, and tilting onto a slope
+	# Standing where another object stands, and tilting onto a slope
 	"crate.global_position = spawn.global_position": "crate ▸ Set position to spawn spawn point",
 	"crate.global_position = target.global_position": "crate ▸ Set position to target another object",
 	"crate.basis = Basis(Quaternion(Vector3.UP, ground_normal)) * crate.basis":
@@ -102,7 +102,7 @@ static var CONDITION_READINGS: Dictionary = {
 
 ## The values this parcel names, and what the sheet calls them.
 static var EXPRESSION_READINGS: Dictionary = {
-	# X1 - the basis table, both halves of it
+	# The basis table, both halves of it
 	"-global_transform.basis.z": "Player's forward",
 	"global_transform.basis.z": "Player's backward",
 	"transform.basis.x": "Player's right",
@@ -110,13 +110,13 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"basis.y": "Player's up",
 	"-basis.y": "Player's down",
 	"Basis.looking_at(to_target)": "facing along to_target",
-	# X31 - the point at an angle, in all three spellings, and one step's share of a turn
+	# The point at an angle, in all three spellings, and one step's share of a turn
 	"Vector2(cos(angle), sin(angle)) * radius": "the point at angle angle, distance radius",
 	"Vector2.from_angle(angle) * radius": "the point at angle angle, distance radius",
 	"Vector3(cos(angle), 0, sin(angle)) * radius": "the point at angle angle, distance radius",
 	"TAU * float(i) / float(n)": "i's share of a full turn",
 	"TAU * float(i) / float(8)": "i's share of a full turn",
-	# X31 - a place ON a circle is the point added to a centre, which is how a ring and a spiral are
+	# A place ON a circle is the point added to a centre, which is how a ring and a spiral are
 	# both actually written.
 	"centre + Vector2.from_angle(deg_to_rad(orbit_angle)) * orbit_radius":
 		"centre + the point at angle orbit_angle°, distance orbit_radius"
@@ -177,7 +177,7 @@ static func _grammar_values() -> bool:
 		ok = _check("expression %s" % value,
 			EventSheetSentence.expression_text(value, context),
 			str(EXPRESSION_READINGS[value])) and ok
-	# X1. A 2D object writes some of the same lines meaning something else, so the whole section is
+	# A 2D object writes some of the same lines meaning something else, so the whole section is
 	# gated on the class: its own one-argument `look_at` keeps the sentence the sheet already has.
 	var flat: Dictionary = _context()
 	flat["self_class"] = "Node2D"
@@ -200,7 +200,7 @@ static func _refusals() -> bool:
 		var reading: String = _joined_segments(statement) if not statement.is_empty() \
 			else EventSheetSentence.expression_text(code, context)
 		ok = _check("refused %s" % code, reading, str(REFUSED[code])) and ok
-	# X3. A direction between two OTHER things is not this object's facing test, however it is spelled.
+	# A direction between two OTHER things is not this object's facing test, however it is spelled.
 	ok = _check("a facing test about somebody else's direction says nothing",
 		_joined_pieces(EventSheetSentence.condition_pieces(
 			"forward.dot(to_ally) > cos(deg_to_rad(45.0))", context)),
@@ -231,7 +231,7 @@ static func _claims() -> bool:
 	var lone: PackedStringArray = PackedStringArray(["var step := TAU * float(i) / float(n)"])
 	ok = _check("a share of a turn with nothing placed at it claims nothing",
 		_claim_words(lone, "polar"), "") and ok
-	# X5. The drop to the ground: four lines that only mean one thing together, and the guard that
+	# The drop to the ground: four lines that only mean one thing together, and the guard that
 	# folds into them. The chip names the object whose place moved, because that is what a reader
 	# scanning the file came for.
 	var dropped: PackedStringArray = PackedStringArray([
@@ -324,7 +324,7 @@ static func _authoring() -> bool:
 			continue
 		ok = _check("%s writes the spelling the reading knows" % ace_id,
 			str((descriptor as ACEDescriptor).codegen_template), str(templates[ace_id])) and ok
-	# X16. The direction parameter offers the six words and writes the basis expression, so a reader
+	# The direction parameter offers the six words and writes the basis expression, so a reader
 	# picks "forward" and the file says `-basis.z`.
 	var move: ACEDescriptor = shipped.get("MoveInDirection3D", null)
 	var labels: PackedStringArray = PackedStringArray()
@@ -340,7 +340,7 @@ static func _authoring() -> bool:
 		"forward, backward, right, left, up, down") and ok
 	ok = _check("and writes the axis each one is", ", ".join(keys),
 		"-basis.z, basis.z, basis.x, -basis.x, basis.y, -basis.y") and ok
-	# X16. The 3D rows are filed on a PAGE with sections, the way the 2D ones are, rather than in one
+	# The 3D rows are filed on a PAGE with sections, the way the 2D ones are, rather than in one
 	# flat list keyed on the node type they are scoped to.
 	ok = _check("the move rows are filed on the 3D page",
 		str((shipped.get("MoveInDirection3D", null) as ACEDescriptor).category),
@@ -371,7 +371,7 @@ static func _authoring() -> bool:
 		EventSheetSentence.expression_text(
 			"Vector2.from_angle(deg_to_rad(30.0)) * 100.0", _context()),
 		"the point at angle 30°, distance 100") and ok
-	# X5. What a Place On The Ground row writes is what the run reading recognises: the row's own
+	# What a Place On The Ground row writes is what the run reading recognises: the row's own
 	# emission, with the dock's `{uid}` baked, claims the placement pattern straight back.
 	var place: ACEDescriptor = shipped.get("PlaceOnGround3D", null)
 	var emitted: PackedStringArray = PackedStringArray()

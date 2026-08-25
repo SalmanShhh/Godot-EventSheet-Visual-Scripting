@@ -1,4 +1,4 @@
-# Godot EventSheets - R38 (the five variable verbs and the two questions) and R42 (the dialog
+# Godot EventSheets - the five variable verbs, the two questions, and the dialog
 # that speaks the same sentence).
 #
 # The picker's entries and the reading are named IDENTICALLY, so the round trip is word-exact and
@@ -40,7 +40,7 @@ static func run() -> bool:
 	ok = _check("`if not muted:` flips the WORD, not a mark",
 		_condition_text("not muted", context), "muted is false") and ok
 
-	# ── R42: the dialog previews the exact row it will write, in the R37 shape ──
+	# ── the dialog previews the exact row it will write, in the shape ───────
 	var dialog: VariableDialog = VariableDialog.new()
 	var host: Node = Node.new()
 	dialog.init_dialog(host)

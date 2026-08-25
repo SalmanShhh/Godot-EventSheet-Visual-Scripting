@@ -1,4 +1,4 @@
-# Godot EventSheets - U17 the sheet map: which sheets, scenes and globals reach which.
+# Godot EventSheets - the sheet map: which sheets, scenes and globals reach which.
 #
 # The map is DERIVED, so the pins are the graph a real fixture project produces - three scripts that
 # reach each other every way the map draws: one includes another, one signals a third, and one

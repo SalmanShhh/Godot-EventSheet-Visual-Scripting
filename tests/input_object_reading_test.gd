@@ -1,4 +1,4 @@
-# EventForge - R25 / R26. Three input shapes that Godot files as ordinary handlers read as the words
+# EventForge - Three input shapes that Godot files as ordinary handlers read as the words
 # the sheet already has for them: the cursor arriving at an object and leaving it are the Mouse's
 # `Cursor is over <object>` with the edge said quietly, input landing on a clickable body is
 # `On <object> clicked`, and the joypad connection signal is the Gamepad's

@@ -21,17 +21,17 @@ extends RefCounted
 
 const VERSION: String = "0.17.0"
 
-## X30. The name of the shared aimed-floor helper the cursor and floor expressions call. One
+## The name of the shared aimed-floor helper the cursor and floor expressions call. One
 ## definition per file, whichever of them the picker wrote first.
 const AIMED_CURSOR_HELPER: String = "__eventsheets_aim_floor"
 
-## X30, the 2D twins. The point query that answers what the cursor is over on a 2D canvas, and the
+## The 2D twins. The point query that answers what the cursor is over on a 2D canvas, and the
 ## tile lookup that answers which cell it is over. Same discipline as the aimed-floor helper above:
 ## one definition per file, appended last, skipped outright when the file already defines it.
 const POINT_CURSOR_HELPER: String = "__eventsheets_object_at_2d"
 const TILE_CURSOR_HELPER: String = "__eventsheets_tile_under"
 
-## V4. The comment written above a hoisted Static local, naming the ROW the member belongs to. A
+## The comment written above a hoisted Static local, naming the ROW the member belongs to. A
 ## cosmetic marker with zero runtime weight, exactly like the `# @group:` row tags: it is what lets an
 ## opened file hand the member back to the row instead of reading it as an ordinary private member.
 const STATIC_LOCAL_MARKER: String = "# @static_local:%s"
@@ -371,7 +371,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 					lines.append(local_declaration_line)
 				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": local_var_start, "end": lines.size(), "kind": "variable"})
 
-	# V4 Static locals: class members for the locals whose rows sit under an event. GDScript has no
+	# Static locals: class members for the locals whose rows sit under an event. GDScript has no
 	# function-scope `static`, so a local that must keep its value between runs of its event is
 	# hoisted here (beside the group locals, which solve the same problem one scope wider) and the
 	# event's uses are rewritten onto the member by _rewrite_static_local_uses.
@@ -1010,7 +1010,7 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		lines.append("\tpass")
 
 
-## W6. A menu handler's body: `match id:` with one case per item of that menu, in sheet order - the
+## A menu handler's body: `match id:` with one case per item of that menu, in sheet order - the
 ## shape every menu in Godot is already written in, and the shape the reading reads back as one
 ## trigger per item. Returns false (emitting nothing) unless EVERY event in the group is a menu item,
 ## which keeps every other trigger on the ordinary body path.
@@ -1450,14 +1450,14 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 			parts.append("collapsed=true")
 		if group.runtime_toggleable:
 			parts.append("toggleable=true")
-		# M3 - who runs it, written only when the answer is not "everybody". A single-player sheet
+		# Who runs it, written only when the answer is not "everybody". A single-player sheet
 		# therefore emits exactly the header it always emitted.
 		if not EventGroup.runs_on_guard(group.runs_on).is_empty():
 			parts.append("runs_on=\"%s\"" % group.runs_on.strip_edges())
 		lines.append("## @ace_group(%s)" % ", ".join(parts))
 
 
-## M3. The guards a row inherits from its groups, joined as one and-chain in the order they gate:
+## The guards a row inherits from its groups, joined as one and-chain in the order they gate:
 ## the runtime switch, then who runs it. Either half may be empty, and both empty means no guard.
 static func _joined_group_guard(runtime_guard: String, runs_on_guard: String) -> String:
 	var terms: PackedStringArray = PackedStringArray()
@@ -1473,7 +1473,7 @@ static func _joined_group_guard(runtime_guard: String, runs_on_guard: String) ->
 static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "", runs_on_guard: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
-			# M3 - the two group guards a row can inherit, as the one and-chain the emitter wraps its
+			# The two group guards a row can inherit, as the one and-chain the emitter wraps its
 			# conditions in: the runtime switch first (a group that is off runs nothing at all), then
 			# who runs it. Either alone is the whole guard; neither leaves the row exactly as it was.
 			var guards: String = _joined_group_guard(runtime_guard, runs_on_guard)
@@ -1500,7 +1500,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 							already_known = true
 					if not already_known:
 						_runtime_group_members.append([child_guard, group.enabled])
-				# M3 - who runs it inherits exactly as the switch does, and the INNERMOST answer wins:
+				# Who runs it inherits exactly as the switch does, and the INNERMOST answer wins:
 				# an owner group inside a host group is the owner's, because that is the one the
 				# reader put closest to the rows.
 				var child_runs_on: String = EventGroup.runs_on_guard(group.runs_on)
@@ -1606,21 +1606,21 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			# Global SceneTree signals (process_frame / physics_frame) - post-tick triggers connect here.
 			source_prefix = "get_tree()."
 		elif source_path == "@editor_files":
-			# W18. The editor's file watcher (filesystem_changed) - On project files changed connects here.
+			# The editor's file watcher (filesystem_changed) - On project files changed connects here.
 			source_prefix = "EditorInterface.get_resource_filesystem()."
 		elif source_path == "@editor_preferences":
-			# W18. The user's Editor Settings (settings_changed) - On preferences changed connects here.
+			# The user's Editor Settings (settings_changed) - On preferences changed connects here.
 			source_prefix = "EditorInterface.get_editor_settings()."
 		elif source_path == "@window":
 			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."
 		elif source_path == TriggerResolver.MULTIPLAYER_SOURCE:
-			# E1. The scene tree's own MultiplayerAPI (peer_connected, server_disconnected, …) - the
+			# The scene tree's own MultiplayerAPI (peer_connected, server_disconnected, …) - the
 			# seven connection triggers connect here. `multiplayer` is a property of every node, which
 			# is why the line needs no lookup at all and reads exactly as a hand-written one does.
 			source_prefix = "multiplayer."
 		elif source_path.begins_with(TriggerResolver.MEMBER_SOURCE_PREFIX):
-			# W6. A menu is a variable of this script, not a node looked up by path: the line that
+			# A menu is a variable of this script, not a node looked up by path: the line that
 			# wires it is `sheet_popup.id_pressed.connect(...)`, which is what every hand-written
 			# menu already says.
 			source_prefix = "%s." % source_path.trim_prefix(TriggerResolver.MEMBER_SOURCE_PREFIX)
@@ -2133,7 +2133,7 @@ static func _emit_event_body(
 				and lines.size() == block_header_line + 2:
 			lines[block_header_line] = "%s %s" % [lines[block_header_line], lines[block_header_line + 1].substr(body_indent.length())]
 			lines.remove_at(block_header_line + 1)
-		# V4. The row's Static locals live as class members, so every line this event just wrote -
+		# The row's Static locals live as class members, so every line this event just wrote -
 		# its condition header and its sub-events included, which is exactly the scope the local had -
 		# says the member's name instead of the row's. The rewrite happens on the emitted TEXT, never
 		# on the row model: what the author typed stays what the author typed.
@@ -2147,7 +2147,7 @@ static func _emit_event_body(
 	return had_body
 
 
-## V4. Rewrites an event's uses of its Static locals onto the members they were hoisted to, over the
+## Rewrites an event's uses of its Static locals onto the members they were hoisted to, over the
 ## lines the event emitted from `from_index` on. Whole-word and literal-safe (a printed sentence that
 ## happens to contain the name is displayed text), through the one rename the refactors already use.
 static func _rewrite_static_local_uses(event_row: EventRow, lines: PackedStringArray, from_index: int) -> void:
@@ -2662,7 +2662,7 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 const VARIABLE_SECTION_LEVELS: PackedStringArray = ["category", "group", "subgroup"]
 
 
-## V2 - the order the declarations are emitted in: the order they were WRITTEN, bucketed only as
+## The order the declarations are emitted in: the order they were WRITTEN, bucketed only as
 ## far as the Inspector forces. `@export_group` applies to every property after it and no line
 ## closes one, so a section's variables must emit CONTIGUOUSLY and the sectionless ones must come
 ## first, or a plain variable written after a grouped one is swallowed into that group's fold. So a
@@ -3017,7 +3017,7 @@ static func _function_body_rows(event_function: EventFunction) -> Array:
 	return event_function.events if not event_function.events.is_empty() else event_function.rows
 
 
-## V4. Every Static local a sheet declares: the ones under its own events AND the ones under events
+## Every Static local a sheet declares: the ones under its own events AND the ones under events
 ## inside its functions - a function body is ordinary selectable rows, so a local can be written on
 ## one. Both hoisting paths ask here: _rewrite_static_local_uses runs over function bodies too, so a
 ## sheet collected from `events` alone rewrote uses onto a member nothing declared, and the emitted
@@ -3032,7 +3032,7 @@ static func _collect_sheet_static_locals(events: Array, functions: Array, warnin
 	return static_locals
 
 
-## V4. Gathers every Static local declared under an event, in reading order (nested events included),
+## Gathers every Static local declared under an event, in reading order (nested events included),
 ## de-duplicated by the member each would write: two events cannot both declare `hits_taken`, because
 ## both hoist to `var _hits_taken`. The second one is a warning, not an error - it still compiles, it
 ## just shares the first one's member, which is what the reader has to be told.
@@ -3295,7 +3295,7 @@ static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
-	# V4. A Static local is written as a local and lives as a member: two lines, the marker that says
+	# A Static local is written as a local and lives as a member: two lines, the marker that says
 	# which row the member belongs to and the member itself. Every other branch below is about how a
 	# declaration is spelled; this one is about WHERE the declaration ended up, so it answers first.
 	if local_var.static_local:
@@ -3353,7 +3353,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# String "placeholder" → @export_placeholder("hint") (grey hint text shown in the empty field).
 	elif local_var.exported and local_var.type_name == "String" and local_var.attributes is Dictionary and not str((local_var.attributes as Dictionary).get("placeholder", "")).strip_edges().is_empty() and not str((local_var.attributes as Dictionary).get("placeholder", "")).contains("\""):
 		var_line = "@export_placeholder(\"%s\") var %s: %s = %s" % [str((local_var.attributes as Dictionary).get("placeholder")).strip_edges(), local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
-	# R32. An Inspector button: `@export_tool_button("Bake", "Bake") var bake = _bake`. The one export
+	# An Inspector button: `@export_tool_button("Bake", "Bake") var bake = _bake`. The one export
 	# family emitted WITHOUT a `: Type`, because the value is the function the button calls and Godot's
 	# own spelling annotates nothing. The arguments are the author's own, kept verbatim on the
 	# attribute, so a one-argument and a two-argument button both re-emit as they were written.
@@ -3383,7 +3383,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	return _tree_variable_group_prefix(local_var) + var_line
 
 
-## V4. The member line a Static local compiles to: `var _hits_taken := 0`. Private (the row is a
+## The member line a Static local compiles to: `var _hits_taken := 0`. Private (the row is a
 ## local, so nothing outside its event should reach it) and inferred, because the row already says
 ## the type in words and the literal carries it. A float whose literal reads as a whole number spells
 ## the fraction out, or `:=` would infer int and refuse the first fractional assignment.
@@ -3883,7 +3883,7 @@ static func _calls_outside_strings(line: String, needle: String) -> bool:
 	return false
 
 
-## X30. The one function every aimed-floor word calls, written into the file the first time any of
+## The one function every aimed-floor word calls, written into the file the first time any of
 ## them appears in it. All three answers - the floor point, the floor object and the floor's slope -
 ## and both cursor questions share this ONE definition, so a project that asks for the point AND the
 ## slope gains the plumbing once rather than twice.

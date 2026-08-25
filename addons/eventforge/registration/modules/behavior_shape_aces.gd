@@ -1,4 +1,4 @@
-# EventForge module - the behavior SHAPES as free actions (T1 / T3 / T4).
+# EventForge module - the behavior SHAPES as free actions.
 #
 # Every reading of a hand-rolled behavior shape has to be authorable in the same words, and every
 # template here writes EXACTLY the line the reading recognises - so a row dropped from the picker and
@@ -26,7 +26,7 @@ const CAT_PIN := "Pin"
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# ── T1: the Bullet shape ──────────────────────────────────────────────────────────────────
+	# ── the Bullet shape ──────────────────────────────────────────────────────────────────────
 	# `velocity` is what all three of these are written against, so they file under the body whose
 	# velocity it is - the same scoping the shipped Set Velocity row already has.
 	descriptors.append(F.make_descriptor("Core", "SetAngleOfMotion", "Set Angle Of Motion", ACEDescriptor.ACEType.ACTION, "{host.}velocity = Vector2.RIGHT.rotated({angle}) * {speed}", "", [F.make_param("angle", "String", "rotation", "Angle", "Direction to fly along, in radians. `rotation` is the object's own facing.", "expression"), F.make_param("speed", "String", "600.0", "Speed", "How fast to travel along that direction, in pixels per second.", "expression")], CAT_BULLET, "Set angle of motion to {angle}", "CharacterBody2D")
@@ -41,12 +41,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# template in the picker, and the more specific one would quietly claim every line the general one
 	# was written for. So the reading recognises those two shapes and the existing rows author them.
 
-	# ── T3: the Move To shape ─────────────────────────────────────────────────────────────────
+	# ── the Move To shape ─────────────────────────────────────────────────────────────────────
 	# The arrival question is the shipped Is Within Distance row for the same reason.
 	descriptors.append(F.make_descriptor("Core", "GlideToward", "Move Toward Position", ACEDescriptor.ACEType.ACTION, "{host.}position = {host.}position.move_toward({destination}, {speed} * {delta_t})", "", [F.make_param("destination", "String", "Vector2.ZERO", "Destination", "The point to glide toward.", "expression"), F.make_param("speed", "String", "200.0", "Speed", "Pixels per second.", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta`.", "expression")], CAT_MOVE_TO, "Move toward {destination} at {speed}", "Node2D")
 		.described("Glides this frame's share of the way toward a point, never overshooting it."))
 
-	# ── T4: the one-liners ────────────────────────────────────────────────────────────────────
+	# ── the one-liners ────────────────────────────────────────────────────────────────────────
 	descriptors.append(F.make_descriptor("Core", "RotateClockwise", "Rotate Clockwise", ACEDescriptor.ACEType.ACTION, "{host.}rotation_degrees += {degrees_per_second} * {delta_t}", "", [F.make_param("degrees_per_second", "String", "90.0", "Degrees per second", "How far to turn each second (negative turns the other way).", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta`.", "expression")], CAT_LAYOUT, "Rotate clockwise at {degrees_per_second} (degrees per second)", "Node2D")
 		.described("Spins the object at a steady rate - a coin, a fan, a saw blade."))
 	descriptors.append(F.make_descriptor("Core", "WrapAroundLayoutX", "Wrap Around Layout Horizontally", ACEDescriptor.ACEType.ACTION, "{host.}position.x = wrapf({host.}position.x, {low}, {high})", "", [F.make_param("low", "String", "0.0", "Left edge", "The left edge of the layout, in pixels.", "expression"), F.make_param("high", "String", "1152.0", "Right edge", "The right edge of the layout, in pixels.", "expression")], CAT_LAYOUT, "Wrap around layout horizontally", "Node2D")
@@ -60,16 +60,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "PinAngleToObject", "Pin Angle To", ACEDescriptor.ACEType.ACTION, "{host.}rotation = {anchor}.rotation", "", [F.make_param("anchor", "String", "self", "Object", "The object whose angle to copy.", "expression")], CAT_PIN, "Pin to {anchor} (angle)", "Node2D")
 		.described("Turns the object to match another object's angle, so the two stay aligned."))
 
-	# ── Y4: the two DISTANCE pin modes, one line each ─────────────────────────────────────────
+	# ── the two DISTANCE pin modes, one line each ─────────────────────────────────────────────
 	# The Pin behavior pack owns the whole family - a mode dropdown, a remembered offset, an Unpin
 	# and an Is Pinned - and the pattern chip offers it first. These two rows are for the projects
 	# that want the one line: a rope, and a bar.
 	#
-	# The other four modes Y5 shipped are pack rows ONLY, and that is the same rule the acceleration
+	# The other four pin modes are pack rows ONLY, and that is the same rule the acceleration
 	# step above is left out under. `global_position.x = a.global_position.x`, `scale = a.scale` and
 	# `p = p.lerp(a.p, k * delta)` are three of the most general lines in the language - the last of
 	# them is byte-for-byte how a CAMERA scrolls toward a target, which the sheet has had its own
-	# words for since S18. A picker row is not just a row: its template is what the IMPORTER matches,
+	# words for since the camera-scroll vocabulary landed. A picker row is not just a row: its template is what the IMPORTER matches,
 	# so shipping one would silently re-file every such line in every project as a pin, whatever the
 	# reading's own gates say. So those four are authored as Pin ▸ Pin To Softly / Pin X Position To
 	# / Pin Y Position To / Pin Size To on the pack, and the hand-written shapes only READ as pins in

@@ -14,12 +14,12 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("EightDirectionMovement behavior requires a CharacterBody2D parent.")
 
+## Movement speed in pixels per second the host travels at full input.
+@export var move_speed: float = 200.0
 ## AI drive: read ai_move_x/ai_move_y instead of the keyboard (the standard seam an AI driver flips on to steer).
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_y: float = 0.0
-## Movement speed in pixels per second the host travels at full input.
-@export var move_speed: float = 200.0
 
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(host):

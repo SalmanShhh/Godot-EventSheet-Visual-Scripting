@@ -1,4 +1,4 @@
-# Godot EventSheets - the sheet map's DATA (U17)
+# Godot EventSheets - the sheet map's DATA
 #
 # "What talks to what" is a question an intermediate user asks weekly, and the project answers it one
 # hit at a time: Find all references answers about one name, the listener notes answer about one

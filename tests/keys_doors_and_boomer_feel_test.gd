@@ -4,12 +4,12 @@ extends RefCounted
 
 # Pins batch fourteen's boomer parcel - the three items that finish the shooter kit:
 #
-#   Y16  keys and doors: the four keycard rows, the door pair, the trigger a door answers with,
+#   Keys and doors: the four keycard rows, the door pair, the trigger a door answers with,
 #        the writable "needs key" mark and the event a marked door's drop offers, and the Keycard
 #        Door starter
-#   Y17  the feel layer: the FPS Controller's air control, bunny hop, bob and sway knobs, the two
+#   The feel layer: the FPS Controller's air control, bunny hop, bob and sway knobs, the two
 #        weapon rows, and the readings that recognise the hand-written shapes of all three
-#   Y18  enemies and pickups: alerting, infighting, the respawning pickup, and the exit tally
+#   Enemies and pickups: alerting, infighting, the respawning pickup, and the exit tally
 #
 # Everything here pins VALUES: the exact emitted line, the exact reading, the exact template. The
 # RUNTIME behaviour of the showcase was verified by a NON-headless harness (physics does not step in
@@ -46,7 +46,7 @@ static func run() -> bool:
 	return ok
 
 
-## Y16. The four keycard rows are the LIST words said about keys, so each template is exactly the
+## The four keycard rows are the LIST words said about keys, so each template is exactly the
 ## line a project already writes by hand - which is what lets the same file round-trip either way.
 static func _keycard_vocabulary() -> bool:
 	var ok: bool = true
@@ -71,7 +71,7 @@ static func _keycard_vocabulary() -> bool:
 	return ok
 
 
-## Y16. The door pair and the trigger between them. Try Door is the whole gesture; Open Door is what
+## The door pair and the trigger between them. Try Door is the whole gesture; Open Door is what
 ## a door does about it, once; On Locked Door Tried is the door's answer when the key does not fit.
 static func _door_contract() -> bool:
 	var ok: bool = true
@@ -112,7 +112,7 @@ static func _door_contract() -> bool:
 	return ok
 
 
-## Y16. The mark a reader writes on a door, and the event dropping that door then offers.
+## The mark a reader writes on a door, and the event dropping that door then offers.
 static func _needs_key_mark() -> bool:
 	var ok: bool = true
 	EventSheetObjectProperties.reset_needs_key_for_tests()
@@ -158,7 +158,7 @@ static func _needs_key_mark() -> bool:
 	return ok
 
 
-## Y16. The Keycard Door starter: what kind of script it is, and the fact that it compiles to a door
+## The Keycard Door starter: what kind of script it is, and the fact that it compiles to a door
 ## that keeps the whole contract - the key it wants, the opening, and the refusal.
 static func _keycard_door_starter() -> bool:
 	var ok: bool = true
@@ -187,7 +187,7 @@ static func _keycard_door_starter() -> bool:
 	return ok
 
 
-## Y17. The five feel knobs, on the pack's SHIPPED source - which is the contract, so the assertions
+## The five feel knobs, on the pack's SHIPPED source - which is the contract, so the assertions
 ## read it rather than the builder.
 static func _feel_knobs() -> bool:
 	var ok: bool = true
@@ -236,7 +236,7 @@ static func _feel_knobs() -> bool:
 	return ok
 
 
-## Y16 / Y17. The readings, and - as much as the readings themselves - what they REFUSE. Each of
+## The readings, and - as much as the readings themselves - what they REFUSE. Each of
 ## these lines is the most general line in GDScript, so every claim is matched by a line that looks
 ## exactly like it and is about something else.
 static func _readings() -> bool:
@@ -259,7 +259,7 @@ static func _readings() -> bool:
 		_asks("door.needs_key in keys"), "Has key the key it needs") and ok
 	ok = _check("a membership test about anything else is untouched",
 		_asks("\"gold\" in secrets_found").contains("Has key"), false) and ok
-	# Y17. The feel shapes.
+	# The feel shapes.
 	ok = _check("an airborne lerp on a velocity component reads as air control",
 		_says("velocity.x = lerpf(velocity.x, wish.x * speed, air_control * delta)"),
 		"Air control air_control (steers the run in the air, keeps the rest)") and ok
@@ -290,7 +290,7 @@ static func _readings() -> bool:
 	return ok
 
 
-## Y18. Alerting, infighting and the pickup that comes back.
+## Alerting, infighting and the pickup that comes back.
 static func _enemies_and_pickups() -> bool:
 	var ok: bool = true
 	var by_id: Dictionary = _descriptors()
@@ -333,7 +333,7 @@ static func _enemies_and_pickups() -> bool:
 	return ok
 
 
-## Y16 / Y17 / Y18. The showcase, as the LINES the four sheets emit. These are the spellings the
+## The showcase, as the LINES the four sheets emit. These are the spellings the
 ## readings recognise and the rows write, so a reading that stops matching one and a builder that
 ## starts writing a different one both land here.
 static func _showcase_sheets() -> bool:

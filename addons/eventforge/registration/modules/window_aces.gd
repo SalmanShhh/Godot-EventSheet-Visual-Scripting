@@ -42,7 +42,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "WindowMaximize", "Maximize Window", ACEDescriptor.ACEType.ACTION, "get_window().mode = Window.MODE_MAXIMIZED", "", [], CAT, "Maximize")
 		.described("Maximizes the game window."))
 
-	# ── V5. The render and screenshot half of the same family ──
+	# ── The render and screenshot half of the same family ──────
 	# Each of these writes EXACTLY the plain Godot line the sheet reads back as its own words, so a
 	# picked row and a hand-written one are the same bytes and the same sentence.
 	descriptors.append(F.make_descriptor("Core", "WindowSetAntiAliasing", "Set Anti-aliasing", ACEDescriptor.ACEType.ACTION, "get_viewport().msaa_2d = {level}", "", [F.make_param("level", "String", "Viewport.MSAA_DISABLED", "Level", "How many samples smooth the edges. Off is fastest; 4x is the usual choice.", "", [{"key": "Viewport.MSAA_DISABLED", "label": "off"}, {"key": "Viewport.MSAA_2X", "label": "2×"}, {"key": "Viewport.MSAA_4X", "label": "4×"}, {"key": "Viewport.MSAA_8X", "label": "8×"}])], CAT, "Set anti-aliasing to [b]{level}[/b]")

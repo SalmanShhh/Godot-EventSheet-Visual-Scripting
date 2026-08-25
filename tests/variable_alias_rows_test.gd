@@ -1,4 +1,4 @@
-# Godot EventSheets - R38: "Set boolean" and "Boolean is true / is false" are ALIAS rows.
+# Godot EventSheets - "Set boolean" and "Boolean is true / is false" are ALIAS rows.
 #
 # They are the names everyone who has used an event sheet already says, but neither is a descriptor
 # of its own: minting one would put a second template in the lifter matching the same line, and an

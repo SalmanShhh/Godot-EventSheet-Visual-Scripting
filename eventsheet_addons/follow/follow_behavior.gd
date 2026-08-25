@@ -21,29 +21,29 @@ signal reached_target
 ## @ace_name("On Path Blocked")
 signal path_blocked
 
-var _blocked: bool = false
-var _reached: bool = false
-var clock: float = 0.0
-## In delayed mode, how many seconds behind the target's recorded path the host trails.
-@export var delay: float = 0.4
-## In smooth mode, how quickly the host chases the target each second (higher is snappier).
-@export var follow_speed: float = 5.0
-var following: bool = true
-var history: Array = []
-## In smooth mode, stops and fires On Reached Target once within this many pixels of the target.
-@export var min_distance: float = 0.0
-## smooth lerps toward the target each frame; delayed replays the target's past positions.
-@export_enum("smooth", "delayed") var mode: String = "smooth"
-## Also stop the sweep on Area2D nodes, which it ignores by default.
-@export var step_hits_areas: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
-## In SMOOTH mode, sweep the path each frame instead of lerping straight there, so a fast chase cannot pass through a thin wall between two frames. Delayed mode ignores it, since retracing the target's recorded path is the point of that mode.
-@export var stepping: bool = false
-## Follow the first node in this GROUP instead of a path - no tree path, so it survives the target being moved or renamed. Takes priority over Target Path; leave blank to use the path.
-@export var target_group: String = ""
 ## Node path (relative to the host) of the node to follow; empty means idle.
 @export var target_path: String = ""
+## Follow the first node in this GROUP instead of a path - no tree path, so it survives the target being moved or renamed. Takes priority over Target Path; leave blank to use the path.
+@export var target_group: String = ""
+## smooth lerps toward the target each frame; delayed replays the target's past positions.
+@export_enum("smooth", "delayed") var mode: String = "smooth"
+## In smooth mode, how quickly the host chases the target each second (higher is snappier).
+@export var follow_speed: float = 5.0
+## In delayed mode, how many seconds behind the target's recorded path the host trails.
+@export var delay: float = 0.4
+## In smooth mode, stops and fires On Reached Target once within this many pixels of the target.
+@export var min_distance: float = 0.0
+## In SMOOTH mode, sweep the path each frame instead of lerping straight there, so a fast chase cannot pass through a thin wall between two frames. Delayed mode ignores it, since retracing the target's recorded path is the point of that mode.
+@export var stepping: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Also stop the sweep on Area2D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
+var following: bool = true
+var history: Array = []
+var clock: float = 0.0
+var _reached: bool = false
+var _blocked: bool = false
 
 func _process(delta: float) -> void:
 	if host == null:

@@ -1,4 +1,4 @@
-# Godot EventSheets - scene workspaces (V15): a scene's sheets, opened together and remembered.
+# Godot EventSheets - scene workspaces: a scene's sheets, opened together and remembered.
 #
 # Pins VALUES: the name a scene's workspace gets, that the scene itself leads its own membership,
 # that a script used on three nodes is ONE member (the same rule the scene-as-sheet reads by), that

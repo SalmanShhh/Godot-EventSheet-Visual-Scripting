@@ -1,4 +1,4 @@
-# EventForge - W6. The menus a tool builds in code, read as the menus they are.
+# EventForge - The menus a tool builds in code, read as the menus they are.
 #
 # Every tool has a menu, and in Godot every menu is the same two halves written twenty rows apart:
 # a run of `add_item("Save", 2)` calls that says what is IN the menu, and a `match id:` somewhere

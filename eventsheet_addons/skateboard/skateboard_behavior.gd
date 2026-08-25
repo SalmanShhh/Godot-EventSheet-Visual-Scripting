@@ -32,51 +32,51 @@ signal bailed
 ## @ace_category("Skateboard")
 signal trick_done(trick: String, points: float)
 
-var _balance: float = 0.0
-var _balancing: bool = false
-var _banked_score: float = 0.0
-var _chain_multiplier: int = 1
-var _chain_score: float = 0.0
-var _grind_direction: float = 1.0
-var _grinding: bool = false
-var _manual: bool = false
-var _rail_offset: float = 0.0
-var _spin_turns: float = 0.0
-var _was_on_floor: bool = false
-var _zip_speed: float = 0.0
-var _zipline: bool = false
+## How much speed one push adds toward the top speed (px/s). A board keeps it - there is no per-tick acceleration here.
+@export var push_speed: float = 40.0
+## The fastest a push will take you (px/s). A slope can still carry you past it.
+@export var max_speed: float = 600.0
+## Upward speed an ollie gives you (px/s).
+@export var ollie_speed: float = 420.0
+## Downward acceleration (px/s²). Roll With The Slope projects this along the floor.
+@export var gravity: float = 980.0
+## Terminal velocity - gravity never pulls you down faster than this.
+@export var max_fall_speed: float = 1200.0
+## Rolling friction on the ground (px/s²). Low, because a board coasts.
+@export var friction: float = 60.0
+## How much of gravity the slope hands you. 1 is a real ramp, above 1 exaggerates it, 0 makes hills flat.
+@export_range(0, 3, 0.05) var slope_grip: float = 1.0
 ## How quickly the board settles flat onto the slope it is rolling on, in radians per second. It only does this when no trick is turning, so a spin is never fought.
 @export var align_speed: float = 12.0
+## Default turns per second a Spin or Flip trick turns at.
+@export var trick_spin_rate: float = 1.0
+## How far off square with the floor the board may be and still land clean. Wider is friendlier.
+@export_range(1, 90, 1) var landing_tolerance_degrees: float = 25.0
+## Default speed along a rail (px/s) when a grind is not keeping your momentum.
+@export var grind_speed: float = 320.0
+## How close to the rail's line the board has to be for Is Near Rail to say yes (px).
+@export var rail_snap_distance: float = 12.0
+## Upward speed a hop off a rail gives you (px/s).
+@export var hop_off_speed: float = 260.0
 ## How fast balance slides toward the edge per second while you are balancing. 0 is a free ride.
 @export var balance_drift: float = 0.8
 ## How hard one full steer pushes balance back toward the middle, per second.
 @export var balance_steer: float = 1.6
 ## How far out balance has to be before Is Losing Balance says yes. 1 is the bail.
 @export_range(0, 1, 0.05) var balance_warn: float = 0.6
-## Rolling friction on the ground (px/s²). Low, because a board coasts.
-@export var friction: float = 60.0
-## Downward acceleration (px/s²). Roll With The Slope projects this along the floor.
-@export var gravity: float = 980.0
-## Default speed along a rail (px/s) when a grind is not keeping your momentum.
-@export var grind_speed: float = 320.0
-## Upward speed a hop off a rail gives you (px/s).
-@export var hop_off_speed: float = 260.0
-## How far off square with the floor the board may be and still land clean. Wider is friendlier.
-@export_range(1, 90, 1) var landing_tolerance_degrees: float = 25.0
-## Terminal velocity - gravity never pulls you down faster than this.
-@export var max_fall_speed: float = 1200.0
-## The fastest a push will take you (px/s). A slope can still carry you past it.
-@export var max_speed: float = 600.0
-## Upward speed an ollie gives you (px/s).
-@export var ollie_speed: float = 420.0
-## How much speed one push adds toward the top speed (px/s). A board keeps it - there is no per-tick acceleration here.
-@export var push_speed: float = 40.0
-## How close to the rail's line the board has to be for Is Near Rail to say yes (px).
-@export var rail_snap_distance: float = 12.0
-## How much of gravity the slope hands you. 1 is a real ramp, above 1 exaggerates it, 0 makes hills flat.
-@export_range(0, 3, 0.05) var slope_grip: float = 1.0
-## Default turns per second a Spin or Flip trick turns at.
-@export var trick_spin_rate: float = 1.0
+var _manual: bool = false
+var _grinding: bool = false
+var _zipline: bool = false
+var _zip_speed: float = 0.0
+var _rail_offset: float = 0.0
+var _grind_direction: float = 1.0
+var _balancing: bool = false
+var _balance: float = 0.0
+var _chain_score: float = 0.0
+var _chain_multiplier: int = 1
+var _banked_score: float = 0.0
+var _spin_turns: float = 0.0
+var _was_on_floor: bool = false
 
 # The rail this board is riding. Start Grinding remembers it so the riding rows do not
 # have to name it again, and Hop Off / a bail forget it.

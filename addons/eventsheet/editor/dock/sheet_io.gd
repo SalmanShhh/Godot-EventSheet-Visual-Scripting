@@ -22,7 +22,7 @@ var _open_job_path: String = ""
 ## (the same file can legitimately be open in two tabs, so the path alone is not an identity).
 var _open_job_raw: EventSheetResource = null
 var _open_polling: bool = false
-## P4 - the scene being read one script per frame, and whether that read is still running.
+## The scene being read one script per frame, and whether that read is still running.
 var _scene_sheet: EventSheetResource = null
 var _scene_polling: bool = false
 
@@ -39,14 +39,14 @@ func _load_sheet_from_path(path: String) -> void:
 	# GDScript-backed sheets: any .gd opens losslessly (lifted rows + verbatim blocks); the
 	# file stays the single source of truth and Save compiles back to it.
 	if resolved_path.get_extension() == "gd":
-		# V10 - a file a merge left unresolved has no single reading to open: it holds two. The
+		# A file a merge left unresolved has no single reading to open: it holds two. The
 		# conflict view offers them side by side and picks per event; opening the file as a sheet
 		# would only show the marker lines as code.
 		if _open_conflict_view(resolved_path):
 			return
 		_begin_async_gd_open(resolved_path)
 		return
-	# P4 - a .tscn opens as the reading of the WHOLE layout: every script the scene uses, each under
+	# A .tscn opens as the reading of the WHOLE layout: every script the scene uses, each under
 	# its own object bar. Read only for good, and the scene file is never written to.
 	if resolved_path.get_extension() == "tscn":
 		_open_scene_as_sheet(resolved_path)
@@ -128,7 +128,7 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 	_open_polling = true
 
 
-## P4. Opens a .tscn as the reading of the whole layout, WITHOUT freezing the editor: the scene's bar
+## Opens a .tscn as the reading of the whole layout, WITHOUT freezing the editor: the scene's bar
 ## and one object bar per script paint at once, then one script is read per frame behind the progress
 ## strip. A scene with twenty scripts is twenty short reads rather than one long stall.
 ##
@@ -289,7 +289,7 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		_dock._refresh_preview_banner()
 		_flag_parse_error_rows(sheet, resolved_path)
 	EventSheets._notify_lifecycle("opened", {"sheet": sheet, "path": resolved_path})
-	# W19 - a "show the events behind this" that was waiting for this file finishes here, now that
+	# A "show the events behind this" that was waiting for this file finishes here, now that
 	# there are rows to land on.
 	_dock._complete_built_here(sheet, resolved_path)
 	if was_canceled:
@@ -354,7 +354,7 @@ func _save_backed_sheet() -> bool:
 	return true
 
 
-## W20 - the question a save of the running editor's own source asks, once. Two ways to say yes,
+## The question a save of the running editor's own source asks, once. Two ways to say yes,
 ## because the reader who is going to edit the editor all afternoon should not be asked all afternoon.
 func _ask_before_saving_this_editor() -> void:
 	var dialog: ConfirmationDialog = ConfirmationDialog.new()
@@ -389,7 +389,7 @@ func _save_this_editor_now() -> void:
 		_reload_after_editor_save()
 
 
-## W20 - what happens after a file of the running editor is written: the plugin comes back, UNLESS
+## What happens after a file of the running editor is written: the plugin comes back, UNLESS
 ## the file it was written from does not parse, in which case the version already running keeps
 ## running and the bar says why. That refusal is the whole reason editing the editor from inside
 ## itself is survivable.
@@ -405,7 +405,7 @@ func _on_save_requested() -> void:
 		return
 	# Read-only preview never writes back over the source file. The user opts in with
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
-	# P4 - a scene read as one sheet is many files at once, and the .tscn is not one of them: there is
+	# A scene read as one sheet is many files at once, and the .tscn is not one of them: there is
 	# nothing here to save, so say where the editing happens instead.
 	if EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet):
 		_dock._set_status("%s is a reading of the whole scene - double-click an object bar to open that script and save there." %
@@ -415,7 +415,7 @@ func _on_save_requested() -> void:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()
 		_dock._set_status("You're viewing %s - click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
 		return
-	# W20 - the one file whose save has a consequence no other file's does: this one builds the editor
+	# The one file whose save has a consequence no other file's does: this one builds the editor
 	# you are looking at. Asked once, answerable with "always", and asked BEFORE the write rather than
 	# reported after it.
 	if EventSheetThisEditorBar.applies_to(_dock._current_sheet) and EventSheetThisEditorBar.keep_asking():

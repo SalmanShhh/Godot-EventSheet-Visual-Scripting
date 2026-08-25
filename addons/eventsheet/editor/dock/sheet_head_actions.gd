@@ -35,7 +35,7 @@ func init(dock: Control) -> void:
 func handle(action: String) -> void:
 	if _dock._current_sheet == null:
 		return
-	# E2 / L4 / L6 - the bands that stand for a fact of the SCENE name the node they are about after
+	# The bands that stand for a fact of the SCENE name the node they are about after
 	# a colon. All of them mean the same gesture: the other editor of that fact - the Replication
 	# panel, the Inspector - is over there, so open the scene and select the node. Asked of the band
 	# model rather than listed here, so a scene band a later pass adds arrives already clickable.
@@ -71,7 +71,7 @@ func handle(action: String) -> void:
 			open_add_menu()
 
 
-## E2 - opens the scene a replication fact lives in and selects the node that holds it, so Godot's
+## Opens the scene a replication fact lives in and selects the node that holds it, so Godot's
 ## own Replication panel and Inspector open on it. Says so on the status line either way: a node that
 ## is not there any more is a fact the sheet read from a file somebody has since changed.
 func reveal_scene_node(scene_path: String, node_path: String) -> void:

@@ -4,15 +4,15 @@ extends RefCounted
 
 # Pins the 3D words batch thirteen gave the sheet:
 #
-#   X4   orbiting, in both spellings - a camera pivot going round what it looks at, and the angle
+#   Orbiting, in both spellings - a camera pivot going round what it looks at, and the angle
 #        written out as a cosine and a sine at a radius - plus a camera arm's length
-#   X6   camera-relative locomotion: the five-line basis mix reads as ONE action, the fall under it
+#   Camera-relative locomotion: the five-line basis mix reads as ONE action, the fall under it
 #        reads as a fall, and what a body is standing on reads as the shipped question
-#   X7   an AnimationTree's magic parameter strings read as the object's Animation aspect
-#   X8   what a mesh lets through - the visible-range band, see-through, the shadow switch - and the
+#   An AnimationTree's magic parameter strings read as the object's Animation aspect
+#   What a mesh lets through - the visible-range band, see-through, the shadow switch - and the
 #        two triggers a notifier raises when something comes into view and leaves again
-#   X9   the world's look: the Environment object, and an effect parameter set everywhere
-#   X19  UI that lives in the world: billboards, world size, a bar's width, an in-world screen
+#   The world's look: the Environment object, and an effect parameter set everywhere
+#   UI that lives in the world: billboards, world size, a bar's width, an in-world screen
 #
 # Five gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -28,7 +28,7 @@ extends RefCounted
 
 const SOURCE_PATH := "user://eventforge_spatial_words_reading.gd"
 
-## X4's first spelling needs a SCENE: a `rotate_y` reads as an orbit only when the scene says the
+## The first spelling needs a SCENE: a `rotate_y` reads as an orbit only when the scene says the
 ## node it turns holds nothing but a camera rig. The fixture rig beside this file is that scene, and
 ## the facts walk reads it straight back out as text - nothing here instances anything.
 const PIVOT_SCRIPT_PATH := "res://tests/fixtures/orbit_pivot_rig.gd"
@@ -98,31 +98,31 @@ func dress_the_knight(hp: float) -> void:
 ## Every reading the opened file must contain, one per shape these items claim. The object is the
 ## class the script extends, because this file declares no class_name of its own.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# X6 - the five-line run is ONE action, and the fall under it says what it is
+	# The five-line run is ONE action, and the fall under it says what it is
 	"CharacterBody3D ▸ Move relative to the camera along input at run_speed (flattened to the ground)",
 	"CharacterBody3D ▸ Fall at 30 (gravity)",
-	# X4 - the angle written out, and the arm the camera hangs off
+	# The angle written out, and the arm the camera hangs off
 	"CharacterBody3D ▸ Orbit moon at radius moon radius angle moon angle (on the ground plane)",
 	"arm ▸ Set camera distance to 6",
-	# X7 - the blend tree, under the object's Animation aspect
+	# The blend tree, under the object's Animation aspect
 	"CharacterBody3D ▸ Animation ▸ Set Locomotion blend to pace",
 	"CharacterBody3D ▸ Animation ▸ Go to state \"Jump\"",
 	"CharacterBody3D ▸ Animation ▸ Set animation speed to 0.5",
 	"CharacterBody3D ▸ Animation ▸ Play one-shot animation Shoot",
-	# X8 - the sound that carries, the band a mesh is drawn in, and the two switches
+	# The sound that carries, the band a mesh is drawn in, and the two switches
 	"horn ▸ Set hearing distance to 40",
 	"horn ▸ Set falloff to 3",
 	"rock ▸ Visible from 10 to 90",
 	"rock ▸ Set see-through to 40%",
 	"rock ▸ Set shadows off",
-	# X9 - the world's look, under the Environment object
+	# The world's look, under the Environment object
 	"Environment ▸ Set fog on",
 	"Environment ▸ Set fog thickness to 0.02",
 	"Environment ▸ Set glow on",
 	"Environment ▸ Set glow strength to 0.4",
 	"Environment ▸ Set ambient light to 30%",
 	"System ▸ Set effect parameter wind strength to 2 (everywhere)",
-	# X19 - UI standing in the world
+	# UI standing in the world
 	"name_tag ▸ Set always face the camera on",
 	"name_tag ▸ Set show through walls on",
 	"hp_bar ▸ Set world size to 0.004 (per pixel)",
@@ -133,11 +133,11 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 ## Readings the file must NOT contain: the words each shape replaced. A reading that silently
 ## stopped firing would otherwise pass the list above by never being asked about.
 static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
-	# X6 - the four lines the run swallowed, each a perfectly good row on its own before it
+	# The four lines the run swallowed, each a perfectly good row on its own before it
 	"dir ▸ Set y to 0",
 	"CharacterBody3D ▸ Set velocity X to dir X * run_speed",
 	"CharacterBody3D ▸ Subtract 30 * dt from velocity Y",
-	# X8 / X9 / X19 - the property writes these readings renamed
+	# The property writes these readings renamed
 	"horn ▸ Set max distance to 40",
 	"rock ▸ Set transparency to 0.4",
 	"env ▸ Set fog enabled to true",
@@ -146,13 +146,13 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 
 ## The statements whose sentence these items settle, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# X4 - the angle written out, its plane named by the axis the circle is flat against
+	# The angle written out, its plane named by the axis the circle is flat against
 	"global_position = target.global_position + Vector3(cos(angle), 0.0, sin(angle)) * radius":
 		"Player ▸ Orbit target at radius radius angle angle (on the ground plane)",
 	"global_position = target.global_position + Vector3(cos(a), sin(a), 0.0) * 4.0":
 		"Player ▸ Orbit target at radius 4 angle a (on the upright plane)",
 	"arm.spring_length = 6.0": "arm ▸ Set camera distance to 6",
-	# X7 - the three parameter roles, and the state machine's own step
+	# The three parameter roles, and the state machine's own step
 	"anim_tree.set(\"parameters/Locomotion/blend_position\", pace)":
 		"Player ▸ Animation ▸ Set Locomotion blend to pace",
 	"anim_tree.set(\"parameters/TimeScale/scale\", 0.5)":
@@ -160,13 +160,13 @@ static var STATEMENT_READINGS: Dictionary = {
 	"anim_tree.set(\"parameters/Shoot/request\", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)":
 		"Player ▸ Animation ▸ Play one-shot animation Shoot",
 	"anim_state.travel(\"Jump\")": "Player ▸ Animation ▸ Go to state \"Jump\"",
-	# X8 - the seen-and-heard distances and switches
+	# The seen-and-heard distances and switches
 	"rock.transparency = 0.4": "rock ▸ Set see-through to 40%",
 	"rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF": "rock ▸ Set shadows off",
 	"rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON": "rock ▸ Set shadows on",
 	"rock.visibility_range_begin = 10.0": "rock ▸ Set visible from 10",
 	"rock.visibility_range_end = 90.0": "rock ▸ Set visible until 90",
-	# X9 - the environment block, reached both ways
+	# The environment block, reached both ways
 	"env.fog_enabled = true": "Environment ▸ Set fog on",
 	"env.fog_enabled = false": "Environment ▸ Set fog off",
 	"env.fog_light_color = Color(0.7, 0.6, 0.8)": "Environment ▸ Set fog colour to 0.7, 0.6, 0.8",
@@ -176,7 +176,7 @@ static var STATEMENT_READINGS: Dictionary = {
 	"RenderingServer.global_shader_parameter_set(\"wind_strength\", 2.0)":
 		"System ▸ Set effect parameter wind strength to 2 (everywhere)",
 	"rock.set_instance_shader_parameter(\"tint\", 0.5)": "rock ▸ Set effect parameter tint to 0.5",
-	# X19 - the world-space UI knobs
+	# The world-space UI knobs
 	"name_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED":
 		"name_tag ▸ Set always face the camera on",
 	"name_tag.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y":
@@ -202,10 +202,10 @@ static var CONDITION_READINGS: Dictionary = {
 ## The shapes that must NOT be claimed. Every one of them is ALMOST one of the readings above, and a
 ## reading that is almost right is worse than the code it replaced.
 static var REFUSED_STATEMENTS: PackedStringArray = PackedStringArray([
-	# X8 / X19 - the general property spellings, on a class that is not one of these families
+	# The general property spellings, on a class that is not one of these families
 	"crate.transparency = 0.4",
 	"crate.pixel_size = 0.004",
-	# X9 - a fog knob on something that is not an environment
+	# A fog knob on something that is not an environment
 	"crate.fog_density = 0.02"
 ])
 
@@ -293,7 +293,7 @@ static func _grammar_values() -> bool:
 	ok = _check("an environment knob claims the lighting pattern",
 		str(EventSheetSentence.statement("env.fog_enabled = true", context).get("pattern", "")),
 		"lighting") and ok
-	# X6 - the run recognised piece by piece, which is what the row builder's pass is built on.
+	# The run recognised piece by piece, which is what the row builder's pass is built on.
 	ok = _check("a camera's basis names the camera",
 		EventSheetSentence.camera_basis_source("cam.global_transform.basis"), "cam") and ok
 	ok = _check("the basis mix names the input vector",
@@ -311,7 +311,7 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.velocity_step_speed("velocity.x = dir.x * speed", "dir"), "speed") and ok
 	ok = _check("a velocity step off another direction is refused",
 		EventSheetSentence.velocity_step_speed("velocity.x = other.x * speed", "dir"), "") and ok
-	# X8 - the two triggers, in both spellings a trigger arrives in.
+	# The two triggers, in both spellings a trigger arrives in.
 	ok = _check("coming into view is a trigger the sheet has words for",
 		EventSheetSentence.view_trigger_words("signal:screen_entered"), "On entered view") and ok
 	ok = _check("and leaving it again is the other half",
@@ -321,7 +321,7 @@ static func _grammar_values() -> bool:
 	return ok
 
 
-## X4. The pivot reading is gated on the SCENE, and this is the gate: the SAME `rotate_y` line reads
+## The pivot reading is gated on the SCENE, and this is the gate: the SAME `rotate_y` line reads
 ## as an orbit on the node whose only child is a camera arm, and as the plain rotate it is on the
 ## node holding a crate. Both nodes live in one fixture scene, so nothing about the line itself can
 ## be what tells them apart.

@@ -1,4 +1,4 @@
-# Godot EventSheets - Nav Agent 3D pack (the navmesh wrapper, spec P3).
+# Godot EventSheets - Nav Agent 3D pack (the navmesh wrapper).
 #
 # Loads the COMPILED pack and pins: the zero-wiring promise (_ensure_agent inserts and tunes a
 # NavigationAgent3D child), the universal-AI-seam driver discovery + release, and VERB SYMMETRY

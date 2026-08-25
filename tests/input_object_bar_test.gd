@@ -1,4 +1,4 @@
-# R23 - the Input Map in the Object bar: the INPUT section, the words each control's line carries,
+# The Input Map in the Object bar: the INPUT section, the words each control's line carries,
 # and the ⚠ on one the project does not have.
 #
 # Every check pins a VALUE, because the point of the section is what it SAYS.

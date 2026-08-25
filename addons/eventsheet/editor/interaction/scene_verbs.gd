@@ -1,4 +1,4 @@
-# Godot EventSheets - what the sheet's OWN ROWS say about the scene's two networking nodes (M4/E3).
+# Godot EventSheets - what the sheet's OWN ROWS say about the scene's two networking nodes.
 #
 # The scene half of Godot's multiplayer is read from the `.tscn` (scene_replication.gd): which
 # properties a synchronizer keeps in step, which scenes a spawner may make. This is the other

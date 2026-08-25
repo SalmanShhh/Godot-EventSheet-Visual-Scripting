@@ -2,7 +2,7 @@
 class_name EventSheetEditorToolCensus
 extends RefCounted
 
-# R35 - what a sheet or a pack ADDS TO THE EDITOR, derived rather than declared.
+# What a sheet or a pack ADDS TO THE EDITOR, derived rather than declared.
 #
 # A pack can carry a @tool script that hangs a dock, adds a Tools menu item or teaches the editor a
 # new object type, and until now nothing anywhere said so: you installed the pack and found out by
@@ -27,7 +27,7 @@ extends RefCounted
 const CAPABILITIES: Array[Dictionary] = [
 	{"kind": "menu_item", "ace_id": "AddToolsMenuItem", "call": "add_tool_menu_item(", "noun": "Tools menu item", "label": "Tools menu item", "name_param": "title"},
 	{"kind": "dock", "ace_id": "AddEditorDock", "call": "add_control_to_dock(", "noun": "dock", "label": "dock", "name_param": "control"},
-	# W17. The bottom row of panels, added by the same pair of verbs as a dock. Without this entry a
+	# The bottom row of panels, added by the same pair of verbs as a dock. Without this entry a
 	# Bottom panel sheet claimed nothing on its own Include bar while a Dock panel sheet claimed one.
 	{"kind": "bottom_panel", "ace_id": "AddBottomPanel", "call": "add_control_to_bottom_panel(", "noun": "bottom panel", "label": "bottom panel", "name_param": "title"},
 	{"kind": "object_type", "ace_id": "AddEditorObjectType", "call": "add_custom_type(", "noun": "object type", "label": "object type", "name_param": "type_name"},
@@ -126,7 +126,7 @@ static func summary(entries: Array[Dictionary]) -> String:
 	return "%s %s" % [EventSheetL10n.translate("adds"), ", ".join(parts)]
 
 
-## The rail's own line for one entry: the label as the mockup words it.
+## The rail's own line for one entry: the label in the rail's own words.
 static func labels(entries: Array[Dictionary]) -> PackedStringArray:
 	var texts: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in entries:

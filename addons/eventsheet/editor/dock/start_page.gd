@@ -2,7 +2,7 @@
 class_name EventSheetStartPage
 extends RefCounted
 
-# T14 - THE START PAGE. Everything a session starts with, on one page instead of three:
+# THE START PAGE. Everything a session starts with, on one page instead of three:
 #
 #   New from template   the shipped starters and the playable showcases, by genre, each with a
 #                       one-line pitch and its picture
@@ -83,7 +83,7 @@ static func _set_opens_on_startup(on: bool) -> void:
 ##   kind "showcase"  target = the scene path
 ##   kind "recent"    target = the file path
 ##   kind "learn"     target = the Manual doc id
-##   kind "this_editor"  target = "" (W24: only in the plugin's own repo)
+##   kind "this_editor"  target = "" (only in the plugin's own repo)
 static func columns(starters: Array, showcases: PackedStringArray, recents: Array,
 		is_editor_project: bool = false) -> Array:
 	var templates: Array = []
@@ -106,7 +106,7 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 			"note": "%s · %s" % [genre, line], "target": "%s/%s" % [SHOWCASE_DIR, showcase]})
 	var recent_entries: Array = []
 	for path: Variant in recents:
-		# V20 - the health card's short form is the Recent list's second column: how many events the
+		# The health card's short form is the Recent list's second column: how many events the
 		# sheet has and how its tests last went, read from the file rather than by loading it.
 		recent_entries.append({"kind": "recent", "label": str(path).get_file(),
 			"note": EventSheetHealthCard.brief_for_path(str(path), str(path).get_base_dir()),
@@ -125,7 +125,7 @@ static func columns(starters: Array, showcases: PackedStringArray, recents: Arra
 		{"id": "recent", "title": "Recent", "entries": recent_entries},
 		{"id": "learn", "title": "Learn", "entries": learn},
 	]
-	# W24 - the contributor's door, and only in the editor's own repo. A game project's Start page is
+	# The contributor's door, and only in the editor's own repo. A game project's Start page is
 	# exactly what it always was.
 	if is_editor_project:
 		built.append({"id": "this_editor", "title": "This editor", "entries": [{
@@ -253,7 +253,7 @@ func activate(entry: Dictionary) -> void:
 		_window.hide()
 
 
-## W24 - the contributor's door: turn the Project bar on, open it, and open the plugin's own script
+## The contributor's door: turn the Project bar on, open it, and open the plugin's own script
 ## as the first thing they read. Everything here is a gesture the reader could make by hand; the card
 ## just makes it one click instead of four.
 func _open_this_editor_folder() -> void:

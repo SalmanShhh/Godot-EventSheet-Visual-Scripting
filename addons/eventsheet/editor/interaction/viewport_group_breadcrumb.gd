@@ -33,7 +33,7 @@ var _map_dirty: bool = true
 var _jump_index: int = -1
 # The full parent chain of the pinned head, for the hover - the strip only shows the last two.
 var _full_chain: String = ""
-# G5 - one click zone per drawn parent name: [{"x", "width", "index"}] in canvas x, `index` the flat
+# One click zone per drawn parent name: [{"x", "width", "index"}] in canvas x, `index` the flat
 # row of the head that name stands for. Rebuilt by every draw, so it can never point at a stale row.
 var _crumb_zones: Array[Dictionary] = []
 
@@ -106,7 +106,7 @@ func draw(width: float, font: Font, font_size: int) -> void:
 			titles.append(EventSheetGroupFacts.display_name(chain_row.source_resource as EventGroup))
 			title_rows.append(group_index)
 			continue
-		# V12: an Arrange-by header is a group as far as reading goes - it holds events and the
+		# An Arrange-by header is a group as far as reading goes - it holds events and the
 		# reader is inside it - so the pinned head names it too, from its own drawn title.
 		var header_title: String = header_title_of(chain_row)
 		if not header_title.is_empty():
@@ -130,7 +130,7 @@ func draw(width: float, font: Font, font_size: int) -> void:
 	_viewport.draw_string(font, Vector2(cursor - 14.0, baseline),
 		"▸" if head_row != null and head_row.folded else "▾",
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, text_size, reading_style.muted_text_color)
-	# G5 - the parent names are drawn one at a time rather than as one joined string, so each can
+	# The parent names are drawn one at a time rather than as one joined string, so each can
 	# arm its own click zone. The separators are drawn between them, and belong to neither.
 	var crumbs: Array = trail.get("crumbs", []) as Array
 	var crumb_widths: PackedFloat32Array = PackedFloat32Array()
@@ -232,7 +232,7 @@ func handle_click(local_position: Vector2) -> bool:
 		_viewport._toggle_row_fold(_jump_index)
 		_scroll_to_row(_jump_index, zoom)
 		return true
-	# G5 - a parent name is a door back out to that group: clicking it scrolls to its own head,
+	# A parent name is a door back out to that group: clicking it scrolls to its own head,
 	# which is the row the reader wanted when they read the name.
 	var crumb_row: int = crumb_at(_crumb_zones, canvas_x)
 	if crumb_row >= 0:
@@ -248,7 +248,7 @@ func handle_click(local_position: Vector2) -> bool:
 	return true
 
 
-## G5. Where each parent name lands on the strip, given the widths the font measured for them:
+## Where each parent name lands on the strip, given the widths the font measured for them:
 ## [{"x", "width", "index"}] in canvas x, one per crumb that stands for a row. The elision names no
 ## group, so it arms nothing. Pure + static, so the geometry is pinned without a canvas.
 static func crumb_zones(crumbs: Array, title_rows: PackedInt32Array, start_x: float,

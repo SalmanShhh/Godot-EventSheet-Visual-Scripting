@@ -1,7 +1,7 @@
 @tool
 class_name MultiplayerVocabularyTest
 extends RefCounted
-# M1 / M3 / E3 - the rest of Godot's high-level multiplayer as rows, and the one word that says who
+# The rest of Godot's high-level multiplayer as rows, and the one word that says who
 # runs a group.
 #
 # Two halves, pinned by VALUE rather than by count so a wording change is visible here rather than
@@ -162,7 +162,7 @@ static func _test_the_help_strip_explains_the_network_fields() -> bool:
 	ok = _check("...and a peer kind", host.params[2].hint, "peer_kind") and ok
 	ok = _check("Join a game asks for an address",
 		ACERegistry.find_descriptor("Core", "JoinGame").params[0].hint, "net_address") and ok
-	# P1 - each peer kind carries the line under it that says when to pick it.
+	# Each peer kind carries the line under it that says when to pick it.
 	var notes: Dictionary = FieldFactory.option_notes({"options": EventForgeMultiplayerACEs.PEER_KINDS})
 	ok = _check("ENet says it is the default", str(notes.get("ENetMultiplayerPeer", "")).contains("default"), true) and ok
 	ok = _check("WebSocket says it is the browser one",
@@ -200,7 +200,7 @@ static func _test_the_picker_shelves() -> bool:
 	return ok
 
 
-# ── M3 - who runs it ────────────────────────────────────────────────────────────────────────────
+# ── who runs it ─────────────────────────────────────────────────────────────────────────────────
 
 
 static func _test_runs_on_is_one_table() -> bool:

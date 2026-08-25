@@ -1,7 +1,7 @@
 @tool
 extends Control
 
-# A hand-written tool file of exactly the two shapes W7 and W8 read: a dialog built in code, and a
+# A hand-written tool file of exactly the two shapes the tool reading claims: a dialog built in code, and a
 # canvas painted by hand and answering its own input. Opened read-only by
 # canvas_dialog_reading_test.gd and by the render harness that makes the guide figure - so the words
 # in the test, the words in the picture and the words on this page can never drift apart.

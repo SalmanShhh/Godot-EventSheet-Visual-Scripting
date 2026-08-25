@@ -2,7 +2,7 @@
 class_name SceneNodeParamPickerTest
 extends RefCounted
 
-# X16. The node parameter on the Hierarchy rows is picked out of the layout that is OPEN, not typed
+# The node parameter on the Hierarchy rows is picked out of the layout that is OPEN, not typed
 # from memory: the "scene_node" hint offers the edited scene's tree in the spellings a row writes
 # (`self`, `%Unique`, `$Path`), and stays a free text field for everything the tree cannot know.
 #

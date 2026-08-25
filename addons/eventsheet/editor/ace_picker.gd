@@ -28,7 +28,7 @@ signal guide_requested(definition: ACEDefinition)
 ## dialog only says which verb was asked about.
 signal help_requested(definition: ACEDefinition)
 
-## S27. Emitted when the reader takes the Add event dialog's first entry, "(none - runs every tick)".
+## Emitted when the reader takes the Add event dialog's first entry, "(none - runs every tick)".
 ## A blank event is a real event with no condition of its own, so there is no definition to hand over -
 ## only the context the dialog was opened with, which says where the new event goes.
 signal blank_event_selected(context: Dictionary)
@@ -47,7 +47,7 @@ const FAVORITES_SETTING := "eventsheets/picker/favorites"
 ## Marks an object-card entry as "hidden class, select to restore" rather than a scope target.
 const UNHIDE_PREFIX := "unhide:"
 
-## X16. The page the 3D verbs are filed on. A category starting with this names a page and a section
+## The page the 3D verbs are filed on. A category starting with this names a page and a section
 ## ("3D: Move & Turn"), and is filed as one even though the row is also scoped to a node type.
 const SPATIAL_PAGE_PREFIX := "3D: "
 
@@ -58,7 +58,7 @@ const FUNCTION_PREFIX := "function:"
 ## the Call Function parameters instead of needing a second dispatch table.
 const FUNCTION_META_KEY := "eventsheet_function_name"
 
-## L1/L4/L6. The three things a row built FOR one node of the open scene carries: the node it is
+## The three things a row built FOR one node of the open scene carries: the node it is
 ## aimed at (pre-filled into the params dialog, exactly as a Functions entry pre-fills its function),
 ## the shelf it is offered on, and the group that shelf sits in. Metadata rather than fields, because
 ## the copy is a picker entry and the row it makes is the ordinary node-scoped row with its target
@@ -67,7 +67,7 @@ const SCENE_TARGET_META := "eventsheet_light_target"
 const SCENE_SHELF_META := "eventsheet_light_shelf"
 const SCENE_GROUP_META := "eventsheet_light_group"
 
-## L1/L4/L6. Where the LIGHTING NODES of the open scene are offered: one folder per kind of thing,
+## Where the LIGHTING NODES of the open scene are offered: one folder per kind of thing,
 ## one sub-folder per node. The sixteen Core lighting actions and the per-class groups are untouched
 ## beside them - these are the shelves for "which of MY lights", which is the question a reader
 ## actually arrives with, and its two neighbours for the darkness and the atmosphere.
@@ -75,7 +75,7 @@ const LIGHTS_GROUP := "Lights in this scene"
 const DARKNESS_GROUP := "Darkness in this scene"
 const ATMOSPHERE_GROUP := "Atmosphere in this scene"
 
-## L1/L4/L6. The shelves themselves: the group each is titled with, and the class of node it offers.
+## The shelves themselves: the group each is titled with, and the class of node it offers.
 ## An empty `root` means "any light", which is asked of ClassDB rather than of a list, so a light
 ## class the engine adds - or one a project subclasses - is on the shelf without an edit here.
 const SCENE_SHELVES: Array[Dictionary] = [
@@ -199,7 +199,7 @@ const SUBCATEGORY_SEPARATOR: String = ": "
 ## headless runs degrade to no icon. Entries also OVERRIDE derivation, for the cases where a human
 ## choice beats the derived one (an "Overlap" section reads better as an Area than a bare Node).
 const CATEGORY_EDITOR_ICONS: Dictionary = {
-	# U6 / U7 / U12. The three objects batch ten added. Each names the node its rows act on, which is
+	# The three objects batch ten added. Each names the node its rows act on, which is
 	# also the icon a reader already associates with that kind of row in the Scene dock.
 	"AJAX": "HTTPRequest",
 	"Lighting": "PointLight2D",
@@ -210,14 +210,14 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Audio Server": "AudioBusLayout",
 	"Physics Server": "PhysicsMaterial",
 	"Behavior": "Node",
-	# X21 / X24 / X26 / X27. The four game-shape sections. None of their names is a class and none of
+	# The four game-shape sections. None of their names is a class and none of
 	# their verbs has a host node, which is exactly what this table is still for: a meter is a bar, a
 	# stealth row is about being heard, a boss section is the fight itself, a mission is its clock.
 	"Meters": "ProgressBar",
 	"Stealth": "AudioStreamPlayer",
 	"Boss": "GuiRadioUnchecked",
 	"Missions": "Timer",
-	# Y16 / Y18. The rest of a level of that shape: the doors that gate it, the things in it that
+	# The rest of a level of that shape: the doors that gate it, the things in it that
 	# come for you, and the things lying around that you pick up.
 	"Keys & Doors": "Key",
 	"Enemies 3D": "CharacterBody3D",
@@ -252,9 +252,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Metadata": "Object",
 	"Mouse": "InputEventMouseButton",
 	"Movement": "Path2D",
-	# S10. Nothing derivable: "Multiplayer" is not a class, and the messages a peer sends are the
+	# Nothing derivable: "Multiplayer" is not a class, and the messages a peer sends are the
 	# nearest thing the editor draws to what these rows are about.
-	# T12. The Browser is not a class, so nothing derives it: the rows there leave the game (a link, the
+	# The Browser is not a class, so nothing derives it: the rows there leave the game (a link, the
 	# clipboard, the window mode), and the editor's own "this opens somewhere else" mark says that.
 	"Browser": "ExternalLink",
 	"Multiplayer": "Signals",
@@ -268,7 +268,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",
-	# X29. The player-facing accessibility options. Godot has no icon for the idea, so the row that
+	# The player-facing accessibility options. Godot has no icon for the idea, so the row that
 	# every one of them ends up on - a setting the player changes - lends its own.
 	"Accessibility": "GuiRadioCheckedDisabled",
 	# A Test sheet's claims: the name is not a class and the verbs record onto the test node rather
@@ -320,7 +320,7 @@ var _recent_list: Tree = null
 var _favorite_button: Button = null
 var _add_button: Button = null
 var _selected_definition: ACEDefinition = null
-## S27. True while the highlighted entry is the Add event dialog's "(none - runs every tick)" row,
+## True while the highlighted entry is the Add event dialog's "(none - runs every tick)" row,
 ## which carries no definition of its own. Add / Enter commit a blank event while it is set.
 var _blank_event_highlighted: bool = false
 var _tree_context_menu: PopupMenu = null
@@ -526,7 +526,7 @@ var _behavior_mode_provider: Callable = Callable()
 var _tool_mode_provider: Callable = Callable()
 ## The node the dialog was attached to (the dock). Only read for the open sheet, never held onto.
 var _host_node: Node = null
-## V7. Returns the open sheet's variables as EventSheetVariableOwners entries. Unset = the Variables
+## Returns the open sheet's variables as EventSheetVariableOwners entries. Unset = the Variables
 ## group reads exactly as it always did, so an embedder that never wires it loses nothing.
 var _variable_catalog_provider: Callable = Callable()
 ## Derived once per open (the provider reads the autoloads' scripts), cleared by open().
@@ -537,7 +537,7 @@ func set_simple_mode_provider(provider: Callable) -> void:
 	_simple_mode_provider = provider
 
 
-## V7. The sheet's variables, so the Variables group can name the ones each verb can take and the
+## The sheet's variables, so the Variables group can name the ones each verb can take and the
 ## description panel can read their sentence. A `-> Array[Dictionary]` of catalog entries.
 func set_variable_catalog_provider(provider: Callable) -> void:
 	_variable_catalog_provider = provider
@@ -554,7 +554,7 @@ func _variables_in_scope() -> Array[Dictionary]:
 	return _variable_catalog
 
 
-## V7. The names a Variables verb can take, written beside it: "hp, speed", "nothing of that kind
+## The names a Variables verb can take, written beside it: "hp, speed", "nothing of that kind
 ## yet" when the sheet has none, and "" for every verb that is not one of the seven.
 static func variable_verb_note(entries: Array[Dictionary], definition: ACEDefinition) -> String:
 	if definition == null or definition.category != VARIABLES_CATEGORY:
@@ -576,7 +576,7 @@ func set_behavior_mode_provider(provider: Callable) -> void:
 	_behavior_mode_provider = provider
 
 
-## R35. The same shape for the Editor object: a `-> bool` that is true when the open sheet runs in the
+## The same shape for the Editor object: a `-> bool` that is true when the open sheet runs in the
 ## editor at all (a Tool sheet, or any sheet with Tool ticked). Without a provider the gate is off, so
 ## an embedder that never wires it keeps the vocabulary it always had.
 func set_tool_mode_provider(provider: Callable) -> void:
@@ -589,7 +589,7 @@ static func host_ace_hidden(provider_id: String, ace_id: String, is_behavior_she
 	return not is_behavior_sheet and provider_id == "Core" and ace_id in ["BehaviorHost", "BehaviorHostValid"]
 
 
-## R35. The Editor object's whole category. Every one of those rows calls EditorInterface or an
+## The Editor object's whole category. Every one of those rows calls EditorInterface or an
 ## EditorPlugin method, which exist only in the editor process - offered on a Player sheet they are
 ## rows that cannot run, so the picker scopes the object to @tool sheets the way it scopes Functions
 ## to the open script. Pure + static so the gate is unit-testable without a live picker.
@@ -597,7 +597,7 @@ static func editor_ace_hidden(category: String, is_tool_sheet: bool) -> bool:
 	return not is_tool_sheet and is_editor_tools_category(category)
 
 
-## W23. The Editor object grew PAGES - "Editor Tools: Panels & menus", "Editor Tools: Project &
+## The Editor object grew PAGES - "Editor Tools: Panels & menus", "Editor Tools: Project &
 ## preferences" and the rest - which the picker nests one level in on the ": " separator. A page is
 ## still the Editor object, so every gate that used to compare the whole category asks here instead;
 ## comparing on equality would have quietly un-scoped every paged row onto game sheets.
@@ -612,7 +612,7 @@ const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 ## The picker category the variable verbs are filed under. Frozen with their descriptors.
 const VARIABLES_CATEGORY := "Variables"
 
-## K2. Where the picker files every comparison the Compare dialog owns EXCEPT the lead one: a single
+## Where the picker files every comparison the Compare dialog owns EXCEPT the lead one: a single
 ## sub-folder under Variables, so "how do I compare something" is one entry rather than twelve rows
 ## scattered across General Conditions, Text and Numbers. The DESCRIPTORS keep their own categories
 ## (their ids, templates and their place in the vocabulary doc are untouched) - this is only where
@@ -620,7 +620,7 @@ const VARIABLES_CATEGORY := "Variables"
 const COMPARISONS_GROUP := VARIABLES_CATEGORY + SUBCATEGORY_SEPARATOR + "All comparisons"
 
 
-## K2. The picker group a comparison belongs in, or "" for anything that is not one. The lead
+## The picker group a comparison belongs in, or "" for anything that is not one. The lead
 ## comparison (Compare variable) stays in the owner's own group beside Set value and Is boolean set,
 ## because comparing a variable is the question people come to that group for; every other
 ## comparison files under the one sub-folder. Pure + static, so the filing is pinned without a tree.
@@ -632,7 +632,7 @@ static func comparison_group_key(definition: ACEDefinition) -> String:
 	return COMPARISONS_GROUP if EventSheetCompareConditionDialog.COMPARE_ACE_IDS.has(definition.id) else ""
 
 
-## M1. Which shelf of the Multiplayer object a TRIGGER is offered on, or "" for anything else -
+## Which shelf of the Multiplayer object a TRIGGER is offered on, or "" for anything else -
 ## every action, condition and expression there stays in the one flat section, and so does every
 ## row of every other object. Derived from the trigger itself rather than listed: a trigger that
 ## names a node in the scene is about that node (Scenes), one that hands you a player id is about a
@@ -651,7 +651,7 @@ static func multiplayer_group_key(definition: ACEDefinition) -> String:
 	return EventForgeMultiplayerACEs.SECTION_PLAYERS
 
 
-## L1/L4/L6. The shelf a scene-lighting row is offered on, or "" for everything else - including the
+## The shelf a scene-lighting row is offered on, or "" for everything else - including the
 ## same verb browsed under its own class, which stays where it was. Outranks the node-type filing for
 ## the same reason the comparisons and the Multiplayer shelves do: what a row IS beats where it was
 ## filed. Pure + static, so the filing is pinned without a tree.
@@ -665,7 +665,7 @@ static func scene_lighting_group_key(definition: ACEDefinition) -> String:
 	return group + SUBCATEGORY_SEPARATOR + shelf
 
 
-## L1/L4/L6. Every row the OPEN SCENE's own lighting nodes can take, as picker entries: one copy per
+## Every row the OPEN SCENE's own lighting nodes can take, as picker entries: one copy per
 ## node per verb its class answers to, with the node already chosen. Which verbs a node can take is
 ## derived - a row hosted on a class that node inherits - so a SpotLight3D is offered the Light3D
 ## words and its own cone angle, and a WorldEnvironment the atmosphere words, without either being
@@ -730,7 +730,7 @@ static func _shelf_offers(node_type: String, root: String) -> bool:
 	return ClassDB.class_exists(node_type) and ClassDB.is_parent_class(node_type, root)
 
 
-## L1/L4/L6. One node's line on the shelf: its name, the class it is, and - for a light - whether it
+## One node's line on the shelf: its name, the class it is, and - for a light - whether it
 ## casts shadows. The facts that decide which row a reader wants and whether it will do anything.
 static func scene_node_shelf_label(node: Dictionary) -> String:
 	var label: String = "%s   %s" % [str(node.get("name", "")), str(node.get("class", ""))]
@@ -784,11 +784,11 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	}
 	for key in extra_context.keys():
 		_context[key] = extra_context[key]
-	# V7 - the variables in scope, re-derived per open (a variable may have been added since) and
+	# The variables in scope, re-derived per open (a variable may have been added since) and
 	# never per keystroke: the answer reads the autoloads' scripts off disk.
 	_variable_catalog.clear()
 	_object_filter_provider = ""
-	# Q1/Q12 - "Add condition on Player" opens the picker ALREADY on Player: the object step of the
+	# "Add condition on Player" opens the picker ALREADY on Player: the object step of the
 	# two-step pick is answered, so the dialog opens at the verbs for that object rather than at the
 	# object cards the caller has just chosen from.
 	var scoped_object: String = str(_context.get("object_scope", "")).strip_edges()
@@ -870,7 +870,7 @@ func _build_hint_text(mode: String, signals_only: bool) -> String:
 
 ## Event-sheet phrase → Godot search-term bridge, so event-sheet users typing their old vocabulary
 ## still find the right ACE (e.g. "on start of layout" finds _ready-based triggers).
-## R38 - the five variable verbs and the two questions, by the names everyone who has used an event
+## The five variable verbs and the two questions, by the names everyone who has used an event
 ## sheet already says. Two of them are not descriptors of their own: "Set boolean" IS Set value with
 ## the value already filled in, and "Boolean is true / is false" IS Compare variable with `== true`.
 ## Minting a descriptor for each would put two templates in the lifter that match the same line -
@@ -915,7 +915,7 @@ const SEARCH_SYNONYMS := {
 	"is overlapping": "overlap",
 	"set position": "position",
 	"compare variable": "variable",
-	# R38 - the two alias names, so the quick-add bar finds the descriptor they stand for even
+	# The two alias names, so the quick-add bar finds the descriptor they stand for even
 	# though neither is a descriptor of its own.
 	"set boolean": "set value",
 	"boolean is true": "compare variable",
@@ -1224,7 +1224,7 @@ func _populate_object_cards() -> void:
 			item.set_custom_color(0, GROUP_COLOR_NODE_TYPE)
 		item.set_text(0, label)
 		var tooltip: String = "Browse %s's conditions, actions, and triggers." % label
-		# R35. A pack can ship editor tooling as well as gameplay verbs, and until you installed it
+		# A pack can ship editor tooling as well as gameplay verbs, and until you installed it
 		# nothing said so. The census reads the pack's own emitted scripts, so the card cannot claim a
 		# dock the pack stopped hanging.
 		var adds: String = EventSheetEditorToolCensus.summary(
@@ -1363,7 +1363,7 @@ func _refresh_tree() -> void:
 	var filtering: bool = not query.is_empty()
 
 	_blank_event_highlighted = false
-	# ── S27 ──────────────────────────────────────────────────────────────────────────────────────
+	# ─────────────────────────────────────────────────────────────────────────────────────────────
 	# A blank event is an event: it runs every tick. So the Add event dialog offers it FIRST, already
 	# highlighted, and Enter makes it - the reader who just wants "do this every frame" never has to
 	# hunt for a condition to satisfy the dialog. It only appears where a whole new TOP-LEVEL event is
@@ -1393,7 +1393,7 @@ func _refresh_tree() -> void:
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
 				definitions.append(extra_definition)
-	# U23 - the other direction: a Godot user types the CALL they know. Every row whose template
+	# The other direction: a Godot user types the CALL they know. Every row whose template
 	# writes that call answers, and so does the row the reading's idiom tables name for it, so
 	# `queue_free` lands on Destroy and `is_on_floor` on Is on floor. The GDScript is written beside
 	# the name below, which is what makes the two names visibly the same thing.
@@ -1444,7 +1444,7 @@ func _refresh_tree() -> void:
 		for function_definition: ACEDefinition in function_call_definitions(_open_sheet(), _registry):
 			if function_matches_query(function_definition, query):
 				definitions.append(function_definition)
-	# L1/L4/L6 - and so are the LIGHTING NODES of the open scene: the same verbs, one copy per node,
+	# And so are the LIGHTING NODES of the open scene: the same verbs, one copy per node,
 	# with the node already chosen. Browsed as well as searched, because "which of my lights" is the
 	# question a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
 	if not signals_only:
@@ -1466,7 +1466,7 @@ func _refresh_tree() -> void:
 		if not host_ace_hidden(str(host_candidate.provider_id), str(host_candidate.id), is_behavior_sheet):
 			host_filtered.append(host_candidate)
 	definitions = host_filtered
-	# R35. The Editor object, on the same chokepoint: its rows only run inside the editor, so they are
+	# The Editor object, on the same chokepoint: its rows only run inside the editor, so they are
 	# offered on a @tool sheet and nowhere else. No provider wired = no gate, which is what keeps a
 	# headless build and an embedder's picker showing exactly what they showed before.
 	if _tool_mode_provider.is_valid():
@@ -1519,7 +1519,7 @@ func _refresh_tree() -> void:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
-		# ── X16 ─────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# The 3D page. Scoping a row to a node type is what decides which objects may drop it, and
 		# until now it also decided where it was FILED - so every 3D verb sat in one flat "Node3D"
 		# list while the 2D ones were sorted into named sections. A row filed on the 3D page keeps
@@ -1529,14 +1529,14 @@ func _refresh_tree() -> void:
 		var paged: bool = _category_of(definition).begins_with(SPATIAL_PAGE_PREFIX)
 		var is_node_type_group: bool = not node_type.is_empty() and not paged
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
-		# K2 - every comparison but the lead one files under Variables ▸ All comparisons, wherever
+		# Every comparison but the lead one files under Variables ▸ All comparisons, wherever
 		# its descriptor's own category puts it. Outranks the node-type filing for the same reason
 		# the page prefix does: what a row IS beats where it happens to have been filed.
 		var comparison_key: String = comparison_group_key(definition)
 		if not comparison_key.is_empty():
 			group_key = comparison_key
 			is_node_type_group = false
-		# M1 - the Multiplayer triggers sort onto three named shelves inside their own section, for
+		# The Multiplayer triggers sort onto three named shelves inside their own section, for
 		# the same reason the comparisons do: "what can happen in a networked game" is a list nobody
 		# reads flat. Outranks the node-type filing so a spawner's own event is still found under
 		# Multiplayer, where the reader went looking for it.
@@ -1544,7 +1544,7 @@ func _refresh_tree() -> void:
 		if not multiplayer_key.is_empty():
 			group_key = multiplayer_key
 			is_node_type_group = false
-		# L1/L4/L6 - a row the picker built for one node of the open scene is filed under that node,
+		# A row the picker built for one node of the open scene is filed under that node,
 		# not under the class it is: the reader picked "Torch", not "PointLight2D".
 		var light_key: String = scene_lighting_group_key(definition)
 		if not light_key.is_empty():
@@ -1594,14 +1594,14 @@ func _refresh_tree() -> void:
 			section.collapsed = true
 			section = section.get_next()
 
-	# S27 - with nothing typed, the blank event is what Enter makes: it is the first entry and it
+	# With nothing typed, the blank event is what Enter makes: it is the first entry and it
 	# starts selected, so "an event that runs every tick" costs one key.
 	if blank_item != null and not filtering:
 		blank_item.select(0)
 		_on_blank_event_highlighted()
 
 
-## S27. Whether the Add event dialog offers its blank first entry. Only for a whole new top-level
+## Whether the Add event dialog offers its blank first entry. Only for a whole new top-level
 ## event, never for signals-only or the append modes, and while searching only when the query plainly
 ## reaches for it.
 func _blank_event_offered(mode: String, signals_only: bool, query: String) -> bool:
@@ -1616,7 +1616,7 @@ func _blank_event_offered(mode: String, signals_only: bool, query: String) -> bo
 	return false
 
 
-## S27. The blank entry is highlighted: the description panel says what it makes, and Add commits it.
+## The blank entry is highlighted: the description panel says what it makes, and Add commits it.
 func _on_blank_event_highlighted() -> void:
 	_selected_definition = null
 	_blank_event_highlighted = true
@@ -1631,7 +1631,7 @@ func _on_blank_event_highlighted() -> void:
 			EventSheetL10n.translate("An event with no condition of its own runs every tick. Add its actions with A, or add a condition later to narrow it down.")]
 
 
-## S27. Commits the blank first entry: a new event with no condition, where the dialog was opened.
+## Commits the blank first entry: a new event with no condition, where the dialog was opened.
 func _commit_blank_event() -> void:
 	close()
 	blank_event_selected.emit(_context.duplicate(true))
@@ -1913,12 +1913,12 @@ func _category_of(definition: ACEDefinition) -> String:
 	return category if not category.is_empty() else "General"
 
 
-## U23 - the Godot call the current search was typed as, "" for an ordinary word search. Held for
+## The Godot call the current search was typed as, "" for an ordinary word search. Held for
 ## one tree rebuild so the matched rows can write that call beside their names.
 var _code_query: String = ""
 
 
-## V7. The Variables verbs, put back into the order a reader looks for them: set it, change it by an
+## The Variables verbs, put back into the order a reader looks for them: set it, change it by an
 ## amount, the boolean pair, then the two questions. Everything else keeps the order it arrived in,
 ## and the section as a whole keeps the position its first member had - so this reorders WITHIN the
 ## Variables group and moves nothing else. Static + pure, so the order is pinned without a dialog.
@@ -1955,7 +1955,7 @@ func _item_label(definition: ACEDefinition) -> String:
 		var hint: String = EventSheetCodeSearch.gdscript_hint(definition, _code_query)
 		if not hint.is_empty():
 			display_name = "%s  ·  %s" % [display_name, hint]
-	# V7 - a variable verb says which variables it can take, so "Add to" with no numbers in scope
+	# A variable verb says which variables it can take, so "Add to" with no numbers in scope
 	# reads as empty before it is clicked rather than after.
 	var takes: String = variable_verb_note(_variables_in_scope(), definition)
 	if not takes.is_empty():
@@ -2496,7 +2496,7 @@ func _on_item_activated() -> void:
 	_commit_definition(item_meta if item_meta is ACEDefinition else null)
 
 
-## R38 - the alias rows, in the section their descriptor already lives in, right after it. Only
+## The alias rows, in the section their descriptor already lives in, right after it. Only
 ## shown when the query matches them (or nothing is typed), and only in a mode that would take the
 ## descriptor anyway - an alias must never offer a condition where only actions can go.
 func _add_alias_rows(root: TreeItem, group_nodes: Dictionary, mode: String, signals_only: bool,
@@ -2666,7 +2666,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
 	if not reactive.is_empty():
 		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
-	# V7 - the footer under a variable verb: every variable it can take, each in the sentence its row
+	# The footer under a variable verb: every variable it can take, each in the sentence its row
 	# reads with, so the choice is made from the sheet's own words instead of from a bare name.
 	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
 	if not sentences.is_empty():
@@ -2674,7 +2674,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	_info_label.text = body
 
 
-## V7. The variable verbs' footer: one line per variable the highlighted verb can take, written the
+## The variable verbs' footer: one line per variable the highlighted verb can take, written the
 ## way its row is ("Instance whole number hp = 100   Current health."). "" for every other verb.
 ## Static + pure, so the footer is pinned without a dialog.
 static func variable_sentences_footer(entries: Array[Dictionary], definition: ACEDefinition) -> String:
@@ -2762,7 +2762,7 @@ func _on_favorite_button_pressed() -> void:
 
 
 func _on_add_button_pressed() -> void:
-	# S27 - the blank first entry carries no definition, so Add / Enter commit it directly.
+	# The blank first entry carries no definition, so Add / Enter commit it directly.
 	if _blank_event_highlighted and _selected_definition == null:
 		_commit_blank_event()
 		return
@@ -2792,14 +2792,14 @@ func _commit_definition(definition: ACEDefinition) -> void:
 		var initial_values: Dictionary = context.get("existing_params", {})
 		initial_values["function_name"] = target_function
 		context["existing_params"] = initial_values
-	# L1/L4/L6 - a shelf entry is the ordinary node-scoped row with its target already chosen, so
+	# A shelf entry is the ordinary node-scoped row with its target already chosen, so
 	# the params dialog opens on the value instead of asking again which node was meant.
 	var aimed_light: String = str(definition.metadata.get(SCENE_TARGET_META, ""))
 	if not aimed_light.is_empty():
 		var light_values: Dictionary = context.get("existing_params", {})
 		light_values["target"] = aimed_light
 		context["existing_params"] = light_values
-	# R38 - an alias row is the same descriptor with the boolean half of the form already answered.
+	# An alias row is the same descriptor with the boolean half of the form already answered.
 	# Taken (and cleared) here rather than stamped on the definition, because ACEDefinitions are
 	# shared across every tab for the session and must never carry one row's values.
 	if not _pending_alias_prefill.is_empty():

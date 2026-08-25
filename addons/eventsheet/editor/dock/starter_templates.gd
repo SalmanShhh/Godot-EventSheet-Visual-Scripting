@@ -67,9 +67,9 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_separator("Custom Resources - data assets (.tres)")
 	_template_menu.add_item("Custom Resource (data + logic)", 9)
 	_template_menu.add_separator("Editor Tools - run inside the editor")
-	# W17. Fifteen shapes is too many to read as a flat run in a menu that also offers game starters,
-	# so the whole family lives behind one entry - the mockup's "New Sheet ▸ Editor tool" list. The
-	# four R33 shapes keep their ids and their exact words; the other eleven are new.
+	# Fifteen shapes is too many to read as a flat run in a menu that also offers game starters,
+	# so the whole family lives behind one entry - the "New Sheet ▸ Editor tool" list. The
+	# four original shapes keep their ids and their exact words; the other eleven are new.
 	_template_menu.add_submenu_node_item("Editor Tool…", _build_editor_tool_menu())
 	_project_template_paths = EventSheetTemplates.list_templates()
 	# (the project-templates section follows the submenu above)
@@ -79,7 +79,7 @@ func _build_template_menu_items() -> void:
 			_template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
 
 
-## W17. Every shape Godot's editor can be extended in, as {id, label, note} in the order the mockup
+## Every shape Godot's editor can be extended in, as {id, label, note} in the order the submenu
 ## fixed. The note is the second column of that list - what the shape IS, in the words a reader who
 ## has never opened Godot's class reference would use. One table, so the submenu, the FileSystem
 ## Create New dialog and the Manual cannot drift from each other.
@@ -143,7 +143,7 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 	return sheet
 
 
-## X21. A LOOT CHEST starter: randomness a player can trust. Every miss raises the odds, the cap
+## A LOOT CHEST starter: randomness a player can trust. Every miss raises the odds, the cap
 ## guarantees the win and the win puts the counter back - the four halves that make a pity system,
 ## laid out so the whole shape reads as one idea and the three numbers are the only things to tune.
 static func _build_loot_chest_starter() -> EventSheetResource:
@@ -182,7 +182,7 @@ static func _build_loot_chest_starter() -> EventSheetResource:
 	return sheet
 
 
-## X24. A STEALTH GUARD starter: the whole detection loop as events. Sight fills a meter, losing
+## A STEALTH GUARD starter: the whole detection loop as events. Sight fills a meter, losing
 ## sight drains it, the place the target was last seen is remembered, a threshold starts the hunt,
 ## and a noise anywhere nearby is heard. Every half is a row, so retuning is arithmetic, not surgery.
 static func _build_stealth_guard_starter() -> EventSheetResource:
@@ -243,7 +243,7 @@ static func _build_stealth_guard_starter() -> EventSheetResource:
 	return sheet
 
 
-## X26. A BOSS FIGHT starter: two phases from health, an invulnerability window after every hit, and
+## A BOSS FIGHT starter: two phases from health, an invulnerability window after every hit, and
 ## the signal that says it is over. The phase guard is what makes each phase start exactly once.
 static func _build_boss_fight_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -287,7 +287,7 @@ static func _build_boss_fight_starter() -> EventSheetResource:
 	return sheet
 
 
-## X27. A MISSION TIMER starter: a clock, a deadline, a HUD label and the event that fires when the
+## A MISSION TIMER starter: a clock, a deadline, a HUD label and the event that fires when the
 ## time runs out - the four faces of one shape, wired to each other.
 static func _build_mission_timer_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -406,7 +406,7 @@ static func _build_editor_tool_starter() -> EventSheetResource:
 	return sheet
 
 
-## R33 - an EDITOR PLUGIN starter. Where the Editor Tool starter above is a chore you press Run on,
+## An EDITOR PLUGIN starter. Where the Editor Tool starter above is a chore you press Run on,
 ## a plugin is something the editor SWITCHES ON: it arrives with the pair of events that shape says
 ## (add the Tools menu item when the plugin is enabled, take it away again when it is disabled) plus
 ## the function the menu item calls, so the very first compile is a plugin that already works.
@@ -446,7 +446,7 @@ static func _build_editor_plugin_starter() -> EventSheetResource:
 	return sheet
 
 
-## R33 - an IMPORT TOOL starter. One On File Imported event: the paths Godot just brought in arrive
+## An IMPORT TOOL starter. One On File Imported event: the paths Godot just brought in arrive
 ## as `paths`, and the body only reports what landed - a first tool should never silently rewrite a
 ## designer's files, so the shape is "look at what arrived" and the editing is left to the reader.
 static func _build_import_tool_starter() -> EventSheetResource:
@@ -466,7 +466,7 @@ static func _build_import_tool_starter() -> EventSheetResource:
 	return sheet
 
 
-## R33 - an EXPORT HOOK starter. The shipped On Project Export trigger with the smallest honest bake
+## An EXPORT HOOK starter. The shipped On Project Export trigger with the smallest honest bake
 ## step: write the version stamp, and only outside a debug build, so the two facts the exporter hands
 ## a hook (`is_debug`, `features`) are both modelled the first time a reader sees the event.
 static func _build_export_hook_starter() -> EventSheetResource:
@@ -492,9 +492,9 @@ static func _build_export_hook_starter() -> EventSheetResource:
 	return sheet
 
 
-# ── W17. The other eleven shapes Godot's editor has ──────────────────────────────────────────────
+# ── The other eleven shapes Godot's editor has ───────────────────────────────────────────────────
 #
-# R33 shipped four (chore / plugin / importer / export hook). Godot has fifteen ways to extend the
+# Shipped four (chore / plugin / importer / export hook). Godot has fifteen ways to extend the
 # editor, and a reader who wants "a panel" or "a button in the Inspector" should find it in the New
 # Sheet list in those words and get EVENTS, not a class to go and look up.
 #
@@ -631,7 +631,7 @@ static func _build_context_menu_starter() -> EventSheetResource:
 
 
 ## A LAYOUT VIEW HANDLE: drawing on top of the 2D view, and getting the input that lands there
-## first. Both triggers shipped with R34, so this shape is entirely events already.
+## first. Both triggers ship with the editor-tool vocabulary, so this shape is entirely events already.
 static func _build_view_handle_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("EditorPlugin", "[b]Layout view handle[/b] - draw guides, handles or labels over the editor's 2D view, and answer the input that lands there before the view does.\nAnswer true from the input event to keep the view from also acting on it.")
 	var draw_event: EventRow = EventRow.new()
@@ -670,7 +670,7 @@ static func _build_debugger_panel_starter() -> EventSheetResource:
 ## tells success from failure.
 static func _build_command_tool_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = _tool_starter("SceneTree", "[b]Command tool[/b] - a script the Godot binary runs headless from the command line, with arguments and an exit code:\ngodot --headless --path . --script res://tools/my_tool.gd -- arg1\nEverything after the -- arrives as the arguments. Finish with code 1 when something went wrong, so a script calling this can tell.")
-	# W10. The skeleton is an EVENT, not a function: `_init` on a SceneTree script is the whole run,
+	# The skeleton is an EVENT, not a function: `_init` on a SceneTree script is the whole run,
 	# which is what the Command tool's On run trigger says, and what a hand-written tools/*.gd already
 	# reads back as. Authored as picked rows, so the file this starter compiles to is byte-for-byte
 	# the file the reading recognises - the two-way gate every batch ships with.
@@ -764,7 +764,7 @@ static func _build_topdown_starter() -> EventSheetResource:
 	return sheet
 
 
-## X25. A BOOMER ARSENAL starter: fire, switch, ammo and secrets wired in one go, on the movement the
+## A BOOMER ARSENAL starter: fire, switch, ammo and secrets wired in one go, on the movement the
 ## FPS Controller behaviour already does. Deliberately no aiming-down-sights: it is a boomer shooter.
 static func _build_boomer_arsenal_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -797,7 +797,7 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
 	pressed.params = {"action": "\"ui_accept\""}
 	fire.conditions.append(pressed)
-	# X25. Ammo is a TABLE - an Array of records with a weapon column and a rounds column - so the
+	# Ammo is a TABLE - an Array of records with a weapon column and a rounds column - so the
 	# shipped Row Where word finds the record for the weapon that is out. Row Where hands back the
 	# record itself (not a copy), so spending a round writes straight back into the table.
 	var find_ammo: ACEAction = ACEAction.new()
@@ -849,14 +849,14 @@ static func _build_boomer_arsenal_starter() -> EventSheetResource:
 	return sheet
 
 
-## X25. The HUD Kit behaviour pack, whose rows this file's stats screen drives. Named once so the
+## The HUD Kit behaviour pack, whose rows this file's stats screen drives. Named once so the
 ## template lookups below cannot point at a moved or renamed pack without failing loudly.
 const HUD_KIT_PACK := "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd"
 
-## Y15. The Upgrades autoload pack, whose skill-tree words the skill tree screen is written in.
+## The Upgrades autoload pack, whose skill-tree words the skill tree screen is written in.
 const UPGRADES_PACK := "res://eventsheet_addons/upgrades/upgrades_addon.gd"
 
-## X25. The node names the stats screen drives, as {label node, what it shows}. The starter's own
+## The node names the stats screen drives, as {label node, what it shows}. The starter's own
 ## comment row and its Set Text rows both read this table, so the panel a reader is told to build
 ## and the rows that fill it can never name two different things.
 const STATS_SCREEN_PANEL := "StatsScreen"
@@ -867,7 +867,7 @@ const STATS_SCREEN_LABELS: Array[Dictionary] = [
 ]
 
 
-## X25. An END-OF-LEVEL STATS SCREEN starter: kills, secrets and time counted while the level runs,
+## An END-OF-LEVEL STATS SCREEN starter: kills, secrets and time counted while the level runs,
 ## then shown on a named panel the moment the level is over. Every number reaches the screen through
 ## the shipped HUD Kit rows - Switch Screen, Set Text, Set Bar and the one On Button Pressed trigger -
 ## so the whole panel is named nodes under a UI root with not one signal connected by hand. Attach the
@@ -963,7 +963,7 @@ static func _build_level_stats_screen_starter() -> EventSheetResource:
 	return sheet
 
 
-## Y16. A KEYCARD DOOR starter: the whole of a coloured door, attached to the door itself. It keeps
+## A KEYCARD DOOR starter: the whole of a coloured door, attached to the door itself. It keeps
 ## the three things the Try Door row calls for - the key it wants, the opening, and what it does when
 ## it is tried without one - so a level sheet never has to know how a door works, only that it is one.
 ## The HUD half is a row of icons named after the keys, lit through the shipped Keys Held count.
@@ -1018,7 +1018,7 @@ static func _build_keycard_door_starter() -> EventSheetResource:
 	return sheet
 
 
-## Y15. THE SKILL TREE SCREEN: a Control that lays a Skill Tree data asset out as nodes with lines
+## THE SKILL TREE SCREEN: a Control that lays a Skill Tree data asset out as nodes with lines
 ## between prerequisites, in the three states the tree words themselves answer.
 ##
 ## Everything on the screen is read from the SAME conditions the reading uses - locked is "a
@@ -1252,7 +1252,7 @@ static func _pack_template(pack_path: String, method_name: String) -> String:
 	return str((methods.get(method_name, {}) as Dictionary).get("codegen_template", ""))
 
 
-## X29. A GAME OPTIONS starter: the accessibility screen every project should be an afternoon from.
+## A GAME OPTIONS starter: the accessibility screen every project should be an afternoon from.
 ## The settings are remembered between runs, the remap flow is four rows of one action each, and the
 ## three dials are the ones the juice, text and aim rows ask before they fire.
 static func _build_game_options_starter() -> EventSheetResource:
@@ -1369,7 +1369,7 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		12: return _build_editor_plugin_starter()
 		13: return _build_import_tool_starter()
 		14: return _build_export_hook_starter()
-		# W17 - the other eleven editor shapes, in the mockup's order.
+		# The other eleven editor shapes, in the submenu's order.
 		15: return _build_dock_panel_starter()
 		16: return _build_bottom_panel_starter()
 		17: return _build_tools_menu_item_starter()
@@ -1389,11 +1389,11 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		# Batch 13 kits 2, renumbered past the game shapes at merge.
 		30: return _build_boomer_arsenal_starter()
 		31: return _build_game_options_starter()
-		# X25 - the end-of-level screen the arsenal starter's counters feed.
+		# The end-of-level screen the arsenal starter's counters feed.
 		32: return _build_level_stats_screen_starter()
-		# Y16 - the coloured door the level's keys open.
+		# The coloured door the level's keys open.
 		33: return _build_keycard_door_starter()
-		# Y15 - the picture of a Skill Tree data asset.
+		# The picture of a Skill Tree data asset.
 		34: return _build_skill_tree_screen_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
@@ -1414,7 +1414,7 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 29, "label": "Mission Timer"},
 		{"id": 34, "label": "Skill Tree Screen"},
 	]
-	# W17. Every editor shape, in the same order and the same words as the New-Sheet submenu - the
+	# Every editor shape, in the same order and the same words as the New-Sheet submenu - the
 	# FileSystem dialog is a flat list, so the "what it is" note rides along in the label.
 	for shape: Dictionary in EDITOR_TOOL_SHAPES:
 		starters.append({"id": int(shape["id"]), "label": "%s - %s" % [str(shape["label"]), str(shape["note"])]})
@@ -1427,7 +1427,7 @@ static func create_new_starters() -> Array[Dictionary]:
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
-	# T13 - a project that started from a template is one of the two ways a reader says "give me the
+	# A project that started from a template is one of the two ways a reader says "give me the
 	# familiar surfaces" without being asked, so the Project bar turns itself on for it.
 	EventSheetProjectBarGlue.mark_started_from_template()
 	if template_id >= 100:

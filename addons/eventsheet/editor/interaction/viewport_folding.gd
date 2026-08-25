@@ -73,13 +73,13 @@ func set_group_folds(folded: bool) -> void:
 	persist_region_folds()
 
 
-## G4 - Open all / Close all: true while ANY group on the sheet is open, which is what makes the one
+## Open all / Close all: true while ANY group on the sheet is open, which is what makes the one
 ## gesture a toggle instead of two commands.
 func any_group_open() -> bool:
 	return _any_open_in(_viewport._root_rows, SWEEP_GROUPS)
 
 
-## R2 - the same question for regions: true while any paired fence still shows its body, which is
+## The same question for regions: true while any paired fence still shows its body, which is
 ## what makes Fold All / Unfold All one toggling item instead of two commands.
 func any_region_open() -> bool:
 	return _any_open_in(_viewport._root_rows, SWEEP_REGIONS)

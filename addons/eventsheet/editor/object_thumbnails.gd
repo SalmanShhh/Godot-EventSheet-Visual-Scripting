@@ -2,7 +2,7 @@
 class_name EventSheetObjectThumbnails
 extends RefCounted
 
-# Q10 - an object's PICTURE, wherever the sheet shows the object.
+# An object's PICTURE, wherever the sheet shows the object.
 #
 # An event sheet shows a thing by showing the thing: the Include bar, the Object bar, the Object
 # properties popup and every object label carry the object's own picture, not a diagram of its class.

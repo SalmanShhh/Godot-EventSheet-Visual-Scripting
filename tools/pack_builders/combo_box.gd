@@ -75,14 +75,14 @@ static func build() -> bool:
 		"var _failed_id: String = \"\"",
 		"var _fail_index: int = 0",
 		"var _cleared_count: int = 0",
-		"# Y24. The hit chain: what the run of moves landed so far is worth, what the next one will",
+		"# The hit chain: what the run of moves landed so far is worth, what the next one will",
 		"# be multiplied by, and the total that is already safe. The same three numbers a board's",
 		"# trick chain keeps, in the same words.",
 		"var _chain_score: float = 0.0",
 		"var _chain_multiplier: int = 1",
 		"var _banked_score: float = 0.0",
 		"var _chain_last: String = \"\"",
-		"# Y1 - combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.",
+		"# Combo id -> {player: AnimationPlayer, animation: String}: the move each combo PLAYS.",
 		"# Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it",
 		"# here makes those twenty one table rather than twenty copies of the same event.",
 		"var _animations: Dictionary = {}",
@@ -180,14 +180,14 @@ static func build() -> bool:
 		"\t\t_match_time = _clock",
 		"\t\tif debug_logging:",
 		"\t\t\tprint(\"[ComboBox] matched \", best_full)",
-		"\t\t# Y1 - the move this combo was wired to, played before the trigger fires so the",
+		"\t\t# The move this combo was wired to, played before the trigger fires so the",
 		"\t\t# animation and everything the trigger does start on the same frame.",
 		"\t\t_play_combo_animation(best_full)",
 		"\t\ton_combo_matched.emit()",
 		"\tif partial_changed:",
 		"\t\ton_partial_progress.emit()",
 		"",
-		"# Y1. Plays the animation a combo was wired to, when it was wired to one and the player it",
+		"# Plays the animation a combo was wired to, when it was wired to one and the player it",
 		"# names is still alive. A combo with no animation, or one whose player has gone, plays nothing:",
 		"# detecting is this pack's job, and a missing animation must never stop the trigger firing.",
 		"func _play_combo_animation(id: String) -> void:",
@@ -271,7 +271,7 @@ static func build() -> bool:
 		[["id", "String"]],
 		"_combos.erase(id)\n_progress.erase(id)")
 
-	# --- The hit chain (Y24) ---
+	# --- The hit chain ---
 	# A run of moves landed without a break is worth more than the moves apart, and that is as true
 	# of a fighter's combo as it is of a skater's line. The rows are deliberately the SAME words the
 	# board pack uses, so a reader who has met one has met both, and nothing is safe until it is
@@ -297,7 +297,7 @@ static func build() -> bool:
 		"_chain_multiplier = 1"
 	])), "[b]Drop[/b] the chain")
 
-	# --- Y1: one row per combo -> animation ---
+	# --- One row per combo -> animation ---
 	#
 	# "This input sequence plays this animation" is the whole of a fighting game, and both halves
 	# already shipped separately: the sequences here, the animation rows on the sprite. This is the

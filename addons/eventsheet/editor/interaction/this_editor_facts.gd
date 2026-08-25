@@ -2,7 +2,7 @@
 class_name EventSheetThisEditor
 extends RefCounted
 
-# W1 - "THIS EDITOR": the plugin's own source, listed as sheets, grouped by what each file IS.
+# "THIS EDITOR": the plugin's own source, listed as sheets, grouped by what each file IS.
 #
 # Every batch of readings so far was proved on game scripts and on the shipped behavior packs. The
 # editor itself is the largest hand-written GDScript body in this repo, written by people, in every
@@ -27,7 +27,7 @@ extends RefCounted
 const PLUGIN_CFG_PATH: String = "res://addons/eventforge/plugin.cfg"
 const PACK_BUILDERS_DIR: String = "res://tools/pack_builders"
 
-## The plugin's own EditorPlugin script - the file the plugin bar (W20) belongs to.
+## The plugin's own EditorPlugin script - the file the plugin bar belongs to.
 const PLUGIN_SCRIPT_PATH: String = "res://addons/eventforge/plugin.gd"
 
 ## Everything the folder LISTS: the plugin, the gates that pin it, and the tools built with it.
@@ -78,7 +78,7 @@ const PROJECT_BAR_SHOWN_KEY: String = "eventsheets_project_bar_shown"
 const ENTRY_KIND: String = "this_editor_script"
 
 ## Answered once per session: the folders this asks about do not appear or vanish while the editor
-## runs, and the folder is consulted on every control the plugin builds (W19).
+## runs, and the folder is consulted on every control the plugin builds.
 static var _is_editor_project_cached: int = -1
 
 
@@ -97,7 +97,7 @@ static func is_editor_project_at(cfg_path: String, builders_dir: String) -> bool
 
 ## THE SECOND GATE, for the things that COST something: is the folder actually turned on? Two
 ## features hang off this rather than off the repo test alone - the meta a plugin-built control
-## carries (W19), and the reading-health note (W22), which opens files to answer.
+## carries, and the reading-health note, which opens files to answer.
 ##
 ## False without an editor around it, which is deliberate: a headless run has no reader who asked for
 ## the folder, so nothing should be paying for one.

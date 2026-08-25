@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSavedViews
 extends RefCounted
-# SAVED VIEWS (V12) - a way of reading the sheet, named and kept.
+# SAVED VIEWS - a way of reading the sheet, named and kept.
 #
 # A view is three things a reader sets together and then wants back: the ARRANGEMENT (file order /
 # object / trigger / group), the FILTER the find bar is holding, and the reading LENSES (humanized

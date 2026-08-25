@@ -13,7 +13,7 @@ extends RefCounted
 var _dock: Control = null
 
 
-## W19 - this file's own path, so a control it builds can say where it was built. Written out rather
+## This file's own path, so a control it builds can say where it was built. Written out rather
 ## than derived, because a RefCounted helper has no script path to ask for at the point it matters.
 const THIS_FILE_PATH: String = "res://addons/eventsheet/editor/dock/menu_bar.gd"
 
@@ -61,7 +61,7 @@ func build(root: Node) -> void:
 	)
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
-	# V11 - a shared sheet is a script whose whole job is to be included. The wiring question
+	# A shared sheet is a script whose whole job is to be included. The wiring question
 	# ("as a base class" / "as a helper") is asked ONCE, when the shared sheet is made, and never
 	# again per includer.
 	sheet_popup.add_item("New shared sheet…", 19)
@@ -103,7 +103,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_item("Name Raw Calls…", 15)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(15), "Sweep this sheet for raw one-call code rows and name each one that matches an action you already have - engine classes, your own scripts, installed packs. Each conversion is kept only when it compiles to the exact same line; anything ambiguous is left alone.")
 	sheet_popup.add_separator()
-	# T14 - the Start page. It opens by itself when the workspace has nothing in it; this is how a
+	# The Start page. It opens by itself when the workspace has nothing in it; this is how a
 	# reader gets back to it afterwards.
 	sheet_popup.add_item("Start page", 17)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(17),
@@ -134,11 +134,11 @@ func build(root: Node) -> void:
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
 	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
-	# M5 - testing a networked game needs two copies of it running. Godot can already do that; this
+	# Testing a networked game needs two copies of it running. Godot can already do that; this
 	# button is the one that finds the setting for you and says in its tooltip how to take it back.
 	_add_toolbar_button(_toolbar, "Play as host + client", _dock._play_as_host_and_client,
 		EventSheetRunInstances.tooltip(), "Play")
-	# T15 - Preview on the SHEET. The keys stay Godot's (F6 / F5) and the names are the ones an
+	# Preview on the SHEET. The keys stay Godot's (F6 / F5) and the names are the ones an
 	# author coming from another event-sheet editor reaches for; while a game runs the first two
 	# relabel themselves Stop / Restart, so the strip never claims it will do something it will not.
 	for preview_entry: Variant in EventSheetRunControls.BUTTONS:
@@ -161,14 +161,14 @@ func build(root: Node) -> void:
 	add_menu.flat = false
 	var add_popup: PopupMenu = add_menu.get_popup()
 	add_popup.add_item("Signal Event…", 0)
-	# R37/R40 - the sheet's own members are INSTANCE variables of the object the file is; a GLOBAL is
+	# The sheet's own members are INSTANCE variables of the object the file is; a GLOBAL is
 	# one value the whole project shares, and lives on an autoload. Two different things, so two
 	# items, each named the thing it makes.
 	add_popup.add_item("Instance Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Global Variable… (V)", 8)
 	add_popup.add_item("Function…", 3)
-	# V11 - the other half of the shared-sheet gesture. How it is wired was decided by the shared
+	# The other half of the shared-sheet gesture. How it is wired was decided by the shared
 	# sheet itself, so this asks nothing: pick the sheet, and the rows that wire it are written.
 	add_popup.add_item("Include sheet…", 10)
 	add_popup.add_separator()
@@ -178,7 +178,7 @@ func build(root: Node) -> void:
 	add_popup.add_item("Make 'Or' block", 6)
 	add_popup.add_item("Add 'Else'", 7)
 	add_popup.add_separator()
-	# S23 - the shapes a game is made of, as events. The patterns the sheet can READ it can also
+	# The shapes a game is made of, as events. The patterns the sheet can READ it can also
 	# WRITE, from the same fixtures: the list is the Manual's Common Game Patterns page, which draws
 	# each one as a real picture of its rows with an Insert that lands them in this sheet - most
 	# common first, so the ten a beginner wants are the ten they see.
@@ -254,7 +254,7 @@ func build(root: Node) -> void:
 	view_popup.set_item_checked(view_popup.get_item_index(11), _dock._simple_mode)
 	view_popup.add_separator()
 	view_popup.add_item("GDScript Panel (toggle)", 0)
-	# T13 / T18 - the two project-level surfaces a beginner (or a migrating author) gets by default
+	# The two project-level surfaces a beginner (or a migrating author) gets by default
 	# and everyone else turns on by hand. Both are off unless Simple mode or a template start asked
 	# for them, and both remember the choice per project.
 	view_popup.add_check_item("Project bar", _dock.PROJECT_BAR_VIEW_ID)
@@ -559,7 +559,7 @@ func build(root: Node) -> void:
 			_quick_add_edit.clear()
 	)
 	_toolbar.add_child(_quick_add_edit)
-	# W19 - every menu on the strip remembers this file too, so "where is this menu made" is the same
+	# Every menu on the strip remembers this file too, so "where is this menu made" is the same
 	# gesture as "where is this button made". One sweep rather than a mark beside each `MenuButton`,
 	# because a mark that has to be remembered at eleven call sites is a mark that goes stale.
 	for child: Node in _toolbar.get_children():
@@ -620,8 +620,8 @@ func build(root: Node) -> void:
 	# said. The window is the whole output - no row is marked, ever. Id 9701 is clear of every
 	# block above; a separate id_pressed handler keeps this block trivially mergeable.
 	# ── Live edit + the replay recorder (appended block - keep together) ───────────────────────
-	# V8's toggle sits with the other view choices because it is one: whether an edit made while the
-	# game runs lands on its own or waits for the ⟳ on the status strip. V9's window sits beside Run
+	# The toggle sits with the other view choices because it is one: whether an edit made while the
+	# game runs lands on its own or waits for the ⟳ on the status strip. The window sits beside Run
 	# Tests… because what it writes IS a Test sheet. Ids 9801/9802 are clear of every block above.
 	view_popup.add_check_item("Auto-apply while debugging", 9801)
 	view_popup.set_item_checked(view_popup.get_item_index(9801), EventSheetLiveEdit.auto_apply_enabled())
@@ -644,7 +644,7 @@ func build(root: Node) -> void:
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())
-	# ── V12: Arrange by… + Saved Views (appended block - keep together) ────────────────────────
+	# ── Arrange by… + Saved Views (appended block - keep together) ─────────────────────────────
 	# Two submenus on View, wired the explicit way (a named child PopupMenu plus add_submenu_item
 	# with its OWN id) - never an id-less add_submenu_item. Both rebuild on open, so the
 	# arrangement radio always shows the live one and a view saved a second ago is already listed.
@@ -664,7 +664,7 @@ func build(root: Node) -> void:
 			arrange_menu.add_radio_check_item(EventSheetL10n.translate(EventSheetArrangement.mode_label(mode)), mode)
 			arrange_menu.set_item_checked(mode, mode == active_mode))
 	arrange_menu.id_pressed.connect(func(mode: int) -> void: _dock.set_arrangement_mode(mode))
-	# ── V13: View ▸ Variable rows (appended block - keep together) ─────────────────────────────
+	# ── View ▸ Variable rows (appended block - keep together) ──────────────────────────────────
 	# How much of a variable row is drawn: the sentence a beginner reads, the sentence with the
 	# declaration echoed beside it (the shipped default), or the declaration as the whole row. A
 	# toolbar setting, never a row on the sheet. Id 9813 is the next number the View menu has never
@@ -709,7 +709,7 @@ func build(root: Node) -> void:
 			_dock.delete_saved_view(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.apply_saved_view(names[id - 100]))
-	# ── V20: Sheet ▸ Health… (appended block - keep together) ──────────────────────────────────
+	# ── Sheet ▸ Health… (appended block - keep together) ───────────────────────────────────────
 	# How this sheet is doing, at a glance, with every line clicking through to the panel behind it.
 	# Id 9812 is clear of the Sheet menu's own run.
 	sheet_popup.add_item("Health…", 9812)
@@ -718,7 +718,7 @@ func build(root: Node) -> void:
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9812:
 			_dock.open_sheet_health())
-	# ── V16: Sheet ▸ Export (appended block - keep together) ───────────────────────────────────
+	# ── Sheet ▸ Export (appended block - keep together) ────────────────────────────────────────
 	# The sheet as a picture, for a forum post, a design doc or a lesson: the canvas exactly as it is
 	# being read. Id 9811 is clear of the Sheet menu's own run; the submenu's ids are its own.
 	var export_menu: PopupMenu = PopupMenu.new()
@@ -737,7 +737,7 @@ func build(root: Node) -> void:
 			_dock.export_sheet_picture_requested("pdf")
 		elif id == 2:
 			_dock.export_sheet_picture_requested("md"))
-	# ── V15: Sheet ▸ Workspaces (appended block - keep together) ───────────────────────────────
+	# ── Sheet ▸ Workspaces (appended block - keep together) ────────────────────────────────────
 	# A scene's sheets, opened together and remembered under the scene's name. Rebuilt on open so a
 	# workspace made a second ago is already listed. Id 9810 is clear of the Sheet menu's own run.
 	var workspaces_menu: PopupMenu = PopupMenu.new()
@@ -764,7 +764,7 @@ func build(root: Node) -> void:
 			_dock.forget_workspace(names[id - 500])
 		elif id >= 100 and id - 100 < names.size():
 			_dock.open_workspace(names[id - 100]))
-	# ── V14: Show Events in the Scene (appended block - keep together) ─────────────────────────
+	# ── Show Events in the Scene (appended block - keep together) ──────────────────────────────
 	# The events overlay's switch. It marks the SCENE, not the sheet, which is why it is one item
 	# rather than a lens - and it starts off. Id 9803 is clear of every block above.
 	view_popup.add_check_item("Show Events in the Scene", 9803)
@@ -862,7 +862,7 @@ func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callab
 		if editor_theme != null and editor_theme.has_icon(editor_icon, "EditorIcons"):
 			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
 	button.pressed.connect(callable)
-	# W19 - the button remembers which of the editor's files made it, so Ctrl+Shift+Alt on it opens
+	# The button remembers which of the editor's files made it, so Ctrl+Shift+Alt on it opens
 	# that file as a sheet at the row that names these words. Nothing is written outside the editor's
 	# own repo, so a game project's toolbar carries no extra bytes.
 	EventSheetBuiltHere.mark(button, THIS_FILE_PATH, text)

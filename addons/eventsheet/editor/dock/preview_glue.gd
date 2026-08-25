@@ -92,7 +92,7 @@ func _refresh_preview_banner() -> void:
 	_dock._preview_banner.visible = is_preview
 	if not is_preview or _dock._preview_label == null:
 		return
-	# P4 - a scene read as one sheet has no single file to write back to, so there is nothing to
+	# A scene read as one sheet has no single file to write back to, so there is nothing to
 	# unlock: the banner says what this is and where editing happens instead. The buttons that offer
 	# a file go away with it.
 	var scene_view: bool = EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet)

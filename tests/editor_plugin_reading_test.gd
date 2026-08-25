@@ -2,7 +2,7 @@
 class_name EditorPluginReadingTest
 extends RefCounted
 
-# Pins W2 / W15 - what a script that extends one of the editor's own plugin classes reads as.
+# Pins what a script that extends one of the editor's own plugin classes reads as.
 #
 # The claim these gates protect is narrow and total: the reading is keyed off the class the file
 # EXTENDS and nothing else, it changes only what is drawn, and the file still saves the bytes it
@@ -84,7 +84,7 @@ func _parse_property(object, type, name, hint, hint_text, usage, wide) -> bool:
 	return false
 """
 
-## W2 - what the opened plugin must say, in the sheet's own words.
+## What the opened plugin must say, in the sheet's own words.
 const EXPECTED_PLUGIN: Array[String] = [
 	"Editor ▸ On plugin first turned on",
 	"Editor ▸ On plugin first turned off",
@@ -104,7 +104,7 @@ const EXPECTED_PLUGIN: Array[String] = [
 	"Editor ▸ Add context menu menu to Scene dock"
 ]
 
-## W15 - and what the opened Properties bar add-on must say.
+## And what the opened Properties bar add-on must say.
 const EXPECTED_INSPECTOR: Array[String] = [
 	"Properties bar ▸ Asks: show this add-on for object?",
 	"System ▸ Answer object is Node",
@@ -141,7 +141,7 @@ static func _plugin_reads_with_the_editor_object() -> bool:
 	return ok
 
 
-## W2 - the three questions with constant answers are facts on the head bar, and their function rows
+## The three questions with constant answers are facts on the head bar, and their function rows
 ## are not drawn a second time underneath it.
 static func _head_states_the_constant_answers() -> bool:
 	var ok: bool = true
@@ -170,7 +170,7 @@ static func _inspector_reads_in_the_properties_bar_words() -> bool:
 	return ok
 
 
-## W15 - every plugin class Godot offers has a word of its own and an object to wear it, so no
+## Every plugin class Godot offers has a word of its own and an object to wear it, so no
 ## opened add-on falls back to reading as a nameless helper.
 static func _every_plugin_class_has_its_own_word() -> bool:
 	var ok: bool = true
@@ -216,7 +216,7 @@ static func _context_slots_read_as_panels() -> bool:
 	return ok
 
 
-## W15 - the head bar's receipt: who registered this add-on with the editor. Proved against THIS
+## The head bar's receipt: who registered this add-on with the editor. Proved against THIS
 ## project's own plugin, which is the only kind of file the walk is allowed to name - an add-on
 ## registered by nothing here must say nothing rather than guess.
 static func _the_head_names_who_registered_the_addon() -> bool:
@@ -229,7 +229,7 @@ static func _the_head_names_who_registered_the_addon() -> bool:
 	return ok
 
 
-## W2 - the reading claims the file's shape once, for the whole file, with nothing to adopt.
+## The reading claims the file's shape once, for the whole file, with nothing to adopt.
 static func _the_file_level_shape_is_claimed() -> bool:
 	var ok: bool = true
 	var sheet: EventSheetResource = _import(PLUGIN_PATH, PLUGIN_SOURCE)

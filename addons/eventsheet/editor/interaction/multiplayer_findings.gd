@@ -1,6 +1,6 @@
 # Godot EventSheets - the four networking mistakes, found by reading the sheet.
 #
-# M7. Networking bugs are silent: the game runs, nobody sees an error, and the other player sees
+# Networking bugs are silent: the game runs, nobody sees an error, and the other player sees
 # nothing. These four are the ones that cost a beginner an evening, and every one of them is a
 # question the sheet can already answer about itself:
 #
@@ -17,7 +17,7 @@
 # to clean up. A sheet that says nothing about the network gets NO findings at all - the coverage
 # census is the gate, so a single-player project grows no notes it did not have before.
 #
-# The same list feeds both surfaces: the V12 note rows under the offending row, and the Doctor's
+# The same list feeds both surfaces: the note rows under the offending row, and the Doctor's
 # Multiplayer section. One wording, one rule, two places to read it.
 #
 # PURE + STATIC: no viewport, no dialog, no display server, so every word is pinned headless.

@@ -1,7 +1,7 @@
 @tool
 extends RefCounted
 
-# THE EVENTS OVERLAY (V14) - the badges themselves.
+# THE EVENTS OVERLAY - the badges themselves.
 #
 # Two surfaces, one set of facts (scene_events_facts.gd):
 #   * the SCENE DOCK: a node whose script is a sheet wears a small ⌗ and its event count at the

@@ -21,12 +21,12 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
-## W23. The root every page below hangs under. Kept as a constant even though no descriptor uses it
+## The root every page below hangs under. Kept as a constant even though no descriptor uses it
 ## any more: it is the string the tool-sheet gate and the "Editor" object label test the prefix of, and
 ## naming it here is what stops a page being spelled a hair differently and quietly ungating itself.
 const CAT := "Editor Tools"
 
-## W23. The pages this module's rows are filed on. Every one begins "Editor Tools: " so the tool-sheet
+## The pages this module's rows are filed on. Every one begins "Editor Tools: " so the tool-sheet
 ## gate and the "Editor" object label keep working - both test the PREFIX, not the whole string - and
 ## every one names the surface a reader is already looking at when they come here: the plugin's own
 ## life, the panels it hangs, the Properties bar it adds to, the history Ctrl+Z walks. A page per
@@ -37,7 +37,7 @@ const CAT_PROPERTIES := "Editor Tools: Properties bar"
 const CAT_UNDO := "Editor Tools: Undo history"
 const CAT_PREFERENCES := "Editor Tools: Project & preferences"
 
-## W6. The menu a tool builds in code, and the item the user picked out of it. Its own page because a
+## The menu a tool builds in code, and the item the user picked out of it. Its own page because a
 ## menu is its own object: the rows read "Menu ▸ Add item …" and "Sheet menu ▸ On Save chosen", which
 ## is exactly how a hand-written menu already reads when a file is opened as a sheet.
 const CAT_MENUS := "Editor Tools: Menus"
@@ -65,7 +65,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when the plugin is switched on - at editor start, or the moment you tick it in Project Settings. This is where a plugin hangs its dock, adds its Tools menu item and teaches the editor its object types."))
 	descriptors.append(F.make_descriptor("Core", "OnPluginDisabled", "On Plugin Disabled", ACEDescriptor.ACEType.TRIGGER, "", "_exit_tree", [], CAT_LIFECYCLE, "On plugin disabled")
 		.described("Runs when the plugin is switched off or the editor closes. Undo here everything On plugin enabled did, or the editor keeps a dock nobody owns."))
-	# W2 - what `_edit` actually is: the editor HANDED this plugin an object to edit, because the
+	# What `_edit` actually is: the editor HANDED this plugin an object to edit, because the
 	# plugin answered yes when asked whether it could. "On object selected" said only half of that,
 	# and sent a reader looking for a selection change that never fires for objects this plugin
 	# refused. The ace_id and the callback behind it are unchanged; only the words are.
@@ -93,7 +93,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Teaches the editor a new object type, so it shows up in Create Node like a built-in one."))
 	descriptors.append(F.make_descriptor("Core", "RemoveEditorObjectType", "Remove Object Type", ACEDescriptor.ACEType.ACTION, "remove_custom_type({type_name})", "", [F.make_param("type_name", "String", "\"Waypoint\"", "Named", "The name the type was added with.", "expression")], CAT_PANELS, "Remove object type {type_name}")
 		.described("Takes a custom object type back out of the Create Node dialog."))
-	# W15 - the panel these two register an add-on with is the one the sheet calls the Properties
+	# The panel these two register an add-on with is the one the sheet calls the Properties
 	# bar, everywhere else it names it. Same ace_ids, same emitted calls; the words catch up.
 	descriptors.append(F.make_descriptor("Core", "AddEditorInspectorPlugin", "Add Properties Bar Add-on", ACEDescriptor.ACEType.ACTION, "add_inspector_plugin({plugin})", "", [F.make_param("plugin", "EditorInspectorPlugin", "null", "Add-on", "The Properties bar add-on that draws the custom fields.", "expression")], CAT_PROPERTIES, "Add Properties bar add-on {plugin}")
 		.described("Registers a Properties bar add-on, so your own buttons and fields appear in the Properties bar beside the object's own."))
@@ -102,7 +102,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "UpdateViewportOverlays", "Redraw Viewport Overlays", ACEDescriptor.ACEType.ACTION, "update_overlays()", "", [], CAT_LIFECYCLE, "redraw viewport overlays")
 		.described("Asks the editor to run the overlay pass again, so On draw over 2D viewport repaints."))
 
-	# ── W6. The menu, and the item that was chosen out of it ──
+	# ── The menu, and the item that was chosen out of it ──────
 	# The action writes the one line the reading recognises, and the trigger compiles into the one
 	# handler every item of a menu shares - `match id:` with a case per item, which is the shape every
 	# menu in Godot is already written in. So a menu picked here and a menu typed by hand are the same
@@ -134,7 +134,7 @@ static func section_descriptions() -> Dictionary:
 	}
 
 
-## W6. The menu every row on the Menus page acts on - the variable the menu was made into. Written as
+## The menu every row on the Menus page acts on - the variable the menu was made into. Written as
 ## a plain expression because that is what it is: `sheet_popup`, `_dock._view_menu`, whatever the file
 ## already calls it. The same param on both rows, so the action and the trigger can never name the
 ## menu two different ways.

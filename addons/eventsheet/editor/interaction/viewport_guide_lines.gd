@@ -2,7 +2,7 @@
 class_name EventSheetViewportGuideLines
 extends RefCounted
 
-# M15 - the tree connector from an event to its sub-events.
+# The tree connector from an event to its sub-events.
 #
 # Indent alone loses the depth on a long handler: seven rows in, "which parent is this under"
 # stops being answerable by eye. An event sheet draws a connector, so this draws one - a continuous

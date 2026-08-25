@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetArrangement
 extends RefCounted
-# ARRANGE BY - one sheet, four readings of its order (V12).
+# ARRANGE BY - one sheet, four readings of its order.
 #
 # The same events, re-grouped under headers: by the object they talk about (Player / Enemy / HUD),
 # by the trigger they hang off (On created / Every tick / On hit), by the group they sit in, or in

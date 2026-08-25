@@ -28,50 +28,50 @@ signal double_jumped
 ## @ace_name("On Wall Jumped")
 signal wall_jumped
 
-var _air_time: float = 0.0
-var _buffer_timer: float = 0.0
-var _coyote_timer: float = 0.0
-var _facing: int = 1
-var _jumps_left: int = 0
-var _wall_sliding: bool = false
-var _was_on_floor: bool = false
-## How fast you reach top speed when pressing a direction.
-@export var acceleration: float = 1500.0
-## AI drive: read ai_move_axis instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
-@export var ai_controlled: bool = false
-var ai_move_axis: float = 0.0
-## Grace window (s) to still jump just after walking off a ledge.
-@export var coyote_time: float = 0.1
-## How fast you stop when no direction is pressed.
-@export var deceleration: float = 1800.0
-## Jump off walls (kicks away from the wall).
-@export var enable_wall_jump: bool = false
-## Cling and slow your fall when pressing into a wall.
-@export var enable_wall_slide: bool = false
+## Top horizontal run speed (px/s).
+@export var move_speed: float = 200.0
+## Upward velocity of a jump (negative = up).
+@export var jump_velocity: float = -400.0
 ## Downward acceleration (px/s²).
 @export var gravity: float = 980.0
 ## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right). Rotates the whole movement frame: floor detection, running, and jumps follow.
 @export_range(0, 360, 1) var gravity_angle: float = 90.0
-## Press jump this many seconds early and it still fires on landing.
-@export var jump_buffer_time: float = 0.1
-## Fraction of upward speed kept when jump is released early.
-@export_range(0, 1, 0.05) var jump_cut_factor: float = 0.45
-## Upward velocity of a jump (negative = up).
-@export var jump_velocity: float = -400.0
+## How fast you reach top speed when pressing a direction.
+@export var acceleration: float = 1500.0
+## How fast you stop when no direction is pressed.
+@export var deceleration: float = 1800.0
 ## Terminal velocity - gravity never pulls you faster than this.
 @export var max_fall_speed: float = 1000.0
+## Grace window (s) to still jump just after walking off a ledge.
+@export var coyote_time: float = 0.1
+## Press jump this many seconds early and it still fires on landing.
+@export var jump_buffer_time: float = 0.1
 ## Total jumps before touching ground (2 = double jump).
 @export var max_jumps: int = 1
-## Top horizontal run speed (px/s).
-@export var move_speed: float = 200.0
 ## Releasing jump early cuts the rise (hold = higher).
 @export var variable_jump_height: bool = true
+## Fraction of upward speed kept when jump is released early.
+@export_range(0, 1, 0.05) var jump_cut_factor: float = 0.45
+## Cling and slow your fall when pressing into a wall.
+@export var enable_wall_slide: bool = false
+## Max fall speed while wall sliding (px/s).
+@export var wall_slide_speed: float = 80.0
+## Jump off walls (kicks away from the wall).
+@export var enable_wall_jump: bool = false
+## AI drive: read ai_move_axis instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
+@export var ai_controlled: bool = false
+var ai_move_axis: float = 0.0
 ## Horizontal kick away from the wall on a wall jump.
 @export var wall_jump_push: float = 260.0
 ## Upward velocity of a wall jump (negative = up).
 @export var wall_jump_velocity: float = -380.0
-## Max fall speed while wall sliding (px/s).
-@export var wall_slide_speed: float = 80.0
+var _coyote_timer: float = 0.0
+var _buffer_timer: float = 0.0
+var _jumps_left: int = 0
+var _air_time: float = 0.0
+var _was_on_floor: bool = false
+var _facing: int = 1
+var _wall_sliding: bool = false
 
 func _physics_process(delta: float) -> void:
 	if host == null:

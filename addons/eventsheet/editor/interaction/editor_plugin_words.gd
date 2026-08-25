@@ -1,4 +1,4 @@
-# EventForge - the words every editor-plugin class reads in (W2 / W15).
+# EventForge - the words every editor-plugin class reads in.
 #
 # Godot's editor extension surface is nine classes, and a script that extends one of them is not a
 # game object at all: it is something the EDITOR owns, calls back, and hands things to. This file is
@@ -31,7 +31,7 @@ extends RefCounted
 const ANSWER_VALUE := "value"
 const ANSWER_HANDLED := "handled"
 
-## The object column of the Editor object itself, as R30 named it. Every other class here gets its
+## The object column of the Editor object itself, as the editor-object vocabulary named it. Every other class here gets its
 ## own noun, because "Editor ▸ Add control" would send a reader looking in the wrong panel.
 const EDITOR_OBJECT := "Editor"
 

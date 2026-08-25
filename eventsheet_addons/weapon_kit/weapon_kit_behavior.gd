@@ -27,28 +27,28 @@ signal reload_started
 ## @ace_name("On Reload Complete")
 signal reload_completed
 
-var _burst_left: int = 0
-var _cooldown: float = 0.0
-var _reload_timer: float = 0.0
-var _reloading: bool = false
-## Reload automatically when the magazine runs dry.
-@export var auto_reload: bool = true
-## Shots per burst when fire_mode = 2.
-@export var burst_count: int = 3
-## Rounds loaded right now (set to your magazine size to start full).
-@export var current_ammo: int = 12
-## 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
-@export var fire_mode: int = 0
-## Shots per second (the cooldown between shots is 1 / fire_rate).
-@export var fire_rate: float = 8.0
-## Reloads never spend reserve ammo.
-@export var infinite_reserve: bool = false
 ## Magazine size (rounds before a reload).
 @export var max_ammo: int = 12
-## Seconds a reload takes.
-@export var reload_time: float = 1.2
+## Rounds loaded right now (set to your magazine size to start full).
+@export var current_ammo: int = 12
 ## Spare rounds a reload draws from.
 @export var reserve_ammo: int = 96
+## Shots per second (the cooldown between shots is 1 / fire_rate).
+@export var fire_rate: float = 8.0
+## Seconds a reload takes.
+@export var reload_time: float = 1.2
+## 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
+@export var fire_mode: int = 0
+## Shots per burst when fire_mode = 2.
+@export var burst_count: int = 3
+## Reload automatically when the magazine runs dry.
+@export var auto_reload: bool = true
+## Reloads never spend reserve ammo.
+@export var infinite_reserve: bool = false
+var _cooldown: float = 0.0
+var _reloading: bool = false
+var _reload_timer: float = 0.0
+var _burst_left: int = 0
 
 func _process(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)

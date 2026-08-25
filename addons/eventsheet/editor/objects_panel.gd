@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetObjectsPanel
 extends VBoxContainer
-# The OBJECT BAR (Q12) - a list you glance at, filter, and drag from.
+# The OBJECT BAR - a list you glance at, filter, and drag from.
 #
 # The first draft of this rail listed everything in one flat run, which turns a forty-node scene into
 # thirty-seven grey lines burying the three objects the sheet actually uses. That is a scene tree, not
@@ -40,10 +40,10 @@ signal object_behavior_requested(object_label: String)
 ## Right-click > Open its script as a sheet.
 signal object_script_requested(object_label: String)
 
-## V13. Right-click > Add common events… - the starter events this object's class is usually given.
+## Right-click > Add common events… - the starter events this object's class is usually given.
 signal object_starter_events_requested(object_label: String)
 
-## V13. Right-click > Duplicate events for… - this object's events, copied for other objects.
+## Right-click > Duplicate events for… - this object's events, copied for other objects.
 signal object_duplicate_events_requested(object_label: String)
 
 const _META_KEY: String = "eventsheets_objects_panel"
@@ -52,7 +52,7 @@ const _META_KEY: String = "eventsheets_objects_panel"
 ## knowing anything about this panel.
 const DRAG_TYPE: String = "eventsheet_object"
 
-## R23 - the INPUT section's own payload. An Input Map action is not an object, and dropping one on
+## The INPUT section's own payload. An Input Map action is not an object, and dropping one on
 ## the sheet means one specific thing (start an "On <action> pressed" event), so it travels under its
 ## own name rather than pretending to be an object drop.
 const DRAG_TYPE_INPUT_ACTION: String = "eventsheet_input_action"
@@ -80,7 +80,7 @@ var _section_folds: Dictionary = {"used": false, "scene": true, "input": false, 
 var _menu: PopupMenu = null
 var _menu_label: String = ""
 var _class_map: Dictionary = {}
-# T13 - the Project bar rides in this bar as its OTHER TAB rather than as a second dock. The strip
+# The Project bar rides in this bar as its OTHER TAB rather than as a second dock. The strip
 # only appears once one is handed over, so a project that never turns it on sees the bar it always
 # had, with nothing extra on it.
 var _tab_row: HBoxContainer = null
@@ -178,7 +178,7 @@ func _make_tab_button(label: String, tab_id: String) -> Button:
 	return button
 
 
-## T13 - hands this bar its Project tab. Passing null takes the tab away again (View ▸ Project bar
+## Hands this bar its Project tab. Passing null takes the tab away again (View ▸ Project bar
 ## off, or the ✕), and the bar falls back to the Objects tab it has always had.
 func set_project_bar(bar: Control) -> void:
 	if _project_bar != null and _project_bar.get_parent() == self:
@@ -283,7 +283,7 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	_refresh_header()
 
 
-## P10 - when the OPEN FILE is itself a project autoload, the rail says so about it: the file's own
+## When the OPEN FILE is itself a project autoload, the rail says so about it: the file's own
 ## entry reads under the singleton's name, wears the globe, and says "autoload (global)" - the same
 ## words its Include bar uses, and the same words every other sheet's `Game (global) ▸ …` rows use
 ## for it, so a reader following one of those rows here recognises what they landed on.
@@ -330,7 +330,7 @@ func scene_entries() -> Array:
 ##   [{"id", "title", "note", "entries": Array}]
 ## in the order they are drawn. Sections with nothing in them are still returned (the header says so);
 ## the tree simply does not build an empty one.
-## T9. `familiar_words` decides only what the last section is CALLED - the sheet's word for an
+## `familiar_words` decides only what the last section is CALLED - the sheet's word for an
 ## inheritance set is a setting, and every place that says it asks the one helper.
 static func sections_for(census: Array, scene_only: Array, scene_name: String,
 		input_actions: Array = [], familiar_words: bool = false) -> Array:
@@ -350,7 +350,7 @@ static func sections_for(census: Array, scene_only: Array, scene_name: String,
 			"note": EventSheetL10n.translate("drag one onto the sheet to use it") if not scene_name.is_empty() else "",
 			"entries": scene_only
 		},
-		# R23 - the controls this file names, with what each one is bound to. The Input Map is the
+		# The controls this file names, with what each one is bound to. The Input Map is the
 		# object every input row is really about, and it was the one thing in the bar a reader had to
 		# leave the sheet to look up.
 		{
@@ -479,7 +479,7 @@ static func entry_tooltip(entry: Dictionary) -> String:
 	return " · ".join(verbs)
 
 
-## R40 - an autoload's hover under GLOBALS says what it HOLDS, with the values: `Score = 0 ·
+## An autoload's hover under GLOBALS says what it HOLDS, with the values: `Score = 0 ·
 ## Lives = 3 · PlayerName = ""`. The verbs an autoload is used with are the least interesting thing
 ## about it; the numbers the whole project shares are the answer a reader came for. Read straight off
 ## the autoload's file, so it works for one nobody has opened. Falls back to the ordinary hover when
@@ -551,7 +551,7 @@ static func matches_filter(entry: Dictionary, filter_text: String) -> bool:
 # ── The tree ──────────────────────────────────────────────────────────────────────────────────
 
 
-## T9. Whether the sheet's own glossary is on, which is the fallback the word for an inheritance set
+## Whether the sheet's own glossary is on, which is the fallback the word for an inheritance set
 ## follows when the project has not pinned one. Read from the same place the canvas reads it, so the
 ## bar's heading and the rows never disagree about which glossary is showing.
 func _familiar_words() -> bool:
@@ -611,7 +611,7 @@ func _rebuild_tree() -> void:
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 
 
-## S25 - the muted "could adopt: X, Y" line under an object whose script the readings recognised a
+## The muted "could adopt: X, Y" line under an object whose script the readings recognised a
 ## replaceable pattern in. One line, under the object it is about, so a reader meets the offer where
 ## they are already looking instead of only inside a right-click menu.
 ##
@@ -658,7 +658,7 @@ func _owner_label_of(entry: Dictionary) -> String:
 func _add_entry_item(parent_item: TreeItem, entry: Dictionary, is_missing: bool) -> TreeItem:
 	var item: TreeItem = tree.create_item(parent_item)
 	var label: String = str(entry.get("label", ""))
-	# R23 - an action this script names that the project's Input Map does not have is the same kind of
+	# An action this script names that the project's Input Map does not have is the same kind of
 	# broken as a node that is not in the scene, and wears the same mark.
 	var unknown_action: bool = str(entry.get("kind", "")) == "input_action" \
 		and not bool(entry.get("known", false))
@@ -790,7 +790,7 @@ func _ensure_menu() -> void:
 	_menu = PopupMenu.new()
 	_menu.add_item(EventSheetL10n.translate("Add condition"), 0)
 	_menu.add_item(EventSheetL10n.translate("Add action"), 1)
-	# V13: the events this object's class is usually given, and this object's events copied for
+	# The events this object's class is usually given, and this object's events copied for
 	# other objects - both start from what is already on the sheet, so they sit with the add items.
 	_menu.add_item(EventSheetL10n.translate("Add common events…"), 5)
 	_menu.add_item(EventSheetL10n.translate("Duplicate events for…"), 6)

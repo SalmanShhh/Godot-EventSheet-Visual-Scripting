@@ -98,7 +98,7 @@ static func object_list_text(object_labels: PackedStringArray) -> String:
 	return ", ".join(shown)
 
 
-## M3. The one muted word a head shows for who runs a group, or "" for everyone. A head says the
+## The one muted word a head shows for who runs a group, or "" for everyone. A head says the
 ## EXCEPTION and never the default, so a sheet with no networking in it reads exactly as it always
 ## did. The two words are spelled as literals rather than looked up, so the translation gate can see
 ## them - the value they come from is a stored string, which it cannot.
@@ -111,7 +111,7 @@ static func runs_on_word(group: EventGroup) -> String:
 	return ""
 
 
-## M3. The three answers to "who runs this group", each as the word a reader picks, the line under
+## The three answers to "who runs this group", each as the word a reader picks, the line under
 ## it, and the value stored on the group. ONE list: the Edit group dropdown, the head's Runs on
 ## submenu, the help strip and the tests all read it, so a wording change lands everywhere at once.
 ## Everyone stores "" - it is the default, and it is the answer that emits nothing at all.
@@ -266,7 +266,7 @@ const CRUMB_ELLIPSIS: String = "…"
 ## kept as `full` for the hover, and the innermost name is the head itself (`title`), never a crumb -
 ## the pinned row IS that group.
 ##
-## G5 - the strip draws one name at a time and arms a click zone per crumb from these, so clicking a
+## The strip draws one name at a time and arms a click zone per crumb from these, so clicking a
 ## parent name scrolls to that head.
 static func pinned_trail(titles: PackedStringArray) -> Dictionary:
 	if titles.size() <= 1:

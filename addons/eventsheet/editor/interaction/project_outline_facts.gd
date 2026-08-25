@@ -2,7 +2,7 @@
 class_name EventSheetProjectOutline
 extends RefCounted
 
-# T13 - THE PROJECT BAR'S FACTS: the project read by KIND rather than by folder.
+# THE PROJECT BAR'S FACTS: the project read by KIND rather than by folder.
 #
 # Godot's FileSystem dock answers "where does this file live". This answers "what are the things in
 # this project" - scenes, scripts, classes, base classes, behaviors, sounds, files - which is the
@@ -285,7 +285,7 @@ static func matches_filter(entry: Dictionary, filter_text: String) -> bool:
 ##   sound/folder-> Godot's FileSystem dock
 static func route_for(entry: Dictionary, script_opens_as_sheet: bool = true) -> String:
 	match str(entry.get("kind", "")):
-		# W1 - a file of the RUNNING editor always opens as a sheet, and always read-only, whatever
+		# A file of the RUNNING editor always opens as a sheet, and always read-only, whatever
 		# the reader's default for ordinary project scripts is. Its own route, because what happens
 		# after it opens (the read-only bar, the save guard) is different from every other script.
 		"this_editor_script":

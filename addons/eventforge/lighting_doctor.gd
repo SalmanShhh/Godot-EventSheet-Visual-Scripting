@@ -1,6 +1,6 @@
 # Godot EventSheets - the Doctor's Lighting section.
 #
-# L8. Every other Doctor check reads code. This one reads SCENES, because that is where lighting goes
+# Every other Doctor check reads code. This one reads SCENES, because that is where lighting goes
 # wrong: a light with no texture, shadows nothing can block, a darkened layer nothing reaches. None of
 # those is a line anybody wrote, so no amount of reading the sheet would ever find them - and all
 # three are visible in the `.tscn` before the game is run once.

@@ -1,5 +1,5 @@
 # Godot EventSheets - Simple Mode finally reaches the Variable dialog
-# (v0.11 chapter 2, P3). In Simple Mode the Advanced tier (show-if, lock-unless,
+# (v0.11 chapter 2). In Simple Mode the Advanced tier (show-if, lock-unless,
 # on-changed, clamp, read-only, grouping fields) stays out of sight: it is wiring,
 # not looks. Display-only: attributes already on a variable still round-trip, and
 # the tier returns the moment Simple Mode turns off.

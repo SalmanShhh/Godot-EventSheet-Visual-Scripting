@@ -17,15 +17,15 @@ enum Intent {
 	CUSTOM_RESOURCE,
 	TEST,
 	EDITOR_PLUGIN,
-	# W17. The editor extension classes that are neither a chore nor the plugin itself - the Properties
+	# The editor extension classes that are neither a chore nor the plugin itself - the Properties
 	# bar add-on, the importer, the thumbnail maker, the debugger panel, the context menu. They are
 	# registered BY a plugin and their events are the callbacks the editor calls on them.
 	EDITOR_ADDON,
-	# W17. A script the Godot binary runs headless from the command line (`extends SceneTree`).
+	# A script the Godot binary runs headless from the command line (`extends SceneTree`).
 	COMMAND_TOOL,
 }
 
-## W17. The editor extension classes an "Editor add-on" sheet can be hosted on. Every one of them is
+## The editor extension classes an "Editor add-on" sheet can be hosted on. Every one of them is
 ## a class a plugin hands to the editor with an add_*_plugin call, so none of them is the plugin. The
 ## list is what tells the Sheet Type dialog to keep the host field VISIBLE for this intent: which of
 ## the six it is, is the whole choice.
@@ -41,7 +41,7 @@ const ADDON_HOSTS: PackedStringArray = [
 	"EditorSyntaxHighlighter",
 ]
 
-## W17. The two base classes Godot runs as a command-line program.
+## The two base classes Godot runs as a command-line program.
 const COMMAND_TOOL_HOSTS: PackedStringArray = ["SceneTree", "MainLoop"]
 
 
@@ -58,12 +58,12 @@ static func of_sheet(sheet: EventSheetResource) -> Intent:
 		return Intent.BEHAVIOUR
 	if sheet.tool_mode and sheet.host_class.strip_edges() == "EditorScript":
 		return Intent.EDITOR_TOOL
-	# R33. A @tool sheet hosted on EditorPlugin is not a chore you run - it is a plugin the editor
+	# A @tool sheet hosted on EditorPlugin is not a chore you run - it is a plugin the editor
 	# switches on, which is a different set of events (enabled / disabled / dock / menu item) and a
 	# different Include bar. Checked after EditorScript so the two tool intents never overlap.
 	if sheet.tool_mode and sheet.host_class.strip_edges() == "EditorPlugin":
 		return Intent.EDITOR_PLUGIN
-	# W17. The other editor shapes. Checked after the two above so the three tool intents never
+	# The other editor shapes. Checked after the two above so the three tool intents never
 	# overlap, and BEFORE the resource/custom-node heuristics - an add-on always names a class, and
 	# without this an EditorInspectorPlugin sheet classified as "custom node" and lost its host the
 	# next time the Sheet Type dialog was confirmed.

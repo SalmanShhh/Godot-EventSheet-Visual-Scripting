@@ -1,4 +1,4 @@
-# Godot EventSheets - L4/L6: darkness as a percentage, and the World object (preview module).
+# Godot EventSheets - darkness as a percentage, and the World object (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The sheet is a crypt somebody set the mood of by hand: a CanvasModulate darkened and eased darker,

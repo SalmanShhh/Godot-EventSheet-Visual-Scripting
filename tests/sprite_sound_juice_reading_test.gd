@@ -1,4 +1,4 @@
-# S11 / S12 / S13 / S14 - the sprite, UI, sound and juice readings, and the pattern each of them
+# The sprite, UI, sound and juice readings, and the pattern each of them
 # claims.
 #
 # Every check pins the exact TEXT a row shows, and the pattern id the reading hands to the registry.
@@ -35,7 +35,7 @@ static func run() -> bool:
 	return passed
 
 
-## S11 - mirrored, flipped, frame, speed, image, blend and travel.
+## Mirrored, flipped, frame, speed, image, blend and travel.
 static func _check_sprite_words() -> bool:
 	var passed: bool = _pin("a mirror driven by a test says the test",
 		_reading("sprite.flip_h = dir < 0"), "sprite ▸ Set mirrored when dir < 0")
@@ -49,7 +49,7 @@ static func _check_sprite_words() -> bool:
 		_reading("anim.speed_scale = 2.0"), "anim ▸ Set animation speed to 2") and passed
 	passed = _pin("a texture write names the file",
 		_reading("sprite.texture = load(\"res://hero.png\")"), "sprite ▸ Set image to hero.png") and passed
-	# X7 re-homed both of these: an AnimationTree is not an object a reader points at, it is HOW one
+	# Re-homed both of these: an AnimationTree is not an object a reader points at, it is HOW one
 	# object animates, so its rows wear the object's own name and its Animation aspect - and a blend
 	# tree's playback reads in the State Machine behavior's words rather than in Godot's `travel`.
 	passed = _pin("an animation tree parameter is a blend",
@@ -63,7 +63,7 @@ static func _check_sprite_words() -> bool:
 	return passed
 
 
-## S12 - focus, dialogs and the master volume.
+## Focus, dialogs and the master volume.
 static func _check_ui_words() -> bool:
 	var passed: bool = _pin("grabbing focus is setting it",
 		_reading("resume_button.grab_focus()"), "resume_button ▸ Set focus")
@@ -78,7 +78,7 @@ static func _check_ui_words() -> bool:
 	return passed
 
 
-## S13 - the sound, its pitch, its bus, its volume and where it plays from.
+## The sound, its pitch, its bus, its volume and where it plays from.
 static func _check_sound_words() -> bool:
 	var passed: bool = _pin("a stream write names the sound file",
 		_reading("sfx.stream = preload(\"res://jump.wav\")"), "sfx ▸ Set sound to jump.wav")
@@ -100,7 +100,7 @@ static func _check_sound_words() -> bool:
 	return passed
 
 
-## S14 - the five most copied juice snippets, in the behaviors' words.
+## The five most copied juice snippets, in the behaviors' words.
 static func _check_juice_words() -> bool:
 	var passed: bool = _pin("a random camera offset is a shake",
 		_reading("camera.offset = Vector2(randf_range(-s, s), randf_range(-s, s))"),
@@ -145,7 +145,7 @@ static func _check_refusals() -> bool:
 	passed = _pin("a lerp somewhere other than normal size is not the ease",
 		_reading("scale = scale.lerp(Vector2(2, 2), 10 * delta)"),
 		"System ▸ Set scale to scale.lerp((2, 2), 10 * dt)") and passed
-	# Y19 re-pin. This was a refusal - a mirror set from a FLAG stayed the plain member write it was
+	# Re-pin. This was a refusal - a mirror set from a FLAG stayed the plain member write it was
 	# spelled as. It is the verb now, said with what decides it: the same row on every host that can
 	# mirror is the whole point of the Facing page, and `flip_h` was never a word a reader knew.
 	passed = _pin("a mirror set from another flag says the flag",

@@ -5,17 +5,17 @@ extends RefCounted
 # Pins the batch-thirteen HIERARCHY readings - the words an event sheet has always used for putting
 # one object under another, now said about Godot's own spellings of it:
 #
-#   X10  reparent / remove_child + add_child: Add child (said by the PARENT) with the keep-its-place
+#   Reparent / remove_child + add_child: Add child (said by the PARENT) with the keep-its-place
 #        choice spelled out, Remove from parent, and Take out of the layout for a bare removal
-#   X11  the four follow-flags a hierarchy row carries, read back off whatever plumbing wrote them
+#   The four follow-flags a hierarchy row carries, read back off whatever plumbing wrote them
 #        (a RemoteTransform with a switch off, a top_level beside it) as ONE flagged row
-#   X12  the picks and the counts: For each c in x's children, x.ChildCount, x's parent, x's first
+#   The picks and the counts: For each c in x's children, x.ChildCount, x's parent, x's first
 #        child, every T among x's descendants, x contains y, and the two child triggers
-#   X13  the escape hatches: ignore parent's movement, copy its place to, stop copying
+#   The escape hatches: ignore parent's movement, copy its place to, stop copying
 #
 # Six gates, in the order the failures actually happen:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
-#   2. the T10 line that must NOT move: a reparent onto a KNOWN drawing layer keeps the layer words,
+#   2. The line that must NOT move: a reparent onto a KNOWN drawing layer keeps the layer words,
 #      because that reading is what a 2D project is actually looking at;
 #   3. the runs - the two-line move and the flags shape - read as one row in an OPENED file;
 #   4. every pattern claimed on the row that owns it;
@@ -69,20 +69,20 @@ func heal_squad(leader: Node3D) -> void:
 		unit.hp += 10
 """
 
-## X10 / X13. The statements whose sentence this parcel settles, as "object ▸ sentence".
+## The statements whose sentence this parcel settles, as "object ▸ sentence".
 static var STATEMENT_READINGS: Dictionary = {
-	# X10 - a move in the hierarchy, said by the parent that gained the child
+	# A move in the hierarchy, said by the parent that gained the child
 	"item.reparent($Hand)": "Hand ▸ Add child item keeping its place",
 	"rider.reparent($Saddle, false)": "Saddle ▸ Add child rider, snapping to it",
 	"item.reparent(get_tree().current_scene)":
 		"item ▸ Remove from parent keeping its place in the layout",
 	"item.reparent(get_tree().root)": "item ▸ Remove from parent keeping its place in the layout",
-	# X10 - a receiver-less reparent is the script's own object moving itself
+	# A receiver-less reparent is the script's own object moving itself
 	"reparent($Hand)": "Hand ▸ Add child Player keeping its place",
-	# X10 - taken out and kept, which is a different thing from destroyed
+	# Taken out and kept, which is a different thing from destroyed
 	"item.get_parent().remove_child(item)": "item ▸ Take out of the layout (kept in memory)",
 	"$Bag.remove_child(item)": "item ▸ Take out of the layout (kept in memory)",
-	# X13 - the two escape hatches, in the words the answers to "why does my child not follow" use
+	# The two escape hatches, in the words the answers to "why does my child not follow" use
 	"item.top_level = true": "item ▸ Set ignore parent's movement on",
 	"item.top_level = false": "item ▸ Set ignore parent's movement off",
 	"follower.remote_path = NodePath(\"../Target\")": "follower ▸ Copy its place to Target",
@@ -91,13 +91,13 @@ static var STATEMENT_READINGS: Dictionary = {
 	"follower.update_position = true": "follower ▸ Copy position on"
 }
 
-## X12 / X13. The conditions the grammar must answer on its own, as "object ▸ sentence".
+## The conditions the grammar must answer on its own, as "object ▸ sentence".
 static var CONDITION_READINGS: Dictionary = {
 	"squad.is_ancestor_of(unit)": "squad ▸ contains unit",
 	"item.top_level": "item ▸ ignores parent's movement"
 }
 
-## X12. The value expressions, as the possessives a reader says them with out loud.
+## The value expressions, as the possessives a reader says them with out loud.
 static var EXPRESSION_READINGS: Dictionary = {
 	"unit.get_parent()": "unit's parent",
 	"squad.get_child_count()": "squad.ChildCount",
@@ -127,13 +127,13 @@ static var FORBIDDEN_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ move to layer $Saddle, false",
 	"Local object __follow_hat",
 	"item ▸ Move to layer Hand",
-	# X11 - a follower with nothing beside it is NOT a flagged Add child row. An ordinary child
+	# A follower with nothing beside it is NOT a flagged Add child row. An ordinary child
 	# already inherits its parent's whole transform, so a follower on its own changes nothing about
-	# the parenting: it is the standalone "copies its place to" of X13, and reads as its own lines.
+	# the parenting: it is the standalone "copies its place to" reading, and reads as its own lines.
 	"__follow_solo ▸ Add child follow solo keeping its place"
 ])
 
-## X10 / X13. The authoring half: each row and the ONE line it must emit - which is exactly a line
+## The authoring half: each row and the ONE line it must emit - which is exactly a line
 ## the readings above recognise, so a picked row and a typed line are one row and one file.
 static var EMITTED_LINES: Array = [
 	["HierarchyAddChild", {"child": "item", "parent": "$Hand", "keep": ""}, "item.reparent($Hand)"],
@@ -164,7 +164,7 @@ static func run() -> bool:
 	return ok
 
 
-## X11. The flags chip is the row's own way back to the ticks that wrote it, so the two directions
+## The flags chip is the row's own way back to the ticks that wrote it, so the two directions
 ## have to meet exactly: the lines the writer emits read back as this row, the chip reports the very
 ## ticks they were written with, and handing those ticks back to the writer reproduces the lines.
 ## Anything less and clicking flags… twice would quietly change what the row does.
@@ -199,7 +199,7 @@ static func _flags_chip() -> bool:
 	return ok
 
 
-## X11, the writing half. Ticking the size back ON replaces the run the chip sits on - every line of
+## The writing half. Ticking the size back ON replaces the run the chip sits on - every line of
 ## it - rather than stacking a second set of plumbing beside the first, which is the one way this
 ## could go wrong and the reason the payload carries the exact actions the row stands for.
 static func _flags_write() -> bool:
@@ -297,7 +297,7 @@ static func _grammar_values() -> bool:
 		ok = _check("expression %s" % value,
 			EventSheetSentence.expression_text(value, context),
 			str(EXPRESSION_READINGS[value])) and ok
-	# X10 - the two-line spelling is ONE move, and it does NOT keep the world place, which is the
+	# The two-line spelling is ONE move, and it does NOT keep the world place, which is the
 	# difference between the two spellings and the whole reason the row says so.
 	ok = _check("remove-then-add is one row",
 		_joined_segments(EventSheetSentence.remove_then_add_sentence(
@@ -307,7 +307,7 @@ static func _grammar_values() -> bool:
 	ok = _check("an unrelated pair is not a move",
 		EventSheetSentence.remove_then_add_sentence(
 			"$Bag.remove_child(item)", "$Back.add_child(other)", context).is_empty(), true) and ok
-	# X12 - the loop over another object's children, in the possessive the rest of the words use.
+	# The loop over another object's children, in the possessive the rest of the words use.
 	ok = _check("a loop over children says whose they are",
 		str(EventSheetViewportReadingRows.loop_words(
 			PickFilter.CollectionKind.EXPRESSION, "unit", "leader.get_children()").get("text", "")),
@@ -315,7 +315,7 @@ static func _grammar_values() -> bool:
 	return ok
 
 
-## Gate two: the T10 reading that must NOT move. A reparent onto a KNOWN drawing layer is a layer
+## Gate two: the reading that must NOT move. A reparent onto a KNOWN drawing layer is a layer
 ## move and keeps the layer words; a reparent onto anything else is a move in the hierarchy. Both
 ## halves are pinned, because the interesting failure is either one swallowing the other.
 static func _layer_words_stay() -> bool:

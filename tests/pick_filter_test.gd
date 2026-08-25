@@ -106,7 +106,7 @@ static func run() -> bool:
 	for span in row_data.spans:
 		if str((span.metadata if span.metadata is Dictionary else {}).get("kind", "")) == "pick_filter":
 			pick_span_text = span.text
-	# K5 - a loop that FILTERS a group is a pick, and says so; a plain walk is still a For each.
+	# A loop that FILTERS a group is a pick, and says so; a plain walk is still a For each.
 	all_passed = _check("pick filter renders in the condition lane",
 		pick_span_text, "Pick where enemy.health < 50 · top 3") and all_passed
 	all_passed = _check("line counting includes pick rows",

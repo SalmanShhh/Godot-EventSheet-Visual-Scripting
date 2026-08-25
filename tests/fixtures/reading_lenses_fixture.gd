@@ -1,8 +1,8 @@
 ## A hand-written script that exercises every reading lens at once, so the lenses are proved
 ## against REAL lifted rows rather than against strings a test made up. It carries, on purpose:
-## an @onready node reference (M13/M20), an inverted condition (M12), a nested if (M15), a call
-## with named arguments (M16), snake_case state and an @export knob (M9), and a property chain
-## (M10). It is also the round-trip subject: opening it as a sheet and re-emitting it must
+## An @onready node reference, an inverted condition, a nested if, a call
+## with named arguments, snake_case state and an @export knob, and a property chain
+##. It is also the round-trip subject: opening it as a sheet and re-emitting it must
 ## reproduce this file byte for byte, because every lens here is display-only.
 class_name ReadingLensesFixture
 extends CharacterBody2D

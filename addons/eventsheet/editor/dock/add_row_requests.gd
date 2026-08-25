@@ -58,7 +58,7 @@ func on_add_comment_requested() -> void:
 func on_add_group_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	# G4 - G is one key with one meaning: "make these a group". With rows selected it wraps THEM (the
+	# G is one key with one meaning: "make these a group". With rows selected it wraps THEM (the
 	# existing Group Selection command) and drops straight into naming it; with nothing selected there
 	# is nothing to wrap, so it adds an empty group at the cursor instead.
 	var selected: Array = _dock._top_level_selected_resources()
@@ -70,7 +70,7 @@ func on_add_group_requested() -> void:
 		if _dock._row_edit_ops.last_group_created != null:
 			call_deferred("_begin_group_rename", _dock._row_edit_ops.last_group_created)
 		return
-	# N1 authoring symmetry - on a .gd sheet the file is the truth, and the file's own way of
+	# Authoring symmetry - on a .gd sheet the file is the truth, and the file's own way of
 	# grouping is `#region Name` / `#endregion`, which Godot folds in the script editor. So a Group
 	# added here is written as that fence pair; it reads back as the same bar, so a group made on the
 	# sheet arrives in Godot as a fold instead of as a marker comment nobody else understands.
@@ -145,7 +145,7 @@ func on_duplicate_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
-	# G4 - Ctrl+D on a GROUP head duplicates the group and everything in it, which is what the menu's
+	# Ctrl+D on a GROUP head duplicates the group and everything in it, which is what the menu's
 	# own Duplicate already does; the key routes to the same writer rather than refusing.
 	if selected_resource is EventGroup:
 		_dock._bulk_duplicate_rows([selected_resource])

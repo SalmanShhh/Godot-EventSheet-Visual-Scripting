@@ -1,19 +1,19 @@
-# Godot EventSheets - the shapes an EDITOR is written in, read as events (W3 / W4 / W5 / W16).
+# Godot EventSheets - the shapes an EDITOR is written in, read as events.
 #
 # A tool project is written in four shapes no game script has, and until now the sheet read all four
 # as "a RefCounted with some functions". This pins what replaced them, over four real fixtures:
 #
-#   W3  a helper with a back-reference reads as a behavior OF the object it was made with: the
+#   A helper with a back-reference reads as a behavior OF the object it was made with: the
 #       Include bar says whose helper it is and which file that object lives in, the constructor
 #       that only stores the reference is folded into the bar, a read through the reference reads as
 #       the object's own property, and a call through it reads under the object's name.
-#   W4  an edit handed to the undo funnel reads as ONE undoable step - a Local boolean catching the
+#   An edit handed to the undo funnel reads as ONE undoable step - a Local boolean catching the
 #       answer, the step's own name, and the edit hanging under it as sub-events, where a `return`
 #       is the Answer the funnel asked for.
-#   W5  a class that is all static reads as a shared store: the bar says nothing of it is ever made,
+#   A class that is all static reads as a shared store: the bar says nothing of it is ever made,
 #       each shared value says it is one for the whole editor, a frozen constant says so, and the
 #       three report levels stop pretending to be one.
-#   W16 a vocabulary module's publishes read as the Define rows a pack author already knows, and a
+#   A vocabulary module's publishes read as the Define rows a pack author already knows, and a
 #       function that hands over to itself says so on the call row.
 #
 # VALUES are pinned, not counts, and the covenant closes every gate: all four fixtures still
@@ -40,14 +40,14 @@ static func run() -> bool:
 	return ok
 
 
-# ── W3 ──
+# ────────
 
 
 static func _test_helper_of() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(HELPER_PATH)
 	var readings: PackedStringArray = _readings(view)
-	# C1 - the class name is the name band's and `@tool` is the tool band's, so the bar is left with
+	# The class name is the name band's and `@tool` is the tool band's, so the bar is left with
 	# the shape this file plays in the editor it belongs to.
 	ok = _check("the Include bar says whose helper this is",
 		_texts(_row_with_uid(view.get_flat_rows(), "pack_include_bar_")),
@@ -66,7 +66,7 @@ static func _test_helper_of() -> bool:
 	return ok
 
 
-# ── W4 ──
+# ────────
 
 
 static func _test_undo_step() -> bool:
@@ -99,7 +99,7 @@ static func _test_undo_step() -> bool:
 	return ok
 
 
-# ── W5 ──
+# ────────
 
 
 static func _test_shared_store() -> bool:
@@ -133,7 +133,7 @@ static func _test_shared_store() -> bool:
 	return ok
 
 
-# ── W16 ──
+# ─────────
 
 
 static func _test_vocabulary_module() -> bool:
@@ -193,7 +193,7 @@ static func _test_facts_are_shape_bound() -> bool:
 	return ok
 
 
-## W4's health check: an edit made around the funnel rather than through it is a finding, and a
+## The health check: an edit made around the funnel rather than through it is a finding, and a
 ## helper that uses the funnel is not.
 static func _test_the_funnel_check() -> bool:
 	var ok: bool = true

@@ -1,4 +1,4 @@
-# Godot EventSheets - T9: INHERITANCE SHOWN AS ONE THING, and the word it is shown under.
+# Godot EventSheets - INHERITANCE SHOWN AS ONE THING, and the word it is shown under.
 #
 # A `class_name` that other scripts `extends` is a base class. Godot has no view of that: to see
 # which scripts extend Enemy, what they share, and whether the "enemy" group agrees with the Enemy

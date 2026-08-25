@@ -61,13 +61,13 @@ static func _any_row_contains(texts: PackedStringArray, needle: String) -> bool:
 	return false
 
 
-## M9, M10, M12, M16, M17, M20 on the rows the importer actually produced.
+## On the rows the importer actually produced.
 static func _reading_rows() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open(true)
 	var texts: PackedStringArray = _row_texts(view)
 
-	# M9 - the private state var and the @export knob both read as words, with the knob taking
+	# The private state var and the @export knob both read as words, with the knob taking
 	# Godot's Inspector capitalisation.
 	passed = _check("reading mode turns the humanized-names lens on",
 		view.humanize_names_enabled(), true) and passed
@@ -76,23 +76,23 @@ static func _reading_rows() -> bool:
 	passed = _check("the raw identifier is gone from the sentence",
 		_any_row_contains(texts, "_coyote_timer ="), false) and passed
 
-	# M10 - the property chain in the call arguments reads possessively.
+	# The property chain in the call arguments reads possessively.
 	passed = _check("a property chain reads possessively",
 		_any_row_contains(texts, "velocity X"), true) and passed
 
-	# M12 - the inverted condition shows the mark, and the sentence lost the word.
+	# The inverted condition shows the mark, and the sentence lost the word.
 	passed = _check("an inverted condition draws the mark",
 		_any_row_contains(texts, ViewportRowBuilder.NEGATED_MARK), true) and passed
 	passed = _check("an inverted condition's sentence drops the word not",
 		_any_row_contains(texts, "not is_on_floor"), false) and passed
 
-	# M16 - the call to the fixture's own add_look reads the familiar way, with the parameter
+	# The call to the fixture's own add_look reads the familiar way, with the parameter
 	# names supplying the argument labels.
 	passed = _check("a known call reads Functions > Call", _any_row_contains(texts, "Call Add Look"), true) and passed
 	passed = _check("call arguments are named by the parameters",
 		_any_row_contains(texts, "x = velocity X"), true) and passed
 
-	# M20 - the @onready node reference is an object declaration, not a variable row.
+	# The @onready node reference is an object declaration, not a variable row.
 	passed = _check("an @onready node reads as an Object declaration",
 		_any_row_contains(texts, "Object | hp_bar"), true) and passed
 	passed = _check("the object declaration names its node", _any_row_contains(texts, "%HpBar"), true) and passed
@@ -114,7 +114,7 @@ static func _editing_rows() -> bool:
 	passed = _check("an editable sheet does not turn a variable into an Object row",
 		_any_row_contains(texts, "Object | hp_bar"), false) and passed
 
-	# M9's toggle is a real override in both directions: turning it ON while authoring works.
+	# The toggle is a real override in both directions: turning it ON while authoring works.
 	view.humanize_names_override = 1
 	passed = _check("the View toggle turns the lens on while authoring",
 		view.humanize_names_enabled(), true) and passed
@@ -134,7 +134,7 @@ static func _round_trip_is_byte_identical() -> bool:
 	return _check("the fixture re-emits byte for byte", str(compiled.get("output", "")), source)
 
 
-## M15 - the connector is geometry only: its trunks sit on the indent stops the layout already
+## The connector is geometry only: its trunks sit on the indent stops the layout already
 ## applied, and it reserves no width of its own.
 static func _guide_lines() -> bool:
 	var passed: bool = true

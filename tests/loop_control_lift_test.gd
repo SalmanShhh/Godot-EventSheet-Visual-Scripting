@@ -1,4 +1,4 @@
-# EventForge (gap G2) - `break` / `continue` inside a lifted loop body reverse-lift to Break Loop /
+# EventForge - `break` / `continue` inside a lifted loop body reverse-lift to Break Loop /
 # Continue Loop ACTION rows, instead of staying an in-flow GDScript cell. They lift ONLY inside a loop
 # (they are invalid GDScript anywhere else), including when nested in an `if` inside the loop, so a loop with
 # an early-exit reads fully as events. `pass` is NOT lifted: it has no ACE and the compiler emits it only as

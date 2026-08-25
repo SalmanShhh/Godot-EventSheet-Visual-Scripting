@@ -143,7 +143,7 @@ static func run() -> bool:
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("a loaded sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
-    # S27 - an every-tick event with NO condition of its own reads as a BLANK event: the empty
+    # An every-tick event with NO condition of its own reads as a BLANK event: the empty
     # condition lane already means "runs every tick", so there are no trigger words and no tempo
     # badge to draw. Give the same event a condition and the full Every tick reading is back, tempo
     # badge included - which is the second half of this pin.
@@ -207,7 +207,7 @@ static func run() -> bool:
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
-    # G1 - the head leads with the folder MARK, and the title beside it is the editable span (no
+    # The head leads with the folder MARK, and the title beside it is the editable span (no
     # redundant "Group" word badge, then or now).
     all_passed = _check("the head leads with the folder mark",
         bool((group_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
@@ -328,7 +328,7 @@ static func run() -> bool:
     dock.setup(or_sheet)
     dock_viewport = dock.get_viewport_control()
     var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
-    # K4 - "or" is ruled BETWEEN two conditions, not badged onto the second: the row carries the
+    # "or" is ruled BETWEEN two conditions, not badged onto the second: the row carries the
     # lines a divider is drawn above, and no condition wears an OR mark any more.
     all_passed = _check("or block badges no condition", _count_span_text(or_row_data, "OR"), 0) and all_passed
     all_passed = _check("negated condition leads with the word not", _count_span_text(or_row_data, "not"), 1) and all_passed
@@ -480,7 +480,7 @@ static func run() -> bool:
     dock.setup(empty_condition_sheet)
     dock_viewport = dock.get_viewport_control()
     var empty_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
-    # S27 - a top-level event with no conditions reads BLANK (the empty lane is the reading); the
+    # A top-level event with no conditions reads BLANK (the empty lane is the reading); the
     # "Every Tick" placeholder now only stands where it is not already implied.
     all_passed = _check("events without authored conditions read blank, not Every Tick", _row_contains_text(empty_condition_row, "Every Tick"), false) and all_passed
 
@@ -1287,7 +1287,7 @@ static func run() -> bool:
         [dock._new_function_submenu.get_item_text(0), dock._new_function_submenu.get_item_text(1), dock._new_function_submenu.get_item_text(2), dock._new_function_submenu.get_item_text(3)],
         ["Function", "Action", "Condition", "Expression"]) and all_passed
     all_passed = _check("empty context menu fourth item is the Add Variable submenu", dock._empty_space_context_menu.get_item_text(3), "Add Variable") and all_passed
-    # V8 - "add a variable" is three questions, so the submenu asks the one that matters.
+    # "add a variable" is three questions, so the submenu asks the one that matters.
     all_passed = _check("the Add Variable submenu names the three scopes",
         [dock._add_variable_submenu.get_item_text(0), dock._add_variable_submenu.get_item_text(1),
             dock._add_variable_submenu.get_item_text(2)],

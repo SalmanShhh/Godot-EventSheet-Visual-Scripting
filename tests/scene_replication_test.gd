@@ -1,4 +1,4 @@
-# E2 - the scene seam: what a `.tscn` says about keeping a game in step, read back.
+# The scene seam: what a `.tscn` says about keeping a game in step, read back.
 #
 # The facts this covers are not in any script, so a fixture SCENE is the only honest input:
 # tests/fixtures/multiplayer_scene_player.tscn keeps four properties of a player in step (two always,

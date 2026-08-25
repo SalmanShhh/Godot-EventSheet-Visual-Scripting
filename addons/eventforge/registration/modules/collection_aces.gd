@@ -182,7 +182,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "TweenCallback", "Tween Callback", ACEDescriptor.ACEType.ACTION, "create_tween().tween_callback({callable}).set_delay({delay})", "", [F.make_param("callable", "String", "queue_free", "Callable", "Method/Callable to invoke after the delay (e.g. a node method or a lambda).", "expression"), F.make_param("delay", "String", "1.0", "Delay", "Seconds before the call fires.", "expression")], "Tween", "Call {callable} after {delay}s")
 		.described("Waits a delay, then calls a method or function once (handy for timed events)."))
 	# Scene flow (System: layouts -> Godot scenes)
-	# R8. The scene-flow rows carry the sheet's own action names - layout, restart, quit - and an
+	# The scene-flow rows carry the sheet's own action names - layout, restart, quit - and an
 	# opened .gd file reads these very lines back in the same words, so the two can never drift.
 	descriptors.append(F.make_descriptor("Core", "ChangeScene", "Go To Layout", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "Scene file to switch to.", "expression")], "Scene", "Go to layout {path}")
 		.described("Switches the game to a different layout (a scene file), replacing the current one."))
@@ -259,13 +259,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True once the navigation agent has reached its target destination."))
 	descriptors.append(F.make_descriptor("Core", "GetNextPathPosition", "Next Path Position", ACEDescriptor.ACEType.EXPRESSION, "get_next_path_position()", "", [], "General Expressions", "next path position", "NavigationAgent2D")
 		.described("Returns the next point along the path the agent should move toward."))
-	# S15. The step a path walk is made of, as ONE row. Its template is exactly the line the reading
+	# The step a path walk is made of, as ONE row. Its template is exactly the line the reading
 	# recognises: the direction from where the body is to the next waypoint, at the given speed.
 	descriptors.append(F.make_descriptor("Core", "MoveAlongPath", "Move Along Path", ACEDescriptor.ACEType.ACTION, "velocity = global_position.direction_to({next}) * {speed}", "", [F.make_param("next", "String", "Vector2(0, 0)", "Next waypoint", "The agent's next path position - read it into a local first with the Next Path Position expression.", "expression"), F.make_param("speed", "String", "120.0", "Speed", "How fast to travel along the path, in pixels per second.", "expression")], "Movement", "Move along path at {speed}", "CharacterBody2D")
 		.described("Steers the body toward the next point on the path its navigation agent worked out. Follow it with Move so the body actually travels."))
 	descriptors.append(F.make_descriptor("Core", "GetNavDistance", "Distance To Target", ACEDescriptor.ACEType.EXPRESSION, "distance_to_target()", "", [], "General Expressions", "distance to target", "NavigationAgent2D")
 		.described("Returns how far the agent still is from its navigation target."))
-	# S8. Loading a layout in the background. Three rows cover the whole idiom: the request, the
+	# Loading a layout in the background. Three rows cover the whole idiom: the request, the
 	# question, and the switch once it is there - so nobody has to type the status enum again. The
 	# templates ARE the lines the reading recognises, which is what makes a written and a picked
 	# loading screen the same bytes.

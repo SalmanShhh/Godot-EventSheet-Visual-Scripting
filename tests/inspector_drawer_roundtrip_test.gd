@@ -529,7 +529,7 @@ static func run() -> bool:
 	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
 	all_passed = _vector_dial_range_persists() and all_passed
 
-	# Forgiving Range parse (progressive disclosure P2): a bare max, min+max, or min+max+step all parse; a
+	# Forgiving Range parse (progressive disclosure): a bare max, min+max, or min+max+step all parse; a
 	# blank max or >3 parts error. Shared by the apply and the live preview so they never disagree.
 	all_passed = _eq("Range '150' parses as max 150 (min 0, step 1)",
 		VariableDialog._parse_range_parts(PackedStringArray(["150"])), {"min": "0", "max": "150", "step": "1"}) and all_passed

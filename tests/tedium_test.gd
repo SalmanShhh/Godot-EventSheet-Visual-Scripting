@@ -117,7 +117,7 @@ static func run() -> bool:
 	var expression_edit: LineEdit = LineEdit.new()
 	field_box.add_child(expression_edit)
 	expression_edit.text = "missing_thing + 1"
-	# P3 - the "+ var" and "Use …" buttons that used to grow beside the field are the help strip's
+	# The "+ var" and "Use …" buttons that used to grow beside the field are the help strip's
 	# FIXES now, so the note is what the field reports and the strip is where a reader looks.
 	dialog._fields["amount"] = expression_edit
 	dialog._param_dicts["amount"] = {"id": "amount", "display_name": "Amount", "hint": "expression"}

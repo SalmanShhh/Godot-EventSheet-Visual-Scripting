@@ -1,4 +1,4 @@
-# EventForge - L7: the lighting spellings people wrote before this plugin existed.
+# EventForge - the lighting spellings people wrote before this plugin existed.
 #
 # Most lit games are older than the sheet that opens them, so every light row has to be readable
 # BACKWARDS out of hand-written GDScript: `$Torch.energy = 1.2`, `torch.light_energy = 0.5`,
@@ -40,7 +40,7 @@ const FADE_CALL: String = "tween_property"
 ## attached to a torch is the same row as `$Torch.energy = 1.2` on the sheet beside it.
 const BLANK_RECEIVER: Dictionary = {"target": ""}
 
-## L4/L6. The two lighting nodes that are not lights, and the member the World rows all write
+## The two lighting nodes that are not lights, and the member the World rows all write
 ## through. A darkness line and a light's colour line are spelled identically (`X.color = ...`), so
 ## which of them a line IS depends entirely on what the scene says X is - which is exactly what the
 ## guard below asks, and why neither can be claimed without it.
@@ -158,7 +158,7 @@ static func lift_entries() -> Array[Dictionary]:
 	return _entries
 
 
-## L4/L6 - the two nodes that are not lights. The darkness pair writes a CanvasModulate's colour;
+## The two nodes that are not lights. The darkness pair writes a CanvasModulate's colour;
 ## the World rows all write a property of the environment a WorldEnvironment holds, which is why
 ## every one of their patterns goes through `.environment.` and none of them can be confused with a
 ## light. Written out rather than derived, because these are not a WORD map with spellings per
@@ -182,7 +182,7 @@ static func _scene_object_entries() -> Array[Dictionary]:
 	return entries
 
 
-## L6/L8 - the one atmosphere row that is not a knob, and the one the Doctor writes on a reader's
+## The one atmosphere row that is not a knob, and the one the Doctor writes on a reader's
 ## behalf. `environment = environment.duplicate()` gives a scene its own copy of an environment other
 ## scenes load; a sheet that has taken that step is never told to take it again, which only works if
 ## the line reads back as the row that wrote it. Both halves name the SAME node, so the second

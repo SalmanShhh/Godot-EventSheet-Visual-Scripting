@@ -1,17 +1,17 @@
 # Godot EventSheets - working with sheets: live edit, the replay recorder, the conflict view and
-# shared sheets (batch 11, V8-V11).
+# shared sheets (batch 11).
 #
 # Four features that all live one step outside the reading: what you do WITH a sheet once it reads.
 # Each of them keeps its decision in a plain, editor-free module precisely so it can be pinned here,
 # by VALUE, with no editor, no running game and no git:
 #
-#  - V8 live edit: the running game is a seam (`EventSheetLiveEdit.running_probe`), so "what does
+#  - Live edit: the running game is a seam (`EventSheetLiveEdit.running_probe`), so "what does
 #    the strip say" and "can this change be reloaded" are ordinary questions with exact answers.
-#  - V9 replay recorder: a take is a list of controls with frames, and the sheet it writes is an
+#  - Replay recorder: a take is a list of controls with frames, and the sheet it writes is an
 #    ordinary Test sheet whose rows compile - so the rows are pinned AND compiled here.
-#  - V10 conflict view: a fixture with real merge markers is read into two columns, picked per
+#  - Conflict view: a fixture with real merge markers is read into two columns, picked per
 #    event, and written back with the bytes outside the region untouched.
-#  - V11 shared sheets: including one as a base class rewrites one line; including one as a helper
+#  - Shared sheets: including one as a base class rewrites one line; including one as a helper
 #    writes the member and the forwarding rows, and the Doctor's question about two includes
 #    handling the same trigger is answered off the sources alone.
 @tool
@@ -43,7 +43,7 @@ static func run() -> bool:
 	return passed
 
 
-# ── V8 live edit ──────────────────────────────────────────────────────────────────────────
+# ── live edit ─────────────────────────────────────────────────────────────────────────────
 ## The whole affordance is gated on a running game. With nothing running the strip says nothing at
 ## all: a button that can never do anything is worse than no button.
 static func _test_nothing_happens_unless_the_game_is_running() -> bool:
@@ -126,7 +126,7 @@ static func _test_the_changed_rows_are_the_ones_that_pulse() -> bool:
 	return ok
 
 
-# ── V9 the replay recorder ────────────────────────────────────────────────────────────────
+# ── the replay recorder ───────────────────────────────────────────────────────────────────
 ## A take reads back as the rows it will become, in frame order, with the checkpoint slotted in.
 static func _test_a_take_reads_as_frame_addressed_rows() -> bool:
 	var recorder: EventSheetReplayRecorder = _recorded_take()
@@ -173,7 +173,7 @@ static func _test_a_drift_names_its_frame() -> bool:
 	return ok
 
 
-# ── V10 the conflict view ─────────────────────────────────────────────────────────────────
+# ── the conflict view ─────────────────────────────────────────────────────────────────────
 ## The conflicted region reads as two columns: what both sides agree on is greyed (nothing to
 ## decide), and only the differing pairs are a question.
 static func _test_a_conflicted_file_reads_as_two_columns() -> bool:
@@ -232,7 +232,7 @@ static func _test_the_doctor_lists_remaining_conflicts() -> bool:
 	return ok
 
 
-# ── V11 shared event sheets ───────────────────────────────────────────────────────────────
+# ── shared event sheets ───────────────────────────────────────────────────────────────────
 ## A shared sheet says what it is and how it is wired, in its own header, once.
 static func _test_a_shared_sheet_declares_how_it_is_wired() -> bool:
 	var helper: String = EventSheetSharedSheets.new_shared_sheet_source("Pause Handling", EventSheetSharedSheets.WIRING_HELPER)

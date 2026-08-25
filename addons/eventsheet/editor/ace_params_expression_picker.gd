@@ -30,7 +30,7 @@ var _expression_target_key: String = ""
 # a project-sized sheet) would be pure waste. Cleared on every open; the behaviour half also
 # keys on the robust toggle.
 var _self_section_cache: Dictionary = {}
-# V11 - and the GLOBALS the sheet reaches for, for the same reason: answering that one scans every
+# And the GLOBALS the sheet reaches for, for the same reason: answering that one scans every
 # row of the sheet and then the autoloads' scripts, while typing in the search box only re-FILTERS.
 # Only the globals are held: the sheet's own variables and its locals are a cheap walk, and holding
 # those would hide a variable added while the dictionary is open. Keyed "globals" so a sheet that
@@ -206,7 +206,7 @@ func _ensure_expression_window() -> void:
 	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(expr_card)
 
-	# V11 - the one line under the tree: what the highlighted entry actually inserts. A global reads
+	# The one line under the tree: what the highlighted entry actually inserts. A global reads
 	# `Score` in its group and inserts `Game.Score`, and this is where a reader finds that out before
 	# it lands in the field rather than after.
 	_inserts_label = EventSheetPopupUI.hint_label("")
@@ -383,7 +383,7 @@ static func variable_member_fragment(var_name: String, member: String, is_method
 	return var_name + "." + member_expression_fragment(member, is_method)
 
 
-## V11. The sheet's variables as one-click leaves, GROUPED BY OWNER - this object's own first, then
+## The sheet's variables as one-click leaves, GROUPED BY OWNER - this object's own first, then
 ## each autoload's globals, then the locals in scope - each written in the sentence its row reads
 ## with ("hp   whole number = 100") and inserting what the code needs (a bare name, or `Game.Score`
 ## for a global, where the prefix cannot be dropped). A variable whose type cannot go where this
@@ -449,7 +449,7 @@ func _wanted_type() -> String:
 	return ""
 
 
-## V11. The line under the tree: what picking the highlighted entry actually inserts, so the reader
+## The line under the tree: what picking the highlighted entry actually inserts, so the reader
 ## sees `Game.Score` before they insert it into a field that shows `Score`. "" when nothing is
 ## highlighted. Static + pure.
 static func inserts_note(insert_text: String) -> String:

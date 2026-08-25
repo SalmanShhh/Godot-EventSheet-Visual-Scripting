@@ -515,7 +515,7 @@ static func sheet_variables(sheet: EventSheetResource) -> Array[Dictionary]:
 	return EventSheetVariableOwners.catalog(sheet)
 
 
-## M2. Every function a sheet publishes as a MESSAGE - the ones carrying an `@rpc` annotation, which
+## Every function a sheet publishes as a MESSAGE - the ones carrying an `@rpc` annotation, which
 ## is what makes a call travel to the other peers. Entries are
 ## `{"name", "params", "annotation", "words", "note"}`, in declaration order: the function name, its
 ## parameter names in order, the annotation verbatim, that annotation read back in the sheet's own
@@ -529,7 +529,7 @@ static func sheet_messages(sheet: EventSheetResource) -> Array[Dictionary]:
 	return EventSheetMessageFacts.messages_in(sheet)
 
 
-## M2. The `@rpc(...)` line a set of answers writes, and the reverse - what a line already says. Pass
+## The `@rpc(...)` line a set of answers writes, and the reverse - what a line already says. Pass
 ## `{"Who may send": "any_peer", "Where it runs": "call_local", "Delivery": "reliable",
 ## "channel": 0}`; the field words are `EventSheetMessageFacts.FIELD_*`. Handing back the ORIGINAL
 ## line when the answers still mean what it said is the byte-exactness rule, so a pack that edits a
@@ -538,7 +538,7 @@ static func message_annotation(original: String, answers: Dictionary) -> String:
 	return EventSheetMessageFacts.rewrite(original, answers)
 
 
-## M4. Every function of this sheet that a `MultiplayerSynchronizer` asks whether a player may see
+## Every function of this sheet that a `MultiplayerSynchronizer` asks whether a player may see
 ## its node - one entry each, `{"name", "synchronizer"}`, in the order the rows name them.
 ## `synchronizer` is the node the asking row addresses, and "" when that row acts on the sheet's own
 ## node.
@@ -1787,7 +1787,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"audio": "Sound-And-Music",
 	"behavior_shape": "Making-Things-Move-In-2D",
 	"boomer_weapons": "Working-In-3D",
-	# Y16. Keys and doors are documented beside the shots and the secrets, because they are the same
+	# Keys and doors are documented beside the shots and the secrets, because they are the same
 	# reader's question - "how do I build a level of this shape" - asked one room later.
 	"keys_doors": "Working-In-3D",
 	"audio_server": "Sound-And-Music",
@@ -1812,13 +1812,13 @@ const MODULE_GUIDE_OVERRIDES := {
 	"host": "Calling-Your-Own-Code-From-Rows",
 	"input": "Setting-Up-And-Rebinding-Controls",
 	"json": "Working-With-Files",
-	# U7. Lights are what a scene is LIT with, which is the graphics guide's subject - the same guide a
-	# reader lands on from the camera and screenshot rows. L1's node-scoped light words are the same
+	# Lights are what a scene is LIT with, which is the graphics guide's subject - the same guide a
+	# reader lands on from the camera and screenshot rows. The node-scoped light words are the same
 	# subject said the other way round (the light in the object column rather than in a field), so
 	# they land on the same page rather than splitting the reader's lighting into two.
 	"lighting": "Cameras-Graphics-And-Screenshots",
 	"light_node": "Cameras-Graphics-And-Screenshots",
-	# L4/L6. The darkness a layer wears and the world's own atmosphere are the same reader's question
+	# The darkness a layer wears and the world's own atmosphere are the same reader's question
 	# one step out from the lights, so the three modules land on the one page rather than three.
 	"scene_lighting": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
@@ -1826,7 +1826,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"loop": "Working-With-Lists",
 	"mesh": "Working-In-3D",
 	"native_3d": "Working-In-3D",
-	# X1 / X3 / X5 / X31. The 3D page's own verbs - moving in a direction, the three turns, placing and
+	# The 3D page's own verbs - moving in a direction, the three turns, placing and
 	# the facing questions - are the same subject the 3D guide already covers, said in plainer words.
 	"spatial_words": "Working-In-3D",
 	"node": "Finding-And-Rearranging-Nodes",
@@ -1839,7 +1839,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"physics": "Collisions-Joints-And-World-Physics",
 	"physics_server": "Collisions-Joints-And-World-Physics",
 	"procedural": "Doing-Math-And-Randomness",
-	# X2 / X20 / X30. The cursor's ray IS a 3D raycast, and the canvas words that go with it are
+	# The cursor's ray IS a 3D raycast, and the canvas words that go with it are
 	# read and written beside it, so both share the 3D raycasting guide rather than opening a page
 	# nobody would look for them under.
 	"cursor_canvas": "Raycasting-And-Overlaps-In-3D",
@@ -1856,11 +1856,11 @@ const MODULE_GUIDE_OVERRIDES := {
 	"text_format": "Making-Text-Readable-On-Screen",
 	"tilemap": "Working-With-Tilemaps",
 	"tooling": "Automating-The-Editor",
-	# R30. The Editor object is a second FILE of the same vocabulary (one category, one object), so it
+	# The Editor object is a second FILE of the same vocabulary (one category, one object), so it
 	# resolves to the same guide - a reader who followed a dock verb here must not land somewhere else
 	# than a reader who followed a Save Scene one.
 	"editor_object": "Automating-The-Editor",
-	# W18. The tool author's everyday Editor set is the same subject as the two modules beside it, so
+	# The tool author's everyday Editor set is the same subject as the two modules beside it, so
 	# it reads in the same guide rather than in a page of its own.
 	"editor_author": "Automating-The-Editor",
 	"translation": "Localising-Your-Game",
@@ -1885,7 +1885,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"debug": "Debugging-And-Printing",
 	"display": "Game-Options-And-The-Window",
 	"editor_tools": "Automating-The-Editor",
-	# W23. The Editor object's picker PAGES. They are folders inside the same object, so they read in
+	# The Editor object's picker PAGES. They are folders inside the same object, so they read in
 	# the same guide the flat category always did.
 	"editor_tools_panels_menus": "Automating-The-Editor",
 	"editor_tools_project_preferences": "Automating-The-Editor",
@@ -1915,7 +1915,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"metadata": "Finding-And-Rearranging-Nodes",
 	"mouse": "Reading-Keyboard-Mouse-And-Gamepad",
 	"movement": "Making-Things-Move-In-2D",
-	# X9 / X19. Batch thirteen's two new picker sections. The world's look is the graphics guide's
+	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.
 	"environment": "Cameras-Graphics-And-Screenshots",
@@ -2400,7 +2400,7 @@ static func spawners_of(sheet: EventSheetResource) -> Array[Dictionary]:
 		str(sheet.external_source_path) if sheet != null else "").get("spawners", []))
 
 
-## L4. Every light in the scene (or scenes) that run this sheet's script, in scene order. One entry
+## Every light in the scene (or scenes) that run this sheet's script, in scene order. One entry
 ## each:
 ##   {"name", "path", "class", "kind", "shadows", "masks", "shadow_masks", "reference",
 ##    "scene_path", "properties"}

@@ -34,7 +34,7 @@ func import_external(script_path: String, lift: bool = true) -> EventSheetResour
 		return null
 	# The path is handed DOWN rather than stamped on the way out: the lifter needs it while it runs, to
 	# find the scene(s) whose root uses this script and read the signal connections the Godot editor
-	# wrote there (M42). A path stamped afterwards arrives one pass too late.
+	# wrote there. A path stamped afterwards arrives one pass too late.
 	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path), lift, script_path)
 	sheet.external_source_path = script_path
 	_recover_autoload_identity(sheet, script_path)
@@ -293,7 +293,7 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
 	if lift:
-		# M42 - which file this source came from, for the one question the lifter cannot answer from the
+		# Which file this source came from, for the one question the lifter cannot answer from the
 		# text: which scene(s) wire signals to it. Handed over as a hint rather than by stamping
 		# `external_source_path` early, because that field also switches the compiler onto its external
 		# emission path - and the lift runs several before/after compiles of its own that must keep
@@ -475,7 +475,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true
-	# R32. An Inspector button is a Callable knob, and Godot's own spelling for it carries no type
+	# An Inspector button is a Callable knob, and Godot's own spelling for it carries no type
 	# annotation - the annotation names the button, the value names the function it calls. It is
 	# pulled into structured attributes BEFORE the gate below rather than after it, the way every
 	# other hint family is, because the generic hinted emission (`var bake: Variant = _bake`) could
@@ -542,7 +542,7 @@ func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
 
 ## @export_placeholder("hint") round-trip: pull the quoted hint text into the structured `placeholder`
 ## attribute (the dialog's Placeholder field). Verify-gated like the others.
-## R32. `@export_tool_button("Bake", "Bake") var bake = _bake` into structured attributes: the
+## `@export_tool_button("Bake", "Bake") var bake = _bake` into structured attributes: the
 ## annotation's arguments verbatim (so emission reproduces the author's own spelling, icon or no
 ## icon) plus the button's label, which is what the row shows. The caller's byte gate is the only
 ## gate this needs - a hint whose arguments this cannot re-spell fails there and stays verbatim.
@@ -643,7 +643,7 @@ static func _is_variable_doc_line(line: String) -> bool:
 ## becomes a clean grouped variable instead of a stray @export_group GDScript block - without ever risking
 ## the byte-exact round-trip. (Order matches _emit_variables: @export_group then @export_subgroup.)
 func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> void:
-	# V4. A Static local's member answers first and alone: it is a private local's hoisted half, so
+	# A Static local's member answers first and alone: it is a private local's hoisted half, so
 	# there is no Inspector grouping below to look for.
 	if _absorb_static_local_marker(lifted, pending, var_line):
 		return
@@ -782,7 +782,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		pending.remove_at(pending.size() - 1)
 
 
-## V4. A `# @static_local:<row name>` marker directly above a member says the member is the hoisted
+## A `# @static_local:<row name>` marker directly above a member says the member is the hoisted
 ## half of a Local row: the variable takes the row's own name back and carries the flag, so the file
 ## opens as the Static local it was written from instead of an ordinary private member. Byte-gated
 ## like every other absorb - the canonical re-emission must reproduce the marker AND the declaration

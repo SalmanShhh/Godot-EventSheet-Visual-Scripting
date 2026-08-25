@@ -1,4 +1,4 @@
-# Godot EventSheets - Y3: WHAT THE ANIMATIONS CALL.
+# Godot EventSheets - WHAT THE ANIMATIONS CALL.
 #
 # Half of game feel is the animation telling the game when: the hit lands on frame 3, the footstep
 # plays on frame 6, the sword leaves the hand at 0.4 s. Godot's own answer to that is the METHOD
@@ -123,7 +123,7 @@ static func _quoted_value(line: String) -> String:
 	return line.substr(opening + 1, closing - opening - 1) if closing > opening else ""
 
 
-## Y3. The plain words behind a called function's name: `_on_hit_frame` -> "hit frame". The handler
+## The plain words behind a called function's name: `_on_hit_frame` -> "hit frame". The handler
 ## spelling is the convention Godot's own signal handlers use, and the words are what the row says,
 ## so an author who types the event's name into the picker and an author who names the track by hand
 ## end up looking at the same row.

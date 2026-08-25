@@ -1085,7 +1085,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Start Flickering** (`after_seconds: float = 0.0`) - Starts the flicker, either now or after a delay. The delay is what a row uses when a torch should catch a moment after the thing that lit it.
-- **Stop Flickering** (`settle_at: float = 1.0`) - Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. Reach goes back to whatever the scene was authored with.
+- **Stop Flickering** (`settle_at: float = 1.0`) - Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. A flame that was flickering its reach puts that back to whatever the scene was authored with, rather than leaving the radius of the frame it stopped on.
 
 ### LightPulseBehavior (`res://eventsheet_addons/light_pulse/light_pulse_behavior.gd`)
 @ace_tags(lighting, juice, visual) @ace_category("Light Pulse") @ace_expose_all(node) @ace_version(1.0.0)
@@ -2763,7 +2763,7 @@ Audio Server vocabulary (the mixing desk from events).
 - **Audio Output Latency** - The output latency in seconds - rhythm games subtract it when judging hits.
 
 ### Behavior Shape (`res://addons/eventforge/registration/modules/behavior_shape_aces.gd`)
-the behavior SHAPES as free actions (T1 / T3 / T4).
+the behavior SHAPES as free actions.
 
 #### Actions
 - **Set Angle Of Motion** (`angle: String, speed: String`) - Sends the object flying along an angle at a speed - the one line a projectile's movement is.
@@ -2780,7 +2780,7 @@ the behavior SHAPES as free actions (T1 / T3 / T4).
 - **Pin To (Bar)** (`anchor: String, length: String`) - Holds the object at exactly one distance from another, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.  A pin follows at runtime and can let go; a child is structure and is destroyed with its parent.
 
 ### Boomer Weapons (`res://addons/eventforge/registration/modules/boomer_weapons_aces.gd`)
-Weapons in 3D (X25): hitscan, explosions, an arsenal and the secrets counter.
+Weapons in 3D: hitscan, explosions, an arsenal and the secrets counter.
 
 #### Triggers
 - **On Alerted** - Runs when an Alert Enemies Within action reaches this one, with who to go for. Put this object in the alerted group first (Add To Group, on created).
@@ -3147,7 +3147,7 @@ Console vocabulary (browser/console-style logging).
 - **To Text** (`value: String`) - Turns any value (numbers, vectors, arrays…) into readable text for a log message.
 
 ### Controls (`res://addons/eventforge/registration/modules/controls_aces.gd`)
-Controls (R23-R29): analog, gamepads by number, touch and gestures,
+Controls: analog, gamepads by number, touch and gestures,
 
 #### Conditions
 - **Compare Axis** (`axis: String, device: String, comparison: String, value: String`) - How far a stick or trigger is pushed, on the -100 to 100 scale the Gamepad object shows.
@@ -3584,7 +3584,7 @@ File management (read / write / JSON, plus directory + file operations).
 - **List Subdirectories** (`path: String`) - Returns the list of subfolder names inside a folder.
 
 ### Game Accessibility (`res://addons/eventforge/registration/modules/game_accessibility_aces.gd`)
-Accessibility for the GAME (X29): the options every project should be one row
+Accessibility for the GAME: the options every project should be one row
 
 #### Conditions
 - **Any Input Received** (`listening: String`) - True on the next key, button or click after Start Listening For, used inside an input event - whatever the player pressed is what they want bound.
@@ -3769,7 +3769,7 @@ JSON (serialize, parse, validate, and save / load JSON files).
 - **From JSON Text** (`text: String`) - Reads JSON text back into a usable value, returning nothing if the text is invalid.
 
 ### Keys Doors (`res://addons/eventforge/registration/modules/keys_doors_aces.gd`)
-Keys and doors (Y16): the coloured keycard, said as the sheet's list words.
+Keys and doors: the coloured keycard, said as the sheet's list words.
 
 #### Triggers
 - **On Locked Door Tried** - Runs on a door that was tried without its key, with the key it wanted. The thud, the red flash, the "you need the red keycard" line - all of them go here.
@@ -3787,7 +3787,7 @@ Keys and doors (Y16): the coloured keycard, said as the sheet's list words.
 - **Keys Held** (`keys: String`) - How many keys the player is carrying - the number a row of HUD key icons counts up to.
 
 ### Light Node (`res://addons/eventforge/registration/modules/light_node_aces.gd`)
-L1/L2: the LIGHT is the object, not a parameter.
+the LIGHT is the object, not a parameter.
 
 #### Conditions
 - **Is On** (`target: String`) - True while is on. Reads `Light2D.enabled`.
@@ -4379,7 +4379,7 @@ Data assets: a folder of .tres as vocabulary, independent copies, pouring
 - **Data Folder Problems** (`folder: String`) - Every structural problem in a folder of data assets, one per line, and "" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it.
 
 ### Scene Lighting (`res://addons/eventforge/registration/modules/scene_lighting_aces.gd`)
-L4/L6: the two lighting objects that are not lights.
+the two lighting objects that are not lights.
 
 #### Actions
 - **Set Darkness** (`value: Color, target: String`) - Darkens a whole 2D layer at once - the one row that makes a level read as night. Writes `CanvasModulate.color`; the row reads the colour back as how dark it makes the layer.
@@ -4708,7 +4708,7 @@ Tilemaps (TileMapLayer, Godot 4.3+)
 - **Tile To Position** (`coords: String, target: String`) - Converts cell coordinates into the pixel position at that cell's center.
 
 ### Timed Input (`res://addons/eventforge/registration/modules/timed_input_aces.gd`)
-Timed inputs (X28): input windows, mashes, prompts and graded timing.
+Timed inputs: input windows, mashes, prompts and graded timing.
 
 #### Conditions
 - **Pressed In The Window** (`open_flag: String, action: String, deadline: String`) - True when the control goes down while the window is still open, used inside an input event. Pair it with the grade to tell a perfect answer from a good one.

@@ -1,10 +1,10 @@
 # EventForge - render harness (dev tool) for batch 5's readings of an opened script.
 #
 # Two approved items in one file:
-#   P2  a script that does not compile shows WHICH rows are broken - the engine's own message on the
+#   A script that does not compile shows WHICH rows are broken - the engine's own message on the
 #       rows built from the offending lines (the errors here are real: the file is written into the
 #       project and put to the same --check-only run the open job uses)
-#   P8  `_draw`, `_enter_tree`, `_exit_tree` and a `_notification` whose body is a `match what:` read
+#   `_draw`, `_enter_tree`, `_exit_tree` and a `_notification` whose body is a `match what:` read
 #       as the object's own lifecycle triggers instead of as helper functions
 #
 # It writes:
@@ -17,7 +17,7 @@ extends SceneTree
 const FIXTURE_PATH: String = "res://opened_script_structure5_preview.gd"
 
 ## Deliberately does not compile: `speed`, `walk_speed` and `max_hp` are never declared, which is the
-## exact shape the approved mockup shows (`hp < max_hp` wearing "max_hp is not declared").
+## exact shape the approved reading shows (`hp < max_hp` wearing "max_hp is not declared").
 const FIXTURE_SOURCE: String = """extends Node2D
 
 var trail_color: Color = Color.RED
@@ -97,7 +97,7 @@ func _init() -> void:
 			if row_data != null and not row_data.row_uid.is_empty():
 				_viewport._fold_state[row_data.row_uid] = false
 		_viewport.set_sheet(_sheet)
-	# P2 end to end: the real check, the real source map, the real row join.
+	# End to end: the real check, the real source map, the real row join.
 	_errors = EventSheetParseErrors.check_file(FIXTURE_PATH)
 	EventSheetParseErrors.store_on_sheet(_sheet, _errors)
 	var source_map: Array = SheetCompiler.compile(_sheet, FIXTURE_PATH).get("source_map", [])

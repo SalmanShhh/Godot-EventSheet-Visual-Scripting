@@ -1,7 +1,7 @@
 # Godot EventSheets - the picker's shelves for the lighting nodes of one scene (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
-# The shelves are the whole of L1/L4/L6's claim about picking: a reader arrives asking "which of MY
+# The shelves are the whole of the claim about picking: a reader arrives asking "which of MY
 # lights", so the answer is one sub-folder per lighting node of the attached scene - saying what kind
 # it is and whether it casts shadows - holding exactly the verbs that node's class answers to. The
 # darkness a layer wears and the world's own atmosphere are two more shelves beside the lights, for

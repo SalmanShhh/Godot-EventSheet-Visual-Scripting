@@ -21,7 +21,7 @@ const ROW_MENU_WHY_DIDNT_FIRE := 9700
 ## row's More ▸). Same rule as above: far outside every shared dispatcher's range.
 const ROW_MENU_FIND_ALL_REFERENCES := 9710
 
-## S20 / S24 - the two items an event that a reading claimed a PATTERN on gains: swap the
+## The two items an event that a reading claimed a PATTERN on gains: swap the
 ## hand-written shape for the shipped behavior, and read why the sheet called it that. Same rule as
 ## the ids above: far outside every shared dispatcher's range.
 const ROW_MENU_ADOPT_BEHAVIOR := 9720
@@ -35,7 +35,7 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## V8. The key that does the same thing, shown at the right of a menu item, so the shortcut is
+## The key that does the same thing, shown at the right of a menu item, so the shortcut is
 ## learned from the menu the reader is already in. `binding` is the shortcut table's own spelling
 ## ("F2", "Ctrl+Shift+V") and goes through its parser, so passing binding_for(action) hints a REBOUND
 ## key as the key it was bound to.
@@ -114,7 +114,7 @@ func build_all() -> void:
 	_dock._row_more_submenu.id_pressed.connect(_dock._on_row_context_menu_id_pressed)
 	_dock._row_context_menu.add_child(_dock._row_more_submenu)
 
-	# M3 - the group head's "Runs on". Built once and parented to the ROW menu, because the row menu
+	# The group head's "Runs on". Built once and parented to the ROW menu, because the row menu
 	# is where a group head is right-clicked; it is filled from the group under the cursor each time.
 	_dock._group_runs_on_submenu = PopupMenu.new()
 	_dock._group_runs_on_submenu.name = "GroupRunsOnSubmenu"
@@ -132,15 +132,15 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
 	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
 	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
-	# V2 - the list is in the order it was written; this is how you ask for alphabetical, and it
+	# The list is in the order it was written; this is how you ask for alphabetical, and it
 	# WRITES that order rather than sorting the view behind your back.
 	_dock._variable_context_menu.add_item("Sort A-Z", _dock.VARIABLE_MENU_SORT_AZ)
-	# V8 - the two verbs the row menu was missing. "Copy as expression" hands over the name a
+	# The two verbs the row menu was missing. "Copy as expression" hands over the name a
 	# parameter field or a script would need (a global as `Game.Score`, which is the spelling that
 	# runs); "Show in Inspector" is the one tick that turns a variable into a designer knob.
 	_dock._variable_context_menu.add_item("Copy as Expression", _dock.VARIABLE_MENU_COPY_EXPRESSION)
 	_dock._variable_context_menu.add_check_item("Show in Inspector", _dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
-	# E2 - "Keep in step": whether a MultiplayerSynchronizer in this object's SCENE replicates this
+	# "Keep in step": whether a MultiplayerSynchronizer in this object's SCENE replicates this
 	# value, and in which of the three modes. Filled the moment it opens, because the answer is a
 	# fact of a file this dock does not own - and the submenu is named after the synchronizer that
 	# holds it, since that is the node the mode is written on.
@@ -150,7 +150,7 @@ func build_all() -> void:
 	_dock._variable_sync_submenu.id_pressed.connect(_dock._on_variable_sync_menu_id_pressed)
 	_dock._variable_context_menu.add_submenu_node_item("Keep in Step", _dock._variable_sync_submenu,
 		_dock.VARIABLE_MENU_KEEP_IN_STEP)
-	# R2 - the two accessor events. A setter fires when the value is set, so it reads as a trigger;
+	# The two accessor events. A setter fires when the value is set, so it reads as a trigger;
 	# a getter gives a value, so it reads as an expression. Enabled only on a sheet-level (tree)
 	# variable that does not already have that accessor.
 	_dock._variable_context_menu.add_item("Add setter", _dock.VARIABLE_MENU_ADD_SETTER)
@@ -164,7 +164,7 @@ func build_all() -> void:
 	# can never overwrite each other.
 	_dock._variable_context_menu.add_item("Export Text for Translation…", _dock.VARIABLE_MENU_TEXT_EXPORT)
 	_dock._variable_context_menu.add_item("Import Translations…", _dock.VARIABLE_MENU_TEXT_IMPORT)
-	# V8 - the keys that do the same thing, at the right of the items that do it.
+	# The keys that do the same thing, at the right of the items that do it.
 	hint_key(_dock._variable_context_menu, _dock.VARIABLE_MENU_RENAME, "F2")
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
@@ -181,11 +181,11 @@ func build_all() -> void:
 	_dock._new_function_submenu.add_item("Action", _dock.NEW_FUNCTION_MENU_ACTION)
 	_dock._new_function_submenu.add_item("Condition", _dock.NEW_FUNCTION_MENU_CONDITION)
 	_dock._new_function_submenu.add_item("Expression", _dock.NEW_FUNCTION_MENU_EXPRESSION)
-	# M2 - a message is a function other peers call, so it is added the same way and then marked.
+	# A message is a function other peers call, so it is added the same way and then marked.
 	_dock._new_function_submenu.add_item("Message…", _dock.NEW_FUNCTION_MENU_MESSAGE)
 	_dock._new_function_submenu.id_pressed.connect(_dock._on_new_function_submenu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("New Function", _dock._new_function_submenu)
-	# V8 - "add a variable" is three questions, so the submenu asks the one that matters: where does
+	# "add a variable" is three questions, so the submenu asks the one that matters: where does
 	# the declaration go. Global writes into an autoload, Local lives inside the event it sits in,
 	# Instance belongs to this object. Same dialog behind all three, opened on that scope.
 	_dock._add_variable_submenu = PopupMenu.new()
@@ -193,7 +193,7 @@ func build_all() -> void:
 	_dock._add_variable_submenu.add_item("Global variable…", _dock.EMPTY_MENU_ADD_VARIABLE)
 	_dock._add_variable_submenu.add_item("Local variable…", _dock.EMPTY_MENU_ADD_LOCAL_VARIABLE)
 	_dock._add_variable_submenu.add_item("Instance variable…", _dock.EMPTY_MENU_ADD_INSTANCE_VARIABLE)
-	# V8 - and the two of these three that have a key say which. Read off the shortcut table, so a
+	# And the two of these three that have a key say which. Read off the shortcut table, so a
 	# rebound key hints as the key it was rebound to; Local has no key of its own to name.
 	hint_key(_dock._add_variable_submenu, _dock.EMPTY_MENU_ADD_VARIABLE,
 		EventSheetShortcuts.binding_for("add_variable"))
@@ -201,7 +201,7 @@ func build_all() -> void:
 		EventSheetShortcuts.binding_for("add_variable_chord"))
 	_dock._add_variable_submenu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock._empty_space_context_menu.add_submenu_node_item("Add Variable", _dock._add_variable_submenu)
-	# R32 - the smallest editor tool there is, one menu item away: a button in the Inspector and the
+	# The smallest editor tool there is, one menu item away: a button in the Inspector and the
 	# empty function it calls. It sits beside Add New Variable because that is what it adds - a knob,
 	# one you press instead of one you type into.
 	_dock._empty_space_context_menu.add_item("Add Inspector Button…", _dock.EMPTY_MENU_ADD_INSPECTOR_BUTTON)
@@ -276,7 +276,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
 	var is_group: bool = row_type == EventRowData.RowType.GROUP
-	# R1/R2 - a region is its own row type with its own verbs: it holds no locals, it cannot be
+	# A region is its own row type with its own verbs: it holds no locals, it cannot be
 	# switched off, and the two things it CAN become (a group, or nothing at all) are refactors the
 	# group menu has no item for. Only an OPENING fence gets them - a closer is the same region.
 	var is_region: bool = row_type == EventRowData.RowType.REGION \
@@ -316,7 +316,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
 		menu.add_item("Edit Function…", _dock.ROW_MENU_EDIT_FUNCTION)
 		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
-		# M2 - what makes this function a message is an `@rpc` line above it, so the gesture that
+		# What makes this function a message is an `@rpc` line above it, so the gesture that
 		# writes that line lives on the function's own row. The menu is built per right-click, so the
 		# item reads the live state: a function that already is one opens the same dialog to change it.
 		menu.add_item(
@@ -353,11 +353,11 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item("Add 'Else'", _dock.ROW_MENU_MAKE_ELSE)
 		menu.add_item("Add 'Else If'", _dock.ROW_MENU_MAKE_ELIF)
 	elif is_group:
-		# G4 - the group verbs in the order an author reaches for them: everything the group IS in one
+		# The group verbs in the order an author reaches for them: everything the group IS in one
 		# dialog, the on/off tick, the folds, then the things you do TO a group. Duplicate and Delete
 		# are the universal items below, so the group menu does not repeat them.
 		menu.add_item("Edit Group…", _dock.ROW_MENU_EDIT_GROUP)
-		# M3 - who runs this group over a network, without opening the dialog for the one answer.
+		# Who runs this group over a network, without opening the dialog for the one answer.
 		# Filled as it opens, ticked at what the group says now.
 		menu.add_submenu_node_item("Runs On", _dock._group_runs_on_submenu, _dock.ROW_MENU_GROUP_RUNS_ON)
 		menu.add_check_item("Active On Start", _dock.ROW_MENU_GROUP_ENABLED)
@@ -366,7 +366,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 		menu.add_item("Add Local Variable…", _dock.ROW_MENU_GROUP_ADD_LOCAL)
 		menu.add_item("Group Color…", _dock.ROW_MENU_GROUP_COLOR)
-		# R2 - the way back to the file's own kind of grouping. A group carries two things a region
+		# The way back to the file's own kind of grouping. A group carries two things a region
 		# cannot (locals, the runtime switch), so the item says WHY before the click rather than
 		# failing after it.
 		# A synthetic Arrange-by header reports as a group row but stands for no EventGroup, so it is
@@ -381,7 +381,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 				menu.set_item_disabled(menu.item_count - 1, true)
 		menu.add_item("Ungroup - Keep The Rows", _dock.ROW_MENU_UNGROUP)
 	elif is_region:
-		# R1/R2 - what a region offers: rename the fence, fold it, and the two things it can become.
+		# What a region offers: rename the fence, fold it, and the two things it can become.
 		# No locals, no on/off switch, no ungroup - a region holds none of that.
 		menu.add_item("Rename Region…", _dock.ROW_MENU_REGION_RENAME)
 		menu.add_item("Open / Close Region", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
@@ -645,7 +645,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					group_toggle_index,
 					"Open Group" if context_group.is_collapsed() else "Close Group"
 				)
-		# G4 - Active on start is a TICK, so the menu shows the group's live state rather than a verb
+		# Active on start is a TICK, so the menu shows the group's live state rather than a verb
 		# that has to be read twice to work out which way it goes.
 		var group_enabled_index: int = menu.get_item_index(_dock.ROW_MENU_GROUP_ENABLED)
 		if group_enabled_index >= 0:
@@ -669,7 +669,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					convert_index,
 					"Convert to Global" if scope_label == "local" else "Convert to Local"
 				)
-		# V8 - the Inspector tick shows what is true right now, and a local can never be a property.
+		# The Inspector tick shows what is true right now, and a local can never be a property.
 		var inspector_index: int = menu.get_item_index(_dock.VARIABLE_MENU_SHOW_IN_INSPECTOR)
 		if inspector_index >= 0:
 			var can_export: bool = has_variable and str(
@@ -679,7 +679,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				can_export and _dock._variables.context_variable_exported())
 			menu.set_item_tooltip(inspector_index, "" if can_export
 				else "A local lives inside its event - it is never a property of the object.")
-		# E2 - a scene is where replication lives, so a script no scene runs has nothing to keep in
+		# A scene is where replication lives, so a script no scene runs has nothing to keep in
 		# step, and a local lives inside its event rather than on the object a synchronizer watches.
 		var sync_index: int = menu.get_item_index(_dock.VARIABLE_MENU_KEEP_IN_STEP)
 		if sync_index >= 0:
@@ -700,7 +700,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 				menu.set_item_disabled(grid_index, not grid_variable)
 				menu.set_item_tooltip(grid_index, "" if grid_variable
 					else "Only a grid variable (one shown as a table in the Inspector) has columns to line up in a spreadsheet.")
-		# R2 - an accessor belongs to a sheet-level variable that does not already have one. A local
+		# An accessor belongs to a sheet-level variable that does not already have one. A local
 		# lives and dies with its event, and a constant never changes, so neither can take an accessor.
 		var accessor_variable: LocalVariable = _dock._variables._context_variable.get("resource", null) if has_variable else null
 		var accessor_scope: bool = accessor_variable != null and not accessor_variable.is_constant
@@ -735,7 +735,7 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 			)
 
 
-## M3 - the Runs on submenu: the three answers, ticked at the one this group carries now. Built as
+## The Runs on submenu: the three answers, ticked at the one this group carries now. Built as
 ## it opens, from the group under the cursor, so a second group's head never shows the first's answer.
 func _fill_group_runs_on_submenu() -> void:
 	var menu: PopupMenu = _dock._group_runs_on_submenu
@@ -749,7 +749,7 @@ func _fill_group_runs_on_submenu() -> void:
 		menu.set_item_checked(menu.get_item_count() - 1, current == value)
 
 
-## E2 - the Keep in step submenu, built from the SCENE every time it opens. With a synchronizer it
+## The Keep in step submenu, built from the SCENE every time it opens. With a synchronizer it
 ## leads with that node's name (the mode is written on it, so the reader has to know which one) and
 ## then the four modes, ticked at the one that is true now. With none it is the single offer to add
 ## one, because a scene with nothing to replicate cannot be asked in which mode.

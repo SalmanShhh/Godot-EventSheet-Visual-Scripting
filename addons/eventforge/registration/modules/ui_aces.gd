@@ -68,7 +68,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetLineEditText", "Field Text", ACEDescriptor.ACEType.EXPRESSION, "text", "", [], "UI", "field text", "LineEdit")
 		.described("Returns whatever text the player has typed into the field."))
 
-	# S12 - the UI shapes an opened script already READS as these words: a bar filled to a value out
+	# The UI shapes an opened script already READS as these words: a bar filled to a value out
 	# of a maximum, a centred dialog, and the mixer's master volume as the 0-to-1 a slider gives.
 	descriptors.append(F.make_descriptor("Core", "SetProgress", "Set Progress", ACEDescriptor.ACEType.ACTION, "value = {value}
 max_value = {max}", "", [F.make_param("value", "String", "0", "Value", "How full the bar is.", "expression"), F.make_param("max", "String", "100", "Of", "The full amount.", "expression")], "UI", "Set progress to {value} of {max}", "Range")
@@ -78,7 +78,7 @@ max_value = {max}", "", [F.make_param("value", "String", "0", "Value", "How full
 	descriptors.append(F.make_descriptor("Core", "SetMasterVolume", "Set Master Volume", ACEDescriptor.ACEType.ACTION, "AudioServer.set_bus_volume_db(0, linear_to_db({level}))", "", [F.make_param("level", "String", "0.5", "Level", "0 = silent, 1 = full - the number a volume slider gives.", "expression")], "UI", "Set master volume to {level} (0 to 1)")
 		.described("Sets the overall game volume from a 0-to-1 slider value."))
 
-	# ── V2 - the object words a form has: Text input, List, Check box, File chooser, Tabs ──
+	# ── the object words a form has: Text input, List, Check box, File chooser, Tabs ───────
 	# Every template below writes exactly the line the opened-script reading recognises, so a picked
 	# row and a hand-written one are the same bytes and read the same sentence.
 	descriptors.append(F.make_descriptor("Core", "SetTextInputPlaceholder", "Set Placeholder", ACEDescriptor.ACEType.ACTION, "placeholder_text = {value}", "", [F.make_param("value", "String", "\"\"", "Placeholder", "The grey hint shown while the field is empty.", "expression")], "UI", "Set placeholder to {value}", "LineEdit")

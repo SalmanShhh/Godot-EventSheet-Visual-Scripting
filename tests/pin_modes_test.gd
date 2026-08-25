@@ -2,15 +2,15 @@
 class_name PinModesTest
 extends RefCounted
 
-# Y4 / Y5 / Y6. The Pin behavior in every mode, and the two ways the pin words and the child words
+# The Pin behavior in every mode, and the two ways the pin words and the child words
 # get crossed.
 #
-#   Y4  rope and bar     the two DISTANCE modes - a rope hangs slack and pulls only when taut, a bar
+#   Rope and bar     the two DISTANCE modes - a rope hangs slack and pulls only when taut, a bar
 #                        holds its length every tick
-#   Y5  soft, axis,      the follow that lags, one axis at a time, the anchor's scale, a named point
+#   Soft, axis,      the follow that lags, one axis at a time, the anchor's scale, a named point
 #       size, point,     on another object (a marker, a bone, a hand), and a point travelling a path
 #       path
-#   Y6  pin or child     the head bar's "pinned to X (rope)" fact, and the Doctor's two notes -
+#   Pin or child     the head bar's "pinned to X (rope)" fact, and the Doctor's two notes -
 #                        following the same object twice, and pinning to one that gets destroyed
 #
 # Six gates:
@@ -62,7 +62,7 @@ func _physics_process(_delta: float) -> void:
 	global_position = anchor.global_position + (global_position - anchor.global_position).limit_length(rope_length)
 """
 
-## Y6. A child of the thing it is pinned to - the classic "it drifts twice as fast" bug. Being a
+## A child of the thing it is pinned to - the classic "it drifts twice as fast" bug. Being a
 ## child already carries the object, and the pin writes its place a second time from the same source.
 const DOUBLE_FOLLOW: String = """extends Node2D
 
@@ -73,7 +73,7 @@ func _physics_process(_delta: float) -> void:
 	global_position = rig.global_position + pin_offset
 """
 
-## Y6. A pin to an object this file destroys, with no Unpin and no validity question.
+## A pin to an object this file destroys, with no Unpin and no validity question.
 const FREED_ANCHOR: String = """extends Node2D
 
 var anchor: Node2D
@@ -86,7 +86,7 @@ func finish() -> void:
 	anchor.queue_free()
 """
 
-## Y6. The same file with the accepted fix written in, which is what must NOT be flagged.
+## The same file with the accepted fix written in, which is what must NOT be flagged.
 const FREED_ANCHOR_GUARDED: String = """extends Node2D
 
 var anchor: Node2D
@@ -149,13 +149,13 @@ static var AUTHORING_PARITY: Dictionary = {
 		"Lantern ▸ Pin  Pin to hitch (bar, length bar_length)"]
 }
 
-## Y4/Y5. The pin spellings that must NOT have a picker row, because their template would be handed
+## The pin spellings that must NOT have a picker row, because their template would be handed
 ## to the importer. Pinned by NAME so a later parcel cannot quietly add one back.
 static var UNAUTHORED_SHAPES: PackedStringArray = PackedStringArray([
 	"PinToObjectSoftly", "PinXPositionToObject", "PinYPositionToObject", "PinSizeToObject"
 ])
 
-## Y5. The verbs the two packs publish for the modes above. Named, not counted: a count says nothing
+## The verbs the two packs publish for the modes above. Named, not counted: a count says nothing
 ## about which row went missing.
 static var PIN_2D_VERBS: PackedStringArray = PackedStringArray([
 	"Pin To", "Pin To At Offset", "Set Pin Offset", "Pin To Rope", "Pin To Bar", "Pin To Softly",
@@ -247,7 +247,7 @@ static func _authoring_parity() -> bool:
 	return ok
 
 
-## Gate four: the head bar's Y6 fact - what this object rides, in the pin's own mode words, off the
+## Gate four: the head bar's pin fact - what this object rides, in the pin's own mode words, off the
 ## file itself. Pinned by value here and walked through a real viewport below.
 static func _head_bar_fact() -> bool:
 	var ok: bool = true
@@ -285,12 +285,12 @@ static func _head_bar_fact() -> bool:
 	# code the bar walks and the anchor is left saying `(rope)` rather than `(rope · size)`. Pinned
 	# as it is rather than as it might be, because a bar that named a mode the canvas does not show
 	# would be the exact failure the gates above exist to prevent.
-	ok = _check("whose lines are the mockup's own sentences", " | ".join(bar_lines),
+	ok = _check("whose lines are the pinned sentences", " | ".join(bar_lines),
 		"pinned to anchor (rope) | pinned to hitch (bar) | pinned to lead (soft · angle) | pinned to Player's hand (position) | pinned to Track's path (position) | pinned to ground (x only · y only)") and ok
 	return ok
 
 
-## Gate five: the Doctor's two Y6 notes, and the fixes each one offers.
+## Gate five: the Doctor's two pin notes, and the fixes each one offers.
 static func _doctor_notes() -> bool:
 	var ok: bool = true
 	ok = _check("every spelling of a pin is found", ",".join(
@@ -320,7 +320,7 @@ static func _doctor_notes() -> bool:
 	return ok
 
 
-## Y5. Both packs publish every mode as a row, and the emitted GDScript is what says so.
+## Both packs publish every mode as a row, and the emitted GDScript is what says so.
 static func _pack_verbs() -> bool:
 	var ok: bool = true
 	ok = _check("the Pin pack publishes every mode",
@@ -342,7 +342,7 @@ static func _pack_verbs() -> bool:
 	return ok
 
 
-## Y4 / Y5. What each mode actually DOES, called straight on a behavior with no tree at all - the
+## What each mode actually DOES, called straight on a behavior with no tree at all - the
 ## reach function needs a mode, a length and a frame time and nothing else, so the promise the mode
 ## names can be pinned by value rather than described.
 ##

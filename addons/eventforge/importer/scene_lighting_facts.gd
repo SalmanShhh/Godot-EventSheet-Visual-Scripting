@@ -1,4 +1,4 @@
-# EventForge - L4/L6: what the attached SCENE says about this sheet's lighting, said in sentences.
+# EventForge - what the attached SCENE says about this sheet's lighting, said in sentences.
 #
 # Lighting fails invisibly. The node is there, the row runs, and the screen does not change - because
 # the light casts shadows that nothing blocks, or because the environment being written at run time
@@ -36,7 +36,7 @@ const ENVIRONMENT_PROPERTY: String = "environment"
 const DARKNESS_CLASS: String = "CanvasModulate"
 const DARKNESS_PROPERTY: String = "color"
 
-## L8. What a 2D point light casts through. A light with none of it lights nothing at all, which is
+## What a 2D point light casts through. A light with none of it lights nothing at all, which is
 ## the first of the Doctor's five findings.
 const TEXTURE_PROPERTY: String = "texture"
 
@@ -167,7 +167,7 @@ static func lights_without_occluders(scene_path: String, casting: Array[Dictiona
 	return stranded
 
 
-## L8. The 2D lights of a scene with NO texture on them, by name. A PointLight2D lights the shape of
+## The 2D lights of a scene with NO texture on them, by name. A PointLight2D lights the shape of
 ## its texture and nothing else, so one without a texture is a node that is switched on, costs a
 ## draw, and shows nothing - the quietest way a lit scene can be dark. Only asked of the classes that
 ## HAVE a texture: a DirectionalLight2D has none and needs none.
@@ -181,7 +181,7 @@ static func textureless_lights(scene_path: String) -> PackedStringArray:
 	return dark
 
 
-## L8. The 2D lights of a scene whose RANGE mask reaches what is drawn on the layer. Godot matches a
+## The 2D lights of a scene whose RANGE mask reaches what is drawn on the layer. Godot matches a
 ## light's `range_item_cull_mask` against each item's own `light_mask`, and an item that never set one
 ## is on layer 1 - so a light whose range mask misses layer 1 lights nothing anybody put in the scene
 ## by hand. This is the RANGE question, not the shadow one: two masks, two rules, and confusing them
@@ -195,7 +195,7 @@ static func lights_reaching_the_layer(scene_path: String) -> PackedStringArray:
 	return reaching
 
 
-## L8. The CanvasModulate nodes of a scene that really DARKEN it, each as {"name", "percent"}. A
+## The CanvasModulate nodes of a scene that really DARKEN it, each as {"name", "percent"}. A
 ## CanvasModulate holding white multiplies everything by one and changes nothing, so it is not a
 ## darkness at all; the percentage is the row's own reading of the colour, so the Doctor and the row
 ## say the same number about the same node.

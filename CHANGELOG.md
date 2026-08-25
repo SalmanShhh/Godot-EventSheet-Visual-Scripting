@@ -227,6 +227,22 @@
 
 ### Tooling
 
+- **Every comment states its own constraint.** A feature is designed away from the code, in notes
+  that number their items, and those numbers leaked: 3,654 comments across the plugin opened with a
+  label (`W6.`, `X30,`, `M3 -`, `T1-T4.`) or leaned on one mid-sentence ("the W1 gate", "the M28
+  reading", "the case P8 is actually about"), and one test file was named after one. Every one of
+  them is rewritten to say the thing itself - the label carried no meaning to anyone without the
+  document it came from, and the sentence beside it always could. `tests/variable_dialog_v5_test.gd`
+  is `tests/variable_dialog_fields_test.gd` with the same assertions, and the pack recipes that
+  EMITTED such comments into the 105 generated packs emit plain ones now (drift stays 0).
+- **And it cannot leak back.** `tests/design_shorthand_test.gd` sweeps every tracked text file for a
+  letter-and-digit label standing as a word, and for a comment pointing at a design drawing, with a
+  short allow-list that each entry earns: the other editor's name (its own gate governs it), the
+  keyboard keys, Markdown heading levels, the paper size a sheet export defaults to, a regular
+  expression's character class, and the bundled Mockup Slate theme, which is a product name a user
+  reads. The detector is proved on both sides - five shapes it must catch and eight it must not -
+  before the live sweep is believed, and the design-notes folder is the one place the numbering
+  still belongs.
 - **A preloaded constant is an import, and reads as one.** Every one of the 105 pack recipes opens
   with `@tool` and `const Lib := preload(…)`, and the reading accepted the annotation but not the
   import - so a recipe whose body split cleanly was left with its prelude standing as a wall of
@@ -404,7 +420,7 @@
   declares them lists none (its globals are already its rows), and neither does a read-only preview,
   whose head gathers the same list into one folder.
 - **A global counts as used however the row that uses it is stored.** The list behind these rows -
-  and behind the `Global variables used here` folder an opened preview has carried since R40 - only
+  and behind the `Global variables used here` folder an opened preview has carried from the start - only
   matched a qualified `Game.Score` string. A row that has been through the picker files the object
   and the property in separate cells, so the most ordinary way to touch a global (`Game > Set Score
   to 0`) counted as no use at all and the folder under-reported. The object column is now paired
@@ -1965,7 +1981,7 @@ one the logic is right and the wiring is not.
   plugin's `plugin.cfg` AND `tools/pack_builders/` beside it), so a project that merely installed
   the plugin never sees any of it. The listing is read when the folder is first opened and forgotten
   when it is folded: a session that never opens it pays nothing.
-- **The plugin's own bar** (W20). A file of the running editor opens read-only with
+- **The plugin's own bar**. A file of the running editor opens read-only with
   `part of this editor · read-only` and an **Edit anyway** chip; `plugin.gd` also carries
   **Enabled ●** (the plugin list's live state), **Reload ↻** (disable and enable through the editor),
   **Output ▾** (the editor log filtered to what the reload printed) and **plugin.cfg ▸** (the
@@ -1975,11 +1991,11 @@ one the logic is right and the wiring is not.
   **A saved file that does not parse is NOT reloaded**: the version already running keeps running
   and the bar goes red saying so, which is the one thing that makes editing the editor from inside
   itself survivable.
-- **"Show the events behind this"** (W19). Ctrl+Shift+Alt on any control the plugin built opens the
+- **"Show the events behind this"**. Ctrl+Shift+Alt on any control the plugin built opens the
   file that built it as a sheet, at the row that names it. No registry: a control carries the file
   that made it and the words it was made with, and the row is found by those words. Written only
   while the This-editor folder is on, so a shipped editor in a game project carries nothing.
-- **Dogfood gates** (W22). New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
+- **Dogfood gates**. New `tests/plugin_reads_itself_test.gd`: a rotating sample of forty files
   a day (seeded by the day, so a run is fast and a week covers the editor) must open, round-trip
   byte-exact, add no script block, and stay under a *wordless-row* ceiling measured per role group
   on the current tree rather than guessed. A wordless row is one with no words of its own - an entry
@@ -1989,7 +2005,7 @@ one the logic is right and the wiring is not.
   the folder is on. Two pre-existing byte round-trip drifts were found by the new gate; both are
   fixed at their roots (see Fixed below), the gate's exception list is empty, and it now enforces
   the lossless contract on the whole corpus it samples.
-- **A contributor's door** (W24). The Start page gains a card - "This is the editor's own project -
+- **A contributor's door**. The Start page gains a card - "This is the editor's own project -
   open its source as sheets" - in the plugin's repository only, and the Manual gains two tutorials:
   *Read the editor's code as events* and *Add a word to the vocabulary*. New guide:
   **The Editor, Read as Events**.
@@ -4702,7 +4718,7 @@ in the right-hand lane, where the reader expects a step.
   "Answer" / "Give back" split. A bare `return` in an action still reads **Stop event**.
 - A call to one of the sheet's OWN functions inside a return cell reads by its Function name -
   **Set return value to Can Stand Up** rather than `_can_stand_up()`, with `Call <Name>` plus argument
-  chips when it takes any (the same M16 rule the Call rows already follow).
+  chips when it takes any (the same rule the Call rows already follow).
 - A no-argument `get_thing()` now reads as the property it is (`host.get_wall_normal().x` ->
   `host's wall normal X`), and a condition made of `and` / `or` conjuncts reads each one through the
   grammar (`host != null and host.is_on_wall()` -> `host exists and host is on wall`).
@@ -9152,7 +9168,7 @@ Both are proposals - nothing built until the slices are green-lit.
   "Radius", a Ring shows "Radius" + "Thickness", a Rect shows "Width" + "Height", a Line shows "End X" +
   "End Y" + "Thickness", a Cone shows "Facing" + "FOV" + "Radius", a Stamp shows "Scale" + "Spin" +
   "Texture" - plus a common "Offset X/Y" and a colour swatch, with reorder and remove per card. This
-  replaces the generic grid's opaque "P1 / P2 / P3" columns (where P1 meant radius for one shape and width
+  replaces the generic grid's opaque numbered parameter columns (where the first meant radius for one shape and width
   for the next). The stored keys are unchanged, so the pack, the rasterizer, the Draw Prefab action, and the
   .tres bytes are all untouched - and the live preview panel still repaints on every tweak.
 
@@ -9621,7 +9637,7 @@ Both are proposals - nothing built until the slices are green-lit.
   Simulate verbs), the AI drag & drop recipe, and the 3-line recipe for putting the same
   seam in your own addons.
 
-### Added - pathfinding P4: hazards + moving platforms
+### Added - pathfinding: hazards + moving platforms
 
 - **Add Hazard / Clear Hazards** (Platformer Pathfinding): mark a world rectangle as
   hazardous at routing time - no graph rebuild. Deadly hazards (spikes, lava) block their
@@ -9648,7 +9664,7 @@ Both are proposals - nothing built until the slices are green-lit.
 
 ## [0.14.0] - 2026-07-12 - The Pathfinding & Game-Feel Update
 
-### Added - pathfinding P2: patrol discipline, chase freshness, the watchdog, and the budget
+### Added - pathfinding: patrol discipline, chase freshness, the watchdog, and the budget
 
 - **Ledge Restriction + Ledge Leniency**: walk-only routing for patrollers - no jumps, no
   portals, and drops only within the leniency, so a guard never chases you off its rooftop.
@@ -9670,7 +9686,7 @@ Both are proposals - nothing built until the slices are green-lit.
 
 ### Added - Nav Agent 3D (62nd pack): navmesh pathfinding, sheet-shaped
 
-- **Nav Agent 3D** completes the pathfinding pair (spec P3): a thin, zero-wiring wrapper over
+- **Nav Agent 3D** completes the pathfinding pair: a thin, zero-wiring wrapper over
   Godot's navmesh navigation. Attach it under a `CharacterBody3D` and call **Find Path To** - a
   `NavigationAgent3D` child is inserted and tuned for you (radius/height/arrive knobs), routes
   come from the scene's `NavigationRegion3D`, and the verbs MIRROR the 2D Platformer
@@ -9726,7 +9742,7 @@ Both are proposals - nothing built until the slices are green-lit.
   To's `nearest` mode never fails (chasers); `reach` fails honestly (On Path Failed). Manual
   mode exposes the intents (Path Move Axis, Path Wants Jump, Current Waypoint X/Y, Current Path
   Action) for custom drivers, and Set Nav Debug Draw paints the live route.
-  Guide: `docs/Addons/Platformer-Pathfinding.md`. (Spec P1; P2 discipline knobs, the shared
+  Guide: `docs/Addons/Platformer-Pathfinding.md`. (The discipline knobs, the shared
   graph autoload, physics-polygon slope classification, and the 3D wrapper are phased next.)
 - **PlatformerMovement** gains the `ai_controlled` + `ai_move_axis` seam - inert by default
   (the keyboard read is unchanged when off); any AI can now steer the pack.
@@ -10634,7 +10650,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   (the button disables itself with the reason otherwise). Unlike a Tool button -
   its own Inspector entry generated from a function - this one sits with the
   variable it concerns. Verify-gated round-trip; preview sentence + card mock.
-  This closes the parity matrix's P5 tail. Pinned in
+  This closes the parity matrix's last tail item. Pinned in
   tests/inspector_drawer_roundtrip_test.gd.
 
 ### Added - inline validation: a sheet function's warning shown at the field
@@ -10762,7 +10778,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   `hover_text(entry)` to explain its rows on hover (BBCode renders styled); the
   viewport asks the registered kind before its generic tooltips.
 
-### Added - Inspector Designer P1: section headers + info notes (decor)
+### Added - Inspector Designer: section headers + info notes (decor)
 
 - **Two decor fields on every exported variable**: a **Section header** (an
   accent-colored label above the property; end it with `#rrggbb` to tint, e.g.
@@ -10778,7 +10794,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   back into editable dialog fields; both variable paths (dict + tree) emit one
   canonical shape. Pinned in tests/inspector_drawer_roundtrip_test.gd.
 
-### Added - Inspector Designer P1: the min-max range slider drawer
+### Added - Inspector Designer: the min-max range slider drawer
 
 - **A sixth Inspector drawer, `min_max`**: a Vector2 shown as ONE track with two
   draggable handles - the variable's `x` is the low end, `y` the high end. Spawn
@@ -11378,7 +11394,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   the compiler's own prefix builder, so the plain-language names teach the annotations instead
   of hiding them (the ACE Studio pattern).
 
-### Added - full inspector export coverage, P1 (every hint family round-trips editable)
+### Added - full inspector export coverage (every hint family round-trips editable)
 
 - **The wider @export families are now structured, dialog-ready attributes** instead of
   verbatim hints: range WITH its modifier tail (`or_greater` / `or_less` / `exp` /
@@ -11451,7 +11467,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   function itself is edited through its Define block / the Functions panel.
   (`tests/mid_file_function_lift_test.gd`)
 
-### Added - Custom Block API P1 (the core, shipped)
+### Added - Custom Block API (the core, shipped)
 
 - **Register your own non-ACE row kinds.** `EventSheetBlockKind` (one stateless descriptor per
   kind: field schema + pure `emit()` + byte-verify-gated `lift()` + `summary()` display) +
@@ -11463,7 +11479,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
 - **Two built-in proof kinds**: **Preload Resource** (`const Sfx := preload("res://…")`) and
   **Region marker** (`#region Name` / `#endregion`) - both now open as first-class rows in any
   `.gd` sheet instead of raw GDScript blocks. (`tests/custom_block_test.gd`)
-- **P2: packs define block kinds zero-config.** Drop a script extending `EventSheetBlockKind`
+- **Packs define block kinds zero-config.** Drop a script extending `EventSheetBlockKind`
   into `res://eventsheet_addons/` and it registers automatically (the same scan that finds ACE
   providers; detection walks the base-class chain so ordinary provider scripts are never
   instantiated). kind_ids from packs are namespaced `<pack>.<name>` (warned otherwise). Living
@@ -11479,7 +11495,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   pending surgery, not a per-row contract) - byte-identical output (drift=0 over all 31 packs),
   saved sheets and the dedicated dialogs untouched. Resource kinds are excluded from the
   generic add surfaces (`addable_kinds()`); their row classes keep their dedicated flows.
-- **P3: custom blocks in the command palette.** Ctrl+P now lists "Add <kind>…" for every
+- **Custom blocks in the command palette.** Ctrl+P now lists "Add <kind>…" for every
   registered kind (built-ins and pack-defined alike), built per open so a freshly dropped pack's
   kinds appear without a restart.
 - **Add + edit UX, zero UI code per kind**: every registered kind gets an entry in the
@@ -11495,8 +11511,8 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   touching the plugin. One `EventSheetBlockKind` contract (fields schema + pure `emit` +
   byte-verify-gated `lift` + `summary` render) wired ONCE through the compiler, importer,
   row builder, and a generic schema dialog; a single `CustomBlockRow` resource so sheets degrade
-  gracefully to plain GDScript when a kind is missing. Phased P1 (core + two proof kinds) →
-  P2 (zero-config pack kinds via the addon scanner) → P3 (picker integration).
+  gracefully to plain GDScript when a kind is missing. Phased: the core plus two proof kinds, then
+  zero-config pack kinds via the addon scanner, then picker integration.
 
 ### Changed - maintainability
 
@@ -12074,7 +12090,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   brighter "GDScript" badge. A block the importer couldn't lift now shows an inline amber **"⚠ code"**
   badge (its `lift_note`) beside the hover tooltip - a wall of blocks becomes a triage list.
 - Pure editor view-state - **zero codegen change**, the `.gd` stays byte-exact. See
-  `docs/internal/SPEC-code-blocks-as-event-rows.md` (P1) + `blocks_scaffolding_test`.
+  `docs/internal/SPEC-code-blocks-as-event-rows.md` + `blocks_scaffolding_test`.
 
 ### Changed - "Open as Event Sheet" is easier to find
 
@@ -14267,14 +14283,14 @@ authored as events). Details below (newest first).
   volatile surface - runtime ACEs stay on stable APIs only, per the covenant).
 - Covered by `tests/tool_sheets_test.gd` (10 assertions).
 
-### Multi-view complete: detached windows + linked panes (P2/P3)
+### Multi-view complete: detached windows + linked panes
 - **Detach** (toolbar): a floating OS window hosting another full-editing pane over the
   same sheet - drag it to a second monitor while debugging. Same shared per-sheet state
   (breakpoints/bookmarks/disabled) and the same refresh bus as the split pane.
 - **Link** (toolbar): follow-selection across panes - selecting a row in any pane
   scrolls/selects it in the others. Keep the split zoomed out as an overview and click
   rows to focus them in your detail pane (recursion-guarded; unlink any time).
-- With Split (P1) + full dual-pane editing (P1.5), the multi-view arc from the spec is
+- With Split + full dual-pane editing, the multi-view arc from the spec is
   **complete**. Covered by the extended `tests/multi_view_test.gd` (21 assertions).
 
 ### Multi-view phase 1.5: both panes are full editors

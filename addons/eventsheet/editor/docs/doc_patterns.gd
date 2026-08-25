@@ -92,7 +92,7 @@ static func pattern_blocks(pattern: String) -> Array[Dictionary]:
 	return blocks
 
 
-## S26 - the patterns a verb belongs to, as {title, doc_id} links, derived from the ace_ids the
+## The patterns a verb belongs to, as {title, doc_id} links, derived from the ace_ids the
 ## claims carry. Empty when the verb is in none of them, which is most verbs.
 ##
 ## The join is over the CLAIMS of the sheet the reader has open, not a hand-kept table: a verb is

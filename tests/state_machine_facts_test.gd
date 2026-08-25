@@ -1,4 +1,4 @@
-# Godot EventSheets - S1: an enum plus a variable of it IS a state machine, and reads as the FSM
+# Godot EventSheets - an enum plus a variable of it IS a state machine, and reads as the FSM
 # behavior - one line in the head, Go to state, Current state is, Previous state is, the in-list
 # forms and the CurrentState expression. Pins the facts and every sentence by VALUE.
 @tool

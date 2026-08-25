@@ -1,4 +1,4 @@
-# Godot EventSheets - what the SCENE says about keeping a game in step (E2).
+# Godot EventSheets - what the SCENE says about keeping a game in step.
 #
 # Godot's high-level multiplayer keeps half of its story outside the script. A `MultiplayerSynchronizer`
 # holds the list of properties it replicates, how often, and who may see them; a `MultiplayerSpawner`
@@ -738,7 +738,7 @@ static func add_synchronizer(scene_path: String, node_path: String) -> Dictionar
 	return {"ok": true, "reason": "", "name": added.name}
 
 
-## M4. Adds one scene to a spawner's list of the scenes it may spawn - the Inspector's *Auto spawn
+## Adds one scene to a spawner's list of the scenes it may spawn - the Inspector's *Auto spawn
 ## list* - so a Spawn row naming a scene the spawner does not know yet makes itself true instead of
 ## compiling to a copy that never travels. Through the scene's own undo like every other write here,
 ## and a no-op (reported as ok) when the list already holds it. Returns `{"ok", "reason"}`.

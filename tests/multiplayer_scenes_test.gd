@@ -1,4 +1,4 @@
-# M4 / E3 - the scene's own two nodes as rows: spawning, despawning, who may see it, and the three
+# The scene's own two nodes as rows: spawning, despawning, who may see it, and the three
 # events the pair raises.
 #
 # Pinned by VALUE, in the order the failures would matter:
@@ -132,7 +132,7 @@ static func _test_the_vocabulary() -> bool:
 	return ok
 
 
-## M1's shelf rule, applied to the three new events: a trigger that names a node in the scene is
+## The shelf rule, applied to the three new events: a trigger that names a node in the scene is
 ## about that node, so it is filed under Scenes with no table edited.
 static func _test_the_picker_shelf() -> bool:
 	var ok: bool = true

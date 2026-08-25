@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSceneEvents
 extends RefCounted
-# THE EVENTS OVERLAY (V14) - which nodes in this scene have events, and which events.
+# THE EVENTS OVERLAY - which nodes in this scene have events, and which events.
 #
 # A node whose script is a sheet wears a small ⌗ with its event count, in the Scene dock and beside
 # its gizmo in the 2D / 3D editor. Hovering it names the triggers (On created · On hit · Every

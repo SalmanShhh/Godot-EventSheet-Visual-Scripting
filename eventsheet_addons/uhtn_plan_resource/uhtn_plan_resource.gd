@@ -10,13 +10,13 @@ extends Resource
 # @inspector_required
 ## The goal the planner decomposes - name a compound (usually) or primitive task from the Tasks grid.
 @export var root_task: String = ""
-## Preconditions a method needs before it can be chosen: the world-state key, a comparison, and the expected value. A method with no rows here is always applicable.
+## Every task in the network. A PRIMITIVE is a leaf your event sheet executes (walk, shoot, hide); a COMPOUND decomposes into subtasks via the Methods grid.
 @export_group("Task Network")
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:method=String,key=String,op=enum(==|!=|<|<=|>|>=),value=String") var conditions: Array = []
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:name=String,kind=enum(primitive|compound)") var tasks: Array = []
 ## The ways to accomplish each compound task. Subtasks run in order (comma-separated task names). Rank methods with a SCORER (from the Scorer Inputs grid) for live utility ranking, or leave scorer blank and use the fixed utility number. Keep method ids unique.
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:task=String,method=String,subtasks=String,scorer=String,utility=float") var methods: Array = []
-## Every task in the network. A PRIMITIVE is a leaf your event sheet executes (walk, shoot, hide); a COMPOUND decomposes into subtasks via the Methods grid.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:name=String,kind=enum(primitive|compound)") var tasks: Array = []
+## Preconditions a method needs before it can be chosen: the world-state key, a comparison, and the expected value. A method with no rows here is always applicable.
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:method=String,key=String,op=enum(==|!=|<|<=|>|>=),value=String") var conditions: Array = []
 ## The Utility-AI half: each row feeds one world-state input through a response curve into a named scorer. A method that names that scorer is ranked by the LIVE score at plan time (weighted average across the scorer's rows). Center + slope shape the logistic / threshold / bell curves.
 @export_group("Utility Scorers")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:scorer=String,input=String,curve=enum(linear|inverse|quadratic|inverse_quadratic|logistic|threshold|bell),weight=float,center=float,slope=float") var scorer_inputs: Array = []

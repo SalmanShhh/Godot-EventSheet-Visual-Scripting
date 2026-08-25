@@ -70,7 +70,7 @@ static func _run_registration() -> bool:
 
 
 ## What a sheet actually compiles to. The expression lands in a Set Variable row exactly as the
-## mockup writes it, and the whole emitted line is asserted - a template is frozen once shipped.
+## row writes it, and the whole emitted line is asserted - a template is frozen once shipped.
 static func _run_emission() -> bool:
 	var ok: bool = true
 	var emitted: String = _emitted("TableFromFile", {"path": "\"res://data/items.csv\"", "separator": "\",\""})
@@ -87,7 +87,7 @@ static func _run_emission() -> bool:
 	ok = _check("no unsubstituted placeholder survives", emitted.contains("{separator}"), false) and ok
 	ok = _check("the emitted expression is one line", emitted.split("\n").size(), 1) and ok
 
-	# Through the real compiler, in the row the mockup shows: Set variable items to Table From File(...).
+	# Through the real compiler, in the row the picker writes: Set variable items to Table From File(...).
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
 	var row: EventRow = EventRow.new()

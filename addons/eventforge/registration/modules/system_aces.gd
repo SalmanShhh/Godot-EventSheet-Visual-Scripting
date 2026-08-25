@@ -119,7 +119,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Gives the system's current date and time as readable text."))
 	descriptors.append(F.make_descriptor("Core", "GetUnixTime", "Date: Now", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "Date.Now")
 		.described("Gives the current Unix timestamp in seconds, useful for saving real-world time."))
-	# ── T26: the Date object ─────────────────────────────────────────────────────────────────────
+	# ── the Date object ──────────────────────────────────────────────────────────────────────────
 	# The calendar and the wall clock, one expression per field, so a clock label is written the way
 	# it reads: `Date.Hour & ":" & Date.Minute`. Each one asks the system clock afresh, which is what
 	# a row that shows the time needs; a whole timestamp to compare against is Date.Now.
@@ -232,7 +232,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when two values match your chosen comparison, like equal, greater or less than."))
 	descriptors.append(F.make_descriptor("Core", "IsBetween", "Is Between Values", ACEDescriptor.ACEType.CONDITION, "({min} <= {value} and {value} <= {max})", "", [F.make_param("value", "String", "0", "Value", "Value to test.", "expression"), F.make_param("min", "String", "0", "Min", "Lower bound (inclusive).", "expression"), F.make_param("max", "String", "10", "Max", "Upper bound (inclusive).", "expression")], "General Conditions", "{value} is between {min} and {max}")
 		.described("True when a value falls within a low and high range, bounds included."))
-	# ── R4 / R5 / R6 / R11 - the questions an opened script reads in these same words ──
+	# ── the questions an opened script reads in these same words ───────────────────────
 	# Every template here is the exact line the reading claims, so a row picked in the editor and a
 	# line typed in a .gd file are the same line, and the sheet says the same sentence about both.
 	descriptors.append(F.make_descriptor("Core", "IsBetweenAngles", "Is Between Angles", ACEDescriptor.ACEType.CONDITION, "(wrapf({angle}, 0.0, 360.0) >= {low} and wrapf({angle}, 0.0, 360.0) <= {high})", "", [F.make_param("angle", "String", "0.0", "Angle", "The angle to test, in degrees.", "expression"), F.make_param("low", "String", "30.0", "From", "Start of the window, in degrees.", "expression"), F.make_param("high", "String", "60.0", "To", "End of the window, in degrees.", "expression")], "Math & Random", "{angle} is between angles {low} and {high}")
@@ -395,7 +395,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## G2 - the group Set/Is Group Active name. Its hint is `group_reference`, but the value is one of
+## The group Set/Is Group Active name. Its hint is `group_reference`, but the value is one of
 ## the SHEET's own groups rather than a node group: the params dialog decides which list to offer
 ## from what the template does with the value, so nothing here has to declare it twice.
 static func _group_param(factory: Variant) -> ACEParam:

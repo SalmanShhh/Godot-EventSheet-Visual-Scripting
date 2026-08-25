@@ -5,15 +5,15 @@ extends RefCounted
 # Pins the reading words batch six added - the six shapes a real script is full of that used to read
 # as the GDScript they are rather than as the sheet's own row:
 #
-#   Q3   a just-pressed / just-released poll at the top of a tick handler reads as the TRIGGER it is,
+#   A just-pressed / just-released poll at the top of a tick handler reads as the TRIGGER it is,
 #        and the "Every tick" words go away; a HELD poll keeps them, because holding is a check
-#   Q5   numbers read the way a person writes them - 300.0 is 300, a million is grouped, 1e3 is
+#   Numbers read the way a person writes them - 300.0 is 300, a million is grouped, 1e3 is
 #        spelled out, π/2 is named, and a 0..1 setting reads as a percentage
-#   Q6   list, table and text steps read in the List / Text modules' own words
-#   Q7   the deferred family says the delay out loud, and a one-shot connection is Trigger once
-#   Q8   physics layers and input actions read by their PROJECT names, and an action's bound device
+#   List, table and text steps read in the List / Text modules' own words
+#   The deferred family says the delay out loud, and a one-shot connection is Trigger once
+#   Physics layers and input actions read by their PROJECT names, and an action's bound device
 #        chooses the object it files under
-#   Q11  a number written where an enum is expected reads as the member it names
+#   A number written where an enum is expected reads as the member it names
 #
 # Three gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -99,7 +99,7 @@ func reset() -> void:
 
 ## Every reading the opened file must contain, one per shape this batch claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# Q6 - the List / Dictionary / Text modules' own words
+	# The List / Dictionary / Text modules' own words
 	"System ▸ Push back 1 to items",
 	"System ▸ Push front 2 to items",
 	"System ▸ Pop back of items",
@@ -112,34 +112,34 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Reverse items",
 	"System ▸ Delete key \"potion\" from inventory",
 	"System ▸ Append \"!\" to label",
-	# Q7 - the deferred family says the delay out loud
+	# The deferred family says the delay out loud
 	"CharacterBody2D ▸ Call Reset (at end of frame)",
 	"CharacterBody2D ▸ Set visible to true (at end of frame)",
-	# Q8 - the project's own names for its physics layers
-	# T7 re-pin: sitting on a layer is what this body is to the others, so the row says Solid and keeps
+	# The project's own names for its physics layers
+	# Re-pin: sitting on a layer is what this body is to the others, so the row says Solid and keeps
 	# the project's own name for the layer with its number after it.
 	"CharacterBody2D ▸ Solid ▸ On layer Enemies (layer 2)",
 	"CharacterBody2D ▸ Set collision layers to \"World\", \"Player\"",
-	# Q11 - a number written where an enum is expected
+	# A number written where an enum is expected
 	"CharacterBody2D ▸ Set process mode to Always",
 	"System ▸ Set dir to DOWN",
 	"art ▸ Set texture filter to Nearest",
-	# T11 re-pin: alignment is a TEXT reading now, and the sheet's own word for the middle of a line
+	# Re-pin: alignment is a TEXT reading now, and the sheet's own word for the middle of a line
 	# is "centre" rather than the engine constant's spelling.
 	"caption ▸ Set horizontal alignment to centre",
-	# Q5 - numbers the way a person writes them
+	# Numbers the way a person writes them
 	"System ▸ Set Half to 50%",
 	"CharacterBody2D ▸ Set X to 300",
 	"CharacterBody2D ▸ Set Y to 1,000,000",
 	"CharacterBody2D ▸ Set angle (radians) to π/2",
 	"System ▸ Set velocity X to 1000",
-	# Q3 / Q8 - the poll reads as the trigger it is, under the device the project bound it to
+	# The poll reads as the trigger it is, under the device the project bound it to
 	"Keyboard ▸ On \"jump\" pressed",
 	"Mouse ▸ On \"reading_words6_fire\" released",
-	# Q3 - a HELD poll is a check, so its handler keeps the tick words
+	# A HELD poll is a check, so its handler keeps the tick words
 	"System ▸ Every tick (physics)",
 	"Keyboard ▸ \"hold\" is down",
-	# Q7 - a one-shot connection is the sheet's own Trigger once
+	# A one-shot connection is the sheet's own Trigger once
 	"Beat ▸ On Timeout",
 	"Trigger once"
 ])
@@ -182,7 +182,7 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 ## answer is pinned to the one function that produced it rather than to the whole canvas.
 static func _grammar_values() -> bool:
 	var ok: bool = true
-	# Q5 - what each spelling reads as. "" means "already written the way a person writes it".
+	# What each spelling reads as. "" means "already written the way a person writes it".
 	var numbers: Dictionary = {
 		"300.0": "300", "0.50": "0.5", "1_000_000": "1,000,000", "1e3": "1000",
 		"1.5707963": "π/2", "6.2831853": "τ", "1.4142136": "√2", "10000": "10,000",
@@ -196,7 +196,7 @@ static func _grammar_values() -> bool:
 		EventSheetSentence.number_lens("sprite2.frame = 300.0"), "sprite2.frame = 300") and ok
 	ok = _check("the number lens leaves a string literal alone",
 		EventSheetSentence.number_lens("\"res://a/1000000.png\""), "\"res://a/1000000.png\"") and ok
-	# Q11 - Godot writes an enum hint as a comma list, and an entry may pin its own number.
+	# Godot writes an enum hint as a comma list, and an entry may pin its own number.
 	ok = _check("an enum hint names its member by position",
 		EventSheetSentence.enum_hint_member("Inherit,Pausable,When Paused,Always,Disabled", 3), "Always") and ok
 	ok = _check("an enum hint honours a pinned number",
@@ -206,7 +206,7 @@ static func _grammar_values() -> bool:
 	ok = _check("the engine's own enum hint is found through ClassDB",
 		EventSheetSentence.enum_hint_member(
 			EventSheetSentence.engine_enum_hint("Node", "process_mode"), 4), "Disabled") and ok
-	# Q8 - the project's layer names, and the device an action's bindings put it under.
+	# The project's layer names, and the device an action's bindings put it under.
 	var restore: Dictionary = _apply_project_settings()
 	ok = _check("a named layer reads by its name",
 		EventSheetSentence.physics_layer_name(2, EventSheetSentence.PHYSICS_DIMENSION_2D), "Enemies") and ok

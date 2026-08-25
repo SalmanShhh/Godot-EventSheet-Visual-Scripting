@@ -1,4 +1,4 @@
-# EventForge - M23: an `if ... else` INSIDE a statement reads as a sub-event pair, never as a
+# EventForge - an `if ... else` INSIDE a statement reads as a sub-event pair, never as a
 # condition sitting in an action cell (which is the one thing an event sheet never does).
 #
 # Three things are pinned here, all of them pure view state over unchanged statements:
@@ -93,7 +93,7 @@ static func _fixture_rows() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 	var rows: PackedStringArray = _row_readings(view)
-	# M24: `and` never appears inside a condition cell - each conjunct is a condition LINE of the one
+	# `and` never appears inside a condition cell - each conjunct is a condition LINE of the one
 	# event, exactly as a lifted `if a and b:` already stacks them.
 	ok = _check("a lone ternary return replaces its row with the pair",
 		_reading_at(rows, "Set return value to host's wall normal X"),

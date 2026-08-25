@@ -1,4 +1,4 @@
-# Godot EventSheets - the Hierarchy pane (X15) and the three hierarchy Doctor notes (X17).
+# Godot EventSheets - the Hierarchy pane and the three hierarchy Doctor notes.
 #
 # What this pins, and why each half matters:
 #
@@ -178,7 +178,7 @@ static func _round_trip() -> bool:
 	return passed
 
 
-## X17 - the three notes. Each is shown the shape that IS the bug and the shape that is the fix.
+## The three notes. Each is shown the shape that IS the bug and the shape that is the fix.
 static func _doctor_notes() -> bool:
 	var passed: bool = true
 	var moving_walk: String = "\n".join(PackedStringArray([

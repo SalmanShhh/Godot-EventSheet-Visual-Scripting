@@ -2,23 +2,23 @@
 class_name ReadingWords5Test
 extends RefCounted
 
-# Pins the reading words for batch five's shapes (P6 / P8 / P9 / P11): the wait-then, the tick
+# Pins the reading words for batch five's shapes: the wait-then, the tick
 # switches and the process mode, the question a @tool script asks about itself, the drawing verbs, the
 # lifecycle and notification trigger names, and the named argument chips.
 #
 # Four gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
-#   2. the trigger words on their own, which is where P8 and P9 live (the trigger ids themselves are
+#   2. The trigger words on their own, which is where the trigger readings live (the trigger ids themselves are
 #      the structure's business; what they SAY is this file's);
 #   3. the whole path - two hand-written files opened as sheets, walked row by row, so a reading that
 #      stops reaching the canvas is caught even when the grammar still answers on its own;
 #   4. the two promises the reading rests on - the files still save byte-identically, and a row built
 #      from the PICKER reads exactly what the same shape typed by hand reads.
 #
-# The two sources are checked-in fixtures rather than strings, because P9's whole question is whether
+# The two sources are checked-in fixtures rather than strings, because the whole question is whether
 # the opened file is the script the SCENE carries: `opened_script_words5_root.gd` is the root script of
 # `opened_script_words5_root.tscn`, and `opened_script_words5_part.gd` sits on a CHILD node of that same
-# scene, which is exactly the two cases P9 splits on.
+# scene, which is exactly the two cases the reading splits on.
 
 const ROOT_PATH := "res://tests/fixtures/opened_script_words5_root.gd"
 const PART_PATH := "res://tests/fixtures/opened_script_words5_part.gd"
@@ -36,23 +36,23 @@ const CONTEXT: Dictionary = {
 ## Every reading the opened ROOT file must contain. Its object is "Node2D": the file declares no
 ## class_name, so the class it extends is the only name anybody calls that object by.
 static var ROOT_READINGS: PackedStringArray = PackedStringArray([
-	# P9 - the script the SCENE carries, so its _ready is the layout starting
+	# The script the SCENE carries, so its _ready is the layout starting
 	"System ▸ On start of layout",
-	# P6 - the question a @tool script asks about itself
+	# The question a @tool script asks about itself
 	"System ▸ is in the editor",
-	# P6 - the tick switches and the process mode
+	# The tick switches and the process mode
 	"Node2D ▸ Set Every tick (physics) deactivated",
 	"Node2D ▸ Set Every tick (draw) activated",
 	"Node2D ▸ Set input deactivated",
 	"Node2D ▸ Set disabled",
-	# P6 - the wait, then the step that follows it
+	# The wait, then the step that follows it
 	"System ▸ ⏳ Wait 2 seconds then Call Explode",
-	# P8 - the drawing verbs
+	# The drawing verbs
 	"Node2D ▸ Draw line (0, 0) to (100, 0), red",
 	"Node2D ▸ Draw rectangle Rect2(0, 0, 10, 10), blue",
 	"Node2D ▸ Draw circle at (4, 4), radius 2, green",
 	"Node2D ▸ Redraw",
-	# P11 - named chips on an emit, on one of the sheet's own functions, and on the optional
+	# Named chips on an emit, on one of the sheet's own functions, and on the optional
 	# engine argument that had none
 	"System ▸ Signal On Hit   damage = 3",
 	"sprite ▸ Set animation to \"burst\" (play from beginning)   speed = 2"
@@ -103,23 +103,23 @@ static func _read_condition(expression: String) -> String:
 	return "" if result.is_empty() else "%s ▸ %s" % [str(result.get("object", "")), _joined(result)]
 
 
-## P6 / P8 / P11 in the action lane.
+## In the action lane.
 static func _statement_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		# P6 - switching a tick on and off is the sheet's own activation, said about a tick
+		# Switching a tick on and off is the sheet's own activation, said about a tick
 		["set_physics_process(false)", "Player ▸ Set Every tick (physics) deactivated"],
 		["set_process(true)", "Player ▸ Set Every tick (draw) activated"],
 		["set_process_input(false)", "Player ▸ Set input deactivated"],
 		["set_process_unhandled_input(true)", "Player ▸ Set unhandled input activated"],
 		["$Hurtbox.set_physics_process(false)", "Hurtbox ▸ Set Every tick (physics) deactivated"],
-		# P6 - the process mode, in both of Godot's spellings
+		# The process mode, in both of Godot's spellings
 		["process_mode = PROCESS_MODE_DISABLED", "Player ▸ Set disabled"],
 		["process_mode = PROCESS_MODE_INHERIT", "Player ▸ Set enabled"],
 		["process_mode = Node.PROCESS_MODE_ALWAYS", "Player ▸ Set always active"],
 		["process_mode = PROCESS_MODE_PAUSABLE", "Player ▸ Set pausable"],
 		["process_mode = PROCESS_MODE_WHEN_PAUSED", "Player ▸ Set active only when paused"],
-		# P6 - the wait, then the step that runs when it ends
+		# The wait, then the step that runs when it ends
 		["get_tree().create_timer(2.0).timeout.connect(func(): explode())",
 			"System ▸ ⏳ Wait 2 seconds then Call Explode"],
 		["get_tree().create_timer(0.5).timeout.connect(explode)",
@@ -128,14 +128,14 @@ static func _statement_values() -> bool:
 			"System ▸ ⏳ Wait 1 seconds then Set hp to 0"],
 		["get_tree().create_timer(0.15).timeout.connect(func(): queue_free(), CONNECT_ONE_SHOT)",
 			"System ▸ ⏳ Wait 0.15 seconds then Player  Destroy"],
-		# P8 - the drawing verbs
+		# The drawing verbs
 		["draw_line(Vector2(0, 0), Vector2(100, 0), Color.RED)",
 			"Player ▸ Draw line (0, 0) to (100, 0), red"],
 		["draw_rect(box, Color.BLUE)", "Player ▸ Draw rectangle box, blue"],
 		["draw_circle(Vector2(4, 4), 2.0, Color.GREEN)",
 			"Player ▸ Draw circle at (4, 4), radius 2, green"],
 		["queue_redraw()", "Player ▸ Redraw"],
-		# P11 - the optional engine argument that used to have no name
+		# The optional engine argument that used to have no name
 		["sprite.play(\"run\", 2.0)", "sprite ▸ Set animation to \"run\" (play from beginning)   speed = 2"],
 		["sprite.play(\"run\")", "sprite ▸ Set animation to \"run\" (play from beginning)"]
 	]:
@@ -143,7 +143,7 @@ static func _statement_values() -> bool:
 	return ok
 
 
-## P6 in the condition lane: one question, whichever of Godot's two spellings asked it.
+## In the condition lane: one question, whichever of Godot's two spellings asked it.
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -165,11 +165,11 @@ static func _refusals() -> bool:
 	ok = _check("a bound callback is refused",
 		_read("get_tree().create_timer(1.0).timeout.connect(spawn.bind(3))"), "") and ok
 	# A repeating connection is not a one-shot wait, and reading it as one would lose the repetition.
-	# U10 gave it the sentence it does have - wiring a handler up is an ACTION - so the pin is that it
+	# Gave it the sentence it does have - wiring a handler up is an ACTION - so the pin is that it
 	# reads as the wiring it is and never as the wait it is not.
 	ok = _check("a plain signal connect is a wiring, not a wait",
 		_read("$Timer.timeout.connect(explode)"), "Timer ▸ Wire On Timeout to Explode") and ok
-	# W8 gave the width its own place in the sentence, so the line that used to be refused now reads
+	# Gave the width its own place in the sentence, so the line that used to be refused now reads
 	# with the thickness said out loud rather than quietly dropped.
 	ok = _check("a drawn line with a width says the width",
 		_read("draw_line(a, b, Color.RED, 4.0)"), "Player ▸ Draw line a to b, red width 4") and ok
@@ -182,17 +182,17 @@ static func _refusals() -> bool:
 	return ok
 
 
-## P8 / P9 - the lifecycle trigger words, and who each belongs to. The trigger ids are the structure's
+## The lifecycle trigger words, and who each belongs to. The trigger ids are the structure's
 ## business; these are the words, which is what a reader actually meets.
 static func _lifecycle_trigger_words() -> bool:
 	var ok: bool = true
 	for row: Array in [
-		# P9 - the same trigger id, the two answers the scene decides between
+		# The same trigger id, the two answers the scene decides between
 		["OnReady", true, "On start of layout", "System"],
 		["OnReady", false, "On created", "Player"],
 		["OnExitTree", true, "On end of layout", "System"],
 		["OnExitTree", false, "On destroyed", "Player"],
-		# P8 - the rest read the same wherever the script sits
+		# The rest read the same wherever the script sits
 		["OnEnterTree", true, "On created", "Player"],
 		["OnEnterTree", false, "On created", "Player"],
 		["OnDraw", false, "On draw", "Player"]
@@ -214,7 +214,7 @@ static func _lifecycle_trigger_words() -> bool:
 	return ok
 
 
-## P8 - the notifications, in the sheet's words where it has them and in plain words where it does not.
+## The notifications, in the sheet's words where it has them and in plain words where it does not.
 static func _notification_trigger_words() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -248,7 +248,7 @@ static func _opened_files_read() -> bool:
 	var part_readings: PackedStringArray = _render(_import(PART_PATH))
 	for expected: String in PART_READINGS:
 		ok = _check("a script on an object reads \"%s\"" % expected, part_readings.has(expected), true) and ok
-	# And the two must NOT read each other's words - that split is the whole of P9.
+	# And the two must NOT read each other's words - that split is the whole of the rule.
 	ok = _check("only the scene's own script starts the layout",
 		part_readings.has("System ▸ On start of layout"), false) and ok
 	return ok
@@ -319,7 +319,7 @@ static func _picked_matches_typed() -> bool:
 	sheet.events.append(event_row)
 	var readings: PackedStringArray = _render(sheet)
 	for expected: String in [
-		# P9 - a sheet that is nobody's scene root reads its _ready as its object being created
+		# A sheet that is nobody's scene root reads its _ready as its object being created
 		"Player ▸ On created",
 		"System ▸ is in the editor",
 		"Player ▸ Set Every tick (physics) deactivated",

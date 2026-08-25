@@ -46,7 +46,7 @@ func init(dock: Control) -> void:
 
 # ── Sheet functions: the dialog with the expanding param list (Add ▾ → Function…) ────
 var _function_dialog: EventSheetFunctionDialog = null
-## M2. Set by Message…, cleared the moment the function lands: the next Add opens the Message dialog
+## Set by Message…, cleared the moment the function lands: the next Add opens the Message dialog
 ## on it. One-shot on purpose - a plain Add Function that follows must not inherit it.
 var _message_after_add: bool = false
 
@@ -69,7 +69,7 @@ func _open_function_dialog_new(kind: String, publish: bool) -> void:
 	_function_dialog.open(kind, publish)
 
 
-## M2 - New Function ▸ Message…: a message IS a function, so the name and the parameters are asked
+## New Function ▸ Message…: a message IS a function, so the name and the parameters are asked
 ## for in the ordinary dialog and the Message dialog opens on the function that was just added. The
 ## chaining is a one-shot flag rather than a second dialog: one add path, one undo step for the
 ## function, one for the annotation.

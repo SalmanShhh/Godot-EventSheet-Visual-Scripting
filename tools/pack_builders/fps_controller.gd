@@ -660,7 +660,7 @@ static func build() -> bool:
 		[],
 		"return _firing_timer > 0.0")
 	_last_returns(sheet, TYPE_BOOL)
-	# Y17. The feel layer, as two rows a weapon object gets. Both are per-tick rows on purpose: a bob
+	# The feel layer, as two rows a weapon object gets. Both are per-tick rows on purpose: a bob
 	# and a sway are things that are TRUE every frame, not events, and putting them in the tick is
 	# what lets a reader see the whole of what their hands are doing in two lines of the sheet.
 	Lib.append_function(sheet, "bob_with_movement", "Bob With Movement", "FPS Controller",

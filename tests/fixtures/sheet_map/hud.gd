@@ -1,4 +1,4 @@
-# A fixture project for the Sheet map (U17): the object that listens for the player's signal.
+# A fixture project for the Sheet map: the object that listens for the player's signal.
 extends Node
 
 @export var player: Node

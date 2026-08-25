@@ -1,4 +1,4 @@
-# EventForge (gap G4, BUILD-partial) - a methods-bearing inner class (`class X:` with methods, not only data)
+# EventForge (partially built) - a methods-bearing inner class (`class X:` with methods, not only data)
 # reads as a foldable, READ-ONLY class block: the class in the condition cell, its fields (read-only) and a
 # `ƒ name(params) -> Type` chip per method as child rows, instead of a raw GDScript wall. It is a PURE VIEW
 # over an unchanged RawCodeRow (the compiler never sees a structured nested class), byte-gated by

@@ -58,7 +58,7 @@ static func run() -> bool:
 		if flat_row != null and flat_row.source_resource == group:
 			group_row = flat_row
 			group_row_index = index
-	# G1 - the head is ONE line: the description sits beside the name, not under it.
+	# The head is ONE line: the description sits beside the name, not under it.
 	all_passed = _check("the head reads in one line", group_row.line_count, 1) and all_passed
 	var description_span: SemanticSpan = _span_with_edit_kind(group_row, "group_description")
 	all_passed = _check("description span is inline-editable", description_span != null, true) and all_passed

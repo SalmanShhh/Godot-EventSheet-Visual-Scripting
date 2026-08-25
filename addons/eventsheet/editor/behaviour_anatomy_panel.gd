@@ -24,7 +24,7 @@ signal reveal_requested(resource: Resource)
 signal open_provider_requested(provider_id: String)
 
 const _ORGAN_ACCENTS: Dictionary = {
-	# V9 - the variables, in the sheet's own scopes rather than in the code split
+	# The variables, in the sheet's own scopes rather than in the code split
 	# (exported / not exported) a reader never asked about.
 	"instance": EventSheetPalette.TEXT_SECONDARY,
 	"global": EventSheetPalette.TEXT_SECONDARY,
@@ -33,7 +33,7 @@ const _ORGAN_ACCENTS: Dictionary = {
 	"actions": EventSheetPalette.COLOR_ACTION,
 	"conditions": EventSheetPalette.COLOR_CONDITION,
 	"expressions": EventSheetPalette.COLOR_EXPRESSION,
-	# R35. What the pack adds to the EDITOR rather than to the game - a different audience from every
+	# What the pack adds to the EDITOR rather than to the game - a different audience from every
 	# other organ, so it wears the trigger accent (the editor calls these, the way it calls a trigger).
 	"editor_tools": EventSheetPalette.COLOR_TRIGGER,
 	"uses": EventSheetPalette.TEXT_SECONDARY,
@@ -245,7 +245,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 		"instance": [], "global": [], "local": [], "triggers": [],
 		"actions": [], "conditions": [], "expressions": [], "editor_tools": [], "uses": [],
 	}
-	# V9 - the variable organs, named by SCOPE and spelled by the same call the rows make
+	# The variable organs, named by SCOPE and spelled by the same call the rows make
 	# (EventSheetVariableOwners.sentence -> EventSheetVariableSentence.chip_text), so the rail can
 	# never disagree with the sheet about how a variable reads. The owner rides on the header, not
 	# on every line: "Instance · 3 of Player" says it once.
@@ -275,7 +275,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 				label = event_function.function_name.capitalize()
 			(organs[ViewportRowBuilder.define_role_for(event_function) + "s"] as Array).append(
 				{"label": label, "resource": event_function})
-		# R35. What this sheet adds to the editor itself. Derived by the one census every surface
+		# What this sheet adds to the editor itself. Derived by the one census every surface
 		# shares (the Include bar and the picker's pack card read the same list), so a pack that stops
 		# hanging a dock stops claiming one the moment it is rebuilt.
 		for entry: Dictionary in EventSheetEditorToolCensus.from_sheet(sheet):
@@ -301,7 +301,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 	]
 
 
-## V9. The heading a variable organ wears: the scope word a reader knows the group by, with the owner
+## The heading a variable organ wears: the scope word a reader knows the group by, with the owner
 ## named once instead of on every line. An organ nothing filled says its scope and nothing else -
 ## "of" with no object after it would be a promise the list does not keep.
 static func variable_organ_title(organ: String, owner: String) -> String:
@@ -322,7 +322,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 			_collect_row(child, organs, providers)
 		return
 	if row is LocalVariable:
-		# V9 - tree variables are the object's own, and the catalog above already listed every one of
+		# Tree variables are the object's own, and the catalog above already listed every one of
 		# them under its scope. Nothing to add here beyond not walking into a declaration.
 		return
 	if row is SignalRow and (row as SignalRow).trigger:

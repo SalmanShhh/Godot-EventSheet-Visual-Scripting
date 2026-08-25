@@ -48,13 +48,13 @@ const GYROSCOPE := "Input.get_gyroscope()"
 ## The engine clock in seconds, spelled the way an ordinary Godot script spells it.
 const WINDOW_CLOCK := "Time.get_ticks_msec() / 1000.0"
 
-## Y9. The two curve calls a rail ride is written with: the one that finds where on the line you
+## The two curve calls a rail ride is written with: the one that finds where on the line you
 ## are, and the one that reads the point back off it. Both, or the file is measuring a path rather
 ## than riding one.
 const CURVE_CLOSEST_OFFSET := "get_closest_offset("
 const CURVE_SAMPLE_BAKED := "sample_baked("
 
-## Y22. The way a body asks which way the ground under it faces - the only honest source of a
+## The way a body asks which way the ground under it faces - the only honest source of a
 ## slope, and the mark that tells a board apart from a runner.
 const FLOOR_NORMAL := "get_floor_normal()"
 
@@ -64,7 +64,7 @@ const FLOOR_NORMAL := "get_floor_normal()"
 ##
 ##   "countdown_variables" {name: how it stays above zero, "" for a plain `-= delta`}
 ##   "pool_variables"      {name: true}   - the lists used as object pools
-##   "state_machine"       the FSM this file writes out, {} when it writes none (S1)
+##   "state_machine"       the FSM this file writes out, {} when it writes none
 ##
 ## Takes the file's lines rather than the sheet, so nothing here has to know what a sheet is: the
 ## caller already walks the rows once for the other fact maps and hands the same lines to all of them.
@@ -79,7 +79,7 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"countdown_variables": countdown_variables(lines),
 		"pool_variables": pool_variables(lines),
 		"state_machine": machine,
-		# ── X21 / X24 / X26 / X27 ──────────────────────────────────────────────────────────────
+		# ───────────────────────────────────────────────────────────────────────────────────────
 		# Four game shapes no single line can decide: a roll that owes the player one, a meter that
 		# fills while something is seen and drains while it is not, a health ladder that moves a
 		# fight through numbered phases, and a mission clock with a deadline on it. Each is answered
@@ -89,25 +89,25 @@ static func facts(lines: PackedStringArray) -> Dictionary:
 		"meter_variables": meter_variables(lines),
 		"boss_phase_steps": boss_phase_steps(lines),
 		"mission_timers": mission_timers(lines, countdown_variables(lines)),
-		# X22 - which values hold a tilt measured from a neutral point, and which hold a rotation
+		# Which values hold a tilt measured from a neutral point, and which hold a rotation
 		# rate. A single line cannot tell `tilt.x * speed * delta` from any other multiplication, so
 		# the two questions are answered from one walk of the file here.
 		"tilt_variables": tilt_variables(lines),
 		"rate_variables": rate_variables(lines),
-		# X28 - the input window this file writes, {} when it writes none. The flag, the deadline and
+		# The input window this file writes, {} when it writes none. The flag, the deadline and
 		# the control are three lines apart, so the shape is worked out once rather than guessed at.
 		"input_window": input_window_facts(lines),
-		# Y11 - which booleans hold "I am in the water". The way in, the way out and the swimming
+		# Which booleans hold "I am in the water". The way in, the way out and the swimming
 		# itself are three places apart, so the question is answered once over the whole file.
 		"water_flags": water_flags(lines),
-		# Y1 - the input SEQUENCES this file collects. A list appended to, a countdown stamped beside
+		# The input SEQUENCES this file collects. A list appended to, a countdown stamped beside
 		# the append, and the same list emptied when the countdown runs out IS a combo detector, and
 		# no one of those three lines says so on its own.
 		"combo_lists": combo_lists(lines)
 	}
 
 
-## Y1. The lists this file uses as a COMBO buffer, as {list name: {timer, window}}.
+## The lists this file uses as a COMBO buffer, as {list name: {timer, window}}.
 ##
 ## The shape a fighting game writes by hand is always the same three moves: push the pressed input
 ## onto a list, stamp a countdown beside it, and empty the list when that countdown runs out. Once
@@ -160,7 +160,7 @@ static func _appended_list(line: String) -> String:
 	return owner_text if EventSheetSentence.is_identifier(owner_text) else ""
 
 
-## X22. The values this file uses as a TILT: assigned the accelerometer (or the gravity direction)
+## The values this file uses as a TILT: assigned the accelerometer (or the gravity direction)
 ## with a neutral point taken off. The subtraction is required - the raw sensor reading is a sensor
 ## reading, and only measuring it from a remembered "flat" makes it a tilt.
 ##
@@ -184,7 +184,7 @@ static func tilt_variables(lines: PackedStringArray) -> Dictionary:
 	return found
 
 
-## X22. The values this file uses as a ROTATION RATE: assigned the gyroscope outright. Nothing is
+## The values this file uses as a ROTATION RATE: assigned the gyroscope outright. Nothing is
 ## subtracted from a rate - a gyroscope reads zero when the device is still - so the bare assignment
 ## is the whole shape.
 static func rate_variables(lines: PackedStringArray) -> Dictionary:
@@ -220,7 +220,7 @@ static func _sensor_assignment(line: String) -> Dictionary:
 	return {}
 
 
-## X28. The input window this file writes, as {flag, deadline, action, perfect, prompt}, or {} when it writes
+## The input window this file writes, as {flag, deadline, action, perfect, prompt}, or {} when it writes
 ## none. Three marks together and nothing less: a yes-no flag set true, a deadline set to the clock
 ## plus something, and a control tested while the flag is up. Two of the three is a timer.
 static func input_window_facts(lines: PackedStringArray) -> Dictionary:
@@ -298,7 +298,7 @@ static func _perfect_cutoff(text: String) -> String:
 	return ""
 
 
-## S3. Whether a function body is a SEQUENCE - rows that alternate waiting and doing, which is what
+## Whether a function body is a SEQUENCE - rows that alternate waiting and doing, which is what
 ## a cutscene, an intro and a combo are made of - as {waits, seconds, open_ended} or {} when it is not.
 ##
 ##   waits       how many times the body stops and waits
@@ -341,7 +341,7 @@ static func _timer_wait_seconds(line: String) -> String:
 	return inner if inner.is_valid_float() else ""
 
 
-## S3. What the chip on a sequence's header says: how long the whole run takes, and whether one of
+## What the chip on a sequence's header says: how long the whole run takes, and whether one of
 ## its waits is on something whose length nobody knows.
 static func wait_sequence_words(facts: Dictionary) -> String:
 	if facts.is_empty():
@@ -428,7 +428,7 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"words": "reuses objects from %s instead of making a new one" % ", ".join(pool_names),
 			"adoptable": "object_pool", "ace_ids": PackedStringArray()
 		})
-	# X2 / X30. The camera-ray run, and X20's nearest-on-the-canvas walk. Both are SHAPES spread over
+	# The camera-ray run, and the nearest-on-the-canvas walk. Both are SHAPES spread over
 	# several lines joined only by their locals' names, so they are claimed here rather than read as a
 	# row: the rows stay exactly as they are, and the chip, the hover evidence and the coverage count
 	# get the one sentence each shape is.
@@ -442,7 +442,7 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 			"adoptable": "", "ace_ids": PackedStringArray(["Core/MouseRayCollider3D",
 				"Core/MouseRayPoint3D", "Core/CastMouseRayInto3D"])
 		})
-	# X5. Putting a thing on the floor under it, which is four lines and one sentence. Claimed here
+	# Putting a thing on the floor under it, which is four lines and one sentence. Claimed here
 	# rather than read as a row because the run straddles the `if not …is_empty()` guard: the rows the
 	# file wrote stay exactly as they are, and the chip and its evidence say what they are FOR.
 	var dropped: Dictionary = ground_drop_run(body)
@@ -471,7 +471,7 @@ static func claims_in(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	return found
 
 
-## X31. The two shapes a body draws with an angle and a distance: a RING - a loop that gives each step
+## The two shapes a body draws with an angle and a distance: a RING - a loop that gives each step
 ## its share of a full turn and places something at that angle - and a SPIRAL, where the angle and the
 ## distance both grow every tick and a place is worked out from the pair.
 ##
@@ -513,7 +513,7 @@ static func polar_claim(body: PackedStringArray) -> Dictionary:
 	}
 
 
-## X31. True when a value works a POINT out of an angle and a distance anywhere inside it, so the
+## True when a value works a POINT out of an angle and a distance anywhere inside it, so the
 ## `centre + <point>` a spiral is written as counts as much as the bare product a ring uses.
 static func _holds_polar_point(value: String) -> bool:
 	var text: String = value.strip_edges()
@@ -528,7 +528,7 @@ static func _holds_polar_point(value: String) -> bool:
 	return false
 
 
-## X21 / X24 / X26 / X27. The four game shapes this body writes, each claimed WHOLE or not at all.
+## The four game shapes this body writes, each claimed WHOLE or not at all.
 ## Split out of claims_in so each one can be pinned on its own: they share nothing but the body.
 static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -> Array:
 	var found: Array = []
@@ -544,7 +544,7 @@ static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -
 	var mission: Dictionary = _mission_timer_claim(body, file_facts)
 	if not mission.is_empty():
 		found.append(mission)
-	# Y7 / Y8 / Y11 - the three traversal shapes, each gated on the thing that makes it that shape
+	# The three traversal shapes, each gated on the thing that makes it that shape
 	# rather than on the velocity write it ends in: the two-probe test, the wall the body is already
 	# touching, and a volume marked water that raises a flag on the way in.
 	var ledge: Dictionary = _ledge_claim(body)
@@ -559,7 +559,7 @@ static func game_shape_claims(body: PackedStringArray, file_facts: Dictionary) -
 	return found
 
 
-## X21. The pity roll this body makes, with the four lines that ARE it as the evidence.
+## The pity roll this body makes, with the four lines that ARE it as the evidence.
 static func _pity_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
 	var rolls: Dictionary = file_facts.get("pity_rolls", {})
 	if rolls.is_empty():
@@ -578,7 +578,7 @@ static func _pity_claim(body: PackedStringArray, file_facts: Dictionary) -> Dict
 	return {}
 
 
-## X24. The detection loop this body writes: a meter filled while the target is seen and drained
+## The detection loop this body writes: a meter filled while the target is seen and drained
 ## while it is not, PLUS the sight-or-hidden question that gates the two halves. The gate is
 ## required - without it the pair is an ordinary meter, and calling every meter "detection" would
 ## name a stealth system in every file that has a bar.
@@ -620,7 +620,7 @@ static func _detection_claim(body: PackedStringArray, file_facts: Dictionary) ->
 	return {}
 
 
-## X24. True when a line asks the question a detection meter is gated on: can this thing SEE the
+## True when a line asks the question a detection meter is gated on: can this thing SEE the
 ## target, or is the target HIDDEN. Both spellings, because a stealth script writes one or the other
 ## and neither is more honest than the other.
 static func is_detection_gate(text: String) -> bool:
@@ -631,7 +631,7 @@ static func is_detection_gate(text: String) -> bool:
 	return false
 
 
-## X24. True when a line remembers WHERE the target was - the one variable every stealth AI keeps,
+## True when a line remembers WHERE the target was - the one variable every stealth AI keeps,
 ## and the reason the guard walks to a place instead of standing still.
 static func _last_known_assignment(text: String) -> bool:
 	var at: int = EventSheetSentence.top_level_index(text, " = ")
@@ -641,7 +641,7 @@ static func _last_known_assignment(text: String) -> bool:
 	return target.contains("last_known") or target.contains("last_seen")
 
 
-## X26. The phase ladder this body climbs, with every guarded threshold as the evidence.
+## The phase ladder this body climbs, with every guarded threshold as the evidence.
 static func _boss_phase_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
 	var steps: Dictionary = file_facts.get("boss_phase_steps", {})
 	if steps.is_empty():
@@ -663,7 +663,7 @@ static func _boss_phase_claim(body: PackedStringArray, file_facts: Dictionary) -
 	}
 
 
-## X27. The mission clock this body counts down - claimed on the event that TICKS it, because that
+## The mission clock this body counts down - claimed on the event that TICKS it, because that
 ## is the row a reader looks at when they ask how long the mission is.
 static func _mission_timer_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
 	var timers: Dictionary = file_facts.get("mission_timers", {})
@@ -685,7 +685,7 @@ static func _mission_timer_claim(body: PackedStringArray, file_facts: Dictionary
 	return {}
 
 
-## Y7. The ledge this body finds, with the two-probe test and the hang it raises as the evidence.
+## The ledge this body finds, with the two-probe test and the hang it raises as the evidence.
 ##
 ## The gate is the PAIR: one probe that hits and a higher one that does not, asked in the same
 ## question. A single is_colliding() is a ray, and calling every ray a ledge would name a traversal
@@ -733,7 +733,7 @@ static func _ledge_claim(body: PackedStringArray) -> Dictionary:
 	}
 
 
-## Y7. Whether a question is the two-probe ledge test: one cast that must HIT and a higher one that
+## Whether a question is the two-probe ledge test: one cast that must HIT and a higher one that
 ## must be CLEAR, joined by `and` in the same condition.
 static func is_ledge_probe_pair(condition: String) -> bool:
 	var hit: bool = false
@@ -754,7 +754,7 @@ static func is_ledge_probe_pair(condition: String) -> bool:
 	return hit and clear
 
 
-## Y8. The wall moves this body writes, claimed on the wall it is already touching.
+## The wall moves this body writes, claimed on the wall it is already touching.
 ##
 ## The gate is that contact: is_on_wall() or the wall's own normal has to be asked for somewhere in
 ## the same body, so an ordinary velocity write in a file that never touches a wall stays an ordinary
@@ -796,7 +796,7 @@ static func _wall_move_claim(body: PackedStringArray) -> Dictionary:
 	}
 
 
-## Y8. Which wall move a single statement is, or "" for anything else. `normal_names` are the local
+## Which wall move a single statement is, or "" for anything else. `normal_names` are the local
 ## values this body took the wall's normal into, so the jump is recognised whether it is written
 ## against get_wall_normal() directly or against the variable it was kept in.
 static func wall_move_kind(text: String, normal_names: PackedStringArray = PackedStringArray()) -> String:
@@ -827,7 +827,7 @@ static func wall_move_kind(text: String, normal_names: PackedStringArray = Packe
 	return ""
 
 
-## Y8. The words each wall move is said in.
+## The words each wall move is said in.
 const WALL_MOVE_WORDS: Dictionary = {
 	"slide": "a capped slide down it",
 	"jump": "a jump away along its own normal",
@@ -835,7 +835,7 @@ const WALL_MOVE_WORDS: Dictionary = {
 }
 
 
-## Y11. The swim this body writes, claimed on the water flag the file raises and lowers.
+## The swim this body writes, claimed on the water flag the file raises and lowers.
 ##
 ## Two halves, two rows a reader meets in different places: the toggle (entering and leaving the
 ## marked volume) and the tick that trades gravity for drag while the flag is up. Either half claims
@@ -873,7 +873,7 @@ static func _swim_claim(body: PackedStringArray, file_facts: Dictionary) -> Dict
 	}
 
 
-## Y11. The values this file uses as a WATER flag: a boolean whose name says water, set BOTH ways
+## The values this file uses as a WATER flag: a boolean whose name says water, set BOTH ways
 ## (the way in and the way out), in a file that also swims - swaps gravity for the water's own pull,
 ## or drags the velocity down. Without the arithmetic the flag is only a flag.
 ##
@@ -916,7 +916,7 @@ static func water_flags(lines: PackedStringArray) -> Dictionary:
 	return complete
 
 
-## Y11. Whether a name says water. The three words a project spells the same idea in; anything else
+## Whether a name says water. The three words a project spells the same idea in; anything else
 ## is a boolean about something else.
 static func is_water_word(name_text: String) -> bool:
 	var lowered: String = name_text.to_lower()
@@ -926,7 +926,7 @@ static func is_water_word(name_text: String) -> bool:
 	return false
 
 
-## Y11. Whether a statement trades gravity for the water's own pull - the swap that makes a fall a
+## Whether a statement trades gravity for the water's own pull - the swap that makes a fall a
 ## sink. The water has to be NAMED in it, either side of the assignment.
 static func is_water_gravity_swap(text: String) -> bool:
 	for operator: String in [" = ", " += "]:
@@ -942,7 +942,7 @@ static func is_water_gravity_swap(text: String) -> bool:
 	return false
 
 
-## Y11. Whether a statement drags the whole velocity down by a fraction of itself - `velocity *= 0.9`
+## Whether a statement drags the whole velocity down by a fraction of itself - `velocity *= 0.9`
 ## and the spellings of the same thing. The factor has to be between 0 and 1: multiplying velocity by
 ## 2 is a boost, not a drag.
 static func is_water_drag(text: String) -> bool:
@@ -1016,7 +1016,7 @@ static func _is_fraction(value: String) -> bool:
 	return number > 0.0 and number < 1.0
 
 
-## T8. The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,
+## The nearest-or-farthest LOOP a body writes: walk a list, measure the distance to each one,
 ## keep the best so far. An event sheet says that in one row - Pick nearest / Pick farthest - and no
 ## single line of the loop is it, which is why it is recognised here rather than in the grammar.
 ##
@@ -1090,12 +1090,12 @@ static func _loop_variable_name(head: String) -> String:
 	return text if EventSheetSentence.is_identifier(text) else ""
 
 
-## S1. The shipped behavior a hand-rolled state machine could be replaced by. Named here rather than
+## The shipped behavior a hand-rolled state machine could be replaced by. Named here rather than
 ## guessed at from a row, so the chip, Adopt behavior and the Doctor all offer the same one.
 const STATE_MACHINE_PACK: String = "StateMachineBehavior"
 
 
-## S1. The state-machine claim a BODY makes, or {} when its lines never turn the machine or ask about
+## The state-machine claim a BODY makes, or {} when its lines never turn the machine or ask about
 ## it. A machine is a fact about the FILE, but the claim belongs on the event that drives it: an
 ## enum nobody switches on is a list of names, and marking every event of the file would say nothing.
 static func state_machine_claim(body: PackedStringArray, file_facts: Dictionary) -> Dictionary:
@@ -1130,7 +1130,7 @@ static func state_machine_claim(body: PackedStringArray, file_facts: Dictionary)
 	}
 
 
-## S4. The numbers this file uses as countdowns: counted DOWN by a per-frame delta somewhere and
+## The numbers this file uses as countdowns: counted DOWN by a per-frame delta somewhere and
 ## compared against zero somewhere else. Both halves are required, so an ordinary subtraction stays a
 ## subtraction and a number merely compared to zero stays a comparison.
 ##
@@ -1159,7 +1159,7 @@ static func countdown_variables(lines: PackedStringArray) -> Dictionary:
 	return out
 
 
-## S4. The countdown step a line IS, as {name, note}, or {} when the line is not one. The three
+## The countdown step a line IS, as {name, note}, or {} when the line is not one. The three
 ## spellings a jam script writes:
 ##
 ##   cooldown -= delta                            {name: "cooldown", note: ""}
@@ -1219,7 +1219,7 @@ static func _is_zero(value: String) -> bool:
 	return text == "0" or text == "0.0"
 
 
-## S4. Every identifier a line compares against zero - `cooldown <= 0`, `fuse > 0`, `hp == 0`. Only a
+## Every identifier a line compares against zero - `cooldown <= 0`, `fuse > 0`, `hp == 0`. Only a
 ## bare identifier on the left counts: `stats["hp"] > 0` asks about a table entry, which is a
 ## different sentence with a different name.
 static func _zero_comparisons(line: String) -> PackedStringArray:
@@ -1268,7 +1268,7 @@ static func _is_word_character(character: String) -> bool:
 	return character == "_" or character.is_valid_identifier() or (character >= "0" and character <= "9")
 
 
-## S2. The lists this file uses as object pools: drained through `pop_back()` / `pop_front()` behind
+## The lists this file uses as object pools: drained through `pop_back()` / `pop_front()` behind
 ## an `is_empty()` guard with an `instantiate()` fallback, and refilled with `push_back()`. The guard
 ## is what makes it a pool rather than a queue, so it is required.
 static func pool_variables(lines: PackedStringArray) -> Dictionary:
@@ -1280,7 +1280,7 @@ static func pool_variables(lines: PackedStringArray) -> Dictionary:
 	return pools
 
 
-## S2. The pooled-Create line, as {pool, scene, alias} or {} when the line is not one:
+## The pooled-Create line, as {pool, scene, alias} or {} when the line is not one:
 ##
 ##   var b = pool.pop_back() if not pool.is_empty() else BULLET.instantiate()
 ##   var b = BULLET.instantiate() if pool.is_empty() else pool.pop_back()
@@ -1359,7 +1359,7 @@ static func _instantiated_source(text: String) -> String:
 	return source if EventSheetSentence.is_identifier(source) else ""
 
 
-## S2. The step a line is in a Return-to-pool run, as {kind, object, pool} or {}:
+## The step a line is in a Return-to-pool run, as {kind, object, pool} or {}:
 ##   "sleep"  b.hide() / b.set_process(false) / b.set_physics_process(false)
 ##   "return" pool.push_back(b)
 static func pool_return_step(line: String, pools: Dictionary) -> Dictionary:
@@ -1385,7 +1385,7 @@ static func pool_return_step(line: String, pools: Dictionary) -> Dictionary:
 	return {}
 
 
-## X2 / X30. The camera-ray run a body writes, as {evidence, aimed}, or {} when it writes none. The
+## The camera-ray run a body writes, as {evidence, aimed}, or {} when it writes none. The
 ## four lines only mean anything together, and the question they ask - what is under the cursor - is
 ## the thing a reader is looking for when they open the file.
 static func cursor_ray_run(body: PackedStringArray) -> Dictionary:
@@ -1432,7 +1432,7 @@ static func cursor_ray_run(body: PackedStringArray) -> Dictionary:
 	return {}
 
 
-## X5. The drop-to-the-ground run a body writes, as {evidence, object, reach}, or {} when it writes
+## The drop-to-the-ground run a body writes, as {evidence, object, reach}, or {} when it writes
 ## none. Four lines that say one thing - put this on the floor under it:
 ##
 ##   var query := PhysicsRayQueryParameters3D.create(crate.global_position,
@@ -1493,7 +1493,7 @@ static func ground_drop_run(body: PackedStringArray) -> Dictionary:
 	return {}
 
 
-## X5. Whose place a `crate.global_position` is, in the sheet's own words. A bare `position` is the
+## Whose place a `crate.global_position` is, in the sheet's own words. A bare `position` is the
 ## script's own object, which the row's object column already names.
 static func _placed_object(target: String) -> String:
 	var dot_at: int = target.rfind(".")
@@ -1502,7 +1502,7 @@ static func _placed_object(target: String) -> String:
 	return EventSheetSentence.object_of_reference(target.substr(0, dot_at).strip_edges())
 
 
-## X5. The `100.0` in `here + Vector3.DOWN * 100.0`, or "" when the far end of a ray is not straight
+## The `100.0` in `here + Vector3.DOWN * 100.0`, or "" when the far end of a ray is not straight
 ## down from `here`. Both dimensions, because a top-down 2D game drops things onto the floor too.
 static func _straight_down_reach(to_text: String, from_text: String) -> String:
 	var bare: String = to_text.strip_edges()
@@ -1519,7 +1519,7 @@ static func _straight_down_reach(to_text: String, from_text: String) -> String:
 	return scaled.substr(times_at + 3).strip_edges()
 
 
-## X20. The nearest-on-the-CANVAS walk a body writes, as {evidence}, or {} when it writes none. The
+## The nearest-on-the-CANVAS walk a body writes, as {evidence}, or {} when it writes none. The
 ## difference from the ordinary nearest pick is the whole point: a distance measured between canvas
 ## points is in PIXELS, so the pick honours camera zoom, which is exactly what a crosshair must do
 ## and what a world-distance pick silently gets wrong.
@@ -1602,7 +1602,7 @@ static func _cursor_ray_value(text: String) -> String:
 	return bare
 
 
-## X21. The randomness that OWES the player one. A pity roll is four halves written apart:
+## The randomness that OWES the player one. A pity roll is four halves written apart:
 ##
 ##   pity += 1                                            a counter fed once per roll
 ##   var chance := base_chance + pity_step * float(pity)  a chance that grows out of it
@@ -1769,7 +1769,7 @@ static func _is_random_roll(value: String) -> bool:
 	return method.begins_with("rand") or method == "random_value"
 
 
-## X24. The METERS this file keeps: a number filled at a rate while something holds and drained at a
+## The METERS this file keeps: a number filled at a rate while something holds and drained at a
 ## rate while it does not, each half clamped. Both halves are required for the same name, which is
 ## what keeps an ordinary clamped add - a stamina top-up, a bar nudged to its maximum - out: a meter
 ## is the PAIR, and one without the other is the arithmetic it looks like.
@@ -1804,7 +1804,7 @@ static func meter_variables(lines: PackedStringArray) -> Dictionary:
 	return out
 
 
-## X24. The meter step a line IS, as {name, kind, rate, limit, line}, or {} when it is not one:
+## The meter step a line IS, as {name, kind, rate, limit, line}, or {} when it is not one:
 ##
 ##   suspicion = minf(suspicion + detect_rate * delta, 100.0)   fill, up to 100
 ##   suspicion = maxf(suspicion - calm_rate * delta, 0.0)       drain, down to 0
@@ -1865,7 +1865,7 @@ static func _meter_rate(term: String, name_text: String, kind: String) -> String
 	return ""
 
 
-## X26. The PHASE LADDER a boss fight is: a health threshold guarded by the phase the fight is in,
+## The PHASE LADDER a boss fight is: a health threshold guarded by the phase the fight is in,
 ## so each phase is entered exactly once. `if phase == 1 and hp <= max_hp * 0.6:` with `phase = 2`
 ## as the branch's first step - the guard IS the trigger-once, which is why the reading says "once"
 ## instead of showing the bookkeeping.
@@ -1987,7 +1987,7 @@ static func _phase_assignment(text: String, variable: String) -> String:
 	return value if value.is_valid_int() else ""
 
 
-## X27. The MISSION CLOCKS this file keeps: a countdown (already a countdown, by the shipped rule -
+## The MISSION CLOCKS this file keeps: a countdown (already a countdown, by the shipped rule -
 ## counted down by a delta AND asked about against zero) that is ALSO shown to the player as
 ## minutes and seconds. All three halves are required, which is what keeps an ordinary countdown a
 ## countdown: a cooldown nobody can see is not a mission.
@@ -2008,7 +2008,7 @@ static func mission_timers(lines: PackedStringArray, countdowns: Dictionary) -> 
 	return out
 
 
-## X27. True when a piece of text builds `m:ss` out of a number of seconds: it divides by sixty, it
+## True when a piece of text builds `m:ss` out of a number of seconds: it divides by sixty, it
 ## takes the remainder over sixty, and it joins the two with a colon. Every spelling of that - a
 ## format string, two zero-pads, an `int()` pair - says the same thing, and this asks the question
 ## all of them answer rather than matching one of their shapes.
@@ -2067,19 +2067,19 @@ static func _numeric_cast_inner(value: String) -> String:
 	return text
 
 
-## Y12. The words a table of UNLOCKED ids is ever named with. Deliberately narrow: `skills` is the
+## The words a table of UNLOCKED ids is ever named with. Deliberately narrow: `skills` is the
 ## table of what the tree HOLDS, not of what has been taken, and reading a lookup in it as "is
 ## unlocked" would say the opposite of what the line asks. A file that keeps a dictionary of flags
 ## under a name none of these appear in is keeping flags, and the tree words must not claim it.
 const SKILL_TABLE_WORDS: PackedStringArray = ["unlocked", "unlocks", "learned", "perk", "talent"]
 
-## Y12. The marks that say a file is running a TREE rather than a flat set of flags: a prerequisite
+## The marks that say a file is running a TREE rather than a flat set of flags: a prerequisite
 ## list walked before the unlock, a cost taken off a number, or a points counter named outright.
 ## One of them has to be there before any `has()` in the file reads as Is unlocked.
 const SKILL_TREE_MARKS: PackedStringArray = ["requires", ".cost", "skill_point", "skill point"]
 
 
-## Y12 / Y13. What a file's own shape says about a SKILL TREE: which table it keeps unlocked ids in.
+## What a file's own shape says about a SKILL TREE: which table it keeps unlocked ids in.
 ## The question cannot be answered from a single line - `unlocked.has("double_jump")` is a plain
 ## dictionary lookup until the file elsewhere writes `unlocked[id] = true` beside a requires list -
 ## so it is answered from one walk here and handed to the grammar as ordinary context.
@@ -2122,7 +2122,7 @@ static func skill_tree_facts(lines: PackedStringArray) -> Dictionary:
 	return {"unlocked_tables": tables}
 
 
-## Y12. The table an UNLOCK line writes into, or "" when the line is not an unlock. Both spellings
+## The table an UNLOCK line writes into, or "" when the line is not an unlock. Both spellings
 ## count: `unlocked[id] = true` for a dictionary of ids and `unlocked.append(id)` for a list of
 ## them. The `= true` is required - a table written with a level or a timestamp is a different
 ## shape, and the reading would say the wrong thing about it.
@@ -2142,7 +2142,7 @@ static func _unlocked_table_write(text: String) -> String:
 
 
 ## The rail-riding facts this file writes, as {rail, offset, riding, speed, points}, or {} when it rides
-## none. Y9. Three marks together and nothing less: an offset taken off a curve with
+## none. Three marks together and nothing less: an offset taken off a curve with
 ## `get_closest_offset`, that offset used to `sample_baked` a point back off the same curve, and a
 ## flag the file both raises and lowers beside them. Two of the three is somebody measuring a path,
 ## not riding one - and a reading that fired on the measurement alone would rename every project's
@@ -2212,7 +2212,7 @@ static func grind_facts(lines: PackedStringArray) -> Dictionary:
 
 
 ## The board facts this file writes, as {slope, gravity, ollie, top_speed, push}, or {} when it
-## writes none. Y22. The one mark that has to be there is the SLOPE: gravity projected along the
+## writes none. The one mark that has to be there is the SLOPE: gravity projected along the
 ## floor normal, which is what a board does and a runner never does. Every other name is only read
 ## in the board's words BECAUSE that line is in the same file - `velocity.y = -jump_speed` is a
 ## jump in every other script in the world, and stays one.

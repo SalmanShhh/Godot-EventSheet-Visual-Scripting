@@ -107,17 +107,17 @@ const EXTENDED_MODULES: Dictionary = {
 		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
 		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
 	],
-	# W6 - the two rows that build a menu and answer the item that was chosen out of it.
+	# The two rows that build a menu and answer the item that was chosen out of it.
 	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
 		"MenuAddItem", "OnMenuItemChosen",
 	],
-	# Y2 / Y3 - the combo wave: the slice of a clip a move may be cancelled in, the per-object
+	# The combo wave: the slice of a clip a move may be cancelled in, the per-object
 	# freeze, and the two ways an animation tells the game when something happens.
 	"res://addons/eventforge/registration/modules/animation_player_aces.gd": [
 		"AnimationIsBetween", "PauseAnimationFor",
 		"OnAnimationFrame", "SpriteAnimationFrameIs", "OnAnimationEvent",
 	],
-	# Y2 - the press remembered for a moment so an input made slightly too early still lands,
+	# The press remembered for a moment so an input made slightly too early still lands,
 	# in seconds and in the frame-counted spelling beside it.
 	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [
 		"BufferInput", "IsInputBuffered", "ConsumeBufferedInput",

@@ -47,7 +47,7 @@ func open() -> void:
 	for path: String in runner.call("discover", "res://"):
 		var result: Dictionary = await runner.call("run_script", tree, path, 5.0)
 		results.append(result)
-		# V20 - a sheet's health card says how its tests last went, and this run is what it means by
+		# A sheet's health card says how its tests last went, and this run is what it means by
 		# "last". Nothing is written onto any sheet: the memory is the editor's own, per project.
 		var failed: int = 0
 		for entry: Variant in result.get("entries", []):

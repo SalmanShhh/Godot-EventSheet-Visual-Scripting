@@ -95,7 +95,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error."))
 	descriptors.append(F.make_descriptor("Core", "LoadResourceOrDefault", "Load Resource Or Default", ACEDescriptor.ACEType.EXPRESSION, "(load({path}) if ResourceLoader.exists({path}) else {fallback})", "", [F.make_param("path", "String", "\"res://data/item.tres\"", "Path", "Full path to the resource or scene to load.", "expression"), F.make_param("fallback", "String", "null", "Fallback", "What to use instead when the file is not there (a preloaded default, or null).", "expression")], CAT_FILES, "load [b]{path}[/b] or [i]{fallback}[/i]")
 		.described("Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game."))
-	# ── V4. The two plainest data-asset steps, in the shape a hand-written file writes them ──
+	# ── The two plainest data-asset steps, in the shape a hand-written file writes them ──────
 	# Deliberately NOT guarded: these two write the exact `load(path)` / `ResourceSaver.save(r, path)`
 	# a script writes by hand, so a picked row and a typed line are the same bytes and read the same
 	# sentence. Load Resource Or Default beside them is the forgiving version for content that may

@@ -1,4 +1,4 @@
-# L1 / L2 - the light words, and the rows they build.
+# The light words, and the rows they build.
 #
 # The claim this file holds to account is that the sheet says ONE word where Godot says several, and
 # that the word is never a guess: `brightness` is `energy` on a 2D light and `light_energy` on a 3D
@@ -32,7 +32,7 @@ static func run() -> bool:
 
 
 ## The IN CODE line the parameter dialog's help strip shows, for one verb picked on four different
-## lights. The sentence is the same word every time and the code is not, which is the whole of L2:
+## lights. The sentence is the same word every time and the code is not, which is the whole claim:
 ## the row says `brightness` and the strip says what the light picked actually answers to.
 static func _test_the_dialog_says_the_real_property() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()

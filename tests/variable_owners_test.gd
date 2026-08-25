@@ -1,4 +1,4 @@
-# EventForge - V6/V7/V9/V10/V11/V12: who owns a variable, and every surface that now asks.
+# EventForge - who owns a variable, and every surface that now asks.
 #
 # Pins: the catalog's three owner groups (this object's variables, an autoload's globals, the locals
 # in scope) and the insert spelling each carries; the row builder leading a variable row's object
@@ -63,7 +63,7 @@ static func _scope_of(sheet: EventSheetResource, var_name: String) -> String:
 	return ""
 
 
-## V12/R3. The Doctor's three new findings are the ROWS' own sentences, word for word: a name this
+## The Doctor's three new findings are the ROWS' own sentences, word for word: a name this
 ## sheet does not declare, a variable handed to a verb that wants another kind, and a `#region` fence
 ## with no partner. Pinned by comparing against the very calls the canvas makes - a report that
 ## worded a problem differently would read as a second problem.
@@ -217,7 +217,7 @@ static func _test_catalog() -> bool:
 	return ok
 
 
-# ── V7: the two new verbs ──
+# ── the two new verbs ──────
 
 
 static func _test_new_boolean_verbs() -> bool:
@@ -248,7 +248,7 @@ static func _test_new_boolean_verbs() -> bool:
 	return ok
 
 
-# ── V7: the picker ──
+# ── the picker ──────
 
 
 static func _test_picker_order_and_notes() -> bool:
@@ -290,7 +290,7 @@ static func _test_picker_order_and_notes() -> bool:
 	return ok
 
 
-# ── V9: the Anatomy rail ──
+# ── the Anatomy rail ──────
 
 
 static func _test_anatomy_sections() -> bool:
@@ -323,7 +323,7 @@ static func _test_anatomy_sections() -> bool:
 	return ok
 
 
-# ── V11: the expression picker ──
+# ── the expression picker ───────
 
 
 static func _test_expression_picker_leaves() -> bool:
@@ -341,7 +341,7 @@ static func _test_expression_picker_leaves() -> bool:
 	return ok
 
 
-# ── V10: the Inspector's census ──
+# ── the Inspector's census ───────
 
 
 static func _test_inspector_census() -> bool:
@@ -403,7 +403,7 @@ var hp: int = 100
 	return ok
 
 
-# ── V6 + V12: the row's object column, and the notes under an event ──
+# ── the row's object column, and the notes under an event ────────────
 
 
 static func _test_row_owner_and_notes() -> bool:
@@ -460,7 +460,7 @@ static func _test_row_owner_and_notes() -> bool:
 	dock._apply_variable_note_fix(notes[0] if not notes.is_empty() else null)
 	ok = _check("the fix rewrote the row", str(wrong.params.get("var_name", "")), "hp") and ok
 
-	# V12 - and the mismatch's own fix swaps the verb for the one that fits, carrying what was typed
+	# And the mismatch's own fix swaps the verb for the one that fits, carrying what was typed
 	# across to whatever the new verb calls it. The row's SLOT is rewritten, so what stands there
 	# afterwards is a fresh Set value, not the Add to that was there.
 	dock._apply_variable_note_fix(_note_with_fix(_row_with_uid(dock, "typo"), "retarget"))

@@ -18,7 +18,7 @@ extends RefCounted
 # with the rest of the editor about what it is showing.
 
 
-# ── X25 / Y11. The things this panel WRITES: the marks the reader puts on an object ──────────
+# ── The things this panel WRITES: the marks the reader puts on an object ─────────────────────
 # Every other row here answers a question about the object; a mark is the reader's own answer, so it
 # is a checkbox rather than a value. Two of them ship - "this is a secret" and "this is water". It is authoring metadata about how the sheet
 # treats the object, not game data the object carries, which is why it lives in the same
@@ -28,7 +28,7 @@ extends RefCounted
 const SECRET_META_SECTION := "eventsheets"
 const SECRET_META_KEY := "object_secret_flags"
 
-## Y11. The second mark, kept in its own store beside the first: this area is WATER. Same reasoning,
+## The second mark, kept in its own store beside the first: this area is WATER. Same reasoning,
 ## same place - it says how the sheet treats the object, and the game never reads it, so it must not
 ## reach the emitted bytes.
 const WATER_META_KEY := "object_water_flags"
@@ -83,14 +83,14 @@ static func _ensure_secret_flags() -> void:
 		_secret_flags = (stored as Dictionary).duplicate()
 
 
-## Y11. True when the reader has marked this area water - the flag the canvas drop reads before it
+## True when the reader has marked this area water - the flag the canvas drop reads before it
 ## offers the two rows that raise and lower the sheet's own in-water flag.
 static func is_water(source_path: String, object_label: String) -> bool:
 	_ensure_water_flags()
 	return bool(_water_flags.get(secret_key(source_path, object_label), false))
 
 
-## Y11. Marks (or unmarks) an area water and remembers it for the project. The key shape is the
+## Marks (or unmarks) an area water and remembers it for the project. The key shape is the
 ## secret mark's - file plus label - so two sheets naming the same area mark their own.
 static func set_water(source_path: String, object_label: String, marked: bool) -> void:
 	_ensure_water_flags()
@@ -151,7 +151,7 @@ static func can_be_secret(entry: Dictionary) -> bool:
 	return false
 
 
-# ── Y16. The second thing this panel writes: which key does this door want? ──────────────────
+# ── The second thing this panel writes: which key does this door want? ───────────────────────
 # The secret mark above is a yes or no; a door's is a NAME, because red and blue doors are the whole
 # point of having any. It lives in the same per-project editor store and for the same reason: the
 # mark is how the SHEET treats the object, and a fact that changed the emitted bytes would break the
@@ -221,7 +221,7 @@ static func can_need_key(entry: Dictionary) -> bool:
 	return false
 
 
-## Y11. True when "water" is a sensible thing to say about this object: only an area IS a volume you
+## True when "water" is a sensible thing to say about this object: only an area IS a volume you
 ## can be inside, so unlike the secret mark - which any node in a room can carry - this one is
 ## offered on Area2D and Area3D and on nothing else.
 static func can_be_water(entry: Dictionary) -> bool:
@@ -283,7 +283,7 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 			"source": source_path,
 			"note": EventSheetL10n.translate("Name the key and dropping it on the canvas offers the door event. Leave it blank for a door that is not locked.")
 		})
-	# Y11 - the second mark, beside the first: an area the reader calls water. Only an area gets it,
+	# The second mark, beside the first: an area the reader calls water. Only an area gets it,
 	# so a secret room that is not a pool is asked one question and a pool is asked two.
 	if can_be_water(entry):
 		var water_label: String = str(entry.get("label", ""))
@@ -305,7 +305,7 @@ static func property_rows(entry: Dictionary, scene_name: String = "",
 	return rows
 
 
-## Q1 - what the object IS, as opposed to what this file does with it: the instance variables it
+## What the object IS, as opposed to what this file does with it: the instance variables it
 ## carries, the functions and triggers it offers, the behaviors mounted on it and the families it
 ## belongs to. Each row is a chip list, in the order a reader asks for them; a row with nothing in it
 ## is not built, because "Behaviors: none" is a line on nearly every object.
@@ -328,7 +328,7 @@ static func identity_rows(entry: Dictionary, source_path: String,
 	var families: Array = _family_chips(facts.get("families", PackedStringArray()))
 	if not families.is_empty():
 		rows.append({
-			# T9. The word for an inheritance set is a setting, so the object page asks the one helper
+			# The word for an inheritance set is a setting, so the object page asks the one helper
 			# for it exactly as the Object bar and the head folder do.
 			"label": EventSheetFamilyFacts.plural(familiar_words),
 			"value": _chip_text(families),
@@ -476,19 +476,19 @@ static func build_panel(entry: Dictionary, scene_name: String = "", class_map: D
 	for row: Dictionary in property_rows(entry, scene_name, source_path):
 		form.add_child(EventSheetPopupUI.form_row(str(row.get("label", "")), _field_for(row)))
 	column.add_child(EventSheetPopupUI.panel_section(form))
-	# X15 - where this object sits in the tree, and what each child carries. Only a node has a place
+	# Where this object sits in the tree, and what each child carries. Only a node has a place
 	# in a tree, so the section is simply absent for a group, an autoload or a scene file.
 	if hierarchy_section != null:
 		column.add_child(EventSheetPopupUI.section_header(EventSheetL10n.translate("Hierarchy")))
 		column.add_child(hierarchy_section)
-	# R39 - the object's own variables as a TABLE, not a chip list: the popup is where a reader
+	# The object's own variables as a TABLE, not a chip list: the popup is where a reader
 	# already came to ask what the object is, so it is where adding, renaming, retyping and
 	# deleting one belongs. Only the sheet's own object gets it - the table writes into THIS file.
 	if variable_table != null:
 		column.add_child(EventSheetPopupUI.section_header(
 			EventSheetL10n.translate("Instance variables")))
 		column.add_child(variable_table)
-	# Q1 - the two ways to START using the object, first: the popup is where a reader who just learned
+	# The two ways to START using the object, first: the popup is where a reader who just learned
 	# what an object offers reaches for it, and both open the picker already scoped to this object.
 	var authoring: HBoxContainer = HBoxContainer.new()
 	authoring.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
@@ -556,7 +556,7 @@ static func write_mark(mark: String, source_path: String, object_label: String, 
 	set_secret(source_path, object_label, marked)
 
 
-## X25 / Y11. The WRITABLE fields: a mark's tick box, with the muted line saying what ticking it
+## The WRITABLE fields: a mark's tick box, with the muted line saying what ticking it
 ## does. Ticking writes straight through the static store the row names, so the panel needs no
 ## handler threaded in from the dock and a reader's answer survives closing the popup.
 static func _check_field(row: Dictionary) -> Control:
@@ -584,7 +584,7 @@ static func _check_field(row: Dictionary) -> Control:
 	return column
 
 
-## Y16. The second WRITABLE field: the key a door wants, by name. Written on every keystroke through
+## The second WRITABLE field: the key a door wants, by name. Written on every keystroke through
 ## the same static store the tick box uses, so the panel needs no handler threaded in from the dock
 ## and a reader's answer survives closing the popup. Blank is a door that is not locked.
 static func _key_field(row: Dictionary) -> Control:
@@ -689,7 +689,7 @@ func open_for(object_label: String) -> void:
 	_popup.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i.ZERO))
 
 
-## X15 - the Hierarchy pane for this object, with every gesture wired to the dock operation that
+## The Hierarchy pane for this object, with every gesture wired to the dock operation that
 ## writes it. Each handler re-derives what it needs from the live sheet, so a pane left open across
 ## an undo cannot write against a resource the funnel has already replaced.
 func _hierarchy_section_for(sheet: EventSheetResource, entry: Dictionary, label: String,

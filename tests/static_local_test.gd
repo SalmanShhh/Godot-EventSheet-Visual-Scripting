@@ -1,4 +1,4 @@
-# Godot EventSheets - V4 "Static local": a local by scope, a member in code.
+# Godot EventSheets - "Static local": a local by scope, a member in code.
 #
 # The row sits under its event and reads "Static local whole number hits_taken = 0", but GDScript has
 # no function-scope `static`, so the value can only survive between runs of that event as a class
@@ -128,7 +128,7 @@ static func _test_a_null_default_spells_its_type() -> bool:
 	return ok
 
 
-## The sentence and the V13 echo: the row says Static local where a plain local says Local, and the
+## The sentence and the echo: the row says Static local where a plain local says Local, and the
 ## code beside it is the member line the compiler writes, never the marker above it.
 static func _test_row_reads_and_echoes_the_member() -> bool:
 	var ok: bool = true

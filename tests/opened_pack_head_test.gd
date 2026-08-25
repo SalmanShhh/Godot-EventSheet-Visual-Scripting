@@ -51,7 +51,7 @@ static func run() -> bool:
 	ok = _check("a band states its line and echoes it",
 		_texts(_band(rows, "extends")), "extends | Node | extends Node") and ok
 	var include_bar: EventRowData = _row_with_uid(rows, "pack_include_bar_")
-	# C1 - the identity half is gone from the bar: the name band says FPSController and the extends
+	# The identity half is gone from the bar: the name band says FPSController and the extends
 	# band says Node, so what is left is what the file is as a PACKAGE. Two patterns since the feel
 	# layer landed: the pack's airborne run is READ as air control, beside the look shape it claimed.
 	ok = _check("the Include bar says only what no band says",
@@ -164,7 +164,7 @@ static func _test_a_plain_script_is_not_called_a_pack() -> bool:
 	view.set_sheet(sheet)
 	var bar: EventRowData = _row_with_uid(view.get_flat_rows(), "pack_include_bar_")
 	ok = _check("a plain script still gets the Include bar", bar != null, true) and ok
-	# M34 - and it does not wear the word "Script" either. Its name and its class are the head bands'
+	# And it does not wear the word "Script" either. Its name and its class are the head bands'
 	# to say, so all the bar owes a plain script is how much of it read as events.
 	ok = _check("but it is not called an Addon Pack", _texts(bar), "⇥ | reads as events") and ok
 	ok = _check("the bands name it instead", _texts(_row_at(view.get_flat_rows(), 0)),

@@ -1,4 +1,4 @@
-# EventForge - Y9 / Y22 / Y23 / Y24: the board, the rail, and the words both of them read as.
+# EventForge - the board, the rail, and the words both of them read as.
 #
 # Five gates, and the order matters:
 #   1. the WHOLE-FILE facts, including their refusals - the gate that keeps `velocity.y =
@@ -278,12 +278,12 @@ static func _pack_rows() -> bool:
 			source_3d.contains("## @ace_name(\"%s\")" % row), true) and ok
 	ok = _check("the 3D twin is a body that moves in three dimensions",
 		source_3d.contains("var host: CharacterBody3D = null"), true) and ok
-	# Y24 - the chain rows are offered to fighters too, in the same words.
+	# The chain rows are offered to fighters too, in the same words.
 	var combo: String = FileAccess.get_file_as_string("res://eventsheet_addons/combo_box/combo_box_addon.gd")
 	for row: String in ["Add To Chain", "Bank Chain", "Drop Chain", "Chain Score", "Multiplier"]:
 		ok = _check("the combo pack offers %s as well" % row,
 			combo.contains("## @ace_name(\"%s\")" % row), true) and ok
-	# Y24 - a meter with a CENTRE, which a bar cannot show.
+	# A meter with a CENTRE, which a bar cannot show.
 	var hud: String = FileAccess.get_file_as_string("res://eventsheet_addons/hud_kit/hud_kit_behavior.gd")
 	ok = _check("the HUD pack gained the balance needle",
 		hud.contains("## @ace_name(\"Set Needle\")"), true) and ok

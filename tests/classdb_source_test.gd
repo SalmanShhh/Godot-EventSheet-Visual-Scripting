@@ -1,4 +1,4 @@
-# Godot EventSheets - the ClassDB reflected vocabulary (v0.11 chapter 5, P1).
+# Godot EventSheets - the ClassDB reflected vocabulary (v0.11 chapter 5).
 #
 # Any engine class becomes browsable vocabulary on demand: own methods classify by
 # return type (void = Action, bool = Condition, else Expression), own signals become

@@ -1,4 +1,4 @@
-# Godot EventSheets - the typed registrar (v0.11 chapter 4, P3).
+# Godot EventSheets - the typed registrar (v0.11 chapter 4).
 #
 # A provider may register through `static func _eventforge_register(reg)` instead of
 # ## @ace_* comments: real GDScript, so the editor autocompletes the vocabulary and a

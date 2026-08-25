@@ -1,4 +1,4 @@
-# Godot EventSheets - R40. Under Familiar Words a global drops its autoload's name.
+# Godot EventSheets - Under Familiar Words a global drops its autoload's name.
 #
 # In the sheet a global is simply a value the whole project shares, and System is the object the
 # sheet already files shared things under; WHICH autoload holds it is a Godot fact, not a reading.

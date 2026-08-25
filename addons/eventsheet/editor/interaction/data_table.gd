@@ -2,7 +2,7 @@
 class_name EventSheetDataTable
 extends RefCounted
 
-# V4. A .tres opened as a TABLE, and a folder of .tres opened as ONE grid.
+# A .tres opened as a TABLE, and a folder of .tres opened as ONE grid.
 #
 # A data asset is a row of values: one column per exported field of the Resource script behind it.
 # That is a table, and a designer edits a table in a grid rather than one file at a time in the

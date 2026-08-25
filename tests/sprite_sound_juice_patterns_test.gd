@@ -2,7 +2,7 @@
 class_name SpriteSoundJuicePatternsTest
 extends RefCounted
 
-# S11 - S14, the whole path: a hand-written sprite / UI / sound / juice script opened as a sheet,
+# The whole path: a hand-written sprite / UI / sound / juice script opened as a sheet,
 # walked row by row, so a reading that stops reaching the canvas is caught even when the grammar
 # still answers on its own. Three gates:
 #   1. every reading the canvas must show, asserted literally;
@@ -59,28 +59,28 @@ func _on_pause_pressed() -> void:
 	AudioServer.set_bus_volume_db(0, linear_to_db(0.5))
 """
 
-## Every reading the opened file must contain, one per shape S11 - S14 claims.
+## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# S11 - the sprite and animation words
+	# The sprite and animation words
 	"sprite ▸ Set mirrored when dir < 0",
-	# X7 re-homed the two blend-tree rows onto the object's Animation aspect.
+	# Re-homed the two blend-tree rows onto the object's Animation aspect.
 	"SpriteSoundJuiceReader ▸ Animation ▸ Set blend blend position to dir",
 	"sprite ▸ Set animation frame to 3",
 	"anim ▸ Set animation speed to 2",
 	"sprite ▸ Set opacity to 50%",
 	"SpriteSoundJuiceReader ▸ Animation ▸ Go to state \"Hurt\"",
-	# S13 - the sound words
+	# The sound words
 	"sfx ▸ Set sound to jump.wav",
 	"sfx ▸ Set pitch to 1.1",
 	"sfx ▸ Set bus to SFX",
 	"sfx ▸ Play sound",
 	"music ▸ Set volume to 50%",
 	"music ▸ Seek to 12 seconds",
-	# S12 - the UI words
+	# The UI words
 	"resume_button ▸ Set focus",
 	"game_over ▸ Open centered",
 	"Audio ▸ Set master volume to 50%",
-	# S14 - the juice words
+	# The juice words
 	"camera ▸ Shake by s random offset this tick",
 	"SpriteSoundJuiceReader ▸ Bob y sine · magnitude 8 · 3 per second"
 ])

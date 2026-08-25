@@ -2,7 +2,7 @@
 class_name ReadingWordsFixture
 extends CharacterBody2D
 
-# A hand-written script carrying one of every shape the event-sheet words claim (M25 - M33), so the
+# A hand-written script carrying one of every shape the event-sheet words claim, so the
 # render harness can show what an ordinary game script reads like. Never run: it exists to be OPENED.
 
 var lives: int = 3

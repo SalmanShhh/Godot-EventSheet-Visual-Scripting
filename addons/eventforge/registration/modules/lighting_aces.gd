@@ -15,16 +15,16 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const CAT := "Lighting"
 
-## X9. The world's LOOK is its own section of the picker: fog, glow, ambient occlusion and the sky
+## The world's LOOK is its own section of the picker: fog, glow, ambient occlusion and the sky
 ## belong to the environment rather than to any light a reader can point at.
 const ENV_CAT := "Environment"
 
-## X9. Where the environment lives in a scene that has a WorldEnvironment node - the default every
+## Where the environment lives in a scene that has a WorldEnvironment node - the default every
 ## environment row starts from, and the exact spelling the Environment reading recognises.
 const ENV := "$WorldEnvironment.environment"
 
 
-## L1. The on/off dropdown the two light switches share. `display_option_labels` is what makes the
+## The on/off dropdown the two light switches share. `display_option_labels` is what makes the
 ## ROW read "Set light off" instead of "Set light false": the KEY is still `true`/`false` (it is what
 ## the template writes and what every saved row holds, both frozen), and only the word a reader sees
 ## changes. The same two words the reading already gives a hand-written `enabled = false`, so a
@@ -61,7 +61,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetAmbientLight", "Set Ambient Light", ACEDescriptor.ACEType.ACTION, "{node}.environment.ambient_light_energy = {value}", "", [F.make_param("node", "String", "$WorldEnvironment", "World environment", "The WorldEnvironment node holding the environment.", "expression"), F.make_param("value", "float", "0.3", "Energy", "How much light everything gets regardless of the lights, as a fraction.", "expression")], CAT, "Set ambient light to {value}")
 		.described("Sets how much light a 3D scene has with no light shining on it."))
 
-	# ── X9 - the Environment: fog, glow, ambient occlusion and the sky ──
+	# ── the Environment: fog, glow, ambient occlusion and the sky ───────
 	#
 	# The world's LOOK, which belongs to no node a reader can point at, so every row here takes the
 	# environment itself. Each template writes the exact shape the Environment reading recognises, so

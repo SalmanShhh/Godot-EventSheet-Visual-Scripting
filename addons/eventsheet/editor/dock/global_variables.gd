@@ -252,7 +252,7 @@ func _refresh_targets() -> void:
 	_target_picker.selected = 0
 
 
-## The row the sheet will show, live, in the R37 shape - the same preview the Add variable dialog
+## The row the sheet will show, live, in the shape - the same preview the Add variable dialog
 ## gives, because the dialog's whole job is to write one row.
 func _refresh_preview() -> void:
 	var word: String = str(EventSheetVariableSentence.TYPE_WORD_ORDER[maxi(_type_picker.selected, 0)])
@@ -269,7 +269,7 @@ func _on_confirmed() -> void:
 
 
 ## Writes one global into `target` ({} = "make me a global sheet"), the only path that puts a global
-## anywhere. THIS dialog calls it with what its fields hold; the Add variable dialog (V5) calls it
+## anywhere. THIS dialog calls it with what its fields hold; the Add variable dialog calls it
 ## with what ITS fields hold when its Scope dropdown says Global - so a global written from either
 ## place lands as the same line, in the same file, under the same one undo step.
 func add_global(raw_name: String, type_name: String, value_text: String, target: Dictionary) -> void:

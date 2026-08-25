@@ -55,7 +55,7 @@ var _drawing_prefab_gizmo: RefCounted = null
 var _drawing_prefab_3d_gizmo: RefCounted = null
 # Selection-driven behavior gizmos: a selected node's behaviors draw their editor_gizmo_draw overlays (loaded by path).
 var _behavior_gizmos: RefCounted = null
-## V14 - the events overlay (Scene dock + 2D editor badges). Inert until the setting turns it on.
+## The events overlay (Scene dock + 2D editor badges). Inert until the setting turns it on.
 var _scene_events_overlay: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
@@ -144,7 +144,7 @@ func _open_sheet_in_workspace(path: String) -> void:
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
 
-## V10 - the Inspector's "Instance variables · N": the sheet, opened on the very table that answers
+## The Inspector's "Instance variables · N": the sheet, opened on the very table that answers
 ## the question the button was clicked with. Falls back to the plain open on a build whose workspace
 ## does not offer the table, so the button is never a dead click.
 func _open_sheet_variables_in_workspace(path: String) -> void:
@@ -153,7 +153,7 @@ func _open_sheet_variables_in_workspace(path: String) -> void:
 		_event_sheet_editor.call("open_instance_variables")
 
 
-## V15 - the FileSystem's "Open its sheets": a scene opens as one named tab group holding the
+## The FileSystem's "Open its sheets": a scene opens as one named tab group holding the
 ## scene-as-sheet and every script in it, in tree order.
 func _open_scene_workspace(scene_path: String) -> void:
 	_ensure_editor()
@@ -305,7 +305,7 @@ func _enter_tree() -> void:
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
 	_sheet_edit_button_plugin = EventSheetEditButtonPlugin.new()
 	_sheet_edit_button_plugin.open_sheet = _open_sheet_in_workspace
-	# V10 - and "Instance variables · N" beside it, which opens the same sheet on its variables.
+	# And "Instance variables · N" beside it, which opens the same sheet on its variables.
 	_sheet_edit_button_plugin.open_variables = _open_sheet_variables_in_workspace
 	add_inspector_plugin(_sheet_edit_button_plugin)
 	# Export integrity: recompile every sheet when an export starts so stale generated
@@ -358,7 +358,7 @@ func _enter_tree() -> void:
 	# Selection-driven (never _handles), transient owner-less canvas - can't hijack the workspace.
 	_behavior_gizmos = load(BEHAVIOR_GIZMOS_PATH).new()
 	_behavior_gizmos.call("init", get_editor_interface())
-	# V14: the events overlay - a node whose script is a sheet wears a ⌗ and its event count in the
+	# The events overlay - a node whose script is a sheet wears a ⌗ and its event count in the
 	# Scene dock and beside it in the 2D editor, with its triggers on hover. Off until the setting
 	# says otherwise, so the scene editor stays exactly as the person editing the scene left it.
 	_scene_events_overlay = load(SCENE_EVENTS_OVERLAY_PATH).new()

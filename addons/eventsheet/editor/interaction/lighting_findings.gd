@@ -1,6 +1,6 @@
 # Godot EventSheets - the five ways a light silently does nothing.
 #
-# L8. Lighting is the part of a game that fails without saying anything: the node is in the scene,
+# Lighting is the part of a game that fails without saying anything: the node is in the scene,
 # the row runs, no error is printed, and the screen does not change. These five are the reasons, and
 # every one of them is a fact somebody can already see before the game runs:
 #

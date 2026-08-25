@@ -84,7 +84,7 @@ func build_ui() -> void:
 	_dock._title_path_label.text = "Open or create a sheet to begin"
 	_dock._title_strip.add_child(_dock._title_path_label)
 
-	# T18 - the beginner Add toolbar sits directly above the canvas (not up in the menu strip): on
+	# The beginner Add toolbar sits directly above the canvas (not up in the menu strip): on
 	# day one, the buttons have to be beside the thing they add to. Hidden until Simple mode or
 	# View ▸ Add toolbar asks for it, so an expert's sheet is unchanged.
 	_dock._beginner_toolbar.build(root, _dock._run_controls)
@@ -171,11 +171,11 @@ func build_ui() -> void:
 		_dock._navigate.record_current()
 		_dock._navigate.open_or_focus(provider_path)
 		_dock._set_status("Opened %s - a behaviour this sheet uses (Alt+Left jumps back)." % provider_path.get_file()))
-	# N10 - the Objects panel answers "what is in this file" the way the scene tree answers it for a
+	# The Objects panel answers "what is in this file" the way the scene tree answers it for a
 	# scene: every node, behaviour, global, group and scene the open file uses, derived from its own
 	# rows. Clicking one highlights its rows through the viewport's filter lens; clicking it again
 	# clears, which is why the dock (not the panel) owns what "highlight" means.
-	# Q12 - and the five gestures the bar offers: hover previews, click pins, double-click opens the
+	# And the five gestures the bar offers: hover previews, click pins, double-click opens the
 	# object's properties, right-click adds a row scoped to it or jumps to it, and dragging one onto
 	# the canvas starts an event on it.
 	_dock._objects_panel = EventSheetObjectsPanel.new()
@@ -196,7 +196,7 @@ func build_ui() -> void:
 		_dock.open_object_file_as_sheet(EventSheetObjectFacts.script_path_for_entry(
 			EventSheetObjectProperties.find_entry(_dock._current_sheet, object_label),
 			str(_dock._current_sheet.get("external_source_path")) if _dock._current_sheet != null else "")))
-	# V13 - the two starter gestures: the events this object's class is usually given, and this
+	# The two starter gestures: the events this object's class is usually given, and this
 	# object's events copied for other objects.
 	_dock._objects_panel.object_starter_events_requested.connect(func(object_label: String) -> void:
 		_dock.add_common_events_for(object_label))
@@ -243,11 +243,11 @@ func build_ui() -> void:
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
 	_dock._viewport.object_bar_dropped.connect(_dock.apply_object_bar_drop)
 	_dock._viewport.input_action_dropped.connect(_dock.apply_input_action_drop)
-	# X15 - a child dragged out of the Hierarchy pane and let go anywhere on the canvas: unparent it.
+	# A child dragged out of the Hierarchy pane and let go anywhere on the canvas: unparent it.
 	_dock._viewport.hierarchy_child_dropped.connect(_dock.hierarchy_unparent)
-	# T13 - the Project bar's own drop: what it means travels in the payload, and the dock writes it.
+	# The Project bar's own drop: what it means travels in the payload, and the dock writes it.
 	_dock._viewport.project_entry_dropped.connect(_dock.apply_project_entry_drop)
-	# Q10 - a thumbnail the editor's preview cache renders after the row was drawn: redraw once when
+	# A thumbnail the editor's preview cache renders after the row was drawn: redraw once when
 	# it lands, so the picture appears rather than waiting for the next thing to move.
 	EventSheetObjectThumbnails.set_arrival_handler(func() -> void:
 		if _dock._viewport != null:
@@ -370,7 +370,7 @@ func build_ui() -> void:
 	_dock._row_address_label.name = "EventSheetRowAddress"
 	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_dock._row_address_label.modulate = EventSheetActiveTheme.chrome().row_address_color
-	# Live edit (V8): the ⟳ offer sits between the message and the address, hidden unless a game is
+	# Live edit: the ⟳ offer sits between the message and the address, hidden unless a game is
 	# running and this sheet has an unapplied edit - a button that can never do anything is worse
 	# than no button.
 	_dock._live_edit_bar.init(_dock)
@@ -391,7 +391,7 @@ func build_ui() -> void:
 	_dock._context_menus.build_all()
 	_dock._build_preview_window()
 	_dock._build_theme_file_dialog()
-	# T13 / T18 - both surfaces exist now (the View items above, the strip below the menus), so the
+	# Both surfaces exist now (the View items above, the strip below the menus), so the
 	# "should this project have them" rule can finally be resolved. It could not run inside the menu
 	# build: the strip was not there yet, and a rule that runs against half a UI silently does nothing.
 	_dock._project_bar_glue.apply_visibility()
@@ -607,15 +607,15 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_simple_mode_provider(func() -> bool: return _dock._simple_mode)
 	_dock._ace_picker.set_reflect_class_provider(func() -> String: return _dock._current_sheet.host_class if _dock._current_sheet != null else "")
 	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
-	# R35. The Editor object is offered on a sheet that runs in the editor and nowhere else.
+	# The Editor object is offered on a sheet that runs in the editor and nowhere else.
 	_dock._ace_picker.set_tool_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.tool_mode)
-	# V7. The Variables group names the variables each verb can take, and describes the one under the
+	# The Variables group names the variables each verb can take, and describes the one under the
 	# cursor in the sentence its row reads with - both out of the sheet's own catalog.
 	_dock._ace_picker.set_variable_catalog_provider(
 		func() -> Array: return EventSheetVariableOwners.catalog(_dock._current_sheet))
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
-	# S27 - the Add event dialog's first entry, "(none - runs every tick)": a real event with no
+	# The Add event dialog's first entry, "(none - runs every tick)": a real event with no
 	# condition of its own, made where the dialog was opened.
 	_dock._ace_picker.blank_event_selected.connect(_dock._on_picker_blank_event_selected)
 	# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack
@@ -677,7 +677,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._find_bar_glue.init(_dock)
 	_dock._clipboard_glue.init(_dock)
 	_dock._quick_prompts.init(_dock)
-	# M2 - the Message dialog writes an annotation; the Send dialog names one of the three shipped
+	# The Message dialog writes an annotation; the Send dialog names one of the three shipped
 	# Send ACEs and hands it to the ordinary apply path, exactly as the Compare dialog does.
 	_dock._messages.init(_dock)
 	_dock._messages.send_confirmed.connect(_dock._on_send_message_confirmed)
@@ -685,7 +685,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_dock._variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _dock._current_sheet)
 	_dock._variable_dlg.variable_confirmed.connect(_dock._on_variable_dialog_confirmed)
-	# V5 - Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
+	# Scope ▸ Global writes into the autoload the dialog's "Write into" picker named, through the
 	# same writer the Add global variable dialog uses, rather than into this file.
 	_dock._variable_dlg.project_global_requested.connect(_dock._on_variable_dialog_global_requested)
 	# Sheet enums feed the variable dialog's one-click combo fill.

@@ -14,10 +14,10 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("SceneFlowBehavior behavior requires a Node parent.")
 
-## The cover colour the screen fades through.
-@export var fade_color: Color = Color(0.0, 0.0, 0.0, 1.0)
 ## Fade-out (and fade-in) duration in seconds.
 @export_range(0.05, 5, 0.05) var fade_seconds: float = 0.4
+## The cover colour the screen fades through.
+@export var fade_color: Color = Color(0.0, 0.0, 0.0, 1.0)
 
 ## The root-parented fade overlay: fades out, swaps (or reloads) the scene, fades back in,
 ## then frees itself. Lives under the tree root so the running tween outlives the old scene;

@@ -65,7 +65,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		[F.make_param("value", "String", "3.14159", "Value", "Number to format.", "expression"), F.make_param("decimals", "String", "2", "Decimals", "Digits after the decimal point.", "expression")], "Text", "format {value} to {decimals} dp")
 		.described("Returns a number as text with a fixed number of decimal places, e.g. 3.14159 → \"3.14\"."))
 
-	# ── V6 - the same questions asked of a pattern you KEEP ──
+	# ── the same questions asked of a pattern you KEEP ───────
 	# The verbs above compile the pattern afresh every time they run, which is what a one-off match
 	# wants. These four act on a pattern held in a variable of the sheet - the shape an opened script
 	# already reads as "Set pattern rx to …" / "first match of rx in text" - so a picked row and a
@@ -94,7 +94,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	return descriptors
 
 
-## V6. The variable a kept pattern lives in. The default builds one on the spot so the row runs the
+## The variable a kept pattern lives in. The default builds one on the spot so the row runs the
 ## moment it is dropped; point it at a variable of your own sheet to keep the pattern between runs.
 static func _holder_param() -> ACEParam:
 	return F.make_param("holder", "String", "RegEx.create_from_string(\"[0-9]+\")", "Pattern", "The variable holding the pattern - the one Set Pattern filled.", "expression")

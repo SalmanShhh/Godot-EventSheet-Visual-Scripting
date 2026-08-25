@@ -59,7 +59,7 @@ static func run() -> bool:
 			prop_row = row_data
 	ok = _check("the property renders as a variable row with children", prop_row != null, true) and ok
 	if prop_row != null:
-		# R2 - the accessors are EVENTS now, not a code block: the setter is the trigger it is, the
+		# The accessors are EVENTS now, not a code block: the setter is the trigger it is, the
 		# getter the expression it is, and the variable row above them keeps the value and the type.
 		ok = _check("the property row is no longer a code block", prop_row.language_block, false) and ok
 		ok = _check("it has a setter event and a getter event", prop_row.children.size(), 2) and ok
@@ -137,7 +137,7 @@ static func run() -> bool:
 	EventSheetVariablesManager._apply_property_accessors(authored, {})
 	ok = _check("clearing the bodies removes the accessors", authored.has_property_accessors(), false) and ok
 
-	# ── R2 authoring: "Add setter" / "Add getter" on the variable row's menu write exactly the
+	# ── authoring: "Add setter" / "Add getter" on the variable row's menu write exactly the
 	# GDScript the reading takes back apart. ──
 	var plain: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node\n\nvar score: int = 0\n")
 	var author_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock

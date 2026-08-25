@@ -22,15 +22,15 @@ signal process_item(item: Variant)
 ## @ace_name("On Drained")
 signal drained
 
-var _last_count: int = 0
-var _paused: bool = false
-var _queue: Array = []
 ## Max milliseconds per frame spent draining the queue (used when Mode includes ms).
 @export_range(0.1, 16, 0.1) var frame_budget_ms: float = 4.0
 ## Hard cap on items processed per frame (used when Mode includes count).
 @export var max_items_per_frame: int = 64
 ## Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only.
 @export_enum("both", "ms", "count") var mode: String = "both"
+var _queue: Array = []
+var _last_count: int = 0
+var _paused: bool = false
 
 func _process(delta: float) -> void:
 	if _paused or _queue.is_empty():

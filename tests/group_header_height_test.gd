@@ -1,6 +1,6 @@
 # Godot EventSheets - a group head is ONE line, and everything it says fits inside it.
 #
-# G1 moved the description onto the head's own line (beside the name, still inline-editable) and put
+# Moved the description onto the head's own line (beside the name, still inline-editable) and put
 # what the group holds at the right edge, so a group costs one row however much it says. This pins
 # the relationship rather than the pixels: the head is a single-line row, a described group is no
 # taller than an undescribed one, both clear the themed bar height, and every span - including the

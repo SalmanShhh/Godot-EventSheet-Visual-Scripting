@@ -4,19 +4,19 @@
 # Three readings ship here and each is pinned by VALUE, because a count would pass just as happily
 # with the wrong words in the right shape:
 #
-#   P3  THE READING-COVERAGE CHIP. The share of an opened file that arrived as rows, and how many
+#   THE READING-COVERAGE CHIP. The share of an opened file that arrived as rows, and how many
 #       script blocks the rest sits in. The number is measured by EventSheetReadingCoverage, which
 #       is ALSO what tests/handwritten_lift_gate_test.gd measures with - so the last check here
 #       pins that the chip's number and the gate's entry point agree on the same file. Two
 #       implementations of "what still reads as code" would drift the moment either learned a new
 #       row shape, and the gate would go on passing while the chip told a reader something else.
 #
-#   P7  THE INSPECTOR FACTS ON A SETTING ROW. A range and its step, an enum as a combo chip reading
+#   THE INSPECTOR FACTS ON A SETTING ROW. A range and its step, an enum as a combo chip reading
 #       its LABEL rather than its number, a 0-1 range as a percent, a file filter, a folder, a
 #       multiline note, a colour with its word, and flags with their names. Read from what the
 #       importer already stored, over a REAL hinted file rather than a hand-built sheet.
 #
-#   P10 AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its Include bar says so, its knobs collapse into
+#   AN AUTOLOAD READS AS THE PROJECT'S GLOBAL. Its Include bar says so, its knobs collapse into
 #       one Global variables folder (on a global there is nothing for a second folder to mean), its
 #       triggers say "this global fires", and the Objects rail names it the same way.
 #
@@ -42,7 +42,7 @@ static func run() -> bool:
 	return ok
 
 
-# ── P3 ──
+# ────────
 
 
 static func _test_coverage_chip() -> bool:
@@ -107,7 +107,7 @@ static func _test_parse_errors() -> bool:
 	return ok
 
 
-# ── P7 ──
+# ────────
 
 
 static func _test_setting_facts() -> bool:
@@ -153,14 +153,14 @@ static func _test_setting_facts() -> bool:
 	return ok
 
 
-# ── P10 ──
+# ─────────
 
 
 static func _test_autoload_head() -> bool:
 	var ok: bool = true
 	var view: EventSheetViewport = _open(SETTINGS_PATH, true)
 	var rows: Array = view.get_flat_rows()
-	# C1 - the singleton's NAME is the autoload band's, with the project.godot entry that grants it
+	# The singleton's NAME is the autoload band's, with the project.godot entry that grants it
 	# echoed beside it; the bar under the stack is left with the file it is and its coverage.
 	ok = _check("an autoload's own band names the singleton and echoes the entry that grants it",
 		_texts(_row_with_uid(rows, "sheet_head_autoload_")),

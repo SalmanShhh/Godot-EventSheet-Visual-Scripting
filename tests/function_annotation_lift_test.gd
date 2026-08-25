@@ -1,4 +1,4 @@
-# EventForge (gap G4) - a leading GDScript annotation (`@rpc`, `@warning_ignore`, `@abstract`, stacked) above
+# EventForge - a leading GDScript annotation (`@rpc`, `@warning_ignore`, `@abstract`, stacked) above
 # a function no longer blocks it from lifting. The annotation lines are kept VERBATIM on the EventFunction
 # (annotation_lines) and re-emitted between the `## @ace_*` block and the `func` header, so a `@rpc`
 # multiplayer method opens as an editable function instead of a raw block. It is the repo's established

@@ -1,4 +1,4 @@
-# Godot EventSheets - the sheet health card (V20).
+# Godot EventSheets - the sheet health card.
 #
 # Pins VALUES: the exact lines the card draws and which panel each one belongs to, the Doctor counts
 # for ONE sheet out of a project-wide report, how a set of Test Sheets reads when one of them failed

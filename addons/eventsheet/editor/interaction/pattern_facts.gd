@@ -35,21 +35,21 @@ const PATTERN_IDS: PackedStringArray = [
 	"orbit", "worldspace_ui",
 	"hierarchy",
 	"pity", "detection", "boss_phases", "quest_timer",
-	# X22 / X23 / X25 / X28 / X29 - the sensor, touch, shooter, timed-input and options shapes.
+	# The sensor, touch, shooter, timed-input and options shapes.
 	"gyro_controls", "swipe", "hitscan", "secrets", "qte", "accessibility_options",
-	# Y19 / Y20 / Y21 - which way a thing faces, and everything that has to turn with it.
+	# Which way a thing faces, and everything that has to turn with it.
 	"facing",
-	# Y16 - the coloured keycard and the door that wants it.
+	# The coloured keycard and the door that wants it.
 	"keys_doors",
-	# Y12 / Y13 - the skill tree: an unlocked table, a points number and a requires list.
+	# The skill tree: an unlocked table, a points number and a requires list.
 	"skill_tree",
-	# Y9 / Y22 - the rail ride and the board. Two ids rather than one because snapping to a curve
+	# The rail ride and the board. Two ids rather than one because snapping to a curve
 	# and riding it is a general shape a traversal pack owns as readily as a skateboard does.
 	"grind", "skateboard",
-	# Y7 / Y8 / Y11 - the traversal shapes: the ledge a two-probe test finds, the three moves
+	# The traversal shapes: the ledge a two-probe test finds, the three moves
 	# built on the wall a body is touching, and the water volume that swaps gravity for drag.
 	"ledge", "wall_move", "swim",
-	# Y1 / Y2 - the input sequence a fighting game is made of, and the two timing tricks around it.
+	# The input sequence a fighting game is made of, and the two timing tricks around it.
 	"animation_combo"
 ]
 

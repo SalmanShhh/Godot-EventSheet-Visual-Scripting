@@ -605,7 +605,7 @@ static func list_blocks() -> Array[Dictionary]:
 	return blocks
 
 
-## One tutorial, at one step: the card the mockup draws. The heading is the tutorial and the
+## One tutorial, at one step: the card the Manual draws. The heading is the tutorial and the
 ## small-caps line is where the reader is, so the page title never changes under them while they
 ## walk it - only the card does.
 static func step_blocks(tutorial_id: String, index: int = -1) -> Array[Dictionary]:

@@ -1,4 +1,4 @@
-# Godot EventSheets - exporting a sheet as an image, a PDF or Markdown with figures (V16).
+# Godot EventSheets - exporting a sheet as an image, a PDF or Markdown with figures.
 #
 # Everything that needs no screen is pinned here by VALUE: how a tall picture is cut into pages, the
 # exact bytes a hand-written PDF starts and ends with, that the PDF really is one page per slice and

@@ -2,7 +2,7 @@
 class_name EventForgeMultiplayerLift
 extends RefCounted
 
-# E1 - the multiplayer RECOGNISERS: the spellings people actually wrote before this plugin existed.
+# The multiplayer RECOGNISERS: the spellings people actually wrote before this plugin existed.
 #
 # Most networked projects are older than the sheet that opens them, so every row the Multiplayer
 # object offers has to be readable BACKWARDS out of hand-written GDScript. What is here is one
@@ -72,7 +72,7 @@ const NETWORKING_MARKS: Array[String] = [
 	"server_disconnected", "peer_authenticating", "peer_authentication_failed",
 	"complete_auth(", "send_auth(", "disconnect_peer(", "refuse_new_connections",
 	"set_multiplayer_authority(", "get_multiplayer_authority()",
-	# M4 - the scene side. `Multiplayer` above already covers a line naming either node class, so what
+	# The scene side. `Multiplayer` above already covers a line naming either node class, so what
 	# is left is the calls and the properties those two nodes answer to.
 	"spawn_path", "spawn_function", "set_visibility_for(", "public_visibility",
 	"add_visibility_filter(", "remove_visibility_filter("
@@ -162,7 +162,7 @@ static func _match_connection_run(lines: PackedStringArray, index: int, depth: i
 	}
 
 
-## M4. The four lines a networked spawn IS: make the copy, name it, place it, and hand it to the
+## The four lines a networked spawn IS: make the copy, name it, place it, and hand it to the
 ## node the spawner watches. Deliberately the WHOLE shape and nothing looser - an `instantiate()`
 ## followed by an `add_child` is the commonest run in every project ever written, networked or not,
 ## and the one thing that makes THIS run a spawn is the last line reading `spawn_path` off a

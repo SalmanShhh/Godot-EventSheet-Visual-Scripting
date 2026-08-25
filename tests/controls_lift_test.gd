@@ -1,4 +1,4 @@
-# R24-R29 - the controls vocabulary reads BACK out of ordinary hand-written Godot.
+# The controls vocabulary reads BACK out of ordinary hand-written Godot.
 #
 # Every template in the controls module is the exact bytes a hand-written script writes for the same
 # idea, which is the whole reason an opened file reads as those rows: the importer's reverse index is
@@ -61,7 +61,7 @@ static func run() -> bool:
 	return passed
 
 
-## R29 - `var a = Input.get_accelerometer()` is a Local variable row, not a code cell, and the value
+## `var a = Input.get_accelerometer()` is a Local variable row, not a code cell, and the value
 ## it is set to reads in the Touch object's words.
 static func _check_sensor_locals() -> bool:
 	var source: String = "extends Node\n\n\nfunc _process(delta: float) -> void:\n\tvar a = Input.get_accelerometer()\n\tvar g = Input.get_gravity()\n"

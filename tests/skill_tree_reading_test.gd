@@ -1,4 +1,4 @@
-# EventForge - the SKILL TREE (Y12-Y15): the data asset, the Upgrades tree words, the skill wording
+# EventForge - the SKILL TREE: the data asset, the Upgrades tree words, the skill wording
 # on the Abilities pack, the readings that recognise a hand-written tree, the Doctor's three checks
 # and the screen starter.
 #
@@ -32,7 +32,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## Y12 / Y13. The sentences themselves.
+## The sentences themselves.
 static func _test_grammar() -> bool:
 	var passed: bool = true
 	var learned: Dictionary = EventSheetSentence.condition("unlocked.has(\"double_jump\")", TREE_CONTEXT)
@@ -85,7 +85,7 @@ static func _test_gating() -> bool:
 	return passed
 
 
-## Y12. The pattern id exists, and the fixture claims it with the Upgrades pack to adopt.
+## The pattern id exists, and the fixture claims it with the Upgrades pack to adopt.
 static func _test_pattern_claim() -> bool:
 	var passed: bool = true
 	passed = _check("the skill tree is a pattern the readings may claim",
@@ -117,7 +117,7 @@ static func _test_round_trip() -> bool:
 		reopened == FileAccess.get_file_as_string(FIXTURE), true)
 
 
-## Y12 / Y13 / Y14. The pack's own answers, pinned as the numbers a player would see.
+## The pack's own answers, pinned as the numbers a player would see.
 static func _test_upgrades_pack() -> bool:
 	var passed: bool = true
 	var upgrades: Node = (load(UPGRADES_PACK) as GDScript).new()
@@ -168,7 +168,7 @@ static func _test_upgrades_pack() -> bool:
 	return passed
 
 
-## Y14. The skill wording on the Abilities pack answers exactly what the ability wording does.
+## The skill wording on the Abilities pack answers exactly what the ability wording does.
 static func _test_abilities_wording() -> bool:
 	var passed: bool = true
 	var abilities: Node = (load(ABILITIES_PACK) as GDScript).new()
@@ -184,7 +184,7 @@ static func _test_abilities_wording() -> bool:
 	return passed
 
 
-## Y12 / Y13. The three ways a tree is wrong, said out loud.
+## The three ways a tree is wrong, said out loud.
 static func _test_doctor() -> bool:
 	var passed: bool = true
 	var good: Array[Dictionary] = []
@@ -233,7 +233,7 @@ static func _test_doctor() -> bool:
 	return passed
 
 
-## Y15. The screen starter.
+## The screen starter.
 static func _test_starter() -> bool:
 	var passed: bool = true
 	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(34)

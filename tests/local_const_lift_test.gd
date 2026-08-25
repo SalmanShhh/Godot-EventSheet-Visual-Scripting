@@ -1,4 +1,4 @@
-# EventForge (gap G4) - a `const` inside a flow body round-trips as a Set Local Constant row instead of
+# EventForge - a `const` inside a flow body round-trips as a Set Local Constant row instead of
 # mis-lifting to a Set Variable named "const N". Three new Helper ACEs (plain / typed / inferred) mirror the
 # Set Local Variable family; they emit `const ... = ...` via the registry template and are admitted to the
 # reverse index (whitelisted out of the Helpers exclusion), where the literal_len sort makes typed outrank

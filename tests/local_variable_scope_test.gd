@@ -1,4 +1,4 @@
-# EventForge - R41. A local variable is visible from the event that declares it to the end of the
+# EventForge - A local variable is visible from the event that declares it to the end of the
 # body it was declared in, subtrees included - and nowhere else. A function body opens as a RUN of
 # sibling events, so "the rest of the body" is what the scope has to mean; anything narrower would
 # refuse a drop one row down, and anything wider would allow one into another function.

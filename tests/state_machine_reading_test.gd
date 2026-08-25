@@ -102,7 +102,7 @@ static func run() -> bool:
 	ok = _check("one case row built", case_rows.size(), 1) and ok
 	ok = _check("case row leads with the state badge", case_rows[0].spans[0].text, "◆") and ok
 	ok = _check("case row reads State: leaf", case_rows[0].spans[1].text, "State: PATROL") and ok
-	# M37 - a match on an ORDINARY value is not a state machine at all, and an event sheet has no switch:
+	# A match on an ORDINARY value is not a state machine at all, and an event sheet has no switch:
 	# it reads as the if / else-if chain an event-sheet user knows, so the first case states the test.
 	lifted_match.match_expression = "damage_type"
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
@@ -126,7 +126,7 @@ static func run() -> bool:
 	spot.code = "if not can_see_player():
 	state = State.PATROL"
 	var negated_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
-	# M12 - the inversion is the red `not` in the badge column, the same mark an inverted ACE condition
+	# The inversion is the red `not` in the badge column, the same mark an inverted ACE condition
 	# wears, and the SENTENCE is the positive one. It used to read "Not Can See Player"; a word in
 	# the middle of a sentence is easy to skim past, and it meant the sheet had two ways of saying
 	# "inverted" depending on where the condition came from.

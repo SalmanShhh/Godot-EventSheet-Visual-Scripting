@@ -8,7 +8,7 @@ extends RefCounted
 # refresh bus). Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
 # The view-access core stays on the dock: _active_view() / _active_viewport_ref /
-# _mirroring_selection / _linked_views and the detached-view (P2) state are shared by the
+# _mirroring_selection / _linked_views and the detached-view state are shared by the
 # primary, split, AND detached panes, so the dock owns them. This helper reaches them (and the
 # dock's _viewport / _scroll / _current_sheet / _ace_registry) through the `_dock` back-reference,
 # the same pattern as the other dock/ helpers. The dock keeps a one-line delegate for every

@@ -2,7 +2,7 @@
 class_name EventSheetSignalFanout
 extends RefCounted
 
-# Q9 - "who reacts to this?", answered project-wide.
+# "who reacts to this?", answered project-wide.
 #
 # A signal row is half a sentence on its own. `Player > Signal On Died` says something was announced
 # and stops; `➜ Player On died` says something was heard and stops. The other half is in a different
@@ -263,7 +263,7 @@ static func _trailing_identifier(text: String) -> String:
 	return collected if EventSheetViewportLenses.is_identifier(collected) else ""
 
 
-## The object one script drives, by the same rule the Include bar names it (Q4): the scene root that
+## The object one script drives, by the same rule the Include bar names it: the scene root that
 ## uses it, else the file name in the shape a reader writes it.
 static func object_label_of_script(script_path: String) -> String:
 	var scene: Dictionary = ViewportRowBuilder.scene_using_script(script_path)

@@ -93,7 +93,7 @@ static func _tree_has_item(tree: Tree, text: String) -> bool:
 	return tree != null and _walk_item(tree.get_root(), text)
 
 
-## V11. A leaf found by what it INSERTS rather than by what it says: a variable leaf now reads as its
+## A leaf found by what it INSERTS rather than by what it says: a variable leaf now reads as its
 ## sentence ("score   whole number = 0"), and the fragment in its metadata is what a caret receives.
 static func _tree_inserts(tree: Tree, fragment: String) -> bool:
 	return tree != null and _walk_insert(tree.get_root(), fragment)

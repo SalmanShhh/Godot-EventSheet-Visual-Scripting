@@ -46,7 +46,7 @@ const ORDER: PackedStringArray = [
 	BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
-## E2 / L4 / L6 - the bands that come from the SCENE rather than from the file, and the key each
+## The bands that come from the SCENE rather than from the file, and the key each
 ## reads its entries from. These are the kinds a sheet can wear SEVERAL of (a scene may hold two
 ## synchronizers, and a lit room holds a light per band), so they are built as a list instead of as
 ## one band per kind. Every one of them is read on open and stored nowhere.
@@ -233,7 +233,7 @@ static func bands(head_facts: Dictionary) -> Array[Dictionary]:
 	return built
 
 
-## E2 - the scene's bands: one per synchronizer that keeps this sheet's object in step, one per
+## The scene's bands: one per synchronizer that keeps this sheet's object in step, one per
 ## spawner elsewhere that can make its scene. The readings and the echoes are composed by the scene
 ## reader (a band never spells a fact itself), and each band carries the node it is about so its
 ## control can open the editor that owns it.
@@ -246,14 +246,14 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 		var reading: Dictionary = entry
 		var band: Dictionary = _make(kind, str(reading.get("value", "")), str(reading.get("echo", "")))
 		band["reference"] = str(reading.get("reference", ""))
-		# L4 - a fact that is a PROBLEM wears the problem's colour and the problem's words. The
+		# A fact that is a PROBLEM wears the problem's colour and the problem's words. The
 		# reader composed both, so the band and the Doctor finding about the same scene agree.
 		band["warning"] = bool(reading.get("warning", false))
 		built.append(band)
 	return built
 
 
-## E2 - everything the SCENE says about a sheet, in the shape `bands()` reads: one entry per
+## Everything the SCENE says about a sheet, in the shape `bands()` reads: one entry per
 ## synchronizer and one per spawner, each already written as the words the band shows and the lines
 ## of the file they came from. Empty for a sheet no scene runs, which is why nothing about
 ## replication appears in a project that has none.
@@ -263,7 +263,7 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
-	# L4 / L6 - the lighting the scene already has: one band per light, the occluders that can block
+	# The lighting the scene already has: one band per light, the occluders that can block
 	# their shadows, and the environment resource the scene holds (and who else holds it).
 	facts["lit_by"] = EventSheetSceneLightingFacts.lit_by(source_path)
 	facts["shadow_facts"] = EventSheetSceneLightingFacts.shadow_bands(source_path)
@@ -481,10 +481,10 @@ static func _make(kind: String, value: String, echo: String) -> Dictionary:
 		"editable": false,
 		"switch": false,
 		"switch_on": false,
-		# E2 - the thing OUTSIDE this file a band is about ("scene|node"), so its control can open
+		# The thing OUTSIDE this file a band is about ("scene|node"), so its control can open
 		# the editor that owns the fact. "" for every band that stands for a line of the file.
 		"reference": "",
-		# L4 - whether this band's fact is a PROBLEM, in which case its words are the warning the
+		# Whether this band's fact is a PROBLEM, in which case its words are the warning the
 		# Doctor raises about the same scene and the canvas draws them in the note colour.
 		"warning": false,
 		"control": control_label(kind),

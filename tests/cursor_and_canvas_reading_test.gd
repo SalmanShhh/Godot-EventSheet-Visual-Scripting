@@ -4,13 +4,13 @@ extends RefCounted
 
 # Pins batch thirteen's cursor-and-canvas readings and the words that author them:
 #
-#   X2   the camera-ray run - project_ray_origin, project_ray_normal, the query, intersect_ray -
+#   The camera-ray run - project_ray_origin, project_ray_normal, the query, intersect_ray -
 #        reads as ONE row asking what is under the cursor, with the reach and the folded empty-check
 #        as its muted note; a ray hit's own entries read as what they mean
-#   X20  canvas space - the canvas centre, a position ON THE CANVAS in either dimension, a distance
+#   Canvas space - the canvas centre, a position ON THE CANVAS in either dimension, a distance
 #        between two canvas points named in PIXELS, whether a point is behind the camera, the world
 #        point under a canvas point at a depth, and an arrow clamped to the canvas edge
-#   X30  the same run aimed through a crosshair object and restricted to a layer mask, and the three
+#   The same run aimed through a crosshair object and restricted to a layer mask, and the three
 #        aimed-floor expressions the picker writes, which share ONE emitted helper per file
 #
 # Six gates, in the order they matter:
@@ -30,7 +30,7 @@ const X2_PATH := "user://eventforge_cursor_ray_reading.gd"
 const X20_PATH := "user://eventforge_canvas_reading.gd"
 const X30_PATH := "user://eventforge_aimed_floor_reading.gd"
 
-## X2. The four-line run every 3D tool writes, with the branch that clears what it found.
+## The four-line run every 3D tool writes, with the branch that clears what it found.
 const X2_SOURCE: String = """extends Node3D
 
 @onready var cam: Camera3D = $Camera3D
@@ -47,7 +47,7 @@ func _pick(mouse_pos: Vector2) -> void:
 	hovered = hit.collider
 """
 
-## X20. The nearest-to-crosshair walk, and the 2D twin that asks where a node is on the canvas.
+## The nearest-to-crosshair walk, and the 2D twin that asks where a node is on the canvas.
 const X20_SOURCE: String = """extends Node3D
 
 @onready var cam: Camera3D = $Camera3D
@@ -71,7 +71,7 @@ func _screen_pos(o: Node2D) -> Vector2:
 	return o.get_global_transform_with_canvas().origin
 """
 
-## X30. The same run aimed through a crosshair object and filtered to one layer.
+## The same run aimed through a crosshair object and filtered to one layer.
 const X30_SOURCE: String = """extends Node3D
 
 @onready var cam: Camera3D = $Camera3D
@@ -90,17 +90,17 @@ func _aim() -> Dictionary:
 
 ## Every reading the three opened files must contain, one per shape these items claim.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# X2 - four lines of plumbing, one row, and the branch under it folded into the note.
+	# Four lines of plumbing, one row, and the branch under it folded into the note.
 	"System ▸ Set hit to the object under the cursor",
 	"reach 1000 · none when nothing is hit",
 	"System ▸ Set hovered to the object under the cursor",
-	# X20 - the canvas words, each one the sentence its ACE writes.
+	# The canvas words, each one the sentence its ACE writes.
 	"= the canvas centre",
 	"= e's position on the canvas",
 	"= the canvas distance from centre to on_screen (pixels)",
 	"e ▸ is behind the camera",
 	"System ▸ Return o's position on the canvas",
-	# X30 - the aimed, filtered run, with the layer it may see said in the note.
+	# The aimed, filtered run, with the layer it may see said in the note.
 	"System ▸ Set hit to the object under crosshair",
 	"on layer 1, reach 500 · none when nothing is hit"
 ])
@@ -128,14 +128,14 @@ static var EXPRESSION_READINGS: Dictionary = {
 	"hit.position": "where the cursor touches the world",
 	"hit.normal": "the surface's facing there",
 	"hit.collider": "the object under the cursor",
-	# X30 - what the picker writes, read back as the sentence it offered.
+	# What the picker writes, read back as the sentence it offered.
 	"__eventsheets_aim_floor(get_viewport().get_mouse_position(), 1, 500.0).get(\"position\", Vector3.ZERO)":
 		"the floor point under the cursor",
 	"__eventsheets_aim_floor(get_viewport().get_mouse_position(), 1, 500.0).get(\"collider\", null)":
 		"the floor object under the cursor",
 	"__eventsheets_aim_floor(crosshair.get_global_transform_with_canvas().origin, 1, 500.0).get(\"normal\", Vector3.UP)":
 		"the floor's slope under crosshair",
-	# X30's 2D twins - a flat game has no camera ray, so the same two questions are a point query
+	# The 2D twins - a flat game has no camera ray, so the same two questions are a point query
 	# and a map lookup, and each reads back as the sentence its word offered.
 	"__eventsheets_object_at_2d(get_global_mouse_position(), 1).get(\"collider\", null)":
 		"the object under the cursor",
@@ -231,7 +231,7 @@ static func _grammar_values() -> bool:
 	for refused: String in REFUSED_EXPRESSIONS:
 		ok = _check("refused %s" % refused,
 			EventSheetSentence.canvas_expression_words(refused, context), "") and ok
-	# X2 - the run recognised step by step, and the far end that says how far it reaches.
+	# The run recognised step by step, and the far end that says how far it reaches.
 	ok = _check("the ray's start is recognised",
 		str(EventSheetSentence.cursor_ray_step_parts("cam.project_ray_origin(mouse_pos)").get("step", "")),
 		"project_ray_origin") and ok
@@ -245,7 +245,7 @@ static func _grammar_values() -> bool:
 	ok = _check("a ray between two places is the sight question it is",
 		EventSheetSentence.fixed_point_ray_words("muzzle", "target.global_position", context),
 		"the first object between muzzle and target.global_position") and ok
-	# X30 - the note, in the project's own layer words when the mask names them and its own value
+	# The note, in the project's own layer words when the mask names them and its own value
 	# otherwise, so a mask nobody named still reads honestly.
 	ok = _check("the note says the reach and the layers the ray may see",
 		EventSheetSentence.cursor_ray_note("500.0", "1", EventSheetSentence.PHYSICS_DIMENSION_3D, context),
@@ -253,7 +253,7 @@ static func _grammar_values() -> bool:
 	ok = _check("a run nobody filtered says only how far it reaches",
 		EventSheetSentence.cursor_ray_note("1000.0", "", EventSheetSentence.PHYSICS_DIMENSION_3D, context),
 		"reach 1000") and ok
-	# X20 - an off-screen arrow, pinned inside the view.
+	# An off-screen arrow, pinned inside the view.
 	ok = _check("an arrow at the edge says it is clamped there",
 		EventSheetSentence.canvas_expression_words(
 			"cam.unproject_position(e.global_position).clamp(Vector2(48, 48), Vector2(1872, 1032))",
@@ -362,7 +362,7 @@ static func _authoring() -> bool:
 	return ok
 
 
-## X30's 2D half. The flat game's two aiming words write their own one helper each, by exactly the
+## The 2D half. The flat game's two aiming words write their own one helper each, by exactly the
 ## rule the aimed-floor helper follows: one definition per file, none at all when nothing asks.
 static func _flat_twins() -> bool:
 	var ok: bool = true

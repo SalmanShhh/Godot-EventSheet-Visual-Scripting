@@ -2,7 +2,7 @@
 class_name EventSheetProjectBar
 extends VBoxContainer
 
-# T13 - THE PROJECT BAR: a read-only outline of the project by KIND, as a TAB of the Object bar.
+# THE PROJECT BAR: a read-only outline of the project by KIND, as a TAB of the Object bar.
 #
 # It is not a second FileSystem dock and it is not a new dock at all. It shares the Object bar's
 # strip, it is collapsed to a thin header by default, and it is OFF unless the reader asked for it
@@ -57,7 +57,7 @@ var _script_opens_as_sheet: bool = true
 var _coverage_by_path: Dictionary = {}
 var _menu: PopupMenu = null
 var _section_folds: Dictionary = {}
-# W1 - the editor's own source, listed only in the editor's own repo and scanned only once the folder
+# The editor's own source, listed only in the editor's own repo and scanned only once the folder
 # is actually opened. Empty until then, which is the whole cost of a folder nobody expanded.
 var _this_editor: Dictionary = {}
 var _this_editor_built: bool = false
@@ -120,7 +120,7 @@ func set_expanded(expanded: bool) -> void:
 	_save_prefs()
 
 
-## W24 - opens the This-editor folder from outside (the Start page's contributor card). Reads the
+## Opens the This-editor folder from outside (the Start page's contributor card). Reads the
 ## editor's own source if this is the first time it has been asked for, exactly as unfolding it does.
 func open_this_editor_folder() -> void:
 	if not EventSheetThisEditor.is_editor_project():
@@ -200,7 +200,7 @@ func _rebuild_tree() -> void:
 		empty_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 
 
-## W1 - "This editor": the plugin's own source, as sheets, grouped by what each file IS. Returns how
+## "This editor": the plugin's own source, as sheets, grouped by what each file IS. Returns how
 ## many files it listed, so the bar's "nothing here" line counts them too.
 ##
 ## Only in the editor's own repo, and only scanned once someone opens it. Until then the folder is a
@@ -259,7 +259,7 @@ func _add_entry_item(parent_item: TreeItem, entry: Dictionary) -> TreeItem:
 		item.set_tooltip_text(0, EventSheetL10n.translate(
 			"The last Project Doctor run had something to say about this one."))
 	else:
-		# V20 - the health card's short form on hover, where a sheet is picked. Text reads only:
+		# The health card's short form on hover, where a sheet is picked. Text reads only:
 		# a bar listing a whole project must never load a sheet to hover one.
 		item.set_tooltip_text(0, EventSheetHealthCard.brief_for_path(
 			str(entry.get("path", "")), str(entry.get("note", ""))))
@@ -298,7 +298,7 @@ func _on_section_collapsed(item: TreeItem) -> void:
 		return
 	var section: String = str((metadata as Dictionary)["section"])
 	_section_folds[section] = item.collapsed
-	# W1 - THE LAZY BUILD. Opening the folder for the first time is what reads the editor's own
+	# THE LAZY BUILD. Opening the folder for the first time is what reads the editor's own
 	# source; a reader who never opens it never pays for the scan.
 	if section != "this_editor":
 		return

@@ -10,7 +10,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## Unpin lets go and the host keeps whatever place it had. The one-liner a hundred jam scripts write
 ## as `global_position = anchor.global_position + offset`, with the offset remembered for you.
 ##
-## Y4/Y5 grew the mode past position/angle/both into the shapes people write by hand around a pin:
+## Grew the mode past position/angle/both into the shapes people write by hand around a pin:
 ## a ROPE that only pulls when it is taut, a BAR that holds its length, a SOFT follow that lags, a
 ## SPRING that overshoots and settles, one AXIS at a time, the anchor's SIZE, a named POINT on the
 ## anchor (a bone, a marker, a hand) and a moving point on a PATH. Every shipped id and template is

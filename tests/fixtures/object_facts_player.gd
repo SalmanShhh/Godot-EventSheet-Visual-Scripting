@@ -1,5 +1,5 @@
 ## The object behind tests/fixtures/object_facts_player.tscn - a script that carries one of every
-## thing the Object properties popup answers with, so Q1/Q2 are proved against a real file rather
+## thing the Object properties popup answers with, so the popup's two answers are proved against a real file rather
 ## than against a string a test made up: instance variables, functions (including one that answers
 ## yes-or-no, which is a condition on the sheet), triggers, and a family joined in code.
 class_name ObjectFactsPlayer

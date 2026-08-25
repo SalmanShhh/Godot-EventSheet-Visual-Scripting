@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSheetExport
 extends RefCounted
-# EXPORT A SHEET AS A PICTURE (V16) - the render harness, made a user feature.
+# EXPORT A SHEET AS A PICTURE - the render harness, made a user feature.
 #
 # Sheet ▸ Export ▸ Image (PNG) / PDF / Markdown with figures. The picture is the sheet exactly as it
 # is being read - the current theme, density, arrangement and lenses, with the event numbers on -

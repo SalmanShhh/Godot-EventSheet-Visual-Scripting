@@ -2,7 +2,7 @@
 class_name ReadingWordsTest
 extends RefCounted
 
-# Pins the event-sheet WORDS for the shapes an ordinary game script is full of (M25 - M33).
+# Pins the event-sheet WORDS for the shapes an ordinary game script is full of.
 #
 # Three gates, in the order they matter:
 #   1. the grammar's own values - one shape, one sentence, asserted literally;
@@ -69,44 +69,44 @@ func _process(delta: float) -> void:
 	await get_tree().physics_frame
 """
 
-## Every reading the opened file must contain, one per shape M25 - M33 claims.
+## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
-	# M25 - the script's own object is named, engine properties read under it, globals are System
+	# The script's own object is named, engine properties read under it, globals are System
 	"ReadingWordsPlayer ▸ Set X to 100",
 	"System ▸ Print \"ready\"",
-	# M27 - dt reaches a LIFTED row too, where the grammar's own rewriting never runs
+	# Dt reaches a LIFTED row too, where the grammar's own rewriting never runs
 	"System ▸ Set velocity X to speed * dt",
-	# M31 - text joins with &, indexing reads possessively
+	# Text joins with &, indexing reads possessively
 	"System ▸ Set label to lives & \" lives\"",
 	"System ▸ Set label to \"Score: \" & lives",
 	"System ▸ Set label to lives & \" / \" & speed",
 	"System ▸ Set lives to inventory's \"potion\"",
 	"System ▸ Set lives to items' item 0",
-	# M32 - the extended idiom table
+	# The extended idiom table
 	"System ▸ Set lives to random whole number 1 to 6",
 	"System ▸ Set speed to random number 0.5 to 2",
 	"System ▸ Set speed to rotation in degrees",
 	"System ▸ Set speed to speed snapped to 0.5",
 	"System ▸ Set lives to items' count",
 	"ReadingWordsPlayer ▸ Tween position to velocity in 0.3 seconds",
-	# M30 - groups read as families, and the PICKED group row says the same words
+	# Groups read as families, and the PICKED group row says the same words
 	"enemies (group) ▸ Call Flee",
-	# M28 - payload chips and the two tick waits
+	# Payload chips and the two tick waits
 	"ReadingWordsPlayer ▸ Signal On Damaged   amount = 3   source = attacker",
 	"System ▸ ⏳ Wait one tick",
-	# M27 - the tick triggers in the familiar words
+	# The tick triggers in the familiar words
 	"System ▸ Every tick (physics)",
-	# S27 - the every-FRAME handler here carries no condition of its own, so it reads as the BLANK
+	# The every-FRAME handler here carries no condition of its own, so it reads as the BLANK
 	# event it is (nothing in the condition lane at all). The physics one above keeps its words
 	# because its loops are conditions. Pinned as an absence just below.
-	# M33 - the familiar loop words
+	# The familiar loop words
 	"System ▸ Repeat 3 times (loopindex i)",
 	"System ▸ For \"i\" from 2 to 7",
 	"System ▸ While lives > 0",
 	"System ▸ For each child child",
 	"System ▸ Stop loop",
 	"System ▸ Next",
-	# M26 - any other call reads Object ▸ Verb, never verb ( args )
+	# Any other call reads Object ▸ Verb, never verb ( args )
 	"child ▸ Destroy"
 ])
 
@@ -158,29 +158,29 @@ static func _read_condition(expression: String) -> String:
 	return "" if result.is_empty() else "%s ▸ %s" % [str(result.get("object", "")), _joined(result)]
 
 
-## M25 / M27 / M28 / M30 / M31 / M32 / M33 at the grammar's own level.
+## At the grammar's own level.
 static func _grammar_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
-		# M25 - the script's object, never `self`
+		# The script's object, never `self`
 		["position.x = 100", "Player ▸ Set X to 100"],
 		["self.position.y = 100", "Player ▸ Set Y to 100"],
 		["rotation += 1", "Player ▸ Add 1 to angle (radians)"],
 		["score += 1", "System ▸ Add 1 to score"],
 		["self.queue_free()", "Player ▸ Destroy"],
-		# M27 - delta is the familiar dt
+		# Delta is the familiar dt
 		["velocity.x = speed * delta", "Player ▸ Set velocity.x to speed * dt"],
 		["delta_time = 1", "System ▸ Set delta_time to 1"],
-		# M28 - payload chips, the signal wait, the tick waits
+		# Payload chips, the signal wait, the tick waits
 		["damaged.emit(3, attacker)", "Player ▸ Signal On Damaged   amount = 3   source = attacker"],
 		["await door.opened", "System ▸ ⏳ Wait for signal door On Opened"],
 		["await get_tree().process_frame", "System ▸ ⏳ Wait one tick"],
 		["await get_tree().physics_frame", "System ▸ ⏳ Wait one physics tick"],
-		# M30 - groups as families
+		# Groups as families
 		["add_to_group(\"enemies\")", "Player ▸ Add to group \"enemies\""],
 		["get_tree().call_group(\"enemies\", \"flee\")", "enemies (group) ▸ Call Flee"],
 		["get_tree().call_group(\"enemies\", \"take_damage\", 3)", "enemies (group) ▸ Call Take damage   3"],
-		# M31 - joins and indexing
+		# Joins and indexing
 		["label = str(lives) + \" lives\"", "System ▸ Set label to lives & \" lives\""],
 		["label = \"you: \" + name_text", "System ▸ Set label to \"you: \" & name_text"],
 		["label = \"Score: %d\" % score", "System ▸ Set label to \"Score: \" & score"],
@@ -189,7 +189,7 @@ static func _grammar_values() -> bool:
 		["first = items[0]", "System ▸ Set first to items' item 0"],
 		["nth = items[i]", "System ▸ Set nth to items' item i"],
 		["total = a + b", "System ▸ Set total to a + b"],
-		# M32 - the extended idiom table
+		# The extended idiom table
 		["hp = randi_range(1, 6)", "System ▸ Set hp to random whole number 1 to 6"],
 		["t = randf_range(0.5, 2.0)", "System ▸ Set t to random number 0.5 to 2"],
 		["d = Input.get_vector(\"left\", \"right\", \"up\", \"down\")",
@@ -201,7 +201,7 @@ static func _grammar_values() -> bool:
 		["m = items.size()", "System ▸ Set m to items' count"],
 		["create_tween().tween_property(host, \"position\", target, 0.3)",
 			"host ▸ Tween position to target in 0.3 seconds"],
-		# M33 - the two loop steps
+		# The two loop steps
 		["break", "System ▸ Stop loop"],
 		["continue", "System ▸ Next"],
 		# Refusals: a shape that is not recognised keeps its code rather than a confident lie
@@ -212,7 +212,7 @@ static func _grammar_values() -> bool:
 	return ok
 
 
-## M25 / M30 in the condition lane.
+## In the condition lane.
 static func _condition_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -228,7 +228,7 @@ static func _condition_values() -> bool:
 	return ok
 
 
-## M26 - Object ▸ Verb chips, and never a pair of parentheses.
+## Object ▸ Verb chips, and never a pair of parentheses.
 static func _call_readings() -> bool:
 	var ok: bool = true
 	for entry: Array in [
@@ -250,14 +250,14 @@ static func _call_readings() -> bool:
 	return ok
 
 
-## M33 - the loop rows' words, straight off the row-level lens.
+## The loop rows' words, straight off the row-level lens.
 static func _loop_words() -> bool:
 	var ok: bool = true
 	for entry: Array in [
 		[PickFilter.CollectionKind.REPEAT, "i", "10", "Repeat 10 times (loopindex i)", ""],
 		[PickFilter.CollectionKind.REPEAT, "i", "2, 8", "For \"i\" from 2 to 7", ""],
 		[PickFilter.CollectionKind.WHILE, "", "hp > 0", "While hp > 0", ""],
-		# X10 - a loop over ANOTHER object's children names whose they are, in the possessive the rest
+		# A loop over ANOTHER object's children names whose they are, in the possessive the rest
 		# of the hierarchy words use. The loop is the sheet's own For each, so it belongs to nobody.
 		[PickFilter.CollectionKind.EXPRESSION, "child", "host.get_children()",
 			"For each child in host's children", ""],
@@ -271,7 +271,7 @@ static func _loop_words() -> bool:
 	ok = _check("a list loop keeps the plain For each reading",
 		EventSheetViewportReadingRows.loop_words(PickFilter.CollectionKind.EXPRESSION, "x", "wave").is_empty(),
 		true) and ok
-	# M27 - the tick triggers, wording only: every other trigger keeps its own name.
+	# The tick triggers, wording only: every other trigger keeps its own name.
 	ok = _check("the physics trigger reads the familiar words",
 		EventSheetViewportReadingRows.tick_trigger_words("OnPhysicsProcess", "Every Physics Tick"),
 		"Every tick (physics)") and ok
@@ -289,7 +289,7 @@ static func _opened_file_reads() -> bool:
 	var readings: PackedStringArray = _render(_import())
 	for expected: String in EXPECTED_READINGS:
 		ok = _check("opened row reads \"%s\"" % expected, readings.has(expected), true) and ok
-	# S27 - and the conditionless `_process` handler says nothing at all, because a blank event
+	# And the conditionless `_process` handler says nothing at all, because a blank event
 	# already means every tick.
 	ok = _check("a conditionless _process reads blank, not \"Every tick (draw)\"",
 		readings.has("System ▸ Every tick (draw)"), false) and ok

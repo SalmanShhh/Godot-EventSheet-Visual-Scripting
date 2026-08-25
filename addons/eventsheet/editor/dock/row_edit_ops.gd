@@ -44,7 +44,7 @@ extends RefCounted
 
 var _dock: Control = null
 
-## S27. The "keep as every tick?" prompt and the event it is about, addressed by uid because the undo
+## The "keep as every tick?" prompt and the event it is about, addressed by uid because the undo
 ## funnel replaces resources on every commit.
 var _every_tick_dialog: ConfirmationDialog = null
 var _every_tick_event_uid: String = ""
@@ -95,7 +95,7 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 
 
 ## The group the last successful _bulk_group_rows made, so the caller can drop straight into naming
-## it (G4's G-with-rows-selected). Null when the last call refused or made a region instead.
+## it (the G-with-rows-selected). Null when the last call refused or made a region instead.
 var last_group_created: EventGroup = null
 
 
@@ -105,7 +105,7 @@ var last_group_created: EventGroup = null
 func _bulk_group_rows(targets: Array) -> String:
 	if targets.is_empty():
 		return "Nothing selected to group."
-	# N1 authoring symmetry - a group on a .gd sheet is written the file's own way, as a
+	# Authoring symmetry - a group on a .gd sheet is written the file's own way, as a
 	# `#region` / `#endregion` fence pair, which reads back as the same bar.
 	if _dock._current_sheet != null and not str(_dock._current_sheet.external_source_path).is_empty():
 		_dock._surround_selection_with_region()
@@ -148,7 +148,7 @@ func _delete_context_ace() -> void:
 	var metadata: Dictionary = _dock._context_hit.get("span_metadata", {})
 	var ace_index: int = int(metadata.get("ace_index", -1))
 	var kind: String = str(metadata.get("kind", ""))
-	# Read the row's name for the S27 prompt BEFORE the edit: the commit replaces resources with
+	# Read the row's name for the prompt BEFORE the edit: the commit replaces resources with
 	# snapshot duplicates, so the row below is not the row the sheet holds afterwards.
 	var event_uid: String = event_row.event_uid
 	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Cell", func() -> bool:
@@ -173,7 +173,7 @@ func _delete_context_ace() -> void:
 			_prompt_keep_as_every_tick(event_uid)
 
 
-## S27. The event-sheet rule the other way round: an event with no condition of its own runs every
+## The event-sheet rule the other way round: an event with no condition of its own runs every
 ## tick, so taking the LAST one off does not break the event - it widens it, all the way. That is a
 ## real choice and a silent one is the wrong kind, so the row says what it just became and offers the
 ## other reading of the gesture (the reader wanted the event gone, not widened).

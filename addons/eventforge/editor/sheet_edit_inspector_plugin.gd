@@ -4,7 +4,7 @@
 # from a sheet (the pairing rule knows), one button jumps straight to the sheet -
 # and quietly says "edit the sheet, not the script".
 #
-# V10 - beside it, "Instance variables · N", because that is where an event-sheet author looks for
+# Beside it, "Instance variables · N", because that is where an event-sheet author looks for
 # an object's variables: on the object. It opens the same table the sheet already has. Under both
 # buttons, the one question the Inspector cannot answer on its own - which of this object's
 # variables are NOT down there, and what makes one appear.
@@ -18,7 +18,7 @@ class_name EventSheetEditButtonPlugin
 extends EditorInspectorPlugin
 
 var open_sheet: Callable = Callable()  # Callable(sheet_path: String)
-## V10. Callable(sheet_path: String) - opens the sheet AND its instance-variable table.
+## Callable(sheet_path: String) - opens the sheet AND its instance-variable table.
 var open_variables: Callable = Callable()
 
 
@@ -62,7 +62,7 @@ func _parse_begin(object: Object) -> void:
 		add_custom_control(note_label)
 
 
-## V10. The object's own member variables, read off its script: [{"name", "exported"}] in file order.
+## The object's own member variables, read off its script: [{"name", "exported"}] in file order.
 ## `@export` (in any of its hinted spellings) on the line above is what puts a variable in the
 ## Inspector, which is exactly the fact the note below reports. Static + pure, so both are testable
 ## without an editor.
@@ -132,7 +132,7 @@ static func _without_export_annotation(bare: String) -> String:
 	return bare.substr(index).strip_edges()
 
 
-## V10. The muted line under the buttons: the variables that exist but are not down here, and the one
+## The muted line under the buttons: the variables that exist but are not down here, and the one
 ## gesture that changes that. "" when every variable is already in the Inspector, and when there are
 ## none at all - a note about an empty list answers nothing.
 static func hidden_variables_note(variables: Array[Dictionary]) -> String:

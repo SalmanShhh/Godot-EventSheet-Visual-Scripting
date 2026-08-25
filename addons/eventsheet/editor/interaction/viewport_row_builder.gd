@@ -35,22 +35,22 @@ extends RefCounted
 ## has to be visible even when the theme ships verb_row_tint_strength at 0.0 for the authoring look.
 const VERB_KIND_TINT_ALPHA: float = 0.16
 
-## W16. The mark a call row wears when the function hands over to ITSELF. One constant, so the row,
+## The mark a call row wears when the function hands over to ITSELF. One constant, so the row,
 ## the hover help and the Manual's legend can never draw two different glyphs for the same fact.
 const MARK_RECURSION := "↻"
 
-## M12/K4. What an inverted condition wears in the badge column when there is no opposite operator to
+## What an inverted condition wears in the badge column when there is no opposite operator to
 ## show instead. A word, because "not begins with" is the sentence, and one constant so the row, the
 ## text listing and the Manual can never teach two spellings of the same denial.
 const NEGATED_MARK := "not"
 
-## V1/V2. The marks a variable row wears, and the box they draw in. Both are 15px cues, never words:
+## The marks a variable row wears, and the box they draw in. Both are 15px cues, never words:
 ## the outlined `x` says "this row declares something", the sliders mark says "and you can edit it in
 ## the Inspector". The width is fixed so the badge column stays a column at any font size.
 const KIND_BADGE_WIDTH: float = 15.0
 const INSPECTOR_BADGE_GLYPH := "⚙"
 
-## E2 - the third mark a variable row can wear: this value is kept in step across the network. One
+## The third mark a variable row can wear: this value is kept in step across the network. One
 ## glyph per mode, because the mark has to say WHICH mode without a word - the art behind each is a
 ## box with two bars in it, stroked solid, dotted or dashed.
 const SYNC_BADGE_GLYPHS: Dictionary = {
@@ -64,11 +64,11 @@ const SYNC_BADGE_GLYPHS: Dictionary = {
 const HEAD_BAND_UID_PREFIX := "sheet_head_"
 
 ## The `@tool` band's switch, drawn as a mark in the badge column at the variable badge's width.
-## G2 - a group head wears the same pair, because it is the same fact: this line is on, or it is not.
+## A group head wears the same pair, because it is the same fact: this line is on, or it is not.
 const HEAD_SWITCH_ON_GLYPH := "◍"
 const HEAD_SWITCH_OFF_GLYPH := "◌"
 
-## G1/G2. The marks a group head leads and ends with: the folder that says "this is structure" (the
+## The marks a group head leads and ends with: the folder that says "this is structure" (the
 ## editor's own Folder texture draws over it when there is one), and the ring that says the group can
 ## be switched at runtime, which sits just before the switch it qualifies.
 const GROUP_FOLDER_GLYPH := "▤"
@@ -78,12 +78,12 @@ const GROUP_TOGGLEABLE_GLYPH := "◎"
 ## resting echo, so the band is findable without claiming the file says something it does not.
 const HEAD_ECHO_GHOST_ALPHA: float = 0.3
 
-## R1. The closing fence is a TICK, not a row: its `#endregion` echo draws a size down and quieter
+## The closing fence is a TICK, not a row: its `#endregion` echo draws a size down and quieter
 ## than a resting echo, so "the region ends here" costs a sliver of canvas instead of a full row.
 const REGION_CLOSER_FONT_DELTA: int = -2
 const REGION_CLOSER_ECHO_ALPHA: float = 0.4
 
-## R1. How tall the closing tick is against an ordinary row, before the echo's own line height
+## How tall the closing tick is against an ordinary row, before the echo's own line height
 ## floors it. Slim enough to read as a rule with a label rather than as another row.
 const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 
@@ -92,7 +92,7 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## The COLOUR is what separates a line that cannot work from one that only misbehaves.
 const NOTE_MARK := "⚠"
 
-## The two families of finding the canvas hangs under a row (M7's networking mistakes, L8's lighting
+## The two families of finding the canvas hangs under a row (the networking mistakes, the lighting
 ## ones). Names for the per-sweep cache below, never shown to anybody.
 const FINDINGS_MULTIPLAYER := "multiplayer"
 const FINDINGS_LIGHTING := "lighting"
@@ -104,10 +104,10 @@ var _viewport: Control = null
 var _current_verb_function: EventFunction = null
 # The verb kind a lazily-built row carries with it, or -1 when the walk itself is the authority.
 var _verb_kind_override: int = -1
-# W4 - how many undo-step edits the walk is inside right now. A `return` in there is the ANSWER the
+# How many undo-step edits the walk is inside right now. A `return` in there is the ANSWER the
 # funnel asked for ("did this change anything?"), never the "stop the event" a plain body's is.
 var _answer_return_rows: int = 0
-# W6 - the menu whose handler the walk is inside right now, "" at sheet level. A `match id:` arm says
+# The menu whose handler the walk is inside right now, "" at sheet level. A `match id:` arm says
 # only a number; which MENU that number belongs to is a fact about the walk (the lambda it was handed
 # to, or the function the connect line named), so it is stamped here exactly as the verb kind is.
 var _current_menu_key: String = ""
@@ -115,18 +115,18 @@ var _current_menu_key: String = ""
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
-# V13 - the code echo's token colours for THIS sweep. Cleared with the other per-build caches, so a
+# The code echo's token colours for THIS sweep. Cleared with the other per-build caches, so a
 # theme or Editor Settings change is picked up on the next rebuild and never mid-build.
 var _code_echo_palette: Dictionary = {}
-# G1 - the `## @ace_group(...)` line the compiler writes for each group, {EventGroup: String}, asked
+# The `## @ace_group(...)` line the compiler writes for each group, {EventGroup: String}, asked
 # of the compiler ONCE per sweep: the walk that slugs them is a whole-tree walk, and every head on
 # the canvas wants one line out of it.
 var _group_declaration_lines: Dictionary = {}
-# R3 - the orphan-fence notes built in THIS sweep, so the fix label can be numbered once the flat
+# The orphan-fence notes built in THIS sweep, so the fix label can be numbered once the flat
 # list has its gutter numbers. Empty on every sheet whose fences all pair, which is nearly all.
 var _region_fix_notes: Array[EventRowData] = []
 
-## S19 - the mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
+## The mark on the chip that names a pattern. Its own glyph, so a reader learns "⟡ means this
 ## event is a known shape" once and then recognises it everywhere, the way ⟳ ➜ ƒ already work.
 const PATTERN_CHIP_MARK := "⟡"
 
@@ -159,12 +159,12 @@ static var _event_cast_regex: RegEx = null
 # Reset by the viewport at the top of every _build_rows_from_sheet sweep.
 var _class_uid_counts: Dictionary = {}
 
-# V6. The sheet's variables and who owns each, keyed "entries" so an empty sheet still counts as
+# The sheet's variables and who owns each, keyed "entries" so an empty sheet still counts as
 # derived. Asked once per condition and once per action, and answering it reads the autoloads'
 # scripts off disk - so it is derived once per sweep and cleared beside the palette above.
 var _variable_owner_catalog: Dictionary = {}
 
-# M7 / L8. The mistakes this sheet earns, by family, so a sheet with none still counts as derived.
+# The mistakes this sheet earns, by family, so a sheet with none still counts as derived.
 # Asked once per event, once per variable and once per function, and answering one walks the whole
 # sheet and the attached scene - so each is derived once per sweep and cleared beside the catalog
 # above.
@@ -214,7 +214,7 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			continue
 		if _is_region_row(row_data) and _region_row_is_end(row_data):
 			if stack.is_empty():
-				# R3 - a closer with nothing above it closes nothing. The file still compiles, so
+				# A closer with nothing above it closes nothing. The file still compiles, so
 				# the row stays flat and the note under it is amber, never red.
 				_append_to_sink(output, stack, row_data)
 				_append_to_sink(output, stack, _build_region_orphan_note_row(
@@ -242,7 +242,7 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 			var fold_key: String = "%s#%d" % [opener_label, occurrence]
 			opener.set_meta("region_fold_key", fold_key)
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
-			# R1 - folded, the opener says how much it holds and echoes both fences, exactly the way
+			# Folded, the opener says how much it holds and echoes both fences, exactly the way
 			# a script editor draws a folded region on one line. Re-dressed rather than appended to,
 			# so open and folded are one description of the row instead of two.
 			_apply_region_opener_spans(opener, _region_member_count_text(region_children))
@@ -257,7 +257,7 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 		# the note under it is the explanation rather than the only signal.
 		unclosed.custom_color = _viewport._get_reading_style().lift_note_badge_foreground_color
 		output.append(unclosed)
-		# R3 - the note rides directly under the fence it is about, with the fix beside it. The
+		# The note rides directly under the fence it is about, with the fix beside it. The
 		# label names the row the closer would land after, which only the numbering pass knows, so
 		# the note is recorded here and the number filled in once the rows have theirs.
 		output.append(_build_region_orphan_note_row(
@@ -293,10 +293,10 @@ func _region_member_count_text(region_children: Array[EventRowData]) -> String:
 		else EventSheetL10n.translate("%d rows") % rows
 
 
-# ── R1: a region's own look ────────────────────────────────────────────────────────────────────
+# ── a region's own look ────────────────────────────────────────────────────────────────────────
 
 
-## R1 - the fold mark, in the shape the script editor draws it: a dashed `#` box in the badge
+## The fold mark, in the shape the script editor draws it: a dashed `#` box in the badge
 ## column, the name in the row's own ink, the description muted beside it, and the fence line
 ## echoed at the right edge. No folder, no chapter-bar height, no "end region" prose - a region is
 ## two lines of the file, and the row says exactly those two lines.
@@ -424,10 +424,10 @@ func _region_accent(block: CustomBlockRow) -> Color:
 	return styled.get("accent", _viewport._get_event_style().behavior_accent_color)
 
 
-# ── R3: a fence with no partner ────────────────────────────────────────────────────────────────
+# ── a fence with no partner ────────────────────────────────────────────────────────────────────
 
 
-## R3 - the amber note under an unmatched fence: the problem in a sentence, and (for an opener) the
+## The amber note under an unmatched fence: the problem in a sentence, and (for an opener) the
 ## fix that writes the missing `#endregion` after the last row before the next head. Amber, never
 ## red: an unbalanced fence is a readability wart and the file still compiles.
 func _build_region_orphan_note_row(fence_row: EventRowData, message: String, close_after_uid: String) -> EventRowData:
@@ -511,7 +511,7 @@ func apply_numbered_labels(numbered_rows: Array) -> void:
 	apply_else_follows_labels(numbered_rows)
 
 
-## K4. The Else row says what it is the else OF: "neither of 9", the gutter number of the event its
+## The Else row says what it is the else OF: "neither of 9", the gutter number of the event its
 ## chain starts at. Idempotent - a fold re-flattens and re-numbers without rebuilding spans, so this
 ## runs again over the same rows and must only ever write the span that IS the note.
 func apply_else_follows_labels(numbered_rows: Array) -> void:
@@ -548,7 +548,7 @@ static func else_follows_text(numbered_rows: Array, else_index: int, indent: int
 	return ""
 
 
-## R3 - the fix names the row it writes the fence after, and the number it names is the one in the
+## The fix names the row it writes the fence after, and the number it names is the one in the
 ## gutter, which exists only once the flat list is numbered. Does nothing at all on a sheet with no
 ## unmatched fence - which is every healthy sheet.
 func apply_region_fix_labels(numbered_rows: Array) -> void:
@@ -624,7 +624,7 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# gestures at all - so a previewed file is never told it is unattached.
 	head_facts["attached"] = sheet.read_only \
 		or _sheet_is_attached(sheet, str(head_facts.get("class_name", "")))
-	# E2 - the half of the head that comes from the SCENE: what keeps this object in step, and which
+	# The half of the head that comes from the SCENE: what keeps this object in step, and which
 	# spawner can make it. Read, never stored, so a project with no scenes gains no bands at all.
 	head_facts.merge(EventSheetHeadBands.scene_facts(sheet), true)
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
@@ -644,7 +644,7 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_facts: Dictionary,
 		description_source: Resource) -> EventRowData:
 	var kind: String = str(band["kind"])
-	# E2 - a band about something outside this file names it after a colon, so one gesture carries
+	# A band about something outside this file names it after a colon, so one gesture carries
 	# both which band was clicked and which node it was about (the way an edit kind does).
 	var reference: String = str(band.get("reference", ""))
 	var band_action: String = kind if reference.is_empty() else "%s:%s" % [kind, reference]
@@ -689,7 +689,7 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 		}, true)))
 	var value_text: String = str(band["value"])
 	if not value_text.is_empty():
-		# L4 - a band whose fact is a problem says so in the note colour, which is the colour the
+		# A band whose fact is a problem says so in the note colour, which is the colour the
 		# same finding wears everywhere else on the canvas. Nothing else about the band changes:
 		# it is still one fact, read from the scene, with the node it is about one click away.
 		var value_colour: Color = reading_style.muted_text_color if bool(band["value_muted"]) \
@@ -903,7 +903,7 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 		if note_row != null:
 			rows.append(note_row)
 	rows.append(_build_define_function_row(event_function, indent))
-	# M2 - an `@rpc` carrying an option Godot does not take cannot be read into words, so the row
+	# An `@rpc` carrying an option Godot does not take cannot be read into words, so the row
 	# shows the annotation itself and this note says which option stopped it. Amber, never red: the
 	# file compiles, and it is only the message that will not travel.
 	var message_note: String = EventSheetMessageFacts.unknown_note(
@@ -913,7 +913,7 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 			"message_note_%s" % event_function.function_name.strip_edges(), indent,
 			"message_note", message_note,
 			_viewport._get_reading_style().lift_note_badge_foreground_color, {}, {}))
-	# M7 - a message anyone may send that writes a value every peer keeps in step, without ever
+	# A message anyone may send that writes a value every peer keeps in step, without ever
 	# asking who sent it. It is about the MESSAGE, so it sits under its head.
 	rows.append_array(_build_finding_note_rows(
 		EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
@@ -953,12 +953,12 @@ func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource
 	var helpers: Array[EventRowData] = []
 	var kept: Array[EventRowData] = []
 	var last_published: int = -1
-	# W3 - a constructor that only stores the object it was handed says nothing a reader has to read:
+	# A constructor that only stores the object it was handed says nothing a reader has to read:
 	# the Include bar already says the class is made with that object. So it folds into the bar, and
 	# the helper's functions start with the first one that does something.
 	var folds_constructor: bool = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource) \
 		.get("helper_of") is Dictionary
-	# W9 - and the same rule for a test's `_check`: it is the harness the Check rows are DRAWN from,
+	# And the same rule for a test's `_check`: it is the harness the Check rows are DRAWN from,
 	# the same eleven lines in every file in the folder, and the Include bar already says this is a
 	# test sheet and how many checks it makes. Folded here rather than with the other head facts
 	# because the trailing verbs are appended to the list after that pass has run.
@@ -1057,7 +1057,7 @@ func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> v
 func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null or not sheet.read_only or rows.is_empty():
 		return rows
-	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# Ahead of everything else, and whatever the rest of this head turns out to read as: on an editor
 	# add-on the constant-answer virtuals have already been said on the Include bar as facts, so the
 	# rows that would repeat them are dropped from the VIEW. Nothing is removed from the sheet - the
@@ -1065,7 +1065,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	rows = _fold_editor_plugin_facts(rows, sheet)
 	var host_class: String = ""
 	var identity_seen: bool = false
-	# C1 - the band stack the file opens with. It IS the head, here as much as on an authored sheet,
+	# The band stack the file opens with. It IS the head, here as much as on an authored sheet,
 	# so it is carried through rather than folded away and the Include bar keeps only what no band
 	# says.
 	var band_rows: Array[EventRowData] = []
@@ -1128,7 +1128,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 				pending_row = null
 			consumed = index + 1
 			continue
-		# M34 - `const BULLET_SCENE := preload("res://bullet.tscn")` lifts to a `preload` block, not a
+		# `const BULLET_SCENE := preload("res://bullet.tscn")` lifts to a `preload` block, not a
 		# variable. It is still a name the file introduces, so it reads as an Object row in the head
 		# rather than stopping it dead one line in.
 		if source is CustomBlockRow and (source as CustomBlockRow).kind_id == "preload":
@@ -1189,7 +1189,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	var publishes_vocabulary: bool = bool(EventSheetEditorSourceFacts.facts(sheet).get("vocabulary_module", false))
 	if not identity_seen or (triggers.is_empty() and knobs.is_empty() and not editor_addon and not publishes_vocabulary):
 		return rows
-	# C1 - the bands first: an opened pack's head is the head of its FILE, one band per line, exactly
+	# The bands first: an opened pack's head is the head of its FILE, one band per line, exactly
 	# as an authored sheet's is. A file whose prelude was too slight to fold still gets them, built
 	# from what the sheet knows, so identity is never the thing that goes missing.
 	var head: Array[EventRowData] = band_rows.duplicate()
@@ -1201,7 +1201,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	var include_bar: EventRowData = _build_pack_include_bar_row(sheet, host_class)
 	if include_bar.spans.size() > 1:
 		head.append(include_bar)
-	# N12 - a script that extends ANOTHER SCRIPT of this project is including that sheet: everything
+	# A script that extends ANOTHER SCRIPT of this project is including that sheet: everything
 	# the base declares runs here too. That is a second bar under the identity one, naming the file
 	# and offering to open it, rather than an inheritance keyword nobody outside the language knows.
 	var base_include_row: EventRowData = _build_base_script_include_bar_row(sheet)
@@ -1241,7 +1241,7 @@ func build_read_only_head_rows(rows: Array[EventRowData], sheet: EventSheetResou
 	return output
 
 
-## W2 / W15. The same row list without the rows that only restate a head fact, and with the file's
+## The same row list without the rows that only restate a head fact, and with the file's
 ## shape claimed as the editor-plugin pattern it is. Returns `rows` untouched for every sheet that
 ## does not extend an editor plugin class, which is every game script.
 func _fold_editor_plugin_facts(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
@@ -1264,7 +1264,7 @@ func _fold_editor_plugin_facts(rows: Array[EventRowData], sheet: EventSheetResou
 	return kept
 
 
-## W9. True when this sheet is a TEST sheet, whose `_check` helper is the harness the Check rows are
+## True when this sheet is a TEST sheet, whose `_check` helper is the harness the Check rows are
 ## drawn from rather than anything the test does. False for every file that is not one, which is
 ## every game script - and for a test opened with no file behind it, since the folder a file lives in
 ## is half of what makes it a test.
@@ -1294,7 +1294,7 @@ func _head_comment_text(code_lines: PackedStringArray) -> String:
 ## strip: `⇥ Addon Pack [v1.0.0] behaves on a [CharacterBody3D]  reads as events ▸`, and for any
 ## other script its receipts and coverage - `⇥ · player.gd · scene Player.tscn  96% reads as events ▸`.
 ##
-## C1 - the file's own IDENTITY is not here: `class_name`, `extends`, `@tool` and an autoload's name
+## The file's own IDENTITY is not here: `class_name`, `extends`, `@tool` and an autoload's name
 ## are lines of the file, and the band stack above states each of them once, with its own echo and
 ## its own control. This bar says only what no line says - the version, the host it behaves on, how
 ## much of it read as events, which file it is - so nothing on the head is stated twice.
@@ -1321,7 +1321,7 @@ func _build_pack_include_bar_row(sheet: EventSheetResource, host_class: String) 
 	}
 	var icon_class: String = host_class if not host_class.is_empty() else sheet.host_class
 	var identity_icon: Texture2D = ACEPickerDialog.editor_icon(icon_class) if not icon_class.is_empty() else null
-	# P10 - an autoload is the project's GLOBAL, and the globe is the mark it already wears in the
+	# An autoload is the project's GLOBAL, and the globe is the mark it already wears in the
 	# Objects rail and in every other sheet's `Game (global) ▸ …` row. Its own class is beside the
 	# point: what a reader needs is that this file is reachable from everywhere.
 	if is_autoload(sheet):
@@ -1368,7 +1368,7 @@ func _addon_pack_include_spans(sheet: EventSheetResource, host_class: String) ->
 	if not host_class.is_empty():
 		spans.append(_make_span(EventSheetL10n.translate("behaves on a"), SemanticSpan.SpanType.VALUE, muted))
 		spans.append(_pack_include_chip(host_class))
-	# R35. A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
+	# A pack that ships editor tooling says so on its own bar: `adds 1 Tools menu item, 1 dock`.
 	# Silent for the packs that add nothing, which is nearly all of them.
 	var tools_summary: String = EventSheetEditorToolCensus.summary(EventSheetEditorToolCensus.from_sheet(sheet))
 	if not tools_summary.is_empty():
@@ -1376,13 +1376,13 @@ func _addon_pack_include_spans(sheet: EventSheetResource, host_class: String) ->
 	return spans
 
 
-## R33 - a tool sheet's own play button, on the bar where the writing happens. An editor script is
+## A tool sheet's own play button, on the bar where the writing happens. An editor script is
 ## otherwise run from the script editor's File > Run and a plugin from Project Settings, both of them
 ## a room away from the sheet; Run now / Reload / Output / Enable plugin close that loop. Every other
 ## kind of sheet gets nothing here - a Run now that cannot run is worse than no Run now at all.
 func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
-	# W20 - a file of the RUNNING editor gets its own bar instead of this one. Both would otherwise
+	# A file of the RUNNING editor gets its own bar instead of this one. Both would otherwise
 	# draw a Reload, and the two mean different things: one re-reads a tool you wrote, the other takes
 	# the editor you are looking at off and on again.
 	if EventSheetThisEditorBar.applies_to(sheet):
@@ -1401,7 +1401,7 @@ func _editor_tool_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	return spans
 
 
-## W1 + W20 - the bar a file of the RUNNING editor wears: what it is, that it is read-only, the door
+## The bar a file of the RUNNING editor wears: what it is, that it is read-only, the door
 ## out of that, and - on the one file that IS the plugin - Enabled, Reload, Output and plugin.cfg.
 ##
 ## Drawn nowhere but in the editor's own repo, so an installed plugin's sheets look exactly as they
@@ -1434,7 +1434,7 @@ func _this_editor_bar_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	return spans
 
 
-## P3 - the two things a reader wants to know about an opened file before reading a line of it: how
+## The two things a reader wants to know about an opened file before reading a line of it: how
 ## much of it arrived as events, and whether it even compiles.
 ##
 ## The coverage chip (`96% reads as events · 3 script blocks ▸`) is measured by the SAME static the
@@ -1465,14 +1465,14 @@ func _reading_coverage_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	return spans
 
 
-## P10 - TRUE when the opened file IS a project autoload. ProjectSettings is the single source of
+## TRUE when the opened file IS a project autoload. ProjectSettings is the single source of
 ## truth and the importer already reads it onto the sheet, so this is a read of what the project
 ## says rather than a guess from the file's shape.
 static func is_autoload(sheet: EventSheetResource) -> bool:
 	return sheet != null and not sheet.autoload_singleton_name().is_empty()
 
 
-## P4 - the scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
+## The scene's own bar, at the top of a scene view: `⇥ Level1.tscn  a  Node2D  4 scripts`. Inert
 ## (there is nothing to edit on it) and wearing the same accent band a script's Include bar wears,
 ## because it is the same kind of thing one level up: the identity of what you are reading.
 func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
@@ -1526,17 +1526,17 @@ static func is_addon_pack(sheet: EventSheetResource) -> bool:
 		or str(sheet.external_source_path).begins_with("res://eventsheet_addons/")
 
 
-## M34 - what an opened script is BEYOND its own first lines: the shape it plays in this project (a
+## What an opened script is BEYOND its own first lines: the shape it plays in this project (a
 ## data type, a behavior, a store, a page of the vocabulary, an editor add-on and its constant facts),
 ## whatever it is as tooling, and the receipts - `⇥ data type · item.gd`, `⇥ · player.gd · scene
 ## Player.tscn`.
 ##
-## C1 - the NAME and the class are not here: `class_name` and `extends` are lines of the file, and the
+## The NAME and the class are not here: `class_name` and `extends` are lines of the file, and the
 ## band stack above states each of them once, with its own control and its own echo. What is left is
 ## what no line of the file says.
 func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var source_path: String = str(sheet.external_source_path)
-	# P4 - inside a scene view this bar is the OBJECT bar of the node carrying the script, so it says
+	# Inside a scene view this bar is the OBJECT bar of the node carrying the script, so it says
 	# what the scene tree says ("HUD a CanvasLayer") and skips the scene receipt: the whole sheet is
 	# that one scene already. A node's NAME is a fact of the SCENE rather than a line of the script, so
 	# this is the one shape that still leads with an identity. Double-click opens the script as its
@@ -1547,7 +1547,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	var base_class: String = sheet.host_class.strip_edges()
 	var scene: Dictionary = scene_using_script(source_path) if not source_path.is_empty() else {}
 	var spans: Array[SemanticSpan] = []
-	# M34 - a script with no `class_name` is known by the NODE that runs it: "SpawnerPad" is what its
+	# A script with no `class_name` is known by the NODE that runs it: "SpawnerPad" is what its
 	# author calls this thing. That name is a fact of the SCENE rather than a line of the file, so it
 	# is this bar's to say; a file that declares a class is named by its name band instead.
 	var scene_name: String = str(scene.get("root_name", "")).strip_edges() \
@@ -1557,14 +1557,14 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 			"editable": false, "kind": "pack_include", "line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}))
-	# ── V4 ─────────────────────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────
 	# A script that extends a Resource is not an object in the scene: it is a DATA TYPE, and every
 	# .tres saved from it is one asset of that type. `extends Resource` is the line; this is the word
 	# a designer would use for what that line makes.
 	if EventSheetScriptIntent.is_resource_host(base_class):
 		spans.append(_pack_include_chip(EventSheetL10n.translate("data type")))
 		return _append_include_receipts(spans, source_path, {})
-	# ── W3 / W5 / W16 ────────────────────────────────────────────────────────────────────
+	# ─────────────────────────────────────────────────────────────────────────────────────
 	# What this file IS to the editor it is part of, said instead of the class it happens to extend: a
 	# behavior of the object it was made with, a store nothing is ever made of, or a page of the
 	# vocabulary. All three replace "a RefCounted", which is the least useful true thing about them.
@@ -1572,7 +1572,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 	if not tool_shape.is_empty():
 		spans.append_array(tool_shape)
 		return _append_include_receipts(spans, source_path, {})
-	# ── W2 / W15 ─────────────────────────────────────────────────────────────────────────
+	# ─────────────────────────────────────────────────────────────────────────────────────
 	# A script extending one of the editor's plugin classes states the questions with constant answers
 	# as the facts they are: an EditorPlugin's name, its main screen and its icon are three lines of
 	# code that say one thing each, and reading them as three events would be reading three lies.
@@ -1582,7 +1582,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[SemanticSpan]:
 				"editable": false, "kind": "pack_include", "line_index": 0,
 				"text_color": _viewport._get_reading_style().muted_text_color
 			}))
-	# ── W9 / W10 / W11 lens hook ───────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────
 	# What this file is as a piece of TOOLING, in the same chips: a test sheet and how many checks it
 	# makes, a command tool that runs headless, a pack recipe and the behavior it builds. A recipe's
 	# sheet-level property writes are FACTS about the pack, so they read here rather than as rows.
@@ -1608,7 +1608,7 @@ func _append_include_receipts(spans: Array[SemanticSpan], source_path: String,
 	return spans
 
 
-## W2 / W15. The facts an editor add-on's head bar states, in reading order: what kind of add-on it
+## The facts an editor add-on's head bar states, in reading order: what kind of add-on it
 ## is, then whatever its constant-answer virtuals answer. `editor plugin · main screen "EventSheet"
 ## · icon eventsheet.svg` for a plugin that owns a workspace, and just `editor plugin` for one that
 ## does not - a main-screen line on a plugin with no main screen would be a fact it never claimed.
@@ -1700,7 +1700,7 @@ func _function_body_entries(sheet: EventSheetResource, function_name: String) ->
 	return []
 
 
-## W9 / W10 / W11. The Include-bar chips a tooling file states about itself, plus - for a test that
+## The Include-bar chips a tooling file states about itself, plus - for a test that
 ## opens one - the fixture it reads, which double-click opens beside it. Empty for every other file.
 func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
@@ -1733,7 +1733,7 @@ func _tool_file_chip_spans(sheet: EventSheetResource, source_path: String) -> Ar
 	return spans
 
 
-## P4 - one node's object bar inside a scene view: the node's own name, the class it is, the file its
+## One node's object bar inside a scene view: the node's own name, the class it is, the file its
 ## script lives in, and "(x3)" when the same script sits on more than one node of this scene. Every
 ## span carries the script path, so a double-click anywhere on the bar opens that file as its own
 ## sheet - which is where editing happens, because a scene view never writes anything.
@@ -1790,7 +1790,7 @@ static func base_script_path(sheet: EventSheetResource) -> String:
 	return ""
 
 
-## N12's second head bar: `⇥ Include <base.gd> - open as a sheet`. Null when the base is an engine
+## The second head bar: `⇥ Include <base.gd> - open as a sheet`. Null when the base is an engine
 ## class. Inert as a resource (a lens over the `extends` line, which stays exactly where it is); the
 ## chip carries the path so opening it goes through the same jump the rest of the canvas uses.
 func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowData:
@@ -1833,7 +1833,7 @@ func _build_base_script_include_bar_row(sheet: EventSheetResource) -> EventRowDa
 	return row_data
 
 
-## W3 / W5 / W16. The middle of a TOOL script's Include bar - the one sentence that says what the
+## The middle of a TOOL script's Include bar - the one sentence that says what the
 ## file is to the editor it belongs to. Empty for every ordinary game script, which is why an
 ## ordinary project never sees any of these words.
 ##
@@ -1916,7 +1916,7 @@ func _pack_about_row_index(rows: Array[EventRowData], from_index: int) -> int:
 	return -1
 
 
-## Q2 - the two folders an event sheet's object carries, before its settings: the BEHAVIORS mounted on
+## The two folders an event sheet's object carries, before its settings: the BEHAVIORS mounted on
 ## it and the FAMILIES it belongs to. Both are facts about the object rather than lines of the file, so
 ## they come from where Godot keeps them - pack nodes in the scene the script is the root of, and that
 ## root's persistent groups plus the file's own `add_to_group` lines.
@@ -1928,7 +1928,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 	var bars: Array[EventRowData] = []
 	var facts: Dictionary = EventSheetObjectFacts.sheet_object_facts(sheet)
 	var behaviors: Array = facts.get("behaviors", []) if not facts.is_empty() else []
-	# ── S1 ─────────────────────────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────────
 	# A machine this file WRITES OUT is a behavior on the object exactly as a mounted pack node is,
 	# so it is one ordinary line here - "FSM · Idle" - and the enum, the state variable and the
 	# transition functions it stands for show on hover. Nothing else about the machine is added to
@@ -1937,7 +1937,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 	if not written_machine.is_empty():
 		behaviors = behaviors.duplicate()
 		behaviors.append_array(written_machine)
-	# Y6's pin bar is read off the FILE, not off a scene, so it is worked out before the early exit:
+	# The pin bar is read off the FILE, not off a scene, so it is worked out before the early exit:
 	# a plain .gd with a pin in it has no scene facts at all and still has something to say.
 	#
 	# Its facts are worked out HERE rather than taken from `sentence_context()`, deliberately. The
@@ -1970,7 +1970,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			sheet, "object_behaviors", EventSheetL10n.translate("Behaviors"),
 			"%s - %s" % [EventSheetL10n.translate("on this object"), " · ".join(names)],
 			members))
-	# ── X13 ─────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# A RemoteTransform on this object drives a node that is NOT its child, which is the answer to
 	# "why does that thing follow me" and lives nowhere a reader of the script would find it. So it
 	# reads here, as the fact it is, with the parts it copies as tick chips.
@@ -1992,7 +1992,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			sheet, "object_followers", EventSheetL10n.translate("Follows"),
 			"%s - %s" % [EventSheetL10n.translate("places this object copies onto others"),
 				" · ".join(followed)], follows))
-	# ── Y6 ─────────────────────────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────────
 	# Pin or child? Both words ship, both mean "this goes where that goes", and which one is in use
 	# decides what happens when the other object is destroyed - a pin follows at runtime and can let
 	# go; a child is structure and is destroyed with its parent. So the object states which it uses,
@@ -2018,7 +2018,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 			"%s - %s" % [EventSheetL10n.translate("what this object rides, and can let go of"),
 				" · ".join(ridden)], pin_rows))
 	var families: PackedStringArray = PackedStringArray(facts.get("families", PackedStringArray()))
-	# ── T9 ──────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# The inheritance set this object is part of: the scripts that extend its class, shown as the
 	# members they are. The word the folder is called goes through the one helper, because a project
 	# may have pinned "Base class" or "Kind" and it has to change in every place at once.
@@ -2041,7 +2041,7 @@ func _build_object_folder_rows(sheet: EventSheetResource) -> Array[EventRowData]
 	return bars
 
 
-## Y6. The cheap look before the expensive one: every spelling of a pin copies a place, an angle or a
+## The cheap look before the expensive one: every spelling of a pin copies a place, an angle or a
 ## size OFF another object, so a file with none of those on any line cannot be pinning and never pays
 ## for the grammar walk behind the Pins bar. One `contains` per line against a handful of literals,
 ## against ~eight parsers per line for the walk it stands in front of.
@@ -2054,7 +2054,7 @@ func _might_pin(lines: PackedStringArray) -> bool:
 	return false
 
 
-## T9. One row per script that extends this sheet's own class, plus, when a Godot group of the same
+## One row per script that extends this sheet's own class, plus, when a Godot group of the same
 ## name exists, whether the two agree - a ✓ when the group's members are the set's, and the stray
 ## named out loud when one of them is not. Empty when the sheet's class is nobody's base, which is
 ## the common case and must cost nothing.
@@ -2080,7 +2080,7 @@ func _inheritance_member_rows(sheet: EventSheetResource, groups: PackedStringArr
 	return rows
 
 
-## R40 - the "Global variables used here" folder: which of the project's globals this file reads or
+## The "Global variables used here" folder: which of the project's globals this file reads or
 ## writes, and where they are declared. A global is declared once, on an autoload, and used
 ## everywhere; until this folder the only way to see which ones a file touched was to read it.
 ##
@@ -2129,7 +2129,7 @@ func _global_variable_detail(source: String, variable_name: String, declared: Ar
 	return EventSheetL10n.translate("not declared on %s") % source
 
 
-## R23 - the Input Map bar: which controls this script uses, and what each one is bound to. The
+## The Input Map bar: which controls this script uses, and what each one is bound to. The
 ## project-wide Input Map is what every input row in the file is really about, and until this bar a
 ## reader had to leave the sheet and open Project Settings to find out what "jump" was.
 ##
@@ -2174,7 +2174,7 @@ func _input_action_detail(facts: Dictionary) -> String:
 
 ## One behavior's settings as the scene wrote them: `max hp = 50 · regen = 1`, "" when the scene left
 ## the pack on its defaults (which is worth saying by saying nothing).
-## S1. The behaviors this file WRITES OUT rather than mounts - today exactly one, the state machine an
+## The behaviors this file WRITES OUT rather than mounts - today exactly one, the state machine an
 ## enum plus a variable of it is. Shaped like a scene-mounted behavior so the Behaviors folder cannot
 ## tell the two apart, which is the point: a hand-rolled machine and the shipped pack are one line
 ## each, with the same name and the same starting state.
@@ -2194,7 +2194,7 @@ func _written_behaviors(sheet: EventSheetResource) -> Array:
 
 
 func _behavior_settings_text(behavior: Dictionary) -> String:
-	# S1. A behavior the file writes out says so, and says with what: an event sheet's own behaviors
+	# A behavior the file writes out says so, and says with what: an event sheet's own behaviors
 	# have settings, and this one has plumbing.
 	var written: String = str(behavior.get("written", "")).strip_edges()
 	if not written.is_empty():
@@ -2233,7 +2233,7 @@ func _build_object_fact_row(sheet: EventSheetResource, uid_suffix: String, title
 ## The pack's knobs as event-sheet setting folders: one bar per @export_group in FILE order, a Settings
 ## bar for exported knobs declared before any group, and Internal state for the rest.
 func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
-	# P10 - on an autoload every one of these IS a global variable, exported or not: the whole point
+	# On an autoload every one of these IS a global variable, exported or not: the whole point
 	# of the singleton is that the rest of the project reads them. Splitting them into Settings and
 	# Internal state would be drawing a line a reader of an event sheet has no use for, so they read
 	# as the ONE folder the sheet already has a name for.
@@ -2256,7 +2256,7 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 		var row_data: EventRowData = _build_reading_variable_row(variable, str(record.get("description", "")), 1)
 		var group_name: String = str(record.get("group", "")).strip_edges()
 		if not variable.exported or group_name.is_empty():
-			# R37 - one folder, not two. A variable is Inspector-editable or it is not, and the row
+			# One folder, not two. A variable is Inspector-editable or it is not, and the row
 			# now says so with its own chip, so a Settings / Internal state split would only be
 			# telling a reader twice what the chip already tells them once. The Inspector ones lead,
 			# because those are the ones a designer came to look at.
@@ -2294,7 +2294,7 @@ func _build_knob_group_rows(sheet: EventSheetResource, knobs: Array) -> Array[Ev
 	return bars
 
 
-## P10 - an autoload's knobs as the sheet's ONE Global variables folder, in file order. Same rows,
+## An autoload's knobs as the sheet's ONE Global variables folder, in file order. Same rows,
 ## same reading; only the folders they live in change, because on a global there is nothing for a
 ## second folder to mean.
 func _build_global_variables_folder(sheet: EventSheetResource, knobs: Array) -> Array[EventRowData]:
@@ -2354,12 +2354,12 @@ func _build_head_group_row(sheet: EventSheetResource, uid_suffix: String, title:
 ## the @export / group chips are gone - the bar above the row carries the group, and everything inside
 ## a settings bar is exported by definition.
 func _build_reading_variable_row(variable: LocalVariable, description: String, indent: int) -> EventRowData:
-	# M20 - an @onready node reference is an OBJECT, not a value: it reads as an Object
+	# An @onready node reference is an OBJECT, not a value: it reads as an Object
 	# declaration here too, so the head's variable list and the event tree agree.
 	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
 	if object_row != null:
 		return object_row
-	# M34 - a preloaded scene / script / resource is an OBJECT too, whichever row shape carried it.
+	# A preloaded scene / script / resource is an OBJECT too, whichever row shape carried it.
 	var preload_path: String = preloaded_path(str(variable.default_value))
 	if not preload_path.is_empty():
 		var preload_row: EventRowData = _build_preload_object_row(
@@ -2381,32 +2381,32 @@ func _build_reading_variable_row(variable: LocalVariable, description: String, i
 			"row_uid": "variable_reading_%d" % variable.get_instance_id(),
 			"code_line": EventSheetCodeEcho.line_for(variable),
 			"description": description,
-			# R37 - the scope word that leads the row, and the Inspector chip that replaced the
+			# The scope word that leads the row, and the Inspector chip that replaced the
 			# Settings folder. Both are facts the variable already carries; nothing is re-parsed.
 			"reading_scope": _member_scope_key(variable),
 			"exported": variable.exported,
 			"scope_note": _member_scope_note(variable),
-			# P7 - the Inspector facts this knob carries: its range and step, its choices, the filter
+			# The Inspector facts this knob carries: its range and step, its choices, the filter
 			# on the file it picks, its colour. Read from what the importer already stored, so the row
 			# says what the Inspector would say about the same variable.
 			"facts": EventSheetSettingFacts.facts(variable)
 		}
 	)
-	# R2 - a property's accessor events belong wherever the variable is listed, and the head's
+	# A property's accessor events belong wherever the variable is listed, and the head's
 	# Instance variables folder is where a reader goes to find out what a variable IS.
 	_attach_property_accessors(reading_row, variable, indent)
 	return reading_row
 
 
-## R37 - the scope word a MEMBER variable of this sheet reads with: Constant, Static, Global on an
+## The scope word a MEMBER variable of this sheet reads with: Constant, Static, Global on an
 ## autoload, Field on a Resource script, Instance otherwise.
 func _member_scope_key(variable: LocalVariable) -> String:
 	var sheet: EventSheetResource = _viewport._sheet
-	# V4 - a hoisted Static local is a member of the class only because GDScript has nowhere narrower
+	# A hoisted Static local is a member of the class only because GDScript has nowhere narrower
 	# to keep it; what it IS is the local of one event, and that is what the row says.
 	if variable.static_local:
 		return EventSheetVariableSentence.SCOPE_STATIC_LOCAL
-	# W5 - the same declaration, read where there are no copies to share it between.
+	# The same declaration, read where there are no copies to share it between.
 	if variable.is_static and not variable.is_constant and _is_shared_store():
 		return EventSheetVariableSentence.SCOPE_SHARED
 	return EventSheetVariableSentence.member_scope(
@@ -2656,7 +2656,7 @@ static func friendly_param_label(param: ACEParam) -> String:
 	return label.replace("_", " ").strip_edges()
 
 
-## U11. What ONE parameter chip on a function's header says: its friendly label, plus the value a
+## What ONE parameter chip on a function's header says: its friendly label, plus the value a
 ## caller gets when it leaves the input out, plus the ellipsis that marks the one input which
 ## swallows however many values follow it.
 ##
@@ -2676,7 +2676,7 @@ static func verb_param_chip_text(param: ACEParam) -> String:
 	return "%s = %s" % [label, fallback]
 
 
-## U11. True for the one parameter that stands for "and however many more" - a list-typed input the
+## True for the one parameter that stands for "and however many more" - a list-typed input the
 ## author named `args`. Godot has no varargs in a script function, and this is the shape every script
 ## that wants them writes, so it is the only one the ellipsis is claimed for.
 static func _is_varargs_param(param: ACEParam) -> bool:
@@ -2715,7 +2715,7 @@ static func friendly_type_word(type_name: String) -> String:
 		"float":
 			return EventSheetL10n.translate("number")
 		"int":
-			# R37 - a declared `int` is the one number that REFUSES a fraction, and that is the whole
+			# A declared `int` is the one number that REFUSES a fraction, and that is the whole
 			# fact a reader needs about it. An undeclared `100` still reads "number": nothing in the
 			# line said the author cared, and "whole number" would be putting words in their mouth.
 			return EventSheetL10n.translate("whole number")
@@ -3016,7 +3016,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"line_index": 0
 		})
 	]
-	# M2 / M4 - one word says this function is not one the sheet CALLS: a `@rpc` function arrives,
+	# One word says this function is not one the sheet CALLS: a `@rpc` function arrives,
 	# sent by another peer, and a visibility filter is asked, per player, by a synchronizer. The word
 	# leads the name the way a variable row's scope word leads its own.
 	var role_word: String = _function_role_word(event_function)
@@ -3096,7 +3096,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	if event_function.is_async:
 		spans.append(_define_chip(EventSheetL10n.translate("waits"), chip_bg, chip_fg, 0))
 	if event_function.is_static:
-		# U11. `static` is GDScript's word; the sheet's word for a function that belongs to the class
+		# `static` is GDScript's word; the sheet's word for a function that belongs to the class
 		# rather than to any one object is `shared`, and the define row says the same word the reading
 		# does.
 		spans.append(_define_chip(EventSheetL10n.translate("shared"), chip_bg, muted, 0))
@@ -3133,7 +3133,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	return row_data
 
 
-## W9. What the last headless run said about one Check row, or null when this test has not been run
+## What the last headless run said about one Check row, or null when this test has not been run
 ## in this session (and the row is then marked with nothing at all).
 func _check_row_verdict(check_label: String) -> Variant:
 	if check_label.is_empty() or _viewport._sheet == null:
@@ -3141,7 +3141,7 @@ func _check_row_verdict(check_label: String) -> Variant:
 	return EventSheetEditorToolBar.check_verdict(_viewport._sheet.external_source_path, check_label)
 
 
-## Y3. The sentence a function reads as when one of the project's ANIMATIONS calls it, "" when no
+## The sentence a function reads as when one of the project's ANIMATIONS calls it, "" when no
 ## animation does. The animation's own clip name rides in the sentence, because "which animation" is
 ## the first thing a reader of a hit frame wants and the script cannot say it.
 ##
@@ -3169,7 +3169,7 @@ func _animation_event_sentence(event_function: EventFunction) -> String:
 		"{event}", "\"%s\"" % words).replace("{animation}", "\"%s\"" % clip)
 
 
-## W9 / W10. Which object a function reads its trigger under. A test's `run` and a command tool's
+## Which object a function reads its trigger under. A test's `run` and a command tool's
 ## `_init` are what the file EXISTS to do and the runner calls them by name, so they belong to Test
 ## and to Command tool. Every other function is a helper this sheet calls, and stays under Functions.
 func _verb_trigger_object(event_function: EventFunction) -> String:
@@ -3218,7 +3218,7 @@ static func _has_action_lane_span(spans: Array[SemanticSpan]) -> bool:
 ## segments the renderer paints, so the tags themselves are never printed. An unpublished helper adds
 ## the one caption a reader takes a function in by - its doc comment - in the RIGHT lane, muted.
 func _build_verb_function_block_spans(event_function: EventFunction, role: String, display_name: String) -> Array[SemanticSpan]:
-	# ── W2 / W15 ────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# On a script that extends one of the editor's plugin classes, some of these functions are not
 	# the author's verbs at all: they are the questions and the events the EDITOR calls, and reading
 	# them as "ƒ On parse property" tells a reader nothing they can act on. Named here, keyed only
@@ -3228,7 +3228,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		_editor_plugin_class(), event_function.function_name)
 	if not editor_callback.is_empty():
 		return _build_editor_callback_spans(event_function, str(editor_callback.get("text", "")))
-	# ── Y3 ──────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# A function an ANIMATION calls is not a helper this sheet calls itself, it is an event: the
 	# animation's method track names it, and the moment the play head reaches that key the engine
 	# calls it. Nothing in the script says so - which is exactly why the sheet has to.
@@ -3258,7 +3258,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 		"lane": "condition",
 		"line_index": 0,
 		"chip": true,
-		# ── W9 / W10 lens hook ────────────────────────────────────────────────────────────────
+		# ── lens hook ─────────────────────────────────────────────────────────────────────────
 		# A test's `run` and a command tool's `_init` are not helpers something else calls: they are
 		# the one thing the file is FOR, and the runner calls them. So they read under the object
 		# that runs them - Test ▸ On run, Command tool ▸ On run - rather than under Functions.
@@ -3269,7 +3269,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	if EventSheetBBCodeLite.has_markup(display_name):
 		plain_name = EventSheetBBCodeLite.strip(display_name)
 		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
-	# M2 / M4 - a function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer,
+	# A function marked `@rpc` is not one this peer calls: it ARRIVES, sent by another peer,
 	# and a visibility filter is ASKED, once per player, by a synchronizer. So the word between "On"
 	# and the name says which kind of arrival this head stands for.
 	var arrival: String = EventSheetL10n.translate("On")
@@ -3312,7 +3312,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"natural_width": true,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
-	# ── U11 ─────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# The two things about a function that change how it is CALLED, said on the header where the call
 	# is decided rather than found out inside the body. A function that waits cannot be called and
 	# left; a shared one belongs to the class rather than to any one object.
@@ -3333,7 +3333,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 			"natural_width": true,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}))
-	# ── S3 ──────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# A function whose rows alternate waiting and doing IS a sequence, and the header says so with how
 	# long the whole run takes. Display only: the body is untouched, and the claim behind the chip is
 	# what the pattern chips and Refactor read.
@@ -3361,7 +3361,7 @@ func _build_verb_function_block_spans(event_function: EventFunction, role: Strin
 	return spans
 
 
-## M2. What a MESSAGE says about itself at the right of its own row: the three `@rpc` choices in the
+## What a MESSAGE says about itself at the right of its own row: the three `@rpc` choices in the
 ## sheet's words ("from anyone · also here · reliable"), then the annotation itself echoed in the
 ## script editor's own colours. An annotation carrying an option Godot does not take reads as no
 ## words at all - the echo IS the annotation, and guessing at what it meant would be worse than the
@@ -3389,7 +3389,7 @@ func _append_message_spans(spans: Array[SemanticSpan], event_function: EventFunc
 	}, EventSheetCodeEcho.REST_ALPHA, true))
 
 
-## M2 / M4. The word a function row leads with when the sheet does not CALL this function - it is
+## The word a function row leads with when the sheet does not CALL this function - it is
 ## reached some other way, and the row says which. "" for an ordinary function, which is most of
 ## them. Both words are literals rather than a table lookup, so the translation gate can see them.
 func _function_role_word(event_function: EventFunction) -> String:
@@ -3400,7 +3400,7 @@ func _function_role_word(event_function: EventFunction) -> String:
 	return ""
 
 
-## M4. What the sheet's own rows say about this function being a visibility filter, or {} for every
+## What the sheet's own rows say about this function being a visibility filter, or {} for every
 ## other function. One lookup for both halves of the mark - the word that leads the row, and the
 ## synchronizer named at the right of it.
 func _visibility_filter_entry(event_function: EventFunction) -> Dictionary:
@@ -3410,7 +3410,7 @@ func _visibility_filter_entry(event_function: EventFunction) -> Dictionary:
 		event_function.function_name)
 
 
-## M4. Which synchronizer asks this function whether a player may see it, at the right of its own
+## Which synchronizer asks this function whether a player may see it, at the right of its own
 ## row - the other half of the "visibility filter" word. Nothing is written into the `.gd` for it:
 ## the fact IS the row that names the function, so a filter nobody asks stops saying it is one.
 func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
@@ -3428,7 +3428,7 @@ func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: 
 	}))
 
 
-## W2 / W15. One editor callback as the event it is: the trigger arrow, the owning panel in the
+## One editor callback as the event it is: the trigger arrow, the owning panel in the
 ## object column, and the sentence that says what the editor wants.
 ##
 ## Two shapes, chosen by the sentence itself. A sentence that NAMES the callback's parameters
@@ -3437,7 +3437,7 @@ func _append_visibility_filter_span(spans: Array[SemanticSpan], event_function: 
 ## ("On workspace shown") keeps them as the trigger payload chips every other event wears, which is
 ## how `visible` stays visible without the sentence having to mention it.
 ## `object_word` names the object the row files under; blank means the editor object this was first
-## written for. Y3's animation events borrow the whole shape - a badge, a sentence, the parameter
+## written for. The animation events borrow the whole shape - a badge, a sentence, the parameter
 ## chips - and differ only in whose event it is.
 func _build_editor_callback_spans(event_function: EventFunction, sentence: String,
 		object_word: String = "") -> Array[SemanticSpan]:
@@ -3513,7 +3513,7 @@ func _editor_callback_param_names(event_function: EventFunction) -> PackedString
 	return names
 
 
-## S3. The `sequence · N s` chip a function of alternating waits and actions wears, or "" for every
+## The `sequence · N s` chip a function of alternating waits and actions wears, or "" for every
 ## other function. The body's own lines are the only input, so the chip and the claim behind it can
 ## never say different things.
 func _wait_sequence_words(event_function: EventFunction) -> String:
@@ -3550,7 +3550,7 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 				# Mark the subtree BEFORE any span build: a condition-less row inside a verb body must
 				# read "Always" (it runs when the verb is called), not the sheet's "Every Tick".
 				_mark_verb_body(child_row, _current_verb_kind())
-				# M23 runs HERE, before the body is made inert: the sub-event pair is derived from the
+				# Runs HERE, before the body is made inert: the sub-event pair is derived from the
 				# EventRow the row points at, and an inert row has already dropped that pointer.
 				var body_rows: Array[EventRowData] = [child_row]
 				body_rows = expand_ternary_rows(body_rows)
@@ -3768,7 +3768,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	row_data.disabled = not block.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
-	# R1 - a region asks for its own look through the Custom Block API rather than borrowing the
+	# A region asks for its own look through the Custom Block API rather than borrowing the
 	# group bar's chrome: it is a FOLD MARK, the same thing the script editor draws, and it holds
 	# none of what a group holds. Any registered kind can ask for the same shape.
 	if kind != null and kind.row_style(block) == "region":
@@ -4310,13 +4310,13 @@ static func function_body_info(code: String) -> Dictionary:
 ## read through the SAME producer - a shape must say one thing whether it was typed or picked.
 ## Kept here as a thin forwarder so the classifiers around it keep one import surface.
 static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
-	# U3. A trailing `# note` is a note on this row, not part of the statement. Split off FIRST, so
+	# A trailing `# note` is a note on this row, not part of the statement. Split off FIRST, so
 	# every reading below sees the line the way it would without one, and handed back on the result so
 	# the row can draw it where a sheet draws a note - at the end. The row itself is untouched.
 	var split: PackedStringArray = EventSheetSentence.trailing_comment(code)
 	var note: String = split[1]
 	var body: String = split[0]
-	# M28: the awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
+	# The awaits an event sheet has words for, ahead of the grammar - a hand-written `await` that no
 	# ACE claimed (inside a lambda, inside a block that stayed code) reads the same as the lifted row
 	# beside it. Every other await falls straight through and keeps its GDScript.
 	var awaited: Dictionary = _raw_await_reading(body, context)
@@ -4327,7 +4327,7 @@ static func statement_sentence(code: String, context: Dictionary = {}) -> Dictio
 	return reading
 
 
-## The M28 reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
+## The reading of a hand-written `await <expression>` line, indent and all, or {} when the shape
 ## is not one of the named ones.
 static func _raw_await_reading(code: String, context: Dictionary = {}) -> Dictionary:
 	var indent: int = 0
@@ -4974,7 +4974,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if not function_info.is_empty():
 		row_data.line_count = 1
 		row_data.language_block = true  # a collapsed function header - language structure, not an event
-		# N3 - `while true: await get_tree().create_timer(x).timeout` is a beat, not a helper: the
+		# `while true: await get_tree().create_timer(x).timeout` is a beat, not a helper: the
 		# function exists to run its body every x seconds. It reads as that beat, with the loop's own
 		# lines as its content (the card opens to the exact GDScript, unchanged).
 		var loop_seconds: String = await_loop_seconds(raw_row.code)
@@ -5067,7 +5067,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"kind": "lift_note",
 			"line_index": 0
 		}))
-	# ── M17 - the folded code card ─────────────────────────────────────────────────────────────
+	# ── the folded code card ───────────────────────────────────────────────────────────────────
 	# A block that could not lift is a wall of statements you did not ask to read. While READING a
 	# sheet it costs one row - "code · 12 lines" - and opens in place to the exact GDScript; while
 	# AUTHORING one the statement lines stay put, because those are what you edit. The fold rides
@@ -5100,7 +5100,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 
 
 ## The exact GDScript of a raw block, one span per source line. Shared by the ordinary authoring
-## render and by what an M17 code card opens to, so "the code" is literally the same rows either
+## render and by what a code card opens to, so "the code" is literally the same rows either
 ## way and the two can never drift into showing different text.
 func _raw_code_line_spans(code_lines: PackedStringArray, line_fg: Color) -> Array[SemanticSpan]:
 	var line_spans: Array[SemanticSpan] = []
@@ -5160,7 +5160,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
-	# U4. What a pure-data `class X:` IS, in the words a reader has for it: a data type this file
+	# What a pure-data `class X:` IS, in the words a reader has for it: a data type this file
 	# declares, whose fields are the rows below. "class" is GDScript's spelling of the same thing and
 	# stays one double-click away, in the code the bar opens.
 	var header_text: String = "%s %s" % [EventSheetL10n.translate("Data type"), data_class_display_name]
@@ -5419,10 +5419,10 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	return row_data
 
 
-## M20 - an `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
+## An `@onready var hp_bar: ProgressBar = %HpBar` read as an OBJECT declaration rather than
 ## as a value one: this is how an event sheet's object list is recovered from a script. The row says
 ## what the object is called, which node it is, and its class - with the class's own Godot icon,
-## the same icon every later row using `hp_bar` as its object then shows (M13).
+## the same icon every later row using `hp_bar` as its object then shows.
 ##
 ## Reading mode only. While AUTHORING, the @onready variable row stays exactly as it was: it is
 ## the row the variable dialog edits, and re-shaping an editable row would be a lens with
@@ -5437,7 +5437,7 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	row_data.row_uid = "variable_tree_%d" % variable.get_instance_id()
 	row_data.line_count = 1
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	# ── M47 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A `get_node("A/B")` lookup names the same object `$A/B` does, so it reads as that reference -
 	# and the `_or_null` spelling says, in the muted note, that the object may not be there.
 	var declaration_value: Dictionary = EventSheetViewportReadingRows.object_declaration_value(variable)
@@ -5481,7 +5481,7 @@ func _build_object_declaration_row(variable: LocalVariable, indent: int) -> Even
 	return row_data
 
 
-## M34 - a preloaded scene, script or resource is an OBJECT, not a value: `bullet_scene` holding
+## A preloaded scene, script or resource is an OBJECT, not a value: `bullet_scene` holding
 ## `preload("res://bullet.tscn")` reads `Object bullet_scene = Bullet  scene · bullet.tscn`, with the
 ## scene root's own class icon. The res:// path is punctuation to a reader; the THING at the end of it
 ## is what they are looking for, and the file name stays as the muted receipt. Returns null when the
@@ -5728,7 +5728,7 @@ static func _record_scene_root_script(scene_path: String) -> void:
 
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
-	# M20 - while reading, an @onready node reference is an OBJECT declaration, not a variable row.
+	# While reading, an @onready node reference is an OBJECT declaration, not a variable row.
 	var object_row: EventRowData = _build_object_declaration_row(variable, indent)
 	if object_row != null:
 		return object_row
@@ -5749,7 +5749,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			"is_static": variable.is_static,
 			"source_resource": variable,
 			"row_uid": "variable_tree_%d" % variable.get_instance_id(),
-			# V1/V3 - the tree row reads exactly as the head's does: one shape, and a scope word
+			# The tree row reads exactly as the head's does: one shape, and a scope word
 			# derived from where this sheet lives rather than from anything stored on the variable.
 			"reading_scope": _member_scope_key(variable),
 			# The `##` doc comment's first line, which is the sentence the Inspector shows as this
@@ -5765,7 +5765,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 	return row_data
 
 
-## R2. The accessor events (and the verbatim block they fall back to) hung under a variable row.
+## The accessor events (and the verbatim block they fall back to) hung under a variable row.
 ## Shared by the event tree and by the head's Instance variables folder, because a property is the
 ## same property wherever the sheet lists it - and a reader who opens the head to find out what `hp`
 ## IS should find its `On hp set` there too, not only down in the tree.
@@ -5773,7 +5773,7 @@ func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable,
 	if row_data == null or variable == null or not variable.has_property_accessors():
 		return
 	var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
-	# R2 - the accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
+	# The accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
 	# when a body does not lift cleanly do they fall back to the verbatim language block below.
 	var read_rows: Array[EventRowData] = _build_property_accessor_reading(variable, param, indent + 1, row_data.row_uid)
 	if not read_rows.is_empty():
@@ -5787,7 +5787,7 @@ func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable,
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
 
 
-## R2. A property's accessors, read as the events they are instead of as code under the variable row.
+## A property's accessors, read as the events they are instead of as code under the variable row.
 ## A `set(v):` block is exactly a trigger - it fires when the value is set, with the new value as its
 ## payload - so it reads `➜ <Object> On <name> set` with a `v` chip and its body as ordinary action
 ## rows and sub-events. A `get:` block is a function that gives a value, so it reads as an expression
@@ -5990,7 +5990,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	row_data.debug_state = str(_viewport._debug_rows.get(row_data.row_uid, ""))
 	row_data.disabled = not group.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	# G1 - the head reads in ONE line: a folder mark in the badge column, the title, the description
+	# The head reads in ONE line: a folder mark in the badge column, the title, the description
 	# muted right beside it (still inline-editable), then what the group holds and its switch at the
 	# right edge. The body wears a bracket in the group's colour instead of pushing its rows sideways,
 	# so the head is the only place a group takes vertical room. Headless the folder icon resolves
@@ -6026,7 +6026,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
-	# M3 - who runs this group, as ONE muted word beside the name. Everyone says nothing: the head
+	# Who runs this group, as ONE muted word beside the name. Everyone says nothing: the head
 	# carries the exception, so a sheet that never hosts anything looks exactly as it did.
 	var runs_on: String = EventSheetGroupFacts.runs_on_word(group)
 	if not runs_on.is_empty():
@@ -6042,13 +6042,13 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				}
 			)
 		)
-	# G1 - the line this head IS, echoed in the script editor's own colours. It opens the
+	# The line this head IS, echoed in the script editor's own colours. It opens the
 	# right-anchored run rather than closing it, so the counts and the switch stay flush with the
 	# edge where the pinned copy of this head also draws them.
 	_append_head_band_echo(spans, {"group_echo": true}, _group_declaration_line(group), false)
 	spans.append_array(_group_head_status_spans(group, row_data.folded, reading_style))
 	row_data.spans = spans
-	# G3 - the group's own locals are rows at the TOP of its body: they are declarations, and a
+	# The group's own locals are rows at the TOP of its body: they are declarations, and a
 	# declaration reads where it is declared. The echo is the member the compiler really writes.
 	for local_row: EventRowData in _build_group_local_rows(group, indent + 1):
 		row_data.children.append(local_row)
@@ -6065,7 +6065,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	return row_data
 
 
-## G1. The `## @ace_group(...)` line the compiler writes for this group, asked of the compiler's own
+## The `## @ace_group(...)` line the compiler writes for this group, asked of the compiler's own
 ## emitter so the head can never claim a line the file does not have. "" for a group the open sheet
 ## does not hold (a preview's, a function's), which simply draws no echo.
 func _group_declaration_line(group: EventGroup) -> String:
@@ -6182,7 +6182,7 @@ func _note_object_label(label: String, labels: PackedStringArray, seen: Dictiona
 	labels.append(trimmed)
 
 
-## G3. A group's `local_variables` as Local rows, first inside the bracket. Same shape as an event's
+## A group's `local_variables` as Local rows, first inside the bracket. Same shape as an event's
 ## own locals - one variable sentence for every declaration on the canvas - and the same echo, which
 ## is the plain `var` line the compiler emits under the group's "group locals" header.
 func _build_group_local_rows(group: EventGroup, indent: int) -> Array[EventRowData]:
@@ -6271,37 +6271,37 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.line_count = _count_event_lines(event_row)
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
-	# V12 - a name that is not a variable, and a verb handed the wrong kind of one, said UNDER the
+	# A name that is not a variable, and a verb handed the wrong kind of one, said UNDER the
 	# event that has the problem rather than in a panel somewhere else. Built here so the note sits
 	# above the sub-events, which is where the reader is already looking.
 	for note_row: EventRowData in _build_variable_note_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
-	# M7 - and the networking mistakes about THIS event: a Send row naming a function that is not a
+	# And the networking mistakes about THIS event: a Send row naming a function that is not a
 	# message, and a row that moves a synced object on every peer.
 	for note_row: EventRowData in _build_finding_note_rows(
 			EventSheetMultiplayerFindings.for_event(_sheet_findings(FINDINGS_MULTIPLAYER), event_row),
 			row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
-	# L8 - and the lighting ones: an environment row aimed at a scene with no WorldEnvironment, and a
+	# And the lighting ones: an environment row aimed at a scene with no WorldEnvironment, and a
 	# row writing an environment file other scenes load, which is the one with a single step to take.
 	for note_row: EventRowData in _build_finding_note_rows(
 			EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row),
 			row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
-	# R41 - a `var` line inside the body declares a local of this event, so it reads at the top of the
+	# A `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
 	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
 		row_data.children.append(promoted_row)
-	# W4 - the edit handed to the undo funnel hangs under the step it belongs to, which is where the
+	# The edit handed to the undo funnel hangs under the step it belongs to, which is where the
 	# file writes it: one undoable step, and the lines it is made of below it.
 	for edit_row: EventRowData in _build_undo_step_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(edit_row)
-	# M29 - a lambda handed to `connect` IS a trigger event; an event sheet has no lambdas, only triggers.
+	# A lambda handed to `connect` IS a trigger event; an event sheet has no lambdas, only triggers.
 	# Its reading sits with the actions (which is where the connect line sits) and above the real
 	# sub-events, because that is the order the file runs in.
 	for connect_row: EventRowData in _build_connect_lambda_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(connect_row)
-	# P5 - a connect handed ANOTHER object's function is the same thought with the work already
+	# A connect handed ANOTHER object's function is the same thought with the work already
 	# written elsewhere: the trigger on the left, the call it makes on the right.
 	for connect_call_row: EventRowData in _build_connect_call_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(connect_call_row)
@@ -6318,7 +6318,7 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	return row_data
 
 
-## W6. The menu a `match` answers, or {} when it answers none. Three things have to be true: the walk
+## The menu a `match` answers, or {} when it answers none. Three things have to be true: the walk
 ## is inside a menu's handler (a lambda handed to `id_pressed`, or a function that connect named),
 ## the file knows that menu, and the thing being matched is a bare name - the handler's own parameter.
 ## `match some.thing:` in a menu handler is a switch on something else and keeps its own reading.
@@ -6332,7 +6332,7 @@ func _menu_of_match(match_row: MatchRow, event_row: EventRow) -> Dictionary:
 	return {} if key.is_empty() else EventSheetMenuFacts.menu_of(sentence_context(), key)
 
 
-## W6. Records that this event is a menu answering its items. Claimed here rather than through the
+## Records that this event is a menu answering its items. Claimed here rather than through the
 ## pending-pattern funnel because a handler is a shape all by itself: a file may answer a menu built
 ## in another file, and then there is no add_item run on this sheet to hang the claim on.
 func _claim_menu_pattern(event_row: EventRow, menu: Dictionary) -> void:
@@ -6344,7 +6344,7 @@ func _claim_menu_pattern(event_row: EventRow, menu: Dictionary) -> void:
 		PackedStringArray([str(menu.get("object", ""))]), str(vocabulary.get("words", "")))
 
 
-## W6. The menu whose handler the walk is inside. A handler arrives one of three ways, and every one
+## The menu whose handler the walk is inside. A handler arrives one of three ways, and every one
 ## of them names its menu somewhere the arm itself cannot see: a lambda says it on the connect line it
 ## was handed to (stamped for the length of that walk), a plain function says it on the connect line
 ## that named the function, and a handler the open already recognised as a signal trigger carries that
@@ -6362,7 +6362,7 @@ func _menu_context_key(event_row: EventRow) -> String:
 	return EventSheetMenuFacts.handler_menu(sentence_context(), _current_verb_function.function_name)
 
 
-## Y1. The combo detector a `match` is asking on behalf of, as {list, separator, window, object} - or
+## The combo detector a `match` is asking on behalf of, as {list, separator, window, object} - or
 ## {} when the match is an ordinary switch. Three facts have to line up: the subject joins a list into
 ## one string, that list is one the FILE fills with pressed inputs inside a time window, and the
 ## window is that list's own. Nothing here looks at the arms; what the arms spell is their business.
@@ -6383,7 +6383,7 @@ func _combo_of_match(match_row: MatchRow) -> Dictionary:
 	}
 
 
-## Y1. One arm of a combo match, in the condition lane as the TRIGGER it is: the move the inputs
+## One arm of a combo match, in the condition lane as the TRIGGER it is: the move the inputs
 ## spell, with the window the player had to press them in as the muted note. The catch-all arm gets
 ## no spans at all, so a `_` keeps reading as the plain Else it is.
 func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Array[SemanticSpan]:
@@ -6420,7 +6420,7 @@ func _combo_arm_condition_spans(combo: Dictionary, pattern_text: String) -> Arra
 	return spans
 
 
-## W6. One `match` arm of a menu handler as the trigger it is: the ➜ badge, the menu in the object
+## One `match` arm of a menu handler as the trigger it is: the ➜ badge, the menu in the object
 ## column, and `On <item> chosen` with the id resolved back to the words the user clicks. An id no
 ## item declared keeps the number and wears the warning colour - the branch is real, and nothing in
 ## the menu can ever reach it.
@@ -6500,13 +6500,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
 		# from the code's own names rather than any pack. Other matches keep their pattern text.
 		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
-		# M37 - an event sheet has no switch. A reader of one knows if / else-if / else, so a
+		# An event sheet has no switch. A reader of one knows if / else-if / else, so a
 		# match on an ORDINARY value reads as that chain: the first case as its test, every later case as
 		# an Else carrying its own test, `_` as a plain Else. Only shapes that MEAN "one of these values"
 		# qualify; a pattern that binds a name or destructures an array is doing something an Else-if
 		# cannot say, and keeps its pattern text.
 		var else_if_chain: bool = not state_shaped and _match_reads_as_else_if(match_row)
-		# W6 - a `match id:` inside a menu's handler is not a switch on a number, it is the menu
+		# A `match id:` inside a menu's handler is not a switch on a number, it is the menu
 		# answering: every arm is the item the user picked. The menu is what the WALK knows (the
 		# lambda the handler was handed to, or the function the connect line named), which is why the
 		# key is stamped rather than read off this row.
@@ -6515,7 +6515,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			state_shaped = false
 			else_if_chain = false
 			_claim_menu_pattern(event_row, menu)
-		# Y1 - a `match ",".join(combo):` is not a switch on a string, it is the combo detector
+		# A `match ",".join(combo):` is not a switch on a string, it is the combo detector
 		# answering: every arm is a move the player just spelled, so every arm is a trigger.
 		var combo: Dictionary = _combo_of_match(match_row)
 		if not combo.is_empty():
@@ -6539,7 +6539,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 						transition_children.append(guard_row)
 						continue
 					for case_line: String in case_lines:
-						# Y1 - emptying the buffer is the detector's own bookkeeping: the trigger head
+						# Emptying the buffer is the detector's own bookkeeping: the trigger head
 						# above already stands for it, and repeating it as a step would tell a reader
 						# the move clears the combo, which is backwards.
 						if not combo.is_empty() \
@@ -6592,7 +6592,7 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 	return rows
 
 
-# ── M39: instantiate + add_child (+ the first position) is an event sheet's Create object ─────────
+# ── instantiate + add_child (+ the first position) is an event sheet's Create object ──────────────
 # Godot spells spawning as three statements that only mean anything together; an event sheet spells
 # it as one action, and a reader takes in the three as noise around the one thing that happened. So
 # the run reads as `System ▸ Create object <Scene> at <P> (as b)` - the three lines stay exactly as
@@ -6610,7 +6610,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 	# class map, and a refresh triggered later (by the icon lookup on the very span being built) would
 	# rebuild the map from the sheet and drop it again.
 	_reset_lens_caches_if_stale()
-	# T22. The `var e = Scene.instantiate()` line reads as the event's own Local row rather than as an
+	# The `var e = Scene.instantiate()` line reads as the event's own Local row rather than as an
 	# action, so the alias and the scene it was made from are looked up there too. The Local row stays
 	# where it is: what collapses is everything the file then DOES to the new object.
 	var spawned: Dictionary = _spawned_locals(locals)
@@ -6625,7 +6625,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 				continue
 			spawn = spawned[alias_here]
 			cursor = index
-		# ── T22 ─────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# The run is everything the file does to the new object before it does anything else: the
 		# layer it is added to, where it is put, and the properties set on the way in. They are
 		# written in whatever order the author liked - the plant often comes AFTER the position -
@@ -6641,7 +6641,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 		while cursor < actions.size():
 			var parent: String = _plant_parent(actions[cursor], alias)
 			if parent.is_empty() and not _plant_placement_word(actions[cursor], alias).is_empty():
-				# U5. The sibling spellings - `add_sibling(b)` and `get_parent().add_child(b)` - plant the
+				# The sibling spellings - `add_sibling(b)` and `get_parent().add_child(b)` - plant the
 				# object NEXT TO this node rather than inside a named layer, so the plant is recognised
 				# and the row says the placement word instead of a layer.
 				parent = "here"
@@ -6676,7 +6676,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 			"alias": alias,
 			"line_count": last - index + 1,
 			"indices": indices,
-			# X14. The scene file this row instances, so the hover can show the tree it just made.
+			# The scene file this row instances, so the hover can show the tree it just made.
 			"scene": _spawned_scene_path(str(spawn.get("source", ""))),
 		}
 		for consumed_index: int in range(index + 1, last + 1):
@@ -6685,7 +6685,7 @@ func _create_object_groups(actions: Array, locals: Array = []) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X14. The scene FILE a Create object row makes an instance of, "" when the row spawns something the
+## The scene FILE a Create object row makes an instance of, "" when the row spawns something the
 ## sheet never named a file for. Both spellings are read: the expression written into the row
 ## (`preload("res://enemy.tscn")`) and the const the file usually holds it in, which the same scan the
 ## head's Objects folder is drawn from has already resolved.
@@ -6697,7 +6697,7 @@ func _spawned_scene_path(source: String) -> String:
 	return str(declared.get("res_path", ""))
 
 
-# ── S18: the four limit_* lines a camera's bounds are written as read as ONE scroll-limits row ────
+# ── the four limit_* lines a camera's bounds are written as read as ONE scroll-limits row ─────────
 # Godot spells a camera's bounds as up to four property writes that only mean anything together; the
 # sheet spells them as one action, and the reader takes in the run as the one thing that happened.
 # The lines stay exactly as they are in the file - on hover, under a double-click and in the bytes
@@ -6767,7 +6767,7 @@ func _scroll_limit_note(sides: Dictionary) -> String:
 	return "(%s)" % ", ".join(named)
 
 
-# ── U8 / U12: the two runs whose lines only mean anything together ───────────────────────────────
+# ── the two runs whose lines only mean anything together ─────────────────────────────────────────
 # A first-person script turns the body one way and the camera the other and then clamps the camera,
 # and a music crossfade writes one fader up and the other down. Each is ONE thing that happened, and
 # a reader takes the lines in as noise around it. The lines stay exactly as they are in the file - on
@@ -6775,7 +6775,7 @@ func _scroll_limit_note(sides: Dictionary) -> String:
 # object and scroll-limits runs above make too.
 
 
-## U8. The mouse-look run in one action lane, as {"leads": {index: {text, note, object, evidence,
+## The mouse-look run in one action lane, as {"leads": {index: {text, note, object, evidence,
 ## line_count, indices}}, "consumed": {index: true}}. A run is a `rotate_y(...)` followed by a
 ## `<cam>.rotate_x(...)` and - only when it comes straight after - the clamp that keeps the camera
 ## from looking through the floor. Both turns are required: one on its own is a turn, not a look.
@@ -6789,7 +6789,7 @@ func _mouse_look_groups(actions: Array) -> Dictionary:
 		if turn.is_empty() or pitch.is_empty():
 			index += 1
 			continue
-		# X22 - the same two lines driven by the GYROSCOPE are a gyro aim, not a mouse look. The two
+		# The same two lines driven by the GYROSCOPE are a gyro aim, not a mouse look. The two
 		# runs are the same shape with a different hand on it, so the more specific one gets first
 		# refusal and this pass steps over it rather than claiming both.
 		if not EventSheetSentence.gyro_aim_turn_parts(
@@ -6822,7 +6822,7 @@ func _mouse_look_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-# ── X6 / X8: the two runs batch thirteen adds ────────────────────────────────────────────────────
+# ── the two runs batch thirteen adds ─────────────────────────────────────────────────────────────
 # A third-person script mixes the camera's own axes with the input, flattens the result, makes it one
 # unit long and writes it into the velocity - five lines that only mean "move the way the camera is
 # facing" together. A mesh's visible range is two writes that only mean a distance BAND together.
@@ -6830,7 +6830,7 @@ func _mouse_look_groups(actions: Array) -> Dictionary:
 # double-click and in the bytes that are saved - which is the promise every run above makes too.
 
 
-## X6. The camera-relative run in one action lane, as {"leads": {index: {text, note, object,
+## The camera-relative run in one action lane, as {"leads": {index: {text, note, object,
 ## evidence, line_count, indices}}, "consumed": {index: true}}.
 ##
 ## The camera and the direction are declared as LOCALS, above the lane, which is where the shape says
@@ -6896,7 +6896,7 @@ func _camera_relative_move_groups(actions: Array, locals: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X6. What the event's LOCALS say about a camera-relative run: which local holds a camera's basis,
+## What the event's LOCALS say about a camera-relative run: which local holds a camera's basis,
 ## which one holds that basis mixed with the input, and which input vector drove the mix. {} when the
 ## event declares no such pair, which is what keeps the walk above from claiming anything.
 ##
@@ -6944,7 +6944,7 @@ func _camera_relative_locals(actions: Array, locals: Array) -> Dictionary:
 	return {}
 
 
-## W6. The add_item runs in one action lane, in the same shape as the scroll limits above: a run of
+## The add_item runs in one action lane, in the same shape as the scroll limits above: a run of
 ## adjacent calls that put items into ONE menu. Ten `add_item` lines are not ten things that happened
 ## - they are one menu, and a reader wants to see the menu, in order, with its separators and its
 ## tick items where they are. The lines are untouched: this is a lens, so the file re-emits byte for
@@ -6992,7 +6992,7 @@ func _menu_item_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## W6. One line that puts something in a menu -> {menu, line}, or {} for anything else. Both
+## One line that puts something in a menu -> {menu, line}, or {} for anything else. Both
 ## spellings are read - the line as typed and the Call Method row the lifter files it as - so a run
 ## reads the same whichever way the open lifted it.
 func _menu_item_parts(action_resource: Variant) -> Dictionary:
@@ -7003,7 +7003,7 @@ func _menu_item_parts(action_resource: Variant) -> Dictionary:
 	return {} if menu_key.is_empty() else {"menu": menu_key, "line": text}
 
 
-## X8. The visible-range runs in one action lane, in the same shape as the scroll limits above: two
+## The visible-range runs in one action lane, in the same shape as the scroll limits above: two
 ## adjacent writes on ONE object, the near end and the far end, which only name a band together.
 func _visible_range_groups(actions: Array) -> Dictionary:
 	var leads: Dictionary = {}
@@ -7036,7 +7036,7 @@ func _visible_range_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X8. One `rock.visibility_range_begin = 10` line -> {object, end, value, line}, or {} for anything
+## One `rock.visibility_range_begin = 10` line -> {object, end, value, line}, or {} for anything
 ## else. Both spellings a write arrives in are read, exactly as the scroll limits are.
 func _visible_range_parts(action_resource: Variant) -> Dictionary:
 	var text: String = _group_line_text(action_resource)
@@ -7067,7 +7067,7 @@ func _visible_range_parts(action_resource: Variant) -> Dictionary:
 	}
 
 
-## U12. The crossfade runs in one action lane, in the same shape. A run is two adjacent volume
+## The crossfade runs in one action lane, in the same shape. A run is two adjacent volume
 ## writes driven by ONE fraction - one fader by `1 - t` and the other by `t` - which is the whole of
 ## what a crossfade is. Two volumes set from unrelated values are two rows, and stay two rows.
 func _crossfade_groups(actions: Array) -> Dictionary:
@@ -7094,7 +7094,7 @@ func _crossfade_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-# ── X10 / X11: the spellings a hierarchy move takes read as the ONE row they are ──────────────────
+# ── the spellings a hierarchy move takes read as the ONE row they are ─────────────────────────────
 #
 # "Put this object under that one" has three spellings in Godot and one meaning: `reparent`, the
 # `remove_child` + `add_child` pair, and - when the mover wanted the child to follow only SOME of its
@@ -7106,7 +7106,7 @@ func _crossfade_groups(actions: Array) -> Dictionary:
 # are, so the file re-emits byte for byte whichever spelling it came in as.
 
 
-## X11. The four flags an Add child row carries, in the order the row says them, as
+## The four flags an Add child row carries, in the order the row says them, as
 ## member/word pairs. Godot's default for every one of them is ON, which is why a plain child needs
 ## no plumbing at all and a plain row shows no chips.
 const HIERARCHY_FLAG_WORDS: Dictionary = {
@@ -7117,7 +7117,7 @@ const HIERARCHY_FLAG_WORDS: Dictionary = {
 }
 
 
-## W7. The run that CONFIGURES a Control a Local row just made: the property writes, the calls and
+## The run that CONFIGURES a Control a Local row just made: the property writes, the calls and
 ## the add_child that name it, from the line under the declaration onwards. Returned as
 ## {declaration index: {"name", "indices"}, "consumed": {index: true}} - the shape every run pass here
 ## uses - so the action lane drops them and the Local row draws them underneath instead.
@@ -7159,7 +7159,7 @@ func _control_setup_groups(event_row: EventRow) -> Dictionary:
 	return {"runs": runs, "consumed": consumed}
 
 
-## W7. The local ONE action declares as a newly made Control, or "" for every other action. This is
+## The local ONE action declares as a newly made Control, or "" for every other action. This is
 ## the head predicate the whole regroup hangs off, so it must not cost a code generation per action:
 ## a lifted row is asked for its declaration directly (the same answer the Local rows are built from)
 ## and only a verbatim line is read as text. Nothing below here runs until this says yes.
@@ -7219,7 +7219,7 @@ func _configures_control(line: String, name: String) -> bool:
 	return line.begins_with("%s." % name)
 
 
-## W11. The lines a pack recipe uses to STATE what the pack is - its host class, its class name, its
+## The lines a pack recipe uses to STATE what the pack is - its host class, its class name, its
 ## category, its tags, what it says about itself, and that it is a behavior at all - as
 ## {"consumed": {index: true}}. They are head facts on the bar above (which computes them from the
 ## file itself), so drawing them again as six Set rows says the same thing twice and buries the one
@@ -7238,7 +7238,7 @@ func _recipe_head_groups(actions: Array) -> Dictionary:
 	return {"leads": {}, "consumed": consumed}
 
 
-## W11. Whether the open sheet is a pack recipe, answered once per sheet. The kind is a whole-FILE
+## Whether the open sheet is a pack recipe, answered once per sheet. The kind is a whole-FILE
 ## fact that cannot change while the file is open, so a tab switch is the only thing that rebuilds it.
 func _sheet_is_pack_recipe() -> bool:
 	var sheet: Resource = _viewport._sheet if _viewport != null else null
@@ -7262,7 +7262,7 @@ func _is_recipe_head_line(line: String) -> bool:
 	return false
 
 
-## X10 / X11. The hierarchy runs in one action lane, as {"leads": {index: {text, note, object,
+## The hierarchy runs in one action lane, as {"leads": {index: {text, note, object,
 ## evidence, line_count, indices}}, "consumed": {index: true}}.
 func _hierarchy_groups(actions: Array, event_uid: String = "") -> Dictionary:
 	var leads: Dictionary = {}
@@ -7287,7 +7287,7 @@ func _hierarchy_groups(actions: Array, event_uid: String = "") -> Dictionary:
 			"line_count": last - index + 1,
 			"indices": indices
 		}
-		# X11. What the flags chip needs to reopen this run as ticks and write it back: which event
+		# What the flags chip needs to reopen this run as ticks and write it back: which event
 		# and which actions it stands for, how the move itself is spelled, and which flags are on
 		# right now. Everything travels by VALUE - a resource captured here would describe a sheet
 		# the next undoable edit has already replaced.
@@ -7303,7 +7303,7 @@ func _hierarchy_groups(actions: Array, event_uid: String = "") -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X22. The gyro runs in one action lane, in the shape every run here has. Three shapes share the
+## The gyro runs in one action lane, in the shape every run here has. Three shapes share the
 ## pass because they are one idea: the calibration line that stores a neutral point, the line that
 ## feeds a tilt into movement, and the two-line turn-and-pitch that is mouse look with the phone
 ## doing the turning. Each is claimed on the event that owns it and none of them moves a byte.
@@ -7350,7 +7350,7 @@ func _gyro_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X10 / X11. The hierarchy run that STARTS at `index`, as {text, note, object, last}, or {} when
+## The hierarchy run that STARTS at `index`, as {text, note, object, last}, or {} when
 ## nothing there is one. Only a run of more than one line is claimed: a lone `reparent` already reads
 ## as its own sentence through the shared grammar, and wrapping it here would say the same thing
 ## twice and cost the row its own chips.
@@ -7363,13 +7363,13 @@ func _hierarchy_run_at(actions: Array, index: int) -> Dictionary:
 	if first.is_empty() or not (first.contains("reparent(") or first.contains("remove_child(")):
 		return {}
 	var context: Dictionary = sentence_context()
-	# X10 - the remove-then-add pair, which is one move said in two lines.
+	# The remove-then-add pair, which is one move said in two lines.
 	var paired: Dictionary = EventSheetSentence.remove_then_add_sentence(
 		first, _group_line_text(actions[index + 1]), context)
 	if not paired.is_empty():
 		return {"text": _joined_segments(paired), "note": "",
 			"object": str(paired.get("object", "")), "last": index + 1}
-	# X11 - a reparent whose transform or lifetime flags were written out beneath it.
+	# A reparent whose transform or lifetime flags were written out beneath it.
 	var moved: Dictionary = EventSheetSentence.reparent_call_parts(first, context)
 	if moved.is_empty():
 		return {}
@@ -7404,7 +7404,7 @@ func _hierarchy_run_at(actions: Array, index: int) -> Dictionary:
 		"flags_chip": _hierarchy_flags_chip(actions, moved, flags, index, last)}
 
 
-## X11. The flags a hierarchy run was written with, as the ticks the dialog shows them as, beside the
+## The flags a hierarchy run was written with, as the ticks the dialog shows them as, beside the
 ## spelling of the move itself. The transform words are stated in the code only when they are OFF -
 ## Godot's default for every one of them is on - so a member the run never wrote is a ticked box.
 func _hierarchy_flags_chip(actions: Array, moved: Dictionary, flags: Dictionary, first: int,
@@ -7431,7 +7431,7 @@ func _hierarchy_flags_chip(actions: Array, moved: Dictionary, flags: Dictionary,
 	}
 
 
-## X11. The flag chips a hierarchy row wears - every flag the run turned OFF said with a ✗ and the
+## The flag chips a hierarchy row wears - every flag the run turned OFF said with a ✗ and the
 ## rest with a ✓, so the row shows the whole set rather than only what changed. "" when the run set
 ## none of them, which is the plain child that needs no chips at all.
 func _hierarchy_flag_note(flags: Dictionary) -> String:
@@ -7442,7 +7442,7 @@ func _hierarchy_flag_note(flags: Dictionary) -> String:
 	return " ".join(chips)
 
 
-## X28. The input-window pair in one action lane. A flag set true and the deadline beside it are one
+## The input-window pair in one action lane. A flag set true and the deadline beside it are one
 ## thing that happened - a window opened - and the file's own facts have to agree that this is the
 ## window they describe before the two lines read as one row.
 func _input_window_groups(actions: Array) -> Dictionary:
@@ -7495,7 +7495,7 @@ func _input_window_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## Y9. The two lines a rail ride is written as - the offset walked forward by a speed, and the body
+## The two lines a rail ride is written as - the offset walked forward by a speed, and the body
 ## put on the point the curve bakes there - as the ONE row they are. Both halves or neither: an
 ## offset stepped without the position write beside it is arithmetic on a number, and a position
 ## write on its own is somebody placing an object on a path rather than riding it.
@@ -7532,7 +7532,7 @@ func _grind_ride_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## Y2. The two three-line runs a combo game freezes with, each folded into the one row it is: the
+## The two three-line runs a combo game freezes with, each folded into the one row it is: the
 ## whole game stopped for a few frames (a hit-stop), and one animation player held still while
 ## everything else keeps running. Both are written as a stop, a REAL-TIME wait and a start, and the
 ## real-time flag on the wait is what tells them apart from an ordinary pause somebody forgot to
@@ -7616,7 +7616,7 @@ func _actions_might_push(actions: Array) -> bool:
 	return false
 
 
-## Y1. The pressed input pushed onto a combo buffer with the window stamped beneath it - two lines
+## The pressed input pushed onto a combo buffer with the window stamped beneath it - two lines
 ## that are one thing the player did, in the Combo Box behaviour's own words.
 func _combo_press_groups(actions: Array) -> Dictionary:
 	var leads: Dictionary = {}
@@ -7669,7 +7669,7 @@ func _group_line_text(action_resource: Variant) -> String:
 	return compiled.strip_edges() if not compiled.contains("\n") else ""
 
 
-## S17. The condition pairs that are really ONE question, as {"leads": {index: {text, object}},
+## The condition pairs that are really ONE question, as {"leads": {index: {text, object}},
 ## "consumed": {index: true}}. The file writes `if data and data.get_custom_data("solid"):` - one
 ## question with a guard in front of it - and the importer files the two halves as two conditions,
 ## because that is what the `and` says. Putting them back together is a pure view: the conditions
@@ -7677,7 +7677,7 @@ func _group_line_text(action_resource: Variant) -> String:
 ## The one thing a second condition must mention before the pair is worth reading as one question.
 const JOINED_CONDITION_MARK := ".get_custom_data("
 
-## Y2. The other thing a second condition can mention that makes the pair one question: an animation's
+## The other thing a second condition can mention that makes the pair one question: an animation's
 ## play head. Two comparisons on it fence off a cancel window, and neither half means anything alone.
 const ANIMATION_CLOCK_MARK := "current_animation_position"
 
@@ -7686,7 +7686,7 @@ func _joined_condition_groups(conditions: Array, joiner: String = " and ") -> Di
 	var leads: Dictionary = {}
 	var consumed: Dictionary = {}
 	var context: Dictionary = sentence_context()
-	# X21 / X26. Two more runs whose halves mean nothing apart - a roll that is either won or
+	# Two more runs whose halves mean nothing apart - a roll that is either won or
 	# guaranteed, and a health threshold guarded by the phase the fight is in. Which files write one
 	# is a whole-file fact already in hand, so the parse below only ever runs on a file that writes
 	# one; every other sheet in the world still pays a substring search and nothing more.
@@ -7704,7 +7704,7 @@ func _joined_condition_groups(conditions: Array, joiner: String = " and ") -> Di
 			index += 1
 			continue
 		var run: String = "%s%s%s" % [first, joiner, second]
-		# Y2. A floor and a ceiling on ONE animation's play head are not two questions, they are a
+		# A floor and a ceiling on ONE animation's play head are not two questions, they are a
 		# cancel window - the slice of a move another move is allowed to interrupt it in. Asked first
 		# because the general grammar below would answer the pair as two comparisons and stop.
 		var window: Dictionary = EventSheetSentence.animation_window_pieces(run, context)
@@ -7742,7 +7742,7 @@ func _condition_expression_of(condition_resource: Variant) -> String:
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	if condition.ace_id == "ExpressionIsTrue":
 		return str(params_dict.get("expr", "")).strip_edges()
-	# X26. A comparison the importer filed as a Compare row is text the file wrote too - `phase == 1`
+	# A comparison the importer filed as a Compare row is text the file wrote too - `phase == 1`
 	# reached the sheet as a row rather than as an expression only because the lifter had a row for
 	# it. Rebuilt in the file's own spelling, so a joined reading is still built from nothing but
 	# what the author typed.
@@ -7780,7 +7780,7 @@ func _append_scroll_limit_spans(spans: Array, limits: Dictionary, action_index: 
 			"compiled_lines": int(limits.get("line_count", 1)),
 			"create_object_indices": limits.get("indices", [])
 		}, true).merged(action_style_meta, true)))
-	# X11. A run whose flags are EDITABLE offers the chip that reopens them as ticks, AHEAD of the
+	# A run whose flags are EDITABLE offers the chip that reopens them as ticks, AHEAD of the
 	# note: the note is what wraps to the cell's right edge, so a chip behind it would be laid out
 	# past that edge, where nothing is painted. Only the hierarchy run offers one, and only while the
 	# row is not read-only - everything else here is a lens over lines nobody may rewrite from a row.
@@ -7862,7 +7862,7 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 		if source.is_empty() or not _is_identifier_path(source):
 			return {}
 		return {"alias": alias, "source": source, "copy": suffix == ".duplicate()"}
-	# ── S2 ──────────────────────────────────────────────────────────────────────────────────────
+	# ────────────────────────────────────────────────────────────────────────────────────────────
 	# Taking a spare out of a pool and making a new one only when the pool is empty IS Create object -
 	# pooling is how the object is got hold of, not a different thing to do with it. The row says so
 	# with a `pooled` chip and keeps every line of the guard one hover away.
@@ -7872,7 +7872,7 @@ func _instantiate_action_parts(action_resource: Variant) -> Dictionary:
 	return {}
 
 
-## T22. {alias: {alias, source, copy}} for every LOCAL of this event that was filled from a scene -
+## {alias: {alias, source, copy}} for every LOCAL of this event that was filled from a scene -
 ## the `var e = Scene.instantiate()` row an event sheet draws at the top of its event. Empty when the
 ## event declares no such local, which is what keeps the run below from claiming anything.
 func _spawned_locals(locals: Array) -> Dictionary:
@@ -7895,7 +7895,7 @@ func _spawned_locals(locals: Array) -> Dictionary:
 	return spawned
 
 
-## T22. The spawned local an action is ABOUT - the plant, the placement or a property set on it - or
+## The spawned local an action is ABOUT - the plant, the placement or a property set on it - or
 ## "" when the action has nothing to do with one. What lets a run start at the first line after the
 ## Local row rather than at the declaration itself.
 func _spawn_member_alias(action_resource: Variant, spawned: Dictionary) -> String:
@@ -7910,7 +7910,7 @@ func _spawn_member_alias(action_resource: Variant, spawned: Dictionary) -> Strin
 	return ""
 
 
-## T22. WHERE the freshly made object was planted, as the event-sheet layer it went onto: the node an
+## WHERE the freshly made object was planted, as the event-sheet layer it went onto: the node an
 ## `$FX.add_child(b)` names, or "here" for a plant on the script's own node. "" when the action is not
 ## the plant at all, which is what the run above tests for.
 func _plant_parent(action_resource: Variant, alias: String) -> String:
@@ -7934,7 +7934,7 @@ func _plant_parent(action_resource: Variant, alias: String) -> String:
 	return EventSheetSentence.object_of_reference(parent)
 
 
-## T22. A `b.angle = 90` that comes with the spawn, as the `angle = 90` chip the Create object row
+## A `b.angle = 90` that comes with the spawn, as the `angle = 90` chip the Create object row
 ## says it with. "" for anything that is not a property of the new object, which ends the run.
 func _created_property_words(action_resource: Variant, alias: String) -> String:
 	var action: ACEAction = action_resource as ACEAction
@@ -7958,7 +7958,7 @@ func _plants_node(action_resource: Variant, alias: String) -> bool:
 	return not _plant_placement_word(action_resource, alias).is_empty()
 
 
-## U5. WHERE the freshly made object was planted, in the sheet's words - "next to it" for a sibling
+## WHERE the freshly made object was planted, in the sheet's words - "next to it" for a sibling
 ## (which `get_parent().add_child(b)` is, whatever it is spelled as) and "inside it" for a child of
 ## this node. "" when the action is not the plant at all.
 ##
@@ -8033,8 +8033,8 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		var icon_class: String = str(resolved.get("icon_class", ""))
 		if not icon_class.is_empty() and not alias.is_empty():
 			_lens_class_map[alias] = icon_class
-	# U5. Copying a node that is ALREADY in the scene is Clone object; Create object is for making one
-	# out of a scene file (M39). Two different things a reader means, so two different words - and the
+	# Copying a node that is ALREADY in the scene is Clone object; Create object is for making one
+	# out of a scene file. Two different things a reader means, so two different words - and the
 	# clone says what it made and where it put it, which is the whole of what the two lines did.
 	if copy:
 		var clone_text: String = "%s %s" % [EventSheetL10n.translate("Clone object"), shown]
@@ -8048,7 +8048,7 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 				_reading_sentence(EventSheetSentence.expression_text(position_text))])
 		return clone_text if asides.is_empty() else "%s (%s)" % [clone_text, ", ".join(asides)]
 	var text: String = "%s %s" % [EventSheetL10n.translate("Create object"), shown]
-	# T22. The node the object was added to IS the layer an event sheet makes things on, so the row
+	# The node the object was added to IS the layer an event sheet makes things on, so the row
 	# says which one. A plant on the script's own node adds nothing a reader does not already have.
 	if not layer.is_empty() and layer != "here":
 		text += " %s %s" % [EventSheetL10n.translate("on layer"), layer]
@@ -8058,18 +8058,18 @@ func _create_object_text(source: String, alias: String, position_text: String, c
 		text += " %s %s" % [EventSheetL10n.translate("at"), _reading_sentence(EventSheetSentence.expression_text(position_text))]
 	if not alias.is_empty():
 		text += " (%s %s)" % [EventSheetL10n.translate("as"), alias]
-	# S2. The chip is the whole difference a pool makes to this row: a spare is reused when one is
+	# The chip is the whole difference a pool makes to this row: a spare is reused when one is
 	# waiting, and a new object is made when none is.
 	if pooled:
 		text += " [%s]" % EventSheetL10n.translate("pooled")
-	# T22. The properties the file sets on the way in ride along as chips, because setting them is
+	# The properties the file sets on the way in ride along as chips, because setting them is
 	# part of making the thing rather than a separate step a reader has to follow.
 	for extra: String in extras:
 		text += "   %s" % extra
 	return text
 
 
-## M37 - whether a `match` says nothing more than "which of these values is it?", which is the only
+## Whether a `match` says nothing more than "which of these values is it?", which is the only
 ## thing an Else-if chain can say back. Every branch must be one or more PLAIN values; a pattern that
 ## binds (`var n`), destructures (`[a, b]` / `{"k": v}`), or tests a type keeps the switch reading,
 ## because rewriting it as `subject = pattern` would state something the code does not.
@@ -8125,7 +8125,7 @@ func _match_reads_as_else_if(match_row: MatchRow) -> bool:
 		var match_case: MatchCase = match_row.cases[case_index]
 		if match_case == null:
 			return false
-		# U2. A pattern that BINDS a name, destructures a list or picks a table apart says something a
+		# A pattern that BINDS a name, destructures a list or picks a table apart says something a
 		# plain value cannot - and now has words of its own, so those arms join the chain too. Anything
 		# neither reading claims still keeps the pattern text it was written as.
 		if not ViewportRowBuilder.is_plain_match_pattern(match_case.pattern) \
@@ -8145,7 +8145,7 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	var spans: Array[SemanticSpan] = []
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var text: String = pattern.strip_edges()
-	# U2. A pattern that says something a plain value cannot draws its own sentence and its own chips.
+	# A pattern that says something a plain value cannot draws its own sentence and its own chips.
 	var pattern_reading: Dictionary = {} if ViewportRowBuilder.is_plain_match_pattern(text) \
 		else EventSheetSentence.match_pattern_reading(subject, text, sentence_context())
 	if not pattern_reading.is_empty():
@@ -8177,7 +8177,7 @@ func _match_else_if_condition_spans(subject: String, pattern: String, chain_inde
 	return spans
 
 
-## U2. The condition cells of one PATTERN arm: the Else chip when the arm takes whatever is left, the
+## The condition cells of one PATTERN arm: the Else chip when the arm takes whatever is left, the
 ## arm's own sentence otherwise, and the names it binds as chips after it. The chips sit on the same
 ## line as the sentence, because what the pattern pulled out is part of what the pattern says.
 func _match_pattern_condition_spans(reading: Dictionary, chain_index: int,
@@ -8272,7 +8272,7 @@ func _joined_call_args(call: Dictionary) -> String:
 ## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
 ## never meet parentheses in a condition cell). The computed-check cue is the ƒ SVG BADGE the
 ## caller adds in the icon column (the same ƒ collapsed functions wear, one symbol taught
-## once), never inline text. M12: a negated guard does NOT say the word "not" - the sentence is
+## once), never inline text. A negated guard does NOT say the word "not" - the sentence is
 ## the positive one and the inversion is the `not` mark in the badge column, the same mark an inverted
 ## ACE condition has always worn, so one symbol means one thing everywhere on the sheet. Value
 ## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
@@ -8286,7 +8286,7 @@ func _friendly_guard_text(guard: String) -> String:
 	return friendly
 
 
-## M12 - whether a guard is inverted, so the caller can draw the mark the sentence no longer says.
+## Whether a guard is inverted, so the caller can draw the mark the sentence no longer says.
 ## Split from _friendly_guard_text because the two answers go to different places: the words go
 ## in the condition cell, the inversion goes in the badge column beside it.
 func _guard_is_negated(guard: String) -> bool:
@@ -8372,7 +8372,7 @@ func _pattern_leaf(pattern_text: String) -> String:
 ## (_friendly_guard_text does): they pass the inversion here so the mark still gets drawn. Callers
 ## handing over raw text can leave it false - the lens below finds a leading NOT on its own.
 ## `condition_spans`, when given, REPLACES the single condition cell this would otherwise draw - the
-## M37 Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
+## Else-if chain hands over its own stacked Else + test lines, built by the same helpers a ternary
 ## chain uses, so both readings of "one of these branches runs" look identical on the sheet.
 func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource, negated: bool = false,
 		condition_spans: Array[SemanticSpan] = []) -> EventRowData:
@@ -8393,7 +8393,7 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 				"line_index": line_index
 			}.merged(action_style, true)))
 		return row
-	# M12 - a lifted `if not <cond>:` shows its inversion as the `not` mark in the badge column, exactly
+	# A lifted `if not <cond>:` shows its inversion as the `not` mark in the badge column, exactly
 	# as an inverted ACE condition does, and the sentence beside it is the POSITIVE one. Callers
 	# that already stripped the negation pass plain text and nothing happens here.
 	var inversion: Dictionary = EventSheetViewportLenses.strip_leading_not(condition_text)
@@ -8420,7 +8420,7 @@ func _build_condition_action_row(condition_text: String, action_lines: PackedStr
 	return row
 
 
-## V2 - the globals this sheet USES, as rows of its own at the top of it: `Global number Score = 0`
+## The globals this sheet USES, as rows of its own at the top of it: `Global number Score = 0`
 ## with `from Game` trailing it and `Game.Score` echoed at the right edge, which is the form you
 ## would type here. A global is declared once, on an autoload, and read everywhere; until these rows
 ## the only way to see which ones a sheet touched was to read every parameter in it.
@@ -8477,7 +8477,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	var rows: Array[EventRowData] = []
 	if sheet == null:
 		return rows
-	# V2 - AUTHOR ORDER. The view no longer sorts these by name: the order in the dictionary is the
+	# AUTHOR ORDER. The view no longer sorts these by name: the order in the dictionary is the
 	# order they were written in, which is the order the drag gesture and Sort A-Z write back. A
 	# reader who moved `hp` above `speed` finds it there the next time they look.
 	var current_group: String = ""
@@ -8516,7 +8516,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 			current_group = group_name
 		var landing: Array[EventRowData] = rows if group_name.is_empty() else group_members
 		landing.append(row)
-		# M7 - "changed on the host, seen nowhere" is about the VALUE, so it hangs under the line
+		# "changed on the host, seen nowhere" is about the VALUE, so it hangs under the line
 		# that declares it rather than under whichever event happened to change it.
 		landing.append_array(_build_finding_note_rows(
 			EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
@@ -8526,7 +8526,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	return rows
 
 
-## V3 - the scope word a SHEET-LEVEL variable reads with, derived from where the sheet lives: an
+## The scope word a SHEET-LEVEL variable reads with, derived from where the sheet lives: an
 ## autoload's members are Global, a Resource script's are Fields, a `const` is a Constant, and
 ## everything else belongs to the object the sheet is.
 func _sheet_variable_scope(sheet: EventSheetResource, descriptor: Dictionary) -> String:
@@ -8554,7 +8554,7 @@ func _folder_strip_label(group_name: String, members: Array[EventRowData]) -> St
 	return group_name if shared_subgroup.is_empty() else "%s › %s" % [group_name, shared_subgroup]
 
 
-## V1 - the Inspector group as the ONE thing on the variable list that folds: a slim strip naming the
+## The Inspector group as the ONE thing on the variable list that folds: a slim strip naming the
 ## folder, with its rows as children so the existing fold arrow and the bubble outline both work, and
 ## the rows themselves left at the same indent as every other declaration. Rows are never pushed
 ## sideways by a bracket around them.
@@ -8594,7 +8594,7 @@ func _flush_variable_group(rows: Array[EventRowData], sheet: EventSheetResource,
 	members.clear()
 
 
-## V2 - the same labelled, foldable strip over a run of consecutive MEMBER variables in an opened
+## The same labelled, foldable strip over a run of consecutive MEMBER variables in an opened
 ## `.gd`. An `@export_group("Movement")` is one folder whether the sheet stores its variables in the
 ## dictionary or as rows of the event tree, so a reader meets one shape either way, and the rows keep
 ## their indent: a folder never pushes what it holds sideways.
@@ -8679,7 +8679,7 @@ static func variable_group_runs(flat_rows: Array) -> Array:
 	return runs
 
 
-## V12. The notes under an event: a `variable_reference` naming something this sheet does not
+## The notes under an event: a `variable_reference` naming something this sheet does not
 ## declare (red, with the nearest name as a one-click fix), and one handed a variable of the wrong
 ## kind (amber, with the verb that does fit). Both are readings of the ROWS - nothing is written, no
 ## resource is held, and an event with neither problem grows no rows at all.
@@ -8722,7 +8722,7 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 				var mismatch: Dictionary = variable_mismatch_note(
 					EventSheetVariableOwners.find(entries, name_text), ace_id)
 				if not mismatch.is_empty():
-					# V12 - the fix swaps the verb for the one that fits, carrying what was typed
+					# The fix swaps the verb for the one that fits, carrying what was typed
 					# across to whatever the new verb calls it. The row it will rewrite is named by
 					# its LANE and SLOT, never by holding the picked resource: the fix runs through
 					# the undo funnel, and the funnel replaces resources as it commits.
@@ -8734,7 +8734,7 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	return rows
 
 
-## V12. The amber note when a verb is handed the wrong kind of variable, and the verb that does fit:
+## The amber note when a verb is handed the wrong kind of variable, and the verb that does fit:
 ## "nickname is text - Add to wants a number." {} when the pairing is fine, or when the variable's
 ## type says nothing. Static + pure, so the wording is pinned without a canvas.
 static func variable_mismatch_note(entry: Dictionary, ace_id: String) -> Dictionary:
@@ -8797,7 +8797,7 @@ func _build_variable_note_row(event_uid: String, indent: int, message: String, f
 		fix_meta, {} if fix_label.is_empty() else {"label": fix_label, "meta": {}})
 
 
-## M7 / L8. The mistakes one family reads out of this sheet, derived once per sweep and kept under
+## The mistakes one family reads out of this sheet, derived once per sweep and kept under
 ## its own name. Both families answer the same shape - a message, a subject, a one-click fix and the
 ## row it hangs under - which is why one cache and one note row serve them and a third is one leg.
 func _sheet_findings(family: String) -> Array[Dictionary]:
@@ -8808,7 +8808,7 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 	return _sheet_findings_cache[family]
 
 
-## M7 / L8. A finding said UNDER the row it is about - the Send row's event, the variable's own
+## A finding said UNDER the row it is about - the Send row's event, the variable's own
 ## declaration, the message's function head, the event that writes a shared environment - through the
 ## very note row an unknown variable already uses, so there is one note look and one fix click in the
 ## sheet rather than three.
@@ -8847,8 +8847,8 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
 					"is_constant": descriptor.is_constant,
 					"owner_event": event_row,
 					"variable_index": rows.size(),
-					# V1/V3 - an event's own local reads in the one shape too: Local leads, and the
-					# echo is the `var` line the compiler writes for it. V4 - a Static local says so
+					# An event's own local reads in the one shape too: Local leads, and the
+					# echo is the `var` line the compiler writes for it. A Static local says so
 					# in the same word, and its echo is the class member the declaration hoists to.
 					"reading_scope": EventSheetVariableSentence.local_scope(descriptor.static_local),
 					"expression_default": descriptor.expression_default or descriptor.inferred_type,
@@ -8859,7 +8859,7 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
 	return rows
 
 
-## R41. The Local rows an event's own Local Variable ACTIONS read as. An event sheet declares a local
+## The Local rows an event's own Local Variable ACTIONS read as. An event sheet declares a local
 ## at the TOP of the event that owns it, so a `var` line anywhere in the body draws there - in file
 ## order among the locals - while the work the line does stays in the action lane where it sits.
 ##
@@ -8870,16 +8870,16 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 	var rows: Array[EventRowData] = []
 	if event_row == null or not event_promotes_locals(event_row):
 		return rows
-	# X2 / X30. A local the camera-ray run already said is not a declaration of its own: the run reads
+	# A local the camera-ray run already said is not a declaration of its own: the run reads
 	# as ONE row in the action lane, and drawing its four locals above that row would say the same
 	# thing twice - once as plumbing, which is exactly what the run exists to stop showing.
 	var ray_groups: Dictionary = _cursor_ray_groups(event_row.actions)
 	var ray_leads: Dictionary = ray_groups.get("leads", {})
 	var ray_consumed: Dictionary = ray_groups.get("consumed", {})
-	# W9. And the same for a test's verdict local: the action lane does not draw it, so a Local row
+	# And the same for a test's verdict local: the action lane does not draw it, so a Local row
 	# above the gate would be the one place the folded bookkeeping came back.
 	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
-	# W7 - which Local rows have a configure run to draw under them.
+	# Which Local rows have a configure run to draw under them.
 	var setup_runs: Dictionary = _control_setup_groups(event_row).get("runs", {})
 	for action_index in event_row.actions.size():
 		if ray_leads.has(action_index) or ray_consumed.has(action_index):
@@ -8915,13 +8915,13 @@ func _build_promoted_local_rows(event_row: EventRow, indent: int) -> Array[Event
 			if span is SemanticSpan:
 				typed_spans.append(span as SemanticSpan)
 		row_data.spans = typed_spans
-		# W7 - what the event did to the Control it just made hangs under the row that made it.
+		# What the event did to the Control it just made hangs under the row that made it.
 		_append_control_setup_rows(row_data, event_row, setup_runs.get(action_index, {}), indent + 1)
 		rows.append(row_data)
 	return rows
 
 
-## W7. The configure run as the rows under its Local row. Each line is built through the very same
+## The configure run as the rows under its Local row. Each line is built through the very same
 ## row builder every other statement goes through, so a `Set title to ...` under a dialog says exactly
 ## what it says anywhere else; the rows are inert, because they stand for statements the event itself
 ## still holds and the file is never touched.
@@ -8978,18 +8978,18 @@ func _build_variable_row(
 		"variable_group": str(options.get("group", "")).strip_edges(),
 		"variable_subgroup": str(options.get("subgroup", "")).strip_edges()
 	}
-	# V2 - a row standing for a declaration in ANOTHER file carries that file, under the key the
+	# A row standing for a declaration in ANOTHER file carries that file, under the key the
 	# navigation already reads: Ctrl+Click jumps there like any include, and the edit gesture opens
 	# it, because a declaration can only change where it is written.
 	var declared_in: String = str(options.get("declared_in", "")).strip_edges()
 	if not declared_in.is_empty():
 		variable_meta["include_path"] = declared_in
-	# V1 - ONE shape for every variable row, authored or opened. The `name : Type` code grammar is
+	# ONE shape for every variable row, authored or opened. The `name : Type` code grammar is
 	# gone (it survives on the hover and in the code panel, where a declaration belongs): a row says
 	# its SCOPE, then its TYPE in plain words, then the name - "Instance whole number hp = 100". Both
 	# words are plain text, never pills; `const` and `static` fold INTO the scope word, and the one
 	# Godot-only fact left is a small sliders mark saying the value is editable in the Inspector.
-	# P7 - the Inspector facts (see EventSheetSettingFacts): a type word the hint settles ("combo",
+	# The Inspector facts (see EventSheetSettingFacts): a type word the hint settles ("combo",
 	# "file", "folder", "flags", "node path"), a value the hint re-reads (an enum's LABEL, a 0-1 range
 	# as a percent, a colour's word) and the muted note that says the limits or the choices.
 	var facts: Dictionary = options.get("facts", {}) if options.get("facts") is Dictionary else {}
@@ -9002,7 +9002,7 @@ func _build_variable_row(
 	var hinted_type_word: String = str(facts.get("type_word", "")).strip_edges()
 	if not hinted_type_word.is_empty():
 		type_word = hinted_type_word
-	# V3 - the scope word is DERIVED, never stored: the caller settles it from where the sheet lives
+	# The scope word is DERIVED, never stored: the caller settles it from where the sheet lives
 	# (an autoload says Global, a node script Instance, a Resource script Field), and a `const` or a
 	# `static var` answers for itself even when nothing else did.
 	var scope_word_key: String = str(options.get("reading_scope", ""))
@@ -9020,11 +9020,11 @@ func _build_variable_row(
 	var code_line: String = str(options.get("code_line", ""))
 	var view_mode: int = _variable_row_view()
 	var code_only: bool = view_mode == EventSheetCodeEcho.VIEW_CODE and not code_line.is_empty()
-	# E2 - what the SCENE says about this variable, asked once for the row: {} unless a
+	# What the SCENE says about this variable, asked once for the row: {} unless a
 	# MultiplayerSynchronizer keeps it in step, which is every variable of every project with no
 	# networking in it.
 	var sync_entry: Dictionary = _sync_entry(scope_label, var_name, declared_in)
-	# V2 - the kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
+	# The kind cue: an outlined `x` in the badge column, so a declaration is unmistakable while
 	# scrolling. A mark, never a word pill.
 	row_data.spans = [
 		_make_span(
@@ -9071,7 +9071,7 @@ func _build_variable_row(
 		# The name is what a reader came for, so it is the one bold word on the row - and its hover
 		# keeps the declaration grammar (`hp : int`) for anyone who wants it.
 		#
-		# V8 - it is also the row's rename field: F2 opens it in place, with the count of what
+		# It is also the row's rename field: F2 opens it in place, with the count of what
 		# committing will rewrite beside it. `edit_gesture` is what keeps it OUT of every other way
 		# in - Enter still edits the value, and a double-click anywhere on the row still opens the
 		# variable dialog, so the field belongs to the one key that means "rename this".
@@ -9115,7 +9115,7 @@ func _build_variable_row(
 					}, true)
 				)
 			)
-		# E2 - and the mark that says this value does not stay on this machine: a synchronizer in the
+		# And the mark that says this value does not stay on this machine: a synchronizer in the
 		# scene keeps it in step, in the mode the stroke spells. Nothing is written into the script
 		# for it, so the mark appears and disappears with the .tscn and never with the .gd.
 		if not sync_entry.is_empty():
@@ -9138,7 +9138,7 @@ func _build_variable_row(
 					}, true)
 				)
 			)
-	# R32 - a setting with nothing to tune shows nothing to tune: an Inspector button's `= _bake` is
+	# A setting with nothing to tune shows nothing to tune: an Inspector button's `= _bake` is
 	# which function it calls, and the muted note beside it already says so in words.
 	var hide_value: bool = code_only or bool(facts.get("hide_value", false))
 	if not hide_value:
@@ -9152,7 +9152,7 @@ func _build_variable_row(
 	var hinted_value: String = str(facts.get("value_text", "")).strip_edges()
 	if not hinted_value.is_empty():
 		value_text = hinted_value
-	# V12 - the value is the one cell of the row a click edits in place, with the type word beside it
+	# The value is the one cell of the row a click edits in place, with the type word beside it
 	# as the guide rail. The type it must fit rides on the span so the inline editor can say so
 	# without asking the sheet again.
 	var value_meta: Dictionary = variable_meta.merged({
@@ -9163,7 +9163,7 @@ func _build_variable_row(
 		"variable_value_span": declared_in.is_empty(),
 		"variable_type_word": type_word,
 		"variable_type_name": type_name,
-		# E2 - a value another peer owns is not this machine's to set: the field still opens (the
+		# A value another peer owns is not this machine's to set: the field still opens (the
 		# INITIAL value is this file's, and every peer starts from it), with the note beside it
 		# saying who the running game will take it from.
 		"edit_note": EventSheetL10n.translate("set by the owner") if not sync_entry.is_empty() else ""
@@ -9185,7 +9185,7 @@ func _build_variable_row(
 	# What the SCOPE adds that its word does not say on its own ("shared by every Player"), muted,
 	# in the same slot the limits use - a fact about the variable, ahead of its prose.
 	var is_static: bool = bool(options.get("is_static", false))
-	# W5 - the rest of the sentence a shared value's note is the short form of.
+	# The rest of the sentence a shared value's note is the short form of.
 	var shared_hover: String = EventSheetL10n.translate("One for the whole editor, kept between sheets.") \
 		if _is_shared_store() else ""
 	var scope_note: String = str(options.get("scope_note", "")).strip_edges() if not code_only else ""
@@ -9193,7 +9193,7 @@ func _build_variable_row(
 	# A static variable says who shares it: one value on the CLASS, so every object of this type reads
 	# and writes the same one. Without the note "Static number spawned = 0" looks like an ordinary
 	# variable that happens to wear an extra word. A head row already carries the note as its
-	# scope_note (above), so it is only added here when nothing said it yet. W5 - in a class nothing
+	# scope_note (above), so it is only added here when nothing said it yet. In a class nothing
 	# is ever made of, "shared by every X" names copies that do not exist; what the reader needs
 	# there is that this ONE value is the editor's, and it outlives the sheet they are looking at.
 	if is_static and scope_note.is_empty() and not code_only:
@@ -9201,7 +9201,7 @@ func _build_variable_row(
 			EventSheetL10n.translate("one for the whole editor") if _is_shared_store() \
 				else EventSheetL10n.translate("shared by every %s") % _static_owner_word(),
 			shared_hover)
-	# W5 - a constant the file itself says must never change wears that promise where a reader meets
+	# A constant the file itself says must never change wears that promise where a reader meets
 	# it. The words come from the doc comment above the line, so nothing here decides what is frozen.
 	if is_constant and not code_only and _frozen_constants().has(var_name):
 		_append_variable_note(row_data, variable_meta, EventSheetL10n.translate("frozen"),
@@ -9215,7 +9215,7 @@ func _build_variable_row(
 	return row_data
 
 
-## E2 - the scene's word about one variable of THIS sheet, {} when there is none. A local lives and
+## The scene's word about one variable of THIS sheet, {} when there is none. A local lives and
 ## dies inside its event and a borrowed declaration belongs to another file, so neither can be the
 ## property a synchronizer in this object's scene keeps in step.
 func _sync_entry(scope_label: String, var_name: String, declared_in: String) -> Dictionary:
@@ -9241,7 +9241,7 @@ func _append_variable_note(row_data: EventRowData, variable_meta: Dictionary, no
 	}, true)))
 
 
-## V13 - the View dial this sheet is being read at (sentence / both / code). A viewport that has not
+## The View dial this sheet is being read at (sentence / both / code). A viewport that has not
 ## heard of the dial reads at the shipped default, so a preview render and a headless build both
 ## draw the sentence with its echo.
 func _variable_row_view() -> int:
@@ -9250,7 +9250,7 @@ func _variable_row_view() -> int:
 	return int(_viewport.variable_row_view)
 
 
-## V13 - the code echo at the row's right edge: the exact line the compiler emits for this variable,
+## The code echo at the row's right edge: the exact line the compiler emits for this variable,
 ## coloured by the script editor's own token colours and resting at a fraction of them. Nothing here
 ## formats a declaration; the line arrives from the emitter, so the echo can never drift from the
 ## file. Silent in `sentence` mode, and full-strength in `code` mode, where the row IS the line.
@@ -9269,14 +9269,14 @@ func _append_code_echo_span(row_data: EventRowData, variable_meta: Dictionary, c
 	))
 
 
-## W5. True when the opened file is a class nothing is ever made of - the shared stores an editor
+## True when the opened file is a class nothing is ever made of - the shared stores an editor
 ## keeps its memory in. False for every ordinary script, which is what keeps these words out of a
 ## game project.
 func _is_shared_store() -> bool:
 	return bool(EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource).get("shared_store", false))
 
 
-## W5. The constants this file says must never be renamed, {} when it says it about none.
+## The constants this file says must never be renamed, {} when it says it about none.
 func _frozen_constants() -> Dictionary:
 	var facts: Variant = EventSheetEditorSourceFacts.facts(_viewport._sheet as EventSheetResource).get("frozen_constants")
 	return facts if facts is Dictionary else {}
@@ -9346,7 +9346,7 @@ static func _inferred_type_word(default_value: Variant, expression_default: bool
 		return friendly_type_word("Dictionary")
 	if text.is_valid_float():
 		return friendly_type_word("float")
-	# R37 - the two constructor spellings a reader meets constantly. `var tint := Color.WHITE` is a
+	# The two constructor spellings a reader meets constantly. `var tint := Color.WHITE` is a
 	# colour and `var home := Vector2.ZERO` is a vector; reading either as "any" would tell them less
 	# than the value in front of them already does.
 	for constructed: String in ["Color", "Vector2", "Vector3", "Vector4"]:
@@ -9394,7 +9394,7 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 		return EventSheetL10n.translate(descriptor.display_name)
 	if trigger_id.begins_with("signal:"):
 		var signal_name: String = trigger_id.trim_prefix("signal:")
-		# V2. A form's own signals have object words in the sheet, exactly as its actions do: a text
+		# A form's own signals have object words in the sheet, exactly as its actions do: a text
 		# field's change belongs to Text input, a list's pick to List. Display only - the stored
 		# trigger_id is the frozen one, and a signal the table does not name reads as it always did.
 		if CONTROL_TRIGGER_WORDS.has(signal_name):
@@ -9404,7 +9404,7 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	return trigger_id
 
 
-## V2. The Control signals a form is wired with, under the object word each one belongs to. Only
+## The Control signals a form is wired with, under the object word each one belongs to. Only
 ## signals that mean ONE thing on one kind of Control are here: `pressed` is every button's and is
 ## already a published trigger, so it is deliberately absent.
 const CONTROL_TRIGGER_WORDS: Dictionary = {
@@ -9420,7 +9420,7 @@ const CONTROL_TRIGGER_WORDS: Dictionary = {
 ## SIGNAL keeps the shipped green ➜ from the event style - the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
 ## reads at a distance. Shared by both trigger-badge paths (authored ACECondition + lifted trigger_id).
-# ── Q3 - a trigger-shaped poll at the top of a tick handler IS the trigger ──────────────────────
+# ── a trigger-shaped poll at the top of a tick handler IS the trigger ───────────────────────────
 #
 # This is how a beginner writes input in Godot: poll `is_action_just_pressed` inside `_process`. In an
 # event sheet the same thing is a top-level trigger, so the row loses the "Every tick" words and its
@@ -9442,7 +9442,7 @@ const INPUT_TRIGGER_CALLS: PackedStringArray = [
 ]
 
 
-## Q7. True when the connect line that wired this handler asked for a ONE-SHOT connection - the
+## True when the connect line that wired this handler asked for a ONE-SHOT connection - the
 ## sheet's own Trigger once. Read off the verbatim line the lift kept, so nothing here can move a byte.
 static func is_one_shot_handler(event_row: EventRow) -> bool:
 	if event_row == null:
@@ -9497,12 +9497,12 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
-# ── N3 - "Every X seconds" over Godot's two spellings of it ─────────────────────────────────────
+# ── "Every X seconds" over Godot's two spellings of it ──────────────────────────────────────────
 #
 # An event sheet's most-used trigger is `Every X seconds`. Godot writes the same thing twice: a repeating
 # Timer node plus a `timeout` handler, or `while true: await get_tree().create_timer(x).timeout` with
 # the work in the loop. Both read as the trigger here. DISPLAY ONLY - the file keeps its handler, its
-# connect line and its loop, and the connect note still sits on the `_ready` row (M29).
+# connect line and its loop, and the connect note still sits on the `_ready` row.
 #
 # Only a REPEATING timer qualifies. A `one_shot = true` anywhere in the file takes its node back out
 # (that Timer keeps `On timeout`, which is what it does), and a Timer whose wait_time the script never
@@ -9642,7 +9642,7 @@ static func await_loop_seconds(code: String) -> String:
 	return _trimmed_seconds(await_match.get_string(1).strip_edges())
 
 
-# ── N12 - `super` reads as calling the included sheet ───────────────────────────────────────────
+# ── `super` reads as calling the included sheet ─────────────────────────────────────────────────
 
 
 ## The base script path, resolved once per sheet: the answer needs the project's class list, and a
@@ -9737,7 +9737,7 @@ func _append_super_call_spans(spans: Array[SemanticSpan], reading: Dictionary, a
 	}, true).merged(action_style_meta, false)))
 
 
-# ── N2 - commented-out code reads as a switched-off row ─────────────────────────────────────────
+# ── commented-out code reads as a switched-off row ──────────────────────────────────────────────
 
 
 ## The code behind an action-lane resource that is really a commented-out statement, "" otherwise.
@@ -9826,14 +9826,14 @@ func _await_loop_trigger_spans(seconds: String) -> Array[SemanticSpan]:
 
 
 ## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
-## R26 - `_input_event` is one of them: a clickable body branches on the event exactly as the three
+## `_input_event` is one of them: a clickable body branches on the event exactly as the three
 ## whole-screen handlers do, and the only difference is that the input already landed on the object,
 ## which is what its branch reading says.
 const INPUT_HANDLER_TRIGGERS: Array[String] = [
 	"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent", "OnControlInput"
 ]
 
-## W8. The handlers whose input already landed on THIS object, so their branches say which object
+## The handlers whose input already landed on THIS object, so their branches say which object
 ## they landed on rather than reading as a press somewhere on the screen.
 const SCOPED_INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInputEvent", "OnControlInput"]
 
@@ -9850,7 +9850,7 @@ func _handler_object_label(event_row: EventRow) -> String:
 	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
 
 
-## M42 - the class picture of the node a SCENE-wired signal comes from. The scene said what class the
+## The class picture of the node a SCENE-wired signal comes from. The scene said what class the
 ## emitter is when the connection was read, so this is a known answer rather than a guess; null for
 ## every other trigger, which keeps its vocabulary icon.
 func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
@@ -9862,7 +9862,7 @@ func _scene_trigger_icon(event_row: EventRow) -> Texture2D:
 	return ACEPickerDialog.editor_icon(source_class)
 
 
-# ── Q9. Signals: who listens, and where it comes from ─────────────────────────────────────────
+# ── Signals: who listens, and where it comes from ─────────────────────────────────────────────
 # A signal row is half a sentence on its own: an emit says something was announced and stops, a
 # handler says something was heard and stops. The other half lives in a different file every time,
 # which is a question an event-sheet reader never has to ask, because there the wiring IS the sheet.
@@ -9895,7 +9895,7 @@ static func signal_name_of_trigger(trigger_id: String) -> String:
 	return ""
 
 
-## Q9 - the muted `-> HUD, Level (2 listeners)` an emit wears. Nothing is appended when nothing in
+## The muted `-> HUD, Level (2 listeners)` an emit wears. Nothing is appended when nothing in
 ## the project listens, because a note saying "nobody" on every internal signal is noise.
 func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, action_index: int,
 		line_index: int) -> void:
@@ -9909,7 +9909,7 @@ func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, a
 		_fanout_metadata("action", action_index, line_index, signal_name, true)))
 
 
-## Q9 - the muted `<- emitted in player.gd: Take Damage` a handler wears.
+## The muted `<- emitted in player.gd: Take Damage` a handler wears.
 func _append_signal_source_span(spans: Array[SemanticSpan], event_row: EventRow, line_index: int) -> void:
 	if event_row == null:
 		return
@@ -9961,41 +9961,41 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 
 ## Builtin categories that are OBJECTS in the event-sheet grammar, not part of System - a row of theirs
 ## wears the device name in its object cell (Mouse, Keyboard, Gamepad, Touch).
-## S10 adds Multiplayer to this list for the same reason: Godot's high-level networking is a thing a
+## Adds Multiplayer to this list for the same reason: Godot's high-level networking is a thing a
 ## sheet TALKS TO - it sends it messages, it asks it who the host is - so its rows wear its name.
 const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch", "Multiplayer"]
 
-## R30. The editor is an object too - it is opened, it is drawn on, it is given docks and menu items,
+## The editor is an object too - it is opened, it is drawn on, it is given docks and menu items,
 ## and it answers questions about what is selected. Its whole vocabulary is filed under one category,
 ## so a row of that category wears "Editor" in its object cell exactly as a Mouse row wears "Mouse".
 const EDITOR_TOOLS_CATEGORY := "Editor Tools"
 const EDITOR_OBJECT := "Editor"
 
-## W23. The Editor object's vocabulary now sits on PAGES ("Editor Tools: Panels & menus" and the
+## The Editor object's vocabulary now sits on PAGES ("Editor Tools: Panels & menus" and the
 ## rest), which the picker nests one level in. A page is still the Editor, so the object cell tests
 ## the prefix rather than the whole string.
 const EDITOR_TOOLS_PAGE_PREFIX := "Editor Tools: "
 
-## W10 / W23. One page of the Editor's vocabulary is NOT the editor: a command tool is a program the
+## One page of the Editor's vocabulary is NOT the editor: a command tool is a program the
 ## Godot binary runs from the command line, with no editor open at all. Its rows therefore wear the
 ## same object a hand-written tools/*.gd already reads under - "Command tool ▸ Finish with code 1" -
 ## so a picked row and a typed line say one sentence. Keyed off the PAGE rather than a list of ace
 ## ids, because every row of that page is the command tool's and none of them is the editor's.
 const COMMAND_TOOL_PAGE := "Editor Tools: Command tool"
 
-## W6. Another page of the Editor's vocabulary that is not the editor: the rows that build a MENU and
+## Another page of the Editor's vocabulary that is not the editor: the rows that build a MENU and
 ## answer the item that was chosen. A hand-written menu already reads under its own object ("Sheet
 ## menu ▸ On Save chosen"), so a picked row wears the same word rather than the Editor's, and a
 ## picked menu and a typed one say one sentence.
 const MENU_PAGE := "Editor Tools: Menus"
 
-## W18. Two rows in the Editor's pages are not about the editor at all - they read and write THIS
+## Two rows in the Editor's pages are not about the editor at all - they read and write THIS
 ## PROJECT's settings, which every person opening the project shares. An event sheet says that as its
 ## own object, so a reader can tell "your editor" from "this project" at a glance.
 const PROJECT_OBJECT := "Project"
 const PROJECT_ACE_IDS: PackedStringArray = ["SetProjectSetting", "SaveProjectSettings"]
 
-## V5. The window is an object too - it is resized, retitled, made fullscreen, and asked whether it
+## The window is an object too - it is resized, retitled, made fullscreen, and asked whether it
 ## is. An OVERRIDE list rather than the whole Game Window category, because that category also holds
 ## the frame cap and the render settings, which an event sheet says as System (the reading says the
 ## same: `Engine.max_fps` is a System row, `get_window().size` is a Window one). Every id here is one
@@ -10085,7 +10085,7 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 			continue
 		atom["used"] = true
 	var sentence: String = ""
-	# W8. A Control's own handler names the BUTTON, not the object: the object is said once, in the
+	# A Control's own handler names the BUTTON, not the object: the object is said once, in the
 	# scope that follows, and a canvas that answers three buttons would otherwise read as three
 	# identical "On Viewport clicked" triggers.
 	if event_row.trigger_id == "OnControlInput" and event_class == "InputEventMouseButton" \
@@ -10116,7 +10116,7 @@ func _input_branch_reading(event_row: EventRow) -> Dictionary:
 ## The one-line trigger sentence for a recognized branch ("" = not a shape we name).
 func _input_branch_sentence(event_class: String, edge: int, button: String, key: String,
 		device: String = "", on_this_object: bool = false) -> String:
-	# R26 - the input already landed on this body, so a pressed-button branch of `_input_event` is
+	# The input already landed on this body, so a pressed-button branch of `_input_event` is
 	# the sheet's own "On <object> clicked" rather than a bare button press somewhere on the screen.
 	if on_this_object and event_class == "InputEventMouseButton" and edge > 0 \
 			and not button.begins_with("MOUSE_BUTTON_WHEEL_"):
@@ -10146,7 +10146,7 @@ func _input_branch_sentence(event_class: String, edge: int, button: String, key:
 			if edge == 0 or button.is_empty():
 				return ""
 			var button_word: String = button.trim_prefix("JOY_BUTTON_").capitalize()
-			# R25 - a branch that named a device says which gamepad, in the Gamepad object's own words.
+			# A branch that named a device says which gamepad, in the Gamepad object's own words.
 			if not device.is_empty():
 				return EventSheetL10n.translate(
 					"On gamepad %s button %s pressed" if edge > 0 else "On gamepad %s button %s released"
@@ -10175,7 +10175,7 @@ func _humanized_input_event_text(text: String) -> String:
 	if not text.contains("event"):
 		return text
 	var humanized: String = _strip_event_casts(text)
-	# W8. Where the pointer was when the event arrived is the Mouse object's own expression - the
+	# Where the pointer was when the event arrived is the Mouse object's own expression - the
 	# same value a picked row would print, so a typed handler and a dropped one read alike.
 	humanized = humanized.replace("event.global_position", EventSheetL10n.translate("Mouse.Position"))
 	humanized = humanized.replace("event.position", EventSheetL10n.translate("Mouse.Position"))
@@ -10249,10 +10249,10 @@ func _wraps_whole_expression(text: String) -> bool:
 	return false
 
 
-## `slice_from` / `slice_to` (half-open, -1 = to the end) and `hide_conditions` exist for M23: a
+## `slice_from` / `slice_to` (half-open, -1 = to the end) and `hide_conditions` exist for the paired statement rows: a
 ## statement carrying a ternary splits its event into a row of the actions before it, the branch rows,
 ## and a continuation row - three views of ONE unchanged EventRow, each drawing its own slice.
-## S27. True when this row is one of the sheet's OWN events rather than a sub-event of another. A
+## True when this row is one of the sheet's OWN events rather than a sub-event of another. A
 ## blank row means "runs every tick" only up here; under a parent, blank means "then, in order".
 ## `rows` is null on the outer call and the group's own list on a nested one - never an "empty means
 ## start over" default, which on a sheet holding an EMPTY group would recurse forever.
@@ -10276,7 +10276,7 @@ func _is_top_level_event(event_row: EventRow, rows: Variant = null) -> bool:
 	return false
 
 
-## S27. What a top-level event whose tick carries no condition of its own says in the condition lane -
+## What a top-level event whose tick carries no condition of its own says in the condition lane -
 ## {} when the row keeps its own trigger words, else {"note": String} ("" = say nothing at all). Also
 ## the one place the blank-event pattern is claimed, so the chip, the hover and the Doctor all read
 ## the same fact rather than each re-deriving it.
@@ -10307,7 +10307,7 @@ func _blank_tick_reading(event_row: EventRow) -> Dictionary:
 	return reading
 
 
-## S27. True when the sheet holds this event UNDER another one - which is what makes blank mean
+## True when the sheet holds this event UNDER another one - which is what makes blank mean
 ## "follows its parent" rather than "every tick". Walks the sheet's own events and its functions'
 ## bodies, so a sub-event of a function reads the same as one on the canvas.
 func _is_sub_event(event_row: EventRow, container: Variant = null, depth: int = 0) -> bool:
@@ -10342,7 +10342,7 @@ func _is_sub_event(event_row: EventRow, container: Variant = null, depth: int = 
 	return false
 
 
-## S27. True when an event is a blank SUB-event - no condition, no trigger, no Else, under a parent.
+## True when an event is a blank SUB-event - no condition, no trigger, no Else, under a parent.
 ## An event sheet's own rule for that shape is "follows its parent, in order", which is exactly what
 ## the compiler already emits (plain statements after the parent's block, no `if` at all), so the
 ## reading owes it an EMPTY condition lane rather than the "Every Tick" placeholder a top-level event
@@ -10368,7 +10368,7 @@ func _blank_sub_event(event_row: EventRow) -> bool:
 	return true
 
 
-## S27. The Patterns reading toggle: with it off, the tick triggers keep their explicit Every tick
+## The Patterns reading toggle: with it off, the tick triggers keep their explicit Every tick
 ## words. Defaults to on when the dock has not published a preference (tests, figure renders).
 func _patterns_reading_on() -> bool:
 	var dock: Variant = _viewport.get("_dock") if _viewport != null else null
@@ -10383,7 +10383,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	if slice_from > 0 or slice_to >= 0 or hide_conditions:
 		return _slice_event_spans(_build_event_spans(event_row, in_verb_body), event_row,
 			slice_from, slice_to, hide_conditions, slice_is_tail)
-	# K4 - collected while the condition lines are built and read off by whoever owns the row (the
+	# Collected while the condition lines are built and read off by whoever owns the row (the
 	# divider is drawn between two lines, so it belongs to the ROW, not to a span on either line).
 	_pending_or_lines = PackedInt32Array()
 	var condition_line_index: int = 0
@@ -10397,7 +10397,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# generic "On unhandled input event" cell. Pure lens; the emitted handler is untouched.
 	var input_reading: Dictionary = _input_branch_reading(event_row)
 	var input_consumed: Dictionary = input_reading.get("consumed", {})
-	# S1 - an event that asks which state the object is in is a state machine's tick; it says so in
+	# An event that asks which state the object is in is a state machine's tick; it says so in
 	# the pattern registry, which is where the chip, its hover and Adopt behavior read it.
 	_claim_state_machine_pattern(event_row)
 	if not input_reading.is_empty():
@@ -10443,7 +10443,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(condition_style_meta, true)
 			)
 		)
-		# K4 - and what it is the else OF. An Else three sub-events below its `if` is the classic
+		# And what it is the else OF. An Else three sub-events below its `if` is the classic
 		# reading mistake, so the row names the event its chain starts at. Filled in AFTER the
 		# viewport numbers the rows (apply_else_follows_labels), because that number does not exist
 		# yet; a row whose head is folded away keeps the blank and says nothing.
@@ -10489,7 +10489,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		)
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and is_input_trigger_tick(event_row):
-		# ── Q3 ──────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# A just-pressed / just-released poll at the top of a tick handler IS a trigger, and an event
 		# sheet draws it as one - never as a check under Every tick. The tick words go away because
 		# the condition below already says when the event runs; the badge stays, wearing the input
@@ -10505,7 +10505,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(_make_span("⌨", SemanticSpan.SpanType.KEYWORD, poll_badge_meta))
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE \
 			and not _blank_tick_reading(event_row).is_empty():
-		# ── S27 ─────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# A blank event at the top of a sheet runs every tick - that is what blank MEANS here, so an
 		# every-frame handler with no condition of its own says nothing in the condition lane and the
 		# empty lane is the reading (the hover and Explain say it in words). The physics tick keeps
@@ -10521,7 +10521,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				"hoverable": false,
 				"line_index": condition_line_index
 			}.merged(condition_style_meta, true)))
-		# R32 - blank hides the tick words, never a fact a reader has to know: a per-frame event on a
+		# Blank hides the tick words, never a fact a reader has to know: a per-frame event on a
 		# tool sheet ALSO runs while the scene is being edited, so that chip survives the blank
 		# reading and keeps its place on the line.
 		if _ticks_in_the_editor(event_row):
@@ -10534,7 +10534,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
 		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
-		# N3 - a repeating Timer's handler runs on a beat, so it wears the repeating tempo rather than
+		# A repeating Timer's handler runs on a beat, so it wears the repeating tempo rather than
 		# the one-off signal arrow, and says the beat in the sheet's own words below.
 		var timer_reading: Dictionary = _repeating_timer_reading(event_row)
 		if not timer_reading.is_empty():
@@ -10551,7 +10551,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
 		)
 		var trigger_object: String = _handler_object_label(event_row)
-		# ── P8 / P9 lens hook ──────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# The lifecycle triggers in the sheet's own words, always on: the layout starting or an object
 		# being created, the layout ending or an object being destroyed, a draw, and the notifications.
 		var lifecycle_reading: Dictionary = EventSheetViewportReadingRows.lifecycle_trigger_reading(
@@ -10560,7 +10560,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		if not lifecycle_reading.is_empty():
 			trigger_words = str(lifecycle_reading.get("text", trigger_words))
 			trigger_object = str(lifecycle_reading.get("object", trigger_object))
-		# ── R25 / R26 lens hook ────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# The cursor arriving at an object, and a gamepad being plugged in, are the Mouse's and the
 		# Gamepad's news - not the news of whichever node Godot happens to file the signal under. The
 		# object the cursor is over is the wired source when there is one, else the script's own.
@@ -10586,7 +10586,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			trigger_object = EventSheetL10n.translate("System")
 		spans.append(
 			_make_span(
-				# ── M27 lens hook (tick triggers) ──────────────────────────────────────────────
+				# ── lens hook (tick triggers) ──────────────────────────────────────────────────
 				# The event-sheet words for the two ticks; every other trigger keeps its own name.
 				trigger_words,
 				SemanticSpan.SpanType.CONDITION,
@@ -10597,7 +10597,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					"chip": true,
 					"line_index": condition_line_index,
 					"object_label": trigger_object,
-					# M42 - a handler the SCENE wired knows exactly which node emits and what class it
+					# A handler the SCENE wired knows exactly which node emits and what class it
 					# is, so that node's own picture leads the row instead of the generic trigger icon.
 					"object_icon": _scene_trigger_icon(event_row) if _scene_trigger_icon(event_row) != null \
 						else _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
@@ -10610,14 +10610,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var handler_payload: PackedStringArray = _handler_payload_chips(event_row)
 		for payload_index in range(handler_payload.size()):
 			spans.append(_trigger_payload_span(handler_payload[payload_index], payload_index, condition_line_index))
-		# ── Q7 ──────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# A one-shot connection fires ONCE, which is the sheet's own Trigger once - so it reads as
 		# that, on a chip beside the trigger. Read off the connect line the lift kept verbatim, so
 		# the file is untouched and the flag is re-emitted exactly as it was written.
 		if is_one_shot_handler(event_row):
 			spans.append(_trigger_payload_span(
 				EventSheetL10n.translate("Trigger once"), handler_payload.size(), condition_line_index))
-		# ── R32 ─────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# What `@tool` actually means, said on the row it surprises people on: a per-frame event on a
 		# tool sheet ALSO runs while you are editing the scene, before the game exists. One chip, on
 		# the tick triggers only, because that is the one tempo where "it is running right now" is
@@ -10626,12 +10626,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			spans.append(_trigger_payload_span(
 				EventSheetL10n.translate("in the editor too"),
 				handler_payload.size() + 1, condition_line_index))
-		# R26 - which edge of the cursor pair this handler is, on a chip beside the words the two
+		# Which edge of the cursor pair this handler is, on a chip beside the words the two
 		# share, in the slot the payload chips use. Quiet, because the sentence is the same sentence
 		# either way, and a chip rather than a bare note because this lane lays chips out.
 		if not device_note.is_empty():
 			spans.append(_trigger_payload_span(device_note, handler_payload.size() + 2, condition_line_index))
-		# Q9 - and last on the line, muted: where this signal is actually raised.
+		# And last on the line, muted: where this signal is actually raised.
 		_append_signal_source_span(spans, event_row, condition_line_index)
 		condition_line_index += 1
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
@@ -10661,7 +10661,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 		condition_line_index += 1
-	# S17 - a guard and the question it guards are ONE question. The importer files them as two
+	# A guard and the question it guards are ONE question. The importer files them as two
 	# conditions because the file joins them with `and`, so the pair is put back together here.
 	var joined_conditions: Dictionary = _joined_condition_groups(event_row.conditions,
 		" or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and ")
@@ -10745,13 +10745,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		var pick: PickFilter = event_row.pick_filters[pick_index] as PickFilter
 		if pick == null or not pick.enabled:
 			continue
-		# ── M33 lens hook (loop rows) ──────────────────────────────────────────────────────────
+		# ── lens hook (loop rows) ──────────────────────────────────────────────────────────────
 		# One call: the loop's familiar words, and the object a For-each-child loop belongs to.
 		# A filtered or limited pick says more than the loop words can carry, so it keeps its own text.
 		var loop_reading: Dictionary = {}
 		if pick.predicate_expression.strip_edges().is_empty() and pick.pick_first_n <= 0:
 			var collection_words: String = _pick_collection_words(pick)
-			# X31 - only a plain count can be a ring, and only a ring needs its body read. Deciding
+			# Only a plain count can be a ring, and only a ring needs its body read. Deciding
 			# that from the HEAD keeps every other loop in the file free of a body walk.
 			var loop_body: PackedStringArray = PackedStringArray()
 			if EventSheetViewportReadingRows.ring_loop_possible(pick.iterator_name, collection_words):
@@ -10759,13 +10759,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			loop_reading = EventSheetViewportReadingRows.loop_words(
 				pick.collection_kind, pick.iterator_name, collection_words, loop_body)
 		var loop_object: String = str(loop_reading.get("object", ""))
-		# X31 - what the loop is FOR rides in the head's own cell, after a "·": the condition lane is
+		# What the loop is FOR rides in the head's own cell, after a "·": the condition lane is
 		# one column wide, and a note in a span of its own is the half a reader never gets to see.
 		var loop_text: String = str(loop_reading.get("text", ""))
 		var loop_note: String = str(loop_reading.get("note", ""))
 		if not loop_text.is_empty() and not loop_note.is_empty():
 			loop_text = "%s · %s" % [loop_text, loop_note]
-		# K5 - a pick that NARROWS says so: the family in the object column, "Pick where …" in the
+		# A pick that NARROWS says so: the family in the object column, "Pick where …" in the
 		# cell, and what the filter keeps following as facts. Asked after the loop words because a
 		# plain walk over everything is a For each and stays one.
 		var pick_reading: Dictionary = _pick_filter_reading(pick)
@@ -10795,13 +10795,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	# draws one: "Always" is a placeholder that invites a condition, and a view that accepts none
 	# must not invite.
 	var always_placeholder_suppressed: bool = in_verb_body and _scaffolding_suppressed()
-	# S27 - a blank TOP-LEVEL event already says it runs every tick by saying nothing, so writing
+	# A blank TOP-LEVEL event already says it runs every tick by saying nothing, so writing
 	# "Every Tick" into its lane would be the reading talking over itself. The lane stays empty (the
 	# hover says it in words); "+ Add condition" below is still the way in. Inside a verb body the
 	# placeholder is "Always" and stays, because there it is the truth.
 	if not in_verb_body and not _blank_tick_reading(event_row).is_empty():
 		always_placeholder_suppressed = true
-	# S27 - and a blank SUB-event is the other half of the same rule: it follows its parent, in order.
+	# And a blank SUB-event is the other half of the same rule: it follows its parent, in order.
 	# "Every Tick" under a parent would say the rows below run every frame, which is not what they do,
 	# so the lane stays empty and the hover says what blank means here.
 	if _blank_sub_event(event_row):
@@ -10851,44 +10851,44 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			)
 		)
 	if not event_row.actions.is_empty():
-		# M39 - the instantiate + add_child (+ first position) run is an event sheet's single Create object.
+		# The instantiate + add_child (+ first position) run is an event sheet's single Create object.
 		# Worked out once for the whole lane, because a group is recognised by what FOLLOWS its lead.
 		var create_groups: Dictionary = _create_object_groups(
 			event_row.actions, event_row.local_variables)
-		# S18 - the run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
+		# The run of limit_* writes a camera's bounds are spelled as is one scroll-limits row.
 		var limit_groups: Dictionary = _scroll_limit_groups(event_row.actions)
-		# U8 / U12 - the mouse-look trio and the two faders of a crossfade are one row each.
+		# The mouse-look trio and the two faders of a crossfade are one row each.
 		var look_groups: Dictionary = _mouse_look_groups(event_row.actions)
 		var fade_groups: Dictionary = _crossfade_groups(event_row.actions)
-		# X2 / X30 - the four lines of camera-ray plumbing are ONE question, and read as one row.
+		# The four lines of camera-ray plumbing are ONE question, and read as one row.
 		var ray_groups: Dictionary = _cursor_ray_groups(event_row.actions)
-		# X6 / X8 - the camera-relative run and a mesh's visible-range band are one row each.
+		# The camera-relative run and a mesh's visible-range band are one row each.
 		var move_groups: Dictionary = _camera_relative_move_groups(
 			event_row.actions, event_row.local_variables)
 		var range_groups: Dictionary = _visible_range_groups(event_row.actions)
-		# X10 / X11 - the remove-then-add pair, and a reparent whose follow-flags were written out
+		# The remove-then-add pair, and a reparent whose follow-flags were written out
 		# beneath it, are each one hierarchy row with every line they stand for on the hover.
 		var hierarchy_runs: Dictionary = _hierarchy_groups(event_row.actions, event_row.event_uid)
-		# W11 - a pack recipe's head facts are said once, on the bar.
+		# A pack recipe's head facts are said once, on the bar.
 		var recipe_head: Dictionary = _recipe_head_groups(event_row.actions)
-		# W7 - the lines that shape a Control the event just made read under its Local row.
+		# The lines that shape a Control the event just made read under its Local row.
 		var control_setup: Dictionary = _control_setup_groups(event_row)
-		# X22 / X28 - the sensor shapes and the opened input window are one row each.
+		# The sensor shapes and the opened input window are one row each.
 		var gyro_groups: Dictionary = _gyro_groups(event_row.actions)
 		var window_groups: Dictionary = _input_window_groups(event_row.actions)
-		# Y9 - the offset walked forward and the body put on the curve are ONE ride, and read as one row.
+		# The offset walked forward and the body put on the curve are ONE ride, and read as one row.
 		var ride_groups: Dictionary = _grind_ride_groups(event_row.actions)
-		# Y1 / Y2 - the combo shapes: the pressed input with its window, and the two freezes.
+		# The combo shapes: the pressed input with its window, and the two freezes.
 		var press_groups: Dictionary = _combo_press_groups(event_row.actions)
 		var freeze_groups: Dictionary = _freeze_time_groups(event_row.actions)
-		# W6 - the run of add_item calls that builds a menu is ONE menu, and reads as one bar.
+		# The run of add_item calls that builds a menu is ONE menu, and reads as one bar.
 		var menu_groups: Dictionary = _menu_item_groups(event_row.actions)
-		# U3 - a TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
+		# A TODO / FIXME / HACK / NOTE line written directly above a step is a note ON that step.
 		var task_notes: Dictionary = _task_note_groups(event_row.actions)
-		# W12 - the run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
+		# The run of rows a multi-line `{...}` / `[...]` used as a VALUE was split into is one
 		# statement, so it reads as one row with the entries as chips and no orphan bracket line.
 		var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
-		# W9 - a test's `var passed := true` is the harness's bookkeeping, and the Check rows are the
+		# A test's `var passed := true` is the harness's bookkeeping, and the Check rows are the
 		# verdict it stands for.
 		var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
 		for action_index in range(event_row.actions.size()):
@@ -10901,11 +10901,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			# without advancing the line index, which is what turns the run into one row.
 			if bool(literal_groups.get("consumed", {}).get(action_index, false)):
 				continue
-			# W11 - the same skip-without-advancing: a head fact draws no row at all, so the step below
+			# The same skip-without-advancing: a head fact draws no row at all, so the step below
 			# it takes the line the fact would have had.
 			if bool(recipe_head.get("consumed", {}).get(action_index, false)):
 				continue
-			# W7 - the same skip-without-advancing: the line is drawn under the Local row instead.
+			# The same skip-without-advancing: the line is drawn under the Local row instead.
 			if bool(control_setup.get("consumed", {}).get(action_index, false)):
 				continue
 			if (literal_groups.get("leads", {}) as Dictionary).has(action_index):
@@ -10922,12 +10922,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				continue
 			if bool(limit_groups.get("consumed", {}).get(action_index, false)):
 				continue
-			# U8 / U12 - the same skip-without-advancing, for the two runs batch ten added.
+			# The same skip-without-advancing, for the two runs batch ten added.
 			if bool(look_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(fade_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(hierarchy_runs.get("consumed", {}).get(action_index, false)):
 				continue
-			# X2 / X6 / X8 / X30 - the same skip-without-advancing for the batch-thirteen runs.
+			# The same skip-without-advancing for the batch-thirteen runs.
 			if bool(ray_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(move_groups.get("consumed", {}).get(action_index, false)) \
 					or bool(range_groups.get("consumed", {}).get(action_index, false)) \
@@ -10955,18 +10955,18 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if run_lead.is_empty():
 				run_lead = (hierarchy_runs["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "hierarchy"
-			# X22 / X28 - the same skip-without-advancing for batch thirteen's two runs.
+			# The same skip-without-advancing for batch thirteen's two runs.
 			if run_lead.is_empty():
 				run_lead = (gyro_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "gyro_controls"
 			if run_lead.is_empty():
 				run_lead = (window_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "qte"
-			# Y9 - the ride, as the one row the two lines add up to.
+			# The ride, as the one row the two lines add up to.
 			if run_lead.is_empty():
 				run_lead = (ride_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "grind"
-			# Y1 / Y2 - batch fourteen's two runs. The freeze already claimed its own pattern inside
+			# Batch fourteen's two runs. The freeze already claimed its own pattern inside
 			# the group pass (it is the only run whose two shapes claim differently), so the arm here
 			# only has to draw it.
 			if run_lead.is_empty():
@@ -10975,7 +10975,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if run_lead.is_empty():
 				run_lead = (freeze_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = "animation_combo"
-			# W6 - the menu the run above built, as the one bar it is.
+			# The menu the run above built, as the one bar it is.
 			if run_lead.is_empty():
 				run_lead = (menu_groups["leads"] as Dictionary).get(action_index, {})
 				run_pattern = EventSheetMenuFacts.PATTERN_ID
@@ -11009,19 +11009,19 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					# The statements this ONE cell stands for. Hover shows all of them, so the row never
 					# hides a line: it says what happened, and the file's own spelling is a pointer away.
 					"create_object_indices": create.get("indices", []),
-					# X14. An instance is a ready-made hierarchy: the hover shows the tree this row
+					# An instance is a ready-made hierarchy: the hover shows the tree this row
 					# just made, so nobody has to open the .tscn to find out what is inside it.
 					"create_object_scene": str(create.get("scene", ""))
 				}.merged(action_style_meta, true)))
 				action_line_index += 1
 				continue
-			# M29 - whichever shape the line took (a Call Method row or a verbatim block), the line
+			# Whichever shape the line took (a Call Method row or a verbatim block), the line
 			# that wires a lambda to a signal reads as a muted NOTE: the work it describes is drawn
 			# below it as the trigger event it is. Nothing is hidden - the note names the object and
 			# the signal, and double-click still opens the exact GDScript.
 			var connect_parts: Dictionary = connect_lambda_parts(connect_statement_of(action_resource))
 			if connect_parts.is_empty():
-				# P5 - the wired-up call reads below as the trigger it is, so its line reads as the
+				# The wired-up call reads below as the trigger it is, so its line reads as the
 				# same muted note the lambda's line already keeps.
 				connect_parts = _connect_call_note(action_resource)
 			if not connect_parts.is_empty():
@@ -11038,11 +11038,11 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				}.merged(action_style_meta, false)))
 				action_line_index += 1
 				continue
-			# N2 - a comment whose text is a STATEMENT is not a note, it is a row somebody switched
+			# A comment whose text is a STATEMENT is not a note, it is a row somebody switched
 			# off, which is the only way a .gd file has of recording that. It reads as the row it
 			# would be, struck through and greyed the way a disabled row already is, with the muted
 			# word saying so. Prose stays a comment. The file is untouched either way.
-			# N12 - `super.take_damage(x)` is calling the INCLUDED sheet's verb, not an object named
+			# `super.take_damage(x)` is calling the INCLUDED sheet's verb, not an object named
 			# `super`. It reads that way: the include, the file it names, and the verb.
 			var super_call: Dictionary = super_call_reading(action_resource, event_row)
 			if not super_call.is_empty():
@@ -11055,7 +11055,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				action_line_index += 1
 				continue
 			if action_resource is ACEAction:
-				# R41 - a Local Variable row is a DECLARATION, and an event sheet declares its locals at
+				# A Local Variable row is a DECLARATION, and an event sheet declares its locals at
 				# the TOP of the event that owns them, so the declaration is drawn there (see
 				# _build_promoted_local_rows) rather than in the action lane. What stays here is the work
 				# the line does: nothing when the value is already a value, and the Set action that fills
@@ -11350,7 +11350,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	return spans
 
 
-## S19 - the ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
+## The ⟡ chip that names the PATTERN this event is, when a reading claimed one on it. It sits
 ## at the end of the FIRST condition line, after the trigger and its parameter chips, exactly where a
 ## note about the whole event belongs; rows that merely USE a pattern's words get nothing, because
 ## the claim names the one row that owns the shape.
@@ -11423,7 +11423,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	if not input_reading.is_empty():
 		condition_lines += 1
 	elif has_trigger and event_row.else_mode == EventRow.ElseMode.NONE and not is_input_trigger_tick(event_row):
-		# Q3 mirrors the span pass here too: a tick handler whose one condition is an edge poll draws
+		# Mirrors the span pass here too: a tick handler whose one condition is an edge poll draws
 		# the badge on the CONDITION's line rather than a tick line of its own, so it is one line
 		# shorter. Any lazy measure reads this count, not the spans, so the two must agree exactly.
 		condition_lines += 1
@@ -11450,17 +11450,17 @@ func _count_event_lines(event_row: EventRow) -> int:
 	# when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
 	# blocks occupy one line per code line.
 	var action_count: int = 0
-	# W12 mirrors the span pass: the run of rows one multi-line literal was split into draws ONE
+	# Mirrors the span pass: the run of rows one multi-line literal was split into draws ONE
 	# line, and its entry and closing-bracket rows draw none.
 	var literal_groups: Dictionary = EventSheetValueLiteralRows.groups(event_row.actions)
 	var literal_consumed: Dictionary = literal_groups.get("consumed", {})
 	var literal_leads: Dictionary = literal_groups.get("leads", {})
-	# W9 mirrors the span pass too: a test's folded verdict local draws no line in either lane.
+	# Mirrors the span pass too: a test's folded verdict local draws no line in either lane.
 	var verdict_consumed: Dictionary = _test_verdict_consumed(event_row)
-	# W11 mirrors the span pass: a pack recipe's head facts are said on the bar, so the lines that
+	# Mirrors the span pass: a pack recipe's head facts are said on the bar, so the lines that
 	# state them draw no rows and cost the lane no height.
 	var recipe_consumed: Dictionary = _recipe_head_groups(event_row.actions).get("consumed", {})
-	# W7 mirrors the span pass: a line drawn under the Local row costs the action lane no height.
+	# Mirrors the span pass: a line drawn under the Local row costs the action lane no height.
 	var setup_consumed: Dictionary = _control_setup_groups(event_row).get("consumed", {})
 	var literal_index: int = -1
 	for action_resource in event_row.actions:
@@ -11477,7 +11477,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 			action_count += 1
 			continue
 		if action_resource is ACEAction:
-			# R41 mirrors the span pass: a local whose value is already a value draws no action line at
+			# Mirrors the span pass: a local whose value is already a value draws no action line at
 			# all - its declaration is the row at the top of the event.
 			var promotion: Dictionary = local_declaration_promotion(action_resource as ACEAction)
 			if (not promotion.is_empty() and str(promotion.get("set_value", "")).is_empty()
@@ -11485,13 +11485,13 @@ func _count_event_lines(event_row: EventRow) -> int:
 				continue
 			action_count += 1
 		elif action_resource is RawCodeRow:
-			# M29: a connected lambda collapses to ONE muted note line however many lines it spans,
+			# A connected lambda collapses to ONE muted note line however many lines it spans,
 			# because its body is drawn below as the trigger event it reads as.
 			var raw_code: String = (action_resource as RawCodeRow).code
 			if not connect_lambda_parts(connect_statement_of(action_resource)).is_empty():
 				action_count += 1
 			elif not _connect_call_note(action_resource).is_empty():
-				# P5 - the wired-up call's line is one muted note too, for the same reason.
+				# The wired-up call's line is one muted note too, for the same reason.
 				action_count += 1
 			else:
 				action_count += maxi(raw_code.split("\n").size(), 1)
@@ -11513,7 +11513,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	return maxi(max_condition_line, max_action_line) + 1
 
 
-## M16 inside a `Set return value` cell: when the value is a call to one of THIS sheet's own
+## Inside a `Set return value` cell: when the value is a call to one of THIS sheet's own
 ## functions, the cell names the Function the way the picker does - `Set return value to Can Stand Up`
 ## rather than `_can_stand_up()`. With arguments the Call wording stays, so the argument chips have a
 ## verb to hang off. A call to anything the sheet does not know falls straight through: a call to
@@ -11579,7 +11579,7 @@ func _return_value_function_pieces(returned: String) -> Array:
 	return pieces
 
 
-# ── W4: the undo funnel - one door, one step ───────────────────────────────────────────────────
+# ── the undo funnel - one door, one step ───────────────────────────────────────────────────────
 
 
 ## The parts of an edit handed to the mutation funnel:
@@ -11649,7 +11649,7 @@ static func undo_step_parts(code: String) -> Dictionary:
 	}
 
 
-## W4. The undo-step row's own cell: the local that catches the answer, the step's name in the words
+## The undo-step row's own cell: the local that catches the answer, the step's name in the words
 ## Undo will show, and the cue that what follows is the edit. Pure view - the RawCodeRow keeps every
 ## line it had, so the byte round-trip is untouched and a double-click still opens the statement.
 func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int, line_index: int,
@@ -11691,7 +11691,7 @@ func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int,
 		}, true).merged(action_style_meta, false)))
 
 
-## W4. The edit itself, as the sub-events it is: every line of the callback read through the very
+## The edit itself, as the sub-events it is: every line of the callback read through the very
 ## same lift a declared function's body goes through, so a statement says the same thing wherever it
 ## was written. The rows are inert - they stand for one statement the file holds, which is untouched.
 func _build_undo_step_rows(event_row: EventRow, anchor_base: String, indent: int) -> Array[EventRowData]:
@@ -11739,7 +11739,7 @@ func _ensure_subtree_spans(row_data: EventRowData) -> void:
 		_ensure_subtree_spans(child)
 
 
-# ── M29: a lambda connected to a signal reads as the trigger event it is ────────────────────────
+# ── a lambda connected to a signal reads as the trigger event it is ─────────────────────────────
 
 
 ## The GDScript a connect-a-lambda action stands for, whichever shape the open lifted it into: a
@@ -11848,7 +11848,7 @@ static func connect_lambda_parts(code: String) -> Dictionary:
 			continue
 		var type_at: int = bare.find(":")
 		args.append((bare.substr(0, type_at) if type_at > 0 else bare).strip_edges())
-	# ── M41 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A collision signal reads as the event-sheet trigger it is, exactly as a declared handler's does.
 	var collision_words: String = EventSheetViewportReadingRows.collision_trigger_words(signal_bare)
 	return {
@@ -11905,7 +11905,7 @@ func _build_connect_lambda_rows(event_row: EventRow, anchor_base: String, indent
 			continue
 		var anchor: String = "%s_connect%d" % [anchor_base, action_index]
 		var trigger_row: EventRowData = _build_connect_trigger_row(event_row, parts, anchor, indent, action_index)
-		# W6 - which menu a lambda answers is written on the CONNECT line, and nowhere inside the
+		# Which menu a lambda answers is written on the CONNECT line, and nowhere inside the
 		# lambda. Stamped for the length of the body walk, exactly as the verb kind is, and put back
 		# afterwards so a lambda on anything else is untouched.
 		var outer_menu: String = _current_menu_key
@@ -12026,7 +12026,7 @@ func _mark_connect_reading(row_data: EventRowData, event_row: EventRow, anchor: 
 		_mark_connect_reading(child, event_row, anchor, action_index)
 
 
-# ── P5: a signal wired to ANOTHER object's function reads as the trigger calling it ─────────────
+# ── a signal wired to ANOTHER object's function reads as the trigger calling it ─────────────────
 #
 # `$Button.pressed.connect(player.reset)` and `$Timer.timeout.connect(spawner.spawn_wave.bind(3))`
 # are the third way real code wires a signal, after a handler declared in this file and a lambda.
@@ -12262,7 +12262,7 @@ func _build_connect_call_row(event_row: EventRow, parts: Dictionary, anchor: Str
 	return row_data
 
 
-# ── M23: a ternary reads as a sub-event pair, never a condition in an action cell ───────────────
+# ── a ternary reads as a sub-event pair, never a condition in an action cell ────────────────────
 
 
 ## Rewrites a list of sibling rows so a statement carrying a ternary reads the way an event sheet
@@ -12279,7 +12279,7 @@ func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var out: Array[EventRowData] = []
 	for row: EventRowData in rows:
 		row.children = expand_ternary_rows(row.children)
-		# M36 runs first: it REPLACES a loop row with the event its body reads as, and that event may
+		# Runs first: it REPLACES a loop row with the event its body reads as, and that event may
 		# itself carry a ternary the pass below still has to see.
 		var picked: Array[EventRowData] = _expand_picking_row(row)
 		if not picked.is_empty():
@@ -12289,7 +12289,7 @@ func expand_ternary_rows(rows: Array[EventRowData]) -> Array[EventRowData]:
 	return out
 
 
-# ── M36: a loop over a group with one `if` inside is event-sheet picking, and reads as one event ──
+# ── a loop over a group with one `if` inside is event-sheet picking, and reads as one event ───────
 #
 # This is the event-sheet model: a condition on an object PICKS the instances, and the actions run
 # on the ones it picked. Godot has no picking, so the same idea is spelled as a loop with an `if` in
@@ -12437,7 +12437,7 @@ static func _strip_picked_possessive(text: String, picked_object: String) -> Str
 	return text.substr(at + 3)
 
 
-## M36 - the picked object and its note, written onto the first condition line once its spans exist.
+## The picked object and its note, written onto the first condition line once its spans exist.
 ## The cell keeps its own condition text; what changes is that it now reads as a condition ON an
 ## object, which is exactly what the loop around it was saying.
 func _apply_picking_note(row_data: EventRowData) -> void:
@@ -12672,7 +12672,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 	return branch_row
 
 
-## M24 - the branch test as CONDITION LINES, never as one cell spelling `and`. An event sheet has no word
+## The branch test as CONDITION LINES, never as one cell spelling `and`. An event sheet has no word
 ## for "and": each conjunct is a condition of the one event, stacked, and an `or` is the OR block. This
 ## is the same shape the lifted `if a and b:` already draws, applied to the readings the grammar
 ## invents, so a test says the same thing however the row got here. Precedence follows GDScript, where
@@ -12682,7 +12682,7 @@ func _build_ternary_branch_row(row: EventRowData, indent: int, condition_text: S
 ## the source does not.
 func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: String,
 		first_line: int, condition_style_meta: Dictionary) -> void:
-	# ── R4 / R11 lens hook ─────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Some questions are ONE question written as two terms: a range (`x >= 0 and x <= width`), an
 	# angle window, a pair of layout edges (`x < 0 or x > width`). The sheet has one condition for
 	# each of those, so they are claimed BEFORE the run is split - after the split each half would
@@ -12704,11 +12704,11 @@ func _append_conjunct_condition_lines(branch_row: EventRowData, condition_text: 
 	for term: String in terms:
 		if term.strip_edges().is_empty():
 			continue
-		# K4 - the same "or" divider an authored OR event draws, so a lifted `a or b` and an OR block
+		# The same "or" divider an authored OR event draws, so a lifted `a or b` and an OR block
 		# the user built read alike. Above every line but the first: nothing sits above that one.
 		if or_block and line_index > first_line:
 			branch_row.or_condition_lines.append(line_index)
-		# ── N4 lens hook ───────────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# A test written on an autoload's member belongs to that autoload: `Game.score > 100` reads
 		# as the object `Game (global)` and the test `score > 100`, so the owner is visible in the
 		# object column instead of buried in the sentence. The term is
@@ -12889,13 +12889,13 @@ func _tone_segments(pieces: Array) -> Dictionary:
 			"object":
 				tone_color = _viewport._get_event_style().object_label_color
 			"muted":
-				# P6 - a connective the sentence needs but the reader does not read ("then").
+				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
 		segments.append({"text": piece_text, "color": tone_color, "bold": tone_bold, "italic": false})
 	return {"text": text, "segments": segments}
 
 
-## One slice of an event's finished spans (M23). Filtering the WHOLE build - rather than teaching the
+## One slice of an event's finished spans. Filtering the WHOLE build - rather than teaching the
 ## span pass to skip actions - is what keeps a sliced row's cells identical to the unsliced ones, down
 ## to the style metadata; only which cells survive, and which line each lands on, changes here.
 func _slice_event_spans(spans: Array[SemanticSpan], event_row: EventRow, slice_from: int,
@@ -12959,14 +12959,14 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			row_data.action_slice_from, row_data.action_slice_to, row_data.conditions_hidden,
 			row_data.action_slice_tail)
 		row_data.spans = _split_function_reference_spans(row_data.spans)
-		# K4 - which condition lines carry an "or" above them. A sliced row hides its conditions, so
+		# Which condition lines carry an "or" above them. A sliced row hides its conditions, so
 		# it keeps none: there is nothing left to divide.
 		row_data.or_condition_lines = PackedInt32Array() if row_data.conditions_hidden else _pending_or_lines
 		# The patterns those readings recognised, claimed on the event that OWNS them - the trigger,
 		# function or tick the shape hangs off. Everything that talks about patterns reads the
 		# registry; nothing re-derives them.
 		_claim_pending_patterns(row_data)
-		# N11 - a row holding a bare `breakpoint` wears the gutter dot. OR-ed in, never assigned, so a
+		# A row holding a bare `breakpoint` wears the gutter dot. OR-ed in, never assigned, so a
 		# user's own breakpoint on the same row is not cleared by a rebuild.
 		if _pending_grammar_breakpoint:
 			row_data.breakpoint_enabled = true
@@ -12976,7 +12976,7 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 			_apply_picking_note(row_data)
 
 
-## W13. The ƒ chip a row ends with is a LINK: a function held as a value names a function this sheet
+## The ƒ chip a row ends with is a LINK: a function held as a value names a function this sheet
 ## declares, and a reader who sees its name wants to be at it. So the chip is split off the sentence
 ## into a span of its own carrying the raw name, which the click handler jumps to.
 ##
@@ -13060,11 +13060,11 @@ func _append_condition_prefix_spans(
 	# Keep the primary badge column stable for trigger/invert/OR by rendering
 	# negation first. When a line has both badges, the denial is placed in column 1
 	# and OR follows in column 2.
-	# K4 - a comparison with a clean opposite already reads as the opposite, so it wears no denial
+	# A comparison with a clean opposite already reads as the opposite, so it wears no denial
 	# mark: two marks for one fact is how a reader ends up unwrapping the row in their head.
 	if (condition.negated and not _comparison_flips(condition)) or _condition_reads_negated(condition):
 		spans.append(_negated_badge_span(condition_style_meta, line_index, condition_index))
-	# K4 - the word "or" is drawn BETWEEN two conditions, not badged onto the second one: an event
+	# The word "or" is drawn BETWEEN two conditions, not badged onto the second one: an event
 	# sheet has no word for "and", so the only thing worth saying about a stack of questions is when
 	# any one of them is enough. The first condition has nothing above it to divide from.
 	if (
@@ -13075,7 +13075,7 @@ func _append_condition_prefix_spans(
 		_pending_or_lines.append(line_index)
 
 
-## M12 / K4 - the inverted-condition mark: the word `not`, in the badge column, in the invert colour
+## The inverted-condition mark: the word `not`, in the badge column, in the invert colour
 ## and with no plate behind it (themable via EventSheetEventStyle.invert_marker_color). ONE factory,
 ## because the mark has two producers - an ACE condition with its `negated` flag, and a lifted
 ## `if not <cond>:` whose sentence dropped the word - and they must draw the identical mark or the
@@ -13158,20 +13158,20 @@ func _format_with_node(event_row: EventRow) -> String:
 
 
 ## The expression a pick filter loops over, with the legacy spelling as the fallback. One helper so
-## the loop's own text and its M33 reading can never disagree about what the loop walks.
+## the loop's own text and its reading can never disagree about what the loop walks.
 func _pick_collection_text(pick: PickFilter) -> String:
 	var collection: String = pick.collection_value.strip_edges()
 	return collection if not collection.is_empty() else pick.source_expression.strip_edges()
 
 
-## R30. The collection a loop walks, with the editor's own expressions named: a tool's
+## The collection a loop walks, with the editor's own expressions named: a tool's
 ## `for n in EditorInterface.get_selection().get_selected_nodes()` is a For each over
 ## Editor.SelectedObjects, and reading it as the engine call spells out plumbing nobody wrote.
 func _pick_collection_words(pick: PickFilter) -> String:
 	return EventSheetSentence.editor_words(_pick_collection_text(pick))
 
 
-## X31. The lines a loop row RUNS, in file order - what lets the loop head say what the loop is for.
+## The lines a loop row RUNS, in file order - what lets the loop head say what the loop is for.
 ## The row's own actions, because that is where a ring loop's share-of-a-turn line is written; a
 ## sub-event under the loop is a loop of its own and answers for itself.
 func _loop_body_lines(event_row: EventRow) -> PackedStringArray:
@@ -13183,7 +13183,7 @@ func _loop_body_lines(event_row: EventRow) -> PackedStringArray:
 	return lines
 
 
-## R32. True when this event runs every frame AND the sheet is a @tool script - the one combination
+## True when this event runs every frame AND the sheet is a @tool script - the one combination
 ## where the event is already running while the reader looks at it. Static-ish by construction: it
 ## asks the sheet for its tool flag and the trigger for its tempo, so a test can pin the same answer
 ## the chip is drawn from.
@@ -13194,11 +13194,11 @@ func _ticks_in_the_editor(event_row: EventRow) -> bool:
 		return false
 	# The GAME ticks only. An Editor trigger already says it belongs to the editor in its own name, so
 	# a chip there would repeat the row rather than add to it. A BLANK event counts: it runs every
-	# tick, which is exactly the tempo this chip is about (S27).
+	# tick, which is exactly the tempo this chip is about.
 	return INPUT_TRIGGER_TICKS.has(TriggerResolver.effective_trigger_id(event_row))
 
 
-## K5. The pick sentence for a filter that narrows a family, or {} when this loop walks everything
+## The pick sentence for a filter that narrows a family, or {} when this loop walks everything
 ## (which is a For each, and reads as one). Only a GROUP collection is a family: the group name IS
 ## the family name an event sheet puts in the object column, and there is nothing to name for a loop
 ## over an arbitrary expression.
@@ -13209,7 +13209,7 @@ func _pick_filter_reading(pick: PickFilter) -> Dictionary:
 		pick.order_by_expression, pick.order_descending, pick.pick_first_n)
 
 
-## K5. What a pick FILTERS on, as one line: the legacy predicate expression when the filter carries
+## What a pick FILTERS on, as one line: the legacy predicate expression when the filter carries
 ## one, else its structured filter conditions joined the way they compile (AND or OR). Read through
 ## the same operator glyphs a condition row uses, so `hp < 10` looks the same wherever it is shown.
 func _pick_test_text(pick: PickFilter) -> String:
@@ -13238,7 +13238,7 @@ func _format_pick_filter(pick: PickFilter) -> String:
 	if iterator.is_empty():
 		iterator = "item"
 	var collection: String = _pick_collection_words(pick)
-	# ── T23 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A loop over what an area is touching is the sheet's own "For each ... overlapping ..." row -
 	# the same words the Is overlapping condition beside it uses, rather than the engine call that
 	# hands the list back.
@@ -13255,7 +13255,7 @@ func _format_pick_filter(pick: PickFilter) -> String:
 		PickFilter.CollectionKind.REPEAT:
 			return "Repeat %s times" % collection
 		PickFilter.CollectionKind.WHILE:
-			# ── W10 lens hook ──────────────────────────────────────────────────────────────
+			# ── lens hook ──────────────────────────────────────────────────────────────────
 			# A folder walk is written as a `while` over a local that `get_next()` keeps filling,
 			# and what the four lines MEAN together is one loop over the files in a folder. The
 			# reading is gated on the file being a command tool AND on that local, so no other
@@ -13333,7 +13333,7 @@ func _function_call_label(action: ACEAction) -> String:
 					label = display
 				break
 	var args: String = str(params_dict.get("args", "")).strip_edges()
-	# ── M16 lens hook (LIFTED call rows) ──────────────────────────────────────────────────────
+	# ── lens hook (LIFTED call rows) ──────────────────────────────────────────────────────────
 	# "Call Add Look   x = velocity X   y = velocity Y" instead of "Add Look(velocity.x,
 	# velocity.y)": the argument labels come from the called function's OWN parameter names, so
 	# the row says what each value means rather than making you open the function to find out.
@@ -13352,7 +13352,7 @@ func _function_call_label(action: ACEAction) -> String:
 			# IS that label - is dropped here rather than repeated inside the sentence.
 			for index: int in range(1, call_pieces.size()):
 				text += str((call_pieces[index] as Array)[0])
-			# W16 - a call that sits inside the very function it calls says so: the rows below are
+			# A call that sits inside the very function it calls says so: the rows below are
 			# these rows again, one level in, and that is the one thing a reader cannot see.
 			if _function_body_holds(called, action):
 				text += "   %s %s" % [MARK_RECURSION, EventSheetL10n.translate("itself")]
@@ -13388,10 +13388,10 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	# where the template is RESOLVED - a locale whose catalog predates the markup translates
 	# the plain sentence, and that plain result must not enter the styled branch.
 	_pending_display_bbcode = _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
-	# ── M9 / M10 / M12 lens hook (LIFTED rows) ────────────────────────────────────────────────
+	# ── lens hook (LIFTED rows) ───────────────────────────────────────────────────────────────
 	# The sentence-layer hook further down only covers code that stayed raw; a condition that
 	# LIFTED into a real ACE gets its reading here, at the one place its display text is built.
-	# M12 strips a leading NOT because the mark in the badge column says it instead (see
+	# Strips a leading NOT because the mark in the badge column says it instead (see
 	# _condition_reads_negated, which asks the same question for the badge).
 	var base_text: String = _reading_sentence(_humanized_input_event_text(str(EventSheetViewportLenses.strip_leading_not(
 		_format_condition_descriptor_base(condition)
@@ -13405,12 +13405,12 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 ## True when this condition is the state-header shape (an is_in_state verb carrying a non-empty
 ## state value) - the span builder badges it with the ◆ diamond in the trigger-icon column and
 ## the descriptor formats it as "State: <name>".
-## S1. The shipped behavior a hand-rolled state machine could be replaced by. The pattern chip and
+## The shipped behavior a hand-rolled state machine could be replaced by. The pattern chip and
 ## Adopt behavior read this off the claim rather than guessing from the row.
 const STATE_MACHINE_PACK_ID: String = "StateMachineBehavior"
 
 
-## S1. An event that asks which state the object is in IS a state machine's tick, so it claims the
+## An event that asks which state the object is in IS a state machine's tick, so it claims the
 ## pattern on itself - the state names it asks about are the evidence, and the shipped State Machine
 ## behavior is what a hand-rolled machine could become. Called once per event build; the registry
 ## keeps one claim per (pattern, row).
@@ -13442,7 +13442,7 @@ func _is_state_header_condition(condition: ACECondition) -> bool:
 
 
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
-	# K4. An inverted COMPARISON reads as its opposite - `hp > 0`, which is also what it compiles to
+	# An inverted COMPARISON reads as its opposite - `hp > 0`, which is also what it compiles to
 	# now - so the row says the question rather than a question wrapped in a denial. Done on a COPY
 	# before anything downstream sees the params; the stored condition keeps its own spelling.
 	condition = _comparison_flip_of(condition)
@@ -13458,7 +13458,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# reason the action lane clears: a text-only reading must not leave a label behind.
 	_pending_object_label = ""
 	_pending_grammar_segments = []
-	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A test reaching through an autoload (`EventForgeBridge.score > 100`) is re-read as a test the
 	# autoload owns: the singleton prefix comes off the values and moves to the object column, where
 	# a reader looks for the owner. Everything downstream reads the rewritten COPY - the stored
@@ -13468,11 +13468,11 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		params_dict, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
-	# V6 - and when nothing reached through an autoload, the variable the row NAMES still has an
+	# And when nothing reached through an autoload, the variable the row NAMES still has an
 	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
 	if global_owner.is_empty():
 		global_owner = _variable_owner_label(condition.provider_id, condition.ace_id, params_dict)
-	# L1 - and a question asked OF A LIGHT belongs to that light: "Torch > Is on", not "Light2D > Is on".
+	# And a question asked OF A LIGHT belongs to that light: "Torch > Is on", not "Light2D > Is on".
 	if global_owner.is_empty():
 		global_owner = _lighting_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
@@ -13488,7 +13488,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
 	if _is_state_header_condition(condition):
-		# ── S1 ──────────────────────────────────────────────────────────────────────────────────
+		# ────────────────────────────────────────────────────────────────────────────────────────
 		# The words a state machine is asked in: "Current state is "Jump"". Anyone who has driven a
 		# state-machine behavior in an event sheet reaches for exactly that phrase, and the shipped
 		# State Machine pack now publishes it, so a hand-rolled machine and the behavior read alike.
@@ -13583,11 +13583,11 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	# Same split as the condition formatter: rich-param styling arms here, template markup
 	# arms where the template resolves (translation-fallback aware).
 	_pending_display_bbcode = _param_markup_applies(action.provider_id, action.ace_id, action.params)
-	# M9 / M10 lens hook for LIFTED action rows - the twin of the condition hook above.
+	# Lens hook for LIFTED action rows - the twin of the condition hook above.
 	# Input-event words FIRST (casts stripped, `event.relative.x` -> mouse's ΔX), the name lens
 	# after: the lens sees `(event as InputEventMouseMotion).relative.x` as a chain around a
 	# cast and the cast stripper then hollowed the middle out ("eventrelative X").
-	# U3. A trailing `# note` rides into whichever param the lift put the end of the line in, where it
+	# A trailing `# note` rides into whichever param the lift put the end of the line in, where it
 	# would otherwise read as part of the value ("Subtract 1  # ouch from hp"). Split off the params
 	# this row is FORMATTED from - a throwaway copy, the row itself untouched - and drawn as the note
 	# it is, at the end.
@@ -13612,7 +13612,7 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	return base_text
 
 
-## U3. The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.
+## The task notes an action lane carries, as {"consumed": {index: true}, "notes": {index: text}}.
 ##
 ## A comment written directly above a step, opening TODO / FIXME / HACK / NOTE, is about that step -
 ## it is the way a person writes a note on one action when the language has nowhere else to put it.
@@ -13638,7 +13638,7 @@ func _task_note_groups(actions: Array) -> Dictionary:
 	return {"consumed": consumed, "notes": notes}
 
 
-## U3. The note the action lane attached to the row being formatted, taken and cleared. One-shot, the
+## The note the action lane attached to the row being formatted, taken and cleared. One-shot, the
 ## same discipline _pending_object_label uses: the loop writes it, the formatter reads it once.
 func _take_attached_note() -> String:
 	var note: String = _pending_attached_note
@@ -13649,7 +13649,7 @@ func _take_attached_note() -> String:
 var _pending_attached_note: String = ""
 
 
-## U3. The row's params with any trailing `# note` split off them, as {"action", "note"} - or {} when
+## The row's params with any trailing `# note` split off them, as {"action", "note"} - or {} when
 ## no param carries one. The copy is for DISPLAY only and never reaches the sheet: the row keeps the
 ## exact text it was lifted from, so the note is still in the file and the bytes still come back.
 ##
@@ -13699,22 +13699,22 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# left behind there would land on whatever span is built next.
 	_pending_object_label = ""
 	_pending_grammar_segments = []
-	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same re-read the condition lane gets, on the same throwaway copy: a step reaching through
 	# an autoload's member belongs to that autoload, not to System.
 	var action_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var global_read: Dictionary = EventSheetViewportReadingRows.global_member_params(
 		action_params, _reading_autoloads())
 	var global_owner: String = str(global_read.get("object", ""))
-	# V6 - the same rule the condition lane takes: a step that changes a variable belongs to whoever
+	# The same rule the condition lane takes: a step that changes a variable belongs to whoever
 	# owns that variable, so "Player > Subtract 10 from health" leads with the object it changes.
 	if global_owner.is_empty():
 		global_owner = _variable_owner_label(action.provider_id, action.ace_id, action_params)
-	# M2 - and the same rule again for a Send row: it is about the MESSAGE, so it belongs to the
+	# And the same rule again for a Send row: it is about the MESSAGE, so it belongs to the
 	# object whose function that message is rather than to the Multiplayer object in general.
 	if global_owner.is_empty():
 		global_owner = _message_owner_label(action.provider_id, action.ace_id, action_params)
-	# L1/L4/L6 - and again for a lighting row: the node IS the object, so "Torch > Set brightness to
+	# And again for a lighting row: the node IS the object, so "Torch > Set brightness to
 	# 1.2" and "Level > Set darkness to 70%" rather than the class each happens to be. A lighting row
 	# is also evidence of the LIGHTING pattern, exactly as the hand-written line it was read from
 	# was - the row it opens as changed, what it is evidence of did not.
@@ -13806,7 +13806,7 @@ func _sentence_head(event_row: EventRow) -> String:
 		return "Else"
 	if event_row.else_mode == EventRow.ElseMode.ELIF:
 		return "Else if"
-	# S27 - a blank top-level event, and an every-frame handler carrying no condition of its own, are
+	# A blank top-level event, and an every-frame handler carrying no condition of its own, are
 	# the same event: the empty condition lane says it runs every tick, and the hover says so in words.
 	if not _blank_tick_reading(event_row).is_empty():
 		return EventSheetL10n.translate("Runs every tick")
@@ -13912,13 +13912,13 @@ var _pending_display_bbcode: bool = false
 # to no emphasis.
 var _pending_param_ranges: Dictionary = {}
 
-# N11. Raised by _append_sentence_spans when a row holds a bare `breakpoint` statement, and consumed
+# Raised by _append_sentence_spans when a row holds a bare `breakpoint` statement, and consumed
 # by _ensure_event_spans, which is the only place that knows which row the spans just built belong to.
 # A pause point is marked ON the row here, so the row says it the way a user-set breakpoint says it
 # rather than spelling the keyword out in the action cell. Display only: the statement in the file is
 # untouched, and nothing about this reaches the view state a user's own breakpoints live in.
 var _pending_grammar_breakpoint: bool = false
-# K4 - the condition lines an "or" divider is drawn above, filled during the span pass of the event
+# The condition lines an "or" divider is drawn above, filled during the span pass of the event
 # currently being built and consumed by the caller that holds its EventRowData.
 var _pending_or_lines: PackedInt32Array = PackedInt32Array()
 
@@ -13953,7 +13953,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/MakeCameraCurrent", "Core/SetCameraZoom", "Core/SetCameraLimits",
 			"Core/CameraScrollToward", "Core/SetCameraSmoothing"]
 	},
-	# S11 - S14. The four families most small scripts are made of. Only game feel has a behavior that
+	# The four families most small scripts are made of. Only game feel has a behavior that
 	# replaces the hand-written shape outright, so only it carries an `adoptable`: the Juice pack does
 	# every one of these five with state of its own.
 	"sprite_animation": {
@@ -13961,7 +13961,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/SetFlipH", "Core/SetFlipV", "Core/SetSpriteFrame", "Core/SetAnimationSpeed",
 			"Core/SetSpriteTexture", "Core/SetTreeParam", "Core/TravelToState", "Core/AnimationIsPlaying"]
 	},
-	# Y19 - Y21. Which way a thing faces. Separate from the sprite family because it is NOT a sprite
+	# Which way a thing faces. Separate from the sprite family because it is NOT a sprite
 	# fact: the same two words cover a body that mirrors its own children, a 3D model, a UI panel, the
 	# camera's view, a tile and a path, and every one of them is a different line in the file.
 	"facing": {
@@ -13986,7 +13986,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/CameraShakeOnce", "Core/Hitstop", "Core/BobY", "Core/FlashColour",
 			"Core/EaseSizeBack"]
 	},
-	# ── T1 / T2 / T3 / T4 ──────────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────────
 	# The hand-rolled behavior shapes. Every one of these DOES have a shipped pack behind it, so each
 	# carries an `adoptable`: attaching the behavior is the first thing to offer, and the free
 	# actions beside it are the second.
@@ -14036,7 +14036,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"adoptable": "fade",
 		"ace_ids": []
 	},
-	# U6 - U9. The long tail's four shapes. Two of them have a behavior that does the whole thing -
+	# The long tail's four shapes. Two of them have a behavior that does the whole thing -
 	# the FPS Controller owns the mouse-look block, and Run In Background owns the threads - so those
 	# two carry an `adoptable` and the other two do not: an adoption nobody could take is a worse
 	# offer than none.
@@ -14085,7 +14085,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 			"Core/IsPlatform", "Core/IsOnWebPlatform", "Core/IsOnMobilePlatform",
 			"Core/IsOnDesktopPlatform"]
 	},
-	# V1 / V3 / V6. The last three gaps. Only the path walk has a behavior that replaces the shape
+	# The last three gaps. Only the path walk has a behavior that replaces the shape
 	# outright, so only it carries an `adoptable`: a rigid body is what bodies ARE (the car pack is
 	# offered separately, on the car shape alone), and the text words are free actions.
 	"physics": {
@@ -14105,24 +14105,24 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/SetTextPattern", "Core/MatchPattern", "Core/AllMatches",
 			"Core/ReplaceMatches"]
 	},
-	# W8. Painting a canvas by hand. Adoptable only on a Node2D host - the Drawing Canvas pack draws
+	# Painting a canvas by hand. Adoptable only on a Node2D host - the Drawing Canvas pack draws
 	# onto a node's 2D canvas, so offering it on a Control would be an adoption that cannot happen.
 	"custom_draw": {
 		"words": "Painting the canvas by hand",
 		"adoptable": "drawing_canvas",
 		"ace_ids": ["Core/DrawLine", "Core/DrawRect", "Core/DrawCircle", "Core/DrawRing"]
 	},
-	# W7. A window or dialog built in code, configured and opened.
+	# A window or dialog built in code, configured and opened.
 	"dialog": {
 		"words": "A dialog built in code",
 		"ace_ids": []
 	},
-	# W6. A menu whose items are declared once and answered by their ids.
+	# A menu whose items are declared once and answered by their ids.
 	"menu": {
 		"words": "A menu and the items it answers",
 		"ace_ids": []
 	},
-	# W9 / W10 / W11. The three tooling shapes. None is adoptable: a test, a command tool and a pack
+	# The three tooling shapes. None is adoptable: a test, a command tool and a pack
 	# recipe are things you WRITE, not behaviors a pack could take over, so the chip names the shape
 	# and offers nothing to swap it for.
 	"test_sheet": {
@@ -14134,7 +14134,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	"pack_recipe": {
 		"words": "Pack recipe"
 	},
-	# X2 / X20 / X30. The cursor's ray and the canvas measurements built on it. Neither has a pack to
+	# The cursor's ray and the canvas measurements built on it. Neither has a pack to
 	# adopt: both are FREE vocabulary - the shipped camera-picking words, the aimed-floor expressions
 	# and the canvas distance - so what a hand-written run should become is a row, not an addon.
 	"cursor_ray": {
@@ -14149,7 +14149,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/PickNearestToCanvasPoint", "Core/VectorDistanceTo", "Core/IsBehindCamera3D",
 			"Core/CanvasX2D", "Core/CanvasY2D", "Core/CanvasX3D", "Core/CanvasY3D"]
 	},
-	# X6. Movement claims from the readings themselves (the camera-relative run, a fall) as well as
+	# Movement claims from the readings themselves (the camera-relative run, a fall) as well as
 	# from the whole-file pattern walk. No `adoptable`: what could replace a hand-written movement
 	# depends entirely on which one it is, and offering one pack for all of them would misfit most.
 	"movement": {
@@ -14157,7 +14157,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/SetVelocity3D", "Core/MoveAndSlide3D", "Core/GetInputVector",
 			"Core/MoveRelativeToCamera", "Core/IsOnFloor3D"]
 	},
-	# X4 / X19. Batch thirteen's two new shapes. An orbit HAS a pack that does the whole thing, so it
+	# Batch thirteen's two new shapes. An orbit HAS a pack that does the whole thing, so it
 	# offers one; world-space UI is a handful of settings on ordinary nodes, so the honest offer is
 	# the rows themselves and no adoption.
 	"orbit": {
@@ -14170,7 +14170,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"ace_ids": ["Core/SetFaceTheCamera", "Core/SetShowThroughWalls", "Core/SetWorldSize",
 			"Core/SetBarWidth", "Core/SendInputToSurface", "Core/SetSurfaceRedraw"]
 	},
-	# X22 / X23 / X25 / X28 / X29. Only two of the six have a behavior that does the whole shape - the
+	# Only two of the six have a behavior that does the whole shape - the
 	# FPS Controller owns gyro aim the way it owns mouse look, and the Touch Gestures pack owns swipes
 	# and drawn shapes outright - so only those two carry an `adoptable`. A shot, a blast, a secrets
 	# counter, an input window and an options screen are vocabulary, not a behaviour to attach.
@@ -14194,7 +14194,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 		"words": "Secrets found",
 		"ace_ids": ["Core/MarkSecretFound", "Core/SecretsFoundCount", "Core/SecretAlreadyFound"]
 	},
-	# Y16. A keycard is a name in a list and a door is a body that wants one. No `adoptable`: there is
+	# A keycard is a name in a list and a door is a body that wants one. No `adoptable`: there is
 	# no behaviour to attach for it and there should not be - what a hand-written keycard should
 	# become is six rows and the Keycard Door starter, which is vocabulary, not an addon.
 	"keys_doors": {
@@ -14231,7 +14231,7 @@ const PATTERN_VOCABULARY: Dictionary = {
 	}
 }
 
-## W8. The host classes the Drawing Canvas pack can actually be attached to. A `_draw` body on a
+## The host classes the Drawing Canvas pack can actually be attached to. A `_draw` body on a
 ## Control paints the same way but has no pack to adopt, so the chip offers none.
 const CUSTOM_DRAW_ADOPTABLE_HOSTS: PackedStringArray = ["Node2D", "Sprite2D", "Polygon2D", "Line2D"]
 
@@ -14251,7 +14251,7 @@ func _note_pattern(pattern: String, evidence: String) -> void:
 
 
 ## The pack a claim may offer to adopt, which for most patterns is whatever the vocabulary table
-## says. W8 is the exception: hand-drawing is the same shape on any canvas, but only a 2D node has a
+## says. Hand-drawing is the exception: is the same shape on any canvas, but only a 2D node has a
 ## pack that could take it over, so a `_draw` body on a Control claims the pattern and offers nothing.
 func _pattern_adoptable(pattern: String, listed: String) -> String:
 	if pattern != "custom_draw" or listed.is_empty():
@@ -14291,11 +14291,11 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 ## double-click-opens-the-code-editor behave exactly as they do for any other raw row. Only the LAST
 ## span omits `natural_width`, so it stretches to close the action cell the way the Declare header
 ## does - without that, the cell background would stop mid-row.
-## W12: `literal` is the multi-line table or list this statement's value was written over, when the
+## `literal` is the multi-line table or list this statement's value was written over, when the
 ## row is the LEAD of such a run. The statement then reads with the word `table` / `list` where the
 ## literal sat and the entries as chips after it; every other caller passes {} and nothing changes.
 func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary, literal: Dictionary = {}) -> bool:
-	# W4 - an edit handed to the mutation funnel is ONE undoable step: the row names the step, and the
+	# An edit handed to the mutation funnel is ONE undoable step: the row names the step, and the
 	# callback's own lines read as sub-events under it. Ahead of the sentence layer, which cannot see
 	# a statement written across several lines at all.
 	var undo_step: Dictionary = undo_step_parts(raw.code)
@@ -14306,7 +14306,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var indent: int = 0
 	var object_label: String = ""
 	var sentence: Dictionary = statement_sentence(raw.code, sentence_context())
-	# ── N11 lens hook ─────────────────────────────────────────────────────────────────────────
+	# ── lens hook ─────────────────────────────────────────────────────────────────────────────
 	# A bare `breakpoint` reads as the mark it is: the row wears the gutter dot and says nothing.
 	if bool(sentence.get("breakpoint", false)):
 		_pending_grammar_breakpoint = true
@@ -14330,7 +14330,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	if not sentence.is_empty():
 		indent = int(sentence.get("indent", 0))
 		object_label = str(sentence.get("object", ""))
-		# ── W9 lens hook ───────────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# A Check row that has been RUN says so, in front of what it checks: ✓ when the last headless
 		# run passed it, ✗ when it did not. A check that has never been run says nothing, which is the
 		# truth. Display only - the mark comes from the run's output and never from the file.
@@ -14346,7 +14346,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 			return false
 		indent = int(call_info.get("indent", 0))
 		var args: PackedStringArray = call_info.get("args", PackedStringArray())
-		# ── M16 lens hook ──────────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# Applied AFTER the sentence layer has resolved this row as a call: when the callee is one
 		# of THIS sheet's functions, the row reads the event-sheet way ("Functions ▸ Call Add Look",
 		# one argument per parameter name) instead of as a bare method call. A callee the sheet
@@ -14356,7 +14356,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		if not call_pieces.is_empty():
 			pieces = call_pieces
 		else:
-			# ── M25 / M26 lens hook ───────────────────────────────────────────────────────────
+			# ── lens hook ─────────────────────────────────────────────────────────────────────
 			# Any other call reads Object ▸ Verb chips - the verb in words, the arguments named by
 			# the engine's own parameter names when the object's class is known, and no
 			# parentheses anywhere. Only a line that is not one call at all keeps the old form.
@@ -14379,7 +14379,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 					pieces.append([" )", "plain"])
 	if pieces.is_empty():
 		return false
-	# ── N4 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# WHO this statement belongs to, decided once the sentence layer has said what it DOES. An
 	# autoload gains its "(global)" note and a globe; a pack node under the script's own node hands
 	# its rows to that object with the pack's name as the leading chip. Applied before the spelling
@@ -14389,7 +14389,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	object_label = str(attribution.get("object", object_label))
 	pieces = attribution.get("pieces", pieces) as Array
 	var attributed_icon: Variant = attribution.get("icon")
-	# ── W14 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# When the sheet DECLARED what this receiver is, the object column says what it is rather than
 	# what it was called: `_registry` reads `ACE registry`, with `registry` muted beside it. Applied
 	# after the attribution above, so an autoload or a pack's own object still wins.
@@ -14399,13 +14399,13 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	if not typed_object.is_empty():
 		object_label = str(typed_object.get("label", object_label))
 		object_note = str(typed_object.get("note", ""))
-	# ── M9 / M10 lens hook ─────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
 	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
 	# pieces are touched (identifiers the builder already resolved), never a string literal and
 	# never a connective word, and the row's hover still shows the exact GDScript.
 	pieces = EventSheetViewportLenses.apply_to_pieces(pieces, _viewport.humanize_names_enabled(), _export_knob_names())
-	# U3. The row's own note, at the end of it, muted - which is where and how a sheet writes a note
+	# The row's own note, at the end of it, muted - which is where and how a sheet writes a note
 	# about one step. Appended AFTER the spelling lens, because a note is prose somebody wrote and
 	# nothing in it is a name for the lens to respell.
 	var row_note: String = str(sentence.get("note", ""))
@@ -14414,14 +14414,14 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		row_note = attached_note if row_note.is_empty() else "%s · %s" % [attached_note, row_note]
 	if not row_note.is_empty():
 		pieces.append(["   💬 %s" % row_note, "muted"])
-	# ── M13 / M20 lens hook ────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The object this statement acts on draws its Godot class icon, the way an event sheet shows
 	# an object's picture in every cell it appears in. Resolved from the RAW pieces (before the
 	# lens above respelled them) so the lookup keys stay the names the file actually uses.
 	var sentence_icon: Texture2D = _reading_sentence_icon(sentence, raw.code)
 	if attributed_icon is Texture2D and _viewport.show_object_icons:
 		sentence_icon = attributed_icon as Texture2D
-	# ── X5 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A statement whose VALUE is a thing in the scene draws that thing's picture beside it, not only
 	# the subject's: `crate ▸ Set position to spawn_point` shows the marker's own icon on the marker.
 	# The class is named by the sentence layer, which resolved it there anyway - this reads one key
@@ -14437,7 +14437,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
 	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
 	# source tab keeps deeper statements visually nested like the code they came from.
-	# W12 - the statement is written around a multi-line table or list: the sentence splits where the
+	# The statement is written around a multi-line table or list: the sentence splits where the
 	# literal sat, the word for it goes there, and the entries follow as chips.
 	if not literal.is_empty():
 		_append_literal_sentence_spans(spans, pieces, literal, indent, object_label, object_note,
@@ -14469,7 +14469,7 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	return true
 
 
-## X5. The statement split in two so the VALUE can wear its own picture: the sentence up to the value
+## The statement split in two so the VALUE can wear its own picture: the sentence up to the value
 ## (carrying the subject's icon, its object label and its note), then the value itself with the class
 ## icon the sentence layer named, then whatever the sentence said after it. An icon draws at the
 ## START of the span it is on, which is exactly why the value needs a span of its own.
@@ -14550,18 +14550,18 @@ func _sentence_tone_segments(pieces: Array, indent: int) -> Array[Dictionary]:
 			"object":
 				tone_color = _viewport._get_event_style().object_label_color
 			"behaviour":
-				# N4 - the pack's name between the object and its verb. Drawn in the object tint and
+				# The pack's name between the object and its verb. Drawn in the object tint and
 				# bold, so it reads as part of WHO acts rather than as part of what the verb says.
 				tone_color = _viewport._get_event_style().object_label_color
 				tone_bold = true
 			"muted":
-				# P6 - a connective the sentence needs but the reader does not read ("then").
+				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
 		segments.append({"text": str(piece[0]), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 
 
-## W12. The lead row of a multi-line literal: the statement's own sentence up to where the literal
+## The lead row of a multi-line literal: the statement's own sentence up to where the literal
 ## sat, then the entry chips, then whatever the statement said after it (the `)` of the call it was
 ## an argument to). The chips are the point - `"span_index": _selected_span_index` reads
 ## `span index = selected span index` instead of being a line of code with no row of its own.
@@ -14616,7 +14616,7 @@ func _append_literal_sentence_spans(spans: Array, pieces: Array, literal: Dictio
 	}, true).merged(action_style_meta, false)))
 
 
-## W12. The word for the literal (`table` / `list`) and one chip per entry, folded to the first three
+## The word for the literal (`table` / `list`) and one chip per entry, folded to the first three
 ## with "… N more" when there are more - the whole thing is on the row's hover, so a folded row never
 ## hides a line. Each chip edits in place, rewriting the ONE source row its entry came from.
 ## `show_word` is off on a declaration row, whose type chip already says `Local table` - the word
@@ -14675,7 +14675,7 @@ func _append_literal_chip_spans(spans: Array, literal: Dictionary, action_index:
 		SemanticSpan.SpanType.VALUE, more_meta.merged(action_style_meta, false)))
 
 
-## W12. The lead row of a literal run whose flattened statement no sentence claimed: the head line
+## The lead row of a literal run whose flattened statement no sentence claimed: the head line
 ## reads as itself and the chips still follow it, so the entries are named either way.
 func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index: int,
 		line_index: int, action_style_meta: Dictionary) -> void:
@@ -14704,12 +14704,12 @@ func _append_value_literal_spans(spans: Array, literal: Dictionary, action_index
 ## hand-written `var` line and by the Local Variable ACE, so a local reads the same however it got
 ## there. `base_meta` carries the row identity (which lane, which action index) and `style_meta` the
 ## cell chrome; the LAST span omits natural_width so the cell background closes the row.
-## W12: `literal` is the multi-line table or list the local was declared from, when there is one -
+## `literal` is the multi-line table or list the local was declared from, when there is one -
 ## the starting value is then the entry chips rather than one blob of text.
 func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_meta: Dictionary, style_meta: Dictionary, literal: Dictionary = {}) -> void:
 	var indent_text: String = "    ".repeat(int(declaration.get("indent", 0)))
 	var type_word: String = str(declaration.get("type_word", ""))
-	# W12 - an untyped `var x := {` says nothing about what x is, but the literal it opens says
+	# An untyped `var x := {` says nothing about what x is, but the literal it opens says
 	# exactly what it is: the chip reads `Local table` / `Local list` rather than `Local value`.
 	if not literal.is_empty() and type_word == EventSheetL10n.translate("value"):
 		type_word = EventSheetL10n.translate("table" if str(literal.get("open", "{")) == "{" else "list")
@@ -14737,7 +14737,7 @@ func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_
 	value_meta["chip"] = true
 	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
 	spans.append(_make_span("= %s" % str(declaration.get("value", "")), SemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
-	# U3. A `var x = 1  # note` carries its note the same way every other row does - at the end, muted -
+	# A `var x = 1  # note` carries its note the same way every other row does - at the end, muted -
 	# rather than inside the value, where it read as part of the starting value.
 	var declaration_note: String = str(declaration.get("note", ""))
 	if declaration_note.is_empty():
@@ -14765,7 +14765,7 @@ var _pending_grammar_segments: Array = []
 # The sheet the cached sentence context was built for, so a tab switch rebuilds it.
 var _sentence_context_sheet: Resource = null
 var _sentence_context_cache: Dictionary = {}
-# W11. Whether the open sheet is a pack recipe, remembered per sheet. Asked once per EVENT in both
+# Whether the open sheet is a pack recipe, remembered per sheet. Asked once per EVENT in both
 # the span pass and its line-count twin, and the answer is a fact about the FILE - so asking the
 # sentence context each time (which duplicates the whole context dictionary) would put a copy of it
 # on the paint path for every event in every ordinary game script, which is exactly what this is not.
@@ -14773,7 +14773,7 @@ var _recipe_sheet_seen: Resource = null
 var _recipe_sheet_is: bool = false
 
 
-## T1 / T3 / T4 / T27. The behavior-shape reading of a ROW - whether the importer lifted a typed line
+## The behavior-shape reading of a ROW - whether the importer lifted a typed line
 ## into it or the picker wrote it. The row's params are put back into the line the row stands for and
 ## read through the shape grammar, which is the same text a user who never let the importer touch the
 ## file would have. {} when no shape claims it, and the row keeps the reading it already had.
@@ -14783,14 +14783,14 @@ func behavior_shape_action_sentence(ace_id: String, params_dict: Dictionary,
 	return {} if code.is_empty() else EventSheetBehaviorShapes.statement(code, context)
 
 
-## T1 / T3. The same for a CONDITION row.
+## The same for a CONDITION row.
 func behavior_shape_condition_sentence(ace_id: String, params_dict: Dictionary,
 		context: Dictionary) -> Dictionary:
 	var code: String = EventSheetBehaviorShapes.line_for(ace_id, params_dict, true)
 	return {} if code.is_empty() else EventSheetBehaviorShapes.condition(code, context)
 
 
-## X4 / X7 / X8 / X9 / X19. The rows batch thirteen added whose sentence is the SHARED one: each of
+## The rows batch thirteen added whose sentence is the SHARED one: each of
 ## them writes exactly the line its reading recognises, so the row is read by compiling it back and
 ## asking the grammar rather than by its own display template. That is what keeps a picked row and a
 ## typed line one sentence - the parity the two-way byte gate proves.
@@ -14817,19 +14817,19 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var context: Dictionary = sentence_context()
-	# R41. A local whose starting value has to be worked out reads as the two rows an event sheet
+	# A local whose starting value has to be worked out reads as the two rows an event sheet
 	# writes: the declaration at the top of the event, and - here - the Set that fills it in.
 	var promotion: Dictionary = local_declaration_promotion(action)
 	if not promotion.is_empty() and not str(promotion.get("set_value", "")).is_empty():
 		var declaration: Dictionary = promotion.get("declaration", {})
 		return EventSheetSentence.statement("%s = %s" % [
 			str(declaration.get("name", "")), str(declaration.get("raw_value", ""))], context)
-	# ── T1 / T3 lens hook ──────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A line the importer claimed for a shipped row is still the behavior SHAPE it was, so the row
 	# reads in that behavior's words - but only when the shape actually claims it. A row no shape
 	# claims falls straight through to the reading it already had, which is why routing these three
 	# ace ids here cannot move anything that does not belong to a projectile or a glide.
-	# ── X4 ─────────────────────────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────────
 	# A place written as a circle around somebody is an ORBIT, and it is asked before the shape
 	# lookup below for the same reason the typed line asks it before the shapes: the importer files
 	# `me = you.global_position + <offset>` as a Pin, and "pinned to you at an offset" is true of one
@@ -14842,7 +14842,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	var shaped: Dictionary = behavior_shape_action_sentence(action.ace_id, params_dict, context)
 	if not shaped.is_empty():
 		return shaped
-	# ── Y9 / Y22 lens hook ─────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A board's push and its ollie are ordinary property writes, so the importer files them as
 	# Set rows before any reading gets a look - and "Set velocity Y to -ollie speed" is a true
 	# sentence about a line and says nothing at all about what the player just did. Re-reading the
@@ -14859,7 +14859,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			var board: Dictionary = EventSheetSentence.skate_statement(board_line.strip_edges(), context)
 			if not board.is_empty():
 				return board
-	# ── X4 / X7 / X8 / X9 / X19 ────────────────────────────────────────────────────────────────
+	# ───────────────────────────────────────────────────────────────────────────────────────────
 	# The batch-thirteen rows whose reading IS the grammar's reading of the line they compile to.
 	# Routing them here rather than letting each keep its descriptor's display template is what makes
 	# the promise hold in BOTH directions: the row a user drops from the picker and the line the same
@@ -14876,7 +14876,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetVar":
 			return EventSheetSentence.statement("%s = %s" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("value", ""))], context)
-		# Q6. Adding to TEXT puts the value on the end, which is the Append the Text module ships and
+		# Adding to TEXT puts the value on the end, which is the Append the Text module ships and
 		# not the arithmetic "Add". Only the grammar can tell the two apart, because only it knows what
 		# the sheet declared the variable to be.
 		"AddVar":
@@ -14887,7 +14887,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				str(params_dict.get("signal_name", "")), str(params_dict.get("args", "")), context)
 		"QueueFree":
 			return EventSheetSentence.statement("queue_free()", context)
-		# R9. The importer claims `$Timer.start(2.0)` as this row, so the row has to say what the
+		# The importer claims `$Timer.start(2.0)` as this row, so the row has to say what the
 		# typed line says - otherwise an opened file reads one way before the lift and another after
 		# it. The node path IS the tag, and the mode comes off the file's own `one_shot` line.
 		"StartTimer", "StopTimer":
@@ -14895,7 +14895,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return {} if timer_code.is_empty() else EventSheetSentence.statement(timer_code, context)
 		"CallMethod":
 			# A generic call reads as one of the settled sentences when it has one
-			# (`call_deferred("queue_free")` is a destroy) - and otherwise as M26's Object ▸ Verb
+			# (`call_deferred("queue_free")` is a destroy) - and otherwise as the Object ▸ Verb
 			# chips, which is exactly what the same call typed by hand now reads.
 			var call_code: String = "%s.%s(%s)" % [
 				str(params_dict.get("target", "")), str(params_dict.get("method", "")),
@@ -14911,7 +14911,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			for piece: Variant in (generic_call.get("pieces", []) as Array):
 				call_segments.append({"text": str((piece as Array)[0]), "tone": str((piece as Array)[1])})
 			return {"object": str(generic_call.get("object", "")), "segments": call_segments}
-		# ── M30 lens hook (groups as families) ────────────────────────────────────────────────
+		# ── lens hook (groups as families) ────────────────────────────────────────────────────
 		# The picked group rows read the same words a typed `add_to_group(...)` /
 		# `get_tree().call_group(...)` now reads, so the family vocabulary is one sentence either way.
 		"AddToGroup":
@@ -14931,14 +14931,14 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement(group_call, context)
 		"QueueFreeNode":
 			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
-		# X9. The importer claims a `RenderingServer.global_shader_parameter_set(...)` line as this
+		# The importer claims a `RenderingServer.global_shader_parameter_set(...)` line as this
 		# row, so the row has to say what the typed line says - otherwise an opened file reads one way
 		# before the lift and another after it.
 		"RenderingSetGlobalShaderParam":
 			return EventSheetSentence.statement(
 				"RenderingServer.global_shader_parameter_set(%s, %s)" % [
 					str(params_dict.get("name", "")), str(params_dict.get("value", ""))], context)
-		# ── X10 / X13 lens hook (the hierarchy) ───────────────────────────────────────────────────
+		# ── lens hook (the hierarchy) ─────────────────────────────────────────────────────────────
 		# The picked hierarchy rows read the words a hand-typed `item.reparent($Hand)` now reads, so
 		# Add child is one sentence whether it was dropped from the picker or written by hand - and
 		# the keep-its-place half never depends on which way the row got onto the sheet.
@@ -14970,7 +14970,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"StopCopyingPlace":
 			return EventSheetSentence.statement("%s.remote_path = NodePath(\"\")" % str(
 				params_dict.get("follower", "")), context)
-		# U1. A tint set from the tint itself is an EASE, and the grammar is the only place that can
+		# A tint set from the tint itself is an EASE, and the grammar is the only place that can
 		# see it: the row holds one value, and only the shape of that value says it eases. Every other
 		# tint row keeps the descriptor's own words, which is why this returns {} unless it matches.
 		"SetModulate":
@@ -14979,7 +14979,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				EventSheetSentence.object_of_reference(tint_target) if not tint_target.is_empty()
 					else EventSheetSentence.script_object(context),
 				"modulate", str(params_dict.get("color", "")), context)
-		# ── Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
+		# ── lens hook ─────────────────────────────────────────────────────────────────────────
 		# Two rows whose words depend on something only the grammar can see. `erase` is spelled the
 		# same on a list and on a table but means two different steps, and the lifter cannot tell
 		# which; the grammar reads the sheet's own declared type and says "value" or "key". A process
@@ -15001,7 +15001,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return _named_return_sentence(
 				EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context),
 				str(params_dict.get("value", "")))
-		# R30. A node-scoped place setter names the node it moves - a loop variable, a local object -
+		# A node-scoped place setter names the node it moves - a loop variable, a local object -
 		# so the row reads on THAT object, in the same words the typed `n.position = …` line reads.
 		# Without this the row wore the vocabulary's class name ("Node2D") no matter which node it
 		# actually set, which is the one thing the object column exists to answer.
@@ -15012,7 +15012,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s = %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
-		# ── T7 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The importer files `$CollisionShape2D.disabled = true` under this row, and a collision shape
 		# switched off is the object's Solid going away - the word a reader looks for on a platform
 		# that opens. Only a COLLISION SHAPE is routed: on a real button this row keeps its own
@@ -15027,13 +15027,13 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s += %s" % [
 				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
-		# ── N8 lens hook (behaviour words on the picked rows too) ────────────────────────────────
+		# ── lens hook (behaviour words on the picked rows too) ───────────────────────────────────
 		# These are the rows a hand-written camera / emitter / collision line LIFTS to, so without
 		# these five the reading would depend on whether the lifter happened to claim the line - the
 		# one thing the shared grammar exists to prevent.
 		"MakeCameraCurrent":
 			return EventSheetSentence.statement("%s.make_current()" % _ace_target(params_dict), context)
-		# ── S16 / S17 / S18 lens hook ────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The rows a hand-written effect / tilemap / camera line LIFTS to. Without these the reading
 		# would depend on whether the lifter happened to claim the line, which is the one thing the
 		# shared grammar exists to prevent - and the pattern the reading claims would be lost with it.
@@ -15087,11 +15087,11 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.set_collision_layer_value(%s, %s)" % [
 				_ace_target(params_dict), str(params_dict.get("layer", "")),
 				str(params_dict.get("enabled", ""))], context)
-		# ── N7 lens hook (the JSON object owns its two verbs) ────────────────────────────────────
+		# ── lens hook (the JSON object owns its two verbs) ───────────────────────────────────────
 		"JsonParseToVar":
 			return EventSheetSentence.statement("%s = JSON.parse_string(%s)" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("text", ""))], context)
-		# ── N11 lens hook (the debug verbs) ──────────────────────────────────────────────────────
+		# ── lens hook (the debug verbs) ──────────────────────────────────────────────────────────
 		# The picked debug rows read the same words a typed `push_error(...)` / `assert(...)` now
 		# reads, so the log vocabulary is one sentence whichever way the row got onto the sheet.
 		"PushError":
@@ -15114,7 +15114,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			# little: the flag is raised here because this row never goes through the raw-line path.
 			_pending_grammar_breakpoint = true
 			return EventSheetSentence.statement("breakpoint", context)
-		# ── M40 / M43 / M46 / M47 lens hook ───────────────────────────────────────────────────
+		# ── lens hook ─────────────────────────────────────────────────────────────────────────
 		# The picked rows whose hand-written twin now reads in the event-sheet verbs: an animation,
 		# a sound, a visibility switch, an angle, a size, a property set by name. Each hands the
 		# grammar the exact line the ACE compiles to, so the two readings cannot drift apart.
@@ -15125,7 +15125,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		"SetFlipH":
 			return EventSheetSentence.statement("%s.flip_h = %s" % [
 				_ace_target(params_dict), str(params_dict.get("flipped", ""))], context)
-		# ── Y19 lens hook ────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────
 		# The facing rows. Set Flipped joins them here: it shipped without an arm, so the picked
 		# row and the typed `flip_v = true` said the same thing by luck rather than by contract.
 		# The host twins all hand over the same line their own host writes, so "Set mirrored" is
@@ -15172,7 +15172,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				_ace_target(params_dict), str(params_dict.get("path", "")),
 				str(params_dict.get("value", ""))], context)
 
-		# ── S11 / S12 / S13 / S14 lens hook ─────────────────────────────────────────────────────
+		# ── lens hook ───────────────────────────────────────────────────────────────────────────
 		# The rows a hand-written sprite, UI, sound or juice line LIFTS to. Without these the reading
 		# would depend on whether the lifter happened to claim the line, which is the one thing the
 		# shared grammar exists to prevent: each hands the grammar the exact line the ACE compiles to.
@@ -15233,7 +15233,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			return EventSheetSentence.statement("%s.%s -= %s" % [
 				str(params_dict.get("target", "self")), str(params_dict.get("property", "")),
 				str(params_dict.get("value", ""))], context)
-		# M46 - the three the Familiar Words glossary renames. Claimed ONLY while the glossary is on, so
+		# The three the Familiar Words glossary renames. Claimed ONLY while the glossary is on, so
 		# with it off each row keeps the vocabulary's own wording, untouched.
 		"ReloadScene":
 			if not bool(context.get("familiar_words", false)):
@@ -15247,7 +15247,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			if not bool(context.get("familiar_words", false)):
 				return {}
 			return EventSheetSentence.statement("Engine.time_scale = %s" % str(params_dict.get("scale", "")), context)
-		# ── P6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The tick switches and the process mode, and the one-shot timer's "wait, then". Each is
 		# rebuilt as the exact line it compiles to and handed to the same grammar the typed line goes
 		# through, so a picked row and a hand-written one cannot say two different things.
@@ -15284,7 +15284,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	return {}
 
 
-## M28 - what an `await` says in event-sheet words. An event sheet has "Wait for signal" as a System
+## What an `await` says in event-sheet words. An event sheet has "Wait for signal" as a System
 ## action and counts ticks, so suspending on a signal reads as that action and suspending on a frame
 ## reads as the one tick it is. Returns {} for every other await (a timer wait already has its own
 ## "Wait N seconds" reading, and an await on a call keeps its GDScript) - a sentence must never paper
@@ -15301,7 +15301,7 @@ static func await_reading(expression: String, hourglass: bool, context: Dictiona
 		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one tick", {}, hourglass)
 	if text == "get_tree().physics_frame":
 		return _slot_sentence(EventSheetSentence.OBJECT_SYSTEM, "Wait one physics tick", {}, hourglass)
-	# R3 - waiting on a tween is waiting for the animation to end, which is the whole thought; the
+	# Waiting on a tween is waiting for the animation to end, which is the whole thought; the
 	# local's name adds nothing a reader of the Tween rows above it does not already have.
 	if text.ends_with(".finished") and EventSheetSentence.is_tween_local(
 			text.substr(0, text.length() - 9), context):
@@ -15382,7 +15382,7 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	var context: Dictionary = sentence_context()
-	# T1 - a distance the importer claimed for the Is Farther Than row is still the projectile's own
+	# A distance the importer claimed for the Is Farther Than row is still the projectile's own
 	# question, when the file is a projectile. Every other row falls straight through.
 	var shaped: Dictionary = behavior_shape_condition_sentence(condition.ace_id, params_dict, context)
 	if not shaped.is_empty():
@@ -15399,20 +15399,20 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.condition("%s %s %s" % [
 				str(params_dict.get("var_name", "")), str(params_dict.get("op", "==")),
 				str(params_dict.get("value", ""))], context)
-		# ── T23 lens hook ────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The ground check reads on the OBJECT that is asking, with its offset through the shared value
 		# lens - the same row a hand-written `test_move(transform, Vector2(0, 1))` reads as, so the
 		# picked row and the typed line are one sentence.
 		"IsOverlappingAtOffset":
 			return EventSheetSentence.condition(
 				"test_move(transform, %s)" % str(params_dict.get("offset", "")), context)
-		# ── X12 lens hook (the hierarchy's own question) ──────────────────────────────────────────
+		# ── lens hook (the hierarchy's own question) ──────────────────────────────────────────────
 		# "Does this object contain that one" is the word a reader uses about a tree out loud, and it
 		# is what a typed `squad.is_ancestor_of(unit)` now reads as - so the picked row says it too.
 		"IsAncestorOf":
 			return EventSheetSentence.condition("%s.is_ancestor_of(%s)" % [
 				str(params_dict.get("target", "self")), str(params_dict.get("node", ""))], context)
-		# ── Y12 lens hook ────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# A lookup in the table a file keeps unlocked skill ids in is the skill tree's own question,
 		# and a row the importer lifted must ask it in the same words the typed line does. Every
 		# other Has Key row falls straight through - the grammar refuses the moment the file keeps
@@ -15424,24 +15424,24 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
 		"IsActionJustPressed":
 			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), true)
-		# ── N9 / N7 lens hook ────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The release check and the file test read the same words their hand-written twins now read.
 		"IsActionJustReleased":
 			return EventSheetSentence.input_phase_sentence(str(params_dict.get("action", "")), false, false)
 		"FileExists":
 			return EventSheetSentence.condition(
 				"FileAccess.file_exists(%s)" % str(params_dict.get("path", "")), context)
-		# ── P6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# "is in the editor" - one question, one sentence, whichever of Godot's two spellings the file
 		# used and whether the row was typed or picked.
 		"IsInEditor":
 			return EventSheetSentence.condition("Engine.is_editor_hint()", context)
-		# ── N5 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The row a hand-written `x in y` lifts to, so both spellings ask the same question in words.
 		"TextIsOneOf":
 			return EventSheetSentence.condition("%s in %s" % [
 				str(params_dict.get("text", "")), str(params_dict.get("options", ""))], context)
-		# ── N6 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The three text questions a hand-written line lifts to. Routed through the grammar rather
 		# than reworded in the frozen display templates, which are a compatibility promise.
 		"StringBeginsWith", "TextBeginsWith":
@@ -15453,11 +15453,11 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"StringContains":
 			return EventSheetSentence.condition("%s.contains(%s)" % [
 				str(params_dict.get("text", "")), str(params_dict.get("needle", ""))], context)
-		# ── N9 lens hook ─────────────────────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		"MouseButtonDown":
 			return EventSheetSentence.condition("Input.is_mouse_button_pressed(%s)" % str(
 				params_dict.get("button", "")), context)
-		# ── M41 lens hook ─────────────────────────────────────────────────────────────────────
+		# ── lens hook ─────────────────────────────────────────────────────────────────────────
 		# The event-sheet Platform and collision questions, so a picked row and the same test typed by
 		# hand ask it in the same words.
 		"IsOnFloor", "IsOnFloor3D":
@@ -15477,9 +15477,9 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 		"HasOverlappingAreas", "HasOverlappingAreas3D":
 			return EventSheetSentence.condition("%s.has_overlapping_areas()" % _ace_target(params_dict), context)
 		"ArrayIsEmpty", "DictIsEmpty":
-			# M44 - an event sheet has no "is empty": emptiness IS a count of zero.
+			# An event sheet has no "is empty": emptiness IS a count of zero.
 			return EventSheetSentence.condition("%s.is_empty()" % str(params_dict.get("var_name", "")), context)
-		# ── R4 / R5 / R10 / R11 lens hook ────────────────────────────────────────────────────────
+		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The batch-seven questions, so a row picked from the dialog and the same line typed by hand
 		# say the same sentence. Each one hands the grammar the very code the row compiles to.
 		"IsBetween":
@@ -15515,7 +15515,7 @@ func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
 	return {}
 
 
-## R10. The speed test one of the six body rows compiles to. The 3D rows ask the opposite sign of the
+## The speed test one of the six body rows compiles to. The 3D rows ask the opposite sign of the
 ## vertical question, because Y grows upward there - and the grammar turns each back into the same
 ## word the 2D row reads, which is the whole point of asking it this way.
 func _body_speed_test(ace_id: String) -> String:
@@ -15546,12 +15546,12 @@ func grammar_action_declaration(action: ACEAction) -> Dictionary:
 		return {}
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var name_text: String = str(params_dict.get("name", ""))
-	# U3. A trailing `# note` is the row's note, not part of the starting value - split off here, and
+	# A trailing `# note` is the row's note, not part of the starting value - split off here, and
 	# handed to the declaration spans to draw at the end of the row where a sheet draws a note.
 	var split: PackedStringArray = EventSheetSentence.trailing_comment(str(params_dict.get("value", "")))
 	var value_text: String = split[0]
 	var value_note: String = split[1]
-	# U1. The sheet's own context, so a starting value that names a place ("the direction from Player
+	# The sheet's own context, so a starting value that names a place ("the direction from Player
 	# to target") reads with the same object names every other row on this sheet uses.
 	var context: Dictionary = sentence_context()
 	var reading: Dictionary = _declaration_of(action.ace_id, name_text, value_text, params_dict, context)
@@ -15584,7 +15584,7 @@ func _declaration_of(ace_id: String, name_text: String, value_text: String, para
 	return {}
 
 
-## R41. True when this event's locals may read at the top of it. They may not when that would leave
+## True when this event's locals may read at the top of it. They may not when that would leave
 ## the event with NOTHING to draw - an event whose whole content is one `var` line has no question to
 ## ask and no other step to show, so lifting its declaration out would draw an empty band above the
 ## row that carries it. Such an event keeps the declaration in its own lane, exactly where it was.
@@ -15604,7 +15604,7 @@ func event_promotes_locals(event_row: EventRow) -> bool:
 	return false
 
 
-## R41. How a Local Variable row reads as the sheet's own shape: the declaration the event owns,
+## How a Local Variable row reads as the sheet's own shape: the declaration the event owns,
 ## drawn at the top of that event, and the value the Set action beside it carries ("" when the
 ## declaration is a plain starting value and no action is needed). {} when the row is not one of the
 ## Local Variable family at all.
@@ -15612,12 +15612,12 @@ func local_declaration_promotion(action: ACEAction) -> Dictionary:
 	var declaration: Dictionary = grammar_action_declaration(action)
 	if declaration.is_empty():
 		return {}
-	# A value that BRANCHES is already read as the sub-event pair it is (M23), which draws the
+	# A value that BRANCHES is already read as the sub-event pair it is, which draws the
 	# declaration itself once per arm. Promoting it too would say the same thing three times.
 	var raw_value: String = str(declaration.get("raw_value", ""))
 	if raw_value.contains(" if ") and raw_value.contains(" else "):
 		return {}
-	# X11. The follower a hierarchy row writes out is plumbing the row already stands for, not a
+	# The follower a hierarchy row writes out is plumbing the row already stands for, not a
 	# value the reader introduced - promoting it would put a name nobody typed at the top of the
 	# event, one line above the row that explains it.
 	if str(declaration.get("name", "")).begins_with(EventSheetSentence.HIERARCHY_FOLLOWER_PREFIX):
@@ -15628,7 +15628,7 @@ func local_declaration_promotion(action: ACEAction) -> Dictionary:
 	return {"declaration": promoted, "set_value": str(split.get("set_value", ""))}
 
 
-## R9. The GDScript line a lifted Start Timer / Stop Timer row stands for, so the row reads through
+## The GDScript line a lifted Start Timer / Stop Timer row stands for, so the row reads through
 ## the SAME timer sentence a hand-written `$Timer.start(2.0)` reads through. "" when the row acts on
 ## the host rather than on a named node: a timer with no node path has no tag to name, and the row
 ## keeps the shipped format rather than inventing one.
@@ -15671,12 +15671,12 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 			"object":
 				tone_color = _viewport._get_event_style().object_label_color
 			"chip":
-				# N5/N8 - a class name or a behaviour name is a LABEL on the row, not a word in the
+				# A class name or a behaviour name is a LABEL on the row, not a word in the
 				# sentence, so it wears the object hue the object column uses for the same idea.
 				tone_color = _viewport._get_event_style().object_label_color
 				tone_bold = true
 			"muted":
-				# P6 - a connective the sentence needs but the reader does not read ("then").
+				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
 		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
@@ -15688,7 +15688,7 @@ func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
 	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
-	# ── W14 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same reading a hand-written statement gets: a receiver the sheet declared a class for is
 	# named by that class, with its own name muted beside it. Applied here because this is the ONE
 	# place a picked row's object column is decided, so a lifted call and a picked row agree.
@@ -15701,7 +15701,7 @@ func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
 	return str(typed_object.get("label", label))
 
 
-# W14. The variable name shown muted beside the class an object column now names. One-shot, the same
+# The variable name shown muted beside the class an object column now names. One-shot, the same
 # discipline _pending_object_label above uses: _object_label_or_pending writes it, _make_span reads
 # and clears it, and the two always run back to back.
 var _pending_object_note: String = ""
@@ -15717,11 +15717,11 @@ func sentence_context() -> Dictionary:
 		var reused: Dictionary = _sentence_context_cache.duplicate()
 		reused["verb_kind"] = _current_verb_kind()
 		reused["answer_shape"] = _current_answer_shape()
-		# ── M46 lens hook ─────────────────────────────────────────────────────────────────────
+		# ── lens hook ─────────────────────────────────────────────────────────────────────────
 		# The Familiar Words glossary is VIEW state, not sheet state, so it is stamped after the
 		# per-sheet cache - flipping the toggle must change the reading without invalidating it.
 		reused["familiar_words"] = _familiar_words_enabled()
-		# W4 - which edit the walk is inside is a fact about the WALK, not about the sheet, so it is
+		# Which edit the walk is inside is a fact about the WALK, not about the sheet, so it is
 		# stamped after the per-sheet cache exactly as the verb kind above is.
 		reused["answer_return"] = _answer_return_rows > 0
 		return reused
@@ -15737,11 +15737,11 @@ func sentence_context() -> Dictionary:
 			var published: String = str(signal_row.ace_name).strip_edges()
 			declared[signal_row.signal_name] = published if not published.is_empty() else signal_row.signal_name.capitalize()
 		context["signals"] = declared
-		# ── M25 / M28 lens hook ────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# What only something able to ASK can answer: the script's own object name, its engine
 		# properties, and each signal's parameter names. Cached with the rest of the context.
 		context.merge(EventSheetViewportReadingRows.sentence_context_extras(sheet as EventSheetResource), true)
-		# ── W2 / W15 lens hook ─────────────────────────────────────────────────────────────────
+		# ── lens hook ──────────────────────────────────────────────────────────────────────────
 		# The class the file EXTENDS, when that class is one of the editor's own plugin classes. It
 		# is the single fact every editor-plugin reading is keyed off: what the add_* verbs read as,
 		# and which of this file's functions are the editor's questions rather than the author's.
@@ -15757,7 +15757,7 @@ func sentence_context() -> Dictionary:
 	return context
 
 
-## M46 - whether this view is reading in the familiar nouns (layout, time scale, layer). Off unless
+## Whether this view is reading in the familiar nouns (layout, time scale, layer). Off unless
 ## the user asked for it in View ▾, and never on for a headless build with no viewport.
 func _familiar_words_enabled() -> bool:
 	return _viewport != null and _viewport.familiar_words_enabled()
@@ -15792,7 +15792,7 @@ func _current_verb_kind() -> int:
 	return EventSheetSentence.VerbKind.ACTION
 
 
-## W2 / W15. The Answer shape a `return` in the function currently being walked takes - "" for every
+## The Answer shape a `return` in the function currently being walked takes - "" for every
 ## function that is not one of the editor's own callbacks, which is every function in a game script.
 ## Read from the same pair the header reads from (the class the file extends, and the function's own
 ## name), so the row that asks the question and the row that answers it can never disagree.
@@ -15813,7 +15813,7 @@ func _editor_plugin_class() -> String:
 	return extended if EventSheetEditorPluginWords.is_editor_plugin_class(extended) else ""
 
 
-# ── Reading lenses (M9/M10/M13/M16/M20) ───────────────────────────────────────────────────────
+# ── Reading lenses ───────────────────────────────────────────────────────
 # The lenses themselves live in viewport_lenses.gd (text) and viewport_reading_rows.gd (rows).
 # What lives HERE is only the per-rebuild caching: both need to ask the sheet a question whose
 # answer is the same for every row in the pass, and asking it per span would walk the whole
@@ -15821,11 +15821,11 @@ func _editor_plugin_class() -> String:
 var _lens_sheet_stamp: int = 0
 var _lens_knob_names: Dictionary = {}
 var _lens_class_map: Dictionary = {}
-## M39 - variable name -> the object a preloaded scene/script IS, as resolve_res_object answers it
+## Variable name -> the object a preloaded scene/script IS, as resolve_res_object answers it
 ## ({name, kind_word, icon_class}). `bullet_scene` is not what a reader calls the thing they
 ## spawn; the scene's root node is, and this is where Create object gets that name and its picture.
 var _lens_scene_vars: Dictionary = {}
-## N4 - every registered autoload, so a row naming one can say it is a project-wide global.
+## Every registered autoload, so a row naming one can say it is a project-wide global.
 var _lens_autoloads: Dictionary = {}
 
 
@@ -15838,7 +15838,7 @@ func _reset_lens_caches_if_stale() -> void:
 	_lens_knob_names = EventSheetViewportReadingRows.export_knob_names(sheet)
 	_lens_class_map = EventSheetViewportReadingRows.object_class_map(sheet)
 	_lens_scene_vars = _scene_variable_map(sheet)
-	# N4 - walking ProjectSettings for the autoload list is the same answer for every row in a pass,
+	# Walking ProjectSettings for the autoload list is the same answer for every row in a pass,
 	# and asking it per object label walked a several-hundred-entry property list thousands of times
 	# on a large sheet.
 	_lens_autoloads = EventSheetViewportReadingRows.autoload_singletons()
@@ -15869,35 +15869,35 @@ func _scene_variable_map(sheet: EventSheetResource) -> Dictionary:
 			continue
 		var resolved: Dictionary = ViewportRowBuilder.resolve_res_object(res_path)
 		if not resolved.is_empty():
-			# X14. The file itself rides along, so a row that MAKES one of these can show what is
+			# The file itself rides along, so a row that MAKES one of these can show what is
 			# inside it without resolving the name a second time.
 			map[declared_name] = resolved.duplicate().merged({"res_path": res_path}, true)
 	return map
 
 
-## M9 - the sheet's @export knob names, so the lens can show those with Godot's Inspector
+## The sheet's @export knob names, so the lens can show those with Godot's Inspector
 ## capitalisation while ordinary variables read as plain lowercase words.
 func _export_knob_names() -> Dictionary:
 	_reset_lens_caches_if_stale()
 	return _lens_knob_names
 
 
-## M13/M20 - the object-label to class-name map, so a row naming the pack's host, a $Node / %Node
+## The object-label to class-name map, so a row naming the pack's host, a $Node / %Node
 ## reference or an @onready node variable can draw that class's Godot icon.
-## M26 - the object-label to class-name map itself, so a call's chips can be named by the engine's
+## The object-label to class-name map itself, so a call's chips can be named by the engine's
 ## own parameter names for that class.
 func _reading_class_map() -> Dictionary:
 	_reset_lens_caches_if_stale()
 	return _lens_class_map
 
 
-## N4 - every registered autoload, so a row naming one can say it is a project-wide global.
+## Every registered autoload, so a row naming one can say it is a project-wide global.
 func _reading_autoloads() -> Dictionary:
 	_reset_lens_caches_if_stale()
 	return _lens_autoloads
 
 
-## N4 - WHO a grammar-read row belongs to, applied to both lanes so a picked row and the hand-written
+## WHO a grammar-read row belongs to, applied to both lanes so a picked row and the hand-written
 ## line beside it are attributed the same way.
 ##
 ## `global_owner` is the autoload label recovered from the row's parameters, when the row reached
@@ -15912,7 +15912,7 @@ func _variable_owner_entries() -> Array[Dictionary]:
 	return _variable_owner_catalog["entries"]
 
 
-## V6. The object column a variable row belongs in: an instance variable is the sheet's own object's,
+## The object column a variable row belongs in: an instance variable is the sheet's own object's,
 ## a global is its autoload's, and a local is System's - so "Player > Subtract 10 from health" reads
 ## as the object it changes rather than as machinery. "" when the row names no variable this sheet
 ## declares, which leaves the ordinary provider reading standing.
@@ -15921,7 +15921,7 @@ func _variable_owner_entries() -> Array[Dictionary]:
 ## registry has a definition for at all: an expression that happens to mention `hp` is arithmetic,
 ## not ownership, and a line the reading layer recognised on its own already has an object rule of
 ## its own that says more than this one could.
-## M2. The object column a Send row belongs in: the object whose function the message IS. V6's rule,
+## The object column a Send row belongs in: the object whose function the message IS. The rule,
 ## applied to a message - a row that sends one belongs to whoever declares it, the same way a row
 ## that changes a variable belongs to whoever owns the variable. "" for a message this sheet does not
 ## declare, which leaves the row its shipped Multiplayer label.
@@ -15939,12 +15939,12 @@ func _message_owner_label(provider_id: String, ace_id: String, params: Dictionar
 	return ""
 
 
-## L1. The pattern name a light row is evidence of - the same one the reading claims for the
+## The pattern name a light row is evidence of - the same one the reading claims for the
 ## hand-written line, so a lit file claims it whichever way its lines came in.
 const LIGHTING_PATTERN := "lighting"
 
 
-## L1/L4/L6. The lighting class a verb is hosted on, or "" when it is not one of this vocabulary's
+## The lighting class a verb is hosted on, or "" when it is not one of this vocabulary's
 ## verbs at all - any light, the CanvasModulate a layer's darkness sits on, or the WorldEnvironment
 ## the atmosphere rows write through. The same gate the lift asks before claiming a line, so a row
 ## and the statement it was read from agree about which nodes lighting speaks for. Read off
@@ -15962,7 +15962,7 @@ func _lighting_host_class(provider_id: String, ace_id: String) -> String:
 	return host if EventForgeLightingLift.addresses(host) else ""
 
 
-## L1/L4/L6. The object column a lighting row belongs in: the node it names, not the class that node
+## The object column a lighting row belongs in: the node it names, not the class that node
 ## is - "Torch ▸ Set brightness", "Level ▸ Set darkness", "World ▸ Turn fog on". "" when the row acts
 ## on the sheet's own node (there is no other node to name) or when the target is an expression
 ## rather than a node reference.
@@ -16008,7 +16008,7 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 	return {"object": str(attribution.get("object", "")), "segments": rebuilt}
 
 
-## N4 - the name the script's own object goes by, so a behaviour pack mounted under it can hand its
+## The name the script's own object goes by, so a behaviour pack mounted under it can hand its
 ## rows back to it. Empty on a sheet with no object of its own, which is the attribution's cue to
 ## leave the reading alone.
 func _script_object_name() -> String:
@@ -16022,15 +16022,15 @@ func _reading_class_icon_for(object_label: String) -> Texture2D:
 	return EventSheetViewportReadingRows.class_icon_for(object_label, _lens_class_map)
 
 
-## M9/M10 applied to a finished ACE display sentence. One function so every lifted-row lane -
+## Applied to a finished ACE display sentence. One function so every lifted-row lane -
 ## conditions, actions, triggers - reads the same way, and so the View toggle has a single switch
 ## to flip rather than one per lane.
 func _reading_sentence(text: String) -> String:
-	# ── M27 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# `delta` reads `dt` whatever else is switched on: it is the number's event-sheet name, not a
 	# respelling of somebody's variable, so it does not belong behind the humanized-names toggle.
 	var with_dt: String = EventSheetViewportLenses.dt_words(text)
-	# ── M38 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A named constant reads as the value it IS whatever else is switched on, for the same reason dt
 	# does: `Vector2.ZERO` is not somebody's variable name, it is the point (0, 0). Applied here so a
 	# row that reached the canvas through a display TEMPLATE reads it exactly as a typed line does.
@@ -16040,7 +16040,7 @@ func _reading_sentence(text: String) -> String:
 	return EventSheetViewportLenses.humanize_sentence(with_constants, _export_knob_names())
 
 
-## M12 - whether a lifted condition READS as inverted even though its `negated` flag is not set,
+## Whether a lifted condition READS as inverted even though its `negated` flag is not set,
 ## which is the case for an expression condition lifted straight from `if not <cond>:`. The badge
 ## column asks this so the mark appears; _format_condition_descriptor strips the matching word so
 ## the two never both show.
@@ -16052,14 +16052,14 @@ func _condition_reads_negated(condition: ACECondition) -> bool:
 	).get("negated", false))
 
 
-## K4 - true when this inverted condition is a comparison with a clean opposite, so the row shows
+## True when this inverted condition is a comparison with a clean opposite, so the row shows
 ## `hp > 0` (and the compiler emits it) instead of a mark over `hp ≤ 0`. The badge column asks so the
 ## denial mark stays off a row that already says the opposite in words.
 func _comparison_flips(condition: ACECondition) -> bool:
 	return condition != null and condition.negated and not _flipped_comparison_params(condition).is_empty()
 
 
-## K4 - the condition a flippable inverted comparison READS as: the same ACE with the opposite
+## The condition a flippable inverted comparison READS as: the same ACE with the opposite
 ## operator and no inversion. Returns the condition itself, untouched, for everything else.
 func _comparison_flip_of(condition: ACECondition) -> ACECondition:
 	if condition == null or not condition.negated:
@@ -16074,7 +16074,7 @@ func _comparison_flip_of(condition: ACECondition) -> ACECondition:
 	return reading
 
 
-## K4 - this condition's params with the comparison operator flipped, or {} when its template is not
+## This condition's params with the comparison operator flipped, or {} when its template is not
 ## the plain `{a} {op} {b}` shape. The template is the baked one when the row carries it (custom and
 ## pack ACEs bake at apply time), else the descriptor's - the same order the compiler resolves in, so
 ## the row and the emitted line can never disagree about which comparisons flip.
@@ -16091,13 +16091,13 @@ func _flipped_comparison_params(condition: ACECondition) -> Dictionary:
 	return EventForgeACEFactory.flipped_comparison_params(template, params)
 
 
-## M13/M20 - the class icon for the object a statement row acts on. The subject is the head of the
+## The class icon for the object a statement row acts on. The subject is the head of the
 ## statement: the assignment target for a `Set` sentence (`$Head.rotation.x` -> `$Head`), the
 ## receiver for a call (`host.move_and_slide()` -> `host`). Null whenever nothing is known, which
 ## is also what headless returns, so a headless render keeps the text-only look.
 func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
 	var subject: String = ""
-	# ── M25 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The row's OBJECT is the subject whenever the sentence names one - an engine property of the
 	# script's own object reads as `Player ▸ Set X to 100`, whose picture is Player's, not X's.
 	var named_object: Texture2D = _reading_class_icon_for(str(sentence.get("object", "")))
@@ -16120,7 +16120,7 @@ func _reading_sentence_icon(sentence: Dictionary, code: String) -> Texture2D:
 	return _reading_class_icon_for(subject)
 
 
-## M16 - the "Functions ▸ Call Name" pieces for a hand-written call the sheet can attribute to one
+## The "Functions ▸ Call Name" pieces for a hand-written call the sheet can attribute to one
 ## of its own functions, or [] when it cannot.
 func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
 	var sheet: EventSheetResource = _viewport._sheet
@@ -16139,7 +16139,7 @@ func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
 		_viewport.humanize_names_enabled(),
 		_export_knob_names()
 	)
-	# W16 - a function that hands over to ITSELF is the one shape a reader has to be told about: the
+	# A function that hands over to ITSELF is the one shape a reader has to be told about: the
 	# rows below this one are the same rows again, one level in. Said on the call row, muted, because
 	# that is the row where a reader would otherwise go looking for a second function.
 	# The call is the function's OWN when the line sits in that function's body, which is a question
@@ -16150,7 +16150,7 @@ func _reading_call_pieces(code: String, arguments: PackedStringArray) -> Array:
 	return pieces
 
 
-## W16. True when `action` is one of the rows of `event_function`'s own body - the lifted twin of
+## True when `action` is one of the rows of `event_function`'s own body - the lifted twin of
 ## the line test below, asked by identity because a lifted row IS the statement.
 func _function_body_holds(event_function: EventFunction, action: Resource) -> bool:
 	if event_function == null or action == null:
@@ -16173,7 +16173,7 @@ func _entries_hold_action(entries: Array, action: Resource, depth: int) -> bool:
 	return false
 
 
-## W16. True when `code` is one of the lines of `event_function`'s own body.
+## True when `code` is one of the lines of `event_function`'s own body.
 func _function_body_holds_line(event_function: EventFunction, code: String) -> bool:
 	var wanted: String = code.strip_edges()
 	if wanted.is_empty():
@@ -16234,7 +16234,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 					for entry: Variant in _pending_param_ranges.get("ranges", []):
 						shifted.append([int(entry[0]) + at, int(entry[1])])
 					span.metadata["param_ranges"] = shifted
-	# W14 - the muted variable name that belongs to the object label this span was just given. Only
+	# The muted variable name that belongs to the object label this span was just given. Only
 	# a span that actually carries a label takes it; the flag is cleared either way, so it can never
 	# land on the next row.
 	if not _pending_object_note.is_empty() and not str(span.metadata.get("object_label", "")).is_empty():
@@ -16252,7 +16252,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 ## compiled output never translate. Handles both shapes (registry ACEDefinition metadata
 ## templates and builtin ACEDescriptor display text); English or a missing key pass through,
 ## so this is byte-identical to format_display until a catalog provides the template.
-## Q5. One picked row's value in the words a person writes the number in - `300.0` as 300, `1e3` as
+## One picked row's value in the words a person writes the number in - `300.0` as 300, `1e3` as
 ## 1000, a million with its thousands grouped. READING only, and deliberately so: the params dialog
 ## and the inline editor put the author's own GDScript back in front of them, so an editable sheet
 ## keeps showing exactly what it will emit and only a reading softens the spelling.
@@ -16260,7 +16260,7 @@ func _read_number_words(shown: String) -> String:
 	return _read_colour_words(EventSheetSentence.number_lens(shown)) if _viewport.is_reading_mode() else shown
 
 
-## L4. One param value as the row shows it: through its declared READING LENS when it has one, and
+## One param value as the row shows it: through its declared READING LENS when it has one, and
 ## through the general number and colour readings when it does not. A lens is the param's own answer
 ## to "what does this value mean", so it stands INSTEAD of them rather than after them - a darkness
 ## colour would otherwise arrive as colour words and no longer look like a colour at all.
@@ -16269,7 +16269,7 @@ func _read_through_lens(lens: String, shown: String) -> String:
 		else _read_number_words(shown)
 
 
-## U1. A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
+## A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%
 ## opacity" - rather than as the Color call that built it. Only a value that IS a colour expression
 ## goes through the grammar: everything else is the author's own GDScript and stays exactly as typed.
 func _read_colour_words(shown: String) -> String:
@@ -16304,14 +16304,14 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# ("Jouer") instead of the literal tr("Play"). The identity when no preview is active, so
 			# this is byte-identical to the row you author until someone asks to see another language.
 			#
-			# K1: a value that IS a comparison operator renders as the glyph the row means - ≤ ≥ ≠,
+			# A value that IS a comparison operator renders as the glyph the row means - ≤ ≥ ≠,
 			# and `=` for equality - the same spellings an opened script's readings already use. Only
 			# the six operator tokens change; every other param value is the author's own GDScript.
 			shown = EventSheetGameCatalog.preview_param(shown)
 			shown = EventForgeACEFactory.comparison_glyph(shown)
-			# L4 - a param that declares a READING LENS has its own answer for what its value means,
+			# A param that declares a READING LENS has its own answer for what its value means,
 			# so the lens REPLACES the general readings rather than running after them: a stored
-			# darkness colour says the percentage it makes, not the colour words U1 would find in it.
+			# darkness colour says the percentage it makes, not the colour words the colour reading would find in it.
 			# Applied here, on the canvas, because a lens is a derived reading and not a second
 			# spelling - the row still stores and emits the author's own colour.
 			shown = _read_through_lens(EventForgeValueLens.lens_of(parameter as Dictionary), shown)
@@ -16334,7 +16334,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		# L4 - the same reading lens the registry branch applies, so a builtin descriptor and the
+		# The same reading lens the registry branch applies, so a builtin descriptor and the
 		# registry's copy of it say the same sentence about the same row.
 		var param_shown: String = _read_through_lens(param.display_lens,
 			EventForgeACEFactory.comparison_glyph(EventSheetGameCatalog.preview_param(
@@ -16530,7 +16530,7 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 	return icon
 
 
-# ── V12 - Arrange by object / trigger / group (appended block - keep together) ─────────────────
+# ── Arrange by object / trigger / group (appended block - keep together) ───────────────────────
 # The display-only re-grouping pass. It runs over the already-built root rows and re-emits them with
 # one synthetic header per bucket, exactly the way group_helper_verb_rows gathers helpers - the same
 # archetype, the same null source_resource, the same shared fold state. Nothing about the sheet
@@ -16583,7 +16583,7 @@ func _build_arrangement_header_row(sheet: EventSheetResource, mode: int, bucket_
 	return row_data
 
 
-# ── X2 / X30: the camera-ray run, which is ONE question written as four lines ────────────────────
+# ── the camera-ray run, which is ONE question written as four lines ──────────────────────────────
 #
 # `project_ray_origin`, `project_ray_normal`, the query, `intersect_ray` - four lines that only mean
 # anything together, and that every 3D game writes to answer "what is under the cursor?". They read
@@ -16596,9 +16596,9 @@ func _build_arrangement_header_row(sheet: EventSheetResource, mode: int, bucket_
 # no line of the run can answer any of them on its own.
 
 
-## X2 / X30. The camera-ray runs in one action lane, as {"leads": {index: {…}}, "consumed": {…}} -
+## The camera-ray runs in one action lane, as {"leads": {index: {…}}, "consumed": {…}} -
 ## the same shape every other run grouper here answers in.
-## W9. The action indices a TEST sheet's verdict bookkeeping sits at - the `var passed := true` a
+## The action indices a TEST sheet's verdict bookkeeping sits at - the `var passed := true` a
 ## file opens each of its gates with. Not something the test DOES: the Check rows under it are the
 ## verdict, and the Include bar already says this is a test sheet and how many checks it makes. Every
 ## other file, and every other local, comes back empty and draws exactly as it always did.
@@ -16682,7 +16682,7 @@ func _cursor_ray_groups(actions: Array) -> Dictionary:
 	return {"leads": leads, "consumed": consumed}
 
 
-## X2 / X30. The LAST action of a camera-ray run starting at `first`, or -1 when the lines there are
+## The LAST action of a camera-ray run starting at `first`, or -1 when the lines there are
 ## not one. Every step is required: two halves of a ray with no query built from them are two
 ## ordinary declarations, and reading them as a question would be exactly the confident lie this
 ## grammar refuses. The mask line is the one optional member, because a ray restricted to the floor
@@ -16760,7 +16760,7 @@ func _cursor_ray_mask_target(text: String) -> String:
 	return "" if at <= 0 else text.strip_edges().substr(0, at).strip_edges()
 
 
-## X2 / X30. What THIS run says about itself: how far it reaches, which layers it may see, and the
+## What THIS run says about itself: how far it reaches, which layers it may see, and the
 ## object whose canvas position aimed it ("" for the OS pointer). Read off the run's own lines so two
 ## same-named runs in one file can never borrow each other's numbers.
 func _cursor_ray_run_facts(actions: Array, first: int, last: int) -> Dictionary:

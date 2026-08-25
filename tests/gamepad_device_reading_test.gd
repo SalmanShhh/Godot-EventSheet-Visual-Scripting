@@ -1,4 +1,4 @@
-# EventForge - R25. A gamepad branch that names a DEVICE reads as one row in the Gamepad object's own
+# EventForge - A gamepad branch that names a DEVICE reads as one row in the Gamepad object's own
 # words: `if event is InputEventJoypadButton and event.pressed and event.device == 0 and
 # event.button_index == JOY_BUTTON_A:` is `On gamepad 0 button A pressed`, not four condition cells.
 # The device index IS the gamepad number, exactly as the Gamepad object counts them from 0. A keyboard

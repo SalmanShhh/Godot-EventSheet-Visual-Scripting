@@ -8,16 +8,16 @@ extends RefCounted
 # function here returns something to draw, and nothing here touches a row model, a sheet
 # resource, or emitted GDScript.
 #
-#   M13/M20  class icons on objects   - the pack's host, a $Node / %Node reference, and any
+#   Class icons on objects   - the pack's host, a $Node / %Node reference, and any
 #                                       @onready-declared node variable draw their Godot class
 #                                       icon before the object label
-#   M16      Functions > Call Name    - a call to a known function reads with its display name
+#   Functions > Call Name    - a call to a known function reads with its display name
 #                                       and one argument per parameter name
-#   M17      folded code cards        - a raw block that could not lift reads as one card
-#   M20      object declaration rows  - @onready var hp_bar: ProgressBar = %HpBar
-#   N4       autoloads and behaviours - an autoload reads as a global, and a pack node under the
+#   Folded code cards        - a raw block that could not lift reads as one card
+#   Object declaration rows  - @onready var hp_bar: ProgressBar = %HpBar
+#   Autoloads and behaviours - an autoload reads as a global, and a pack node under the
 #                                       script's own node reads as that object's behaviour
-#   W14      typed objects by class   - a receiver whose declared class the PROJECT wrote reads
+#   Typed objects by class   - a receiver whose declared class the PROJECT wrote reads
 #                                       under that class in words, its own name muted beside it
 
 
@@ -26,7 +26,7 @@ extends RefCounted
 const HOST_LABEL := "host"
 
 
-## M25/M27/M28. What the sentence grammar needs to know about THIS sheet that only something able to
+## What the sentence grammar needs to know about THIS sheet that only something able to
 ## ASK can answer: the name of the object the script itself is, the engine properties that object has
 ## (so `position.x = 100` reads under it and a plain script variable does not), and each declared
 ## signal's parameter names (so an emit shows named payload chips).
@@ -36,23 +36,23 @@ const HOST_LABEL := "host"
 static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {}
-	# ── M38 / M40 lens hook ────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The sheet's own enums (so an unambiguous member can drop its enum name) and the class behind
 	# every object label (so `play` can tell an animation from a sound). Both are plain walks of the
 	# sheet, cached with the rest of the context.
 	var enums: Dictionary = enum_member_map(sheet)
-	# ── Q5 / Q6 / Q11 lens hook ────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# What the sheet's own DECLARATIONS say about a value's kind: the type of each variable (so
 	# `inventory.erase(k)` can say "key" where `items.erase(v)` says "value"), the variables typed
 	# with one of the sheet's enums plus each enum's numbering (so `dir = 2` reads LEFT), and the
 	# 0..1 settings the project marked as fractions (so `0.5` reads 50%). All plain walks of the
 	# sheet, cached with the rest of the context.
 	var declared: Dictionary = declared_type_map(sheet)
-	# ── R3 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The tween chains the file writes, walked once in FILE order: which locals hold a tween, and
 	# which of their steps follow another one or run beside it.
 	var tweens: Dictionary = tween_chain_facts(sheet)
-	# ── S2 / S4 lens hook ──────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The PATTERNS this file writes - the numbers counted down by a delta and asked about against
 	# zero, the lists used as object pools. No single line can answer either question, so both are
 	# answered from one walk of the file here and handed to the grammar as ordinary context.
@@ -72,47 +72,47 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"percent_members": declared.get("percent_members", {}),
 		"object_classes": object_class_map(sheet),
 		"self_class": sheet.host_class.strip_edges(),
-		# ── P9 ────────────────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Whether this file is the scene's OWN script, which decides whether its `_ready` reads as the
 		# layout starting or as one object being created. Cached here with the rest of the context
 		# because the answer only changes when the opened sheet does.
 		"scene_root": is_scene_root_script(sheet),
-		# ── R9 ────────────────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Which of the Timer behavior's two modes each timer tag runs in, so a Start timer row can
 		# say `(once)` / `(regular)`. The file itself is the only place that knows, and it says it
 		# on a line of its own - so the line is read once per rebuild rather than per row.
 		"timer_modes": timer_mode_map(sheet),
-		# ── R3 ────────────────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Which locals hold a tween, and which of their steps follow another one. A tween chain is
 		# spread over several lines joined only by the local's name, so the rows that belong together
 		# are worked out once here rather than guessed at line by line.
 		"tween_locals": tweens.get("locals", {}),
 		"tween_notes": tweens.get("notes", {}),
-		# ── S17 ───────────────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Which locals hold a tile's own data, and the cell each one came from. The question a tile
 		# asks ("has solid set") is written a line below the answer's source, so the two are joined
 		# once here rather than guessed at per row.
 		"tile_data_locals": tile_data_local_map(sheet),
-		# ── U9 / U10 / U11 ────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Every function's parameter names, so a call that hands values over - a job sent to a
 		# background thread, a handler wired up with values bound to it, a call made by name - shows
 		# each value under the name the function receives it as, exactly as a signal's payload chips
 		# do. A function the sheet does not declare is simply absent, and the chips then show the
 		# bare values rather than a guessed name.
 		"function_params": function_parameter_map(sheet),
-		# ── X4 ────────────────────────────────────────────────────────────────────────────────
+		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Which of this file's objects are camera PIVOTS - nodes whose only children in the scene
 		# are a camera or the arm one hangs off. Turning one of those is not a turn, it is the
 		# camera going round what it looks at, and only the SCENE can say which nodes those are.
 		"orbit_pivots": orbit_pivot_map(sheet)
 	}
 	extras.merge(patterns, true)
-	# ── X2 / X20 / X30 lens hook ───────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The camera-ray runs the file casts through the cursor, and the locals it converts into canvas
 	# space. A run is four lines joined only by its locals' names and a canvas distance is two
 	# declarations away from the call that measures it, so both are answered from one walk here.
 	extras.merge(cursor_ray_facts(sheet), true)
-	# ── X22 / X28 lens hook ────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The sensor shapes and the input window are asked of the HALF-LIFTED file rather than of its
 	# hand-written lines alone: the control a window waits for is written inside an `if` that lifts
 	# to a condition row, so a walk that saw only the verbatim text would name the window in a file
@@ -121,7 +121,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	extras["tilt_variables"] = EventSheetPatternReadings.tilt_variables(input_lines)
 	extras["rate_variables"] = EventSheetPatternReadings.rate_variables(input_lines)
 	extras["input_window"] = EventSheetPatternReadings.input_window_facts(input_lines)
-	# ── Y12 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Which table this file keeps unlocked skill ids in. `unlocked.has("double_jump")` is a plain
 	# dictionary lookup until the file elsewhere owns that table beside a requires list, so the
 	# question is answered from one walk of the file rather than line by line. Both views of the
@@ -131,7 +131,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	var owned_lines: PackedStringArray = input_lines.duplicate()
 	owned_lines.append_array(file_lines)
 	extras.merge(EventSheetPatternReadings.skill_tree_facts(owned_lines), true)
-	# ── Y9 / Y22 lens hook ─────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The two board shapes, both whole-file questions. A rail ride is a closest offset, a baked
 	# sample and a flag spread over three lines that share only their locals' names; and a board is
 	# told apart from a runner by ONE line elsewhere in the file - gravity projected along the floor
@@ -145,20 +145,20 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	board_lines.append_array(file_lines)
 	extras["grind"] = EventSheetPatternReadings.grind_facts(board_lines)
 	extras["skate"] = EventSheetPatternReadings.skate_facts(board_lines)
-	# ── S8 / S10 / S15 lens hook ───────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The three patterns whose lines only mean something TOGETHER: the locals a background load
 	# threads its path and its progress through, the messages the file publishes with `@rpc`, and the
 	# navigation agent plus the waypoint local a path walk is written around. Worked out once here,
 	# for the same reason the tween chains are - a per-row guess could only see one line at a time.
 	extras.merge(godot_systems_facts(sheet), true)
-	# ── T1 / T2 / T3 / T4 lens hook ────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# What the FILE says about the hand-rolled behavior shapes it writes: whether it is a projectile
 	# at all, which variable a nearest-in-family loop fills, which point a glide aims at and which
 	# flag says it is running, which object a place is copied from, and which tween fades to nothing.
 	# Not one of those questions can be answered from a single line, so all of them are answered from
 	# one walk here and handed to the grammar as ordinary context.
 	extras.merge(EventSheetBehaviorShapes.facts(file_lines), true)
-	# ── Y5 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The same seat question asked of the sheet's DECLARATIONS as well as of its lines. A variable
 	# typed as a marker, a bone or a path follower is what turns "pin to hand" into "pin to Player's
 	# hand", and the importer lifts that declaration into a variable row - so in an opened file the
@@ -169,40 +169,40 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		var seats: Dictionary = (extras.get("pin_seats", {}) as Dictionary).duplicate()
 		seats.merge(declared_seats, true)
 		extras["pin_seats"] = seats
-	# ── T10 lens hook ──────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Whether each object's Z order counts from its parent or from the layer. The file states it on a
 	# line of its own, a line away from the number it qualifies, so the answer is gathered once here
 	# rather than guessed at per row.
 	extras.merge(around_objects_facts(sheet), true)
-	# ── V1 / V6 lens hook ──────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The two kinds of variable whose CLASS is only ever stated where they are declared: the physics
 	# material a body's friction and elasticity are written on, and the regular expression a search
 	# is run with. Worked out once here for the same reason the tween chains are.
 	extras.merge(reading_gap_facts(sheet), true)
-	# ── T5 / T6 / T25 / T26 lens hook ──────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The behaviors a script hand-rolls: which local holds the sight ray, which boolean is the drag
 	# flag and which vector is its grab offset, which local holds the noise and the seeded random,
 	# and which local holds the clock the date fields are read out of. Every one of them is a whole-
 	# file question, so it is answered once here rather than guessed at line by line.
 	extras.merge(behavior_words_facts(sheet), true)
-	# ── W3 / W4 / W5 / W16 lens hook ───────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# What a TOOL script's own shape says about it: the object a helper is a behavior of, the class
 	# that is a shared store, the vocabulary rows a module publishes and the functions that call
 	# themselves. Every one of those is stated in a `func` header or spread over a whole file, so all
 	# of them are answered from one read of the file here rather than guessed at line by line.
 	extras.merge(EventSheetEditorSourceFacts.facts(sheet), true)
-	# ── W9 / W10 / W11 lens hook ───────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# What KIND of tooling file this is - a test, a command-line tool, a behavior pack's recipe - and
 	# the whole-file answers each of those readings needs: the names a test folds its verdict through,
 	# the locals a folder walk fills, the facts a recipe states about the pack it builds. A file that
 	# is none of the three adds nothing at all, which is every game script.
 	extras.merge(tool_file_facts(sheet), true)
-	# ── X3 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# A facing test names its two vectors a line or two before it asks the question, so no single
 	# line can say whose forward `forward` is or what `to_enemy` points at. Both are answered from
 	# one walk of the file here, exactly as the tween chains and the sight rays are.
 	extras.merge(spatial_words_facts(sheet), true)
-	# ── W6 lens hook ───────────────────────────────────────────────────────────────────────────
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The menus this file builds: which add_item labels went into which menu with which id, and
 	# which handler answers that menu. Both halves are written far apart, so neither line can say
 	# what the other knows - they are joined here, once, from one walk of the file.
@@ -210,7 +210,7 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 	return extras
 
 
-## W6. The menus this file builds, or {} when it builds none - which is every sheet that never calls
+## The menus this file builds, or {} when it builds none - which is every sheet that never calls
 ## add_item, so the common case costs one walk and nothing else. Read off DISK for an opened file,
 ## exactly as the tooling facts are: the importer lifts a menu's `_ready` into structure, and the
 ## file on disk is the only place that still holds every line in order.
@@ -220,7 +220,7 @@ static func menu_facts(sheet: EventSheetResource) -> Dictionary:
 	return EventSheetMenuFacts.facts(EventSheetToolFiles.lines_of_sheet(sheet))
 
 
-## W9 / W10 / W11. What this file is as a piece of TOOLING, or {} when it is not one. The path is what
+## What this file is as a piece of TOOLING, or {} when it is not one. The path is what
 ## tells a test from a helper and a recipe from a tool, so it is passed alongside the lines: the sheet
 ## remembers the file it was opened from, and an unsaved sheet is in no folder and claims nothing.
 static func tool_file_facts(sheet: EventSheetResource) -> Dictionary:
@@ -230,7 +230,7 @@ static func tool_file_facts(sheet: EventSheetResource) -> Dictionary:
 		EventSheetToolFiles.lines_of_sheet(sheet), sheet.external_source_path)
 
 
-## X3. What the FILE says about the vectors a facing test is written with:
+## What the FILE says about the vectors a facing test is written with:
 ##
 ##   facing_locals     {local name: the object whose FORWARD it holds}
 ##   direction_locals  {local name: {"from": object, "to": object} it points between}
@@ -269,7 +269,7 @@ static func spatial_words_facts(sheet: EventSheetResource) -> Dictionary:
 	return {"facing_locals": facing, "direction_locals": directions}
 
 
-## T10 / T8. What the FILE says about its drawing order and about the lists it picks from:
+## What the FILE says about its drawing order and about the lists it picks from:
 ##
 ##   z_order_relative  {object label: true when its Z order counts from the parent}
 ##   family_lists      {local name: the family its members are}
@@ -306,7 +306,7 @@ static func around_objects_facts(sheet: EventSheetResource) -> Dictionary:
 	return {"z_order_relative": relative, "family_lists": families}
 
 
-## T8. Records the family a list holds, when the LINE that made the list says it: a list built from a
+## Records the family a list holds, when the LINE that made the list says it: a list built from a
 ## group holds that group's family, and a list declared `Array[Enemy]` holds Enemies. A list the file
 ## never said the kind of is simply absent, and every pick reading then declines to fire.
 static func _note_family_list(text: String, families: Dictionary) -> void:
@@ -327,7 +327,7 @@ static func _note_family_list(text: String, families: Dictionary) -> void:
 		families[declared] = group_family
 
 
-## T8. The group a `get_tree().get_nodes_in_group("enemy")` list was built from, or "" for any other
+## The group a `get_tree().get_nodes_in_group("enemy")` list was built from, or "" for any other
 ## value. Only the literal group name answers: a group named by a variable is a name this reading
 ## cannot show, so the list keeps its own words.
 static func _group_list_source(value: String) -> String:
@@ -344,7 +344,7 @@ static func _group_list_source(value: String) -> String:
 	return ""
 
 
-## T8. The type a declaration carries (`var enemies: Array[Enemy] = ...`), or "" when it carries none.
+## The type a declaration carries (`var enemies: Array[Enemy] = ...`), or "" when it carries none.
 static func _declared_local_type(text: String) -> String:
 	var body: String = text.strip_edges()
 	var keyword: String = EventSheetSentence.leading_word(body)
@@ -359,7 +359,7 @@ static func _declared_local_type(text: String) -> String:
 	return "" if colon_at < 0 else head.substr(colon_at + 1).strip_edges()
 
 
-## V1 / V6. What the FILE says about the two kinds of variable batch eleven's readings need a class
+## What the FILE says about the two kinds of variable batch eleven's readings need a class
 ## for, as the fact maps the sentence grammar reads:
 ##
 ##   physics_materials  {name: true} - the variables a `PhysicsMaterial.new()` filled
@@ -398,7 +398,7 @@ static func reading_gap_facts(sheet: EventSheetResource) -> Dictionary:
 		"match_variables": matches}
 
 
-## V6. True when a value is `<a pattern this file declared>.search(...)` - the one call whose result
+## True when a value is `<a pattern this file declared>.search(...)` - the one call whose result
 ## is the match the reading calls "the match".
 static func _is_pattern_search(value: String, patterns: Dictionary) -> bool:
 	var call: Dictionary = EventSheetSentence.call_parts(value.strip_edges())
@@ -458,7 +458,7 @@ static func _claim_body(sheet: EventSheetResource, row_uid: String, event_uid: S
 			str(claim.get("adoptable", "")), claim.get("ace_ids", PackedStringArray()))
 
 
-## T2. The ACEs a turret is authored from, so the Manual's "Patterns using this" and Adopt behavior
+## The ACEs a turret is authored from, so the Manual's "Patterns using this" and Adopt behavior
 ## know what the hand-rolled loop would be replaced BY. The pack is the first option; these are the
 ## free actions the loop would otherwise be written as.
 const TURRET_ACE_IDS: PackedStringArray = [
@@ -466,7 +466,7 @@ const TURRET_ACE_IDS: PackedStringArray = [
 ]
 
 
-## T2. Records the nearest-in-family loop each event writes as the Turret behavior's Acquire target,
+## Records the nearest-in-family loop each event writes as the Turret behavior's Acquire target,
 ## with the loop's own lines as the evidence and the Weapon Kit as the pack that could replace it.
 ##
 ## The loop is a SHAPE spread over a `for`, the compare inside it and the assignment after, so it is
@@ -503,7 +503,7 @@ static func _claim_turret_runs(sheet: EventSheetResource, row_uid: String,
 			run.get("evidence", PackedStringArray()), words, "weapon_kit", TURRET_ACE_IDS)
 
 
-## S17. {local name: {object, cell}} for every `var data = <tilemap>.get_cell_tile_data(<cell>)` the
+## {local name: {object, cell}} for every `var data = <tilemap>.get_cell_tile_data(<cell>)` the
 ## file writes. A name filled twice from different cells is dropped: the same word may not read two
 ## ways on one sheet, exactly as the tween notes refuse a line that means two things.
 static func tile_data_local_map(sheet: EventSheetResource) -> Dictionary:
@@ -538,7 +538,7 @@ static func tile_data_local_map(sheet: EventSheetResource) -> Dictionary:
 	return found
 
 
-## S8 / S10 / S15. What the FILE says about its Godot-systems patterns, as the fact maps the sentence
+## What the FILE says about its Godot-systems patterns, as the fact maps the sentence
 ## grammar reads:
 ##
 ##   loading_paths     {local: the scene path literal it was declared from}
@@ -618,7 +618,7 @@ static func godot_systems_facts(sheet: EventSheetResource) -> Dictionary:
 	}
 
 
-## S8 / S9 / S10 / S15. The evidence each pattern is recognised BY, as the fragments a line of the
+## The evidence each pattern is recognised BY, as the fragments a line of the
 ## event has to contain. Frozen alongside the pattern ids: a chip, a Doctor smell and a Manual page
 ## all key on the same claim, so what counts as evidence may gain entries but never lose them.
 const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
@@ -638,60 +638,60 @@ const SYSTEMS_PATTERN_EVIDENCE: Dictionary = {
 		"target_position =", "get_next_path_position()", "is_navigation_finished()",
 		"velocity_computed"
 	],
-	# V4. A data asset is loaded, saved or re-read by name. `.tres")` is the strongest single mark a
+	# A data asset is loaded, saved or re-read by name. `.tres")` is the strongest single mark a
 	# line carries - it is the file extension a data asset has, quoted, which no other shape writes.
 	"data_asset": [
 		"ResourceSaver.save(", ".tres\")", ".res\")", "ResourceLoader.exists(",
 		"ResourceLoader.load("
 	],
-	# V5. The window, the frame cap, the anti-aliasing level, and the two lines a screenshot is made
+	# The window, the frame cap, the anti-aliasing level, and the two lines a screenshot is made
 	# of. Every fragment is the exact Godot spelling the reading above is claimed at.
 	"window": [
 		"get_window().", "DisplayServer.window_set_", "Engine.max_fps", "msaa_2d", "msaa_3d",
 		"get_texture().get_image()", ".save_png(", ".save_jpg("
 	],
-	# X23. A swipe is a touch-down, a touch-up and the distance between them measured against a clock;
+	# A swipe is a touch-down, a touch-up and the distance between them measured against a clock;
 	# a drawn shape is the drag positions gathered into a stroke. Every fragment here is a Godot
 	# spelling only a touch script writes, so a mouse-driven file cannot wander into the claim.
 	"swipe": [
 		"InputEventScreenTouch", "InputEventScreenDrag", "stroke.append("
 	],
-	# X25. The shooter's three shapes: the ray down the crosshair, the blast that pushes bodies away
+	# The shooter's three shapes: the ray down the crosshair, the blast that pushes bodies away
 	# from a point, and the wrapping index over a weapons list.
 	"hitscan": [
 		"project_ray_origin(", "project_ray_normal(", "PhysicsRayQueryParameters3D.create(",
 		"intersect_shape(", "apply_impulse(", "weapons.size()", "weapon_index"
 	],
-	# X25. The counter every level of this shape keeps. `secret` is the word the Area itself is marked
+	# The counter every level of this shape keeps. `secret` is the word the Area itself is marked
 	# with, which is why the claim asks for it beside a count rather than for a count alone.
-	# Y18 adds the end-of-level tally's own lines: the kills, the par and the flag that says the
+	# Adds the end-of-level tally's own lines: the kills, the par and the flag that says the
 	# level is over are what turn a counter into a scoreboard, and a stats screen that lifted whole
 	# would otherwise claim nothing at all.
 	"secrets": [
 		"secrets_found", "is_in_group(\"secret\")", "secrets_total",
 		"level_over", "par_seconds", "level_seconds"
 	],
-	# Y16. The keycard shape, and every fragment of it names a KEY. A list called `keys` is not enough
+	# The keycard shape, and every fragment of it names a KEY. A list called `keys` is not enough
 	# on its own - plenty of dictionaries are keyed - so the claim wants a key going into it, a door
 	# saying which one it wants, or one of the two calls the door contract is made of.
 	"keys_doors": [
 		"needs_key", "locked_door_tried(", "open_door()", "_key\" in keys", "keys.append(\""
 	],
-	# Y18. An alert is the noise words aimed at somebody: one enemy shouts and the room answers.
+	# An alert is the noise words aimed at somebody: one enemy shouts and the room answers.
 	# Only the two halves of that call are evidence. The infighting row is deliberately NOT here -
 	# its lines are a group test and an assignment, which every project writes about everything, so
 	# it counts through the row's own ace_id below and never through a fragment of text.
 	"detection": [
 		".alerted(", "func alerted("
 	],
-	# X29. The options screen: the live Input Map being rewritten, the settings the packs read, and
+	# The options screen: the live Input Map being rewritten, the settings the packs read, and
 	# the spoken text. Each fragment is a line only an options screen writes.
 	"accessibility_options": [
 		"InputMap.action_erase_events(", "InputMap.action_add_event(", "effect_strength",
 		"no_flashing", "text_size_scale", "aim_assist_radius", "DisplayServer.tts_speak(",
 		"show_caption"
 	],
-	# Y12. A skill tree names itself: the points it is spent in, and the question it asks before
+	# A skill tree names itself: the points it is spent in, and the question it asks before
 	# every unlock. A dictionary of flags spells neither, which is what keeps a door that remembers
 	# being opened from reading as a talent tree.
 	"skill_tree": [
@@ -751,7 +751,7 @@ const SYSTEMS_PATTERN_ACES: Dictionary = {
 }
 
 
-## S8 / S9 / S10 / S15. Records which events of a sheet read as one of the four Godot-systems
+## Records which events of a sheet read as one of the four Godot-systems
 ## patterns, with the statements themselves as evidence and - where one ships - the behavior that could
 ## replace the hand-written shape.
 ##
@@ -831,19 +831,19 @@ static func _systems_adoptable(pattern: String, text: String, picked: PackedStri
 			return "platformer_movement" if gravity else "eight_direction"
 		"navigation":
 			return "nav_agent_3d" if dimension_3d else "platformer_pathfinding"
-		# X23. A hand-written swipe or shape matcher has a behaviour that does the whole thing
+		# A hand-written swipe or shape matcher has a behaviour that does the whole thing
 		# properly, with the thresholds, the diagonals and the stroke templates - so the honest offer
 		# is the pack, not a row that writes a third of it.
 		"swipe":
 			return "touch_gestures"
-		# Y12. A hand-written tree has a pack that does the whole thing - the asset, the
+		# A hand-written tree has a pack that does the whole thing - the asset, the
 		# prerequisite walk, the points and the grants - so the honest offer is the pack.
 		"skill_tree":
 			return "upgrades"
 	return ""
 
 
-## S8. A declaration's value as the QUOTED project path it is, or "" when it is not one. A lifted
+## A declaration's value as the QUOTED project path it is, or "" when it is not one. A lifted
 ## variable row is written back out with its value already unquoted, so both spellings answer the
 ## same literal and the layout gets named either way.
 static func _scene_path_literal(value: String) -> String:
@@ -906,7 +906,7 @@ static func _declared_local_value(text: String) -> String:
 	return ""
 
 
-## S15. True when a declaration's value IS a navigation agent - either a node whose name says so, or
+## True when a declaration's value IS a navigation agent - either a node whose name says so, or
 ## a variable the sheet typed as one. A guess would put path words on an object that has no path.
 static func _is_nav_agent_value(value: String, declared: String, sheet: EventSheetResource) -> bool:
 	for agent_class: String in EventSheetSentence.NAV_AGENT_CLASSES:
@@ -916,7 +916,7 @@ static func _is_nav_agent_value(value: String, declared: String, sheet: EventShe
 	return EventSheetSentence.NAV_AGENT_CLASSES.has(known)
 
 
-## T5 / T6 / T25 / T26. What the FILE says about the behaviors it hand-rolls, as the fact maps the
+## What the FILE says about the behaviors it hand-rolls, as the fact maps the
 ## sentence grammar reads:
 ##
 ##   sight_rays      {local: true} - the locals a raycast used for a sight test lives in
@@ -993,7 +993,7 @@ static func behavior_words_facts(sheet: EventSheetResource) -> Dictionary:
 	}
 
 
-## T5 / T6 / T7 / T25 / T26. Every line the behavior facts and the behavior claims are read from, in
+## Every line the behavior facts and the behavior claims are read from, in
 ## FILE order: the hand-written ones as they stand, and the rows the importer already lifted written
 ## back out as the statement each stands for.
 ##
@@ -1089,7 +1089,7 @@ static func _lifted_row_line(resource: Resource) -> String:
 	return ""
 
 
-## T5. True when a declaration's value IS the ray a sight test is cast with - a node whose name says
+## True when a declaration's value IS the ray a sight test is cast with - a node whose name says
 ## so, one made outright, or a local the sheet already typed as one.
 static func _is_sight_ray_value(value: String, declared: String, sheet: EventSheetResource) -> bool:
 	for ray_class: String in EventSheetSentence.SIGHT_RAY_CLASSES:
@@ -1099,7 +1099,7 @@ static func _is_sight_ray_value(value: String, declared: String, sheet: EventShe
 	return EventSheetSentence.SIGHT_RAY_CLASSES.has(known)
 
 
-## T5. The number a `global_position.distance_to(t) > sight_range` guard is measured against, or ""
+## The number a `global_position.distance_to(t) > sight_range` guard is measured against, or ""
 ## when the line is not that guard. Only a plain name is claimed: a computed range has no word a row
 ## could honestly print after "within".
 static func _sight_range_name(text: String) -> String:
@@ -1115,7 +1115,7 @@ static func _sight_range_name(text: String) -> String:
 	return ""
 
 
-## T25. The Advanced Random word for a `noise.noise_type = FastNoiseLite.TYPE_PERLIN` line, or "" for
+## The Advanced Random word for a `noise.noise_type = FastNoiseLite.TYPE_PERLIN` line, or "" for
 ## every other line. A file that never states a type is read with the plain `Noise` head.
 static func _noise_type_word(text: String) -> String:
 	if not text.contains("noise_type") or not text.contains("FastNoiseLite."):
@@ -1126,7 +1126,7 @@ static func _noise_type_word(text: String) -> String:
 	return ""
 
 
-## T5 / T6 / T7 / T22 / T23 / T25 / T26. The evidence each behavior pattern is recognised BY, as the
+## The evidence each behavior pattern is recognised BY, as the
 ## fragments a line of the event has to contain. Frozen alongside the pattern ids: a chip, a Doctor
 ## smell and a Manual page all key on the same claim, so this may gain entries but never lose them.
 const BEHAVIOR_PATTERN_EVIDENCE: Dictionary = {
@@ -1174,7 +1174,7 @@ const BEHAVIOR_PATTERN_ACES: Dictionary = {
 }
 
 
-## T5 / T6 / T7 / T22 / T23 / T25 / T26. Records which events of a sheet read as one of the behavior
+## Records which events of a sheet read as one of the behavior
 ## patterns, with the statements themselves as evidence and - where one ships - the behavior that could
 ## replace the hand-written shape. Called once at the top of a row build, after the registry has been
 ## cleared; nothing here draws anything, because the chip and the hover read the claims back.
@@ -1233,7 +1233,7 @@ static func _behavior_adoptable(pattern: String, dimension_3d: bool) -> String:
 	return ""
 
 
-## R9. {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
+## {timer tag: true when it fires once} from the `$Timer.one_shot = true` lines the file holds.
 ## Only a plain `$Node` / `%Node` receiver and a literal `true` / `false` count: a mode assembled at
 ## runtime is not a fact the reading may claim. Empty whenever the file says nothing.
 static func timer_mode_map(sheet: EventSheetResource) -> Dictionary:
@@ -1255,7 +1255,7 @@ static func timer_mode_map(sheet: EventSheetResource) -> Dictionary:
 	return modes
 
 
-## R3. What the file says about its tween chains, as {"locals": {name: true}, "notes": {line: note}}.
+## What the file says about its tween chains, as {"locals": {name: true}, "notes": {line: note}}.
 ##
 ## `locals` are the names declared from `create_tween()`; `notes` says `after` for a step that follows
 ## another step of the same chain and `parallel` for one that runs beside the step before it. Only a
@@ -1310,7 +1310,7 @@ static func tween_chain_facts(sheet: EventSheetResource) -> Dictionary:
 	return {"locals": locals, "notes": notes}
 
 
-## R3. The local a `var t = create_tween()` line declares, or "" when the line declares nothing of
+## The local a `var t = create_tween()` line declares, or "" when the line declares nothing of
 ## the sort. The walrus and the annotated spellings all answer the same name.
 static func _tween_declared_local(text: String) -> String:
 	if not text.begins_with("var "):
@@ -1406,7 +1406,7 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 			"CallMethod":
 				lines.append("%s.%s(%s)" % [
 					str(params.get("target", "")), str(params.get("method", "")), str(params.get("args", ""))])
-			# Y1 - the two list steps a COMBO buffer is made of. Pushing the pressed input on and
+			# The two list steps a COMBO buffer is made of. Pushing the pressed input on and
 			# emptying the buffer both lift to rows, so a walk over verbatim text alone would find a
 			# detector in an untouched file and lose it the moment the importer tidied the same file.
 			"ArrayAppend":
@@ -1425,7 +1425,7 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 			"AwaitNextFrame":
 				lines.append("await get_tree().process_frame")
 			_:
-				# T1 / T3 / T4 - the steps a behavior shape is MADE of, whether the importer claimed a
+				# The steps a behavior shape is MADE of, whether the importer claimed a
 				# typed line for a shipped row or the picker wrote the row outright. Without them the
 				# file cannot tell that it is a projectile at all: the step and the gravity pull are
 				# exactly the two lines that say so.
@@ -1434,7 +1434,7 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 					lines.append(shaped)
 		return
 	if entry is EventRow:
-		# T2 - a `for` the importer lifted lives on a pick filter rather than in any text, so its header
+		# A `for` the importer lifted lives on a pick filter rather than in any text, so its header
 		# is rebuilt here like every other lifted line. The family a nearest-in-family loop searched is
 		# named on that one line and nowhere else, and a walk that could not see it would read the loop
 		# without ever knowing what it was looking through.
@@ -1457,7 +1457,7 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 				condition_params = condition_row.parameters
 			lines.append("%s %s %s" % [str(condition_params.get("var_name", "")),
 				str(condition_params.get("op", "")), str(condition_params.get("value", ""))])
-		# X21 / X26 - the RUN the condition lane stands for, rebuilt as the `if` it compiles to. Two
+		# The RUN the condition lane stands for, rebuilt as the `if` it compiles to. Two
 		# questions this walk has to answer are runs whose halves mean nothing apart: a roll that is
 		# either won or guaranteed, and a health threshold guarded by the phase the fight is in.
 		# Once the importer has lifted such a line into rows there is no text left to read it from,
@@ -1472,7 +1472,7 @@ static func _append_file_lines(entry: Variant, lines: PackedStringArray, depth: 
 			_append_file_lines(sub_entry, lines, depth + 1)
 
 
-## X21 / X26. The `if ...:` a row's CONDITION RUN stands for, or "" when the row has no run to
+## The `if ...:` a row's CONDITION RUN stands for, or "" when the row has no run to
 ## rebuild - fewer than two terms, a term whose spelling the row does not carry, or a disabled one.
 ## The joiner is the row's own, so an OR block reads back as the `or` it compiles to.
 static func _condition_run_line(row: EventRow) -> String:
@@ -1547,7 +1547,7 @@ static func _sheet_code_lines(sheet: EventSheetResource) -> PackedStringArray:
 	return lines
 
 
-## P9. True when the opened file is the script the SCENE ITSELF carries - the one on its root node.
+## True when the opened file is the script the SCENE ITSELF carries - the one on its root node.
 ## The scene scan already answers exactly this (it records a script only when the ROOT carries it), so
 ## this is a lookup rather than a second walk of the project.
 static func is_scene_root_script(sheet: EventSheetResource) -> bool:
@@ -1559,7 +1559,7 @@ static func is_scene_root_script(sheet: EventSheetResource) -> bool:
 	return not ViewportRowBuilder.scene_using_script(source_path).is_empty()
 
 
-## Q5/Q6/Q11. What the sheet's variable declarations say about their values, as three maps:
+## What the sheet's variable declarations say about their values, as three maps:
 ##
 ##   "types"           {name: declared type word}     - "Array", "Dictionary", "String", "Direction"
 ##   "enum_types"      {name: enum name}              - only the ones typed with an enum THIS sheet declares
@@ -1588,7 +1588,7 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
 
 
-## Y5. The variables this sheet DECLARES as a point on another object - a Marker2D, a Bone2D, the
+## The variables this sheet DECLARES as a point on another object - a Marker2D, a Bone2D, the
 ## BoneAttachment3D a skeleton keeps on a bone, a path follower - as {name: {owner, point, path}}.
 ## The type and the node path are both on the declaration, which is the only place either is said,
 ## and pinning to one of them is "pin to Player's hand" rather than "pin to hand".
@@ -1608,7 +1608,7 @@ static func pin_seat_map(sheet: EventSheetResource) -> Dictionary:
 	return seats
 
 
-## Q5. True when an export hint says the value runs from 0 to 1 - the range the engine itself treats
+## True when an export hint says the value runs from 0 to 1 - the range the engine itself treats
 ## as a fraction (alpha, volume, a blend weight), and the one an event sheet shows as a percentage.
 ## Matched on the two numbers only, so `@export_range(0, 1, 0.01)` and `@export_range(0.0, 1.0)` both
 ## count and `@export_range(0, 100)` does not.
@@ -1622,10 +1622,10 @@ static func _is_fraction_range(export_hint: String) -> bool:
 	return parts[0].strip_edges().to_float() == 0.0 and parts[1].strip_edges().to_float() == 1.0
 
 
-## M38. The sheet's enums, as {"names": {EnumName: true}, "members": {MEMBER: how many enums declare
+## The sheet's enums, as {"names": {EnumName: true}, "members": {MEMBER: how many enums declare
 ## it}}. The count is what decides whether a member may drop its enum name: `State.PATROL` reads
 ## `PATROL` only while no other enum on the sheet has a `PATROL` of its own.
-## Q11 added a third map, "values": {EnumName: {number: MEMBER}}, so a number written into a variable
+## Added a third map, "values": {EnumName: {number: MEMBER}}, so a number written into a variable
 ## typed with one of these enums can read as the member it names. GDScript's own numbering rule is
 ## followed exactly - members count up from 0 and an explicit `= n` restarts the count at n.
 static func enum_member_map(sheet: EventSheetResource) -> Dictionary:
@@ -1659,7 +1659,7 @@ static func enum_member_map(sheet: EventSheetResource) -> Dictionary:
 	return {"names": names, "members": members, "values": values}
 
 
-## M25. The name a script's own object goes by: its `class_name` first, then the class it extends -
+## The name a script's own object goes by: its `class_name` first, then the class it extends -
 ## the node it sits on, which is the object a reader sees in the scene tree. Never `self`.
 ##
 ## A plain `extends Node` script with no class_name gets NO name, and its rows stay with System: a
@@ -1689,7 +1689,7 @@ static func _declares_host(sheet: EventSheetResource) -> bool:
 	return false
 
 
-## M25. Every property the ENGINE reports on the class this script extends, as a set. A name the
+## Every property the ENGINE reports on the class this script extends, as a set. A name the
 ## sheet declares as its own variable is removed: a script that keeps a variable called `position`
 ## means ITS variable, and reading it as the node's place would be a confident lie.
 static func engine_property_set(sheet: EventSheetResource) -> Dictionary:
@@ -1711,7 +1711,7 @@ static func engine_property_set(sheet: EventSheetResource) -> Dictionary:
 	return properties
 
 
-## M28. Each declared signal's parameter names, in order, so an emit reads with named payload chips.
+## Each declared signal's parameter names, in order, so an emit reads with named payload chips.
 static func signal_parameter_map(sheet: EventSheetResource) -> Dictionary:
 	var declared: Dictionary = {}
 	if sheet == null:
@@ -1734,7 +1734,7 @@ static func signal_parameter_map(sheet: EventSheetResource) -> Dictionary:
 	return declared
 
 
-## M26. The engine's own names for a method's arguments ("name", "custom_speed" for
+## The engine's own names for a method's arguments ("name", "custom_speed" for
 ## AnimatedSprite2D.play), so a call's chips say what each value MEANS. Empty whenever the class or
 ## the method is not one the engine knows - the chips then show plain values, which is the honest
 ## answer.
@@ -1758,7 +1758,7 @@ static func method_parameter_names(class_name_str: String, method_name: String) 
 static var _project_parameter_names: Dictionary = {}
 
 
-## P5. The names of a method's arguments when the method belongs to a class the PROJECT declared
+## The names of a method's arguments when the method belongs to a class the PROJECT declared
 ## rather than to the engine. A wired-up call names another object's own function far more often than
 ## an engine one, and its chips are worth naming too ("count = 3" rather than a bare 3). The engine's
 ## answer is asked for first, so an engine class never pays for the project lookup.
@@ -1790,7 +1790,7 @@ static func project_method_parameter_names(class_name_str: String, method_name: 
 	return names
 
 
-## M26. The class a call's object is, for the parameter-name lookup: whatever the sheet's own object
+## The class a call's object is, for the parameter-name lookup: whatever the sheet's own object
 ## map knows, else the object label itself when it IS a class name (`$Sprite2D` names its class).
 static func class_of_object(object_label: String, class_map: Dictionary) -> String:
 	var label: String = object_label.strip_edges()
@@ -1802,7 +1802,7 @@ static func class_of_object(object_label: String, class_map: Dictionary) -> Stri
 	return label if ClassDB.class_exists(label) else ""
 
 
-## M27. The event-sheet words for the two tick triggers. The trigger ids are untouched - this is the
+## The event-sheet words for the two tick triggers. The trigger ids are untouched - this is the
 ## reading only, so a sheet still stores (and compiles to) exactly what it did before.
 static func tick_trigger_words(trigger_id: String, display_text: String) -> String:
 	match trigger_id:
@@ -1810,17 +1810,17 @@ static func tick_trigger_words(trigger_id: String, display_text: String) -> Stri
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(physics)")]
 		"OnProcess":
 			return "%s %s" % [EventSheetL10n.translate("Every tick"), EventSheetL10n.translate("(draw)")]
-	# M41 - the collision family reads as the event-sheet's own two triggers.
+	# The collision family reads as the event-sheet's own two triggers.
 	var collision: String = collision_trigger_words(trigger_id)
 	if not collision.is_empty():
 		return collision
-	# X8 - a notifier's two signals ARE the sheet's "came into view" and "left view", in both node
+	# A notifier's two signals ARE the sheet's "came into view" and "left view", in both node
 	# generations: Godot spells them the same on the 2D notifier and the 3D one.
 	var seen: String = EventSheetSentence.view_trigger_words(trigger_id)
 	return seen if not seen.is_empty() else display_text
 
 
-## S27. The tick triggers whose body carries no condition of its own read as a BLANK event, because
+## The tick triggers whose body carries no condition of its own read as a BLANK event, because
 ## that is what a blank event means in an event sheet: it runs every tick. Nothing is written into
 ## the condition lane for the every-frame tick - the empty lane IS the reading, and the hover says
 ## it in words. The physics tick keeps one muted note, because blank alone cannot say WHICH tick.
@@ -1829,13 +1829,13 @@ const BLANK_TICK_TRIGGER_IDS: PackedStringArray = ["OnProcess", "OnPhysicsProces
 ## What the margin hover and the Explain panel say about a blank top-level event.
 const BLANK_EVENT_HOVER: String = "runs every tick"
 
-## S27. And about a blank SUB-event, which means the other half of the same rule: it simply follows
+## And about a blank SUB-event, which means the other half of the same rule: it simply follows
 ## the event above it, in order. Nothing is skipped and nothing is decided - which is exactly why the
 ## lane is empty, and why writing "Every Tick" there would be a plain lie about when its rows run.
 const BLANK_SUB_EVENT_HOVER: String = "follows its parent, in order"
 
 
-## S27. Whether a top-level event reads as a blank one, and what (if anything) its condition lane
+## Whether a top-level event reads as a blank one, and what (if anything) its condition lane
 ## still says. `patterns_on` is the Patterns reading toggle: with it off, the tick trigger keeps its
 ## explicit Every tick words for readers who want them.
 ## Returns {} when the event keeps its own trigger words, else {"note": String} - "" for the
@@ -1853,7 +1853,7 @@ static func blank_tick_reading(trigger_id: String, has_conditions: bool, pattern
 	return {"note": ""}
 
 
-## P8. The notification a `_notification` branch reads as. Only the ones an event sheet already has a
+## The notification a `_notification` branch reads as. Only the ones an event sheet already has a
 ## word for are named; every other notification humanizes, which says what happened without pretending
 ## the sheet has a trigger of its own for it.
 const NOTIFICATION_TRIGGER_WORDS: Dictionary = {
@@ -1870,9 +1870,9 @@ const NOTIFICATION_TRIGGER_WORDS: Dictionary = {
 ## The trigger id prefix a lifted `_notification` branch carries, with Godot's own constant after it.
 const NOTIFICATION_TRIGGER_PREFIX := "OnNotification:"
 
-## P8/P9. The lifecycle triggers whose reading is the same wherever the script sits. `_ready` and
+## The lifecycle triggers whose reading is the same wherever the script sits. `_ready` and
 ## `_exit_tree` are NOT here: what those two say depends on whether the file is the scene's own script,
-## which is the whole point of P9.
+## which is the whole point of the split.
 const LIFECYCLE_TRIGGER_WORDS: Dictionary = {
 	"OnDraw": "On draw",
 	"OnEnterTree": "On created",
@@ -1880,7 +1880,7 @@ const LIFECYCLE_TRIGGER_WORDS: Dictionary = {
 }
 
 
-## P8/P9. The lifecycle triggers in the event sheet's own words, and who they belong to.
+## The lifecycle triggers in the event sheet's own words, and who they belong to.
 ##
 ## Always on, never behind the Familiar Words toggle: these are not a friendlier spelling of Godot's
 ## names, they ARE the sheet's trigger names, and a reader who knows the sheet should find them here.
@@ -1918,7 +1918,7 @@ static func lifecycle_trigger_reading(trigger_id: String, object_label: String,
 	return {}
 
 
-## P8. One notification constant in the sheet's words. An unknown one reads as its own name in plain
+## One notification constant in the sheet's words. An unknown one reads as its own name in plain
 ## words ("On wm mouse enter") rather than as the SCREAMING_CASE constant: the reader still learns what
 ## happened, and nothing claims a trigger the sheet does not have.
 static func notification_trigger_words(constant_name: String) -> String:
@@ -1931,7 +1931,7 @@ static func notification_trigger_words(constant_name: String) -> String:
 	return "%s %s" % [EventSheetL10n.translate("On"), humanized]
 
 
-## R25/R26. The input signals whose words belong to a DEVICE rather than to the node that emitted
+## The input signals whose words belong to a DEVICE rather than to the node that emitted
 ## them: the cursor arriving at an object and leaving it, and a gamepad being plugged in or pulled
 ## out. Godot files all three as ordinary signals, so today they read as "On Mouse Entered" under the
 ## node - a name a reader has to translate back. The sheet already says `Cursor is over <object>` and
@@ -1973,7 +1973,7 @@ static func input_signal_trigger_reading(trigger_id: String, object_label: Strin
 	return {}
 
 
-## M41. An event sheet has one collision trigger and one for the overlap ending, where Godot has four
+## An event sheet has one collision trigger and one for the overlap ending, where Godot has four
 ## signals (bodies and areas, entering and leaving). Keyed by the trigger id AND usable from the
 ## signal name, so a handler lifted from a `.connect(...)` line and one lifted from a declared
 ## `func _on_body_entered` read the same words. "" when the trigger is not one of the four.
@@ -1986,7 +1986,7 @@ static func collision_trigger_words(trigger_id: String) -> String:
 	return ""
 
 
-## K5. A pick that NARROWS reads as the pick it is: "Pick where hp < 10", with the family in the
+## A pick that NARROWS reads as the pick it is: "Pick where hp < 10", with the family in the
 ## object column and what the filter keeps following on the same line ("nearest to Player first",
 ## "top 3"). A loop over a group with a test, an order or a limit is not a walk over everything - it
 ## is a choice - and the reading path already says so for an opened script; this is the same sentence
@@ -2016,7 +2016,7 @@ static func pick_words(collection: String, test: String, order_by: String,
 	return {"text": text, "object": family.capitalize()}
 
 
-## K5. An order-by expression read back as the order it asks for. A distance is the one shape worth
+## An order-by expression read back as the order it asks for. A distance is the one shape worth
 ## naming ("nearest to Player first"), because that is what an author wrote it to mean; everything
 ## else says which end of its own value it starts from, which is all the expression itself claims.
 ## "" when there is no ordering.
@@ -2032,7 +2032,7 @@ static func order_words(order_by: String, descending: bool) -> String:
 	return EventSheetL10n.translate(value_key).replace("{value}", expression)
 
 
-## K5. The object a `distance_to(...)` order-by measures against, named the way a reader would say it
+## The object a `distance_to(...)` order-by measures against, named the way a reader would say it
 ## ("Player"): the argument with its position member and any node-path punctuation taken off. ""
 ## whenever the expression is not a distance, which is what keeps every other order-by literal.
 static func distance_target(expression: String) -> String:
@@ -2052,21 +2052,21 @@ static func distance_target(expression: String) -> String:
 	return argument.strip_edges()
 
 
-## M33. The event-sheet words for a loop row, and the object it belongs to.
+## The event-sheet words for a loop row, and the object it belongs to.
 ##
 ## Returns {"text", "object"} - `object` empty for the System loops, and the host for a loop over
 ## another object's children, which an event sheet draws as that object's own For each. A ring loop
 ## also carries a muted "note". The loop rows themselves are unchanged: this is what they SAY, never
 ## what they are.
 ##
-## X31. `body` is the lines the loop runs, which is how the head can say what the loop is FOR: a
+## `body` is the lines the loop runs, which is how the head can say what the loop is FOR: a
 ## count alone is a count, and the same count whose body gives each step its share of a full turn is
 ## a circle. Empty for every caller that has no body to hand, and the head reads as it always did.
 static func loop_words(kind: int, iterator_name: String, collection: String,
 		body: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var iterator: String = iterator_name.strip_edges()
 	var source: String = collection.strip_edges()
-	# X31. Asked before anything else, because a ring loop IS a plain count however the loop was
+	# Asked before anything else, because a ring loop IS a plain count however the loop was
 	# lifted - what tells a ring from a count is only ever the body under it.
 	if kind != PickFilter.CollectionKind.WHILE and kind != PickFilter.CollectionKind.CHILDREN:
 		var ring: Dictionary = ring_loop_words(iterator, source, body)
@@ -2075,7 +2075,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String,
 	match kind:
 		PickFilter.CollectionKind.REPEAT:
 			var bounds: PackedStringArray = EventSheetSentence.split_top_level(source, ", ")
-			# U2. The two loop shapes M28 left over: counting DOWN, and counting in steps. Both are
+			# The two loop shapes the reading above leaves over: counting DOWN, and counting in steps. Both are
 			# `range(from, to, step)`, and both are For loops a reader already knows - what a reader
 			# needs is the last value the body actually sees, which is what the row says.
 			if bounds.size() == 3:
@@ -2101,7 +2101,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String,
 	# and a receiver-less `get_children()` is the script's own, which the object column already names.
 	if source == "get_children()":
 		return {"text": "%s %s" % [EventSheetL10n.translate("For each child"), iterator], "object": ""}
-	# X12. A loop over ANOTHER object's children names whose children they are, in the possessive the
+	# A loop over ANOTHER object's children names whose children they are, in the possessive the
 	# rest of the hierarchy vocabulary uses ("leader's children") - the object column cannot say it,
 	# because the loop belongs to the sheet's own For each rather than to the object being walked.
 	var children_of: String = _children_receiver(source)
@@ -2112,7 +2112,7 @@ static func loop_words(kind: int, iterator_name: String, collection: String,
 	return {}
 
 
-## X31. Whether this loop head COULD be a ring, decided from the head alone. Two string tests, and
+## Whether this loop head COULD be a ring, decided from the head alone. Two string tests, and
 ## the reason the row builder never walks a loop's body to find out: a ring is a plain count -
 ## `for i in n:` or `for i in 8:` - and a range's bounds, a collection and a call are all different
 ## loop heads with words of their own.
@@ -2125,7 +2125,7 @@ static func ring_loop_possible(iterator: String, count: String) -> bool:
 	return EventSheetSentence.is_identifier(source) or source.is_valid_int()
 
 
-## X31. The head of a RING loop: `for i in n:` whose body gives each step its share of a full turn.
+## The head of a RING loop: `for i in n:` whose body gives each step its share of a full turn.
 ## Reads `For i from 0 to n − 1` with `evenly around a circle` beside it, because the count is not
 ## what the loop is about - the circle is, and a reader scanning for the ring should not have to read
 ## three lines of trigonometry to find it.
@@ -2168,7 +2168,7 @@ static func _children_receiver(expression: String) -> String:
 	return EventSheetSentence.object_of_reference(receiver)
 
 
-## U2. A three-argument `range(...)` as the For loop it is: `range(10, 0, -1)` counts down to 1,
+## A three-argument `range(...)` as the For loop it is: `range(10, 0, -1)` counts down to 1,
 ## `range(0, 100, 10)` steps to 90. Both ends are the values the BODY sees, which is what a reader is
 ## looking for - Godot's exclusive stop is a language detail, and the row does the arithmetic once so
 ## nobody has to do it every time they read the line. "" unless every bound is a plain whole number
@@ -2202,7 +2202,7 @@ static func _one_less(bound: String) -> String:
 	return str(text.to_int() - 1) if text.is_valid_int() else ""
 
 
-## M13/M20 - the object-label to class-name map recovered from a sheet, so any row naming one of
+## The object-label to class-name map recovered from a sheet, so any row naming one of
 ## these objects can draw its Godot class icon.
 ##
 ## Three sources, cheapest first, and nothing else: the pack's declared host class; every
@@ -2217,7 +2217,7 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 	var host_class: String = sheet.host_class.strip_edges()
 	if not host_class.is_empty() and host_class != "Node":
 		map[HOST_LABEL] = host_class
-		# M25 - the script's own object draws the picture of the class it IS, so a row that names it
+		# The script's own object draws the picture of the class it IS, so a row that names it
 		# (`Player ▸ Set X to 100`) shows the same icon the scene tree shows for that node.
 		var script_object: String = script_object_name(sheet)
 		if not script_object.is_empty():
@@ -2233,7 +2233,7 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 		# `%HpBar` / `$Head`: the row that USES the node often names the path rather than the
 		# variable, so the path resolves to the same class. Both spellings, and the bare name
 		# after the sigil, so "HpBar" resolves too.
-		# M47 - a `get_node("A/B")` lookup names the same node `$A/B` does, so both spellings (and the
+		# A `get_node("A/B")` lookup names the same node `$A/B` does, so both spellings (and the
 		# last segment the rows read it under) resolve to the class the variable declared.
 		var node_reference: String = EventSheetSentence.node_lookup_text(variable.default_value.strip_edges())
 		if node_reference.begins_with("%") or node_reference.begins_with("$"):
@@ -2243,13 +2243,13 @@ static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 	return map
 
 
-## W14. The prefixes a plugin puts in front of every class it declares. They are there to keep the
+## The prefixes a plugin puts in front of every class it declares. They are there to keep the
 ## global class list from colliding, and they say nothing to a reader looking at one row - the same
 ## seven characters on every object is noise, not information.
 const CLASS_NAME_PREFIXES: PackedStringArray = ["EventSheet", "EventForge"]
 
 
-## W14. The object label a DECLARED CLASS reads under: `EventSheetACERegistry` reads `ACE registry`,
+## The object label a DECLARED CLASS reads under: `EventSheetACERegistry` reads `ACE registry`,
 ## `EventSheetFindBar` reads `Find bar`, `ContextMenu` reads `Context menu`.
 ##
 ## The plugin prefix comes off, the camel-case name splits into words, an all-caps run stays an
@@ -2294,7 +2294,7 @@ static func class_object_label(class_text: String) -> String:
 	return " ".join(spelled)
 
 
-## W14. The object column for a receiver whose declared CLASS the sheet knows, as {label, note} - the
+## The object column for a receiver whose declared CLASS the sheet knows, as {label, note} - the
 ## class in words, and the variable's own name muted beside it when the two differ. {} when nothing
 ## was declared, which leaves the label exactly as the row already read it.
 ##
@@ -2326,12 +2326,12 @@ static func typed_object_label(object_label: String, context: Dictionary, humani
 	return {"label": words, "note": "" if spelled_name.to_lower() == words.to_lower() else spelled_name}
 
 
-## X4. The classes a node holds when it is a camera PIVOT rather than an ordinary parent: a camera,
+## The classes a node holds when it is a camera PIVOT rather than an ordinary parent: a camera,
 ## or the arm one hangs off. A node holding anything else is somebody's node, and turning it is a turn.
 const ORBIT_PIVOT_CHILD_CLASSES: PackedStringArray = ["Camera3D", "SpringArm3D"]
 
 
-## X4. {object label: true} for every object of this sheet the SCENE says is a camera pivot - a node
+## {object label: true} for every object of this sheet the SCENE says is a camera pivot - a node
 ## with at least one child and no child that is anything but a camera or a camera arm. Both the
 ## variable's own name and the `$Path` spelling resolve, because a row may name either.
 ##
@@ -2375,7 +2375,7 @@ static func orbit_pivot_map(sheet: EventSheetResource) -> Dictionary:
 	return pivots
 
 
-## X4. True when a node's children are a camera rig and nothing else. An empty list is not a pivot:
+## True when a node's children are a camera rig and nothing else. An empty list is not a pivot:
 ## a node with no children at all is a node somebody turns.
 static func _holds_only_camera(child_types: Array) -> bool:
 	if child_types.is_empty():
@@ -2387,7 +2387,7 @@ static func _holds_only_camera(child_types: Array) -> bool:
 	return true
 
 
-## M13 - the Godot class icon for an object label, or null when nothing is known (which is also
+## The Godot class icon for an object label, or null when nothing is known (which is also
 ## what headless returns, so a headless render keeps the text-only look and never crashes).
 static func class_icon_for(object_label: String, class_map: Dictionary) -> Texture2D:
 	var trimmed: String = object_label.strip_edges()
@@ -2399,7 +2399,7 @@ static func class_icon_for(object_label: String, class_map: Dictionary) -> Textu
 	return ACEPickerDialog.editor_icon(class_name_str)
 
 
-## M20 - the class name a node declaration shows after its value ("ProgressBar"), or "" when the
+## The class name a node declaration shows after its value ("ProgressBar"), or "" when the
 ## variable declared no type.
 static func declared_class_of(variable: LocalVariable) -> String:
 	if variable == null or not variable.onready:
@@ -2407,18 +2407,18 @@ static func declared_class_of(variable: LocalVariable) -> String:
 	return variable.type_name.strip_edges()
 
 
-## M20 - true when a variable is an OBJECT declaration rather than a value one: an @onready that
+## True when a variable is an OBJECT declaration rather than a value one: an @onready that
 ## reads a node out of the scene. Those are the ones that become the sheet's object list.
 static func is_object_declaration(variable: LocalVariable) -> bool:
 	if variable == null or not variable.onready:
 		return false
 	var value: String = variable.default_value.strip_edges()
-	# M47 - `get_node("A/B")` names a node exactly as `$A/B` does, so it is the same declaration.
+	# `get_node("A/B")` names a node exactly as `$A/B` does, so it is the same declaration.
 	return value.begins_with("%") or value.begins_with("$") \
 		or value.begins_with("get_node(") or value.begins_with("get_node_or_null(")
 
 
-## M47. What an object declaration's VALUE reads as: the node reference in its `$Path` spelling,
+## What an object declaration's VALUE reads as: the node reference in its `$Path` spelling,
 ## whichever way the file spells it. A `get_node_or_null` lookup may find nothing, and that is worth
 ## saying, so the note comes back beside the value: {"value", "note"} - `note` empty for the rest.
 static func object_declaration_value(variable: LocalVariable) -> Dictionary:
@@ -2430,7 +2430,7 @@ static func object_declaration_value(variable: LocalVariable) -> Dictionary:
 	return {"value": shown, "note": note}
 
 
-## M17 - the label on a folded code card: "code  12 lines". The exact GDScript is what the card
+## The label on a folded code card: "code  12 lines". The exact GDScript is what the card
 ## opens to, and it is on the row's hover either way, so the closed card only has to say how much
 ## is behind it.
 static func code_card_label(line_count: int) -> String:
@@ -2438,7 +2438,7 @@ static func code_card_label(line_count: int) -> String:
 	return "%d %s" % [line_count, lines_word]
 
 
-## M17 - whether a raw block should render as ONE folded card rather than as statement rows.
+## Whether a raw block should render as ONE folded card rather than as statement rows.
 ## Reading mode folds it (a stubborn helper costs one row until you want it); authoring keeps the
 ## statement rows, because that is what you edit. The fold itself is view state, so the caller
 ## seeds it from the viewport's fold map with THIS as the default.
@@ -2462,7 +2462,7 @@ static func called_function_name(code: String) -> String:
 	return callee
 
 
-## M16 - the sentence pieces for a call to a KNOWN function: "Functions > Call Add Look" plus one
+## The sentence pieces for a call to a KNOWN function: "Functions > Call Add Look" plus one
 ## argument per parameter, named by the function's own parameter names so the call is
 ## self-documenting. Returns [] when the function is not one this sheet knows, which is the
 ## caller's cue to keep the ordinary call reading - a call to something unknown must not be
@@ -2495,7 +2495,7 @@ static func call_reading_pieces(
 	return pieces
 
 
-## M26. The whole reading of a call the sheet has no verb of its own for: Object, verb in words, one
+## The whole reading of a call the sheet has no verb of its own for: Object, verb in words, one
 ## chip per argument, and never a pair of parentheses. Returns {"object", "pieces"} - {} when the
 ## line is not exactly one call, which is the caller's cue to keep whatever it was drawing.
 ##
@@ -2520,7 +2520,7 @@ static func generic_call_pieces(code: String, context: Dictionary, class_map: Di
 
 ## The parameter names of one of the sheet's own functions, in order. Empty when the function is
 ## unknown or declared none - the call then reads with plain argument values.
-## U9 / U10 / U11. {function name: its parameter names, in order} for every function the sheet
+## {function name: its parameter names, in order} for every function the sheet
 ## declares. One walk, because a call that names a function may sit anywhere in the file.
 static func function_parameter_map(sheet: EventSheetResource) -> Dictionary:
 	var map: Dictionary = {}
@@ -2569,7 +2569,7 @@ static func export_knob_names(sheet: EventSheetResource) -> Dictionary:
 	return knobs
 
 
-# ── N4. Autoloads as globals, pack nodes as behaviours ────────────────────────────────────────
+# ── Autoloads as globals, pack nodes as behaviours ────────────────────────────────────────────
 # An event sheet has project-wide globals and per-object behaviours; Godot spells those as autoload
 # singletons and as behaviour packs mounted on child nodes. Both already READ - `Game.score += 1`
 # lands under the object `Game`, `$Health.take_damage(3)` under `Health` - but neither says WHAT it
@@ -2633,7 +2633,7 @@ static func autoload_icon() -> Texture2D:
 	return null
 
 
-## N4. A condition written on an autoload's member, re-attributed to the autoload: `Game.score > 100`
+## A condition written on an autoload's member, re-attributed to the autoload: `Game.score > 100`
 ## becomes the object `Game (global)` and the test `score > 100`, so the owner is visible in the
 ## object column instead of buried in the sentence.
 ##
@@ -2653,7 +2653,7 @@ static func global_condition(condition_text: String, autoloads: Dictionary) -> D
 	return {"object": global_object_label(head, autoloads), "text": rest}
 
 
-## N4. A lifted row whose parameters reach THROUGH an autoload to one of its members, re-read as a
+## A lifted row whose parameters reach THROUGH an autoload to one of its members, re-read as a
 ## row belonging to that autoload: a Compare on `EventForgeBridge.score` becomes the object
 ## `EventForgeBridge (global)` comparing `score`, so the owner sits in the object column rather than
 ## inside the sentence, where it read as a possessive ("event forge bridge's score").
@@ -2763,7 +2763,7 @@ static func _pack_head(path: String) -> Dictionary:
 	return head
 
 
-## N4. The behaviour a call's object IS, when that object is a pack node mounted under the script's
+## The behaviour a call's object IS, when that object is a pack node mounted under the script's
 ## own node. Returns the pack's display name, or "" when the label names no pack the editor knows.
 ##
 ## Two ways in, both honest: the label's DECLARED class is a pack class (`@onready var health:
@@ -2780,7 +2780,7 @@ static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> St
 	return str(index.get(label, ""))
 
 
-## N4 applied to a finished reading, at the one moment a lane holds both its object label and its
+## Applied to a finished reading, at the one moment a lane holds both its object label and its
 ## sentence pieces. Returns {"object", "pieces", "icon"} - always all three, so a caller never has to
 ## ask whether anything happened.
 ##
@@ -2807,7 +2807,7 @@ static func object_attribution(object_label: String, pieces: Array, script_objec
 	return {"object": owner, "pieces": chipped, "icon": class_icon_for(owner, class_map)}
 
 
-# ── N10. The census: every object an open file uses ───────────────────────────────────────────
+# ── The census: every object an open file uses ────────────────────────────────────────────────
 # One derived list, read by the Objects rail, by the object popup and by the picker's object page,
 # so those three can never disagree about what is in this file. Everything here is recovered FROM
 # the sheet - there is no stored object list to fall out of date, and nothing is instantiated and no
@@ -2826,7 +2826,7 @@ const OBJECT_KIND_WORDS: Dictionary = {
 	"script": "this script",
 	"node": "node",
 	"behaviour": "behaviour",
-	# P10 - the word "autoload" is Godot's; "(global)" is the sheet's, and it is the half that says
+	# The word "autoload" is Godot's; "(global)" is the sheet's, and it is the half that says
 	# what it MEANS. The same pair reads on the Include bar of an opened autoload and in every other
 	# sheet's `Game (global) ▸ …` row, so the rail, the head and the rows all name it identically.
 	"autoload": "autoload (global)",
@@ -3061,7 +3061,7 @@ static func _tally_usage(order: Array, by_label: Dictionary, units: Array) -> vo
 		by_label[str(entry.get("label", ""))] = entry
 
 
-## Q12 - one object's usage split the way the sheet is split: {"conditions", "actions", "triggers"}.
+## One object's usage split the way the sheet is split: {"conditions", "actions", "triggers"}.
 ## The Object bar's count says how many ROWS use the object, and hovering it says what those rows ARE,
 ## which is the difference between "Player is busy here" and "Player is checked here".
 ##
@@ -3242,7 +3242,7 @@ static func object_note(entry: Dictionary) -> String:
 	return " · ".join(parts)
 
 
-## The icon one census entry draws: its own SPRITE when the object's scene has one (Q10), else its
+## The icon one census entry draws: its own SPRITE when the object's scene has one, else its
 ## class picture for a node, the globe for an autoload, and nothing for a group (which is a name, not
 ## a thing with a picture).
 ##
@@ -3260,7 +3260,7 @@ static func object_icon(entry: Dictionary, class_map: Dictionary, sheet_source_p
 	return class_icon_for(str(entry.get("label", "")), class_map)
 
 
-## X2 / X20 / X30. What the FILE says about the rays it casts through the cursor and the points it
+## What the FILE says about the rays it casts through the cursor and the points it
 ## converts into canvas space, as the two fact maps the sentence grammar reads:
 ##
 ##   cursor_rays    {hit local: {reach, aimed_at, mask, cleared}} - one entry per camera-ray run the
@@ -3341,7 +3341,7 @@ static func cursor_ray_facts(sheet: EventSheetResource) -> Dictionary:
 	return {"cursor_rays": rays, "canvas_points": canvas_points}
 
 
-## X2. What a query line says about the ray it builds, given the locals declared above it - the far
+## What a query line says about the ray it builds, given the locals declared above it - the far
 ## end's reach and the canvas point the ray was aimed through - or {} when its two ends are not the
 ## ray pair at all (a ray to a FIXED point is a different question, and reads as one).
 static func _cursor_ray_query_facts(step: Dictionary, origins: Dictionary,
@@ -3361,7 +3361,7 @@ static func _cursor_ray_query_facts(step: Dictionary, origins: Dictionary,
 	return {}
 
 
-## X30. The object whose canvas position aimed a ray, "" when the ray was aimed by the OS mouse -
+## The object whose canvas position aimed a ray, "" when the ray was aimed by the OS mouse -
 ## which is what makes a gamepad or a touch crosshair as first-class as the pointer.
 static func cursor_aim_owner(point: String) -> String:
 	var bare: String = point.strip_edges()
@@ -3374,7 +3374,7 @@ static func cursor_aim_owner(point: String) -> String:
 	return ""
 
 
-## X2. The local a `if <name>.is_empty():` guard asks about, or "" when the line is not that guard.
+## The local a `if <name>.is_empty():` guard asks about, or "" when the line is not that guard.
 static func _cursor_ray_empty_check(text: String) -> String:
 	var bare: String = text.strip_edges()
 	if not bare.begins_with("if ") or not bare.ends_with(":"):
@@ -3385,7 +3385,7 @@ static func _cursor_ray_empty_check(text: String) -> String:
 	return str(call.get("target", "")).strip_edges()
 
 
-## X2 / X30. The file's lines for the ray walk, in FILE order, with the two things the shared walks
+## The file's lines for the ray walk, in FILE order, with the two things the shared walks
 ## leave out because no other reading needs them: the mask a query is restricted to (an ACE row, not
 ## a property write) and the emptiness GUARD under a run (a condition, not a statement). Both are
 ## members of the run's shape - a ray filtered to the floor and a branch that clears what the ray
@@ -3430,7 +3430,7 @@ static func _append_cursor_ray_lines(entry: Variant, lines: PackedStringArray, d
 		lines.append(line)
 
 
-## X2. The `if <name>.is_empty():` a lifted emptiness question stands for, "" for anything else. Only
+## The `if <name>.is_empty():` a lifted emptiness question stands for, "" for anything else. Only
 ## the shapes that ASK about emptiness count: the note this feeds is "none when nothing is hit", and
 ## a guard about something else would put those words on a branch that never says them.
 static func _cursor_ray_guard_line(condition: Resource) -> String:
@@ -3448,7 +3448,7 @@ static func _cursor_ray_guard_line(condition: Resource) -> String:
 	return "" if name_text.is_empty() else "if %s.is_empty():" % name_text
 
 
-## X30. The `q.collision_mask = <mask>` a lifted Set RayCast Mask row stands for, "" for anything
+## The `q.collision_mask = <mask>` a lifted Set RayCast Mask row stands for, "" for anything
 ## else. Both dimensions' rows spell the same property, and a query object takes it in either.
 static func _cursor_ray_mask_line(action: Resource) -> String:
 	if action == null:

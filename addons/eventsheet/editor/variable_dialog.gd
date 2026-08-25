@@ -1,6 +1,6 @@
 # EventSheet - the Add variable dialog.
 #
-# V5. The dialog writes ONE row, so it asks for that row in the order the row is read: the scope
+# The dialog writes ONE row, so it asks for that row in the order the row is read: the scope
 # first (it is the row's first word), then the name, then the type, then the value. Every choice
 # list carries what its options mean, and ONE help strip at the foot describes whatever is focused -
 # the strip replaces the per-field hint labels, because ten explanations shown at once is the same
@@ -17,43 +17,43 @@ extends RefCounted
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
 ## (@export var) vs. private (var). `context` carries the placement answers - which event or group
-## owns a Local, which row is being edited, and V4's `static_local` tick.
+## owns a Local, which row is being edited, and the `static_local` tick.
 signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool, is_static: bool)
 
-## V5 - the Scope dropdown says Global and the dialog was confirmed. A global lives on an autoload,
+## The Scope dropdown says Global and the dialog was confirmed. A global lives on an autoload,
 ## not in this file, so the dialog hands over the answers it collected (with the autoload the "Write
 ## into" picker chose) rather than writing a member that only looks global.
 signal project_global_requested(name: String, type_name: String, value_text: String, target: Dictionary)
 
 var _dialog: ConfirmationDialog = null
-## V5 - the Scope DROPDOWN (never a row of switches): the sheet's own order, one description line
+## The Scope DROPDOWN (never a row of switches): the sheet's own order, one description line
 ## per choice, and the whole dialog re-gates itself the moment it changes.
 var _scope_option: OptionButton = null
-## V5 - "to Player": whose variable this will be, said once at the top instead of repeated per field.
+## "to Player": whose variable this will be, said once at the top instead of repeated per field.
 var _owner_label: Label = null
-## V5 - the write-into picker, revealed only for a Global: the autoload the value will live on.
+## The write-into picker, revealed only for a Global: the autoload the value will live on.
 var _global_target_option: OptionButton = null
 var _global_target_row: Control = null
-## P4 - the ONE help strip at the foot. Everything focusable in the dialog wires into it.
+## The ONE help strip at the foot. Everything focusable in the dialog wires into it.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
-## R42 - the live preview of the EXACT row this dialog will write, in the R37 shape (the strip's
+## The live preview of the EXACT row this dialog will write, in the shape (the strip's
 ## READS AS line).
 var _row_preview_label: Label = null
-## R42 - `static var`: one value on the CLASS, shared by every copy of the object. Orthogonal to
+## `static var`: one value on the CLASS, shared by every copy of the object. Orthogonal to
 ## WHERE the variable is stored, exactly like Constant, so it is a flag rather than a scope - and
 ## exclusive with Constant, because a `static const` is not a thing GDScript has.
 var _is_static: bool = false
-## V5 - the scope the dialog last opened or wrote with, so re-opening it lands where the last one
+## The scope the dialog last opened or wrote with, so re-opening it lands where the last one
 ## did instead of resetting to Instance every time.
 var _last_scope_key: String = ""
-## V5 - true while the Scope dropdown says Global: the variable belongs to an autoload, so the
+## True while the Scope dropdown says Global: the variable belongs to an autoload, so the
 ## confirm hands it to the global writer instead of emitting a member of this file.
 var _writes_project_global: bool = false
 
 ## The scopes the dialog offers, in the sheet's own order (EventSheetVariableSentence.SCOPE_ORDER).
 const CHOOSABLE_SCOPES: PackedStringArray = EventSheetVariableSentence.SCOPE_ORDER
 
-## P4 - what each field of the dialog is, one paragraph each, keyed by the word the strip heads it
+## What each field of the dialog is, one paragraph each, keyed by the word the strip heads it
 ## with. ONE table: the strip shows an entry when the field is focused, and puts the same entry back
 ## when a refusal about that field is answered. The two dropdowns describe themselves per OPTION
 ## instead (_describe_scope_index / _describe_type_index), so they are not in here.
@@ -91,7 +91,7 @@ var _refusal_field: String = ""
 
 var _name_edit: LineEdit = null
 var _name_warning: Label = null
-## E2 - "Keep in step over the network": the mode a synchronizer in the scene holds this variable in.
+## "Keep in step over the network": the mode a synchronizer in the scene holds this variable in.
 ## Its items carry the mode string as metadata; an item that does nothing carries "", and the offer
 ## to add a synchronizer carries this, which is no mode.
 const SYNC_ADD_CHOICE: String = "add"
@@ -110,10 +110,10 @@ var _items_button: Button = null
 var _items_window: Window = null
 var _items_edit: TextEdit = null
 var _const_check: CheckBox = null
-## V5 - `static var` as a checkbox beside Constant, since that is what it is: a flag on the
+## `static var` as a checkbox beside Constant, since that is what it is: a flag on the
 ## declaration, not a place the variable lives.
 var _static_check: CheckBox = null
-## V4 - "Static local", shown only while the scope is Local: the row stays under its event, and the
+## "Static local", shown only while the scope is Local: the row stays under its event, and the
 ## value survives from one run of that event to the next because the compiler hoists the declaration
 ## to a private class member. Meaningless for every other scope, so it is not offered there.
 var _static_local_check: CheckBox = null
@@ -126,7 +126,7 @@ var _onready_row: HBoxContainer = null
 # list (Sprite2D, Label, CharacterBody2D…) are authorable. _selected_stored_type() reads it when onready.
 var _onready_type_edit: LineEdit = null
 var _scope: String = "global"
-## R42 - the MEMBER spelling the dialog opened with ("global" or "tree"), so the Instance chip can
+## The MEMBER spelling the dialog opened with ("global" or "tree"), so the Instance chip can
 ## put a variable back exactly where it came from after a trip through Local.
 var _member_scope: String = "global"
 var _context: Dictionary = {}
@@ -237,7 +237,7 @@ const TYPE_HINTS: Dictionary = {
 	"Dictionary[String, Variant]": "Named anything (by text key) - a flexible data bag.",
 }
 
-## V5 - the type list as a reader meets it: the three everybody needs, a divider, then the rest.
+## The type list as a reader meets it: the three everybody needs, a divider, then the rest.
 ## `stored` is the real Godot type the choice writes (NUMBER_CHOICE is the one exception - it stores
 ## int or float depending on the "Whole numbers only" tick beside it), `description` is the line
 ## under the option, and the GDScript spelling rides muted at the right of the field. The tail of the
@@ -282,12 +282,12 @@ func init_dialog(parent_node: Node) -> void:
 	form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dialog.add_child(EventSheetPopupUI.margined(form))
 
-	# V5 - whose variable this is, said once at the top. The window title stays "Add variable"; this
+	# Whose variable this is, said once at the top. The window title stays "Add variable"; this
 	# line is the "to Player" half of it, which a Window title bar has nowhere to put.
 	_owner_label = EventSheetPopupUI.hint_label("")
 	form.add_child(_owner_label)
 
-	# V5 - the scope is a DROPDOWN, and it comes first: it is the row's first word, and every other
+	# The scope is a DROPDOWN, and it comes first: it is the row's first word, and every other
 	# field in the dialog is gated by it. Each option carries the one line that says what it means.
 	_scope_option = OptionButton.new()
 	for scope_key: String in CHOOSABLE_SCOPES:
@@ -296,7 +296,7 @@ func init_dialog(parent_node: Node) -> void:
 	_scope_option.item_selected.connect(func(index: int) -> void:
 		_apply_scope_key(str(_scope_option.get_item_metadata(index))))
 	form.add_child(EventSheetPopupUI.form_row("Scope", _scope_option))
-	# V5 - "write into: Game": which autoload a Global lands on. Hidden until Global is the scope,
+	# "write into: Game": which autoload a Global lands on. Hidden until Global is the scope,
 	# because it is the only scope for which the question has an answer.
 	_global_target_option = OptionButton.new()
 	_global_target_row = EventSheetPopupUI.form_row("Write into", _global_target_option)
@@ -329,7 +329,7 @@ func init_dialog(parent_node: Node) -> void:
 	type_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
-	# V5 - Number / Text / Boolean, a divider, then Vector / Color / List / Table, then the Godot
+	# Number / Text / Boolean, a divider, then Vector / Color / List / Table, then the Godot
 	# types under their own names. Every entry carries the stored type as its METADATA (never as its
 	# text), so the display can read as plainly as it likes while _selected_stored_type() still
 	# returns a real Godot type and the .gd round-trip is unchanged.
@@ -386,7 +386,7 @@ func init_dialog(parent_node: Node) -> void:
 
 	var default_row: HBoxContainer = HBoxContainer.new()
 	var default_label: Label = Label.new()
-	# V5 - "Initial value", not "Default": it is the value the variable STARTS at, and "default" is
+	# "Initial value", not "Default": it is the value the variable STARTS at, and "default" is
 	# the word Godot uses for a property's fallback, which this is not.
 	default_label.text = "Initial value"
 	default_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
@@ -457,7 +457,7 @@ func init_dialog(parent_node: Node) -> void:
 	_exported_check.text = "Editable in the Inspector (a designer property)"
 	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector", _exported_check))
-	# E2 - the other question about who can see a value: does it travel to the other players. The
+	# The other question about who can see a value: does it travel to the other players. The
 	# answer lives in the scene's MultiplayerSynchronizer, so picking here writes the .tscn through
 	# the scene's own undo - not the sheet's - and the row's sync mark follows immediately.
 	_sync_option = OptionButton.new()
@@ -641,7 +641,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_getter_edit.custom_minimum_size = Vector2(0.0, 54.0)
 	_attr_getter_edit.tooltip_text = "The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter."
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Getter body", _attr_getter_edit))
-	# V5 - Static and Constant are CHECKBOXES with no text of their own beside them: the help strip
+	# Static and Constant are CHECKBOXES with no text of their own beside them: the help strip
 	# explains whichever one is focused, and nothing else in the dialog repeats it. They are not
 	# scopes (they say nothing about where the variable lives), but picking either in the Scope
 	# dropdown ticks the matching box, so the two spellings of the same fact can never disagree.
@@ -651,7 +651,7 @@ func init_dialog(parent_node: Node) -> void:
 	_static_check.text = "Static"
 	_static_check.toggled.connect(func(pressed: bool) -> void: _on_static_toggled(pressed))
 	flags_box.add_child(_static_check)
-	# V4 - the Local scope's own flag, and the only scope it means anything in: a local cannot be a
+	# The Local scope's own flag, and the only scope it means anything in: a local cannot be a
 	# `static var`, so the two never show together (the gating swaps them).
 	_static_local_check = CheckBox.new()
 	_static_local_check.text = "Static local"
@@ -680,7 +680,7 @@ func init_dialog(parent_node: Node) -> void:
 	# one readable place above without putting it in the middle of the form.
 	form.add_child(_attr_block)
 
-	# P4 - the ONE help strip. Everything focusable above wires into it, and it carries the row this
+	# The ONE help strip. Everything focusable above wires into it, and it carries the row this
 	# dialog will write (READS AS) with the line the compiler will emit under it (IN CODE).
 	_help_strip = EventSheetPopupUI.help_strip()
 	form.add_child(_help_strip)
@@ -759,7 +759,7 @@ static func type_description(stored_type: String) -> String:
 	return stored_type
 
 
-## E2 - fills the "Keep in step" dropdown from the SCENE. Off / Always / On change / At spawn only
+## Fills the "Keep in step" dropdown from the SCENE. Off / Always / On change / At spawn only
 ## when a synchronizer is there, the offer to add one when the scene has none, and disabled with the
 ## reason when there is no scene at all or the variable is not one a synchronizer could watch (a
 ## local, or one that does not exist yet - a config entry for a property nobody declared would be a
@@ -805,7 +805,7 @@ func _refresh_sync_option() -> void:
 		else "Add the variable first - a synchronizer keeps an existing property in step."
 
 
-## E2 - a mode picked in the dialog. The write goes straight to the scene, because the scene's undo
+## A mode picked in the dialog. The write goes straight to the scene, because the scene's undo
 ## owns it: it cannot ride this dialog's Save, which writes the sheet.
 func _on_sync_mode_chosen(index: int) -> void:
 	var scene: Dictionary = _scene_replication()
@@ -845,7 +845,7 @@ func _say_sync_result(result: Dictionary, done: String) -> void:
 		EventSheetPopupUI.HelpStrip.TONE_ERROR)
 
 
-## E2 - what the scene says about the sheet this dialog is writing into.
+## What the scene says about the sheet this dialog is writing into.
 func _scene_replication() -> Dictionary:
 	if not _sheet_provider.is_valid():
 		return EventSheetSceneReplication.for_script("")
@@ -853,7 +853,7 @@ func _scene_replication() -> Dictionary:
 	return EventSheetSceneReplication.for_script(str(sheet.external_source_path) if sheet != null else "")
 
 
-## P4 - every field says what it is THROUGH THE STRIP, so the form itself stays a list of questions.
+## Every field says what it is THROUGH THE STRIP, so the form itself stays a list of questions.
 ## The two dropdowns describe each option as it is arrowed over, before it is picked.
 func _wire_help_strip() -> void:
 	if _help_strip == null:
@@ -889,7 +889,7 @@ func _constant_help() -> String:
 	return field_help("Constant")
 
 
-## P3 - a refusal, said in the ONE strip: the reason replaces the paragraph and the rule turns red,
+## A refusal, said in the ONE strip: the reason replaces the paragraph and the rule turns red,
 ## and the dialog comes back with everything the reader typed still in it.
 func _refuse(field: String, reason: String, size: Vector2i = Vector2i(440, 260)) -> void:
 	_say_refusal(field, reason)
@@ -928,7 +928,7 @@ func _refresh_scope_descriptions() -> void:
 			scope_description(str(_scope_option.get_item_metadata(index)), owner))
 
 
-## The dialog's fields, top to bottom, by the word each row leads with - the order V5 pins: the
+## The dialog's fields, top to bottom, by the word each row leads with, in the pinned order: the
 ## scope first (it is the row's first word), then the name, the type, the value. `visible_only`
 ## answers what the reader can actually see for the scope in front of them.
 func field_order(visible_only: bool = false) -> PackedStringArray:
@@ -1159,7 +1159,7 @@ func open(scope: String) -> void:
 	# A new variable is internal script state by DEFAULT (a plain private var) - the user opts into
 	# "Designer-tweakable (@export)" deliberately, instead of every global leaking onto the Inspector.
 	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, false)
-	# V5 - a fresh variable opens on the scope the last one used: somebody adding five instance
+	# A fresh variable opens on the scope the last one used: somebody adding five instance
 	# variables should answer the scope question once, not five times. An EDIT never moves - the
 	# variable already has a scope, and it is not the dialog's to change behind the reader's back.
 	if not _last_scope_key.is_empty():
@@ -1264,18 +1264,18 @@ func open_for_edit(
 	# reading word - the Add submenu's "Instance variable…", the parameters dialog's "Add hp…" fix -
 	# was otherwise having its answer filed as an event LOCAL, the one place it never belongs.
 	_scope = "global" if scope == EventSheetVariableSentence.SCOPE_INSTANCE else scope
-	# V5 - a Global written from HERE is a member of an autoload, never of this file, so the flag
+	# A Global written from HERE is a member of an autoload, never of this file, so the flag
 	# starts clear and only the Scope dropdown sets it.
 	_writes_project_global = false
 	if _scope != "local":
 		_member_scope = _scope
 	_context = context.duplicate(true)
-	# V5 - "Add variable" / "to Player". The window title says the gesture, the line under it says
+	# "Add variable" / "to Player". The window title says the gesture, the line under it says
 	# whose variable this will be; `title` stays in the signature for callers that still pass one.
 	var is_editing: bool = bool(context.get("editing", false))
 	_dialog.title = "Edit variable" if is_editing else "Add variable"
 	_dialog.ok_button_text = "Save" if is_editing else "Add"
-	# G3 - a Local added from a group head says whose it is: "in group Combat", not the sheet's object.
+	# A Local added from a group head says whose it is: "in group Combat", not the sheet's object.
 	var owner_group: EventGroup = _context.get("group") as EventGroup
 	var owner: String = _owner_name()
 	if owner_group != null:
@@ -1295,7 +1295,7 @@ func open_for_edit(
 	# Local variables are inherently private to the script body, so the export toggle only
 	# applies to global (sheet-level) variables.
 	var is_local: bool = _scope == "local"
-	# V4 - reopening a Static local comes back ticked; the flag rides the context, because it is a
+	# Reopening a Static local comes back ticked; the flag rides the context, because it is a
 	# fact about the LOCAL and only a local can have it.
 	if _static_local_check != null:
 		_static_local_check.set_pressed_no_signal(is_local and bool(context.get("static_local", false)))
@@ -1403,10 +1403,10 @@ func open_for_edit(
 		_select_drawer_kind(existing_drawer)
 		_refresh_drawer_preview()
 	_type_option.disabled = lock_type
-	# R42 - the scope dropdown and the row preview open agreeing with everything above.
+	# The scope dropdown and the row preview open agreeing with everything above.
 	_apply_scope_gating()
 	refresh_scope_selection()
-	# P4 - the strip opens on the scope, because that is the field the reader meets first - unless
+	# The strip opens on the scope, because that is the field the reader meets first - unless
 	# the type is locked, which is the one thing in front of the reader that cannot be acted on and
 	# would otherwise have to be guessed at.
 	if _help_strip != null:
@@ -1446,13 +1446,13 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	_last_scope_key = current_scope_word()
-	# V4 - "Static local" is a fact about WHERE the declaration ends up, not about the declaration, so
+	# "Static local" is a fact about WHERE the declaration ends up, not about the declaration, so
 	# it rides the context beside the other placement answers (which event, which group, which index)
 	# rather than widening the signal every surface already connects to. Answered once, here, so no
 	# path out of this dialog can carry a stale one.
 	_context["static_local"] = static_local_wanted()
 	var type_name: String = _selected_stored_type()
-	# V5 - a Global is not a member of this file. The dialog collected the answers; the autoload the
+	# A Global is not a member of this file. The dialog collected the answers; the autoload the
 	# "Write into" picker names is where they land, through the same writer the Add global variable
 	# dialog uses, so the row that appears is the row that dialog would have written.
 	if _writes_project_global:
@@ -1918,7 +1918,7 @@ static func _look_labels_text(entries: Array) -> String:
 	return ", ".join(parts)
 
 
-## R42 - the scope word the dialog is showing right now: `const` wins, then a global, then a local,
+## The scope word the dialog is showing right now: `const` wins, then a global, then a local,
 ## then the member scope the dialog was opened in.
 func current_scope_word() -> String:
 	if _const_check != null and _const_check.button_pressed:
@@ -1932,7 +1932,7 @@ func current_scope_word() -> String:
 	return EventSheetVariableSentence.SCOPE_INSTANCE
 
 
-## V4 - true when the dialog will write a Static local: the tick, and only while the scope it belongs
+## True when the dialog will write a Static local: the tick, and only while the scope it belongs
 ## to is the one showing. The row builder, the preview and the confirm all ask this one question.
 func static_local_wanted() -> bool:
 	return _scope == "local" and not _writes_project_global \
@@ -2005,7 +2005,7 @@ func _apply_scope_gating() -> void:
 		_exported_check.button_pressed = false
 	_exported_check.disabled = is_local or is_constant
 	if _static_check != null:
-		# V4 - a local cannot be a `static var`, so out of the two "keeps its value" flags exactly one
+		# A local cannot be a `static var`, so out of the two "keeps its value" flags exactly one
 		# is ever on screen: Static for a member, Static local for a local.
 		_static_check.visible = not is_local
 		_static_check.disabled = is_constant
@@ -2077,7 +2077,7 @@ func selected_global_target() -> Dictionary:
 	return meta as Dictionary if meta is Dictionary else {}
 
 
-## R42 - the EXACT row this dialog will write, in the R37 shape, live as you type:
+## The EXACT row this dialog will write, in the shape, live as you type:
 ## `Instance number  hp = 100`. The dialog's whole job is to write one row, so showing that row is
 ## the preview a beginner needs - and it is composed through the same grammar the sheet composes
 ## its own rows with, so the dialog, the head and the events can never disagree.
@@ -2095,7 +2095,7 @@ func row_preview_text() -> String:
 	]
 
 
-## P4 - the strip's IN CODE line: the declaration the compiler will emit for these choices, built by
+## The strip's IN CODE line: the declaration the compiler will emit for these choices, built by
 ## THE COMPILER'S OWN EMITTER over a throwaway variable, so the dialog can never promise a line the
 ## compiled sheet would not write. A global reads as its autoload member, which is how every other
 ## sheet will address it.
@@ -2144,7 +2144,7 @@ func _default_placeholder_for(stored_type: String) -> String:
 func _refresh_ships_as() -> void:
 	_refresh_type_code_note()
 	if _help_strip != null:
-		# P4 - the row the sheet will show, and under it the line the compiler will write for it.
+		# The row the sheet will show, and under it the line the compiler will write for it.
 		_help_strip.set_reading(row_preview_text(), code_line_text())
 	elif _row_preview_label != null:
 		_row_preview_label.text = row_preview_text()
@@ -2510,7 +2510,7 @@ func _shadow_owner(var_name: String) -> String:
 	return EventSheetProjectDoctor.shadowed_member_class(sheet, var_name.strip_edges())
 
 
-## Live feedback: shows/hides the name warnings as the user types. V5 - a name already taken in this
+## Live feedback: shows/hides the name warnings as the user types. A name already taken in this
 ## scope is shown INLINE, under the field, while it is being typed; finding out on OK is finding out
 ## too late.
 func _refresh_name_warning() -> void:
@@ -2569,7 +2569,7 @@ func _populate_enum_fill_menu() -> void:
 		popup.set_item_metadata(popup.item_count - 1, ", ".join(members))
 
 
-## P3 - the collection literal, judged as it is typed. One that does not parse says why in the strip,
+## The collection literal, judged as it is typed. One that does not parse says why in the strip,
 ## in red; the moment it parses (or the type stops being a collection) the field's own description
 ## comes back. Nothing is written under the field itself - the strip is the one place to look.
 func _refresh_default_hint() -> void:

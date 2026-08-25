@@ -80,7 +80,7 @@ static func run() -> bool:
 	ok = _check("…and an event stands for a block, not a line",
 		EventSheets.row_code_line(EventRow.new()), "") and ok
 
-	# G1 - the line a group declares itself on, keyed by the group, exactly as the compiler emits it
+	# The line a group declares itself on, keyed by the group, exactly as the compiler emits it
 	# (and as the head echoes it). A nested group carries its parent, which is how the importer
 	# rebuilds the nesting.
 	var group_sheet: EventSheetResource = EventSheetResource.new()
@@ -111,7 +111,7 @@ static func run() -> bool:
 	ok = _check("…and says nothing about a group with no sheet to place it in",
 		EventSheets.row_code_line(inner_group), "") and ok
 
-	# K1/K4 - the operator table a pack's own rows read through: the glyph a row shows, and the
+	# The operator table a pack's own rows read through: the glyph a row shows, and the
 	# opposite an invert writes. Anything that is not one of the six passes straight through.
 	ok = _check("comparison_glyph is the row's spelling",
 		[EventSheets.comparison_glyph("<="), EventSheets.comparison_glyph("=="),
@@ -120,7 +120,7 @@ static func run() -> bool:
 		[EventSheets.opposite_operator("<="), EventSheets.opposite_operator("=="),
 			EventSheets.opposite_operator("begins with")], [">", "!=", ""]) and ok
 
-	# P2 - what the Parameters dialog's help strip says about a field carrying a pack's own hint.
+	# What the Parameters dialog's help strip says about a field carrying a pack's own hint.
 	# A registration outranks the builtin table, which is how a pack describes a box only it knows.
 	ok = _check("an undescribed hint says nothing", EventSheets.param_help_for("wave_id"), "") and ok
 	EventSheets.register_param_help("wave_id", "A wave from the campaign table.")
@@ -134,7 +134,7 @@ static func run() -> bool:
 	EventSheets.register_param_help("color", "")
 	ok = _check("clearing it hands the builtin wording back",
 		EventSheetParamFieldFactory.hint_paragraph("color").contains("#ff4d4d"), true) and ok
-	# P1 - an option may declare the line that reads under it; one without a note is unchanged.
+	# An option may declare the line that reads under it; one without a note is unchanged.
 	var noted: Array = EventSheets.combo_options([
 		{"key": "run", "label": "Run", "note": "double speed, keeps momentum"}, "walk"])
 	ok = _check("combo_options carries an option's own note",
@@ -142,7 +142,7 @@ static func run() -> bool:
 	ok = _check("and leaves a plain choice with none",
 		str((noted[1] as Dictionary).get("note", "")), "") and ok
 
-	# V6 - who owns each variable a sheet can name, and how a row spells one.
+	# Who owns each variable a sheet can name, and how a row spells one.
 	var owned: EventSheetResource = EventSheetResource.new()
 	owned.custom_class_name = "Player"
 	owned.variables = {"hp": {"type": "int", "default": 100, "exported": false}}
@@ -255,7 +255,7 @@ static func run() -> bool:
 		(report.get("findings", []) as Array).size()) and ok
 	EventSheets.unregister_doctor_check("api_test.probe")
 	# Pinned by NAME rather than by an empty list: the Doctor's own Multiplayer section registers
-	# through this very seam (E4), so the list is never empty once a report has run - and "unregister
+	# through this very seam, so the list is never empty once a report has run - and "unregister
 	# removed MY check" is the promise, not "nobody else may use the seam".
 	var still_registered: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in EventSheetProjectDoctor._extension_checks:

@@ -27,18 +27,18 @@ static var _uid_counter: int = 0
 ## every contained event with it - feature flags / debug switches / cheap state
 ## machines at RUNTIME. Off (default) keeps groups zero-cost compile-time organization.
 @export var runtime_toggleable: bool = false
-## M3. WHO runs this group's events over a network: "" / "everyone" (nobody is left out, and
+## WHO runs this group's events over a network: "" / "everyone" (nobody is left out, and
 ## nothing at all is emitted), "host", or "owner". The commonest multiplayer mistake is a rule that
 ## runs on every peer when it should run once, and repeating an Is host condition on every event is
 ## how that mistake gets made - so the answer is asked once, of the group.
 @export var runs_on: String = ""
 
-## M3. The three answers, as the values written into the `## @ace_group(...)` header.
+## The three answers, as the values written into the `## @ace_group(...)` header.
 const RUNS_ON_EVERYONE := "everyone"
 const RUNS_ON_HOST := "host"
 const RUNS_ON_OWNER := "owner"
 
-## M3. The GDScript test each answer compiles to, and the ONE table behind all of it: the compiler's
+## The GDScript test each answer compiles to, and the ONE table behind all of it: the compiler's
 ## guard, the word the head shows, the dialog's dropdown, the menu, and the reading that recognises
 ## a hand-written guard all resolve here, so none of them can mean something the others do not.
 ## "everyone" is deliberately absent - it is the answer that writes nothing.

@@ -1,4 +1,4 @@
-# EventForge - R41. A LOCAL READS WHERE THE SHEET DECLARES ONE: AT THE TOP OF ITS EVENT.
+# EventForge - A LOCAL READS WHERE THE SHEET DECLARES ONE: AT THE TOP OF ITS EVENT.
 #
 # An event sheet declares a local at the top of the event that owns it and fills it in with an
 # action, so a `var` line inside a body reads as those rows - the declaration up with the event's

@@ -1,4 +1,4 @@
-# Godot EventSheets - L8: the Doctor's Lighting section (preview module).
+# Godot EventSheets - the Doctor's Lighting section (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The rows are drawn by the Project Doctor window's OWN filler, so what is photographed here is the

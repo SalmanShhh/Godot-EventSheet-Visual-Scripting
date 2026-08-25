@@ -2,7 +2,7 @@
 class_name EditorObjectReadingTest
 extends RefCounted
 
-# Pins the Editor object (R30 / R31 / R34) - the reading an opened @tool script gets when what it
+# Pins the Editor object - the reading an opened @tool script gets when what it
 # talks to is the EDITOR rather than the game.
 #
 # Four gates, in the order they matter:
@@ -93,7 +93,7 @@ static func _plugin_reads_with_the_editor_object() -> bool:
 	var readings: PackedStringArray = _render(_import(PLUGIN_PATH, PLUGIN_SOURCE))
 	for expected: String in EXPECTED_PLUGIN:
 		ok = _check("the opened plugin reads \"%s\"" % expected, readings.has(expected), true) and ok
-	# The rename is the whole point of R30: a plugin's `_enter_tree` is not "on created".
+	# The rename is the whole point of the editor-object words: a plugin's `_enter_tree` is not "on created".
 	ok = _check("a plugin's _enter_tree no longer reads as On Enter Tree",
 		readings.has("Editor ▸ On Enter Tree"), false) and ok
 	return ok
@@ -107,7 +107,7 @@ static func _script_reads_with_the_editor_object() -> bool:
 	return ok
 
 
-## R31. The declaration row says what `ur` IS, so a reader can tell it is something to call actions on.
+## The declaration row says what `ur` IS, so a reader can tell it is something to call actions on.
 static func _undo_history_is_an_object_variable() -> bool:
 	var ok: bool = true
 	var declaration: Dictionary = EventSheetSentence.statement("var ur = get_undo_redo()")
@@ -120,7 +120,7 @@ static func _undo_history_is_an_object_variable() -> bool:
 	return ok
 
 
-## R30 / R34. Every new trigger resolves to the editor callback it names, with the return type Godot
+## Every new trigger resolves to the editor callback it names, with the return type Godot
 ## declares for it - the viewport-input hook ANSWERS, and a `-> void` there would not compile.
 static func _triggers_resolve_to_the_editor_callbacks() -> bool:
 	var ok: bool = true

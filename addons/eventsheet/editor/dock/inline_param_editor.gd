@@ -306,7 +306,7 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
 		_dock._mark_dirty("Colour updated.")
 
 
-## R37 - the same picker, committed onto a VARIABLE row. Two things make this different from a
+## The same picker, committed onto a VARIABLE row. Two things make this different from a
 ## param: the value is written back IN THE SPELLING THE LINE ALREADY USED (`Color.RED` stays a named
 ## constant, `Color("#ff9b3c")` stays a hex string, `Color(1, 0.6, 0.2)` stays numbers), so a colour
 ## edit moves the colour and not one byte more; and the variable is re-found BY NAME inside the edit,

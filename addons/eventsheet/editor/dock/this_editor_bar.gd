@@ -2,7 +2,7 @@
 class_name EventSheetThisEditorBar
 extends RefCounted
 
-# W1 + W20 - THE BAR ON A SHEET THAT IS PART OF THE RUNNING EDITOR.
+# THE BAR ON A SHEET THAT IS PART OF THE RUNNING EDITOR.
 #
 # Opening the plugin's own source as a sheet is the honest dogfood, and it is also the one file a
 # sheet can open where SAVING has a consequence no other file has: the editor you are looking at is

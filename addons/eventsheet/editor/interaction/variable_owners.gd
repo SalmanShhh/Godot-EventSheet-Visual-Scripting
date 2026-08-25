@@ -359,7 +359,7 @@ static func nearest_name(entries: Array[Dictionary], name_text: String) -> Strin
 	return best
 
 
-## V7. The Variables group in the order a reader looks for it: set it, change it by an amount, then
+## The Variables group in the order a reader looks for it: set it, change it by an amount, then
 ## the boolean pair, then the two questions. Ordered by what the verbs DO, not by id - which is the
 ## order they were in, and the reason "Toggle boolean" sat between "Subtract from" and the compare.
 ## Any variable verb not named here keeps its place after these, in registry order.
@@ -391,7 +391,7 @@ const VARIABLE_VERB_VALUE_PARAM: Dictionary = {
 const _BRACKET_PAIRS: Dictionary = {"(": ")", "[": "]", "{": "}"}
 
 
-## V6/V12. One variable verb's parameters read as another's: the variable stays where it is and the
+## One variable verb's parameters read as another's: the variable stays where it is and the
 ## value moves to whatever the target calls it, so swapping Add to for Set value never loses what
 ## was typed. Keys neither verb names are carried across untouched.
 static func rekeyed_params(params: Dictionary, from_ace_id: String, to_ace_id: String) -> Dictionary:
@@ -406,7 +406,7 @@ static func rekeyed_params(params: Dictionary, from_ace_id: String, to_ace_id: S
 	return rekeyed
 
 
-## V6. A Set value whose expression only adds to (or subtracts from) the very variable it is setting
+## A Set value whose expression only adds to (or subtracts from) the very variable it is setting
 ## IS an Add to / Subtract from, and reads better as one: `hp = hp + 1` is "Add 1 to hp". Returns
 ## {"ace_id", "params"} - the row this one could be rewritten as - or {} when the expression is
 ## anything else.

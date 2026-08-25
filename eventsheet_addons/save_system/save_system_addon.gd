@@ -80,25 +80,25 @@ signal key_removed(key: String, slot_index: int)
 ## @ace_category("Save System")
 signal save_key_missing(key: String, slot_index: int)
 
-var autosave_accumulator: float = 0.0
-## Seconds between autosaves (0 = off). Fires On Before Save first.
-@export_range(0, 600, 1) var autosave_interval: float = 0.0
-## How many earlier versions of each slot to keep (0 = off). Every write copies the slot's previous bytes into a ring beside the save, so Restore Slot From Backup can go back to a save that was written perfectly and is simply wrong.
-@export_range(0, 50, 1) var backup_count: int = 0
-## Non-empty = encrypted saves (keep the key out of screenshots!).
-@export var encryption_key: String = ""
+## Where save files live.
+@export var save_directory: String = "user://"
 ## {slot} becomes the slot number.
 @export var file_pattern: String = "save_{slot}.cfg"
+## ConfigFile section / JSON namespace for values.
+@export var section: String = "save"
 ## config = ConfigFile (Godot-native), json = readable text, binary = compact store_var, csv = spreadsheet rows, ini = portable [section] key=value, xml = structured <entry> tags. All six preserve exact types.
 @export_enum("config", "json", "binary", "csv", "ini", "xml") var format: String = "config"
 ## Nodes in this group (and their behaviors) auto-save via save_state()/load_state() on Save Game / Load Game.
 @export var persist_group: String = "persist"
-## Where save files live.
-@export var save_directory: String = "user://"
+## Non-empty = encrypted saves (keep the key out of screenshots!).
+@export var encryption_key: String = ""
+## Seconds between autosaves (0 = off). Fires On Before Save first.
+@export_range(0, 600, 1) var autosave_interval: float = 0.0
 ## The save shape number THIS build writes. Bump it whenever your saved data changes shape, and Load Game fires On Save Needs Upgrade for every older file so migration rows can fix it before anything reads it. 1 = nothing to migrate yet (and nothing is stamped, so files stay exactly as they were).
 @export_range(1, 999, 1) var save_version: int = 1
-## ConfigFile section / JSON namespace for values.
-@export var section: String = "save"
+## How many earlier versions of each slot to keep (0 = off). Every write copies the slot's previous bytes into a ring beside the save, so Restore Slot From Backup can go back to a save that was written perfectly and is simply wrong.
+@export_range(0, 50, 1) var backup_count: int = 0
+var autosave_accumulator: float = 0.0
 ## Active save slot (each slot is its own file).
 @export_group("Save System")
 @export_range(0, 9, 1) var slot: int = 0

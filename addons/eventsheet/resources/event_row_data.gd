@@ -7,7 +7,7 @@ EVENT,
 GROUP,
 COMMENT,
 SECTION,
-## R1 - a `#region` fence. It is NOT a group: it holds no locals, it cannot be switched off, and
+## A `#region` fence. It is NOT a group: it holds no locals, it cannot be switched off, and
 ## it is two plain lines of the file rather than a resource. So it reads as what it is in the
 ## script editor - a fold mark: a dashed `#` badge, a dashed rule down its body, and a slim
 ## closing tick whose only text is the `#endregion` the file really has.
@@ -56,11 +56,11 @@ var language_block: bool = false
 # variable tint and rules their left edge, so a declaration never reads as an event. View-only,
 # never serialized.
 var variable_row: bool = false
-# V2. True on the LAST row of a block that a hairline closes - the globals this sheet only uses,
+# True on the LAST row of a block that a hairline closes - the globals this sheet only uses,
 # separated from the variables it declares. A rule, not a row: it costs no height, so a block break
 # never pushes the sheet down a line. View-only, never serialized.
 var rule_below: bool = false
-# K4. The condition LINE INDICES an "or" divider is drawn above - every line after the first when the
+# The condition LINE INDICES an "or" divider is drawn above - every line after the first when the
 # event's conditions are OR'd. The word is drawn BETWEEN the two conditions rather than stamped on
 # either of them, because "or" is what sits between two questions, not a property of one. View-only,
 # never serialized; empty on an AND event, which is every event by default.
@@ -89,38 +89,38 @@ var in_verb_body: bool = false
 # action "Stop event" - and spans are built lazily, long after the walk that knew which verb this was,
 # so the answer is carried on the row. View-only, never serialized.
 var verb_kind: int = 0
-# M23: the half-open range of the source event's ACTIONS this row draws. A statement carrying a
+# The half-open range of the source event's ACTIONS this row draws. A statement carrying a
 # ternary reads as a sub-event pair, which splits the event it lives in into the actions BEFORE the
 # branch (this row), the branch rows, and the actions after (a continuation row) - so each of those
 # rows renders its own slice of the one unchanged EventRow. -1 means "to the end". View-only, never
 # serialized: the resource, the emitted GDScript and the byte round-trip are untouched.
 var action_slice_from: int = 0
 var action_slice_to: int = -1
-# M23: true on the slice that carries the EVENT's own trailing furniture - its comment and the
+# True on the slice that carries the EVENT's own trailing furniture - its comment and the
 # "+ Add condition" / "+ Add action" affordances. Normally that is the continuation after the last
 # branch; when the branch IS the final action it is the head, so the scaffolding stays exactly where
 # it sat before the pair existed instead of growing an empty row under every ternary. View-only.
 var action_slice_tail: bool = false
-# M23: true on the continuation row of such a split - its conditions were already drawn by the row
+# True on the continuation row of such a split - its conditions were already drawn by the row
 # the split began at, and an event sheet never repeats them. View-only, never serialized.
 var conditions_hidden: bool = false
-# M23: true on a row the ternary reading itself produced (a head slice, a branch row, a continuation),
+# True on a row the ternary reading itself produced (a head slice, a branch row, a continuation),
 # so a second pass over the same tree leaves it alone instead of branching it again. View-only.
 var ternary_view: bool = false
-# M23 (editable sheets): the row_uid of the ONE statement row every row of a pair stands for. The pair
+# Editable sheets: the row_uid of the ONE statement row every row of a pair stands for. The pair
 # is a reading of a single statement, so selection, drag, delete and the gutter must all address it as
 # one - and this is the single field they key on. "" on every row that is not part of such a reading.
 # View-only, never serialized.
 var ternary_anchor_uid: String = ""
-# M23: true on the row a pair LEADS with (the head slice, or the first branch row when the head drew
+# True on the row a pair LEADS with (the head slice, or the first branch row when the head drew
 # nothing). Exactly one row per pair carries it, which is the row the event number, the breakpoint dot,
 # the bookmark pennant and the trace hit chip belong to - the others must draw no gutter marks at all.
 var ternary_lead: bool = false
-# M23: the index into the source event's `actions` of the statement a branch row reads, or -1. It is
+# The index into the source event's `actions` of the statement a branch row reads, or -1. It is
 # what routes a double-click anywhere on the pair (the condition cell and the Else row included) to
 # that ONE line's existing editor. View-only, never serialized.
 var ternary_action_index: int = -1
-# M36: the object a For-each PICKS, and the muted note saying where they came from ("(group
+# The object a For-each PICKS, and the muted note saying where they came from ("(group
 # \"enemies\")"). Set on the row a loop-plus-one-`if` merged into, so its first condition line reads as
 # a condition ON that object - which is what event-sheet picking looks like. Spans are built lazily,
 # long after the walk that saw the loop, so the answer is carried on the row. View-only, never

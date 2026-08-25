@@ -16,9 +16,9 @@ extends RefCounted
 # RUN ORDER IS THE WHOLE CONTRACT. The compiler emits an event's actions first and its
 # sub-events afterwards, inside the same block. So:
 #   • wrapping is only sound for a CONTIGUOUS TRAILING run of actions, and the fresh guard
-#     must become the FIRST sub-event - then A1..Aj, [if cond: Aj+1..Ak], S1..Sn reads in
-#     exactly the order the flat row did. Anything else silently reorders the program, so it
-#     is refused with the reason rather than performed;
+#     must become the FIRST sub-event - the actions kept flat, then the guarded run, then the
+#     sub-events that were already there, reads in exactly the order the flat row did. Anything
+#     else silently reorders the program, so it is refused with the reason rather than performed;
 #   • unwrapping the FIRST sub-event appends its actions to the parent's (same position in the
 #     run); a later sub-event's actions travel in a CONDITION-LESS carrier row, which the
 #     compiler emits as plain statements at the same indent - byte-identical output.

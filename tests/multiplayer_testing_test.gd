@@ -1,4 +1,4 @@
-# M5 / M7 / E4 - testing a networked game as two players, and the four mistakes the Doctor knows.
+# Testing a networked game as two players, and the four mistakes the Doctor knows.
 #
 # Pinned by VALUE, in the order the failures would matter:
 #   the SETTING - exactly what "Play as host + client" writes into the editor's own Run Instances
@@ -36,7 +36,7 @@ static func run() -> bool:
 	return ok
 
 
-# -- M5: the setting the button writes ----------------------------------------------------------
+# -- The setting the button writes ----------------------------------------------------------
 
 
 static func _test_what_the_button_writes() -> bool:
@@ -133,7 +133,7 @@ static func _test_the_live_value_chips() -> bool:
 	return ok
 
 
-# -- M7: the four rules -------------------------------------------------------------------------
+# -- The four rules -------------------------------------------------------------------------
 
 
 static func _test_sent_but_not_a_message() -> bool:
@@ -288,7 +288,7 @@ static func _test_a_single_player_sheet_earns_nothing() -> bool:
 	return ok
 
 
-# -- E4: the Doctor's section -------------------------------------------------------------------
+# -- The Doctor's section -------------------------------------------------------------------
 
 
 static func _test_the_doctor_section() -> bool:

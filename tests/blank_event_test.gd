@@ -1,4 +1,4 @@
-# Godot EventSheets - S27: blank events mean what they mean in an event sheet.
+# Godot EventSheets - blank events mean what they mean in an event sheet.
 #
 # A blank SUB-EVENT follows its parent in order: plain statements after the parent's block, never
 # `if true:`. A blank TOP-LEVEL event runs every tick: it compiles exactly as an every-tick event
@@ -105,7 +105,7 @@ static func run() -> bool:
 	all_passed = _check("every other trigger reads exactly as before",
 		EventSheetViewportReadingRows.blank_tick_reading("OnReady", false).is_empty(), true) and all_passed
 
-	# S27. The READING of a blank SUB-event: an empty lane, because "Every Tick" under a parent would
+	# The READING of a blank SUB-event: an empty lane, because "Every Tick" under a parent would
 	# be a plain lie about when its rows run. Built through a real viewport over the sheet above, so
 	# the gate that decides it (the row is held UNDER another one) is the one the editor uses.
 	var nested_viewport: EventSheetViewport = EventSheetViewport.new()

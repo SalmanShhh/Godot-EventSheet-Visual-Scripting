@@ -1,4 +1,4 @@
-# Godot EventSheets - U23, finding a row by the Godot call it writes.
+# Godot EventSheets - finding a row by the Godot call it writes.
 #
 # The promise is exact: a Godot user types `queue_free` and lands on Destroy, `is_on_floor` on Is on
 # floor, `add_child` on Create object, `tween_property` on Tween property - and the GDScript is

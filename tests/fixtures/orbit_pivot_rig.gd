@@ -1,7 +1,7 @@
 @tool
 extends Node3D
 
-# X4 fixture - the two shapes the orbit reading has to tell apart, in ONE file placed in ONE scene.
+# Fixture - the two shapes the orbit reading has to tell apart, in ONE file placed in ONE scene.
 #
 # `pivot` is a node whose only child in `orbit_pivot_rig.tscn` is a camera arm, so turning it is the
 # camera going round what it looks at: the reading says Orbit around its centre. `plain` holds a

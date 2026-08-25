@@ -89,7 +89,7 @@ static func _any_row_contains(texts: PackedStringArray, needle: String) -> bool:
 	return false
 
 
-## N1 - the two fence lines read as a fold mark carrying the name and echoing the line the file
+## The two fence lines read as a fold mark carrying the name and echoing the line the file
 ## has, and a region written inside another region nests inside it.
 static func _region_groups() -> bool:
 	var passed: bool = true
@@ -114,7 +114,7 @@ static func _region_groups() -> bool:
 	return passed
 
 
-## N2 - a comment that is a statement reads as a switched-off row; a comment that is prose does not.
+## A comment that is a statement reads as a switched-off row; a comment that is prose does not.
 static func _disabled_comments() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open()
@@ -151,7 +151,7 @@ static func _disabled_comments() -> bool:
 	return passed
 
 
-## N3 - both spellings of a repeating beat, and the one-shot Timer that is not one.
+## Both spellings of a repeating beat, and the one-shot Timer that is not one.
 static func _every_x_seconds() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open()
@@ -171,7 +171,7 @@ static func _every_x_seconds() -> bool:
 	return passed
 
 
-## N12 - the base script reads as an Include bar, and `super` as calling that include.
+## The base script reads as an Include bar, and `super` as calling that include.
 static func _include_bar_and_super() -> bool:
 	var passed: bool = true
 	var view: EventSheetViewport = _open()
@@ -203,7 +203,7 @@ static func _include_bar_and_super() -> bool:
 	return passed
 
 
-## N1 authoring symmetry: a group added to a .gd sheet is written as the fence pair, and the file
+## Authoring symmetry: a group added to a .gd sheet is written as the fence pair, and the file
 ## reopens with that same bar - the round trip a person actually makes.
 static func _region_authoring_round_trip() -> bool:
 	var authored_path: String = "user://eventsheets_region_authoring.gd"

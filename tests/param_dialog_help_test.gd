@@ -4,9 +4,9 @@
 # to print each parameter's description under its field in small text. It never said what the ROW
 # would read as, never said what the focused BOX wanted, and found a wrong value on OK or later.
 #
-# This pins the four halves of the answer: the title sentence filled from the fields (P0), the line
-# under each choice of an option list (P1), the paragraph each hint contributes to the one help
-# strip (P2), and the red / amber notes with their fixes (P3). Everything here is static or built
+# This pins the four halves of the answer: the title sentence filled from the fields, the line
+# under each choice of an option list, the paragraph each hint contributes to the one help
+# strip, and the red / amber notes with their fixes. Everything here is static or built
 # without a tree, because the dialog's own window needs a display server and its logic does not.
 @tool
 class_name ParamDialogHelpTest
@@ -24,7 +24,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## V6. A Set value whose expression only adds to (or subtracts from) the very variable it sets IS an
+## A Set value whose expression only adds to (or subtracts from) the very variable it sets IS an
 ## Add to / Subtract from. The strip offers it as a reading, and the offer never changes what the row
 ## computes - which is why an expression with a top-level sum of its own is refused.
 static func _test_read_as() -> bool:
@@ -49,7 +49,7 @@ static func _test_read_as() -> bool:
 		EventSheetVariableOwners.compound_reading("SetVar", {"var_name": "hp", "value": "100"}), {}) and passed
 	passed = _check("and no other verb offers a re-reading",
 		EventSheetVariableOwners.compound_reading("AddVar", {"var_name": "hp", "amount": "hp + 1"}), {}) and passed
-	# V12's fix is the same move in reverse, so both go through one re-keying: the variable stays
+	# The fix is the same move in reverse, so both go through one re-keying: the variable stays
 	# put and the value lands under whatever the new verb calls it.
 	passed = _check("re-keying moves the value to the new verb's own name",
 		EventSheetVariableOwners.rekeyed_params({"var_name": "nickname", "amount": "1"}, "AddVar", "SetVar"),
@@ -63,7 +63,7 @@ static func _test_read_as() -> bool:
 	return passed
 
 
-## P0. The title IS the row: the object it belongs to, then the ACE's sentence with the values as
+## The title IS the row: the object it belongs to, then the ACE's sentence with the values as
 ## typed. The code line beside it comes from the emitter, so the dialog cannot promise a spelling
 ## the compiler would not use.
 static func _test_title_sentence() -> bool:
@@ -104,7 +104,7 @@ static func _test_title_sentence() -> bool:
 	return passed
 
 
-## P2. One paragraph per hint, next to the control that hint already builds - so the strip is never
+## One paragraph per hint, next to the control that hint already builds - so the strip is never
 ## generic, and the parameter's own description still leads.
 static func _test_strip_text_per_hint() -> bool:
 	var passed: bool = true
@@ -147,11 +147,11 @@ static func _test_strip_text_per_hint() -> bool:
 			"method_reference", "animation_reference", "input_action", "group_reference"]:
 		if not EventSheetParamFieldFactory.hint_paragraph(hint).is_empty():
 			described += 1
-	passed = _check("every hint the mockup named is described", described, 14) and passed
+	passed = _check("every hint kind is described", described, 14) and passed
 	return passed
 
 
-## P1. A choice explains itself from wherever the choice came from: the Input Map for an action, the
+## A choice explains itself from wherever the choice came from: the Input Map for an action, the
 ## open scene for a node group, the descriptor for a shipped list, the catalog for a variable.
 static func _test_option_second_lines() -> bool:
 	var passed: bool = true
@@ -228,7 +228,7 @@ static func _test_option_second_lines() -> bool:
 	return passed
 
 
-## P3. The checks run at keystroke time, in the words the sheet's own row notes use, with the fix
+## The checks run at keystroke time, in the words the sheet's own row notes use, with the fix
 ## beside them - red for what cannot be meant, amber for what will surprise.
 static func _test_validation_states() -> bool:
 	var passed: bool = true
@@ -290,7 +290,7 @@ static func _test_validation_states() -> bool:
 	return passed
 
 
-## P0/P4. The one strip: it speaks in three tones, offers the fixes a note carries, and hides a
+## The one strip: it speaks in three tones, offers the fixes a note carries, and hides a
 ## reading line it has nothing to put on.
 static func _test_strip_component() -> bool:
 	var passed: bool = true

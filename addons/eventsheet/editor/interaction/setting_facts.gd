@@ -41,7 +41,7 @@ const COLOUR_WORDS: Dictionary = {
 static func facts(variable: LocalVariable) -> Dictionary:
 	var found: Dictionary = {
 		"type_word": "", "value_text": "", "note": "", "swatch": null,
-		# R32 - a button has no value to show: `= _bake` is which function it calls, which the note
+		# A button has no value to show: `= _bake` is which function it calls, which the note
 		# says in words. `name_text` overrides the name the row leads with for the same reason: the
 		# button's own label is what the Inspector shows on it.
 		"hide_value": false, "name_text": ""
@@ -61,7 +61,7 @@ static func facts(variable: LocalVariable) -> Dictionary:
 	return found
 
 
-## R32. An Inspector button is the smallest editor tool there is - one line - and it reads as one:
+## An Inspector button is the smallest editor tool there is - one line - and it reads as one:
 ## `button Bake  in the Inspector · calls Bake`. The row leads with the button's own label rather
 ## than the variable name behind it, and shows no value at all, because `= _bake` is not a setting a
 ## reader tunes - it is which function the button calls, which the note says in words.
@@ -201,7 +201,7 @@ static func _apply_node_path(found: Dictionary, variable: LocalVariable, attribu
 ## A colour shows itself. The swatch is the fact; the word beside it is a courtesy for the handful of
 ## colours anybody names out loud, and every other colour keeps the numbers it was written with.
 static func _apply_colour(found: Dictionary, variable: LocalVariable) -> void:
-	# R37 - a colour is ALWAYS a swatch, whether or not the line bothered to declare the type:
+	# A colour is ALWAYS a swatch, whether or not the line bothered to declare the type:
 	# `var tint := Color.WHITE` is as much a colour as `var tint: Color = ...`, and the swatch is the
 	# half of the row a reader actually uses.
 	if variable.type_name.strip_edges() != "Color" and not is_colour_literal(str(variable.default_value)):

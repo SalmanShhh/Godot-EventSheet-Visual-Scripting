@@ -1,4 +1,4 @@
-# Godot EventSheets - L4: what the attached scene says about a sheet's lighting (preview module).
+# Godot EventSheets - what the attached scene says about a sheet's lighting (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The sheet is the hand-written lit room the suite measures. Nothing on the head was authored: the

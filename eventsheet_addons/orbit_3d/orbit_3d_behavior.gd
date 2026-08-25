@@ -14,15 +14,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Orbit3DBehavior behavior requires a Node3D parent.")
 
-var angle: float = 0.0
-var center_captured: bool = false
-var center_x: float = 0.0
-var center_y: float = 0.0
-var center_z: float = 0.0
 ## Distance in world units the host stays from the orbit center.
 @export var radius: float = 3.0
 ## Degrees per second the host travels around the orbit.
 @export var speed_degrees: float = 90.0
+var angle: float = 0.0
+var center_x: float = 0.0
+var center_y: float = 0.0
+var center_z: float = 0.0
+var center_captured: bool = false
 
 func _process(delta: float) -> void:
 	if host == null:

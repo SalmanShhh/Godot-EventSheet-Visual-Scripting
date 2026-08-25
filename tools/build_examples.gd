@@ -3213,7 +3213,7 @@ func _build_hierarchy_playground() -> bool:
 	setup.trigger_provider_id = "Core"
 	setup.trigger_id = "OnReady"
 	setup.actions.append(_raw("equip(%Hat)"))
-	# X13's first escape hatch: still a child (still freed with the rider, still picked as one of its
+	# The first escape hatch: still a child (still freed with the rider, still picked as one of its
 	# children), but its own transform is global from here on.
 	setup.actions.append(_raw("%HealthBar.top_level = true"))
 	setup.actions.append(_raw("heal_squad($Squad)"))
@@ -3828,7 +3828,7 @@ func _save_boomer_scene() -> bool:
 	camera.rotation_degrees = Vector3(0.0, 180.0, 0.0)
 	camera.current = true
 	arm.add_child(camera); camera.owner = root
-	# The feel knobs the mockup names, set here so the showcase reads as its own settings rather than
+	# The feel knobs the showcase names, set here so the showcase reads as its own settings rather than
 	# as the pack's defaults: a shooter's air control, the bunny hop on, a visible bob and a soft sway.
 	_attach_behavior(player, "FPSController", FPS_CONTROLLER, root, {
 		"air_control": 0.35, "keep_momentum": true,
@@ -4300,7 +4300,7 @@ func _mirror_tile_set() -> TileSet:
 	tile_set.add_source(atlas, 0)
 	return tile_set
 
-# ── 22. Pin modes: every way one thing can ride another (Y4 / Y5) ───────────
+# ── 22. Pin modes: every way one thing can ride another ───────────
 #
 # One room per mode, side by side, all driven by anchors the sheet moves - so the DIFFERENCES are
 # the demo. A rope hangs slack and only pulls when it goes taut; a bar holds its length every tick
@@ -4853,7 +4853,7 @@ func _showcase_function(function_name: String, body: String, params: Array = [])
 
 # ── 23. Skate Park (2D) ─────────────────────────────────────────────────────
 #
-# Y22 / Y9 / Y24. The Skateboard pack playable: a slope that hands you speed, a rail across the
+# The Skateboard pack playable: a slope that hands you speed, a rail across the
 # middle, a quarterpipe at the end, and a HUD that shows the chain climbing until you land it.
 # Every row is the pack's own vocabulary - there is no skating math in the sheet at all.
 
@@ -5921,7 +5921,7 @@ func _course_actor_3d(root: Node3D, actor_name: String, at: Vector3, yaw: float,
 	return actor
 
 
-# ── 26. Combo Fighter (Y1 / Y2 / Y3: the three timing tricks a fighting game is made of) ──────
+# ── 26. Combo Fighter (the three timing tricks a fighting game is made of) ──────
 # Three combos drive three animations, a cancel window lets the next move interrupt the last one,
 # and the hit frame the animation itself names freezes the whole game for a moment. Every shape here
 # is one the READING recognises, so opening combo_fighter.gd as a sheet gives back these very rows:

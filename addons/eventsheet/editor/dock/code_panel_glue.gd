@@ -49,7 +49,7 @@ func refresh_anatomy_panel() -> void:
 		_dock._anatomy_panel.refresh(_dock._current_sheet)
 	if _dock._picker_preview_panel != null:
 		_dock._picker_preview_panel.refresh(_dock._current_sheet)
-	# N10 - the Objects rail is a census of the OPEN sheet's own rows, so it refreshes with the rest
+	# The Objects rail is a census of the OPEN sheet's own rows, so it refreshes with the rest
 	# of the rail rather than keeping any state of its own between sheets.
 	if _dock._objects_panel != null:
 		_dock._objects_panel.set_sheet(_dock._current_sheet)
@@ -243,7 +243,7 @@ func on_code_panel_gui_input(event: InputEvent) -> void:
 	_dock._select_sheet_row_for_code_line(_dock._code_edit.get_caret_line() + 1)
 
 
-## V13 - the code echo beside a variable row, activated: show the GDScript panel and put the caret on
+## The code echo beside a variable row, activated: show the GDScript panel and put the caret on
 ## the very line that row writes. The reverse direction already works (clicking a line of generated
 ## code selects the row that produced it), so this closes the loop from the canvas side.
 func open_at_row(row_data: EventRowData) -> void:

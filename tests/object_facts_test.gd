@@ -1,4 +1,4 @@
-# Godot EventSheets - what an object IS (Q1/Q2/Q4/Q9/Q10/Q12), proved against a real script and a
+# Godot EventSheets - what an object IS, proved against a real script and a
 # real scene rather than against strings a test made up.
 #
 # tests/fixtures/object_facts_player.gd + object_facts_player.tscn carry one of every shape the
@@ -31,7 +31,7 @@ static func run() -> bool:
 	return passed
 
 
-# ── Q1. The object's own script ───────────────────────────────────────────────────────────────
+# ── The object's own script ───────────────────────────────────────────────────────────────────
 
 
 static func _script_facts() -> bool:
@@ -55,7 +55,7 @@ static func _script_facts() -> bool:
 	return passed
 
 
-# ── Q2/Q10. The scene the object is placed in ─────────────────────────────────────────────────
+# ── The scene the object is placed in ─────────────────────────────────────────────────────────
 
 
 static func _scene_facts() -> bool:
@@ -132,7 +132,7 @@ static func _popup_identity_rows() -> bool:
 	return passed
 
 
-# ── Q4. Tabs and titles name the object ───────────────────────────────────────────────────────
+# ── Tabs and titles name the object ───────────────────────────────────────────────────────────
 
 
 static func _sheet_titles() -> bool:
@@ -162,7 +162,7 @@ static func _sheet_titles() -> bool:
 	return passed
 
 
-# ── Q9. Who listens, and where it comes from ──────────────────────────────────────────────────
+# ── Who listens, and where it comes from ──────────────────────────────────────────────────────
 
 
 static func _signal_notes() -> bool:
@@ -209,7 +209,7 @@ static func _signal_notes() -> bool:
 	return passed
 
 
-# ── Q12. The Object bar ───────────────────────────────────────────────────────────────────────
+# ── The Object bar ────────────────────────────────────────────────────────────────────────────
 
 
 static func _object_bar_sections() -> bool:
@@ -234,7 +234,7 @@ static func _object_bar_sections() -> bool:
 	for entry: Variant in sections:
 		var section: Dictionary = entry
 		summary.append("%s: %s" % [str(section.get("title", "")), _names(section.get("entries", []))])
-	# R23 added the INPUT section between the scene and the globals: the controls a reader is looking
+	# Added the INPUT section between the scene and the globals: the controls a reader is looking
 	# at are nearer to hand than the families they rarely touch. It is empty here because this fixture
 	# names no control, and an empty section is never drawn.
 	passed = _check("the bar is four sections, in the order a reader wants them",
@@ -283,7 +283,7 @@ static func _object_bar_sections() -> bool:
 	return passed
 
 
-# ── Q10. Headless stays icon-only ─────────────────────────────────────────────────────────────
+# ── Headless stays icon-only ──────────────────────────────────────────────────────────────────
 
 
 static func _thumbnails_are_icon_only_headless() -> bool:

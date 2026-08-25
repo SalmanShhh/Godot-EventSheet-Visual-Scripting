@@ -2,11 +2,11 @@
 class_name CanvasDialogReadingTest
 extends RefCounted
 
-# Pins W7 and W8: the two shapes a tool's own UI files are made of.
+# Pins the two shapes a tool's own UI files are made of.
 #
-#   W7  a Control made in code, configured and opened - `ConfirmationDialog.new()` is a Confirm
+#   A Control made in code, configured and opened - `ConfirmationDialog.new()` is a Confirm
 #       dialog, the popup helpers are the verbs they publish, and `popup_centered()` opens it.
-#   W8  a canvas painted by hand - the draw verbs at every arity a sentence can name honestly, the
+#   A canvas painted by hand - the draw verbs at every arity a sentence can name honestly, the
 #       redraw, the theme lookups, and a Control's own `_gui_input` read as the Mouse triggers the
 #       same branches already read as inside `_unhandled_input`, scoped to the object they landed on.
 #
@@ -20,7 +20,7 @@ extends RefCounted
 
 const SOURCE_PATH := "user://eventforge_canvas_dialog_reading_test.gd"
 
-## W7. The file the regroup gate opens: one dialog, made and then shaped, which is the shape every
+## The file the regroup gate opens: one dialog, made and then shaped, which is the shape every
 ## tool file repeats dozens of times.
 const SETUP_PATH := "user://eventforge_dialog_setup_run_test.gd"
 const SETUP_SOURCE: String = """extends Node
@@ -95,7 +95,7 @@ static func run() -> bool:
 	return ok
 
 
-## W8 in the action lane: every canvas verb at the arities a sentence can name.
+## In the action lane: every canvas verb at the arities a sentence can name.
 static func _drawing_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -130,7 +130,7 @@ static func _drawing_values() -> bool:
 	return ok
 
 
-## W7 in the action lane: the Control nouns, the popup builders and the two window verbs.
+## In the action lane: the Control nouns, the popup builders and the two window verbs.
 static func _dialog_values() -> bool:
 	var ok: bool = true
 	for pair: Array in [
@@ -214,7 +214,7 @@ static func _opened_file_reads() -> bool:
 
 ## Both readings are display only, so the file saves back byte for byte - the string this test wrote
 ## AND the checked-in fixture the guide figure is made from.
-## W7. A dialog built in code reads as a dialog and the rows that shape it: the lines that write its
+## A dialog built in code reads as a dialog and the rows that shape it: the lines that write its
 ## properties, put it in the tree and open it hang UNDER the Local row that made it, instead of
 ## standing as their own top-level steps. Pinned by the exact shape of the tree, because "the rows
 ## are somewhere" is the one thing a regroup can get wrong while every sentence still reads right.

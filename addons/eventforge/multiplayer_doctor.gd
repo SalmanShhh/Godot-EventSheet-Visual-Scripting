@@ -1,9 +1,9 @@
 # Godot EventSheets - the Doctor's Multiplayer section.
 #
-# E4 + M7. After slotting the plugin into a project that already networks, the first question is
+# After slotting the plugin into a project that already networks, the first question is
 # "what did it understand?". This is the answer: every script in the project that touches the
 # network, how much of what it says about the network read as rows, the lines it could only show as
-# code, and the four mistakes M7 knows.
+# code, and the four mistakes this doctor knows.
 #
 # It ships as an EXTENSION check, registered through the very seam a pack uses
 # (`EventSheets.register_doctor_check`), so a pack that adds its own networking - a lobby service, a
@@ -27,7 +27,7 @@ const CHECK_HOST_ONLY := "multiplayer-host-only"
 const CHECK_AUTHORITY := "multiplayer-authority"
 const CHECK_SENDER := "multiplayer-sender"
 
-## Which check id each of M7's four findings reports as. One table, so the note on the row and the
+## Which check id each of the four findings reports as. One table, so the note on the row and the
 ## line in the report are the same finding under two roofs.
 const CHECK_FOR_KIND: Dictionary = {
 	EventSheetMultiplayerFindings.KIND_NOT_A_MESSAGE: CHECK_MESSAGE,
@@ -68,7 +68,7 @@ static func networked_scripts() -> PackedStringArray:
 
 ## The whole section as findings, the summary first: how many scripts touch the network and how
 ## much of what they say about it reads as rows, then the scripts with lines the sheet can only
-## show as code, then M7's four. Pure over a list of paths, so a test can hand it a corpus of two.
+## show as code, then the four. Pure over a list of paths, so a test can hand it a corpus of two.
 static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	if scripts.is_empty():
@@ -103,7 +103,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 
 
 ## What one opened script contributes to the section: the line saying how much of its networking
-## the sheet could only show as code (when there is any), then M7's findings about it. Pure over a
+## The sheet could only show as code (when there is any), then the findings about it. Pure over a
 ## sheet, so the wording is pinned without going through the importer.
 static func script_findings(script_path: String, sheet: EventSheetResource) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []

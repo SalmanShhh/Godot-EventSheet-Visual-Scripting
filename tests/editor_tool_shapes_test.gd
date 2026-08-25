@@ -1,7 +1,7 @@
 @tool
 class_name EditorToolShapesTest
 extends RefCounted
-# W17 / W18 / W21 / W23 - every shape Godot's editor has as a New Sheet entry, the tool author's
+# Every shape Godot's editor has as a New Sheet entry, the tool author's
 # everyday Editor words, and the twenty-four editor-building nouns Familiar Words now carries.
 #
 # The load-bearing gate here is the two-way one: each of the fifteen shapes is compiled, the result
@@ -26,8 +26,8 @@ static func run() -> bool:
 	return all_passed
 
 
-## W17. The list itself, as VALUES: fifteen shapes, the four R33 ones keeping their ids, in the
-## mockup's order. An id is what a saved sheet was created from, so a renumbering shows up here.
+## The list itself, as VALUES: fifteen shapes, the four original ones keeping their ids, in the
+## submenu's order. An id is what a saved sheet was created from, so a renumbering shows up here.
 static func _test_shape_list() -> bool:
 	var all_passed: bool = true
 	var ids: PackedStringArray = PackedStringArray()
@@ -37,7 +37,7 @@ static func _test_shape_list() -> bool:
 		labels.append(str(shape["label"]))
 	all_passed = _check("every editor shape keeps its id",
 		",".join(ids), "10,12,13,14,15,16,17,18,19,20,21,22,23,24,25") and all_passed
-	all_passed = _check("the list reads in the mockup's order and words",
+	all_passed = _check("the list reads in the submenu's order and words",
 		" | ".join(labels),
 		"One-click chore | Editor plugin | Importer add-on | Export hook | Dock panel | Bottom panel | Tools menu item | Properties bar add-on | Context menu item | Layout view handle | Thumbnail maker | Debugger panel | Command tool | Test sheet | Object type") and all_passed
 	var new_labels: PackedStringArray = PackedStringArray()
@@ -49,7 +49,7 @@ static func _test_shape_list() -> bool:
 	return all_passed
 
 
-## W17. Compile each skeleton, open the result, compile again - byte for byte. Also pins the host
+## Compile each skeleton, open the result, compile again - byte for byte. Also pins the host
 ## each shape ships as, because the host is what the editor looks at to decide what this file IS.
 static func _test_every_shape_round_trips() -> bool:
 	var all_passed: bool = true
@@ -100,7 +100,7 @@ static func _test_every_shape_round_trips() -> bool:
 	return all_passed
 
 
-## W17. The Sheet Type dialog's two new shapes. The add-on is the one tool type whose host the sheet
+## The Sheet Type dialog's two new shapes. The add-on is the one tool type whose host the sheet
 ## does NOT force - which of Godot's add-on classes it is, is the whole choice.
 static func _test_sheet_type_dialog() -> bool:
 	var all_passed: bool = true
@@ -131,7 +131,7 @@ static func _test_sheet_type_dialog() -> bool:
 	return all_passed
 
 
-## W17. Reopening a saved add-on or command tool has to land on the same type it was created as -
+## Reopening a saved add-on or command tool has to land on the same type it was created as -
 ## before this, an EditorInspectorPlugin sheet classified as a custom node and lost its host the next
 ## time anyone pressed OK on the dialog.
 static func _test_intents() -> bool:
@@ -161,7 +161,7 @@ static func _test_intents() -> bool:
 	return all_passed
 
 
-## W18. The tool author's everyday set: each row emits the exact EditorInterface / ProjectSettings
+## The tool author's everyday set: each row emits the exact EditorInterface / ProjectSettings
 ## line it names. A template is a frozen promise, so it is pinned as a value.
 static func _test_editor_vocabulary() -> bool:
 	var all_passed: bool = true
@@ -215,7 +215,7 @@ static func _param_hint(_found: Dictionary, ace_id: String, param_id: String) ->
 	return ""
 
 
-## W18. The two things the editor tells a tool about. Both connect on an editor object rather than
+## The two things the editor tells a tool about. Both connect on an editor object rather than
 ## on the sheet's own node, and both have to come back as themselves when the file is opened again.
 static func _test_editor_signal_triggers() -> bool:
 	var all_passed: bool = true
@@ -253,7 +253,7 @@ static func _test_editor_signal_triggers() -> bool:
 	return all_passed
 
 
-## W18. The reading side: the three editor questions that carry an argument, in the Editor object's
+## The reading side: the three editor questions that carry an argument, in the Editor object's
 ## own dotted names. A whole-spelling replace cannot reach them, so they go through the pattern pass.
 static func _test_editor_reading_words() -> bool:
 	var all_passed: bool = true
@@ -275,7 +275,7 @@ static func _test_editor_reading_words() -> bool:
 	return all_passed
 
 
-## W21. The editor-building words: twenty-four entries, both spellings, and the Manual page that
+## The editor-building words: twenty-four entries, both spellings, and the Manual page that
 ## says why each one was renamed.
 static func _test_editor_words_glossary() -> bool:
 	var all_passed: bool = true
@@ -314,15 +314,15 @@ static func _test_editor_words_glossary() -> bool:
 	all_passed = _check("the page is one chapter per word", chapters, 24) and all_passed
 	all_passed = _check("and the Manual can route to it",
 		EventSheetDocReference.has_page("reference:editorwords"), true) and all_passed
-	all_passed = _check("under the title the mockup gave it",
+	all_passed = _check("under the title the submenu gives it",
 		EventSheetDocReference.title_for(EventSheetDocReference.KIND_EDITOR_WORDS, ""),
 		"The words for building editor tools") and all_passed
 	return all_passed
 
 
-## W23. The Editor object's pages. A page is still the Editor, so every gate that used to compare
+## The Editor object's pages. A page is still the Editor, so every gate that used to compare
 ## the whole category has to recognise the prefix - comparing on equality would have quietly
-## un-scoped every paged row onto game sheets, which is the one thing the R30 rule forbids.
+## un-scoped every paged row onto game sheets, which is the one thing the rule forbids.
 static func _test_picker_pages() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("a paged Editor row is still an Editor row",
@@ -339,7 +339,7 @@ static func _test_picker_pages() -> bool:
 	# The two rows that are about the PROJECT rather than about the editor wear the project's name.
 	all_passed = _check("writing a project setting reads as the Project, not the Editor",
 		"|".join(ViewportRowBuilder.PROJECT_ACE_IDS), "SetProjectSetting|SaveProjectSettings") and all_passed
-	# ── W23, the rest of the pages. Every row that belonged to one named surface is filed on it, so
+	# ── The rest of the pages. Every row that belonged to one named surface is filed on it, so
 	# the flat root keeps only the one-off chores. Pinned by VALUE per row: a row that quietly slid
 	# back onto the root would still pass a count.
 	var filed: Dictionary = {}
@@ -362,7 +362,7 @@ static func _test_picker_pages() -> bool:
 			["SaveNodeAsScene", "Editor Tools: Files & folders"],
 			["OnCommandToolRun", "Editor Tools: Command tool"],
 			["CommandToolFinishWithCode", "Editor Tools: Command tool"],
-			# W6 - the menu page: the item that goes in one, and the event the chosen item runs.
+			# The menu page: the item that goes in one, and the event the chosen item runs.
 			["MenuAddItem", "Editor Tools: Menus"],
 			["OnMenuItemChosen", "Editor Tools: Menus"],
 			# The one-off chores stay on the root, so the folder a reader lands on is not empty.
@@ -381,7 +381,7 @@ static func _test_picker_pages() -> bool:
 	return all_passed
 
 
-## W10. The command tool's four rows, and the one thing that makes them worth having: each writes
+## The command tool's four rows, and the one thing that makes them worth having: each writes
 ## EXACTLY the line the reading already recognises, so a tool authored from the picker and one typed
 ## by hand are the same file. The whole-shape byte gate above covers the skeleton; this covers the
 ## individual spellings, which is where a paraphrase would hide.
@@ -429,7 +429,7 @@ static func _test_command_tool_rows() -> bool:
 	return all_passed
 
 
-## M46. The glossary lens as a hover line. The promise the renamed nouns are only acceptable under is
+## The glossary lens as a hover line. The promise the renamed nouns are only acceptable under is
 ## that nothing is HIDDEN by the rename - so the lookup has to answer from either side, and has to
 ## stay silent about a word it does not know rather than inventing a translation.
 static func _test_glossary_hover() -> bool:

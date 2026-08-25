@@ -3,7 +3,7 @@
 # When sheet variables carry a group (or subgroup / category) attribute, the compiler clusters that
 # section's variables contiguously and writes its @export_group header ONCE, so the Godot Inspector
 # shows one collapsible fold per group instead of a header before every variable. A sheet with no
-# sections is emitted in the order its variables were written, which is what V2's reorder writes.
+# sections is emitted in the order its variables were written, which is what the reorder writes.
 @tool
 class_name InspectorGroupEmitTest
 extends RefCounted
@@ -45,7 +45,7 @@ static func run() -> bool:
 		_count(nested_out, "@export_group(\"Combat\")") == 1 and _count(nested_out, "@export_subgroup(\"Melee\")") == 1
 		and nested_out.find("@export_group(\"Combat\")") < nested_out.find("@export_subgroup(\"Melee\")"), true) and ok
 
-	# V2 - the covenant: a sheet with no Inspector sections emits in the order it was WRITTEN, so a
+	# The covenant: a sheet with no Inspector sections emits in the order it was WRITTEN, so a
 	# drag-reorder and Sort A-Z land in the file instead of being sorted away again here.
 	var flat: EventSheetResource = EventSheetResource.new()
 	flat.host_class = "Node"

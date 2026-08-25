@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetCompareConditionDialog
 extends RefCounted
-# K2/K3 - the ONE Compare dialog.
+# The ONE Compare dialog.
 #
 # A comparison is the commonest question a sheet asks, and the vocabulary answers it with five
 # separate conditions (Compare variable, Compare Values, Is Between Values, Is Outside Range, Values
@@ -17,7 +17,7 @@ extends RefCounted
 # Everything testable is static: `writes()` is the mapping table, `reads_as()` and `in_code()` are
 # what the help strip shows, and none of them needs a Window. The strip's IN CODE line is produced by
 # handing a throwaway ACECondition to ConditionCodegen, so the dialog can never promise a line the
-# compiler would not write - including K4's inverted-comparison flip.
+# compiler would not write - including the inverted-comparison flip.
 
 ## Emitted when the dialog is confirmed. `ace_id` is one of the existing condition ids; the dock
 ## resolves it against the registry and applies it through the ordinary ACE apply path.
@@ -93,7 +93,7 @@ var _tolerance_edit: LineEdit = null
 var _tolerance_row: Control = null
 var _ignore_case_check: CheckBox = null
 var _invert_check: CheckBox = null
-## P0/P4 - the ONE help strip at the foot: what the focused field is for, then the row this dialog
+## The ONE help strip at the foot: what the focused field is for, then the row this dialog
 ## will write and the line it compiles to.
 var _help_strip: EventSheetPopupUI.HelpStrip = null
 var _context: Dictionary = {}
@@ -237,7 +237,7 @@ static func _cased(value: String, ignore_case: bool) -> String:
 
 
 ## READS AS: the row this dialog will write, in the condition's own sentence with the row's operator
-## glyphs. An inverted comparison with a clean opposite shows the opposite (K4), because that is both
+## glyphs. An inverted comparison with a clean opposite shows the opposite, because that is both
 ## what the row will say and what the compiler will write; anything else leads with "not".
 static func reads_as(ace_id: String, params: Dictionary, negated: bool, owner: String = "") -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(PROVIDER, ace_id)

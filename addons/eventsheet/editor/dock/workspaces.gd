@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetWorkspaces
 extends RefCounted
-# SCENE WORKSPACES (V15) - the unit of work is the scene, so open it as one.
+# SCENE WORKSPACES - the unit of work is the scene, so open it as one.
 #
 # "Open its sheets" on a scene opens the scene-as-sheet and every script in it, in tree order, as
 # one named tab group. The group is remembered as a WORKSPACE (Sheet ▸ Workspaces ▸ Level 1), so

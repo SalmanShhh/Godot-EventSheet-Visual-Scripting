@@ -64,7 +64,7 @@ static func build() -> bool:
 	# Internal state + triggers + conditions + expressions + the graph/AStar helpers.
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"# --- Internal state (the graph lives per agent in P1) ---",
+		"# --- Internal state (the graph lives per agent) ---",
 		"var _tilemap: TileMapLayer = null",
 		"var _movement: Node = null",
 		"var _gravity_angle_warned: bool = false",
@@ -400,7 +400,7 @@ static func build() -> bool:
 		"\t\tpath_complete.emit()",
 		"",
 		"## Coarse clearance for a jump/fall arc: the cells along the chord, lifted one cell for",
-		"## the rise, must be free. Coarse on purpose - P1 favours routing in open layouts.",
+		"## the rise, must be free. Coarse on purpose - it favours routing in open layouts.",
 		"## @ace_hidden",
 		"func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:",
 		"\tif solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):",

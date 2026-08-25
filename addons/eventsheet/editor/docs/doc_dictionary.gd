@@ -1,4 +1,4 @@
-# EventSheet - EventSheetDocDictionary: the GDScript-to-events dictionary, generated (U22).
+# EventSheet - EventSheetDocDictionary: the GDScript-to-events dictionary, generated.
 #
 # Every Godot call, property and idiom this editor's reading recognises, alphabetically, with the
 # sentence it reads as and where that reading comes from. It is the reference a power user wants and
@@ -106,7 +106,7 @@ static func entries(registry: Variant = null) -> Array[Dictionary]:
 	return found
 
 
-## The loaded vocabulary, asked the way U23 asks it: the row a call is ABOUT claims that call. A
+## The loaded vocabulary, asked the way the code search asks it: the row a call is ABOUT claims that call. A
 ## row that only reaches the call along the way is skipped, so `queue_free` names Queue Free once
 ## rather than every row that happens to free something.
 static func _collect_vocabulary(registry: Variant, into: Dictionary) -> void:

@@ -27,7 +27,7 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
-	# S27 - a TICK event with no condition of its own reads as a BLANK event: an empty condition
+	# A TICK event with no condition of its own reads as a BLANK event: an empty condition
 	# lane with no trigger words to click. This test is about hit-testing the trigger TEXT against
 	# the empty band below it, so the fixture uses a lifecycle trigger, which always draws its words.
 	event.trigger_id = "OnReady"

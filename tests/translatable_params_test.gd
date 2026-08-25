@@ -1,4 +1,4 @@
-# Godot EventSheets - translatable string params (v0.11 chapter 1, P1).
+# Godot EventSheets - translatable string params (v0.11 chapter 1).
 #
 # The whole feature is a convention over the param VALUE: the globe toggle wraps a
 # string literal in tr("...") inside the value itself. Emission substitutes params
@@ -56,7 +56,7 @@ static func run() -> bool:
 	ok = _check("the compiled script calls tr() at the usage site",
 		compiled.contains("print(tr(\"Spawned\"))"), true) and ok
 
-	# ── The Translation vocabulary (v0.11 chapter 1, P2) ──
+	# ── The Translation vocabulary (v0.11 chapter 1) ──
 	var registry := EventSheetACERegistry.new()
 	registry.refresh_from_sources([], true)
 	for translation_ace: String in ["SetLocale", "GetLocale", "Translate", "TranslateWithContext", "TranslatePlural", "IsLocaleChangeNotification", "OnLocaleChanged"]:

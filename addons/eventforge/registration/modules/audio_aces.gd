@@ -116,7 +116,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		], "Audio", "bus {bus} volume")
 		.described("Gives the current volume of a named audio bus, in decibels."))
 
-	# S13 - the sound a player holds, the bus it goes out on, and its volume as the 0-to-1 level a
+	# The sound a player holds, the bus it goes out on, and its volume as the 0-to-1 level a
 	# slider gives rather than as decibels. Each writes the shape the opened-script reading recognises.
 	descriptors.append(F.make_descriptor("Core", "AudioSetStream", "Set Sound", ACEDescriptor.ACEType.ACTION,
 		"stream = load({path})", "", [F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file this player holds.", "audio_path")],
@@ -131,7 +131,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Audio", "Set volume to {level} (0 to 1)", "AudioStreamPlayer")
 		.described("Sets how loud this player is from a 0-to-1 level, with the decibel conversion done for you."))
 
-	# ── U12 - a sound heard FROM a place, and the two faders a music change is made of ──
+	# ── a sound heard FROM a place, and the two faders a music change is made of ────────
 	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance", "Set Hearing Distance", ACEDescriptor.ACEType.ACTION,
 		"max_distance = {value}", "", [F.make_param("value", "float", "600.0", "Distance", "How far away the sound can still be heard at all.", "expression")],
 		"Audio", "Set hearing distance to {value}", "AudioStreamPlayer2D")
@@ -140,7 +140,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"attenuation = {value}", "", [F.make_param("value", "float", "1.0", "Falloff", "How fast the sound fades with distance: 1 is even, higher drops off sooner.", "expression")],
 		"Audio", "Set falloff to {value}", "AudioStreamPlayer2D")
 		.described("Sets how quickly a positional sound fades as the listener moves away."))
-	# ── X8 - the same two knobs on a sound heard from a place in 3D. Godot spells the falloff
+	# ── the same two knobs on a sound heard from a place in 3D. Godot spells the falloff
 	# differently there (`unit_size` rather than `attenuation`), which is why each is its own row
 	# rather than one row that guesses - the same split the 2D and 3D light rows already make. ──
 	descriptors.append(F.make_descriptor("Core", "AudioSetHearingDistance3D", "Set Hearing Distance (3D)", ACEDescriptor.ACEType.ACTION,

@@ -160,7 +160,7 @@ func _build() -> void:
 	# res:// path opened nothing in an installed project. The link is pinned to the installed
 	# version's tag, so the page matches the build in front of the reader.
 	migration_button.pressed.connect(func() -> void:
-		# T13 - taking the migration path is a reader telling us which surfaces they expect. The
+		# Taking the migration path is a reader telling us which surfaces they expect. The
 		# Project bar turns itself on for them, and View ▸ Project bar takes it away again.
 		EventSheetProjectBarGlue.mark_started_from_template()
 		_dock._project_bar_glue.apply_visibility()

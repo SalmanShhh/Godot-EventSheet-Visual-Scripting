@@ -1,4 +1,4 @@
-# EventForge - R3. A tween chain reads as Tween actions on the object being tweened, one action per
+# EventForge - A tween chain reads as Tween actions on the object being tweened, one action per
 # row: `Player ▸ Tween position to target in 0.5 seconds  ease = Sine out`, the next step wearing
 # "(after the previous)", a parallel run "(at the same time)", the callback "Tween then <action>",
 # `await t.finished` the System wait and `kill()` the stop. The chain is joined across lines by the

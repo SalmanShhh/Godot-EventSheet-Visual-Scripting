@@ -1,4 +1,4 @@
-# A fixture project for the Sheet map (U17): three scripts that reach each other every way the map
+# A fixture project for the Sheet map: three scripts that reach each other every way the map
 # draws - an include, a signal, and a layout change. Never loaded, only read as text.
 extends Node
 

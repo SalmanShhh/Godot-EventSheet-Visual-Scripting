@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetSceneEventsCanvas
 extends Node2D
-# The events overlay's 2D half (V14): the ⌗ badge and its event count drawn beside every node of the
+# The events overlay's 2D half: the ⌗ badge and its event count drawn beside every node of the
 # edited scene that has events. A transient canvas - added with owner null by scene_events_overlay,
 # never saved into the scene, and freed the moment the overlay is refreshed or switched off.
 #

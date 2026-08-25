@@ -1,4 +1,4 @@
-# Godot EventSheets - the project-level surfaces (T13 / T14 / T15 / T18 / T19)
+# Godot EventSheets - the project-level surfaces
 #
 # Five surfaces, one test, because they share one shape: a small pure table decides what the reader
 # sees, and the UI is only a way to show it. Everything pinned here is a VALUE - the exact line an

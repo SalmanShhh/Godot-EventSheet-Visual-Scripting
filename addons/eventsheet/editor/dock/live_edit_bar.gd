@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetLiveEditBar
 extends RefCounted
-# The status strip's live-edit offer: ⟳ Apply to running game (V8).
+# The status strip's live-edit offer: ⟳ Apply to running game.
 #
 # While a game is running and the open sheet has an unapplied edit, this button appears on the
 # status strip. Pressing it (or Ctrl+Alt+S) saves the sheet - which writes its script - and asks the

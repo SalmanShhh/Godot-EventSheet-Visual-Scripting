@@ -1,4 +1,4 @@
-# Godot EventSheets - L3: the flicker behaviour, opened as the sheet it is (preview module).
+# Godot EventSheets - the flicker behaviour, opened as the sheet it is (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # Nothing is staged here: this is the shipped pack file opened the way a user opens it, so the

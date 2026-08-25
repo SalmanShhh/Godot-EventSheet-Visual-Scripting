@@ -89,7 +89,7 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 			* _viewport._get_event_line_height(_viewport._get_font_size())
 		return max(max(float(group_height), text_height), float(_viewport.ROW_HEIGHT))
 	if row_data.row_type == EventRowData.RowType.REGION:
-		# R1 - a region OPENER is an ordinary single-line row: a fold mark, never a chapter bar. Its
+		# A region OPENER is an ordinary single-line row: a fold mark, never a chapter bar. Its
 		# closing fence is a TICK - as tall as the small echo it carries and no taller - so the mark
 		# that says "the region ends here" costs a sliver of canvas instead of another row.
 		if not EventSheetRegionFacts.is_closing_fence(row_data.source_resource):

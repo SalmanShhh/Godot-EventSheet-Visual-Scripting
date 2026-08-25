@@ -2,7 +2,7 @@
 class_name EventSheetInputMapFacts
 extends RefCounted
 
-# R23 - the project's Input Map as an object the sheet can describe.
+# The project's Input Map as an object the sheet can describe.
 #
 # Every input event a sheet reads is really about ONE thing the sheet could not see until now: the
 # project-wide Input Map, a list of named actions with their bindings, their deadzone and the device

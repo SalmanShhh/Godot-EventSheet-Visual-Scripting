@@ -30,7 +30,7 @@ static func run() -> bool:
 	return all_passed
 
 
-## The nine tutorials the Manual opens with, and the shape of a step. Six shipped first; W24 added
+## The nine tutorials the Manual opens with, and the shape of a step. Six shipped first; the contributor wave added
 ## the two contributor tutorials (reading the editor's own code, and adding a word to the
 ## vocabulary), and the multiplayer wave added the networked one - so the pin has moved six to eight
 ## to nine, and stays a VALUE rather than a range.
@@ -38,7 +38,7 @@ static func _test_tutorial_catalogue() -> bool:
 	var all_passed: bool = true
 	all_passed = _check("nine tutorials ship",
 		EventSheetDocTutorials.tutorials().size(), 9) and all_passed
-	# R35. Writing a tool is something a beginner has to be able to FIND, not just be capable of.
+	# Writing a tool is something a beginner has to be able to FIND, not just be capable of.
 	all_passed = _check("the editor-tool tutorial is one of them",
 		str(EventSheetDocTutorials.tutorial("make-an-editor-tool").get("title", "")),
 		"Make an editor tool with an event sheet") and all_passed
@@ -47,13 +47,13 @@ static func _test_tutorial_catalogue() -> bool:
 	all_passed = _check("the first one is the first event",
 		str(EventSheetDocTutorials.tutorial("first-event").get("title", "")),
 		"Your first event") and all_passed
-	all_passed = _check("and it is six steps, the way the mockup draws it",
+	all_passed = _check("and it is six steps, the way the Manual draws it",
 		EventSheetDocTutorials.step_count("first-event"), 6) and all_passed
 	# The tour is step 0 - that is what stops a beginner having to choose between two front doors.
 	all_passed = _check("the tour is step 0",
 		str(EventSheetDocTutorials.step("first-event", 0).get("text", "")).begins_with(
 			"Start with the tour"), true) and all_passed
-	# Step 2 is the mockup's own card: "Now add an action ... Add Action".
+	# Step 2 is the card that names the gesture: "Now add an action ... Add Action".
 	all_passed = _check("step 2 asks for an action",
 		str(EventSheetDocTutorials.step("first-event", 2).get("check", "")),
 		"sheet_has_action") and all_passed
@@ -280,7 +280,7 @@ static func _test_scratch_tabs() -> bool:
 		EventSheetDocScratch.is_scratch(sheet), true) and all_passed
 	all_passed = _check("it remembers the example it holds",
 		EventSheetDocScratch.example_name(sheet), "Wait For Signal") and all_passed
-	all_passed = _check("the tab reads as the mockup draws it",
+	all_passed = _check("the tab reads in its pinned words",
 		EventSheetDocScratch.tab_title("Wait For Signal"), "✎ Scratch - Wait For Signal") and all_passed
 	all_passed = _check("an unnamed example is still a scratch tab",
 		EventSheetDocScratch.tab_title(""), "✎ Scratch") and all_passed

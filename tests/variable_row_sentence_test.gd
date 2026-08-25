@@ -1,6 +1,6 @@
 # Godot EventSheets - the ONE shape a variable row reads in, and the code echo beside it.
 #
-# V1/V2/V3/V13. A variable row is a sentence: a kind badge, the scope word, the type word, the name,
+# A variable row is a sentence: a kind badge, the scope word, the type word, the name,
 # a sliders mark when the value is editable in the Inspector, then `= value`. The `name : Type` code
 # grammar is gone from the row (it lives on the hover and in the code panel), the scope word is
 # DERIVED from where the sheet lives rather than stored, the list keeps the order it was written in,
@@ -33,7 +33,7 @@ static func run() -> bool:
 	return ok
 
 
-## V8. F2 (and a double-click on the name) opens the NAME as a field, with the count of what
+## F2 (and a double-click on the name) opens the NAME as a field, with the count of what
 ## committing will rewrite beside it. The row's default edit is untouched: Enter still means "edit
 ## the value", which is what `edit_gesture` on the name keeps true.
 static func _test_f2_renames_the_name_in_place() -> bool:
@@ -116,7 +116,7 @@ static func _test_f2_renames_the_name_in_place() -> bool:
 	return ok
 
 
-## V8. A variable row let go on a parameter VALUE writes what that field needs: bare for the object's
+## A variable row let go on a parameter VALUE writes what that field needs: bare for the object's
 ## own variable, `Game.Score` for a global, because inside an expression the prefix is real code.
 static func _test_a_dropped_row_writes_what_a_field_needs() -> bool:
 	var ok: bool = true
@@ -172,7 +172,7 @@ static func _index_of(view: EventSheetViewport, row_data: EventRowData) -> int:
 	return -1
 
 
-## V2 - order is a fact about the file now, so the two gestures that change it WRITE it: Sort A-Z on
+## Order is a fact about the file now, so the two gestures that change it WRITE it: Sort A-Z on
 ## the row menu, and dragging one declaration past another. Both land through the undo funnel.
 static func _test_the_order_is_written_not_sorted_behind_your_back() -> bool:
 	var ok: bool = true
@@ -205,7 +205,7 @@ static func _test_the_order_is_written_not_sorted_behind_your_back() -> bool:
 	return ok
 
 
-## V2 - and the file follows: what the rows show is the order the compiler writes, so the echo on a
+## And the file follows: what the rows show is the order the compiler writes, so the echo on a
 ## row cannot claim a line the file does not have. Without this the reorder was a view-only gesture.
 static func _test_the_order_reaches_the_file() -> bool:
 	var ok: bool = true
@@ -240,7 +240,7 @@ static func _declared_names(sheet: EventSheetResource) -> PackedStringArray:
 	return names
 
 
-## V8 - "Show in Inspector" is the one gesture that adds `@export` to a variable, so it has to reach
+## "Show in Inspector" is the one gesture that adds `@export` to a variable, so it has to reach
 ## the sheet: the flag is written, the edit is one undo step, and the menu's tick follows it.
 static func _test_show_in_inspector_writes_the_flag() -> bool:
 	var ok: bool = true
@@ -371,7 +371,7 @@ static func _test_the_segments_rest_below_full_colour() -> bool:
 	return ok
 
 
-## V3 - the scope word comes from where the sheet lives, and from `const`. Nothing is stored.
+## The scope word comes from where the sheet lives, and from `const`. Nothing is stored.
 static func _test_the_scope_word_is_derived() -> bool:
 	var ok: bool = true
 	var view := EventSheetViewport.new()
@@ -394,7 +394,7 @@ static func _test_the_scope_word_is_derived() -> bool:
 	return ok
 
 
-## V2 - author order. The view stopped sorting these by name, so the list reads as the file does.
+## Author order. The view stopped sorting these by name, so the list reads as the file does.
 static func _test_the_list_keeps_the_order_it_was_written_in() -> bool:
 	var view := EventSheetViewport.new()
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -411,7 +411,7 @@ static func _test_the_list_keeps_the_order_it_was_written_in() -> bool:
 		names, PackedStringArray(["speed", "hp", "alive"]))
 
 
-## V1 - the shape: badge, scope word, type word, name, sliders mark, `=`, value. No pills, and no
+## The shape: badge, scope word, type word, name, sliders mark, `=`, value. No pills, and no
 ## `name : Type` anywhere on the row (that spelling survives as the name's hover).
 static func _test_the_row_reads_as_one_sentence() -> bool:
 	var ok: bool = true
@@ -440,7 +440,7 @@ static func _test_the_row_reads_as_one_sentence() -> bool:
 	return ok
 
 
-## V13 - the dial decides what the row carries: the sentence alone, the sentence with its echo, or
+## The dial decides what the row carries: the sentence alone, the sentence with its echo, or
 ## the declaration as the whole row.
 static func _test_the_view_dial_decides_what_the_row_carries() -> bool:
 	var ok: bool = true
@@ -462,7 +462,7 @@ static func _test_the_view_dial_decides_what_the_row_carries() -> bool:
 	return ok
 
 
-## V1 - an Inspector group is the one thing in the list that folds: a slim strip naming the folder
+## An Inspector group is the one thing in the list that folds: a slim strip naming the folder
 ## over rows that are NOT pushed sideways by it.
 static func _test_an_inspector_group_is_a_folder_strip_over_unindented_rows() -> bool:
 	var ok: bool = true
@@ -486,7 +486,7 @@ static func _test_an_inspector_group_is_a_folder_strip_over_unindented_rows() ->
 	return ok
 
 
-## V12 - the type word is the guide rail on the value the row lets you edit in place.
+## The type word is the guide rail on the value the row lets you edit in place.
 static func _test_a_literal_that_does_not_fit_its_type_is_refused() -> bool:
 	var ok: bool = true
 	ok = _check("a whole number refuses a fraction",

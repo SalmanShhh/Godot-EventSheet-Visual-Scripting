@@ -17,7 +17,7 @@ extends RefCounted
 # _get_or_build_row_layout delegate, so every call site (draw, hit-test, box selection,
 # param scope) needed no edits.
 
-## V13 - the narrowest canvas a code echo still fits on. Below it the echo is dropped entirely
+## The narrowest canvas a code echo still fits on. Below it the echo is dropped entirely
 ## (an empty rect draws nothing and hit-tests to nothing), because a sentence squeezed against a
 ## half-drawn declaration reads worse than a sentence alone. The line is still one hover away.
 const CODE_ECHO_MIN_ROW_WIDTH := 440.0
@@ -59,7 +59,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		# whole event highlights instead of the clicked cell, and hover never appears.
 		cached_layout["selected_span_indices"] = _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate()
 		cached_layout["hovered_span_index"] = _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1
-		# R41 - the other USES of the hovered variable light up too, and they live on OTHER rows, so
+		# The other USES of the hovered variable light up too, and they live on OTHER rows, so
 		# the hover state a row carries is no longer only its own.
 		cached_layout["match_span_indices"] = _viewport._hover_match_spans.get(index, PackedInt32Array())
 		# The inline edit state (buffer/caret/text selection) changes per keystroke without

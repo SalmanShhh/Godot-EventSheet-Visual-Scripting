@@ -286,7 +286,7 @@ static func run() -> bool:
 	ok = _check("Set Part Of writes a node's own colour property", node.modulate, Color(1.0, 1.0, 1.0, 0.25)) and ok
 	node.free()
 
-	# The mockup's own lead row: zero the vertical on landing, keep the horizontal. `velocity` only
+	# The lead row: zero the vertical on landing, keep the horizontal. `velocity` only
 	# exists on a body, so this needs its own host - and it is the case a sheet-variables dropdown
 	# could not have reached at all.
 	var body_script: GDScript = GDScript.new()
@@ -388,7 +388,7 @@ static func _runtime_source(by_id: Dictionary) -> String:
 	return "\n".join(lines)
 
 
-## The same write, aimed at a node's own property - the row the mockup leads with.
+## The same write, aimed at a node's own property - the row this reading leads with.
 static func _host_source(by_id: Dictionary) -> String:
 	return "\n".join([
 		"@tool",

@@ -10,7 +10,7 @@ extends Resource
 @export var palette_name: String = "palette"
 ## What each position in a set means ("Danger", "Safe", "Neutral"). Every set fills these roles in this order.
 @export var role_names: PackedStringArray = []
-## One colour array per set, in the same order as Set Names. Inside an array the colours follow Role Names.
-@export var set_colors: Array[PackedColorArray] = []
 ## One name per colour set ("Default", "Deuteranopia", "Protanopia"). This is the name the player picks.
 @export var set_names: PackedStringArray = []
+## One colour array per set, in the same order as Set Names. Inside an array the colours follow Role Names.
+@export var set_colors: Array[PackedColorArray] = []

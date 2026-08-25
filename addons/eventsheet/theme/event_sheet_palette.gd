@@ -38,7 +38,7 @@ const COLOR_COMMENT = Color("#7f848e")
 const COLOR_SELECTION = Color(0.36, 0.51, 0.79, 0.38)
 const COLOR_HOVER = Color(1.0, 1.0, 1.0, 0.10)
 const COLOR_GUIDE = Color(1.0, 1.0, 1.0, 0.08)
-# The tree connector from an event to its sub-events (M15). Deliberately stronger than
+# The tree connector from an event to its sub-events. Deliberately stronger than
 # COLOR_GUIDE: that one is a whisper of an indent stop, this one is a LINE you follow with your
 # eye down a seventy-line handler to find which parent a row hangs off. Still neutral white, so
 # it never competes with a themed accent.

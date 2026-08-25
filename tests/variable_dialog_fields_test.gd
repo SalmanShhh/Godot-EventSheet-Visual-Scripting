@@ -1,13 +1,13 @@
-# Godot EventSheets - V5 (the Add variable dialog), P4 (the one help strip) and K1 (the operator
-# words), pinned where they are decided rather than where they are drawn.
+# Godot EventSheets - the Add variable dialog, the one help strip and the operator
+# words, pinned where they are decided rather than where they are drawn.
 #
-# V5's claim is that the dialog asks for the row in the order the row is READ: the scope first (it
+# The claim is that the dialog asks for the row in the order the row is READ: the scope first (it
 # is the row's first word), then the name, the type, the value. So the order of the fields is the
 # test, along with what each scope does to the rest of the form - a Local can never be an Inspector
 # property, a Constant is neither Static nor a property, a Global asks the one extra question of
 # which autoload it lands on.
 #
-# P4's claim is that ONE strip at the foot says whatever is focused, and that its READS AS line is
+# The claim is that ONE strip at the foot says whatever is focused, and that its READS AS line is
 # the row itself while its IN CODE line is the compiler's own emitted declaration - so the dialog
 # can never promise a line the compiled sheet would not write.
 @tool
@@ -32,7 +32,7 @@ static func run() -> bool:
 	ok = _check("…and names the owner under it", dialog._owner_label.text, "to Player") and ok
 	ok = _check("editing says so instead", _edit_title(dialog, sheet), "Edit variable") and ok
 
-	# ── The field order V5 pins ──
+	# ── The field order the dialog pins ──
 	ok = _check("the fields read in the row's own order", Array(dialog.field_order()), [
 		"Scope", "Write into", "Name", "Type", "Whole numbers only", "Initial value",
 		"Options (combo)", "Description", "Flags", "On ready"
@@ -102,7 +102,7 @@ static func run() -> bool:
 	ok = _check("the variable being edited never clashes with itself",
 		_clash_while_editing(dialog, sheet), false) and ok
 
-	# ── P4: the strip follows focus, and its two lines are the row and the line ──
+	# ── the strip follows focus, and its two lines are the row and the line ──────
 	dialog.open_for_edit("global", {}, "hp", "int", "100", false, "Add variable")
 	ok = _check("the strip opens on the scope", dialog._help_strip.heading_label.text, "SCOPE · INSTANCE") and ok
 	ok = _check("READS AS is the row the sheet will show",
@@ -132,7 +132,7 @@ static func run() -> bool:
 	ok = _check("editing opens on the variable's own scope",
 		dialog.current_scope_word(), EventSheetVariableSentence.SCOPE_INSTANCE) and ok
 
-	# ── K1: the operator list reads as the row reads, and keeps the token it inserts ──
+	# ── the operator list reads as the row reads, and keeps the token it inserts ──────
 	ok = _check("the operator labels lead with the symbol", _comparison_labels(), [
 		"=  equal to", "≠  not equal to", "<  less than", "≤  at most", ">  greater than", "≥  at least"
 	]) and ok
@@ -167,7 +167,7 @@ static func _confirmed_scope(host: Node, opened_scope: String) -> String:
 	return str(seen.get("scope", ""))
 
 
-## P4/P3 - ONE strip, and nothing beside a field. Every verdict the dialog reaches - a literal that
+## ONE strip, and nothing beside a field. Every verdict the dialog reaches - a literal that
 ## will not parse, a Constant the type cannot have, a locked type - is said THERE, in the strip's
 ## own red or amber, and taken back from there when it is answered.
 static func _test_the_strip_is_the_only_explanation(dialog: VariableDialog) -> bool:
@@ -273,7 +273,7 @@ static func _comparison_keys() -> Array:
 	return keys
 
 
-## The muted code note beside an operator dropdown built by the ACE params dialog - the K1 promise
+## The muted code note beside an operator dropdown built by the ACE params dialog - the promise
 ## that a dialog showing the friendly words still shows the token it will insert.
 static func _params_operator_note() -> String:
 	var params: ACEParamsDialog = ACEParamsDialog.new()

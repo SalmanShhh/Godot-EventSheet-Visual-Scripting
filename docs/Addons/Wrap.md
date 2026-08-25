@@ -195,8 +195,8 @@ Shared-screen versus: each player wraps inside their own half, so both arenas ar
 nobody crosses into the rival's side.
 
 ```
-On Ready -> P1 | Wrap: Set Custom Wrap Bounds  0, 0, 576, 648
-         -> P2 | Wrap: Set Custom Wrap Bounds  576, 0, 576, 648
+On Ready -> Player1 | Wrap: Set Custom Wrap Bounds  0, 0, 576, 648
+         -> Player2 | Wrap: Set Custom Wrap Bounds  576, 0, 576, 648
 ```
 
 ### Other use cases

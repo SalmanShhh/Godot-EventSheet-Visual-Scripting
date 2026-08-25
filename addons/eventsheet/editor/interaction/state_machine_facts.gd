@@ -2,7 +2,7 @@
 class_name EventSheetStateMachineFacts
 extends RefCounted
 
-# S1 - the hand-rolled state machine, read as the FSM behavior a sheet already has words for.
+# The hand-rolled state machine, read as the FSM behavior a sheet already has words for.
 #
 # An enum of names plus a variable of that enum IS a state machine: the enum is the states list, the
 # variable is the current state, the function that assigns it is the transition, and the two `match`

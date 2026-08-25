@@ -1,4 +1,4 @@
-# EventForge module - Keys and doors (Y16): the coloured keycard, said as the sheet's list words.
+# EventForge module - Keys and doors: the coloured keycard, said as the sheet's list words.
 #
 # A keycard is a name in a list and a door is a body that wants one of those names. Every project of
 # this shape writes the same four lines: `keys.append("red_key")` on the pickup, `if "red_key" in
