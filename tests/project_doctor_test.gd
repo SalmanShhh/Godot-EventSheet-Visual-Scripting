@@ -7,15 +7,16 @@ class_name ProjectDoctorTest
 extends RefCounted
 
 ## The whole audit, over this whole repository: 105 packs, every demo, every committed sheet, and
-## the fifty-odd checks the union runs. Measured 81, 84, 85 and 92 seconds across four runs on a
-## quiet machine, and a SECOND run in the same process costs the same again, so nothing worth
-## reusing is being kept between them. The budget holds that where it is until it is made smaller,
-## at the near-doubled margin every other timing pin here carries over its own measurement.
+## the fifty-odd checks the union runs. Measured 81-92 seconds across four runs before three things
+## were fixed: a pin reading that ran three times over every file that had no pin in it, a read of
+## every scene in the project per script anybody asked about, and a directory walk repeated once per
+## check. 41 seconds after, on the same quiet machine and with the same 175 findings. The budget is
+## set so a return to any of the three fails rather than passing at half the margin.
 ##
 ## Declaring it also moves this test into the runner's serial tail, which is the only place the
 ## number means anything: measured inside a shard beside seven other Godot processes it would flap,
 ## and a budget people learn to ignore is not a budget.
-const DOCTOR_BUDGET_MS: int = 180000
+const DOCTOR_BUDGET_MS: int = 100000
 
 
 static func run() -> bool:

@@ -201,7 +201,11 @@ static func pin_facts(lines: PackedStringArray) -> Dictionary:
 	var seats: Dictionary = pin_seat_names(lines)
 	for line: String in lines:
 		var text: String = line.strip_edges()
-		if text.is_empty() or text.begins_with("#"):
+		# Every one of the five matchers below begins by finding a top-level ` = `, so a line without
+		# one anywhere cannot be any of them. Asking that here with a plain substring search - one
+		# native scan - in place of five bracket-aware walks is what keeps a whole-project sweep off
+		# the minute mark: most lines of most files are not assignments at all.
+		if text.is_empty() or text.begins_with("#") or not text.contains(" = "):
 			continue
 		var pinned: Dictionary = pin_parts(text)
 		if not pinned.is_empty():
@@ -723,7 +727,9 @@ static func pin_summaries(lines: PackedStringArray, known_facts: Dictionary = {}
 	var order: PackedStringArray = PackedStringArray()
 	for line: String in lines:
 		var text: String = line.strip_edges()
-		if text.is_empty() or text.begins_with("#"):
+		# The same gate as `pin_facts`: a pin is an assignment, so a line with no top-level ` = ` in
+		# it is not one, and the three matchers behind `_pin_summary_of` need never be asked.
+		if text.is_empty() or text.begins_with("#") or not text.contains(" = "):
 			continue
 		var found: Dictionary = _pin_summary_of(text, file_facts)
 		if found.is_empty():

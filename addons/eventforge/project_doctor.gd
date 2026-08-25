@@ -26,6 +26,11 @@ const SCRATCH_PATH := "user://eventsheets_doctor_scratch.gd"
 ## (dock panel, CLI, CI, MCP) with the same contract as a built-in check.
 static var _extension_checks: Array[Dictionary] = []
 
+## The project's own GDScript files, listed once and handed to every check that asks. Dropped at the
+## start of a run and on the editor's filesystem ping - see `_project_scripts`.
+static var _project_scripts_cache: PackedStringArray = PackedStringArray()
+static var _project_scripts_walked: bool = false
+
 
 ## Registers a project-health check. `check` receives (sheet_paths: PackedStringArray,
 ## findings: Array[Dictionary]) and appends findings shaped
@@ -47,6 +52,9 @@ static func unregister_check(check_id: String) -> void:
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run() -> Dictionary:
 	var findings: Array[Dictionary] = []
+	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
+	# audit see files that appeared since the last one.
+	clear_project_scripts()
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
@@ -2660,7 +2668,28 @@ static func _skill_tree_assets() -> PackedStringArray:
 
 
 ## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).
+##
+## HELD between asks. Around forty checks want this list and the walk costs about sixty milliseconds
+## on a thousand-file project, so asking it once per check spent over two seconds of every audit
+## re-listing directories that had not moved. A run drops it first (below), and so does the editor's
+## filesystem ping, which is the same contract every other project-wide read here has.
 static func _project_scripts() -> PackedStringArray:
+	if _project_scripts_walked:
+		return _project_scripts_cache
+	var scripts: PackedStringArray = _walk_project_scripts()
+	_project_scripts_cache = scripts
+	_project_scripts_walked = true
+	return scripts
+
+
+## Forgets the walk above, so the next ask lists the directories again. Called at the top of a run
+## and from the editor's filesystem hook.
+static func clear_project_scripts() -> void:
+	_project_scripts_cache = PackedStringArray()
+	_project_scripts_walked = false
+
+
+static func _walk_project_scripts() -> PackedStringArray:
 	var scripts: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():
@@ -3368,6 +3397,12 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 		# mean, and there is nowhere else a person would be told.
 		# One grammar walk for both notes: each of them would otherwise ask for the same answer.
 		var pins: PackedStringArray = pinned_anchors(source)
+		# A file that pins nothing has neither note to give, and both readers below answer nothing
+		# for it. Asking them anyway was not free: each takes the pins it was HANDED only when that
+		# list is non-empty, and reads the file again from scratch when it is - so every one of the
+		# thousand files with no pin in it paid for the pin grammar three times over.
+		if pins.is_empty():
+			continue
 		for anchor: String in double_follow_anchors(source, pins):
 			_add(findings, "info", "double-follow", script_path,
 				"This object is BOTH a child of %s and pinned to it. Being a child already carries it, so the pin writes its place a second time from the same source and the two fight every frame - the classic \"it drifts twice as fast\" bug. Keep one: Unpin, or take it out of %s and let the pin do the carrying."
