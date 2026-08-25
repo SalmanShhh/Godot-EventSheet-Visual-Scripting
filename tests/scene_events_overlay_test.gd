@@ -15,7 +15,31 @@ static func run() -> bool:
 	all_passed = _test_connected_handlers() and all_passed
 	all_passed = _test_nothing_to_mark() and all_passed
 	all_passed = _test_badge_words() and all_passed
+	all_passed = _test_idle_costs_nothing() and all_passed
 	return all_passed
+
+
+## The dock half of the overlay lies over the Scene dock's Tree and follows it, and a Tree announces
+## neither its scrolling nor its layout - so the mark polls. What it must NOT do is repaint on every
+## one of those polls: that walked the whole dock and measured a string per badge sixty times a
+## second at an editor nobody was touching. It repaints when the Tree has actually moved.
+static func _test_idle_costs_nothing() -> bool:
+	var mark: Control = (load("res://addons/eventsheet/editor/scene_events_dock_mark.gd") as Script).new()
+	var tree: Tree = Tree.new()
+	mark.set("tree", tree)
+	var first: bool = bool(mark.call("layout_moved"))
+	var second: bool = bool(mark.call("layout_moved"))
+	tree.size = Vector2(320.0, 480.0)
+	var after_resize: bool = bool(mark.call("layout_moved"))
+	var passed: bool = _check("the first poll paints the badges", first, true)
+	passed = _check("a poll with nothing moved paints nothing", second, false) and passed
+	passed = _check("the dock resizing paints them again", after_resize, true) and passed
+	passed = _check("and a mark with no Tree behind it asks for nothing at all",
+		bool(((load("res://addons/eventsheet/editor/scene_events_dock_mark.gd") as Script).new()
+			as Control).call("layout_moved")), false) and passed
+	tree.free()
+	mark.free()
+	return passed
 
 
 static func _test_off_by_default() -> bool:

@@ -16,14 +16,44 @@ var tree: Tree = null
 
 const RIGHT_MARGIN := 8.0
 
+## What the badge rectangles depend on: where the Tree is scrolled to and how big it is. Polled,
+## because a Tree announces neither - and COMPARED rather than acted on, because this used to
+## repaint every frame forever, which meant walking the whole Scene dock and measuring a string per
+## badge sixty times a second at an editor nobody was touching.
+var _last_signature: String = ""
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	set_process(true)
+	# Folding a branch moves every row under it without changing the scroll or the size, so the one
+	# layout change the poll cannot see is asked for directly.
+	if tree != null and is_instance_valid(tree) \
+			and not tree.item_collapsed.is_connected(_on_tree_item_collapsed):
+		tree.item_collapsed.connect(_on_tree_item_collapsed)
 
 
 func _process(_delta: float) -> void:
+	if layout_moved():
+		queue_redraw()
+
+
+## True when the Tree has scrolled or been resized since this last said so, and therefore when the
+## badges need painting again. False on every other frame, which is nearly all of them: an editor
+## nobody is touching must cost nothing.
+func layout_moved() -> bool:
+	if tree == null or not is_instance_valid(tree):
+		return false
+	var signature: String = "%s|%s" % [tree.get_scroll(), tree.size]
+	if signature == _last_signature:
+		return false
+	_last_signature = signature
+	return true
+
+
+func _on_tree_item_collapsed(_item: TreeItem) -> void:
+	_last_signature = ""
 	queue_redraw()
 
 
