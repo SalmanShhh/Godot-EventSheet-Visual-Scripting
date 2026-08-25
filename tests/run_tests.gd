@@ -22,11 +22,9 @@ const DEFERRED_LAST: Array[String] = [
 
 func _init() -> void:
 	var passed: bool = true
-	var durations: Dictionary = {}
 	_start_progress()
 	for test_file: String in _test_files():
 		_mark_started(test_file)
-		var started_at: int = Time.get_ticks_msec()
 		var script: GDScript = load(TESTS_DIR + test_file)
 		# A test file with a PARSE ERROR does not load as null - it loads as a GDScript with no methods
 		# that cannot be instantiated. That used to look exactly like a helper file with no run(), so a
@@ -47,9 +45,7 @@ func _init() -> void:
 		else:
 			push_error("Test %s did not return a bool from run()." % test_file)
 			passed = false
-		durations[test_file] = Time.get_ticks_msec() - started_at
 		_mark_finished(test_file)
-	_write_durations(durations)
 	if passed:
 		print("All tests passed.")
 		quit(0)
@@ -70,13 +66,9 @@ func _init() -> void:
 ## Where the trail lives. Under `.godot/`, which is machine-local and ignored by git.
 const PROGRESS_DIR: String = "res://.godot/test_progress/"
 
-## Where a run leaves how long each test took, one file per process so concurrent shards never write
-## the same one. The split reads them all back (see `recorded_durations`).
-const DURATIONS_DIR: String = "res://.godot/test_durations/"
 
-
-## The name of this process's own trail and duration files: the shard it is running, made safe for a
-## file name, or "serial" for an unsharded run.
+## The name of this process's own trail file: the shard it is running, made safe for a file name,
+## or "serial" for an unsharded run.
 static func progress_token() -> String:
 	var shard: String = OS.get_environment(SHARD_VARIABLE).strip_edges()
 	return "serial" if shard.is_empty() else shard.replace("/", "-")
@@ -111,32 +103,6 @@ func _append_progress(line: String) -> void:
 	file.seek_end()
 	file.store_line(line)
 	file.close()
-
-
-func _write_durations(durations: Dictionary) -> void:
-	if durations.is_empty():
-		return
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DURATIONS_DIR))
-	var file: FileAccess = FileAccess.open(DURATIONS_DIR + progress_token() + ".json", FileAccess.WRITE)
-	if file != null:
-		file.store_string(JSON.stringify(durations))
-		file.close()
-
-
-## How long each test took last time it ran, merged across every process that recorded any. Empty
-## before the first run, which is what makes the alphabetical split the honest fallback.
-static func recorded_durations() -> Dictionary:
-	var merged: Dictionary = {}
-	var dir: DirAccess = DirAccess.open(DURATIONS_DIR)
-	if dir == null:
-		return merged
-	for file_name: String in dir.get_files():
-		if not file_name.ends_with(".json"):
-			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(DURATIONS_DIR + file_name))
-		if parsed is Dictionary:
-			merged.merge(parsed as Dictionary, true)
-	return merged
 
 
 ## Sharding, for running the suite across several Godot processes at once (tools/run_tests_parallel.ps1
@@ -179,8 +145,7 @@ func _test_files() -> PackedStringArray:
 		if deferred.has(deferred_file):
 			files.append(deferred_file)
 	files = _only_requested(files)
-	return _shard_of(files, OS.get_environment(SHARD_VARIABLE).strip_edges(), timing_files(files),
-		recorded_durations())
+	return _shard_of(files, OS.get_environment(SHARD_VARIABLE).strip_edges(), timing_files(files))
 
 
 ## The tests that must have the machine to themselves, out of `files`: the ones whose own source
@@ -201,14 +166,13 @@ static func timing_files(files: PackedStringArray) -> PackedStringArray:
 ## that belong in the serial tail. Pure, so the split itself is testable: every file lands in exactly
 ## one of the n shards or the tail, never in two and never in neither.
 ##
-## `durations` is how long each file took the last time it ran (empty on a machine that has never
-## run the suite). With it, the split packs by TIME - longest test first, each one onto whichever
-## shard is currently shortest - because a wall clock is decided by the slowest shard, and dealing
-## files out alphabetically puts however many of the slow ones happen to sort together onto one
-## process. Without it the alphabetical round-robin is what happens, unchanged.
+## A plain round-robin over the alphabetical list, deliberately. Packing it by RECORDED DURATION
+## instead - longest test first, onto whichever shard is currently shortest - was built and measured
+## twice each on a quiet machine: 4 min 30 s round-robin against 4 min 04 s and 4 min 08 s packed,
+## about 9%. The bar for keeping a moving part (a durations file per process, merged and read back
+## by the split) was 10%, so it came out again and this stayed.
 static func _shard_of(files: PackedStringArray, shard: String,
-		serial_files: PackedStringArray = PackedStringArray(),
-		durations: Dictionary = {}) -> PackedStringArray:
+		serial_files: PackedStringArray = PackedStringArray()) -> PackedStringArray:
 	if shard.is_empty():
 		return files
 	var tail: PackedStringArray = PackedStringArray()
@@ -223,53 +187,11 @@ static func _shard_of(files: PackedStringArray, shard: String,
 	var parts: PackedStringArray = shard.split("/")
 	var index: int = int(parts[0]) if parts.size() == 2 else 0
 	var count: int = maxi(int(parts[1]) if parts.size() == 2 else 1, 1)
-	if not durations.is_empty():
-		return _packed_by_duration(parallel_safe, index, count, durations)
 	var picked: PackedStringArray = PackedStringArray()
 	for position: int in range(parallel_safe.size()):
 		if position % count == index:
 			picked.append(parallel_safe[position])
 	return picked
-
-
-## The files of shard `index`, packed greedily by recorded duration: sort longest first, hand each
-## to the shard with the least time on it so far. Ties (and files with no recorded time, which count
-## as the median so a brand-new test is neither hidden nor feared) break by name, so the same
-## durations always produce the same split on every machine.
-static func _packed_by_duration(files: PackedStringArray, index: int, count: int,
-		durations: Dictionary) -> PackedStringArray:
-	var median: int = _median_duration(durations)
-	var ordered: Array[String] = []
-	for file: String in files:
-		ordered.append(file)
-	ordered.sort_custom(func(left: String, right: String) -> bool:
-		var left_time: int = int(durations.get(left, median))
-		var right_time: int = int(durations.get(right, median))
-		return left < right if left_time == right_time else left_time > right_time)
-	var loads: Array[int] = []
-	var picked: PackedStringArray = PackedStringArray()
-	loads.resize(count)
-	for file: String in ordered:
-		var lightest: int = 0
-		for shard_index: int in range(count):
-			if loads[shard_index] < loads[lightest]:
-				lightest = shard_index
-		loads[lightest] += int(durations.get(file, median))
-		if lightest == index:
-			picked.append(file)
-	picked.sort()
-	return picked
-
-
-## The middle recorded duration, used for a file nobody has timed yet.
-static func _median_duration(durations: Dictionary) -> int:
-	var times: Array[int] = []
-	for value: Variant in durations.values():
-		times.append(int(value))
-	if times.is_empty():
-		return 0
-	times.sort()
-	return times[times.size() / 2]
 
 
 ## The explicit list a caller asked for (EVENTFORGE_TEST_ONLY, comma-separated file names), or

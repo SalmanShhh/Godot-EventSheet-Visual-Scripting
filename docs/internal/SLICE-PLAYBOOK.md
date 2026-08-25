@@ -15,6 +15,8 @@ losing a day, and what the tree does when you are not looking.
 
 ```text
 $GODOT --headless --path . --script tools/pick_tests.gd -- run     # seconds; an iteration list
+powershell -File tools/run_tests_parallel.ps1 -Iterate             # the same list, then the rest
+powershell -File tools/test_daemon_client.ps1 <tests...>           # under a second, warm
 $env:GODOT = "<binary>"; powershell -File tools/run_tests_parallel.ps1   # ~5 minutes; the verdict
 ```
 
@@ -23,7 +25,42 @@ runs them in this process. It errs toward picking too many. It is **never** a ve
 picker run means "the tests most likely to notice this did not notice it", and the suite is what
 means the rest.
 
+`-Iterate` is the same list run FIRST, with the run stopping on the first red - a red answer in
+seconds rather than in minutes. Same rule: not a verdict.
+
+**One test, alone**, is `EVENTFORGE_TEST_ONLY=<name>` in the environment of the normal runner
+command (comma-separated for several). That replaces the scratch SceneTree script this file used to
+recommend, and it is what the red-run report hands you to paste.
+
+**The warm daemon** is for the tight loop, where a Godot boot is most of what a test costs.
+`tools/test_daemon.ps1` holds an imported project open; `tools/test_daemon_client.ps1 <tests…>` asks
+it, and answers in well under a second. What it costs is a process that carries whatever the last
+test left in a static - which is the contamination `compiler_state_leak_test` exists to find, and
+the one thing it cannot find in itself. So it hands over to a fresh process when anything under
+`addons/` or `tools/` changes, every 25 tests, and immediately when that sweep fails in it. Prefer a
+cold run after touching a static, an autoload, or registration, and always before you believe a
+result.
+
 Do not run the full suite "to be sure". Run it when you are done, and again only if it was red.
+
+**When it is red, read the report before the log.** The launcher runs `tools/test_report.gd` on any
+failure and prints, per failing test: the assertion with its expected and its got, the files you
+changed that map to that test (the picker's mapping, asked backwards), and the line that reruns it
+alone. A test that CRASHED prints no `[FAIL]` line at all - the runner's start/finish trail under
+`.godot/test_progress/` is what names it, and the launcher fails the run on one whether or not
+anything else failed.
+
+**When a byte gate refuses**, the evidence is already on disk: `.godot/repro/<test>/<case>/` holds
+the input, the expected bytes, what came back, and the two lined up. The gate prints the path.
+`tests/repro_bundle.gd` is the one helper that writes them, so a gate written next month gets the
+same folder by calling it.
+
+**When a test was green a week ago**, `tools/bisect_test.ps1 <test>` is a `git bisect run` command
+for that one test. Run the test alone at HEAD twice first: a test that is red once and green once is
+being failed by the machine or by the split rather than by any commit, and a bisect over that walks
+the whole history and blames whichever commit it lands on. That is what happened to
+`doc_library_test`, whose 12-second parse budget was being measured inside a shard beside seven
+other Godot processes.
 
 The parallel launcher shards the parallel-safe tests and runs the timing and teardown tests serially
 afterwards. A test joins that serial tail by DECLARING it (a `*BUDGET_MS*` or `PARALLEL_UNSAFE`
@@ -64,6 +101,9 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |
 | A non-ACE row kind | The Custom Block API (`registration/block_kind.gd`), see the block guide |
 | Anything a pack should be able to do too | `addons/eventsheet/api/eventsheets.gd` - extend it, document it in the API guide, and add a test. Shapes freeze once shipped |
+| To pin a table of input to expected | `tests/pin_table.gd` - `Pins.check(name, {input: expected}, callable)`, one failure line for all of them, whole table walked |
+| To leave evidence when a byte gate refuses | `tests/repro_bundle.gd` - `Repro.dump(test, case, expected, actual, input_path)` |
+| To know why a run was red | `tools/test_report.gd` - the assertion, the changed files that map to it, the rerun line, and any test that crashed |
 
 ---
 
@@ -206,12 +246,32 @@ matchers, and they say so in a comment.
     `scene_lighting_facts_test.gd` - quote THAT example rather than inventing a second one, and use
     the same one in every guide that needs it.
 
+24. **A descriptor is a promise made in five places, and they can disagree.** The compile gate proves
+    the TEMPLATE parses; it cannot notice a sentence naming a parameter nobody has, a `{slot}` no
+    parameter fills, a dropdown with one item twice, or a host class the engine has never heard of.
+    `tests/descriptor_shape_test.gd` walks all 1,705 registered rows for those. Three emitter idioms
+    are slots without parameters and are exempt by name - `{uid}` (baked at apply time), `{target.}`
+    and `{host.}` (the receiver, the dot inside the braces), and `{, name}` (an optional trailing
+    argument, the comma inside the braces so an empty value emits nothing rather than a dangling
+    comma). Three shapes legitimately have no default: a TRIGGER's parameters (the signal hands them
+    to you), a parameter whose empty value IS an answer (`args`, `prompt`), and one that must name
+    something in the author's own project (any `*_reference` hint, `scene_node`, `input_action`, and
+    a Call row's `function_name`). Each of those is a list in the gate with its reason; adding to one
+    is a claim that a shape is correct, not a way to quieten a finding.
+
 ---
 
 ## 7. House style, in one place
 
 Tabs. `class_name` before `extends`. Two blank lines around functions. snake_case. Real `##` comments
-on anything public, saying WHY rather than what. No em-dashes anywhere in repo text (write " - ").
+on anything public, saying WHY rather than what. **A comment states the constraint, never the label
+of the note it came from**: a feature is designed away from the code in notes that number their
+items, and "the W1 gate" or "V4. Static locals" asks a reader to find a document that is not in this
+repository. `tests/design_shorthand_test.gd` sweeps every tracked text file for a letter-and-digit
+label standing as a word, with a short allow-list (the other editor's name, the keyboard keys,
+Markdown heading levels, a paper size, a regular expression's character class, the bundled theme
+whose NAME a user reads). Design notes keep their numbering; they live in `docs/internal/`, which is
+the one folder the sweep skips. No em-dashes anywhere in repo text (write " - ").
 Never name the other event-sheet editor in code, identifiers, UI strings, translations or test labels
 (prose in docs may). Code never points at a documentation file; state the point inline. Compiler
 OUTPUT keeps its own single-blank formatting by design.

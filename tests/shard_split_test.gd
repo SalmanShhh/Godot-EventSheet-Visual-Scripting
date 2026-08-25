@@ -22,15 +22,6 @@ const SAMPLE_FILES: PackedStringArray = [
 ## The stand-in list's timing tests - what `timing_files()` answers for the real ones.
 const SAMPLE_SERIAL: PackedStringArray = ["c_test.gd"]
 
-## Stand-in recorded times, in milliseconds: two long tests that sort next to each other, three
-## short ones, and one file with no record at all.
-const SAMPLE_DURATIONS: Dictionary = {
-	"a_test.gd": 20000, "b_test.gd": 20000, "d_test.gd": 2000, "e_test.gd": 2000, "f_test.gd": 2000,
-}
-
-## The shared pin helper - a table of input to expected, and one failure line for all of them.
-const Pins := preload("res://tests/pin_table.gd")
-
 
 static func run() -> bool:
 	var ok: bool = true
@@ -38,31 +29,6 @@ static func run() -> bool:
 	ok = _test_the_tail_is_the_shared_state_and_the_timing_tests() and ok
 	ok = _test_a_malformed_shard_string_still_runs_everything_once() and ok
 	ok = _test_a_timing_budget_is_found_in_the_file_not_in_its_name() and ok
-	ok = _test_recorded_times_pack_the_shards_instead_of_dealing_them() and ok
-	return ok
-
-
-## What the recorded durations are FOR. A wall clock is decided by the SLOWEST shard, so dealing
-## files out alphabetically loses whenever the slow ones happen to sort together - here the two
-## twenty-second tests are `a` and `b`, which the round-robin puts on two different shards only by
-## luck of their position. Packing longest-first onto the emptiest shard is what makes the two
-## halves the same size, and the same invariant still holds: every file exactly once.
-static func _test_recorded_times_pack_the_shards_instead_of_dealing_them() -> bool:
-	var ok: bool = true
-	var first: PackedStringArray = _split_timed("0/2")
-	var second: PackedStringArray = _split_timed("1/2")
-	ok = Pins.check_value("shard_split_test", "the long pair is split, one each",
-		[first.has("a_test.gd"), second.has("b_test.gd")], [true, true]) and ok
-	ok = Pins.check_value("shard_split_test", "the two shards carry the same weight",
-		[_weight(first), _weight(second)], [24000, 24000]) and ok
-	ok = Pins.check_value("shard_split_test", "and every parallel-safe file still runs exactly once",
-		_sorted(_joined(first, second)),
-		PackedStringArray(["a_test.gd", "b_test.gd", "d_test.gd", "e_test.gd", "f_test.gd",
-			"g_test.gd"])) and ok
-	ok = Pins.check_value("shard_split_test", "a file nobody has timed counts as the median, not as free",
-		_split_timed("0/1").has("g_test.gd"), true) and ok
-	ok = Pins.check_value("shard_split_test", "the tail is unchanged by any of it",
-		_split_timed("tail"), PackedStringArray(["c_test.gd", "clean_removal_test.gd"])) and ok
 	return ok
 
 
@@ -130,18 +96,6 @@ static func _test_a_timing_budget_is_found_in_the_file_not_in_its_name() -> bool
 # ── helpers ───────────────────────────────────────────────────────────────────────────────────
 static func _split(shard: String) -> PackedStringArray:
 	return EventForgeTestRunner._shard_of(SAMPLE_FILES, shard, SAMPLE_SERIAL)
-
-
-static func _split_timed(shard: String) -> PackedStringArray:
-	return EventForgeTestRunner._shard_of(SAMPLE_FILES, shard, SAMPLE_SERIAL, SAMPLE_DURATIONS)
-
-
-## What one shard costs, by the recorded times, with an untimed file counted as the median.
-static func _weight(files: PackedStringArray) -> int:
-	var total: int = 0
-	for file: String in files:
-		total += int(SAMPLE_DURATIONS.get(file, 2000))
-	return total
 
 
 static func _joined(first: PackedStringArray, second: PackedStringArray) -> PackedStringArray:

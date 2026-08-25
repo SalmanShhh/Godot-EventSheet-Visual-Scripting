@@ -227,10 +227,66 @@
 
 ### Tooling
 
+- **A crashed test has a name now.** A test that takes the process down prints no `[FAIL]` line -
+  the log simply stops, every test after it in that process never runs, and the only evidence is a
+  file that ends in the middle. The runner leaves a trail instead: one line before each test and one
+  after it, flushed as they are written, so the last start with no finish IS the test that crashed.
+  The parallel launcher names it in its summary and fails the run on it whether or not anything else
+  failed, and `tools/test_report.gd` says the same for a serial run.
+- **A red run arrives pre-investigated.** The same tool reads the shard logs and prints, per failing
+  test, the assertion with its expected and its got, the files you changed that map to that test -
+  `tools/pick_tests.gd`'s own mapping, asked backwards through a new `blamed_files` - and the exact
+  line that reruns that one test alone. The launcher runs it on any failure, so the three manual
+  steps between a verdict and a lead are gone.
+- **One test, alone, without a scratch script.** `EVENTFORGE_TEST_ONLY=<name>` (comma-separated for
+  several) filters the discovered list, so the single-test recipe is the normal runner command with
+  a variable in front of it. `tools/bisect_test.ps1 <test>` wraps that for `git bisect run`, with
+  the shard-order incident written down beside it as the worked example of a red that no commit
+  explains.
+- **The shard split stays a round-robin, and the measurement is why.** Packing the shards by
+  RECORDED DURATION - each run writing how long every test took, the split then sorting
+  longest-first onto whichever shard is currently shortest - was built, tested and measured twice
+  each on a quiet machine: 4 min 30 s round-robin against 4 min 04 s and 4 min 08 s packed, which
+  is about 9%. The bar for keeping a moving part in the runner (a durations file per process,
+  merged and read back by the split, wrong the first time anyone reorders a test) was 10%, so it
+  came out again and the numbers are written down beside the split instead. The serial tail was
+  never part of it.
+- **Two iteration shapes, neither of them a verdict.** `run_tests_parallel.ps1 -Iterate` runs the
+  tests the picker says your change could have broken FIRST and stops on the first red. And
+  `tools/test_daemon.ps1` keeps a Godot warm: `tools/test_daemon_client.ps1 <tests…>` answers in
+  well under a second where a cold run costs twenty-five, by holding the imported project open. A
+  warm process carries whatever the last test left in a static, so it hands over to a fresh one the
+  moment anything under `addons/` or `tools/` changes, every 25 tests, and immediately when the
+  state-leak sweep fails in it - and every surface it has says, in those words, that the committed
+  verdict is a cold full run.
+- **A refused byte gate leaves its evidence on disk.** The round-trip gates used to report a file
+  name and the word "drifted", and every diagnosis began by rebuilding what the gate already had.
+  One shared helper (`tests/repro_bundle.gd`) now writes `.godot/repro/<test>/<case>/` holding the
+  input, the expected bytes, what came back, and a diff of the two, and prints the path. The three
+  gates that compare whole files or whole lines call it; a gate written next month gets the same
+  folder by calling it too.
+- **Every published row is held to the shape a row has to have.** `tests/descriptor_shape_test.gd`
+  walks all 1,705 registered descriptors and asks what the compile gate cannot: that every `{slot}`
+  in the code and in the sentence is a parameter of that row, that every parameter is used by one of
+  them, that a dropdown has items and no item twice, that a parameter has a default, and that a host
+  class is one the engine knows. It found 34 shapes on the shipped vocabulary and every one of them
+  turned out to be legitimate: a trigger's parameters are what the signal hands you, `args` and
+  `prompt` mean something when they are empty, and a group, a variable, a node, an input action or a
+  sheet function is named from the author's own project where no default could be right. Each is a
+  short list in the gate with its reason. The one real defect was in the gate's own reading: it did
+  not know the `{, name}` idiom an optional trailing argument is spelled with, and reported the
+  parameter behind it as unused.
+- **A table of pins, and one place that says how one failed.** `tests/pin_table.gd` is the loop most
+  tests were writing out per file: `Pins.check(name, {input: expected}, callable)` walks the whole
+  table rather than stopping at the first failure, prints the same line every time (key, expected,
+  got, test), and takes VALUES - so the house rule about `a and b` against a string cannot be
+  written through it by accident. Used by this wave's own tests as the worked example; nothing
+  existing was rewritten to it.
 - **Every comment states its own constraint.** A feature is designed away from the code, in notes
   that number their items, and those numbers leaked: 3,654 comments across the plugin opened with a
-  label (`W6.`, `X30,`, `M3 -`, `T1-T4.`) or leaned on one mid-sentence ("the W1 gate", "the M28
-  reading", "the case P8 is actually about"), and one test file was named after one. Every one of
+  label - a letter and a number, with a full stop or a dash after it - or leaned on one
+  mid-sentence ("the such-and-such gate", "the case such-and-such is actually about"), and one
+  test file was named after one. Every one of
   them is rewritten to say the thing itself - the label carried no meaning to anyone without the
   document it came from, and the sentence beside it always could. `tests/variable_dialog_v5_test.gd`
   is `tests/variable_dialog_fields_test.gd` with the same assertions, and the pack recipes that
