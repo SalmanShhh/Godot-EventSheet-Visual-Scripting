@@ -4894,3 +4894,60 @@ called by %s,вызывается из %s
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s помечен как остающийся кодом - показан как код и оставлен в покое.
 no such method,нет такого метода
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","У этого объекта нет метода с именем %s. Возможно, его переименовали или до него добираются иначе - выберите тот, который имелся в виду."
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.",%s ищется каждый кадр и никогда не двигается. Запомните его один раз при готовности - строка читается так же.
+Remember it once,Запомнить один раз
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.","Это просматривает каждый объект группы шестьдесят раз в секунду. Спрашивайте реже или тогда, когда что-то меняется."
+Re-check every %s s,Проверять снова каждые %s с
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.","Измерение расстояния берёт квадратный корень каждый кадр. Если вы лишь сравниваете его с числом, сравнение квадратов расстояний даёт тот же ответ дешевле."
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.",%d витков этого цикла происходят за один кадр. Поведение Time Slicer распределяет эту работу на несколько кадров в пределах заданного бюджета.
+Add the Time Slicer…,Добавить Time Slicer…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,"Здесь каждый кадр создаётся новая копия, а другая строка её освобождает. Поведение Object Pool вместо этого выдаёт те же копии снова."
+Add the Object Pool…,Добавить Object Pool…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.","Текст пишется каждый кадр, даже когда он не менялся. Перенесите строку под событие, которое меняет значение, и она будет выполняться раз на изменение."
+Fixed - run the game with the profiler to see whether it helped.,"Исправлено - запустите игру с профилировщиком, чтобы увидеть, помогло ли это."
+"Fixed - the last run never measured this row, so there is nothing to compare.","Исправлено - последний запуск ни разу не измерил эту строку, сравнивать не с чем."
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,"Исправлено - теперь это стоит %.2f мс за срабатывание; сравнить не с чем, прежних измерений не было."
+Fixed: %.2f -> %.2f ms a fire.,Исправлено: %.2f -> %.2f мс за срабатывание.
+This did not help: %.2f -> %.2f ms a fire. Put it back?,Это не помогло: %.2f -> %.2f мс за срабатывание. Вернуть как было?
+This did not help: still %.2f ms a fire. Put it back?,Это не помогло: по-прежнему %.2f мс за срабатывание. Вернуть как было?
+%s - run the game with the profiler to see what it saved.,"%s - запустите игру с профилировщиком, чтобы увидеть, сколько это сэкономило."
+Apply the safe fixes,Применить безопасные исправления
+Put the fix back,Вернуть исправление
+Remember the node once,Запомнить узел один раз
+Ask less often,Спрашивать реже
+Optimise this row,Оптимизировать эту строку
+Optimise this sheet,Оптимизировать этот лист
+Apply %d safe fixes,Применить %d безопасных исправлений
+WHAT CHANGES,ЧТО ИЗМЕНИТСЯ
+Now,Сейчас
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,"Ничто в этом листе не тратит кадр напрасно. Запустите игру с профилировщиком и посмотрите снова, когда игра вырастет."
+Nothing to do,Делать нечего
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.","Оптимизатор читает лист, а не запуск: лист без покадровой работы не получает находок независимо от того, запускалась ли игра."
+ONE AT A TIME,ПО ОДНОМУ
+Finding,Находка
+Why not in the batch,Почему не в пакете
+Safe fixes · %d row(s),Безопасные исправления · %d строк(и)
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.","Каждое отмеченное исправление оставляет поведение игры ровно таким же - меняется только выдаваемый код. Они применяются ОДНИМ шагом отмены. Те, что ниже, меняют, КОГДА что-то происходит, поэтому открываются по одному."
+"%d row(s) optimised, as one undo step.","Оптимизировано строк: %d, одним шагом отмены."
+Nothing was changed.,Ничего не изменилось.
+"No profiled run has measured this row, so there is no number beside it yet.","Ни один профилируемый запуск не измерял эту строку, поэтому числа рядом с ней пока нет."
+The last profiled run measured %.2f ms a fire here.,Последний профилируемый запуск намерил здесь %.2f мс за срабатывание.
+changes how often the row runs,"меняет, как часто выполняется строка"
+adds a behaviour to the scene,добавляет поведение в сцену
+"a decision about the game, not a line to rewrite","решение об игре, а не строка, которую нужно переписать"
+Safe fix,Безопасное исправление
+Changes the timing,Меняет тайминг
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.","Игра ведёт себя ровно так же - меняется только выдаваемая строка, и Ctrl+Z возвращает её. Строка читается по-прежнему."
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.","Это меняет, КОГДА выполняется работа, поэтому применяется отдельно, а результат измеряется при следующем профилируемом запуске."
+Jump to this row,Перейти к этой строке
+Watch %s,Следить за %s
+Costs In The Sheet,Стоимость в листе
+Run With Profiler,Запустить с профилировщиком
+Clear Measured Costs,Очистить измеренные затраты
+Optimise This Sheet…,Оптимизировать этот лист…
+⏱ Run with profiler,⏱ Запустить с профилировщиком
+Put it back,Вернуть как было
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask","Почему это не сработало? Сначала запустите игру, потом спрашивайте"
+There is nothing recorded to put back on this row.,"Для этой строки не записано ничего, что можно вернуть."

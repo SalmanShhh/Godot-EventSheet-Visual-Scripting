@@ -12,6 +12,8 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 4. [Health and Damage](#4-health-and-damage)
 5. [A Pickup Counter](#5-a-pickup-counter)
 6. [Debugging 101](#6-debugging-101)
+   - [Making It Faster - The Costs In The Gutter](#6a-making-it-faster---the-costs-in-the-gutter)
+   - [When It Breaks On Somebody Else's Machine](#6b-when-it-breaks-on-somebody-elses-machine)
 7. [Author Your Own Behavior and ACEs](#7-author-your-own-behavior-and-aces)
 8. [Helper ACEs That Save a Code Drop](#8-helper-aces-that-save-a-code-drop)
 9. [Coordinating Many Nodes - With Node, Groups and Aggregates](#9-coordinating-many-nodes---with-node-groups-and-aggregates)
@@ -142,6 +144,64 @@ When something misbehaves, you have five tools - no `print()` required.
 - **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
   (a cyan PULSE: full glow the instant an event fires, fading over half a second, held bright while it keeps firing) - so "is this event even running?" AND "what just fired?" are answered at a glance. It
   rides the Live Values stream, so turn that on too.
+- **Why didn't this fire?** Right-click an event with conditions. The answer opens with what the run
+  counted for the row itself - a trigger that never arrived is the whole answer - then each condition
+  with the value it was tested against, then the plain facts from elsewhere in the sheet: which group
+  the row is in, whether it is switched off, and whether another row switches it off while the game
+  runs. Facts, never a story joining them into a cause. **Jump to this row** and **Watch hp** are
+  beside the answer. With no run to read from, the menu item says so.
+
+---
+
+## 6a. Making It Faster - The Costs In The Gutter
+
+**Run with profiler** (on the run strip, and in Tools) arms the trace, clears the old numbers and
+plays. Play for thirty seconds, stop, and every row wears what one fire of it cost: a small number in
+the left margin, amber over 1 ms and red over 4. **View ▸ Costs In The Sheet** turns that on and off;
+**View ▸ Row Hit Counts** puts the fire counts in the same chip instead. Hovering an event number
+says both, plus which run they came from - and the numbers survive closing the editor, because the
+run is written to disk when the game stops and read back once when the sheet opens. Nothing is ever
+measured in the editor itself.
+
+**Tools ▸ Optimise This Sheet…** reads the sheet rather than the run, and finds the six classic ways
+a frame gets spent: a node path resolved every frame, a group scanned every frame, a distance
+measured with a square root, a big literal loop in one tick, one row making copies while another
+frees them, and a label rewritten every frame. The same findings appear as notes under their rows
+(while the costs lens is on) and in **Doctor ▸ Performance**.
+
+Two of them the plugin fixes for you, and both are ordinary sheet edits you can undo:
+
+- **Remember it once** turns `get_node("UI/Bar")` into a variable resolved at ready time. The row
+  keeps reading exactly the way it read; only the emitted line changes.
+- **Re-check every 0.2 s** adds the *Every X Seconds* condition to a per-frame scan - a row you could
+  have added yourself, where you would have added it.
+
+The confirm shows the line now and the line after, so what you approve is what happens. Safe fixes
+apply together as one undo step; the ones that change *when* something happens stay one at a time,
+with the reason they are not in the batch written beside them. And the loop closes: after the next
+profiled run, a fixed row wears its receipt - `Fixed: 2.40 -> 0.30 ms a fire` - or says the fix did
+not help, just as plainly, with **Put it back** next to it.
+
+---
+
+## 6b. When It Breaks On Somebody Else's Machine
+
+The error strip above catches script errors while *you* are running the game. Players are not in the
+editor. One trigger closes that gap: **On Something Went Wrong**, which hands your rows a `report`
+saying what failed and where, in a shipped build as well as in the editor.
+
+```
+On something went wrong (report)
+    Game   → Save text report to "user://last_error.txt"
+    HUD    → Show ErrorToast for 4 s
+```
+
+A sheet carrying that trigger declares the signal, arms a logger with the engine in `_ready`, and
+hears about each failing line once per run - so a row that fails every tick cannot drown the handler
+it feeds. A sheet without the trigger emits not one line of any of it. The Doctor asks about it once
+per project when nothing in the game handles it, and **Never ask again** is remembered in the
+project, because a game that swallows its own errors on purpose is a decision rather than an
+oversight.
 
 ---
 

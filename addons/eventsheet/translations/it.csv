@@ -4894,3 +4894,60 @@ called by %s,chiamato da %s
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s è segnato per restare codice - mostrato come codice, e lasciato in pace."
 no such method,nessun metodo con questo nome
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","Questo oggetto non ha un metodo chiamato %s. Potrebbe essere stato rinominato, o raggiunto in altro modo - scegli quello che intendevi."
+"%s is looked up every frame and never moves. Remember it once, at ready time, and the row reads the same.","%s viene cercato a ogni fotogramma e non si sposta mai. Memorizzalo una volta sola, quando è pronto, e la riga si legge uguale."
+Remember it once,Memorizzalo una volta
+"This looks at every object in the group, sixty times a second. Ask less often, or ask when something changes.","Questo guarda ogni oggetto del gruppo, sessanta volte al secondo. Chiedi meno spesso, o chiedi quando qualcosa cambia."
+Re-check every %s s,Ricontrolla ogni %s s
+"Measuring a distance takes a square root every frame. Where you are only comparing it to a number, comparing the squared distances answers the same question for less.","Misurare una distanza costa una radice quadrata a fotogramma. Se la confronti solo con un numero, confrontare le distanze al quadrato risponde uguale spendendo meno."
+"%d turns of this loop happen in one frame. The Time Slicer behaviour spreads that work over several, on a budget you set.","%d giri di questo ciclo avvengono in un solo fotogramma. Il comportamento Time Slicer distribuisce quel lavoro su più fotogrammi, con un budget che imposti tu."
+Add the Time Slicer…,Aggiungi il Time Slicer…
+This makes a new copy every frame while another row frees one. The Object Pool behaviour hands out the same copies again instead.,Questo crea una nuova copia a ogni fotogramma mentre un'altra riga ne libera una. Il comportamento Object Pool riconsegna invece sempre le stesse copie.
+Add the Object Pool…,Aggiungi l'Object Pool…
+"The text is written every frame, even when it has not changed. Move this under the event that changes the value and it is written once per change.","Il testo viene scritto a ogni fotogramma, anche quando non è cambiato. Sposta questa riga sotto l'evento che cambia il valore e verrà scritta una volta per cambiamento."
+Fixed - run the game with the profiler to see whether it helped.,Corretto - esegui il gioco con il profiler per vedere se è servito.
+"Fixed - the last run never measured this row, so there is nothing to compare.","Corretto - l'ultima esecuzione non ha mai misurato questa riga, quindi non c'è nulla da confrontare."
+Fixed - it costs %.2f ms a fire now; there was no measurement before it to compare with.,Corretto - ora costa %.2f ms per attivazione; prima non c'era alcuna misura con cui confrontare.
+Fixed: %.2f -> %.2f ms a fire.,Corretto: %.2f -> %.2f ms per attivazione.
+This did not help: %.2f -> %.2f ms a fire. Put it back?,Non è servito: %.2f -> %.2f ms per attivazione. Ripristinare?
+This did not help: still %.2f ms a fire. Put it back?,Non è servito: sempre %.2f ms per attivazione. Ripristinare?
+%s - run the game with the profiler to see what it saved.,%s - esegui il gioco con il profiler per vedere quanto ha risparmiato.
+Apply the safe fixes,Applica le correzioni sicure
+Put the fix back,Ripristina la correzione
+Remember the node once,Memorizza il nodo una volta
+Ask less often,Chiedi meno spesso
+Optimise this row,Ottimizza questa riga
+Optimise this sheet,Ottimizza questo foglio
+Apply %d safe fixes,Applica %d correzioni sicure
+WHAT CHANGES,COSA CAMBIA
+Now,Ora
+Nothing in this sheet is spending a frame it did not have to. Run the game with the profiler and look again after the game has grown.,Nulla in questo foglio consuma un fotogramma che non doveva. Esegui il gioco con il profiler e guarda di nuovo quando il gioco sarà cresciuto.
+Nothing to do,Niente da fare
+"The optimiser reads the sheet, not the run: a sheet with no per-frame work earns no findings, whether or not a game has ever been run.","L'ottimizzatore legge il foglio, non l'esecuzione: un foglio senza lavoro per fotogramma non riceve rilievi, che il gioco sia mai stato eseguito o no."
+ONE AT A TIME,UNA ALLA VOLTA
+Finding,Rilievo
+Why not in the batch,Perché non è nel gruppo
+Safe fixes · %d row(s),Correzioni sicure · %d riga/e
+"Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time.","Ogni correzione spuntata lascia il gioco a comportarsi esattamente come ora: cambia solo il codice emesso. Si applicano come UN solo passo di annullamento. Quelle sotto cambiano QUANDO qualcosa accade, quindi si aprono una alla volta."
+"%d row(s) optimised, as one undo step.","%d riga/e ottimizzata/e, come un solo passo di annullamento."
+Nothing was changed.,Non è stato cambiato nulla.
+"No profiled run has measured this row, so there is no number beside it yet.","Nessuna esecuzione con il profiler ha misurato questa riga, quindi non c'è ancora un numero accanto."
+The last profiled run measured %.2f ms a fire here.,L'ultima esecuzione con il profiler ha misurato qui %.2f ms per attivazione.
+changes how often the row runs,cambia quanto spesso viene eseguita la riga
+adds a behaviour to the scene,aggiunge un comportamento alla scena
+"a decision about the game, not a line to rewrite","una decisione sul gioco, non una riga da riscrivere"
+Safe fix,Correzione sicura
+Changes the timing,Cambia i tempi
+"The game behaves exactly as it does now - only the emitted line changes, and Ctrl+Z puts it back. The row keeps reading the way it reads.","Il gioco si comporta esattamente come ora: cambia solo la riga emessa, e Ctrl+Z la ripristina. La riga continua a leggersi allo stesso modo."
+"This one changes WHEN the work happens, so it is applied on its own and its effect is measured on the next profiled run.","Questa cambia QUANDO avviene il lavoro, quindi si applica da sola e il suo effetto si misura alla prossima esecuzione con il profiler."
+Jump to this row,Vai a questa riga
+Watch %s,Osserva %s
+Costs In The Sheet,Costi nel foglio
+Run With Profiler,Esegui con il profiler
+Clear Measured Costs,Cancella i costi misurati
+Optimise This Sheet…,Ottimizza questo foglio…
+⏱ Run with profiler,⏱ Esegui con il profiler
+Put it back,Ripristina
+Time Slicer,Time Slicer
+Object Pool,Object Pool
+"Why didn't this fire? Run the game first, then ask","Perché non è scattato? Esegui prima il gioco, poi chiedi"
+There is nothing recorded to put back on this row.,Per questa riga non è registrato nulla da ripristinare.
