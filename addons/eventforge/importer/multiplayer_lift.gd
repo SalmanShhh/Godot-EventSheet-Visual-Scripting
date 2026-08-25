@@ -21,9 +21,13 @@ extends RefCounted
 #   Host / Join   `<peer>.create_server(<port>[, <max>])` or `.create_client(<address>, <port>)`
 #                 followed by `multiplayer.multiplayer_peer = <peer>` (or the `get_tree()`
 #                 spelling), optionally preceded by the `var <peer> := <Kind>.new()` that declares
-#                 it. THREE or more create_server arguments (channels, bandwidth) are refused on
-#                 purpose: the row cannot say them, so the lines stay a script block and the
-#                 coverage count says so.
+#                 it. THREE to FIVE arguments (channels, the two bandwidth caps) open on the
+#                 Advanced rows instead - ENet's own long signatures, so a declaration naming any
+#                 other peer kind refuses the lift and the lines stay a script block.
+#   Compress      `<connection>.host.compress(ENetConnection.COMPRESS_*)`, whatever expression the
+#                 connection was reached through - the receiver is a value of the row.
+#   Raw bytes     `multiplayer.multiplayer_peer.put_packet(<bytes>)`. (`get_packet()` needs nothing
+#                 here - it IS the Next raw packet template, so the reverse index already claims it.)
 #   Leave         `<peer>.close()` and the `get_tree()` spelling of `multiplayer_peer = null`.
 #                 (The plain `multiplayer.multiplayer_peer = null` needs nothing here - it IS the
 #                 Leave The Game template, so the shipped reverse index already claims it.)
@@ -147,10 +151,18 @@ static func _match_connection_run(lines: PackedStringArray, index: int, depth: i
 	if assigned.is_empty() or str(assigned["value"]) != peer_name:
 		return {}
 	consumed += 1
-	var params: Dictionary = {"peer_kind": peer_kind}
+	# The long signatures belong to ENetMultiplayerPeer alone, and their rows have no peer-kind
+	# field - so the kind is checked here instead of stored, and the declaration rides into the
+	# template verbatim. A five-argument create_server on a WebSocket peer stays a script block,
+	# which is kinder than a row claiming a line that would not run.
+	var enet_only: bool = bool(call.get("enet_only", false))
+	if enet_only and peer_kind != "ENetMultiplayerPeer":
+		return {}
+	var params: Dictionary = {} if enet_only else {"peer_kind": peer_kind}
 	var template_lines: PackedStringArray = PackedStringArray()
 	if not declared.is_empty():
-		template_lines.append(str(declared["line"]).replace(peer_kind, "{peer_kind}"))
+		template_lines.append(str(declared["line"]) if enet_only
+			else str(declared["line"]).replace(peer_kind, "{peer_kind}"))
 	template_lines.append(str(call["template"]))
 	template_lines.append(assignment)
 	params.merge(call["params"] as Dictionary)
@@ -223,7 +235,8 @@ static func match_line(line: String) -> Dictionary:
 	var text: String = line.strip_edges()
 	# The same cheap rejection as match_run, for the same reason: three words, one of which every
 	# spelling below has to contain. Cheaper than running six patterns over every statement of a file.
-	if not (text.contains("rpc") or text.contains(".close()") or text.contains("multiplayer_peer")):
+	if not (text.contains("rpc") or text.contains(".close()") or text.contains("multiplayer_peer")
+			or text.contains(".host.compress(")):
 		return {}
 	return EventForgeLiftTable.match_line(lift_entries(), text)
 
@@ -269,6 +282,23 @@ static func lift_entries() -> Array[Dictionary]:
 	entries.append(_leave_entry("leave_via_the_tree",
 		"^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
 		"get_tree().get_multiplayer().multiplayer_peer = null", Callable()))
+	# The wire spellings. The compress receiver is a VALUE of the row - whatever expression the
+	# connection was reached through rides back out unchanged - and the codec capture is pinned to
+	# the constants ENetConnection actually has, so a project's own COMPRESS_ name never lifts.
+	entries.append({
+		"id": "compress_the_connection", "ace_id": "SetCompression",
+		"pattern": "^(?<peer>.+?)\\.host\\.compress\\(ENetConnection\\.(?<mode>COMPRESS_(?:NONE|RANGE_CODER|FASTLZ|ZLIB|ZSTD))\\)$",
+		"shape": "{peer}.host.compress(ENetConnection.{mode})",
+		"params": PackedStringArray(["peer", "mode"]),
+		"slots": {"peer": "peer", "mode": "COMPRESS_RANGE_CODER"}
+	})
+	entries.append({
+		"id": "send_raw_bytes", "ace_id": "SendRawBytes",
+		"pattern": "^multiplayer\\.multiplayer_peer\\.put_packet\\((?<bytes>.+)\\)$",
+		"shape": "multiplayer.multiplayer_peer.put_packet({bytes})",
+		"params": PackedStringArray(["bytes"]),
+		"slots": {"bytes": "bytes"}
+	})
 	return entries
 
 
@@ -385,8 +415,11 @@ static func _match_peer_declaration(line: String) -> Dictionary:
 
 
 ## `peer.create_server(PORT, 4)` / `peer.create_client(ip, PORT)` -> the row it opens, its
-## parameters, and the template that writes this exact line back. {} for every other argument count,
-## which is what leaves a channels-and-bandwidth call as the script block it has to stay.
+## parameters, and the template that writes this exact line back. Three to five arguments are the
+## channels-and-bandwidth signatures and open on the Advanced rows, marked `enet_only` because those
+## signatures belong to ENetMultiplayerPeer alone. {} for every other argument count - a
+## `create_client` with a sixth argument (a bound local port) has no row that can say it, so the
+## lines stay a script block and the coverage count says so.
 static func _match_create_call(line: String) -> Dictionary:
 	var opened: RegExMatch = _regex("^([A-Za-z_][A-Za-z0-9_]*)\\.create_(server|client)\\((.*)\\)$").search(line)
 	if opened == null:
@@ -394,8 +427,11 @@ static func _match_create_call(line: String) -> Dictionary:
 	var peer_name: String = opened.get_string(1)
 	var arguments: PackedStringArray = EventSheetBlockRegistry.split_params_top_level(opened.get_string(3))
 	if opened.get_string(2) == "server":
-		if arguments.is_empty() or arguments.size() > 2:
+		if arguments.is_empty() or arguments.size() > 5:
 			return {}
+		if arguments.size() > 2:
+			return _advanced_create_call("HostGameAdvanced", "create_server", peer_name, arguments,
+				PackedStringArray(["port", "max_players", "channels", "in_bandwidth", "out_bandwidth"]))
 		var host_params: Dictionary = {"port": arguments[0].strip_edges(), "max_players": DEFAULT_MAX_PLAYERS}
 		var host_slots: String = "{port}"
 		if arguments.size() == 2:
@@ -403,11 +439,28 @@ static func _match_create_call(line: String) -> Dictionary:
 			host_slots = "{port}, {max_players}"
 		return {"ace_id": "HostGame", "peer": peer_name, "params": host_params,
 			"template": "%s.create_server(%s)" % [peer_name, host_slots]}
+	if arguments.size() > 2 and arguments.size() <= 5:
+		return _advanced_create_call("JoinGameAdvanced", "create_client", peer_name, arguments,
+			PackedStringArray(["address", "port", "channels", "in_bandwidth", "out_bandwidth"]))
 	if arguments.size() != 2:
 		return {}
 	return {"ace_id": "JoinGame", "peer": peer_name,
 		"params": {"address": arguments[0].strip_edges(), "port": arguments[1].strip_edges()},
 		"template": "%s.create_client({address}, {port})" % peer_name}
+
+
+## The long signatures. The template carries only the arguments the author wrote, so a three-argument
+## call re-emits as three; the unwritten tail still gets VALUES (ENet's own defaults), because the
+## row has those fields even when the line does not say them.
+static func _advanced_create_call(ace_id: String, call: String, peer_name: String,
+		arguments: PackedStringArray, names: PackedStringArray) -> Dictionary:
+	var params: Dictionary = {"in_bandwidth": "0", "out_bandwidth": "0"}
+	var slots: PackedStringArray = PackedStringArray()
+	for index: int in range(arguments.size()):
+		params[names[index]] = arguments[index].strip_edges()
+		slots.append("{%s}" % names[index])
+	return {"ace_id": ace_id, "peer": peer_name, "params": params, "enet_only": true,
+		"template": "%s.%s(%s)" % [peer_name, call, ", ".join(slots)]}
 
 
 ## `multiplayer.multiplayer_peer = peer` in either spelling -> {value}.

@@ -117,6 +117,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `compare_locales` | [Language Matches](ace:Core/LanguageMatches) | Translation | Vocabulary |
 | `compile` | [Set Pattern](ace:Core/SetTextPattern) | Text: RegEx | Vocabulary |
 | `complete_auth` | [Accept Player](ace:Core/AcceptPlayer) | Multiplayer | Vocabulary |
+| `compress` | [Compress Network Traffic](ace:Core/SetCompression) | Multiplayer | Vocabulary |
 | `cone` | [Draw Cone](ace:Core/DrawCone) | Drawing | Vocabulary |
 | `configure` | [Configure Canvas](ace:Core/DrawConfigure) | Drawing | Vocabulary |
 | `connect` | [Connect Signal](ace:Core/ConnectSignal) | Helpers | Vocabulary |
@@ -313,6 +314,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_output_latency` | [Audio Output Latency](ace:Core/AudioOutputLatency) | Audio Server | Vocabulary |
 | `get_overlapping_areas` | [Overlapping Areas](ace:Core/GetOverlappingAreas) | Collisions | Vocabulary |
 | `get_overlapping_bodies` | [Overlapping Bodies](ace:Core/GetOverlappingBodies) | Collisions | Vocabulary |
+| `get_packet` | [Next Raw Packet](ace:Core/NextRawPacket) | Multiplayer | Vocabulary |
 | `get_parent` | [Get Parent](ace:Core/GetParent) | Nodes | Vocabulary |
 | `get_path` | [Node Path](ace:Core/GetNodePath) | Nodes | Vocabulary |
 | `get_peers` | [Players](ace:Core/Players) | Multiplayer | Vocabulary |
@@ -404,6 +406,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `hide` | [Hide](ace:Core/HideNode) | General Actions | Vocabulary |
 | `hit_back_faces` | [RayCast Hits Back Faces (3D)](ace:Core/RayCast3DSetHitBackFaces) | Raycast 3D | Vocabulary |
 | `hit_from_inside` | [RayCast Hits From Inside (2D)](ace:Core/RayCast2DSetHitFromInside) | Raycast 2D | Vocabulary |
+| `host` | [Compress Network Traffic](ace:Core/SetCompression) | Multiplayer | Vocabulary |
 | `hour` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
 | `html` | [Color From Hex](ace:Core/ColorFromHex) | Color | Vocabulary |
 | `if` | [Text Or](ace:Core/TextOr) | Variables | Vocabulary |
@@ -610,6 +613,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `push_front` | [Push Front](ace:Core/ArrayPushFront) | Variables: Array | Vocabulary |
 | `push_input` | [Send Input To Surface](ace:Core/SendInputToSurface) | World-space UI | Vocabulary |
 | `push_warning` | [Push Warning](ace:Core/PushWarning) | Debug | Vocabulary |
+| `put_packet` | [Send Raw Bytes](ace:Core/SendRawBytes) | Multiplayer | Vocabulary |
 | `queue` | [Queue Animation](ace:Core/QueueAnimation) | Animation | Vocabulary |
 | `queue_free` | [Queue Free](ace:Core/QueueFree) | General Actions | Vocabulary |
 | `quit` | [Finish](ace:Core/CommandToolFinish) | Editor Tools: Command tool | Vocabulary |

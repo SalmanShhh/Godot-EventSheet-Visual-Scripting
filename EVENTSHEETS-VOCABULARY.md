@@ -4014,6 +4014,10 @@ Mesh vocabulary (build and swap 3D meshes from events).
 - **Join A Game** (`address: String, port: String, peer_kind: String`) - Asks a host to let this peer in. The answer arrives later as On joined the host or On join failed - nothing is connected the moment this row runs.
 - **Leave The Game** - Drops this peer's connection and puts the game back to single player. On the host this ends the game for everybody, because there is nobody left to answer them.
 - **Spawn** (`target: String, data: String`) - Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy.
+- **Host A Game (Advanced)** (`port: String, max_players: String, channels: String, in_bandwidth: String, out_bandwidth: String`) - Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these.
+- **Join A Game (Advanced)** (`address: String, port: String, channels: String, in_bandwidth: String, out_bandwidth: String`) - Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these.
+- **Compress Network Traffic** (`peer: String, mode: String`) - Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining.
+- **Send Raw Bytes** (`bytes: String`) - Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself.
 - **Kick Player** (`id: String`) - Drops one player's connection from the host. Only the host may do it - a client that wants somebody kicked sends the host a message and lets it decide.
 - **Stop Accepting Players** - Closes the lobby without ending the game: everybody already in stays, and nobody else gets in. Run it when the match starts, or when the last seat is taken.
 - **Relay Messages Between Players** (`on: String`) - Whether the host forwards messages between clients. Off is the safer setting for a game where the host decides what is true, because then no client can talk to another behind its back.
@@ -4030,6 +4034,7 @@ Mesh vocabulary (build and swap 3D meshes from events).
 
 #### Expressions
 - **My ID** - This peer's own id. The host is always 1; everyone else gets a number when they join.
+- **Next Raw Packet** - The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.
 - **Players** - The ids of every OTHER peer in the game, as a list. This peer is not in it - My ID is that one.
 - **Player Count** - How many other peers are in the game. Add one for this peer when the number a player reads should include them.
 - **Sender** - Inside a message, the id of the peer that sent it - the one thing a message cannot lie about, so check it before trusting what it asked for. It is 0 anywhere else.

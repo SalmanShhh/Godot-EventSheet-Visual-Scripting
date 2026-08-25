@@ -97,6 +97,9 @@ two guards. That is a convention, not a rule the plugin enforces.
 | the `create_client(address, PORT)` twin of either | **Join a game at address port PORT** |
 | `multiplayer.multiplayer_peer = null`, `peer.close()`, or the `get_tree().get_multiplayer()` spelling | **Leave the game** |
 | `WebSocketMultiplayerPeer` / `WebRTCMultiplayerPeer` in the constructor | the same rows, with that peer kind |
+| either call given channels and bandwidth limits (three to five arguments) | **Host a game (Advanced)** / **Join a game (Advanced)**, writing back only the arguments you wrote |
+| `peer.host.compress(ENetConnection.COMPRESS_*)` | **Compress network traffic**, the receiver a value that rides back out unchanged |
+| `multiplayer.multiplayer_peer.put_packet(bytes)` and its `get_packet()` twin | **Send raw bytes** / the **Next raw packet** expression |
 | `multiplayer.peer_connected.connect(_on_x)` and its six siblings | the seven events, with your connect line re-emitted as you wrote it |
 | `@rpc(...)` above a function, in any order or subset of the options | that function's **message** row and its words, with the annotation as its echo |
 | `rpc("f", 10)`, `rpc(&"f", 10)`, `rpc_id(1, &"f", 10)`, `rpc_id(peer, "f", 5)`, `$Other.rpc(&"f")` | the **Send** rows, each keeping your own quoting |

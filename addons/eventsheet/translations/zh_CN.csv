@@ -4894,3 +4894,35 @@ called by %s,由 %s 调用
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s 已标记为保持代码 - 以代码显示，并保持原样。
 no such method,没有这个方法
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",该对象没有名为 %s 的方法。它可能被改名了，或者通过别的方式被调用 - 请选择你想要的那个。
+Host A Game (Advanced),主持一局游戏（高级）
+"Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these.","以明说的网络参数主持游戏：消息经过多少条通道，以及此对等端收发量的上限。仅限 ENet - 在游戏真正需要这些参数之前，简单的""主持一局游戏""行才是合适的选择。"
+Host a game on port {port} for up to {max_players} players over {channels} channels,在端口 {port} 上主持一局游戏，最多 {max_players} 名玩家，经 {channels} 条通道
+Channels,通道数
+How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.,消息经过多少条独立车道。一条车道上的大宗传输不再拖慢另一条车道上的快消息；两侧应指定相同的数字。
+Receive limit,接收上限
+"The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.",此对等端接收的上限，单位为字节每秒。0 表示不限制，这是通常的选择。
+Send limit,发送上限
+"The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.",此对等端发送的上限，单位为字节每秒。0 表示不限制；设置上限可防止繁忙的主机淹没细窄的连接。
+Join A Game (Advanced),加入一局游戏（高级）
+"Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these.","以主机设定的相同参数加入 - 通道数必须与主机打开的一致。仅限 ENet，在游戏需要之前，简单的""加入一局游戏""行才是合适的选择。"
+Join a game at {address} port {port} over {channels} channels,加入位于 {address} 端口 {port} 的游戏，经 {channels} 条通道
+How many independent lanes messages travel down. Say the same number the host said.,消息经过多少条独立车道。请指定与主机相同的数字。
+"The most this peer will send, in bytes per second. 0 means unlimited.",此对等端发送的上限，单位为字节每秒。0 表示不限制。
+Compress Network Traffic,压缩网络流量
+"Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining.",压缩此连接发送的每个数据包，并解开到达的数据包。两侧必须选择相同的编解码器，仅在 ENet 连接上有效，且要在主持或加入之后说出。
+Compress network traffic {mode},压缩网络流量 {mode}
+Connection,连接
+The ENet connection to compress. The default reaches the one Host a game or Join a game installed.,"要压缩的 ENet 连接。默认值指向""主持一局游戏""或""加入一局游戏""安装的那个连接。"
+Codec,编解码器
+How the packets are squeezed. Both sides of the connection must pick the same one.,数据包的压缩方式。连接的两侧必须选择相同的一种。
+with range coder,用区间编码器
+with FastLZ,用 FastLZ
+with zlib,用 zlib
+with Zstandard,用 Zstandard
+Send Raw Bytes,发送原始字节
+"Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself.",将字节直接送入连接 - 没有消息名，没有参数，也不会为你解码任何东西。在游戏开始计较每个字节之前，消息才是正确的工具；发送这些的游戏也得自己去读它们。
+Send raw bytes {bytes},发送原始字节 {bytes}
+Bytes,字节
+Next Raw Packet,下一个原始数据包
+"The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.",连接上等待的下一个原始数据包，以字节形式。只有自己发送原始字节的游戏才有理由读它 - 普通消息从不经这条路到达。
+Next raw packet,下一个原始数据包

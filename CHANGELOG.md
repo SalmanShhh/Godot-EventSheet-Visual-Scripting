@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Multiplayer - the wire's own words
+
+- **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given
+  three to five arguments - the channel count and the two bandwidth caps - stayed a script block on
+  purpose, because no row could say them. Now they open as **Host a game (Advanced)** and
+  **Join a game (Advanced)**: the same three-line run with the dials said out loud, writing back
+  only the arguments the author wrote. ENet's own signatures, so a declaration naming any other
+  peer kind still refuses the lift rather than claiming a line that would not run.
+- **Compression and raw packets read too.** `peer.host.compress(ENetConnection.COMPRESS_*)` opens
+  as **Compress network traffic** with the codec as a dropdown and the receiver riding back out as
+  written; `multiplayer.multiplayer_peer.put_packet(bytes)` opens as **Send raw bytes**, and
+  `get_packet()` is the **Next raw packet** expression. The shipped Host, Join and message rows are
+  untouched - these stand beside them, and the plain rows stay the ones to reach for until a game
+  needs the dials.
+- All 32 new strings speak the eight bundled languages, and the three guides that named these
+  spellings as the honest leftovers now name what is left: the `var error = ...` spelling that
+  checks what a call answered, and a `create_client` that binds its own local port.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

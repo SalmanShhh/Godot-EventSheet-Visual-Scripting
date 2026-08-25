@@ -6,6 +6,24 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Multiplayer - the wire's own words
+
+- **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given
+  three to five arguments - the channel count and the two bandwidth caps - stayed a script block on
+  purpose, because no row could say them. Now they open as **Host a game (Advanced)** and
+  **Join a game (Advanced)**: the same three-line run with the dials said out loud, writing back
+  only the arguments the author wrote. ENet's own signatures, so a declaration naming any other
+  peer kind still refuses the lift rather than claiming a line that would not run.
+- **Compression and raw packets read too.** `peer.host.compress(ENetConnection.COMPRESS_*)` opens
+  as **Compress network traffic** with the codec as a dropdown and the receiver riding back out as
+  written; `multiplayer.multiplayer_peer.put_packet(bytes)` opens as **Send raw bytes**, and
+  `get_packet()` is the **Next raw packet** expression. The shipped Host, Join and message rows are
+  untouched - these stand beside them, and the plain rows stay the ones to reach for until a game
+  needs the dials.
+- All 32 new strings speak the eight bundled languages, and the three guides that named these
+  spellings as the honest leftovers now name what is left: the `var error = ...` spelling that
+  checks what a call answered, and a `create_client` that binds its own local port.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost
@@ -86,6 +104,30 @@ What changed in the build you have installed (v0.17.0), in the words the release
   a material's \"worn by\" sentence and every other list derived from the project scan answered in a
   different order on Linux than on Windows. Continuous integration on ubuntu caught it; the list is
   sorted once where it is collected, and every consumer answers the same everywhere.
+- **Every other project-wide listing reads in path order too.** The scene-list fix above was one
+  walk of thirty-nine; an audit of the rest found eight more whose order reached something a person
+  sees - the Find window's results, the Doctor's finding order and its \"first user\" picks, the
+  export report's failure list, the MCP server's sheet listing, a method track's first-file-wins
+  animation fact, a signal note's jump target, the scene that names a script-without-a-class_name,
+  and the node picker's capped cross-scene scan, which filled its cap with different scenes per
+  platform. Each is now sorted once at its collection point; walks whose order truly cannot matter
+  (existence checks, counting sweeps, deletion sweeps) are left as they are, and a new
+  `listing_order_test` pins the project-wide listings as path-sorted so a walk that loses its sort
+  fails at home before it fails on somebody else's OS.
+- **A warm project index no longer leaks \"called by\" chips into another test's rows.** Six
+  assertions failed on continuous integration and nowhere else, and the reason was never the
+  platform: the serial suite runs in one process, one test built the project share index and left
+  it ready, and every function head two later tests rendered grew a \"called by ...\" chip their
+  pinned spans never asked for - while the sharded local run split leaker and victims into
+  different processes and stayed green. The leaker now clears what it warmed, and the two tests
+  that pin function heads start from a cold index either way, so the suite answers the same
+  however the tests are grouped.
+- **The bridge autoload resolves on a fresh checkout.** `project.godot` names the EventForgeBridge
+  autoload by the script's uid, but uid sidecars were ignored wholesale - so every fresh checkout
+  invented a new uid for the script, booted with \"Unrecognized UID\" and a failed autoload, and
+  rewrote `project.godot` to a value no other machine shares. The one sidecar that line depends on
+  is now committed (a narrow exception to the `*.uid` ignore), so every checkout resolves the same
+  uid and the file stays byte-stable through an import.
 - **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting
   `//` and then matched every other line, so wrapping a declaration in `/* … */` - which is how
   anybody switches a uniform off while they try the shader without it - left the text inside reading

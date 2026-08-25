@@ -4894,3 +4894,35 @@ called by %s,aufgerufen von %s
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s ist als ""bleibt Code"" markiert - wird als Code gezeigt und in Ruhe gelassen."
 no such method,keine solche Methode
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",Dieses Objekt hat keine Methode namens %s. Sie wurde vielleicht umbenannt oder wird anders erreicht - wähle die gemeinte aus.
+Host A Game (Advanced),Ein Spiel hosten (Erweitert)
+"Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these.","Hostet mit ausgesprochenen Netzwerkreglern: über wie viele Kanäle Nachrichten laufen und mit Obergrenzen dafür, was dieser Peer empfängt und sendet. Nur ENet - und die einfache Zeile ""Ein Spiel hosten"" ist die richtige, bis ein Spiel diese Regler wirklich braucht."
+Host a game on port {port} for up to {max_players} players over {channels} channels,Spiel auf Port {port} für bis zu {max_players} Spieler über {channels} Kanäle hosten
+Channels,Kanäle
+How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.,Über wie viele unabhängige Spuren Nachrichten laufen. Eine große Lieferung auf einer Spur verzögert die schnellen Nachrichten auf einer anderen nicht mehr; beide Seiten sollten dieselbe Zahl nennen.
+Receive limit,Empfangslimit
+"The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.","Das Meiste, was dieser Peer empfängt, in Bytes pro Sekunde. 0 bedeutet unbegrenzt, was die übliche Wahl ist."
+Send limit,Sendelimit
+"The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.","Das Meiste, was dieser Peer sendet, in Bytes pro Sekunde. 0 bedeutet unbegrenzt; eine Obergrenze hindert einen ausgelasteten Host daran, eine dünne Verbindung zu fluten."
+Join A Game (Advanced),Einem Spiel beitreten (Erweitert)
+"Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these.","Tritt mit denselben Reglern bei, die der Host gesetzt hat - die Kanalzahl muss zu dem passen, was der Host geöffnet hat. Nur ENet, und die einfache Zeile ""Einem Spiel beitreten"" ist die richtige, bis ein Spiel diese Regler braucht."
+Join a game at {address} port {port} over {channels} channels,Spiel unter {address} Port {port} über {channels} Kanäle beitreten
+How many independent lanes messages travel down. Say the same number the host said.,Über wie viele unabhängige Spuren Nachrichten laufen. Nenne dieselbe Zahl wie der Host.
+"The most this peer will send, in bytes per second. 0 means unlimited.","Das Meiste, was dieser Peer sendet, in Bytes pro Sekunde. 0 bedeutet unbegrenzt."
+Compress Network Traffic,Netzwerkverkehr komprimieren
+"Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining.","Presst jedes Paket zusammen, das diese Verbindung sendet, und entpackt, was ankommt. Beide Seiten müssen denselben Codec wählen, es funktioniert nur auf einer ENet-Verbindung, und es wird nach dem Hosten oder Beitreten gesagt."
+Compress network traffic {mode},Netzwerkverkehr komprimieren {mode}
+Connection,Verbindung
+The ENet connection to compress. The default reaches the one Host a game or Join a game installed.,"Die zu komprimierende ENet-Verbindung. Der Standard erreicht die, die ""Ein Spiel hosten"" oder ""Einem Spiel beitreten"" eingerichtet hat."
+Codec,Codec
+How the packets are squeezed. Both sides of the connection must pick the same one.,Wie die Pakete zusammengepresst werden. Beide Seiten der Verbindung müssen denselben wählen.
+with range coder,mit Range-Coder
+with FastLZ,mit FastLZ
+with zlib,mit zlib
+with Zstandard,mit Zstandard
+Send Raw Bytes,Rohe Bytes senden
+"Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself.","Sendet Bytes direkt durch die Verbindung - kein Nachrichtenname, keine Argumente, nichts wird für dich entschlüsselt. Nachrichten sind das richtige Werkzeug, bis ein Spiel jedes Byte zählt; ein Spiel, das diese sendet, muss sie auch selbst lesen."
+Send raw bytes {bytes},Rohe Bytes senden {bytes}
+Bytes,Bytes
+Next Raw Packet,Nächstes rohes Paket
+"The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.","Das nächste rohe Paket, das auf der Verbindung wartet, als Bytes. Nur ein Spiel, das selbst rohe Bytes sendet, hat hier etwas zu lesen - gewöhnliche Nachrichten kommen nie auf diesem Weg an."
+Next raw packet,Nächstes rohes Paket

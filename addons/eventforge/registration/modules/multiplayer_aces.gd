@@ -72,6 +72,30 @@ const PEER_KINDS: Array = [
 const HOST_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_server({port}, {max_players})\nmultiplayer.multiplayer_peer = __peer_{uid}"
 const JOIN_TEMPLATE := "var __peer_{uid} := {peer_kind}.new()\n__peer_{uid}.create_client({address}, {port})\nmultiplayer.multiplayer_peer = __peer_{uid}"
 
+## The same three lines with the network dials said out loud: channels, and the two bandwidth caps.
+## ENet only, and spelled so on purpose - the longer create_server is ENet's own signature, and
+## writing it at a WebSocket or WebRTC peer is not a working line of GDScript. The plain rows above
+## stay the ones to reach for until a game needs these.
+const ADVANCED_HOST_TEMPLATE := "var __peer_{uid} := ENetMultiplayerPeer.new()\n__peer_{uid}.create_server({port}, {max_players}, {channels}, {in_bandwidth}, {out_bandwidth})\nmultiplayer.multiplayer_peer = __peer_{uid}"
+const ADVANCED_JOIN_TEMPLATE := "var __peer_{uid} := ENetMultiplayerPeer.new()\n__peer_{uid}.create_client({address}, {port}, {channels}, {in_bandwidth}, {out_bandwidth})\nmultiplayer.multiplayer_peer = __peer_{uid}"
+
+## The codecs an ENet connection can squeeze its packets with, as the dropdown behind "Compress
+## network traffic". The keys are ENetConnection.CompressionMode names, which is also what the
+## written line says; the labels are the sentence, so the row reads "with range coder" rather than
+## a constant. Each note says what the codec costs and when it is the right one.
+const COMPRESSION_MODES: Array = [
+	{"key": "COMPRESS_RANGE_CODER", "label": "with range coder",
+		"note": "Fast, and made for the small packets games send. The usual pick."},
+	{"key": "COMPRESS_FASTLZ", "label": "with FastLZ",
+		"note": "The cheapest on the processor and the weakest squeeze - for a very busy server."},
+	{"key": "COMPRESS_ZLIB", "label": "with zlib",
+		"note": "Smaller packets for more processor - rarely worth it for a realtime game."},
+	{"key": "COMPRESS_ZSTD", "label": "with Zstandard",
+		"note": "Strong and quick on big packets - right when whole states travel."},
+	{"key": "COMPRESS_NONE", "label": "off",
+		"note": "Turns compression back off."}
+]
+
 ## The four lines "Spawn a scene" writes: make the copy, name it, put it where it goes, and hand
 ## it to the node the spawner watches. Four because that is what Godot's AUTO spawn IS - a scene in
 ## the spawner's own list, added under its spawn path, copied from there onto every peer without a
@@ -95,6 +119,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "MyPeerId", "My ID", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.get_unique_id()", "", [], CATEGORY, "MyID")
 		.described("This peer's own id. The host is always 1; everyone else gets a number when they join."))
 	descriptors.append_array(_connection_descriptors())
+	descriptors.append_array(_transport_descriptors())
 	descriptors.append_array(_lobby_descriptors())
 	descriptors.append_array(_state_descriptors())
 	descriptors.append_array(_connection_triggers())
@@ -126,6 +151,49 @@ static func _connection_descriptors() -> Array[ACEDescriptor]:
 	], CATEGORY, "Spawn {data}", "MultiplayerSpawner")
 		.described("Makes one copy of a scene on the host and on every peer at once. Only the host may call it; everybody else receives the copy."))
 	return descriptors
+
+
+## The wire itself: the tuned connection rows, compression, and raw packets. What hand-written
+## netcode says when it outgrows the plain rows - each one names the exact call it compiles to, so
+## the same lines written by hand open on these rows instead of staying script blocks.
+static func _transport_descriptors() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "HostGameAdvanced", "Host A Game (Advanced)", ACEDescriptor.ACEType.ACTION, ADVANCED_HOST_TEMPLATE, "", [
+		F.make_param("port", "String", "7777", "Port", "The port players connect to. Anything from 1024 to 65535 is yours to pick; both sides must use the same number.", "net_port"),
+		F.make_param("max_players", "String", "4", "Players", "How many peers may connect. The host is not one of them, so 4 here means the host plus four others.", "max_players"),
+		F.make_param("channels", "String", "2", "Channels", "How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.", "expression"),
+		F.make_param("in_bandwidth", "String", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression"),
+		F.make_param("out_bandwidth", "String", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.", "expression")
+	], CATEGORY, "Host a game on port {port} for up to {max_players} players over {channels} channels")
+		.described("Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these."))
+	descriptors.append(F.make_descriptor("Core", "JoinGameAdvanced", "Join A Game (Advanced)", ACEDescriptor.ACEType.ACTION, ADVANCED_JOIN_TEMPLATE, "", [
+		F.make_param("address", "String", "\"127.0.0.1\"", "Address", "Where the host is. 127.0.0.1 is this same machine; on a home network it is the host's local address, and over the internet it is whatever address the host published.", "net_address"),
+		F.make_param("port", "String", "7777", "Port", "The port the host opened. It has to be the same number the host used.", "net_port"),
+		F.make_param("channels", "String", "2", "Channels", "How many independent lanes messages travel down. Say the same number the host said.", "expression"),
+		F.make_param("in_bandwidth", "String", "0", "Receive limit", "The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.", "expression"),
+		F.make_param("out_bandwidth", "String", "0", "Send limit", "The most this peer will send, in bytes per second. 0 means unlimited.", "expression")
+	], CATEGORY, "Join a game at {address} port {port} over {channels} channels")
+		.described("Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these."))
+	descriptors.append(F.make_descriptor("Core", "SetCompression", "Compress Network Traffic", ACEDescriptor.ACEType.ACTION, "{peer}.host.compress(ENetConnection.{mode})", "", [
+		F.make_param("peer", "String", "(multiplayer.multiplayer_peer as ENetMultiplayerPeer)", "Connection", "The ENet connection to compress. The default reaches the one Host a game or Join a game installed.", "expression"),
+		_compression_param()
+	], CATEGORY, "Compress network traffic {mode}")
+		.described("Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining."))
+	descriptors.append(F.make_descriptor("Core", "SendRawBytes", "Send Raw Bytes", ACEDescriptor.ACEType.ACTION, "multiplayer.multiplayer_peer.put_packet({bytes})", "", [
+		F.make_param("bytes", "String", "PackedByteArray()", "Bytes", "The bytes to send. var_to_bytes(...) turns a value into them, and bytes_to_var(...) reads them back on the other side.", "expression")
+	], CATEGORY, "Send raw bytes {bytes}")
+		.described("Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself."))
+	descriptors.append(F.make_descriptor("Core", "NextRawPacket", "Next Raw Packet", ACEDescriptor.ACEType.EXPRESSION, "multiplayer.multiplayer_peer.get_packet()", "", [], CATEGORY, "Next raw packet")
+		.described("The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way."))
+	return descriptors
+
+
+## The compression dropdown. `display_option_labels` is what makes the ROW read "Compress network
+## traffic with range coder" while the line it writes still names the constant.
+static func _compression_param() -> ACEParam:
+	var parameter: ACEParam = F.make_param("mode", "String", "COMPRESS_RANGE_CODER", "Codec", "How the packets are squeezed. Both sides of the connection must pick the same one.", "", COMPRESSION_MODES)
+	parameter.display_option_labels = true
+	return parameter
 
 
 ## The five things `MultiplayerAPI` itself says. Signal triggers like every other one: the sheet

@@ -4894,3 +4894,35 @@ called by %s,%s에서 호출함
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s 는 코드로 남기기로 표시되어 있습니다 - 코드로 보여 주고, 그대로 둡니다."
 no such method,그런 메서드가 없습니다
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",이 오브젝트에는 %s 라는 메서드가 없습니다. 이름이 바뀌었거나 다른 방법으로 호출되는 것일 수 있습니다 - 의도한 것을 고르세요.
+Host A Game (Advanced),게임 호스팅하기 (고급)
+"Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends. ENet only - and the plain Host a game row is the one to reach for until a game needs these.","네트워크 다이얼을 명시하여 호스팅합니다: 메시지가 지나는 채널 수와 이 피어의 수신·송신 상한. ENet 전용입니다 - 게임에 정말 필요해지기 전까지는 단순한 ""게임 호스팅하기"" 행이 알맞습니다."
+Host a game on port {port} for up to {max_players} players over {channels} channels,"포트 {port}에서 최대 {max_players}명, {channels}개 채널로 게임 호스팅"
+Channels,채널 수
+How many independent lanes messages travel down. A big delivery on one lane no longer delays the quick messages on another; both sides should say the same number.,메시지가 지나는 독립 차선의 수. 한 차선의 큰 전송이 다른 차선의 빠른 메시지를 더 이상 지연시키지 않습니다. 양쪽이 같은 수를 지정해야 합니다.
+Receive limit,수신 상한
+"The most this peer will receive, in bytes per second. 0 means unlimited, which is the usual pick.","이 피어가 수신할 최대량(초당 바이트). 0은 무제한을 뜻하며, 보통은 그렇게 둡니다."
+Send limit,송신 상한
+"The most this peer will send, in bytes per second. 0 means unlimited; a cap keeps a busy host from flooding a thin connection.",이 피어가 송신할 최대량(초당 바이트). 0은 무제한. 상한을 두면 바쁜 호스트가 가는 회선을 넘치게 하지 않습니다.
+Join A Game (Advanced),게임에 참가하기 (고급)
+"Joins with the same dials the host set - the channel count has to match what the host opened. ENet only, and the plain Join a game row is the one to reach for until a game needs these.","호스트가 정한 것과 같은 값으로 참가합니다 - 채널 수는 호스트가 연 수와 일치해야 합니다. ENet 전용이며, 필요해지기 전까지는 단순한 ""게임에 참가하기"" 행이 알맞습니다."
+Join a game at {address} port {port} over {channels} channels,{address}의 포트 {port}에 {channels}개 채널로 게임 참가
+How many independent lanes messages travel down. Say the same number the host said.,메시지가 지나는 독립 차선의 수. 호스트가 말한 것과 같은 수를 지정하세요.
+"The most this peer will send, in bytes per second. 0 means unlimited.",이 피어가 송신할 최대량(초당 바이트). 0은 무제한입니다.
+Compress Network Traffic,네트워크 트래픽 압축하기
+"Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, it only works on an ENet connection, and it is said after hosting or joining.","이 연결이 보내는 모든 패킷을 압축하고 도착한 것을 풉니다. 양쪽이 같은 코덱을 골라야 하며, ENet 연결에서만 동작하고, 호스팅이나 참가 후에 지정합니다."
+Compress network traffic {mode},네트워크 트래픽 압축 {mode}
+Connection,연결
+The ENet connection to compress. The default reaches the one Host a game or Join a game installed.,"압축할 ENet 연결. 기본값은 ""게임 호스팅하기"" 또는 ""게임에 참가하기""가 설치한 연결에 닿습니다."
+Codec,코덱
+How the packets are squeezed. Both sides of the connection must pick the same one.,패킷을 압축하는 방식. 연결의 양쪽이 같은 것을 골라야 합니다.
+with range coder,레인지 코더로
+with FastLZ,FastLZ로
+with zlib,zlib로
+with Zstandard,Zstandard로
+Send Raw Bytes,원시 바이트 보내기
+"Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you. Messages are the right tool until a game is counting every byte; a game that sends these also has to read them itself.","연결로 바이트를 그대로 보냅니다 - 메시지 이름도 인수도 없고, 아무것도 대신 해독되지 않습니다. 게임이 바이트 하나까지 세기 전까지는 메시지가 올바른 도구입니다. 이것을 보내는 게임은 스스로 읽기도 해야 합니다."
+Send raw bytes {bytes},원시 바이트 보내기 {bytes}
+Bytes,바이트
+Next Raw Packet,다음 원시 패킷
+"The next raw packet waiting on the connection, as bytes. Only a game that sends raw bytes itself has any business reading it - ordinary messages never arrive this way.",연결에서 기다리는 다음 원시 패킷(바이트). 스스로 원시 바이트를 보내는 게임만 읽을 이유가 있습니다 - 일반 메시지는 결코 이 길로 도착하지 않습니다.
+Next raw packet,다음 원시 패킷

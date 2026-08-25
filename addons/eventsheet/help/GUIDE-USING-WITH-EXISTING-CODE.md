@@ -1397,11 +1397,15 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
     | `## @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |
 
+    | a `create_server` or `create_client` given channels and bandwidth limits, in the same three-line run | **Host a game (Advanced)** / **Join a game (Advanced)**, writing back only the arguments you wrote |
+    | `peer.host.compress(ENetConnection.COMPRESS_*)`, whatever the connection was reached through | **Compress network traffic**, the receiver a value that rides back out unchanged |
+    | `multiplayer.multiplayer_peer.put_packet(bytes)` and its `get_packet()` twin | **Send raw bytes** / the **Next raw packet** expression |
+
     And the honest other half. These stay the code they are, because no row can say them without
-    losing something: a `create_server` given channel or bandwidth limits, `peer.host.compress(...)`,
-    `put_packet` / `get_packet`, and the `var error = peer.create_client(...)` spelling that checks
-    what the call answered. They still read line by line, and the head's **reads as** band counts
-    them: *every networking line reads as a row - 9 of 9*, or the number it really is.
+    losing something: the `var error = peer.create_client(...)` spelling that checks what the call
+    answered, and a `create_client` that binds its own local port. They still read line by line, and
+    the head's **reads as** band counts them: *every networking line reads as a row - 9 of 9*, or
+    the number it really is.
   - **Lighting.** A light is an OBJECT, not a parameter: `$Torch.energy = 1.2` reads **Torch ▸ Set
     brightness to 1.2**, and the word is the same in 2D and 3D while the code echo shows the property
     your light really has. This half is a **lift** too - the row stores the spelling it matched, so

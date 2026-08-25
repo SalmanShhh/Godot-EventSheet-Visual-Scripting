@@ -552,9 +552,16 @@ writes, but it is also the line every project writes to remove any node at all -
 meaning is in WHERE it runs, not in the line - so a bare `queue_free()` still reads **Queue free**,
 and Despawn is a row you author rather than one a reading hands you.
 
-What no row can say stays code, on purpose and visibly: a `create_server` given channel or bandwidth
-limits, `peer.host.compress(...)`, packets put on the wire by hand, and the
-`var error = peer.create_client(...)` spelling that checks what the call answered. Those lines keep
-their script block, and the sheet counts them out loud rather than rounding up:
+The wire's own spellings read too. A `create_server` or `create_client` given channel or bandwidth
+limits opens as **Host a game (Advanced)** / **Join a game (Advanced)** - the same three lines with
+the dials said out loud - `peer.host.compress(ENetConnection.COMPRESS_RANGE_CODER)` reads
+**Compress network traffic with range coder** with the receiver riding back out as you spelled it,
+and `multiplayer.multiplayer_peer.put_packet(bytes)` reads **Send raw bytes** (its `get_packet()`
+twin is the **Next raw packet** expression).
+
+What no row can say stays code, on purpose and visibly: the
+`var error = peer.create_client(...)` spelling that checks what the call answered, and a
+`create_client` that binds its own local port. Those lines keep their script block, and the sheet
+counts them out loud rather than rounding up:
 *every networking line reads as a row - 9 of 9*, or the number it really is, on the head and again
 per script in the Project Doctor's Multiplayer section.
