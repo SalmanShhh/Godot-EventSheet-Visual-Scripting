@@ -2020,9 +2020,14 @@ const MODULE_GUIDE_OVERRIDES := {
 	"keyboard": "Reading-Keyboard-Mouse-And-Gamepad",
 	"loops": "Working-With-Lists",
 	"math_random": "Doing-Math-And-Randomness",
+	# The value-shaping statements (keep between, move toward, rescale, wrap) read beside the
+	# expressions they are the statement forms of, so one guide covers both.
+	"math_words": "Doing-Math-And-Randomness",
 	"metadata": "Finding-And-Rearranging-Nodes",
 	"mouse": "Reading-Keyboard-Mouse-And-Gamepad",
 	"movement": "Making-Things-Move-In-2D",
+	# The moves that name their space and the three turns are 2D movement, whatever else they say.
+	"space_words": "Making-Things-Move-In-2D",
 	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.

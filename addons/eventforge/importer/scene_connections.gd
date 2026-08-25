@@ -360,7 +360,16 @@ static func folded(lines: PackedStringArray) -> PackedStringArray:
 
 
 ## How far one line opens or closes the brackets it holds, ignoring anything inside a quoted string.
+##
+## The quote-aware walk below is per-CHARACTER, and this runs on every line of every scene in the
+## project - which is the hottest read there is. So it is only reached when the line's brackets do
+## not already balance by a native count, which almost every line's do: a balanced line cannot be a
+## continuation whatever its quotes hold, and the count is six native calls against a GDScript loop
+## over every character of the file.
 static func _bracket_depth(line: String) -> int:
+	if line.count("[") + line.count("{") + line.count("(") \
+			== line.count("]") + line.count("}") + line.count(")"):
+		return 0
 	var depth: int = 0
 	var quoted: bool = false
 	for index: int in line.length():

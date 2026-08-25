@@ -4908,3 +4908,6 @@ uses,usa
 animations,animazioni
 %s is not an animation of this scene - the row plays nothing,%s non e un'animazione di questa scena - la riga non riproduce nulla
 %s loops - the queue never comes,%s va in ciclo - la coda non arriva mai
+%s is inside %s (scaled %s) - its own 10 is the world's %s,%s si trova dentro %s (scalato %s) - i suoi 10 nel mondo sono %s
+%s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s e specchiato da una scala negativa - le sue forme e i suoi raggi si ribaltano con la grafica; ribalta invece lo sprite
+"%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s e scalato (%s, %s) e ruotato - si deformera; scala la grafica, non il collider"

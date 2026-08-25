@@ -28,6 +28,13 @@ extends RefCounted
 ## Declaring it also moves this test into the runner's serial tail, which is the only place the
 ## number means anything: measured inside a shard beside seven other Godot processes it would flap,
 ## and a budget people learn to ignore is not a budget.
+##
+## MEASURED AGAIN 2026-08-25, alone, with nothing else running: 68.7, 77.0 and 70.4 seconds. The
+## last of those had the scene reader's line folding switched off, so the answer is the same with and
+## without it and the drift is not in that reader - it is in what the audit already did. The budget
+## is deliberately left where it is: raising one to fit a number nobody has explained is how a budget
+## stops meaning anything. What it is asking for is the audit measured on a quiet machine and the
+## slow section found, not a bigger number.
 const DOCTOR_BUDGET_MS: int = 65000
 
 

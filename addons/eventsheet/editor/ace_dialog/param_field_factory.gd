@@ -129,7 +129,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"property_reference": "A property of the object this row acts on, by name.",
 	"method_reference": "A method of the object this row acts on, by name. It is called with no arguments unless the row says otherwise.",
 	"signal_reference": "A signal of the object this row acts on, by name.",
-	"angle": "Degrees, measured from pointing right and turning clockwise. A quarter turn is 90.",
+	"angle": "Degrees, measured from pointing right and turning clockwise - a quarter turn is 90. There is no unit to choose: a plain number is degrees. Radians are not locked out either - write PI/4, or say the unit out loud (1.2 rad), and the field keeps what you meant and converts it once. The row always shows which unit it ended up meaning.",
 	"bbcode_text": "Text with the engine's own markup - the buttons wrap the selection, and the preview under the box is what the label will show.",
 	"physics_layer_2d": "The 2D physics layers this row looks at, by their project names. Tick as many as apply.",
 	"physics_layer_3d": "The 3D physics layers this row looks at, by their project names. Tick as many as apply.",

@@ -76,6 +76,31 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Apply Central Force | Applies a continuous push each physics frame, like steady thrust. | `apply_central_force({force})` |
 | Apply Torque Impulse | Gives a rigid body an instant spin. | `apply_torque_impulse({torque})` |
 
+### Movement - whose space a move means
+
+The first transform bug everybody writes is "move 10 right", and the sprite drifts diagonally because
+it was rotated - or refuses to, when the drift was the point. Godot has both meanings and spells them
+differently, so the row says which one it is.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Move Forward | Moves the node the way it is FACING, whatever way that happens to be. | `position += transform.x * {speed} * {delta_t}` |
+| Move (the world's way) | Moves it the way the SCREEN means, however the node is turned. | `global_position += {direction} * {speed} * {delta_t}` |
+| Turn Around | Carries it round a point at a steady rate, keeping its distance. | `global_position = {centre} + (global_position - {centre}).rotated(deg_to_rad({degrees_per_second}) * {delta_t})` |
+| Face | Turns it toward a place at a top speed, never overshooting. | `rotation = rotate_toward(rotation, global_position.angle_to_point({target}), deg_to_rad({degrees_per_second}) * {delta_t})` |
+| Swing | Swings it round by an amount over a time and leaves it there. | `create_tween().tween_property(self, "rotation", rotation + deg_to_rad({degrees}), {seconds})` |
+
+"Forward" is derived per dimension and never assumed: a 2D node's own forward is its `transform.x`
+and a 3D node's is `-basis.z` - the two conventions that cost everybody an evening. The 3D leg lives
+in the 3D guide, whose direction dropdown IS the basis expression.
+
+**Swing turns about the node's own origin**, so where that origin sits is the hinge. Move it to the
+door's edge in the editor and the door swings on its edge; leave it in the middle and the door spins.
+
+**Angles are degrees** in every field here - there is no unit to pick, because a plain number is
+degrees. Radians are not locked out: write `PI/4`, or say it out loud (`1.2 rad`), and the field
+keeps what you meant. Whichever way it was written, the row shows which unit it means.
+
 ### Movement - the velocity toolkit (CharacterBody2D)
 
 | Name | What it does | Ships as |

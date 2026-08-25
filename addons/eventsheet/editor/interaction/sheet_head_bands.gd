@@ -34,6 +34,7 @@ const BAND_SHADOWS: String = "shadows"
 const BAND_ENVIRONMENT: String = "environment"
 const BAND_EFFECT: String = "effect"
 const BAND_ANIMATIONS: String = "animations"
+const BAND_TRANSFORM: String = "transform"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -50,7 +51,7 @@ const CHAIN_LEAD_PARAM: String = "animation"
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
-	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS,
+	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
 	BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
@@ -66,6 +67,7 @@ const SCENE_BANDS: Dictionary = {
 	BAND_ENVIRONMENT: "environment",
 	BAND_EFFECT: "effect",
 	BAND_ANIMATIONS: "animations",
+	BAND_TRANSFORM: "transform",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -85,6 +87,7 @@ const LEADERS: Dictionary = {
 	BAND_ENVIRONMENT: "environment",
 	BAND_EFFECT: "effect",
 	BAND_ANIMATIONS: "animations",
+	BAND_TRANSFORM: "transform",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -271,7 +274,7 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	var facts: Dictionary = {"synchronizers": [], "spawned_by": [],
-		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": []}
+		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [], "transform": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
@@ -292,6 +295,10 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 		EventSheetCompletions.FIELD_ANIMATION)
 	facts["animations"] = EventSheetSceneAnimations.bands(source_path,
 		_values_of(animation_values), _chain_leads(animation_values))
+	# And the transform facts that are about to bite: this node sitting inside something scaled, a
+	# body mirrored by a negative scale, a node scaled unevenly and turned. A scene with nothing
+	# scaled grows none of them.
+	facts["transform"] = EventSheetSceneTransformFacts.bands(source_path)
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries

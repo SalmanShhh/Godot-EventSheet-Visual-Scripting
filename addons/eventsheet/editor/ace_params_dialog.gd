@@ -2104,7 +2104,10 @@ func _judge_animation(edit: LineEdit, known: PackedStringArray) -> void:
 	if _validate_named_field(edit, known, EventSheetL10n.translate("no such animation"),
 			EventSheetL10n.translate("This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.")):
 		return
-	if _key_of_field(edit) != EventSheetHeadBands.CHAIN_LEAD_PARAM or not _param_dicts.has("next"):
+	# Asked of the DEFINITION rather than of the fields built so far: the chain's second field comes
+	# after this one, so a form still being built has not met it yet and the note would only appear
+	# the second time somebody typed.
+	if _key_of_field(edit) != EventSheetHeadBands.CHAIN_LEAD_PARAM or not _has_param("next"):
 		return
 	var found: Dictionary = EventSheetSceneAnimations.find(
 		EventSheetSceneAnimations.for_script(_sheet_source_path()), edit.text)
@@ -2167,6 +2170,17 @@ func _live_scene_animations() -> PackedStringArray:
 	for animation_name: String in animation_options_from(scene_root):
 		quoted.append(format_quoted_literal(animation_name))
 	return quoted
+
+
+## True when the row being edited has a parameter by this name at all - asked of the descriptor, so
+## the answer does not depend on how far through building the form we are.
+func _has_param(param_id: String) -> bool:
+	if _definition == null:
+		return false
+	for parameter: Variant in _definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param_id:
+			return true
+	return false
 
 
 ## The script the sheet being edited is, which is what every scene reading is asked about.
@@ -2980,6 +2994,18 @@ func _lint_context_healthy() -> bool:
 	return bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
 
 
+## One committed value with its UNIT settled, for an angle field - and untouched for every other
+## field there is. A plain number is degrees and these templates write the `deg_to_rad` themselves,
+## so a plain number is stored exactly as it was typed; a reader who wrote PI or said "rad" gets the
+## one conversion that makes their own expression true, rather than having their radians silently
+## read as degrees. Nothing is stored twice and nothing is guessed: the value IS the code.
+func _angled(key: String, value: Variant) -> Variant:
+	if not (value is String) or str((_param_dicts.get(key, {}) as Dictionary).get("hint", "")) \
+			!= EventForgeAngleUnits.LENS_HINT:
+		return value
+	return EventForgeAngleUnits.stored(str(value), EventForgeAngleUnits.DEGREES)
+
+
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
@@ -3006,7 +3032,7 @@ func _on_confirmed() -> void:
 func _commit(chain: bool) -> void:
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
-		values[str(key)] = _extract_value(_fields[key])
+		values[str(key)] = _angled(str(key), _extract_value(_fields[key]))
 	_remembered_values[_definition.id] = values.duplicate(true)
 	# Recent values: every committed STRING value joins its parameter's project-wide ring, so the
 	# suggestion combo can offer it next time (bools/checkboxes have nothing worth ringing).

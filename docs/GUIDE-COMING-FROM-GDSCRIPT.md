@@ -43,8 +43,28 @@ as, and where to go to see the two side by side.
 | `create_tween().tween_property(...)` | Tween Property | Tween |
 | `set_process(false)` | Set Node Per-Frame Processing | Nodes: Activation |
 | `print(...)` | Log | Debug |
+| `x = clampf(x, a, b)` | Keep `x` between `a` and `b` | Math & Random |
+| `x = lerp(x, to, 0.1)` | Move `x` toward `to` by 10% each tick | Math & Random |
+| `x = wrapf(x, a, b)` | Wrap `x` around `a`..`b` | Math & Random |
+| `y = remap(x, …)` | Rescale `x` from one range into another | Math & Random |
+| `position += transform.x * s * delta` | Move forward `s`/s - its own facing | Movement |
+| `global_position += Vector2.RIGHT * s * delta` | Move right `s`/s - the world's way | Movement |
+| `global_position += -basis.z * s * delta` | Move forward at `s` (3D) | 3D: Move & Turn |
+| `(p - c).rotated(...)` | Turn around `c` at a rate | Movement |
+| `rotate_toward(...)` | Face a target at a top speed | Movement |
+| `deg_to_rad(45)` | an angle field holding 45 - degrees is what a plain number means | any angle field |
+| `PI/4` | an angle field holding PI/4, which stays radians and says so | any angle field |
 
 ## Three things that surprise people
+
+**An angle is degrees unless it says otherwise.** There is no unit to pick anywhere in the
+editor: type 45 and it means 45 degrees, and the code says `deg_to_rad(45)` because that is what
+the property wants. Radians are not locked out - type `PI/4`, or say the unit out loud (`1.2 rad`),
+and the field keeps what you meant with exactly the one conversion that makes it true. Whichever
+way it was written, the ROW shows which unit it means, so the sentence and the code cannot quietly
+disagree. A project that thinks in radians can flip what a bare number means with the
+`eventsheets/angles/default_unit` setting; that changes what gets written from then on and never
+re-reads a value already stored.
 
 **A sheet row is one statement.** The reading is never denser than the code: one action per row, one
 event per idea. A `var speed = 200.0` inside a function is a Local variable row followed by

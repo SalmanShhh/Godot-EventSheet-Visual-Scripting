@@ -775,6 +775,7 @@ needed explaining.
 | `variable_reference` | Dropdown of sheet variables | A sheet variable name. |
 | `variable_reference:Array` (or `:Dictionary`, etc.) | Dropdown filtered to that variable type | A typed variable; only matching (or Variant) variables show. |
 | `color` | ColorPickerButton | A `Color`. |
+| `angle` | Text field, with the UNIT settled when the value is committed | An angle. A plain number is DEGREES - there is no unit to pick, because the unit is already in what was typed. Radians are not locked out: `PI/4`, or a value with the unit said out loud (`1.2 rad`), keeps what the author meant and gets exactly the one conversion that makes it true, and the ROW always shows which unit it ended up meaning. A per-project setting (`eventsheets/angles/default_unit`) flips what a bare number means, for teams that think in radians; it changes what is WRITTEN after that and never re-reads a value already stored. Write the template as the call it is (`deg_to_rad({angle})`) and the field does the rest. |
 | `key_capture` | Press-a-key modal | A keyboard key (records the key you press). |
 | `input_action` | Editable picker of the project's Input Map actions (enumerated live at dialog-open, project actions first) | An existing input action, as a quoted literal. |
 | `group_reference` | Editable picker of the node groups that actually exist (project globals + the edited scene's groups) | A node group name, as a quoted literal. |
