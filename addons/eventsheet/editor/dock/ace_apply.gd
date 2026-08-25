@@ -542,6 +542,12 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 	# Bus triggers: autoload providers connect by singleton name (project-wide signals).
 	if _dock._autoload_provider_names.has(definition.provider_id):
 		event_row.trigger_source_path = "autoload:%s" % str(_dock._autoload_provider_names[definition.provider_id])
+	# A signal picked off one of the project's OWN scripts carries the object that emits it - a node
+	# of the open scene, or an Autoload - so the connection written in `_ready` names that object
+	# rather than the sheet itself. The same field a lifted trigger fills, filled the same way.
+	var emitter: String = str(definition.metadata.get(ACEPickerDialog.SIGNAL_SOURCE_META, ""))
+	if not emitter.is_empty():
+		event_row.trigger_source_path = emitter
 	var parts: PackedStringArray = PackedStringArray()
 	for parameter in definition.parameters:
 		if not (parameter is Dictionary):

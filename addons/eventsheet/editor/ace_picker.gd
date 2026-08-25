@@ -825,6 +825,57 @@ static func effect_dial_description(dial: Dictionary, row_description: String) -
 	return " ".join(said)
 
 
+## Where the SIGNALS of the project's own scripts are offered: one folder per node of the open scene
+## that wears a script, and one per Autoload, holding that script's declared signals.
+const SIGNALS_GROUP := "Signals in this project"
+
+## The object a signal entry listens to, in the spelling a trigger row stores - a node path, or
+## `autoload:<Name>` for a singleton. Read at apply time so the wiring in `_ready` names the node the
+## reader picked, exactly as a lifted trigger's does.
+const SIGNAL_SOURCE_META := "eventsheet_signal_source"
+
+
+## Every signal the project's own scripts declare, as picker entries: one copy of the On Signal
+## trigger per source per signal, with the signal name, its argument signature and the object it
+## comes off already answered. Picking one wires it in `_ready` like every lifted trigger.
+##
+## DECLARED signals only. What a Button or a Timer emits is already browsable under its own class,
+## and a copy of each per node would be a picker nobody could read; what no picker had was the
+## `leveled_up(new_level)` somebody wrote in 2022, which is exactly what this offers.
+##
+## Pure + static (a sheet and a registry in, definitions out), so the shelves are pinned headless.
+static func scene_signal_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+	var out: Array[ACEDefinition] = []
+	if sheet == null or registry == null:
+		return out
+	var on_signal: ACEDefinition = registry.find_definition("Core", "OnSignal")
+	if on_signal == null:
+		return out
+	for source: Dictionary in EventSheetScriptMembers.signal_sources(sheet):
+		var script_path: String = str(source["script_path"])
+		for declared: Dictionary in (EventSheetScriptMembers.of_script(script_path)["signals"] as Array[Dictionary]):
+			out.append(_signal_entry(on_signal, source, declared, script_path))
+	return out
+
+
+## One picker entry: the On Signal row with the object, the signal and its arguments answered, named
+## the way every other trigger is and described with the script's own `##` line above the signal.
+static func _signal_entry(definition: ACEDefinition, source: Dictionary, declared: Dictionary,
+		script_path: String) -> ACEDefinition:
+	# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate() would hand
+	# back a blank definition that still looks valid.
+	var offered: ACEDefinition = definition.copy()
+	var signal_name: String = str(declared["name"])
+	offered.display_name = "%s %s" % [EventSheetL10n.translate("On"), signal_name.replace("_", " ")]
+	offered.description = EventSheetScriptMembers.detail_of(declared)
+	offered.metadata[SIGNAL_SOURCE_META] = str(source["source"])
+	offered.metadata[SCENE_SHELF_META] = "%s   %s" % [str(source["label"]), script_path.get_file()]
+	offered.metadata[SCENE_GROUP_META] = SIGNALS_GROUP
+	offered.metadata[SCENE_PREFILL_META] = {"signal_name": signal_name,
+		"args": str(declared.get("args", ""))}
+	return offered
+
+
 ## One node's line on the shelf: its name, the class it is, and - for a light - whether it
 ## casts shadows. The facts that decide which row a reader wants and whether it will do anything.
 static func scene_node_shelf_label(node: Dictionary) -> String:
@@ -1582,6 +1633,12 @@ func _refresh_tree() -> void:
 		for light_definition: ACEDefinition in scene_lighting_definitions(_open_sheet(), _registry):
 			if not filtering or shelf_matches_query(light_definition, query):
 				definitions.append(light_definition)
+	# And the SIGNALS the project's own scripts declare, off the node or the Autoload that emits
+	# them. Offered whether or not the picker is signals-only, because "react to something my code
+	# already announces" is the whole question here and it is asked from both doors.
+	for signal_definition: ACEDefinition in scene_signal_definitions(_open_sheet(), _registry):
+		if not filtering or shelf_matches_query(signal_definition, query):
+			definitions.append(signal_definition)
 	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
 	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
 	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
@@ -2925,10 +2982,16 @@ func _commit_definition(definition: ACEDefinition) -> void:
 	if not aimed_light.is_empty():
 		var light_values: Dictionary = context.get("existing_params", {})
 		light_values["target"] = aimed_light
-		# And whatever else the shelf answered on the reader's behalf - the dial an effect entry was
-		# built for, so the dialog opens on the value rather than asking for the name back.
-		light_values.merge(definition.metadata.get(SCENE_PREFILL_META, {}) as Dictionary, true)
 		context["existing_params"] = light_values
+	# And whatever else the shelf answered on the reader's behalf - the dial an effect entry was
+	# built for, the signal and arguments a signal entry was built for - so the dialog opens on the
+	# value rather than asking for the name back. Its own step, because a shelf entry that answers
+	# values need not be aimed at a node: a signal entry names the object on the row, not in a field.
+	var prefilled: Dictionary = definition.metadata.get(SCENE_PREFILL_META, {}) as Dictionary
+	if not prefilled.is_empty():
+		var shelf_values: Dictionary = context.get("existing_params", {})
+		shelf_values.merge(prefilled, true)
+		context["existing_params"] = shelf_values
 	# An alias row is the same descriptor with the boolean half of the form already answered.
 	# Taken (and cleared) here rather than stamped on the definition, because ACEDefinitions are
 	# shared across every tab for the session and must never carry one row's values.

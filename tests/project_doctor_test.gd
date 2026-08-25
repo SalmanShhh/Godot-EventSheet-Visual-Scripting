@@ -19,6 +19,12 @@ extends RefCounted
 ## 65 seconds is a third clear of the worst run measured and a fifth under the best run of the code
 ## this replaced, so a return to any of the three fails rather than passing at half the margin.
 ##
+## The Interop section joined the audit after that measurement and re-measured it at 48 to 54 seconds
+## over three runs. Its own share is about two seconds: it reads every script of the project ONCE for
+## the mark and the size together, and the lifts it does after that are capped by count and by a
+## wall clock. Anything that reads the corpus a second time is where the next slow second will come
+## from.
+##
 ## Declaring it also moves this test into the runner's serial tail, which is the only place the
 ## number means anything: measured inside a shard beside seven other Godot processes it would flap,
 ## and a budget people learn to ignore is not a budget.

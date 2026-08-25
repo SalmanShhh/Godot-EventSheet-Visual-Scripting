@@ -36,6 +36,10 @@ const FIELD_EXPRESSION := "expression"
 const FIELD_VARIABLE := "variable_reference"
 const FIELD_FUNCTION := "function_name"
 const FIELD_SIGNAL := "signal_reference"
+## A method of the object a row is AIMED at, which is why this kind carries an argument: the target
+## expression. `method_reference:$Hurtbox` is a different list from `method_reference:Progress`, and
+## the cache keys on the whole kind, so both are held and neither is a guess.
+const FIELD_METHOD := "method_reference"
 const FIELD_GROUP := "group_reference"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
@@ -196,6 +200,8 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _function_entries(sheet)
 		FIELD_SIGNAL:
 			return _signal_entries(sheet)
+		FIELD_METHOD:
+			return _method_entries(sheet, argument)
 		FIELD_GROUP:
 			return _group_entries()
 		FIELD_INPUT_ACTION:
@@ -270,6 +276,18 @@ static func _function_detail(event_function: EventFunction) -> String:
 	if not names.is_empty():
 		said += "(%s)" % ", ".join(names)
 	return said
+
+
+## The methods of the object a row is aimed at: what its script declares, with the arguments as
+## written and the `##` line above the declaration as the explanation, then what its engine class
+## adds. Empty for a target nothing in the project answers to - a row aimed at something worked out
+## at run time keeps its typed string, and a guessed list would be worse than none.
+static func _method_entries(sheet: EventSheetResource, target: String) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for member: Dictionary in EventSheetScriptMembers.methods_for(sheet, target):
+		entries.append({"text": str(member["name"]),
+			"detail": EventSheetScriptMembers.detail_of(member), "kind": KIND_MEMBER})
+	return entries
 
 
 ## The signals in scope: the ones this sheet declares, then the ones its host class already has.

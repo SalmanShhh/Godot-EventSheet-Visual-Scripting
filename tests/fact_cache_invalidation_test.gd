@@ -175,10 +175,9 @@ static func run() -> bool:
 	all_passed = _check("the Project Settings hook is connected",
 		dock_source.contains("ProjectSettings.connect(\"settings_changed\", _on_project_settings_changed)"),
 		true) and all_passed
-	# The readers this test warmed are process-wide statics, and the whole suite runs in ONE process
-	# when it is not sharded - a share index left READY here puts "called by ..." chips into every
-	# function head a later test renders, which is how these six assertions failed on CI (serial)
-	# while the sharded local run stayed green.
+	# The rebuild above proved clearing works; what it built must not outlive the test. A warm
+	# share index makes later tests' verb headers grow "called by" chips their assertions do
+	# not expect - seen only in a serial run, where every test shares this one process.
 	EventSheetProjectShareIndex.clear_cache()
 	EventSheetSceneEffects.clear_cache()
 	EventForgeShaderUniforms.clear_cache()

@@ -173,6 +173,24 @@ Each one compiles to a single line of ordinary GDScript:
 `target`, `method`, `property`, etc. are free-text fields - you type the real GDScript fragment. Defaults
 are sensible (`target` is `self`, `property` is `modulate`/`visible`, and so on).
 
+**The method field reads the target's own script.** Once the row says which object it is aimed at,
+the **Method** field offers that object's methods rather than a blank line: everything its script
+declares, with the arguments as written and the `##` comment above the declaration as the
+explanation, then what its engine class adds, named with the class it came from. Your programmers'
+doc comments become the designer's tooltips, in the file where they already live. Aim the row at a
+different object and it is a different list - a node of the open scene, an Autoload, a class the
+project declares.
+
+The field stays **editable**, which is the point: a name reflection cannot see is still typeable, and
+a row whose target is worked out at run time keeps the free-text field it always had. A name the
+target does not have goes **amber** with the nearest one offered - a warning, not a refusal, because
+the method may be reached some other way. That is what stops a rename somewhere else rotting a typed
+string silently until the game runs.
+
+**Connect Signal reads the same way.** Once the row names a source, its **Signal** dropdown lists
+that object's signals - what its script declares, then what its class emits - rather than this
+sheet's own. A row with no source still offers the sheet's, exactly as before.
+
 ### RawCode blocks - drop in GDScript directly
 
 For anything the above doesn't cover, a **RawCode block** is a pass-through row: the lines you write are
@@ -197,6 +215,13 @@ GlobalUtils.ping(self)
 Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
 
+- **Add event ▸ Signals in this project** - the shelf that needs no typing and no scene dock. Every
+  signal your OWN scripts declare is listed under the object that emits it: one folder per scripted
+  node of the open scene, one per Autoload, each signal with its parameters and its `##` line as the
+  description. Pick one and the event lands wired - the signal name, the argument signature and the
+  emitter are all answered, and the connection is written in `_ready` exactly as a lifted trigger's
+  is. (Declared signals only. What a Button or a Timer emits is already browsable under its own
+  class; what no picker had was the `leveled_up(new_level)` somebody wrote in 2022.)
 - **Connect Signal to Event Sheet** - the no-typing path: right-click the node in the Scene dock,
   pick the signal from the searchable list (script signals and native ones alike), and an
   **On <Signal>** trigger event lands in its sheet with the handler arguments pre-baked.

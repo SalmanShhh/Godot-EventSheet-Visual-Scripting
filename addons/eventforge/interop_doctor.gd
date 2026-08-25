@@ -37,8 +37,8 @@ const STAYS_CODE_MARK := "# eventsheets: stays code"
 ## How many scripts one report opens, and how long it may spend doing it. Both are ceilings, not
 ## targets: the report says what it measured, so a project of two thousand scripts gets a useful
 ## page in a second rather than a complete one in a minute.
-const MEASURED_LIMIT: int = 15
-const MEASURE_BUDGET_MSEC: int = 2000
+const MEASURED_LIMIT: int = 8
+const MEASURE_BUDGET_MSEC: int = 1200
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
@@ -58,7 +58,15 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func stays_code(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false
-	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+	return _marked_in(FileAccess.get_file_as_string(script_path))
+
+
+## The same question asked of text already in hand, which is how the report asks it: it reads every
+## script of the project once and needs the mark and the size out of that one read.
+static func _marked_in(text: String) -> bool:
+	if not text.contains(STAYS_CODE_MARK):
+		return false
+	for line: String in text.split("\n"):
 		if line.strip_edges() == STAYS_CODE_MARK:
 			return true
 	return false
@@ -95,17 +103,21 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	if scripts.is_empty():
 		return findings
-	# A report is a batch job, so it waits for the project index rather than saying "counting…" - the
-	# rule a head band follows exists because a band is drawn while somebody is looking at it.
-	EventSheetProjectShareIndex.build_now()
+	# ONE read per script answers both questions - is it marked, and how big is it - because this runs
+	# over every script the project owns and reading each of them twice is the whole cost of the
+	# section. The lifts below are bounded; this walk is not, so it has to be the cheap half.
 	var kept_as_code: PackedStringArray = PackedStringArray()
-	var candidates: PackedStringArray = PackedStringArray()
+	var sized: Array[Dictionary] = []
 	for script_path: String in scripts:
-		if stays_code(script_path):
+		var text: String = FileAccess.get_file_as_string(script_path)
+		if _marked_in(text):
 			kept_as_code.append(script_path)
-		else:
-			candidates.append(script_path)
-	var measured: Array[Dictionary] = _measure(_smallest_first(candidates))
+			continue
+		sized.append({"path": script_path, "size": text.length()})
+	var measured: Array[Dictionary] = _measure(_smallest_first(sized))
+	var candidates: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in sized:
+		candidates.append(str(entry["path"]))
 	findings.append(_finding("info", CHECK_ID, measured[0].get("path", "") if not measured.is_empty() else "",
 		EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
 			candidates.size(), measured.size(), _average_reads_as(measured)], ""))
@@ -135,14 +147,7 @@ static func _script_line(entry: Dictionary) -> String:
 
 ## The candidates, smallest file first - which is both the cheapest to measure and, as it happens,
 ## the best place to start: a small input or UI script is the one that reads 100%.
-static func _smallest_first(candidates: PackedStringArray) -> PackedStringArray:
-	var sized: Array[Dictionary] = []
-	for script_path: String in candidates:
-		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
-		if file == null:
-			continue
-		sized.append({"path": script_path, "size": file.get_length()})
-		file.close()
+static func _smallest_first(sized: Array[Dictionary]) -> PackedStringArray:
 	sized.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
 		if int(left["size"]) == int(right["size"]):
 			return str(left["path"]) < str(right["path"])
@@ -184,7 +189,8 @@ static func _average_reads_as(measured: Array[Dictionary]) -> int:
 
 ## How many OTHER scripts call something this one declares - the number a rename of it would have to
 ## check, off the one project index. 0 while that index is still counting, which is the honest answer
-## to a question nobody has finished asking.
+## to a question nobody has finished asking - and it is asked rather than waited for on purpose: the
+## whole audit has a budget, and a health check is not worth a second of somebody's time on its own.
 static func _caller_count(sheet: EventSheetResource, script_path: String) -> int:
 	if not EventSheetProjectShareIndex.request():
 		return 0

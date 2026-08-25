@@ -4892,3 +4892,5 @@ called by %s,%s から呼ばれています
 "%s reads as rows: %d%% - %d function(s) opened, %d still code.",%s が行として読める割合: %d%% - %d 個の関数が開き、%d 個はコードのままです。
 %d other script(s) call something it declares.,他の %d 個のスクリプトが、これが宣言しているものを呼んでいます。
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s は「コードのまま」と印が付いています - コードとして表示し、手を触れません。
+no such method,そのメソッドはありません
+"This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",このオブジェクトに %s というメソッドはありません。名前が変わったか、別の方法で呼ばれているのかもしれません - 意図したものを選んでください。

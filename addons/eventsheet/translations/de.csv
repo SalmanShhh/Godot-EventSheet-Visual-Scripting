@@ -4892,3 +4892,5 @@ called by %s,aufgerufen von %s
 "%s reads as rows: %d%% - %d function(s) opened, %d still code.","%s liest sich als Zeilen: %d%% - %d Funktion(en) geöffnet, %d weiterhin Code."
 %d other script(s) call something it declares.,"%d andere Skript(e) rufen etwas auf, das es deklariert."
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s ist als ""bleibt Code"" markiert - wird als Code gezeigt und in Ruhe gelassen."
+no such method,keine solche Methode
+"This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",Dieses Objekt hat keine Methode namens %s. Sie wurde vielleicht umbenannt oder wird anders erreicht - wähle die gemeinte aus.
