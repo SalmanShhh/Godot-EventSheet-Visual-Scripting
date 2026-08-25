@@ -172,6 +172,119 @@ static func build() -> bool:
 			"return \"\\n\".join(lines)"
 		])), TYPE_STRING)
 
+	# --- Quality presets: one WORD over settings that already exist ---
+	var quality: RawCodeRow = RawCodeRow.new()
+	quality.code = "\n".join(PackedStringArray([
+		"# Where the quality words live. Each .tres in this folder IS one choice, so adding a preset is",
+		"# adding a file - nothing registers it, and the dropdown, the options page and the label all",
+		"# just list the folder.",
+		"const QUALITY_FOLDER: String = \"res://settings/quality\"",
+		"",
+		"# The word one preset file goes by: its own if it named itself, otherwise its file name",
+		"# capitalised, which is what \"low.tres\" would have been called anyway.",
+		"func _quality_word(preset: Resource, path: String) -> String:",
+		"\tvar named: String = str(preset.get(\"preset_name\")).strip_edges()",
+		"\tif not named.is_empty():",
+		"\t\treturn named",
+		"\tvar stem: String = path.get_file().get_basename()",
+		"\treturn stem.substr(0, 1).to_upper() + stem.substr(1)",
+		"",
+		"# The values a preset stands for, or {} for a file that is not a preset at all. Asked by name",
+		"# rather than by class so this pack never has to reference another one.",
+		"func _quality_values(preset: Resource) -> Dictionary:",
+		"\tvar held: Variant = preset.get(\"values\") if preset != null else null",
+		"\treturn held if held is Dictionary else {}"
+	]))
+	sheet.events.append(quality)
+
+	Lib.append_function(sheet, "apply_quality", "Apply Quality", "Settings",
+		"Writes every value one quality preset stands for, as ordinary Set Setting changes - so each On Setting Changed row does the actual work, exactly as it would if the player had nudged those settings one at a time. Takes a preset file or a path to one. The preset is a shorthand; the settings are the truth, which is why nudging one afterwards simply changes that setting and the quality word reads Custom on its own.",
+		[["preset", "Variant"]],
+		"\n".join(PackedStringArray([
+			"var asset: Resource = preset if preset is Resource else (load(str(preset)) if ResourceLoader.exists(str(preset)) else null)",
+			"var values: Dictionary = _quality_values(asset)",
+			"if values.is_empty():",
+			"\tpush_warning(\"Settings: '%s' is not a quality preset - point Apply Quality at a .tres in %s.\" % [str(preset), QUALITY_FOLDER])",
+			"\treturn",
+			"for setting_name: String in values:",
+			"\tset_setting(setting_name, values[setting_name])"
+		])))
+	Lib.append_function(sheet, "apply_quality_step", "Apply Quality One Step", "Settings",
+		"Moves to the preset one step lighter (-1) or heavier (+1) than the one in force, and applies it. Stops at the ends rather than wrapping, so a game turning itself down on a struggling machine cannot loop back round to the heaviest preset. The order is each preset file's own Rank. From Custom it starts at the lightest.",
+		[["step", "int"]],
+		"\n".join(PackedStringArray([
+			"var ranked: Array = quality_preset_paths()",
+			"if ranked.is_empty():",
+			"\treturn",
+			"var here: int = ranked.find(quality_preset_path())",
+			"var wanted: int = clampi((0 if here < 0 else here) + step, 0, ranked.size() - 1)",
+			"apply_quality(ranked[wanted])"
+		])))
+
+	Lib.number(sheet, "quality_preset_paths", "Quality Preset Paths", "Settings",
+		"Every quality preset in res://settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list \"one step lower\" walks - the folder, read live, so a preset added while the game was closed is simply there.",
+		[],
+		"\n".join(PackedStringArray([
+			"var found: Array = []",
+			"var folder: DirAccess = DirAccess.open(QUALITY_FOLDER)",
+			"if folder == null:",
+			"\treturn found",
+			"for file_name: String in folder.get_files():",
+			"\tvar plain: String = file_name.trim_suffix(\".remap\")",
+			"\tif plain.ends_with(\".tres\"):",
+			"\t\tfound.append(\"%s/%s\" % [QUALITY_FOLDER, plain])",
+			"found.sort_custom(func(left: String, right: String) -> bool:",
+			"\tvar first: Resource = load(left)",
+			"\tvar second: Resource = load(right)",
+			"\tvar left_rank: int = int(first.get(\"rank\")) if first != null else 0",
+			"\tvar right_rank: int = int(second.get(\"rank\")) if second != null else 0",
+			"\tif left_rank == right_rank:",
+			"\t\treturn left < right",
+			"\treturn left_rank < right_rank)",
+			"return found"
+		])), TYPE_ARRAY)
+	Lib.number(sheet, "quality_preset_names", "Quality Preset Names", "Settings",
+		"The words those presets go by, in the same order - drop it straight into a dropdown. A preset that did not name itself goes by its file name.",
+		[],
+		"\n".join(PackedStringArray([
+			"var words: Array = []",
+			"for path: String in quality_preset_paths():",
+			"\tvar preset: Resource = load(path)",
+			"\tif preset != null:",
+			"\t\twords.append(_quality_word(preset, path))",
+			"return words"
+		])), TYPE_ARRAY)
+	Lib.number(sheet, "quality_preset_path", "Quality Preset Path", "Settings",
+		"The preset file whose values are ALL in force right now, or nothing when no file matches. Worked out by comparing values, never remembered - so it cannot fall out of step with what the game is doing.",
+		[],
+		"\n".join(PackedStringArray([
+			"for path: String in quality_preset_paths():",
+			"\tvar values: Dictionary = _quality_values(load(path))",
+			"\tif values.is_empty():",
+			"\t\tcontinue",
+			"\tvar all_match: bool = true",
+			"\tfor setting_name: String in values:",
+			"\t\tif setting_value(setting_name) != values[setting_name]:",
+			"\t\t\tall_match = false",
+			"\t\t\tbreak",
+			"\tif all_match:",
+			"\t\treturn path",
+			"return \"\""
+		])), TYPE_STRING)
+	Lib.number(sheet, "quality_name", "Quality Name", "Settings",
+		"The quality word to show a player: the preset whose every value is in force, or \"Custom\" when none of them is. Derived by comparison and never stored, so nudging one graphics setting flips the label on its own and no save file has to carry a word that could go stale.",
+		[],
+		"\n".join(PackedStringArray([
+			"var path: String = quality_preset_path()",
+			"if path.is_empty():",
+			"\treturn \"Custom\"",
+			"return _quality_word(load(path), path)"
+		])), TYPE_STRING)
+	Lib.condition(sheet, "quality_is", "Quality Is", "Settings",
+		"Whether the quality in force right now goes by this word. \"Custom\" answers true whenever the values match no preset file.",
+		[["word", "String"]],
+		"return quality_name() == word")
+
 	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
 	# Only the VALUES travel: the declarations belong to the game's code, not to a save file, so a
 	# build that added a setting keeps its new default instead of restoring a file that never had it.
@@ -191,11 +304,15 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	_set_hints(sheet, "apply_quality", {"preset": "quality_preset"})
 	Lib.verb_sentences(sheet, {
 		"declare_setting": "Declare setting [b]{setting_name}[/b] default [b]{default_value}[/b] kind [b]{kind}[/b]",
 		"set_setting": "Set setting [b]{setting_name}[/b] to [b]{value}[/b]",
 		"setting_is": "Setting [b]{setting_name}[/b] is [b]{value}[/b]",
 		"changed_setting_is": "Changed setting is [b]{setting_name}[/b]",
+		"apply_quality": "Apply quality [b]{preset}[/b]",
+		"apply_quality_step": "Apply quality [b]{step}[/b] step",
+		"quality_is": "Quality is [b]{word}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["declare_setting", "set_setting"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/game_settings/game_settings_addon",
@@ -222,3 +339,16 @@ static func _optional(fn: EventFunction, param_id: String, gdscript_default: Str
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.gdscript_default = gdscript_default
+
+
+## Points named parameters of a published verb at the widget that fills them - the quality preset
+## field lists res://settings/quality/ rather than asking anyone to type a path.
+static func _set_hints(sheet: EventSheetResource, function_name: String, hints: Dictionary) -> void:
+	for function_resource: Resource in sheet.functions:
+		if not (function_resource is EventFunction) or (function_resource as EventFunction).function_name != function_name:
+			continue
+		for parameter: ACEParam in (function_resource as EventFunction).params:
+			if hints.has(parameter.id):
+				parameter.hint = str(hints[parameter.id])
+		return
+	push_warning("_set_hints: no function named %s on this sheet (typo?)" % function_name)

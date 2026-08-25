@@ -30,6 +30,11 @@ var _announcing: Array[String] = []
 # still answer Changed Setting Is instead of silently going false halfway through.
 var _last_announced: String = ""
 
+# Where the quality words live. Each .tres in this folder IS one choice, so adding a preset is
+# adding a file - nothing registers it, and the dropdown, the options page and the label all
+# just list the folder.
+const QUALITY_FOLDER: String = "res://settings/quality"
+
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Declare Setting")
@@ -189,12 +194,140 @@ func settings_report() -> String:
 		lines.append("%s (%s): %s [default %s]" % [setting_name, str(entry.get("kind", "")), str(setting_value(setting_name)), str(entry.get("default", null))])
 	return "\n".join(lines)
 
+## @ace_action
+## @ace_name("Apply Quality")
+## @ace_category("Settings")
+## @ace_description("Writes every value one quality preset stands for, as ordinary Set Setting changes - so each On Setting Changed row does the actual work, exactly as it would if the player had nudged those settings one at a time. Takes a preset file or a path to one. The preset is a shorthand; the settings are the truth, which is why nudging one afterwards simply changes that setting and the quality word reads Custom on its own.")
+## @ace_display_template("Apply quality [b]{preset}[/b]")
+## @ace_param_hint(preset quality_preset)
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.apply_quality({preset})")
+func apply_quality(preset: Variant) -> void:
+	var asset: Resource = preset if preset is Resource else (load(str(preset)) if ResourceLoader.exists(str(preset)) else null)
+	var values: Dictionary = _quality_values(asset)
+	if values.is_empty():
+		push_warning("Settings: '%s' is not a quality preset - point Apply Quality at a .tres in %s." % [str(preset), QUALITY_FOLDER])
+		return
+	for setting_name: String in values:
+		set_setting(setting_name, values[setting_name])
+
+## @ace_action
+## @ace_name("Apply Quality One Step")
+## @ace_category("Settings")
+## @ace_description("Moves to the preset one step lighter (-1) or heavier (+1) than the one in force, and applies it. Stops at the ends rather than wrapping, so a game turning itself down on a struggling machine cannot loop back round to the heaviest preset. The order is each preset file's own Rank. From Custom it starts at the lightest.")
+## @ace_display_template("Apply quality [b]{step}[/b] step")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.apply_quality_step({step})")
+func apply_quality_step(step: int) -> void:
+	var ranked: Array = quality_preset_paths()
+	if ranked.is_empty():
+		return
+	var here: int = ranked.find(quality_preset_path())
+	var wanted: int = clampi((0 if here < 0 else here) + step, 0, ranked.size() - 1)
+	apply_quality(ranked[wanted])
+
+## @ace_expression
+## @ace_name("Quality Preset Paths")
+## @ace_category("Settings")
+## @ace_description("Every quality preset in res://settings/quality/, lightest first by each file's Rank. This is the list an options dropdown offers and the list "one step lower" walks - the folder, read live, so a preset added while the game was closed is simply there.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.quality_preset_paths()")
+func quality_preset_paths() -> Array:
+	var found: Array = []
+	var folder: DirAccess = DirAccess.open(QUALITY_FOLDER)
+	if folder == null:
+		return found
+	for file_name: String in folder.get_files():
+		var plain: String = file_name.trim_suffix(".remap")
+		if plain.ends_with(".tres"):
+			found.append("%s/%s" % [QUALITY_FOLDER, plain])
+	found.sort_custom(func(left: String, right: String) -> bool:
+		var first: Resource = load(left)
+		var second: Resource = load(right)
+		var left_rank: int = int(first.get("rank")) if first != null else 0
+		var right_rank: int = int(second.get("rank")) if second != null else 0
+		if left_rank == right_rank:
+			return left < right
+		return left_rank < right_rank)
+	return found
+
+## @ace_expression
+## @ace_name("Quality Preset Names")
+## @ace_category("Settings")
+## @ace_description("The words those presets go by, in the same order - drop it straight into a dropdown. A preset that did not name itself goes by its file name.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.quality_preset_names()")
+func quality_preset_names() -> Array:
+	var words: Array = []
+	for path: String in quality_preset_paths():
+		var preset: Resource = load(path)
+		if preset != null:
+			words.append(_quality_word(preset, path))
+	return words
+
+## @ace_expression
+## @ace_name("Quality Preset Path")
+## @ace_category("Settings")
+## @ace_description("The preset file whose values are ALL in force right now, or nothing when no file matches. Worked out by comparing values, never remembered - so it cannot fall out of step with what the game is doing.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.quality_preset_path()")
+func quality_preset_path() -> String:
+	for path: String in quality_preset_paths():
+		var values: Dictionary = _quality_values(load(path))
+		if values.is_empty():
+			continue
+		var all_match: bool = true
+		for setting_name: String in values:
+			if setting_value(setting_name) != values[setting_name]:
+				all_match = false
+				break
+		if all_match:
+			return path
+	return ""
+
+## @ace_expression
+## @ace_name("Quality Name")
+## @ace_category("Settings")
+## @ace_description("The quality word to show a player: the preset whose every value is in force, or "Custom" when none of them is. Derived by comparison and never stored, so nudging one graphics setting flips the label on its own and no save file has to carry a word that could go stale.")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.quality_name()")
+func quality_name() -> String:
+	var path: String = quality_preset_path()
+	if path.is_empty():
+		return "Custom"
+	return _quality_word(load(path), path)
+
+## @ace_condition
+## @ace_name("Quality Is")
+## @ace_category("Settings")
+## @ace_description("Whether the quality in force right now goes by this word. "Custom" answers true whenever the values match no preset file.")
+## @ace_display_template("Quality is [b]{word}[/b]")
+## @ace_icon("res://eventsheet_addons/game_settings/icon.svg")
+## @ace_codegen_template("Settings.quality_is({word})")
+func quality_is(word: String) -> bool:
+	return quality_name() == word
+
 func _announce(setting_name: String, value: Variant) -> void:
 	# Fires the trigger for one setting and keeps the announcing stack honest while handlers run.
 	_announcing.append(setting_name)
 	_last_announced = setting_name
 	setting_changed.emit(setting_name, value)
 	_announcing.pop_back()
+
+func _quality_word(preset: Resource, path: String) -> String:
+	# The word one preset file goes by: its own if it named itself, otherwise its file name
+	# capitalised, which is what "low.tres" would have been called anyway.
+	var named: String = str(preset.get("preset_name")).strip_edges()
+	if not named.is_empty():
+		return named
+	var stem: String = path.get_file().get_basename()
+	return stem.substr(0, 1).to_upper() + stem.substr(1)
+
+func _quality_values(preset: Resource) -> Dictionary:
+	# The values a preset stands for, or {} for a file that is not a preset at all. Asked by name
+	# rather than by class so this pack never has to reference another one.
+	var held: Variant = preset.get("values") if preset != null else null
+	return held if held is Dictionary else {}
 
 ## @ace_hidden
 func save_state() -> Dictionary:

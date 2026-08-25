@@ -4894,3 +4894,5 @@ called by %s,aufgerufen von %s
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s ist als ""bleibt Code"" markiert - wird als Code gezeigt und in Ruhe gelassen."
 no such method,keine solche Methode
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",Dieses Objekt hat keine Methode namens %s. Sie wurde vielleicht umbenannt oder wird anders erreicht - wähle die gemeinte aus.
+New preset…,Neue Voreinstellung…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Kopiert die gewählte Voreinstellung in eine neue Datei und öffnet sie. Ein leerer Ordner bekommt Low, Medium und High."

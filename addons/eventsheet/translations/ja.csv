@@ -4894,3 +4894,5 @@ called by %s,%s から呼ばれています
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s は「コードのまま」と印が付いています - コードとして表示し、手を触れません。
 no such method,そのメソッドはありません
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",このオブジェクトに %s というメソッドはありません。名前が変わったか、別の方法で呼ばれているのかもしれません - 意図したものを選んでください。
+New preset…,新しいプリセット…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。

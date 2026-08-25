@@ -67,6 +67,8 @@ const NOT_STANDALONE: Array[String] = [
 	"WasRecentlyTrue", "OnlyOnceEver",  # calls a sheet-synthesized helper over its own last-true timestamp slot
 	"OnceThisFrame",  # calls a sheet-synthesized helper over its own per-frame claim slots
 	"FpsBelowFor",  # calls a sheet-synthesized helper over its own drop-started-at slot
+	"FrameRunningLong", "FrameRecovered",  # call sheet-synthesized helpers over their own run counters
+	"RenderingIsOnScreen",  # calls a sheet-synthesized helper over its own notifier-node slot
 	"OnGroupEmptied", "OnGroupFirstMember",  # call sheet-synthesized helpers over their own previous-count slots
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",

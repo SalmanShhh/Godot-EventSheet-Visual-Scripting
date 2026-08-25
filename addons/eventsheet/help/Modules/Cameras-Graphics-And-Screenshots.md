@@ -120,6 +120,48 @@ The MSAA dropdowns offer `RenderingServer.VIEWPORT_MSAA_DISABLED`, `..._2X`, `..
 `RenderingServer.VIEWPORT_SCREEN_SPACE_AA_DISABLED` and `..._FXAA`. Debug Draw offers
 `RenderingServer.VIEWPORT_DEBUG_DRAW_DISABLED`, `..._WIREFRAME`, `..._OVERDRAW` and `..._UNSHADED`.
 
+A menu wants these as one word - Low, Medium, High - and that word is a FILE. See the Game Settings
+pack for Apply Quality, which writes a preset's values as ordinary setting changes so the rows you
+already wrote do the work.
+
+### Drawing order (picker section: Rendering)
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Draw In Front Of | Puts this node one step in front of another in the drawing order. | `{target.}z_index = {other}.z_index + 1` |
+| Show Only To | Limits which cameras draw this node, by the project's own visibility layer names. | `{target.}visibility_layer = {layers}` |
+| Is On Screen | True while a camera is showing the node. | a `VisibleOnScreenNotifier2D`, the node's own or one added on demand |
+
+**Draw In Front Of is relative on purpose.** Two hand-set `z_index` numbers drift apart the moment
+anyone moves a node or adds one between them; "one in front of the Player, whatever the Player is"
+survives that. Set the number directly (Set Property, or the Inspector) when you want an absolute
+layer rather than a relationship.
+
+**Show Only To ticks names, never bits.** A camera draws what its own cull mask and a node's
+visibility layer share, so a marker ticked for "minimap" alone is drawn by the minimap camera and by
+nothing else. The names are the project's: Project Settings > Layer Names > 2D Render, the same place
+the physics layer names live, read live so a layer renamed a minute ago reads by its new name.
+
+**Is On Screen adds a node the first time it is asked.** Godot answers this question with a
+`VisibleOnScreenNotifier2D` rather than a property. The row uses the node's own if it has one, and
+otherwise adds a plain child called `VisibleOnScreenNotifier2D` - visible in the scene, yours to
+move and resize (its rectangle is what counts as "on screen", not the sprite's bounds).
+
+### The frame that ran long (picker section: Debug)
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On The Frame Running Long | True on the ONE frame where the game has been over budget for the whole run you name. | a per-row run counter, checked each tick |
+| On The Frame Recovered | True on the ONE frame where the game has run comfortably for the whole run you name, having been long first. | a per-row run counter and a latch |
+
+Put either under a per-frame trigger. **Frame Took Longer Than** and **FPS Below For** answer "is it
+slow right now", which is true sixty times a second; these two answer "it just went wrong" and "it
+just came right", which is where a row that turns rain down and puts it back belongs.
+
+Use two thresholds with a gap between them - over 16 ms for 30 frames, under 12 ms for 300 - and the
+game cannot flick its own quality up and down on the boundary. Recovered stays silent until
+something has actually been long, so a game that started well never hears it.
+
 ### The perf HUD numbers (picker section: Rendering)
 
 | Name | What it does | Ships as |

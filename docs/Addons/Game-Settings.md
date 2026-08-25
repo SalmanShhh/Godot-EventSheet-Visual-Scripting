@@ -108,6 +108,8 @@ draw them:
 | Reset Settings To Defaults | - | Forgets every set or loaded value and re-applies them all. |
 | Load All Settings | - | Reads saved values for every declared setting out of `user://settings.cfg`. Applies nothing yet. |
 | Save All Settings | - | Writes every declared setting's current value into `user://settings.cfg`. |
+| Apply Quality | Preset | Writes every value one quality preset stands for, as ordinary Set Setting changes. Takes a preset file or a path to one; the field lists `res://settings/quality/`. |
+| Apply Quality One Step | Step | Moves to the preset one step lighter (-1) or heavier (+1) and applies it. Stops at the ends rather than wrapping. |
 
 ### Conditions
 
@@ -116,6 +118,7 @@ draw them:
 | Changed Setting Is | Setting Name | The setting being announced is this one. It keeps answering after the announcement, so a reaction that waits can still branch when it resumes. |
 | Setting Is | Setting Name, Value | The setting currently holds this value. Usable anywhere, at any time. |
 | Setting Is Declared | Setting Name | The setting has been declared at all. |
+| Quality Is | Word | The quality in force goes by this word. "Custom" is true whenever the values match no preset file. |
 
 ### Expressions
 
@@ -126,6 +129,10 @@ draw them:
 | Setting Choices | Setting Name | A Choice setting's options as a list, in declared order. Empty for every other kind. |
 | Declared Setting Names | - | Every declared name, in declared order. |
 | Settings Report | - | Every setting as one readable line: name, kind, value in force, default. |
+| Quality Preset Paths | - | Every preset in `res://settings/quality/`, lightest first by each file's own Rank. |
+| Quality Preset Names | - | The words those presets go by, in the same order - drop it straight into a dropdown. |
+| Quality Preset Path | - | The preset file whose values are all in force, or nothing when none matches. |
+| Quality Name | - | The word to show a player: the matching preset's, or "Custom". |
 
 ### Triggers
 
@@ -396,3 +403,39 @@ the path you typed:
 The pack publishes no verbs of its own - it is the shape of the data, and the accessibility words are
 what spend it. Bind the swap to a setting (`Set setting "palette"` then a reaction that runs Use
 palette) and the choice survives a restart with everything else in `user://settings.cfg`.
+
+## Its other companion data asset: Quality Preset
+
+A graphics quality word - Low, Medium, High - is not a setting of its own. It is a set of values over
+settings that already exist, which is why picking Medium is the same thing as nudging msaa,
+resolution scale and debanding by hand, and why a save file carries those three values rather than
+the word.
+
+So each word is a FILE: a **Quality Preset** `.tres` in `res://settings/quality/`. The folder is the
+list. The Apply Quality field lists it, an options dropdown lists it, and adding a preset is adding a
+file - there is nothing to register anywhere. **New preset** in that field copies the one you had
+picked and opens it in the Inspector; on an empty folder it writes Low, Medium and High to start
+from. Duplicating the `.tres` in the FileSystem dock yourself does exactly the same thing.
+
+Each preset carries three things: the word a player sees (blank means the file name), a **Rank**
+saying how heavy it is - which is the order "one step lower" walks - and the **values**, one per
+setting it answers for.
+
+**Every key of Values is a field of its own in the Inspector**, named and typed by what is stored
+under it. That is what makes a preset a macro over your settings rather than a fixed schema: declare
+`motion_blur` as an ordinary setting, put it in the presets, and every preset file has a motion blur
+field from then on. Your `On setting changed / motion_blur` event does the actual work, exactly as it
+does for every other setting.
+
+**"Custom" is worked out, never stored.** Quality Name compares the values in force against each
+preset file: match `low.tres` and it says Low, match nothing and it says Custom. There is no stored
+preset flag to fall out of step, so nudging one graphics setting flips the label on its own. Three
+things follow from that, and each is worth having:
+
+- a custom setup survives an update, because what was saved is the values;
+- deleting a preset file cannot break anyone's game - their values still load, and the label simply
+  reads Custom;
+- editing a preset file changes what the WORD means, not what any player already has.
+
+Keep the individual rows (Set MSAA, Set 3D Resolution Scale) for the moments a preset is too blunt.
+They are the truth; the preset is the shorthand.

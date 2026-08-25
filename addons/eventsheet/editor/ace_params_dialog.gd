@@ -413,6 +413,8 @@ func _ensure_hint_factories() -> void:
 			"property_reference": _create_property_reference_field,
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
+			"render_layer_2d": _create_render_layer_2d_field,
+			"quality_preset": _create_quality_preset_field,
 			"feature_tag": _create_feature_tag_field,
 			# Three fields that take any GDScript exactly as an expression param does, and are
 			# spelled apart from it only so the help strip has something to describe them BY: what a
@@ -1187,20 +1189,91 @@ static func input_action_choices() -> Array:
 	return choices
 
 
+## The quality words, which are a FOLDER: every .tres in res://settings/quality/ is one choice,
+## lightest first, and the field shows the word with the file it came from beside it. "New preset…"
+## is the other half of the same idea - a preset is a file, so making one makes a file: it copies
+## whatever is picked (or writes the starter Low/Medium/High into an empty folder) and opens it in
+## the Inspector, where every field is described and nothing needs code.
+func _create_quality_preset_field(key: String, default_value: Variant) -> Control:
+	var row: Control = _create_autocomplete_field(key, quality_preset_choices(), default_value)
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit == null:
+		return row
+	var make: Button = Button.new()
+	make.text = EventSheetL10n.translate("New preset…")
+	make.tooltip_text = EventSheetL10n.translate(
+		"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.")
+	make.pressed.connect(func() -> void: _new_quality_preset(edit))
+	row.add_child(make)
+	return row
+
+
+## Every preset in the folder as the value a row carries - the quoted path, because that is what the
+## emitted line loads. Sorted lightest first by each file's own Rank, so a dropdown reads in the
+## order a player expects and "one step lower" walks the same order.
+static func quality_preset_choices() -> Array:
+	var choices: Array = []
+	for path: String in EventSheetQualityPresets.preset_paths():
+		choices.append(format_quoted_literal(path))
+	return choices
+
+
+## Makes the new file and puts its path in the field. An empty folder is the interesting case: there
+## is nothing to copy, so the three starter words are written and the field takes the middle one -
+## which is what a person pressing this on a fresh project meant.
+func _new_quality_preset(edit: LineEdit) -> void:
+	var existing: PackedStringArray = EventSheetQualityPresets.preset_paths()
+	var problem: String = ""
+	var made: String = ""
+	if existing.is_empty():
+		problem = EventSheetQualityPresets.write_starter_presets()
+		var written: PackedStringArray = EventSheetQualityPresets.preset_paths()
+		made = written[written.size() / 2] if not written.is_empty() else ""
+	else:
+		var source: String = _quoted_text(edit.text)
+		if not existing.has(source):
+			source = existing[0]
+		made = EventSheetQualityPresets.next_free_path(source, existing)
+		problem = EventSheetQualityPresets.write_preset(made, made.get_file().get_basename(),
+			EventSheetQualityPresets.rank_of(source), EventSheetQualityPresets.values_of(source))
+	if not problem.is_empty():
+		push_warning("Quality presets: %s" % problem)
+		return
+	edit.text = format_quoted_literal(made)
+	edit.text_changed.emit(edit.text)
+	if Engine.is_editor_hint() and ResourceLoader.exists(made):
+		EditorInterface.edit_resource(load(made))
+
+
+## The path inside a field's quoted literal, or the text itself when it carries no quotes.
+static func _quoted_text(raw_value: String) -> String:
+	var text: String = raw_value.strip_edges()
+	if text.length() >= 2 and text.begins_with("\"") and text.ends_with("\""):
+		return text.substr(1, text.length() - 2)
+	return text
+
+
 func _create_physics_layer_2d_field(key: String, default_value: Variant) -> Control:
-	return _create_physics_layer_field(key, default_value, "2d_physics")
+	return _create_named_layer_field(key, default_value, "2d_physics")
 
 
 func _create_physics_layer_3d_field(key: String, default_value: Variant) -> Control:
-	return _create_physics_layer_field(key, default_value, "3d_physics")
+	return _create_named_layer_field(key, default_value, "3d_physics")
 
 
-## The collision-mask picker: a checkable list of the project's physics layers - NAMED layers
+## Visibility layers read from the same place by the same picker: Godot names its 2D render layers
+## in Project Settings exactly as it names its physics ones, so "which cameras may see this" is the
+## same question with a different list behind it rather than a second widget.
+func _create_render_layer_2d_field(key: String, default_value: Variant) -> Control:
+	return _create_named_layer_field(key, default_value, "2d_render")
+
+
+## The named-mask picker: a checkable list of the project's layers of one kind - NAMED layers
 ## show their Project Settings names, so a beginner ticks "Walls" instead of computing the
 ## bitmask integer. The button label reads the selection back ("Walls, Enemies"); the value
 ## submitted is the plain mask int the ACE expects. Layers past 8 only list once the project
 ## names them - 32 anonymous checkboxes would bury the ones that matter.
-func _create_physics_layer_field(key: String, default_value: Variant, dimension: String) -> Control:
+func _create_named_layer_field(key: String, default_value: Variant, dimension: String) -> Control:
 	var button: MenuButton = MenuButton.new()
 	button.flat = false
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1223,14 +1296,14 @@ func _create_physics_layer_field(key: String, default_value: Variant, dimension:
 			if popup.is_item_checked(item_index):
 				value |= 1 << popup.get_item_id(item_index)
 		button.set_meta("physics_mask", value)
-		button.text = _physics_mask_summary(value, dimension))
-	button.text = _physics_mask_summary(mask, dimension)
+		button.text = _named_layer_summary(value, dimension))
+	button.text = _named_layer_summary(mask, dimension)
 	_fields[key] = button
 	return button
 
 
 ## Human-readable readback of a mask: named layers by name, anonymous ones by number.
-func _physics_mask_summary(mask: int, dimension: String) -> String:
+func _named_layer_summary(mask: int, dimension: String) -> String:
 	if mask == 0:
 		return "No layers"
 	var parts: PackedStringArray = PackedStringArray()

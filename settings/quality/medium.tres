@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QualityPreset" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/quality_preset_resource/quality_preset.gd" id="1_vexxx"]
+
+[resource]
+script = ExtResource("1_vexxx")
+preset_name = "Medium"
+rank = 1
+values = {
+"debanding": true,
+"msaa": 2,
+"resolution_scale": 1.0,
+"shadow_size": 2048
+}

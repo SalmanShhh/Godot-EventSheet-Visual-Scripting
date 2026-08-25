@@ -836,6 +836,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `viewport_set_screen_space_aa` | [Set Screen-Space AA](ace:Core/RenderingSetScreenSpaceAA) | Rendering | Vocabulary |
 | `viewport_set_use_debanding` | [Set Debanding](ace:Core/RenderingSetDebanding) | Rendering | Vocabulary |
 | `viewport_set_use_occlusion_culling` | [Set Occlusion Culling](ace:Core/RenderingSetOcclusionCulling) | Rendering | Vocabulary |
+| `visibility_layer` | [Show Only To](ace:Core/RenderingShowOnlyTo) | Rendering | Vocabulary |
 | `visibility_range_begin` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visibility_range_end` | [Set Visible Range](ace:Core/SetVisibleRange) | Native 3D | Vocabulary |
 | `visible` | [Is Visible](ace:Core/IsVisible) | General Conditions | Vocabulary |

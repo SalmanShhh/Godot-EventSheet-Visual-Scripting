@@ -3231,6 +3231,14 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# project is the same story. The FRAME-counted twin stays in the index, where
 	# `Engine.get_physics_frames() + {frames}` means one thing and nothing else writes it.
 	"BufferInput",
+	# Show Only To writes `visibility_layer = 2`, and 2 is the whole problem: the READING says
+	# `Show only to "minimap"` because it asks the project what it called that layer, where the
+	# lifted row can only repeat the template's own words with the bitmask in them. Same rule as the
+	# three excluded categories above - a lift is worth making only when the row reads at least as
+	# well as the line it replaced, and here it does not. The row authors the same bytes either way.
+	# (Draw In Front Of stays in: `z_index = other.z_index + 1` reads as its own sentence with the
+	# node's own spelling in it, and the lifted row is the editable one.)
+	"RenderingShowOnlyTo",
 	"UsePalette", "CurrentWeapon", "SecretsFoundCount", "SecretAlreadyFound", "OffBeatBy",
 	# The keycard rows, out for exactly the reason the secrets rows above are: `list.append(x)`,
 	# `(a in b)` and `(not a in b)` are the list operations every project writes, and a keycard row
