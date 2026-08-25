@@ -226,6 +226,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# only means "turn the light off" when the scene says Torch is a light. Nothing else can say so,
 	# and a row that guessed would relabel somebody's door.
 	EventForgeLightingLift.note_source(source, _scene_source_path_of(sheet))
+	# And the material-wearing nodes of that same scene, for the third time the same reason:
+	# `material.set_shader_parameter(&"dissolve", 0.7)` only means "turn the dissolve dial" when the
+	# scene says this node wears a material and that material's shader declares `dissolve`.
+	EventForgeEffectLift.note_source(source, _scene_source_path_of(sheet))
 	# And the groups' own "who runs it", resolved per slug (a group inherits its parent's
 	# answer), so the guard the compiler wrote in front of each event can be taken back off.
 	_note_group_guards(source)
@@ -2734,6 +2738,15 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if not lit.is_empty():
 		_flush_raw(event, pending_raw, blank_box)
 		event.actions.append(_matched_spelling_action(lit, blank_box))
+		return
+	# The shader spellings, on the same footing: a line naming a dial the node's own shader really
+	# declares becomes the picked row that says which dial it is. A line whose node wears no material,
+	# or whose name the shader has never heard of, falls straight through to the general index and
+	# stays the shipped free-string row - which is the honest reading of a name nothing can confirm.
+	var turned: Dictionary = EventForgeEffectLift.match_line(line)
+	if not turned.is_empty():
+		_flush_raw(event, pending_raw, blank_box)
+		event.actions.append(_matched_spelling_action(turned, blank_box))
 		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
