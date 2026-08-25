@@ -134,7 +134,7 @@ static func event_words(method_name: String) -> String:
 	return bare.replace("_", " ").strip_edges()
 
 
-## Every file that could hold an Animation, newest layout first. Scenes and resources only: a script
+## Every file that could hold an Animation, in path order. Scenes and resources only: a script
 ## cannot hold one, and walking the whole project asking every file would cost what this exists to
 ## avoid.
 static func _files_that_could_hold_animations() -> PackedStringArray:
@@ -162,4 +162,8 @@ static func _files_that_could_hold_animations() -> PackedStringArray:
 				found.append(full)
 			entry = directory.get_next()
 		directory.list_dir_end()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and both the first-file-wins rule per method and the SCAN_LIMIT
+	# cutoff read this order.
+	found.sort()
 	return found

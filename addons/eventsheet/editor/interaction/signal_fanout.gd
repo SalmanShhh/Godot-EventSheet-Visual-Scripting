@@ -133,23 +133,31 @@ static func _scan_directory(directory_path: String) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
 	if directory == null:
 		return
+	# Name order, always - the listing arrives in filesystem order (near-alphabetical on NTFS, hash
+	# order on ext4), and a note's jump target is the FIRST place the walk recorded, so an unsorted
+	# walk lands the same click on different files on different platforms.
+	var subdirectories: PackedStringArray = PackedStringArray()
+	var file_names: PackedStringArray = PackedStringArray()
 	directory.list_dir_begin()
 	var entry: String = directory.get_next()
 	while not entry.is_empty():
-		if entry.begins_with("."):
-			entry = directory.get_next()
-			continue
-		var full_path: String = directory_path.path_join(entry)
-		if directory.current_is_dir():
-			_scan_directory(full_path)
-		else:
-			var extension: String = entry.get_extension().to_lower()
-			if extension == "gd":
-				_index_script(full_path)
-			elif extension == "tscn":
-				_index_scene(full_path)
+		if not entry.begins_with("."):
+			if directory.current_is_dir():
+				subdirectories.append(entry)
+			else:
+				file_names.append(entry)
 		entry = directory.get_next()
 	directory.list_dir_end()
+	subdirectories.sort()
+	file_names.sort()
+	for file_name: String in file_names:
+		var extension: String = file_name.get_extension().to_lower()
+		if extension == "gd":
+			_index_script(directory_path.path_join(file_name))
+		elif extension == "tscn":
+			_index_scene(directory_path.path_join(file_name))
+	for subdirectory: String in subdirectories:
+		_scan_directory(directory_path.path_join(subdirectory))
 
 
 static func _index_script(path: String) -> void:

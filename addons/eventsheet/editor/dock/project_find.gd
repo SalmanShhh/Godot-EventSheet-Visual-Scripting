@@ -100,6 +100,10 @@ static func list_project_sheets() -> PackedStringArray:
 				if resource is EventSheetResource:
 					sheet_paths.append(full_path)
 			entry = directory.get_next()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and this list is the Find window's result order and the Doctor's
+	# visiting order.
+	sheet_paths.sort()
 	return sheet_paths
 
 

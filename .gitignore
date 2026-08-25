@@ -26,6 +26,10 @@ __pycache__/
 
 # Godot script UID sidecars
 *.uid
+# EXCEPT the one script project.godot names by uid: the editor rewrites the autoload line to the
+# script's uid on import, and without a committed sidecar every fresh checkout invents a new uid -
+# so project.godot churned on every machine and the autoload errored until the rewrite landed.
+!addons/eventforge/runtime/eventforge_bridge.gd.uid
 _preview.png
 _preview.png.import
 _picker_preview.png

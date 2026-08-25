@@ -5733,19 +5733,27 @@ static func _scan_scenes_for_scripts(directory_path: String) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
 	if directory == null:
 		return
+	# Name order, always - the listing arrives in filesystem order (near-alphabetical on NTFS, hash
+	# order on ext4), and when two scenes root the same script the FIRST one recorded names the
+	# object, so an unsorted walk labels the same script differently on different platforms.
+	var subdirectories: PackedStringArray = PackedStringArray()
+	var scene_names: PackedStringArray = PackedStringArray()
 	directory.list_dir_begin()
 	var entry: String = directory.get_next()
 	while not entry.is_empty():
-		if entry.begins_with("."):
-			entry = directory.get_next()
-			continue
-		var full_path: String = directory_path.path_join(entry)
-		if directory.current_is_dir():
-			_scan_scenes_for_scripts(full_path)
-		elif entry.get_extension().to_lower() == "tscn":
-			_record_scene_root_script(full_path)
+		if not entry.begins_with("."):
+			if directory.current_is_dir():
+				subdirectories.append(entry)
+			elif entry.get_extension().to_lower() == "tscn":
+				scene_names.append(entry)
 		entry = directory.get_next()
 	directory.list_dir_end()
+	subdirectories.sort()
+	scene_names.sort()
+	for scene_name: String in scene_names:
+		_record_scene_root_script(directory_path.path_join(scene_name))
+	for subdirectory: String in subdirectories:
+		_scan_scenes_for_scripts(directory_path.path_join(subdirectory))
 
 
 ## Records `script path -> {scene_path, root_name}` for one scene, when its ROOT node carries a

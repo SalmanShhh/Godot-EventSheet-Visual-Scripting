@@ -72,4 +72,7 @@ static func _find_sheet_paths(root: String) -> PackedStringArray:
 					found.append(entry_path)
 			entry = dir.get_next()
 		dir.list_dir_end()
+	# Path order, always - the directory walk hands files back in filesystem order (near-alphabetical
+	# on NTFS, hash order on ext4), and this order is the export report's failure order.
+	found.sort()
 	return found

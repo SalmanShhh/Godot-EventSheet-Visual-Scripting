@@ -179,6 +179,8 @@ static func run() -> bool:
 	# share index makes later tests' verb headers grow "called by" chips their assertions do
 	# not expect - seen only in a serial run, where every test shares this one process.
 	EventSheetProjectShareIndex.clear_cache()
+	EventSheetSceneEffects.clear_cache()
+	EventForgeShaderUniforms.clear_cache()
 	return all_passed
 
 
