@@ -61,6 +61,11 @@
 
 ### Fixed - what this pass's own review found
 
+- **The scene list reads in path order on every platform.** The `.tscn` walk handed files back in
+  whatever order the filesystem keeps them - close to alphabetical on NTFS, hash order on ext4 - so
+  a material's "worn by" sentence and every other list derived from the project scan answered in a
+  different order on Linux than on Windows. Continuous integration on ubuntu caught it; the list is
+  sorted once where it is collected, and every consumer answers the same everywhere.
 - **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting
   `//` and then matched every other line, so wrapping a declaration in `/* … */` - which is how
   anybody switches a uniform off while they try the shader without it - left the text inside reading
