@@ -581,6 +581,21 @@
 - The hierarchy-pane render harness spells its sample children once. Its four sample nodes each wrote the same six key names out in full, so fourteen of that file's rows were literal fragments and it read at 29% wordless against its group's 24% ceiling - the rotating this-editor sample only had to draw it to go red, which it did the moment the corpus gained a file. A `_sample_child(...)` helper names the fields once and the file reads at 23%; the harness renders the same picture byte for byte.
 - README's test figures are measured off this tree rather than carried over: 17,695 assertions across 624 test files, counted the way the README's own figures always are - `[PASS]` lines from one full serial suite run, and `tests/*_test.gd`.
 - The message fixture's channel spelling is one Godot actually takes. `@rpc` reads its three option strings in any order, but the transfer CHANNEL is only ever the fourth argument, so `@rpc("authority", "unreliable_ordered", 2)` is a parse error and not the subset it looks like. The corpus of hand-written multiplayer scripts carried exactly that line as its channel case, and the suite could not see it: the lift reads a fixture as TEXT, so a fixture that never parses still round-trips byte for byte. It now spells all four (`@rpc("authority", "call_remote", "unreliable_ordered", 2)`), which is what the Message dialog already writes and the only shape a real project can carry. A fixture that is meant to be a spelling a project could really write only proves it under `--check-only`, which is now part of what a wave verifies before it lands.
+- **A green run stops reporting two failures.** `tests/red_run_report_test.gd` prints two `[FAIL]`
+  lines ON PURPOSE, to prove the red-run report formats one correctly, and it already named them
+  `deliberate_probe_not_a_failure` for exactly that reason - but nothing read the name. The parallel
+  launcher counted them, so every green run ended `total: 18752 pass, 2 fail` on the line directly
+  above `All tests passed.`, and `tools/test_report.gd` would have listed the probe beside real
+  failures on any red run. Both skip the marked lines now, and the pin that a deliberately failing
+  line is claimed by nobody sits in the table beside the lines that are claimed. A summary that
+  contradicts the verdict standing under it is how a verdict stops being read.
+- **A sweep for a character cannot see the escape that writes it.** The compiler's
+  unresolvable-condition warning built its dash out of a six-character unicode escape instead of
+  typing the character, so the house rule against em-dashes, and every grep that enforces it,
+  walked past a string that Godot then rendered with one in it for whoever compiled the sheet. It
+  reads " - " now, and a sweep that wants to be sure has the escaped spelling to look for as well as
+  the character. The six emitted strings that keep theirs are a compatibility promise about the
+  bytes of a generated file; a warning shown in the editor was never one of them.
 
 ### Fixed - a dropdown writes what it shows
 
