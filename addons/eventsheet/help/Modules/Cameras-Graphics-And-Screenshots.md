@@ -151,6 +151,30 @@ tween-a-uniform idiom
 (`tween.tween_method(func(v): mat.set_shader_parameter("dissolve", v), 0.0, 1.0, 0.5)`) is ONE
 **Tween effect parameter dissolve from 0 to 1 in 0.5 seconds** row, on the material it drives.
 
+#### The same five rows with the name picked instead of typed
+
+The rows above take the parameter's name as text you write, which is right for a material that only
+exists at run time and wrong everywhere else: `set_shader_parameter(&"disolve", 1.0)` is a call Godot
+accepts, returns from, and acts on in no way at all. So a second set of rows takes the name from the
+`.gdshader` the node's material really runs. They are offered per node of the attached scene, one
+entry per dial the shader declares, described in the shader author's own words, and they read behind
+a muted `effect.` lead - **Boss ▸ Set `effect.dissolve` to 0.7**.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Set Effect Dial | Turns one dial of the effect this node wears, by a name the shader really declares. | `{target.}material.set_shader_parameter(&"{dial}", {value})` |
+| Fade Effect Dial | Walks one dial to a new value over time instead of jumping to it. | `create_tween().tween_method(func(v): {target.}material.set_shader_parameter(&"{dial}", v), {from}, {to}, {seconds})` |
+| Effect Dial | Reads one dial back, for any value field. | `{target.}material.get_shader_parameter(&"{dial}")` |
+| Effect Dial Is | True while one dial compares as the row says. | `{target.}material.get_shader_parameter(&"{dial}") {op} {value}` |
+| Make The Effect This Node's Own | Gives this node a private copy of the material before anything turns a dial on it. | `{target.}material = {target.}material.duplicate()` |
+
+Only a shader file can name a dial, so these five are never browsable on their own: the picker offers
+the copies it builds from the open scene and nothing else. Where no shader can be asked - a node
+wearing nothing, a name nothing declares - a line falls back to the free-string **Set Effect
+Parameter** row above, which claims nothing about any shader. **Make The Effect This Node's Own** is
+the row to write first whenever the material is a `.tres`, because a `.tres` is a file and every node
+pointing at it shares every dial on it.
+
 ### Lights
 
 The six knobs a running game actually touches. Godot spells brightness `energy` on a 2D light and

@@ -21,6 +21,7 @@ nothing in the engine ever tells you why. Reading the dial names out of the shad
 - [The four verbs](#the-four-verbs)
 - [The field a dial edits in](#the-field-a-dial-edits-in)
 - [The shared-material trap](#the-shared-material-trap)
+- [One dial every shader can read](#one-dial-every-shader-can-read)
 - [Six effects you do not have to write](#six-effects-you-do-not-have-to-write)
 - [Full-screen effects](#full-screen-effects)
 - [What the head says about the effect](#what-the-head-says-about-the-effect)
@@ -71,7 +72,11 @@ material, not a variable of the script. It is the same device a global's row use
 name, and what it compiles to is the call it says:
 
 ```gdscript
-material.set_shader_parameter(&"dissolve", 0.7)
+extends Sprite2D
+
+
+func _ready() -> void:
+	material.set_shader_parameter(&"dissolve", 0.7)
 ```
 
 Every one of these rows has the ordinary optional **On node** field. Left blank it acts on the node
@@ -88,6 +93,28 @@ the sheet is attached to; fill it and the whole line retargets.
 
 The fade is one tween and no state: nothing is kept between frames, and nothing has to be cleaned up
 when the node goes away.
+
+<!-- caption: Fade the dial instead of jumping it -->
+```gdscript
+extends Sprite2D
+
+
+func _ready() -> void:
+	create_tween().tween_method(func(v): material.set_shader_parameter(&"dissolve", v), 0.0, 1.0, 0.8)
+```
+
+The read and the question are the same call the other way round, and they go wherever a value or a
+condition goes:
+
+<!-- caption: Asking a dial where it has got to -->
+```gdscript
+extends Sprite2D
+
+
+func _process(_delta: float) -> void:
+	if material.get_shader_parameter(&"dissolve") >= 1.0:
+		queue_free()
+```
 
 The four free-string rows that shipped before these ones are still there, on a shelf of their own
 beside the dials (**any material, name typed**). They are exactly right for a material that only
@@ -132,12 +159,43 @@ Godot's own answer is to take a copy first, and that is a row:
 
 > **Boss ▸ Make the effect this node's own**
 
+Put it under an **On ready** trigger, before any row that turns a dial. Once it is there, every dial
+row after it is about this node and nothing else:
+
 ```gdscript
-material = material.duplicate()
+extends Sprite2D
+
+
+func _ready() -> void:
+	material = material.duplicate()
+	material.set_shader_parameter(&"edge_tint", Color(1.0, 0.6, 0.2, 1.0))
 ```
 
-Put it under an **On ready** trigger, before any row that turns a dial. Once it is there, every dial
-row after it is about this node and nothing else.
+## One dial every shader can read
+
+Some values are not about one node at all. How hard the wind is blowing, how wet the world is, what
+time of day it is: every shader in the game wants the same number, and Godot has a place to keep it -
+a **global shader parameter**, declared once in **Project Settings ▸ Shader Globals** and read by any
+shader that names it as a `global uniform`. Writing one is a row:
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	RenderingServer.global_shader_parameter_set("wind_strength", 2.0)
+```
+
+It has the same silent failure as a dial and one more besides. A name Project Settings does not
+declare is accepted and dropped, exactly as a mistyped dial is - and every shader reading that global
+carries on seeing zero rather than your number, which looks like a shader bug and is a spelling one.
+That is the Doctor's fourth check, and its step is to declare the setting rather than to change the
+row.
+
+The two rows are **Set Global Shader Parameter** and **Global Shader Parameter**, the read. They are
+frozen vocabulary that shipped before the dials, they take the name as typed text, and they are right
+to: a global belongs to the project rather than to any file the sheet can read, so there is nothing to
+pick it from.
 
 ## Six effects you do not have to write
 
@@ -172,6 +230,15 @@ applies to it: the picker offers `Set effect.dissolve`, the head grows an **effe
 file, and the Doctor checks the names. The pack's verbs are the timing; the dial rows are the direct
 control, and a project uses both.
 
+<!-- caption: A pack verb is one row, and its timing is the pack's -->
+```gdscript
+extends Sprite2D
+
+
+func _ready() -> void:
+	$DissolveBehavior.appear(0.6)
+```
+
 ## Full-screen effects
 
 A full-screen effect in Godot is a `CanvasLayer` holding a `ColorRect` whose shader reads
@@ -185,14 +252,31 @@ The **Screen FX** pack ships that scene. Adding it drops the layer in, and four 
 > **ScreenFx ▸ Blur to** `3` **over** `0.2` **s**
 > **ScreenFx ▸ Chromatic pulse at** `0.6`
 
-```gdscript
-$ScreenFx.shockwave(Boss.position, 1.0)
-await $ScreenFx.fade_to(Color.BLACK, 1.5)
-```
-
 **Fade waits.** Its line carries `await`, so the rows under it run when the fade has landed. That is
 a scene transition written as two rows in one event, in the same await shape the shipped `Wait` rows
-already use, and it is why the pack has no separate transition machinery.
+already use, and it is why the pack has no separate transition machinery. The commonest pair is a
+level fading in and then handing the player their controls back:
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	await $ScreenFx.fade_back(Color.BLACK, 0.8)
+	$Player.set_physics_process(true)
+```
+
+The other half is the row that leaves, and a splash or logo scene is nothing but that one event:
+
+<!-- caption: Fading out, then going somewhere -->
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	await $ScreenFx.fade_to(Color.BLACK, 1.5)
+	get_tree().change_scene_to_file("res://scenes/credits.tscn")
+```
 
 **It costs nothing at rest.** A rectangle covering the viewport redraws every pixel of it through the
 shader every frame. The pack hides the rectangle whenever every effect has finished and shows it the
