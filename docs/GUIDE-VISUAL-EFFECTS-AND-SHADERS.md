@@ -21,6 +21,8 @@ nothing in the engine ever tells you why. Reading the dial names out of the shad
 - [The four verbs](#the-four-verbs)
 - [The field a dial edits in](#the-field-a-dial-edits-in)
 - [The shared-material trap](#the-shared-material-trap)
+- [Six effects you do not have to write](#six-effects-you-do-not-have-to-write)
+- [Full-screen effects](#full-screen-effects)
 - [What the head says about the effect](#what-the-head-says-about-the-effect)
 - [A dial the shader no longer has](#a-dial-the-shader-no-longer-has)
 - [Opening a project that already has shader code](#opening-a-project-that-already-has-shader-code)
@@ -136,6 +138,67 @@ material = material.duplicate()
 
 Put it under an **On ready** trigger, before any row that turns a dial. Once it is there, every dial
 row after it is about this node and nothing else.
+
+## Six effects you do not have to write
+
+Nobody should have to write a dissolve shader to burn a boss. Five packs ship the commonest sprite
+effects, each as a shader file, a material and one or two verbs:
+
+| Pack | The verbs | What it does |
+|------|-----------|--------------|
+| **Hit Flash** | Flash, Stop Flashing | Washes the sprite's own pixels towards a colour and back. Works on dark sprites, which a modulate blink does not. |
+| **Dissolve** | Dissolve, Appear, On Dissolved | Burns the sprite away along a noise field with a glowing edge, and tells the sheet when it has gone. |
+| **Outline** | Outline, No Outline, Fade Outline | A border in the shape of the art, not of its rectangle. |
+| **Grayscale** | Grayscale, Recolour | Drains the colour out, all the way or part of it, with a tint for sepia or frozen. |
+| **Wave** | Wave, Settle | Ripples the picture without moving the node, so collisions and positions are untouched. |
+
+The shipped modulate **Flash** verb stays exactly where it was. It needs no material at all, which is
+what makes it the right answer for a node that has none, and the object column and the code echo say
+which of the two a row is.
+
+**The shader file becomes yours.** Adding an effect pack to an object copies its `.gdshader` into
+`res://effects/` and makes a `.tres` material wearing it, then puts that material on the node as an
+undoable scene edit. Both files are ordinary project files from then on: open the shader and change
+what a hit looks like. Nothing here ever overwrites a file that exists, so a second node added later
+finds your edited copy and uses it.
+
+**And the packs take the copy for you.** Every one of them duplicates the material the first time it
+writes a dial, which is the trap above solved before it can happen. The `own_material` knob turns that
+off for the one case where sharing is the effect - a whole squad flashing together, a body of water
+rippling as one surface.
+
+**The dials are still rows.** Because the node wears a real `ShaderMaterial`, everything in this guide
+applies to it: the picker offers `Set effect.dissolve`, the head grows an **effect** band naming the
+file, and the Doctor checks the names. The pack's verbs are the timing; the dial rows are the direct
+control, and a project uses both.
+
+## Full-screen effects
+
+A full-screen effect in Godot is a `CanvasLayer` holding a `ColorRect` whose shader reads
+`hint_screen_texture`: the rectangle covers the viewport, the shader is handed the frame so far, and
+what it writes is what the player sees.
+
+The **Screen FX** pack ships that scene. Adding it drops the layer in, and four rows follow:
+
+> **ScreenFx ▸ Shockwave at** `Boss.position`**, strength** `1.0`
+> **ScreenFx ▸ Fade to** black **over** `1.5` **s**
+> **ScreenFx ▸ Blur to** `3` **over** `0.2` **s**
+> **ScreenFx ▸ Chromatic pulse at** `0.6`
+
+```gdscript
+$ScreenFx.shockwave(Boss.position, 1.0)
+await $ScreenFx.fade_to(Color.BLACK, 1.5)
+```
+
+**Fade waits.** Its line carries `await`, so the rows under it run when the fade has landed. That is
+a scene transition written as two rows in one event, in the same await shape the shipped `Wait` rows
+already use, and it is why the pack has no separate transition machinery.
+
+**It costs nothing at rest.** A rectangle covering the viewport redraws every pixel of it through the
+shader every frame. The pack hides the rectangle whenever every effect has finished and shows it the
+moment one starts, and a hidden `Control` is not drawn at all. That is also the shape the Doctor's
+fifth check looks for: a visible screen rectangle with every dial still at its declared default is a
+whole screen of work for no change, and if you build your own layer it should hide itself too.
 
 ## What the head says about the effect
 

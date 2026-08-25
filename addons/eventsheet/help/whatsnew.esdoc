@@ -136,6 +136,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
   dial checks read the same `.gdshader` parse everything else reads - there is exactly one reader of
   uniform lines in the plugin - and the first four also appear as amber notes under the row they are
   about, so the same sentence meets a reader wherever they meet the problem.
+- **Six effect packs, so nobody has to write a dissolve shader to burn a boss.** **Hit Flash** (a
+  white-out that mixes the sprite's own pixels towards a colour, so a dark sprite whites out as far
+  as a bright one - which a modulate blink cannot do), **Dissolve** (burns away along a noise field
+  with a glowing edge, and fires **On Dissolved** where the loot drops or the node is freed),
+  **Outline** (a border in the shape of the art rather than of its rectangle), **Grayscale** (drains
+  the colour out, with a tint that makes sepia and frozen the same two rows) and **Wave** (ripples
+  the picture without moving the node, so collisions and positions are untouched). One-word verbs:
+  **Flash white for 0.15 s**, **Dissolve over 0.8 s**, **Outline yellow at 2 px**, **Grayscale to 1
+  over 0.25 s**, **Wave at 0.03 over 0.4 s**. The shipped modulate **Flash** stays exactly where it
+  was - it needs no material, which is what makes it right for a node that has none.
+- **A pack can ship files now, and adding it installs them.** An effect pack's `.gdshader` is copied
+  into `res://effects/`, a `.tres` material wearing it is made beside it, and the node is dressed in
+  that material through the editor's own undo - so Ctrl+Z takes the whole thing back. Nothing is ever
+  overwritten: a second node added later finds your edited copy and uses it, and a node already
+  wearing a shader material of its own keeps it. What a pack ships is DERIVED from its folder - the
+  one `.gdshader` beside the script is its shader, the one `.tscn` is the scene adding it drops in -
+  so a pack author ships an asset by putting a file in the folder, with nothing to declare. A pack
+  that ships a SCENE has already dressed itself and nothing is copied for it. Public as
+  `EventSheets.pack_shipped_assets` and `EventSheets.install_pack_effect`.
+- **Every effect pack takes its own copy of the material before it turns anything.** The sharing trap
+  the head band warns about, solved before it can happen: one goblin flashing never flashes the room.
+  The `own_material` knob turns it off for the one case where sharing IS the effect - a squad flashing
+  together, a body of water rippling as one surface.
+- **Screen FX: full-screen effects as four rows on one rectangle.** The pack ships the whole scene (a
+  `CanvasLayer` with a hidden `ColorRect` wearing a `hint_screen_texture` shader), and adding it drops
+  that scene in rather than a bare node. **Shockwave at** a point in the WORLD (the camera transform
+  is applied, so the ring stays on the thing that caused it), **Fade to** a colour, **Blur to** a
+  number, **Chromatic pulse**. The rectangle hides itself whenever every effect is idle, so an unused
+  layer costs nothing - and that is the exact shape the Doctor's fifth check looks for.
+- **A row can wait for its verb.** **Fade to black over 1.5 s** emits `await $ScreenFx.fade_to(…)`, so
+  the rows under it run when the fade lands: a scene transition is two rows in one event, in the same
+  await shape the shipped `Wait` rows already use. Any pack verb may now author `await` in front of
+  its own template and still keep the retargetable **On node** slot every pack row carries - the wait
+  and the node are two separate facts about one line.
 
 ### Lighting - the light is the object
 

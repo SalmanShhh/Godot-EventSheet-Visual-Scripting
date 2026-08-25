@@ -127,6 +127,12 @@ Attach to a node to move it.
 - [Light Pulse](Light-Pulse.md) - a light that breathes: the same two rows on a smooth wave instead of a noise field, for beacons, pickups, runes and alarms. Period is a rhythm, so two pulses stay in time.
 - [Day/Night Cycle](Day-Night-Cycle.md) - one clock that runs the sky: a whole day every N minutes, the sun turning with the hour, three Inspector curves for sun, ambient and sky, and On Sunrise / Sunset / Midnight / The Hour as the moments. Drives a WorldEnvironment or a 2D CanvasModulate.
 - [Flash](Flash.md) - flash a sprite a colour on hit.
+- [Hit Flash](Hit-Flash.md) - the white-out that makes a strike land, as a shader rather than a modulate: it mixes the sprite's own pixels towards a colour, so a dark sprite whites out as far as a bright one. Ships its shader into your project on the first add.
+- [Dissolve](Dissolve.md) - burn a sprite away along a noise field with a glowing edge, and burn it back. On Dissolved is where the loot drops, the pool takes the node back, or the row frees it.
+- [Outline](Outline.md) - a border around what the sprite actually is, following its own alpha rather than its rectangle: the selection ring, the interactable marker, the rarity colour, the accessibility highlight.
+- [Grayscale](Grayscale.md) - drain the colour out of one node, all the way or part of it, for a disabled button, a dead unit still on the board or a whole world paused behind a menu. The grey takes a tint, so sepia and frozen are the same two rows.
+- [Wave](Wave.md) - ripple the picture without moving the node: water, heat haze, flags and dizziness, with collisions and positions untouched because only the drawing sways.
+- [Screen FX](Screen-FX.md) - full-screen effects as four rows on one rectangle: a shockwave ring from a world point, an awaited fade you build a scene transition out of, a blur and a chromatic pulse. The rectangle hides itself whenever every effect is idle.
 - [Fade](Fade.md) - fade any sprite or UI in and out by animating its transparency.
 - [Spring](Spring.md) - springy, bouncy motion toward a target value.
 - [Tween](Tween.md) - animate a property to a value over time with easing.
