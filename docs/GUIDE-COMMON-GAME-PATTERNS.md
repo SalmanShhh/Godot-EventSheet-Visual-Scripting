@@ -102,6 +102,61 @@ subject is named `state`, the whole machine reads in plain words with zero conve
 
 ![A hand-written enum + match machine opened as a sheet](images/code-patterns-lifted-machine.png)
 
+## The game's own mode - Playing, Paused, Cutscene, Menu
+
+The pattern above is about ONE OBJECT's state. The GAME's state is the other one everybody grows: an
+enum, plus a hundred `if` statements that each have to remember to ask. The forgotten `if` is the
+bug - movement runs during a cutscene, nothing errors, and nobody can see why.
+
+Modes are declared once, on the **modes** band of the Game sheet's head (an Autoload - global state
+is what an Autoload is for). **Edit modes…** writes four ordinary declarations, which is the whole
+design:
+
+```gdscript
+enum Mode { PLAYING, PAUSED, CUTSCENE, MENU }
+signal mode_changed(from_mode: int, to_mode: int)
+var mode: Mode = Mode.MENU:
+	set(value):
+		if value == mode:
+			return
+		var was: int = mode
+		mode = value
+		mode_changed.emit(was, value)
+var mode_stack: Array[int] = []
+```
+
+Nothing is stored anywhere else - which is why a project that wrote those four lines by hand is
+already using this, and why a project with no modes has no band, no vocabulary and no findings.
+
+**A group says which mode it runs in**, and every row inside it stops asking:
+
+```
+▾ Movement   Everything the player steers.   Playing
+    Every tick   →   Move
+```
+
+That is one muted word on the group head - the same shape as *runs on host* - and it compiles to the
+guard the rows would each have carried. The rows that move the game between modes are one plain line
+each, because the announcement lives in the variable's own setter:
+
+- **Go to mode Cutscene** → `mode = Mode.CUTSCENE`
+- **In mode Playing** → `mode == Mode.PLAYING`
+- **Push mode Menu** remembers what was underneath; **Go back** returns to it. Menus open over pause,
+  which sits over playing: the escape key is a stack whether or not a project admits it.
+- **On entering X** / **On leaving X** answer the moment itself - fade the music down as the cutscene
+  starts, bring it back after. Leaving always fires first.
+
+Each mode also declares its **policy** once, in the same dialog: does the tree keep processing, is
+the mouse shown. Those are Godot's own documented pause pattern, and they are written as ordinary
+*On entering* rows you can see and change. "Does gameplay input reach the game" is the first of them
+- pausing the tree is what stops gameplay nodes hearing input, and a node that must keep hearing it
+says so with its own `process_mode`.
+
+While the game runs, **Live Values** shows the mode, the stack and the trail - `Menu › Playing ›
+Cutscene`, the how-did-we-get-here answer - and **Why didn't this fire?** gains the line it could not
+say before: *it runs in Playing; the game was in Cutscene*. **Doctor** finds the two mode bugs at
+authoring time: a mode rows can reach and never leave, and a mode nothing uses at all.
+
 ## Pick one node out of a group
 
 The code version is a `for` loop with a `best` variable and a comparison - easy to get subtly

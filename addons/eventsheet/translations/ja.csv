@@ -4951,3 +4951,25 @@ Time Slicer,Time Slicer
 Object Pool,Object Pool
 "Why didn't this fire? Run the game first, then ask",なぜ実行されなかった？ まずゲームを実行してから聞いてください
 There is nothing recorded to put back on this row.,この行には元に戻せる記録がありません。
+"%s is declared and nothing uses it: no group runs in it, and no row goes to it.",%s は宣言されていますが、どこにも使われていません。この中で動くグループも、ここへ移る行もありません。
+Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.,%s へ移る行はありますが、そこから出る行がひとつもありません。このモードに入ったプレイヤーは出られません。
+Name at least one mode.,モードを少なくとも 1 つ指定してください。
+Edit modes,モードを編集
+Edit modes…,モードを編集…
+%d mode(s) declared - groups can now say which one they run in.,モードを %d 個宣言しました。グループはどのモードで動くかを言えるようになりました。
+Every mode,すべてのモード
+"These events run whatever the game is doing. Right for a pause menu's own rows, and for a game with no modes in it.",これらのイベントは、ゲームが何をしていても動きます。ポーズメニュー自身の行や、モードのないゲームに向いています。
+These events run only while the game is in %s. Every row inside stops asking for itself.,これらのイベントは、ゲームが %s のあいだだけ動きます。中の行はそれぞれ自分で尋ねる必要がなくなります。
+modes,モード
+The events in this group run only while the game is in this mode - right-click the head to change it.,このグループのイベントは、ゲームがこのモードのあいだだけ動きます。ヘッダを右クリックで変更できます。
+the %s mode,%s モード
+Runs in,動くモード
+Playing,プレイ中
+Paused,一時停止
+Modes,モード
+Starts in,開始モード
+Policy for,対象モード
+Runs,動く
+Stopped,止まる
+Shown,表示
+Hidden,非表示

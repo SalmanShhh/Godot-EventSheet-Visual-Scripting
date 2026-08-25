@@ -84,6 +84,29 @@ family stops being confusing.
 | Set Game Paused | Pauses or resumes the whole game | `get_tree().paused = {paused}` |
 | Is Game Paused | True when the game is currently paused | `get_tree().paused` |
 
+### The game's own mode
+
+Pausing is the commonest thing a game does to itself, and it is rarely the only one: a cutscene, a
+menu and a dialogue all want their own answers to "does the tree keep processing" and "is the mouse
+shown". Declare the game's MODES once - **Edit modes…** on the modes band of the Game sheet's head -
+and these six rows are that enum's vocabulary. Everything they lean on is four ordinary declarations
+the dialog writes, so a project that typed them by hand is already using this.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Go To Mode | Moves the whole game into another mode, and says so | `mode = Mode.{mode}` (the variable's own setter emits `mode_changed`) |
+| In Mode | True while the game is in this mode | `mode == Mode.{mode}` |
+| Push Mode | Goes to a mode remembering the one underneath | `push_mode(Mode.{mode})` - a function the dialog declares beside the four |
+| Go Back | Returns to the mode under this one, and does nothing when there is none | `go_back()` - the same, guarded on an empty stack |
+| On Entering Mode | Runs the moment the game enters this mode | one handler off `mode_changed`, under `if to_mode == Mode.{mode}:` |
+| On Leaving Mode | Runs the moment it leaves one, before anything answering the mode it is entering | the same handler, under `if from_mode == Mode.{mode}:` |
+
+A GROUP says which mode its rows run in - one muted word on its head, the same shape as *runs on
+host* - so every row inside stops asking for itself and the one that would have forgotten cannot.
+While the game runs, Live Values shows the mode, the stack and the trail (`Menu › Playing ›
+Cutscene`), and Doctor finds the two mode bugs before a player does: a mode rows can reach and never
+leave, and a mode nothing uses at all.
+
 **Handle Quit Myself** has a friendly dropdown that inserts the opposite-looking value: "Intercept
 (handle it myself)" inserts `false`, and "Allow (quit immediately)" inserts `true`. Set it to
 Intercept in a ready handler and the window's close button waits for your own close handler, which

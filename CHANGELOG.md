@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Game state - the game's mode, declared once instead of asked a hundred times
+
+- **Modes are four ordinary declarations, and that is the whole design.** An enum, a variable, a
+  signal and a stack - lines anybody could have typed, and which most hand-written projects already
+  have. Nothing is stored anywhere else. A project that wrote them by hand is already using this and
+  does not know it; a project that never asked for modes has none of it, and no band, no vocabulary
+  and no findings appear anywhere.
+- **The modes band on the sheet head**, reading the enum and the mode the game opens in - "Playing ·
+  Paused · Cutscene · Menu - starts in Menu" - with **Edit modes…** beside it. The dialog writes the
+  four declarations as undoable rows, and asks each mode's policy once: does the tree keep
+  processing, is the mouse shown. Those two are Godot's own documented pause pattern; "does gameplay
+  input reach the game" is the first of them, and the strip says so rather than offering a third
+  dropdown that writes the same line.
+- **Groups say which mode they run in.** One muted word on the group head, the same shape and the
+  same guard path as "runs on host", so a whole group of rows stops asking for itself and the one
+  row that would have forgotten cannot. It rides in the group's own annotation and comes back on
+  open.
+- **Go to mode · In mode · Push mode · Go back.** Going to a mode is ONE plain assignment, because
+  the announcement lives in the mode variable's own setter - which is where Godot puts "and tell
+  everybody", and what makes a hand-written `mode = Mode.PLAYING` already correct. Push and Go back
+  are the stack a game grows the first time a menu opens over a pause that sits over playing: the
+  escape-key bug, answered in the vocabulary.
+- **On entering X / On leaving X**, sharing one handler off the one signal, with leaving written
+  first - always, so nobody discovers the order by bug.
+- **What a running game shows.** Live Values streams the mode and the stack as names rather than
+  numbers, and keeps the trail: "Menu › Playing › Cutscene", the how-did-we-get-here answer, kept in
+  the editor so the game carries no history nobody reads to play it. "Why didn't this fire?" gains
+  the line it could not say before: it runs in Playing, the game was in Cutscene.
+- **Doctor finds the two mode bugs**: a mode rows can reach and never leave (the softlock, found at
+  authoring rather than by a player), and a mode nothing uses at all.
+
 ### Performance - what the frame is being spent on, on the row that spends it
 
 - **Milliseconds in the gutter.** The trace already knew how long each row's fires took; it kept the
