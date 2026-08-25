@@ -1,0 +1,313 @@
+# Godot EventSheets - what the editor is allowed to cost on a project far bigger than this one.
+#
+# Every other timing pin in this suite is measured on THIS repository. That is a large project by
+# most standards and it is still not the one the plugin has to survive: a game two years in, a
+# thousand scripts, three hundred scenes, a hundred shaders, and the level scene nobody ever split
+# up. So `huge_project_fixture.gd` fabricates that project under `user://` and the budgets below are
+# measured against it.
+#
+# EVERY NUMBER HERE WAS MEASURED, at least three times, on a quiet machine, before it was written
+# down, and each budget says what it measured at. A budget invented from a feeling is either so
+# tight that everyone learns to ignore the failure or so loose that nothing can trip it. What these
+# are for is a change that makes something ALGORITHMICALLY slower, and a regression of that kind
+# lands far outside the band rather than just inside it.
+#
+# WHAT IS NOT HERE, and why:
+#   - the 389-row viewport rebuild budget lives in `lift_perf_test.gd`, beside the structural pins
+#     that are the real reason it is fast. It is not repeated here.
+#   - the whole-project Doctor run is budgeted in `project_doctor_test.gd`, around the audit that
+#     test already runs. Running it twice would cost the suite a minute and a half for one number.
+#   - the whole-project scanners (the Doctor's sheet list, the picker's vocabulary, the shared
+#     resource index) cannot be pointed at the fixture: `res://` is fixed when the process starts.
+#     Those are measured on this repository, which carries 105 packs and every demo, and each pin
+#     below says which corpus it used.
+#
+# COLD BOOT IS MEASURED IN ITS OWN PROCESS. By the time any test runs, half the plugin is compiled
+# and every registry is warm, so the work an editor start really does measures as zero from in here.
+# `cold_boot_probe.gd` is run as a subprocess and its two numbers are pinned.
+@tool
+class_name HugeProjectBudgetTest
+extends RefCounted
+
+const HugeProject := preload("res://tests/huge_project_fixture.gd")
+const Pins := preload("res://tests/pin_table.gd")
+
+## The probe that answers what a cold editor start costs, run in a process of its own.
+const COLD_BOOT_PROBE: String = "res://tests/cold_boot_probe.gd"
+
+## Enabling the plugin: loading plugin.gd and building everything `_enter_tree` hands the editor.
+## Measured 268-293 ms across eight runs. The budget is deliberately far below the ~2,000 ms this
+## used to cost, because that is the regression it exists to catch: one heavy class named in a boot
+## file compiles its whole subtree into every editor start, and it has crept back in twice.
+const BOOT_CLOSURE_BUDGET_MS: int = 1200
+
+## The FIRST sheet tab of a session: every descriptor, the reverse index every lift matches against,
+## the compiled matchers, the block kinds, and then one ordinary 74-line sheet opened through them.
+## Measured 2,284-2,472 ms across eight runs, of which 2,030-2,190 is the registries - the half no
+## later tab pays, and the half worth making smaller.
+const FIRST_OPEN_BUDGET_MS: int = 5000
+
+## Opening the fixture's 2,000-line script as a sheet: the import, the lift, and the row build with
+## its head bands, ending in 1,441 rows. Measured 5,629, 5,758 and 7,305 ms - the widest spread of
+## anything here, which is why the margin over it is the widest. The registries are warmed BEFORE
+## the clock starts, because what they cost is the budget above rather than this one.
+const BIG_SHEET_OPEN_BUDGET_MS: int = 14000
+
+## The Add picker's whole tree, built with every pack in this repository loaded. Measured 392, 396
+## and 469 ms over 5,129 registered rows.
+const PICKER_OPEN_BUDGET_MS: int = 1500
+
+## ONE KEYSTROKE in a completing field, with the kind's list already built. Sub-frame is the design
+## target and 16 ms is the frame; measured 2.1-2.6 ms, so the pin is the TARGET rather than the
+## measurement. Anything at all that scans the project per keystroke lands orders of magnitude out.
+const KEYSTROKE_BUDGET_MS: float = 16.0
+
+## Reading the lights and the material wearers of a 2,000-node scene, from cold. Measured 267, 268
+## and 275 ms for the pair.
+const SCENE_FACTS_BUDGET_MS: int = 900
+
+## The same two questions asked again. Measured 0.02-0.04 ms for the pair, because the answer is
+## held and handed back by reference - which is what the structural pin beside this one is really
+## about. The budget is a claim that a second ask is FREE, not that it is fast.
+const SCENE_FACTS_WARM_BUDGET_MS: int = 5
+
+## Parsing the uniforms of all 100 fixture shaders from cold. Measured 176, 180 and 187 ms.
+const SHADER_CORPUS_BUDGET_MS: int = 900
+
+## Asking the same 100 shaders again. Measured 86, 91 and 93 ms - NOT free, because deciding whether
+## the cache entry is current opens each file for its length. The budget holds that number where it
+## is; making a warm read cost no filesystem call at all is a change, not a tightening.
+const SHADER_CORPUS_WARM_BUDGET_MS: int = 400
+
+## One keystroke measured once is noise; this many, divided, is a number.
+const KEYSTROKE_SAMPLES: int = 20
+
+## Prefixes a reader types on the way to a name, so the per-keystroke figure covers a growing filter
+## rather than the same lookup twenty times.
+const TYPED_PREFIXES: Array[String] = ["h", "he", "hea", "heal", "healt", "health"]
+
+
+static func run() -> bool:
+	var project: Dictionary = HugeProject.build()
+	var passed: bool = _pin_the_corpus(project)
+	passed = _pin_cold_boot() and passed
+	passed = _pin_scene_facts(project) and passed
+	passed = _pin_the_shader_corpus(project) and passed
+	passed = _pin_a_keystroke() and passed
+	# One editor serves both the open budget and the picker budget. Building a second would measure
+	# the same vocabulary scan twice and cost the suite half a minute for nothing.
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	passed = _pin_opening_the_big_script(project, editor) and passed
+	passed = _pin_the_picker(editor) and passed
+	editor.free()
+	return passed
+
+
+## The fixture is what it says it is. Every budget under this one is meaningless if the corpus
+## quietly shrank - a 40-node scene walks in no time at all, and would pass the 2,000-node pin.
+static func _pin_the_corpus(project: Dictionary) -> bool:
+	var big_script_lines: int = FileAccess.get_file_as_string(str(project["big_script"])).split("\n").size()
+	var big_scene_nodes: int = EventSheetSceneConnections.nodes_of_scene(str(project["big_scene"])).size()
+	var measured: Dictionary = {
+		"scripts": (project["scripts"] as PackedStringArray).size(),
+		"scenes": (project["scenes"] as PackedStringArray).size(),
+		"shaders": (project["shaders"] as PackedStringArray).size(),
+		"the big script is at least two thousand lines": big_script_lines >= HugeProject.BIG_SCRIPT_LINES,
+		"the big scene is at least two thousand nodes": big_scene_nodes >= HugeProject.BIG_SCENE_NODES,
+	}
+	return Pins.check("huge_project_corpus", {
+		"scripts": HugeProject.SCRIPT_COUNT,
+		"scenes": HugeProject.SCENE_COUNT,
+		"shaders": HugeProject.SHADER_COUNT,
+		"the big script is at least two thousand lines": true,
+		"the big scene is at least two thousand nodes": true,
+	}, func(key: String) -> Variant:
+		return measured[key])
+
+
+## What enabling the plugin costs, and what the first sheet tab after it costs, both measured in a
+## process that has never done either. A probe that cannot be run at all FAILS rather than passing
+## quietly: a budget nobody measured is worse than no budget.
+static func _pin_cold_boot() -> bool:
+	var output: Array = []
+	var arguments: PackedStringArray = PackedStringArray(["--headless", "--path",
+		ProjectSettings.globalize_path("res://"), "--script", COLD_BOOT_PROBE])
+	OS.execute(OS.get_executable_path(), arguments, output, true)
+	var numbers: Dictionary = _probe_numbers(output)
+	var passed: bool = _check("the cold boot probe answered", numbers.has("closure_ms"), true)
+	if not passed:
+		print("  the probe printed no result line; its output was:")
+		for chunk: Variant in output:
+			print("  %s" % str(chunk))
+		return false
+	var closure_ms: float = float(numbers["closure_ms"])
+	var first_open_ms: float = float(numbers["first_open_ms"])
+	passed = _check("enabling the plugin costs under %d ms (took %.1f ms)" % [
+		BOOT_CLOSURE_BUDGET_MS, closure_ms],
+		closure_ms <= float(BOOT_CLOSURE_BUDGET_MS), true) and passed
+	passed = _check("the first sheet tab costs under %d ms (took %.1f ms, %.1f of it registries)" % [
+		FIRST_OPEN_BUDGET_MS, first_open_ms, float(numbers.get("registries_ms", 0.0))],
+		first_open_ms <= float(FIRST_OPEN_BUDGET_MS), true) and passed
+	return passed
+
+
+## The `key=value` pairs off the probe's one result line.
+static func _probe_numbers(output: Array) -> Dictionary:
+	var numbers: Dictionary = {}
+	var text: String = ""
+	for chunk: Variant in output:
+		text += "%s\n" % str(chunk)
+	for line: String in text.split("\n"):
+		if not line.begins_with("cold_boot "):
+			continue
+		for pair: String in line.trim_prefix("cold_boot ").split(" ", false):
+			var parts: PackedStringArray = pair.split("=")
+			if parts.size() == 2:
+				numbers[parts[0]] = float(parts[1])
+	return numbers
+
+
+## The 2,000-line script, opened the way the dock opens one: import, lift, and the row build with
+## its head bands. The registries are warmed first on purpose - their cost is the first-tab budget
+## above, and leaving it in here would measure the same two seconds twice and hide the row build
+## behind them.
+##
+## What this number does NOT include is the scene-derived half of the head (which node the script is
+## on, what lights it, what it wears): those bands resolve through the scenes under `res://`, and a
+## fixture script lives outside it. The scene readers are budgeted directly instead, on the
+## 2,000-node scene, which is the larger question anyway.
+static func _pin_opening_the_big_script(project: Dictionary, editor: EventSheetEditor) -> bool:
+	var path: String = str(project["big_script"])
+	var source: String = FileAccess.get_file_as_string(path)
+	EventSheetOpenJob.warm_registries()
+	var start_usec: int = Time.get_ticks_usec()
+	var importer: GDScriptImporter = GDScriptImporter.new()
+	var sheet: EventSheetResource = importer.import_external(path, false)
+	EventSheetACELifter.attempt_lift(sheet, source)
+	editor.setup(sheet)
+	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	var rows: int = editor.get_viewport_control().get_total_row_count()
+	var passed: bool = _check("the big script opened as rows (built %d)" % rows, rows > 100, true)
+	return _check("opening a %d-line script under %d ms (took %.1f ms)" % [
+		source.split("\n").size(), BIG_SHEET_OPEN_BUDGET_MS, elapsed_ms],
+		elapsed_ms <= float(BIG_SHEET_OPEN_BUDGET_MS), true) and passed
+
+
+## The Add picker with every pack in this repository in it. Measured on the repository rather than
+## the fixture because the vocabulary comes from `res://`, which no test can move.
+static func _pin_the_picker(editor: EventSheetEditor) -> bool:
+	var registry: EventSheetACERegistry = editor.get_ace_registry()
+	var loaded: int = registry.get_all_definitions().size()
+	var passed: bool = _check("the picker's vocabulary is fully loaded (%d rows)" % loaded,
+		loaded > 1000, true)
+	var host: Node = Node.new()
+	var picker: ACEPickerDialog = ACEPickerDialog.new()
+	picker.init_dialog(host, registry)
+	picker._context = {"mode": "append_action", "signals_only": false, "selected_resource": null}
+	var start_usec: int = Time.get_ticks_usec()
+	picker._refresh_tree()
+	var elapsed_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	host.free()
+	return _check("the picker opens over %d rows under %d ms (took %.1f ms)" % [
+		loaded, PICKER_OPEN_BUDGET_MS, elapsed_ms],
+		elapsed_ms <= float(PICKER_OPEN_BUDGET_MS), true) and passed
+
+
+## One keystroke in a completing field. The list is built first, outside the clock, because that is
+## the contract: a kind's candidates are built once and only FILTERED afterwards.
+static func _pin_a_keystroke() -> bool:
+	var sheet: EventSheetResource = _completing_sheet()
+	EventSheetCompletions.for_field(sheet, EventSheetCompletions.FIELD_EXPRESSION, "")
+	var start_usec: int = Time.get_ticks_usec()
+	for repeat in KEYSTROKE_SAMPLES:
+		for prefix: String in TYPED_PREFIXES:
+			EventSheetCompletions.for_field(sheet, EventSheetCompletions.FIELD_EXPRESSION, prefix)
+	var per_keystroke_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0 \
+		/ float(KEYSTROKE_SAMPLES * TYPED_PREFIXES.size())
+	return _check("a keystroke answers inside a frame (%.3f ms, budget %.1f)" % [
+		per_keystroke_ms, KEYSTROKE_BUDGET_MS],
+		per_keystroke_ms <= KEYSTROKE_BUDGET_MS, true)
+
+
+## A sheet with enough of its own vocabulary that filtering it is real work.
+static func _completing_sheet() -> EventSheetResource:
+	EventSheetCompletions.clear_cache()
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "Player"
+	sheet.host_class = "CharacterBody2D"
+	for index in 40:
+		sheet.variables["health_%02d" % index] = {"type": "int", "default": index}
+	for index in 12:
+		var event_function: EventFunction = EventFunction.new()
+		event_function.function_name = "do_thing_%02d" % index
+		sheet.functions.append(event_function)
+	return sheet
+
+
+## The lights and the material wearers of a 2,000-node scene, cold and then warm - and the reason
+## the warm read is free, which is that the answer is HELD rather than re-derived. Identity, not
+## equality: two equal arrays would still mean every caller re-walked two thousand nodes.
+static func _pin_scene_facts(project: Dictionary) -> bool:
+	var scene_path: String = str(project["big_scene"])
+	EventSheetSceneLights.clear_cache()
+	EventSheetSceneEffects.clear_cache()
+	var start_usec: int = Time.get_ticks_usec()
+	var lights: Array[Dictionary] = EventSheetSceneLights.for_scene(scene_path)
+	var wearers: Array[Dictionary] = EventSheetSceneEffects.for_scene(scene_path)
+	var cold_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	var passed: bool = _check("the big scene really holds lights to find (%d)" % lights.size(),
+		lights.size() > 100, true)
+	passed = _check("the big scene really holds material wearers to find (%d)" % wearers.size(),
+		wearers.size() > 100, true) and passed
+	passed = _check("scene facts on a %d-node scene under %d ms (took %.1f ms)" % [
+		HugeProject.BIG_SCENE_NODES, SCENE_FACTS_BUDGET_MS, cold_ms],
+		cold_ms <= float(SCENE_FACTS_BUDGET_MS), true) and passed
+	start_usec = Time.get_ticks_usec()
+	var lights_again: Array[Dictionary] = EventSheetSceneLights.for_scene(scene_path)
+	var wearers_again: Array[Dictionary] = EventSheetSceneEffects.for_scene(scene_path)
+	var warm_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	passed = _check("asking again costs under %d ms (took %.3f ms)" % [
+		SCENE_FACTS_WARM_BUDGET_MS, warm_ms],
+		warm_ms <= float(SCENE_FACTS_WARM_BUDGET_MS), true) and passed
+	passed = _check("the lights of a scene are held and handed out by reference",
+		is_same(lights, lights_again), true) and passed
+	passed = _check("the material wearers of a scene are held and handed out by reference",
+		is_same(wearers, wearers_again), true) and passed
+	return passed
+
+
+## A hundred shaders, parsed and then asked again. The warm figure is pinned as well as the cold
+## one, because a cache that still costs a filesystem call per question is a cache that stops
+## helping the moment a row build asks it a thousand times.
+static func _pin_the_shader_corpus(project: Dictionary) -> bool:
+	var shaders: PackedStringArray = project["shaders"]
+	EventForgeShaderUniforms.clear_cache()
+	var start_usec: int = Time.get_ticks_usec()
+	for path: String in shaders:
+		EventForgeShaderUniforms.for_shader(path)
+	var cold_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	start_usec = Time.get_ticks_usec()
+	for path: String in shaders:
+		EventForgeShaderUniforms.for_shader(path)
+	var warm_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0
+	var dials: Array[Dictionary] = EventForgeShaderUniforms.for_shader(shaders[0])
+	var passed: bool = _check("a fixture shader really declares dials (%d)" % dials.size(),
+		dials.size() > 4, true)
+	passed = _check("the dials of a shader are held and handed out by reference",
+		is_same(dials, EventForgeShaderUniforms.for_shader(shaders[0])), true) and passed
+	passed = _check("%d shaders parse from cold under %d ms (took %.1f ms)" % [
+		shaders.size(), SHADER_CORPUS_BUDGET_MS, cold_ms],
+		cold_ms <= float(SHADER_CORPUS_BUDGET_MS), true) and passed
+	return _check("%d shaders answer again under %d ms (took %.1f ms)" % [
+		shaders.size(), SHADER_CORPUS_WARM_BUDGET_MS, warm_ms],
+		warm_ms <= float(SHADER_CORPUS_WARM_BUDGET_MS), true) and passed
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] huge_project_budget_test: %s" % label)
+		return true
+	print("[FAIL] huge_project_budget_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false

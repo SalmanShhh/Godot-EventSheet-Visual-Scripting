@@ -6,6 +6,17 @@
 class_name ProjectDoctorTest
 extends RefCounted
 
+## The whole audit, over this whole repository: 105 packs, every demo, every committed sheet, and
+## the fifty-odd checks the union runs. Measured 81, 84, 85 and 92 seconds across four runs on a
+## quiet machine, and a SECOND run in the same process costs the same again, so nothing worth
+## reusing is being kept between them. The budget holds that where it is until it is made smaller,
+## at the near-doubled margin every other timing pin here carries over its own measurement.
+##
+## Declaring it also moves this test into the runner's serial tail, which is the only place the
+## number means anything: measured inside a shard beside seven other Godot processes it would flap,
+## and a budget people learn to ignore is not a budget.
+const DOCTOR_BUDGET_MS: int = 180000
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -195,7 +206,11 @@ static func run() -> bool:
 
 	# The repo gate: this repository must be doctor-clean at the error level - the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
+	var audit_start_usec: int = Time.get_ticks_usec()
 	var report: Dictionary = EventSheetProjectDoctor.run()
+	var audit_ms: float = float(Time.get_ticks_usec() - audit_start_usec) / 1000.0
+	all_passed = _check("the whole audit runs under %d ms (took %.0f ms)" % [
+		DOCTOR_BUDGET_MS, audit_ms], audit_ms <= float(DOCTOR_BUDGET_MS), true) and all_passed
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		if str(finding.get("severity")) == "error":
 			print("  doctor error: %s - %s" % [str(finding.get("path")), str(finding.get("message"))])

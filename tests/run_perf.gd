@@ -97,6 +97,10 @@ func _init() -> void:
 	passed = GodotWorkflowTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	passed = LiftPerfTest.run() and passed
+	# The huge-project budgets: a fabricated thousand-script project, a cold editor boot measured in
+	# its own process, and the readers a large tree leans on. Last, because it is the slowest thing
+	# here and the first run on a machine also has to write the fixture out.
+	passed = HugeProjectBudgetTest.run() and passed
 	passed = PluginBootLazyTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")
