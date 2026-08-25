@@ -145,6 +145,9 @@ static func _generate() -> void:
 	for index in SHADER_COUNT:
 		_write(shader_path(index), _shader_source(index))
 	_write("%s/stamp.txt" % ROOT, _stamp())
+	# Nothing outside the editor sends the filesystem ping the by-file readers invalidate on, so a
+	# regenerated corpus at the same paths would be read through the identities the last one had.
+	EventForgeFileStamp.forget_all()
 
 
 ## Writes one file with explicit LF endings. Godot's FileAccess stores exactly what it is given, but

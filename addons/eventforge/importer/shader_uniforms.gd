@@ -149,9 +149,12 @@ static func reads_the_screen(shader_path: String) -> bool:
 
 
 ## Drops the cache. The editor calls this when the filesystem changes; tests call it between
-## fixtures, for the same reason every other by-file reader here exposes one.
+## fixtures, for the same reason every other by-file reader here exposes one. The stamps go with it:
+## a caller that clears this reader has just changed shader files on disk, and a held stamp would
+## serve the old parse straight back.
 static func clear_cache() -> void:
 	_cache.clear()
+	EventForgeFileStamp.forget_all()
 
 
 ## The uniforms of shader SOURCE TEXT, for a caller that already holds it (and for the tests, which
@@ -332,12 +335,9 @@ static func _number(value: float) -> String:
 	return str(int(value)) if is_equal_approx(value, float(int(value))) else str(value)
 
 
-## The cache identity of one shader file: its path, its saved mtime and its byte length. mtime alone
-## has seconds resolution, so two saves inside one second would otherwise serve the older parse.
+## The cache identity of one shader file, from the shared stamp reader. Working it out here meant a
+## filesystem call - two, for the byte length - before the cache could even be consulted, so a warm
+## read still cost I/O per question. The stamp is held for the session and dropped on the same
+## filesystem ping this reader's own cache is.
 static func _cache_key(path: String) -> String:
-	var length: int = 0
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if file != null:
-		length = file.get_length()
-		file.close()
-	return "%s|%d|%d" % [path, FileAccess.get_modified_time(path), length]
+	return EventForgeFileStamp.of(path)

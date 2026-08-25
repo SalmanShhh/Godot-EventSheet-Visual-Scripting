@@ -33,6 +33,19 @@ static var _cache: Dictionary = {}
 static var _scene_paths: PackedStringArray = PackedStringArray()
 static var _scene_paths_scanned: bool = false
 
+## `path|mtime|size` -> the node list of that scene file. THE parse cache of this plugin: the lights
+## reader, the material reader, the replication reader, the scene view and the connection read all
+## walk the same node list, and every one of them used to re-read and re-parse the file for itself -
+## a 2,000-node scene costs about 12 ms a walk, so five readers meeting it cold cost five times that
+## for one answer. Each of them still caches what it DERIVED; this is the parse underneath them all.
+static var _nodes_cache: Dictionary = {}
+
+## script path -> the scenes that load it, built in one pass over the project's scenes. What makes
+## "which scenes wire signals to this script" a lookup instead of a read of every scene in the
+## project, which is what it was for every script anybody opened.
+static var _scenes_by_script: Dictionary = {}
+static var _scenes_by_script_built: bool = false
+
 ## The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
 ## view the question is a different one: not "what does this script's own scene say about it" but
 ## "what does THIS scene wire to this script", and the script may sit on any node rather than only on
@@ -55,20 +68,59 @@ static func for_script(script_path: String) -> Dictionary:
 		_cache[key] = scoped
 		return scoped
 	var found: Dictionary = {}
-	for scene_path: String in scene_paths():
-		var text: String = FileAccess.get_file_as_string(scene_path)
-		if text.is_empty() or not text.contains(path):
-			continue
-		found.merge(_connections_of(scene_path, text, path), true)
+	for scene_path: String in scenes_using_script(path):
+		found.merge(_connections_of(scene_path, FileAccess.get_file_as_string(scene_path), path), true)
 	_cache[key] = found
 	return found
 
 
+## Which scenes load one script, from an index built once. This used to be a read of EVERY scene in
+## the project per script asked about, which made a whole-project sweep quadratic: a thousand scripts
+## meeting three hundred scenes is three hundred thousand file reads for a question the scenes could
+## answer between them in one pass. Opening a small file measured 104 ms of it, and nothing about the
+## file explained why.
+##
+## The index is exact rather than approximate: a connection can only reach a script through the
+## scene's `[ext_resource]` table, which is what the read below matches on anyway, so a scene that
+## merely mentions the path in a string was already going to answer nothing.
+static func scenes_using_script(script_path: String) -> PackedStringArray:
+	if not _scenes_by_script_built:
+		_build_scene_script_index()
+	return _scenes_by_script.get(script_path, PackedStringArray())
+
+
+## One pass over the project's scenes, filling "which scenes load this script" for all of them. Only
+## this function may mark the index built, and it does so once it is - a half-filled index marked
+## ready answers "no scene uses this" for every script the pass had not reached yet.
+static func _build_scene_script_index() -> void:
+	var index: Dictionary = {}
+	for scene_path: String in scene_paths():
+		var text: String = FileAccess.get_file_as_string(scene_path)
+		if text.is_empty():
+			continue
+		for referenced: Variant in resource_paths_in(text.split("\n")).values():
+			var referenced_path: String = str(referenced)
+			if not referenced_path.ends_with(".gd"):
+				continue
+			var users: PackedStringArray = index.get(referenced_path, PackedStringArray())
+			if not users.has(scene_path):
+				users.append(scene_path)
+			index[referenced_path] = users
+	_scenes_by_script = index
+	_scenes_by_script_built = true
+
+
 ## Drops the cache. The editor calls this when the filesystem changes; tests call it between fixtures.
+## The parsed node lists and their stamps go too: a caller clearing this reader has just changed
+## scene files, and a held stamp would hand the old parse back.
 static func clear_cache() -> void:
 	_cache.clear()
+	_nodes_cache.clear()
 	_scene_paths = PackedStringArray()
 	_scene_paths_scanned = false
+	_scenes_by_script = {}
+	_scenes_by_script_built = false
+	EventForgeFileStamp.forget_all()
 
 
 ## The connections of ONE scene whose root uses `script_path`, or {} when the root uses another script.
@@ -146,7 +198,21 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 ## file holds (`NodePath("..")`, `PackedStringArray("res://a.tscn")`, `0.05`). A reader that wants a
 ## scene fact - which node a synchronizer keeps in step, which scenes a spawner can make - reads it
 ## from here instead of walking the file a second time.
+##
+## HELD, and handed back by reference. Every caller reads it and none of them writes to it, so one
+## parse serves them all for as long as the file is unchanged; treat what comes back as read-only.
 static func nodes_of_scene(scene_path: String) -> Array:
+	var stamp: String = EventForgeFileStamp.of(scene_path)
+	if _nodes_cache.has(stamp):
+		return _nodes_cache[stamp]
+	var parsed: Array = _parse_nodes_of_scene(scene_path)
+	_nodes_cache[stamp] = parsed
+	return parsed
+
+
+## The walk itself, off the file's own lines. Separated from the question above so the cache has
+## exactly one thing to hold and this stays the only place that reads a scene's node headers.
+static func _parse_nodes_of_scene(scene_path: String) -> Array:
 	var nodes: Array = []
 	var text: String = FileAccess.get_file_as_string(scene_path)
 	if text.is_empty():

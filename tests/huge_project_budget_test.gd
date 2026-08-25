@@ -62,9 +62,11 @@ const PICKER_OPEN_BUDGET_MS: int = 1500
 ## measurement. Anything at all that scans the project per keystroke lands orders of magnitude out.
 const KEYSTROKE_BUDGET_MS: float = 16.0
 
-## Reading the lights and the material wearers of a 2,000-node scene, from cold. Measured 267, 268
-## and 275 ms for the pair.
-const SCENE_FACTS_BUDGET_MS: int = 900
+## Reading the lights and the material wearers of a 2,000-node scene, from cold. Measured 18.4, 20.2
+## and 21.8 ms for the pair, down from 267-296 when each reader parsed the scene file for itself:
+## they share one parse now, held per file. The budget is well clear of that but far under the old
+## 900, because a reader that goes back to parsing on its own lands straight back at 270.
+const SCENE_FACTS_BUDGET_MS: int = 150
 
 ## The same two questions asked again. Measured 0.02-0.04 ms for the pair, because the answer is
 ## held and handed back by reference - which is what the structural pin beside this one is really
@@ -74,10 +76,12 @@ const SCENE_FACTS_WARM_BUDGET_MS: int = 5
 ## Parsing the uniforms of all 100 fixture shaders from cold. Measured 176, 180 and 187 ms.
 const SHADER_CORPUS_BUDGET_MS: int = 900
 
-## Asking the same 100 shaders again. Measured 86, 91 and 93 ms - NOT free, because deciding whether
-## the cache entry is current opens each file for its length. The budget holds that number where it
-## is; making a warm read cost no filesystem call at all is a change, not a tightening.
-const SHADER_CORPUS_WARM_BUDGET_MS: int = 400
+## Asking the same 100 shaders again. Measured 0.2 ms, four runs alike, down from 86-101: deciding
+## whether the cache entry was current used to open every file for its length, so a "cached" read
+## still cost I/O per question and a row build asking per dial per row paid it thousands of times.
+## The identity is held per file now. Like the scene pin below it, this budget is a claim that a
+## second ask is FREE rather than that it is fast.
+const SHADER_CORPUS_WARM_BUDGET_MS: int = 5
 
 ## One keystroke measured once is noise; this many, divided, is a number.
 const KEYSTROKE_SAMPLES: int = 20

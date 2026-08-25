@@ -97,6 +97,52 @@ static func run() -> bool:
 				"res://tests/fixtures/effect_shared_material.tres").size())]),
 		PackedStringArray([str(warm_wearers), str(warm_dials), str(warm_shared)])) and all_passed
 
+	# ── The parse UNDER all of those, and the file identity under that ──────────────────────
+	# Every scene reader in the plugin walks one shared node list per file, and every by-file reader
+	# asks one shared place what a file's cache identity is. Both are what make a warm read cost
+	# nothing at all; both would serve a saved answer for a changed file if the clear did not reach
+	# them, which is why the two pins below are IDENTITY pins - the same array back, not an equal one.
+	var scene_path: String = "res://tests/fixtures/lighting_scene_room.tscn"
+	var parsed: Array = EventSheetSceneConnections.nodes_of_scene(scene_path)
+	all_passed = _check("the scene's nodes are read", parsed.size() > 1, true) and all_passed
+	all_passed = _check("asking again hands back the SAME parse, not another one",
+		is_same(parsed, EventSheetSceneConnections.nodes_of_scene(scene_path)), true) and all_passed
+	var stamp: String = EventForgeFileStamp.of(scene_path)
+	all_passed = _check("a file's identity carries its path, its mtime and its length",
+		stamp.split("|").size(), 3) and all_passed
+	all_passed = _check("and is held, so asking twice is the same answer",
+		EventForgeFileStamp.of(scene_path), stamp) and all_passed
+	EventSheetSceneConnections.clear_cache()
+	all_passed = _check("clear_cache() drops the parse and its stamps", PackedStringArray([
+		str(EventSheetSceneConnections._nodes_cache.size()),
+		str(EventForgeFileStamp._stamps.size())]),
+		PackedStringArray(["0", "0"])) and all_passed
+	var reparsed: Array = EventSheetSceneConnections.nodes_of_scene(scene_path)
+	all_passed = _check("the next question parses the file again and answers the same",
+		reparsed.size(), parsed.size()) and all_passed
+	all_passed = _check("and it really is a fresh parse, not the dropped one",
+		is_same(reparsed, parsed), false) and all_passed
+	# Which scenes load a script is an INDEX now, built in one pass. It used to be a read of every
+	# scene in the project per script asked about, which is what made opening a twelve-line file cost
+	# a tenth of a second for no reason the file could explain.
+	all_passed = _check("the scene that loads a script is found through the index",
+		", ".join(EventSheetSceneConnections.scenes_using_script(
+			"res://tests/fixtures/lighting_scene_room.gd")),
+		"res://tests/fixtures/lighting_scene_room.tscn") and all_passed
+	all_passed = _check("and a script no scene loads is named by none",
+		EventSheetSceneConnections.scenes_using_script(DOCK_PATH).size(), 0) and all_passed
+
+	# ── The project's own script list ───────────────────────────────────────────────────────
+	# Around forty health checks ask for it, so it is walked once and handed out; an audit drops it
+	# first, and so does the filesystem hook, or a file added since the last audit would be invisible.
+	var listed: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	all_passed = _check("the project's scripts are listed", listed.size() > 100, true) and all_passed
+	EventSheetProjectDoctor.clear_project_scripts()
+	all_passed = _check("clear_project_scripts() puts it back to unwalked",
+		EventSheetProjectDoctor._project_scripts_walked, false) and all_passed
+	all_passed = _check("and the next ask walks again and finds the same files",
+		EventSheetProjectDoctor._project_scripts().size(), listed.size()) and all_passed
+
 	# ── The dock actually calls both ────────────────────────────────────────────────────────
 	# Source lint, not a live dock: constructing the dock needs a display server. What matters is
 	# that the two hooks name the droppers, and that both hooks are connected at all.
@@ -116,6 +162,10 @@ static func run() -> bool:
 		filesystem_hook.contains("EventForgeShaderUniforms.clear_cache()"), true) and all_passed
 	all_passed = _check("and the project-wide scan behind every sharing count",
 		filesystem_hook.contains("EventSheetProjectShareIndex.clear_cache()"), true) and all_passed
+	all_passed = _check("and the shared scene parse the lighting and effect reads sit on",
+		filesystem_hook.contains("EventSheetSceneConnections.clear_cache()"), true) and all_passed
+	all_passed = _check("and the listing of the project's own scripts",
+		filesystem_hook.contains("EventSheetProjectDoctor.clear_project_scripts()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
 	all_passed = _check("the settings hook drops the Input Map read",
 		settings_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed

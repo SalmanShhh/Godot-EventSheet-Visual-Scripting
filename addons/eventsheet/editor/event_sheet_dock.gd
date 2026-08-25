@@ -560,6 +560,14 @@ func _on_translations_maybe_changed() -> void:
 	# was invisible and a deleted one went on being claimed until the editor restarted.
 	EventSheetSceneLights.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
+	# And the PARSE those two are derived from. Every scene reader in the plugin walks one shared node
+	# list per file, held for as long as the file is unchanged - so dropping the derived answers above
+	# without dropping the parse under them would re-derive yesterday's nodes. This clear takes the
+	# file stamps with it, which is what makes every by-file reader re-stat rather than trust a saved
+	# identity from before the change.
+	EventSheetSceneConnections.clear_cache()
+	# And the listing of the project's own scripts, which every health check walks.
+	EventSheetProjectDoctor.clear_project_scripts()
 	# And what it says about EFFECTS: which node wears which material, which shader is at the end of
 	# that chain, and what dials the shader declares. All three are reads of files that just changed -
 	# a uniform renamed in the shader has to reach the rows naming it, and the project-wide "who else
