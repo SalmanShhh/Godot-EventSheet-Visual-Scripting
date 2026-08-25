@@ -495,6 +495,22 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Current Text**
 - **Lines Remaining**
 
+### DissolveBehavior (`res://eventsheet_addons/dissolve/dissolve_behavior.gd`)
+@ace_tags(effects, shader, juice, visual) @ace_category("Dissolve") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Dissolved**
+
+#### Conditions
+- **Is Gone** - True once the host has burned all the way away.
+
+#### Actions
+- **Dissolve** (`seconds: float = 0.8`) - Burns the host away over the given time and fires On Dissolved when there is nothing left. No time at all burns it away on the spot, which is the row for a thing that pops out of existence rather than fading.
+- **Appear** (`seconds: float = 0.8`) - Burns the host back in from nothing over the given time. The host is shown again first, so the row works whether or not the last dissolve hid it.
+
+#### Expressions
+- **Burnt Away** - How much of the host has burned away, 0 to 1 - for a health bar that empties with the burn, or a sound that follows it.
+
 ### DragDropBehavior (`res://eventsheet_addons/drag_drop/drag_drop_behavior.gd`)
 @ace_category("Drag & Drop") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -788,6 +804,19 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Declared Setting Names** - Every declared setting's name, in the order they were declared - For Each over it and an options menu builds itself from the declaration instead of a hand-wired control per setting.
 - **Settings Report** - Every declared setting as one readable line - name, kind, the value in force and the default it came from. What your game actually offers, in a form you can print, show in a debug overlay, or paste into a bug report. Blank when nothing has been declared.
 
+### GrayscaleBehavior (`res://eventsheet_addons/grayscale/grayscale_behavior.gd`)
+@ace_tags(effects, shader, ui, visual) @ace_category("Grayscale") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Gray** - True once more than half the colour has gone - the question a sheet asks about a unit that has been taken out of play.
+
+#### Actions
+- **Grayscale** (`amount: float = 1.0, seconds: float = 0.25`) - Drains the host's colour to the given amount over the given time. 1 is fully grey; a half reads as faded rather than as dead, which is what a disabled-but-still-there control wants.
+- **Recolour** (`seconds: float = 0.25`) - Brings the colour back over the given time.
+
+#### Expressions
+- **Grayness** - How much colour has been drained, 0 to 1.
+
 ### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
 @ace_category("Health") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -841,6 +870,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Health Pool Priority** (`type: String`)
 - **Last Pool Damage Absorbed**
 - **Last Health Pool Type**
+
+### HitFlashBehavior (`res://eventsheet_addons/hit_flash/hit_flash_behavior.gd`)
+@ace_tags(effects, shader, juice, visual) @ace_category("Hit Flash") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Flashing** - True while any of the wash is still showing.
+
+#### Actions
+- **Flash** (`colour: Color = Color.WHITE, seconds: float = 0.15`) - Washes the host towards a colour and lets it drain back over the given time. A second flash while one is running restarts it rather than stacking, so a fast string of hits reads as one bright thing rather than as a stuck white square.
+- **Stop Flashing** - Ends the wash now, whatever was left of it. The row for an interruption: the hit was cancelled, the enemy died mid-flash, the scene is moving on.
 
 ### HomeLeashBehavior (`res://eventsheet_addons/home_leash/home_leash_behavior.gd`)
 @ace_category("Home & Leash") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1306,6 +1345,17 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Set Orbit 3D Center** (`x: float, y: float, z: float`) - Orbits around the given point from now on.
+
+### OutlineBehavior (`res://eventsheet_addons/outline/outline_behavior.gd`)
+@ace_tags(effects, shader, ui, visual) @ace_category("Outline") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Outlined** - True while a border is being drawn.
+
+#### Actions
+- **Outline** (`colour: Color = Color.WHITE, pixels: float = 2.0`) - Draws a border of the given colour and thickness. Thickness is in pixels of the host's own image, so a sprite scaled up in the scene gets a border scaled up with it.
+- **No Outline** - Clears the border. The colour is left where it was, so the next Outline with no colour given comes back the same as the last one.
+- **Fade Outline** (`pixels: float = 0.0, seconds: float = 0.25`) - Fades the border in or out over a time rather than switching it, for a highlight that breathes instead of blinking.
 
 ### PhaseCycleAddon (`res://eventsheet_addons/phase_cycle/phase_cycle_addon.gd`)
 @ace_tags(time, day-night, cycle) @ace_category("Phase Cycle") @ace_version(1.0.0)
@@ -1828,6 +1878,20 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Expressions
 - **Current Scene Path**
+
+### ScreenFx (`res://eventsheet_addons/screen_fx/screen_fx.gd`)
+@ace_tags(effects, shader, juice, camera, visual) @ace_category("Screen FX") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Screen Effect Is Running** - True while any effect is running - a fade held on, a blur, a ring still travelling.
+
+#### Actions
+- **Shockwave** (`at: Vector2 = Vector2.ZERO, strength: float = 1.0`) - Sends out a ring from a point in the WORLD - a boss that has just died, an explosion, a landing. The camera transform is applied, so the ring stays on the thing that caused it however the camera is moving.
+- **Fade To** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the whole screen to a colour and WAITS for it to land, so the rows under it are what happens next: change the scene, show the credits, start the level. That is the scene transition, spelled as two rows in one event.
+- **Fade Back** (`colour: Color = Color.BLACK, seconds: float = 1.0`) - Fades the screen back from a colour to the game, and waits for that too - the other half of a transition, run once the new scene is up.
+- **Blur** (`amount: float = 2.0, seconds: float = 0.3`) - Blurs the whole screen over a time - the world going soft behind a pause menu, a knockout, a dream. 0 is sharp again.
+- **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`) - Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.
+- **Clear Screen Effects** - Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.
 
 ### SineBehavior (`res://eventsheet_addons/sine/sine_behavior.gd`)
 @ace_category("Sine") @ace_expose_all(node) @ace_version(1.0.0)
@@ -2562,6 +2626,19 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Homing Target Dist**
 - **Count Homing Targets**
 - **Bounce Mode**
+
+### WaveBehavior (`res://eventsheet_addons/wave/wave_behavior.gd`)
+@ace_tags(effects, shader, juice, visual) @ace_category("Wave") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Conditions
+- **Is Waving** - True while the picture is still moving.
+
+#### Actions
+- **Wave** (`strength: float = 0.03, seconds: float = 0.4`) - Eases the ripple in to the given strength. Strength is a share of the picture's width: 0.01 is a shimmer, 0.05 is water, 0.15 is a hallucination.
+- **Settle** (`seconds: float = 0.4`) - Eases the ripple back out to still. A ripple stopped instantly snaps the picture sideways, which is why this takes a time rather than a switch.
+
+#### Expressions
+- **Wave Strength** - How hard the ripple is pushing right now, as a share of the picture's width.
 
 ### WeaponKit (`res://eventsheet_addons/weapon_kit/weapon_kit_behavior.gd`)
 @ace_tags(combat, shooter) @ace_category("Weapon") @ace_expose_all(node) @ace_version(1.0.0)
@@ -3524,6 +3601,20 @@ the Editor object (plugin lifecycle, docks, menu items, object types).
 #### Expressions
 - **Editor Settings** - The editor's own settings object - read a user's grid step, theme or font size from it.
 - **Undo History** - The editor's undo / redo history. Put it in a local object variable and add do / undo steps to it, so Ctrl+Z reverses what your tool changed.
+
+### Effect Dial (`res://addons/eventforge/registration/modules/effect_dial_aces.gd`)
+the DIAL is the thing the row names, and the shader says what it is called.
+
+#### Conditions
+- **Effect Dial Is** (`dial: String, op: String, value: String, target: String`) - True while one dial of this node's effect compares as the row says. Reads `ShaderMaterial.get_shader_parameter`.
+
+#### Actions
+- **Set Effect Dial** (`dial: String, value: String, target: String`) - Turns one dial of the effect this node wears. Writes `ShaderMaterial.set_shader_parameter`, with the name taken from the shader rather than typed - a mistyped name is a call Godot accepts and never acts on.
+- **Fade Effect Dial** (`target: String, dial: String, from: String, to: String, seconds: String`) - Walks one dial of this node's effect to a new value over time instead of jumping to it - a dissolve, a freeze setting in, a glow coming up. One tween, no state to keep.
+- **Make The Effect This Node's Own** (`target: String`) - Gives this node its own copy of the material before anything turns a dial on it. Without it, every dial row written at run time turns the dial for every other node wearing the same `.tres`.
+
+#### Expressions
+- **Effect Dial** (`dial: String, target: String`) - Reads one dial of this node's effect back. Use it in any value field - the name is picked from the shader, so a read can no longer quietly return nothing.
 
 ### Facing (`res://addons/eventforge/registration/modules/facing_aces.gd`)
 Facing: mirror and flip, on every host that can do it
