@@ -663,7 +663,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		_emit_function_doc_comment(event_function, lines)
 		_emit_expose_annotations(event_function, sheet, lines)
 		_emit_function_annotation_prefix(event_function, lines)
-		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
+		lines.append(_function_header_line(event_function))
 		var function_events: Array = _function_body_rows(event_function)
 		var function_body_start: int = lines.size()
 		_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
@@ -949,7 +949,7 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 	_emit_function_doc_comment(event_function, lines)
 	_emit_expose_annotations(event_function, sheet, lines)
 	_emit_function_annotation_prefix(event_function, lines)
-	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
+	lines.append(_function_header_line(event_function))
 	var function_events: Array = _function_body_rows(event_function)
 	var function_body_start: int = lines.size()
 	_emit_event_body(function_events, lines, source_map, 1, result["warnings"])
@@ -2587,6 +2587,10 @@ static func _has_statement(lines: PackedStringArray, from_index: int) -> bool:
 ## `pass` only parses for void - a bool/typed function needs a type-correct `return <default>` or the
 ## whole generated script fails to load, taking every OTHER verb on the sheet down with it.
 static func _empty_function_stub(event_function: EventFunction) -> String:
+	# No return annotation at all: the function may return anything or nothing, so `pass` is the
+	# only stub that is both correct and what the source would have written.
+	if event_function.no_return_annotation:
+		return "\tpass"
 	# A named (custom/engine class) return can't be defaulted structurally - null parses for any
 	# object/collection type, so a bodiless helper with a named return still loads.
 	if not event_function.return_type_name.strip_edges().is_empty():
@@ -2610,6 +2614,21 @@ static func _empty_function_stub(event_function: EventFunction) -> String:
 			# Variant (TYPE_MAX sentinel) and any other typed return: null is assignable everywhere
 			# it parses; exotic value types can refine this case as they join the dialog's list.
 			return "\treturn null"
+
+
+## The whole `func` line: the one place a function head is spelled, so the trailing functions
+## section, the in-place anchor slots and the lifter's per-function byte gate can never spell it
+## three slightly different ways.
+##
+## A function lifted from a source that wrote NO return annotation keeps that head exactly - adding
+## `-> void` would be a correction, and a correction to somebody else's file is the one thing the
+## round-trip promise forbids.
+static func _function_header_line(event_function: EventFunction) -> String:
+	var head: String = "%sfunc %s(%s)" % ["static " if event_function.is_static else "",
+		event_function.function_name, _emit_function_params(event_function)]
+	if event_function.no_return_annotation:
+		return "%s:" % head
+	return "%s -> %s:" % [head, _function_return_type_name(event_function)]
 
 
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").

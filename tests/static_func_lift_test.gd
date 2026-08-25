@@ -3,7 +3,7 @@
 # on lift, the header regex accepts an optional `static ` prefix and sets is_static, and the four
 # `begins_with("func ")` gates (importer chunker, trailing-run classifier, mid-file anchor, declaration
 # splitter) also admit `static func `. Everything is byte-gated: a static func whose model does not re-emit
-# to its exact source (e.g. a return-type-less `static func foo():`) degrades to a verbatim block, and a
+# to its exact source (a non-canonical `static  func`, two spaces) degrades to a verbatim block, and a
 # plain non-static func still lifts with is_static == false (the regex-index-shift guard).
 @tool
 class_name StaticFuncLiftTest
@@ -56,13 +56,17 @@ static func run() -> bool:
 	if plain_lifted != null:
 		ok = _check("a plain func is NOT flagged static", plain_lifted.is_static, false) and ok
 
-	# ── A return-type-less static func stays a raw block (same rule as return-type-less plain funcs) ──
+	# ── A return-type-less static func lifts too, remembering that it had no return annotation ──
 	var no_ret: String = "@tool\nextends Node\n\n\nstatic func tick():\n\tpass\n"
 	var no_ret_imported: EventSheetResource = GDScriptImporter.new().import_external_source(no_ret)
-	ok = _check("a return-type-less static func does NOT lift", _first_function(no_ret_imported) == null, true) and ok
-	ok = _check("...and stays a verbatim `static func` block", _has_raw_beginning(no_ret_imported, "static func tick"), true) and ok
+	var no_ret_lifted: EventFunction = _first_function(no_ret_imported)
+	ok = _check("a return-type-less static func lifts", no_ret_lifted != null, true) and ok
+	if no_ret_lifted != null:
+		ok = _check("it is still flagged static", no_ret_lifted.is_static, true) and ok
+		ok = _check("it remembers that the head had no return annotation",
+			no_ret_lifted.no_return_annotation, true) and ok
 	no_ret_imported.external_source_path = "user://sf_noret.gd"
-	ok = _check("the un-lifted static func round-trips byte-identically",
+	ok = _check("the untyped static func round-trips byte-identically",
 		str(SheetCompiler.compile(no_ret_imported, "user://sf_noret.gd").get("output", "")) == no_ret, true) and ok
 
 	# ── Non-canonical `static  func` (two spaces) never matches -> stays raw, round-trips ──

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Existing codebases - the lift walls come down
+
+- **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost
+  everybody writes before they meet the style guide, and until now one of them turned its whole file
+  into a wall of code: the head did not match, the function stayed verbatim, and because a refusal
+  re-anchors the run it took the functions above it down with it. Measured over six beginner-shaped
+  scripts the wall was total - 15 of 15 functions stayed code. All 15 now open as real function
+  blocks, and the six files still come back byte for byte. The whole mechanism is one remembered
+  fact: the head carried no arrow, so emission does not write one. Nothing is corrected. Over the
+  264 style-guide files in this repository the change moves nothing at all, because they all
+  annotate their returns.
+- **A file whose first line is a function keeps its first line.** With nothing above the run there
+  was no gap to measure, so emission fell back to its default separator and added a blank line the
+  file never had - which failed the whole-file check and reverted every function in it. The
+  no-gap-at-all case is now recorded like every other gap.
+
 ### Fixed - what this pass's own review found
 
 - **A uniform commented out was being offered as a dial.** The shader reader skipped a line starting

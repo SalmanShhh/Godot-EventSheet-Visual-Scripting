@@ -66,23 +66,24 @@ static func run() -> bool:
 	var roundtrip: String = str(SheetCompiler.compile(sheet, "user://_connects_only_ready_rt.gd").get("output", ""))
 	ok = _check("the full lift round-trips byte-identically", roundtrip == source, true) and ok
 
-	# ── One genuinely unliftable function (an untyped-return header the lift refuses on every
-	# path) degrades ALONE: the handler and _draw still lift - anchored in place - and the file
-	# still round-trips. This is the standing contract the whole-file revert used to violate. ──
+	# ── One genuinely unliftable function (a header wrapped over two lines, which is not a header
+	# on any path) degrades ALONE: the handler and _draw still lift - anchored in place - and the
+	# file still round-trips. This is the standing contract the whole-file revert used to violate. ──
 	var hairy_lines: Array[String] = MENU_DISPATCH_LINES.duplicate()
 	hairy_lines.remove_at(hairy_lines.size() - 1)
 	hairy_lines.append_array([
 		"",
 		"",
-		"func gnarly(a: Array):",
-		"\treturn a.reduce(func(x, y): return x + y)",
+		"func gnarly(",
+		"\t\ta: Array) -> void:",
+		"\ta.reduce(func(x, y): return x + y)",
 		"",
 	])
 	var hairy_source: String = "\n".join(hairy_lines)
 	var hairy_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(hairy_source)
 	var hairy_raw: Array = _raw_function_headers(hairy_sheet)
 	ok = _check("only the refusing function (and the raw _ready holding its connect) stay raw",
-		hairy_raw, ["func _ready() -> void:", "func gnarly(a: Array):"]) and ok
+		hairy_raw, ["func _ready() -> void:", "func gnarly("]) and ok
 	var hairy_events: Array = _event_rows(hairy_sheet)
 	ok = _check("the handler and _draw still lift beside the refusal", hairy_events.size(), 2) and ok
 	if hairy_events.size() == 2:

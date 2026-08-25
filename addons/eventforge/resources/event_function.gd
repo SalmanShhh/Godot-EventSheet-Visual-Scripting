@@ -62,6 +62,11 @@ extends Resource
 ## return_type - so a helper returning `-> HealthPool` lifts into a real, editable function instead
 ## of staying a raw block. Empty = use return_type as before.
 @export var return_type_name: String = ""
+## The source wrote NO return annotation at all (`func hurt(amount):`, not `-> void:`). GDScript
+## allows it and a great deal of hand-written code is written that way, so the head is remembered
+## rather than corrected: emission leaves the `-> ...` off entirely and the file comes back byte for
+## byte. Default false, so every function authored on a sheet keeps the typed head it always had.
+@export var no_return_annotation: bool = false
 @export var is_async: bool = false
 ## When true, the generated function is emitted as `static func` (a class-level helper with no `self`).
 ## Set on lift from a `static func` header and re-emitted verbatim, so a static utility helper opens as a

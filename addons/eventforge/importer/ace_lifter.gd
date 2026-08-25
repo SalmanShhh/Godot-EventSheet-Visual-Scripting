@@ -540,6 +540,11 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# note written directly above a function measures 0, which the default would turn
 				# into a line the file never had.
 				_stamp_leading_blanks(lifted_events, lifted_functions, maxi(first_section_blanks, 0))
+		elif sheet.events.is_empty():
+			# NOTHING precedes the run: the file's very first line is the first lifted function, so
+			# there is no gap at all and emission's default separator would add a blank line the file
+			# never had. Same stamp as the ends-on-text case above, for the same reason.
+			_stamp_leading_blanks(lifted_events, lifted_functions, maxi(first_section_blanks, 0))
 		# The connects-only `_ready`'s remembered gap/header ride the first lifted event (the
 		# synthesized `_ready` has no OnReady event of its own to carry them) - stamped on exactly
 		# one event; the compiler scans for whichever event carries the metas.
@@ -1416,8 +1421,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	# A generated sheet function always carries an annotation block (@ace_action… or @ace_hidden); a
 	# hand-written helper in an opened .gd has none. Both lift - the un-annotated one becomes an
 	# un-exposed function whose @ace_hidden emission is suppressed (lifted_unannotated), so it
-	# round-trips byte-identically. Needs an explicit `-> Type:` header (the regex below); a
-	# return-type-less `func foo():` still falls back to a verbatim block.
+	# round-trips byte-identically.
 	var unannotated: bool = annotations.is_empty()
 	var header_regex: RegEx = RegEx.new()
 	# Optional non-emitting `(static )?` prefix (group 1) shifts the name/args/return captures to 2/3/4.
@@ -1427,7 +1431,11 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	# failure re-anchors the trailing run, it took every function above it down with it. Such a
 	# return is not a Variant.Type, so it resolves through the verbatim return_type_name branch
 	# below - which means only the individually byte-gated anchor path claims it.
-	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*(?:\\[[A-Za-z_][A-Za-z0-9_, \\[\\]]*\\])?):$")
+	# The whole ` -> Type` is OPTIONAL, because `func hurt(amount):` is ordinary GDScript and the
+	# commonest head in code written by anyone who did not meet the style guide first. It lifts into
+	# the same function block its typed twin does; the only thing remembered is that the annotation
+	# was absent, so emission writes the head back exactly as it was typed rather than correcting it.
+	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> ([A-Za-z_][A-Za-z0-9_]*(?:\\[[A-Za-z_][A-Za-z0-9_, \\[\\]]*\\])?))?:$")
 	var header_match: RegExMatch = header_regex.search(function_lines[0])
 	if header_match == null:
 		return {"ok": false}
@@ -1437,7 +1445,8 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.doc_comment = doc_comment
 	event_function.is_static = not header_match.get_string(1).is_empty()
 	event_function.function_name = header_match.get_string(2)
-	var return_name: String = header_match.get_string(4) if header_match.get_group_count() >= 4 else "void"
+	event_function.no_return_annotation = header_match.get_string(4).is_empty()
+	var return_name: String = "void" if event_function.no_return_annotation else header_match.get_string(4)
 	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
 	if return_types.has(return_name):
 		event_function.return_type = return_types[return_name]

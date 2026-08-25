@@ -21,12 +21,14 @@ static func run() -> bool:
 	authored.host_class = "Node"
 	authored.tool_mode = true
 	authored.external_source_path = "user://_per_fn_lift_source.gd"
-	# No `-> Type` on the header: the function-lift regex refuses it on EVERY path (trailing and
-	# the mid-file anchor pass alike), so it reliably pins "one unliftable function does not revert
-	# the clean tail". (Its old `-> HairyType` shape now LIFTS via FunctionAnchorRow - custom-return
-	# helpers anchor in place - so it no longer serves as the unliftable fixture.)
+	# A header WRAPPED over two lines: the function-lift regex reads the first line only, and
+	# `func gnarly(` is not a header on any path (trailing scan or mid-file anchor), so it reliably
+	# pins "one unliftable function does not revert the clean tail". Two earlier fixtures stopped
+	# being unliftable as the walls came down - a `-> HairyType` custom return now anchors in place,
+	# and a head with no return annotation at all now lifts like its typed twin - which is the point:
+	# this case has to be one the grammar genuinely cannot reproduce, not one it has not learned yet.
 	var hairy: RawCodeRow = RawCodeRow.new()
-	hairy.code = "func gnarly(a: Array):\n	return a.reduce(func(x, y): return x + y)"
+	hairy.code = "func gnarly(\n		a: Array) -> void:\n	a.reduce(func(x, y): return x + y)"
 	authored.events.append(hairy)
 	for spec: Array in [["ping", TYPE_NIL, "Ping"], ["answer", TYPE_FLOAT, "Answer"]]:
 		var verb: EventFunction = EventFunction.new()
