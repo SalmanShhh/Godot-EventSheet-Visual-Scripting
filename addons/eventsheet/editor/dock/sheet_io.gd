@@ -108,6 +108,13 @@ func _begin_async_gd_open(resolved_path: String) -> void:
 	_dock._clear_undo_history()
 	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 	_dock._refresh_preview_banner()
+	# A script its owner marked to stay code is shown and never worked on: no lift, no offers, and
+	# the read-only open above is the whole of it. The mark is a comment line in the file, so this is
+	# a decision the file itself carries rather than one this plugin remembers about it.
+	if EventSheetInteropDoctor.stays_code(resolved_path):
+		_dock._set_status(EventSheetL10n.translate(
+			"%s is marked to stay code - showing it as code, and leaving it alone.") % resolved_path.get_file())
+		return
 	_dock._set_status("Opening %s - showing the code now, working out the events…" % resolved_path.get_file())
 	_open_job = EventSheetOpenJob.new()
 	_open_job_path = resolved_path

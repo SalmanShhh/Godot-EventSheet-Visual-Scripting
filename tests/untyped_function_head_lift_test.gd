@@ -64,6 +64,19 @@ static func run() -> bool:
 	ok = _check("the mixed file round-trips byte-identically",
 		str(SheetCompiler.compile(mixed_sheet, "user://_untyped_mixed_rt.gd").get("output", "")), mixed) and ok
 
+	# ── A call to a function THIS file declares is that call, whatever else is spelled the same ──
+	# `restart()` beside a `func restart():` means the author's own function. The vocabulary has a
+	# particle verb whose template is also `restart()`, and being more specific by character count it
+	# used to win, so the row read "Restart particles" about a menu button. The line emitted is
+	# identical either way; only the sentence was wrong.
+	var own: String = "extends Node\n\n\nfunc _ready():\n\trestart()\n\n\nfunc restart():\n\tpass\n"
+	var own_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(own)
+	ok = _check("a call to the file's own function reads as that call",
+		_first_action_id(own_sheet), "CallFunction") and ok
+	own_sheet.external_source_path = "user://_own_call_rt.gd"
+	ok = _check("and the file still round-trips byte-identically",
+		str(SheetCompiler.compile(own_sheet, "user://_own_call_rt.gd").get("output", "")), own) and ok
+
 	# ── The corpus: what a real beginner-shaped project opens as, byte-gated file by file ──
 	var drifted: PackedStringArray = PackedStringArray()
 	var raw_functions: PackedStringArray = PackedStringArray()
@@ -108,6 +121,18 @@ static func _annotation_flags(sheet: EventSheetResource) -> Array:
 		if entry is EventFunction:
 			flags.append((entry as EventFunction).no_return_annotation)
 	return flags
+
+
+## The ace_id of the first action of the sheet's first event, or "" when there is none - what a
+## single lifted statement was claimed AS.
+static func _first_action_id(sheet: EventSheetResource) -> String:
+	for item: Variant in sheet.events:
+		if not (item is EventRow):
+			continue
+		for action: Variant in (item as EventRow).actions:
+			if action is ACEAction:
+				return (action as ACEAction).ace_id
+	return ""
 
 
 static func _param_ids(event_function: EventFunction) -> Array:

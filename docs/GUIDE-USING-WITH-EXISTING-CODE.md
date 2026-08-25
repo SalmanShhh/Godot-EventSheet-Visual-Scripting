@@ -326,6 +326,52 @@ above a function - and any ONE of them could revert an entire file, because the 
 file. The rest was structure nobody had split: a run of statements is now one action row per statement,
 which you can select, disable and drag like any other.
 
+**And if your code does not look like a style guide, try it again too.** Two shapes that are ordinary
+GDScript used to stop a file dead, and both open now:
+
+- `func hurt(amount):` - a head with **no return annotation**, which is what most people write before
+  they meet the style guide. Measured over six beginner-shaped scripts the wall was total: 15 of 15
+  functions stayed code. All 15 open as functions now. The head is remembered as it was written, so
+  saving the file writes `func hurt(amount):` back - the plugin does not correct your signature.
+- `button.pressed.connect(func(): start_game())` - a handler written as a **lambda in the connect
+  call**. A lambda at the top of `_ready` becomes the trigger event it is, with its body as the rows
+  under it. The receiver spelling, your spacing and the one-line-versus-block shape are all kept, so
+  the statement is written back exactly as you typed it. One written further down `_ready`, where the
+  statement could not come back where it was, stays a statement and reads as it always did.
+
+### Marking a script to stay code
+
+Not everything wants to be rows, and a plugin that insists is a bad neighbour. Put this comment line
+anywhere in a script and this plugin leaves it alone:
+
+```gdscript
+# eventsheets: stays code
+```
+
+That file is then opened read-only as code with its syntax colours, never lifted, never offered a
+behaviour, and never counted in the adoption table below. The mark is a **comment**, deliberately: it
+survives the plugin being uninstalled, it reads as what it is to anybody who opens the file in any
+editor, and it costs the running game nothing. The physics wizard's 800-line solver deserves peace.
+
+### Doctor › Interop: where to start, and who calls what
+
+The Doctor's **Interop** section is the adoption dashboard for a project you already had. It says how
+many scripts the project owns, how much of what it measured reads as rows, and lists the best next
+candidates first - which are usually a small input or UI script that reads 100%. Each line says what
+its number is made of (how many functions opened, how many are still code) and how many other scripts
+call something that file declares. Marked files are listed separately, as left alone.
+
+The score gates nothing. A project at 12% works exactly as well as one at 90%; the number is there so
+a team can watch the seam move at their own speed, not so anybody chases it. And installing the plugin
+changes nothing by itself - no autoloads, no rewritten files, no hooked scenes. A script is code until
+you open it as a sheet.
+
+The same "who calls what" answer appears where it is most useful: on a function's own head, as
+`called by combat.gd · boss_ai.gd`, and in **Rename everywhere**, which renames inside sheets and then
+LISTS the hand-written scripts that call the old name. It renames nothing outside a sheet, on purpose -
+your code is not the plugin's to rewrite. Both are matched by name, so treat the list as files to
+check: one of them may be calling a different function that happens to share the name.
+
 ### How long opening takes, and why the editor stays responsive
 
 ![The "Opening <file>" strip mid-lift: the rows are already painted and the editor is still drawing frames](images/open-progress-strip.png)

@@ -27,10 +27,37 @@
   outgrows one line is written in the shape that holds it rather than dropped. A lambda the lift
   cannot re-spell - one written after other setup in `_ready`, where the statement could not come
   back where it was - stays the statement it already is, and reads exactly as it did.
+- **"called by combat.gd · boss_ai.gd" on a function's head.** Who else in the project calls a
+  function is a fact, and it comes off the same one indexed scan the shared-resource facts come off:
+  one pass, dropped whole when the filesystem changes, and cheap to build again - what one saved
+  file costs is a re-read of that file, never of the other thousand (70 ms over 1,119 scripts,
+  against 970 when every script was read afresh). The band names three files and counts the rest.
+- **Rename everywhere says what it did not touch.** It renames inside sheets, as it always has, and
+  now lists the hand-written scripts that call the old name so the one decision the plugin must not
+  make alone is made by somebody who can. Matched by name, and the words say so: a file listed is a
+  file to check, because it may be calling a different function that shares the name.
+- **A question about scenes no longer waits on a pass over every script.** The index reads scenes
+  first and scripts after, with a readiness question each, so "who else holds this file" answers
+  exactly as quickly as it did before the caller answers existed. New: `EventSheets.scripts_calling`.
 - **A comment paragraph no longer costs a function its rows.** A run of `# ` notes broken by the
   bare `#` that separates two paragraphs of it stopped being read as comments at all, so the whole
   function it sat in reverted to a wall of code. The run splits where its marker changes, each part
   keeping its own, and the bare line is written back as the line it is.
+- **A call to the file's own function reads as that call.** `restart()` written beside a
+  `func restart():` in the same script is the author's own function, but a shipped verb whose
+  template is also `restart()` is more specific by character count and used to win - so the row said
+  "Restart particles" about a menu button, and `play("low")` beside a `func play(name)` read as a
+  sound. The line emitted was identical either way; only the sentence was wrong.
+- **Doctor › Interop: adopt at your own pace.** A new advisory section for a project that already had
+  code: how many scripts it owns, how much of what was measured reads as rows, and the best next
+  candidates first - each line saying what its number is made of and how many other scripts call
+  something that file declares. It opens the smallest candidates within a wall-clock budget and says
+  how many of how many it read, because a report nobody runs is worse than a short one. The score
+  gates nothing; installing the plugin still changes nothing until you open a script as a sheet.
+- **"Stays code" - one comment line, honoured everywhere.** `# eventsheets: stays code` in a script
+  means: opened read-only as code, never lifted, never offered a behaviour, never counted against the
+  adoption number. A comment on purpose, so the decision survives the plugin being uninstalled and
+  reads as what it is to whoever opens the file next, in any editor.
 
 ### Fixed - what this pass's own review found
 

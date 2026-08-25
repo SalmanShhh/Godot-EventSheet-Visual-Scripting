@@ -219,6 +219,9 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# The file's own object-typed members, read before any line is matched: they are what tells
 	# `candidate == host` apart from `i == 1` (see _is_object_expression).
 	_object_reference_names = _object_names_from_source(source)
+	# And its own function names, for the same reason: `restart()` beside a `func restart():` is the
+	# author's own call, not whichever verb of the vocabulary is spelled the same way.
+	_note_own_functions(source)
 	# And its network peers, for the same reason: `peer.create_server(…)` only means "host a
 	# game" when `peer` really is a multiplayer peer this file declared.
 	EventForgeMultiplayerLift.note_source(source)
@@ -2645,6 +2648,34 @@ static func _is_known_connect_line(line: String, connections: Dictionary) -> boo
 	return claimed is Dictionary and str((claimed as Dictionary).get("line", "")) == line
 
 
+## The plain function names the file under lift declares, so a call to one of them can be read as the
+## call it is. Filled once per file, before any line is matched; empty for a paste with no functions
+## in it, which simply leaves the vocabulary to answer as it always did.
+static var _own_function_names: Dictionary = {}
+
+
+## Notes the file's own function headers. Every `func name(` at the top level of the source, whether
+## or not that function itself goes on to lift.
+static func _note_own_functions(source: String) -> void:
+	_own_function_names.clear()
+	var header: RegEx = RegEx.create_from_string("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\(")
+	for line: String in source.split("\n"):
+		var found: RegExMatch = header.search(line)
+		if found != null:
+			_own_function_names[found.get_string(1)] = true
+
+
+## True when the line is a bare call to one of this file's own functions - `restart()`, `heal(5)` -
+## and nothing else. A receiver in front of it (`$Timer.restart()`) is a call on something else and
+## is left to the vocabulary, which is what knows about other objects.
+static func _is_own_function_call(line: String) -> bool:
+	if _own_function_names.is_empty():
+		return false
+	var call: RegEx = RegEx.create_from_string("^([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)$")
+	var found: RegExMatch = call.search(line.strip_edges())
+	return found != null and _own_function_names.has(found.get_string(1))
+
+
 ## Whether any of these lifted rows is an event on one named trigger. Asked of a `_ready` lift, whose
 ## rows may now be a mixture: its own OnReady body, and one event per connect lambda it wired.
 static func _has_trigger(events: Array, trigger_id: String) -> bool:
@@ -3319,8 +3350,16 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 
 
 static func _match_entry(line: String, reverse_entries: Array, kind: String, in_loop: bool = true, scope_trigger: String = "") -> Dictionary:
+	# A call to a function THIS FILE declares is that call, whatever else in the vocabulary happens to
+	# spell the same words. `restart()` beside a `func restart():` in the same script means the
+	# author's own function; a particle verb whose template is also `restart()` is more specific by
+	# character count and used to win, so the row said "Restart particles" about a call that restarts
+	# a menu. The emitted line is identical either way - only the sentence was wrong.
+	var own_call: bool = kind == "action" and _is_own_function_call(line)
 	for entry: Variant in reverse_entries:
 		if str((entry as Dictionary).get("kind", "")) != kind:
+			continue
+		if own_call and str((entry as Dictionary).get("ace_id", "")) != "CallFunction":
 			continue
 		# A loop-control action (`break`/`continue`) is only valid - and only lifts - inside a loop body.
 		if bool((entry as Dictionary).get("loop_control", false)) and not in_loop:
