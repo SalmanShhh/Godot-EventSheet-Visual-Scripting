@@ -337,7 +337,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_selected_nodes` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
 | `get_selection` | [Selected Nodes](ace:Core/EditorSelectedNodes) | Editor Tools | Vocabulary |
 | `get_setting` | [Project Setting](ace:Core/ProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
-| `get_shader_parameter` | [Effect Parameter](ace:Core/GetShaderParameter) | Effects | Vocabulary |
+| `get_shader_parameter` | [Effect Dial](ace:Core/EffectDial) | Effects | Vocabulary |
 | `get_signal_list` | [Expect Signal](ace:Core/ExpectSignal) | Testing | Vocabulary |
 | `get_slice` | [Token At](ace:Core/TextTokenAt) | Text | Vocabulary |
 | `get_slice_count` | [Token Count](ace:Core/TextTokenCount) | Text | Vocabulary |
@@ -727,7 +727,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_pseudolocalization_enabled` | [Test With Fake Translation](ace:Core/TestWithFakeTranslation) | Translation | Vocabulary |
 | `set_ribbon_texture` | [Set Ribbon Texture](ace:Core/DrawSetRibbonTexture) | Drawing | Vocabulary |
 | `set_setting` | [Set Setting](ace:Core/SetProjectSetting) | Editor Tools: Project & preferences | Vocabulary |
-| `set_shader_parameter` | [Set Effect Parameter](ace:Core/SetShaderParameter) | Effects | Vocabulary |
+| `set_shader_parameter` | [Set Effect Dial](ace:Core/EffectSetDial) | Effects | Vocabulary |
 | `set_trans` | [Tween Property](ace:Core/TweenProperty) | Tween | Vocabulary |
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |

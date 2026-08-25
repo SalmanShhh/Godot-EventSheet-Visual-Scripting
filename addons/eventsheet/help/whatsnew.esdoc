@@ -6,6 +6,55 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Effects - the shader names its own dials
+
+- **The dial names come out of the `.gdshader`, not out of your typing.**
+  `material.set_shader_parameter(&\"disolve\", 1.0)` is a call Godot accepts, returns from, and acts
+  on in no way at all: no error, no warning, no effect, forever. So the shader file is read instead.
+  One parser for uniform lines - name, type, hints (`hint_range` with its ends and step,
+  `source_color`, the sampler kinds), the value the file starts it at, and the `//` comment directly
+  above it as the description - cached on `path|mtime|size` exactly like the ACE definition cache. A
+  declaration split across lines is left alone rather than half-read, because a wrong name is the
+  very failure this exists to prevent.
+- **Five rows beside the four frozen ones.** **Set** `effect.dissolve` **to 0.7**, **Fade**
+  `effect.dissolve` **to 1.0 over 0.8 s** (one tween, no state to keep), the dial read back as an
+  expression, the dial asked about as a condition, and **Make the effect this node's own**. The four
+  shipped free-string rows are untouched and keep compiling; they are still exactly right for a
+  material that only exists at run time, and the picker now shelves them as *any material, name
+  typed* beside the dials.
+- **The row says what the name belongs to.** A dial reads behind a muted `effect.` lead -
+  **Boss ▸ Set `effect.dissolve` to 0.7** - the same device a global's row uses for `Game.HighScore`,
+  and a reading rather than a pill. The row stores the plain name and compiles to the call it says.
+- **\"Effects in this scene\", in the picker.** One shelf per node of the attached scene that wears a
+  shader material, named with the shader it runs (`Boss   effect_dissolve.gdshader`), holding one
+  entry per dial per verb with the node AND the dial already answered - so the parameter dialog opens
+  on the value. Each entry describes itself in the shader's own words: the author's `//` comment,
+  then the declaration read back (`float 0..1 = 0.0`). A material the scene keeps inside itself is
+  followed exactly as far as a saved `.tres` is.
+- **A dial the shader no longer declares says so.** Rename a uniform and every row holding the old
+  name stops working silently; the sheet grows an amber note under the row naming the shader and the
+  dial, and - when one declared dial is close enough to be what was meant - offers it as one click
+  that rewrites the row in one undo step. The same note and the same gesture a misspelled variable
+  already gets, because it is the same mistake.
+- **A project that already has shader code opens on those rows.** Nine spellings, recognised as
+  table entries and re-emitted BYTE FOR BYTE: the set call with no receiver, with `$Path`, with
+  `%Unique`, with `get_node(\"…\")` and with the variable the node was held in; the name written as a
+  StringName or as a plain string; the one-line `tween_method` a fade is, with the author's own
+  lambda argument name; `material = material.duplicate()`; and the two frozen spellings beside them.
+  The gate is the project, twice: a line becomes a dial row only when the attached scene says the
+  node wears a material AND that material's shader really declares the dial. A node wearing nothing,
+  and a name the shader has never heard of, both fall through to the shipped free-string row - which
+  claims nothing about any shader, and is the honest reading of a name nothing can check.
+- **`EventForgeShaderUniforms`** is the project's one reader of `.gdshader` uniforms, and
+  **`EventSheetSceneEffects`** walks the one chain there is - scene to material to shader - for the
+  picker, the lift's guard and the health check alike. Both are pure and static, both cache for the
+  session, and neither ever copies anything into a sheet.
+- **`ACEDescriptor.project_scoped()`** is new and documented: a row whose CHOICES come out of the
+  open project rather than out of the vocabulary. The picker offers the copies it builds from the
+  scene and never the bare row (which could only ask for the name back), and the reverse index leaves
+  its template alone, because deciding a line means that row takes a question only the project can
+  answer. The dial rows declare it; the copy row does not, because it names nothing.
+
 ### Lighting - the light is the object
 
 - **A light is something you point at, not a parameter you fill in.** The sixteen Core lighting
@@ -231,6 +280,78 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Tooling
 
+- **A crashed test has a name now.** A test that takes the process down prints no `[FAIL]` line -
+  the log simply stops, every test after it in that process never runs, and the only evidence is a
+  file that ends in the middle. The runner leaves a trail instead: one line before each test and one
+  after it, flushed as they are written, so the last start with no finish IS the test that crashed.
+  The parallel launcher names it in its summary and fails the run on it whether or not anything else
+  failed, and `tools/test_report.gd` says the same for a serial run.
+- **A red run arrives pre-investigated.** The same tool reads the shard logs and prints, per failing
+  test, the assertion with its expected and its got, the files you changed that map to that test -
+  `tools/pick_tests.gd`'s own mapping, asked backwards through a new `blamed_files` - and the exact
+  line that reruns that one test alone. The launcher runs it on any failure, so the three manual
+  steps between a verdict and a lead are gone.
+- **One test, alone, without a scratch script.** `EVENTFORGE_TEST_ONLY=<name>` (comma-separated for
+  several) filters the discovered list, so the single-test recipe is the normal runner command with
+  a variable in front of it. `tools/bisect_test.ps1 <test>` wraps that for `git bisect run`, with
+  the shard-order incident written down beside it as the worked example of a red that no commit
+  explains.
+- **The shard split stays a round-robin, and the measurement is why.** Packing the shards by
+  RECORDED DURATION - each run writing how long every test took, the split then sorting
+  longest-first onto whichever shard is currently shortest - was built, tested and measured twice
+  each on a quiet machine: 4 min 30 s round-robin against 4 min 04 s and 4 min 08 s packed, which
+  is about 9%. The bar for keeping a moving part in the runner (a durations file per process,
+  merged and read back by the split, wrong the first time anyone reorders a test) was 10%, so it
+  came out again and the numbers are written down beside the split instead. The serial tail was
+  never part of it.
+- **Two iteration shapes, neither of them a verdict.** `run_tests_parallel.ps1 -Iterate` runs the
+  tests the picker says your change could have broken FIRST and stops on the first red. And
+  `tools/test_daemon.ps1` keeps a Godot warm: `tools/test_daemon_client.ps1 <tests…>` answers in
+  well under a second where a cold run costs twenty-five, by holding the imported project open. A
+  warm process carries whatever the last test left in a static, so it hands over to a fresh one the
+  moment anything under `addons/` or `tools/` changes, every 25 tests, and immediately when the
+  state-leak sweep fails in it - and every surface it has says, in those words, that the committed
+  verdict is a cold full run.
+- **A refused byte gate leaves its evidence on disk.** The round-trip gates used to report a file
+  name and the word \"drifted\", and every diagnosis began by rebuilding what the gate already had.
+  One shared helper (`tests/repro_bundle.gd`) now writes `.godot/repro/<test>/<case>/` holding the
+  input, the expected bytes, what came back, and a diff of the two, and prints the path. The three
+  gates that compare whole files or whole lines call it; a gate written next month gets the same
+  folder by calling it too.
+- **Every published row is held to the shape a row has to have.** `tests/descriptor_shape_test.gd`
+  walks all 1,705 registered descriptors and asks what the compile gate cannot: that every `{slot}`
+  in the code and in the sentence is a parameter of that row, that every parameter is used by one of
+  them, that a dropdown has items and no item twice, that a parameter has a default, and that a host
+  class is one the engine knows. It found 34 shapes on the shipped vocabulary and every one of them
+  turned out to be legitimate: a trigger's parameters are what the signal hands you, `args` and
+  `prompt` mean something when they are empty, and a group, a variable, a node, an input action or a
+  sheet function is named from the author's own project where no default could be right. Each is a
+  short list in the gate with its reason. The one real defect was in the gate's own reading: it did
+  not know the `{, name}` idiom an optional trailing argument is spelled with, and reported the
+  parameter behind it as unused.
+- **A table of pins, and one place that says how one failed.** `tests/pin_table.gd` is the loop most
+  tests were writing out per file: `Pins.check(name, {input: expected}, callable)` walks the whole
+  table rather than stopping at the first failure, prints the same line every time (key, expected,
+  got, test), and takes VALUES - so the house rule about `a and b` against a string cannot be
+  written through it by accident. Used by this wave's own tests as the worked example; nothing
+  existing was rewritten to it.
+- **Every comment states its own constraint.** A feature is designed away from the code, in notes
+  that number their items, and those numbers leaked: 3,654 comments across the plugin opened with a
+  label - a letter and a number, with a full stop or a dash after it - or leaned on one
+  mid-sentence (\"the such-and-such gate\", \"the case such-and-such is actually about\"), and one
+  test file was named after one. Every one of
+  them is rewritten to say the thing itself - the label carried no meaning to anyone without the
+  document it came from, and the sentence beside it always could. `tests/variable_dialog_v5_test.gd`
+  is `tests/variable_dialog_fields_test.gd` with the same assertions, and the pack recipes that
+  EMITTED such comments into the 105 generated packs emit plain ones now (drift stays 0).
+- **And it cannot leak back.** `tests/design_shorthand_test.gd` sweeps every tracked text file for a
+  letter-and-digit label standing as a word, and for a comment pointing at a design drawing, with a
+  short allow-list that each entry earns: the other editor's name (its own gate governs it), the
+  keyboard keys, Markdown heading levels, the paper size a sheet export defaults to, a regular
+  expression's character class, and the bundled Mockup Slate theme, which is a product name a user
+  reads. The detector is proved on both sides - five shapes it must catch and eight it must not -
+  before the live sweep is believed, and the design-notes folder is the one place the numbering
+  still belongs.
 - **A preloaded constant is an import, and reads as one.** Every one of the 105 pack recipes opens
   with `@tool` and `const Lib := preload(…)`, and the reading accepted the annotation but not the
   import - so a recipe whose body split cleanly was left with its prelude standing as a wall of

@@ -2,6 +2,55 @@
 
 ## [Unreleased]
 
+### Effects - the shader names its own dials
+
+- **The dial names come out of the `.gdshader`, not out of your typing.**
+  `material.set_shader_parameter(&"disolve", 1.0)` is a call Godot accepts, returns from, and acts
+  on in no way at all: no error, no warning, no effect, forever. So the shader file is read instead.
+  One parser for uniform lines - name, type, hints (`hint_range` with its ends and step,
+  `source_color`, the sampler kinds), the value the file starts it at, and the `//` comment directly
+  above it as the description - cached on `path|mtime|size` exactly like the ACE definition cache. A
+  declaration split across lines is left alone rather than half-read, because a wrong name is the
+  very failure this exists to prevent.
+- **Five rows beside the four frozen ones.** **Set** `effect.dissolve` **to 0.7**, **Fade**
+  `effect.dissolve` **to 1.0 over 0.8 s** (one tween, no state to keep), the dial read back as an
+  expression, the dial asked about as a condition, and **Make the effect this node's own**. The four
+  shipped free-string rows are untouched and keep compiling; they are still exactly right for a
+  material that only exists at run time, and the picker now shelves them as *any material, name
+  typed* beside the dials.
+- **The row says what the name belongs to.** A dial reads behind a muted `effect.` lead -
+  **Boss ▸ Set `effect.dissolve` to 0.7** - the same device a global's row uses for `Game.HighScore`,
+  and a reading rather than a pill. The row stores the plain name and compiles to the call it says.
+- **"Effects in this scene", in the picker.** One shelf per node of the attached scene that wears a
+  shader material, named with the shader it runs (`Boss   effect_dissolve.gdshader`), holding one
+  entry per dial per verb with the node AND the dial already answered - so the parameter dialog opens
+  on the value. Each entry describes itself in the shader's own words: the author's `//` comment,
+  then the declaration read back (`float 0..1 = 0.0`). A material the scene keeps inside itself is
+  followed exactly as far as a saved `.tres` is.
+- **A dial the shader no longer declares says so.** Rename a uniform and every row holding the old
+  name stops working silently; the sheet grows an amber note under the row naming the shader and the
+  dial, and - when one declared dial is close enough to be what was meant - offers it as one click
+  that rewrites the row in one undo step. The same note and the same gesture a misspelled variable
+  already gets, because it is the same mistake.
+- **A project that already has shader code opens on those rows.** Nine spellings, recognised as
+  table entries and re-emitted BYTE FOR BYTE: the set call with no receiver, with `$Path`, with
+  `%Unique`, with `get_node("…")` and with the variable the node was held in; the name written as a
+  StringName or as a plain string; the one-line `tween_method` a fade is, with the author's own
+  lambda argument name; `material = material.duplicate()`; and the two frozen spellings beside them.
+  The gate is the project, twice: a line becomes a dial row only when the attached scene says the
+  node wears a material AND that material's shader really declares the dial. A node wearing nothing,
+  and a name the shader has never heard of, both fall through to the shipped free-string row - which
+  claims nothing about any shader, and is the honest reading of a name nothing can check.
+- **`EventForgeShaderUniforms`** is the project's one reader of `.gdshader` uniforms, and
+  **`EventSheetSceneEffects`** walks the one chain there is - scene to material to shader - for the
+  picker, the lift's guard and the health check alike. Both are pure and static, both cache for the
+  session, and neither ever copies anything into a sheet.
+- **`ACEDescriptor.project_scoped()`** is new and documented: a row whose CHOICES come out of the
+  open project rather than out of the vocabulary. The picker offers the copies it builds from the
+  scene and never the bare row (which could only ask for the name back), and the reverse index leaves
+  its template alone, because deciding a line means that row takes a question only the project can
+  answer. The dial rows declare it; the copy row does not, because it names nothing.
+
 ### Lighting - the light is the object
 
 - **A light is something you point at, not a parameter you fill in.** The sixteen Core lighting

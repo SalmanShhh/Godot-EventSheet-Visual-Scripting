@@ -103,6 +103,13 @@ Chain these onto the descriptor to shape it:
 - `.described("Plain-language help shown in the info panel.")` - always add this.
 - `.featured()` - bold it and float it to the top of its category (for the one or two rows a beginner reaches for first).
 - `.deprecated("Use X instead.", "Core::NewId")` - hide it from the picker but keep it compiling (see the freeze contract).
+- `.project_scoped()` - this row's CHOICES come out of the open project rather than out of your
+  vocabulary: a shader dial, which only a `.gdshader` can name. The picker offers the copies it
+  builds from the open scene (one per real choice, with the choice already filled in) and never the
+  bare row, which could only ask the reader to type the very name the row exists to stop them
+  typing; and the reverse index leaves the template alone, because deciding that a line means this
+  row takes a question only the project can answer - your own matcher asks it. The row compiles and
+  lifts like any other.
 
 ## 4. Parameters
 
