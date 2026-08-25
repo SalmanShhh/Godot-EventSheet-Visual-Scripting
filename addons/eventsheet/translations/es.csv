@@ -4894,3 +4894,17 @@ called by %s,llamado por %s
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s está marcado para seguir siendo código: se muestra como código y se deja en paz.
 no such method,no existe ese método
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","Este objeto no tiene ningún método llamado %s. Puede que se haya renombrado, o que se alcance de otra forma: elige el que querías."
+no such animation,no existe esa animacion
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,Esta escena no tiene ninguna animacion llamada %s. Un nombre mal escrito no reproduce nada y no avisa de nada - elige la que querias.
+the queue never comes,la cola nunca llega
+%s s in,a %s s
+frame %d,fotograma %d
+%s s into %s,a %s s de %s
+loop,bucle
+%s s,%s s
+%d more in %s,%d mas en %s
+%d in %s,%d en %s
+uses,usa
+animations,animaciones
+%s is not an animation of this scene - the row plays nothing,%s no es una animacion de esta escena - la fila no reproduce nada
+%s loops - the queue never comes,%s se repite en bucle - la cola nunca llega

@@ -4894,3 +4894,17 @@ called by %s,%s から呼ばれています
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s は「コードのまま」と印が付いています - コードとして表示し、手を触れません。
 no such method,そのメソッドはありません
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",このオブジェクトに %s というメソッドはありません。名前が変わったか、別の方法で呼ばれているのかもしれません - 意図したものを選んでください。
+no such animation,そのアニメーションはありません
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,このシーンには %s というアニメーションがありません。名前を間違えると何も再生されず、何も報告されません - 意図したものを選んでください。
+the queue never comes,キューは決して来ません
+%s s in,%s 秒地点
+frame %d,フレーム %d
+%s s into %s,%s の %s 秒地点
+loop,ループ
+%s s,%s 秒
+%d more in %s,%s に他 %d 件
+%d in %s,%s に %d 件
+uses,使用
+animations,アニメーション
+%s is not an animation of this scene - the row plays nothing,%s はこのシーンのアニメーションではありません - この行は何も再生しません
+%s loops - the queue never comes,%s はループします - キューは決して来ません

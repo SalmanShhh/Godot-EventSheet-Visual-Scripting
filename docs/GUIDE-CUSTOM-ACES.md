@@ -783,7 +783,9 @@ needed explaining.
 | `physics_layer_2d` / `physics_layer_3d` | Checkable list of the project's physics layers - NAMED layers (Project Settings > Layer Names) show their names, and the button reads the selection back ("Walls, Enemies") | A collision mask int. Params named `collision_mask` / `*_mask` (2D) or `*_mask_3d` (3D) get this picker by convention, no annotation needed. |
 | `audio_path` | Text field with a `▶` preview button | An audio file path. |
 | `scene_path` | Text field with a Browse button | A `.tscn` path. |
-| `animation_reference` | Field plus a dropdown of AnimationPlayer animations | An animation name. |
+| `animation_reference` | Editable field completing from the animations the ATTACHED SCENE really has - an AnimationPlayer's clips and an AnimatedSprite's flipbooks, grouped by the node that declares each one and labelled with how long it runs or that it loops. A name the scene has never heard of turns the field amber with the nearest real one offered as the fix. | An animation name, as a quoted literal. A name built while the game runs is still typeable, so a free-string row keeps working. |
+| `marker_reference` | Editable field completing from the named markers on the timeline of the animation the row's own `animation` field names - what a keyframed clip has instead of frames. | A marker name, as a quoted literal. |
+| `animation_frame` | Number field with the animation's own FILMSTRIP under it: one cell per frame, numbered from 0, showing that frame's picture, the chosen one lit; hovering a cell shows it large and the arrow keys step one frame. A long strip scrolls. Built only for a flipbook - a keyframed clip has no frames, and the field is then the plain number box. | A frame index. |
 | `signal_reference` (or `signal_reference:quoted`) | Dropdown of host and sheet signals | A signal name. `:quoted` stores it as a `"name"` literal. |
 | `method_reference` | Autocomplete of the host's public methods | A method name. |
 | `property_reference` | Autocomplete of the host's public properties | A property name. |

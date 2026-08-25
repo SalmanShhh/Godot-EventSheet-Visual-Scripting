@@ -4894,3 +4894,17 @@ called by %s,вызывается из %s
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s помечен как остающийся кодом - показан как код и оставлен в покое.
 no such method,нет такого метода
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","У этого объекта нет метода с именем %s. Возможно, его переименовали или до него добираются иначе - выберите тот, который имелся в виду."
+no such animation,нет такой анимации
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,В этой сцене нет анимации с именем %s. Опечатка ничего не воспроизведёт и ни о чём не сообщит - выберите нужную.
+the queue never comes,очередь никогда не наступит
+%s s in,на %s с
+frame %d,кадр %d
+%s s into %s,на %s с в %s
+loop,цикл
+%s s,%s с
+%d more in %s,ещё %d в %s
+%d in %s,%d в %s
+uses,использует
+animations,анимации
+%s is not an animation of this scene - the row plays nothing,%s не является анимацией этой сцены - строка ничего не воспроизводит
+%s loops - the queue never comes,%s зациклена - очередь никогда не наступит

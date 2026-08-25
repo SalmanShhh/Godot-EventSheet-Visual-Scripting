@@ -4894,3 +4894,17 @@ called by %s,由 %s 调用
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s 已标记为保持代码 - 以代码显示，并保持原样。
 no such method,没有这个方法
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",该对象没有名为 %s 的方法。它可能被改名了，或者通过别的方式被调用 - 请选择你想要的那个。
+no such animation,没有这个动画
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,此场景没有名为 %s 的动画。拼错的名字不会播放任何内容，也不会报错 - 请选择你想要的那个。
+the queue never comes,队列永远不会到来
+%s s in,第 %s 秒
+frame %d,第 %d 帧
+%s s into %s,%s 中第 %s 秒
+loop,循环
+%s s,%s 秒
+%d more in %s,%s 中还有 %d 个
+%d in %s,%s 中有 %d 个
+uses,使用
+animations,动画
+%s is not an animation of this scene - the row plays nothing,%s 不是此场景的动画 - 该行不会播放任何内容
+%s loops - the queue never comes,%s 是循环的 - 队列永远不会到来

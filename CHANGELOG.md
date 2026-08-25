@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Animations - the name is picked, never typed
+
+- **An animation name comes off the scene.** The attached scene lists what really exists - an
+  AnimationPlayer's clips with their lengths and loop modes, an AnimatedSprite's flipbooks with
+  their real frame counts and the named markers on a keyframed timeline - and every animation field
+  is completed from that list, grouped by the node that declares each name and saying how long it
+  runs or that it loops. A name the scene has never heard of goes amber with the nearest real one
+  offered as the fix, because `play("atack")` plays nothing and reports nothing. A name built while
+  the game runs is still typeable, so the shipped free-string rows keep working.
+- **Play X then Y.** One row plays an animation with the next one queued behind it, so the waiting
+  is the engine's own rather than a timer somebody guessed the length of. An animation that LOOPS
+  never finishes, so a queue behind one is never reached - and that is now said while the row is
+  being written, and on the head, rather than found at run time.
+- **The `animations` band.** One line per animation node, naming the clips THIS sheet plays with
+  their lengths and counting the rest ("uses idle loop · swing 0.8 s · 127 more in Anim"). The full
+  list stays one click away; a character with a hundred and thirty-one clips is still a one-line
+  fact.
+- **The frame field is the animation.** A flipbook's frame number now has the strip of its own
+  frames under it - one cell per frame, numbered from 0 the way Godot numbers them, the chosen one
+  lit, hovering a cell shows it large and the arrow keys step one frame. A long strip scrolls. The
+  plain number box never goes away. A keyframed clip has no frames at all, so it never gets a strip:
+  its moments are the named markers on its timeline, and the new "has reached" row asks the
+  animation where its marker is rather than storing a number - retiming it in the Animation panel
+  moves the moment and the row does not change.
+- **`play("attack")` and `queue(&"idle")` open as the rows they are.** Godot takes a plain string
+  or a StringName in both calls and everybody picks by habit; the shipped templates wrote one form
+  of each, so half the animation code in the world stayed a wall of text. Both spellings now lift,
+  and the file gets its own bytes back.
+- New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
+  sheet order, with the row that holds it.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

@@ -44,6 +44,11 @@ const FIELD_GROUP := "group_reference"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
 const FIELD_SHADER_DIAL := "shader_dial"
+## An animation of the scene this sheet is attached to, and a named moment inside one. The marker
+## kind carries the animation as its argument the way a method carries its target: the markers of
+## `swing` are not the markers of `idle`, and a list that mixed them would be a guess.
+const FIELD_ANIMATION := "animation_reference"
+const FIELD_MARKER := "marker_reference"
 ## The three with no hint behind them: a class to extend or to type a variable as, one of an enum's
 ## own values, and a file from the project.
 const FIELD_CLASS := "class_name"
@@ -80,6 +85,8 @@ const KIND_NODE := "node"
 const KIND_CLASS := "class"
 const KIND_FILE := "file"
 const KIND_DIAL := "dial"
+const KIND_ANIMATION := "animation"
+const KIND_MARKER := "marker"
 const KIND_ENUM := "enum"
 const KIND_BUILTIN := "builtin"
 
@@ -210,6 +217,10 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _node_entries()
 		FIELD_SHADER_DIAL:
 			return _dial_entries(sheet)
+		FIELD_ANIMATION:
+			return _animation_entries(sheet)
+		FIELD_MARKER:
+			return _marker_entries(sheet, argument)
 		FIELD_CLASS:
 			return _class_entries()
 		FIELD_ENUM_VALUE:
@@ -375,6 +386,46 @@ static func _dial_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 					EventForgeShaderUniforms.reading(dial as Dictionary)],
 				"kind": KIND_DIAL,
 			})
+	return entries
+
+
+## Every animation the scene this sheet is attached to really has, named with how long it runs (or
+## that it loops) and which node declares it. Inserted QUOTED, because an animation name is a string
+## literal in every row that takes one - completing it into a bare word would write a line naming a
+## variable nobody declared.
+static func _animation_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for source: Dictionary in EventSheetSceneAnimations.for_script(_sheet_script_path(sheet)):
+		for animation: Variant in (source.get("animations", []) as Array):
+			var clip: Dictionary = animation
+			var clip_name: String = str(clip.get("name", ""))
+			if clip_name.is_empty():
+				continue
+			entries.append({
+				"text": "\"%s\"" % clip_name,
+				"detail": "%s %s %s" % [EventSheetSceneAnimations.reading(clip), SEPARATOR,
+					str(source.get("name", ""))],
+				"kind": KIND_ANIMATION,
+			})
+	return entries
+
+
+## The named moments inside one animation - what a keyframed clip has instead of frames. The
+## argument is the animation the row is about, so a marker list is never a mix of two clips'.
+static func _marker_entries(sheet: EventSheetResource, animation_name: String) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var found: Dictionary = EventSheetSceneAnimations.find(
+		EventSheetSceneAnimations.for_script(_sheet_script_path(sheet)), animation_name)
+	if found.is_empty():
+		return entries
+	for marker: Variant in ((found["animation"] as Dictionary).get("markers", []) as Array):
+		entries.append({
+			"text": "\"%s\"" % str((marker as Dictionary).get("name", "")),
+			"detail": EventSheetL10n.translate("%s s into %s") % [
+				String.num(float((marker as Dictionary).get("time", 0.0)), 2),
+				EventSheetSceneAnimations.unquoted(animation_name)],
+			"kind": KIND_MARKER,
+		})
 	return entries
 
 

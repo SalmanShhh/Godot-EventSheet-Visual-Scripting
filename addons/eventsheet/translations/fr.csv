@@ -4894,3 +4894,17 @@ called by %s,appelé par %s
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s est marqué pour rester du code - affiché comme du code, et laissé tranquille."
 no such method,aucune méthode de ce nom
 "This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.","Cet objet n'a pas de méthode appelée %s. Elle a peut-être été renommée, ou est atteinte autrement - choisissez celle que vous vouliez."
+no such animation,aucune animation de ce nom
+This scene has no animation called %s. A misspelled name plays nothing and reports nothing - pick the one you meant.,Cette scene n'a aucune animation nommee %s. Un nom mal orthographie ne joue rien et ne signale rien - choisis celle que tu voulais.
+the queue never comes,la file n'arrive jamais
+%s s in,a %s s
+frame %d,image %d
+%s s into %s,a %s s dans %s
+loop,boucle
+%s s,%s s
+%d more in %s,%d de plus dans %s
+%d in %s,%d dans %s
+uses,utilise
+animations,animations
+%s is not an animation of this scene - the row plays nothing,%s n'est pas une animation de cette scene - la ligne ne joue rien
+%s loops - the queue never comes,%s boucle - la file n'arrive jamais
