@@ -90,11 +90,13 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_field.select_all()
 
 
-## What KIND of field one parameter is - its own `hint`, which is what the completion seam is keyed
-## by. "" for a row whose verb this build has no descriptor for (a lifted row from a pack that is
-## not installed), and an empty kind completes nothing, which is the right answer: a list guessed
-## for a parameter nobody can describe would be worse than no list. Static and registry-in, so a
-## test can pin it without a dock.
+## What KIND of field one parameter is, asked of the seam itself rather than read off the hint here:
+## a few kinds have no hint behind them and are named by their id instead (a Call row's function
+## name, a type field), and asking a different way in the sheet than in the dialog is how the same
+## parameter came to complete in one and not the other. "" for a row whose verb this build has no
+## descriptor for (a lifted row from a pack that is not installed), and an empty kind completes
+## nothing, which is the right answer: a list guessed for a parameter nobody can describe would be
+## worse than no list. Static and registry-in, so a test can pin it without a dock.
 static func field_kind_of(registry: EventSheetACERegistry, ace: Resource, param_id: String) -> String:
 	if registry == null or ace == null or param_id.is_empty():
 		return ""
@@ -103,7 +105,8 @@ static func field_kind_of(registry: EventSheetACERegistry, ace: Resource, param_
 		return ""
 	for parameter: Variant in definition.parameters:
 		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param_id:
-			return str((parameter as Dictionary).get("hint", ""))
+			return EventSheetCompletions.kind_for_param(
+				str((parameter as Dictionary).get("hint", "")), param_id)
 	return ""
 
 

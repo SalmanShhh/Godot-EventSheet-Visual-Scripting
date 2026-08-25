@@ -59,6 +59,23 @@ static func run() -> bool:
 	EventSheetDock.set_group_fields(group, "   ", "")
 	all_passed = _check("blank group name falls back to Group", group.group_name, "Group") and all_passed
 
+	# What KIND of field a parameter is, asked the same way in the row as in the parameters dialog.
+	# A Call row's function name carries no hint at all - its kind is its own id - so working the
+	# answer out from the hint alone opened a bare box on the one field the dialog completes best,
+	# and the reader got two answers to one question depending on where they double-clicked.
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var call_row: ACEAction = ACEAction.new()
+	call_row.provider_id = "Core"
+	call_row.ace_id = "CallFunction"
+	all_passed = _check("a Call row's function name completes against the sheet's functions",
+		EventSheetInlineParamEditor.field_kind_of(registry, call_row, "function_name"),
+		EventSheetCompletions.FIELD_FUNCTION) and all_passed
+	# And a parameter whose hint says nothing completes nothing, in the row exactly as in the
+	# dialog: a list guessed for a field nobody can describe is worse than no list.
+	all_passed = _check("a parameter nothing describes still completes nothing",
+		EventSheetInlineParamEditor.field_kind_of(registry, call_row, "args"), "") and all_passed
+
 	viewport.free()
 	return all_passed
 
