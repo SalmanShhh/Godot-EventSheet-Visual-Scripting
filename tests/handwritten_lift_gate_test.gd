@@ -20,6 +20,10 @@
 class_name HandwrittenLiftGateTest
 extends RefCounted
 
+## When a round-trip is refused, the evidence goes on disk rather than into a rebuild by hand:
+## the source, what came back, and the two lined up. See tests/repro_bundle.gd.
+const Repro := preload("res://tests/repro_bundle.gd")
+
 ## Ordinary hand-written sources, none of them compiler output, none written for this test.
 const SAMPLES: Array[String] = [
 	"res://addons/eventforge/importer/lift_report.gd",
@@ -98,8 +102,11 @@ static func run() -> bool:
 		for function_entry: Variant in sheet.functions:
 			if function_entry is EventFunction:
 				block_lines += _block_line_count((function_entry as EventFunction).events, false)
-		if str(SheetCompiler.compile(sheet, "user://_handwritten_lift_gate.gd").get("output", "")) != source:
+		var emitted: String = str(SheetCompiler.compile(sheet,
+			"user://_handwritten_lift_gate.gd").get("output", ""))
+		if emitted != source:
 			drifted.append(path)
+			print("  %s" % Repro.dump("handwritten_lift_gate_test", path, source, emitted, path))
 	# A renamed or deleted sample would make every count below pass vacuously.
 	all_passed = _check("every sample file is present to be measured", missing, PackedStringArray()) and all_passed
 	all_passed = _check("every hand-written sample round-trips byte-identically",

@@ -22,6 +22,9 @@
 class_name PluginReadsItselfTest
 extends RefCounted
 
+## When a round-trip is refused, the evidence goes on disk rather than into a rebuild by hand.
+const Repro := preload("res://tests/repro_bundle.gd")
+
 ## Where the editor's own source is, for this gate: the shipped plugin and the tools around it. The
 ## tests folder is deliberately out - it is listed in the This-editor folder, but its files are full
 ## of multi-line GDScript fixtures whose interiors are, correctly, code.
@@ -189,9 +192,11 @@ static func _test_corpus() -> bool:
 		if sheet == null:
 			unreadable.append(path)
 			continue
-		if str(SheetCompiler.compile(sheet, "user://_plugin_reads_itself.gd").get("output", "")) != source \
-				and not path in KNOWN_DRIFT:
+		var emitted: String = str(SheetCompiler.compile(sheet,
+			"user://_plugin_reads_itself.gd").get("output", ""))
+		if emitted != source and not path in KNOWN_DRIFT:
 			drifted.append(path)
+			print("  %s" % Repro.dump("plugin_reads_itself_test", path, source, emitted, path))
 		var blocks: int = int(EventSheetReadingCoverage.measure(sheet).get("block_lines", 0))
 		if blocks > int(KNOWN_BLOCK_LINES.get(path, 0)):
 			blocky.append("%s (%d lines)" % [path, blocks])

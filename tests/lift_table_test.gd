@@ -19,6 +19,9 @@
 class_name LiftTableTest
 extends RefCounted
 
+## When a re-emission is refused, the evidence goes on disk instead of into a rebuild by hand.
+const Repro := preload("res://tests/repro_bundle.gd")
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -88,8 +91,10 @@ static func _test_one_entry(entries: Array, entry: Dictionary) -> bool:
 	ok = _check("%s: with the values the line says" % id,
 		hit.get("params", {}), EventForgeLiftTable.expected_params(entry)) and ok
 	ok = _check("%s: and the spelling stored on it" % id, str(hit.get("template", "")), shape) and ok
-	ok = _check("%s: re-emits byte for byte" % id,
-		_emit(str(hit.get("template", "")), hit.get("params", {})), line) and ok
+	var re_emitted: String = _emit(str(hit.get("template", "")), hit.get("params", {}))
+	if re_emitted != line:
+		print("  %s" % Repro.dump("lift_table_test", id, line, re_emitted))
+	ok = _check("%s: re-emits byte for byte" % id, re_emitted, line) and ok
 	return ok
 
 
