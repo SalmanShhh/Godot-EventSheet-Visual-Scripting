@@ -47,6 +47,12 @@ const DIAL_PARAM := "dial"
 ## name is picked from a shader rather than typed - which is the whole of this vocabulary.
 const DIAL_HINT := "shader_dial"
 
+## The field a dial's VALUE is edited in. Also its own hint, because what the value is depends on the
+## dial: the shader says whether it takes a number between two ends, a colour, a texture or a whole
+## number, and the field it edits in is derived from that declaration rather than from a table. A
+## dial nothing can be derived for edits in the ordinary value field, so this is never a dead end.
+const VALUE_HINT := "shader_dial_value"
+
 ## What a copy starts on before the picker answers it from a real shader. A base row is never
 ## browsable, so this is what the compile gate builds its line from and nothing else ever shows.
 const SAMPLE_DIAL := "dissolve"
@@ -78,7 +84,7 @@ static func _set_row() -> ACEDescriptor:
 		[_dial_param("The dial to turn. Picked from the shader this node's material runs, so the name is always one the shader really declares."),
 			F.make_param("value", "String", "1.0", "Value",
 				"What to set it to. The shader says what kind of value the dial takes, and what it starts at.",
-				"expression")],
+				VALUE_HINT)],
 		CAT, "Set {%s} to {value}" % DIAL_PARAM, HOST) \
 		.described("Turns one dial of the effect this node wears. Writes `ShaderMaterial.set_shader_parameter`, with the name taken from the shader rather than typed - a mistyped name is a call Godot accepts and never acts on.") \
 		.project_scoped() \
@@ -94,8 +100,8 @@ static func _fade_row() -> ACEDescriptor:
 			MATERIAL_MEMBER, SET_CALL, DIAL_PARAM], "",
 		[_target_param("The node whose effect to fade. Leave it blank for this node."),
 			_dial_param("The dial to walk. Picked from the shader this node's material runs."),
-			F.make_param("from", "String", "0.0", "From", "Where the fade starts.", "expression"),
-			F.make_param("to", "String", "1.0", "To", "Where the fade ends.", "expression"),
+			F.make_param("from", "String", "0.0", "From", "Where the fade starts.", VALUE_HINT),
+			F.make_param("to", "String", "1.0", "To", "Where the fade ends.", VALUE_HINT),
 			F.make_param("seconds", "String", DEFAULT_FADE_SECONDS, "Seconds",
 				"How long the fade takes.", "expression")],
 		CAT, "Fade {%s} to {to} over {seconds} s" % DIAL_PARAM, HOST) \
@@ -123,7 +129,7 @@ static func _ask_row() -> ACEDescriptor:
 		[_dial_param("The dial to ask about."),
 			F.make_param("op", "String", ">", "Operator", "Comparison.", "", F.COMPARISON_OPTIONS),
 			F.make_param("value", "String", "0.5", "Value", "What to compare the dial against.",
-				"expression")],
+				VALUE_HINT)],
 		CAT, "{%s} {op} {value}" % DIAL_PARAM, HOST) \
 		.described("True while one dial of this node's effect compares as the row says. Reads `ShaderMaterial.get_shader_parameter`.") \
 		.project_scoped()

@@ -30,6 +30,19 @@ const MATERIAL_PROPERTY: String = "material"
 const SHADER_PROPERTY: String = "shader"
 const SHADER_MATERIAL_CLASS: String = "ShaderMaterial"
 
+## The member one material hands the drawing on to. A node wearing an outline over a dissolve is two
+## materials chained through this, drawn in the order the chain runs - and a chain in the WRONG order
+## looks identical in the Inspector, which is why the head says it.
+const NEXT_PASS_PROPERTY: String = "next_pass"
+
+## How far a `next_pass` chain is followed. Godot allows one material to point at itself, and a file
+## somebody hand-edited can loop; a bound is cheaper than remembering what has been seen, and no real
+## chain is anywhere near this long.
+const MAX_PASSES: int = 8
+
+## How a material writes down a dial it has moved off the shader's own default.
+const PARAMETER_PREFIX: String = "shader_parameter/"
+
 ## script path -> the wearing nodes of its scenes. Session-lifetime, shared by every asker.
 static var _cache: Dictionary = {}
 
@@ -38,7 +51,8 @@ static var _cache: Dictionary = {}
 ## on it. Keyed the same way the lighting reader keys its scenes, for the same reason.
 static var _scenes: Dictionary = {}
 
-## material resource path -> the shader it runs. A `.tres` is read once however many nodes wear it.
+## material resource path -> {"shader", "next_pass"}. A `.tres` is read once however many nodes wear
+## it, and once for however many questions are asked about it.
 static var _shaders: Dictionary = {}
 
 
@@ -104,9 +118,32 @@ static func wearers_of_script(script_path: String) -> Dictionary:
 ## The shader one node reference runs, or "" when the sheet cannot say. The chain in one call, for
 ## the guard and for the picker's entry per dial.
 static func shader_of(script_path: String, reference: String) -> String:
-	var found: Dictionary = wearers_of_script(script_path).get(
-		EventSheetSceneLights.reference_key(reference), {})
-	return str(found.get("shader_path", ""))
+	return str(wearer_of(script_path, reference).get("shader_path", ""))
+
+
+## The wearing node one row is aimed at, or {} when the sheet cannot say which node that is. A BLANK
+## "On node" means the node the sheet itself is on, which is what a blank means on every row of this
+## vocabulary - so it is answered here rather than at each of the four places that ask.
+static func wearer_of(script_path: String, reference: String) -> Dictionary:
+	return wearers_of_script(script_path).get(reference_key_of(reference), {})
+
+
+## One "On node" value reduced to the key the wearers map is filed under. The one place a blank
+## receiver becomes `self`, so the dialog's field, the health checks and the lift's guard cannot
+## disagree about which node an unanswered row is about.
+static func reference_key_of(written: String) -> String:
+	var trimmed: String = written.strip_edges()
+	return EventSheetSceneLights.SELF_REFERENCE if trimmed.is_empty() \
+		else EventSheetSceneLights.reference_key(trimmed)
+
+
+## The DECLARATION behind one row's dial - the uniform its node's shader really publishes, with the
+## type, the hints and the default that decide how it is edited. {} when any link of the chain is
+## missing (no scene, no material, no shader, or a name the shader does not declare), which is the
+## answer that leaves the ordinary value field in charge.
+static func dial_declaration(script_path: String, reference: String, dial_name: String) -> Dictionary:
+	var shader_path: String = shader_of(script_path, reference)
+	return {} if shader_path.is_empty() else EventForgeShaderUniforms.find(shader_path, dial_name)
 
 
 ## Drops every cache. The editor calls this when the filesystem changes; tests call it between
@@ -118,7 +155,12 @@ static func clear_cache() -> void:
 
 
 ## One wearing node, with the chain already followed: what it is called, where it is, how a row
-## addresses it, the material text the file holds, and the shader and dials at the end of it.
+## addresses it, the material text the file holds, the shader and dials at the end of it, the node's
+## own properties as the scene file wrote them, and the dial values the material overrides.
+##
+## The last two are what tells a screen effect somebody has turned on from one that is switched on
+## and doing nothing: the node says whether it is visible, and the material says whether any dial has
+## been moved off what the shader declares.
 static func _wearer(node: Dictionary, held: String, scene_path: String, host_path: String,
 		files: Dictionary, inside: Dictionary) -> Dictionary:
 	var material_path: String = str(files.get(_resource_id(held), "")) \
@@ -133,8 +175,30 @@ static func _wearer(node: Dictionary, held: String, scene_path: String, host_pat
 		"material": held,
 		"material_path": material_path,
 		"shader_path": shader_path,
-		"dials": EventForgeShaderUniforms.for_shader(shader_path)
+		"dials": EventForgeShaderUniforms.for_shader(shader_path),
+		"properties": node.get("properties", {}),
+		"parameters": _overridden_dials(held, material_path, inside)
 	}
+
+
+## The dial values one material writes down, as `name -> the text the file holds`. A material FILE
+## keeps them in its own `.tres`; one the scene keeps inside itself keeps them in the scene. Empty
+## for a chain that cannot be followed, which reads as "nothing has been turned up".
+static func _overridden_dials(held: String, material_path: String, inside: Dictionary) -> Dictionary:
+	if held.begins_with("SubResource("):
+		return _dial_overrides((inside.get(_resource_id(held), {}) as Dictionary).get("properties", {}))
+	return _material_facts(material_path).get("parameters", {})
+
+
+## The `shader_parameter/x = …` entries of a property table, under the bare dial names. One reading,
+## used for a material inside a scene and for one in a file of its own.
+static func _dial_overrides(properties: Dictionary) -> Dictionary:
+	var overrides: Dictionary = {}
+	for key: Variant in properties:
+		var written: String = str(key)
+		if written.begins_with(PARAMETER_PREFIX):
+			overrides[written.trim_prefix(PARAMETER_PREFIX)] = str(properties[key])
+	return overrides
 
 
 ## The shader behind one material, whichever of the two shapes it is: a resource the scene keeps
@@ -152,24 +216,52 @@ static func _shader_of_material(held: String, material_path: String, files: Dict
 	return _shader_of_file(material_path)
 
 
-## The shader a material FILE runs, read once per file. A `.tres` is written in the same text format
-## a scene is, so the file table is read with the scene reader's own parser rather than a second one;
-## a material saved in Godot's binary format has no lines to read and ends the chain.
+## The DRAW ORDER of one material file: the shader it runs, then the shader of whatever it hands the
+## drawing on to, and so on down the `next_pass` chain. One entry per pass, each
+## {"material_path", "shader_path"}, in the order the passes are drawn.
+##
+## The head says it because the Inspector cannot: two materials chained the wrong way round look
+## exactly like two chained the right way, and the only place the order is visible is the screen.
+static func pass_chain(material_path: String) -> Array[Dictionary]:
+	var passes: Array[Dictionary] = []
+	var current: String = material_path.strip_edges()
+	while not current.is_empty() and passes.size() < MAX_PASSES:
+		var facts: Dictionary = _material_facts(current)
+		passes.append({"material_path": current, "shader_path": str(facts["shader"])})
+		var next_pass: String = str(facts["next_pass"])
+		current = "" if next_pass == current else next_pass
+	return passes
+
+
+## The shader a material FILE runs, or "" when the chain cannot be followed to a `.gdshader`.
 static func _shader_of_file(material_path: String) -> String:
+	return str(_material_facts(material_path).get("shader", ""))
+
+
+## What one material file says about itself: the shader it runs and the material it hands on to, read
+## once per file. A `.tres` is written in the same text format a scene is, so the file table is read
+## with the scene reader's own parser rather than a second one; a material saved in Godot's binary
+## format has no lines to read and ends the chain.
+static func _material_facts(material_path: String) -> Dictionary:
 	if material_path.is_empty():
-		return ""
+		return {"shader": "", "next_pass": ""}
 	if _shaders.has(material_path):
 		return _shaders[material_path]
-	var found: String = ""
+	var facts: Dictionary = {"shader": "", "next_pass": "", "parameters": {}}
 	var lines: PackedStringArray = FileAccess.get_file_as_string(material_path).split("\n")
 	var files: Dictionary = EventSheetSceneConnections.resource_paths_in(lines)
+	var written: Dictionary = {}
 	for line: String in lines:
-		if not line.begins_with(SHADER_PROPERTY + " = ExtResource("):
-			continue
-		found = str(files.get(_resource_id(line.substr(line.find("=") + 1).strip_edges()), ""))
-		break
-	_shaders[material_path] = found
-	return found
+		for member: String in [SHADER_PROPERTY, NEXT_PASS_PROPERTY]:
+			if line.begins_with(member + " = ExtResource("):
+				var key: String = "shader" if member == SHADER_PROPERTY else NEXT_PASS_PROPERTY
+				facts[key] = str(files.get(
+					_resource_id(line.substr(line.find("=") + 1).strip_edges()), ""))
+		if line.begins_with(PARAMETER_PREFIX):
+			written[line.get_slice("=", 0).strip_edges()] = line.substr(line.find("=") + 1).strip_edges()
+	facts["parameters"] = _dial_overrides(written)
+	_shaders[material_path] = facts
+	return facts
 
 
 ## The id inside an `ExtResource("2_mat")` / `SubResource("3_x")` reference - the quoted text and

@@ -46,6 +46,9 @@ var _fields: Dictionary = {}
 ## The shipped descriptor dictionary per parameter id - what the strip describes and validates
 ## against. Kept beside _fields because a built widget knows its value, never its parameter.
 var _param_dicts: Dictionary = {}
+## What every parameter of the form opened on, filled before the first field is built. A parameter
+## whose FIELD depends on a sibling's answer reads it here (see _opening_value).
+var _form_values: Dictionary = {}
 ## The muted lines beside the choice fields, as the callables that re-read them. A value written by
 ## a fix (or by anything that is not a click on the list) reaches them through here: OptionButton's
 ## select() deliberately does not emit item_selected, so a caption wired only to that signal goes
@@ -285,6 +288,13 @@ func _attach_recent_value_combos() -> void:
 
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
+	_form_values = initial_values.duplicate()
+	for parameter_entry: Variant in definition.parameters:
+		if parameter_entry is Dictionary:
+			var declared: Dictionary = parameter_entry
+			var declared_key: String = str(declared.get("id", ""))
+			if not _form_values.has(declared_key):
+				_form_values[declared_key] = declared.get("default_value", "")
 	_param_dicts.clear()
 	_field_notes.clear()
 	_choice_captions.clear()
@@ -318,6 +328,14 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 ## every question about a parameter is asked of the same store in the same way.
 func _param_dict(key: String) -> Dictionary:
 	return _param_dicts.get(key, {})
+
+
+## What the form OPENED on, per parameter. A field is usually built from its own value alone, but a
+## few are answered by a SIBLING: a dial's value cannot know whether it is a slider or a colour
+## without knowing which dial and which node the row names. Read from here rather than from the
+## widgets, because the widget for a later parameter does not exist yet while an earlier one builds.
+func _opening_value(key: String, fallback: String = "") -> String:
+	return str(_form_values.get(key, fallback)).strip_edges()
 
 
 func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
@@ -414,6 +432,10 @@ func _ensure_hint_factories() -> void:
 			"palette": _create_palette_field,
 			"input_prompt_show": _create_input_prompt_show_field,
 			"input_prompt_clear": _create_input_prompt_clear_field,
+			# The dial's value, in whichever editor the shader's own declaration asks for. The one
+			# field here whose WIDGET is decided by a file in the project rather than by the hint
+			# alone - which is the point: the shader already says how its dial wants to be edited.
+			EventForgeEffectDialACEs.VALUE_HINT: _create_shader_dial_value_field,
 		}
 
 
@@ -1384,13 +1406,178 @@ func _create_enum_reference_field(key: String, default_value: Variant, enum_name
 
 ## Color picker param (hint "color" or a Color-typed param). The value round-trips as a
 ## canonical Color(r, g, b, a) literal so the sheet can show a swatch next to the text.
+##
+## The picker opens on the SAVED SHELF - the colours this project has already used, kept by the same
+## store the canvas's inline swatch picker keeps them in. A team colour picked on a row is on the
+## shelf of every colour field afterwards, which is the whole point of a shelf.
 func _create_color_field(key: String, default_value: Variant) -> Control:
 	var picker: ColorPickerButton = ColorPickerButton.new()
 	picker.custom_minimum_size = Vector2(72.0, 0.0)
 	var parsed: Variant = str_to_var(str(default_value))
 	picker.color = parsed if parsed is Color else Color.WHITE
+	var shelf: ColorPicker = picker.get_picker()
+	if shelf != null:
+		for saved: Color in EventSheetColorPresets.all():
+			shelf.add_preset(saved)
+		shelf.preset_added.connect(func(color: Color) -> void: EventSheetColorPresets.add(color))
+		shelf.preset_removed.connect(func(color: Color) -> void: EventSheetColorPresets.remove(color))
 	_fields[key] = picker
 	return picker
+
+
+## THE dial's value field: whichever editor the shader's own declaration asks for. The Inspector
+## obeys those hints, and a dial that edits as a slider there edits as a slider here - so a reader
+## meets one shader in two places rather than two different-looking things.
+##
+## The declaration is found through the row's own siblings: the "On node" says which node, the node's
+## material says which shader, and the shader says what this dial is. Any link of that missing, or a
+## value the derived editor could not hold without changing it (an expression in a slider's slot),
+## leaves the ordinary value field - which is the field this parameter always had.
+func _create_shader_dial_value_field(key: String, default_value: Variant) -> Control:
+	var sheet: EventSheetResource = _lint_sheet()
+	var uniform: Dictionary = {} if sheet == null else EventSheetSceneEffects.dial_declaration(
+		str(sheet.external_source_path),
+		_opening_value("target"),
+		_opening_value(EventForgeEffectDialACEs.DIAL_PARAM))
+	# An unanswered field opens on what the SHADER starts the dial at, the way the Inspector opens on
+	# a uniform's own default rather than on zero.
+	var value: String = str(default_value).strip_edges()
+	if value.is_empty():
+		value = EventForgeShaderUniforms.gdscript_default(uniform)
+	match EventForgeShaderUniforms.editor_kind(uniform):
+		EventForgeShaderUniforms.EDITOR_COLOR:
+			if value.is_empty() or str_to_var(value) is Color:
+				return _create_color_field(key, value)
+		EventForgeShaderUniforms.EDITOR_TEXTURE:
+			if value.is_empty() or not texture_literal_path(value).is_empty():
+				return _create_dial_texture_field(key, value)
+		EventForgeShaderUniforms.EDITOR_TOGGLE:
+			if value in ["", "true", "false"]:
+				var toggle: CheckBox = CheckBox.new()
+				toggle.button_pressed = value == "true"
+				_fields[key] = toggle
+				return toggle
+		EventForgeShaderUniforms.EDITOR_VECTOR:
+			var parts: PackedStringArray = vector_literal_parts(value)
+			if not parts.is_empty():
+				return _create_vector_field(key, parts)
+		EventForgeShaderUniforms.EDITOR_SLIDER:
+			if value.is_empty() or value.is_valid_float():
+				return _create_dial_slider_field(key, value, uniform)
+		EventForgeShaderUniforms.EDITOR_STEPPER, EventForgeShaderUniforms.EDITOR_NUMBER:
+			if value.is_empty() or value.is_valid_float():
+				return _create_dial_number_field(key, value, uniform)
+	return _create_expression_field(key, value)
+
+
+## A dial with ends: the slider the shader asked for, and the number beside it for a reader who knows
+## the value they want. Both drive the same SpinBox, which is what the row ships, so dragging and
+## typing are one answer rather than two fields that can disagree.
+func _create_dial_slider_field(key: String, value: String, uniform: Dictionary) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var spin: SpinBox = _dial_spin_box(value, uniform)
+	var slider: HSlider = HSlider.new()
+	slider.share(spin)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.custom_minimum_size = Vector2(140.0, 0.0)
+	row.add_child(slider)
+	row.add_child(spin)
+	_fields[key] = spin
+	return row
+
+
+## A dial with no slider to it: a whole-number stepper, or a plain number box. The same widget the
+## Inspector gives an `int` and a `float` uniform, and the same one this dialog has always given a
+## number-typed parameter - reached here from the shader's declaration instead of from the parameter's
+## own declared type, because the parameter is a String and the shader is what knows better.
+func _create_dial_number_field(key: String, value: String, uniform: Dictionary) -> Control:
+	var spin: SpinBox = _dial_spin_box(value, uniform)
+	_fields[key] = spin
+	return spin
+
+
+## The number box behind both, with the ends and the step the shader wrote. A dial with no ends can
+## still be typed past them - `allow_greater`/`allow_lesser` - because a uniform without `hint_range`
+## has no ends to enforce and Godot itself does not clamp one.
+func _dial_spin_box(value: String, uniform: Dictionary) -> SpinBox:
+	var ends: Dictionary = uniform.get("range", {})
+	var whole: bool = str(uniform.get("type", "")) == EventForgeShaderUniforms.TYPE_INT
+	var spin: SpinBox = SpinBox.new()
+	spin.step = 1.0 if whole else maxf(float(ends.get("step", 0.0)), 0.001)
+	spin.allow_greater = ends.is_empty()
+	spin.allow_lesser = ends.is_empty()
+	if not ends.is_empty():
+		spin.min_value = float(ends["from"])
+		spin.max_value = float(ends["to"])
+	else:
+		spin.min_value = -999999.0
+		spin.max_value = 999999.0
+	# An unanswered dial with ends opens at the bottom of them; one without ends opens at zero, never
+	# at the bottom of a range that only exists to stop the box refusing what somebody types.
+	spin.value = value.to_float() if value.is_valid_float() \
+		else clampf(0.0, spin.min_value, spin.max_value)
+	spin.custom_minimum_size = Vector2(96.0, 0.0)
+	return spin
+
+
+## A dial the shader declares as a texture: the file, picked the way every other file field in this
+## dialog is picked, and shipped as the `preload` the emitted line needs.
+func _create_dial_texture_field(key: String, value: String) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var shipped: LineEdit = LineEdit.new()
+	shipped.text = value
+	shipped.visible = false
+	var typed: LineEdit = LineEdit.new()
+	typed.text = texture_literal_path(value)
+	typed.placeholder_text = "res://…"
+	typed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	typed.text_changed.connect(func(written: String) -> void:
+		shipped.text = texture_literal(written))
+	# Dropped from the FileSystem dock, a file arrives as the quoted literal every other field here
+	# wants; this field shows the bare path, and `texture_literal` takes the quotes off either way.
+	typed.set_drag_forwarding(Callable(), _can_drop_on_expression,
+		func(_position: Vector2, data: Variant) -> void:
+			var dropped: String = drop_data_to_expression(data)
+			if not dropped.is_empty():
+				typed.text = dropped.strip_edges().trim_prefix("\"").trim_suffix("\"")
+				typed.text_changed.emit(typed.text))
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(typed)
+	var browse: Button = Button.new()
+	browse.text = EventSheetL10n.translate("Browse…")
+	# Filtered to the image formats Godot imports as textures, so the list is the files that could
+	# answer this field rather than every file there is.
+	browse.pressed.connect(func() -> void: _browse_for_file(typed,
+		PackedStringArray(["*.png", "*.jpg", "*.jpeg", "*.webp", "*.svg", "*.bmp", "*.tres"]),
+		EventSheetL10n.translate("Textures"), Callable()))
+	row.add_child(typed)
+	row.add_child(browse)
+	row.add_child(shipped)
+	_fields[key] = shipped
+	return row
+
+
+## The GDScript one texture dial ships - the file loaded where the row is written, which is what
+## `set_shader_parameter` needs and what a reader would have typed. "" for an empty path, so an
+## unanswered field ships nothing rather than a load of nowhere.
+static func texture_literal(path: String) -> String:
+	var trimmed: String = path.strip_edges().trim_prefix("\"").trim_suffix("\"").strip_edges()
+	return "" if trimmed.is_empty() else "preload(\"%s\")" % trimmed
+
+
+## That read back: the path inside a texture literal, or "" when the value is not one. `load` counts
+## as well as `preload` - somebody who wrote the line by hand may well have used it, and the field
+## should open on their file rather than refuse to recognise it.
+static func texture_literal_path(literal: String) -> String:
+	var trimmed: String = literal.strip_edges()
+	for call_name: String in ["preload", "load"]:
+		var opening: String = "%s(\"" % call_name
+		if trimmed.begins_with(opening) and trimmed.ends_with("\")"):
+			return trimmed.substr(opening.length(), trimmed.length() - opening.length() - 2)
+	return ""
 
 
 func _can_drop_on_expression(_position: Vector2, data: Variant) -> bool:
@@ -1739,29 +1926,46 @@ static func palette_asset_choices() -> Array:
 	choices.sort()
 	return choices
 
-# One cached palette browser, parented to the persistent dialog for the same reason the scene
-# browser is: no per-press accumulation, and a form rebuild cannot kill it mid-interaction.
-var _palette_file_dialog: EditorFileDialog = null
-var _palette_browse_target: LineEdit = null
+# ONE cached file browser for every Browse button in this dialog, parented to the persistent dialog
+# for the same reason the scene browser is: no per-press accumulation, and a form rebuild cannot kill
+# it mid-interaction. Which files it offers and how the pick is written are per-press, so a palette
+# field and a texture field share the window and not each other's answer.
+var _file_browse_dialog: EditorFileDialog = null
+var _file_browse_target: LineEdit = null
+var _file_browse_format: Callable = Callable()
+
+
+## Opens that browser over one field. `as_written` turns the picked path into whatever the field
+## holds - a quoted literal for a palette, a bare path for a texture - so the one window serves both
+## without either knowing about the other.
+func _browse_for_file(path_edit: LineEdit, filters: PackedStringArray, filter_label: String,
+		as_written: Callable) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if _file_browse_dialog == null:
+		_file_browse_dialog = EditorFileDialog.new()
+		_file_browse_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		_file_browse_dialog.file_selected.connect(func(selected_path: String) -> void:
+			if _file_browse_target == null or not is_instance_valid(_file_browse_target):
+				return
+			_file_browse_target.text = str(_file_browse_format.call(selected_path)) \
+				if _file_browse_format.is_valid() else selected_path
+			# Setting `text` in code raises no signal, so whatever watches the field is told by
+			# hand - otherwise a browsed file lands in it with the old reading still under it.
+			_file_browse_target.text_changed.emit(_file_browse_target.text)
+		)
+		_dialog.add_child(_file_browse_dialog)
+	_file_browse_dialog.clear_filters()
+	for filter_text: String in filters:
+		_file_browse_dialog.add_filter(filter_text, filter_label)
+	_file_browse_target = path_edit
+	_file_browse_format = as_written
+	_file_browse_dialog.popup_file_dialog()
 
 
 func _browse_for_palette(path_edit: LineEdit) -> void:
-	if not Engine.is_editor_hint():
-		return
-	if _palette_file_dialog == null:
-		_palette_file_dialog = EditorFileDialog.new()
-		_palette_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		_palette_file_dialog.add_filter("*.tres", EventSheetL10n.translate("Palette assets"))
-		_palette_file_dialog.file_selected.connect(func(selected_path: String) -> void:
-			if _palette_browse_target != null and is_instance_valid(_palette_browse_target):
-				_palette_browse_target.text = format_quoted_literal(selected_path)
-				# Setting `text` in code raises no signal, so the strip is told by hand -
-				# otherwise a browsed palette lands in the field with the old swatches under it.
-				_palette_browse_target.text_changed.emit(_palette_browse_target.text)
-		)
-		_dialog.add_child(_palette_file_dialog)
-	_palette_browse_target = path_edit
-	_palette_file_dialog.popup_file_dialog()
+	_browse_for_file(path_edit, PackedStringArray(["*.tres"]),
+		EventSheetL10n.translate("Palette assets"), Callable(ACEParamsDialog, "format_quoted_literal"))
 
 
 ## Drops onto plain LineEdit fields: files become quoted paths, nodes $Refs (reuses

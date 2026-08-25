@@ -151,6 +151,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"input_prompt_show": "Optional. With the tick on, the control's key is written onto the named label for as long as the window is open.",
 	"input_prompt_clear": "Optional. With the tick on, the prompt comes off the named label as the window shuts.",
 	"shader_dial": "A uniform declared by the shader this node's material runs, by name. The picker fills it in from the shader file, so a name that is not in that file cannot reach the game - which matters here more than anywhere: Godot accepts a misspelled dial name without a word and then does nothing with it, forever.",
+	"shader_dial_value": "What the dial is set to, in the editor its own declaration asks for: a range makes a slider, source_color a colour, a sampler a texture file, a whole number a stepper. The same hints Godot's Inspector obeys, read from the same shader file - and a dial nothing can be derived for takes an ordinary value or expression.",
 }
 
 ## The phrase a heading ends with, per hint: "Colour - a colour". Only for the hints whose kind is

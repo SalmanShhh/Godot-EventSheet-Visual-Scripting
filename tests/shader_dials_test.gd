@@ -51,6 +51,7 @@ static func run() -> bool:
 	ok = _test_the_reading() and ok
 	ok = _test_the_rows() and ok
 	ok = _test_the_picker() and ok
+	ok = _test_the_editors() and ok
 	ok = _test_the_finding() and ok
 	return ok
 
@@ -211,6 +212,68 @@ static func _test_the_picker() -> bool:
 		ACEPickerDialog.effect_group_key(registry.find_definition("Core", "SetShaderParameter"), true),
 		ACEPickerDialog.effect_group_key(registry.find_definition("Core", "SetShaderParameter"), false)
 	]), PackedStringArray(["Effects in this scene: any material, name typed", ""])) and ok
+
+
+## The EDITOR each dial asks for, derived from its own declaration rather than from a table: Godot's
+## Inspector obeys these same hints, and a dial that edits as a slider there has no business editing
+## as a text box here. Pinned by value because the derivation IS the feature - a hint read wrong is a
+## field a reader cannot answer.
+static func _test_the_editors() -> bool:
+	var ok: bool = Pins.check("shader_dials_test", {
+		"dissolve": "slider", "edge_tint": "color", "burn_noise": "texture", "steps": "stepper"
+	}, func(dial: String) -> Variant:
+		return EventForgeShaderUniforms.editor_kind(
+			EventForgeShaderUniforms.find(DISSOLVE_SHADER, dial)))
+	# The shapes with no file to read them from: a bare type decides on its own, a range of whole
+	# numbers steps rather than slides, and a declaration nothing recognises falls to the ordinary
+	# value field - which is what "never a dead end" means.
+	var kinds: PackedStringArray = PackedStringArray()
+	for uniform: Dictionary in EventForgeShaderUniforms.parse(SOURCE):
+		kinds.append("%s=%s" % [str(uniform["name"]), EventForgeShaderUniforms.editor_kind(uniform)])
+	# `weights` is an ARRAY of floats: not a slider, because the value is a list and none of the
+	# derived editors is one. It takes the ordinary value field, where the list can be written.
+	ok = _check("every declaration shape picks its own editor", kinds, PackedStringArray([
+		"dissolve=slider", "tint=color", "noise=texture", "steps=stepper", "wind_strength=number",
+		"weights=expression", "lit=toggle"])) and ok
+	ok = _check("a dial nothing is known about takes the ordinary value field",
+		EventForgeShaderUniforms.editor_kind({}), "expression") and ok
+	# The value a field OPENS on when the row has none: the shader's own starting value, written as
+	# the GDScript the row emits. `vec4` is not GDScript; `Color(…)` is the same value in the language
+	# the line is in, and a single component fills the rest exactly as GLSL fills it.
+	ok = Pins.check("shader_dials_test", {
+		"uniform float a = 0.0;": "0.0",
+		"uniform int b = 8;": "8",
+		"uniform bool c = true;": "true",
+		"uniform vec4 d : source_color = vec4(1.0, 0.6, 0.2, 1.0);": "Color(1.0, 0.6, 0.2, 1.0)",
+		"uniform vec4 e : source_color = vec4(1.0);": "Color(1.0, 1.0, 1.0, 1.0)",
+		"uniform vec2 f = vec2(3.0, 4.0);": "Vector2(3.0, 4.0)",
+		"uniform vec3 g = vec3(1.0);": "Vector3(1.0, 1.0, 1.0)",
+		"uniform float h;": ""
+	}, func(declaration: String) -> Variant:
+		var parsed: Array[Dictionary] = EventForgeShaderUniforms.parse(declaration)
+		return "" if parsed.is_empty() else EventForgeShaderUniforms.gdscript_default(parsed[0])) and ok
+	# A texture dial is a FILE in the field and a `preload` in the line, and the two are exact
+	# inverses - a hand-written `load(…)` opens in the field as its own path rather than being
+	# refused, because somebody really does write that.
+	ok = Pins.check("shader_dials_test", {
+		"res://noise.png": "preload(\"res://noise.png\")",
+		"\"res://noise.png\"": "preload(\"res://noise.png\")",
+		"": ""
+	}, func(path: String) -> Variant: return ACEParamsDialog.texture_literal(path)) and ok
+	ok = Pins.check("shader_dials_test", {
+		"preload(\"res://noise.png\")": "res://noise.png",
+		"load(\"res://noise.png\")": "res://noise.png",
+		"hp / 100.0": ""
+	}, func(literal: String) -> Variant: return ACEParamsDialog.texture_literal_path(literal)) and ok
+	# And the chain the field walks to find any of that: the row's "On node", the material that node
+	# wears, the shader behind it, and the dial by name. A blank node is the node the sheet is on.
+	EventSheetSceneEffects.clear_cache()
+	return Pins.check("shader_dials_test", {
+		"|dissolve": "slider", "|burn_noise": "texture", "$Aura|glow": "slider",
+		"$Plain|glow": "expression", "|nothing_like_it": "expression"
+	}, func(asked: String) -> Variant:
+		return EventForgeShaderUniforms.editor_kind(EventSheetSceneEffects.dial_declaration(
+			FIXTURE_DIR + BOSS, asked.get_slice("|", 0), asked.get_slice("|", 1)))) and ok
 
 
 ## The finding: a row naming a dial the shader does not declare, which Godot accepts and acts on in no
