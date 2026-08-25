@@ -89,15 +89,14 @@ static func run() -> bool:
 	all_passed = _check("animation options scan the scene's players",
 		ACEParamsDialog.animation_options_from(anim_root), PackedStringArray(["idle", "run"])) and all_passed
 	hint_dialog.animation_scene_root_override = anim_root
+	# The field prefers the ATTACHED scene's own animations; a dialog with no sheet behind it falls
+	# back to the tree it was handed, and either way the names come back QUOTED, because an animation
+	# name is a string literal in every row that takes one.
+	all_passed = _check("the live tree's animations come back as the literals a row holds",
+		hint_dialog._live_scene_animations(), PackedStringArray(["\"idle\"", "\"run\""])) and all_passed
 	var anim_field: Control = hint_dialog._create_animation_field("anim_name", "\"idle\"")
-	var anim_picker: OptionButton = null
-	for child in anim_field.get_children():
-		if child is OptionButton:
-			anim_picker = child
-	all_passed = _check("animation field offers the dropdown when players exist",
-		anim_picker != null and anim_picker.item_count == 3, true) and all_passed
-	all_passed = _check("dropdown entries are metadata-tagged, placeholder is not",
-		anim_picker.get_item_metadata(0) == null and str(anim_picker.get_item_metadata(1)) == "idle", true) and all_passed
+	all_passed = _check("the animation field is an editable box holding the row's own value",
+		hint_dialog._extract_value(hint_dialog._fields.get("anim_name")), "\"idle\"") and all_passed
 	scene_field.free()
 	anim_field.free()
 	anim_root.free()

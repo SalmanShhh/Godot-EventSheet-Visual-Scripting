@@ -95,6 +95,10 @@ static func _cell_button(cell: Dictionary, texture: Texture2D, edit: LineEdit, p
 	button.custom_minimum_size = Vector2(CELL_SIZE, CELL_SIZE)
 	button.toggle_mode = true
 	button.button_pressed = bool(cell["selected"])
+	# The chosen cell has to be obvious at a glance, because the whole point of the strip is finding
+	# one cell among sixty. The editor's own accent is what every other selection in this plugin is
+	# drawn in, so the strip does not invent a colour of its own.
+	button.add_theme_stylebox_override("pressed", _chosen_look())
 	button.tooltip_text = EventSheetL10n.translate("frame %d") % frame
 	button.pressed.connect(func() -> void:
 		edit.text = str(frame)
@@ -116,6 +120,21 @@ static func _cell_button(cell: Dictionary, texture: Texture2D, edit: LineEdit, p
 		button.accept_event()
 	)
 	return button
+
+
+## How the chosen cell is drawn: the editor's own accent as a tint and a border. Asked of the editor
+## theme where there is one, so the strip matches whatever theme the reader picked, and falling back
+## to the plugin's own blue where there is not (a preview render, a headless test).
+static func _chosen_look() -> StyleBoxFlat:
+	var accent: Color = Color("6db3f2")
+	if Engine.is_editor_hint() and EditorInterface.get_editor_theme() != null:
+		accent = EditorInterface.get_editor_theme().get_color("accent_color", "Editor")
+	var look: StyleBoxFlat = StyleBoxFlat.new()
+	look.bg_color = Color(accent.r, accent.g, accent.b, 0.2)
+	look.border_color = accent
+	look.set_border_width_all(2)
+	look.set_corner_radius_all(3)
+	return look
 
 
 ## Which way an arrow key steps, 0 for anything else.

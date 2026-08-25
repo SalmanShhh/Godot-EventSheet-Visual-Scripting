@@ -35,15 +35,21 @@ static func match_line(line: String) -> Dictionary:
 	return EventForgeLiftTable.match_line(lift_entries(), text)
 
 
-## The table. `play` and `queue` each take one animation, optionally through a node reference, and
-## the receiver is the author's own text rather than a value - which is why it rides back out
-## untouched and is not part of any sentence.
+## The table. `play` and `queue` each take one animation, optionally through a node PATH, and the
+## receiver is the author's own text rather than a value - which is why it rides back out untouched
+## and is not part of any sentence.
+##
+## THE RECEIVER IS REQUIRED, and it has to be a node PATH. `play` and `queue` are among the
+## commonest method names in the language: a file can declare a `play()` of its own, and a bare
+## `sprite.` says nothing about what `sprite` is. Either would have this table claiming a line it
+## cannot say anything true about - and taking it away from the readings that can. A `$Path` says
+## which node it is, which is the evidence this family needs and the only one it accepts.
 static func lift_entries() -> Array[Dictionary]:
 	return [
 		{
 			"id": "play_a_plain_string_animation",
 			"ace_id": PLAY_ACE,
-			"pattern": "^%splay\\((?<anim_name>\"[^\"]*\")\\)$" % EventForgeLiftTable.receiver(),
+			"pattern": "^(?<target>%s)\\.play\\((?<anim_name>\"[^\"]*\")\\)$" % EventForgeLiftTable.NODE_PATHS,
 			"params": ["anim_name", "target"],
 			"shape": "{target.}play({anim_name})",
 			"slots": {"anim_name": "\"attack\"", "target": "$Anim"}
@@ -51,7 +57,7 @@ static func lift_entries() -> Array[Dictionary]:
 		{
 			"id": "queue_a_string_name_animation",
 			"ace_id": QUEUE_ACE,
-			"pattern": "^%squeue\\((?<animation>&\"[^\"]*\")\\)$" % EventForgeLiftTable.receiver(),
+			"pattern": "^(?<target>%s)\\.queue\\((?<animation>&\"[^\"]*\")\\)$" % EventForgeLiftTable.NODE_PATHS,
 			"params": ["animation", "target"],
 			"shape": "{target.}queue({animation})",
 			"slots": {"animation": "&\"idle\"", "target": "$Anim"}

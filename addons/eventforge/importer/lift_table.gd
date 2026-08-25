@@ -71,12 +71,19 @@ const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard"]
 ## The provider an entry belongs to unless it says otherwise. Every builtin family is Core.
 const DEFAULT_PROVIDER: String = "Core"
 
-## The node spellings a row can address a node by, as a pattern fragment: `$Path`, `%Unique`,
-## `get_node("Path")` and the bare variable the node was held in. All four are the author's own text
-## and ride back out untouched, which is why the receiver they sit in is not part of any sentence.
-## Here rather than in one family because every node-scoped family needs exactly these four.
-const NODE_REFERENCE: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
-	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)|[A-Za-z_][A-Za-z0-9_]*"
+## The node spellings a row can address a node by, as a pattern fragment: `$Path`, `%Unique` and
+## `get_node("Path")`. All three are the author's own text and ride back out untouched, which is why
+## the receiver they sit in is not part of any sentence. Here rather than in one family because
+## every node-scoped family needs exactly these.
+const NODE_PATHS: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
+	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)"
+
+## The same, plus the bare variable a node was held in. A family takes this WIDER set only when it
+## has a second way to be sure the variable really is the node it wants (the shader table asks the
+## scene which variables hold a material-wearing node); a family with no such check takes the paths
+## above, because a bare identifier matches every receiver in the language and claiming those on a
+## call name alone would take lines away from the readings that already say more about them.
+const NODE_REFERENCE: String = NODE_PATHS + "|[A-Za-z_][A-Za-z0-9_]*"
 
 ## One compiled RegEx per pattern for the life of the session: these run on every statement of every
 ## opened file, and recompiling per line was the entire cost of the hand-written matchers.
@@ -202,8 +209,8 @@ static func optional_prefix_slot(name: String) -> String:
 ## the bare member operation, `energy = 1.2` or `material.set_shader_parameter(…)`, which is the
 ## commonest shape a sheet attached to its own node writes. `name` is the capture, so a line naming
 ## the same node twice can be matched with one group per mention and a guard asked whether they agree.
-static func receiver(name: String = "target") -> String:
-	return "(?:(?<%s>%s)\\.)?" % [name, NODE_REFERENCE]
+static func receiver(name: String = "target", spellings: String = NODE_REFERENCE) -> String:
+	return "(?:(?<%s>%s)\\.)?" % [name, spellings]
 
 
 ## True when a shape answers for a param - under either spelling, the plain `{name}` or the

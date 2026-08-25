@@ -23,15 +23,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Scales how fast every animation on this player runs - slow-mo a death, speed up a fast-forward. 0 freezes it in place."))
 	descriptors.append(F.make_descriptor("Core", "SeekAnimation", "Seek Animation", ACEDescriptor.ACEType.ACTION, "seek({time}, true)", "", [F.make_param("time", "float", "0.0", "Time", "Seconds from the animation's start to jump to.", "expression")], CAT, "seek animation to {time}s", "AnimationPlayer")
 		.described("Jumps the play head to a time in seconds (and updates the pose immediately) - scrub, restart from a beat, or sync to another clock."))
-	descriptors.append(F.make_descriptor("Core", "QueueAnimation", "Queue Animation", ACEDescriptor.ACEType.ACTION, "queue({animation})", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to play once the current one finishes.", "expression")], CAT, "queue animation {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "QueueAnimation", "Queue Animation", ACEDescriptor.ACEType.ACTION, "queue({animation})", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to play once the current one finishes.", "animation_reference")], CAT, "queue animation {animation}", "AnimationPlayer")
 		.described("Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer."))
 	descriptors.append(F.make_descriptor("Core", "PauseAnimation", "Pause Animation", ACEDescriptor.ACEType.ACTION, "pause()", "", [], CAT, "pause animation", "AnimationPlayer")
 		.described("Freezes the animation at its current position (Play resumes from here) - a hit-pause on a specific frame, or a photo mode."))
-	descriptors.append(F.make_descriptor("Core", "SetAnimationTime", "Set Current Animation", ACEDescriptor.ACEType.ACTION, "current_animation = {animation}", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to make current (assigning it also plays it).", "expression")], CAT, "set current animation to {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "SetAnimationTime", "Set Current Animation", ACEDescriptor.ACEType.ACTION, "current_animation = {animation}", "", [F.make_param("animation", "String", "\"idle\"", "Animation", "The clip to make current (assigning it also plays it).", "animation_reference")], CAT, "set current animation to {animation}", "AnimationPlayer")
 		.described("Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments."))
 
 	# ── Conditions ──
-	descriptors.append(F.make_descriptor("Core", "HasAnimation", "Has Animation", ACEDescriptor.ACEType.CONDITION, "has_animation({animation})", "", [F.make_param("animation", "String", "\"attack\"", "Animation", "Clip name to check for.", "expression")], CAT, "has animation {animation}", "AnimationPlayer")
+	descriptors.append(F.make_descriptor("Core", "HasAnimation", "Has Animation", ACEDescriptor.ACEType.CONDITION, "has_animation({animation})", "", [F.make_param("animation", "String", "\"attack\"", "Animation", "Clip name to check for.", "animation_reference")], CAT, "has animation {animation}", "AnimationPlayer")
 		.described("True when this player owns a clip by that name - guard a Play so a missing animation never errors."))
 
 	# ── Expressions ──

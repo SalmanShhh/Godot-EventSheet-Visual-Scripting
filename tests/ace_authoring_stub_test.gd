@@ -69,7 +69,7 @@ static func _run_node_scoped(registry: EventSheetACERegistry) -> bool:
 		"## @ace_codegen_template(\"{target.}queue({animation})\")") and all_passed
 	all_passed = _check("a quoted-literal default ships wrapped in a second quote pair",
 		_line_starting_with(stub, "## @ace_param(animation"),
-		"## @ace_param(animation, hint: expression, default: \"\"idle\"\", desc: \"The clip to play once the current one finishes.\")") and all_passed
+		"## @ace_param(animation, hint: animation_reference, default: \"\"idle\"\", desc: \"The clip to play once the current one finishes.\")") and all_passed
 	all_passed = _check("the injected On node param is plumbing, not vocabulary",
 		_line_starting_with(stub, "## @ace_param(target"), "") and all_passed
 	all_passed = _check("the authored row caption survives",

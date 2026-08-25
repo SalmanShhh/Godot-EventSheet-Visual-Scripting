@@ -31,6 +31,7 @@ static func run() -> bool:
 	ok = _test_the_filmstrip_numbers_from_zero() and ok
 	ok = _test_the_new_rows() and ok
 	ok = _test_the_spellings_that_lift() and ok
+	ok = _test_the_dialog_picks_from_the_scene() and ok
 	EventSheetSceneAnimations.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
 	return ok
@@ -212,15 +213,57 @@ static func _test_the_new_rows() -> bool:
 ## The spellings a project already holds. The shipped templates write one form of each call and
 ## everybody's habit is the other, so both open as the row they mean, with the author's own bytes
 ## kept (the lift-table harness proves the round trip; what is pinned here is WHICH row).
+##
+## And what this table refuses: a receiver that is a bare variable says nothing about what it holds,
+## and a file can declare a `play()` of its own - so such a line is left to the readings that know
+## more about it than a call name does.
 static func _test_the_spellings_that_lift() -> bool:
 	var read: Dictionary = {}
-	for line: String in ["$Anim.play(\"attack\")", "queue(&\"idle\")", "play(&\"attack\")"]:
+	for line: String in ["$Anim.play(\"attack\")", "$Anim.queue(&\"idle\")", "sprite.play(\"run\")"]:
 		var matched: Dictionary = EventForgeAnimationLift.match_line(line)
 		read[line] = "%s %s" % [str(matched.get("ace_id", "-")), str(matched.get("template", "-"))]
 	return _check("the other spelling of play and queue opens as the row it means", read, {
 		"$Anim.play(\"attack\")": "PlayAnimation {target.}play({anim_name})",
-		"queue(&\"idle\")": "QueueAnimation {target.}queue({animation})",
-		"play(&\"attack\")": "- -",
+		"$Anim.queue(&\"idle\")": "QueueAnimation {target.}queue({animation})",
+		"sprite.play(\"run\")": "- -",
+	})
+
+
+## The picker end of the same list: the Parameters dialog's fields are built off the scene, and the
+## strip is the chosen clip's own frames - eight of them for the flipbook, and none at all for a
+## keyframed clip, which is the rule that keeps a frame field off a thing that has no frames.
+static func _test_the_dialog_picks_from_the_scene() -> bool:
+	var sheet: EventSheetResource = _sheet_playing([])
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	var dialog: ACEParamsDialog = ACEParamsDialog.new()
+	dialog.set_registry(registry)
+	dialog.set_lint_context_provider(func() -> EventSheetResource: return sheet)
+	dialog._definition = registry.find_definition("Core", "OnAnimationFrame")
+	# The frame field asks its sibling which animation the row is about, exactly as it does in a
+	# dialog somebody opened; the fields are built straight rather than through a window, because a
+	# window is what a headless suite has not got.
+	dialog._form_values = {"animation": "\"walk\""}
+	dialog._create_animation_field("animation", "\"walk\"")
+	dialog._create_animation_frame_field("frame", "3")
+	var strip_cells: Array = []
+	for cell: Dictionary in EventSheetFrameStrip.cells_for(EventSheetSceneAnimations.find(
+			EventSheetSceneAnimations.for_script(SCRIPT), "\"walk\"").get("animation", {}), 3):
+		strip_cells.append(int(cell["frame"]))
+	var offered: Array = []
+	for entry: Dictionary in EventSheetCompletions.for_field(sheet,
+			EventSheetCompletions.FIELD_ANIMATION, ""):
+		offered.append(str(entry["text"]))
+	return _check("the dialog's fields are built off the scene's own list", {
+		"animation field holds the row's value": dialog._extract_value(dialog._fields.get("animation")),
+		"frame field holds the row's value": dialog._extract_value(dialog._fields.get("frame")),
+		"offered": offered,
+		"strip": strip_cells,
+	}, {
+		"animation field holds the row's value": "\"walk\"",
+		"frame field holds the row's value": "3",
+		"offered": ["\"die\"", "\"idle\"", "\"swing\"", "\"hurt\"", "\"walk\""],
+		"strip": [0, 1, 2, 3, 4, 5, 6, 7],
 	})
 
 
