@@ -2,6 +2,56 @@
 
 ## [Unreleased]
 
+### Autocomplete - one list of names, one set of keys, everywhere
+
+- **One seam behind every completing field.** `EventSheets.completions_for(sheet, field_kind,
+  prefix)` answers with `{text, detail, kind}` entries ranked best first, and every field in the
+  editor now asks it: the `ƒx` expression boxes, the Script block, the pick-filter fields, the ▾
+  combos, and - for the first time - the value you double-click inside a row. Typing in the sheet is
+  no longer blinder than typing in the dialog showing the same parameter.
+- **The field kind IS the parameter's hint.** A pack shipping `"hint": "input_action"` completes
+  against the project's Input Map without writing a line, and one shipping a hint nobody has heard
+  of completes with nothing - an ordinary typed field, never somebody else's list. Three kinds have
+  no hint behind them and are named directly (`function_name`, `class_name`, `file`), and a kind may
+  carry an argument after a colon the way the hints already do: `file:PackedScene`,
+  `enum_value:State`. `register_completion_source` lets a pack answer a kind of its own, or sharpen
+  one the plugin already answers.
+- **One popup, one keyboard model.** Tab or Enter accepts, Escape closes and keeps exactly what was
+  typed, Up and Down move and wrap. They are Godot's own completion keys on purpose. In a value
+  field accepting swaps only the word under the caret, so `health + ma` keeps its `health + `; in a
+  name, type or file field it replaces the field, because the field holds one value. The Sheet type
+  dialog's bespoke class popup is gone and its Extends field rides this one, keeping its curated
+  class list and its editor icons.
+- **What completes where.** Value fields: the sheet's variables with scope and type, the host
+  class's members, `Autoload.member` globals, the parameters your own functions declare, the enums,
+  and GDScript's own `max()` / `clamp()` / `randf()`. After a dot, only that type's members; after
+  `$` or `%`, the scene's paths and unique names (and a `%` that is really the modulo operator
+  offers nothing). Name fields: sheet functions, signals, node groups with their counts, enum values,
+  Input Map actions with their bindings. Type fields: the project's own classes first, then the
+  engine's, each with the editor's icon. File fields: `res://` paths filtered to the resource type
+  the field takes, from the engine's own loader rather than a table here.
+- **Ranked, not just filtered.** The whole name, then a name starting with the query, then a name
+  whose WORD starts with it (`shader` finds `set_shader_parameter`), then the name containing it,
+  then a hit in the explaining line, and finally letters-in-order - but only from three characters
+  up, because `hp` is a subsequence of half the engine's method names and finding all of them buries
+  the variable that was meant.
+- **Quick add reads a whole sentence.** Type `boss fla 0.4` into the Add picker and
+  **Boss ▸ Flash white for 0.4 s** comes first with the 0.4 already in it. Words match the row's
+  name, the node it is aimed at, its category and its keywords, in any order, and every word has to
+  hit something. A VALUE - a number, or text in quotes - is taken out of the filter (no row's name
+  contains `0.4`, which is why the whole query used to find nothing) and lands in the first
+  parameter that can take it and is not already answered. A dropdown, a colour or a node reference
+  takes none, and nothing a picker shelf already chose is overwritten.
+- **A keystroke never scans the project.** Each kind's list is built once - when a field of that
+  kind is first completed - and only FILTERED afterwards. Lists are dropped at the two moments an
+  answer can change: a sheet edit drops that sheet's, and the editor's filesystem ping drops all of
+  them. The answers about the project (the Input Map, the groups, the class list, the file list) are
+  held once and shared by every open tab.
+- **Code boxes keep Godot's own popup.** A Script block is a GDScript editor and stays one; what the
+  plugin contributes to it is the vocabulary, from the same seam. There is no second completion
+  engine anywhere in the plugin, which is what lets the keys be identical everywhere.
+- New guide: **Autocomplete and Quick Add**, and the seam is documented in the API guide.
+
 ### Effects - the shader names its own dials
 
 - **The dial names come out of the `.gdshader`, not out of your typing.**

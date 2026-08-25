@@ -96,6 +96,7 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | To check a dialog you built | `EventSheetPopupUI.probe_help_dialog(node)` - strips, fields, unwired, follows_focus, both reading lines, no display server needed |
 | Dialog chrome | `titled_card`, `panel_section`, `form_row`, `form_box`, `margined`, `code_noted_option`, `autocomplete_combo` |
 | The line a row compiles to | `EventSheetCodeEcho` / `EventSheets.row_code_line(row)` - the emitter's own string, never a re-implementation |
+| A field that completes as you type | `EventSheetCompletionPopup.attach(field, field_kind, sheet_provider)` - one popup, one keyboard model (Tab/Enter accepts, Escape keeps what was typed). The names come from `EventSheets.completions_for(sheet, field_kind, prefix)`, and `field_kind` is the parameter's own hint |
 | To recognise a hand-written spelling | A TABLE ENTRY in `addons/eventforge/importer/lift_table.gd`, not a new matcher (section 5) |
 | A picture of a UI change | A module under `tools/previews/`, rendered by `tools/render_previews.gd` in one boot |
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |

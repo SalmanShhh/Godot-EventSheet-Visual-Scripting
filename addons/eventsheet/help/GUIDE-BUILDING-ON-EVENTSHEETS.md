@@ -140,6 +140,28 @@ assert(probe["strips"] == 1 and probe["unwired"].is_empty() and probe["follows_f
 
 `show_note(heading, body, tone := TONE_NORMAL, fixes := [])` is the shape to call: it sets the heading, the paragraph, the tone (`TONE_NORMAL` / `TONE_WARNING` / `TONE_ERROR`, which recolour the rule down the left edge) and the one-click fixes together, so a red rule from the last field can never stand over this field's description. The strip's current `tone` is readable, so a test pins the state without sampling a colour.
 
+### Completion
+
+`completions_for(sheet, field_kind, prefix)` is THE list of names a field can hold, ranked best first. The expression boxes, the value you double-click inside a row, the name fields, the type fields and the file fields all ask this one call, which is why they all behave the same and why there is only one set of keys to learn (Tab or Enter accepts, Escape keeps what was typed, Up and Down move).
+
+```gdscript
+EventSheets.completions_for(EventSheets.current_sheet(), "expression", "health + ma")
+# -> [{"text": "max()", "detail": "built-in · max(a, b, ...) - the largest", "kind": "builtin"}, ...]
+```
+
+`text` is what accepting inserts, `detail` is the line shown beside it, and `kind` is a stable id naming what sort of thing it is: `variable`, `member`, `function`, `signal`, `group`, `action`, `node`, `class`, `file`, `dial`, `enum`, `builtin`.
+
+**`field_kind` is your parameter's own `hint`**, so a parameter you ship with `"hint": "input_action"` completes against the project's Input Map with no wiring at all, and one carrying a hint nobody knows completes with nothing - an ordinary typed field, never somebody else's list. Three kinds have no hint behind them and are named directly (`"function_name"`, `"class_name"`, `"file"`), and a kind may carry an argument after a colon exactly as the hints do: `"file:PackedScene"`, `"enum_value:State"`. For `"expression"` pass the whole text BEFORE THE CARET - `hp.` and `hp` want different answers, and only that can tell them apart.
+
+| Helper | What it is |
+|---|---|
+| `completions_for(sheet, field_kind, prefix := "") -> Array[Dictionary]` | the ranked entries for one field |
+| `register_completion_source(field_kind, source: Callable)` | answer a kind of your own, or sharpen one the plugin already answers. `source(sheet, field_kind) -> Array` may return entries or plain Strings; it is asked BEFORE the built-in, and its answer is cached like one |
+| `unregister_completion_source(field_kind)` | remove it again |
+| `attach_completions(field: LineEdit, field_kind) -> EventSheetCompletionPopup` | ride the popup on a field of your own dialog, with the same keys and the current sheet as context |
+
+A source is asked ONCE per sheet and only filtered afterwards, so it is free to be slow - it runs when a field of that kind is first completed, never on a keystroke. Built lists are dropped when the sheet is edited and when the editor's filesystem changes, which are the only two things that can change an answer.
+
 ## 5. Codegen Services
 
 The compiler and importer as plain services, dock-free, usable from tests and CI:
@@ -289,6 +311,10 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
+| Editor | `completions_for(sheet, field_kind, prefix := "")` - THE names a field of that kind can hold, ranked best first as `{text, detail, kind}`. `field_kind` is the parameter's own `hint` (plus `function_name` / `class_name` / `file`, and a `:argument` suffix where one is needed) | `Array[Dictionary]` | no |
+| Editor | `register_completion_source(field_kind: String, source: Callable)` - answer a field kind of your own; `source(sheet, field_kind) -> Array` is asked once per sheet and cached | `void` | no |
+| Editor | `unregister_completion_source(field_kind: String)` | `void` | no |
+| Editor | `attach_completions(field: LineEdit, field_kind: String)` - ride the one completion popup on your own dialog's field (Tab or Enter accepts, Escape keeps what was typed) | `EventSheetCompletionPopup` | no |
 | Rows | `build_condition_action_row(condition_text, action_lines, indent := 0, source := null)` - the primitive for mapping any construct onto the event model | `EventRowData` | yes |
 | Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published function's parameters use this exact call | `EventRowData` | yes |
 | Rows | `build_caption_row(text, indent := 0, row_uid := "", accent := Color(0,0,0,0))` - a wrapping line of prose welded above the row it describes | `EventRowData` | yes |
