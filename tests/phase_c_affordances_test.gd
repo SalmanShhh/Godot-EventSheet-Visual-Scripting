@@ -80,7 +80,7 @@ static func run() -> bool:
 	scene_root.add_child(enemy)
 	EventSheetGDScriptLint.scene_root_provider = func() -> Node: return scene_root
 	var labels: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("$MoveToChild.", null):
+	for candidate in EventSheetGDScriptLint.dot_completion_candidates("$MoveToChild", null):
 		labels.append(str(candidate.get("label", "")))
 	all_passed = _check("scene children complete their script methods", labels.has("move_to_position"), true) and all_passed
 	all_passed = _check("scene children complete their signals", labels.has("arrived"), true) and all_passed

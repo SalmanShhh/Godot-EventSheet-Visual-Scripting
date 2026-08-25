@@ -142,18 +142,6 @@ static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetR
 	return "\n".join(lines)
 
 
-## Context-aware completion: when the text before the caret ends in `<identifier>.`, the
-## resolved type's members are offered (dot-context); otherwise the flat sheet/host
-## candidates. This is the single choke point both the block editor and ƒx fields use.
-static func completion_for_context(text_before_caret: String, sheet: EventSheetResource) -> Array[Dictionary]:
-	var dot_regex: RegEx = RegEx.new()
-	if dot_regex.compile("([$]?[A-Za-z_][A-Za-z0-9_]*)\\.$") == OK:
-		var dot_match: RegExMatch = dot_regex.search(text_before_caret)
-		if dot_match != null:
-			return dot_completion_candidates(dot_match.get_string(1), sheet)
-	return completion_candidates(sheet)
-
-
 ## Members of the type the dotted token resolves to:
 ## - `host` (behavior sheets) → the declared host class
 ## - a sheet variable with a known class type → that class

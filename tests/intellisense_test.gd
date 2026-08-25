@@ -47,20 +47,20 @@ static func run() -> bool:
 	sheet.functions.append(reload_fn)
 
 	# Dot-context: host. → host class members; typed variable → its class; flat otherwise.
-	var host_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("host.", sheet))
+	var host_members: Array[String] = _labels(EventSheetGDScriptLint.dot_completion_candidates("host", sheet))
 	all_passed = _check("host. offers host-class members", host_members.has("move_and_slide"), true) and all_passed
 	all_passed = _check("host. does not offer sheet variables", host_members.has("health"), false) and all_passed
-	var body_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("if body.", sheet))
+	var body_members: Array[String] = _labels(EventSheetGDScriptLint.dot_completion_candidates("body", sheet))
 	all_passed = _check("typed variable offers its class members", body_members.has("global_position"), true) and all_passed
-	var typed_array_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("enemies.", sheet))
+	var typed_array_members: Array[String] = _labels(EventSheetGDScriptLint.dot_completion_candidates("enemies", sheet))
 	all_passed = _check("typed Array[T] variable completes container (Array) members",
 		typed_array_members.has("append") and typed_array_members.has("size"), true) and all_passed
-	var behavior_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("$TimerBehavior.", sheet))
+	var behavior_members: Array[String] = _labels(EventSheetGDScriptLint.dot_completion_candidates("$TimerBehavior", sheet))
 	all_passed = _check("$Behavior. offers the script class's methods", behavior_members.has("start_timer"), true) and all_passed
 	all_passed = _check("$Behavior. includes base-class members", behavior_members.has("get_child_count"), true) and all_passed
-	var flat: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("hea", sheet))
+	var flat: Array[String] = _labels(EventSheetGDScriptLint.completion_candidates(sheet))
 	all_passed = _check("non-dot context stays flat (sheet symbols)", flat.has("health") and flat.has("reload"), true) and all_passed
-	all_passed = _check("unknown token offers nothing", EventSheetGDScriptLint.completion_for_context("mystery.", sheet).is_empty(), true) and all_passed
+	all_passed = _check("unknown token offers nothing", EventSheetGDScriptLint.dot_completion_candidates("mystery", sheet).is_empty(), true) and all_passed
 
 	# Signature hints.
 	all_passed = _check("sheet-function hint", EventSheetGDScriptLint.signature_hint("reload(", sheet), "reload(ammo: int)") and all_passed

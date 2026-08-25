@@ -58,12 +58,12 @@ static func run() -> bool:
 	all_passed = _check("expressions referencing the enum lint",
 		bool(EventSheetGDScriptLint.lint_expression("state == State.RUN", sheet).get("ok", false)), true) and all_passed
 	var members: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("State.", sheet):
+	for candidate in EventSheetGDScriptLint.dot_completion_candidates("State", sheet):
 		members.append(str(candidate.get("label", "")))
 	all_passed = _check("State. completes members (values stripped)",
 		members.has("IDLE") and members.has("HURT") and not members.has("HURT = 4"), true) and all_passed
 	var flat: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("Sta", sheet):
+	for candidate in EventSheetGDScriptLint.completion_candidates(sheet):
 		flat.append(str(candidate.get("label", "")))
 	all_passed = _check("enum name is a flat candidate", flat.has("State"), true) and all_passed
 

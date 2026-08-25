@@ -15,13 +15,13 @@ static func run() -> bool:
 	sheet.host_class = "Area2D"
 	sheet.variables = {"zone": {"type": "Area2D", "default": null, "exported": false}}
 	var labels: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("zone.", sheet):
+	for candidate in EventSheetGDScriptLint.dot_completion_candidates("zone", sheet):
 		labels.append(str(candidate.get("label", "")))
 	all_passed = _check("typed variables complete class signals", labels.has("body_entered"), true) and all_passed
 
 	# $GlobalClass. includes script-declared signals (PlatformerMovement declares jumped).
 	var pack_labels: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("$PlatformerMovement.", sheet):
+	for candidate in EventSheetGDScriptLint.dot_completion_candidates("$PlatformerMovement", sheet):
 		pack_labels.append(str(candidate.get("label", "")))
 	all_passed = _check("$GlobalClass completes script signals", pack_labels.has("jumped"), true) and all_passed
 
