@@ -54,6 +54,12 @@ static func build_report(event_row: EventRow, values: Dictionary, streaming: boo
 	report["headline"] = _headline_for(event_row)
 	report["trigger"] = trigger_line(event_row)
 	report["facts"] = cross_references(sheet, event_row)
+	# The one fact this report could not say before the game had modes: the row's group runs in one,
+	# and the game was in another. Two facts side by side, not a conclusion - the reader is the one
+	# who knows whether the game was supposed to be in that mode.
+	var guard: String = mode_guard_line(sheet, event_row, values)
+	if not guard.is_empty():
+		(report["facts"] as PackedStringArray).append(guard)
 	if not bool(report["streaming"]):
 		report["verdict_line"] = NO_SESSION_LINE
 		# The conditions are still listed - reading WHICH conditions gate a row is useful with the
@@ -111,6 +117,20 @@ static func cross_references(sheet: EventSheetResource, event_row: EventRow) -> 
 			facts.append("The %s group it is in can be switched off while the game runs, and %s." % [
 				group.display_name(), ", ".join(switched)])
 	return facts
+
+
+## "runs in Playing; the game was in Cutscene" - the guard the row's group carries, beside the mode
+## the run was actually in. "" when the group names no mode, or when the two agree, or when nothing
+## has streamed a mode: a fact only earns a line when it is a fact.
+static func mode_guard_line(sheet: EventSheetResource, event_row: EventRow, values: Dictionary) -> String:
+	var group: EventGroup = _group_holding(sheet.events, event_row) if sheet != null else null
+	if group == null or group.runs_in.strip_edges().is_empty():
+		return ""
+	var was: String = EventSheetModeFacts.word_for(str(values.get("mode", "")))
+	if was.is_empty() or was == group.runs_in.strip_edges():
+		return ""
+	return "It runs in %s; the game was in %s - the trail in Live Values says how it got there." % [
+		group.runs_in.strip_edges(), was]
 
 
 ## The innermost group holding this row, or null when it sits at the top of the sheet.
