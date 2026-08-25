@@ -4892,3 +4892,5 @@ called by %s,%s에서 호출함
 "%s reads as rows: %d%% - %d function(s) opened, %d still code.","%s 가 행으로 읽히는 비율: %d%% - 함수 %d개가 열렸고, %d개는 아직 코드입니다."
 %d other script(s) call something it declares.,다른 스크립트 %d개가 이 파일이 선언한 것을 호출합니다.
 "%s is marked to stay code - showing it as code, and leaving it alone.","%s 는 코드로 남기기로 표시되어 있습니다 - 코드로 보여 주고, 그대로 둡니다."
+no such method,그런 메서드가 없습니다
+"This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",이 오브젝트에는 %s 라는 메서드가 없습니다. 이름이 바뀌었거나 다른 방법으로 호출되는 것일 수 있습니다 - 의도한 것을 고르세요.

@@ -4892,3 +4892,5 @@ called by %s,由 %s 调用
 "%s reads as rows: %d%% - %d function(s) opened, %d still code.",%s 可读作行的比例：%d%% - 已打开 %d 个函数，%d 个仍是代码。
 %d other script(s) call something it declares.,另有 %d 个脚本调用了它声明的内容。
 "%s is marked to stay code - showing it as code, and leaving it alone.",%s 已标记为保持代码 - 以代码显示，并保持原样。
+no such method,没有这个方法
+"This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.",该对象没有名为 %s 的方法。它可能被改名了，或者通过别的方式被调用 - 请选择你想要的那个。

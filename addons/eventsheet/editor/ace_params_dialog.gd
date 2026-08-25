@@ -1247,8 +1247,70 @@ func _physics_mask_summary(mask: int, dimension: String) -> String:
 ## Reflection pickers for the Helper ACEs' method/property params: an editable suggest-combo
 ## of the sheet host class's members (reflected from ClassDB), so Call Method / Set Property
 ## become pick-don't-type. Editable, so an expert can still type a member reflection misses.
+## The method list is the TARGET's, not this sheet's: the row says which object it is aimed at, and
+## the answer to "what can I call on it" is that object's own script - every method it declares, with
+## the arguments as written and the `##` comment above the declaration as its description. A target
+## nothing in the project answers to (an expression worked out at run time) falls back to the sheet's
+## own class, and the field stays editable either way, so a name reflection cannot see is still
+## typeable. That is what keeps the frozen typed-string row usable for genuinely dynamic names.
 func _create_method_reference_field(key: String, default_value: Variant) -> Control:
-	return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "method"), default_value)
+	var members: Array[Dictionary] = EventSheetScriptMembers.methods_for(_lint_sheet(),
+		_opening_value("target", "self"))
+	if members.is_empty():
+		return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "method"), default_value)
+	var names: PackedStringArray = PackedStringArray()
+	var described: Dictionary = {}
+	for member: Dictionary in members:
+		names.append(str(member["name"]))
+		described[str(member["name"])] = EventSheetScriptMembers.detail_of(member)
+	var row: Control = _create_autocomplete_field(key, Array(names), default_value,
+		func(name: String) -> String: return str(described.get(name, "")))
+	var edit: LineEdit = _fields.get(key) as LineEdit
+	if edit != null:
+		edit.text_changed.connect(func(_typed: String) -> void: _validate_member_field(edit, names))
+		_validate_member_field(edit, names)
+	return row
+
+
+## Amber when the row names a method the target no longer has - which is what a rename somewhere else
+## does to a typed string, silently, until the game runs. A WARNING and not an error on purpose: the
+## name may be reached some other way, and refusing to save somebody's row over a guess would be
+## worse than saying so. The nearest name is offered as the fix, which is nearly always the rename.
+func _validate_member_field(edit: LineEdit, known: PackedStringArray) -> void:
+	var typed: String = edit.text.strip_edges()
+	# An expression rather than a plain name (a variable holding one, a call) is not this check's
+	# business - it cannot be looked up, and a warning about it would be noise on every row using one.
+	if typed.is_empty() or known.has(typed) or not _is_plain_identifier(typed):
+		edit.remove_theme_color_override("font_color")
+		_record_expression_note(edit, "", "", "", "", "")
+		return
+	edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
+	var nearest: String = closest_of(typed, known)
+	_record_expression_note(edit, EventSheetParamFieldFactory.LEVEL_WARNING,
+		EventSheetL10n.translate("no such method"),
+		EventSheetL10n.translate("This object has no method called %s. It may be renamed, or reached some other way - pick the one you meant.") % typed,
+		"", nearest)
+
+
+static func _is_plain_identifier(text: String) -> bool:
+	return RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$").search(text) != null
+
+
+## The nearest name in a list, within two edits - the same rule the unknown-identifier fix follows,
+## over whatever list the caller has rather than over the sheet's own vocabulary.
+static func closest_of(name: String, candidates: PackedStringArray) -> String:
+	if name.length() < 2:
+		return ""
+	var best: String = ""
+	var best_distance: int = 3
+	for candidate: String in candidates:
+		if candidate.is_empty() or candidate == name:
+			continue
+		var distance: int = _edit_distance(name.to_lower(), candidate.to_lower())
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate
+	return best
 
 
 func _create_property_reference_field(key: String, default_value: Variant) -> Control:
