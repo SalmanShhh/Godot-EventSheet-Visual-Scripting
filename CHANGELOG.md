@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Performance - a project ten times this one, and what the editor costs on it
+
+- **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
+  measured on this repository, which is large by most standards and is still not the tree the plugin
+  has to survive: a game two years in. So a generator writes that tree instead, under `user://`, the
+  first time a test asks for it - 1,000 scripts in the seven shapes real files come in (variables,
+  regions, plain functions, networked rows, lighting rows, effect rows, and code no lift will
+  claim), 300 scenes of which three carry 2,000 nodes, 100 shaders declaring eight described dials
+  each, one 2,000-line controller, and the 105 packs this repository already ships. It is
+  deterministic - every file is derived from its index, so two machines write identical bytes and a
+  number measured on one means something on the other - it takes 1.2 seconds to write and 2
+  milliseconds to find again, and it is never committed, so nothing here grew by 1,401 files.
+- **Ten budgets, each measured three or more times on a quiet machine before it was written down.**
+  What the editor costs on that fixture today: enabling the plugin **270 ms**; the first sheet tab
+  of a session **2,310 ms**, of which **2,050 ms** is the once-per-session registries no later tab
+  pays; opening the 2,000-line script as 1,441 rows **5,600 ms**; the Add picker over all 5,129
+  registered rows **390 ms**; one keystroke in a completing field **2.2 ms**, comfortably inside a
+  frame; the lights and material wearers of a 2,000-node scene **270 ms** cold and **0.03 ms**
+  warm; 100 shaders **180 ms** cold and **90 ms** warm; the whole Project Doctor audit of this
+  repository **85 s**. Every one of them is now a test, and `tests/run_perf.gd` runs them.
+- **Boot is measured in a process that has never booted.** By the time any test runs, half the
+  plugin is compiled and every registry is warm, so the work an editor start really does measures as
+  zero from inside the suite - which is how a 2-second boot regression hid twice. A probe now runs
+  as its own subprocess, loads the plugin the way the editor does and reports what it cost, and the
+  budget over it is set far below the number the lazy-boot contract exists to prevent rather than
+  just above today's.
+- **Two numbers are pinned where they are rather than where they ought to be**, and are named here
+  so the next pass has a target instead of a feeling: a warm shader read still costs a filesystem
+  call per question (deciding whether the cached answer is current opens the file for its length),
+  which is why 100 warm reads cost 90 ms instead of nothing; and the Doctor's second run over the
+  same unchanged project costs the same as its first, so nothing it learns is being kept.
+
 ### Autocomplete - one list of names, one set of keys, everywhere
 
 - **One seam behind every completing field.** `EventSheets.completions_for(sheet, field_kind,

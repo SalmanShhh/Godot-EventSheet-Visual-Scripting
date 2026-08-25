@@ -105,6 +105,9 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | To pin a table of input to expected | `tests/pin_table.gd` - `Pins.check(name, {input: expected}, callable)`, one failure line for all of them, whole table walked |
 | To leave evidence when a byte gate refuses | `tests/repro_bundle.gd` - `Repro.dump(test, case, expected, actual, input_path)` |
 | To know why a run was red | `tools/test_report.gd` - the assertion, the changed files that map to it, the rerun line, and any test that crashed |
+| A project far bigger than this one to measure on | `tests/huge_project_fixture.gd` - `HugeProject.build()` returns the manifest of 1,000 scripts, 300 scenes (three of them 2,000 nodes) and 100 shaders, written deterministically under `user://` on first ask and found again in 2 ms |
+| What a cold editor start costs | `tests/cold_boot_probe.gd`, run as its OWN process - the suite cannot measure boot from inside itself, because by then everything is compiled and warm |
+| Where a timing budget goes | `tests/huge_project_budget_test.gd` for anything on the fixture; beside the code for anything else (the row rebuild lives in `lift_perf_test.gd`, the Doctor audit in `project_doctor_test.gd`). Measure three times on a quiet machine first, write the measurements into the constant's own comment, and set the budget at roughly double |
 
 ---
 
