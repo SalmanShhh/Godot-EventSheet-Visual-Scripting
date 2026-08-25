@@ -3156,6 +3156,13 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 		if REVERSE_LIFT_EXCLUDED_CATEGORIES.has(descriptor.category) \
 				or REVERSE_LIFT_EXCLUDED_ACE_IDS.has(descriptor.ace_id):
 			continue
+		# And a row whose choices come out of the open project is never claimed by a template match,
+		# for the reason its own flag gives: deciding that `material.set_shader_parameter(&"x", v)` is
+		# a DIAL row takes a question only the project can answer - does that node wear a material,
+		# and does its shader declare `x`. The family's matcher asks it before this index is reached,
+		# and a line it cannot answer for keeps whichever row it already had.
+		if descriptor.is_project_scoped:
+			continue
 		# `break` / `continue` are admitted but tagged loop_control: _match_entry only claims them inside a
 		# lifted loop body (they are invalid GDScript anywhere else), so they never mis-claim a bare keyword
 		# at function scope. (`pass` has no ACE - the compiler emits it only as an empty-body stub, so there

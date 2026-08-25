@@ -4859,3 +4859,6 @@ Sets how much light a 3D scene has with no light shining on it.,Imposta quanta l
 World environment,WorldEnvironment
 The WorldEnvironment node holding the environment.,Il nodo WorldEnvironment che contiene l'ambiente.
 Set fog colour to {colour},Imposta il colore della nebbia su {colour}
+"%s declares no dial called %s, so this row does nothing when the game runs.","%s non dichiara alcun controllo chiamato %s, quindi questa riga non fa nulla quando il gioco è in esecuzione."
+Picked %s.,%s scelto.
+"any material, name typed","qualsiasi materiale, nome digitato"

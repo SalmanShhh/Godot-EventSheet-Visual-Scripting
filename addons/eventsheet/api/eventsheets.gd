@@ -1821,6 +1821,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	# The darkness a layer wears and the world's own atmosphere are the same reader's question
 	# one step out from the lights, so the three modules land on the one page rather than three.
 	"scene_lighting": "Cameras-Graphics-And-Screenshots",
+	# And turning a shader's dials is that question one step further out - how the picture is made -
+	# so it lands on the same page rather than starting a fourth one.
+	"effect_dial": "Cameras-Graphics-And-Screenshots",
 	"locale_asset": "Localising-Your-Game",
 	"video": "Playing-Video",
 	"loop": "Working-With-Lists",

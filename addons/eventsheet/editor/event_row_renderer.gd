@@ -232,7 +232,8 @@ func _draw_param_emphasis(
 	base_color: Color,
 	value_color: Color,
 	string_color: Color,
-	bool_color: Color
+	bool_color: Color,
+	muted_color: Color = TEXT_MUTED
 ) -> void:
 	var limit: float = baseline.x + max_width
 	for entry: Variant in param_ranges:
@@ -260,6 +261,8 @@ func _draw_param_emphasis(
 						run_color = string_color
 					elif kind == "bool":
 						run_color = bool_color
+					elif kind == "muted":
+						run_color = muted_color
 					else:
 						run_color = value_color
 					break
@@ -283,7 +286,8 @@ func _draw_text_with_values(
 	base_color: Color,
 	value_color: Color = COLOR_VALUE,
 	string_color: Color = COLOR_VALUE,
-	bool_color: Color = COLOR_VALUE
+	bool_color: Color = COLOR_VALUE,
+	muted_color: Color = TEXT_MUTED
 ) -> void:
 	var cursor: int = 0
 	var x: float = baseline.x
@@ -307,6 +311,11 @@ func _draw_text_with_values(
 					value_col = string_color
 				"bool":
 					value_col = bool_color
+				# A reading's LEAD - the `effect.` in front of a shader dial's name, the same device an
+				# autoload's name is read with. It says what the name belongs to, which a reader needs
+				# once and then stops reading, so it is drawn quietly and the name is not.
+				"muted":
+					value_col = muted_color
 		var value_text: String = text.substr(start, length)
 		if not value_text.is_empty() and x < limit:
 			_draw_text(control, Vector2(x, baseline.y), value_text, limit - x, font, font_size, value_col)
@@ -1252,7 +1261,7 @@ func _draw_spans(
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
-			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, reading.string_value_color, reading.boolean_value_color)
+			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
 		# The event-sheet parameter emphasis: every substituted parameter value re-draws 0.7px over -
 		# the same double-draw bold the BBCode cells use - in whatever colour that run already
 		# has, so the typed value tints never wash out.
@@ -1260,7 +1269,7 @@ func _draw_spans(
 			var emphasis_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
 				text_width, font, draw_font_size, color, emphasis_value_color,
-				reading.string_value_color, reading.boolean_value_color)
+				reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:

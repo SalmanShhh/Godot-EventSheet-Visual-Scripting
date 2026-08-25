@@ -28,6 +28,18 @@ const LENS_DARKNESS: String = "darkness"
 ## needs the number it is fading to.
 const LENS_DARKNESS_PERCENT: String = "darkness_percent"
 
+## A shader dial's name, read behind the lead that says WHAT the name is: `effect.dissolve` rather
+## than a bare `dissolve` a reader would have to guess is a dial and not a variable. The same device
+## an autoload's members are read with, and the same one the expression fields accept.
+const LENS_EFFECT_DIAL: String = "effect_dial"
+
+## The lead itself, so the canvas can mute exactly those characters and the tests can name them.
+const EFFECT_LEAD: String = "effect."
+
+## Every lead a reading can put in front of a name. Two readers ask: the canvas, which draws those
+## characters quietly, and the name lens, which must NOT read one as a possession.
+const LEADS: Array[String] = [EFFECT_LEAD]
+
 
 ## One value as its lens reads it, or the value unchanged: for a param that named no lens, for a
 ## name that is not one, and for a value the lens cannot make sense of.
@@ -37,7 +49,35 @@ static func read(lens: String, value: String) -> String:
 			return darkness(value)
 		LENS_DARKNESS_PERCENT:
 			return darkness_percent(value)
+		LENS_EFFECT_DIAL:
+			return effect_dial(value)
 	return value
+
+
+## `dissolve` as `effect.dissolve`. Only a plain name is led: anything else is an expression the
+## author wrote (a variable holding the name, a call that works one out), and putting a lead on it
+## would say something the row does not mean.
+static func effect_dial(value: String) -> String:
+	var name_text: String = value.strip_edges()
+	return EFFECT_LEAD + name_text if name_text.is_valid_identifier() else value
+
+
+## The muted lead one lens puts in front of its reading, "" for the lenses that put none there. The
+## canvas asks so it can draw those characters quietly; a lens added later answers here and is muted
+## with nothing else to change.
+static func lead_of(lens: String) -> String:
+	return EFFECT_LEAD if lens.strip_edges() == LENS_EFFECT_DIAL else ""
+
+
+## True when a token IS one name behind a reading lead - `effect.dissolve`. A lead is a word this
+## plugin put in front of the name to say what the name belongs to, not a chain the author wrote, so
+## the name lens must leave it alone: read as a chain it comes out "effect's dissolve", which claims
+## a possession of something that does not exist.
+static func leads_a_name(text: String) -> bool:
+	for lead: String in LEADS:
+		if text.begins_with(lead) and text.substr(lead.length()).is_valid_identifier():
+			return true
+	return false
 
 
 ## The lens a parameter declared, "" for the parameters that declared none. Takes the plain

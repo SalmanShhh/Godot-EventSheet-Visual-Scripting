@@ -5411,7 +5411,37 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetMultiplayerFindings.FIX_OWNER_GROUP:
 			_wrap_event_in_owner_group(note_meta.get("variable_note_event", null) as EventRow)
 			return true
+		EventSheetEffectFindings.FIX_PICK_DIAL:
+			_repick_effect_dial(note_meta)
+			return true
 	return false
+
+
+## "Use dissolve" on an effect note: the row names a dial its shader does not declare, and one
+## declared name is close enough to be what was meant. Rewrites that ONE row's dial - the re-pick, in
+## one click and one undo step. The row is found by its lane and slot rather than held across the
+## funnel, which replaces resources as it commits.
+func _repick_effect_dial(note_meta: Dictionary) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var slot: int = int(note_meta.get("variable_note_index", -1))
+	var picked: String = str(note_meta.get("variable_note_to", "")).strip_edges()
+	if event_row == null or slot < 0 or picked.is_empty():
+		return
+	var lane: Array = event_row.conditions if str(note_meta.get("variable_note_lane", "")) \
+		== "condition" else event_row.actions
+	if slot >= lane.size() or not (lane[slot] is Resource):
+		return
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Use %s") % picked, func() -> bool:
+			var row: Resource = lane[slot] as Resource
+			var params: Variant = row.get("params")
+			if not (params is Dictionary):
+				return false
+			var written: Dictionary = (params as Dictionary).duplicate()
+			written[EventForgeEffectDialACEs.DIAL_PARAM] = picked
+			row.set("params", written)
+			return true):
+		return
+	_set_status(EventSheetL10n.translate("Picked %s.") % picked)
 
 
 ## "Make the environment this scene's own". A WorldEnvironment usually points at a `.tres`, and a

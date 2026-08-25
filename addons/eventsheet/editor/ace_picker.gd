@@ -67,6 +67,11 @@ const SCENE_TARGET_META := "eventsheet_light_target"
 const SCENE_SHELF_META := "eventsheet_light_shelf"
 const SCENE_GROUP_META := "eventsheet_light_group"
 
+## And the values a shelf entry answers BESIDES its node - a Dictionary of param id to value, merged
+## into the params dialog exactly as the target is. An effect entry is built for one dial as well as
+## for one node, so both are answered before the dialog opens and the reader edits the value.
+const SCENE_PREFILL_META := "eventsheet_scene_prefill"
+
 ## Where the LIGHTING NODES of the open scene are offered: one folder per kind of thing,
 ## one sub-folder per node. The sixteen Core lighting actions and the per-class groups are untouched
 ## beside them - these are the shelves for "which of MY lights", which is the question a reader
@@ -83,6 +88,16 @@ const SCENE_SHELVES: Array[Dictionary] = [
 	{"group": DARKNESS_GROUP, "root": "CanvasModulate"},
 	{"group": ATMOSPHERE_GROUP, "root": "WorldEnvironment"},
 ]
+
+## Where the EFFECTS of the open scene are offered: one folder per node wearing a shader material,
+## named with the shader it runs, holding one entry per dial that shader declares. The frozen
+## free-string Effects rows sit beside them on their own shelf, because they are still exactly right
+## for a material that only exists at run time - a name nothing can check is a name nobody should be
+## made to pretend was checked.
+const EFFECTS_GROUP := "Effects in this scene"
+
+## The picker category the effect rows are filed under.
+const EFFECTS_CATEGORY := "Effects"
 
 ## The separator between a shelf entry's facts - the middle dot every other two-fact reading in the
 ## editor uses.
@@ -728,6 +743,86 @@ static func _shelf_offers(node_type: String, root: String) -> bool:
 	if root.is_empty():
 		return EventForgeLightWords.is_light_class(node_type)
 	return ClassDB.class_exists(node_type) and ClassDB.is_parent_class(node_type, root)
+
+
+## The shelf an EFFECT row is offered on, or "" for everything else. A row built for one dial of one
+## node goes under that node; the frozen free-string rows go on the general shelf beside them, and
+## only while the sheet has dial shelves at all - a project with no shaders keeps its picker exactly
+## as it was. Pure + static, so the filing is pinned without a tree.
+static func effect_group_key(definition: ACEDefinition, has_dial_shelves: bool) -> String:
+	if definition == null:
+		return ""
+	var shelf: String = str(definition.metadata.get(SCENE_SHELF_META, "")).strip_edges()
+	if str(definition.metadata.get(SCENE_GROUP_META, "")) == EFFECTS_GROUP and not shelf.is_empty():
+		return EFFECTS_GROUP + SUBCATEGORY_SEPARATOR + shelf
+	if not has_dial_shelves or definition.category.strip_edges() != EFFECTS_CATEGORY:
+		return ""
+	return EFFECTS_GROUP + SUBCATEGORY_SEPARATOR \
+		+ EventSheetL10n.translate("any material, name typed")
+
+
+## Every row the OPEN SCENE's own shader materials can take, as picker entries: one copy per node per
+## dial per verb, with the node AND the dial already chosen, so the params dialog opens on the value.
+## Which dials a node has is the shader's answer, walked once by EventSheetSceneEffects - nothing here
+## knows a dial name, which is the whole point of the vocabulary.
+##
+## Pure + static (a sheet and a registry in, definitions out), so the shelves are pinned headless.
+static func effect_dial_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+	var out: Array[ACEDefinition] = []
+	if sheet == null or registry == null:
+		return out
+	# The registry is walked ONCE, not once per node or per dial: this runs on every keystroke of the
+	# search box, and a scene with thirty dials was thirty full walks of the vocabulary per character.
+	var vocabulary: Array[ACEDefinition] = []
+	for definition: ACEDefinition in registry.get_all_definitions():
+		if bool(definition.metadata.get("project_scoped", false)) \
+				and definition.category.strip_edges() == EFFECTS_CATEGORY:
+			vocabulary.append(definition)
+	for node: Dictionary in EventSheetSceneEffects.for_script(str(sheet.external_source_path)):
+		var shelf: String = scene_effect_shelf_label(node)
+		for entry: Variant in node.get("dials", []):
+			var dial: Dictionary = entry
+			for definition: ACEDefinition in vocabulary:
+				out.append(_dial_entry(definition, node, dial, shelf))
+	return out
+
+
+## One dial's line on the shelf: the node it belongs to and the shader file it runs, which together
+## are what a reader arrived asking about ("which of MY effects", and which shader is behind it).
+static func scene_effect_shelf_label(node: Dictionary) -> String:
+	return "%s   %s" % [str(node.get("name", "")), str(node.get("shader_path", "")).get_file()]
+
+
+## One picker entry: the shipped row with the node and the dial answered, named with the dial FIRST
+## because that is what a reader scans for, and described with what the shader itself says about it.
+static func _dial_entry(definition: ACEDefinition, node: Dictionary, dial: Dictionary,
+		shelf: String) -> ACEDefinition:
+	# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate() would hand
+	# back a blank definition that still looks valid.
+	var offered: ACEDefinition = definition.copy()
+	var dial_name: String = str(dial.get("name", ""))
+	offered.display_name = "%s  %s  %s" % [EventForgeValueLens.effect_dial(dial_name), SHELF_BULLET,
+		EventSheetL10n.translate(definition.display_name)]
+	offered.description = effect_dial_description(dial, definition.description)
+	offered.metadata[SCENE_TARGET_META] = str(node.get("reference", ""))
+	offered.metadata[SCENE_SHELF_META] = shelf
+	offered.metadata[SCENE_GROUP_META] = EFFECTS_GROUP
+	offered.metadata[SCENE_PREFILL_META] = {EventForgeEffectDialACEs.DIAL_PARAM: dial_name}
+	return offered
+
+
+## What one dial's entry says about itself: the shader author's own `//` comment when they wrote one,
+## then the declaration read back (the type, the ends of its range, what it starts at), then the
+## row's own description. The first two come out of the shader file, so a reader is told what this
+## particular dial is rather than what dials are.
+static func effect_dial_description(dial: Dictionary, row_description: String) -> String:
+	var said: PackedStringArray = PackedStringArray()
+	var about: String = str(dial.get("about", "")).strip_edges()
+	if not about.is_empty():
+		said.append(about)
+	said.append(EventForgeShaderUniforms.reading(dial))
+	said.append(row_description)
+	return " ".join(said)
 
 
 ## One node's line on the shelf: its name, the class it is, and - for a light - whether it
@@ -1447,6 +1542,21 @@ func _refresh_tree() -> void:
 	# And so are the LIGHTING NODES of the open scene: the same verbs, one copy per node,
 	# with the node already chosen. Browsed as well as searched, because "which of my lights" is the
 	# question a reader arrives with and a shelf they have to type to find is a shelf nobody meets.
+	# And so are the DIALS of the shader materials that scene's nodes wear, on the same footing and
+	# for the same reason: "which of my effects" is the question, and the dial names are the shader's
+	# to give. A sheet whose scene wears no shader material grows no shelves and no general shelf.
+	var dial_shelves: Array[ACEDefinition] = [] as Array[ACEDefinition]
+	if not signals_only:
+		dial_shelves = effect_dial_definitions(_open_sheet(), _registry)
+		var dial_query: String = query.to_lower()
+		for dial_definition: ACEDefinition in dial_shelves:
+			# Either half of the entry answers a search: the dial ("dissolve") and the node it is
+			# aimed at ("Boss"), because both are things a reader types looking for this row.
+			if filtering and not (dial_definition.display_name.to_lower().contains(dial_query) \
+					or str(dial_definition.metadata.get(SCENE_TARGET_META, "")) \
+						.to_lower().contains(dial_query)):
+				continue
+			definitions.append(dial_definition)
 	if not signals_only:
 		var light_query: String = query.to_lower()
 		for light_definition: ACEDefinition in scene_lighting_definitions(_open_sheet(), _registry):
@@ -1549,6 +1659,12 @@ func _refresh_tree() -> void:
 		var light_key: String = scene_lighting_group_key(definition)
 		if not light_key.is_empty():
 			group_key = light_key
+			is_node_type_group = false
+		# The same filing for the effect dials, and for the free-string rows beside them: a reader who
+		# picked "Boss" and "dissolve" picked a node and a dial, not the class CanvasItem.
+		var effect_key: String = effect_group_key(definition, not dial_shelves.is_empty())
+		if not effect_key.is_empty():
+			group_key = effect_key
 			is_node_type_group = false
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)
@@ -2118,6 +2234,12 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 	# Deprecated ACEs are hidden from the picker so they can't be added to NEW work - but they still
 	# compile in sheets that already use them (the compatibility covenant; see ACEDescriptor.deprecated).
 	if bool(definition.metadata.get("deprecated", false)):
+		return false
+	# A row the project names the choices for is offered as the COPIES built from the open scene -
+	# one per node per dial, with both already answered. The bare row is not browsable, because all
+	# it could do is ask for the very name it exists to stop somebody typing.
+	if bool(definition.metadata.get("project_scoped", false)) \
+			and str(definition.metadata.get(SCENE_TARGET_META, "")).is_empty():
 		return false
 	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …).
 	if _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call()) and _SIMPLE_MODE_DENYLIST.has(definition.provider_id + "::" + definition.id):
@@ -2798,6 +2920,9 @@ func _commit_definition(definition: ACEDefinition) -> void:
 	if not aimed_light.is_empty():
 		var light_values: Dictionary = context.get("existing_params", {})
 		light_values["target"] = aimed_light
+		# And whatever else the shelf answered on the reader's behalf - the dial an effect entry was
+		# built for, so the dialog opens on the value rather than asking for the name back.
+		light_values.merge(definition.metadata.get(SCENE_PREFILL_META, {}) as Dictionary, true)
 		context["existing_params"] = light_values
 	# An alias row is the same descriptor with the boolean half of the form already answered.
 	# Taken (and cleared) here rather than stamped on the definition, because ACEDefinitions are

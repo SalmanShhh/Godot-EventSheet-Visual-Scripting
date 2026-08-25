@@ -33,6 +33,9 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		"replacement_ace_id": descriptor.replacement_ace_id,
 		# Featured (the everyday-verb highlight) rides the same metadata channel.
 		"featured": descriptor.is_featured,
+		# And so does "the project names this row's choices": the picker offers the copies it built
+		# from the open scene rather than the bare row, which could only ask for the name back.
+		"project_scoped": descriptor.is_project_scoped,
 		# Rich-text capability (rich_text_when): the row builder styles BBCode in cells
 		# only for ACEs that DECLARE it - never by sniffing param values generically.
 		"rich_when_param": descriptor.rich_when_param,

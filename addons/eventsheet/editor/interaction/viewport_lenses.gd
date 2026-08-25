@@ -235,7 +235,7 @@ static func _humanized_token(token: String, knob_names: Dictionary) -> String:
 		return token
 	# A FILE is not a chain: `jump.wav` is one thing with a name, and reading it
 	# possessively ("jump's wav") turns the one word a reader recognises into two they do not.
-	if is_asset_file_name(token):
+	if is_asset_file_name(token) or EventForgeValueLens.leads_a_name(token):
 		return token
 	if token.contains("."):
 		return possessive_chain(token)
@@ -324,7 +324,7 @@ static func humanize_sentence(text: String, knob_names: Dictionary = {}) -> Stri
 static func _sentence_token(token: String, knob_names: Dictionary) -> String:
 	if token.is_empty():
 		return token
-	if is_asset_file_name(token):
+	if is_asset_file_name(token) or EventForgeValueLens.leads_a_name(token):
 		return token
 	if token.contains("."):
 		return possessive_chain(token)

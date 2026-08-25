@@ -66,6 +66,18 @@ var looping_iterator: String = "item"
 ## category (the event-sheet "highlight"). Set inline via `.featured()`.
 @export var is_featured: bool = false
 
+## PROJECT-SCOPED: this row's choices come out of the open project, not out of this vocabulary. A
+## shader dial is the case it exists for - only a `.gdshader` can say what its dials are called, and
+## the whole point of the row is that the reader never types that name. Set inline via
+## `.project_scoped()`. Two consequences, both of them the same rule:
+##   - the picker offers the COPIES it builds from the open scene and never the bare descriptor,
+##     which could only ask for the name back;
+##   - the reverse index leaves its template alone, because deciding that a line means this row takes
+##     a question only the project can answer - the family's own matcher asks it, and a line nobody
+##     can say more about keeps whichever row it already had.
+## The row compiles and lifts exactly like any other; this changes only who is allowed to offer it.
+@export var is_project_scoped: bool = false
+
 ## Curated poll -> signal-twin map (the shared "reactivity" datum): the handful of polling CONDITIONS
 ## that have a clean reactive trigger, so the editor can nudge "react to a signal instead of checking
 ## this every frame". Keyed "<provider>::<ace_id>" -> {trigger_id, trigger_name}. Deliberately omits
@@ -172,6 +184,13 @@ func looping(iterator_name: String = "item") -> ACEDescriptor:
 ## Chains like .described(): `F.make_descriptor(...).stateful(...).evaluated_last()`.
 func evaluated_last() -> ACEDescriptor:
 	evaluate_last = true
+	return self
+
+
+## Marks this row as one the open project names the choices for, and returns self so it chains after
+## make_descriptor like .described(). See `is_project_scoped` for what it changes.
+func project_scoped() -> ACEDescriptor:
+	is_project_scoped = true
 	return self
 
 

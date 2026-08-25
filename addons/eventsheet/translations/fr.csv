@@ -4859,3 +4859,6 @@ Sets how much light a 3D scene has with no light shining on it.,Définit la lumi
 World environment,WorldEnvironment
 The WorldEnvironment node holding the environment.,Le nœud WorldEnvironment qui porte l'environnement.
 Set fog colour to {colour},Régler la couleur du brouillard sur {colour}
+"%s declares no dial called %s, so this row does nothing when the game runs.","%s ne déclare aucun réglage nommé %s, donc cette ligne ne fait rien quand le jeu tourne."
+Picked %s.,%s choisi.
+"any material, name typed","n'importe quel matériau, nom saisi"

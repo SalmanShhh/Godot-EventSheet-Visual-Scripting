@@ -150,6 +150,7 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"palette": "A palette asset from the project, and which set of colours inside it this row uses.",
 	"input_prompt_show": "Optional. With the tick on, the control's key is written onto the named label for as long as the window is open.",
 	"input_prompt_clear": "Optional. With the tick on, the prompt comes off the named label as the window shuts.",
+	"shader_dial": "A uniform declared by the shader this node's material runs, by name. The picker fills it in from the shader file, so a name that is not in that file cannot reach the game - which matters here more than anywhere: Godot accepts a misspelled dial name without a word and then does nothing with it, forever.",
 }
 
 ## The phrase a heading ends with, per hint: "Colour - a colour". Only for the hints whose kind is
@@ -171,6 +172,7 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"net_address": "text",
 	"net_port": "a number",
 	"max_players": "a number",
+	"shader_dial": "a shader dial",
 }
 
 ## The phrase for a parameter that leans on its declared GDScript type instead of a hint.

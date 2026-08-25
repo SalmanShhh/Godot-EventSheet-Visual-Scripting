@@ -4859,3 +4859,6 @@ Sets how much light a 3D scene has with no light shining on it.,"Задаёт, �
 World environment,WorldEnvironment
 The WorldEnvironment node holding the environment.,"Узел WorldEnvironment, который держит окружение."
 Set fog colour to {colour},Задать цвет тумана {colour}
+"%s declares no dial called %s, so this row does nothing when the game runs.","%s не объявляет параметр с именем %s, поэтому эта строка ничего не делает при запуске игры."
+Picked %s.,Выбрано %s.
+"any material, name typed","любой материал, имя вводится"

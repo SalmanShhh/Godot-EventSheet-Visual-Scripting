@@ -92,10 +92,11 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## The COLOUR is what separates a line that cannot work from one that only misbehaves.
 const NOTE_MARK := "⚠"
 
-## The two families of finding the canvas hangs under a row (the networking mistakes, the lighting
-## ones). Names for the per-sweep cache below, never shown to anybody.
+## The families of finding the canvas hangs under a row (the networking mistakes, the lighting ones,
+## the dial a shader no longer declares). Names for the per-sweep cache below, never shown to anybody.
 const FINDINGS_MULTIPLAYER := "multiplayer"
 const FINDINGS_LIGHTING := "lighting"
+const FINDINGS_EFFECTS := "effects"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -6288,6 +6289,12 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 			EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row),
 			row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
+	# And the effect one: a row naming a dial the node's own shader does not declare, which Godot
+	# accepts and acts on in no way at all. One click re-picks the declared name it was nearly.
+	for note_row: EventRowData in _build_finding_note_rows(
+			EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row),
+			row_data.row_uid, indent + 1):
+		row_data.children.append(note_row)
 	# A `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
 	for promoted_row: EventRowData in _build_promoted_local_rows(event_row, indent + 1):
@@ -8803,8 +8810,13 @@ func _build_variable_note_row(event_uid: String, indent: int, message: String, f
 func _sheet_findings(family: String) -> Array[Dictionary]:
 	if not _sheet_findings_cache.has(family):
 		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
-		_sheet_findings_cache[family] = EventSheetLightingFindings.findings(sheet) \
-			if family == FINDINGS_LIGHTING else EventSheetMultiplayerFindings.findings(sheet)
+		match family:
+			FINDINGS_LIGHTING:
+				_sheet_findings_cache[family] = EventSheetLightingFindings.findings(sheet)
+			FINDINGS_EFFECTS:
+				_sheet_findings_cache[family] = EventSheetEffectFindings.findings(sheet)
+			_:
+				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]
 
 
@@ -8823,7 +8835,13 @@ func _build_finding_note_rows(found: Array[Dictionary], uid: String, indent: int
 			{
 				"variable_note_name": str(finding.get("subject", "")),
 				"variable_note_fix": str(finding.get("fix", "")),
-				"variable_note_event": finding.get("event")
+				"variable_note_event": finding.get("event"),
+				# The row the fix will rewrite, named by its LANE and SLOT rather than held: the fix
+				# runs through the undo funnel, and the funnel replaces resources as it commits. A
+				# finding whose repair is a whole new row leaves these at their empty answers.
+				"variable_note_to": str(finding.get("to", "")),
+				"variable_note_lane": str(finding.get("lane", "")),
+				"variable_note_index": int(finding.get("index", -1))
 			}, false))
 	return rows
 
@@ -13472,7 +13490,8 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# owner: "Player > hp ≤ 0" instead of "System > hp ≤ 0".
 	if global_owner.is_empty():
 		global_owner = _variable_owner_label(condition.provider_id, condition.ace_id, params_dict)
-	# And a question asked OF A LIGHT belongs to that light: "Torch > Is on", not "Light2D > Is on".
+	# And a question asked OF A NODE belongs to that node: "Torch > Is on", not "Light2D > Is on";
+	# "Aura > effect.glow > 0.5", not "CanvasItem > …".
 	if global_owner.is_empty():
 		global_owner = _lighting_owner_label(condition.provider_id, condition.ace_id, params_dict)
 	var read_params: Dictionary = global_read.get("params", params_dict) if not global_read.is_empty() else params_dict
@@ -13720,8 +13739,12 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	# was - the row it opens as changed, what it is evidence of did not.
 	if not _lighting_host_class(action.provider_id, action.ace_id).is_empty():
 		_note_pattern(LIGHTING_PATTERN, ActionCodegen.generate_action(action))
-		if global_owner.is_empty():
-			global_owner = _lighting_owner_label(action.provider_id, action.ace_id, action_params)
+	# And for an effect row, which asks the same question about a different family: the node wearing
+	# the material is the object, so "Aura > Set effect.glow to 2" rather than the very general class
+	# these rows are hosted on. No pattern is noted - an effect is a thing a game has, not a shape a
+	# reader wrote out by hand and could be shown a shorter way of.
+	if global_owner.is_empty():
+		global_owner = _lighting_owner_label(action.provider_id, action.ace_id, action_params)
 	var params_dict: Dictionary = global_read.get("params", action_params) if not global_read.is_empty() else action_params
 	var read_action: ACEAction = action
 	if not global_read.is_empty():
@@ -13911,6 +13934,17 @@ var _pending_display_bbcode: bool = false
 # await hourglass) shifts the ranges instead of mis-bolding, and any other post-processing degrades
 # to no emphasis.
 var _pending_param_ranges: Dictionary = {}
+
+# The reading LEADS the last display substitution put into the sentence (`effect.` in front of a
+# shader dial). _make_span consumes + clears them, marking where each landed so the renderer draws
+# those characters in the muted ink. One-shot for the same reason the ranges above are: they belong
+# to the row being built and to nothing after it.
+var _pending_muted_leads: PackedStringArray = PackedStringArray()
+
+# The effect rows' ids as a set, filled on first ask (see _names_its_node). Static because the answer
+# is the same in every tab for the whole session - the vocabulary does not change under a running
+# editor - and because this is asked once per row of every sheet.
+static var _effect_ace_ids: Dictionary = {}
 
 # Raised by _append_sentence_spans when a row holds a bare `breakpoint` statement, and consumed
 # by _ensure_event_spans, which is the only place that knows which row the spans just built belong to.
@@ -15962,16 +15996,31 @@ func _lighting_host_class(provider_id: String, ace_id: String) -> String:
 	return host if EventForgeLightingLift.addresses(host) else ""
 
 
-## The object column a lighting row belongs in: the node it names, not the class that node
-## is - "Torch ▸ Set brightness", "Level ▸ Set darkness", "World ▸ Turn fog on". "" when the row acts
-## on the sheet's own node (there is no other node to name) or when the target is an expression
-## rather than a node reference.
+## The object column a row aimed at a NODE belongs in: the node it names, not the class that node
+## is - "Torch ▸ Set brightness", "Level ▸ Set darkness", "World ▸ Turn fog on", "Aura ▸ Set
+## effect.glow". "" when the row acts on the sheet's own node (there is no other node to name), when
+## the target is an expression rather than a node reference, or when the row is not one of the
+## families whose subject IS the node it is aimed at.
 func _lighting_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
 	var aimed: String = str(params.get("target", "")).strip_edges()
-	if aimed.is_empty() or aimed == "self" or _lighting_host_class(provider_id, ace_id).is_empty():
+	if aimed.is_empty() or aimed == "self" or not _names_its_node(provider_id, ace_id):
 		return ""
 	var named: String = EventSheetSceneLights.reference_key(aimed)
 	return "" if named.is_empty() else named.get_slice("/", named.get_slice_count("/") - 1)
+
+
+## True for a row whose object IS the node it is aimed at. Two families answer yes: the lighting
+## ones, whose host class is itself a light or one of the two scene objects beside them, and the
+## effect ones, whose host is the very general CanvasItem but whose subject is plainly the node
+## wearing the material. Asked of the vocabulary that publishes them rather than of a list here, and
+## kept for the session because the question is asked once per row of every sheet.
+func _names_its_node(provider_id: String, ace_id: String) -> bool:
+	if not _lighting_host_class(provider_id, ace_id).is_empty():
+		return true
+	if _effect_ace_ids.is_empty():
+		for published: String in EventForgeEffectDialACEs.published_ace_ids():
+			_effect_ace_ids[published] = true
+	return _effect_ace_ids.has(ace_id)
 
 
 func _variable_owner_label(provider_id: String, ace_id: String, params: Dictionary) -> String:
@@ -16219,7 +16268,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 			if not stripped_ranges.is_empty():
 				span.metadata["value_ranges"] = stripped_ranges
 		else:
-			var ranges: Array = _value_ranges_for(text)
+			var ranges: Array = merged_muted_leads(_value_ranges_for(text), text, _pending_muted_leads)
 			if not ranges.is_empty():
 				span.metadata["value_ranges"] = ranges
 			# A row the shared grammar read carries ITS tones, so a picked row is tinted exactly like
@@ -16243,7 +16292,25 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}
 	_pending_grammar_segments = []
+	_pending_muted_leads = PackedStringArray()
 	return span
+
+
+## `value_ranges` with every occurrence of a reading LEAD marked muted, in start order - which is the
+## order the renderer walks them in, so a lead inserted out of order would silently drop the value
+## after it. A lead never overlaps a value range: it is an identifier's prefix, and a value range is
+## a number, a quoted string or a boolean. Static + pure, so the marking is pinned without a canvas.
+static func merged_muted_leads(ranges: Array, text: String, leads: PackedStringArray) -> Array:
+	if leads.is_empty():
+		return ranges
+	var marked: Array = ranges.duplicate()
+	for lead: String in leads:
+		var at: int = text.find(lead)
+		while at >= 0:
+			marked.append([at, lead.length(), "muted"])
+			at = text.find(lead, at + lead.length())
+	marked.sort_custom(func(left: Array, right: Array) -> bool: return int(left[0]) < int(right[0]))
+	return marked
 
 
 ## format_display, but the display TEMPLATE is translated FIRST (then {slots} substitute), so
@@ -16265,8 +16332,16 @@ func _read_number_words(shown: String) -> String:
 ## to "what does this value mean", so it stands INSTEAD of them rather than after them - a darkness
 ## colour would otherwise arrive as colour words and no longer look like a colour at all.
 func _read_through_lens(lens: String, shown: String) -> String:
-	return EventForgeValueLens.read(lens, shown) if not lens.strip_edges().is_empty() \
-		else _read_number_words(shown)
+	if lens.strip_edges().is_empty():
+		return _read_number_words(shown)
+	var read: String = EventForgeValueLens.read(lens, shown)
+	# A lens that puts a LEAD in front of its reading - `effect.` before a shader dial's name - says
+	# what the name belongs to, which is a thing a reader needs once and then stops reading. So the
+	# lead is noted here, where the only code that knows a lens ran is, and drawn quietly by the span.
+	var lead: String = EventForgeValueLens.lead_of(lens)
+	if not lead.is_empty() and read.begins_with(lead) and not _pending_muted_leads.has(lead):
+		_pending_muted_leads.append(lead)
+	return read
 
 
 ## A colour param reads as the colour a person would say - "red, 20% darker", "red at 50%

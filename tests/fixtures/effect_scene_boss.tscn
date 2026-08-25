@@ -1,0 +1,17 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/effect_scene_boss.gd" id="1_boss"]
+[ext_resource type="Material" path="res://tests/fixtures/effect_dissolve_material.tres" id="2_burn"]
+[ext_resource type="Shader" path="res://tests/fixtures/effect_glow.gdshader" id="3_glow"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
+shader = ExtResource("3_glow")
+
+[node name="Boss" type="Sprite2D"]
+material = ExtResource("2_burn")
+script = ExtResource("1_boss")
+
+[node name="Aura" type="Sprite2D" parent="." unique_name_in_owner=true]
+material = SubResource("ShaderMaterial_aura")
+
+[node name="Plain" type="Sprite2D" parent="."]

@@ -4859,3 +4859,6 @@ Sets how much light a 3D scene has with no light shining on it.,어떤 조명도
 World environment,WorldEnvironment
 The WorldEnvironment node holding the environment.,환경을 지니고 있는 WorldEnvironment 노드.
 Set fog colour to {colour},안개 색을 {colour} 로 설정
+"%s declares no dial called %s, so this row does nothing when the game runs.",%s 에는 %s 라는 다이얼이 선언되어 있지 않아 이 행은 게임 실행 시 아무 일도 하지 않습니다.
+Picked %s.,%s 을(를) 선택했습니다.
+"any material, name typed","모든 머티리얼, 이름 직접 입력"
