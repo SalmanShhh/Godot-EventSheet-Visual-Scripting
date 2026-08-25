@@ -13,7 +13,10 @@
 #   NEVER ON THE OPEN. The first build is TIME-SLICED: `advance()` reads as many scenes as fit in a
 #   few milliseconds and hands the frame back, so opening a sheet in a thousand-scene project never
 #   waits for it. A band asking before the scan finishes is told exactly that, and says "counting…"
-#   rather than stalling.
+#   rather than stalling - and is TOLD WHEN IT IS OVER, because a band's words are worked out while
+#   its rows are built and a scan finishing is not a row build. Without that the first sheet of a
+#   session says "counting…" until something unrelated rebuilds it, which for a sheet nobody touches
+#   is never.
 #   DROPPED WHEN THE FILES CHANGE. The editor's own filesystem signal clears it; the next question
 #   starts a fresh scan. A session-lifetime answer is right while the editor runs and wrong the
 #   moment somebody saves a scene.
@@ -57,6 +60,13 @@ static var _started: bool = false
 ## hundred.
 static var _pumping: bool = false
 
+## Who to tell when a scan finishes. The counts a head band shows are worked out while the ROWS are
+## built, and a scan finishing is not a row build - so without this the first sheet of a session
+## says "counting…" for as long as it stays open and nothing else touches it, which is the one
+## promise the slicing makes and the one it was not keeping. Callables whose object has gone are
+## dropped as they are found: a dock closed mid-scan is the ordinary case, not an error.
+static var _when_counted: Array[Callable] = []
+
 
 ## Starts the scan if it has not started, and returns whether it has already finished. Cheap to call
 ## from anywhere, including from the question itself - which is where it IS called from, so nothing
@@ -77,6 +87,18 @@ static func request() -> bool:
 ## True when every scene has been read and the counts below are final.
 static func is_ready() -> bool:
 	return _started and _next >= _pending.size()
+
+
+## Asks to be told when a scan finishes, so a band that said "counting…" can be built again with the
+## count in it. Registering twice is one registration; a listener stays for the session and is asked
+## again after each fresh scan, because the filesystem ping starts one.
+static func when_counted(listener: Callable) -> void:
+	if listener.is_valid() and not _when_counted.has(listener):
+		_when_counted.append(listener)
+
+
+static func stop_telling(listener: Callable) -> void:
+	_when_counted.erase(listener)
 
 
 ## Reads scenes until the budget is spent, and answers whether that finished the scan. The editor
@@ -175,21 +197,57 @@ static func _sort_holders() -> void:
 		_holders[resource_path] = holders
 
 
-## Schedules the next slice on the editor's own idle frame. Deferred rather than timed: it costs no
-## node, no timer and nothing at plugin boot.
+## Schedules the next slice on the editor's own next frame. It costs no node, no timer and nothing
+## at plugin boot.
 ##
 ## ONLY IN THE EDITOR, which is the only place there are frames to spread work over. A headless run -
 ## a test, the Doctor's command line, a build - fills the index through `build_now()` instead, and
 ## gets the same answer with none of the timing: a scan that finished half way through a suite
 ## because an idle frame happened to arrive is a suite that passes differently on a slower machine.
 static func _arm() -> void:
-	if _pumping or not Engine.is_editor_hint():
+	if _pumping:
 		return
-	_pumping = true
-	Callable(EventSheetProjectShareIndex, "_pump").call_deferred()
+	_pumping = _schedule_slice()
+
+
+## Puts the next slice on the NEXT FRAME, and answers whether it got there.
+##
+## THE FRAME SIGNAL RATHER THAN A DEFERRED CALL. A deferred call is flushed at the end of the frame
+## that posted it, and that flush is re-entrant - it goes on consuming whatever was pushed while it
+## was running - so a slice that re-armed with one was run inside the same flush, and the whole scan
+## finished in a single frame rather than a few milliseconds of each. Which is exactly the stall the
+## budget above exists to prevent. A connection made while a signal is being emitted is not part of
+## that emission, so this is one slice per frame and no more.
+##
+## No main loop (a `--script` run, a test) means no frames to spread anything over, and false back
+## to the caller so a later question tries again rather than waiting on a slice nobody scheduled.
+static func _schedule_slice() -> bool:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null or not Engine.is_editor_hint():
+		return false
+	tree.process_frame.connect(Callable(EventSheetProjectShareIndex, "_pump"), CONNECT_ONE_SHOT)
+	return true
 
 
 static func _pump() -> void:
 	_pumping = false
 	if not advance():
 		_arm()
+		return
+	# A slice scheduled before the cache was dropped arrives at a scan that no longer exists, and
+	# has finished nothing. `is_ready()` is the one place that knows the difference.
+	if is_ready():
+		_tell_the_askers()
+
+
+## Tells everyone still listening that the counts are final, dropping the ones whose object has gone
+## on the way past. Only the sliced path says it: `build_now()` hands its own caller the finished
+## index as it returns, so there is nobody left to tell.
+static func _tell_the_askers() -> void:
+	var live: Array[Callable] = []
+	for listener: Callable in _when_counted:
+		if not listener.is_valid():
+			continue
+		live.append(listener)
+		listener.call()
+	_when_counted = live

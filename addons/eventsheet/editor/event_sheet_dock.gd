@@ -512,6 +512,11 @@ func _ready() -> void:
 	# editor's own EditorSelection - which only exists in the editor.
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		_ensure_scene_link().init_selection(EditorInterface.get_selection())
+	# "Who else wears this material" is a question about every scene in the project, so it is scanned
+	# a slice per frame and a head band asked before it finishes says "counting…". What a band says
+	# is worked out while its rows are BUILT, so the scan finishing has to reach back here or the
+	# first sheet of a session goes on counting for as long as it is open.
+	EventSheetProjectShareIndex.when_counted(_on_shared_resources_counted)
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
@@ -584,6 +589,15 @@ func _on_translations_maybe_changed() -> void:
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
 			_viewport.queue_redraw()
+
+
+## The project-wide scan of who else holds which file has finished, some frames after a sheet opened
+## on it. Nothing about the sheet has changed, only what can now be SAID about it - the `effect`
+## band's count and the note under a row that turns a dial twelve nodes share - so the rows are built
+## again. Once per scan, and only for the view in front: a tab activated later builds its own rows.
+func _on_shared_resources_counted() -> void:
+	if _viewport != null:
+		_viewport.rebuild_rows()
 
 
 ## Project Settings changed: the Input Map lives there, and every row that names an action reads it.

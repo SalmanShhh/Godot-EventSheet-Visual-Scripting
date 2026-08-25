@@ -551,6 +551,14 @@ func region_fold_snapshot() -> Dictionary:
 	return _folding.region_fold_snapshot()
 
 
+## Builds the rows again from the sheet exactly as it stands. For an answer that arrives AFTER the
+## view was built and changes what a row or a head band SAYS while changing nothing about the sheet:
+## a project-wide count that finishes a few frames later is the case this exists for.
+func rebuild_rows() -> void:
+	_refresh_rows()
+	queue_redraw()
+
+
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
 	if ace_registry == null:
 		_ace_registry = EventSheetACERegistry.new()

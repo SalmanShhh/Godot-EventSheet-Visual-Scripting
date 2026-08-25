@@ -73,10 +73,45 @@ static func _test_the_index() -> bool:
 	# The same question through the public seam, which is where a pack asks it: it builds the scan
 	# if nothing has yet, so a caller with no head band to say "counting…" through still gets an
 	# answer rather than an empty one.
-	return _check("a pack asks the same question through the API", PackedStringArray([
+	ok = _check("a pack asks the same question through the API", PackedStringArray([
 		",".join(EventSheets.scenes_using_resource(SHARED_MATERIAL, GOBLIN_SCENE)),
 		",".join(EventSheets.scenes_using_resource(""))]),
 		PackedStringArray([ORC_SCENE, ""])) and ok
+	return _test_the_slices() and ok
+
+
+## The scan a slice at a time: that it answers the same as the whole scan done at once, and that it
+## SAYS when it has finished. The band's words are worked out while its rows are built, so a scan
+## that finishes quietly leaves the first sheet of a session saying "counting…" for as long as it
+## stays open - which is the whole promise of slicing it, unkept.
+static func _test_the_slices() -> bool:
+	_fresh()
+	EventSheetProjectShareIndex.build_now()
+	var at_once: PackedStringArray = EventSheetProjectShareIndex.holders_of(SHARED_MATERIAL)
+	_fresh()
+	var told: Array[int] = [0]
+	var listener: Callable = func() -> void: told[0] += 1
+	EventSheetProjectShareIndex.when_counted(listener)
+	EventSheetProjectShareIndex.request()
+	var told_while_counting: int = told[0]
+	# The pump the editor's frame signal drives, driven by hand: a suite has no frames, which is why
+	# nothing here is ever scheduled and why `build_now()` is the door every other caller uses.
+	var slices: int = 0
+	while not EventSheetProjectShareIndex.is_ready() and slices < 1000:
+		EventSheetProjectShareIndex._pump()
+		slices += 1
+	var ok: bool = _check("a sliced scan answers exactly what one done at once answers",
+		EventSheetProjectShareIndex.holders_of(SHARED_MATERIAL), at_once)
+	ok = _check("nobody is told while it is still counting, and everybody once it is not",
+		PackedStringArray([str(told_while_counting), str(told[0])]),
+		PackedStringArray(["0", "1"])) and ok
+	# Nothing may be armed where there are no frames to spread it over: a caller that believed it had
+	# scheduled a slice would wait for one that never arrives, and never arm another.
+	ok = _check("with no editor frame to run on, no slice is scheduled",
+		EventSheetProjectShareIndex._schedule_slice(), false) and ok
+	EventSheetProjectShareIndex.stop_telling(listener)
+	EventSheetProjectShareIndex.clear_cache()
+	return ok
 
 
 ## The band. One per wearing node of the attached scene, saying the file, the shader and the sharing -
