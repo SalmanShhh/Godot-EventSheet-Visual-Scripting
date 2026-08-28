@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Declarations - one place to name things, and the Doctor hears the silence
+
+- **Add ▸ Declare.** Every way to give something a name, gathered as one submenu: Variable,
+  Constant, Node reference, Resource, Enum, Signal, Collection. Each entry opens the same dialog
+  its scattered sibling opens - the Constant and Node reference entries arrive with the right
+  boxes already ticked, Collection opens the variable dialog on the List type whose Items editor
+  is the grid, and Enum and Signal drop a fresh row straight into its editor, the same
+  insert-then-name beat Add Group uses. Nothing moved and nothing forked: the existing entries,
+  keys and dialogs all still work, this is the place to FIND them.
+- **The Doctor names two kinds of quiet.** An enum value nothing in the project ever writes
+  ("Enum value Mode.HURT is declared but nothing ever names it") and a signal announced but never
+  heard - no scene connection, no connect call, no await - each an advisory note on the generated
+  script that declares it. Only compiled sheet output is judged (in hand-written code an unused
+  name can be an offer to code not written yet), the usage corpus is every script in the project,
+  published packs stay exempt as vocabulary, and both judgements are deliberately generous (a name
+  handed around as a string counts as a listener), because accusing a working game is worse than
+  missing a tidy-up.
+
 ### Multiplayer - the wire's own words
 
 - **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given
