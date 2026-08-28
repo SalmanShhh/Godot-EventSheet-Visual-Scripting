@@ -4126,6 +4126,38 @@ func _open_project_find(initial_query: String = "") -> void:
 	_project_find.open(initial_query)
 
 
+# ── Project View - every sheet on one page → self_doc/project_view_panel.gd ──────────
+var _project_view: EventSheetProjectViewPanel = null
+
+
+## Opens the Project View. The sheets are gathered here, once, from the ones already open plus the
+## ones the project index knows about; the panel joins them and shows the result. Findings and
+## profiler milliseconds are handed in only when this session already HAS them - the window never
+## starts a Doctor run or a profiler run to fill a column, because a page that costs a run is a page
+## nobody opens twice.
+func _open_project_view() -> void:
+	if _project_view == null:
+		_project_view = EventSheetProjectViewPanel.new(self)
+	_project_view.open(_open_sheets_by_path())
+
+
+## The sheets this session already has in hand, keyed by the path each was opened from. Open tabs
+## only: this is a roll-up of what is here, not a scan of res://, and a sheet nobody opened is not
+## something this window learned anything new about.
+func _open_sheets_by_path() -> Dictionary:
+	var sheets: Dictionary = {}
+	for tab: Dictionary in _open_tabs:
+		var sheet: Variant = tab.get("sheet")
+		if not sheet is EventSheetResource:
+			continue
+		var path: String = str(tab.get("path", "")).strip_edges()
+		if path.is_empty():
+			path = str((sheet as EventSheetResource).resource_path).strip_edges()
+		if not path.is_empty():
+			sheets[path] = sheet
+	return sheets
+
+
 # ── Project Doctor - health-audit window → dock/project_doctor_panel.gd ──
 func _open_project_doctor() -> void:  # Tools menu (id 7)
 	_doctor.open()
