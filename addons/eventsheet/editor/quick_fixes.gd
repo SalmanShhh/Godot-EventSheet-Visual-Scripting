@@ -274,7 +274,18 @@ static func _add_input_action(action_name: String) -> Dictionary:
 	var setting: String = "input/%s" % action_name
 	if ProjectSettings.has_setting(setting):
 		return {"ok": true, "message": "%s is already in the Input Map." % action_name}
-	ProjectSettings.set_setting(setting, {"deadzone": 0.5, "events": []})
+	# A control whose name has an everyday binding is created wearing it ("jump, bound to
+	# Space") - said in the answer, changeable in Project ▸ Input Map like any binding. A name
+	# convention says nothing about is created unbound, exactly as before.
+	var events: Array = []
+	var key: Key = EventSheetNameRescue.suggested_key(action_name)
+	if key != KEY_NONE:
+		var key_event: InputEventKey = InputEventKey.new()
+		key_event.physical_keycode = key
+		events.append(key_event)
+	ProjectSettings.set_setting(setting, {"deadzone": 0.5, "events": events})
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		ProjectSettings.save()
+	if key != KEY_NONE:
+		return {"ok": true, "message": "Added \"%s\" to the Input Map, bound to %s - change the binding in Project ▸ Input Map." % [action_name, OS.get_keycode_string(key)]}
 	return {"ok": true, "message": "Added \"%s\" to the Input Map - bind a key to it in Project ▸ Input Map." % action_name}

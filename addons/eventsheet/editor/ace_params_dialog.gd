@@ -2770,24 +2770,9 @@ static func closest_known_identifier(identifier: String, sheet: EventSheetResour
 
 
 ## Levenshtein distance (small strings - identifiers), used only by closest_known_identifier.
+## One definition of "near" for the whole plugin - see EventSheetNameRescue.
 static func _edit_distance(a: String, b: String) -> int:
-	var n: int = a.length()
-	var m: int = b.length()
-	if n == 0:
-		return m
-	if m == 0:
-		return n
-	var previous: Array[int] = []
-	for j: int in range(m + 1):
-		previous.append(j)
-	for i: int in range(1, n + 1):
-		var current: Array[int] = [i]
-		current.resize(m + 1)
-		for j: int in range(1, m + 1):
-			var cost: int = 0 if a[i - 1] == b[j - 1] else 1
-			current[j] = min(min(previous[j] + 1, current[j - 1] + 1), previous[j - 1] + cost)
-		previous = current
-	return previous[m]
+	return EventSheetNameRescue.edit_distance(a, b)
 
 
 func set_variable_creator(creator: Callable) -> void:
@@ -3638,7 +3623,13 @@ func _write_field(key: String, value: String) -> void:
 ## the field re-checked, so the red note answers itself.
 func _add_variable_named(key: String, variable_name: String) -> void:
 	if _variable_adder.is_valid():
-		_variable_adder.call(variable_name)
+		# The declaration dialog opens PRE-FILLED: the name that was typed, and the type read
+		# from how the failing expression already uses it (compared to 0.5 = a float, joined to
+		# text = a String) - never a silent creation, never a blind default.
+		var field: Variant = _fields.get(key)
+		var field_text: String = str((field as TextEdit).text) if field is TextEdit \
+			else (str((field as LineEdit).text) if field is LineEdit else "")
+		_variable_adder.call(variable_name, EventSheetNameRescue.guess_type_name(field_text, variable_name))
 		return
 	if _variable_creator.is_valid() and bool(_variable_creator.call(variable_name)):
 		_variable_names = _resolve_variable_names()

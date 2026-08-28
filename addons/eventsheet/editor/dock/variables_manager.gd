@@ -86,11 +86,11 @@ func _on_add_instance_variable_requested() -> void:
 ## typed into the parameter, so the answer to "that is not a variable" is one click and one form,
 ## not a cancel and a hunt through the Add menu. The Parameters dialog re-reads its variables the
 ## moment focus comes back to it, so the new name is in the list without anyone asking.
-func open_add_variable_named(variable_name: String) -> void:
+func open_add_variable_named(variable_name: String, type_name: String = "int") -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_dock._variable_dlg.open_for_edit(EventSheetVariableSentence.SCOPE_INSTANCE, {},
-		variable_name.strip_edges(), "int", "", false, "Create Variable")
+		variable_name.strip_edges(), type_name, "", false, "Create Variable")
 
 
 func _on_add_local_variable_requested() -> void:
