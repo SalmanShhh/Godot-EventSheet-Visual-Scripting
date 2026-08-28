@@ -5056,3 +5056,8 @@ Attach this sheet to a scene…,Dieses Blatt an eine Szene anhängen…
 Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,Tipp: ein Auslöser dieses Blatts hat in diesem Lauf nicht gefeuert - Rechtsklick auf seine Zeile und Frag warum.
 Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,"Tipp: dieser Lauf hat gestottert - Werkzeuge > Zeilen-Zeiten zeigt, an welche Zeilen die Frames gingen."
 "The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.","Das Spiel lief, dieses Blatt aber nie - sein Skript hängt an nichts in der gestarteten Szene."
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.","%s: %s. Jede Zeile unten entwirft eine Beschreibung aus den eigenen Zeilen der Sache - übernimm sie, bearbeite sie, oder schreib deine eigene."
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s hat keine Beschreibung, und seine Zeilen ergeben keine - diese Zeile kannst nur du schreiben."
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s hat keine Beschreibung. Entwurf aus den eigenen Zeilen: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s sagt noch ""%s"", aber seine Zeilen erwähnen nichts davon mehr. Neuer Entwurf: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,"Beschreibungen: %d von %d Blatt/Blättern gelesen. Öffne die übrigen, dann hat die Seite sie auch."

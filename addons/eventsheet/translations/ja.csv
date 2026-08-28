@@ -5056,3 +5056,8 @@ Attach this sheet to a scene…,このシートをシーンにアタッチ…
 Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,ヒント: このシートのトリガーがこの実行で一度も発火していません。行を右クリックして「理由を聞く」を使ってください。
 Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,ヒント: 実行がカクつきました。ツール > 行タイミングで、どの行にフレームが使われたか分かります。
 "The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.",ゲームは動きましたが、このシートは一度も動きませんでした。スクリプトが実行したシーンのどこにもアタッチされていません。
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.",%s: %s。下の各行は、その対象自身の行から説明を下書きします。受け入れる、編集する、または自分で書いてください。
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.",%s %s には説明がなく、その行からは下書きも作れません。この一行はあなたにしか書けません。
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s には説明がありません。自身の行からの下書き: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s はまだ ""%s"" と述べていますが、その行はもうそのどれにも触れていません。新しい下書き: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,説明: %d / %d シートを読みました。残りを開けば、このページにも入ります。

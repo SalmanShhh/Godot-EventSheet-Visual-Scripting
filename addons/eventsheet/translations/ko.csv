@@ -5056,3 +5056,8 @@ Attach this sheet to a scene…,이 시트를 씬에 붙이기…
 Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,팁: 이 시트의 트리거가 이번 실행에서 한 번도 발동하지 않았습니다. 해당 행을 우클릭하고 이유 물어보기를 사용하세요.
 Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,팁: 이번 실행이 버벅였습니다. 도구 > 행 타이밍에서 프레임이 어느 행에 쓰였는지 볼 수 있습니다.
 "The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.",게임은 실행됐지만 이 시트는 한 번도 실행되지 않았습니다. 스크립트가 실행한 씬의 어디에도 붙어 있지 않습니다.
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.","%s: %s. 아래 각 줄은 대상 자신의 행에서 설명 초안을 만듭니다. 받아들이거나, 고치거나, 직접 쓰세요."
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s 에는 설명이 없고, 그 행들로는 초안도 만들 수 없습니다. 이 줄은 당신만 쓸 수 있습니다."
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s 에는 설명이 없습니다. 자신의 행에서 만든 초안: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s 는 아직 ""%s"" 라고 말하지만, 그 행들은 더 이상 그 어느 것도 언급하지 않습니다. 새 초안: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,설명: 시트 %d / %d개를 읽었습니다. 나머지를 열면 이 페이지에도 들어옵니다.

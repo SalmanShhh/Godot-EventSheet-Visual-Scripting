@@ -50,6 +50,56 @@
   handed around as a string counts as a listener), because accusing a working game is worse than
   missing a tidy-up.
 
+### Self-documenting sheets - one description per thing, and no second store
+
+- **A function, a variable, a group, a signal and the sheet itself each carry ONE description**, and
+  it is the `##` documentation comment the generated GDScript already writes above the declaration -
+  not a field this plugin invented. Typing it into a dialog and typing it into the file are the same
+  act, the words survive a save byte for byte, and a reader who never installs the plugin sees them.
+  Every reader now asks one place for it, so a list and the file can no longer disagree.
+- **An undescribed thing reads "no description yet"**, in one wording, wherever it is listed - a soft
+  nudge at the moment somebody is already looking at the thing, which is the only moment writing the
+  line is cheap. Nothing is blocked and no count goes red.
+- **Descriptions draft themselves from the thing's own rows.** A function that sets hp and prints a
+  line drafts "Set self.hp = hp - amount; print hit"; a group drafts from what its rows react to; the
+  sheet head drafts from its groups; a parameter drafts from the first row that uses it. Composed
+  deterministically out of the rows and nothing else - no model, no network, no clock - so the same
+  sheet drafts the same sentence on every machine. A long function names its first steps and counts
+  the rest rather than composing a forty-clause line.
+- **A draft is honest and is never written on its own.** A block of hand-written code composes to
+  "runs its own code" rather than a guess, and a draft is computed fresh each time it is shown, so it
+  can never overwrite words a person wrote and there is nowhere for a stale one to hide. The Function
+  dialog offers the draft under the Doc comment field, and pressing the button fills the field for
+  editing rather than saving anything.
+- **Doctor: "describe the undescribed".** Every describable thing with no line, each carrying the
+  draft its own rows compose. Notes only, because a project with no descriptions is a working
+  project.
+- **Doctor: the drift note.** A description a person accepted describes the rows as they were. When
+  those rows are replaced, the words go on sounding authoritative while being wrong - so a
+  description whose function no longer names anything it talks about is listed with a fresh draft
+  beside the old words. Rewording is not drift; only losing the subject is.
+
+### The project manual, and the Project View
+
+- **Your game writes its own manual.** One page per sheet - what it is, what it remembers, what it
+  can be asked to do, what it announces, how its rules are grouped - composed the moment it is
+  opened, never stored, so it cannot be the usual documentation that was written once and wrong
+  within a month. The same sheet composes the same bytes every time, so a team can export the pages,
+  commit them, and read what changed about their game in a pull request.
+- **The footer states coverage as a fact**: "3 of 6 described", with the names of the ones still to
+  write. No colour, no bar, no grade.
+- **Project View (Tools › Project View…)**: every open sheet on one page - what it runs as, how many
+  events, how much of it is described, how many findings the Doctor had for it, and the milliseconds
+  a stored profiler run measured. Every column is a number that already existed somewhere; the join
+  happens once when the window opens, never per frame and never as a new scan of the project. A sheet
+  nobody profiled shows an EMPTY milliseconds cell rather than a zero, because zero is a claim
+  nobody made.
+- **Find across every sheet, by what was done with the name.** `hp` written is a different fact from
+  `hp` read and from `hp` compared, and the facet says which one you are hunting - plus node names,
+  animations and modes. Every hit names its sheet and the function or group it sits in.
+- **Merge defence.** A sheet opened from a file a merge damaged reports BOTH parents' spellings
+  rather than quietly keeping one, and the sentence it states names neither as the right one.
+
 ### Multiplayer - the wire's own words
 
 - **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given

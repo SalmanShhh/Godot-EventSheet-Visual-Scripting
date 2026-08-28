@@ -57,6 +57,12 @@ var _original_name: String = ""
 var _preview_card: Control = null
 var _name_edit: LineEdit = null
 var _doc_comment_edit: TextEdit = null
+## The description this function's own rows compose, and the strip that offers it. Held only while
+## the dialog is open: a draft is never stored anywhere, so there is nowhere for a stale one to hide.
+var _drafted_description: String = ""
+var _draft_hint: Label = null
+var _draft_button: Button = null
+var _draft_row: HBoxContainer = null
 var _tool_button_edit: LineEdit = null
 # Shown when the OWNING sheet is an editor tool (tool_mode): this verb runs INSIDE the editor.
 var _tool_mode_hint: Label = null
@@ -113,6 +119,22 @@ func init_dialog(parent_node: Node) -> void:
 		"Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional."))
 	# Highlight-to-format bar (same one the comment dialog uses) - BBCode renders in Godot's generated docs.
 	EventSheetBBCodeSelectionBar.attach(_doc_comment_edit)
+	# The help strip under the field, and the offer beside it: what this function's OWN rows would say
+	# about it. Nothing is written until the button is pressed - a draft never overwrites words a
+	# person typed, and a function with no rows to compose from simply gets no offer.
+	var draft_row: HBoxContainer = HBoxContainer.new()
+	draft_row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
+	_draft_hint = EventSheetPopupUI.hint_label("")
+	_draft_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	draft_row.add_child(_draft_hint)
+	_draft_button = Button.new()
+	_draft_button.text = "Use this draft"
+	_draft_button.tooltip_text = "Puts the drafted line in the field above, where you can edit it before saving. Nothing is written until you save."
+	_draft_button.pressed.connect(func() -> void: _doc_comment_edit.text = _drafted_description)
+	draft_row.add_child(_draft_button)
+	draft_row.visible = false
+	_draft_row = draft_row
+	form.add_child(draft_row)
 
 	# Inspector button: name a label and this function gets a one-click button in the Inspector
 	# (@export_tool_button) - the beginner path to editor tools: the button IS the function, its
@@ -270,7 +292,19 @@ func open_for_edit(event_function: EventFunction) -> void:
 		})
 	_expose_check.button_pressed = event_function.expose_as_ace
 	_preview_card.visible = event_function.expose_as_ace
+	_show_draft_offer(event_function)
 	_refresh_studio()
+
+
+## Shows what this function's rows would say about it, and offers to put those words in the field.
+## Only when the function has no description yet: a person who already wrote a line is not asked to
+## reconsider it, and a function whose rows compose nothing gets no offer rather than an empty one.
+func _show_draft_offer(event_function: EventFunction) -> void:
+	_drafted_description = EventSheetDescriptionDrafts.for_function(event_function)
+	var already_described: bool = not EventSheetDescriptions.for_function(event_function).is_empty()
+	_draft_row.visible = not already_described and not _drafted_description.is_empty()
+	if _draft_row.visible:
+		_draft_hint.text = "No description yet. Its own rows say: \"%s\"" % _drafted_description
 
 
 ## queue_free alone leaves children in the tree until end of frame, so a prefill added right after

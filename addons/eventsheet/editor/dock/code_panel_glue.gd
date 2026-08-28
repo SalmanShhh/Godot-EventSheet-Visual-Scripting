@@ -152,7 +152,13 @@ func refresh_functions_list() -> void:
 	if _dock._current_sheet != null:
 		for function_resource: Variant in _dock._current_sheet.functions:
 			if function_resource is EventFunction:
-				_dock._functions_list.add_item(_dock._format_function_signature(function_resource as EventFunction))
+				var event_function: EventFunction = function_resource as EventFunction
+				_dock._functions_list.add_item(_dock._format_function_signature(event_function))
+				# The one description this function carries, on its entry: what it is for, or the
+				# soft nudge that it has not been said yet. Read from the function's own doc line,
+				# never from a second store, so the list and the file cannot disagree.
+				_dock._functions_list.set_item_tooltip(count,
+					EventSheetDescriptions.display(EventSheetDescriptions.for_function(event_function)))
 				count += 1
 	if _dock._functions_panel != null:
 		_dock._functions_panel.set_count(count)  # the collapsed header still tells the sheet's weight
