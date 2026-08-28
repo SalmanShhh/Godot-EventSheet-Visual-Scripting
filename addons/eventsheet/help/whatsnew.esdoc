@@ -6,6 +6,36 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### No walls - the picker and the errors never dead-end
+
+- **A fixable reason greys an entry, never hides it.** The behavior-host verbs off a plain sheet,
+  the Editor object off a game sheet, and a verb whose node the open scene lacks all stay listed -
+  greyed, with the one-line reason on the entry and the Add button wearing the fix (\"Add an
+  AnimationPlayer to the scene\", \"Switch Tool on for this sheet\", \"Make this a behavior sheet…\",
+  \"Attach this sheet to a scene…\"). Pressing the fix performs it - the node lands through the
+  editor's own undo, Tool flips through the sheet's - and the row's dialog opens right after. A
+  node trigger on a sheet no scene carries says that too, since a trigger without a source can
+  never fire. One table holds every gate, each reason and fix speaks the eight bundled languages,
+  and the suite walks every picker source and fails any entry gated without both.
+- **The picker never renders an empty list.** A query that matches nothing gets the quick-add
+  ranker's relaxed reading first - the nearest entries, the ones one bad word away - and then
+  **Recipes**: whole worked examples enumerated from the guides' own self-drawing figures, so the
+  docs and the picker share one source, inserted as real rows through the Manual's one-undo
+  snippet path.
+- **Creating a name is an offer, never a silence.** Declaring an unknown name from a field opens
+  the declaration dialog pre-filled with the type read from how the expression uses it (compared
+  to 0.5 is a float, joined to text is a String), the did-you-mean names still come first so a
+  typo never mints a twin, and a control named jump is added to the Input Map already bound to
+  Space - said in the answer, changed in Project Settings like any binding.
+- **The tools find you, once, quietly.** Ask-why offers itself at the first never-fired trigger
+  the hit counts reveal, Row Timings at the first stuttering window, and the \"nothing happened at
+  all\" run says its own cause - the game streamed while no scene carries this sheet's script. One
+  quiet status line per offer, once per session, all words in the eight languages, with a
+  persisted global switch (Toggle Rescue Tips in the command palette).
+- **The Doctor hears pasted error text.** A note row still speaking Godot's own words (\"Invalid
+  call. Nonexistent function…\") gets an advisory finding so it can be re-said as the row would
+  say it - or fixed and deleted.
+
 ### Declarations - one place to name things, and the Doctor hears the silence
 
 - **Add ▸ Declare.** Every way to give something a name, gathered as one submenu: Variable,
