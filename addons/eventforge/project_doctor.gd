@@ -108,6 +108,7 @@ static func run() -> Dictionary:
 	check_plugin_reading_health(findings)
 	check_facing_follows(sheet_paths, findings)
 	check_skill_trees(findings)
+	check_raw_error_notes(sheet_paths, findings)
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
@@ -1370,6 +1371,36 @@ static func _scan_variable_notes(rows: Array, sheet_path: String, entries: Array
 				if not mismatch.is_empty():
 					_add(findings, "warning", "variable-type-mismatch", sheet_path, str(mismatch.get("note", "")))
 		_scan_variable_notes(event.sub_events, sheet_path, entries, owner, findings)
+
+
+## A note row carrying Godot's own error text, pasted raw. The runtime-error strip already re-says
+## every failure in the sheet's words, so a note that still speaks engine ("Invalid call.
+## Nonexistent function…") is a wall someone hit and then stored - the finding points at it so it
+## can be re-said as the row would say it, or fixed and deleted. A note, never an error: the sheet
+## compiles fine, it just talks to its reader in the wrong language.
+static func check_raw_error_notes(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet != null:
+			_scan_raw_error_notes(sheet.events, sheet_path, findings)
+
+
+static func _scan_raw_error_notes(rows: Array, sheet_path: String, findings: Array[Dictionary]) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_scan_raw_error_notes(group.events if not group.events.is_empty() else group.rows,
+				sheet_path, findings)
+			continue
+		if entry is EventRow:
+			_scan_raw_error_notes((entry as EventRow).sub_events, sheet_path, findings)
+			continue
+		if not (entry is CommentRow):
+			continue
+		var comment: CommentRow = entry as CommentRow
+		if EventSheetRuntimeErrorWords.looks_like_engine_error(comment.text):
+			_add(findings, "info", "raw-error-note", sheet_path,
+				"A note here is Godot's own error text (\"%s…\") - re-say it in the sheet's words, or fix the cause and delete it." % comment.text.strip_edges().left(60))
 
 
 ## A `#region` fence with no partner, in the same words the row shows under the orphan itself.

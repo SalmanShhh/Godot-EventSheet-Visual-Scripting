@@ -5053,3 +5053,6 @@ Switch Tool on for this sheet,Включить Tool для этого листа
 Add a %s to the scene,Добавить %s в сцену
 "Listens to a %s, and this sheet is not attached to a scene yet.","Слушает %s, а этот лист ещё не прикреплён к сцене."
 Attach this sheet to a scene…,Прикрепить этот лист к сцене…
+Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,Подсказка: триггер этого листа ни разу не сработал в этом запуске - щёлкните его строку правой кнопкой и спросите почему.
+Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,"Подсказка: запуск шёл рывками - Инструменты > Время строк покажет, на какие строки ушли кадры."
+"The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.","Игра работала, а этот лист ни разу - его скрипт не прикреплён ни к чему в запущенной сцене."

@@ -5053,3 +5053,6 @@ Switch Tool on for this sheet,이 시트의 Tool 켜기
 Add a %s to the scene,씬에 %s 추가
 "Listens to a %s, and this sheet is not attached to a scene yet.",%s을(를) 듣지만 이 시트는 아직 씬에 붙어 있지 않습니다.
 Attach this sheet to a scene…,이 시트를 씬에 붙이기…
+Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,팁: 이 시트의 트리거가 이번 실행에서 한 번도 발동하지 않았습니다. 해당 행을 우클릭하고 이유 물어보기를 사용하세요.
+Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,팁: 이번 실행이 버벅였습니다. 도구 > 행 타이밍에서 프레임이 어느 행에 쓰였는지 볼 수 있습니다.
+"The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.",게임은 실행됐지만 이 시트는 한 번도 실행되지 않았습니다. 스크립트가 실행한 씬의 어디에도 붙어 있지 않습니다.

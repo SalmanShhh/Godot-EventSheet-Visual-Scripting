@@ -416,6 +416,12 @@ func _init() -> void:
 	EventSheets._register_dock(self)
 	EventSheets.register_palette_command("Collapse All Regions", func() -> void: _viewport.set_region_folds(true))
 	EventSheets.register_palette_command("Expand All Regions", func() -> void: _viewport.set_region_folds(false))
+	# The global "don't offer tips" switch for the once-per-session rescue offers (the profiler on
+	# the first stutter, Ask-why on the first silent trigger - see EventSheetRescueTips).
+	EventSheets.register_palette_command("Toggle Rescue Tips", func() -> void:
+		EventSheetRescueTips.set_offers_enabled(not EventSheetRescueTips.offers_enabled())
+		_set_status("Rescue tips on - one quiet offer per moment, per session."
+			if EventSheetRescueTips.offers_enabled() else "Rescue tips off - nothing will be offered."))
 	EventSheets.register_palette_command("Collapse Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
 	EventSheets.register_palette_command("Expand Everything", func() -> void: _viewport.set_region_folds(false, true))
 	EventSheets.register_palette_command("Collapse All", func() -> void: _viewport.collapse_all())
@@ -3163,6 +3169,12 @@ func open_debugger(tab: String = "") -> void:
 func update_event_times(window: Dictionary) -> void:
 	EventSheetTraceTimings.note_window(_last_fired_uids, window.get("stamps", PackedInt64Array()),
 		window.get("markers", PackedInt32Array()), int(window.get("flush", 0)))
+	# The profiler finds you: the first stuttering window of a run offers Row Timings, once,
+	# on the quiet line (see EventSheetRescueTips - one offer per session, and a global switch).
+	if EventSheetTraceTimings.last_window_worst_usec() >= EventSheetTraceTimings.STUTTER_USEC:
+		var stutter_tip: String = EventSheetRescueTips.offer("first_slow_run")
+		if not stutter_tip.is_empty():
+			_set_status(stutter_tip)
 	if _debugger_window != null:
 		_debugger_window.refresh()
 
@@ -3170,6 +3182,10 @@ func update_event_times(window: Dictionary) -> void:
 ## The uids of the last streamed trace window, held for exactly as long as it takes the timings
 ## message that belongs to them to arrive (the same flush sends both, fires first).
 var _last_fired_uids: PackedStringArray = PackedStringArray()
+
+## Whether this run's once-only rescue offers were already considered (reset with the hit counts,
+## so a new run gets its own moments).
+var _run_tips_checked: bool = false
 
 
 func _toggle_live_values() -> void:
@@ -3370,6 +3386,18 @@ func update_fired_events(uids: PackedStringArray) -> void:
 	# before it is deduped into the highlight. Counting always; DRAWING only when the reader
 	# ticks View > Row Hit Counts, or hovers one event number.
 	EventSheetTraceHitCounts.note_fired(uids)
+	# The "nothing happened at all" case says itself: the game is streaming, so it is running -
+	# and when no scene carries this sheet's script, the sheet is the one thing that is not.
+	# Checked once per run, offered once per session, on the quiet line.
+	if not _run_tips_checked and _current_sheet != null:
+		_run_tips_checked = true
+		var tip_script: String = str(_current_sheet.external_source_path).strip_edges()
+		if not tip_script.is_empty() and not tip_script.begins_with("res://eventsheet_addons") \
+				and not tip_script.begins_with("res://addons") \
+				and EventSheetSceneLights.nodes_for_script(tip_script).is_empty():
+			var attached_tip: String = EventSheetRescueTips.offer("first_run_without_this_sheet")
+			if not attached_tip.is_empty():
+				_set_status(attached_tip, true)
 	# Held for the timings message of the same flush, which arrives right after this one and needs
 	# to know WHICH fires its stamps belong to.
 	_last_fired_uids = uids
@@ -3448,8 +3476,40 @@ func _toggle_row_hit_counts(view_popup: PopupMenu) -> void:
 		_set_status("Row Hit Counts off - the gutter is back to event numbers only.")
 	elif EventSheetRunProfile.has_numbers():
 		_set_status("Row Hit Counts on: x-counts in the gutter, warm for the busiest rows, x0 for never fired (%s)." % EventSheetRunProfile.label())
+		# "Ask it why" finds you at the first never-fired trigger, once per session, on the same
+		# quiet line the toggle just used (see EventSheetRescueTips).
+		if _sheet_has_never_fired_trigger():
+			var why_tip: String = EventSheetRescueTips.offer("first_never_fired_trigger")
+			if not why_tip.is_empty():
+				_set_status(why_tip)
 	else:
 		_set_status("Row Hit Counts on - no traced run yet. Tools > Event Trace (live highlight), then run the game.")
+
+
+## Whether the open sheet holds a trigger row the traced run never fired - the row the Ask-why
+## offer exists for. False with no traced run: an unknown count is never read as zero.
+func _sheet_has_never_fired_trigger() -> bool:
+	if _current_sheet == null or not EventSheetTraceHitCounts.has_run():
+		return false
+	return _find_never_fired_trigger(_current_sheet.events)
+
+
+func _find_never_fired_trigger(rows: Array) -> bool:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			if _find_never_fired_trigger(group.events if not group.events.is_empty() else group.rows):
+				return true
+			continue
+		if not (entry is EventRow):
+			continue
+		var event: EventRow = entry as EventRow
+		if not event.trigger_id.is_empty() and not event.event_uid.is_empty() \
+				and EventSheetTraceHitCounts.count_for(event.event_uid) == 0:
+			return true
+		if _find_never_fired_trigger(event.sub_events):
+			return true
+	return false
 
 
 ## View > Costs In The Sheet: the same gutter chip, showing the profiled run's milliseconds per fire.
@@ -3564,6 +3624,8 @@ func _reset_row_hit_counts() -> void:
 	# The timings are the other half of the same tally: a profile kept from before the reset would
 	# be answering about the run the reader just said they were done with.
 	EventSheetTraceTimings.reset()
+	# A fresh tally is a fresh run's moments: the once-per-run rescue check runs again for it.
+	_run_tips_checked = false
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view != null:
 			view.queue_redraw()

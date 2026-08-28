@@ -5053,3 +5053,6 @@ Switch Tool on for this sheet,Activar Tool para esta hoja
 Add a %s to the scene,Añadir un %s a la escena
 "Listens to a %s, and this sheet is not attached to a scene yet.","Escucha a un %s, y esta hoja aún no está adjunta a ninguna escena."
 Attach this sheet to a scene…,Adjuntar esta hoja a una escena…
+Tip: a trigger of this sheet has not fired this run - right-click its row and Ask why.,Consejo: un disparador de esta hoja no se ha activado en esta ejecución - clic derecho en su fila y Pregunta por qué.
+Tip: that run stuttered - Tools > Row Timings shows which rows the frames went to.,Consejo: esa ejecución dio tirones - Herramientas > Tiempos por fila muestra a qué filas se fueron los fotogramas.
+"The game ran, but this sheet never did - its script is not attached to anything in the scene you ran.","El juego se ejecutó, pero esta hoja nunca - su script no está adjunto a nada en la escena que ejecutaste."

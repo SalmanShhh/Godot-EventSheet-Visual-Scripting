@@ -35,6 +35,13 @@ static var _last_usec: int = -1
 ## Frames the run has reported markers for. What "per frame" means here.
 static var _frames: int = 0
 static var _has_run: bool = false
+## The single worst measured self time of the LAST window, for the "that run stuttered" offer -
+## one row eating most of a frame is the stutter a player feels.
+static var _last_window_worst_usec: int = 0
+
+## A measured self time at or above this reads as a stutter (most of a 60 fps frame spent in one
+## event's rows).
+const STUTTER_USEC := 12000
 
 
 ## One streamed window -> the profile. `uids` is the fired tally (one entry per fire, in order),
@@ -48,6 +55,7 @@ static func note_window(uids: PackedStringArray, stamps: PackedInt64Array,
 		markers: PackedInt32Array, flush_usec: int) -> void:
 	_has_run = true
 	_frames += markers.size()
+	_last_window_worst_usec = 0
 	var count: int = mini(uids.size(), stamps.size())
 	if count == 0:
 		return
@@ -73,8 +81,10 @@ static func note_window(uids: PackedStringArray, stamps: PackedInt64Array,
 		var uid: String = uids[index]
 		if uid.is_empty():
 			continue
-		_usec[uid] = int(_usec.get(uid, 0)) + maxi(next_stamp - stamps[index], 0)
+		var measured: int = maxi(next_stamp - stamps[index], 0)
+		_usec[uid] = int(_usec.get(uid, 0)) + measured
 		_measured_calls[uid] = int(_measured_calls.get(uid, 0)) + 1
+		_last_window_worst_usec = maxi(_last_window_worst_usec, measured)
 
 
 ## Forgets the run. Called wherever the hit counts are reset - they are two halves of one tally.
@@ -85,10 +95,17 @@ static func reset() -> void:
 	_last_usec = -1
 	_frames = 0
 	_has_run = false
+	_last_window_worst_usec = 0
 
 
 static func has_run() -> bool:
 	return _has_run
+
+
+## The single worst measured self time of the last streamed window, in microseconds. What the
+## "that run stuttered" offer reads - 0 while nothing measurable arrived.
+static func last_window_worst_usec() -> int:
+	return _last_window_worst_usec
 
 
 static func usec_for(uid: String) -> int:

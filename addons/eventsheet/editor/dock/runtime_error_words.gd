@@ -165,3 +165,31 @@ static func output_lines(verdict: Dictionary) -> PackedStringArray:
 ## is exactly when an Explain button would be promising an answer nobody wrote.
 static func can_explain(verdict: Dictionary) -> bool:
 	return not str(verdict.get("explain", "")).strip_edges().is_empty()
+
+
+## The lead-ins of an engine message pasted raw, over and above the CAUSES needles. Only the
+## spellings the engine itself prints, so an ordinary note that merely talks about errors is
+## never accused.
+const RAW_ERROR_MARKERS: Array[String] = [
+	"SCRIPT ERROR:", "Parse Error:", "Invalid call.", "E 0:", "ERROR:",
+	"Attempt to call function", "Invalid access to property or key",
+]
+
+
+## True when a piece of prose reads as Godot's own error text rather than as a sentence a person
+## wrote - a note row carrying one is a wall pasted into the sheet, and the Doctor points at it so
+## it can be re-said in the sheet's words (or fixed and deleted). The CAUSES needles count too:
+## they ARE engine spellings, which is why the table matches on them.
+static func looks_like_engine_error(text: String) -> bool:
+	var haystack: String = text.strip_edges()
+	if haystack.is_empty():
+		return false
+	for marker: String in RAW_ERROR_MARKERS:
+		if haystack.contains(marker):
+			return true
+	var lowered: String = haystack.to_lower()
+	for cause: Dictionary in CAUSES:
+		for needle: Variant in (cause.get("needles", []) as Array):
+			if lowered.contains(str(needle).to_lower()):
+				return true
+	return false
