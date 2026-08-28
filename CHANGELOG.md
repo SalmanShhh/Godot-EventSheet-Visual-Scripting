@@ -160,6 +160,83 @@
   and the file gets its own bytes back.
 - New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
   sheet order, with the row that holds it.
+### Rendering - drawing order, the long frame, and quality as a folder
+
+- **Draw in front of X.** Drawing order set RELATIVE to another node rather than as a number two
+  people have to keep in step: the row writes `crate.z_index = player.z_index + 1`, so moving the
+  pair around keeps their order. A project that already had that line opens on the row, and saves
+  back byte for byte.
+- **Show only to a named visibility layer.** Which cameras may draw a thing is a bitmask nobody
+  should be computing, so the field is the named-mask picker the collision layers already use,
+  pointed at the other list Godot names in Project Settings (Layer Names > 2D Render). Tick
+  "minimap" and the minimap camera draws the marker and nothing else does. A hand-written
+  `visibility_layer = 2` reads back in the project's own words.
+- **Is on screen.** The engine answers this with a node rather than a property, so the row works
+  through a `VisibleOnScreenNotifier2D` - the node's own if it has one, and otherwise a plain child
+  added the first time the row is asked, visible in the scene and yours to move, resize and keep.
+- **On the frame running long / On the frame recovered.** The frame-budget conditions that shipped
+  answer "is it slow right now", which is true sixty times a second and gives a row nowhere to put
+  "and do something about it". These two speak ONCE: the first on the frame a run of long frames
+  reaches the length you named, the second once the calm has lasted - and never at all unless
+  something was long first, so a game that started well hears nothing. Two thresholds with a gap
+  between them is what stops a game flicking its own quality up and down on the boundary forever.
+- **Apply quality Medium, and the preset is a file.** A quality word is not a setting of its own: it
+  is a set of values over settings that already exist. Each word IS a `.tres` in
+  `res://settings/quality/`, the folder is the list, and adding a preset is adding a file - nothing
+  registers it. Low, Medium and High are written on request, and New preset copies the one you had
+  picked and opens it in the Inspector. Apply Quality writes the values as ordinary setting changes,
+  so the handlers you already wrote do the work; Apply Quality One Step walks the presets' own Rank
+  and stops at the ends.
+- **"Custom" is worked out, never stored.** The quality label compares the values in force against
+  each preset file, so nudging one graphics setting flips the label on its own and no save file
+  carries a word that could go stale. Saves hold the values, which is why a custom setup survives an
+  update and deleting a preset file cannot break anyone's game - their values still load, and the
+  label simply reads Custom.
+- **A graphics option declared later belongs in every preset.** Every key of a preset's values shows
+  in the Inspector as a field of its own, named and typed by what is stored under it, so declaring
+  `motion_blur` and filling it in is all it takes for every preset file to have a motion blur field.
+  New: `EventSheetQualityPresets`, and the Quality Preset companion resource.
+
+### Options menus - one declaration, one control, and the conflict answered
+
+- **Bind to setting: one row, both directions.** A slider that writes `music_volume` and a
+  `music_volume` that moves the slider are one fact seen twice, so they are one row. The control
+  shows the value in force the moment it is bound, and anything else that changes the setting - a
+  quality preset, Reset To Defaults, a second menu still open - moves the control back, because the
+  binding hangs off the announcement rather than off the menu. A dropdown with no items of its own
+  takes the setting's declared choices.
+- **The pair have to fit, and the reason is a sentence.** A checkbox bound to a percent says
+  `music_volume is a percent and wants a slider - this is a checkbox.` in the output log as it binds,
+  and Binding Mismatch hands the same words to a row. A control the pack does not recognise is never
+  complained about - a custom one may show anything, and a wrong guess costs more than no guess.
+- **The menu grows itself.** A setting declared with a page has a row on it: Menu Rows From
+  Declarations fills a container with one labelled, bound control per declaration, so adding an
+  option later is ONE Declare row with no scene edit and no new glue. The rows are plain Godot
+  controls in a plain container, and a control you made yourself and NAMED after a setting is used
+  instead of a generated one - no lock-in in either direction. Declare is now the single entry point
+  for an option of any kind: difficulty, motion blur, invert Y are one Declare row plus one On
+  Setting Changed reaction each.
+- **The focus neighbours are wired as the page is built.** A pad's up and down and the Tab key walk
+  the page in the order it is drawn, from the first frame, and Unreachable Controls names anything a
+  keyboard cannot get to. An options menu that needs a mouse is a bug found at certification rather
+  than in the studio.
+- **Apply with a way back.** Apply a screen mode the monitor cannot show and the menu you need in
+  order to undo it is the thing you cannot see. Apply With A Way Back remembers every value and
+  starts a countdown; Keep These Settings answers it, and silence puts everything back through
+  ordinary Set Setting changes (so the menu follows) and fires On Settings Reverted. Seconds Left To
+  Keep is the countdown label.
+- **Rebinding, with the conflict answered at bind time.** Controls Page From The Input Map builds one
+  row per action your project declares - keyboard and pad in their own columns, a reset on each row,
+  actions added later appearing on their own. A key something else already answers to fires On
+  Binding Conflict instead of quietly stacking two actions on one key, and the three answers are
+  three rows: Swap The Binding (the two trade, nobody ends up without a key), Take The Binding Anyway
+  (honest rather than tidy - the other action really has lost its key and turns up in Unbound
+  Actions), and Pick Another Key. Bindings save into the same `user://settings.cfg` as everything
+  else, and a reset restores what the project ships with.
+- **Doctor > Options** asks the two questions nobody thinks to: an action with no binding on any
+  device, and a quality preset that says nothing about a setting its neighbours answer for - which is
+  what makes Low after High a different Low from Low after Medium. Both read small files (Project
+  Settings and the quality folder), so a project with neither pays almost nothing.
 
 ### Existing codebases - the lift walls come down
 

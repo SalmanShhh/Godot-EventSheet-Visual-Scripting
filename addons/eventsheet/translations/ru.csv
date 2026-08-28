@@ -5022,3 +5022,7 @@ animations,анимации
 %s is inside %s (scaled %s) - its own 10 is the world's %s,%s находится внутри %s (масштаб %s) - его собственные 10 в мире равны %s
 %s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s отражён отрицательным масштабом - его формы и лучи переворачиваются вместе с графикой; лучше отразите спрайт
 "%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s масштабирован (%s, %s) и повёрнут - он будет скошен; масштабируйте графику, а не коллайдер"
+New preset…,Новый пресет…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Копирует выбранный пресет в новый файл и открывает его. В пустой папке появятся Low, Medium и High."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s не привязано ни к одному устройству - нажать его невозможно. Задайте привязку в настройках проекта или позвольте это сделать странице управления.
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s ничего не говорит о %s, поэтому его выбор оставляет это значение таким, каким его задал прошлый пресет."

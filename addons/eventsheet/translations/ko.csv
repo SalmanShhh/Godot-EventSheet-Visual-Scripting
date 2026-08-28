@@ -5022,3 +5022,7 @@ animations,애니메이션
 %s is inside %s (scaled %s) - its own 10 is the world's %s,%s 는 %s 안에 있습니다 (배율 %s) - 자체의 10 은 월드에서 %s 입니다
 %s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s 는 음수 배율로 뒤집혀 있습니다 - 충돌 모양과 레이캐스트도 그림과 함께 뒤집힙니다. 대신 스프라이트를 뒤집으세요
 "%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s 는 (%s, %s) 로 배율이 다르고 회전합니다 - 찌그러집니다. 콜라이더가 아니라 그림을 조절하세요"
+New preset…,새 프리셋…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","선택한 프리셋을 새 파일로 복사하고 엽니다. 폴더가 비어 있으면 Low, Medium, High가 만들어집니다."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 에 어떤 장치에도 바인딩이 없습니다 - 아무도 누를 수 없습니다. 프로젝트 설정에서 지정하거나 컨트롤 페이지가 지정하게 하세요.
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s 는 %s 에 대해 아무 말도 하지 않으므로, 선택해도 그 값은 직전 프리셋이 정한 그대로 남습니다."

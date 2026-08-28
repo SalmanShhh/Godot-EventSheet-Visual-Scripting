@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="QualityPreset" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/quality_preset_resource/quality_preset.gd" id="1_gd4a4"]
+
+[resource]
+script = ExtResource("1_gd4a4")
+preset_name = "Low"
+values = {
+"debanding": false,
+"msaa": 0,
+"resolution_scale": 0.7,
+"shadow_size": 1024
+}

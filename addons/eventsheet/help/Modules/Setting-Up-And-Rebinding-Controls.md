@@ -113,6 +113,22 @@ The "Ships as" column is the exact code the row compiles to. Parameters appear i
 | Action Binding Count | How many keys or buttons are bound to a named action. | `InputMap.action_get_events(&{action}).size()` |
 | Action Binding As Text | The action's first binding as readable text, or "unbound". | `(InputMap.action_get_events({action})[0].as_text() if not InputMap.action_get_events({action}).is_empty() else "unbound")` |
 
+### When two controls want the same key
+
+The rows above rebind whatever you point them at, which is right for one row doing one thing and
+wrong for a rebinding SCREEN: bind Interact to E while Inventory already answers to E, and the game
+now does two things at once whenever the player presses it. Nothing errors, and nobody finds out
+until a playtest.
+
+The Game Settings pack answers that at bind time. **Listen For A New Binding** waits for the press,
+and a key something else already answers to fires **On Binding Conflict** with both names instead of
+binding anything. Three rows are the three answers - **Swap The Binding** (the two trade, nobody ends
+up without a key), **Take The Binding Anyway** (this action takes it, the other is left without one
+and says so through **Unbound Actions**), and **Pick Another Key** (nothing changes, the row goes on
+listening). **Controls Page From The Input Map** builds the whole screen from the actions your
+project declares, keyboard and pad in their own columns, and **Save Bindings** keeps the result in
+the same `user://settings.cfg` the rest of the options live in.
+
 ## Use cases
 
 **1. Continuous movement.** Is Action Pressed is the one you want while a key is held.

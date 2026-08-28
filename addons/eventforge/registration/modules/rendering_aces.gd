@@ -44,6 +44,25 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "RenderingSetDebanding", "Set Debanding", ACEDescriptor.ACEType.ACTION, "RenderingServer.viewport_set_use_debanding(%s, {enabled})" % VP, "", [F.make_param("enabled", "bool", "true", "Enabled", "Dither away gradient banding in dark scenes.", "expression")], CAT, "set debanding {enabled}")
 		.described("Toggles debanding - removes the visible stripes in smooth dark gradients for a tiny cost."))
 
+	# ── Draw order, in the words a 2D scene uses ──
+	#
+	# Three mechanisms, all numbers, none of them readable in a row: z_index says who covers whom,
+	# visibility_layer says which camera sees a thing at all, and "is it on screen" is a node rather
+	# than a property. The three rows below are the daily case of each; the plain numeric rows above
+	# and the Inspector stay for everything else.
+	#
+	# Both actions carry their OWN `{target.}` slot rather than taking the automatic "On node" one:
+	# the retarget pass refuses to prefix a line whose right-hand side reads the assigned member back
+	# (`z_index = {other}.z_index + 1` does), and refusing is right in general - it is only safe here
+	# because the member being read belongs to the OTHER node, which the row names separately.
+	descriptors.append(F.make_descriptor("Core", "RenderingDrawInFrontOf", "Draw In Front Of", ACEDescriptor.ACEType.ACTION, "{target.}z_index = {other}.z_index + 1", "", [F.make_param("other", "String", "self", "In front of", "The node to draw over - this one takes its drawing order plus one.", "scene_node"), _on_node_param()], CAT, "draw in front of {other}", "CanvasItem")
+		.described("Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.").featured())
+	descriptors.append(F.make_descriptor("Core", "RenderingShowOnlyTo", "Show Only To", ACEDescriptor.ACEType.ACTION, "{target.}visibility_layer = {layers}", "", [F.make_param("layers", "String", "1", "Visible to", "The visibility layers that may see this node, by their project names.", "render_layer_2d"), _on_node_param()], CAT, "show only to {layers}", "CanvasItem")
+		.described("Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else."))
+	descriptors.append(F.make_descriptor("Core", "RenderingIsOnScreen", "Is On Screen", ACEDescriptor.ACEType.CONDITION, "__on_screen_{uid}({node})", "", [F.make_param("node", "String", "self", "Node", "The node to ask about.", "scene_node")], CAT, "is on screen")
+		.described("True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.")
+		.stateful("var __on_screen_watch_{uid}: VisibleOnScreenNotifier2D = null\n\nfunc __on_screen_{uid}(who: Node) -> bool:\n\tif not is_instance_valid(__on_screen_watch_{uid}):\n\t\t__on_screen_watch_{uid} = who.get_node_or_null(^\"VisibleOnScreenNotifier2D\") as VisibleOnScreenNotifier2D\n\tif __on_screen_watch_{uid} == null:\n\t\t__on_screen_watch_{uid} = VisibleOnScreenNotifier2D.new()\n\t\t__on_screen_watch_{uid}.name = \"VisibleOnScreenNotifier2D\"\n\t\twho.add_child(__on_screen_watch_{uid})\n\treturn __on_screen_watch_{uid}.is_on_screen()"))
+
 	# ── Conditions ──
 	descriptors.append(F.make_descriptor("Core", "RenderingUsesModernRenderer", "Uses Modern Renderer", ACEDescriptor.ACEType.CONDITION, "RenderingServer.get_rendering_device() != null", "", [], CAT, "uses the modern renderer")
 		.described("True on the Forward+ / Mobile renderers, false on Compatibility (old GPUs, web) - gate fancy effects on it."))
@@ -63,6 +82,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("The current default background color."))
 
 	return descriptors
+
+
+## The "On node" parameter in the shape the automatic retarget pass gives every other node-scoped
+## row, for the two rows that have to spell their own `{target.}` slot. Same id, same words, so a
+## reader meets one field rather than two that look alike.
+static func _on_node_param() -> ACEParam:
+	return F.make_param("target", "String", "", "On node", "Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(\"player\").", "expression")
 
 
 static func section_descriptions() -> Dictionary:

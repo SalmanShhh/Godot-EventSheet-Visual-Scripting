@@ -3077,6 +3077,13 @@ static func _behaviour_assignment(object_name: String, member: String, assigned:
 		if not named_layers.is_empty():
 			var template: String = "Set collision layers to {layers}" if member == "collision_layer" else "Set collides with {layers}"
 			return _sentence(object_name, template, {"layers": [named_layers, "value"]})
+	# Which CAMERAS may draw this - the project's 2D render layer names, read the same way. A mask
+	# naming nothing the project named keeps the plain assignment reading, because "show only to 2"
+	# tells a reader less than the number already did.
+	if member == "visibility_layer" and value.is_valid_int():
+		var visible_to: String = physics_layer_words(value.to_int(), RENDER_DIMENSION_2D)
+		if not visible_to.is_empty():
+			return _sentence(object_name, "Show only to {layers}", {"layers": [visible_to, "value"]})
 	if not BEHAVIOUR_MEMBERS.has(member):
 		return {}
 	var known_class: String = object_class_of(
@@ -5407,6 +5414,11 @@ const LIST_TYPES: PackedStringArray = [
 ## The two physics dimensions, and the project-settings key their layer names live under.
 const PHYSICS_DIMENSION_2D := "2d_physics"
 const PHYSICS_DIMENSION_3D := "3d_physics"
+
+## The project's OTHER named-layer list: which cameras may draw a thing. Godot names these in the
+## same Project Settings shape as the physics ones, so the same two readers answer for both.
+const RENDER_DIMENSION_2D := "2d_render"
+
 ## The classes whose collision knobs are the 3D ones. Everything else reads the 2D names, which is
 ## what a 2D project wants and what an unknown class can honestly say.
 const PHYSICS_3D_CLASSES: PackedStringArray = ["Node3D"]

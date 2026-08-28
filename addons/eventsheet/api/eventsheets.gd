@@ -1849,6 +1849,7 @@ const ADDON_GUIDE_OVERRIDES := {
 	"price_table_resource": "Priced-Tables",
 	"priced_table": "Priced-Tables",
 	"proc_room": "ProcRoom",
+	"quality_preset_resource": "Game-Settings",
 	"quest_resource": "Quest",
 	"random_table_resource": "Advanced-Random",
 	"skill_tree_resource": "Upgrades",

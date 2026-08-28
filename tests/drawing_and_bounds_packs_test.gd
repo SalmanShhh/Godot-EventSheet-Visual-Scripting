@@ -67,8 +67,8 @@ static func run() -> bool:
 	all_passed = _check("physics_layer_3d hint is registered", factories.has("physics_layer_3d"), true) and all_passed
 	var field: Control = dialog.call("_create_physics_layer_2d_field", "collision_mask", "5")
 	all_passed = _check("mask field extracts the default mask", dialog.call("_extract_value", field), 5) and all_passed
-	all_passed = _check("mask summary lists anonymous layers by number", dialog.call("_physics_mask_summary", 5, "2d_physics"), "1, 3") and all_passed
-	all_passed = _check("empty mask reads as No layers", dialog.call("_physics_mask_summary", 0, "2d_physics"), "No layers") and all_passed
+	all_passed = _check("mask summary lists anonymous layers by number", dialog.call("_named_layer_summary", 5, "2d_physics"), "1, 3") and all_passed
+	all_passed = _check("empty mask reads as No layers", dialog.call("_named_layer_summary", 0, "2d_physics"), "No layers") and all_passed
 	field.free()
 
 	# ── Rotate: the event-sheet-parity spinner + its editor-preview contract

@@ -5022,3 +5022,7 @@ animations,アニメーション
 %s is inside %s (scaled %s) - its own 10 is the world's %s,%s は %s の中にあります（スケール %s） - 自身の 10 はワールドでは %s です
 %s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s は負のスケールで反転しています - 形状とレイキャストも絵と一緒に反転します。代わりにスプライトを反転してください
 "%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s は (%s, %s) にスケールされ回転しています - せん断が起きます。コライダーではなく絵をスケールしてください"
+New preset…,新しいプリセット…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s はどのデバイスにも割り当てがありません - 誰も押せません。プロジェクト設定で割り当てるか、コントロールページに割り当てさせてください。
+"%s says nothing about %s, so picking it leaves that where the last preset put it.",%s は %s について何も言っていないため、選んでも直前のプリセットが決めた値のまま残ります。

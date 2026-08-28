@@ -5022,3 +5022,7 @@ animations,animaciones
 %s is inside %s (scaled %s) - its own 10 is the world's %s,%s esta dentro de %s (escalado %s) - sus propios 10 son %s en el mundo
 %s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s esta reflejado por una escala negativa - sus formas y sus rayos se voltean con el arte; voltea el sprite en su lugar
 "%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s esta escalado (%s, %s) y girado - se va a inclinar; escala el arte, no el colisionador"
+New preset…,Nuevo preajuste…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copia el preajuste elegido en un archivo nuevo y lo abre. Una carpeta vacía recibe Low, Medium y High."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s no tiene asignación en ningún dispositivo - nadie puede pulsarlo. Asígnalo en los ajustes del proyecto, o deja que lo haga una página de controles."
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s no dice nada sobre %s, así que elegirlo deja eso donde lo dejó el ajuste anterior."

@@ -5022,3 +5022,7 @@ animations,Animationen
 %s is inside %s (scaled %s) - its own 10 is the world's %s,%s liegt in %s (skaliert %s) - seine eigenen 10 sind in der Welt %s
 %s is mirrored by a negative scale - its shapes and raycasts flip with the art; flip the sprite instead,%s ist durch eine negative Skalierung gespiegelt - Formen und Strahlen kippen mit der Grafik mit; spiegle stattdessen das Sprite
 "%s is scaled (%s, %s) and turned - it will shear; scale the art, not the collider","%s ist (%s, %s) skaliert und gedreht - es wird geschert; skaliere die Grafik, nicht den Collider"
+New preset…,Neue Voreinstellung…
+"Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Kopiert die gewählte Voreinstellung in eine neue Datei und öffnet sie. Ein leerer Ordner bekommt Low, Medium und High."
+"%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s hat auf keinem Gerät eine Belegung - niemand kann es drücken. Belege es in den Projekteinstellungen, oder lass es eine Steuerungsseite belegen."
+"%s says nothing about %s, so picking it leaves that where the last preset put it.","%s sagt nichts über %s, also lässt seine Auswahl das dort, wo die letzte Voreinstellung es hingelegt hat."
