@@ -140,8 +140,21 @@ static func run() -> bool:
 	EventSheetProjectDoctor.clear_project_scripts()
 	all_passed = _check("clear_project_scripts() puts it back to unwalked",
 		EventSheetProjectDoctor._project_scripts_walked, false) and all_passed
-	all_passed = _check("and the next ask walks again and finds the same files",
-		EventSheetProjectDoctor._project_scripts().size(), listed.size()) and all_passed
+	# Freshness is proven with a file THIS test controls, never by comparing live-tree counts:
+	# other tests legitimately create and remove scripts (the probe tests spawn whole child
+	# processes that do), so two walks of the real tree are allowed to disagree by a file. A
+	# temp script appearing after a clear, and disappearing after the next one, pins the same
+	# promise - the clear really forces a fresh walk - without racing anybody.
+	var probe_script_path: String = "res://tests/fixtures/cache_walk_probe_tmp.gd"
+	var probe_file: FileAccess = FileAccess.open(probe_script_path, FileAccess.WRITE)
+	probe_file.store_line("extends RefCounted")
+	probe_file.close()
+	all_passed = _check("and the next ask walks again - a file added after the clear is found",
+		EventSheetProjectDoctor._project_scripts().has(probe_script_path), true) and all_passed
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_script_path))
+	EventSheetProjectDoctor.clear_project_scripts()
+	all_passed = _check("and a file removed before the next clear is gone from the next walk",
+		EventSheetProjectDoctor._project_scripts().has(probe_script_path), false) and all_passed
 
 	# ── The dock actually calls both ────────────────────────────────────────────────────────
 	# Source lint, not a live dock: constructing the dock needs a display server. What matters is
