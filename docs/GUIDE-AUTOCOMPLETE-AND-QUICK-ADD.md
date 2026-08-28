@@ -163,3 +163,25 @@ sheet** (a variable added, a function renamed) only that sheet's lists go, and w
 changes** (a scene saved, an action added in Project Settings, a shader edited) all of them do. The
 answers about the project - the Input Map, the node groups, the class list, the file list - are held
 once and shared by every open tab, so ten tabs asking for the Input Map is one Input Map.
+
+## No walls: a greyed entry is a fix, and no result is ever empty
+
+An entry the picker cannot honestly offer yet is never hidden. It stays listed, greyed, with the
+one-line reason on it - and selecting it turns the Add button into the fix itself. A behavior-host
+verb off a plain sheet offers to make the sheet a behavior; an Editor verb on a game sheet offers
+to switch Tool on; a verb whose node the open scene lacks offers to add that node (through the
+editor's own undo, so Ctrl+Z takes it back); a node trigger on a sheet no scene carries offers to
+attach the sheet. Press the fix and the row's own dialog opens right after, as if nothing had ever
+been in the way.
+
+![The Add Event picker with a behavior-host condition selected: the description panel explains
+Host Is Valid, and the dialog's confirm button reads "Make this a behavior sheet…" instead of
+Add](images/picker-gate-fix.png)
+
+A search that matches nothing is not a dead end either. The same ranker relaxes - a word that
+found nothing no longer disqualifies an entry - and the nearest entries stand under a **Nearest
+matches** section. Under them, **Recipes**: whole worked examples drawn from the guides' own
+figures, inserted into the sheet as real rows in one undo step, ready to retune.
+
+![The Add Event picker after a query with no exact match: a Nearest matches section listing wall
+and jump entries, then a Recipes section offering a worked example from a guide](images/picker-recipes.png)
