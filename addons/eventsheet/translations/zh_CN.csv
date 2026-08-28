@@ -5026,3 +5026,17 @@ New preset…,新建预设…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",把选中的预设复制成新文件并打开。空文件夹会得到 Low、Medium 和 High。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 在任何设备上都没有绑定 - 没人能按下它。请在项目设置中绑定，或让控制页面来绑定。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s 没有提到 %s，所以选它会让该项停留在上一个预设留下的值。
+Errors,错误
+Warnings,警告
+%d new since you last looked.,自上次查看以来新增 %d 条。
+"Project Doctor: %d error(s), %d warning(s), %d note(s).",项目 Doctor：%d 个错误、%d 个警告、%d 条备注。
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.",该项目没有任何导出预设，因此没有可用于构建发行版的东西。项目 > 导出 > 添加 可为要发布的平台创建一个。
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.",游戏还没有自己的名字，所以窗口和构建出的文件都沿用项目模板的名称。项目设置 > 应用 > 配置 > 名称。
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",图标仍是引擎自带的，所以任务栏显示的是 Godot 的标志而不是游戏的。项目设置 > 应用 > 配置 > 图标。
+%s writes to the console where an exported release build still runs it - first: %s.,%s 在导出的发行版构建仍会执行的位置写入控制台 - 第一处：%s。
+%d more like it in this file.,该文件中还有 %d 处类似的。
+Log (Debug Builds Only) compiles the line out of a release game.,日志（仅调试构建）会把这一行从发行版游戏中去掉。
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s 缺少游戏请求的 %d 个键，玩家会看到原始键：%s。
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s 在上次测量的运行中每帧耗费 %.2f 毫秒 - 占一帧的 %d%%（60 fps 下一帧为 %.1f 毫秒）。
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",这个游戏的一个存档槽保存 %d 个值，由 %d 个脚本写入：%s。不在此列表中的内容在加载存档槽时会回到初始值。
+%s and %d more,%s 等另外 %d 个

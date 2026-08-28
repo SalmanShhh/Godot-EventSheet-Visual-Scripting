@@ -5026,3 +5026,17 @@ New preset…,Nuovo preset…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copia il preset scelto in un nuovo file e lo apre. Una cartella vuota riceve Low, Medium e High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s non ha alcuna associazione su nessun dispositivo - nessuno può premerlo. Assegnalo nelle impostazioni del progetto, oppure lascia che lo faccia una pagina dei comandi."
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s non dice nulla su %s, quindi sceglierlo lascia quel valore dove l'ha messo il preset precedente."
+Errors,Errori
+Warnings,Avvisi
+%d new since you last looked.,%d nuovi dall'ultima volta che hai guardato.
+"Project Doctor: %d error(s), %d warning(s), %d note(s).","Dottore del progetto: %d errore/i, %d avviso/i, %d nota/e."
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.","Questo progetto non ha alcun preset di esportazione, quindi non c'è nulla da cui costruire una release. Progetto > Esporta > Aggiungi ne crea uno per la piattaforma a cui stai pubblicando."
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.","Il gioco non ha ancora un nome suo, quindi la finestra e il file costruito prendono il nome del modello di progetto. Impostazioni progetto > Applicazione > Config > Nome."
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","L'icona è ancora quella del motore, quindi la barra delle applicazioni mostra il logo di Godot invece di quello del gioco. Impostazioni progetto > Applicazione > Config > Icona."
+%s writes to the console where an exported release build still runs it - first: %s.,%s scrive nella console dove una build di release esportata la esegue ancora - prima: %s.
+%d more like it in this file.,%d altre simili in questo file.
+Log (Debug Builds Only) compiles the line out of a release game.,Log (solo build di debug) toglie la riga da un gioco di release.
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","A %s mancano %d chiave/i che il gioco chiede, quindi chi legge vede la chiave grezza: %s."
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s costa %.2f ms di un frame nell'ultima esecuzione misurata - %d%% dei %.1f ms che ha un frame a 60 fps.
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Uno slot di salvataggio di questo gioco contiene %d valore/i, scritto/i da %d script: %s. Tutto ciò che non è in questo elenco torna al valore iniziale quando si carica uno slot."
+%s and %d more,%s e altri %d

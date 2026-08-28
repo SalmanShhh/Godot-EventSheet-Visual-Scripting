@@ -5026,3 +5026,17 @@ New preset…,新しいプリセット…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s はどのデバイスにも割り当てがありません - 誰も押せません。プロジェクト設定で割り当てるか、コントロールページに割り当てさせてください。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s は %s について何も言っていないため、選んでも直前のプリセットが決めた値のまま残ります。
+Errors,エラー
+Warnings,警告
+%d new since you last looked.,前回見てから %d 件が新しく増えました。
+"Project Doctor: %d error(s), %d warning(s), %d note(s).",プロジェクト Doctor: エラー %d 件、警告 %d 件、メモ %d 件。
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.",このプロジェクトにはエクスポートプリセットがないため、リリースをビルドする元がありません。プロジェクト > エクスポート > 追加 で、公開先のプラットフォーム用に 1 つ作れます。
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.",ゲームにまだ固有の名前がないため、ウィンドウもビルドされたファイルもプロジェクトテンプレートの名前のままです。プロジェクト設定 > アプリケーション > 構成 > 名前。
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",アイコンがまだエンジンのものなので、タスクバーにはゲームではなく Godot のロゴが出ます。プロジェクト設定 > アプリケーション > 構成 > アイコン。
+%s writes to the console where an exported release build still runs it - first: %s.,%s は、エクスポートしたリリースビルドでも実行される場所でコンソールに書き出しています - 最初: %s。
+%d more like it in this file.,このファイルには同じようなものがあと %d 件あります。
+Log (Debug Builds Only) compiles the line out of a release game.,ログ (デバッグビルドのみ) を使うと、その行はリリース版から取り除かれます。
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s にはゲームが求めるキーが %d 件不足しているため、プレイヤーには生のキーが見えます: %s。
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s は最後に計測した実行で 1 フレームあたり %.2f ms かかっています - 1 フレームの %d%% です (60 fps の 1 フレームは %.1f ms)。
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",このゲームのセーブスロットには %d 個の値が入り、%d 個のスクリプトから書き込まれます: %s。この一覧にないものは、スロットを読み込むと初期値に戻ります。
+%s and %d more,%s ほか %d 件
