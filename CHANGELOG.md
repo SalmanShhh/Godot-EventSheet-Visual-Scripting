@@ -160,6 +160,7 @@
   and the file gets its own bytes back.
 - New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
   sheet order, with the row that holds it.
+
 ### Rendering - drawing order, the long frame, and quality as a folder
 
 - **Draw in front of X.** Drawing order set RELATIVE to another node rather than as a number two
