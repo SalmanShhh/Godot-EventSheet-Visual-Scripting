@@ -12,6 +12,8 @@
 #   * an event that has been switched off for a long time
 #   * two events that read identically
 #   * the same literal typed three times or more - a setting waiting for a name
+#   * an enum value nothing in the project ever names
+#   * a signal announced but never heard (no scene connection, no connect call, no await)
 #
 # Every judgement is a PURE static function over plain data, so the suite pins the answers without
 # planting a broken fixture in the project (a planted fixture would make the repo's own audit report
@@ -118,6 +120,93 @@ static func unfired_triggers(sheet: EventSheetResource, corpus: String) -> Packe
 		if not corpus.contains("%s.emit" % signal_name) and not corpus.contains("\"%s\"" % signal_name):
 			unfired.append(signal_name)
 	return unfired
+
+
+# ── Enum values nothing names ────────────────────────────────────────────────────────────────
+## The enum values `source` (one generated script's text) declares that nothing in `corpus`
+## (every project script joined) ever writes as `Name.VALUE`. Declarations never spell that
+## token themselves - `enum Mode { IDLE }` contains no `Mode.IDLE` - so the corpus may include
+## the declaring file, and a match arm or a comparison anywhere counts as a use. Approximate on
+## purpose in one direction only: a value read through a variable or by its number is invisible,
+## which is why the finding asks rather than accuses.
+static func dead_enum_values(source: String, corpus: String) -> PackedStringArray:
+	var dead: PackedStringArray = PackedStringArray()
+	for declaration: Dictionary in _declared_enums(source):
+		var enum_name: String = str(declaration["name"])
+		for member: String in (declaration["members"] as PackedStringArray):
+			var token: RegEx = RegEx.create_from_string("\\b%s\\.%s\\b" % [enum_name, member])
+			if token != null and token.search(corpus) == null:
+				dead.append("%s.%s" % [enum_name, member])
+	return dead
+
+
+## The enums one script's text declares, as [{name, members}]. Reads the two canonical shapes the
+## compiler emits (and the importer lifts): single-line `enum Name { A, B = 4 }`, and multi-line
+## `enum Name {` with one tab-indented member per line until `}`. Member names keep only the part
+## before any explicit `= number`.
+static func _declared_enums(source: String) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var one_line: RegEx = RegEx.create_from_string("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{ (.+) \\}$")
+	var header: RegEx = RegEx.create_from_string("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{$")
+	var lines: PackedStringArray = source.split("\n")
+	var line_index: int = 0
+	while line_index < lines.size():
+		var line: String = lines[line_index]
+		var single: RegExMatch = one_line.search(line)
+		if single != null:
+			found.append({"name": single.get_string(1), "members": _member_names(EventSheetBlockRegistry.split_params_top_level(single.get_string(2)))})
+			line_index += 1
+			continue
+		var opener: RegExMatch = header.search(line)
+		if opener != null:
+			var members: PackedStringArray = PackedStringArray()
+			var scan: int = line_index + 1
+			while scan < lines.size() and lines[scan] != "}":
+				if lines[scan].begins_with("\t"):
+					members.append(lines[scan].substr(1).trim_suffix(","))
+				scan += 1
+			found.append({"name": opener.get_string(1), "members": _member_names(members)})
+			line_index = scan + 1
+			continue
+		line_index += 1
+	return found
+
+
+## Bare member names from member declarations ("HURT = 4" -> "HURT").
+static func _member_names(member_texts: PackedStringArray) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for member_text: String in member_texts:
+		var member_name: String = member_text.get_slice("=", 0).strip_edges()
+		if not member_name.is_empty():
+			names.append(member_name)
+	return names
+
+
+# ── Signals announced but never heard ────────────────────────────────────────────────────────
+## The signals `source` (one generated script's text) declares that nothing anywhere LISTENS to:
+## no scene wires them (`signal="name"` in `scenes_text`, every .tscn joined), no script connects
+## them (`name.connect` or a quoted "name" in `corpus`), and nothing awaits them. Emitting is the
+## other side of the contract and deliberately does not count - an announcement with no listener
+## is exactly the silence this note exists to name. The quoted-name test is generous on purpose:
+## a name handed around as a string is probably being connected somewhere this sweep cannot parse,
+## and accusing a working game is worse than missing a tidy-up.
+static func unheard_signals(source: String, corpus: String, scenes_text: String) -> PackedStringArray:
+	var unheard: PackedStringArray = PackedStringArray()
+	var declaration: RegEx = RegEx.create_from_string("(?m)^signal ([A-Za-z_][A-Za-z0-9_]*)")
+	for found: RegExMatch in declaration.search_all(source):
+		var signal_name: String = found.get_string(1)
+		if scenes_text.contains("signal=\"%s\"" % signal_name):
+			continue
+		if corpus.contains("\"%s\"" % signal_name):
+			continue
+		var connect_call: RegEx = RegEx.create_from_string("\\b%s\\.connect\\b" % signal_name)
+		if connect_call != null and connect_call.search(corpus) != null:
+			continue
+		var awaited: RegEx = RegEx.create_from_string("await [^\\n]*\\b%s\\b" % signal_name)
+		if awaited != null and awaited.search(corpus) != null:
+			continue
+		unheard.append(signal_name)
+	return unheard
 
 
 # ── 4. Behaviors attached but unused ─────────────────────────────────────────────────────────
@@ -353,6 +442,45 @@ static func _replace_literal(rows: Array, literal: String, variable_name: String
 
 
 # ── The checks the Doctor runs ───────────────────────────────────────────────────────────────
+## Declarations nobody reaches, across every GENERATED script in the project: enum values nothing
+## names and signals nothing hears. Driven by the project's scripts rather than by sheet_paths
+## (list_project_sheets() finds only `.tres`, so a sheet-driven walk skips most projects while
+## looking like it works), and gated on the generated banner: only a compiled sheet's own output
+## is judged, because in hand-written code (and in a `.gd` that IS a sheet, which carries no
+## banner) an unused name can be a public offer to code that is not written yet. The usage CORPUS
+## is still every project script, so a use anywhere excuses a declaration. Published packs
+## (res://eventsheet_addons/) are vocabulary, not project wiring, and are skipped for the same
+## reason the unused-pack check gives them their own gentler note.
+static func check_declaration_reach(findings: Array[Dictionary]) -> void:
+	var script_paths: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	var sources: Dictionary = {}
+	var corpus_parts: PackedStringArray = PackedStringArray()
+	for script_path: String in script_paths:
+		var text: String = FileAccess.get_file_as_string(script_path)
+		sources[script_path] = text
+		corpus_parts.append(text)
+	var corpus: String = "\n".join(corpus_parts)
+	var scene_parts: PackedStringArray = PackedStringArray()
+	for scene_path: String in EventSheetSceneConnections.scene_paths():
+		scene_parts.append(FileAccess.get_file_as_string(scene_path))
+	var scenes_text: String = "\n".join(scene_parts)
+	for script_path: String in script_paths:
+		if script_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var source: String = str(sources[script_path])
+		# begins_with, never contains: the generated header is always line one, and a file that
+		# merely TALKS about the convention (this check's own test, for one) must not be read as code.
+		if not source.begins_with("# AUTO-GENERATED by EventForge"):
+			continue
+		for dead_value: String in dead_enum_values(source, corpus):
+			_add(findings, "dead-enum-value", script_path,
+				"Enum value %s is declared but nothing ever names it - remove it, or wire it in?" % dead_value)
+		for signal_name: String in unheard_signals(source, corpus, scenes_text):
+			_add(findings, "unheard-signal", script_path,
+				"Signal \"%s\" is announced but nothing listens - connect it in a scene or an On %s event, or remove it." % [signal_name, signal_name])
+
+
+
 ## Every tidiness note for every sheet, appended to `findings` through the Doctor's own `_add`.
 ## One entry point rather than seven, because the sweep loads each sheet once and asks all seven
 ## questions of it - loading a project's sheets seven times over is the slow way to the same report.

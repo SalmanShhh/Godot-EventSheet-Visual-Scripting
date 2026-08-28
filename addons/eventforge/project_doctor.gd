@@ -111,6 +111,10 @@ static func run() -> Dictionary:
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
 	EventSheetDoctorTidiness.check_tidiness(sheet_paths, findings)
+	# Declarations nobody reaches (dead enum values, signals nothing hears) - driven by the
+	# project's generated scripts, not by sheet_paths. After the tidiness sweep for the same
+	# reason the sweep runs last: new notes append, the established report never reorders.
+	EventSheetDoctorTidiness.check_declaration_reach(findings)
 	# The Multiplayer and Lighting sections ship as EXTENSION checks, registered through the
 	# same public seam a pack uses, so "a pack adds its own networking scripts to that section" is the
 	# shipped path rather than a special case. Registering here is what puts them in all four runners.
