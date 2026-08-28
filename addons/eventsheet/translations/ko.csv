@@ -5026,3 +5026,30 @@ New preset…,새 프리셋…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","선택한 프리셋을 새 파일로 복사하고 엽니다. 폴더가 비어 있으면 Low, Medium, High가 만들어집니다."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 에 어떤 장치에도 바인딩이 없습니다 - 아무도 누를 수 없습니다. 프로젝트 설정에서 지정하거나 컨트롤 페이지가 지정하게 하세요.
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s 는 %s 에 대해 아무 말도 하지 않으므로, 선택해도 그 값은 직전 프리셋이 정한 그대로 남습니다."
+Nearest matches,가까운 항목
+Recipes,레시피
+"Inserts the worked example from %s as real rows, ready to retune.",%s의 예제를 실제 행으로 삽입합니다. 값은 나중에 조정할 수 있습니다.
+Insert rows,행 삽입
+recipe,레시피
+"A worked example from %s, inserted as real rows - retune the values on the rows themselves.",%s의 예제를 실제 행으로 삽입한 것입니다. 값은 행에서 직접 조정하세요.
+This entry's fix (%s) is not wired yet.,이 항목의 수정(%s)은 아직 연결되지 않았습니다.
+Can't add a %s here - add the node by hand in the Scene dock.,여기에는 %s을(를) 추가할 수 없습니다. 씬 독에서 직접 노드를 추가하세요.
+"Open the scene this sheet drives, then this entry can add the %s for you.",이 시트가 움직이는 씬을 열면 이 항목이 %s을(를) 대신 추가할 수 있습니다.
+Added a %s to %s - Ctrl+Z takes it back.,%s을(를) %s에 추가했습니다. Ctrl+Z로 되돌릴 수 있습니다.
+Open a sheet first - Tool is a per-sheet setting.,먼저 시트를 여세요. Tool은 시트별 설정입니다.
+Tool is on - this sheet's rows can run inside the editor now.,Tool이 켜졌습니다. 이 시트의 행은 이제 에디터 안에서 실행될 수 있습니다.
+Pick Behavior here and the host verbs come off grey.,여기서 비헤이비어를 선택하면 호스트 동사의 회색 표시가 사라집니다.
+"Attach this sheet's script to a node of your scene (select the node, then the Attach Script button) and its triggers have a source.",이 시트의 스크립트를 씬의 노드에 붙이면(노드를 선택한 뒤 스크립트 붙이기 버튼) 트리거에 소스가 생깁니다.
+"%s already has a script - attach %s to a child node instead, from the Scene dock.",%s에는 이미 스크립트가 있습니다. 대신 씬 독에서 자식 노드에 %s을(를) 붙이세요.
+Couldn't load %s to attach it.,%s을(를) 불러올 수 없어 붙이지 못했습니다.
+Attached %s to %s - its triggers listen to this scene now.,%s을(를) %s에 붙였습니다. 트리거는 이제 이 씬을 듣습니다.
+"Inserted ""%s"" - retune the values on the rows themselves.","""%s""을(를) 삽입했습니다. 값은 행에서 직접 조정하세요."
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.","""%s""을(를) 여기에 삽입할 수 없습니다. 대신 설명서에서 해당 가이드 페이지를 여세요."
+Runs only on a behavior sheet - it reads the behavior's host.,비헤이비어 시트에서만 동작합니다. 비헤이비어의 호스트를 읽기 때문입니다.
+Make this a behavior sheet…,이 시트를 비헤이비어 시트로 만들기…
+Runs only inside the editor - this sheet needs Tool switched on.,에디터 안에서만 동작합니다. 이 시트는 Tool이 켜져 있어야 합니다.
+Switch Tool on for this sheet,이 시트의 Tool 켜기
+"Needs a %s in the scene, and there is none yet.",씬에 %s이(가) 필요하지만 아직 없습니다.
+Add a %s to the scene,씬에 %s 추가
+"Listens to a %s, and this sheet is not attached to a scene yet.",%s을(를) 듣지만 이 시트는 아직 씬에 붙어 있지 않습니다.
+Attach this sheet to a scene…,이 시트를 씬에 붙이기…

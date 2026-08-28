@@ -136,6 +136,24 @@ static func _word_score(word: String, name: String, object: String, keywords: St
 	return 0
 
 
+## The RELAXED reading of the same ranker, for the "nothing matched" moment: every word's best hit
+## still counts, but a word that found nothing no longer disqualifies the row. This is what ranks
+## the NEAREST entries under an empty result - strict scoring is the filter, loose scoring is the
+## rescue, and they share the same hits so the two can never disagree about what "close" means.
+static func loose_score(query: String, name: String, object: String = "", keywords: String = "") -> int:
+	var parts: Dictionary = split(query)
+	var words: PackedStringArray = parts["words"]
+	if words.is_empty():
+		return 0
+	var lowered_name: String = name.to_lower()
+	var total: int = 0
+	for word: String in words:
+		total += _word_score(word.to_lower(), lowered_name, object.to_lower(), keywords.to_lower())
+	if total == 0:
+		return 0
+	return total - mini(lowered_name.length(), 99)
+
+
 ## The values a query carries, placed into the row's parameters: each value goes to the first
 ## parameter that can take it and has not already been given one. Returns {param_id: value},
 ## empty when the query carried no values or the row has nowhere to put them.

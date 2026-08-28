@@ -5026,3 +5026,30 @@ New preset…,Nuovo preset…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copia il preset scelto in un nuovo file e lo apre. Una cartella vuota riceve Low, Medium e High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s non ha alcuna associazione su nessun dispositivo - nessuno può premerlo. Assegnalo nelle impostazioni del progetto, oppure lascia che lo faccia una pagina dei comandi."
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s non dice nulla su %s, quindi sceglierlo lascia quel valore dove l'ha messo il preset precedente."
+Nearest matches,Corrispondenze più vicine
+Recipes,Ricette
+"Inserts the worked example from %s as real rows, ready to retune.","Inserisce l'esempio svolto di %s come righe reali, pronte da ritoccare."
+Insert rows,Inserisci righe
+recipe,ricetta
+"A worked example from %s, inserted as real rows - retune the values on the rows themselves.","Un esempio svolto di %s, inserito come righe reali - ritocca i valori sulle righe stesse."
+This entry's fix (%s) is not wired yet.,La correzione di questa voce (%s) non è ancora collegata.
+Can't add a %s here - add the node by hand in the Scene dock.,Qui non si può aggiungere un %s - aggiungi il nodo a mano nel dock Scena.
+"Open the scene this sheet drives, then this entry can add the %s for you.","Apri la scena che questo foglio guida, e questa voce potrà aggiungere il %s per te."
+Added a %s to %s - Ctrl+Z takes it back.,Aggiunto un %s a %s - Ctrl+Z lo toglie.
+Open a sheet first - Tool is a per-sheet setting.,Apri prima un foglio - Tool è un'impostazione per foglio.
+Tool is on - this sheet's rows can run inside the editor now.,Tool è attivo - le righe di questo foglio ora possono girare nell'editor.
+Pick Behavior here and the host verbs come off grey.,"Scegli Comportamento qui, e i verbi dell'host non sono più in grigio."
+"Attach this sheet's script to a node of your scene (select the node, then the Attach Script button) and its triggers have a source.","Collega lo script di questo foglio a un nodo della tua scena (seleziona il nodo, poi il pulsante Collega script) e i suoi trigger avranno una sorgente."
+"%s already has a script - attach %s to a child node instead, from the Scene dock.","%s ha già uno script - collega %s a un nodo figlio, dal dock Scena."
+Couldn't load %s to attach it.,Impossibile caricare %s per collegarlo.
+Attached %s to %s - its triggers listen to this scene now.,Collegato %s a %s - i suoi trigger ora ascoltano questa scena.
+"Inserted ""%s"" - retune the values on the rows themselves.","""%s"" inserito - ritocca i valori sulle righe stesse."
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.","Impossibile inserire ""%s"" qui - apri invece la sua pagina di guida nel Manuale."
+Runs only on a behavior sheet - it reads the behavior's host.,Funziona solo su un foglio di comportamento - legge l'host del comportamento.
+Make this a behavior sheet…,Rendi questo foglio un foglio di comportamento…
+Runs only inside the editor - this sheet needs Tool switched on.,Funziona solo dentro l'editor - questo foglio ha bisogno di Tool attivo.
+Switch Tool on for this sheet,Attiva Tool per questo foglio
+"Needs a %s in the scene, and there is none yet.","Serve un %s nella scena, e ancora non ce n'è."
+Add a %s to the scene,Aggiungi un %s alla scena
+"Listens to a %s, and this sheet is not attached to a scene yet.","Ascolta un %s, e questo foglio non è ancora collegato a una scena."
+Attach this sheet to a scene…,Collega questo foglio a una scena…

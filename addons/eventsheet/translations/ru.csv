@@ -5026,3 +5026,30 @@ New preset…,Новый пресет…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Копирует выбранный пресет в новый файл и открывает его. В пустой папке появятся Low, Medium и High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s не привязано ни к одному устройству - нажать его невозможно. Задайте привязку в настройках проекта или позвольте это сделать странице управления.
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s ничего не говорит о %s, поэтому его выбор оставляет это значение таким, каким его задал прошлый пресет."
+Nearest matches,Ближайшие совпадения
+Recipes,Рецепты
+"Inserts the worked example from %s as real rows, ready to retune.","Вставляет готовый пример из %s настоящими строками, которые можно донастроить."
+Insert rows,Вставить строки
+recipe,рецепт
+"A worked example from %s, inserted as real rows - retune the values on the rows themselves.","Готовый пример из %s, вставленный настоящими строками - донастройте значения прямо на строках."
+This entry's fix (%s) is not wired yet.,Исправление этого пункта (%s) ещё не подключено.
+Can't add a %s here - add the node by hand in the Scene dock.,Здесь нельзя добавить %s - добавьте узел вручную в панели «Сцена».
+"Open the scene this sheet drives, then this entry can add the %s for you.","Откройте сцену, которой управляет этот лист, и этот пункт добавит %s за вас."
+Added a %s to %s - Ctrl+Z takes it back.,%s добавлен в %s - Ctrl+Z отменит это.
+Open a sheet first - Tool is a per-sheet setting.,Сначала откройте лист - Tool задаётся для каждого листа.
+Tool is on - this sheet's rows can run inside the editor now.,Tool включён - строки этого листа теперь могут выполняться в редакторе.
+Pick Behavior here and the host verbs come off grey.,"Выберите здесь «Поведение», и глаголы хоста перестанут быть серыми."
+"Attach this sheet's script to a node of your scene (select the node, then the Attach Script button) and its triggers have a source.","Прикрепите скрипт этого листа к узлу вашей сцены (выберите узел, затем кнопку прикрепления скрипта), и у его триггеров появится источник."
+"%s already has a script - attach %s to a child node instead, from the Scene dock.","У %s уже есть скрипт - прикрепите %s к дочернему узлу, через панель «Сцена»."
+Couldn't load %s to attach it.,"Не удалось загрузить %s, чтобы прикрепить его."
+Attached %s to %s - its triggers listen to this scene now.,%s прикреплён к %s - его триггеры теперь слушают эту сцену.
+"Inserted ""%s"" - retune the values on the rows themselves.","«%s» вставлен - донастройте значения прямо на строках."
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.","Не удалось вставить «%s» здесь - откройте вместо этого его страницу в руководстве."
+Runs only on a behavior sheet - it reads the behavior's host.,Работает только на листе поведения - он читает хост поведения.
+Make this a behavior sheet…,Сделать этот лист листом поведения…
+Runs only inside the editor - this sheet needs Tool switched on.,Работает только внутри редактора - этому листу нужен включённый Tool.
+Switch Tool on for this sheet,Включить Tool для этого листа
+"Needs a %s in the scene, and there is none yet.","Нужен %s в сцене, а его пока нет."
+Add a %s to the scene,Добавить %s в сцену
+"Listens to a %s, and this sheet is not attached to a scene yet.","Слушает %s, а этот лист ещё не прикреплён к сцене."
+Attach this sheet to a scene…,Прикрепить этот лист к сцене…

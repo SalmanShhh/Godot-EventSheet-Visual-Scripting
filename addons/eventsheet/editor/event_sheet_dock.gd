@@ -320,6 +320,7 @@ var _queries: EventSheetDockQueries = EventSheetDockQueries.new()  # dock/sheet_
 var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()
 var _extract_ops: EventSheetExtractOps = EventSheetExtractOps.new()  # extract-to-function / extract-to-include (dock/extract_ops.gd)  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
+var _picker_gate_fixes: EventSheetPickerGateFixes = EventSheetPickerGateFixes.new()  # the picker's greyed-entry fixes: add the missing node, switch Tool on, open Sheet Type (dock/picker_gate_fixes.gd)
 var _editor_tool_bar: EventSheetEditorToolBar = EventSheetEditorToolBar.new()  # Run now / Reload / Output / Enable plugin on a tool sheet's Include bar (dock/editor_tool_bar.gd)
 var _pending_built_here: Dictionary = {}  # A recorded "show the events behind this" waiting for its file to finish opening
 var _this_editor_bar: EventSheetThisEditorBar = EventSheetThisEditorBar.new()  # Enabled / Reload / Output / plugin.cfg + the read-only guard on a sheet that is part of the running editor (dock/this_editor_bar.gd)
@@ -408,6 +409,7 @@ func _init() -> void:
 	_queries.init(self)
 	_add_rows.init(self)
 	_extract_ops.init(self)
+	_picker_gate_fixes.init(self)
 	# The public extension API (addons/eventsheet/api/eventsheets.gd) fronts this dock;
 	# the region fold commands register through it as living proof the extension point
 	# works - delete these four lines and only extensions lose their entries.
@@ -1866,6 +1868,22 @@ func _on_add_gdscript_action_requested() -> void:
 
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
 	_ace_apply._on_ace_picker_selected(definition, context)
+
+
+## A greyed picker entry's fix button: perform the fix (add the missing node, switch Tool on, open
+## Sheet Type), then carry on to the row the reader wanted (dock/picker_gate_fixes.gd).
+func _on_picker_gate_fix_requested(gate: Dictionary, definition: ACEDefinition, context: Dictionary) -> void:
+	_picker_gate_fixes.apply(gate, definition, context)
+
+
+## A recipe off the picker's empty-result shelf: the guide's worked example inserted as real rows,
+## through the same one-undo-step snippet path the Manual's figures use.
+func _on_picker_recipe_requested(recipe: Dictionary) -> void:
+	var title: String = str(recipe.get("title", ""))
+	if EventSheetPickerRecipes.insert(recipe, "Insert recipe: %s" % title):
+		_set_status(EventSheetL10n.translate("Inserted \"%s\" - retune the values on the rows themselves.") % title, false)
+	else:
+		_set_status(EventSheetL10n.translate("Couldn't insert \"%s\" here - open its guide page from the Manual instead.") % title, true)
 
 
 ## The Add event dialog's "(none - runs every tick)" entry: a blank event, which is a real

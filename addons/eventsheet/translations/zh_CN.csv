@@ -5026,3 +5026,30 @@ New preset…,新建预设…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",把选中的预设复制成新文件并打开。空文件夹会得到 Low、Medium 和 High。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 在任何设备上都没有绑定 - 没人能按下它。请在项目设置中绑定，或让控制页面来绑定。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s 没有提到 %s，所以选它会让该项停留在上一个预设留下的值。
+Nearest matches,最接近的匹配
+Recipes,配方
+"Inserts the worked example from %s as real rows, ready to retune.",将 %s 中的完整示例作为真实行插入，随后可再调整。
+Insert rows,插入行
+recipe,配方
+"A worked example from %s, inserted as real rows - retune the values on the rows themselves.",来自 %s 的完整示例，已作为真实行插入 - 请直接在行上调整数值。
+This entry's fix (%s) is not wired yet.,该条目的修复(%s)尚未接入。
+Can't add a %s here - add the node by hand in the Scene dock.,这里无法添加 %s - 请在场景面板中手动添加该节点。
+"Open the scene this sheet drives, then this entry can add the %s for you.",打开此事件表驱动的场景，该条目就能替你添加 %s。
+Added a %s to %s - Ctrl+Z takes it back.,已将 %s 添加到 %s - Ctrl+Z 可撤销。
+Open a sheet first - Tool is a per-sheet setting.,请先打开一个事件表 - Tool 是按表设置的。
+Tool is on - this sheet's rows can run inside the editor now.,Tool 已开启 - 此事件表的行现在可以在编辑器中运行。
+Pick Behavior here and the host verbs come off grey.,在这里选择行为，主体动词就不再置灰。
+"Attach this sheet's script to a node of your scene (select the node, then the Attach Script button) and its triggers have a source.",将此事件表的脚本附加到场景中的节点（选中节点，再点附加脚本按钮），它的触发器就有了来源。
+"%s already has a script - attach %s to a child node instead, from the Scene dock.",%s 已经有脚本了 - 请改为从场景面板将 %s 附加到子节点。
+Couldn't load %s to attach it.,无法加载 %s，附加失败。
+Attached %s to %s - its triggers listen to this scene now.,已将 %s 附加到 %s - 它的触发器现在监听这个场景。
+"Inserted ""%s"" - retune the values on the rows themselves.",已插入“%s” - 请直接在行上调整数值。
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.",无法在这里插入“%s” - 请改为在手册中打开它的指南页面。
+Runs only on a behavior sheet - it reads the behavior's host.,只在行为事件表上运行 - 它要读取行为的主体。
+Make this a behavior sheet…,把此事件表变成行为事件表…
+Runs only inside the editor - this sheet needs Tool switched on.,只在编辑器内运行 - 此事件表需要开启 Tool。
+Switch Tool on for this sheet,为此事件表开启 Tool
+"Needs a %s in the scene, and there is none yet.",场景中需要一个 %s，但还没有。
+Add a %s to the scene,向场景添加一个 %s
+"Listens to a %s, and this sheet is not attached to a scene yet.",监听 %s，但此事件表还没有附加到场景。
+Attach this sheet to a scene…,将此事件表附加到场景…

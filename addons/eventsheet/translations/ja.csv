@@ -5026,3 +5026,30 @@ New preset…,新しいプリセット…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s はどのデバイスにも割り当てがありません - 誰も押せません。プロジェクト設定で割り当てるか、コントロールページに割り当てさせてください。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s は %s について何も言っていないため、選んでも直前のプリセットが決めた値のまま残ります。
+Nearest matches,近い候補
+Recipes,レシピ
+"Inserts the worked example from %s as real rows, ready to retune.",%s の実例を実際の行として挿入します。値は後から調整できます。
+Insert rows,行を挿入
+recipe,レシピ
+"A worked example from %s, inserted as real rows - retune the values on the rows themselves.",%s の実例を実際の行として挿入したものです。値は行の上で直接調整してください。
+This entry's fix (%s) is not wired yet.,この項目の修正 (%s) はまだ接続されていません。
+Can't add a %s here - add the node by hand in the Scene dock.,ここに %s は追加できません。シーンドックで手動でノードを追加してください。
+"Open the scene this sheet drives, then this entry can add the %s for you.",このシートが動かすシーンを開くと、この項目が %s を代わりに追加できます。
+Added a %s to %s - Ctrl+Z takes it back.,%s を %s に追加しました。Ctrl+Z で取り消せます。
+Open a sheet first - Tool is a per-sheet setting.,まずシートを開いてください。Tool はシートごとの設定です。
+Tool is on - this sheet's rows can run inside the editor now.,Tool がオンになりました。このシートの行はエディター内で実行できます。
+Pick Behavior here and the host verbs come off grey.,ここでビヘイビアを選ぶと、ホストの動詞のグレー表示が解除されます。
+"Attach this sheet's script to a node of your scene (select the node, then the Attach Script button) and its triggers have a source.",このシートのスクリプトをシーンのノードにアタッチすると (ノードを選択してスクリプトをアタッチ)、トリガーに発生源ができます。
+"%s already has a script - attach %s to a child node instead, from the Scene dock.",%s には既にスクリプトがあります。代わりにシーンドックから子ノードに %s をアタッチしてください。
+Couldn't load %s to attach it.,%s を読み込めなかったため、アタッチできませんでした。
+Attached %s to %s - its triggers listen to this scene now.,%s を %s にアタッチしました。トリガーはこのシーンを監視します。
+"Inserted ""%s"" - retune the values on the rows themselves.",「%s」を挿入しました。値は行の上で直接調整してください。
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.",「%s」をここに挿入できませんでした。代わりにマニュアルからガイドページを開いてください。
+Runs only on a behavior sheet - it reads the behavior's host.,ビヘイビアシートでのみ動作します。ビヘイビアのホストを読み取るためです。
+Make this a behavior sheet…,このシートをビヘイビアシートにする…
+Runs only inside the editor - this sheet needs Tool switched on.,エディター内でのみ動作します。このシートは Tool をオンにする必要があります。
+Switch Tool on for this sheet,このシートの Tool をオンにする
+"Needs a %s in the scene, and there is none yet.",シーンに %s が必要ですが、まだありません。
+Add a %s to the scene,%s をシーンに追加
+"Listens to a %s, and this sheet is not attached to a scene yet.",%s を監視しますが、このシートはまだシーンにアタッチされていません。
+Attach this sheet to a scene…,このシートをシーンにアタッチ…

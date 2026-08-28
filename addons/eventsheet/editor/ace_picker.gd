@@ -33,6 +33,15 @@ signal help_requested(definition: ACEDefinition)
 ## only the context the dialog was opened with, which says where the new event goes.
 signal blank_event_selected(context: Dictionary)
 
+## Emitted instead of ace_selected when the picked entry is behind a fixable precondition (a
+## missing node, Tool switched off - see EventSheetPickerGates): the dock performs the fix and
+## then carries on to the row the reader wanted.
+signal gate_fix_requested(gate: Dictionary, definition: ACEDefinition, context: Dictionary)
+
+## Emitted when the reader picks a RECIPE off the empty-result shelf: a whole worked example from
+## the guides, inserted into the open sheet as real rows (see EventSheetPickerRecipes).
+signal recipe_insert_requested(recipe: Dictionary)
+
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
@@ -341,6 +350,17 @@ var _selected_definition: ACEDefinition = null
 ## True while the highlighted entry is the Add event dialog's "(none - runs every tick)" row,
 ## which carries no definition of its own. Add / Enter commit a blank event while it is set.
 var _blank_event_highlighted: bool = false
+
+## What this refresh knows about the open sheet and its scene, computed once per tree rebuild and
+## read per entry (see EventSheetPickerGates.context_for). Empty until the first refresh.
+var _gate_context: Dictionary = {}
+
+## The Add button's everyday label, so a gated entry can borrow the button for its fix and hand
+## it back.
+var _add_default_label: String = "Add"
+
+## The recipe highlighted on the empty-result shelf, if any - committed by the same Add button.
+var _selected_recipe: Dictionary = {}
 var _tree_context_menu: PopupMenu = null
 var _tree_context_definition: ACEDefinition = null
 var _hint: Label = null
@@ -589,7 +609,8 @@ func set_reflect_class_provider(provider: Callable) -> void:
 
 ## The behaviour-only host vocabulary (Host / Host Is Valid) reads the literal `host` var, which only
 ## exists in a behaviour sheet's synthesized prelude. The dock feeds this a `-> bool` that is true when
-## the current sheet is a behaviour, so the picker hides those ACEs off a plain / resource / node sheet.
+## the current sheet is a behaviour; off a plain / resource / node sheet those ACEs are greyed with
+## the reason and a fix rather than hidden.
 func set_behavior_mode_provider(provider: Callable) -> void:
 	_behavior_mode_provider = provider
 
@@ -601,10 +622,12 @@ func set_tool_mode_provider(provider: Callable) -> void:
 	_tool_mode_provider = provider
 
 
-## True when a definition is a behaviour-only host ACE that must NOT be offered on a non-behaviour sheet
-## (it would emit an undefined `host`). Pure + static so the gate is unit-testable without a live picker.
+## True when a definition is a behaviour-only host ACE that a non-behaviour sheet cannot run (it
+## would emit an undefined `host`). The picker no longer hides these - they are greyed with the
+## reason and a fix (see EventSheetPickerGates) - but the question itself is still asked here.
+## Pure + static so the gate is unit-testable without a live picker.
 static func host_ace_hidden(provider_id: String, ace_id: String, is_behavior_sheet: bool) -> bool:
-	return not is_behavior_sheet and provider_id == "Core" and ace_id in ["BehaviorHost", "BehaviorHostValid"]
+	return not is_behavior_sheet and EventSheetPickerGates.is_behavior_host_ace(provider_id, ace_id)
 
 
 ## The Editor object's whole category. Every one of those rows calls EditorInterface or an
@@ -620,7 +643,7 @@ static func editor_ace_hidden(category: String, is_tool_sheet: bool) -> bool:
 ## still the Editor object, so every gate that used to compare the whole category asks here instead;
 ## comparing on equality would have quietly un-scoped every paged row onto game sheets.
 static func is_editor_tools_category(category: String) -> bool:
-	return category == EDITOR_TOOLS_CATEGORY or category.begins_with(EDITOR_TOOLS_CATEGORY + SUBCATEGORY_SEPARATOR)
+	return EventSheetPickerGates.is_editor_tools_category(category)
 
 
 ## The one category the gate above reads. Named here rather than spelled at the call site because it
@@ -1642,25 +1665,15 @@ func _refresh_tree() -> void:
 	for signal_definition: ACEDefinition in scene_signal_definitions(_open_sheet(), _registry):
 		if not filtering or shelf_matches_query(signal_definition, query):
 			definitions.append(signal_definition)
-	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
-	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
-	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
+	# Fixable preconditions never HIDE an entry any more: the behaviour-only host verbs off a plain
+	# sheet and the Editor object off a game sheet stay LISTED, greyed, with the one-line reason as
+	# the fix (see EventSheetPickerGates). The context is computed once here - the single chokepoint
+	# `definitions` passes through - and read per entry where the tree items are built.
 	var is_behavior_sheet: bool = _behavior_mode_provider.is_valid() and bool(_behavior_mode_provider.call())
-	var host_filtered: Array[ACEDefinition] = []
-	for host_candidate: ACEDefinition in definitions:
-		if not host_ace_hidden(str(host_candidate.provider_id), str(host_candidate.id), is_behavior_sheet):
-			host_filtered.append(host_candidate)
-	definitions = host_filtered
-	# The Editor object, on the same chokepoint: its rows only run inside the editor, so they are
-	# offered on a @tool sheet and nowhere else. No provider wired = no gate, which is what keeps a
-	# headless build and an embedder's picker showing exactly what they showed before.
-	if _tool_mode_provider.is_valid():
-		var is_tool_sheet: bool = bool(_tool_mode_provider.call())
-		var tool_filtered: Array[ACEDefinition] = []
-		for tool_candidate: ACEDefinition in definitions:
-			if not editor_ace_hidden(str(tool_candidate.category), is_tool_sheet):
-				tool_filtered.append(tool_candidate)
-		definitions = tool_filtered
+	var tool_gate_wired: bool = _tool_mode_provider.is_valid()
+	var is_tool_sheet: bool = tool_gate_wired and bool(_tool_mode_provider.call())
+	_gate_context = EventSheetPickerGates.context_for(
+		_open_sheet(), is_behavior_sheet, tool_gate_wired, is_tool_sheet)
 	# Object-first scope: a picked object card narrows the tree to that provider's verbs
 	# (search still filters WITHIN the object, exactly the event-sheet second step).
 	if not _object_filter_provider.is_empty():
@@ -1759,6 +1772,13 @@ func _refresh_tree() -> void:
 			group_item.set_icon_max_width(0, 16)
 		item.set_tooltip_text(0, _item_tooltip(definition))
 		item.set_metadata(0, definition)
+		# A gated entry is greyed, never gone: the tooltip leads with the reason, and selecting it
+		# turns the Add button into the fix (see _on_definition_selected).
+		var entry_gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
+		if not entry_gate.is_empty():
+			item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+			item.set_tooltip_text(0, "%s\n%s" % [
+				EventSheetPickerGates.reason_text(entry_gate), item.get_tooltip_text(0)])
 		_add_help_button(item, definition)
 		if featured:
 			var __bold: Font = _bold_font()
@@ -1767,8 +1787,40 @@ func _refresh_tree() -> void:
 
 	_add_alias_rows(root, group_nodes, mode, signals_only, query)
 
-	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
-	# Nudge the vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
+	# The picker never renders an EMPTY list: a query that matched nothing gets the NEAREST entries
+	# (the same ranker, relaxed - a word that missed no longer disqualifies) and then RECIPES, whole
+	# worked examples out of the guides' own self-drawing figures, inserted as real rows. The plain
+	# advice line survives only for the query nothing at all is near.
+	if filtering and root.get_child_count() == 0:
+		var candidates: Array[ACEDefinition] = []
+		for near_candidate: ACEDefinition in _registry.get_all_definitions():
+			if _is_allowed_for_mode(near_candidate, mode, signals_only):
+				candidates.append(near_candidate)
+		var nearest: Array[ACEDefinition] = EventSheetPickerRecipes.nearest_definitions(query, candidates)
+		if not nearest.is_empty():
+			var nearest_header: TreeItem = _make_group_item(root, EventSheetL10n.translate("Nearest matches"), false)
+			nearest_header.collapsed = false
+			for near_definition: ACEDefinition in nearest:
+				var near_item: TreeItem = _tree.create_item(nearest_header)
+				near_item.set_text(0, _item_label(near_definition))
+				var near_icon: Texture2D = resolve_definition_icon(near_definition)
+				if near_icon != null:
+					near_item.set_icon(0, near_icon)
+					near_item.set_icon_max_width(0, 16)
+				near_item.set_tooltip_text(0, _item_tooltip(near_definition))
+				near_item.set_metadata(0, near_definition)
+		# Recipes make whole events, so they are offered where whole events go.
+		if not signals_only and mode in ["new_event", "new_condition_event"]:
+			var recipes: Array[Dictionary] = EventSheetPickerRecipes.search(query)
+			if not recipes.is_empty():
+				var recipes_header: TreeItem = _make_group_item(root, EventSheetL10n.translate("Recipes"), false)
+				recipes_header.collapsed = false
+				for recipe: Dictionary in recipes:
+					var recipe_item: TreeItem = _tree.create_item(recipes_header)
+					recipe_item.set_text(0, str(recipe.get("title", "")))
+					recipe_item.set_tooltip_text(0, EventSheetL10n.translate("Inserts the worked example from %s as real rows, ready to retune.")
+						% str(recipe.get("page_title", "")))
+					recipe_item.set_metadata(0, {"recipe": recipe})
 	if filtering and root.get_child_count() == 0:
 		var empty_item: TreeItem = _tree.create_item(root)
 		empty_item.set_text(0, "No matches for \"%s\" - try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
@@ -1810,12 +1862,14 @@ func _blank_event_offered(mode: String, signals_only: bool, query: String) -> bo
 ## The blank entry is highlighted: the description panel says what it makes, and Add commits it.
 func _on_blank_event_highlighted() -> void:
 	_selected_definition = null
+	_selected_recipe = {}
 	_blank_event_highlighted = true
 	_update_guide_button(null)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
 	if _add_button != null:
 		_add_button.disabled = false
+		_add_button.text = EventSheetL10n.translate(_add_default_label)
 	if _info_label != null:
 		_info_label.text = "[b]%s[/b]\n%s" % [
 			EventSheetL10n.translate("(none - runs every tick)"),
@@ -2357,7 +2411,11 @@ func _on_item_selected_for_info() -> void:
 		if meta is Dictionary and (meta as Dictionary).has("section"):
 			_show_section_info(selected, str((meta as Dictionary)["section"]))
 			return
+		if meta is Dictionary and (meta as Dictionary).has("recipe"):
+			_show_recipe_info((meta as Dictionary)["recipe"] as Dictionary)
+			return
 	_blank_event_highlighted = false
+	_selected_recipe = {}
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
 	# Picking in the main tree clears the side-pane highlight so there is one logical selection.
 	if definition != null:
@@ -2677,6 +2735,9 @@ func _on_item_activated() -> void:
 	if item_meta is Dictionary and (item_meta as Dictionary).has("alias_index"):
 		_commit_alias(int((item_meta as Dictionary)["alias_index"]))
 		return
+	if item_meta is Dictionary and (item_meta as Dictionary).has("recipe"):
+		_commit_recipe((item_meta as Dictionary)["recipe"] as Dictionary)
+		return
 	_commit_definition(item_meta if item_meta is ACEDefinition else null)
 
 
@@ -2815,9 +2876,16 @@ func _on_side_item_activated(tree: Tree) -> void:
 ## ⭐ button state, and what Add / Enter will insert.
 func _on_definition_selected(definition: ACEDefinition) -> void:
 	_selected_definition = definition
+	_selected_recipe = {}
 	_update_info_panel(definition)
 	if _add_button != null:
 		_add_button.disabled = definition == null
+		# A gated entry stays selectable and its one-line reason IS the fix: the Add button wears
+		# the fix's label, and pressing it performs the fix before carrying on to the row.
+		var gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context) \
+			if definition != null else {}
+		_add_button.text = EventSheetPickerGates.fix_text(gate) if not gate.is_empty() \
+			else EventSheetL10n.translate(_add_default_label)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(definition != null and _is_favorite(definition))
 
@@ -2855,6 +2923,11 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	var sentences: String = variable_sentences_footer(_variables_in_scope(), definition)
 	if not sentences.is_empty():
 		body += "\n[color=#%s]%s[/color]" % [_muted_header_color().to_html(false), sentences]
+	# A gated entry says WHY it is grey, in one line, right where the reader is looking - and the
+	# Add button under this panel is already wearing the fix that answers it.
+	var info_gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
+	if not info_gate.is_empty():
+		body += "\n[color=#e0b050]%s[/color]" % EventSheetPickerGates.reason_text(info_gate)
 	_info_label.text = body
 
 
@@ -2897,15 +2970,42 @@ func _on_figure_guide_requested() -> void:
 		guide_requested.emit(_selected_definition)
 
 
+## A recipe is highlighted: the panel says where it comes from, and Add becomes Insert rows.
+func _show_recipe_info(recipe: Dictionary) -> void:
+	_selected_recipe = recipe.duplicate(true)
+	_selected_definition = null
+	_blank_event_highlighted = false
+	_update_guide_button(null)
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(false)
+	if _add_button != null:
+		_add_button.disabled = false
+		_add_button.text = EventSheetL10n.translate("Insert rows")
+	if _info_label != null:
+		_info_label.text = "[b]%s[/b]  ·  %s\n%s" % [
+			str(recipe.get("title", "")), EventSheetL10n.translate("recipe"),
+			EventSheetL10n.translate("A worked example from %s, inserted as real rows - retune the values on the rows themselves.")
+				% str(recipe.get("page_title", ""))]
+
+
+func _commit_recipe(recipe: Dictionary) -> void:
+	if recipe.is_empty():
+		return
+	close()
+	recipe_insert_requested.emit(recipe.duplicate(true))
+
+
 ## Selecting a section header shows the group's description instead of an ACE: Add stays disabled,
 ## and the blurb comes from EventSheetSectionInfo, falling back to a pack's own class doc comment
 ## (the first provider_description among the group's rows), then to a generic line.
 func _show_section_info(item: TreeItem, section_name: String) -> void:
 	_selected_definition = null
+	_selected_recipe = {}
 	# A section is a group of verbs, not a pack verb - no guide link.
 	_update_guide_button(null)
 	if _add_button != null:
 		_add_button.disabled = true
+		_add_button.text = EventSheetL10n.translate(_add_default_label)
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(false)
 	if _info_label == null:
@@ -2950,6 +3050,10 @@ func _on_add_button_pressed() -> void:
 	if _blank_event_highlighted and _selected_definition == null:
 		_commit_blank_event()
 		return
+	# So does a highlighted recipe - the button was already wearing "Insert rows".
+	if _selected_definition == null and not _selected_recipe.is_empty():
+		_commit_recipe(_selected_recipe)
+		return
 	_commit_definition(_selected_definition)
 
 
@@ -2965,6 +3069,14 @@ func _commit_function_call(function_name: String) -> void:
 ## Single commit path for the tree, the side panes, and the Add button.
 func _commit_definition(definition: ACEDefinition) -> void:
 	if definition == null:
+		return
+	# A gated entry commits its FIX first: the dock performs it (adding the missing node, switching
+	# Tool on) and then carries on to this same row, so the wall and its answer are one gesture.
+	var gate: Dictionary = EventSheetPickerGates.gate_for(definition, _gate_context)
+	if not gate.is_empty():
+		var fix_context: Dictionary = _context.duplicate(true)
+		close()
+		gate_fix_requested.emit(gate, definition, fix_context)
 		return
 	# Read before the window closes: the sentence the reader typed is what carries the values, and
 	# "boss fla 0.4" means the 0.4 as much as it means the verb.
