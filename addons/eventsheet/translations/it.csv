@@ -5026,3 +5026,8 @@ New preset…,Nuovo preset…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copia il preset scelto in un nuovo file e lo apre. Una cartella vuota riceve Low, Medium e High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s non ha alcuna associazione su nessun dispositivo - nessuno può premerlo. Assegnalo nelle impostazioni del progetto, oppure lascia che lo faccia una pagina dei comandi."
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s non dice nulla su %s, quindi sceglierlo lascia quel valore dove l'ha messo il preset precedente."
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.","%s: %s. Ogni riga qui sotto redige una descrizione dalle righe stesse della cosa: accettala, modificala, o scrivi la tua."
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s non ha descrizione, e le sue righe non ne compongono una: questa riga puoi scriverla solo tu."
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s non ha descrizione. Bozza dalle sue stesse righe: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s dice ancora ""%s"", ma le sue righe non ne parlano più. Nuova bozza: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,Descrizioni: %d foglio/i letto/i su %d. Apri gli altri e la pagina avrà anche quelli.

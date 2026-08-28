@@ -5026,3 +5026,8 @@ New preset…,Nouveau préréglage…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Copie le préréglage choisi dans un nouveau fichier et l'ouvre. Un dossier vide reçoit Low, Medium et High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.","%s n'a aucune touche sur aucun appareil - personne ne peut l'utiliser. Attribuez-la dans les paramètres du projet, ou laissez une page de commandes le faire."
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s ne dit rien de %s, donc le choisir laisse ce réglage là où le préréglage précédent l'a mis."
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.","%s : %s. Chaque ligne ci-dessous rédige une description à partir des propres lignes de la chose - accepte-la, modifie-la, ou écris la tienne."
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s n'a pas de description, et ses lignes n'en composent aucune - cette ligne, toi seul peux l'écrire."
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s n'a pas de description. Brouillon d'après ses propres lignes : ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s dit encore ""%s"", mais ses lignes n'en mentionnent plus rien. Nouveau brouillon : ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,Descriptions : %d feuille(s) lue(s) sur %d. Ouvre les autres et la page les aura aussi.

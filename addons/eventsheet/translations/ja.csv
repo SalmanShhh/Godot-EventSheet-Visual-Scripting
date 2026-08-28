@@ -5026,3 +5026,8 @@ New preset…,新しいプリセット…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",選んだプリセットを新しいファイルに複製して開きます。空のフォルダーには Low・Medium・High が作られます。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s はどのデバイスにも割り当てがありません - 誰も押せません。プロジェクト設定で割り当てるか、コントロールページに割り当てさせてください。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s は %s について何も言っていないため、選んでも直前のプリセットが決めた値のまま残ります。
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.",%s: %s。下の各行は、その対象自身の行から説明を下書きします。受け入れる、編集する、または自分で書いてください。
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.",%s %s には説明がなく、その行からは下書きも作れません。この一行はあなたにしか書けません。
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s には説明がありません。自身の行からの下書き: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s はまだ ""%s"" と述べていますが、その行はもうそのどれにも触れていません。新しい下書き: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,説明: %d / %d シートを読みました。残りを開けば、このページにも入ります。

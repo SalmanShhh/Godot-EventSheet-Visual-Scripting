@@ -5026,3 +5026,8 @@ New preset…,Новый пресет…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.","Копирует выбранный пресет в новый файл и открывает его. В пустой папке появятся Low, Medium и High."
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s не привязано ни к одному устройству - нажать его невозможно. Задайте привязку в настройках проекта или позвольте это сделать странице управления.
 "%s says nothing about %s, so picking it leaves that where the last preset put it.","%s ничего не говорит о %s, поэтому его выбор оставляет это значение таким, каким его задал прошлый пресет."
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.","%s: %s. Каждая строка ниже составляет описание из собственных строк самого объекта - примите его, отредактируйте или напишите своё."
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s без описания, и его строки не складываются в одно - эту строку можете написать только вы."
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s без описания. Черновик из его собственных строк: ""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s всё ещё говорит ""%s"", но его строки больше ни о чём из этого не упоминают. Свежий черновик: ""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,"Описания: прочитано %d лист(ов) из %d. Откройте остальные, и страница получит их тоже."

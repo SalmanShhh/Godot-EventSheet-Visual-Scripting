@@ -5026,3 +5026,8 @@ New preset…,新建预设…
 "Copies the picked preset into a new file and opens it. An empty folder gets Low, Medium and High.",把选中的预设复制成新文件并打开。空文件夹会得到 Low、Medium 和 High。
 "%s has no binding on any device - nobody can press it. Bind it in Project Settings, or let a Controls page bind it.",%s 在任何设备上都没有绑定 - 没人能按下它。请在项目设置中绑定，或让控制页面来绑定。
 "%s says nothing about %s, so picking it leaves that where the last preset put it.",%s 没有提到 %s，所以选它会让该项停留在上一个预设留下的值。
+"%s: %s. Each line below drafts a description out of the thing's own rows - accept it, edit it, or write your own.",%s：%s。下面每一行都会根据它自己的行草拟一段说明 - 接受它、修改它，或者自己写。
+"%s %s has no description, and its rows do not compose one - this is a line only you can write.",%s %s 没有说明，它的行也拼不出一句 - 这一行只有你能写。
+"%s %s has no description. Draft from its own rows: ""%s""","%s %s 没有说明。根据它自己的行草拟：""%s"""
+"%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s 仍然写着 ""%s""，但它的行已经不再提到其中任何一项。新的草稿：""%s"""
+Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,说明：已读取 %d / %d 个表。打开其余的，这一页也会有它们。
