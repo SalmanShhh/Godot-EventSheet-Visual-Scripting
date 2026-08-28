@@ -42,6 +42,69 @@ func on_add_action_requested() -> void:
 	_dock._ace_picker.open("append_action", false, _dock._active_view().get_selected_context().get("source_resource", null))
 
 
+# ── The Declare group (Add ▸ Declare) ────────────────────────────────────────────────────────
+# Each entry below opens the SAME dialog its scattered sibling opens, pre-set to the shape the
+# entry names - a constant is the variable dialog with Constant already ticked, a node reference
+# is it with @onready already ticked, a collection is it opened on the List type. One dialog per
+# shape keeps every declaration's undo, validation and code echo identical however it was reached.
+
+
+## Declare ▸ Constant…: the variable dialog with "never changes" pre-ticked, so the row that
+## lands reads as a const from the first keystroke.
+func on_declare_constant_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_dock._variable_dlg.open_for_edit(EventSheetVariableSentence.SCOPE_INSTANCE, {}, "", "int", "",
+		false, "Create Variable", true, false)
+
+
+## Declare ▸ Node reference…: the variable dialog in @onready mode - free-text type, an
+## expression default ($Player, %HealthBar) - the shape a handle on a scene node compiles to.
+func on_declare_node_reference_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_dock._variable_dlg.open_for_edit(EventSheetVariableSentence.SCOPE_INSTANCE, {}, "", "Variant", "",
+		false, "Create Variable", false, false, true)
+
+
+## Declare ▸ Collection…: the variable dialog opened on the List type, whose Items editor is the
+## grid a dict/array literal is edited with.
+func on_declare_collection_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_dock._variable_dlg.open_for_edit(EventSheetVariableSentence.SCOPE_INSTANCE, {}, "", "Array", "[]",
+		false, "Create Variable", false, false)
+
+
+## Declare ▸ Enum…: a fresh enum row below the selection, straight into its editor - the same
+## insert-then-name beat Add Group uses, so cancelling still leaves only an empty (non-emitting) row.
+func on_declare_enum_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	var new_enum: EnumRow = EnumRow.new()
+	var changed: bool = _dock._perform_undoable_sheet_edit("Add Enum", func() -> bool:
+		_dock._insert_row_below_selection(new_enum)
+		return true
+	)
+	if changed:
+		_dock._mark_dirty("Added enum.")
+		_dock._open_enum_dialog(new_enum)
+
+
+## Declare ▸ Signal…: a fresh signal row below the selection, straight into its editor.
+func on_declare_signal_requested() -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	var new_signal: SignalRow = SignalRow.new()
+	var changed: bool = _dock._perform_undoable_sheet_edit("Add Signal", func() -> bool:
+		_dock._insert_row_below_selection(new_signal)
+		return true
+	)
+	if changed:
+		_dock._mark_dirty("Added signal.")
+		_dock._open_signal_dialog(new_signal)
+
+
 func on_add_comment_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return

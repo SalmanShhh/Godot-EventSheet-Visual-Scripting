@@ -167,6 +167,40 @@ func build(root: Node) -> void:
 	add_popup.add_item("Instance Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Global Variable… (V)", 8)
+	# Declare ▸ - every way to give something a NAME, gathered in one place: what the sheet
+	# remembers (Variable, Constant, Collection), reaches (Node reference), uses (Resource),
+	# announces (Signal), and the named values a thing can take (Enum). Each entry opens the
+	# same dialog its scattered sibling opens - one place to find them, not a second flow.
+	# Wired the explicit way (a named child PopupMenu plus add_submenu_item with its own id) -
+	# never an id-less add_submenu_item.
+	var declare_menu: PopupMenu = PopupMenu.new()
+	declare_menu.name = "EventSheetDeclareMenu"
+	declare_menu.add_item("Variable…", 0)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(0), "A value the object remembers - the Add variable dialog, scope pickable inside.")
+	declare_menu.add_item("Constant…", 1)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(1), "A named value that never changes - reads \"Always NAME = value\" and compiles to a const.")
+	declare_menu.add_item("Node reference…", 2)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(2), "A handle on a node of the scene - compiles to an @onready var holding the node.")
+	declare_menu.add_item("Resource…", 3)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(3), "A file this sheet uses - a scene, sound, texture - preloaded under a constant name.")
+	declare_menu.add_item("Enum…", 4)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(4), "The named values a thing can take - compiles before variables, usable as a type.")
+	declare_menu.add_item("Signal…", 5)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(5), "An announcement other objects can hear - appears in the On/Emit Signal pickers.")
+	declare_menu.add_item("Collection…", 6)
+	declare_menu.set_item_tooltip(declare_menu.get_item_index(6), "A list or table of values - the Add variable dialog opened on the List type, items editable as a grid.")
+	declare_menu.id_pressed.connect(func(id: int) -> void:
+		match id:
+			0: _dock._on_add_global_variable_requested()
+			1: _dock._add_rows.on_declare_constant_requested()
+			2: _dock._add_rows.on_declare_node_reference_requested()
+			3: _dock._open_custom_block_add("preload")
+			4: _dock._add_rows.on_declare_enum_requested()
+			5: _dock._add_rows.on_declare_signal_requested()
+			6: _dock._add_rows.on_declare_collection_requested()
+	)
+	add_popup.add_child(declare_menu)
+	add_popup.add_submenu_item("Declare", "EventSheetDeclareMenu", 11)
 	add_popup.add_item("Function…", 3)
 	# The other half of the shared-sheet gesture. How it is wired was decided by the shared
 	# sheet itself, so this asks nothing: pick the sheet, and the rows that wire it are written.
