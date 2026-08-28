@@ -100,6 +100,48 @@
 - **Merge defence.** A sheet opened from a file a merge damaged reports BOTH parents' spellings
   rather than quietly keeping one, and the sentence it states names neither as the right one.
 
+### Ship It - the audit learns what stops a finished game leaving the building
+
+- **A new Doctor section that is not about whether the game works.** Every other section asks whether
+  a sheet is right. This one asks whether the project can be handed to somebody else, and it reports
+  six things nobody is looking at when the game is finally finished: there is **no export preset**,
+  so there is nothing to build a release from; a script **writes to the console** where an exported
+  release build still runs it; the game **still wears the engine's own name and icon**, so the
+  taskbar shows Godot's logo; a **translation catalog is short** of keys the game asks for, so a
+  player reads the raw key; the **last measured run** does not fit the 16.7 ms a 60 fps frame has;
+  and, as a page rather than a warning, **what a save slot of this game actually holds**.
+- **The console line has a one-click answer, and it is a word that already ships.** "Only log in
+  debug builds" swaps the sheet's plain Log rows for **Log (Debug Builds Only)** in one undoable
+  edit, keeping the message and the stream the author typed - the line then compiles to
+  `if OS.is_debug_build(): print(…)` and is skipped entirely in a release build. The receipt says
+  what the line read as before and what it reads as after, before anything is touched.
+- **A short catalog comes back as a FILE.** Forty missing keys is a job, not a sentence, so "Write
+  the missing keys out" writes a ready-to-fill translation CSV - one row per key, one column per
+  catalog - into the user directory rather than listing them in a report line. Byte-deterministic,
+  so exporting twice writes the same file and a diff between two exports is the work in between.
+- **The frame budget is only ever claimed where something was measured.** The check reads the run the
+  profiler already brought into memory and never loads one itself, names the costliest file and its
+  share of the frame, and says nothing at all when no run has happened. Studios extend the section
+  the way a pack does: it is registered through the same public Doctor seam.
+
+### The Doctor's front page is now a triage inbox
+
+- **One page, worst first.** The audit grew sections faster than it grew a way to read them, and
+  sixty findings in the order the checks happened to run is a junk drawer. The window now opens on
+  every finding from every section in one tree: errors, then warnings, then notes, each grouped under
+  a heading that counts what it holds, and inside each a fixed order so two audits of an unchanged
+  project read identically.
+- **"New since you last looked."** Every finding carries an identity - what it is about, never where
+  it appeared - and the identities of the last read are kept in the reader's own user directory. A
+  finding that moved up the page because something above it was fixed is not new; a check reworded
+  overnight does not flood the page; the same warning about a different file is new. The mark is a
+  dot in the first column and a count on the status line, and closing the window (or "Mark all as
+  read") is what "I have looked at this" means.
+- **Every line is still a destination.** The section a finding came from is a column of its own, so a
+  reader can see at a glance that eleven of twelve notes come from one sweep and judge the sweep
+  rather than the notes; double-click still opens the sheet, and a selected finding still shows the
+  one-step fixes it has.
+
 ### Multiplayer - the wire's own words
 
 - **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given

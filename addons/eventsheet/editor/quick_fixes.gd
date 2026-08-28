@@ -98,7 +98,22 @@ const OFFERED := {
 	"no-error-report": [
 		{"id": "never_ask_error_report", "label": "Never ask again"},
 	],
+	# Shipping. A console line an exported game still runs has exactly one accepted answer and it is
+	# a verb that already ships, so the chip swaps the word rather than teaching a new one.
+	"ship-debug-rows": [
+		{"id": "guard_debug_rows", "label": "Only log in debug builds"},
+	],
+	# A short catalog is a JOB, not a sentence: the chip writes the missing keys out as a
+	# ready-to-fill translation file rather than listing forty of them in a report line.
+	"ship-translation-coverage": [
+		{"id": "export_missing_keys", "label": "Write the missing keys out"},
+	],
 }
+
+## Where "Write the missing keys out" puts the file. The user directory rather than the project: it
+## is a working file for a translator, and dropping it into res:// would import it as a live catalog
+## the moment it landed.
+const MISSING_KEYS_PATH := "user://eventsheets_missing_keys.csv"
 
 
 ## What this finding offers, each as {"id", "label"} with the label already carrying the subject
@@ -214,9 +229,48 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Take this object out of %s and let the pin carry it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent." % subject}
 		"guard_pin_anchor":
 			return {"ok": true, "message": "Put the rows that use %s under Pin ▸ Is Pinned, or under a condition asking whether it is still there - a pin whose anchor is gone reads a place off nothing." % subject}
+		"guard_debug_rows":
+			return _guard_debug_rows(str(finding.get("path", "")), dock)
+		"export_missing_keys":
+			return _export_missing_keys()
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Swaps every plain Log row of the offending sheet for the debug-builds-only one, in ONE undoable
+## edit through the dock's own funnel. The reader is told how many rows moved and what the line reads
+## as afterwards, so the fix leaves a receipt rather than a silence.
+static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
+	if dock == null or not dock.has_method("_perform_undoable_sheet_edit"):
+		return {"ok": false, "message": "Open %s and swap its Log rows for Log (Debug Builds Only)." % sheet_path.get_file()}
+	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
+		dock.call("_load_sheet_from_path", sheet_path)
+	var guarded: Array[int] = [0]
+	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", "Only log in debug builds",
+		func() -> bool:
+			guarded[0] = EventSheetShipItDoctor.guard_debug_rows(dock.get("_current_sheet"))
+			return guarded[0] > 0))
+	if not applied:
+		return {"ok": false, "message": "No plain Log rows in %s - the console line is written by hand, so guard it where it is typed." % sheet_path.get_file()}
+	return {"ok": true, "message": "%d row(s) now read \"log … (debug only)\" and compile to if OS.is_debug_build(): print(…) - one Ctrl+Z takes it back." % guarded[0]}
+
+
+## Writes the keys the game asks for and no catalog answers into a ready-to-fill translation CSV, and
+## says where it went. A file rather than a report line, because forty keys is a job somebody does in
+## a spreadsheet.
+static func _export_missing_keys() -> Dictionary:
+	var sources: Dictionary = EventSheetShipItDoctor.project_sources()
+	var text: String = EventSheetShipItDoctor.missing_keys_csv(
+		EventSheetShipItDoctor.used_translation_keys(sources), EventSheetShipItDoctor.catalog_keys())
+	if text.is_empty():
+		return {"ok": true, "message": "Every key the game asks for is answered by every catalog - nothing to write out."}
+	var file: FileAccess = FileAccess.open(EventSheetQuickFixes.MISSING_KEYS_PATH, FileAccess.WRITE)
+	if file == null:
+		return {"ok": false, "message": "Could not write %s." % EventSheetQuickFixes.MISSING_KEYS_PATH}
+	file.store_string(text)
+	file.close()
+	return {"ok": true, "message": "Wrote the missing keys to %s - one row per key, one column per catalog." % EventSheetQuickFixes.MISSING_KEYS_PATH}
 
 
 ## Writes "Make the environment this scene's own" at the top of the sheet the finding points at, so

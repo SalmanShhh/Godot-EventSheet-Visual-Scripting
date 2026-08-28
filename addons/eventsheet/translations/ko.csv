@@ -5061,3 +5061,17 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s 에는 설명이 없습니다. 자신의 행에서 만든 초안: ""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s 는 아직 ""%s"" 라고 말하지만, 그 행들은 더 이상 그 어느 것도 언급하지 않습니다. 새 초안: ""%s"""
 Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,설명: 시트 %d / %d개를 읽었습니다. 나머지를 열면 이 페이지에도 들어옵니다.
+Errors,오류
+Warnings,경고
+%d new since you last looked.,마지막으로 본 뒤로 %d개가 새로 생겼습니다.
+"Project Doctor: %d error(s), %d warning(s), %d note(s).","프로젝트 Doctor: 오류 %d개, 경고 %d개, 메모 %d개."
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.",이 프로젝트에는 내보내기 프리셋이 없어서 릴리스를 빌드할 대상이 없습니다. 프로젝트 > 내보내기 > 추가에서 배포할 플랫폼용으로 하나 만드세요.
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.",게임에 아직 고유한 이름이 없어서 창과 빌드된 파일 모두 프로젝트 템플릿 이름을 씁니다. 프로젝트 설정 > 애플리케이션 > 구성 > 이름.
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",아이콘이 아직 엔진 것이라 작업 표시줄에 게임 대신 Godot 로고가 보입니다. 프로젝트 설정 > 애플리케이션 > 구성 > 아이콘.
+%s writes to the console where an exported release build still runs it - first: %s.,%s는 내보낸 릴리스 빌드에서도 실행되는 자리에서 콘솔에 씁니다 - 첫 번째: %s.
+%d more like it in this file.,이 파일에 비슷한 것이 %d개 더 있습니다.
+Log (Debug Builds Only) compiles the line out of a release game.,로그(디버그 빌드 전용)를 쓰면 그 줄은 릴리스 게임에서 빠집니다.
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s에는 게임이 요청하는 키가 %d개 없어서 플레이어가 원본 키를 그대로 보게 됩니다: %s.
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s는 마지막으로 측정한 실행에서 한 프레임당 %.2f ms를 씁니다 - 한 프레임의 %d%%입니다 (60 fps에서 한 프레임은 %.1f ms).
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",이 게임의 저장 슬롯에는 값 %d개가 들어가며 스크립트 %d개에서 기록됩니다: %s. 이 목록에 없는 것은 슬롯을 불러오면 처음 값으로 돌아갑니다.
+%s and %d more,%s 외 %d개

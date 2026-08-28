@@ -5061,3 +5061,17 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s no tiene descripción. Borrador a partir de sus propias filas: ""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s todavía dice ""%s"", pero sus filas ya no mencionan nada de eso. Borrador nuevo: ""%s"""
 Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,Descripciones: %d hoja(s) leídas de %d. Abre las demás y la página también las tendrá.
+Errors,Errores
+Warnings,Advertencias
+%d new since you last looked.,%d nuevos desde la última vez que miraste.
+"Project Doctor: %d error(s), %d warning(s), %d note(s).","Doctor del proyecto: %d error(es), %d advertencia(s), %d nota(s)."
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.","Este proyecto no tiene ninguna preconfiguración de exportación, así que no hay nada con lo que construir una versión. Proyecto > Exportar > Añadir crea una para la plataforma a la que vas a publicar."
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.","El juego todavía no tiene un nombre propio, así que la ventana y el archivo construido se llaman como la plantilla del proyecto. Configuración del proyecto > Aplicación > Configuración > Nombre."
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","El icono sigue siendo el del motor, así que la barra de tareas muestra el logo de Godot en vez del del juego. Configuración del proyecto > Aplicación > Configuración > Icono."
+%s writes to the console where an exported release build still runs it - first: %s.,%s escribe en la consola donde una versión exportada todavía lo ejecuta - primero: %s.
+%d more like it in this file.,%d más como esa en este archivo.
+Log (Debug Builds Only) compiles the line out of a release game.,Log (solo en compilaciones de depuración) deja la línea fuera de un juego publicado.
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","A %s le faltan %d clave(s) que el juego pide, así que quien lea verá la clave en bruto: %s."
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s cuesta %.2f ms de un fotograma en la última ejecución medida - %d%% de los %.1f ms que tiene un fotograma a 60 fps.
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Una ranura de guardado de este juego contiene %d valor(es), escritos desde %d script(s): %s. Todo lo que no esté en esta lista vuelve a su valor inicial cuando se carga una ranura."
+%s and %d more,%s y %d más

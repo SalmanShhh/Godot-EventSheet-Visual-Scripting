@@ -126,6 +126,10 @@ static func run() -> Dictionary:
 	EventSheetPerformanceDoctor.ensure_registered()
 	EventSheetOptionsDoctor.ensure_registered()
 	EventSheetSelfDocDoctor.ensure_registered()
+	# Ship It rides the same seam: whether the game can leave the building is a question about the
+	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
+	# sheet checks, and a studio's own release rule joins it the same way.
+	EventSheetShipItDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

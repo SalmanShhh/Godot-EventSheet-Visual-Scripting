@@ -5061,3 +5061,17 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s без описания. Черновик из его собственных строк: ""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s всё ещё говорит ""%s"", но его строки больше ни о чём из этого не упоминают. Свежий черновик: ""%s"""
 Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,"Описания: прочитано %d лист(ов) из %d. Откройте остальные, и страница получит их тоже."
+Errors,Ошибки
+Warnings,Предупреждения
+%d new since you last looked.,%d новых с прошлого просмотра.
+"Project Doctor: %d error(s), %d warning(s), %d note(s).","Доктор проекта: ошибок - %d, предупреждений - %d, заметок - %d."
+"This project has no export preset, so there is nothing to build a release from. Project > Export > Add makes one for the platform you are shipping to.","В этом проекте нет ни одного пресета экспорта, поэтому собирать релиз не из чего. Проект > Экспорт > Добавить создаст его для нужной платформы."
+"The game has no name of its own yet, so the window and the built file are both called after the project template. Project Settings > Application > Config > Name.","У игры пока нет собственного имени, поэтому окно и собранный файл названы по шаблону проекта. Настройки проекта > Приложение > Конфигурация > Имя."
+"The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","Значок всё ещё движковый, поэтому на панели задач виден логотип Godot, а не игры. Настройки проекта > Приложение > Конфигурация > Значок."
+%s writes to the console where an exported release build still runs it - first: %s.,"%s пишет в консоль там, где экспортированная релизная сборка всё ещё это выполняет - первое: %s."
+%d more like it in this file.,Ещё %d таких же в этом файле.
+Log (Debug Builds Only) compiles the line out of a release game.,Лог (только в отладочных сборках) убирает строку из релизной игры.
+"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","В %s не хватает %d ключ(ей), которые запрашивает игра, поэтому игрок видит сырой ключ: %s."
+%s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,"%s стоит %.2f мс кадра в последнем измеренном запуске - %d%% от %.1f мс, которые есть у кадра при 60 fps."
+"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Слот сохранения этой игры хранит %d значени(й), записанных из %d скрипт(ов): %s. Всё, чего нет в этом списке, вернётся к начальному значению при загрузке слота."
+%s and %d more,%s и ещё %d
