@@ -99,9 +99,9 @@
   tree's own `node_removed` signal, and the question that narrows it to one crowd is an ORDINARY
   CONDITION ROW added underneath it when the trigger is picked - visible, editable, deletable, and a
   plain `if` on disk rather than a wrapper the compiler writes behind the row. The question reads
-  `node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]`, because a
-  leaving node is still listed in its groups at that moment: a crowd down to just the one that is
-  going is exactly a crowd that was about to be empty. The shipped **On Group Emptied** condition is
+  `node.is_in_group("enemies") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group("enemies") == [node]`,
+  because a leaving node is still listed in its groups at that moment: a crowd down to just the one
+  that is going, and really going, is exactly a crowd that was about to be empty. The shipped **On Group Emptied** condition is
   untouched and stays the answer when you would rather the check rode a per-frame trigger.
 
 ### What a sheet spawns, and the four crashes found before the game runs
@@ -199,6 +199,16 @@
   make-room row is now RUN as well as read in the suite - three spawns in one frame against a
   stand-in tree that behaves the way Godot's does about `queue_free` - because a pin on the emitted
   text cannot see this class of bug at all.
+
+- **A crowd member that moved house no longer reads as the crowd emptying.** `node_removed` fires
+  for ANY exit from the scene tree, and `Node.reparent()` is one of them: for the instant the signal
+  is emitted the moved node is out of the tree, still in its groups and the only member the group
+  lists - so **On The Last One Removed** announced the wave cleared, opened the door and paid the
+  reward while the enemy was alive under another parent. Its gate asks `is_queued_for_deletion()` as
+  well now, which is true for every removal this language writes (all three removal rows are a
+  `queue_free`) and false for a move. The trade is stated on the row rather than hidden: a member
+  taken out of the world without a `queue_free` of its own - its whole branch freed at once - is not
+  seen by this trigger, and the shipped **On Group Emptied** condition is the row for that.
 
 ### Removed
 

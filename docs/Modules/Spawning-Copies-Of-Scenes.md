@@ -336,7 +336,7 @@ func _ready() -> void:
 	get_tree().node_removed.connect(_on_node_removed)
 
 func _on_node_removed(node: Node) -> void:
-	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+	if node.is_in_group("enemies") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group("enemies") == [node]:
 		...
 ```
 
@@ -344,6 +344,15 @@ Picking the trigger adds that condition underneath it, filled in with the crowd 
 ordinary row: editable, deletable, and a plain `if` on disk. **A leaving node is still listed in its
 groups at that moment**, which is why "the crowd is down to just the one that is going" is exactly
 "this was the last one".
+
+**The middle question is what tells leaving the world from changing parents.** `node_removed` fires
+for any exit from the tree, and `Node.reparent()` is one: for the instant the signal is emitted the
+moved node is out of the tree, still in its groups, and the only member the group lists. Without
+`is_queued_for_deletion()` the event would open the door and pay the reward while the enemy was
+alive under another parent. It is true for every removal this language writes - all three removal
+rows are a `queue_free` - and false for a move. A member taken out of the world some other way, such
+as its whole branch being freed at once, is not seen by this trigger; On Group Emptied below is the
+row for that.
 
 The shipped **On Group Emptied** condition asks the same question a different way - on a per-frame
 trigger, by remembering last tick's count. It is unchanged and still the answer when you want the
@@ -359,7 +368,7 @@ func _ready() -> void:
 
 
 func _on_node_removed(node: Node) -> void:
-	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+	if node.is_in_group("enemies") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group("enemies") == [node]:
 		open_door()
 ```
 
@@ -558,7 +567,7 @@ it; removing after a delay instead is the other way, and the note says so.
 | Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
 | On The Last One Removed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
-| Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
+| Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 
 ## Use cases
 
@@ -726,6 +735,10 @@ Last One Removed on that crowd drop the key.
   Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
 - **On The Last One Removed never fires for a crowd that was already empty.** It answers a member
   leaving, so a crowd nothing ever joined has no last member to remove.
+- **Moving the last member to another parent is not the crowd emptying.** `Node.reparent()` leaves
+  the tree, so the signal fires, but the member is alive - the gate asks whether it is really being
+  removed as well. The other side of that: a member taken out without a `queue_free` of its own, such
+  as its whole branch being freed at once, is not seen by this trigger. Use On Group Emptied there.
 - **Do not delete the gate condition under that trigger unless you mean it.** Without it the event
   runs for every node removed anywhere in the game.
 - **A guard you did not ask for is telling you something.** It appears only on a name that can

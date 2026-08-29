@@ -15,7 +15,9 @@
 #   3. THE COUNT. One expression, the group's own size, pinned as the text it writes.
 #   4. THE LAST ONE OUT. The trigger is the scene tree's node_removed signal and the gate is an
 #      ORDINARY CONDITION in the sheet, so this pins the connect line, the handler's signature, and
-#      the `if` the gate compiles to - the guard being visible is the whole point of the row.
+#      the `if` the gate compiles to - the guard being visible is the whole point of the row. Its
+#      third clause is pinned on its own, because without it a Node.reparent() reads as the crowd
+#      emptying and the wave reward is paid while the enemy is alive under another parent.
 #   5. THE ROUND TRIP. A crowd spawn opens as rows and re-emits byte for byte.
 #
 # Values are pinned, never counts: a count would go on passing while the wrong line moved.
@@ -382,7 +384,13 @@ static func _test_the_last_one_out_is_a_signal_and_a_visible_gate() -> bool:
 	# The guard is a CONDITION, so it is an `if` in the file and a row in the sheet - not a wrapper
 	# the compiler adds around a body nobody can see.
 	passed = _check("the gate is an ordinary if in the emitted handler",
-		output.contains("\tif node.is_in_group(\"enemies\") and get_tree().get_nodes_in_group(\"enemies\") == [node]:"), true) and passed
+		output.contains("\tif node.is_in_group(\"enemies\") and node.is_queued_for_deletion()"
+			+ " and get_tree().get_nodes_in_group(\"enemies\") == [node]:"), true) and passed
+	# THE THIRD QUESTION. node_removed fires for any exit from the tree, a Node.reparent() included,
+	# and a reparented member is alive, still in its groups and momentarily the only one the group
+	# lists. Without this the trigger pays out the wave reward while the enemy is under another parent.
+	passed = _check("and it asks whether the member is really going, not merely moving",
+		output.contains("node.is_queued_for_deletion()"), true) and passed
 	passed = _check("the body runs under the gate",
 		output.contains("\t\tprint(\"wave cleared\")"), true) and passed
 	return passed

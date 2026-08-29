@@ -37,6 +37,16 @@
 # condition asks, in one readable line, and it is added to the event as an ordinary condition the
 # author can see, edit and delete rather than a wrapper the compiler adds behind the row.
 #
+# AND LEAVING A PARENT IS NOT LEAVING THE WORLD. node_removed fires for ANY exit from the tree, a
+# Node.reparent() included - and a reparented node is still alive, still in its groups and, for the
+# instant the signal is emitted, the only member the group lists. Without a third question the
+# trigger announces the wave cleared, opens the door and pays the reward while the enemy is alive
+# under another parent. `is_queued_for_deletion()` is that question and is the only one Godot answers
+# from the node itself: it is true for every removal this language writes, all three of which are a
+# queue_free, and false for a move. A member taken out some other way - its whole branch freed at
+# once, or a bare free() - is not seen by this trigger, and the shipped On Group Emptied condition,
+# which compares this tick's count with last tick's, is the row for that.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant); this file
 # only changes where the descriptors are AUTHORED.
 @tool
@@ -60,7 +70,7 @@ const LAST_REMOVED_GATE_ID: String = "CrowdIsDownToThisOne"
 
 ## The gate's template, kept beside the trigger for the same reason: the dock bakes this exact string
 ## onto the condition it adds, and the descriptor below declares it. One constant, one spelling.
-const LAST_REMOVED_GATE_TEMPLATE: String = "{node}.is_in_group({crowd}) and get_tree().get_nodes_in_group({crowd}) == [{node}]"
+const LAST_REMOVED_GATE_TEMPLATE: String = "{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]"
 
 ## The handler argument the gate reads - the node SceneTree.node_removed hands over. A constant
 ## because the trigger resolver spells the same name in the emitted function's signature.
@@ -133,14 +143,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_TRIGGER_ID, "On The Last One Removed", ACEDescriptor.ACEType.TRIGGER,
 		"", "", [_crowd_param()],
 		CATEGORY, "On the last of [b]{crowd}[/b] removed")
-		.described("Runs the moment the last member of a crowd leaves the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. The On Group Emptied condition asks the same question a different way, on a per-frame trigger, by remembering last tick's count; this one needs neither the tick nor the memory."))
+		.described("Runs the moment the last member of a crowd is removed from the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count."))
 	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_GATE_ID, "Crowd Is Down To This One", ACEDescriptor.ACEType.CONDITION,
 		LAST_REMOVED_GATE_TEMPLATE, "",
 		[_crowd_param(), F.make_param(REMOVED_NODE_ARGUMENT, "String", REMOVED_NODE_ARGUMENT, "Leaving",
 			"The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.",
 			"expression")],
-		CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is leaving")
-		.described("The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty."))
+		CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is being removed")
+		.described("The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd, is really being removed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty."))
 
 	return descriptors
 
