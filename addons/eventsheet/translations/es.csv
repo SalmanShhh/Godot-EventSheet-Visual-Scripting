@@ -5278,7 +5278,9 @@ The %d worst are listed below.,Las %d peores aparecen abajo.
 Rewrite the project manual and refresh the search,Reescribir el manual del proyecto y actualizar la búsqueda
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.",Escribe la página que cada hoja escribe sobre sí misma y vuelve a leer el manual para que las páginas nuevas se puedan buscar.
 Harvest the engine's documentation,Cosechar la documentación del motor
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Solo si esta versión de Godot aún no se ha cosechado. No se descarga nada: el motor escribe su propia referencia.
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.","Solo cuando esta versión de Godot aún no se ha cosechado. No se descarga nada: el motor escribe cada clase y cada miembro que tiene, sin sus descripciones."
+Fetch the engine's reference text,Descargar el texto de referencia del motor
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.","Las descripciones que la cosecha no puede escribir, porque el motor las guarda dentro del editor y no en un archivo. Esta es la única tarea que descarga algo: la referencia de clases de esta versión exacta de Godot, una sola vez, guardada en esta máquina. Nunca se ejecuta sola."
 Draft the descriptions nothing has written yet,Redactar borradores de las descripciones que nadie ha escrito
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,Se recogen en un único archivo de borradores. No se aplica nada a una hoja ni a una guía - un borrador sigue siendo un borrador hasta que tú lo muevas.
 Check coverage and drift,Comprobar la cobertura y la desviación

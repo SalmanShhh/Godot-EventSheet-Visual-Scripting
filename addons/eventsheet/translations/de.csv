@@ -5278,7 +5278,9 @@ The %d worst are listed below.,Die %d schlimmsten stehen unten.
 Rewrite the project manual and refresh the search,Projekthandbuch neu schreiben und Suche aktualisieren
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Schreibt die Seite, die jedes Blatt über sich selbst schreibt, und liest das Handbuch neu ein, damit die neuen Seiten durchsuchbar sind."
 Harvest the engine's documentation,Die Dokumentation der Engine ernten
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Nur wenn diese Godot-Version noch nicht geerntet wurde. Es wird nichts heruntergeladen: die Engine schreibt ihre eigene Referenz.
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.","Nur wenn diese Godot-Version noch nicht geerntet wurde. Es wird nichts heruntergeladen: die Engine schreibt jede Klasse und jedes Mitglied heraus, aber ohne deren Beschreibungen."
+Fetch the engine's reference text,Referenztext der Engine holen
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.","Die Beschreibungen, die die Ernte nicht schreiben kann, weil die Engine sie im Editor statt in einer Datei aufbewahrt. Das ist die einzige Aufgabe hier, die etwas herunterlädt: die Klassenreferenz genau dieser Godot-Version, einmal, auf diesem Rechner gespeichert. Sie läuft nie von selbst."
 Draft the descriptions nothing has written yet,"Beschreibungen entwerfen, die noch niemand geschrieben hat"
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"In einer Entwurfsdatei gesammelt. Nichts wird auf ein Blatt oder eine Anleitung angewendet - ein Entwurf bleibt ein Entwurf, bis Sie ihn übernehmen."
 Check coverage and drift,Abdeckung und Abweichung prüfen

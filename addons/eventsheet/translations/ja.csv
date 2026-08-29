@@ -5278,7 +5278,9 @@ The %d worst are listed below.,下に重い順で %d 件を表示します。
 Rewrite the project manual and refresh the search,プロジェクトマニュアルを書き直し、検索を更新する
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.",各シートが自身について書くページを出力し、マニュアルを読み直して新しいページを検索できるようにします。
 Harvest the engine's documentation,エンジンのドキュメントを取り込む
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,この Godot のバージョンをまだ取り込んでいない場合のみ実行します。ダウンロードは行われず、エンジン自身がリファレンスを書き出します。
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.",この Godot のバージョンをまだ取り込んでいない場合のみ。ダウンロードは行いません。エンジンは自身が持つすべてのクラスとメンバーを書き出しますが、説明文は含まれません。
+Fetch the engine's reference text,エンジンのリファレンス本文を取得する
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.",取り込みでは書き出せない説明文です。エンジンがそれをファイルではなくエディタの中に持っているためです。ここでダウンロードを行うのはこの作業だけです。この Godot バージョンのクラスリファレンスを一度だけ取得し、このマシンに保存します。自動で実行されることはありません。
 Draft the descriptions nothing has written yet,まだ誰も書いていない説明の下書きを作る
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,1 つの下書きファイルにまとめます。シートやガイドには何も適用されません。下書きは、あなたが移すまで下書きのままです。
 Check coverage and drift,網羅状況とずれを確認する

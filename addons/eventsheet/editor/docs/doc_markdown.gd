@@ -47,6 +47,10 @@ extends RefCounted
 ## takes, so a page that links by id and a caller that opens one are speaking one language.
 const DOC_ID_SCHEMES: Array[String] = [
 	"ace:", "reference:", "guide:", "addon:", "module:", "section:", "engine:",
+	# "engine:" draws the class HERE; "engine-help:" hands the same class to the editor's own class
+	# reference, which is the only reader on the machine that has the engine's prose compiled into
+	# it. Neither prefixes the other, so the order of this list is not load-bearing.
+	"engine-help:",
 ]
 
 

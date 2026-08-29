@@ -53,11 +53,31 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **The engine's class reference, harvested from the engine in front of you.** The running binary
   prints its own reference (`--doctool`), once, in the background, cached under `user://` keyed by
   the engine's version string - so an upgrade re-harvests and everything else never runs it again.
-  Nothing is downloaded and nothing is written by hand. It surfaces in three places and it is the
+  Nothing runs on its own but that, nothing is downloaded unless you ask for it by name, and nothing is written by hand. It surfaces in three places and it is the
   same text in all three: a class page in the Manual, pickers describing built-in methods and
   signals in the same slot a script's `##` lines fill, and an Engine group in the search - ranked
   below the plugin's own answers, because an exact hit on a class name is still one hop further out
   than a guide about the same thing in the sheet's own words.
+- **The harvest is the shape of the reference, and the reader is now told so.** `--doctool` reports
+  what ClassDB knows and writes an EMPTY description for every class, property, method and signal:
+  the prose is compiled into the editor binary, and no script can reach it (`EditorHelp`, `DocTools`
+  and `DocData` are not registered with ClassDB in any build, and the language server's
+  `nativeSymbol` answers nothing until a real client has connected over a socket). So F1 on an
+  engine property used to open a page of headings over blank cells, which reads as a broken reader.
+  It now opens a page that says Godot's own description is not on this machine, lists the members it
+  really does know with no column it would have to leave blank, and offers the two places the words
+  do exist: the editor's own class reference, opened at that member, and that class's page on
+  docs.godotengine.org for the running major.minor. The credit line goes with the text and only with
+  the text, so a page that quotes nothing no longer claims to. An exported static site publishes
+  only the classes whose text is actually present, because an exported page has no editor to hand
+  the reader to.
+- **\"Fetch the engine's reference text\" puts the words on the machine.** One chore, ticked by name
+  or run as `docs-engine-text`, reading the class reference for this exact version of Godot from the
+  engine's own repository at the matching tag, over the harvest, once per version. It is the only
+  thing in this plugin that opens a connection: it never runs on its own, it is not ticked by
+  default, a development build fetches nothing rather than another release's sentences, a body that
+  is not that class's reference is refused rather than written, and what is still missing is derived
+  from the cache itself, so an interrupted fetch continues where it stopped.
 - **The engine text is credited where it appears.** The Godot class reference is CC BY 4.0, so every
   page built from it carries \"Godot Engine documentation, used under CC BY 4.0.\", and an exported
   static site is handed the same one line for any page that quotes it.

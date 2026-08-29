@@ -236,21 +236,53 @@ ask for the page, which opens the tracker with their search already in the title
 tells a reader their question was wrong; it is far likelier that the corpus is missing a page, and
 that row is how you find out which one.
 
-### The engine's own reference, harvested
+### The engine's own reference, harvested - and the words it does not come with
 
 Half of what a reader wants explained is not this plugin's vocabulary at all - it is
-`global_position`, `queue_free`, `body_entered`. That text already exists and is already correct for
-the exact build in front of them, so none of it is written here and none of it is downloaded: the
-running binary prints its own class reference (`--doctool`), once, in the background, cached under
-`user://` keyed by the engine's version string. Upgrade Godot and the key changes, so the next
-harvest is the new engine's text; never upgrade and it never runs again.
+`global_position`, `queue_free`, `body_entered`. That reference already exists and is already correct
+for the exact build in front of them, so none of it is written here: the running binary prints its
+own class reference (`--doctool`), once, in the background, cached under `user://` keyed by the
+engine's version string. Upgrade Godot and the key changes, so the next harvest is the new engine's
+text; never upgrade and it never runs again.
+
+**What the harvest contains is the shape and not the words.** `--doctool` reports what ClassDB knows
+- every class, every property with its type, every method with its return type, every signal - and
+writes an empty description for each of them. The prose is compiled into the editor binary as
+compressed data that only the editor's own help panel reads, and nothing in a script can ask for it:
+`EditorHelp`, `DocTools` and `DocData` are not registered with ClassDB in any build, and the one
+in-process route to the merged data (the language server's `textDocument/nativeSymbol`) answers
+nothing until a real LSP client has connected over a socket.
+
+So a class is in one of two states, and the reader is told which:
+
+- **With the words.** F1 draws the class here, with its description, a described column beside every
+  member, and the credit its licence requires.
+- **Without them.** F1 draws the same class, says in a sentence that Godot's own description is not
+  on this machine, lists the members it really does know with no column it would have to leave
+  blank, and offers the two places the words do exist: Godot's own class reference inside the editor
+  (which has them compiled in, opened at the member), and that class's page on
+  `docs.godotengine.org` for the running major.minor. There is deliberately no third state - a page
+  of headings over blank cells reads as a broken reader rather than as text nobody has fetched.
+
+**Fetching the words** is one explicit action and the only thing in this plugin that opens a
+connection: *Fetch the engine's reference text* in Docs housekeeping, or `docs-engine-text` on the
+command line. It reads the class reference for this exact version of Godot from the engine's own
+repository at the matching tag, over the harvest, once per version, and every read after that is a
+local file read. It never runs on its own, it is not ticked by default, and what it still has to do
+is derived from the cache itself, so an interrupted fetch continues where it stopped.
+
+An exported static site publishes only the classes whose text is actually here. The in-editor page
+for a class without it works because it can hand the reader to the editor's own help and offer to
+fetch; an exported page can do neither, so a thousand published pages of names with no descriptions
+would be a site that simply looks broken.
 
 It shows up in three places, and in all three it is the same text:
 
 - **F1 on a row whose echo names an engine property** opens the engine's own page for it, at that
   member.
 - **Pickers describe built-in methods and signals** with the engine's own sentence, in the same slot
-  a script's `##` lines fill for the members you wrote.
+  a script's `##` lines fill for the members you wrote. Before the text is on the machine they show
+  the member with no description rather than an empty quotation.
 - **Search gains an Engine group**, ranked below the plugin's own answers as above.
 
 The engine reference is published under CC BY 4.0, so every surface that shows it shows the line

@@ -5278,7 +5278,9 @@ The %d worst are listed below.,Le %d peggiori sono elencate sotto.
 Rewrite the project manual and refresh the search,Riscrivere il manuale del progetto e aggiornare la ricerca
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Scrive la pagina che ogni foglio scrive su se stesso, poi rilegge il manuale perché le nuove pagine siano ricercabili."
 Harvest the engine's documentation,Raccogliere la documentazione del motore
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Solo se questa versione di Godot non è ancora stata raccolta. Non viene scaricato nulla: il motore scrive il proprio riferimento.
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.","Solo quando questa versione di Godot non è ancora stata raccolta. Non viene scaricato nulla: il motore scrive ogni classe e ogni membro che ha, senza le loro descrizioni."
+Fetch the engine's reference text,Scaricare il testo di riferimento del motore
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.","Le descrizioni che la raccolta non può scrivere, perché il motore le tiene dentro l'editor invece che in un file. Questa è l'unica faccenda qui che scarica qualcosa: il riferimento delle classi di questa esatta versione di Godot, una volta sola, conservato su questa macchina. Non parte mai da sola."
 Draft the descriptions nothing has written yet,Abbozzare le descrizioni che nessuno ha ancora scritto
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,Raccolti in un unico file di bozze. Nulla viene applicato a un foglio o a una guida - una bozza resta una bozza finché non la sposti tu.
 Check coverage and drift,Controllare copertura e scostamenti
