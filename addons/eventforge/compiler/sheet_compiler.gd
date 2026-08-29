@@ -2260,7 +2260,7 @@ static func _emit_event_body(
 						if match_case == null or not match_case.enabled:
 							continue
 						lines.append(body_indent + "\t" + match_case.pattern.strip_edges() + ":")
-						var case_lines: PackedStringArray = _emit_match_case_body(match_case.events, body_indent + "\t\t", effective_node_target)
+						var case_lines: PackedStringArray = _emit_match_case_body(match_case.events, body_indent + "\t\t", effective_node_target, event_row)
 						if case_lines.is_empty():
 							lines.append(body_indent + "\t\tpass")  # a match branch may not be empty
 						else:
@@ -2287,7 +2287,7 @@ static func _emit_event_body(
 						# snappedf keeps 1.2 - 1.0 reading "0.2", not "0.19999999999999996".
 						lines.append(body_indent + "await get_tree().create_timer(%s).timeout" % var_to_str(snappedf(step.at - timeline_cursor, 0.001)))
 						timeline_cursor = step.at
-					var step_lines: PackedStringArray = _emit_match_case_body([step.action], body_indent, effective_node_target)
+					var step_lines: PackedStringArray = _emit_match_case_body([step.action], body_indent, effective_node_target, event_row)
 					lines.append_array(step_lines)
 				had_body = true
 				source_map.append({"uid": str(timeline.get_instance_id()), "start": timeline_start, "end": lines.size(), "kind": "timeline"})
@@ -2367,7 +2367,13 @@ static func _rewrite_static_local_uses(event_row: EventRow, lines: PackedStringA
 ## ordinary action codegen so a case runs actions exactly like an event body does. Returns the lines (empty
 ## when the case has no emittable body, so the caller can substitute `pass`). Handles ACEAction (with the
 ## same last-statement `await` rule the main loop uses), a verbatim RawCodeRow, and a CommentRow.
-static func _emit_match_case_body(events: Array, indent: String, node_target: String) -> PackedStringArray:
+##
+## THE REMOVAL GUARD IS ASKED HERE TOO, and `event_row` is why the parameter exists: a removal on a
+## maybe-gone name is the same line whether it sits in the action lane or inside a match case, and a
+## state machine puts its removals in the case. Guarding one and not the other would be the rule
+## disagreeing with itself two lines apart in the same file.
+static func _emit_match_case_body(events: Array, indent: String, node_target: String,
+		event_row: EventRow = null) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	for item: Variant in events:
 		if item is ACEAction:
@@ -2375,12 +2381,18 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 			var action_line: String = ActionCodegen.generate_action(action, node_target, _behavior_host_default)
 			if action_line.is_empty():
 				continue
+			var removal_guard: String = EventForgeRemovalGuard.guard_expression(
+				action, event_row, _removal_guard_facts)
+			var statement_indent: String = indent
+			if not removal_guard.is_empty():
+				out.append(EventForgeRemovalGuard.guard_line(removal_guard, indent))
+				statement_indent = indent + "\t"
 			var action_lines: PackedStringArray = action_line.split("\n")
 			for line_index: int in action_lines.size():
 				var emitted: String = action_lines[line_index]
 				if (action.is_awaited or action.await_call) and line_index == action_lines.size() - 1:
 					emitted = "await %s" % emitted
-				out.append(indent + emitted)
+				out.append(statement_indent + emitted)
 		elif item is RawCodeRow:
 			var raw: RawCodeRow = item as RawCodeRow
 			if not raw.enabled or raw.code.strip_edges().is_empty():

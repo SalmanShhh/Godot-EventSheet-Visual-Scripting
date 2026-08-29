@@ -32,6 +32,7 @@ static func run() -> bool:
 	passed = _test_the_descriptors_say_what_they_emit() and passed
 	passed = _test_the_rows_write_their_lines() and passed
 	passed = _test_the_guard_is_written_where_it_is_needed() and passed
+	passed = _test_the_guard_reaches_inside_a_match_case() and passed
 	passed = _test_the_guard_stands_down_when_the_sheet_already_asked() and passed
 	passed = _test_the_echo_is_the_line_the_file_holds() and passed
 	passed = _test_the_hand_written_chains_lift() and passed
@@ -151,6 +152,35 @@ static func _test_the_guard_is_written_where_it_is_needed() -> bool:
 	passed = _check("the timer row is guarded on a stored reference too",
 		_compile(waited, "user://eventforge_remove_stored_timer.gd").contains(
 			"\tif is_instance_valid(held_enemy):\n\t\tget_tree().create_timer(2.0).timeout.connect(held_enemy.queue_free)"), true) and passed
+	return passed
+
+
+## A removal inside a match case is the same line as a removal beside it, on the same name, in the
+## same file - and a state machine puts its removals in the case. The rule has to reach both emission
+## sites or it disagrees with itself two lines apart.
+static func _test_the_guard_reaches_inside_a_match_case() -> bool:
+	var sheet: EventSheetResource = _sheet()
+	sheet.variables = {
+		"phase": {"type": "int", "default": 0, "exported": false},
+		"held": {"type": "Node2D", "default": null, "exported": false},
+	}
+	var branch: MatchCase = MatchCase.new()
+	branch.pattern = "0"
+	branch.events.append(_action("RemoveNow", {"object": "held"}))
+	var switch: MatchRow = MatchRow.new()
+	switch.match_expression = "phase"
+	switch.cases.append(branch)
+	var event: EventRow = _event([])
+	event.actions.append(switch)
+	event.actions.append(_action("RemoveNow", {"object": "held"}))
+	sheet.events.append(event)
+	var output: String = _compile(sheet, "user://eventforge_remove_match.gd")
+	var passed: bool = true
+	passed = _check("the removal inside the case is guarded",
+		output.contains("\t\t\tif is_instance_valid(held):\n\t\t\t\theld.queue_free()"), true) and passed
+	passed = _check("as is the one beside it, in the same file",
+		output.contains("\tif is_instance_valid(held):\n\t\theld.queue_free()"), true) and passed
+	passed = _check("and the file the two guards are in still parses", _parses(output), true) and passed
 	return passed
 
 

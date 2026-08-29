@@ -232,6 +232,14 @@
   stand-down when the sheet already asked, and the byte-for-byte round trip of a hand-written guard
   are untouched, and the suite now LOADS the emitted script rather than only reading it.
 
+- **A removal inside a match case is guarded like the one beside it.** The structured switch row has
+  its own emission site, and it had never been taught the rule - so one sheet, one event and one
+  stored node reference compiled to `held.queue_free()` inside the case and
+  `if is_instance_valid(held): held.queue_free()` one row above it, in the same file. The guarded arm
+  was the branch a state machine actually puts its removals in. Both sites ask the same function now,
+  which is what "stated once and applied nowhere else" was supposed to mean; a timeline step, which
+  compiles through the same helper, is covered by the same change.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch
