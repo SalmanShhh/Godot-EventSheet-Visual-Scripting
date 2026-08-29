@@ -556,6 +556,9 @@
 - **Two budgets that could not fail, and three figures that flattered the pass.** The Project Doctor's audit budget was set above the whole
   band the code it guards used to measure at, so losing the entire 40-second saving would still have
   passed; it is 65 s now, measured 41 to 48 across seven runs and set under the old band on purpose.
+  Three later runs on a quiet machine came in at 68.7, 77.0 and 70.4, and the budget is deliberately
+  left where it is rather than raised to fit a number nobody has explained: what it is asking for is
+  the slow section found. The measurements and the reasoning are recorded beside the number itself.
   The Add picker's budget was measured with no sheet in the picker, so the scene shelves - the one
   path that builds an entry per node per dial per verb on every keystroke - answered null before
   doing any work; it is measured with a sheet whose scene really wears materials, the shelf count is
