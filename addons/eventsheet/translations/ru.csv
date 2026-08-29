@@ -5267,3 +5267,18 @@ Opens this page.,Открывает эту страницу.
 Mark read,Отметить прочитанной
 Read it now,Прочитать сейчас
 Opens the page your rows point at.,"Открывает страницу, на которую указывают ваши строки."
+%d description(s) that say nothing,%d пустых описаний
+%d name(s) no verb answers to,"%d имён, которым не отвечает ни один глагол"
+%d verb(s) the changelog never mentions,"%d глаголов, ни разу не упомянутых в журнале изменений"
+%d verb(s) the guide does not list,"%d глаголов, которых нет в руководстве"
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d глаголов без документации, %d имён, которым не отвечает ни один глагол, %d пустых описаний, %d глаголов, ни разу не упомянутых в журнале изменений."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,"%s публикует %s, а руководство его не называет. Тот, кто искал в руководстве, решил, что этого нет."
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s вышел, но журнал изменений ни разу не упоминает %s. Напишите строку, пока помните, что изменилось."
+"Docs: %d of %d guide(s) read, %d out of step.","Документация: прочитано руководств %d из %d, расходятся %d."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Документация: руководства проверяются в редакторе, где словарь уже загружен. За его пределами тот же отчёт печатает сборка пакета справки."
+Draft: %s.,Черновик: %s.
+Takes %s.,Принимает %s.
+The %d worst are listed below.,Ниже перечислены %d худших.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.","%s документирует «%s», но ни один глагол так не называется. Ближайшие: %s."
+"%s documents ""%s"" and no verb answers to it, nor anything near it.","%s документирует «%s», но ни один глагол так не называется, и похожих нет."
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s перечисляет %s без единого слова в графе «что делает». Черновик: «%s»

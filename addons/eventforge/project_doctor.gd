@@ -126,6 +126,11 @@ static func run() -> Dictionary:
 	EventSheetPerformanceDoctor.ensure_registered()
 	EventSheetOptionsDoctor.ensure_registered()
 	EventSheetSelfDocDoctor.ensure_registered()
+	# The Docs section: whether the guides still describe the packs they are about. It rides the same
+	# seam for the same reason - a studio's own pack guide is audited exactly like a shipped one - and
+	# it asks EventSheetDocCoverage, which is also what the help-bundle builder asks, so the page and
+	# the build output can never say different things about the same guide.
+	EventSheetDocsDoctor.ensure_registered()
 	# Ship It rides the same seam: whether the game can leave the building is a question about the
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.

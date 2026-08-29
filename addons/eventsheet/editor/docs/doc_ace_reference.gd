@@ -54,6 +54,14 @@ const KIND_TABLE_NAME_HEADS := ["name", "verb"]
 static var _packs_by_page: Dictionary = {}
 static var _pack_map_built: bool = false
 
+## page id -> the verbs its packs publish, held for the session. Deriving them is cheap in a running
+## editor (the registry already holds them) and expensive outside one, where every pack script has to
+## be read and its members reflected - and the callers ask the same page the same question more than
+## once: the page view draws the tables, the coverage audit diffs them, and the audit's own
+## suggestions rank against them. Dropped by `reload`, which is also what a gained or lost pack
+## drops the page map with, so the two can never disagree about what a page is about.
+static var _verbs_by_page: Dictionary = {}
+
 
 ## The packs a page documents, sorted. Usually one - but a guide legitimately covers SEVERAL pack
 ## directories (the Quest guide documents both the quest behaviour and its resource), and a
@@ -75,6 +83,7 @@ static func packs_for_page(page_id: String) -> PackedStringArray:
 static func reload() -> void:
 	_pack_map_built = false
 	_packs_by_page = {}
+	_verbs_by_page = {}
 
 
 static func _ensure_pack_map() -> void:
@@ -258,8 +267,12 @@ static func _kept_section_blocks(blocks: Array[Dictionary], start: int, end: int
 	return {"before": before, "after": after}
 
 
-## Every verb of every pack a page documents, merged and de-duplicated by name within a group.
+## Every verb of every pack a page documents, merged and de-duplicated by name within a group. Held
+## for the session: outside a running editor this reads and reflects every script of every pack the
+## page is about, and three separate readers ask it the same question about the same page.
 static func verb_rows_for_page(page_id: String) -> Dictionary:
+	if _verbs_by_page.has(page_id):
+		return _verbs_by_page[page_id]
 	var merged: Dictionary = {}
 	var seen: Dictionary = {}
 	for pack_dir: String in packs_for_page(page_id):
@@ -273,6 +286,7 @@ static func verb_rows_for_page(page_id: String) -> Dictionary:
 				if not merged.has(group):
 					merged[group] = []
 				(merged[group] as Array).append(entry)
+	_verbs_by_page[page_id] = merged
 	return merged
 
 

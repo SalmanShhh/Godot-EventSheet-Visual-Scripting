@@ -5267,3 +5267,18 @@ Opens this page.,このページを開きます。
 Mark read,読了にする
 Read it now,今すぐ読む
 Opens the page your rows point at.,あなたの行が指し示すページを開きます。
+%d description(s) that say nothing,内容のない説明 %d 件
+%d name(s) no verb answers to,対応する動詞がない名前 %d 件
+%d verb(s) the changelog never mentions,変更履歴が一度も触れていない動詞 %d 件
+%d verb(s) the guide does not list,ガイドに載っていない動詞 %d 件
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.",未記載の動詞 %d 件、対応する動詞がない名前 %d 件、内容のない説明 %d 件、変更履歴が一度も触れていない動詞 %d 件。
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s は %s を公開していますが、ガイドはそれに触れていません。ガイドを検索した読者は存在しないと判断します。
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.",%s は出荷済みですが、変更履歴に %s の記載がありません。何が変わったか覚えているうちに書いてください。
+"Docs: %d of %d guide(s) read, %d out of step.",ドキュメント: %d / %d 件のガイドを確認、%d 件がずれています。
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.",ドキュメント: ガイドは語彙が読み込まれているエディタ内で確認されます。エディタ外ではヘルプバンドルのビルドが同じ報告を出力します。
+Draft: %s.,下書き: %s。
+Takes %s.,引数: %s。
+The %d worst are listed below.,下に重い順で %d 件を表示します。
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s は「%s」を記載していますが、対応する動詞がありません。近いもの: %s。
+"%s documents ""%s"" and no verb answers to it, nor anything near it.",%s は「%s」を記載していますが、対応する動詞も似た名前もありません。
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s は %s を「何をするか」欄が空のまま載せています。下書き: 「%s」

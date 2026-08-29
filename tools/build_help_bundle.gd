@@ -199,27 +199,28 @@ static func figures_text(gates: Dictionary) -> String:
 	return "%s\n%s\n" % [EventSheetDocLibrary.FIGURES_HEADER, var_to_str({"version": 1, "gates": gates})]
 
 
-## ADVISORY, never a gate: which pack guides' hand-written "## ACE reference" tables no longer
-## match what the pack publishes. The reader never sees those tables (the viewer draws the live
-## ones), so a difference is a note for whoever next edits the guide on GitHub - not a build
-## failure, because a guide legitimately documents a friendlier name than the raw member and
-## legitimately leaves plumbing verbs out.
+## ADVISORY, never a gate: which pack guides no longer describe what their packs publish. The reader
+## never sees those hand-written tables (the viewer draws the live ones), so a difference is a note
+## for whoever next edits the guide on GitHub - not a build failure, because a guide legitimately
+## documents a friendlier name than the raw member and legitimately leaves plumbing verbs out.
+##
+## The QUESTION is not asked here. EventSheetDocCoverage answers it, and the Doctor's Docs section
+## asks the same function for the same page, so this listing and that page cannot disagree about a
+## guide. What this function owns is only the shape of a build log.
 static func report_ace_reference_drift(pages: Dictionary) -> void:
 	var checked: int = 0
 	var differing: PackedStringArray = PackedStringArray()
+	var changelog: String = read_text(EventSheetDocWhatsNew.SOURCE_PATH)
 	for id: Variant in pages:
 		var page_id: String = str(id)
 		if EventSheetDocAceReference.packs_for_page(page_id).is_empty():
 			continue
 		checked += 1
 		var blocks: Array[Dictionary] = EventSheetDocMarkdown.parse(read_text(str(pages[page_id])), page_id)
-		var diff: Dictionary = EventSheetDocAceReference.diff_for_page(page_id, blocks)
-		var missing: PackedStringArray = diff.get("missing", PackedStringArray())
-		var extra: PackedStringArray = diff.get("extra", PackedStringArray())
-		if missing.is_empty() and extra.is_empty():
+		var report: Dictionary = EventSheetDocCoverage.page_report(page_id, blocks, changelog)
+		if not EventSheetDocCoverage.has_findings(report):
 			continue
-		differing.append("  %s: %d verb(s) the guide does not list, %d name(s) no verb answers to" % [
-			page_id, missing.size(), extra.size()])
+		differing.append("  %s" % EventSheetDocCoverage.advisory_line(report))
 	print("help: ace reference advisory - %d pack guide(s) checked, %d differ from the vocabulary" % [
 		checked, differing.size()])
 	for line: String in differing:

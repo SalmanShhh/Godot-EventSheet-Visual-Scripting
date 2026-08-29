@@ -5267,3 +5267,18 @@ Opens this page.,이 쪽을 엽니다.
 Mark read,읽음으로 표시
 Read it now,지금 읽기
 Opens the page your rows point at.,당신의 행이 가리키는 쪽을 엽니다.
+%d description(s) that say nothing,내용이 없는 설명 %d개
+%d name(s) no verb answers to,대응하는 동사가 없는 이름 %d개
+%d verb(s) the changelog never mentions,변경 기록이 한 번도 언급하지 않은 동사 %d개
+%d verb(s) the guide does not list,가이드에 없는 동사 %d개
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","문서화되지 않은 동사 %d개, 대응하는 동사가 없는 이름 %d개, 내용이 없는 설명 %d개, 변경 기록이 한 번도 언급하지 않은 동사 %d개."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s은(는) %s을(를) 제공하지만 가이드는 이를 언급하지 않습니다. 가이드를 검색한 사람은 없다고 판단합니다.
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.",%s은(는) 출시되었지만 변경 기록에 %s에 대한 내용이 없습니다. 무엇이 바뀌었는지 기억할 때 적어 두세요.
+"Docs: %d of %d guide(s) read, %d out of step.","문서: 가이드 %d/%d개 확인, %d개가 어긋남."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.",문서: 가이드는 어휘가 이미 불러와진 편집기에서 확인합니다. 편집기 밖에서는 도움말 번들 빌드가 같은 보고서를 출력합니다.
+Draft: %s.,초안: %s.
+Takes %s.,인자: %s.
+The %d worst are listed below.,아래에 가장 심한 %d개를 표시합니다.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s은(는) “%s”을(를) 문서화했지만 대응하는 동사가 없습니다. 가장 가까운 것: %s.
+"%s documents ""%s"" and no verb answers to it, nor anything near it.",%s은(는) “%s”을(를) 문서화했지만 대응하는 동사도 비슷한 것도 없습니다.
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s은(는) %s을(를) “하는 일” 없이 나열합니다. 초안: “%s”

@@ -5267,3 +5267,18 @@ Opens this page.,Apre questa pagina.
 Mark read,Segna come letta
 Read it now,Leggila ora
 Opens the page your rows point at.,Apre la pagina a cui puntano le tue righe.
+%d description(s) that say nothing,%d descrizione/i che non dicono nulla
+%d name(s) no verb answers to,%d nome/i a cui nessun verbo risponde
+%d verb(s) the changelog never mentions,%d verbo/i che il registro delle modifiche non menziona mai
+%d verb(s) the guide does not list,%d verbo/i che la guida non elenca
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d verbo/i non documentati, %d nome/i a cui nessun verbo risponde, %d descrizione/i che non dicono nulla, %d verbo/i che il registro delle modifiche non menziona mai."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s pubblica %s e la guida non lo nomina mai. Chi ha cercato nella guida ha concluso che non esiste.
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s è uscito, ma il registro delle modifiche non menziona mai %s. Scrivi la riga finché ricordi ancora cosa è cambiato."
+"Docs: %d of %d guide(s) read, %d out of step.","Documentazione: %d di %d guida/e lette, %d non allineate."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Documentazione: le guide vengono controllate nell'editor, dove il vocabolario è già caricato. Fuori, la build del pacchetto di aiuto stampa lo stesso rapporto."
+Draft: %s.,Bozza: %s.
+Takes %s.,Prende %s.
+The %d worst are listed below.,Le %d peggiori sono elencate sotto.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s documenta «%s» e nessun verbo risponde a quel nome. I più vicini: %s.
+"%s documents ""%s"" and no verb answers to it, nor anything near it.","%s documenta «%s» e nessun verbo risponde a quel nome, né qualcosa di simile."
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s elenca %s senza nulla sotto «che cosa fa». Bozza: «%s»

@@ -12,11 +12,12 @@ before you write. Read this once; after that the gates will tell you when you sl
 4. [The shape of an addon or module guide](#the-shape-of-an-addon-or-module-guide)
 5. [Worked examples that draw themselves - the figure fences](#worked-examples-that-draw-themselves---the-figure-fences)
 6. [Learning paths](#learning-paths)
-7. [House rules the suite enforces](#house-rules-the-suite-enforces)
-8. [Regenerate before you commit](#regenerate-before-you-commit)
-9. [Documenting a third-party pack](#documenting-a-third-party-pack)
-10. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
-11. [Common mistakes](#common-mistakes)
+7. [When a guide falls behind its pack - Doctor > Docs](#when-a-guide-falls-behind-its-pack---doctor--docs)
+8. [House rules the suite enforces](#house-rules-the-suite-enforces)
+9. [Regenerate before you commit](#regenerate-before-you-commit)
+10. [Documenting a third-party pack](#documenting-a-third-party-pack)
+11. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
+12. [Common mistakes](#common-mistakes)
 
 ## Where docs live, and where they show up
 
@@ -445,6 +446,41 @@ every other file under `tests/` - and give the id a row in `EventSheetPatternVoc
 with an entry but no fixture simply has no section, which is the honest answer for a shape nothing
 reads yet. Nothing else is edited: the page, the Add menu and the reference pages' "Patterns using
 this" all list the same fixtures.
+
+## When a guide falls behind its pack - Doctor > Docs
+
+A pack guide is a copy of something the editor already knows, and copies go stale silently: a
+renamed verb leaves a sentence that still reads perfectly. **Tools > Project Doctor** carries a
+**Docs** section that compares every pack guide against what its pack publishes, and reports four
+kinds of rot:
+
+| What it reports | What it means |
+|-----------------|---------------|
+| A verb the guide never lists | The pack publishes it and no table names it. A reader who searched the guide concluded it does not exist. |
+| A name no verb answers to | The guide names it and nothing answers. Almost always a rename, so the line offers the nearest three verbs that do exist. |
+| A description that says nothing | The row is there and its "what it does" cell is blank, a dash, or an unfilled stub. |
+| A verb the changelog never mentions | The pack is in `CHANGELOG.md`, so it shipped; this verb of it was never written about anywhere in the ledger. |
+
+None of it fails a build. A guide legitimately documents a verb under a friendlier name than the raw
+member, and legitimately leaves plumbing out, so every line is something you decide about.
+
+The same answer is printed by the help-bundle build, under `help: ace reference advisory`. Both ask
+one shared reader, so the build log and the page cannot disagree about a guide.
+
+Two of the fixes are worth knowing about before you press them:
+
+- **Stub it in the guide** writes a row for the undocumented verb carrying `TODO: describe what this
+  does.`, into a "Not written yet" table at the end of the reference. That row keeps reporting itself
+  as a description that says nothing until you replace the placeholder. It is deliberate: a fix that
+  wrote a plausible sentence would turn the page green while documenting nothing. It only edits a
+  guide this project owns (`eventsheet_addons/<pack>/guide.md`) - a shipped guide under
+  `addons/eventsheet/help/` is regenerated from `docs/`, so an edit there would be overwritten.
+- **Insert the draft** offers a sentence composed from the verb's own name and parameters. It is a
+  starting line, marked as a draft, and never a claim about what the verb does.
+
+The section reads a capped number of guides per audit and always says how many of how many it got
+through: outside the editor there is no loaded vocabulary, so every script of every pack has to be
+read and reflected, and reading a ninety-guide corpus would add minutes to a pre-commit audit.
 
 ## House rules the suite enforces
 

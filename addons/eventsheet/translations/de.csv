@@ -5267,3 +5267,18 @@ Opens this page.,Öffnet diese Seite.
 Mark read,Als gelesen markieren
 Read it now,Jetzt lesen
 Opens the page your rows point at.,"Öffnet die Seite, auf die deine Zeilen zeigen."
+%d description(s) that say nothing,"%d Beschreibung(en), die nichts sagen"
+%d name(s) no verb answers to,"%d Name(n), auf die kein Verb hört"
+%d verb(s) the changelog never mentions,"%d Verb(en), die das Änderungsprotokoll nie erwähnt"
+%d verb(s) the guide does not list,"%d Verb(en), die der Leitfaden nicht aufführt"
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d Verb(en) undokumentiert, %d Name(n), auf die kein Verb hört, %d Beschreibung(en), die nichts sagen, %d Verb(en), die das Änderungsprotokoll nie erwähnt."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,"%s veröffentlicht %s, und der Leitfaden nennt es nie. Wer im Leitfaden gesucht hat, hielt es für nicht vorhanden."
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s ist erschienen, aber im Änderungsprotokoll steht nichts über %s. Schreib die Zeile, solange du dich noch erinnerst."
+"Docs: %d of %d guide(s) read, %d out of step.","Doku: %d von %d Leitfaden/Leitfäden gelesen, %d nicht mehr aktuell."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Doku: Leitfäden werden im Editor geprüft, wo das Vokabular bereits geladen ist. Außerhalb gibt der Build des Hilfepakets denselben Bericht aus."
+Draft: %s.,Entwurf: %s.
+Takes %s.,Nimmt %s.
+The %d worst are listed below.,Die %d schlimmsten stehen unten.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.","%s dokumentiert „%s“, und kein Verb hört darauf. Am nächsten liegen: %s."
+"%s documents ""%s"" and no verb answers to it, nor anything near it.","%s dokumentiert „%s“, und kein Verb hört darauf, auch nichts Ähnliches."
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s führt %s ohne Angabe unter „Was es tut“ auf. Entwurf: „%s“

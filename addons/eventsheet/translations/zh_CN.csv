@@ -5267,3 +5267,18 @@ Opens this page.,打开这一页。
 Mark read,标为已读
 Read it now,现在就读
 Opens the page your rows point at.,打开你的行所指向的那一页。
+%d description(s) that say nothing,%d 条什么都没说的描述
+%d name(s) no verb answers to,%d 个没有动词对应的名称
+%d verb(s) the changelog never mentions,%d 个更新日志从未提到的动词
+%d verb(s) the guide does not list,%d 个指南没有列出的动词
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.",%d 个未记录的动词、%d 个没有动词对应的名称、%d 条什么都没说的描述、%d 个更新日志从未提到的动词。
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s 提供了 %s，而指南从未提及。在指南里搜索过的人会以为它不存在。
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.",%s 已发布，但更新日志从未提到 %s。趁还记得改了什么，把这一行写下来。
+"Docs: %d of %d guide(s) read, %d out of step.",文档：已读 %d/%d 篇指南，%d 篇已脱节。
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.",文档：指南在编辑器内检查，那里已经加载了词汇表。在编辑器之外，帮助包构建会打印同样的报告。
+Draft: %s.,草稿：%s。
+Takes %s.,接受 %s。
+The %d worst are listed below.,下面列出最严重的 %d 篇。
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s 记录了“%s”，但没有动词叫这个名字。最接近的是：%s。
+"%s documents ""%s"" and no verb answers to it, nor anything near it.",%s 记录了“%s”，但没有动词叫这个名字，也没有相近的。
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s 列出了 %s，“做什么”一栏是空的。草稿：“%s”

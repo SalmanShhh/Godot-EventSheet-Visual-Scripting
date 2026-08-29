@@ -4,6 +4,23 @@
 
 ### Reading becomes having
 
+- **The guide audit is a page now, not build noise.** The help-bundle builder already compared every
+  pack guide against what its pack actually publishes, and printed the answer into a build log nobody
+  reads on a tool you only run while editing a guide. That question moved into a shared reader, and
+  the Doctor grew a Docs section that asks the same reader the same question - so the build output
+  and the page cannot say different things about one guide. It reports four kinds of rot: a verb the
+  pack publishes that the guide never names, a name in the guide that no verb answers to (with the
+  nearest three that do, because it is almost always a rename), a description cell that says nothing,
+  and a verb the CHANGELOG has never mentioned for a pack the CHANGELOG does - the release ritual's
+  "write down what changed" step, running continuously instead of being remembered at tag time.
+  Nothing here fails a build: a guide legitimately documents a friendlier name and legitimately
+  leaves plumbing out, so every line is a note or a warning a person decides about.
+- **The fix that refuses to fake a green page.** The chip on an undocumented verb writes a stub row
+  into the guide carrying an unfilled placeholder, and that placeholder goes on reporting itself as a
+  description that says nothing until somebody replaces it. It does the mechanical typing and
+  declines the part that would be a lie. The thin-description chip offers a draft composed from the
+  verb's own name and parameters, and says on the row that it is a draft.
+
 - **Every worked example in the guides lands in your sheet wearing tune-me marks.** The Manual's
   figures already inserted themselves as real rows in one undo step; now the literals in those rows -
   every number, every string the example chose - carry a dashed rule underneath, in the same stroke

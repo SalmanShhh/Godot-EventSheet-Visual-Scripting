@@ -5267,3 +5267,18 @@ Opens this page.,Abre esta página.
 Mark read,Marcar leída
 Read it now,Leerla ahora
 Opens the page your rows point at.,Abre la página a la que apuntan tus filas.
+%d description(s) that say nothing,%d descripción(es) que no dicen nada
+%d name(s) no verb answers to,%d nombre(s) a los que no responde ningún verbo
+%d verb(s) the changelog never mentions,%d verbo(s) que el registro de cambios nunca menciona
+%d verb(s) the guide does not list,%d verbo(s) que la guía no enumera
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d verbo(s) sin documentar, %d nombre(s) a los que no responde ningún verbo, %d descripción(es) que no dicen nada, %d verbo(s) que el registro de cambios nunca menciona."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s publica %s y la guía nunca lo nombra. Quien lo buscó en la guía concluyó que no existe.
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s ya salió, pero el registro de cambios nunca menciona %s. Escribe la línea mientras aún recuerdas qué cambió."
+"Docs: %d of %d guide(s) read, %d out of step.","Documentación: %d de %d guía(s) leídas, %d desfasadas."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Documentación: las guías se revisan en el editor, donde el vocabulario ya está cargado. Fuera de él, la compilación del paquete de ayuda imprime el mismo informe."
+Draft: %s.,Borrador: %s.
+Takes %s.,Toma %s.
+The %d worst are listed below.,Las %d peores aparecen abajo.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s documenta «%s» y ningún verbo responde a ese nombre. Los más cercanos: %s.
+"%s documents ""%s"" and no verb answers to it, nor anything near it.","%s documenta «%s» y ningún verbo responde a ese nombre, ni nada parecido."
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s enumera %s sin nada en «qué hace». Borrador: «%s»

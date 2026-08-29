@@ -5267,3 +5267,18 @@ Opens this page.,Ouvre cette page.
 Mark read,Marquer comme lue
 Read it now,La lire maintenant
 Opens the page your rows point at.,Ouvre la page vers laquelle pointent vos lignes.
+%d description(s) that say nothing,%d description(s) qui ne disent rien
+%d name(s) no verb answers to,%d nom(s) auxquels aucun verbe ne répond
+%d verb(s) the changelog never mentions,%d verbe(s) que le journal des modifications ne mentionne jamais
+%d verb(s) the guide does not list,%d verbe(s) que le guide n'énumère pas
+"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d verbe(s) non documentés, %d nom(s) auxquels aucun verbe ne répond, %d description(s) qui ne disent rien, %d verbe(s) que le journal des modifications ne mentionne jamais."
+%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s publie %s et le guide ne le nomme jamais. Qui a cherché dans le guide en a conclu qu'il n'existe pas.
+"%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s est sorti, mais le journal des modifications ne mentionne jamais %s. Écris la ligne pendant que tu te souviens encore de ce qui a changé."
+"Docs: %d of %d guide(s) read, %d out of step.","Documentation : %d guide(s) lus sur %d, %d en décalage."
+"Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Documentation : les guides sont vérifiés dans l'éditeur, où le vocabulaire est déjà chargé. En dehors, la construction du paquet d'aide imprime le même rapport."
+Draft: %s.,Brouillon : %s.
+Takes %s.,Prend %s.
+The %d worst are listed below.,Les %d pires figurent ci-dessous.
+"%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s documente « %s » et aucun verbe n'y répond. Les plus proches : %s.
+"%s documents ""%s"" and no verb answers to it, nor anything near it.","%s documente « %s » et aucun verbe n'y répond, ni rien d'approchant."
+"%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s énumère %s sans rien sous « ce que ça fait ». Brouillon : « %s »

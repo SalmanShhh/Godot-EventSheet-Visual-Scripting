@@ -119,7 +119,30 @@ const OFFERED := {
 	"ship-translation-coverage": [
 		{"id": "export_missing_keys", "label": "Write the missing keys out"},
 	],
+	# Documentation. The stub chip is the one fix here that deliberately does NOT make the finding go
+	# away: it writes a row per undocumented verb carrying an unfilled placeholder, and that
+	# placeholder keeps reporting itself as a description that says nothing until a person replaces
+	# it. A chip that wrote a plausible sentence would turn the page green while documenting nothing.
+	"docs-undocumented-verb": [
+		{"id": "write_doc_stubs", "label": "Stub %s in the guide"},
+	],
+	# A name nothing answers to is a rename nine times in ten, so the first chip is the shortlist. The
+	# second is the other honest answer: the paragraph is prose about the pack rather than a row of
+	# its reference, and saying so is an edit too.
+	"docs-stale-name": [
+		{"id": "link_nearest_verbs", "label": "Link the nearest verbs to %s"},
+		{"id": "mark_prose_only", "label": "Mark this paragraph prose-only"},
+	],
+	"docs-empty-description": [
+		{"id": "insert_draft_description", "label": "Insert the draft for %s"},
+	],
 }
+
+## Where a guide has to live for a chip to edit it: the packs of THIS project. A shipped guide under
+## the plugin's own help bundle is regenerated from the repository it came from, so writing into it
+## would be undone by the next build and would look, in the meantime, like documentation somebody
+## wrote. Those chips name the edit instead.
+const EDITABLE_GUIDE_ROOT := "res://eventsheet_addons"
 
 ## Where "Write the missing keys out" puts the file. The user directory rather than the project: it
 ## is a working file for a translator, and dropping it into res:// would import it as a live catalog
@@ -244,6 +267,17 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return _guard_debug_rows(str(finding.get("path", "")), dock)
 		"export_missing_keys":
 			return _export_missing_keys()
+		"write_doc_stubs":
+			return _write_doc_stubs(subject, str(finding.get("path", "")))
+		"link_nearest_verbs":
+			return {"ok": true, "message": "Open %s and swap \"%s\" for one of the verbs the finding names, or delete the row - the picker is the list of what answers today." % [
+				str(finding.get("path", "")).get_file(), subject]}
+		"mark_prose_only":
+			return {"ok": true, "message": "Move \"%s\" out of the reference table in %s and into the prose above it - a sentence about the pack is not a row of its reference, and the audit only reads the tables." % [
+				subject, str(finding.get("path", "")).get_file()]}
+		"insert_draft_description":
+			return {"ok": true, "message": "Open %s and put the drafted sentence in the description cell for %s - it is a starting line composed from the verb's own name and parameters, not a claim about what it does." % [
+				str(finding.get("path", "")).get_file(), subject]}
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
@@ -392,3 +426,33 @@ static func _add_input_action(action_name: String) -> Dictionary:
 	if key != KEY_NONE:
 		return {"ok": true, "message": "Added \"%s\" to the Input Map, bound to %s - change the binding in Project ▸ Input Map." % [action_name, OS.get_keycode_string(key)]}
 	return {"ok": true, "message": "Added \"%s\" to the Input Map - bind a key to it in Project ▸ Input Map." % action_name}
+
+
+## Writes a stub row into a pack guide for the verb this finding names, and says so plainly: the row
+## goes in carrying an unfilled placeholder, so the audit keeps reporting it as a description that
+## says nothing until a person writes one. That is the point of the chip - it does the typing that is
+## mechanical (finding the verb, opening the guide, matching the table's shape) and refuses the part
+## that is not.
+##
+## ONLY A GUIDE THIS PROJECT OWNS is written. The shipped guides under the plugin's help bundle are
+## regenerated from the repository they came from, so an edit there is undone by the next build while
+## looking, until then, like documentation somebody wrote.
+static func _write_doc_stubs(verb_name: String, guide_path: String) -> Dictionary:
+	if verb_name.is_empty() or guide_path.is_empty():
+		return {"ok": false, "message": "That finding names no guide to write into."}
+	if not guide_path.begins_with(EDITABLE_GUIDE_ROOT):
+		return {"ok": false, "message": "%s is a shipped guide - the next help-bundle build would overwrite the stub. Add the row for %s to its source on GitHub instead." % [
+			guide_path.get_file(), verb_name]}
+	var file: FileAccess = FileAccess.open(guide_path, FileAccess.READ)
+	if file == null:
+		return {"ok": false, "message": "%s could not be read." % guide_path}
+	var source: String = file.get_as_text()
+	var written: String = EventSheetDocCoverage.insert_stubs(source, PackedStringArray([verb_name]))
+	if written == source:
+		return {"ok": false, "message": "%s already has a row for %s." % [guide_path.get_file(), verb_name]}
+	var out: FileAccess = FileAccess.open(guide_path, FileAccess.WRITE)
+	if out == null:
+		return {"ok": false, "message": "%s could not be written." % guide_path}
+	out.store_string(written)
+	return {"ok": true, "message": "Stubbed %s in %s. It stays on this page as a description that says nothing until you replace the placeholder." % [
+		verb_name, guide_path.get_file()]}
