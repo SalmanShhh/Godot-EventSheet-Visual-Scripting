@@ -36,6 +36,9 @@ const TRAILS: Dictionary = {
 	"START a_test.gd\n": "a_test",
 	"": "",
 	"START a_test.gd\nDONE a_test.gd\n": "",
+	# A finish line carries the test's milliseconds (the launcher's slowest-ten footer reads them off
+	# this same trail), and the crash reading must go on ignoring whatever follows the name.
+	"START a_test.gd\nDONE a_test.gd 12\nSTART b_test.gd\n": "b_test",
 }
 
 ## Log lines, and the test the report files each under. The indented shape is the one that matters:

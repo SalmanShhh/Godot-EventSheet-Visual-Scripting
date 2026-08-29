@@ -62,6 +62,29 @@ the whole history and blames whichever commit it lands on. That is what happened
 `doc_library_test`, whose 12-second parse budget was being measured inside a shard beside seven
 other Godot processes.
 
+**The stamped verdict.** A fully green run records, under `.godot/`, the content identity of the
+tree it was green for: the commit, the porcelain status, the whole diff against `HEAD`, and a
+content hash of every untracked file (porcelain reports an untracked file by NAME, and a name does
+not change when the file does). Ask again on a tree with that identity and the launcher prints the
+stamped verdict with a line saying how long ago it was earned, and exits without running anything.
+One byte of difference anywhere misses, `-Force` always runs, and `tests/verdict_stamp_test.gd`
+proves the miss by asking `-IdentityOnly` around a probe file it creates, edits and removes. The
+stamp answers for a tree, never for a change: it is why "did I already run this?" stops costing five
+minutes, and it cannot tell you anything about a tree you have touched since.
+
+**One suite at a time.** The launcher holds `.godot/suite.lock` exclusively for the whole run, and a
+second invocation prints one line naming the holding process and waits for it instead of overlapping.
+Every false perf-budget red this month came from two suites sharing a machine, and that red looks
+exactly like a real regression - so the fix belongs in the launcher rather than in the reader. The
+handle dies with its process, so a lock can only go stale if the holder is gone; that case is broken
+with a printed note and the run continues.
+
+**The slowest ten.** Every green summary ends with the ten slowest tests and their seconds. The
+numbers come off the crash trail the runner already writes (each `DONE` line carries the test's own
+milliseconds), so there is no second file and no threshold to tune - just a list, on every run, so a
+test that grows into a minute is noticed by whoever added it rather than by whoever bisects the
+suite next year.
+
 The parallel launcher shards the parallel-safe tests and runs the timing and teardown tests serially
 afterwards. A test joins that serial tail by DECLARING it (a `*BUDGET_MS*` or `PARALLEL_UNSAFE`
 constant in its own source), not by what its file is called.

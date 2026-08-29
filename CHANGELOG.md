@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### The test runner - a verdict that keeps, one suite at a time, and the ten slowest
+
+- **A green run stamps the tree it was green for.** The launcher records the working tree's content
+  identity (the commit, the porcelain status, the whole diff against `HEAD`, and a content hash of
+  every untracked file, because git reports one of those by name and the name does not change when
+  the file does) and, asked again on an identical tree, prints that verdict with how long ago it was
+  earned instead of spending five more minutes reaching it. One byte of difference anywhere misses,
+  and `-Force` always runs.
+- **Two suites can no longer share a machine.** A run holds a lock file for its duration; a second
+  invocation says whose lock it is and waits rather than overlapping. Overlapping runs are what
+  failed a perf budget for the wrong reason, and that red reads exactly like a real regression. A
+  lock whose holder is gone is broken with a note.
+- **Every green summary ends with the ten slowest tests.** No gate and no threshold - the seconds
+  come off the crash trail each process already writes, so suite growth is visible to whoever caused
+  it rather than to whoever bisects it next year.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost

@@ -18,6 +18,12 @@
 #   powershell -File tools/run_tests_parallel.ps1            # shards = min(8, cores - 2)
 #   powershell -File tools/run_tests_parallel.ps1 -Shards 4
 #   powershell -File tools/run_tests_parallel.ps1 -Iterate   # see below; NEVER a verdict
+#   powershell -File tools/run_tests_parallel.ps1 -Force     # ignore the stamped verdict below
+#
+# A green run STAMPS the working tree's content identity, and an identical tree gets that verdict
+# printed back instead of run again. One run at a time, too: the suite holds a lock file for its
+# duration and a second invocation waits, because two suites on one machine fail each other's perf
+# budgets. Every green summary ends with the ten slowest tests, so suite growth polices itself.
 #
 # -Iterate is the ITERATION shape of this launcher, for use while a change is still moving: the
 # tests tools/pick_tests.gd says your edits could have broken run FIRST, alone, and the run STOPS
@@ -27,14 +33,80 @@
 param(
 	[int]$Shards = 0,
 	[switch]$Iterate,
+	[switch]$Force,
+	[switch]$IdentityOnly,
 	[string]$Godot = $env:GODOT
 )
 
+$root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+
+# THE TREE'S CONTENT IDENTITY: the commit, plus everything the working tree says on top of it -
+# the porcelain status, the full diff against HEAD (staged and unstaged both), and the CONTENT hash
+# of every untracked file, because porcelain reports an untracked file by name only and a name does
+# not change when the file does. One byte anywhere in that set gives a different identity, which is
+# the whole point: the stamp below may only answer for the exact tree it was recorded on.
+function Get-TreeIdentity {
+	$head = & git -C $root rev-parse HEAD 2>$null
+	if (-not $head) { return "" }
+	$parts = @($head) + @(& git -C $root status --porcelain 2>$null) + @(& git -C $root diff HEAD 2>$null)
+	foreach ($untracked in @(& git -C $root ls-files --others --exclude-standard 2>$null)) {
+		$full = Join-Path $root $untracked
+		if (Test-Path -PathType Leaf $full) { $parts += "$untracked $((Get-FileHash -Algorithm SHA256 $full).Hash)" }
+	}
+	$bytes = [Text.Encoding]::UTF8.GetBytes(($parts -join "`n"))
+	return ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($bytes))).Replace("-", "")
+}
+
+$identity = Get-TreeIdentity
+if ($IdentityOnly) { $identity; exit 0 }   # the identity rule, asked directly (tests/verdict_stamp_test.gd)
+
 if (-not $Godot) { Write-Error "Set `$env:GODOT to the Godot 4.7 console binary first."; exit 2 }
 if ($Shards -lt 1) { $Shards = [Math]::Max(1, [Math]::Min(8, [Environment]::ProcessorCount - 2)) }
-$root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $logDir = Join-Path $root ".godot\test_logs"
 New-Item -ItemType Directory -Force $logDir | Out-Null
+
+# THE STAMP. A green run records the identity it was green FOR; an identical tree gets that verdict
+# back instead of five more minutes of the same answer. Any difference at all misses, and -Force
+# always runs. Machine-local, under .godot/, never committed.
+$stampFile = Join-Path $root ".godot\verdict_stamp.txt"
+if (-not $Force -and $identity -and (Test-Path $stampFile)) {
+	$stamp = @(Get-Content $stampFile)
+	if ($stamp.Count -ge 3 -and $stamp[0] -eq $identity) {
+		$ago = [datetime]::UtcNow - [datetime]::Parse($stamp[1], $null, [Globalization.DateTimeStyles]::RoundtripKind)
+		$minutes = [int][Math]::Round($ago.TotalMinutes)
+		$stamp[2]
+		"All tests passed."
+		"(unchanged tree, stamped verdict from $minutes minutes ago - run with -Force to run it again.)"
+		exit 0
+	}
+}
+
+# THE SINGLE-FLIGHT LOCK. Two suites on one machine fail each other's perf budgets, and the red that
+# produces looks exactly like a real regression. So a run holds this file exclusively and a second
+# invocation waits for it rather than overlapping. The handle dies with the process, so a stale lock
+# needs a holder that is gone: that one is broken with a note.
+$lockPath = Join-Path $root ".godot\suite.lock"
+$lock = $null
+$announced = $false
+while (-not $lock) {
+	# Shared for READING, so a waiting run can say whose lock it is; a second writer is still refused,
+	# which is the exclusion itself.
+	try { $lock = [IO.File]::Open($lockPath, "OpenOrCreate", "ReadWrite", "Read") }
+	catch {
+		$holder = @(Get-Content $lockPath -ErrorAction SilentlyContinue)[0]
+		if ($holder -match "^\d+$" -and -not (Get-Process -Id ([int]$holder) -ErrorAction SilentlyContinue)) {
+			"suite lock: holder process $holder is gone - breaking the stale lock."
+			Remove-Item $lockPath -Force -ErrorAction SilentlyContinue
+		} else {
+			if (-not $announced) { "suite lock: held by process $holder - waiting for it to finish."; $announced = $true }
+			Start-Sleep -Seconds 5
+		}
+	}
+}
+$lock.SetLength(0)   # a shorter pid must not leave the tail of a longer one behind
+$writer = New-Object IO.StreamWriter($lock)
+$writer.WriteLine($PID)
+$writer.Flush()
 
 # The crash trail is read back at the end, so it starts empty: a trail left by a run that is not
 # this one would otherwise be reported as this run's crash.
@@ -124,9 +196,13 @@ foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))
 # A process that CRASHED reports no failure at all - its log simply stops. The trail the runner
 # leaves is what turns that into a named test, so it is checked on every run, green or not.
 $crashed = @()
+$seconds = @{}
 foreach ($trail in (Get-ChildItem (Join-Path $root ".godot\test_progress") -Filter *.log -ErrorAction SilentlyContinue)) {
 	$lines = @(Get-Content $trail.FullName -ErrorAction SilentlyContinue | Where-Object { $_.Trim() })
 	if ($lines.Count -gt 0 -and $lines[-1].StartsWith("START ")) { $crashed += $lines[-1].Substring(6) }
+	# The same trail carries each test's own milliseconds on its DONE line, so the slowest-ten footer
+	# below costs one more match on a walk that was happening anyway.
+	foreach ($line in $lines) { if ($line -match "^DONE (\S+) (\d+)$") { $seconds[$matches[1]] = [int]$matches[2] / 1000 } }
 }
 if ($crashed.Count -gt 0) {
 	"CRASHED (started, never finished): $($crashed -join ', ')"
@@ -134,4 +210,20 @@ if ($crashed.Count -gt 0) {
 }
 
 if (-not $allGreen) { & $Godot --headless --path $root --script tools/test_report.gd }
+
+# THE SLOWEST TEN. No gate and no threshold: a list, every green run, so that a test which grows
+# into a minute is noticed by whoever added it rather than by whoever bisects the suite next year.
+if ($allGreen -and $seconds.Count -gt 0) {
+	"slowest ten:"
+	$seconds.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 10 |
+		ForEach-Object { "  {0,6}s  {1}" -f ([Math]::Round($_.Value, 1)), $_.Key }
+}
+
+# Asked again at the END: a tree edited while the suite ran was never green as a whole, so it gets
+# no stamp rather than a stamp for a state half of the run never saw.
+if ($allGreen -and $identity -and (Get-TreeIdentity) -eq $identity) {
+	Set-Content -Encoding utf8 $stampFile @($identity, [datetime]::UtcNow.ToString("o"),
+		"total: $passes pass, $fails fail across $Shards shards + tail")
+}
+$lock.Dispose()
 if ($allGreen) { "All tests passed."; exit 0 } else { "Some tests failed."; exit 1 }

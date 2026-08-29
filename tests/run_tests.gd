@@ -46,6 +46,7 @@ func _init() -> void:
 			continue
 		if not _has_static_run(script):
 			continue  # a shared helper living in tests/, not a test
+		var started_at: int = Time.get_ticks_msec()
 		var result: Variant = script.call("run")
 		if result is bool:
 			passed = bool(result) and passed
@@ -53,7 +54,7 @@ func _init() -> void:
 			push_error("Test %s did not return a bool from run()." % test_file)
 			passed = false
 		_sweep_stray_output()
-		_mark_finished(test_file)
+		_mark_finished(test_file, Time.get_ticks_msec() - started_at)
 	if passed:
 		print("All tests passed.")
 		quit(0)
@@ -102,8 +103,11 @@ func _mark_started(test_file: String) -> void:
 	_append_progress("START %s" % test_file)
 
 
-func _mark_finished(test_file: String) -> void:
-	_append_progress("DONE %s" % test_file)
+## The finish line carries how long the test took, in milliseconds. The trail is the one place a
+## per-test duration is recorded - readers of it (the crash sentinel, the launcher's slowest-ten
+## footer) take what they need from this line rather than any second file.
+func _mark_finished(test_file: String, msec: int) -> void:
+	_append_progress("DONE %s %d" % [test_file, msec])
 
 
 ## One line on the trail. Opened and closed per line on purpose: a handle held open across a crash
