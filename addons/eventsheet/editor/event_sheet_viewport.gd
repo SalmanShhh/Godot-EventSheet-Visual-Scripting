@@ -2451,6 +2451,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	_row_builder._code_echo_palette.clear()
 	# And the line each group declares itself on, which a head echoes at its right edge.
 	_row_builder._group_declaration_lines.clear()
+	# And which of the sheet's names may already be gone, so a removal row can echo the guard the
+	# compiler writes for it.
+	_row_builder._removal_guard_facts.clear()
 	# And who owns each variable the sheet names, so a row that touches `hp` can lead with the
 	# object that HAS an hp. Derived once per sweep: it reads the autoloads' scripts.
 	_row_builder._variable_owner_catalog.clear()

@@ -5322,3 +5322,21 @@ random place off a screen edge (+{margin}),画面端の外側のランダムな�
 the new copy,新しいコピー
 Recognisers,認識テーブル
 the spellings a lift knows,読み取りが知っている書き方
+Remove,削除
+Remove Now,今すぐ削除
+Remove After Seconds,秒数後に削除
+Fade Out Then Remove,フェードアウトしてから削除
+Is Still Here,まだ存在する
+"Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.",オブジェクトをゲームから削除します。Godot はこの行ではなく、このフレームの終わりに削除するため、同じイベント内の後続の行は実行され、その間オブジェクトはまだ存在します。拾ったアイテム、倒した敵、使い終わったエフェクトなど、ゲームが用済みにしたものに使います。
+"Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.",数秒後にオブジェクトを削除し、その間もイベントは先に進みます。待機はシーンツリーのタイマーなので、この行は何もブロックしません。ほかの何かが先にオブジェクトを削除しても安全です。Godot はオブジェクトと一緒にタイマーの接続も外すため、待機は何にも届かずに終わります。
+"Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly.",数秒かけてオブジェクトの透明度をゼロまで下げ、そのあと削除します。イベントはここで待つので、後続の行はフェードが終わってから実行されます。この待機はゲーム時間の本当の空白なので、削除の前にオブジェクトがまだあるかを尋ね、その行はシートに書かれます。こっそり追加されるものではありません。
+"True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves.",オブジェクトがまだ削除されていない間は真になります。シートがフレームをまたいで持ち続けたもの、つまり変数に入れたノードや、前のイベントのスポーン行が作ったコピーに触れる前に尋ねてください。自分自身の削除を知りたいノードは、代わりに On Exit Tree トリガーを使います。これは抜けるときに発火します。
+remove [i]{object}[/i] now,[i]{object}[/i] を今すぐ削除
+remove [i]{object}[/i] after {seconds}s,{seconds}秒後に [i]{object}[/i] を削除
+"fade [i]{object}[/i] out over {seconds}s, then remove it",[i]{object}[/i] を {seconds}秒かけてフェードアウトしてから削除
+[i]{object}[/i] is still here,[i]{object}[/i] がまだ存在する
+"The object to remove, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",削除する対象を式で指定します。スポーン行がコピーに付けた名前、ノードを保持する変数、ノードパスのいずれかです。このノード自身なら self のままにします。
+How many seconds to wait before removing the object. The event carries on immediately; only the removal waits.,オブジェクトを削除するまで何秒待つか。イベントはすぐに進み、待つのは削除だけです。
+"How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",フェードにかける秒数。イベントはこれを待つので、後続の行はフェードが終わってから実行されます。
+"Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.",ものを世界から取り除く方法。今すぐ、待ってから、あるいはフェードしてから。どの行もただの queue_free で、それぞれ呼び出しがいつ起きるかを述べます。
+"This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",この名前はすでに消えている可能性があるため、コンパイラはこの行を行の上に書きます。クリックするとコードパネルで開きます。

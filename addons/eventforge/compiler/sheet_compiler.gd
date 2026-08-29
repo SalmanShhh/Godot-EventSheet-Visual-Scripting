@@ -97,6 +97,11 @@ static var _behavior_host_default: String = ""
 # lock is never taken twice on one thread and cannot deadlock.
 static var _compile_mutex: Mutex = Mutex.new()
 
+## What the removal guard knows about THIS sheet's names (see EventForgeRemovalGuard.facts): which
+## ones hold a node across frames, and which ones a spawn row minted in which event. Filled once per
+## compile, read per removal row.
+static var _removal_guard_facts: Dictionary = {}
+
 
 ## Clears every per-compile static above, and is the ONLY place that does. Each public emission entry
 ## point calls it first, so no caller can inherit what the last one left: the flags are shared
@@ -121,6 +126,10 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_runtime_group_members = []
 	_group_slugs = {}
 	_row_group_path = {}
+	# What this sheet's names MEAN, for the removal guard: which of them hold a node across frames and
+	# which were minted by a spawn row in some other event. Gathered once here rather than per row,
+	# because it is a walk of the whole sheet and the answer cannot change during a compile.
+	_removal_guard_facts = EventForgeRemovalGuard.facts(sheet)
 
 
 ## Compiles an event sheet resource to a GDScript output file.
@@ -2189,6 +2198,17 @@ static func _emit_event_body(
 				if action_line.is_empty():
 					continue
 				_emit_leading_body_blanks(action_item, lines)
+				# THE REMOVAL GUARD, written where it is needed and shown where it is written: a row
+				# that reaches into an object which may already be gone (a name a spawn row minted in
+				# another event, a variable holding a node across frames) compiles inside
+				# `if is_instance_valid(<it>):`. The rule lives in one place and stands down whenever
+				# the sheet's own conditions already asked - see EventForgeRemovalGuard.
+				var removal_guard: String = EventForgeRemovalGuard.guard_expression(
+					action_item, event_row, _removal_guard_facts)
+				var statement_indent: String = body_indent
+				if not removal_guard.is_empty():
+					lines.append(EventForgeRemovalGuard.guard_line(removal_guard, body_indent))
+					statement_indent = body_indent + "\t"
 				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
 				# awaits only its LAST statement (the actual call) - prefixing `await` onto the joined
 				# multi-line string would land it on a `var … =` declaration line (a parse error).
@@ -2197,7 +2217,7 @@ static func _emit_event_body(
 					var emitted_line: String = action_lines[line_index]
 					if (action_item.is_awaited or action_item.await_call) and line_index == action_lines.size() - 1:
 						emitted_line = "await %s" % emitted_line
-					lines.append(body_indent + emitted_line)
+					lines.append(statement_indent + emitted_line)
 				had_body = true
 			elif action_item is RawCodeRow:
 				# In-flow GDScript block (inline scripting): emitted verbatim inside the

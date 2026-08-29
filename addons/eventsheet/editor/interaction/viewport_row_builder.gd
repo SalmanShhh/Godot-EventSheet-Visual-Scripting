@@ -129,6 +129,10 @@ var _region_occurrences: Dictionary = {}
 # The code echo's token colours for THIS sweep. Cleared with the other per-build caches, so a
 # theme or Editor Settings change is picked up on the next rebuild and never mid-build.
 var _code_echo_palette: Dictionary = {}
+# What the removal guard knows about THIS sheet's names, for the guard line a removal row echoes.
+# Derived once per sweep for the same reason the caches around it are: it walks every row of the
+# sheet, and every removal row on the canvas wants one answer out of it.
+var _removal_guard_facts: Dictionary = {}
 # The `## @ace_group(...)` line the compiler writes for each group, {EventGroup: String}, asked
 # of the compiler ONCE per sweep: the walk that slugs them is a whole-tree walk, and every head on
 # the canvas wants one line out of it.
@@ -10090,6 +10094,39 @@ func _append_signal_fanout_span(spans: Array[SemanticSpan], action: ACEAction, a
 		_fanout_metadata("action", action_index, line_index, signal_name, true)))
 
 
+## THE GUARD, ON THE ROW. A removal row whose object may already be gone compiles inside
+## `if is_instance_valid(<it>):`, and this is the span that says so: the exact line the file holds,
+## echoed at the end of the row's own line in the script editor's token colours, exactly as a
+## declaration row echoes its `var`. Nothing is hidden and nothing is paraphrased - a reader who
+## does not want the guard can see it, and can see which name asked for it.
+##
+## The rule is the compiler's own (EventForgeRemovalGuard), asked here rather than re-derived, so
+## the row can never claim a guard the file does not contain or miss one it does. Same line_index as
+## the sentence, so the row does not grow a line and the lazy height measure stays exact.
+func _append_removal_guard_span(spans: Array[SemanticSpan], action: ACEAction, event_row: EventRow,
+		action_index: int, line_index: int) -> void:
+	if action == null or not EventForgeRemovalGuard.GUARDED_ACE_IDS.has(action.ace_id):
+		return
+	if _removal_guard_facts.is_empty():
+		_removal_guard_facts = EventForgeRemovalGuard.facts(_viewport._sheet)
+	var guarded: String = EventForgeRemovalGuard.guard_expression(action, event_row, _removal_guard_facts)
+	if guarded.is_empty():
+		return
+	spans.append(_code_echo_span(
+		EventForgeRemovalGuard.guard_line(guarded),
+		{
+			"lane": "action",
+			"kind": "action",
+			"ace_index": action_index,
+			"line_index": line_index,
+			"natural_width": true,
+			"hover_note": EventSheetL10n.translate("This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.")
+		},
+		EventSheetCodeEcho.REST_ALPHA,
+		true
+	))
+
+
 ## The muted `<- emitted in player.gd: Take Damage` a handler wears.
 func _append_signal_source_span(spans: Array[SemanticSpan], event_row: EventRow, line_index: int) -> void:
 	if event_row == null:
@@ -11279,6 +11316,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 					)
 				)
 				_append_signal_fanout_span(spans, action_resource as ACEAction, action_index, action_line_index)
+				_append_removal_guard_span(spans, action_resource as ACEAction, event_row, action_index, action_line_index)
 				action_line_index += 1
 			elif action_resource is MatchRow:
 				# match statement (the switch): header + branch lines as action cells sharing one ace_index;

@@ -30,6 +30,7 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/lighting_lift.gd"),
 	preload("res://addons/eventforge/importer/effect_lift.gd"),
 	preload("res://addons/eventforge/importer/animation_lift.gd"),
+	preload("res://addons/eventforge/importer/removal_lift.gd"),
 ]
 
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
@@ -3227,6 +3228,13 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# way in into ONE sentence, and it keeps the author's own name for the copy in it. The row is an
 	# authoring word here; the reading stays the one that opens the line.
 	"MakeNewCopy",
+	# The two removal sentences that stand BESIDE a frozen row writing the identical line: Remove Now
+	# writes `{object}.queue_free()`, which is Free Node's own template, and Is Still Here writes
+	# `is_instance_valid({object})`, which is Object Still Exists's. Two rows with one template would
+	# split every one of those lines between them by registry order alone; the shipped rows keep the
+	# reading, and these two are authoring words. Nothing is lost by it - the sentence the file gets
+	# is the same sentence either way, down to the byte.
+	"RemoveNow", "IsStillHere",
 	# Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
 	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
 	# right for the row that writes it and hopelessly general for the index that reads lines BACK:

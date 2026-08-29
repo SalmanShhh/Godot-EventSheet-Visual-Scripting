@@ -28,13 +28,26 @@ The older **Spawn Scene**, **Spawn Scene At** and **Spawn Scene (Full)** rows ta
 text and are unchanged. They are still the answer when the path is built at runtime; these rows are
 for the scene the sheet already declares.
 
+Four more rows take a copy back out of the world again, because the other half of spawning is
+removing, and the mistakes live there:
+
+- **Remove Now** - `queue_free()`, said plainly, with the end-of-frame timing on the row.
+- **Remove After Seconds** - a scene-tree timer with the free hung off it.
+- **Fade Out Then Remove** - a tween, a wait, and the removal after it.
+- **Is Still Here** - the question, for a name the sheet held on to.
+
+A node that wants to hear about its OWN removal uses the shipped **On Exit Tree** trigger, which
+fires as it leaves the tree. That is a lifecycle handler rather than a removal verb, so it stays
+where it is.
+
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Reference tables](#reference-tables)
-4. [Use cases](#use-cases)
-5. [Tips and common mistakes](#tips-and-common-mistakes)
+3. [Removing what you spawned](#removing-what-you-spawned)
+4. [Reference tables](#reference-tables)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -77,6 +90,55 @@ for the scene the sheet already declares.
 - **Nothing here needs the plugin at runtime.** Every row compiles to `instantiate()`, `add_child`,
   `call_deferred`, `randf()` and arithmetic. Uninstall the editor and the game still builds.
 
+## Removing what you spawned
+
+Removing a node in Godot is `queue_free()`. The three removal rows are that call with the wait each
+one does written out beside it, so the only thing you ever have to decide is WHEN.
+
+```
+enemy.queue_free()                                              # now, meaning end of frame
+get_tree().create_timer(2.0).timeout.connect(enemy.queue_free)  # in two seconds
+```
+
+**"Now" means the end of this frame, not this line.** `queue_free()` marks the node and Godot
+deletes it when the frame finishes. The rows after it in the same event still run, and the node is
+still there while they do. That is not a quirk to work around - it is why a sheet can remove a thing
+and then read its position on the very next row without crashing.
+
+**The timer row is safe if the thing is already gone.** Godot drops a signal connection along with
+the object at the far end of it, so something else removing the node first takes the pending free
+with it and the timer fires at nothing.
+
+**The fade row waits, so the event waits.** It walks `modulate:a` down to nothing with a tween,
+awaits the tween, and then removes. Because that wait is a real gap in game time, the row asks
+whether the object is still there before it removes it, and the line that asks is part of the row's
+own code rather than something added quietly.
+
+### The guard, and why you can see it
+
+A name that outlives the line that set it can name nothing at all by the time a later row says it.
+There are exactly two of those in a sheet: a **variable typed as a node** (it survives from frame to
+frame) and a **copy a spawn row minted in a different event**. When a removal row's object is one of
+those, the compiler writes the check Godot's own answer calls for:
+
+```
+if is_instance_valid(boss):
+	boss.queue_free()
+```
+
+**And the row shows it.** The guard line is echoed at the end of the row, in the script editor's own
+colours, exactly as a variable row echoes its declaration. It is never a hidden wrapper: the sheet
+shows the line the file holds, so you can see which name asked for it and delete the reason if you
+would rather not have it.
+
+**It stands down when you already asked.** Put an Is Still Here (or the shipped Object Still Exists)
+condition on the event and the compiler writes nothing extra - your question is the one that gets
+written, once. That is also what makes a file guarded by hand open and save back byte for byte.
+
+**Nothing else is guarded.** `self` cannot dangle, a `$Path` re-resolves every time it is read, and
+every row outside these three is left exactly as it was. Emitted code does not change under your
+feet.
+
 ## Reference tables
 
 | Name | What it does | Ships as |
@@ -88,6 +150,10 @@ for the scene the sheet already declares.
 | Random Place Along Path | Gives a random point along a Path2D's curve. | `({path}.global_position + {path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
 | Random Place Inside Shape | Gives a random point inside a collision shape. | `({shape}.global_position + …)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
+| Remove Now | Removes the object at the end of this frame. | `{object}.queue_free()` |
+| Remove After Seconds | Removes the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
+| Fade Out Then Remove | Fades the object out, waits, then removes it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
+| Is Still Here | True while the object has not been removed. | `is_instance_valid({object})` |
 
 ## Use cases
 
@@ -150,6 +216,20 @@ the spawner is - a muzzle flash, a shield, a shadow that belongs on the spot.
 **17. A trail of copies.** Spawn a fading mark every few frames at `global_position`, under a Marks
 layer node so the trail is easy to clear later.
 
+**18. A bullet that cleans itself up.** One Remove After Seconds row on `self` in the bullet's own
+On Ready event. No lifetime counter, no per-frame check, and nothing left behind if it hits first.
+
+**19. A corpse that fades.** Fade Out Then Remove on `self` in the death event, over half a second.
+The event waits for the fade, so anything after it runs once the body is gone.
+
+**20. Removing a copy from a later event.** Spawn the boss in one event and store nothing; say its
+name in a Remove Now row in another and the guard appears on the row, because that name has had a
+frame to stop meaning anything.
+
+**21. Clearing a stored reference.** A sheet variable typed `Node2D` holding the current target: a
+Remove Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
+variable honest afterwards.
+
 ### Other use cases
 
 **A ghost replay.** Spawn a copy of the player scene as `ghost`, disable its input flag on the next row, and let a recorded path drive it.
@@ -188,5 +268,17 @@ layer node so the trail is easy to clear later.
   the row gives the path's own position. Draw the curve first.
 - **Spawning every tick fills the tree fast.** Put a cooldown, a counter or a Once At A Time condition
   above the row - a spawn is cheap, ten thousand of them are not.
-- **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody freed;
-  a Free Node row on the copy's own death trigger is usually the whole answer.
+- **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody
+  freed; a Remove Now row on the copy's own death trigger is usually the whole answer.
+- **A removed node is still there for the rest of the frame.** `queue_free()` queues; it does not
+  delete. A row after the removal that reads the object still works, and a check that expects it to
+  be gone in the same frame does not.
+- **Do not free the same node twice.** The second call errors. Ask Is Still Here first, or let the
+  guard do it by naming a stored reference rather than a path.
+- **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
+  you want the event to carry straight on, use Remove After Seconds instead.
+- **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
+  CanvasItem. A plain Node has no transparency to walk.
+- **A guard you did not ask for is telling you something.** It appears only on a name that can
+  already be gone. If you would rather not see it, keep the removal in the event that made the copy,
+  or ask Is Still Here yourself.

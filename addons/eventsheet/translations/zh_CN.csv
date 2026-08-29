@@ -5322,3 +5322,21 @@ random place off a screen edge (+{margin}),屏幕边缘外的随机位置 (+{mar
 the new copy,新副本
 Recognisers,识别表
 the spellings a lift knows,读取时认得的写法
+Remove,移除
+Remove Now,立即移除
+Remove After Seconds,若干秒后移除
+Fade Out Then Remove,淡出后移除
+Is Still Here,仍然存在
+"Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.",把对象从游戏中移除。Godot 会在本帧结束时删除它，而不是在这一行，所以同一事件中后面的行仍会执行，期间对象依然存在。用于游戏已经用完的东西：捡起的道具、被击败的敌人、播放完的特效。
+"Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.",在若干秒后移除对象，期间事件继续往下走。等待用的是场景树计时器，所以这一行不会阻塞任何东西。即使别的地方先移除了对象也很安全：Godot 会连同对象一起丢掉计时器的连接，等待最后什么也不会触发。
+"Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly.",用若干秒把对象的透明度降到零，然后移除它。事件会在这里等待，所以后面的行要等淡出结束才执行。因为这个等待是游戏时间里真实的空档，这一行会在移除前先问对象是否还在，而发问的那一行就写在表里，不是被悄悄加上去的。
+"True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves.",只要对象还没有被移除就为真。在触碰任何跨帧保存下来的东西之前先问一句：存在变量里的节点，或者更早的事件里生成行做出的副本。想知道自己被移除的节点，请改用 On Exit Tree 触发器，它会在节点离开时触发。
+remove [i]{object}[/i] now,立即移除 [i]{object}[/i]
+remove [i]{object}[/i] after {seconds}s,{seconds} 秒后移除 [i]{object}[/i]
+"fade [i]{object}[/i] out over {seconds}s, then remove it",用 {seconds} 秒淡出 [i]{object}[/i]，然后移除
+[i]{object}[/i] is still here,[i]{object}[/i] 仍然存在
+"The object to remove, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",要移除的对象，写成表达式 - 生成行给副本起的名字、保存着节点的变量，或者节点路径。留作 self 表示这个节点自己。
+How many seconds to wait before removing the object. The event carries on immediately; only the removal waits.,在移除对象之前等待多少秒。事件会立刻继续，只有移除在等。
+"How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",淡出要花多少秒。事件会等它，所以后面的行在淡出结束后才执行。
+"Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.",把一样东西从世界里拿走：马上、等一会儿，或者淡出之后。每一行都是普通的 queue_free，并且都说明调用发生在什么时候。
+"This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",这个名字可能已经不存在了，所以编译器会在这一行上方写下这行代码。点击可在代码面板中打开。

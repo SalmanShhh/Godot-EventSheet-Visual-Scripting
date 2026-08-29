@@ -5322,3 +5322,21 @@ random place off a screen edge (+{margin}),화면 가장자리 밖의 무작위 
 the new copy,새 사본
 Recognisers,인식기
 the spellings a lift knows,읽어들이기가 아는 표기들
+Remove,제거
+Remove Now,지금 제거
+Remove After Seconds,몇 초 후 제거
+Fade Out Then Remove,페이드 아웃 후 제거
+Is Still Here,아직 있음
+"Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.","오브젝트를 게임에서 제거합니다. Godot는 이 줄이 아니라 이 프레임의 끝에서 삭제하므로, 같은 이벤트의 이후 행은 계속 실행되고 그동안 오브젝트는 아직 남아 있습니다. 주운 아이템, 쓰러뜨린 적, 다 쓴 이펙트처럼 게임이 다 쓴 것에 사용하세요."
+"Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.","몇 초 뒤에 오브젝트를 제거하고, 그동안 이벤트는 계속 진행합니다. 대기는 씬 트리 타이머라서 이 줄은 아무것도 막지 않습니다. 다른 무언가가 오브젝트를 먼저 제거해도 안전합니다. Godot가 오브젝트와 함께 타이머 연결도 끊기 때문에, 대기는 아무 곳에도 도달하지 않고 끝납니다."
+"Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly.","몇 초에 걸쳐 오브젝트의 투명도를 0까지 낮춘 뒤 제거합니다. 이벤트는 여기서 기다리므로, 이후 행은 페이드가 끝난 다음에 실행됩니다. 그 기다림은 게임 시간의 진짜 공백이라서, 제거하기 전에 오브젝트가 아직 있는지 묻고, 그 묻는 줄은 시트에 적혀 있습니다. 조용히 덧붙는 것이 아닙니다."
+"True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves.","오브젝트가 아직 제거되지 않은 동안 참입니다. 시트가 프레임을 넘어 들고 있던 것, 즉 변수에 담아 둔 노드나 이전 이벤트의 스폰 행이 만든 복사본을 건드리기 전에 물어보세요. 자기 자신의 제거를 알고 싶은 노드는 대신 On Exit Tree 트리거를 씁니다. 이것은 빠져나갈 때 발생합니다."
+remove [i]{object}[/i] now,[i]{object}[/i] 지금 제거
+remove [i]{object}[/i] after {seconds}s,{seconds}초 후 [i]{object}[/i] 제거
+"fade [i]{object}[/i] out over {seconds}s, then remove it",[i]{object}[/i] 를 {seconds}초 동안 페이드 아웃한 뒤 제거
+[i]{object}[/i] is still here,[i]{object}[/i] 가 아직 있음
+"The object to remove, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.","제거할 대상을 식으로 지정합니다. 스폰 행이 복사본에 붙인 이름, 노드를 담은 변수, 또는 노드 경로입니다. 이 노드 자신이면 self 그대로 두세요."
+How many seconds to wait before removing the object. The event carries on immediately; only the removal waits.,"오브젝트를 제거하기까지 몇 초를 기다릴지. 이벤트는 곧바로 진행되고, 기다리는 것은 제거뿐입니다."
+"How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",페이드에 걸리는 초. 이벤트가 이를 기다리므로 이후 행은 페이드가 끝난 뒤 실행됩니다.
+"Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.","무언가를 세계에서 빼내기. 지금 바로, 기다린 뒤, 또는 페이드한 뒤. 모든 행은 평범한 queue_free이며, 각각 호출이 언제 일어나는지 말해 줍니다."
+"This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",이 이름은 이미 사라졌을 수 있어서 컴파일러가 이 줄을 행 위에 씁니다. 클릭하면 코드 패널에서 열립니다.

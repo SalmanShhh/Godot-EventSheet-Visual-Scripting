@@ -191,7 +191,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `find_prev_valid_focus` | [Focus Previous](ace:Core/FocusPrevious) | UI | Vocabulary |
 | `find_world_2d` | [Set Physics Active (2D)](ace:Core/PhysicsSetSpaceActive2D) | Physics Server | Vocabulary |
 | `find_world_3d` | [Set Physics Active (3D)](ace:Core/PhysicsSetSpaceActive3D) | Physics Server | Vocabulary |
-| `finished` | [Play Sound At (2D)](ace:Core/PlaySoundAt) | Audio | Vocabulary |
+| `finished` | [Fade Out Then Remove](ace:Core/FadeOutAndRemove) | Remove | Vocabulary |
 | `flip_h` | [Set Mirrored](ace:Core/SetFlipH) | General Actions | Vocabulary |
 | `flip_v` | [Set Flipped](ace:Core/SetFlipV) | Animation | Vocabulary |
 | `float` | [To Decimal](ace:Core/ToDecimal) | Math & Random | Vocabulary |

@@ -35,6 +35,37 @@
   outside one of the four edges in world coordinates. Each is plain GDScript and works in any field
   that takes a position, not only in a spawn row.
 
+### Removing, without leaving ghosts
+
+- **Three removal verbs, all of them `queue_free`, each saying WHEN.** **Remove Now** writes the
+  plain call and teaches the thing people get wrong about it: Godot deletes the node at the END of
+  the frame, not on this line, so the rows after it in the same event still run and the node is
+  still there while they do. **Remove After Seconds** hangs the free off a scene-tree timer, which
+  never blocks and is safe if something else removed the node first - Godot drops the connection
+  along with the object, and the timer fires at nothing. **Fade Out Then Remove** walks `modulate:a`
+  down with a tween, awaits it, and then removes; the event waits for the fade, so everything after
+  it runs once the fade is done. Nothing new is invented for any of them: the emitted code is the
+  same code somebody would write by hand.
+- **The guard is written where it is needed, and shown where it is written.** A removal row whose
+  object is a name that outlives the line that set it - a variable typed as a node, or a copy a
+  spawn row minted in a DIFFERENT event - compiles inside `if is_instance_valid(…):`, which is
+  Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
+  guard line is echoed at the end of the row in the script editor's own colours, exactly as a
+  variable row echoes its declaration, so the sheet shows the line the file holds and you can see
+  which name asked for it. It stands down entirely when the sheet already asked - an **Is Still
+  Here** or **Object Still Exists** condition on the event, or on an enclosing one, is the only
+  question written - which is also what lets a file guarded by hand open and save back byte for
+  byte. `self` and node paths are never guarded, and no row outside these three is touched.
+- **Is Still Here** asks `is_instance_valid` in the sheet's own words, beside the shipped **Object
+  Still Exists** row that writes the same line. A node that wants to hear about its OWN removal
+  still uses the shipped **On Exit Tree** trigger; that is a lifecycle handler, not a removal verb,
+  and it stays where it is.
+- **The two chains people write by hand open as these rows.**
+  `get_tree().create_timer(2.0).timeout.connect(queue_free)` and the one-line tween-then-free
+  spelling are recognised as Remove After Seconds and Fade Out Then Remove, each carrying the
+  author's own spelling so the file saves back unchanged. A tween that fades one node and frees a
+  different one is somebody else's line and keeps the reading it already had.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch
