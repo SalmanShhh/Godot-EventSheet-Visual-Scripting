@@ -35,16 +35,33 @@ param(
 	[switch]$Iterate,
 	[switch]$Force,
 	[switch]$IdentityOnly,
+	[int]$LockTimeoutMinutes = 30,
 	[string]$Godot = $env:GODOT
 )
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
-# THE TREE'S CONTENT IDENTITY: the commit, plus everything the working tree says on top of it -
-# the porcelain status, the full diff against HEAD (staged and unstaged both), and the CONTENT hash
-# of every untracked file, because porcelain reports an untracked file by name only and a name does
-# not change when the file does. One byte anywhere in that set gives a different identity, which is
-# the whole point: the stamp below may only answer for the exact tree it was recorded on.
+# EVENTFORGE_TEST_ONLY IS A SINGLE-TEST FLAG AND MUST NOT REACH A FULL RUN. It is the documented way
+# to run one test, it survives for the rest of a PowerShell session once set, and a shard that
+# inherits it runs that one test and prints the same green verdict the whole suite prints - which
+# then gets STAMPED as this tree's answer. So it is cleared here, before anything is launched, and
+# the person who set it is told rather than left wondering where their single-test run went.
+# -Iterate sets its own value below, after this point.
+if ($env:EVENTFORGE_TEST_ONLY) {
+	"note: EVENTFORGE_TEST_ONLY was set to '$env:EVENTFORGE_TEST_ONLY' - ignoring it; this launcher runs the whole suite."
+	Remove-Item Env:\EVENTFORGE_TEST_ONLY -ErrorAction SilentlyContinue
+}
+# Same reasoning for a shard selector inherited from the caller: the launcher sets this per process.
+Remove-Item Env:\EVENTFORGE_TEST_SHARD -ErrorAction SilentlyContinue
+
+# THE RUN'S IDENTITY: the commit, plus everything the working tree says on top of it - the porcelain
+# status, the full diff against HEAD (staged and unstaged both), and the CONTENT hash of every
+# untracked file, because porcelain reports an untracked file by name only and a name does not change
+# when the file does. It also carries the ENGINE the suite would run in: a verdict is a statement
+# about code AND about the binary that executed it, so swapping Godot builds under an unchanged tree
+# has to miss the stamp rather than inherit the old build's answer. One byte anywhere in that set
+# gives a different identity, which is the whole point: the stamp below may only answer for the exact
+# tree, and the exact engine, it was recorded on.
 function Get-TreeIdentity {
 	$head = & git -C $root rev-parse HEAD 2>$null
 	if (-not $head) { return "" }
@@ -53,6 +70,14 @@ function Get-TreeIdentity {
 		$full = Join-Path $root $untracked
 		if (Test-Path -PathType Leaf $full) { $parts += "$untracked $((Get-FileHash -Algorithm SHA256 $full).Hash)" }
 	}
+	# Path, size and write time rather than a content hash: the engine is a few hundred megabytes and
+	# this runs on every invocation, while those three together separate any two builds a person has.
+	$engine = "engine $Godot"
+	if ($Godot -and (Test-Path -PathType Leaf $Godot)) {
+		$binary = Get-Item $Godot
+		$engine = "engine $($binary.FullName) $($binary.Length) $($binary.LastWriteTimeUtc.ToString('o'))"
+	}
+	$parts += $engine
 	$bytes = [Text.Encoding]::UTF8.GetBytes(($parts -join "`n"))
 	return ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($bytes))).Replace("-", "")
 }
@@ -85,10 +110,20 @@ if (-not $Force -and $identity -and (Test-Path $stampFile)) {
 # produces looks exactly like a real regression. So a run holds this file exclusively and a second
 # invocation waits for it rather than overlapping. The handle dies with the process, so a stale lock
 # needs a holder that is gone: that one is broken with a note.
+#
+# The wait has a CEILING. A run that queues behind a holder which is alive but wedged would otherwise
+# block forever with no output, and a suite that never answers is worse than one that says why.
 $lockPath = Join-Path $root ".godot\suite.lock"
 $lock = $null
 $announced = $false
+$waitedUntil = [datetime]::UtcNow.AddMinutes($LockTimeoutMinutes)
 while (-not $lock) {
+	if ([datetime]::UtcNow -gt $waitedUntil) {
+		"suite lock: still held after $LockTimeoutMinutes minutes - giving up rather than waiting silently."
+		"(the holder's pid is in $lockPath; delete that file once you know the process is gone,"
+		" or pass -LockTimeoutMinutes to wait longer.)"
+		exit 2
+	}
 	# Shared for READING, so a waiting run can say whose lock it is; a second writer is still refused,
 	# which is the exclusion itself.
 	try { $lock = [IO.File]::Open($lockPath, "OpenOrCreate", "ReadWrite", "Read") }
