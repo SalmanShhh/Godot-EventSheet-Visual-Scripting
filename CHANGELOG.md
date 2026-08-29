@@ -595,6 +595,16 @@
   answered by the same function that writes the fix, so the name on the receipt is the name that
   lands.
 
+- **The shipped error reporter registers once, and gives itself back.** The debug-session reporter
+  has always been guarded against arming twice, for the reason stated beside it: every logger hears
+  every error, so duplicates say each failure that many times. Its shipped twin - the one that runs
+  in the build a player is holding - had no such guard. Four instances of one sheet in a scene
+  registered four loggers and reported each failure four times, and nothing ever took one off again,
+  so a level loaded and freed twenty times left twenty dead loggers on the engine for the rest of the
+  process, each of them consulted on every error. There is one now: the first instance to be ready
+  arms it, it comes off the engine when that instance leaves the tree, and the next instance arms it
+  afresh.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be

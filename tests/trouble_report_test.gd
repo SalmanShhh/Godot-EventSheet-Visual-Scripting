@@ -116,7 +116,16 @@ static func _run_emission() -> bool:
 	all_passed = _check("the reporter is a logger the ENGINE gets, not the debugger",
 		built.contains("class __EventSheetsTroubleReporter extends Logger:"), true) and all_passed
 	all_passed = _check("armed with no debugger test at all - a build has no debugger",
-		built.contains("\tOS.add_logger(__trouble)"), true) and all_passed
+		built.contains("\t\tOS.add_logger(__trouble)"), true) and all_passed
+	# Every logger hears every error, so four instances of one sheet must not register four of them
+	# and say each failure four times - and a level loaded and freed twenty times must not leave
+	# twenty dead loggers on the engine.
+	all_passed = _check("only the first instance arms it",
+		built.contains("\tif __EventSheetsTroubleReporter.armed == null:"), true) and all_passed
+	all_passed = _check("and it is given back when that instance leaves the tree",
+		built.contains("\t\t\t\tOS.remove_logger(__trouble)"), true) and all_passed
+	all_passed = _check("leaving the next instance free to arm it afresh",
+		built.contains("\t\t\t\t__EventSheetsTroubleReporter.armed = null)"), true) and all_passed
 	all_passed = _check("each failing line is said once per run",
 		built.contains("\t\tif _said.has(location):"), true) and all_passed
 	all_passed = _check("and the report carries where it happened",
