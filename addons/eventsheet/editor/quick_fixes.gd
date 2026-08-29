@@ -14,9 +14,20 @@ extends RefCounted
 #   a pattern the sheet recognises         -> use the behavior that ships / add the missing half
 #   a variable read but never set          -> declare it
 #
-# Every fix applies through the undo funnel and the check re-runs afterwards, so its
-# disappearance is proven rather than assumed. `fixes_for` is pure: it reads a finding and
-# returns what could be offered, which is what the test pins.
+# Every fix that changes a SHEET applies through the undo funnel and the check re-runs afterwards,
+# so its disappearance is proven rather than assumed. Two of them change the PROJECT instead - adding
+# a control to the Input Map, and recording that this game does not want to be asked about error
+# reports - and those are project settings a person edits in Project ▸ Project Settings; they are
+# named in their own words here rather than pretended into the sheet's undo history.
+#
+# A fix that edits a sheet edits the OPEN one. Several of these findings come off a scan of the whole
+# project, so the file a finding names is usually not the one on screen - and a sheet opened to be
+# fixed would replace the reader's tab without asking, arriving as a read-only preview whose rows are
+# not lifted yet. Double-clicking a finding is what opens its sheet; the chip changes it once it is
+# there.
+#
+# `fixes_for` is pure: it reads a finding and returns what could be offered, which is what the test
+# pins.
 
 ## check id -> the fixes it offers, each {"label", "id"}. The labels are what the row shows on
 ## its chips; `id` is what `apply` dispatches on.
@@ -238,14 +249,28 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 	return {"ok": false, "message": "No fix named %s." % fix_id}
 
 
-## Swaps every plain Log row of the offending sheet for the debug-builds-only one, in ONE undoable
-## edit through the dock's own funnel. The reader is told how many rows moved and what the line reads
-## as afterwards, so the fix leaves a receipt rather than a silence.
+## Swaps every plain Log row of the sheet in front of the reader for the debug-builds-only one, in
+## ONE undoable edit through the dock's own funnel, and says what the lines read as before and after
+## so the swap leaves a receipt rather than a count.
+##
+## IT ONLY EVER TOUCHES THE OPEN SHEET. This finding comes off a text scan of every script in the
+## project, so the file it names is usually not the one on screen; opening it here would replace the
+## reader's tab without asking, and a `.gd` opened that way arrives as a read-only preview whose rows
+## have not been lifted yet - so the swap would find nothing and then blame the author for having
+## written the line by hand. Double-clicking the finding is what opens the sheet; the chip is what
+## changes it once it is there and editable.
 static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
+	var elsewhere: String = "Open %s and swap its Log rows for Log (Debug Builds Only) - double-clicking the finding opens it." % sheet_path.get_file()
 	if dock == null or not dock.has_method("_perform_undoable_sheet_edit"):
-		return {"ok": false, "message": "Open %s and swap its Log rows for Log (Debug Builds Only)." % sheet_path.get_file()}
-	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
-		dock.call("_load_sheet_from_path", sheet_path)
+		return {"ok": false, "message": elsewhere}
+	if not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null or sheet.read_only:
+		return {"ok": false, "message": "%s is still opening - it reads as code until its rows have been lifted. Try again once it has finished." % sheet_path.get_file()}
+	var receipt: Array[Dictionary] = EventSheetShipItDoctor.guard_receipt(sheet)
+	if receipt.is_empty():
+		return {"ok": false, "message": "No plain Log rows in %s - the console line is written by hand, so guard it where it is typed." % sheet_path.get_file()}
 	var guarded: Array[int] = [0]
 	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", "Only log in debug builds",
 		func() -> bool:
@@ -253,7 +278,33 @@ static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
 			return guarded[0] > 0))
 	if not applied:
 		return {"ok": false, "message": "No plain Log rows in %s - the console line is written by hand, so guard it where it is typed." % sheet_path.get_file()}
-	return {"ok": true, "message": "%d row(s) now read \"log … (debug only)\" and compile to if OS.is_debug_build(): print(…) - one Ctrl+Z takes it back." % guarded[0]}
+	return {"ok": true, "message": "%d row(s) guarded. %s - one Ctrl+Z takes it back."
+		% [guarded[0], guard_receipt_line(receipt)]}
+
+
+## The receipt one guard swap leaves: what the first line read as, what it reads as now, and how many
+## others went with it. Shown BEFORE the reader is told the fix worked, because a count on its own is
+## not a receipt - it names no line the reader can go and look at.
+static func guard_receipt_line(receipt: Array[Dictionary]) -> String:
+	if receipt.is_empty():
+		return ""
+	var first: Dictionary = receipt[0]
+	var line: String = "%s → %s" % [str(first.get("before", "")), str(first.get("after", ""))]
+	if receipt.size() > 1:
+		line += ", and %d more like it" % (receipt.size() - 1)
+	return line
+
+
+## True when the sheet this finding names is the one the dock has in front of the reader. A finding
+## with no path at all is about whatever is open, which is how the row-level chips reach it.
+static func _is_the_open_sheet(dock: Variant, sheet_path: String) -> bool:
+	if sheet_path.strip_edges().is_empty():
+		return true
+	var open_path: String = str(dock.get("_current_sheet_path")).strip_edges()
+	if open_path == sheet_path:
+		return true
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	return sheet != null and str(sheet.external_source_path).strip_edges() == sheet_path
 
 
 ## Writes the keys the game asks for and no catalog answers into a ready-to-fill translation CSV, and
@@ -277,10 +328,9 @@ static func _export_missing_keys() -> Dictionary:
 ## every fog and glow row after it changes this scene's own copy rather than the file every scene
 ## loads. One undo step, through the dock's own funnel - the same operation the note row's button runs.
 static func _own_environment(target: String, sheet_path: String, dock: Variant) -> Dictionary:
-	if dock == null or not dock.has_method("give_the_scene_its_own_environment"):
+	if dock == null or not dock.has_method("give_the_scene_its_own_environment") \
+			or not _is_the_open_sheet(dock, sheet_path):
 		return {"ok": false, "message": "Open %s and click the fix on the note under the row." % sheet_path.get_file()}
-	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
-		dock.call("_load_sheet_from_path", sheet_path)
 	if not bool(dock.call("give_the_scene_its_own_environment", target)):
 		return {"ok": false, "message": "%s already takes its own copy of the environment." % sheet_path.get_file()}
 	return {"ok": true, "message": "%s takes its own copy of the environment first - the change stops in this scene." % sheet_path.get_file()}
@@ -293,10 +343,9 @@ static func _own_environment(target: String, sheet_path: String, dock: Variant) 
 static func _extract_to_variable(literal: String, sheet_path: String, dock: Variant) -> Dictionary:
 	if literal.is_empty():
 		return {"ok": false, "message": "That finding names no value to extract."}
-	if dock == null or not dock.has_method("_perform_undoable_sheet_edit"):
+	if dock == null or not dock.has_method("_perform_undoable_sheet_edit") \
+			or not _is_the_open_sheet(dock, sheet_path):
 		return {"ok": false, "message": "Open %s to extract %s." % [sheet_path.get_file(), literal]}
-	if not sheet_path.is_empty() and dock.has_method("_load_sheet_from_path"):
-		dock.call("_load_sheet_from_path", sheet_path)
 	var variable_name: String = EventSheetDoctorTidiness.suggested_variable_name(literal)
 	var moved: Array[int] = [0]
 	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", "Extract to variable",

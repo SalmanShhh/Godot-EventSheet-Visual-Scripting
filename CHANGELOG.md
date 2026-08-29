@@ -625,6 +625,21 @@
   does with it. The doc comment above it also claimed the sheets came from the project index; they
   come from the open tabs, as the code nine lines below always said.
 
+- **"Only log in debug builds" changes the sheet you are looking at, and shows the line it changed.**
+  The finding comes off a text scan of every script in the project, so the file it names is almost
+  never the one on screen - and the chip opened it, which replaced the reader's tab without asking
+  and, for a `.gd` (the default sheet format), arrived as a read-only preview whose rows have not
+  been lifted yet. So the swap found no Log rows, did nothing, and told the reader the console line
+  must have been written by hand. The chip now works on the OPEN sheet and says where to go
+  otherwise, tells a sheet that is still opening apart from one with nothing to guard, and reports
+  what it did as the receipt that was already written for it and never shown: the first line before
+  and after, with the rest counted.
+- **The same rule for the other two fixes that edit a sheet.** Making the environment this scene's
+  own and extracting a repeated number both opened the file they named for the same reasons and with
+  the same two consequences. Both now change the sheet in front of the reader or say where to go.
+  The note at the top of the file no longer claims every fix goes through the sheet's undo funnel
+  either: two of them change a project setting, and they say so in their own words.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
