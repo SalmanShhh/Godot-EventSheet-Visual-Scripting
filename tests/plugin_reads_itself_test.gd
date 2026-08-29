@@ -37,7 +37,7 @@ const SAMPLE_SIZE: int = 40
 ## The share of a file's rows that may say nothing of their own, per role group. Measured on the tree
 ## this gate was written on, as the WORST file in each group, then rounded up a little:
 ##
-##   plugin 2 · workspace 29 · canvas 10 · readings 11 · importer 8 · compiler 0
+##   plugin 2 · workspace 29 · canvas 10 · readings 11 · importer 8 · recognisers 47 · compiler 0
 ##   vocabulary 60 · manual 17 · command tools 20 · pack recipes 97 · everything else 26
 ##
 ## Pack recipes stand out for a reason worth writing down rather than hiding: a pack builder IS a
@@ -50,6 +50,11 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"canvas": 14,
 	"readings": 15,
 	"importer": 12,
+	# Measured like the rest, on the three recogniser families that ship: 47 for the animation
+	# spellings, 39 for the effect ones, 27 for the lighting ones. A family is a TABLE - one
+	# dictionary literal per entry - so most of its rows are literal entries, which is the same
+	# reason a pack recipe sits where it does. Read off the tree, rounded up a little.
+	"recognisers": 48,
 	"compiler": 5,
 	"vocabulary": 65,
 	"manual": 21,

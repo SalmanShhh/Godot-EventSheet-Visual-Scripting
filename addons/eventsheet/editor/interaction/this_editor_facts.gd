@@ -60,6 +60,7 @@ const ROLE_WORDS: Dictionary = {
 	"canvas": ["Canvas", "viewport, row builder, renderer, input"],
 	"readings": ["Readings", "sentence grammar, facts, patterns"],
 	"importer": ["Importer", "open a .gd as events"],
+	"recognisers": ["Recognisers", "the spellings a lift knows"],
 	"compiler": ["Compiler", "events to GDScript"],
 	"vocabulary": ["Vocabulary", "modules, registry, picker"],
 	"manual": ["Manual", "docs dock, search, reference"],
@@ -146,6 +147,14 @@ static func role_for(path: String, source: String) -> String:
 		return "tests"
 	if _extends(source, "EditorPlugin"):
 		return "plugin"
+	# A recogniser family before the folder it lives in: a file whose body is `lift_entries` IS a
+	# table of spellings, the same shape as a pack recipe - one dictionary literal per entry, with
+	# nearly every line a literal. The importer around it is code that reads; this is the list it
+	# reads FROM, and calling the two the same thing measures a table against a ceiling set for
+	# logic. Asked of the file's own text rather than of a list kept here, so a family added
+	# tomorrow is classified the moment it declares the static.
+	if path.contains("/importer/") and source.contains("static func lift_entries("):
+		return "recognisers"
 	if path.contains("/importer/") or path.contains("/foreign"):
 		return "importer"
 	if path.contains("/compiler/"):
