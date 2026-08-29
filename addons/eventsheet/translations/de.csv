@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,Von der Menge ist nur diese übrig
 Leaving,Geht
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"Der Knoten, der geht - der, den der Auslöser diesem Ereignis übergeben hat. ""Wenn die letzte entfernt wird"" füllt das für dich aus."
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.","Die Kopien, die ein Blatt erzeugt hat, gehalten als Godot-Gruppe: beim Eintreten beigetreten, gezählt, mit laut ausgesprochener Regel begrenzt und beantwortet, wenn die letzte geht."
+and %d more scene(s) spawned,und %d weitere erzeugte Szene(n)
+at most %s in %s,höchstens %s in %s
+into %s,in %s
+pooled as %s,gepoolt als %s
+browse the scene,Szene anzeigen
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.","Diese wird durch einen Ausdruck benannt, den das Blatt zur Laufzeit auswertet - es gibt also keine Datei zum Anzeigen."
+%s - shown in the FileSystem dock.,%s - im Dateisystem-Dock angezeigt.
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.","Das hängt einen Knoten in den Baum, während der Physikserver beschäftigt ist - Godot lehnt das ab. Häng ihn stattdessen im nächsten Leerlaufmoment ein."
+Add it on the next idle moment,Im nächsten Leerlaufmoment einhängen
+Use the safe spawn row,Die sichere Spawn-Zeile verwenden
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.","%s wird über Frames hinweg gehalten, und irgendetwas könnte es inzwischen entfernt haben. Frag nach, ob es noch da ist, bevor du darauf zugreifst."
+Guard it,Absichern
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.","Das erzeugt genau die Szene, in der es schon läuft - bei jeder neuen Kopie und ohne irgendeine Bedingung davor. Jede Kopie macht die nächste."
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.","%s wird weiter oben in diesem Ereignis entfernt, und diese Zeile bucht eine Wartezeit darauf. Verschieb die Entfernung unter diese Zeile, oder entferne es stattdessen zeitverzögert."
+Move the removal last,Entfernung nach unten
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","Spawning: %d Skript(e), die Knoten hinzufügen oder entfernen, %d gelesen, %d davon mit etwas, das zur Laufzeit schiefgeht."
+This row is already added on the next idle moment.,Diese Zeile hängt bereits im nächsten Leerlaufmoment ein.
+Guard %s,%s absichern
+This event already asks whether it is still here.,"Dieses Ereignis fragt bereits, ob es noch da ist."
+The removal is already the last row of this event.,Die Entfernung ist bereits die letzte Zeile dieses Ereignisses.
+"The removal runs last now, after everything that reads it.","Die Entfernung läuft jetzt zuletzt, nach allem, was darauf zugreift."

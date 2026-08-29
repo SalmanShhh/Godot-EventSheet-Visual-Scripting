@@ -39,6 +39,12 @@ func handle(action: String) -> void:
 	# a colon. All of them mean the same gesture: the other editor of that fact - the Replication
 	# panel, the Inspector - is over there, so open the scene and select the node. Asked of the band
 	# model rather than listed here, so a scene band a later pass adds arrives already clickable.
+	# The spawns band is about a FILE rather than about a node of a scene, so its gesture is the one
+	# a file wants: show it where it lives. Answered before the loop below because it is the one scene
+	# band whose reference is a scene path on its own, with no node inside it to select.
+	if action.begins_with("%s:" % EventSheetHeadBands.BAND_SPAWNS):
+		browse_to_scene(action.trim_prefix("%s:" % EventSheetHeadBands.BAND_SPAWNS))
+		return
 	for scene_band: Variant in EventSheetHeadBands.SCENE_BANDS.keys():
 		if not action.begins_with("%s:" % scene_band):
 			continue
@@ -71,6 +77,24 @@ func handle(action: String) -> void:
 			_dock._attach_behavior_to_selection()
 		"add":
 			open_add_menu()
+
+
+## Shows a spawned scene where it lives, in Godot's own FileSystem dock. Browsing rather than
+## opening on purpose: a spawns band lists several scenes and a click meant "which file is that" far
+## more often than it meant "close what I am editing". A band with no file behind it - the one that
+## counts the scenes it did not name, or a scene the sheet builds a path for at run time - says so
+## rather than doing nothing quietly.
+func browse_to_scene(scene_path: String) -> void:
+	var path: String = scene_path.strip_edges()
+	if path.is_empty():
+		_dock._set_status(EventSheetL10n.translate(
+			"This one is named by an expression the sheet works out as it runs, so there is no file to show."))
+		return
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_interface: Object = Engine.get_singleton("EditorInterface")
+		if editor_interface.has_method("select_file"):
+			editor_interface.call("select_file", path)
+	_dock._set_status(EventSheetL10n.translate("%s - shown in the FileSystem dock.") % path.get_file())
 
 
 ## Opens the scene a replication fact lives in and selects the node that holds it, so Godot's

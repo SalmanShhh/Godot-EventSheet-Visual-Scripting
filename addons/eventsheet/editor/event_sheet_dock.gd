@@ -5686,6 +5686,15 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetMultiplayerFindings.FIX_OWNER_GROUP:
 			_wrap_event_in_owner_group(note_meta.get("variable_note_event", null) as EventRow)
 			return true
+		EventSheetSpawnFindings.FIX_DEFER_THE_ADD:
+			_defer_the_add(note_meta)
+			return true
+		EventSheetSpawnFindings.FIX_GUARD_IT:
+			_guard_the_reference(note_meta, subject)
+			return true
+		EventSheetSpawnFindings.FIX_REMOVE_LAST:
+			_move_the_removal_last(note_meta)
+			return true
 		EventSheetEffectFindings.FIX_PICK_DIAL:
 			_repick_effect_dial(note_meta)
 			return true
@@ -5693,6 +5702,113 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 			give_the_node_its_own_material(subject)
 			return true
 	return false
+
+
+## "Add it on the next idle moment" / "Use the safe spawn row". Godot refuses to parent a node while
+## the physics server is flushing its queries, which is most of what a collision callback is - so this
+## writes the deferred spelling of the very same line. A verbatim block is respelled in place; a spawn
+## row is swapped for the deferred row standing beside it, which takes the same parameters and admits
+## the deferral in its own sentence.
+##
+## RECEIPT FIRST: the status line says the line before and the line after, and the whole thing is one
+## undo step through the funnel every other mutation takes. The row is found by its lane and slot
+## rather than held across that funnel, which replaces resources as it commits.
+func _defer_the_add(note_meta: Dictionary) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var slot: int = int(note_meta.get("variable_note_index", -1))
+	if _current_sheet == null or event_row == null or slot < 0:
+		return
+	var lane: Array = event_row.conditions if str(note_meta.get("variable_note_lane", "")) \
+		== "condition" else event_row.actions
+	if slot >= lane.size():
+		return
+	var twin: String = str(note_meta.get("variable_note_to", "")).strip_edges()
+	var receipt: Dictionary = {"line": ""}
+	if not _perform_undoable_sheet_edit(
+			EventSheetL10n.translate("Add it on the next idle moment"), func() -> bool:
+				var row: Resource = lane[slot] as Resource
+				if row is RawCodeRow:
+					var block: RawCodeRow = row as RawCodeRow
+					var written: String = EventSheetSpawnFindings.deferred_spelling(block.code)
+					if written == block.code:
+						return false
+					receipt["line"] = EventSheetSpawnFindings.respell_receipt(
+						_parenting_line(block.code), _parenting_line(written))
+					block.code = written
+					return true
+				if twin.is_empty() or row == null:
+					return false
+				receipt["line"] = EventSheetSpawnFindings.respell_receipt(
+					str(row.get("ace_id")), twin)
+				row.set("ace_id", twin)
+				# The baked template is the row's own copy of the spelling it compiles through, and it
+				# is the OLD spelling. Clearing it is what lets the deferred row's own template answer.
+				row.set("codegen_template", "")
+				return true):
+		_set_status(EventSheetL10n.translate("This row is already added on the next idle moment."))
+		return
+	_set_status(str(receipt["line"]))
+
+
+## The one line of a block that parents a node - what the receipt above shows on each side of the
+## arrow, so the reader sees the change rather than the whole block twice.
+func _parenting_line(code: String) -> String:
+	for line: String in code.split("\n"):
+		if EventSheetSpawnFindings.parents_a_node(line) \
+				or line.contains(EventSheetSpawnFindings.DEFERRED_ADD):
+			return line.strip_edges()
+	return code.strip_edges()
+
+
+## "Guard it". A node kept in a variable across frames may have been removed by anything since, and
+## Godot's answer is `is_instance_valid`. This adds that question to the event as an ORDINARY
+## condition row - visible, editable, deletable, a plain `if` on disk - rather than as a wrapper the
+## compiler adds behind the row, which is the same rule the removal guard states about itself.
+func _guard_the_reference(note_meta: Dictionary, subject: String) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var name_text: String = subject.strip_edges()
+	if _current_sheet == null or event_row == null or not name_text.is_valid_identifier():
+		return
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Guard %s") % name_text,
+			func() -> bool:
+				for entry: Variant in event_row.conditions:
+					var existing: ACECondition = entry as ACECondition
+					if existing != null and existing.ace_id == EventSheetSpawnFindings.GUARD_ACE_ID:
+						return false
+				var guard: ACECondition = ACECondition.new()
+				guard.provider_id = "Core"
+				guard.ace_id = EventSheetSpawnFindings.GUARD_ACE_ID
+				guard.params = {EventSheetSpawnFindings.GUARD_PARAM: name_text}
+				# In FRONT of the questions already there: a guard asked after something has already
+				# reached into the name is a guard that ran too late.
+				event_row.conditions.insert(0, guard)
+				return true):
+		_set_status(EventSheetL10n.translate("This event already asks whether it is still here."))
+		return
+	_set_status(EventSheetSpawnFindings.respell_receipt(name_text,
+		"is_instance_valid(%s)" % name_text))
+
+
+## "Move the removal last". A row that removes a node and a later row in the same event that books a
+## timer or a tween against it are in the wrong order, and the order is the whole of the bug: the
+## removal is marked at once and the booking is then made against something on its way out. This puts
+## the removal at the end of the event, where everything else has already run.
+func _move_the_removal_last(note_meta: Dictionary) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var slot: int = int(note_meta.get("variable_note_index", -1))
+	if _current_sheet == null or event_row == null or slot < 0:
+		return
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Move the removal last"),
+			func() -> bool:
+				if slot >= event_row.actions.size() or slot == event_row.actions.size() - 1:
+					return false
+				var moved: Variant = event_row.actions[slot]
+				event_row.actions.remove_at(slot)
+				event_row.actions.append(moved)
+				return true):
+		_set_status(EventSheetL10n.translate("The removal is already the last row of this event."))
+		return
+	_set_status(EventSheetL10n.translate("The removal runs last now, after everything that reads it."))
 
 
 ## "Make the effect this node's own". The rows turn dials on a material file other nodes wear, so

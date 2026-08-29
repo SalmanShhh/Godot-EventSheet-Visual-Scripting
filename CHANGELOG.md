@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+### What a sheet spawns, and the four crashes found before the game runs
+
+- **The head says what this sheet puts into the world.** A new **spawns** band per scene, above the
+  first event, read back out of the sheet's own rows: the scene a spawn row names, the crowd and cap
+  a crowd row puts on it, and the pool an Object Pool row takes it from. It is joined once when the
+  sheet opens with what the attached scene already says - the scenes a MultiplayerSpawner in it may
+  make - through the very index the "spawned by" band beside it reads, so nothing new is scanned. A
+  scene with neither cap nor pool reads as its own name and nothing more, because that is what the
+  absence of a cap means. The band scale law does the rest: the head names what fits and counts the
+  remainder on one line, so a sheet that spawns twenty things still has a head you can read. Clicking
+  a band shows that scene in the FileSystem dock. Hand-written spawning is on the band too, because
+  the band is read off the emitted line rather than off a row's name.
+- **Four spawning mistakes, found by reading the sheet.** A new **Spawning** section in the Doctor,
+  registered through the same public seam a pack uses, and every one of its findings is also said in
+  place: an amber note under the row that has it, with its one click at the right edge.
+  - **A node added while physics is busy.** Godot refuses to parent a node while the physics server
+	is flushing, which is most of what a collision callback is. One click respells it: a verbatim
+	line becomes `call_deferred("add_child", …)` in place, and a Spawn A Copy row is swapped for
+	Spawn A Copy Safely, which takes the same parameters. The status line shows the line before and
+	the line after, and the change is one undo step.
+  - **A reference that may already be gone.** A node kept in a variable that this sheet also removes
+	somewhere, reached into by a row that never asks. "Guard it" adds an Is Still Here condition to
+	the event - an ordinary row you can see, edit and delete, and a plain `if` on disk. The three
+	removal rows are never noted, because the compiler already writes their guard.
+  - **A scene that spawns itself.** Reported as an error, by reachability rather than by matching
+	text: only a spawn of this sheet's own scene that is reached unconditionally when a copy is
+    created. A spawn of the same scene under a condition is a game, not a loop. It carries no repair,
+    because the answer is a decision about the game.
+  - **Freed, and still booked.** A removal, and a later row in the same event that hangs a timer or a
+    tween on the very node it removed. "Move the removal last" puts it after everything that reads
+    it, and the note names removing after a delay as the other way.
+- Each check is pinned twice - on a sheet that has the bug and on the sheet beside it that does not -
+  so neither a check that only fires nor one that never does can pass. Run over this repository's own
+  showcases and packs with no ceiling on it, the four report five things and all five are real:
+  `add_child` inside `_physics_process` in three generated showcases, and a behaviour that frees the
+  host it goes on reading afterwards.
+- **The project sweep is SAMPLED, and says so.** Reading a script's rows means opening it as a sheet,
+  which costs about half a second, so the section pre-reads the text per FUNCTION - the two words a
+  rule needs inside one body, not merely somewhere in the file - ranks what survives by how much its
+  own text says it could earn, and opens the strongest few under a count and a wall clock, the way
+  the Interop section already does. Its summary line says how many candidates there were AND how many
+  were read, so a sampled run reads as a partial one rather than as a clean bill of health. The notes
+  on a sheet's own rows are never sampled: they are derived from that one sheet whenever the canvas
+  rebuilds, so the sheet in front of a reader is always fully checked.
+
 ### Spawning, said in sentences
 
 - **A spawn is a sentence with a name in it.** **Spawn A Copy** makes one copy of a scene, adds it

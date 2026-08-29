@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,В толпе остался только этот
 Leaving,Уходит
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"Уходящий узел - тот, который триггер передал этому событию. ""Когда убран последний"" заполняет это за вас."
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.","Копии, созданные листом, хранимые как группа Godot: вступают на входе, считаются, ограничиваются вслух названным правилом и получают ответ, когда уходит последняя."
+and %d more scene(s) spawned,и ещё %d сцен(ы) порождается
+at most %s in %s,не более %s в %s
+into %s,в %s
+pooled as %s,в пуле как %s
+browse the scene,показать сцену
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.","Она задана выражением, которое лист вычисляет во время работы, поэтому показывать нечего."
+%s - shown in the FileSystem dock.,%s - показан в доке файловой системы.
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.","Здесь узел добавляется в дерево, пока занят сервер физики, и Godot это отклоняет. Добавьте его в ближайший свободный момент."
+Add it on the next idle moment,Добавить в ближайший свободный момент
+Use the safe spawn row,Использовать безопасную строку появления
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.","%s хранится между кадрами, и что угодно могло его уже удалить. Спросите, здесь ли он ещё, прежде чем к нему обращаться."
+Guard it,Защитить
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.","Здесь порождается та же сцена, в которой это уже работает - при каждом создании копии и без единого условия. Каждая копия делает следующую."
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.","%s удаляется выше в этом событии, а эта строка бронирует ожидание для него. Перенесите удаление ниже этой строки или удаляйте с задержкой."
+Move the removal last,Переместить удаление в конец
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","Порождение: %d скрипт(ов), добавляющих или удаляющих узлы, %d прочитано, %d из них с тем, что сломается во время выполнения."
+This row is already added on the next idle moment.,Эта строка уже добавляется в ближайший свободный момент.
+Guard %s,Защитить %s
+This event already asks whether it is still here.,"Это событие уже спрашивает, здесь ли он ещё."
+The removal is already the last row of this event.,Удаление уже последняя строка этого события.
+"The removal runs last now, after everything that reads it.","Удаление теперь выполняется последним, после всего, что его читает."

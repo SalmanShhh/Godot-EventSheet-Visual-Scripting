@@ -29,6 +29,7 @@ const BAND_AUTOLOAD: String = "autoload"
 const BAND_HOST: String = "host"
 const BAND_SYNC: String = "sync"
 const BAND_SPAWNED: String = "spawned"
+const BAND_SPAWNS: String = "spawns"
 const BAND_LIT_BY: String = "lit_by"
 const BAND_SHADOWS: String = "shadows"
 const BAND_ENVIRONMENT: String = "environment"
@@ -51,7 +52,7 @@ const CHAIN_LEAD_PARAM: String = "animation"
 ## is the order a reader recites the head in.
 const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
-	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED,
+	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_SPAWNS,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
 	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
@@ -63,6 +64,7 @@ const ORDER: PackedStringArray = [
 const SCENE_BANDS: Dictionary = {
 	BAND_SYNC: "synchronizers",
 	BAND_SPAWNED: "spawned_by",
+	BAND_SPAWNS: "spawns",
 	BAND_LIT_BY: "lit_by",
 	BAND_SHADOWS: "shadow_facts",
 	BAND_ENVIRONMENT: "environment",
@@ -83,6 +85,7 @@ const LEADERS: Dictionary = {
 	BAND_HOST: "host",
 	BAND_SYNC: "keeps in step",
 	BAND_SPAWNED: "spawned by",
+	BAND_SPAWNS: "spawns",
 	BAND_LIT_BY: "lit by",
 	BAND_SHADOWS: "shadows",
 	BAND_ENVIRONMENT: "environment",
@@ -280,11 +283,16 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## of the file they came from. Empty for a sheet no scene runs, which is why nothing about
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
-	var facts: Dictionary = {"synchronizers": [], "spawned_by": [],
+	var facts: Dictionary = {"synchronizers": [], "spawned_by": [], "spawns": [],
 		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [], "transform": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
+	# And what it PUTS INTO the world: one band per scene this sheet spawns, with the cap and the pool
+	# the sheet's own rows put on it, and a count of the rest. The rows are already in memory and the
+	# scene side is the replication index the "spawned by" band above reads, so this is a join over
+	# two answers somebody else already paid for rather than a scan of its own.
+	facts["spawns"] = EventSheetSpawnFacts.bands(sheet)
 	# The lighting the scene already has: one band per light, the occluders that can block
 	# their shadows, and the environment resource the scene holds (and who else holds it).
 	facts["lit_by"] = EventSheetSceneLightingFacts.lit_by(source_path)
@@ -375,6 +383,8 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("Replication panel…")
 		BAND_SPAWNED:
 			return EventSheetL10n.translate("select the spawner")
+		BAND_SPAWNS:
+			return EventSheetL10n.translate("browse the scene")
 		BAND_LIT_BY, BAND_SHADOWS:
 			return EventSheetL10n.translate("select the light")
 		BAND_ENVIRONMENT, BAND_EFFECT:

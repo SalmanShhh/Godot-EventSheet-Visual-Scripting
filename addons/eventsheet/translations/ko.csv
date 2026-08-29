@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,무리에 남은 것은 이것뿐
 Leaving,떠나는 것
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"떠나는 노드 - 트리거가 이 이벤트에 넘겨준 것입니다. ""마지막 하나가 사라졌을 때""가 대신 채워 줍니다."
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.","시트가 생성한 사본들을 Godot 그룹으로 보관합니다. 들어올 때 가입하고, 세고, 방침을 소리 내어 말한 채 상한을 두고, 마지막 하나가 떠날 때 응답합니다."
+and %d more scene(s) spawned,그 외 %d개의 씬을 생성
+at most %s in %s,"최대 %s, %s 안에서"
+into %s,%s(으)로
+pooled as %s,%s(으)로 풀링
+browse the scene,씬 보기
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.",이것은 시트가 실행 중에 계산하는 식으로 지정되므로 보여줄 파일이 없습니다.
+%s - shown in the FileSystem dock.,%s - 파일시스템 독에 표시했습니다.
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.",물리 서버가 처리 중일 때 노드를 트리에 추가하고 있어 Godot이 이를 거부합니다. 다음 유휴 시점에 추가하세요.
+Add it on the next idle moment,다음 유휴 시점에 추가
+Use the safe spawn row,안전한 생성 행 사용
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.","%s은(는) 프레임을 넘어 유지되며, 그사이 무언가가 제거했을 수 있습니다. 접근하기 전에 아직 있는지 확인하세요."
+Guard it,확인 추가
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.","이것은 자신이 이미 실행 중인 씬을, 복사본이 만들어질 때마다 아무 조건 없이 생성합니다. 복사본이 또 복사본을 만듭니다."
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.","%s은(는) 이 이벤트의 위쪽에서 제거되는데, 이 행은 그것에 대해 대기를 예약합니다. 제거 행을 이 행 아래로 옮기거나, 지연 후 제거하세요."
+Move the removal last,제거 행을 맨 뒤로
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","생성: 노드를 추가하거나 제거하는 스크립트 %d개, 그중 %d개를 읽었고 %d개에 실행 중 문제가 생길 부분이 있습니다."
+This row is already added on the next idle moment.,이 행은 이미 다음 유휴 시점에 추가됩니다.
+Guard %s,%s에 확인 추가
+This event already asks whether it is still here.,이 이벤트는 이미 아직 있는지 확인하고 있습니다.
+The removal is already the last row of this event.,제거 행은 이미 이 이벤트의 마지막 행입니다.
+"The removal runs last now, after everything that reads it.",제거 행은 이제 그것을 읽는 모든 행 뒤에 마지막으로 실행됩니다.

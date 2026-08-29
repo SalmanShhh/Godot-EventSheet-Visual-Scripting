@@ -56,9 +56,11 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 2. [Core concepts](#core-concepts)
 3. [Removing what you spawned](#removing-what-you-spawned)
 4. [The crowd](#the-crowd)
-5. [Reference tables](#reference-tables)
-6. [Use cases](#use-cases)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
+6. [The four things that go wrong](#the-four-things-that-go-wrong)
+7. [Reference tables](#reference-tables)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -235,6 +237,71 @@ groups at that moment**, which is why "the crowd is down to just the one that is
 The shipped **On Group Emptied** condition asks the same question a different way - on a per-frame
 trigger, by remembering last tick's count. It is unchanged and still the answer when you want the
 check to ride an existing tick. This trigger needs neither the tick nor the memory.
+
+## What the sheet says it spawns
+
+A sheet that spawns has its most important fact buried halfway down it: the scenes it makes copies
+of are one parameter at a time, and the cap that keeps the count sane is buried beside them. The
+head of the sheet says it instead, one **spawns** band per scene, above the first event:
+
+```
+spawns   enemy.tscn - at most 12 in enemies
+spawns   bullet.tscn - pooled as shots
+spawns   coin.tscn
+spawns   and 3 more scene(s) spawned
+```
+
+Nothing on those bands was authored. Each one is read back out of the sheet's own rows - the scene a
+spawn row names, the crowd and cap a crowd row puts on it, the pool an Object Pool row takes it from
+- joined once when the sheet opens with what the attached scene says, which is any scene a
+MultiplayerSpawner in it is allowed to make. A scene with neither a cap nor a pool reads as its own
+name and nothing more, because "no cap" is what the absence of a cap means.
+
+The last line is the band scale law: the head names what fits and counts the rest, so a sheet that
+spawns twenty things still has a head you can read. Clicking a band shows that scene in the
+FileSystem dock; the counting line has no file behind it, and says so.
+
+Hand-written spawning is on the band too. An opened `.gd` whose lines read
+`var b = Bullet.instantiate()` grows the same band as a picked row, because the band is read off the
+line rather than off a row's name.
+
+## The four things that go wrong
+
+Four spawning mistakes are silent in the editor and loud at run time. The Doctor has a **Spawning**
+section for them, and each one is also said in place - an amber note under the very row that has it,
+with its one click at the right edge.
+
+The notes under your rows are complete: they are worked out from the sheet you are looking at, every
+time the canvas rebuilds. The Doctor's project-wide section is a SAMPLE, because reading a script's
+rows means opening it as a sheet and that costs about half a second each. It pre-reads the text,
+ranks the candidates by how much their own text says they could earn, and opens the strongest few -
+and its summary line says how many candidates there were and how many were read, so a sampled run
+never reads as a clean bill of health.
+
+**A node added while physics is busy.** Godot refuses to add a child while the physics server is
+flushing its queries, which is most of what a collision callback is, and the error names a line
+nobody was looking at. Any parenting inside `_physics_process`, a body callback or an area callback
+earns the note. One click respells it: a verbatim line becomes `call_deferred("add_child", …)` in
+place, and a Spawn A Copy row is swapped for Spawn A Copy Safely, which takes the same parameters.
+The status line shows the line before and the line after, and the whole thing is one undo step.
+
+**A reference that may already be gone.** A node kept in a variable outlives the frame that put it
+there, and Godot's answer is `is_instance_valid`. The note appears on a stored node this sheet also
+removes somewhere - the sheet's own word that the reference can really be dangling - and only where
+nothing above the row has already asked. "Guard it" adds an Is Still Here condition to the event: an
+ordinary condition row you can see, edit and delete, and a plain `if` on disk. The three removal
+rows are never noted, because the compiler already writes the guard for them.
+
+**A scene that spawns itself.** A scene whose own sheet spawns that same scene when a copy is
+created, with nothing in the way, doubles every time the event is reached. That is a hang rather
+than an error, so there is no line to point at afterwards. It is reported as an error and carries no
+repair, because the answer is a decision about the game. A spawn of the same scene under a condition
+- a boss that splits when it is hit - is a game, and is never reported.
+
+**Freed, and still booked.** A row that removes a node and a later row in the same event that hangs a
+timer or a tween on it are in the wrong order: the removal is marked at once, and the wait is then
+booked against something on its way out. "Move the removal last" puts it after everything that reads
+it; removing after a delay instead is the other way, and the note says so.
 
 ## Reference tables
 

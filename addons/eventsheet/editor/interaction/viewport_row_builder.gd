@@ -107,6 +107,7 @@ const FINDINGS_MULTIPLAYER := "multiplayer"
 const FINDINGS_LIGHTING := "lighting"
 const FINDINGS_EFFECTS := "effects"
 const FINDINGS_PERFORMANCE := "performance"
+const FINDINGS_SPAWNING := "spawning"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -6423,6 +6424,13 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 			EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row),
 			row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
+	# And the four spawning ones: a node parented while physics is flushing, a reference that may
+	# already be freed, a scene that spawns itself on creation, and a wait booked against something an
+	# earlier row in the same event removed.
+	for note_row: EventRowData in _build_finding_note_rows(
+			EventSheetSpawnFindings.for_event(_sheet_findings(FINDINGS_SPAWNING), event_row),
+			row_data.row_uid, indent + 1):
+		row_data.children.append(note_row)
 	# And what this row spends every frame, with the receipt of any fix already applied to it. Both
 	# hang here ONLY while the costs lens is on: a sheet nobody asked about performance grows no
 	# notes about it, which is the same rule the gutter chips live under.
@@ -8950,6 +8958,14 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				_sheet_findings_cache[family] = EventSheetLightingFindings.findings(sheet)
 			FINDINGS_EFFECTS:
 				_sheet_findings_cache[family] = EventSheetEffectFindings.findings(sheet)
+			FINDINGS_SPAWNING:
+				# The scene this sheet's script runs in, which only the self-spawning rule needs. It
+				# comes from the index the head's bands already read, so the canvas starts no scan of
+				# its own to answer it.
+				var scenes: PackedStringArray = EventSheetSceneReplication.scenes_using(
+					str(sheet.external_source_path) if sheet != null else "")
+				_sheet_findings_cache[family] = EventSheetSpawnFindings.findings(sheet,
+					scenes[0] if scenes.size() > 0 else "")
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]

@@ -126,6 +126,9 @@ static func run() -> Dictionary:
 	EventSheetPerformanceDoctor.ensure_registered()
 	EventSheetOptionsDoctor.ensure_registered()
 	EventSheetSelfDocDoctor.ensure_registered()
+	# The Spawning section: the four ways putting a node into the world and taking it out again go
+	# wrong at run time while the editor says nothing. Same seam, same reason.
+	EventSheetSpawningDoctor.ensure_registered()
 	# The Docs section: whether the guides still describe the packs they are about. It rides the same
 	# seam for the same reason - a studio's own pack guide is audited exactly like a shipped one - and
 	# it asks EventSheetDocCoverage, which is also what the help-bundle builder asks, so the page and

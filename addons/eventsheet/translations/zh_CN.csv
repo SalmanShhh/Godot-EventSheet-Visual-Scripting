@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,群体里只剩下这一个
 Leaving,正在离开
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"正在离开的那个节点 - 触发器交给这个事件的那一个。""当最后一个被移除时""会替你填好。"
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.",一张表生成的副本，以 Godot 分组的形式保存：进来时加入分组、被计数、按明说出来的策略设上限，并在最后一个离开时得到回应。
+and %d more scene(s) spawned,另外还生成 %d 个场景
+at most %s in %s,最多 %s，在 %s 中
+into %s,进入 %s
+pooled as %s,以 %s 池化
+browse the scene,查看场景
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.",这一项由表在运行时算出的表达式指定，因此没有文件可以显示。
+%s - shown in the FileSystem dock.,%s - 已在文件系统面板中显示。
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.",这会在物理服务器忙碌时把节点加入场景树，Godot 会拒绝。请改在下一个空闲时刻添加。
+Add it on the next idle moment,在下一个空闲时刻添加
+Use the safe spawn row,使用安全的生成行
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.",%s 会跨帧保留，此刻可能已被别处移除。使用它之前先问一句它是否还在。
+Guard it,加上判断
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.",这会在每次创建副本时、且没有任何条件阻挡地生成它自己所在的那个场景。每个副本又会再生成一个。
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.",%s 在本事件更靠上的地方被移除，而这一行又为它预约了一段等待。请把移除移到这一行下面，或者改为延迟移除。
+Move the removal last,把移除移到最后
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","生成：有 %d 个脚本会添加或移除节点，已读取 %d 个，其中 %d 个存在运行时会出错的地方。"
+This row is already added on the next idle moment.,这一行已经是在下一个空闲时刻添加的。
+Guard %s,为 %s 加上判断
+This event already asks whether it is still here.,这个事件已经在问它是否还在了。
+The removal is already the last row of this event.,移除已经是这个事件的最后一行了。
+"The removal runs last now, after everything that reads it.",移除现在排在最后，在所有读取它的行之后运行。

@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,De la multitud solo queda este
 Leaving,Se va
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"El nodo que se va: el que el disparador entregó a este evento. ""Al quitarse el último"" rellena esto por ti."
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.","Las copias que ha generado una hoja, guardadas como un grupo de Godot: unidas al entrar, contadas, limitadas con la política dicha en voz alta y respondidas cuando se va la última."
+and %d more scene(s) spawned,y %d escena(s) más generada(s)
+at most %s in %s,como máximo %s en %s
+into %s,en %s
+pooled as %s,agrupado como %s
+browse the scene,ver la escena
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.","Esta se nombra con una expresión que la hoja resuelve mientras corre, así que no hay archivo que mostrar."
+%s - shown in the FileSystem dock.,%s: mostrado en el panel Sistema de archivos.
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.","Esto añade un nodo al árbol mientras el servidor de física está ocupado, y Godot lo rechaza. Añádelo en el siguiente momento libre."
+Add it on the next idle moment,Añadirlo en el siguiente momento libre
+Use the safe spawn row,Usar la fila de spawn segura
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.",%s se conserva entre fotogramas y cualquier cosa podría haberlo eliminado ya. Pregunta si sigue ahí antes de usarlo.
+Guard it,Protegerlo
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.","Esto genera la misma escena en la que ya se ejecuta, cada vez que se crea una copia y sin nada que lo impida. Cada copia crea otra."
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.","%s se elimina más arriba en este evento, y esta fila reserva una espera sobre él. Mueve la eliminación debajo de esta fila, o elimínalo tras un retardo."
+Move the removal last,Mover la eliminación al final
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","Generación: %d script(s) que añaden o eliminan nodos, %d leídos, %d con algo que fallará en tiempo de ejecución."
+This row is already added on the next idle moment.,Esta fila ya se añade en el siguiente momento libre.
+Guard %s,Proteger %s
+This event already asks whether it is still here.,Este evento ya pregunta si sigue ahí.
+The removal is already the last row of this event.,La eliminación ya es la última fila de este evento.
+"The removal runs last now, after everything that reads it.","La eliminación se ejecuta ahora al final, después de todo lo que lo lee."

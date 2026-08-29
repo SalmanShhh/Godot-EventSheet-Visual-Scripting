@@ -5365,3 +5365,24 @@ Crowd Is Down To This One,群れに残るのはこの一体だけ
 Leaving,去るもの
 The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,去ろうとしているノード - トリガーがこのイベントに渡したものです。「最後の一体が消えたとき」が代わりに入れてくれます。
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.",シートが生成したコピーを Godot のグループとして保持します。入るときに参加し、数え、方針を口に出して上限を設け、最後の一体が去ったときに応えます。
+and %d more scene(s) spawned,他に %d 個のシーンを生成
+at most %s in %s,最大 %s、%s 内
+into %s,%s へ
+pooled as %s,%s としてプール
+browse the scene,シーンを表示
+"This one is named by an expression the sheet works out as it runs, so there is no file to show.",これはシートが実行時に組み立てる式で指定されているため、表示できるファイルはありません。
+%s - shown in the FileSystem dock.,%s - ファイルシステムドックに表示しました。
+"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.",物理サーバーが処理中にノードをツリーへ追加しており、Godot はこれを拒否します。次のアイドル時に追加してください。
+Add it on the next idle moment,次のアイドル時に追加
+Use the safe spawn row,安全な生成行を使う
+"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.",%s はフレームをまたいで保持されており、すでに何かが取り除いた可能性があります。触れる前にまだ存在するか確かめてください。
+Guard it,確認を入れる
+"This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.",これは自分がすでに動いているシーンを、コピーが作られるたびに、何の条件もなく生成します。コピーがまたコピーを作ります。
+"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.",%s はこのイベントの上の行で取り除かれており、この行はそれに対して待ちを予約しています。取り除く行をこの行の下へ移すか、遅らせて取り除いてください。
+Move the removal last,取り除く行を最後へ
+"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","生成: ノードを追加または削除するスクリプト %d 件、うち %d 件を読み、%d 件に実行時に破綻するものがあります。"
+This row is already added on the next idle moment.,この行はすでに次のアイドル時に追加されます。
+Guard %s,%s に確認を入れる
+This event already asks whether it is still here.,このイベントはすでに、まだ存在するかを確かめています。
+The removal is already the last row of this event.,取り除く行はすでにこのイベントの最後の行です。
+"The removal runs last now, after everything that reads it.",取り除く行は、それを読むすべての行のあとで最後に実行されるようになりました。
