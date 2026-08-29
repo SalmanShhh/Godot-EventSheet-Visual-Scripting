@@ -1067,6 +1067,33 @@ to the function it names, the same jump the Outline panel makes.
   Parameter** row that shipped before this - which claims nothing about any shader, and is the honest
   reading of a name nothing can check. The Doctor is what tells you which of the two you have.
 
+- **An animation played through a node path reads as the row, in whichever spelling you used.**
+  `$Anim.play("idle")` and `$Anim.queue(&"swing")` are the same two calls people write with and
+  without the ampersand, and both open. The whole literal is the value - quotes and `&` included -
+  so the spelling you typed is the spelling the file gets back, and a lifted row and an authored row
+  are edited by the same field. The receiver has to be a node PATH (`$Path`, `%Unique`,
+  `get_node("Path")`): `play` and `queue` are among the commonest method names in the language, a
+  file can declare a `play()` of its own, and a bare `sprite.` says nothing about what `sprite` is -
+  so claiming those on a call name alone would take lines away from the readings that can say more
+  about them.
+
+- **The maths and the moves are the calls in their own echoes.** A `_process` full of
+  `value = clampf(value, 0.0, max_hp)`, `lerp`, `wrapf` and `remap` opens as **Keep Between**,
+  **Move Toward (each tick)**, **Wrap Around** and **Rescale**; `position += transform.x * 240.0 *
+  delta` is **Move Forward**, `global_position += Vector2.RIGHT * 20.0 * delta` is **Move (the
+  world's way)**, and the `rotate_toward(…, global_position.angle_to_point(…), deg_to_rad(180.0) *
+  delta)` line everybody copies is **Face**. There is no separate lift table for any of them: each
+  row's template IS the line, which is what makes the hand-written file and the authored row one
+  thing, and saving the opened file writes your own bytes back.
+
+- **The two drawing-order lines read as sentences.** `z_index = $Player.z_index + 1` is
+  **Draw in front of $Player** - the one `z_index` line whose meaning is relative rather than a
+  number - and `visibility_layer = 2` is **Show only to "minimap"** when the project has named that
+  layer, since the field lists the project's own layer names rather than asking for the bitmask. A
+  layer nobody named stays `Set visibility_layer to 16`, because there is no word to say instead and
+  inventing one would be a claim about a layer this project has never made. A file holding both
+  opens as those words and saves back without one byte changing.
+
 - **`match` patterns read as the conditions they are.** A match on plain values already reads as the
   if / else-if / else chain a reader knows. The patterns that say something a plain value cannot join
   the same chain now: `["move", var x, var y]` is `event is a list of 3 starting "move"` with `x` and
@@ -1396,7 +1423,6 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
     | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
     | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
     | `## @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |
-
     | a `create_server` or `create_client` given channels and bandwidth limits, in the same three-line run | **Host a game (Advanced)** / **Join a game (Advanced)**, writing back only the arguments you wrote |
     | `peer.host.compress(ENetConnection.COMPRESS_*)`, whatever the connection was reached through | **Compress network traffic**, the receiver a value that rides back out unchanged |
     | `multiplayer.multiplayer_peer.put_packet(bytes)` and its `get_packet()` twin | **Send raw bytes** / the **Next raw packet** expression |

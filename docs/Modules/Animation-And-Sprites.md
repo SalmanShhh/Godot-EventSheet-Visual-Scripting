@@ -52,6 +52,13 @@ of the battle:
   `find_children("*", "AnimationPlayer", true, false)` beneath the object you name and use the first
   match. That is what buys you "no path", and it is also their whole risk profile: first match wins, and
   a missing player means the row quietly does nothing.
+- **The name comes off the scene, not off the keyboard.** Every Animation field on these rows is a
+  list, filled from the scene the sheet is attached to: an AnimationPlayer's clips with their lengths
+  and loop modes, an AnimatedSprite2D's flipbooks with their real frame counts, and the named markers
+  on a keyframed clip's timeline. The Frame field is the same idea one level down - it offers the
+  frames the picked clip actually has, so frame 7 of a five-frame flipbook is not a number you can
+  reach. A name nothing in the scene declares still saves, and goes amber with the nearest real name
+  offered, because a name may be built at run time; `play("atack")` used to be a silent nothing.
 - **Names are StringNames.** Play Animation and its friends emit `play(&"idle")`. The `&` is a hidden
   optimization the picker never shows you; it just means the clip name is interned once instead of hashed
   on every call.
@@ -94,6 +101,8 @@ that line with the node you picked.
 | Animation Speed | The player's current speed scale (1 = normal). | `speed_scale` |
 | Is Between | True while the play head sits inside a slice of one named clip - the cancel window a follow-up move is allowed in, the active frames a hit counts on. | `current_animation == {animation} and current_animation_position > {from_time} and current_animation_position < {to_time}` |
 | Pause For | Holds THIS animation still for a moment and then lets it run on - the per-object hit-stop. The wait ignores the game's time scale, so it un-pauses even during a slow-motion. | `pause()`, then a real-time `create_timer` wait, then `play()` |
+| Play Then | Plays one clip and lines the next one up behind it, both picked from the scene's list. The waiting is the engine's own, so there is no timer to keep in step. | `play(&{animation})` then `queue(&{next})` |
+| Reached Marker | True once a clip's play head has passed a named moment on its own timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the marker in the Animation panel moves it; the row does not change. | `current_animation == {animation} and current_animation_position >= get_animation({animation}).get_marker_time({marker})` |
 
 ### AnimatedSprite2D - sprite frames
 
@@ -413,6 +422,34 @@ On boss defeated
   -> Set Animation Speed  0.25   On node: BossRig
 ```
 
+**21. Attack, then idle.** Play Then is ONE row that writes both lines, so the follow-up is the
+engine's own end-of-clip hook rather than a timer somebody has to keep in step with the animation's
+length, and both names are picked from the scene's list. The two lines are ordinary GDScript, so a
+file that already had them opens as the Play and Queue rows they are - the row is a way to write the
+pair, not a shape the file has to be in.
+
+```gdscript
+extends AnimationPlayer
+
+
+func _ready() -> void:
+	play(&"attack")
+	queue(&"idle")
+```
+
+**22. The spellings you already wrote open too.** A plain-string `play` and a StringName `queue` are
+both ordinary GDScript that people write by habit, and both open as rows through a node path. Whichever
+spelling you used is the spelling the file gets back when you save.
+
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	$Anim.play("idle")
+	$Anim.queue(&"swing")
+```
+
 ### Other use cases
 
 **Slow-motion finisher.** Set Animation Speed to 0.2 on the attacker and the victim together, restore both on the trigger that ends the sequence, and the whole effect is four rows with no engine time scale involved.
@@ -434,7 +471,14 @@ On boss defeated
 - **Play does not restart a clip that is already playing.** Use Restart Animation (in object), or Seek
   Animation to 0, or Stop Animation followed by Play Animation.
 - **Queue Animation never fires on a looping clip.** A loop has no end, so the queue sits there forever.
-  Queue after a one-shot clip, or drive the switch from On Animation Finished.
+  Queue after a one-shot clip, or drive the switch from On Animation Finished. The sheet says so as
+  well: a queue behind a clip the scene declares as looping grows a note on the row, because the loop
+  mode is a fact the scene already knows.
+- **A keyframed clip has markers, not frames.** A skeletal swing has no frame 3 to click on, so
+  "which frame does the hit land on" is answered by a named moment on the timeline instead - add the
+  marker in the Animation panel and ask Reached Marker for it. Retiming the animation moves the
+  marker with it, which a stored number would not do. Frames are the flipbook question, and the Frame
+  field only offers the ones an AnimatedSprite2D's clip really has.
 - **Pause Animation and Stop Animation are not the same.** Pause keeps the play head; Stop discards it.
   A "resume" built on Stop restarts from the beginning.
 - **Set Current Animation starts playing.** It looks like a harmless property write. If you only want to

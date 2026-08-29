@@ -19,7 +19,7 @@
 #     test already runs. Running it twice would cost the suite a minute and a half for one number.
 #   - the whole-project scanners (the Doctor's sheet list, the picker's vocabulary, the shared
 #     resource index) cannot be pointed at the fixture: `res://` is fixed when the process starts.
-#     Those are measured on this repository, which carries 111 packs and every demo, and each pin
+#     Those are measured on this repository, which carries 112 packs and every demo, and each pin
 #     below says which corpus it used.
 #
 # COLD BOOT IS MEASURED IN ITS OWN PROCESS. By the time any test runs, half the plugin is compiled

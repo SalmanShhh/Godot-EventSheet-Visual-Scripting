@@ -388,6 +388,31 @@ Every Frame
     -> Set Rotation (Degrees)   rad_to_deg(velocity.angle())
 ```
 
+**21. A ship under thrust, and snow that ignores which way it is turned.** Move Forward and Move (the
+world's way) are the two meanings of "move", one row each. Turning the ship turns the first line and
+changes nothing about the second.
+
+```gdscript
+extends Node2D
+
+
+func _process(delta: float) -> void:
+	position += transform.x * 240.0 * delta
+	global_position += Vector2.RIGHT * 20.0 * delta
+```
+
+**22. A turret that has to swing round before it can fire.** Face turns toward a place at a top speed
+instead of snapping, so the enemy that must come about is a rule rather than a tween. Make the speed
+huge and it snaps.
+
+```gdscript
+extends Node2D
+
+
+func _process(delta: float) -> void:
+	rotation = rotate_toward(rotation, global_position.angle_to_point(Vector2.ZERO), deg_to_rad(180.0) * delta)
+```
+
 ### Other use cases
 
 **Conveyor belts.** An Every Physics Tick event that adds a fixed Vector2 to velocity with Add To Velocity while a body is inside the belt's Area gives push without changing how the body is otherwise controlled.
