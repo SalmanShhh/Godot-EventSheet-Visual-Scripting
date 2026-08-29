@@ -833,6 +833,9 @@ func _open(doc_id: String, anchor: String, pushed: bool) -> bool:
 func _route(doc_id: String, anchor: String) -> bool:
 	# The engine's own class reference is not this surface's to draw - it is the editor's, and the
 	# editor draws it better. A reader who asked for a Godot class gets the Script editor's help.
+	if doc_id.strip_edges().begins_with(EventSheetDocEngineReference.HELP_SCHEME):
+		return _open_engine_help(doc_id.strip_edges().substr(
+			EventSheetDocEngineReference.HELP_SCHEME.length()))
 	if doc_id.strip_edges().begins_with(ENGINE_SCHEME):
 		return _open_engine_page(doc_id.strip_edges().substr(ENGINE_SCHEME.length()))
 	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
@@ -899,15 +902,16 @@ func _open_sheets() -> Array[EventSheetResource]:
 func _open_engine_page(target: String) -> bool:
 	var split: Dictionary = EventSheetDocEngineReference.split_doc_id(target)
 	var class_id: String = str(split.get("class", ""))
-	var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id)
+	var member: String = str(split.get("member", ""))
+	var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id, member)
 	if blocks.is_empty():
 		EventSheetDocEngineReference.begin_harvest()
-		return _open_engine_help(class_id)
+		return _open_engine_help(EventSheetDocEngineReference.editor_help_topic(class_id, member))
 	if not _query.is_empty():
 		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
-	var doc_id: String = EventSheetDocEngineReference.doc_id(class_id, str(split.get("member", "")))
+	var doc_id: String = EventSheetDocEngineReference.doc_id(class_id, member)
 	if not _page.show_blocks(blocks, doc_id):
-		return _open_engine_help(class_id)
+		return _open_engine_help(EventSheetDocEngineReference.editor_help_topic(class_id, member))
 	_current_id = doc_id
 	_panel.visible = false
 	_page.visible = true
@@ -915,8 +919,16 @@ func _open_engine_page(target: String) -> bool:
 	return true
 
 
-func _open_engine_help(class_id: String) -> bool:
-	var wanted: String = class_id.strip_edges()
+## The editor's own class reference, opened at a topic. THE ONLY READER ON THE MACHINE THAT HAS THE
+## ENGINE'S PROSE: the descriptions are compiled into the editor binary and no script can read them,
+## so every door out of a class page with no text leads here. `topic` is the editor's own spelling
+## ("class_name:Node2D", "class_property:Node2D:position"), built by the reference module so the
+## page's link and this call cannot disagree.
+##
+## Reported honestly: a build whose script editor cannot be asked answers false rather than
+## pretending it opened something.
+func _open_engine_help(topic: String) -> bool:
+	var wanted: String = topic.strip_edges()
 	if wanted.is_empty() or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return false
 	var editor_interface: Object = Engine.get_singleton("EditorInterface")
@@ -925,7 +937,7 @@ func _open_engine_help(class_id: String) -> bool:
 	var script_editor: Object = editor_interface.get_script_editor()
 	if script_editor == null or not script_editor.has_method("goto_help"):
 		return false
-	script_editor.call("goto_help", "class_name:%s" % wanted)
+	script_editor.call("goto_help", wanted)
 	link_activated.emit(wanted)
 	return true
 

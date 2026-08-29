@@ -35,6 +35,9 @@ const COMMANDS := {
 	"docs-check": [EventSheetDocChores.CHORE_CHECK],
 	"docs-export": [EventSheetDocChores.CHORE_MANUAL, EventSheetDocChores.CHORE_SITE],
 	"docs-harvest": [EventSheetDocChores.CHORE_HARVEST],
+	# THE ONE COMMAND THAT USES A NETWORK, and it is its own command for that reason: nothing a
+	# reader runs for another purpose can pull a download in behind it.
+	"docs-engine-text": [EventSheetDocChores.CHORE_ENGINE_TEXT],
 }
 
 
@@ -82,11 +85,15 @@ func _usage() -> String:
 		"  docs-check     read the guides and report what they do not answer, and what has drifted",
 		"  docs-export    rewrite the project manual, then export the Manual as a folder of HTML",
 		"  docs-harvest   ask this engine to write its own class reference, once per version",
+		"  docs-engine-text  DOWNLOADS: the reference descriptions for this exact version of Godot,",
+		"                    which the harvest cannot write because the engine keeps them inside the",
+		"                    editor. Once per version, kept on this machine, and asked for by name.",
 		"",
 		"Options:",
 		"  --out=<folder>   where docs-export writes the site",
 		"  --locale=<code>  export the site in a language, marking the pages nobody has translated",
 		"  --limit=<n>      read only the first n guides (faster; a full read is the real gate)",
+		"  --engine_text_limit=<n>  fetch only n classes this run, and continue where it stopped next time",
 		"",
 		"Exits 0 when there is nothing to fix, 1 when there is, 2 when the command was wrong.",
 	])

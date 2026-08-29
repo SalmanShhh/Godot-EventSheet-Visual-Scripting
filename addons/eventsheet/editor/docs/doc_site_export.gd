@@ -170,6 +170,14 @@ static func _engine_pages(options: Dictionary) -> Array[Dictionary]:
 		return []
 	var pages: Array[Dictionary] = []
 	for class_id: String in EventSheetDocEngineReference.class_names():
+		# ONLY CLASSES WHOSE TEXT THIS MACHINE ACTUALLY HAS. A harvest carries the shape of every
+		# class and the words of none until somebody fetches them, and a class with no words is drawn
+		# in the reader as a page that says so and offers the editor's own help - neither of which
+		# means anything in an exported site, where there is no editor to hand it to and no way for a
+		# reader to fetch anything. A thousand published pages of names with no descriptions is a site
+		# that looks broken, so they are simply not published.
+		if not EventSheetDocEngineReference.has_prose(class_id):
+			continue
 		var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id)
 		if blocks.is_empty():
 			continue

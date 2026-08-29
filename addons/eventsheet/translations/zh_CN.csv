@@ -5285,7 +5285,9 @@ The %d worst are listed below.,下面列出最严重的 %d 篇。
 Rewrite the project manual and refresh the search,重写项目手册并刷新搜索
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.",写出每张表格关于自身的页面，然后重新读取手册，让新页面可被搜索。
 Harvest the engine's documentation,采集引擎文档
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,仅当尚未采集此 Godot 版本时执行。不会下载任何内容：引擎自己写出参考文档。
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.",仅当尚未采集此版本的 Godot 时运行。不会下载任何内容：引擎会写出它拥有的每个类和成员，但不包含它们的描述。
+Fetch the engine's reference text,获取引擎参考文本
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.",采集无法写出的描述文本，因为引擎把它们放在编辑器内部而不是文件里。这是这里唯一会下载内容的事项：只获取一次与当前 Godot 版本对应的类参考，并保存在本机。它绝不会自行运行。
 Draft the descriptions nothing has written yet,为尚无人书写的描述起草
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,汇总到一个草稿文件中。不会写入任何表格或指南 - 草稿始终是草稿，直到你亲自采用。
 Check coverage and drift,检查覆盖与偏离

@@ -5285,7 +5285,9 @@ The %d worst are listed below.,아래에 가장 심한 %d개를 표시합니다.
 Rewrite the project manual and refresh the search,프로젝트 설명서를 다시 쓰고 검색을 갱신
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","각 시트가 스스로에 대해 쓰는 페이지를 작성한 뒤, 새 페이지를 검색할 수 있도록 설명서를 다시 읽습니다."
 Harvest the engine's documentation,엔진 문서 수확
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,"이 Godot 버전을 아직 수확하지 않았을 때만 실행합니다. 내려받는 것은 없고, 엔진이 스스로 참조 문서를 씁니다."
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.",이 Godot 버전을 아직 수확하지 않은 경우에만 실행됩니다. 아무것도 내려받지 않습니다. 엔진이 가진 모든 클래스와 멤버를 기록하지만 설명은 포함되지 않습니다.
+Fetch the engine's reference text,엔진 참조 문서 본문 가져오기
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.",수확으로는 기록할 수 없는 설명입니다. 엔진이 그 설명을 파일이 아니라 에디터 안에 두기 때문입니다. 여기서 무언가를 내려받는 작업은 이것뿐입니다. 바로 이 Godot 버전의 클래스 참조 문서를 한 번만 가져와 이 컴퓨터에 보관합니다. 저절로 실행되지 않습니다.
 Draft the descriptions nothing has written yet,아직 아무도 쓰지 않은 설명의 초안 작성
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"하나의 초안 파일로 모읍니다. 시트나 안내서에는 아무것도 적용되지 않으며, 초안은 당신이 옮기기 전까지 초안으로 남습니다."
 Check coverage and drift,적용 범위와 어긋남 점검

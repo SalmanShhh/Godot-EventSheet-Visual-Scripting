@@ -32,6 +32,7 @@ extends RefCounted
 ## line names them, so a rename would silently un-tick somebody's dialog and break somebody's hook.
 const CHORE_MANUAL := "manual"
 const CHORE_HARVEST := "harvest"
+const CHORE_ENGINE_TEXT := "engine_text"
 const CHORE_DRAFTS := "drafts"
 const CHORE_CHECK := "check"
 const CHORE_SITE := "site"
@@ -40,8 +41,10 @@ const CHORE_KEYS := "keys"
 ## The order they run in, which is the order they depend on each other: the manual is regenerated
 ## before the site exports it, and the checks run before the site so a failing check is reported
 ## against what was actually exported.
-const CHORE_ORDER: PackedStringArray = [CHORE_MANUAL, CHORE_HARVEST, CHORE_DRAFTS, CHORE_CHECK,
-	CHORE_SITE, CHORE_KEYS]
+## The fetch runs straight after the harvest because it fills in what the harvest cannot: the
+## harvest names every class this build has, and the fetch puts the engine's own words on them.
+const CHORE_ORDER: PackedStringArray = [CHORE_MANUAL, CHORE_HARVEST, CHORE_ENGINE_TEXT, CHORE_DRAFTS,
+	CHORE_CHECK, CHORE_SITE, CHORE_KEYS]
 
 ## Where the chores put what they make. All inside the project, all in folders a person would have
 ## picked themselves, and none of them anywhere the plugin's own files live.
@@ -68,7 +71,10 @@ static func chores() -> Array[Dictionary]:
 			"note": EventSheetL10n.translate("Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.")},
 		{"id": CHORE_HARVEST,
 			"label": EventSheetL10n.translate("Harvest the engine's documentation"),
-			"note": EventSheetL10n.translate("Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.")},
+			"note": EventSheetL10n.translate("Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.")},
+		{"id": CHORE_ENGINE_TEXT,
+			"label": EventSheetL10n.translate("Fetch the engine's reference text"),
+			"note": EventSheetL10n.translate("The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.")},
 		{"id": CHORE_DRAFTS,
 			"label": EventSheetL10n.translate("Draft the descriptions nothing has written yet"),
 			"note": EventSheetL10n.translate("Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.")},
@@ -129,6 +135,8 @@ static func run_one(id: String, options: Dictionary = {}) -> Dictionary:
 			return _run_manual(options)
 		CHORE_HARVEST:
 			return _run_harvest(options)
+		CHORE_ENGINE_TEXT:
+			return _run_engine_text(options)
 		CHORE_DRAFTS:
 			return _run_drafts(options)
 		CHORE_CHECK:
@@ -210,8 +218,39 @@ static func _run_manual(options: Dictionary) -> Dictionary:
 	return {"id": CHORE_MANUAL, "ok": true, "lines": lines, "wrote": wrote}
 
 
+## The one chore that downloads anything, and it downloads it once.
+##
+## The harvest writes the SHAPE of the engine's reference and none of its words: `--doctool` is
+## ClassDB reflection, and the descriptions live compiled inside the editor binary where no script
+## can read them. So the text is fetched from the engine's own repository at the tag this build was
+## cut from, over the harvest, and after that every read is a local file read forever.
+##
+## IT IS A CHORE AND NOT A BACKGROUND TASK BECAUSE THAT IS THE CONSENT. A chore is ticked by name in
+## a dialog or named on a command line - a reader always asked for it - and it reports what it did
+## like every other chore, in the same words, whichever door ran it. Nothing else in this plugin
+## opens a connection, and nothing opens one without this being ticked.
+##
+## `engine_text_limit` (from options) stops after that many files, so a reader on a slow link can do
+## it in slices: what is still missing is derived from the cache itself, so the next run continues.
+## Its own option name rather than the shared `limit`, which already means "read this many guides"
+## to the coverage chore and would quietly cut this one short in a run that ticked both.
+static func _run_engine_text(options: Dictionary) -> Dictionary:
+	var report: Dictionary = EventSheetDocEngineFetch.fetch_now(
+		int(options.get("engine_text_limit", 0)))
+	return {"id": CHORE_ENGINE_TEXT, "ok": bool(report.get("ok", false)),
+		"lines": report.get("lines", PackedStringArray()), "wrote": PackedStringArray(
+			[] if int(report.get("fetched", 0)) <= 0
+			else [EventSheetDocEngineReference.cache_dir()])}
+
+
 ## Asks the engine to write its own class reference, once per engine version. Nothing is downloaded
 ## and nothing is read from a network: this is `--doctool`, the engine documenting itself.
+##
+## WHAT IT WRITES IS THE SHAPE, NOT THE WORDS. `--doctool` reports what ClassDB knows - every class,
+## every property and its type, every method and its return type, every signal - and an empty
+## description for each of them, because the prose is compiled into the editor binary rather than
+## kept anywhere the engine can be asked to write it out. The reader is told that on the page, and
+## the fetch chore above is what fills it in.
 static func _run_harvest(_options: Dictionary) -> Dictionary:
 	var lines: PackedStringArray = PackedStringArray()
 	if EventSheetDocEngineReference.is_harvested():

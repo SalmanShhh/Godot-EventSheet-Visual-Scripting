@@ -5285,7 +5285,9 @@ The %d worst are listed below.,Ниже перечислены %d худших.
 Rewrite the project manual and refresh the search,Переписать руководство проекта и обновить поиск
 "Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Записывает страницу, которую каждый лист пишет о себе, затем перечитывает руководство, чтобы новые страницы находились поиском."
 Harvest the engine's documentation,Собрать документацию движка
-Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Только если эта версия Godot ещё не собрана. Ничего не загружается: движок сам пишет свой справочник.
+"Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.","Только если эта версия Godot ещё не собрана. Ничего не скачивается: движок записывает все свои классы и члены, но без их описаний."
+Fetch the engine's reference text,Загрузить текст справочника движка
+"The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.","Описания, которые сборка написать не может, потому что движок хранит их внутри редактора, а не в файле. Это единственная задача здесь, которая что-то скачивает: справочник классов именно этой версии Godot, один раз, и он остаётся на этой машине. Сама она никогда не запускается."
 Draft the descriptions nothing has written yet,"Набросать описания, которых ещё никто не написал"
 Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"Собираются в один файл черновиков. Ничего не применяется к листу или руководству - черновик остаётся черновиком, пока вы сами его не перенесёте."
 Check coverage and drift,Проверить охват и расхождения
