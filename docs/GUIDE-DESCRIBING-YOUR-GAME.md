@@ -14,6 +14,7 @@ So this is not a documentation feature. It is one line per thing you made, kept 
 6. [The Project View](#6-the-project-view)
 7. [Find across every sheet](#7-find-across-every-sheet)
 8. [After a merge](#8-after-a-merge)
+9. [Comments are the book](#9-comments-are-the-book)
 
 ---
 
@@ -107,3 +108,29 @@ Every hit names the sheet and the function or group it sits in, so it reads as a
 ## 8. After a merge
 
 A sheet opened from a file that a merge left damaged does not quietly pick a side. The row goes amber and shows **both** parents' spellings, labelled with the branches they came from, and the sentence beside it names neither as the right one - because the plugin does not know, and a guess printed there would be taken for an answer.
+
+## 9. Comments are the book
+
+A description belongs to a thing you declared. A comment belongs to a place in the sheet - and GDScript already decided, for every file anybody ever wrote, which comments are documentation and which are not:
+
+| The row | What it writes | Who reads it |
+| --- | --- | --- |
+| a **documentation** comment | `## the player falls until the ground catches them` | the manual, the project-wide find, and Godot's own F1 help for a `class_name` script |
+| a **private** comment | `# buffer window is 6 frames - measured` | nobody but whoever opens the sheet or the file |
+
+The sheet adopts that rule whole. There is no "publish this comment" field: the marker the row writes **is** the setting, so the row and the line in the file can never disagree about which one it is.
+
+![Two comment rows on one sheet: a documentation row at full strength with a paragraph mark and its `##` echo at the right edge, and private rows dimmed with their `#` echoes](images/comment-kinds.png)
+
+**Authoring is one checkbox.** Right-click a comment row, **Edit Comment…**, and tick **Shows in the manual**. Ticked writes `##`; unticked writes `#`. The row restyles as you confirm, and the echo at its right edge shows the line it now really writes. Type either spelling into the `.gd` yourself and it opens as the matching row, byte for byte - two spellings, one row kind.
+
+**Where each one is read:**
+
+- **`##` rows become the prose of the manual page**, set between the sections in sheet order, each carrying the name of the chapter it was written under. You write the book by writing where you were already looking.
+- **`#` rows never leave the sheet.** Not the manual, not the search, not an export. A note to yourself stays a note to yourself.
+
+**A `#` line is never documentation debt.** Coverage counts `##` paragraphs and the descriptions of the things you declared; adding a private note moves no number and nothing nudges you to promote it.
+
+The one exception is a note you meant to come back to. A comment opening **TODO** or **FIXME** is listed once, by name, in **Still to do** in the Project View - a to-do list, which is a different thing from a book. It still never reaches the manual.
+
+**Drift reaches prose too.** A `##` paragraph introduces the rows under it, up to the next paragraph. Replace those rows wholesale and the paragraph is listed as drifted, the same way a function's or a group's description is - and for the same reason: words that go on sounding authoritative while being wrong are worse than a gap.

@@ -6,6 +6,27 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Comments are the book
+
+- **A comment row is one of GDScript's two kinds, and nothing else.** A row whose line opens `##` is
+  DOCUMENTATION - it reads at full strength, leads with a paragraph mark, and its words become the
+  prose of the manual page the sheet writes about itself. A row whose line opens a single `#` is a
+  private note: dimmed, and it never leaves the sheet. There is no \"publish this comment\" field to
+  disagree with the file, because the marker the row writes IS the setting.
+- **Authoring is one checkbox.** \"Shows in the manual\" on the Edit Comment dialog. Ticked writes
+  `##`, unticked writes `#`, and the echo now standing at the right edge of every comment row shows
+  the line the row really writes, either way. A row already on the side you picked keeps its exact
+  marker, so a `##` lifted from a file without a trailing space re-emits byte for byte.
+- **The manual sets your `##` rows as prose**, in sheet order, each carrying the chapter it was
+  written under - and the project-wide find reaches them. Neither reaches a `#` note by any route.
+- **A `#` line is never documentation debt.** Coverage counts `##` paragraphs and the things you
+  declared; a private note moves no number anywhere. The single exception is a note opening `TODO`
+  or `FIXME`, which is listed once in \"Still to do\" in the Project View - a to-do list, not a book.
+- **Drift reaches groups and prose.** The check that reports a function description no longer naming
+  anything its rows do now judges a group's description and a `##` paragraph by the same rule, a
+  paragraph being checked against the rows it introduces up to the next paragraph. And draft offers
+  now spend a once-per-thing, once-per-session budget, so nothing asks twice.
+
 ### Every row is a door, both ways
 
 - **One answer, at three depths.** F1 on a row (and its \"What does this do?\" menu item) now opens
