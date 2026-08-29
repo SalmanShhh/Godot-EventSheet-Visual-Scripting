@@ -86,6 +86,18 @@ static func _test_page_files() -> bool:
 		EventSheetDocSiteExport.page_file("GUIDE-RECIPES"), "GUIDE-RECIPES.html")
 	passed = _check("a page in a set folds its slash rather than making a folder",
 		EventSheetDocSiteExport.page_file("Addons/Quest"), "Addons__Quest.html") and passed
+	# A PAGE DECLARES THE LANGUAGE IT IS IN. A French page that says it is English is read out in the
+	# wrong voice by a screen reader and hyphenated by the wrong rules by a browser, silently both
+	# times. The language is the one the export was asked for, never the one the editor is set to -
+	# the same command on two machines has to write the same bytes.
+	var page: Dictionary = {"id": "Fixture", "title": "Fixture", "source": "# Fixture\n",
+		"blocks": [], "engine": false, "untranslated": false}
+	passed = _check("a page exported in French says so",
+		EventSheetDocSiteExport.page_html(page, {"depth": 1, "locale": "fr"}).contains(
+			"<html lang=\"fr\">"), true) and passed
+	passed = _check("and an export that named no language is English",
+		EventSheetDocSiteExport.page_html(page, {"depth": 1}).contains("<html lang=\"en\">"),
+		true) and passed
 	return passed
 
 

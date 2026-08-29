@@ -60,6 +60,14 @@ const REFERENCE_GROUP := "Reference"
 
 ## The site's own footer line. Deliberately says what the folder IS, because a reader who found one
 ## of these pages in a wiki has no other way to know where it came from.
+##
+## THE CHROME IS ENGLISH AND THE PAGES ARE NOT. This line, the search box's placeholder and the
+## Contents link are the site's own furniture; the PAGES follow the locale the export was asked for.
+## They are English literals rather than translated strings on purpose: the export's bytes may not
+## depend on anything outside the bundle and the options, and translating them through the running
+## editor's catalog would make the same command on two machines write two different sites. Giving
+## the furniture its own translations is a job for the day the site is offered to readers who do not
+## read English, and it is not done by reading the editor's language while exporting.
 const FOOTER_LINE := "Exported from this project's Godot EventSheets Manual. Every page here is a copy of a page in the editor."
 
 ## The sentence a page carries when the reader's language has no copy of it. The editor's own
@@ -461,7 +469,7 @@ static func page_html(page: Dictionary, page_context: Dictionary = {}) -> String
 		inner.append("<p class=\"credit\">%s</p>" % escape_html(
 			EventSheetDocEngineReference.CREDIT_LINE))
 	return _document(title, "\n".join(inner), int(context.get("depth", 0)),
-		bool(context.get("engine_credit", false)))
+		bool(context.get("engine_credit", false)), false, str(context.get("locale", "")))
 
 
 ## The contents page: every group, every page in it, and the search box. The whole site is reachable
@@ -486,7 +494,7 @@ static func index_html(pages: Array[Dictionary], context: Dictionary = {}) -> St
 	if open_list:
 		lines.append("</ul>")
 	return _document(str(context.get("site_title", "Manual")), "\n".join(lines), 0,
-		bool(context.get("engine_credit", false)), true)
+		bool(context.get("engine_credit", false)), true, str(context.get("locale", "")))
 
 
 ## The file name a page id is written to.
@@ -495,11 +503,16 @@ static func page_file(page_id: String) -> String:
 
 
 static func _document(title: String, body: String, depth: int, engine_credit: bool,
-		with_search: bool = false) -> String:
+		with_search: bool = false, locale_code: String = "") -> String:
 	var prefix: String = "../" if depth > 0 else ""
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("<!doctype html>")
-	lines.append("<html lang=\"en\">")
+	# The language the PAGE is in, which is the language the export asked for. A French page that
+	# declares itself English is read out in the wrong voice by a screen reader and hyphenated by the
+	# wrong rules by a browser, and both of those happen silently.
+	var language: String = locale_code.strip_edges()
+	lines.append("<html lang=\"%s\">" % escape_html(
+		language if not language.is_empty() else EventSheetDocLocale.BASE_LOCALE))
 	lines.append("<head>")
 	lines.append("<meta charset=\"utf-8\">")
 	lines.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">")
@@ -706,12 +719,13 @@ static func export_site(out_dir: String, options: Dictionary = {}) -> Dictionary
 	var exported: Dictionary = {}
 	for page: Dictionary in pages:
 		exported[str(page.get("id", ""))] = true
+	var site_locale: String = str(options.get("locale", EventSheetDocLocale.BASE_LOCALE)).strip_edges()
 	var context: Dictionary = {"figures": drawn, "depth": 1, "engine_credit": engine_credit,
-		"exported": exported}
+		"exported": exported, "locale": site_locale}
 	_write(root, STYLE_FILE, SITE_CSS, written)
 	_write(root, SEARCH_SCRIPT_FILE, SEARCH_JS, written)
 	_write(root, SEARCH_DATA_FILE, search_data_js(pages), written)
-	_write(root, INDEX_FILE, index_html(pages, {"engine_credit": engine_credit,
+	_write(root, INDEX_FILE, index_html(pages, {"engine_credit": engine_credit, "locale": site_locale,
 		"site_title": str(options.get("site_title", "The EventSheets Manual"))}), written)
 	for page: Dictionary in pages:
 		_write(root, "%s/%s" % [PAGES_DIR, page_file(str(page.get("id", "")))],
