@@ -5340,3 +5340,28 @@ How many seconds to wait before removing the object. The event carries on immedi
 "How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",淡出要花多少秒。事件会等它，所以后面的行在淡出结束后才执行。
 "Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.",把一样东西从世界里拿走：马上、等一会儿，或者淡出之后。每一行都是普通的 queue_free，并且都说明调用发生在什么时候。
 "This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",这个名字可能已经不存在了，所以编译器会在这一行上方写下这行代码。点击可在代码面板中打开。
+Spawn A Copy Into The Crowd,在群体中生成一个副本
+"Spawns a copy the way Spawn A Copy does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.","像""生成一个副本""那样生成一个副本，并把它放进以场景命名的分组里，这样下面的行就能数它们、给它们设上限，并在最后一个消失时收到通知。加入分组时使用了 Godot 的持久分组标志，正是它让这个分组在该分支被重新打包回场景文件后依然存在。"
+Crowd,群体
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]",在 {at} 处、[i]{parent}[/i] 之下生成 [b]{scene}[/b] 的副本 [b]{name}[/b]，加入群体 [b]{crowd}[/b]
+"The group the copies belong to, named after the scene they are copies of. It is an ordinary Godot group, so anything else in the project that uses groups can see these too.",这些副本所属的分组，以它们所复制的场景命名。它是一个普通的 Godot 分组，所以项目里其他使用分组的东西也能看到它们。
+"Spawn A Copy, Oldest Goes First",生成一个副本，最旧的先离场
+"Spawns a copy into the crowd, and when the crowd is already full removes one member to make room, so the count never climbs past the cap. The one removed is the member Godot lists first, which under a parent that spawns by adding children is the earliest one still alive. The new copy always appears, which is what a bullet or a footstep wants.",在群体中生成一个副本；当群体已满时移除一个成员腾出位置，于是数量永远不会超过上限。被移除的是 Godot 最先列出的那个成员，在一个靠添加子节点来生成的父节点之下，它就是仍然活着的最早的那个。新副本总会出现，这正是子弹或脚步声所需要的。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the oldest goes first",在 {at} 处、[i]{parent}[/i] 之下生成 [b]{scene}[/b] 的副本 [b]{name}[/b]，[b]{crowd}[/b] 中最多 [b]{cap}[/b] 个存活 - 最旧的先离场
+At Most,最多
+"How many of this crowd may be alive at once. What happens when that many already are is the rest of the row's sentence, not a setting.",这个群体最多能同时存活多少个。达到这个数量时会发生什么，写在这一行句子的后半段里，而不是某个设置里。
+Spawn A Copy Unless The Crowd Is Full,若群体未满则生成一个副本
+"Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart.","只在还有空位时才在群体中生成副本，群体已满时什么也不做 - 这正是敌人波次想要的答案：一个靠挤走别人才出现的生成，比不生成更糟。名字仍然留给下面的行使用，生成被跳过时它什么也不含，所以一行""仍然在此""就能分辨这两种情况。"
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full",在 {at} 处、[i]{parent}[/i] 之下生成 [b]{scene}[/b] 的副本 [b]{name}[/b]，[b]{crowd}[/b] 中最多 [b]{cap}[/b] 个存活 - 已满时不生成
+How Many Alive,存活数量
+"How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so this is always the number that is actually in the world.",一个群体现在有多少个还活着 - 也就是它的分组大小。没有谁替你计数：被释放的成员在离开节点树的同时就离开了分组，所以这始终是世界里真实存在的数量。
+[b]{crowd}[/b] alive,[b]{crowd}[/b] 的存活数
+On The Last One Removed,当最后一个被移除时
+"Runs the moment the last member of a crowd leaves the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. The On Group Emptied condition asks the same question a different way, on a per-frame trigger, by remembering last tick's count; this one needs neither the tick nor the memory.","在一个群体的最后一个成员离开世界的那一刻运行，每清空一次只运行一次 - 一波敌人被清完，最后一个木箱被打碎。它监听场景树自己的节点移除信号，并把下面那个问题作为一个你看得见、也改得动的条件加上去，所以没有任何事发生在行之外。条件""分组已清空""用另一种方式问同一个问题：挂在逐帧触发器上，靠记住上一帧的计数；而这一个既不需要逐帧，也不需要记忆。"
+On the last of [b]{crowd}[/b] removed,当 [b]{crowd}[/b] 的最后一个被移除时
+Crowd Is Down To This One,群体里只剩下这一个
+"The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.","""当最后一个被移除时""下面的那个条件：当正在离开的节点属于这个群体、并且是群体里剩下的唯一成员时为真。正在离开的节点在那一刻仍然列在它的分组里，所以只剩它一个的群体，就是马上要空掉的群体。"
+"[b]{crowd}[/b] is down to [i]{node}[/i], which is leaving",[b]{crowd}[/b] 只剩下正在离开的 [i]{node}[/i]
+Leaving,正在离开
+The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,"正在离开的那个节点 - 触发器交给这个事件的那一个。""当最后一个被移除时""会替你填好。"
+"The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.",一张表生成的副本，以 Godot 分组的形式保存：进来时加入分组、被计数、按明说出来的策略设上限，并在最后一个离开时得到回应。

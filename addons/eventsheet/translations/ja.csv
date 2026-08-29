@@ -5340,3 +5340,28 @@ How many seconds to wait before removing the object. The event carries on immedi
 "How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",フェードにかける秒数。イベントはこれを待つので、後続の行はフェードが終わってから実行されます。
 "Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.",ものを世界から取り除く方法。今すぐ、待ってから、あるいはフェードしてから。どの行もただの queue_free で、それぞれ呼び出しがいつ起きるかを述べます。
 "This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",この名前はすでに消えている可能性があるため、コンパイラはこの行を行の上に書きます。クリックするとコードパネルで開きます。
+Spawn A Copy Into The Crowd,群れにコピーを生成
+"Spawns a copy the way Spawn A Copy does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.",「コピーを生成」と同じようにコピーを生成し、シーンの名前を付けたグループに入れます。これで下の行がその数を数え、上限を設け、最後の一体がいなくなったことを知ることができます。グループへの参加には Godot の永続グループのフラグを使うため、その枝がシーンファイルに再びパックされてもグループは残ります。
+Crowd,群れ
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に、群れ [b]{crowd}[/b] へ生成
+"The group the copies belong to, named after the scene they are copies of. It is an ordinary Godot group, so anything else in the project that uses groups can see these too.",コピーが属するグループで、コピー元のシーンの名前が付きます。ごく普通の Godot のグループなので、グループを使うプロジェクト内の他のものからも見えます。
+"Spawn A Copy, Oldest Goes First",コピーを生成し、最も古いものから消す
+"Spawns a copy into the crowd, and when the crowd is already full removes one member to make room, so the count never climbs past the cap. The one removed is the member Godot lists first, which under a parent that spawns by adding children is the earliest one still alive. The new copy always appears, which is what a bullet or a footstep wants.",群れにコピーを生成し、群れがすでにいっぱいなら 1 体を取り除いて場所を空けるので、数が上限を超えることはありません。取り除かれるのは Godot が最初に並べる一体で、子を追加して生成する親の下では、まだ生きている中で最も古いものになります。新しいコピーは必ず現れます。弾丸や足音が求めるのはこの動きです。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the oldest goes first",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成、[b]{crowd}[/b] は最大 [b]{cap}[/b] 体まで - 最も古いものから消す
+At Most,最大
+"How many of this crowd may be alive at once. What happens when that many already are is the rest of the row's sentence, not a setting.",この群れが同時に何体まで存在できるか。その数に達したときに何が起きるかは、行の文の残りの部分であって、設定ではありません。
+Spawn A Copy Unless The Crowd Is Full,群れがいっぱいでなければコピーを生成
+"Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart.",空きがあるあいだだけ群れにコピーを生成し、群れがいっぱいのときは何もしません。敵のウェーブが求めるのはこの答えで、他を押し出して現れる生成は、生成しないことより悪いからです。名前は下の行のために残り、生成が飛ばされたときは何も入っていないので、「まだいる」の行で両者を見分けられます。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成、[b]{crowd}[/b] は最大 [b]{cap}[/b] 体まで - いっぱいなら生成しない
+How Many Alive,何体生きているか
+"How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so this is always the number that is actually in the world.",群れのうち今いくつ生きているか - そのグループの大きさです。誰かが代わりに数えているわけではありません。解放された一体はツリーを離れると同時にグループからも外れるので、これは常に本当に世界にいる数です。
+[b]{crowd}[/b] alive,[b]{crowd}[/b] の生存数
+On The Last One Removed,最後の一体が消えたとき
+"Runs the moment the last member of a crowd leaves the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. The On Group Emptied condition asks the same question a different way, on a per-frame trigger, by remembering last tick's count; this one needs neither the tick nor the memory.",群れの最後の一体が世界から去ったその瞬間に、空になるたび一度だけ実行されます。ウェーブを片づけたとき、最後の木箱を壊したときです。シーンツリー自身のノード削除シグナルを聞き、下の問いを見て編集できる条件として追加するので、行の外で起きることは何もありません。条件「グループが空になった」は同じ問いを別のやり方で、フレームごとのトリガーの上で、前のティックの数を覚えて尋ねます。こちらはティックも記憶も要りません。
+On the last of [b]{crowd}[/b] removed,[b]{crowd}[/b] の最後の一体が消えたとき
+Crowd Is Down To This One,群れに残るのはこの一体だけ
+"The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.",「最後の一体が消えたとき」の下に入る条件です。去ろうとしているノードがその群れに属し、群れに残る唯一の一体であるときに真になります。去るノードはその瞬間まだ自分のグループに載っているので、その一体だけの群れは、まさに空になろうとしている群れです。
+"[b]{crowd}[/b] is down to [i]{node}[/i], which is leaving",[b]{crowd}[/b] に残るのは、去ろうとしている [i]{node}[/i] だけ
+Leaving,去るもの
+The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,去ろうとしているノード - トリガーがこのイベントに渡したものです。「最後の一体が消えたとき」が代わりに入れてくれます。
+"The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.",シートが生成したコピーを Godot のグループとして保持します。入るときに参加し、数え、方針を口に出して上限を設け、最後の一体が去ったときに応えます。

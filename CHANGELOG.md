@@ -66,6 +66,39 @@
   author's own spelling so the file saves back unchanged. A tween that fades one node and frees a
   different one is somebody else's line and keeps the reading it already had.
 
+### Crowds, counted by the tree itself
+
+- **The copies a sheet spawned, said in the plural.** **Spawn A Copy Into The Crowd** is the spawn
+  sentence with one line more: the copy joins a Godot group named after the scene it is a copy of.
+  There is still no crowd system - a crowd IS the group, which is the scene tree's own index, so the
+  rows join it and then ask the tree and there is no second place for the two to disagree. A member
+  that is freed leaves the group as it leaves the tree, so nothing goes stale and nothing is
+  remembered anywhere.
+- **The persistent flag, because the alternative fails silently.** The row writes
+  `add_to_group("enemies", true)`. `add_to_group(name)` on its own is not persistent, and
+  `PackedScene.pack()` saves persistent groups ONLY - so a group joined without the flag disappears
+  the moment its branch is packed back into a `.tscn`, after which every count in the sheet answers
+  zero with nothing else failing anywhere.
+- **The cap is on the row, and so is the policy.** "At most twelve alive" is two different games
+  depending on what happens at twelve, so there is a row per answer and each says which it is in its
+  own sentence rather than hiding behind a setting. **Spawn A Copy, Oldest Goes First** reads the
+  crowd once, removes the member Godot lists first to make room and then spawns, so the new copy
+  always appears - what a bullet, a footstep or a skid mark wants; `maxi({cap}, 1)` is what makes
+  the index always safe, whatever number was typed. **Spawn A Copy Unless The Crowd Is Full** does
+  nothing at all when the crowd is full - what an enemy wave wants - and declares the name BEFORE
+  its branch, so the rows after it can still say it and an **Is Still Here** row can tell a skipped
+  spawn from a real one.
+- **How Many Alive** is the group's own size, `get_tree().get_node_count_in_group(…)`, as an
+  expression that goes in any field: a comparison, a HUD label, a difficulty curve.
+- **On The Last One Removed runs once per emptying, with no tick and no memory.** It is the scene
+  tree's own `node_removed` signal, and the question that narrows it to one crowd is an ORDINARY
+  CONDITION ROW added underneath it when the trigger is picked - visible, editable, deletable, and a
+  plain `if` on disk rather than a wrapper the compiler writes behind the row. The question reads
+  `node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]`, because a
+  leaving node is still listed in its groups at that moment: a crowd down to just the one that is
+  going is exactly a crowd that was about to be empty. The shipped **On Group Emptied** condition is
+  untouched and stays the answer when you would rather the check rode a per-frame trigger.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

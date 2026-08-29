@@ -265,6 +265,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnPhysicsPostTick":
 			# The physics-tick sibling: SceneTree.physics_frame, after every _physics_process this step.
 			return _signal_backed("_on_physics_post_tick", "", "physics_frame", "@tree")
+		"OnLastOfCrowdRemoved":
+			# The scene tree's own node_removed signal, which fires as ANY node leaves and hands the
+			# handler the node that is going. Which crowd an event is about is not part of the
+			# connection - it is the gate condition applying the trigger adds underneath, so every
+			# crowd on the sheet shares this one handler and each says its own question in the sheet.
+			# Connected on get_tree() (the "@tree" global source), not self.
+			return _signal_backed("_on_node_removed", "node: Node", "node_removed", "@tree")
 		"OnLocaleChanged":
 			# The translation-changed NOTIFICATION (the engine has no signal for it):
 			# compiles to the _notification virtual; applying the trigger auto-adds the

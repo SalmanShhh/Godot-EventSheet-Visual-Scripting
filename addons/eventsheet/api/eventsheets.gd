@@ -2025,6 +2025,9 @@ const MODULE_GUIDE_OVERRIDES := {
 	# Removing is the other half of the same page: the rows that take a copy back out of the world
 	# read next to the rows that put it there, and the guard belongs beside the name it protects.
 	"removal": "Spawning-Copies-Of-Scenes",
+	# And the plural is the third half of it: a crowd is only ever the copies a spawn row made, so
+	# the cap, the count and the emptying read beside the row that put them there.
+	"crowd": "Spawning-Copies-Of-Scenes",
 	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.

@@ -40,14 +40,25 @@ A node that wants to hear about its OWN removal uses the shipped **On Exit Tree*
 fires as it leaves the tree. That is a lifecycle handler rather than a removal verb, so it stays
 where it is.
 
+Six more say the copies in the plural, because a game that spawns one thing soon spawns twenty:
+
+- **Spawn A Copy Into The Crowd** - the same spawn, with the copy joined to a group named after the
+  scene.
+- **Spawn A Copy, Oldest Goes First** and **Spawn A Copy Unless The Crowd Is Full** - the cap, with
+  what happens at the cap written into the row's own sentence.
+- **How Many Alive** - the group's size, in any field that takes a number.
+- **On The Last One Removed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
+  and the question it puts in the sheet underneath itself.
+
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Removing what you spawned](#removing-what-you-spawned)
-4. [Reference tables](#reference-tables)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [The crowd](#the-crowd)
+5. [Reference tables](#reference-tables)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -58,6 +69,8 @@ where it is.
 - **A spawn point you can move in the editor** without opening the sheet.
 - **A spawn from a collision handler**, where Godot refuses an immediate `add_child`.
 - **Keeping spawns under one layer node** so the scene tree stays readable at runtime.
+- **A trail, a swarm or a burst with a hard limit**, capped on the row with the policy said out loud.
+- **A wave that announces its own end** when the last member leaves, with nothing counting down.
 - **Reading somebody else's script** and seeing their own name for the copy kept in the row.
 
 ## Core concepts
@@ -139,6 +152,90 @@ written, once. That is also what makes a file guarded by hand open and save back
 every row outside these three is left exactly as it was. Emitted code does not change under your
 feet.
 
+## The crowd
+
+Once a sheet spawns more than one of a thing, the questions change: how many are there, how many are
+allowed, and what happens when the last one goes. A crowd is the plugin's word for the answer, and
+the answer is a **Godot group** - the tree's own index, which empties itself as members leave.
+
+```
+var new_enemy = Enemy.instantiate()
+new_enemy.add_to_group("enemies", true)
+$Enemies.add_child(new_enemy)
+new_enemy.global_position = $SpawnPoint.global_position
+```
+
+**The second argument is not optional.** `add_to_group(name)` on its own is not persistent, and
+`PackedScene.pack()` saves persistent groups only - so a group joined without the flag disappears
+the moment its branch is packed back into a `.tscn`, after which every count quietly answers zero.
+The crowd rows always pass `true`. It costs nothing at runtime and it is the difference between a
+crowd that survives being saved into a scene and one that does not.
+
+**Nothing keeps a list.** There is no registry and no manager node. The rows join a group and then
+ask the tree, so there is no second place for the two to disagree, and a member that is freed leaves
+the group as it leaves the tree.
+
+### The cap, and the policy on the row
+
+"At most twelve alive" is two different games depending on what happens at twelve, so there is a row
+per answer and each says which it is in its own sentence.
+
+**Spawn A Copy, Oldest Goes First** removes a member to make room and then spawns, so the new copy
+always appears:
+
+```
+var crowd_new_mark = get_tree().get_nodes_in_group("marks")
+if crowd_new_mark.size() >= maxi(20, 1):
+	crowd_new_mark[0].queue_free()
+var new_mark = Mark.instantiate()
+```
+
+The crowd is read once into a local, because the row needs both the size and the member it is about
+to remove. `maxi(cap, 1)` is what makes `[0]` always safe: the branch cannot run on an empty crowd,
+whatever number you typed. The one removed is the member Godot lists first, which under a parent
+that spawns by adding children is the earliest one still alive. This is what a bullet, a footstep or
+a skid mark wants.
+
+**Spawn A Copy Unless The Crowd Is Full** does nothing at all when the crowd is full:
+
+```
+var new_enemy: Node = null
+if get_tree().get_node_count_in_group("enemies") < 12:
+	new_enemy = Enemy.instantiate()
+```
+
+The name is declared **before** the branch on purpose, so the rows after it can still say it. What
+it holds when the spawn was skipped is nothing - which an Is Still Here row can ask about, rather
+than a silence you have to guess at. This is what an enemy wave wants, where a spawn that arrives by
+pushing another one out is worse than no spawn.
+
+### Counting them, and missing them
+
+**How Many Alive** is the group's own size, `get_tree().get_node_count_in_group("enemies")`. It is an
+expression, so it goes in any field: a comparison, a HUD label, a difficulty curve.
+
+**On The Last One Removed** runs the moment a crowd's last member leaves the world, once per
+emptying. It is the scene tree's own node-removed signal, and the question that narrows it to this
+crowd is a **condition row you can see**:
+
+```
+func _ready() -> void:
+	get_tree().node_removed.connect(_on_node_removed)
+
+func _on_node_removed(node: Node) -> void:
+	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+		...
+```
+
+Picking the trigger adds that condition underneath it, filled in with the crowd you typed. It is an
+ordinary row: editable, deletable, and a plain `if` on disk. **A leaving node is still listed in its
+groups at that moment**, which is why "the crowd is down to just the one that is going" is exactly
+"this was the last one".
+
+The shipped **On Group Emptied** condition asks the same question a different way - on a per-frame
+trigger, by remembering last tick's count. It is unchanged and still the answer when you want the
+check to ride an existing tick. This trigger needs neither the tick nor the memory.
+
 ## Reference tables
 
 | Name | What it does | Ships as |
@@ -154,6 +251,12 @@ feet.
 | Remove After Seconds | Removes the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
 | Fade Out Then Remove | Fades the object out, waits, then removes it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
 | Is Still Here | True while the object has not been removed. | `is_instance_valid({object})` |
+| Spawn A Copy Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
+| Spawn A Copy, Oldest Goes First | Makes room by removing the first member, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd})`, `if crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}[0].queue_free()`, … |
+| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var {name}: Node = null`, `if get_tree().get_node_count_in_group({crowd}) < {cap}:`, … |
+| How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
+| On The Last One Removed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
+| Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 
 ## Use cases
 
@@ -230,6 +333,27 @@ frame to stop meaning anything.
 Remove Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
 variable honest afterwards.
 
+**22. A wave you can hear finish.** Spawn the wave with Spawn A Copy Into The Crowd, then one On The
+Last One Removed event on the same crowd opens the door, pays the reward and starts the next wave.
+Nothing counts the enemies down; the trigger is the last one leaving.
+
+**23. A skid-mark trail that never grows.** Spawn A Copy, Oldest Goes First with a cap of 20 into a
+`marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
+the tree never fills.
+
+**24. A spawner that respects a limit.** Spawn A Copy Unless The Crowd Is Full with a cap of 12. A
+timer that fires every second simply does nothing while twelve are alive, and starts again when one
+dies - no counter to keep and no flag to clear.
+
+**25. Enemies remaining, on the HUD.** Put How Many Alive in a Set Text row, on the same per-frame
+event the rest of the HUD uses. It reads the group, so it can never disagree with what is on screen.
+
+**26. Difficulty that follows the crowd.** Compare How Many Alive to a number in a condition, and
+spawn a tougher kind while the crowd is thin.
+
+**27. A crate you can clear.** Tag every breakable into a `crates` crowd as it spawns, and let On The
+Last One Removed on that crowd drop the key.
+
 ### Other use cases
 
 **A ghost replay.** Spawn a copy of the player scene as `ghost`, disable its input flag on the next row, and let a recorded path drive it.
@@ -279,6 +403,23 @@ variable honest afterwards.
   you want the event to carry straight on, use Remove After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
   CanvasItem. A plain Node has no transparency to walk.
+- **A crowd is a plain Godot group.** Anything else in the project that uses groups sees the same
+  members, which is usually what you want and occasionally a surprise. Name crowds after the scene
+  they hold and the two stay easy to tell apart.
+- **The persistent flag is the one thing not to remove.** Emitted crowd rows pass `true` to
+  `add_to_group`. Editing that out looks harmless and breaks every count the day the branch is packed
+  into a scene file.
+- **The cap rows are two rows, not one row with a setting.** If a spawn keeps vanishing, you picked
+  the skip row; if an old one keeps vanishing, you picked the oldest-first row. The sentence on the
+  row says which.
+- **"Oldest" means the member Godot lists first.** Under a parent that spawns by adding children that
+  is the earliest one alive. Reparent members yourself and the order is the tree's, not the spawn's.
+- **The skipped spawn leaves the name holding nothing.** Rows after Spawn A Copy Unless The Crowd Is
+  Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
+- **On The Last One Removed never fires for a crowd that was already empty.** It answers a member
+  leaving, so a crowd nothing ever joined has no last member to remove.
+- **Do not delete the gate condition under that trigger unless you mean it.** Without it the event
+  runs for every node removed anywhere in the game.
 - **A guard you did not ask for is telling you something.** It appears only on a name that can
   already be gone. If you would rather not see it, keep the removal in the event that made the copy,
   or ask Is Still Here yourself.

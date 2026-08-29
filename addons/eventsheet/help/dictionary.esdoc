@@ -310,7 +310,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_name` | [Is Platform](ace:Core/IsPlatform) | Platform | Vocabulary |
 | `get_next_path_position` | [Next Path Position](ace:Core/GetNextPathPosition) | General Expressions | Vocabulary |
 | `get_node` | [Get Node](ace:Core/GetNode) | Helpers | Vocabulary |
-| `get_node_count_in_group` | [Count Nodes In Group](ace:Core/GetNodeCountInGroup) | Groups | Vocabulary |
+| `get_node_count_in_group` | [How Many Alive](ace:Core/CrowdCount) | Crowd | Vocabulary |
 | `get_node_or_null` | [Get Node Or Null](ace:Core/GetNodeOrNull) | Nodes | Vocabulary |
 | `get_nodes_in_group` | [Entities In Group](ace:Core/NodesInGroup) | Systems | Vocabulary |
 | `get_normal` | [Last Slide Normal](ace:Core/GetLastSlideNormal) | Collisions | Vocabulary |

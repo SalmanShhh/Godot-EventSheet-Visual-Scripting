@@ -28,6 +28,12 @@ extends RefCounted
 # calls to methods that live here (e.g. `_group_children_array`, `_find_resource_location`,
 # `_create_condition_from_definition`) stay bare helper calls.
 
+## The crowd vocabulary, for the gate condition On The Last One Removed carries. Loaded by PATH
+## rather than named by class so the dock still builds before the editor's class cache has caught up
+## with a newly added module, and read from rather than re-spelled so the trigger, the condition and
+## the line they compile to can only ever be written in one place.
+const CROWD_ACES := preload("res://addons/eventforge/registration/modules/crowd_aces.gd")
+
 var _dock: Control = null
 
 
@@ -572,6 +578,21 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
+	# On The Last One Removed is the scene tree's node_removed signal, which fires for every node
+	# anywhere in the game - so which crowd the event is about, and the fact that this was its LAST
+	# member, are a condition under it, added here for the same reason the language gate is: visible
+	# in the sheet, editable, deletable, and a plain condition on disk. The crowd rides across from
+	# the trigger's own field rather than being asked for twice.
+	if definition.id == CROWD_ACES.LAST_REMOVED_TRIGGER_ID and event_row.conditions.is_empty():
+		var crowd_gate: ACECondition = ACECondition.new()
+		crowd_gate.provider_id = "Core"
+		crowd_gate.ace_id = CROWD_ACES.LAST_REMOVED_GATE_ID
+		crowd_gate.codegen_template = CROWD_ACES.LAST_REMOVED_GATE_TEMPLATE
+		crowd_gate.params = {
+			"crowd": str(event_row.trigger_params.get("crowd", "\"enemies\"")),
+			CROWD_ACES.REMOVED_NODE_ARGUMENT: CROWD_ACES.REMOVED_NODE_ARGUMENT
+		}
+		event_row.conditions.append(crowd_gate)
 	# On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
 	# every clip - so which frame the event answers is a condition under it, added here for the same
 	# reason the language gate is: visible in the sheet, editable, deletable, and a plain condition on
