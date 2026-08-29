@@ -646,6 +646,9 @@ const SPAWN_NAME_PARAMS: Dictionary = {
 	"SpawnNewCopy": "name",
 	"SpawnNewCopyDeferred": "name",
 	"MakeNewCopy": "name",
+	"SpawnIntoCrowd": "name",
+	"SpawnIntoCrowdOldestFirst": "name",
+	"SpawnIntoCrowdUnlessFull": "name",
 }
 
 
@@ -662,7 +665,19 @@ static func _spawn_chip_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	if sheet == null:
 		return entries
 	var seen: Dictionary = {}
-	for row: Variant in sheet.events:
+	_collect_spawn_chips(sheet.events, entries, seen)
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_collect_spawn_chips(event_function.events, entries, seen)
+	return entries
+
+
+## The spawn names one row list holds, sub-events and all. A spawn under a condition is still a spawn
+## the sheet does and still declares its local, so the rows beside it are offered the name for the
+## same reason the rows under a plain event are.
+static func _collect_spawn_chips(rows: Array, entries: Array[Dictionary], seen: Dictionary) -> void:
+	for row: Variant in rows:
 		var event: EventRow = row as EventRow
 		if event == null:
 			continue
@@ -677,7 +692,7 @@ static func _spawn_chip_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			entries.append({"text": chip, "detail": "%s %s %s" % [
 				_spawn_scene_word(str(action.params.get("scene", ""))), SEPARATOR,
 				EventSheetL10n.translate("the new copy")], "kind": KIND_VARIABLE})
-	return entries
+		_collect_spawn_chips(event.sub_events, entries, seen)
 
 
 ## The scene a spawn row names, said the short way a detail line has room for: the declared name as

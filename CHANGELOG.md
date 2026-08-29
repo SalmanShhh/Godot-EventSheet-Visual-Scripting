@@ -25,7 +25,10 @@
   sheet's own variables. **Make A Copy** is the same name-minting statement on its own, for a copy
   that needs setting up before it joins the tree - and it is the row a hand-written
   `var b = Bullet.instantiate()` opens as, so an opened file keeps the author's own name for the
-  thing, down to the byte.
+  thing, down to the byte. Every row that mints a name is offered, wherever it sits: the three crowd
+  spawns name their copy in exactly the same field, and a spawn under a condition or inside a
+  function declares exactly the same local, so all of them are suggested and none of them is
+  offered only for having been written at the top of the sheet.
 - **Four words for where it lands, each one expression.** **Place Of** reads a node's own place (drop
   a Marker2D and move the spawn without touching the sheet); **Random Place Along Path** samples a
   Path2D's curve by distance travelled, so a long straight is exactly as likely as a tight corner;
@@ -110,7 +113,11 @@
   absence of a cap means. The band scale law does the rest: the head names what fits and counts the
   remainder on one line, so a sheet that spawns twenty things still has a head you can read. Clicking
   a band shows that scene in the FileSystem dock. Hand-written spawning is on the band too, because
-  the band is read off the emitted line rather than off a row's name.
+  the band is read off the emitted line rather than off a row's name. One pool is one band whichever
+  of its two calls the sheet says first: declaring a pool and taking copies out of it are the two
+  halves of the same spawning, so the declaring call's scene lands on the band the other one opened
+  rather than beside it, and a sheet that only takes copies out still says the pool's own name,
+  which is all that line knows.
 - **Four spawning mistakes, found by reading the sheet.** A new **Spawning** section in the Doctor,
   registered through the same public seam a pack uses, and every one of its findings is also said in
   place: an amber note under the row that has it, with its one click at the right edge.

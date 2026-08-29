@@ -207,6 +207,27 @@ static func _test_the_name_is_offered_to_the_rows_after_it() -> bool:
 	passed = _check("the offer says which scene the copy is of",
 		str(offered.get("new_bullet", "")).contains("bullet.tscn"), true) and passed
 	EventSheetCompletions.clear_cache()
+
+	# A spawn under a condition is still a spawn this sheet does, and its name is still a local the
+	# rows beside it can say - so a sub-event's copy is offered exactly as a top-level one is.
+	var nested: EventSheetResource = EventSheetResource.new()
+	nested.host_class = "Node2D"
+	var parent_event: EventRow = EventRow.new()
+	parent_event.trigger_provider_id = "Core"
+	parent_event.trigger_id = "OnProcess"
+	var child_event: EventRow = EventRow.new()
+	child_event.actions.append(_action("SpawnNewCopy", {
+		"scene": BULLET, "name": "nested_bullet", "at": "global_position", "parent": "self"
+	}))
+	parent_event.sub_events.append(child_event)
+	nested.events.append(parent_event)
+	EventSheetCompletions.clear_cache()
+	var nested_names: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in EventSheetCompletions.for_field(nested, "expression", "nested_"):
+		nested_names.append(str(entry.get("text", "")))
+	passed = _check("a copy spawned under a condition is offered too",
+		nested_names.has("nested_bullet"), true) and passed
+	EventSheetCompletions.clear_cache()
 	return passed
 
 

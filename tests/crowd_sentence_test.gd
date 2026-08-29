@@ -39,6 +39,37 @@ static func run() -> bool:
 	passed = _test_the_last_one_out_is_a_signal_and_a_visible_gate() and passed
 	passed = _test_applying_the_trigger_puts_the_gate_in_the_sheet() and passed
 	passed = _test_a_crowd_spawn_re_emits_byte_for_byte() and passed
+	passed = _test_the_crowd_copy_is_offered_to_the_rows_after_it() and passed
+	return passed
+
+
+# ── 7. The name a crowd row mints ──
+
+
+## A crowd row declares its local exactly as the plain spawn row does, so the name it gave the copy
+## is a name the rows after it can say - and an expression field offers it for the same reason.
+static func _test_the_crowd_copy_is_offered_to_the_rows_after_it() -> bool:
+	var passed: bool = true
+	for ace_id: String in ["SpawnIntoCrowd", "SpawnIntoCrowdOldestFirst", "SpawnIntoCrowdUnlessFull"]:
+		var sheet: EventSheetResource = EventSheetResource.new()
+		sheet.host_class = "Node2D"
+		var event: EventRow = EventRow.new()
+		event.trigger_provider_id = "Core"
+		event.trigger_id = "OnReady"
+		event.actions.append(_action(ace_id, {
+			"scene": ENEMY, "name": "new_foe", "crowd": CROWD, "cap": "12",
+			"at": "global_position", "parent": "self"
+		}))
+		sheet.events.append(event)
+		EventSheetCompletions.clear_cache()
+		var offered: Dictionary = {}
+		for entry: Dictionary in EventSheetCompletions.for_field(sheet, "expression", "new_"):
+			offered[str(entry.get("text", ""))] = str(entry.get("detail", ""))
+		passed = _check("%s offers the name it gave the copy" % ace_id,
+			offered.has("new_foe"), true) and passed
+		passed = _check("%s says which scene the copy is of" % ace_id,
+			str(offered.get("new_foe", "")).contains("enemy.tscn"), true) and passed
+		EventSheetCompletions.clear_cache()
 	return passed
 
 

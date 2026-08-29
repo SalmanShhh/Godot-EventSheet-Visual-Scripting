@@ -77,6 +77,37 @@ static func _test_the_band_says_what_the_sheet_spawns() -> bool:
 	passed = _check("a declared pool says the scene and the pool",
 		str(EventSheetSpawnFacts.bands(pooled)[0].get("value", "")),
 		"bullet.tscn - pooled as bullets") and passed
+
+	# ONE POOL IS ONE BAND. Declaring a pool and taking copies out of it are the two halves of one
+	# spawning, and a sheet doing both - which is the only way a pool is ever used - said one thing.
+	# Pinned in both orders, because the sheet decides which half it says first.
+	var both: EventSheetResource = _sheet()
+	both.events.append(_event("OnReady", [_raw(
+		"ObjectPool.create_pool(\"bullets\", \"res://bullet.tscn\", 8)")]))
+	both.events.append(_event("OnProcess", [_raw("var shot = ObjectPool.spawn(\"bullets\")")]))
+	var both_bands: Array[Dictionary] = EventSheetSpawnFacts.bands(both)
+	passed = _check("a pool declared and drawn from is one band", both_bands.size(), 1) and passed
+	passed = _check("saying the scene it was declared with",
+		str(both_bands[0].get("value", "")), "bullet.tscn - pooled as bullets") and passed
+
+	var drawn_first: EventSheetResource = _sheet()
+	drawn_first.events.append(_event("OnProcess", [_raw("var shot = ObjectPool.spawn(\"bullets\")")]))
+	drawn_first.events.append(_event("OnReady", [_raw(
+		"ObjectPool.create_pool(\"bullets\", \"res://bullet.tscn\", 8)")]))
+	var drawn_bands: Array[Dictionary] = EventSheetSpawnFacts.bands(drawn_first)
+	passed = _check("and one band still when the drawing is said first",
+		drawn_bands.size(), 1) and passed
+	passed = _check("the declaring half naming the scene on the band the other opened",
+		str(drawn_bands[0].get("value", "")), "bullet.tscn - pooled as bullets") and passed
+	passed = _check("with the file behind it, so the click has somewhere to go",
+		str(drawn_bands[0].get("reference", "")), "res://bullet.tscn") and passed
+
+	# A pool this sheet only draws from says the pool's own name, which is the whole of what it knows.
+	var borrowed: EventSheetResource = _sheet()
+	borrowed.events.append(_event("OnProcess", [_raw("var shot = ObjectPool.spawn(\"bullets\")")]))
+	passed = _check("a pool only drawn from says the pool and nothing it was not told",
+		str(EventSheetSpawnFacts.bands(borrowed)[0].get("value", "")),
+		"bullets - pooled as bullets") and passed
 	return passed
 
 

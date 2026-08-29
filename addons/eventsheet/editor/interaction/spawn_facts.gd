@@ -49,6 +49,10 @@ const CAP_PARAM := "cap"
 const POOL_CREATE_CALL := "ObjectPool.create_pool("
 const POOL_SPAWN_CALL := "ObjectPool.spawn("
 
+## How a pool's own name is remembered in the seen-map, kept apart from the scene keys beside it: a
+## pool called "bullets" and a scene called "bullets" are two different facts, and one band each.
+const POOL_KEY_PREFIX := "pool:"
+
 ## The same shape as it appears in a FINISHED line rather than in a template - what a hand-written
 ## spawn inside a verbatim block looks like, with the scene it is a copy of captured.
 const HAND_WRITTEN_PATTERN: String = "^var[ \\t]+[A-Za-z_][A-Za-z0-9_]*[ \\t]*=[ \\t]*(?<scene>.+)\\.instantiate\\(\\)[ \\t]*$"
@@ -236,6 +240,11 @@ static func _collect_written_by_hand(code: String, found: Array[Dictionary],
 ## against that scene, so the band says "enemy.tscn - pooled as bullets" rather than naming the pool
 ## twice; a pool that only hands copies out is recorded against the pool's own name, which is the
 ## whole of what the sheet said about it.
+##
+## ONE POOL IS ONE BAND, whichever of its two calls the sheet says first. Declaring a pool and taking
+## copies out of it are the two halves of the same spawning - a sheet doing both said one thing, not
+## two - so the pool's own name is remembered beside the scene key, and the second call either fills
+## the scene in on the band the first one made or is skipped as already said.
 static func _collect_pool(text: String, found: Array[Dictionary], seen: Dictionary) -> void:
 	for call_name: String in [POOL_CREATE_CALL, POOL_SPAWN_CALL]:
 		var at: int = text.find(call_name)
@@ -245,10 +254,28 @@ static func _collect_pool(text: String, found: Array[Dictionary], seen: Dictiona
 			var scene: String = arguments[1] if call_name == POOL_CREATE_CALL \
 				and arguments.size() > 1 else ""
 			var key: String = scene if not scene.is_empty() else pool
-			if not key.is_empty() and not seen.has(key):
+			var pool_key: String = "%s%s" % [POOL_KEY_PREFIX, pool]
+			var echo: String = text.substr(at).split("\n")[0].strip_edges()
+			if key.is_empty():
+				at = text.find(call_name, at + 1)
+				continue
+			if seen.has(pool_key):
+				# The other half of a pool already on the band. A declaring call arriving second is the
+				# one that knows the scene, so it names the band the handing-out call opened; a
+				# handing-out call arriving second has nothing to add and says nothing twice.
+				if not scene.is_empty():
+					var entry: Dictionary = found[int(seen[pool_key])]
+					if str(entry.get("path", "")).is_empty():
+						entry["scene"] = scene
+						entry["path"] = scene
+						entry["echo"] = echo
+						seen[scene] = true
+			elif not seen.has(key):
 				seen[key] = true
+				if not pool.is_empty():
+					seen[pool_key] = found.size()
 				found.append({"scene": key, "path": scene, "crowd": "", "cap": "",
-					"pool": pool, "echo": text.substr(at).split("\n")[0].strip_edges()})
+					"pool": pool, "echo": echo})
 			at = text.find(call_name, at + 1)
 
 
