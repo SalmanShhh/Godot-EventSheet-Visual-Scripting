@@ -48,7 +48,13 @@ static func run() -> bool:
 			comment_row_data = row
 	all_passed = _check("comment row found", comment_row_data != null, true) and all_passed
 	if comment_row_data != null:
-		all_passed = _check("multiline comment spans per line", comment_row_data.spans.size(), 2) and all_passed
+		# One span per LINE of the note, plus the echo of the line the row writes at its right edge.
+		var comment_lines: int = 0
+		for span: SemanticSpan in comment_row_data.spans:
+			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text":
+				comment_lines += 1
+		all_passed = _check("multiline comment spans per line", comment_lines, 2) and all_passed
+		all_passed = _check("plus one echo of the line it writes", comment_row_data.spans.size(), 3) and all_passed
 		all_passed = _check("multiline comment line_count", comment_row_data.line_count, 2) and all_passed
 		all_passed = _check("custom color carried to the row", comment_row_data.custom_color, Color(0.3, 0.2, 0.1, 1.0)) and all_passed
 

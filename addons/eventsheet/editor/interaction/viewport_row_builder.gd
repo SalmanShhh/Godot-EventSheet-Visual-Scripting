@@ -83,6 +83,15 @@ const HEAD_ECHO_GHOST_ALPHA: float = 0.3
 const REGION_CLOSER_FONT_DELTA: int = -2
 const REGION_CLOSER_ECHO_ALPHA: float = 0.4
 
+## The mark a DOCUMENTATION comment row leads with - the printer's paragraph sign, which is what the
+## row is: a paragraph of the manual this sheet writes. A private note gets no mark, because the
+## absence of one is the ordinary case.
+const COMMENT_PARAGRAPH_GLYPH := "¶"
+
+## How much of the comment ink a PRIVATE note keeps. It recedes rather than disappears: a note to
+## yourself is still worth reading, it is just not the book.
+const COMMENT_PRIVATE_ALPHA: float = 0.72
+
 ## How tall the closing tick is against an ordinary row, before the echo's own line height
 ## floors it. Slim enough to read as a rule with a label rather than as another row.
 const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
@@ -6313,18 +6322,38 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	# blocks); the row height follows line_count.
 	var comment_lines: PackedStringArray = comment_row.text.split("\n") if not comment_row.text.is_empty() else PackedStringArray(["Comment"])
 	row_data.line_count = comment_lines.size()
+	# The two spellings GDScript itself has, drawn as two looks. A `##` row is DOCUMENTATION - the
+	# engine renders it and the manual sets it as prose - so it reads at full strength and leads with
+	# a paragraph mark. A `#` row is a private note that never leaves this sheet, so it recedes to the
+	# same ink at a fraction of it. Only the LOOK differs: both rows write exactly the marker they
+	# carry, and the echo beside them says which.
+	var documentation: bool = comment_row.is_documentation()
+	var line_color: Color = event_style.comment_text_color
+	if not documentation:
+		line_color = Color(line_color, line_color.a * COMMENT_PRIVATE_ALPHA)
 	var comment_spans: Array[SemanticSpan] = []
+	if documentation:
+		comment_spans.append(_make_span(COMMENT_PARAGRAPH_GLYPH, SemanticSpan.SpanType.KEYWORD, {
+			"kind": "comment_row",
+			"badge": true,
+			"badge_style": "outline",
+			"badge_natural_width": true,
+			"line_index": 0,
+			"badge_bg": event_style.comment_text_color,
+			"badge_fg": event_style.comment_text_color,
+			"hover_note": EventSheetL10n.translate("Shows in the manual.")
+		}))
 	for line_index in range(comment_lines.size()):
 		var line_metadata: Dictionary = {
 			"editable": true,
 			"edit_kind": "comment_text",
 			"line_index": line_index,
-			"text_color": event_style.comment_text_color
+			"text_color": line_color
 		}
 		# BBCode-lite ([b]/[i]/[color=…]): segments shape the pixels; the RAW text stays
 		# the editing/serialization truth (no data loss on edit/copy).
 		if EventSheetBBCodeLite.has_markup(comment_lines[line_index]):
-			line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], event_style.comment_text_color)
+			line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], line_color)
 		comment_spans.append(
 			_make_span(
 				comment_lines[line_index],
@@ -6332,6 +6361,20 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 				line_metadata
 			)
 		)
+	# The echo of the line this row actually writes, asked of the row itself so it cannot disagree
+	# with what emission puts in the file - the whole point of the checkbox is that the echo restyles
+	# with the row and stays true either way.
+	if not comment_row.text.strip_edges().is_empty():
+		comment_spans.append(_code_echo_span(
+			comment_row.echo_line(0),
+			{
+				"kind": "comment_row",
+				"line_index": 0,
+				"hover_note": EventSheetL10n.translate("The line this row writes.")
+			},
+			EventSheetCodeEcho.REST_ALPHA,
+			true
+		))
 	row_data.spans = comment_spans
 	return row_data
 

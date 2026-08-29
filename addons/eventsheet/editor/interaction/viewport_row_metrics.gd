@@ -353,6 +353,11 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 	var font_size: int = _viewport._get_font_size()
 	var total_lines: int = 0
 	for span in row_data.spans:
+		# The note's own LINES decide its height. The paragraph mark a documentation row leads with
+		# and the echo of the line it writes both ride line 0, so counting them would reserve a band
+		# two rows tall for a one-line note.
+		if not ViewportLayoutBuilder._is_comment_text_span(span):
+			continue
 		total_lines += _comment_span_line_count(span, wrap_width, font, font_size)
 	return float(maxi(total_lines, 1)) * line_height
 

@@ -22,6 +22,7 @@ func init(dock: Control) -> void:
 var _comment_dialog: ConfirmationDialog = null
 var _comment_text_edit: TextEdit = null
 var _comment_color_button: ColorPickerButton = null
+var _comment_manual_check: CheckBox = null
 var _comment_dialog_target: CommentRow = null
 
 
@@ -35,6 +36,7 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	_comment_dialog_target = comment_row
 	_comment_text_edit.text = comment_row.text
 	_comment_color_button.color = comment_row.custom_color
+	_comment_manual_check.button_pressed = comment_row.is_documentation()
 	_comment_dialog.popup_centered(Vector2i(560, 320))
 	_comment_text_edit.grab_focus()
 
@@ -64,6 +66,15 @@ func _ensure_comment_dialog() -> void:
 	_comment_color_button.color = Color(0, 0, 0, 0)
 	form.add_child(EventSheetPopupUI.form_row("Background", _comment_color_button))
 	form.add_child(EventSheetPopupUI.hint_label("Alpha 0 = theme default."))
+	# The ONE control that decides which of GDScript's two comment spellings this row writes.
+	# Ticked, the row writes `##` - the documentation form the engine renders and the project manual
+	# sets as prose. Unticked, it writes `#` and never leaves this sheet. There is no separate
+	# "publish" field: the marker in the file IS the setting, so the row and the line always agree.
+	_comment_manual_check = CheckBox.new()
+	_comment_manual_check.text = EventSheetL10n.translate("Shows in the manual")
+	form.add_child(_comment_manual_check)
+	form.add_child(EventSheetPopupUI.hint_label(
+		"Writes ## instead of #. Notes left as # stay in this sheet - they are not documentation and nothing counts them as missing.", 480.0))
 	_comment_dialog.add_child(EventSheetPopupUI.margined(form))
 	_comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
 	_dock.add_child(_comment_dialog)
@@ -75,9 +86,13 @@ func _on_comment_dialog_confirmed() -> void:
 	var target: CommentRow = _comment_dialog_target
 	var new_text: String = _comment_text_edit.text
 	var new_color: Color = _comment_color_button.color
+	var documentation: bool = _comment_manual_check.button_pressed
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Comment", func() -> bool:
 		target.text = new_text
 		target.custom_color = new_color
+		# Leaves the marker completely alone when the side has not changed, so a comment lifted as
+		# `##` (no trailing space) is not silently respelled and re-emits byte for byte.
+		target.set_documentation(documentation)
 		return true
 	)
 	if changed:

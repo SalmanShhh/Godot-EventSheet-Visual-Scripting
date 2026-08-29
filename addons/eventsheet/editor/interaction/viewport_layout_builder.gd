@@ -157,6 +157,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	if is_comment_row:
 		var visual_top: int = 0
 		for comment_span: SemanticSpan in row_data.spans:
+			# Only the TEXT spans are lines of the note. The paragraph mark and the echo of the line
+			# this row writes are chrome riding line 0 - counting them as lines stacked the note's
+			# own words one row lower and left the mark alone on a band of its own.
+			if not _is_comment_text_span(comment_span):
+				comment_line_tops.append(0)
+				comment_line_counts.append(1)
+				continue
 			var span_lines: int = _viewport._row_metrics_helper._comment_span_line_count(comment_span, comment_wrap_width, font, font_size)
 			comment_line_tops.append(visual_top)
 			comment_line_counts.append(span_lines)
@@ -274,9 +281,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					span_width = max(max_action_width, 1.0)
 				else:
 					span_width = max(min(span_width, max_action_width), 1.0)
-		elif is_comment_row:
+		elif is_comment_row and _is_comment_text_span(span):
 			# A comment fills to the row's right padding (event-sheet banner), not just its text
-			# width, so the whole row reads as one solid note band.
+			# width, so the whole row reads as one solid note band. Its chrome - the paragraph mark
+			# and the echo - keeps its measured size and falls through to the branches below, or the
+			# mark alone would take the whole band and the words would have nowhere to draw.
 			span_width = max(row_right_limit - span_x - 2.0, 1.0)
 		elif bool(metadata.get("align_right", false)):
 			# A right-aligned span on a flow row (the variable row's code echo, a group head's counts
@@ -321,7 +330,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		# plain text keep the original vertical inset.
 		if bool(metadata.get("chip", false)):
 			span.rect = Rect2(span_x, span_y - 2.5, span_width + 2.0, float(span_visual_lines) * line_height - 1.0)
-		elif is_comment_row and span_index < comment_line_counts.size():
+		elif is_comment_row and _is_comment_text_span(span) and span_index < comment_line_counts.size():
 			# A wrapped comment span is as tall as its visual-line count; flag it so the
 			# renderer draws it with word-wrapping instead of a single clipped line.
 			var comment_height: float = float(comment_line_counts[span_index]) * line_height - 6.0
@@ -426,6 +435,16 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	}
 	_viewport._layout_cache.store(key, layout)
 	return layout
+
+
+## Whether a span on a comment row is one of the note's own LINES rather than the chrome beside them.
+## A comment row carries a paragraph mark when it is documentation and an echo of the line it writes;
+## both ride line 0 at their measured width, while the text spans stack and fill the band. Asked in
+## one place, because three separate branches of the layout have to agree about it.
+static func _is_comment_text_span(span: SemanticSpan) -> bool:
+	if span == null or not (span.metadata is Dictionary):
+		return false
+	return str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text"
 
 
 ## Where the right-anchored run of a flow row starts: the row's right padding minus the measured

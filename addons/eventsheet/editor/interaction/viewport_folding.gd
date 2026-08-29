@@ -339,7 +339,13 @@ func summary_piece(row_data: EventRowData) -> String:
 			continue
 		var lane: String = ""
 		if span.metadata is Dictionary:
-			lane = str((span.metadata as Dictionary).get("lane", ""))
+			var metadata: Dictionary = span.metadata as Dictionary
+			# An ECHO is the row saying the line it writes, not a second thing the row holds. A
+			# summary that read it back said every comment twice - once as its words and once as
+			# `# its words`.
+			if bool(metadata.get("code_echo", false)):
+				continue
+			lane = str(metadata.get("lane", ""))
 		if lane == "condition":
 			conditions.append(text)
 		elif lane == "action":

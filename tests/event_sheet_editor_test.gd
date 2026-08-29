@@ -206,7 +206,13 @@ static func run() -> bool:
     var comment_row_data: EventRowData = flat_rows[0].get("row")
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
-    all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
+    # One editable label per LINE of the note, plus the echo of the line the row writes standing at
+    # its right edge. The echo is chrome, not a line: counted separately here so a change that
+    # started stacking it as a second line of text would fail rather than pass quietly.
+    all_passed = _check("comment rows render a single editable label span",
+        _comment_text_span_count(comment_row_data), 1) and all_passed
+    all_passed = _check("and the echo of the line it writes stands beside it",
+        comment_row_data.spans.size(), 2) and all_passed
     # The head leads with the folder MARK, and the title beside it is the editable span (no
     # redundant "Group" word badge, then or now).
     all_passed = _check("the head leads with the folder mark",
@@ -1695,6 +1701,18 @@ static func run() -> bool:
 
     editor.free()
     return all_passed
+
+
+## How many spans of a comment row are the note's own LINES, as against the chrome beside them
+## (the paragraph mark a documentation row leads with, and the echo of the line the row writes).
+static func _comment_text_span_count(row_data: EventRowData) -> int:
+    var lines: int = 0
+    for span: SemanticSpan in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("edit_kind", "")) == "comment_text":
+            lines += 1
+    return lines
 
 
 static func _row_contains_text(row_data: EventRowData, expected_text: String) -> bool:
