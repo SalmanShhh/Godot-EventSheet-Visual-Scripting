@@ -564,6 +564,25 @@
   was measured.
 - **The pack count is one number again.** One half of the moving-in guide said 105 packs and the
   other said 111; 111 is what the tree holds.
+- **An angle field stops eating the end of your variable's name.** The unit a reader says out loud
+  was found by testing the last three letters and nothing else, so `angle_deg` - the single likeliest
+  name an angle variable ever has - was read as "the value `angle_` said degrees", and the row
+  compiled to a variable the game does not have. `aim_rad` and `turn_grad` went the same way. A unit
+  now has to STAND ALONE to count: after a space, or straight after the number it belongs to
+  (`1.2rad`), and never mid-identifier.
+- **Nothing is wrapped round a PI at the end of an expression either.** `spin_speed * PI` and
+  `x * TAU` name the constant as plainly as `PI/4` does, and both were being written
+  `deg_to_rad(spin_speed * PI)` - the exact conversion the rule exists to prevent - because the test
+  only looked at the front of the string and at a PI with a space on both sides. The constants are
+  now found wherever in the expression they sit, on word boundaries, so `SPIN` and `TAUNT` still name
+  nothing.
+- **A stored angle reads back by what it says, which is what the setting always promised.** A project
+  that thinks in radians flips what a bare number a reader TYPES means; it never meant to change how
+  a stored sheet is read. But a bare number was being read back through the setting, so opening
+  somebody else's sheet in a radian project showed "30 rad" on a row that compiles to
+  `deg_to_rad(30.0)` - the row and the code disagreeing, which is the one outcome this rule exists to
+  rule out. The reading no longer asks the setting at all: a bare number is degrees, because a bare
+  number is what a degree slot stores, and a radian project's own typing is converted on the way in.
 
 ### Performance - a project ten times this one, and what the editor costs on it
 
