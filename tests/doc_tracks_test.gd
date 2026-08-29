@@ -176,10 +176,20 @@ static func _read_next_refuses_to_nag() -> bool:
 	passed = _check("a verb is censused under the words the guides are written in",
 		str(EventSheetDocTracks.census([_sheet_using("MultiplayerHostGame")] as Array[EventSheetResource])),
 		str(PackedStringArray(["Multiplayer Host Game"]))) and passed
-	# The offer is spent once, through the budget the whole editor shares.
+	# The offer is spent once, through the budget the whole editor shares - once for the SESSION and
+	# not once per page it could have named. The suggestion is derived from whichever sheet is being
+	# opened, so booking it against that answer bought a fresh offer for every sheet with a different
+	# one, and a reader opening thirty files was told thirty times by a budget that promises one.
+	passed = _check("nothing has been offered yet",
+		EventSheetDocTracks.may_offer_at_all(), true) and passed
 	var suggestion: Dictionary = EventSheetDocTracks.suggestion(tracks, hits)
 	passed = _check("the offer is made", EventSheetDocTracks.may_offer(suggestion), true) and passed
 	passed = _check("and never a second time", EventSheetDocTracks.may_offer(suggestion), false) and passed
+	passed = _check("nor for a different page the next sheet happens to point at",
+		EventSheetDocTracks.may_offer({"page_id": "GUIDE-THEMING", "title": "Theming",
+			"track": "Multiplayer", "hits": 2}), false) and passed
+	passed = _check("and a caller can find that out before working a suggestion out",
+		EventSheetDocTracks.may_offer_at_all(), false) and passed
 	passed = _check("an empty suggestion is never offered",
 		EventSheetDocTracks.may_offer({}), false) and passed
 	return passed
@@ -239,6 +249,28 @@ static func _tune_marks_land_on_values() -> bool:
 	passed = _check("an insert marks the rows it landed, nested ones too",
 		str(EventSheetClipboard.landed_event_uids([parent])),
 		str(PackedStringArray(["aaaa1111", "bbbb2222"]))) and passed
+	passed = _the_marks_do_not_outlive_the_sheet_they_describe() and passed
+	return passed
+
+
+## THE MARKS ARE A READING, NOT A PROPERTY. Nothing about them is written to a file, so a pane
+## handed a different sheet has to drop them - otherwise a row of the newly opened sheet that
+## happens to share an event uid with a marked one draws dashes it never earned, and the set grows
+## for the whole session across every insert and every tab switch in that pane.
+static func _the_marks_do_not_outlive_the_sheet_they_describe() -> bool:
+	var pane := EventSheetViewport.new()
+	var one := EventSheetResource.new()
+	pane.set_sheet(one)
+	pane.set_tunable_events(PackedStringArray(["aaaa1111"]))
+	var passed: bool = _check("an inserted example's rows are marked",
+		pane.is_event_tunable("aaaa1111"), true)
+	pane.set_sheet(one)
+	passed = _check("the same sheet re-seated after an edit is still the same reading",
+		pane.is_event_tunable("aaaa1111"), true) and passed
+	pane.set_sheet(EventSheetResource.new())
+	passed = _check("another sheet in the same pane inherits no marks",
+		pane.is_event_tunable("aaaa1111"), false) and passed
+	pane.free()
 	return passed
 
 

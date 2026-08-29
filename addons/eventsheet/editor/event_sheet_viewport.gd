@@ -460,6 +460,12 @@ func patterns_lens_enabled() -> bool:
 
 
 func set_sheet(sheet: EventSheetResource) -> void:
+	# The tune-me marks belong to the rows of the sheet that was on screen. A pane handed a DIFFERENT
+	# sheet - a tab switched, a file opened in this pane - drops them, or a row of the new sheet that
+	# happens to share an event uid with a marked one draws dashes it never earned. Only on a real
+	# change: the same sheet re-seated after an edit is the same reading, still being read.
+	if sheet != _sheet:
+		clear_tunable_events()
 	_sheet = sheet
 	_load_persisted_region_folds()
 	_load_persisted_collapse_level()
@@ -2731,8 +2737,9 @@ func is_event_tunable(uid: String) -> bool:
 	return _tunable_uids.has(uid)
 
 
-## Drops every tune-me mark - what a reader does when the example has become their own rows, and what
-## the dock does when the sheet in this pane is replaced.
+## Drops every tune-me mark. Called by set_sheet when this pane is handed a DIFFERENT sheet, which is
+## what stops the marks outliving the reading they belong to: nothing about them is written to a
+## file, so the moment the rows they described are off screen they are the wrong answer.
 func clear_tunable_events() -> void:
 	if _tunable_uids.is_empty():
 		return
