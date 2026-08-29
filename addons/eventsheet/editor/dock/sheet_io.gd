@@ -313,6 +313,11 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 func _offer_read_next(sheet: EventSheetResource) -> void:
 	if sheet == null:
 		return
+	# Asked before the suggestion is WORKED OUT, not after. Working one out takes a census of the
+	# sheet and puts up to forty of its verbs through the search index, and this runs on the
+	# file-open path - so a session that has already made its one offer must not pay for it again.
+	if not EventSheetDocTracks.may_offer_at_all():
+		return
 	var suggestion: Dictionary = EventSheetDocTracks.suggest_for([sheet] as Array[EventSheetResource])
 	if not EventSheetDocTracks.may_offer(suggestion):
 		return

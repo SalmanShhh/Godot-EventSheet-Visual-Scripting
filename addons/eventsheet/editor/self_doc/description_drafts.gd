@@ -101,9 +101,17 @@ static func may_offer(kind: String, name: String, already_described: bool, draft
 	return true
 
 
-## Forgets every offer made so far. The editor calls this when a project is closed, and a test calls
-## it on the way in AND on the way out - a static set that outlived its test would decide the next
-## test's answer, and the suite runs serially in one process.
+## Whether an offer has already been spent, WITHOUT spending one. For a caller whose suggestion is
+## expensive to work out: asking first means a session that has already made its one offer does not
+## pay to compute the answer it is not allowed to show.
+static func was_offered(kind: String, name: String) -> bool:
+	return _offered.has("%s:%s" % [kind, name])
+
+
+## Forgets every offer made so far. A test calls it on the way IN and on the way OUT - a static set
+## that outlived its test would decide the next test's answer, and the suite runs serially in one
+## process. Nothing in the editor calls it, and nothing needs to: the budget is per SESSION by
+## design, and Godot restarts the process when a project is closed.
 static func clear_offers() -> void:
 	_offered.clear()
 

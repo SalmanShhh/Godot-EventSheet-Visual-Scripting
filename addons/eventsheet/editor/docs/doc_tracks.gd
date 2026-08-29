@@ -57,6 +57,12 @@ const WEAKEST_HIT_SCORE := EventSheetDocTeaches.WEAKEST_ACCEPTED_SCORE
 ## suggestion is waiting, and the ranking has long since settled by the time the list is this long.
 const MAX_CENSUS_VERBS := 40
 
+## What the read-next offer is booked against in the shared offer budget. A fixed word rather than
+## the page a particular suggestion names: the offer is "one unprompted reading suggestion this
+## session", so it has one subject, and keying it on the answer would buy a new offer every time the
+## answer changed.
+const OFFER_SUBJECT := "one per session"
+
 
 # ── The tracks themselves ─────────────────────────────────────────────────────────────────────
 
@@ -336,11 +342,24 @@ static func suggestion_text(suggestion_entry: Dictionary) -> String:
 ## Whether this suggestion may be shown right now, and books it when the answer is yes. Spent through
 ## the editor's SHARED offer budget, so a reader who ignored it is not asked again this session and
 ## the Manual cannot spend a budget the dialogs already spent.
+##
+## ONE BOOKING FOR THE WHOLE KIND, not one per suggested page. The budget's keys are "kind:name", and
+## a suggestion is derived from the sheet being opened - so booking under the page it happens to
+## name meant every sheet with a different answer bought a fresh offer, and a reader opening thirty
+## files got thirty suggestions from a budget whose whole promise is one.
 static func may_offer(suggestion_entry: Dictionary) -> bool:
 	if suggestion_entry.is_empty():
 		return false
-	return EventSheetDescriptionDrafts.may_offer("read_next",
-		str(suggestion_entry.get("page_id", "")), false, str(suggestion_entry.get("title", "")))
+	return may_offer_at_all() \
+		and EventSheetDescriptionDrafts.may_offer("read_next", OFFER_SUBJECT, false,
+			str(suggestion_entry.get("title", "")))
+
+
+## Whether the one read-next offer of this session is still unspent. Asked BEFORE the suggestion is
+## worked out, because working one out means taking a census of the sheet and putting up to forty
+## verbs through the search index - on the file-open path, for an offer that has already been made.
+static func may_offer_at_all() -> bool:
+	return not EventSheetDescriptionDrafts.was_offered("read_next", OFFER_SUBJECT)
 
 
 ## The live suggestion for a set of open sheets: census, join, rank. The one call a surface makes.
