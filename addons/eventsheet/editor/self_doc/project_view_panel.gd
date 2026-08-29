@@ -27,6 +27,7 @@ var _find_edit: LineEdit = null
 var _facet_button: OptionButton = null
 var _results: Tree = null
 var _manual_view: TextEdit = null
+var _tasks: Tree = null
 var _rows: Array[Dictionary] = []
 var _sheets: Dictionary = {}
 
@@ -43,6 +44,7 @@ func open(sheets: Dictionary, findings: Array = [], timings: Dictionary = {}) ->
 	_rows = EventSheetProjectViewModel.rows(sheets, findings, timings)
 	_ensure_window()
 	_fill_rows()
+	_fill_tasks()
 	_window.popup_centered()
 
 
@@ -103,6 +105,19 @@ func _ensure_window() -> void:
 	results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(results_card)
 
+	# THE TO-DO LIST, and the only place a private `#` note is ever read. A note opening TODO or
+	# FIXME is a thing to do rather than a thing to publish, so it is listed here once and never
+	# reaches the manual, the search or an export.
+	_tasks = Tree.new()
+	_tasks.hide_root = true
+	_tasks.columns = 3
+	_tasks.set_column_title(0, EventSheetL10n.translate("Sheet"))
+	_tasks.set_column_title(1, EventSheetL10n.translate("Where"))
+	_tasks.set_column_title(2, EventSheetL10n.translate("Note"))
+	_tasks.column_titles_visible = true
+	_tasks.custom_minimum_size = Vector2(0.0, 80.0)
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Still to do"), _tasks))
+
 	_manual_view = TextEdit.new()
 	_manual_view.editable = false
 	_manual_view.custom_minimum_size = Vector2(0.0, 130.0)
@@ -134,6 +149,20 @@ func _fill_rows() -> void:
 		# A sheet nobody profiled leaves the cell EMPTY rather than showing a zero, because zero
 		# milliseconds is a claim about the sheet and nobody measured it.
 		item.set_text(5, "" if row.get("milliseconds") == null else "%.1f" % float(row.get("milliseconds")))
+
+
+## Fills the to-do strip from the notes the sheets already carry. No scan and no store: the chips are
+## read out of the same rows the canvas draws, and a note that was deleted has no chip on the next
+## open because there was never a copy of it anywhere.
+func _fill_tasks() -> void:
+	_tasks.clear()
+	var root: TreeItem = _tasks.create_item()
+	for chip: Dictionary in EventSheetProjectViewModel.tasks(_sheets):
+		var item: TreeItem = _tasks.create_item(root)
+		item.set_text(0, str(chip.get("path", "")).get_file())
+		item.set_tooltip_text(0, str(chip.get("path", "")))
+		item.set_text(1, str(chip.get("where", "")))
+		item.set_text(2, str(chip.get("text", "")))
 
 
 ## Composes the selected sheet's page fresh. Selecting is the regeneration: there is no stored page

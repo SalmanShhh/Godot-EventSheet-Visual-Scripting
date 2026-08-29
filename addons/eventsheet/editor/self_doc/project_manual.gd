@@ -51,6 +51,7 @@ static func page_for(sheet: EventSheetResource) -> String:
 	lines.append("*%s*" % str(head.get("detail", "")))
 	lines.append("")
 	lines.append(_described_line(head))
+	lines.append_array(_prose_lines(sheet))
 	for kind: String in SECTION_ORDER:
 		var section: Array[Dictionary] = _entries_of_kind(entries, kind)
 		if section.is_empty():
@@ -79,6 +80,25 @@ static func pages_for(sheets: Dictionary) -> Dictionary:
 		if sheet is EventSheetResource:
 			pages[key] = page_for(sheet as EventSheetResource)
 	return pages
+
+
+## The sheet's own prose: its DOCUMENTATION comment rows, in sheet order, set as paragraphs between
+## the head and the sections. This is the whole of "the book writes itself" - the words are already in
+## the sheet, written where the person was looking, and the page just reads them in order.
+##
+## A private note is not here and cannot be made to appear here. A paragraph written inside a chapter
+## carries that chapter's name in soft type, because a reader who meets a sentence about landing wants
+## to know it was written under the group about landing.
+static func _prose_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for paragraph: Dictionary in EventSheetSheetProse.paragraphs(sheet):
+		lines.append("")
+		var where: String = str(paragraph.get("where", "")).strip_edges()
+		if not where.is_empty():
+			lines.append("*%s*" % where)
+			lines.append("")
+		lines.append(str(paragraph.get("text", "")))
+	return lines
 
 
 ## The lines for one catalog entry: its name and detail as a heading line, its description or the

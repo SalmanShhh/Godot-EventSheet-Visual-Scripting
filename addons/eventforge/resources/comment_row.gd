@@ -31,6 +31,61 @@ func emit_marker() -> String:
 	return source_marker if not source_marker.is_empty() else "# "
 
 
+## The two spellings GDScript itself gives a comment, and the ONE fact that separates them: a line
+## opening `##` is documentation (the engine renders it for a `class_name` script), a line opening a
+## single `#` is private to the file. There is no second field recording which one this row is - the
+## marker it writes IS the answer, so the row, the emitted line and everything that reads them can
+## never disagree.
+const DOC_MARKER := "## "
+
+## The ordinary private marker. Stored as the EMPTY string rather than as these two characters,
+## because every authored comment and every generated file has always used it and writing it out
+## would change bytes in files nobody edited.
+const PRIVATE_MARKER := "# "
+
+## The words that open a note somebody means to come back to. Surfaced once as a chip in the project
+## view; they are never documentation, whichever marker they were written with.
+const TASK_WORDS: PackedStringArray = ["TODO", "FIXME"]
+
+
+## Whether this comment is DOCUMENTATION - a `##` line. False for the ordinary `#` form, which is the
+## default and what an unmarked row emits.
+func is_documentation() -> bool:
+	return emit_marker().begins_with("##")
+
+
+## Makes this row documentation, or makes it private, by rewriting the only thing that decides it.
+##
+## BYTE-EXACTNESS: a row already on the wanted side is left completely alone, so re-ticking a box on
+## a comment lifted as `##` (no trailing space) does not silently respell it as `## `. Only a row
+## that actually changes sides gets the canonical marker for its new side, and going private stores
+## the empty string, which is the spelling every existing sheet and pack already has.
+func set_documentation(documentation: bool) -> void:
+	if is_documentation() == documentation:
+		return
+	source_marker = DOC_MARKER if documentation else ""
+
+
+## The line this row actually writes, for the echo beside it - the marker it emits followed by one
+## line of its text. The echo is built from `emit_marker()` rather than from a second formatting rule,
+## so an echo that disagreed with the file would be impossible to write.
+func echo_line(line_index: int = 0) -> String:
+	var lines: PackedStringArray = text.split("\n")
+	var line: String = lines[line_index] if line_index >= 0 and line_index < lines.size() else ""
+	return (emit_marker() + line).rstrip(" \t") if line.strip_edges().is_empty() else emit_marker() + line
+
+
+## The task word this note opens with (`TODO` / `FIXME`), or "" when it opens with neither. A task is
+## a thing to do rather than a thing to read, so it is listed as a chip and never as prose.
+func task_word() -> String:
+	var trimmed: String = text.strip_edges()
+	for word: String in TASK_WORDS:
+		if trimmed == word or trimmed.begins_with(word + ":") or trimmed.begins_with(word + " ") \
+				or trimmed.begins_with(word + "(") or trimmed.begins_with(word + "-"):
+			return word
+	return ""
+
+
 ## Whether this row is a line of the file. An authored comment with nothing written in it is not -
 ## it is an empty row somebody has not filled in yet, and emitting it would leave a stray `# ` in the
 ## generated script. A comment that came from an opened file IS, even when it says nothing: the bare

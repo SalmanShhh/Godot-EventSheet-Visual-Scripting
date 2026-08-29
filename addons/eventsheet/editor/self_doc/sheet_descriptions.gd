@@ -164,7 +164,15 @@ static func coverage(sheet: EventSheetResource) -> Dictionary:
 			described += 1
 		else:
 			undescribed.append("%s:%s" % [str(entry.get("kind", "")), str(entry.get("name", ""))])
-	return {"described": described, "total": entries.size(), "undescribed": undescribed}
+	# `paragraphs` counts the sheet's DOCUMENTATION comment rows - the `##` lines that become the
+	# manual's prose. Private `#` notes are deliberately absent from this number and from every other
+	# number here: a note to yourself is not documentation somebody owes.
+	return {
+		"described": described,
+		"total": entries.size(),
+		"undescribed": undescribed,
+		"paragraphs": EventSheetSheetProse.paragraph_count(sheet),
+	}
 
 
 ## The one-line sentence a coverage footer states. Reads as a fact, never as a score to chase.

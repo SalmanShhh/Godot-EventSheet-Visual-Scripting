@@ -83,6 +83,10 @@ static func row_for(path: String, sheet: EventSheetResource, finding_count: int 
 		"unreadable_rows": int(reading.get("block_rows", 0)),
 		"adoption_percent": int(reading.get("percent", 100)),
 		"findings": finding_count,
+		# The `##` paragraphs this sheet writes into the manual. Its `#` notes are not counted here
+		# and are not counted as missing anywhere else either - a note to yourself is not debt.
+		"paragraphs": int(coverage.get("paragraphs", 0)),
+		"tasks": EventSheetSheetProse.tasks(sheet).size(),
 		# Absent, not zero: a sheet nobody profiled has no millisecond number to show, and showing 0
 		# would read as "this sheet is free", which is a claim nobody made.
 		"milliseconds": milliseconds,
@@ -224,6 +228,15 @@ static func _find_in_sheet(path: String, sheet: EventSheetResource, query: Strin
 			if variable_name.to_lower().contains(query):
 				hits.append(_hit(path, "variable", variable_name, "declarations",
 					EventSheetDescriptions.display(EventSheetDescriptions.for_variable(sheet, variable_name))))
+	if facet == FACET_ANY:
+		# The sheet's DOCUMENTATION paragraphs are searchable prose: they are part of the manual, so a
+		# person hunting the sentence they wrote about landing finds it. A private `#` note is not
+		# reachable from here by any facet - the gate is asked once, in one place, and this is a
+		# reader like every other.
+		for paragraph: Dictionary in EventSheetSheetProse.paragraphs(sheet):
+			if str(paragraph.get("text", "")).to_lower().contains(query):
+				hits.append(_hit(path, "prose", str(paragraph.get("text", "")),
+					_paragraph_where(paragraph), "documentation comment"))
 	_find_in_rows(path, sheet.events, "sheet", query, facet, hits)
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
@@ -233,6 +246,37 @@ static func _find_in_sheet(path: String, sheet: EventSheetResource, query: Strin
 					EventSheetDescriptions.signature_of(event_function)))
 			_find_in_rows(path, event_function.events if not event_function.events.is_empty() else event_function.rows,
 				event_function.function_name, query, facet, hits)
+
+
+## Where a prose paragraph reads as belonging - the chapter or function it was written in, or the
+## sheet itself when it was written at the top level.
+static func _paragraph_where(paragraph: Dictionary) -> String:
+	var where: String = str(paragraph.get("where", "")).strip_edges()
+	return where if not where.is_empty() else "sheet"
+
+
+## THE TASK LIST: every `TODO` and `FIXME` note across the sheets handed in, once each, sorted by path
+## then by the place it sits in then by its words - the same project always lists the same chips in
+## the same order. These are the ONE reading a private note has, and they are a list of things to do
+## rather than anything a reader of the game's manual is ever shown.
+static func tasks(sheets: Dictionary) -> Array[Dictionary]:
+	var chips: Array[Dictionary] = []
+	var paths: PackedStringArray = PackedStringArray()
+	for key: Variant in sheets.keys():
+		paths.append(str(key))
+	paths.sort()
+	for path: String in paths:
+		var sheet: Variant = sheets.get(path)
+		if not sheet is EventSheetResource:
+			continue
+		for task: Dictionary in EventSheetSheetProse.tasks(sheet as EventSheetResource):
+			chips.append({
+				"path": path,
+				"word": str(task.get("word", "")),
+				"where": _paragraph_where(task),
+				"text": str(task.get("text", "")),
+			})
+	return chips
 
 
 ## Every hit in one run of rows, at any depth. `where` is the function or group these rows sit in, and
