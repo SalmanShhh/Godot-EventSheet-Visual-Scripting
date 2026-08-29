@@ -347,8 +347,24 @@ static func _normalized_ledger(changelog: String) -> String:
 	var key: int = changelog.hash()
 	if key != _ledger_hash or _ledger_text.is_empty():
 		_ledger_hash = key
-		_ledger_text = _normalize(changelog)
+		_ledger_text = _normalize_bulk(changelog)
 	return _ledger_text
+
+
+## Everything that is not a letter or a digit, compiled once. See _normalize_bulk.
+static var _reducer: RegEx = null
+
+
+## The same reduction as _normalize, done by the engine's own scanner instead of by a GDScript loop
+## over one character at a time. It has to be: a shipped CHANGELOG is over a megabyte, and reducing a
+## megabyte an index at a time costs MINUTES - long enough that a command line reading the corpus
+## looks hung rather than slow. The per-name reduction below stays as it is, because it is the
+## definition the two spellings of a name are compared through and it runs on a handful of
+## characters; this is the same answer for a large input, and the suite pins that they agree.
+static func _normalize_bulk(text: String) -> String:
+	if _reducer == null:
+		_reducer = RegEx.create_from_string("[^a-z0-9]+")
+	return _reducer.sub(text.to_lower(), "", true)
 
 
 ## A table cell back to its bare words: the code span the guides write names in, stripped.
