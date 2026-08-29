@@ -57,6 +57,16 @@ static func build() -> bool:
 	]))
 	sheet.events.append(state)
 
+	# An autoload exists for the whole game, so the frames it does not need matter: nothing is
+	# cycling until Cycle Phases says so, and until then the clock costs nothing.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(_running)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# Self-tick: the autoload owns its own clock, the same way the Boosts autoload counts its
 	# timers down. Nothing in a user sheet has to remember to feed it a delta.
 	var tick: EventRow = EventRow.new()
@@ -80,6 +90,9 @@ static func build() -> bool:
 			"_elapsed = 0.0",
 			"_seconds_per = maxf(seconds_each, 0.0)",
 			"_running = not _phases.is_empty() and _seconds_per > 0.0",
+			"# An empty list, or a length of zero, leaves nothing for a frame to advance - and the",
+			"# clock is switched on before the first trigger so a handler that stops it here wins.",
+			"set_process(_running)",
 			"if _running:",
 			"\ton_phase_changed.emit(\"\", _phases[0])"
 		])),
@@ -88,7 +101,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "stop_cycle", "Stop Cycle", "Phase Cycle",
 		"Freezes the cycle where it stands. The current phase and its progress keep their values (Phase Is and Phase Progress still read them) - only the clock stops. Call Cycle Phases again to start over.",
 		[],
-		"_running = false")
+		"_running = false\n# A frozen cycle costs nothing per frame; Cycle Phases turns the clock back on.\nset_process(false)")
 
 	Lib.condition(sheet, "phase_is", "Phase Is", "Phase Cycle",
 		"True while the cycle is on the named phase - the branch for \"only spawn ghosts at night\". Names are matched exactly, so keep the spelling identical to the list you passed Cycle Phases.",
@@ -136,7 +149,9 @@ static func build() -> bool:
 		"\t_index = int(state.get(\"index\", 0))",
 		"\t_seconds_per = float(state.get(\"seconds_per\", 0.0))",
 		"\t_elapsed = float(state.get(\"elapsed\", 0.0))",
-		"\t_running = bool(state.get(\"running\", false))"
+		"\t_running = bool(state.get(\"running\", false))",
+		"\t# A save taken mid-cycle reopens mid-cycle, so the clock follows the restored state.",
+		"\tset_process(_running)"
 	]))
 	sheet.events.append(persistence)
 

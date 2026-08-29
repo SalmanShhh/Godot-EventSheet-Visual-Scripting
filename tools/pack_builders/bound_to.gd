@@ -31,7 +31,13 @@ static func build() -> bool:
 		"## Half the host's height in pixels (edge binding uses it; match your sprite).",
 		"@export var half_height: float = 16.0",
 		"## Master on/off - Set Bound Enabled flips it at runtime.",
-		"@export var bound_enabled: bool = true",
+		"@export var bound_enabled: bool = true:",
+		"\tset(value):",
+		"\t\tbound_enabled = value",
+		"\t\t# Every write lands here - a sheet's Set Bound Enabled action, the Inspector, another",
+		"\t\t# script - so the clamp stops and restarts with the knob whoever switched it. Only",
+		"\t\t# processing is synced: the pressed-side memory belongs to the verb that clears it.",
+		"\t\tset_physics_process(value)",
 		"",
 		"# --- Internal state ---",
 		"# The custom rectangle (world space) used when bound_space is \"custom\" - Rect2 cannot",
@@ -97,6 +103,17 @@ static func build() -> bool:
 		"\t\t\tcanvas.draw_dashed_line(inner.position + Vector2(0.0, inner.size.y), inner.position, faint, 1.0, 6.0)"
 	]))
 	sheet.events.append(block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# The clamp only runs while binding is on - a host authored with Bound off costs nothing",
+		"# per physics frame until Set Bound Enabled turns it on.",
+		"set_physics_process(bound_enabled)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"
@@ -134,7 +151,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_bound_enabled", "Set Bound Enabled", "Bound To",
 		"Turns the binding on or off at runtime (off = the host moves freely).",
 		[["enabled", "bool"]],
-		"bound_enabled = enabled\nif not enabled:\n\t_pressed_sides = {}")
+		"bound_enabled = enabled\nif not enabled:\n\t_pressed_sides = {}\n# Nothing to clamp while binding is off, and Is At Bound reads the cleared sides above,\n# so it keeps answering correctly with the physics frame switched off.\nset_physics_process(enabled)")
 	Lib.append_function(sheet, "set_custom_bounds", "Set Custom Bounds", "Bound To",
 		"Sets the custom rectangle (world-space pixels) and switches the binding to it - your level's playable area.",
 		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"]],

@@ -31,6 +31,16 @@ static func build() -> bool:
 	finished_signal.ace_category = "Timer"
 	sheet.events.append(finished_signal)
 
+	# A timer is authored stopped, and a stopped clock has nothing to count: processing follows
+	# `running`, so a timer that is never started costs nothing per frame.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(running)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# On Process: while running, count down; when it elapses, fire On Timer and repeat or stop.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -48,6 +58,11 @@ static func build() -> bool:
 	var no_repeat: EventRow = EventRow.new()
 	no_repeat.else_mode = EventRow.ElseMode.ELSE
 	no_repeat.actions.append(_action("SetVar", {"var_name": "running", "value": "false"}))
+	var no_repeat_idle: RawCodeRow = RawCodeRow.new()
+	# A one-shot that has fired is finished, not merely quiet - stop paying for the tick until
+	# Start Timer asks for another countdown.
+	no_repeat_idle.code = "set_process(false)"
+	no_repeat.actions.append(no_repeat_idle)
 	elapsed.sub_events.append(no_repeat)
 	tick.sub_events.append(elapsed)
 	sheet.events.append(tick)
@@ -64,6 +79,11 @@ static func build() -> bool:
 	start_body.actions.append(_action("SetVar", {"var_name": "duration", "value": "seconds"}))
 	start_body.actions.append(_action("SetVar", {"var_name": "remaining", "value": "seconds"}))
 	start_body.actions.append(_action("SetVar", {"var_name": "running", "value": "true"}))
+	var start_tick: RawCodeRow = RawCodeRow.new()
+	# A running countdown needs the frame it counts down in; Stop Timer and the final tick of a
+	# one-shot turn processing back off.
+	start_tick.code = "set_process(true)"
+	start_body.actions.append(start_tick)
 	start_timer.events.append(start_body)
 	sheet.functions.append(start_timer)
 
@@ -76,6 +96,10 @@ static func build() -> bool:
 	stop_timer.description = "Stops the countdown without firing On Timer."
 	var stop_body: EventRow = EventRow.new()
 	stop_body.actions.append(_action("SetVar", {"var_name": "running", "value": "false"}))
+	var stop_tick: RawCodeRow = RawCodeRow.new()
+	# A stopped clock costs nothing per frame; Start Timer turns processing back on.
+	stop_tick.code = "set_process(false)"
+	stop_body.actions.append(stop_tick)
 	stop_timer.events.append(stop_body)
 	sheet.functions.append(stop_timer)
 
@@ -99,7 +123,10 @@ static func build() -> bool:
 		"\tremaining = float(state.get(\"remaining\", 0.0))",
 		"\trunning = bool(state.get(\"running\", false))",
 		"\tduration = float(state.get(\"duration\", 1.0))",
-		"\trepeating = bool(state.get(\"repeating\", false))"
+		"\trepeating = bool(state.get(\"repeating\", false))",
+		"\t# A loaded save can restore a timer that was mid-countdown, so processing follows the",
+		"\t# state that came back rather than the state the scene was authored with.",
+		"\tset_process(running)"
 	]))
 	sheet.events.append(persistence)
 

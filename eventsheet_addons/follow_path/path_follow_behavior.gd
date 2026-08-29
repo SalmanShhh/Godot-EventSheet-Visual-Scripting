@@ -58,6 +58,9 @@ func _process(delta: float) -> void:
 			_distance = length
 			_following = false
 			_apply_path_position()
+			# The end of a Once run is a stop. Processing goes off BEFORE the trigger fires, so a
+			# row that answers On Path Finished with another Follow Path turns it straight back on.
+			set_process(false)
 			path_finished.emit()
 			return
 	elif _distance <= 0.0 and _travel_direction < 0:
@@ -68,6 +71,9 @@ func _process(delta: float) -> void:
 func _ready() -> void:
 	if auto_start and route != null:
 		follow_path(route, travel_speed, loop_mode)
+	# A host that is not walking a route has nothing to work out each frame, so a pack left
+	# waiting for a Follow Path row costs nothing until that row runs.
+	set_process(_following)
 
 ## @ace_hidden
 func _apply_path_position() -> void:
@@ -95,6 +101,8 @@ func follow_path(path: Path2D, speed: float = 120.0, mode: String = "once") -> v
 	_distance = 0.0
 	_travel_direction = 1
 	_following = true
+	# There is a route to walk again, so the per-frame pacing is worth paying for.
+	set_process(true)
 	_apply_path_position()
 
 ## @ace_action
@@ -104,6 +112,8 @@ func follow_path(path: Path2D, speed: float = 120.0, mode: String = "once") -> v
 ## @ace_codegen_template("$PathFollowBehavior.stop_following_path()")
 func stop_following_path() -> void:
 	_following = false
+	# A halted run costs nothing per frame; Follow Path turns processing back on.
+	set_process(false)
 
 ## @ace_condition
 ## @ace_name("Is Following Path")

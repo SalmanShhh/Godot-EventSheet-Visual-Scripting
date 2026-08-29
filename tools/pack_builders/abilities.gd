@@ -233,7 +233,16 @@ static func build() -> bool:
 		"\tfor id: String in abilities.keys():",
 		"\t\tif (abilities[id] as AbilityData).tags.has(tag):",
 		"\t\t\tout.append(id)",
-		"\treturn out"
+		"\treturn out",
+		"",
+		"# Whether any ability still has a clock running. A loadout of ready abilities changes",
+		"# nothing frame to frame, so only a cooldown or an expiry timer is worth a frame.",
+		"func _any_ability_on_a_clock() -> bool:",
+		"\tfor id: String in abilities.keys():",
+		"\t\tvar a: AbilityData = abilities[id]",
+		"\t\tif a.cooldown > 0.0 or a.expiration > 0.0:",
+		"\t\t\treturn true",
+		"\treturn false"
 	]))
 	sheet.events.append(block)
 
@@ -247,7 +256,10 @@ static func build() -> bool:
 		"\t# Deferred so the loadout is created after every node has readied AND connected its triggers -",
 		"\t# the host (which carries the event sheet) readies AFTER this child, so emitting On Ability",
 		"\t# Created synchronously here would fire before the sheet's handler is connected.",
-		"\tload_ability_set.call_deferred(ability_set)"
+		"\tload_ability_set.call_deferred(ability_set)",
+		"# Nothing is counting down yet, so no frame is paid for. Every action that starts a",
+		"# cooldown or an expiry timer - including the deferred loadout above - turns it back on.",
+		"set_process(false)"
 	]))
 	on_ready.actions.append(on_ready_body)
 	sheet.events.append(on_ready)
@@ -259,6 +271,7 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if abilities.is_empty():",
+		"\tset_process(false)",
 		"\treturn",
 		"var expired: Array = []",
 		"for id: String in abilities.keys():",
@@ -281,7 +294,10 @@ static func build() -> bool:
 		"for id: String in expired:",
 		"\tabilities.erase(id)",
 		"\tcurrent_ability_id = id",
-		"\ton_ability_removed.emit()"
+		"\ton_ability_removed.emit()",
+		"# Asked LAST, so a cooldown started by an On Ability Ready / On Ability Removed handler",
+		"# this very frame keeps the tick alive: once no clock is running, it switches itself off.",
+		"set_process(_any_ability_on_a_clock())"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -304,6 +320,8 @@ static func build() -> bool:
 		"var a: AbilityData = _ensure_ability(id)",
 		"a.max_cooldown = maxf(0.0, seconds)",
 		"a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)",
+		"# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"set_process(true)",
 		"if is_new:",
 		"\tcurrent_ability_id = id",
 		"\ton_ability_created.emit()"
@@ -318,6 +336,8 @@ static func build() -> bool:
 		"a.max_stacks = maxi(1, max_stacks)",
 		"a.stacks = a.max_stacks if reset_instantly else 0",
 		"a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)",
+		"# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"set_process(true)",
 		"if is_new:",
 		"\tcurrent_ability_id = id",
 		"\ton_ability_created.emit()"
@@ -330,6 +350,8 @@ static func build() -> bool:
 		"var a: AbilityData = _ensure_ability(id)",
 		"a.max_expiration = maxf(0.0, seconds)",
 		"a.expiration = maxf(0.0, seconds)",
+		"# A live expiry timer needs the frame back; the tick stops itself once none is left.",
+		"set_process(true)",
 		"if is_new:",
 		"\tcurrent_ability_id = id",
 		"\ton_ability_created.emit()"
@@ -341,7 +363,9 @@ static func build() -> bool:
 		"if not abilities.has(id):",
 		"\treturn",
 		"(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)",
-		"(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)"
+		"(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)",
+		"# A live expiry timer needs the frame back; the tick stops itself once none is left.",
+		"set_process(true)"
 	])))
 
 	Lib.append_function(sheet, "remove_ability", "Remove Ability", "Abilities",
@@ -376,6 +400,8 @@ static func build() -> bool:
 		"on_stack_consumed.emit()",
 		"if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:",
 		"\ta.cooldown = a.max_cooldown",
+		"\t# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"\tset_process(true)",
 		"current_ability_id = id",
 		"on_ability_activated.emit()"
 	])))
@@ -394,7 +420,9 @@ static func build() -> bool:
 		"\treturn",
 		"var cd: float = maxf(0.0, seconds * cooldown_multiplier)",
 		"(abilities[id] as AbilityData).cooldown = cd",
-		"(abilities[id] as AbilityData).max_cooldown = cd"
+		"(abilities[id] as AbilityData).max_cooldown = cd",
+		"# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"set_process(true)"
 	])))
 
 	Lib.append_function(sheet, "reset_cooldown", "Reset Cooldown", "Abilities",
@@ -409,7 +437,9 @@ static func build() -> bool:
 		"\tcurrent_ability_id = id",
 		"\ton_stack_gained.emit()",
 		"\tif a.stacks < a.max_stacks and a.max_cooldown > 0.0:",
-		"\t\ta.cooldown = a.max_cooldown"
+		"\t\ta.cooldown = a.max_cooldown",
+		"\t\t# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"\t\tset_process(true)"
 	])))
 
 	Lib.append_function(sheet, "set_max_stacks", "Set Max Stacks", "Abilities",
@@ -458,7 +488,9 @@ static func build() -> bool:
 		"current_ability_id = id",
 		"on_stack_consumed.emit()",
 		"if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:",
-		"\ta.cooldown = a.max_cooldown"
+		"\ta.cooldown = a.max_cooldown",
+		"\t# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"\tset_process(true)"
 	])))
 
 	Lib.append_function(sheet, "set_enabled", "Set Ability Enabled", "Abilities",
@@ -533,7 +565,9 @@ static func build() -> bool:
 		"\t\tcurrent_ability_id = id",
 		"\t\ton_stack_gained.emit()",
 		"\t\tif a.stacks < a.max_stacks and a.max_cooldown > 0.0:",
-		"\t\t\ta.cooldown = a.max_cooldown"
+		"\t\t\ta.cooldown = a.max_cooldown",
+		"\t\t\t# A live cooldown needs the frame back; the tick stops itself once none is left.",
+		"\t\t\tset_process(true)"
 	])))
 
 	Lib.append_function(sheet, "set_cooldown_multiplier", "Set Cooldown Multiplier", "Abilities",
@@ -552,6 +586,9 @@ static func build() -> bool:
 		"var rows: Variant = resource.get(\"abilities\")",
 		"if not (rows is Array):",
 		"\treturn",
+		"# A loadout can carry temporary abilities, so the tick comes back on; it switches itself",
+		"# off again on the first frame nothing is counting down.",
+		"set_process(true)",
 		"for row: Variant in (rows as Array):",
 		"\tif not (row is Dictionary):",
 		"\t\tcontinue",
@@ -625,7 +662,10 @@ static func build() -> bool:
 		"\t\ta.data = (entry.get(\"data\", {}) as Dictionary).duplicate(true)",
 		"\t\ta.tags = (entry.get(\"tags\", []) as Array).duplicate(true)",
 		"\t\ta.expiration = float(entry.get(\"expiration\", 0.0))",
-		"\t\ta.max_expiration = float(entry.get(\"max_expiration\", 0.0))"
+		"\t\ta.max_expiration = float(entry.get(\"max_expiration\", 0.0))",
+		"\t# Restored abilities may be mid-cooldown, so the tick comes back on; it switches itself",
+		"\t# off again on the first frame nothing is counting down.",
+		"\tset_process(true)"
 	]))
 	sheet.events.append(persistence)
 

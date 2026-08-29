@@ -23,16 +23,22 @@ signal path_blocked
 
 ## Units per second the host glides toward each waypoint.
 @export var max_speed: float = 5.0
-var moving: bool = false
-## Also stop the sweep on Area3D nodes, which it ignores by default.
-@export var step_hits_areas: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
 ## Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through thin geometry between two frames.
 @export var stepping: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Also stop the sweep on Area3D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
 ## Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it.
 @export var stop_on_step_hit: bool = true
 var waypoints: Array = []
+var moving: bool = false
+
+func _ready() -> void:
+	# A host that has not been sent anywhere yet has nothing to glide toward, so the tick starts
+	# off and every verb that hands it a destination turns it back on. `moving` is what the whole
+	# tick is gated on, so reading it here keeps the two in step with no second flag.
+	set_process(moving)
 
 func _process(delta: float) -> void:
 	if not moving or host == null or waypoints.is_empty():
@@ -43,6 +49,10 @@ func _process(delta: float) -> void:
 		waypoints.pop_front()
 		if waypoints.is_empty():
 			moving = false
+			# The last stop is reached, so there is nothing left to glide toward. Processing goes
+			# off BEFORE the trigger fires, so a row that answers On Arrived with another Move To
+			# turns it straight back on.
+			set_process(false)
 			arrived.emit()
 
 ## @ace_action
@@ -54,6 +64,8 @@ func _process(delta: float) -> void:
 func move_to_position_3d(x: float, y: float, z: float) -> void:
 	waypoints = [Vector3(x, y, z)]
 	moving = true
+	# There is somewhere to be again, so the per-frame glide is worth paying for.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Add Waypoint (3D)")
@@ -64,6 +76,8 @@ func move_to_position_3d(x: float, y: float, z: float) -> void:
 func add_waypoint_3d(x: float, y: float, z: float) -> void:
 	waypoints.append(Vector3(x, y, z))
 	moving = true
+	# A stop appended to an empty queue restarts the glide, so the tick has to come back on.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Moving (3D)")
@@ -74,6 +88,8 @@ func add_waypoint_3d(x: float, y: float, z: float) -> void:
 func stop_moving_3d() -> void:
 	moving = false
 	waypoints = []
+	# A stopped mover costs nothing per frame; Move To Position turns processing back on.
+	set_process(false)
 
 ## The furthest point on the way to `to` that is actually reachable this frame.
 ##
@@ -93,6 +109,9 @@ func step_toward(from: Vector3, to: Vector3) -> Vector3:
 	if stop_on_step_hit:
 		waypoints.clear()
 		moving = false
+		# A blocked path that drops its queue is stopped, so nothing is left for the tick to
+		# do - Move To Position and Add Waypoint turn processing back on.
+		set_process(false)
 	path_blocked.emit()
 	var contact: Vector3 = step_hit.get("position", world_from)
 	# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not

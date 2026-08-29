@@ -22,18 +22,22 @@ signal process_item(item: Variant)
 ## @ace_name("On Drained")
 signal drained
 
-var _last_count: int = 0
-var _paused: bool = false
-var _queue: Array = []
 ## Max milliseconds per frame spent draining the queue (used when Mode includes ms).
 @export_range(0.1, 16, 0.1) var frame_budget_ms: float = 4.0
 ## Hard cap on items processed per frame (used when Mode includes count).
 @export var max_items_per_frame: int = 64
 ## Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only.
 @export_enum("both", "ms", "count") var mode: String = "both"
+var _queue: Array = []
+var _last_count: int = 0
+var _paused: bool = false
+
+func _ready() -> void:
+	set_process(not _queue.is_empty())
 
 func _process(delta: float) -> void:
 	if _paused or _queue.is_empty():
+		set_process(false)
 		return
 	# Wall-clock ms fence - the one budget primitive shared across the frame-spreading tools.
 	var __budget_end := Time.get_ticks_usec() + int(frame_budget_ms * 1000.0)
@@ -48,6 +52,10 @@ func _process(delta: float) -> void:
 	_last_count = __n
 	if _queue.is_empty():
 		drained.emit()
+	# An empty queue is real idleness - a slicer with nothing to drain should cost nothing per
+	# frame. Recomputed after On Drained, because a handler is free to enqueue the next batch
+	# from inside it; every enqueue verb turns processing back on the same way.
+	set_process(not _queue.is_empty() and not _paused)
 
 ## @ace_action
 ## @ace_name("Enqueue Item")
@@ -57,6 +65,9 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_item({item})")
 func enqueue_item(item: Variant) -> void:
 	_queue.append(item)
+	# Work to do means frames to do it in - unless the slicer is paused, which is the one
+	# state that keeps items queued on purpose.
+	set_process(not _paused)
 
 ## @ace_action
 ## @ace_featured
@@ -68,6 +79,7 @@ func enqueue_item(item: Variant) -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_items({items})")
 func enqueue_items(items: Array) -> void:
 	_queue.append_array(items)
+	set_process(not _paused)
 
 ## @ace_action
 ## @ace_name("Enqueue Group")
@@ -77,6 +89,7 @@ func enqueue_items(items: Array) -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_group({group})")
 func enqueue_group(group: String) -> void:
 	_queue.append_array(get_tree().get_nodes_in_group(group))
+	set_process(not _paused)
 
 ## @ace_action
 ## @ace_name("Clear Queue")
@@ -86,6 +99,8 @@ func enqueue_group(group: String) -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.clear_queue()")
 func clear_queue() -> void:
 	_queue.clear()
+	# Nothing left to drain, so nothing left to spend a frame on.
+	set_process(false)
 
 ## @ace_action
 ## @ace_featured
@@ -106,6 +121,9 @@ func set_frame_budget(ms: float) -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.pause_slicer()")
 func pause_slicer() -> void:
 	_paused = true
+	# A paused slicer is not waiting on anything - it holds its items and does no work, so it
+	# should not be charged a frame for holding them.
+	set_process(false)
 
 ## @ace_action
 ## @ace_name("Resume")
@@ -115,6 +133,7 @@ func pause_slicer() -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.resume_slicer()")
 func resume_slicer() -> void:
 	_paused = false
+	set_process(not _queue.is_empty())
 
 ## @ace_condition
 ## @ace_name("Is Busy")

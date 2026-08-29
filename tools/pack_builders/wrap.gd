@@ -39,7 +39,12 @@ static func build() -> bool:
 		"## Half the host's height in pixels - it must be FULLY off screen before wrapping.",
 		"@export var half_height: float = 16.0",
 		"## Master on/off - Set Wrap Enabled flips it at runtime.",
-		"@export var wrap_enabled: bool = true",
+		"@export var wrap_enabled: bool = true:",
+		"\tset(value):",
+		"\t\twrap_enabled = value",
+		"\t\t# Every write lands here - a sheet's Set Wrap Enabled action, the Inspector, another",
+		"\t\t# script - so the edge test stops and restarts with the knob whoever switched it.",
+		"\t\tset_physics_process(value)",
 		"",
 		"# --- Internal state ---",
 		"# The custom rectangle (world space) used when wrap_space is \"custom\" - Rect2 cannot",
@@ -88,6 +93,17 @@ static func build() -> bool:
 		"\treturn \"bottom\" if direction.y >= 0.0 else \"top\""
 	]))
 	sheet.events.append(block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# The edge test only runs while wrapping is on - a host authored with Wrap off costs",
+		"# nothing per physics frame until Set Wrap Enabled turns it on.",
+		"set_physics_process(wrap_enabled)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"
@@ -134,7 +150,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_wrap_enabled", "Set Wrap Enabled", "Wrap",
 		"Turns wrapping on or off at runtime.",
 		[["enabled", "bool"]],
-		"wrap_enabled = enabled")
+		"wrap_enabled = enabled\n# Wrapping off means no edge test to run, so stop paying for the physics frame.\nset_physics_process(enabled)")
 	Lib.append_function(sheet, "set_custom_wrap_bounds", "Set Custom Wrap Bounds", "Wrap",
 		"Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.",
 		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"]],

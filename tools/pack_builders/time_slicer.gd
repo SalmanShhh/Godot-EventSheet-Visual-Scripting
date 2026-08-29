@@ -58,6 +58,15 @@ static func build() -> bool:
 		"\treturn _last_count"
 	]))
 	sheet.events.append(block)
+	# A slicer starts with an empty queue and therefore with nothing to do; the first enqueue is
+	# what wakes the tick up.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(not _queue.is_empty())"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	# Per-frame: drain the queue within the budget, emitting On Process Item per item, On Drained at empty.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -65,6 +74,7 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if _paused or _queue.is_empty():",
+		"\tset_process(false)",
 		"\treturn",
 		"# Wall-clock ms fence - the one budget primitive shared across the frame-spreading tools.",
 		"var __budget_end := Time.get_ticks_usec() + int(frame_budget_ms * 1000.0)",
@@ -78,31 +88,35 @@ static func build() -> bool:
 		"\t\tbreak",
 		"_last_count = __n",
 		"if _queue.is_empty():",
-		"\tdrained.emit()"
+		"\tdrained.emit()",
+		"# An empty queue is real idleness - a slicer with nothing to drain should cost nothing per",
+		"# frame. Recomputed after On Drained, because a handler is free to enqueue the next batch",
+		"# from inside it; every enqueue verb turns processing back on the same way.",
+		"set_process(not _queue.is_empty() and not _paused)"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 	Lib.append_function(sheet, "enqueue_item", "Enqueue Item", "Time Slicer", "Adds one item to the work queue (processed later within the per-frame budget).",
 		[["item", "Variant"]],
-		"_queue.append(item)")
+		"_queue.append(item)\n# Work to do means frames to do it in - unless the slicer is paused, which is the one\n# state that keeps items queued on purpose.\nset_process(not _paused)")
 	Lib.append_function(sheet, "enqueue_items", "Enqueue Items", "Time Slicer", "Adds every element of an array to the work queue.",
 		[["items", "Array"]],
-		"_queue.append_array(items)")
+		"_queue.append_array(items)\nset_process(not _paused)")
 	Lib.append_function(sheet, "enqueue_group", "Enqueue Group", "Time Slicer", "Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).",
 		[["group", "String"]],
-		"_queue.append_array(get_tree().get_nodes_in_group(group))")
+		"_queue.append_array(get_tree().get_nodes_in_group(group))\nset_process(not _paused)")
 	Lib.append_function(sheet, "clear_queue", "Clear Queue", "Time Slicer", "Drops all pending items without processing them.",
 		[],
-		"_queue.clear()")
+		"_queue.clear()\n# Nothing left to drain, so nothing left to spend a frame on.\nset_process(false)")
 	Lib.append_function(sheet, "set_frame_budget", "Set Frame Budget", "Time Slicer", "Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).",
 		[["ms", "float"]],
 		"frame_budget_ms = maxf(0.0, ms)")
 	Lib.append_function(sheet, "pause_slicer", "Pause", "Time Slicer", "Stops draining (items stay queued).",
 		[],
-		"_paused = true")
+		"_paused = true\n# A paused slicer is not waiting on anything - it holds its items and does no work, so it\n# should not be charged a frame for holding them.\nset_process(false)")
 	Lib.append_function(sheet, "resume_slicer", "Resume", "Time Slicer", "Resumes draining the queue.",
 		[],
-		"_paused = false")
+		"_paused = false\nset_process(not _queue.is_empty())")
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"enqueue_items": "Enqueue [b]{items}[/b]",

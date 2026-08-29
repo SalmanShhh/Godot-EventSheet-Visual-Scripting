@@ -29,7 +29,15 @@ static func build() -> bool:
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## Temporary buffs count down automatically every frame. Off: drive time yourself",
 		"## with Advance Timers (turn-based games advance per turn).",
-		"@export var auto_tick: bool = true",
+		"@export var auto_tick: bool = true:",
+		"\tset(value):",
+		"\t\tauto_tick = value",
+		"\t\t# Every write lands here - a sheet's Set Auto Tick action, the Inspector, another script -",
+		"\t\t# so the timers follow the knob whoever turned it. The predicate is the tick's own:",
+		"\t\t# auto-ticking with nothing counting down is still idle. Safe before the node exists,",
+		"\t\t# because the buff table is a typed Dictionary and reads as an empty one until it is",
+		"\t\t# initialized, never as a null.",
+		"\t\tset_physics_process(value and _any_buff_timer_running())",
 		"## What happens when a computed total leaves the min/max range: clamp stops at the",
 		"## boundary, wrap loops around, none applies no limit.",
 		"@export_enum(\"clamp\", \"wrap\", \"none\") var overflow_mode: String = \"clamp\"",
@@ -192,6 +200,9 @@ static func build() -> bool:
 		"\tfor tag: String in tags.split(\",\", false):",
 		"\t\ttag_list.append(tag.strip_edges())",
 		"\t_buffs[buff_id] = {\"stat\": stat, \"value\": value, \"mode\": mode, \"tags\": tag_list, \"source\": source, \"active\": true, \"time_left\": duration if duration > 0.0 else -1.0, \"duration\": duration, \"paused\": false}",
+		"\tif duration > 0.0:",
+		"\t\t# A timed buff is a countdown, so the auto-tick comes back on to run it.",
+		"\t\tset_physics_process(auto_tick)",
 		"\tbuff_added.emit(buff_id, stat)",
 		"\t_check_thresholds()",
 		"",
@@ -270,6 +281,8 @@ static func build() -> bool:
 		"\t\tvar buff: Dictionary = _buffs[buff_id]",
 		"\t\tbuff[\"time_left\"] = duration",
 		"\t\tbuff[\"duration\"] = duration",
+		"\t\t# A restarted countdown needs the frame back; the timers stop once none is running.",
+		"\t\tset_physics_process(auto_tick)",
 		"",
 		"## Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).",
 		"## @ace_action",
@@ -277,6 +290,9 @@ static func build() -> bool:
 		"func set_buff_timer_paused(buff_id: String, paused: bool) -> void:",
 		"\tif _buffs.has(buff_id):",
 		"\t\t(_buffs[buff_id] as Dictionary)[\"paused\"] = paused",
+		"\t\tif not paused:",
+		"\t\t\t# Unfreezing a countdown needs the frame back; the timers stop once none runs.",
+		"\t\t\tset_physics_process(auto_tick)",
 		"",
 		"## Advances every unpaused timer by the given seconds - the manual clock for",
 		"## turn-based games (turn ends: Advance Timers 1).",
@@ -367,16 +383,46 @@ static func build() -> bool:
 		"\t\t\t_last_rule = rule_id",
 		"\t\t\tthreshold_crossed.emit(rule_id, stat, now)",
 		"\tfor stat: String in new_totals:",
-		"\t\t_last_totals[stat] = new_totals[stat]"
+		"\t\t_last_totals[stat] = new_totals[stat]",
+		"",
+		"## Whether any buff still has a countdown running. A stack of permanent buffs changes",
+		"## nothing frame to frame, so it is worth no frame - Stat Total is computed when asked,",
+		"## never accumulated by the tick.",
+		"## @ace_hidden",
+		"func _any_buff_timer_running() -> bool:",
+		"\tfor buff: Dictionary in _buffs.values():",
+		"\t\tif float(buff[\"time_left\"]) > 0.0 and not bool(buff[\"paused\"]):",
+		"\t\t\treturn true",
+		"\treturn false"
 	]))
 	sheet.events.append(verbs)
+
+	# Nothing is counting down at startup, so no physics frame is paid for until a timed buff
+	# is applied.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# A node with no timed buff has nothing to count down, so it pays for no frame. Add Buff",
+		"# with a duration turns the timers back on.",
+		"set_physics_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	# Auto-tick: temporary buffs count down every physics frame.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
-	tick_body.code = "if auto_tick:\n\tadvance_timers(delta)"
+	tick_body.code = "\n".join(PackedStringArray([
+		"if auto_tick:",
+		"\tadvance_timers(delta)",
+		"# Asked LAST, so a buff applied by an On Buff Expired handler this very frame keeps the",
+		"# timers alive: once no countdown is left, they switch themselves off.",
+		"set_physics_process(auto_tick and _any_buff_timer_running())"
+	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 
@@ -402,7 +448,10 @@ static func build() -> bool:
 		"\t_rules = (state.get(\"rules\", {}) as Dictionary).duplicate(true)",
 		"\t# Restoring the last-seen totals keeps threshold rules from spuriously re-firing",
 		"\t# on the first change after a load.",
-		"\t_last_totals = (state.get(\"last_totals\", {}) as Dictionary).duplicate(true)"
+		"\t_last_totals = (state.get(\"last_totals\", {}) as Dictionary).duplicate(true)",
+		"\t# Restored buffs resume mid-countdown, so the timers come back on; they switch off",
+		"\t# again on the first frame nothing is counting down.",
+		"\tset_physics_process(auto_tick)"
 	]))
 	sheet.events.append(persistence)
 

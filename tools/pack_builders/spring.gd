@@ -152,6 +152,19 @@ static func build() -> bool:
 		"\t\t\"__scale\": host.scale = Vector2(value, value)"
 	]))
 	sheet.events.append(block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# An empty bank has nothing to integrate, so it costs no frames until a spring verb",
+		"# starts one. Guarded rather than unconditional: a row may already have sprung something",
+		"# before this node was readied.",
+		"if springs.is_empty() and color_springs.is_empty():",
+		"\tset_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -171,22 +184,36 @@ static func build() -> bool:
 		"\tif not centry.active:",
 		"\t\tcontinue",
 		"\tif centry.integrate(delta):",
-		"\t\tspring_reached.emit(str(color_name))"
+		"\t\tspring_reached.emit(str(color_name))",
+		"# A bank with nothing left to settle costs nothing per frame; every spring verb turns",
+		"# processing back on. Re-read after the emits above, so a row that starts a new spring",
+		"# from On Spring Reached keeps its frames.",
+		"var still_settling: bool = false",
+		"for pending: Variant in springs.values():",
+		"\tif (pending as SpringEntry).active:",
+		"\t\tstill_settling = true",
+		"\t\tbreak",
+		"if not still_settling:",
+		"\tfor color_pending: Variant in color_springs.values():",
+		"\t\tif (color_pending as ColorSpringEntry).active:",
+		"\t\t\tstill_settling = true",
+		"\t\t\tbreak",
+		"set_process(still_settling)"
 	]))
 	tick.actions.append(simulate)
 	sheet.events.append(tick)
 	Lib.append_function(sheet, "spring_to", "Spring To", "Spring", "Springs the named value toward a target.",
 		[["spring_name", "String"], ["target", "float"]],
-		"var entry: SpringEntry = _spring_entry(spring_name)\nvar was_active := entry.active\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\nif not was_active:\n\tspring_started.emit(spring_name)")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nvar was_active := entry.active\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)\nif not was_active:\n\tspring_started.emit(spring_name)")
 	Lib.append_function(sheet, "spring_between", "Spring Between", "Spring", "Snaps to a start value, then springs to the end value.",
 		[["spring_name", "String"], ["from_value", "float"], ["to_value", "float"]],
-		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.value = from_value\nentry.from_value = from_value\nentry.velocity = 0.0\nentry.target = to_value\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.value = from_value\nentry.from_value = from_value\nentry.velocity = 0.0\nentry.target = to_value\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "set_spring", "Set Spring Value", "Spring", "Snaps the named spring (no motion).",
 		[["spring_name", "String"], ["value", "float"]],
 		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.value = value\nentry.from_value = value\nentry.target = value\nentry.velocity = 0.0\nentry.active = false")
 	Lib.append_function(sheet, "add_impulse", "Add Impulse", "Spring", "Kicks the named spring's velocity (instant juice).",
 		[["spring_name", "String"], ["amount", "float"]],
-		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.velocity += amount\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.velocity += amount\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "stop_spring", "Stop Spring", "Spring", "Freezes the named spring where it is.",
 		[["spring_name", "String"]],
 		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = false")
@@ -195,28 +222,28 @@ static func build() -> bool:
 		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.stiffness = stiffness\nentry.damping = clampf(damping, 0.0, 1.0)\nentry.precision = precision")
 	Lib.append_function(sheet, "spring_host_x", "Spring Host X", "Spring", "Springs the host's X position.",
 		[["target", "float"]],
-		"var entry: SpringEntry = _spring_entry(\"__x\")\nif not entry.active and host != null:\n\tentry.value = host.position.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(\"__x\")\nif not entry.active and host != null:\n\tentry.value = host.position.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "spring_host_y", "Spring Host Y", "Spring", "Springs the host's Y position.",
 		[["target", "float"]],
-		"var entry: SpringEntry = _spring_entry(\"__y\")\nif not entry.active and host != null:\n\tentry.value = host.position.y\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(\"__y\")\nif not entry.active and host != null:\n\tentry.value = host.position.y\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "spring_host_angle", "Spring Host Angle", "Spring", "Springs the host's rotation (degrees).",
 		[["degrees", "float"]],
-		"var entry: SpringEntry = _spring_entry(\"__angle\")\nif not entry.active and host != null:\n\tentry.value = host.rotation_degrees\nentry.from_value = entry.value\nentry.target = degrees\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(\"__angle\")\nif not entry.active and host != null:\n\tentry.value = host.rotation_degrees\nentry.from_value = entry.value\nentry.target = degrees\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "spring_host_scale", "Spring Host Scale", "Spring", "Springs the host's uniform scale (squash & stretch!).",
 		[["target", "float"]],
-		"var entry: SpringEntry = _spring_entry(\"__scale\")\nif not entry.active and host != null:\n\tentry.value = host.scale.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
+		"var entry: SpringEntry = _spring_entry(\"__scale\")\nif not entry.active and host != null:\n\tentry.value = host.scale.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "set_color", "Set Color Value", "Spring", "Snaps a named colour spring (no motion) - seed it before springing.",
 		[["spring_name", "String"], ["color", "Color"]],
 		"var entry: ColorSpringEntry = _color_entry(spring_name)\nentry.value = color\nentry.target = color\nentry.velocity = Color(0, 0, 0, 0)\nentry.active = false")
 	Lib.append_function(sheet, "spring_color", "Spring Color", "Spring", "Springs a named colour toward a target (read it back with Color Value - great for hit flashes).",
 		[["spring_name", "String"], ["target_color", "Color"]],
-		"var entry: ColorSpringEntry = _color_entry(spring_name)\nvar was_active := entry.active\nentry.target = target_color\nentry.active = true\nif not was_active:\n\tspring_started.emit(spring_name)")
+		"var entry: ColorSpringEntry = _color_entry(spring_name)\nvar was_active := entry.active\nentry.target = target_color\nentry.active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)\nif not was_active:\n\tspring_started.emit(spring_name)")
 	Lib.append_function(sheet, "pause_spring", "Pause Spring", "Spring", "Freezes a spring in place (resume continues it).",
 		[["spring_name", "String"]],
 		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = false\nif color_springs.has(spring_name):\n\t(color_springs[spring_name] as ColorSpringEntry).active = false")
 	Lib.append_function(sheet, "resume_spring", "Resume Spring", "Spring", "Resumes a paused spring toward its target.",
 		[["spring_name", "String"]],
-		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = true\nif color_springs.has(spring_name):\n\t(color_springs[spring_name] as ColorSpringEntry).active = true")
+		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = true\nif color_springs.has(spring_name):\n\t(color_springs[spring_name] as ColorSpringEntry).active = true\n# A moving spring needs its per-frame integration back.\nset_process(true)")
 	Lib.append_function(sheet, "remove_spring", "Remove Spring", "Spring", "Deletes a named spring (numeric and/or colour).",
 		[["spring_name", "String"]],
 		"springs.erase(spring_name)\ncolor_springs.erase(spring_name)")

@@ -25,10 +25,10 @@ signal on_buffer_cleared
 
 ## How many recent inputs to remember. Older inputs drop off so stale history cannot complete a combo.
 @export_range(2, 64, 1) var buffer_length: int = 12
-## Print every input, buffer state, and match to the Output panel while tuning.
-@export var debug_logging: bool = false
 ## Default seconds allowed between two inputs of a combo (0 = no time limit). A combo can override this.
 @export_range(0.0, 5.0, 0.05) var default_timing: float = 0.5
+## Print every input, buffer state, and match to the Output panel while tuning.
+@export var debug_logging: bool = false
 
 # id -> {sequence:PackedStringArray, timing:float(-1 = use default), strict:bool, tags:PackedStringArray, priority:int, enabled:bool}.
 var _combos: Dictionary = {}
@@ -58,6 +58,9 @@ var _chain_last: String = ""
 # Wiring a sequence to an animation is what a fighter does twenty times over, and keeping it
 # here makes those twenty one table rather than twenty copies of the same event.
 var _animations: Dictionary = {}
+
+func _ready() -> void:
+	set_process(not _buffer.is_empty())
 
 func _process(delta: float) -> void:
 	_advance(delta)
@@ -145,6 +148,8 @@ func set_buffer_length(length: int) -> void:
 ## @ace_codegen_template("ComboBox.press_input({token})")
 func press_input(token: String) -> void:
 	_buffer.append({"token": token, "time": _clock})
+	# The buffer now holds something to time against, so the clock has to run again.
+	set_process(true)
 	while _buffer.size() > buffer_length:
 		_buffer.remove_at(0)
 	if debug_logging:
@@ -161,6 +166,9 @@ func clear_buffer() -> void:
 	_cleared_count = _buffer.size()
 	_buffer.clear()
 	_progress.clear()
+	# No inputs and no partial motions left, so there is no gap left to measure. Stopped BEFORE the
+	# trigger, so a handler that presses an input from here starts the clock again for itself.
+	set_process(false)
 	on_buffer_cleared.emit()
 
 ## @ace_action

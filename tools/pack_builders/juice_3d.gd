@@ -172,7 +172,10 @@ static func build() -> bool:
 		"_noise.frequency = 1.0",
 		"_noise.seed = randi()",
 		"if host is Node3D:",
-		"\t_base_scale3 = (host as Node3D).scale"
+		"\t_base_scale3 = (host as Node3D).scale",
+		"# No shake, no kick, no bob on the first frame, and every verb that starts one turns",
+		"# processing back on - so an idle Juice 3D costs nothing per frame.",
+		"set_process(false)"
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
@@ -211,6 +214,15 @@ static func build() -> bool:
 		"# Additive apply: pull last frame's offsets off first, so the pose the controller wrote",
 		"# this frame is the base - the effects ride on TOP of mouse look, never against it.",
 		"_unapply()",
+		"# Every effect has settled and last frame's offsets are already back off the camera, so the",
+		"# next frame has nothing to do: stop paying for the tick until a verb starts another effect.",
+		"# A held lean is NOT settled - it is re-applied after every unapply, so it keeps the tick",
+		"# alive, as does the tween still writing it.",
+		"var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO",
+		"var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001",
+		"var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()",
+		"if not (kicks_busy or effects_busy or lean_running):",
+		"\tset_process(false)",
 		"var cam: Camera3D = _camera()",
 		"if cam == null:",
 		"\treturn",
@@ -303,19 +315,19 @@ static func build() -> bool:
 	# --- Actions (fire-and-forget, mirroring the 2D Juice verbs) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice 3D", "Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.",
 		[["strength", "float"]],
-		"trauma = clampf(trauma + strength, 0.0, 1.0)")
+		"trauma = clampf(trauma + strength, 0.0, 1.0)\nset_process(true)")
 	_default(sheet, "strength", "0.4")
 	Lib.append_function(sheet, "stop_shake", "Stop Shake", "Juice 3D", "Cancels any shake immediately (other effects keep running).",
 		[],
 		"trauma = 0.0\nshake_time = 0.0\n_shaking = false")
 	Lib.append_function(sheet, "recoil", "Recoil", "Juice 3D", "Weapon recoil: kicks the view UP by a pitch (degrees) plus a random side spread, then re-centres at the Recoil Recovery rate. Fire on every shot - kicks stack, so sustained fire climbs. Cosmetic (rides on top of mouse look; aim is untouched).",
 		[["vertical_kick", "float"], ["horizontal_spread", "float"]],
-		"_recoil_pitch += vertical_kick\n_recoil_yaw += randf_range(-horizontal_spread, horizontal_spread)")
+		"_recoil_pitch += vertical_kick\n_recoil_yaw += randf_range(-horizontal_spread, horizontal_spread)\nset_process(true)")
 	_default(sheet, "vertical_kick", "1.5")
 	_default(sheet, "horizontal_spread", "0.5")
 	Lib.append_function(sheet, "start_head_bob", "Start Head Bob", "Juice 3D", "Starts a walking head-bob on the camera: a figure-8 (side sway at half rate, one downward dip per step). Amplitude is metres, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.",
 		[["amplitude", "float"], ["frequency", "float"]],
-		"_bob_amplitude = amplitude\n_bob_frequency = maxf(frequency, 0.01)\n_bob_active = true")
+		"_bob_amplitude = amplitude\n_bob_frequency = maxf(frequency, 0.01)\n_bob_active = true\nset_process(true)")
 	_default(sheet, "amplitude", "0.06")
 	_default(sheet, "frequency", "2.2")
 	Lib.append_function(sheet, "stop_head_bob", "Stop Head Bob", "Juice 3D", "Stops the head bob.",
@@ -323,7 +335,7 @@ static func build() -> bool:
 		"_bob_active = false")
 	Lib.append_function(sheet, "start_jitter", "Start Jitter", "Juice 3D", "Starts a continuous nervous wobble (position in metres + a touch of roll) that runs until Stop Jitter - unlike Shake it never decays. Engines idling, helicopters, low health, fear.",
 		[["position_amount", "float"], ["roll_degrees", "float"]],
-		"_jitter_offset = position_amount\n_jitter_roll = roll_degrees\n_jitter_active = true")
+		"_jitter_offset = position_amount\n_jitter_roll = roll_degrees\n_jitter_active = true\nset_process(true)")
 	_default(sheet, "position_amount", "0.02")
 	_default(sheet, "roll_degrees", "0.5")
 	Lib.append_function(sheet, "stop_jitter", "Stop Jitter", "Juice 3D", "Stops the jitter wobble.",
@@ -331,12 +343,12 @@ static func build() -> bool:
 		"_jitter_active = false")
 	Lib.append_function(sheet, "lean", "Lean", "Juice 3D", "Eases the camera roll to an angle (degrees) and HOLDS it - lean into a wall ride, peek a corner, bank with a turn. Lean back to 0 to level out. Emits On Lean Finished.",
 		[["degrees", "float"], ["duration", "float"]],
-		"if _lean_tween != null:\n\t_lean_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_property(self, \"_lean_roll\", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: lean_finished.emit())\n_lean_tween = tw")
+		"if _lean_tween != null:\n\t_lean_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_property(self, \"_lean_roll\", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: lean_finished.emit())\n_lean_tween = tw\nset_process(true)")
 	_default(sheet, "degrees", "10")
 	_default(sheet, "duration", "0.25")
 	Lib.append_function(sheet, "fov_punch", "FOV Punch", "Juice 3D", "Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.",
 		[["amount", "float"]],
-		"_fov_kick += amount")
+		"_fov_kick += amount\nset_process(true)")
 	_default(sheet, "amount", "8")
 	Lib.append_function(sheet, "zoom_fov_to", "Zoom FOV To", "Juice 3D", "Smoothly changes the camera's base field of view to a value in degrees and keeps it there (an aim-down-sights zoom is FOV 40, back to 75 to unzoom). Emits On Zoom Finished.",
 		[["fov", "float"], ["duration", "float"]],
@@ -350,13 +362,13 @@ static func build() -> bool:
 	# ── Directional camera kick from a world point ──
 	Lib.append_function(sheet, "kick_away_from", "Kick Camera Away From Point", "Juice 3D", "Shoves the camera AWAY from a world position (an explosion, a hit source) and re-centres at the Kick Recovery rate - Recoil's directional sibling when you know the cause's location. Cosmetic (additive; aim untouched). Composes with Shake.",
 		[["world_position", "Vector3"], ["strength", "float"]],
-		"var cam: Camera3D = _camera()\nif cam == null:\n\treturn\nvar away: Vector3 = cam.global_position - world_position\naway = away.normalized() if away.length() > 0.001 else Vector3.UP\n_kick_vec += away * strength")
+		"var cam: Camera3D = _camera()\nif cam == null:\n\treturn\nvar away: Vector3 = cam.global_position - world_position\naway = away.normalized() if away.length() > 0.001 else Vector3.UP\n_kick_vec += away * strength\nset_process(true)")
 	_default(sheet, "strength", "0.12")
 
 	# ── Blink (visibility strobe - the 3D take on invulnerability frames) ──
 	Lib.append_function(sheet, "start_blinking", "Start Blinking", "Juice 3D", "Strobes the host's visibility - invulnerability frames, respawn grace, a targeted highlight. Runs until Stop Blinking.",
 		[["times_per_second", "float"]],
-		"_blink_rate = maxf(times_per_second, 0.1)\n_blink_time = 0.0\n_blink_active = true")
+		"_blink_rate = maxf(times_per_second, 0.1)\n_blink_time = 0.0\n_blink_active = true\nset_process(true)")
 	_default(sheet, "times_per_second", "8")
 	Lib.append_function(sheet, "stop_blinking", "Stop Blinking", "Juice 3D", "Stops the blink and makes the host visible again.",
 		[],

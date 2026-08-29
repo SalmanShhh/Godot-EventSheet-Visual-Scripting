@@ -42,48 +42,59 @@ signal solid_hit
 ## @ace_name("On Bounce")
 signal bounce_triggered
 
+## Max cursor speed (px/s).
+@export var max_speed: float = 600.0
 ## Speed-up rate while axis held (px/s^2).
 @export var acceleration: float = 1800.0
+## Slow-down rate when axis released (px/s^2).
+@export var deceleration: float = 2400.0
+## Slide along solids instead of hard-stop.
+@export var allow_sliding: bool = true
+## Read ui_left/right/up/down each tick (keyboard+gamepad).
+@export var default_controls: bool = true
+## Clamp inside the viewport/constraint bounds.
+@export var constrain_to_layout: bool = false
+var mouse_smoothing: float = 0.15
+var has_mouse_target: bool = false
+var has_simulated_axis: bool = false
 ## AI drive: read ai_move_x/ai_move_y instead of the ui_* actions (a sheet or AI driver flips this on to steer the cursor).
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_y: float = 0.0
-## Slide along solids instead of hard-stop.
-@export var allow_sliding: bool = true
-var blocked_this_tick: bool = false
-## Clamp inside the viewport/constraint bounds.
-@export var constrain_to_layout: bool = false
-## Slow-down rate when axis released (px/s^2).
-@export var deceleration: float = 2400.0
-## Read ui_left/right/up/down each tick (keyboard+gamepad).
-@export var default_controls: bool = true
-var edge_hit_prev: bool = false
-## Master on/off.
-@export var enabled: bool = true
-var has_constraint_bounds: bool = false
-var has_mouse_target: bool = false
-var has_simulated_axis: bool = false
+var ignoring_input: bool = false
 var homing_enabled: bool = false
 var homing_mode: int = 0
 var homing_radius: float = 120.0
-var homing_snapped_uid: int = -1
 var homing_strength: float = 0.5
 var homing_targets: Array = []
-var hovered_uid: int = -1
-var ignoring_input: bool = false
 var in_homing_range: bool = false
+var nearest_homing_uid: int = -1
+var nearest_homing_dist: float = -1.0
+var homing_snapped_uid: int = -1
+var solids: Array = []
+var solid_collision: bool = true
+var blocked_this_tick: bool = false
+var solid_uid: int = -1
+var has_constraint_bounds: bool = false
 var interact_states: Dictionary = {}
 var last_pressed_id: String = ""
 var last_released_id: String = ""
-## Max cursor speed (px/s).
-@export var max_speed: float = 600.0
-var mouse_smoothing: float = 0.15
-var nearest_homing_dist: float = -1.0
-var nearest_homing_uid: int = -1
-var solid_collision: bool = true
-var solid_uid: int = -1
-var solids: Array = []
+var hovered_uid: int = -1
+var edge_hit_prev: bool = false
 
+## Master on/off.
+@export var enabled: bool = true:
+	set(value):
+		enabled = value
+		# Every write lands here - a sheet's Set Enabled action, the Inspector, another script -
+		# so the physics tick follows the switch whoever flipped it. A switched-off cursor is
+		# steering nothing and pays for no frame.
+		if not value:
+			# The tick's own first-idle frame used to zero the report; with the tick parked the
+			# write happens here instead, so Speed and Is Moving never answer with the last
+			# frame the cursor moved.
+			report_vel = Vector2.ZERO
+		set_physics_process(value)
 ## Movement axis constraint.
 @export_enum("up_down", "left_right", "four", "eight") var direction_mode: int = 3
 ## Point = origin inside shape; Overlap = shapes overlap.
@@ -115,6 +126,9 @@ func _resolve_bounds() -> Rect2:
 	if host != null and host.get_viewport() != null:
 		return host.get_viewport().get_visible_rect()
 	return Rect2(0, 0, 1920, 1080)
+
+func _ready() -> void:
+	set_physics_process(enabled)
 
 func _physics_process(delta: float) -> void:
 	if not enabled or host == null:
@@ -543,6 +557,8 @@ func set_default_controls(state: bool) -> void:
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_cursor_enabled({is_enabled})")
 func set_cursor_enabled(is_enabled: bool) -> void:
+	# The property's own setter parks the tick and zeroes the movement report, so the verb
+	# and a sheet's Set Enabled property write behave identically.
 	enabled = is_enabled
 
 ## @ace_action

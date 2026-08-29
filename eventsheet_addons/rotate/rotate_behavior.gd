@@ -16,7 +16,13 @@ func _enter_tree() -> void:
 
 # --- Designer knobs (tune in the Inspector) ---
 ## Spin on/off - Set Rotation Enabled flips it at runtime.
-@export var rotate_enabled: bool = true
+@export var rotate_enabled: bool = true:
+	set(value):
+		rotate_enabled = value
+		# Every write lands here - a sheet's Set Rotate Enabled action, the Inspector, another
+		# script - so the physics frame follows the spin whoever switched it, not just the
+		# Set Rotation Enabled row.
+		set_physics_process(value)
 ## Rotation speed in degrees per second (negative = the other way).
 @export var speed: float = 90.0
 ## Speed change in degrees per second, per second (0 = constant speed).
@@ -28,6 +34,12 @@ func _enter_tree() -> void:
 # The live speed (deg/s) - starts at the Speed knob, then Acceleration ramps it.
 var _current_speed: float = 0.0
 var _speed_primed: bool = false
+
+func _ready() -> void:
+	# Physics processing runs only while the spin does - a host authored with Spin off costs
+	# nothing per frame until Set Rotation Enabled turns it on. Speed is deliberately not part
+	# of this test: Acceleration can ramp a spin up from a standing start.
+	set_physics_process(rotate_enabled)
 
 func _physics_process(delta: float) -> void:
 	if not rotate_enabled or host == null:
@@ -71,6 +83,8 @@ func rotation_speed() -> float:
 ## @ace_codegen_template("$RotateBehavior.set_rotation_enabled({enabled})")
 func set_rotation_enabled(enabled: bool) -> void:
 	rotate_enabled = enabled
+	# A stopped spin costs nothing per physics frame; turning it back on restores the tick.
+	set_physics_process(enabled)
 
 ## @ace_action
 ## @ace_name("Set Rotation Speed")

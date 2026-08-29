@@ -87,6 +87,11 @@ func _pin_seat() -> Node2D:
 	_seat_named = pin_point
 	return _seat
 
+func _ready() -> void:
+	# Nothing is being ridden until a Pin To row names something, and the tick can do no work
+	# without an anchor - so a pin that has not been made yet costs nothing per physics frame.
+	set_physics_process(is_pinned())
+
 func _physics_process(delta: float) -> void:
 	if not pin_enabled or host == null or not is_instance_valid(anchor):
 		return
@@ -115,6 +120,9 @@ func pin_to(target: Node2D) -> void:
 	anchor = target
 	pin_enabled = is_instance_valid(target)
 	_clear_pin_modes()
+	# The host rides something from this frame on, which is per-frame work; a target that
+	# is already gone leaves the tick off rather than running it for nothing.
+	set_physics_process(pin_enabled)
 	if not pin_enabled or host == null:
 		return
 	var gap: Vector2 = host.global_position - target.global_position
@@ -133,6 +141,9 @@ func pin_to_at(target: Node2D, offset_x: float, offset_y: float) -> void:
 	pin_offset = Vector2(offset_x, offset_y)
 	pin_angle_offset = 0.0
 	_clear_pin_modes()
+	# The host rides something from this frame on, which is per-frame work; a target that
+	# is already gone leaves the tick off rather than running it for nothing.
+	set_physics_process(pin_enabled)
 
 ## @ace_action
 ## @ace_name("Set Pin Offset")
@@ -234,6 +245,9 @@ func pin_to_point(target: Node2D, point_name: String) -> void:
 	_clear_pin_modes()
 	pin_point = point_name
 	pin_mode = "position and angle"
+	# The host rides something from this frame on, which is per-frame work; a target that
+	# is already gone leaves the tick off rather than running it for nothing.
+	set_physics_process(pin_enabled)
 	if not pin_enabled or host == null:
 		return
 	var seat: Node2D = _pin_seat()
@@ -290,6 +304,9 @@ func unpin() -> void:
 	anchor = null
 	pin_enabled = false
 	_clear_pin_modes()
+	# Let go and the host moves on its own, so the copy-every-frame work is over - Pin To
+	# turns processing back on. The host keeps the place it already had, written before this.
+	set_physics_process(false)
 
 ## @ace_condition
 ## @ace_name("Is Pinned")
@@ -416,5 +433,8 @@ func _begin_pin(target: Node2D, mode: String) -> void:
 	pin_offset = Vector2.ZERO
 	pin_angle_offset = 0.0
 	_clear_pin_modes()
+	# A pin has to copy its anchor every physics frame while it holds, so processing follows
+	# the pin itself: on the moment there is something to ride, off again at Unpin.
+	set_physics_process(pin_enabled)
 
 # Pin behavior (event-sheet parity): the host rides another object. Pin To starts it and remembers how far apart the two were; Pin Mode chooses position, angle, both, rope, bar, soft, spring or size; Unpin lets go. Rotate With Anchor turns the offset with the anchor, so a pinned hat swings round the head instead of hovering beside it. Pin To Point rides a named child of the anchor - a bone, a marker, a hand - and Pin To Path rides a point that travels a Path2D. This pack is an event sheet - extend it by editing it.

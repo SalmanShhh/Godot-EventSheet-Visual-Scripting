@@ -36,11 +36,11 @@ signal on_stack_gained
 ## @ace_name("On Max Stacks Reached")
 signal on_max_stacks_reached
 
-var abilities: Dictionary = {}
-## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
-@export var ability_set: Resource = null
 ## Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
+## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
+@export var ability_set: Resource = null
+var abilities: Dictionary = {}
 var current_ability_id: String = ""
 
 ## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read
@@ -67,9 +67,13 @@ func _ready() -> void:
 		# the host (which carries the event sheet) readies AFTER this child, so emitting On Ability
 		# Created synchronously here would fire before the sheet's handler is connected.
 		load_ability_set.call_deferred(ability_set)
+	# Nothing is counting down yet, so no frame is paid for. Every action that starts a
+	# cooldown or an expiry timer - including the deferred loadout above - turns it back on.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if abilities.is_empty():
+		set_process(false)
 		return
 	var expired: Array = []
 	for id: String in abilities.keys():
@@ -93,6 +97,9 @@ func _process(delta: float) -> void:
 		abilities.erase(id)
 		current_ability_id = id
 		on_ability_removed.emit()
+	# Asked LAST, so a cooldown started by an On Ability Ready / On Ability Removed handler
+	# this very frame keeps the tick alive: once no clock is running, it switches itself off.
+	set_process(_any_ability_on_a_clock())
 
 ## @ace_action
 ## @ace_name("Create Ability")
@@ -120,6 +127,8 @@ func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: b
 	var a: AbilityData = _ensure_ability(id)
 	a.max_cooldown = maxf(0.0, seconds)
 	a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
+	# A live cooldown needs the frame back; the tick stops itself once none is left.
+	set_process(true)
 	if is_new:
 		current_ability_id = id
 		on_ability_created.emit()
@@ -137,6 +146,8 @@ func create_ability_with_stacks(id: String, seconds: float, max_stacks: int, res
 	a.max_stacks = maxi(1, max_stacks)
 	a.stacks = a.max_stacks if reset_instantly else 0
 	a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
+	# A live cooldown needs the frame back; the tick stops itself once none is left.
+	set_process(true)
 	if is_new:
 		current_ability_id = id
 		on_ability_created.emit()
@@ -152,6 +163,8 @@ func create_temporary_ability(id: String, seconds: float) -> void:
 	var a: AbilityData = _ensure_ability(id)
 	a.max_expiration = maxf(0.0, seconds)
 	a.expiration = maxf(0.0, seconds)
+	# A live expiry timer needs the frame back; the tick stops itself once none is left.
+	set_process(true)
 	if is_new:
 		current_ability_id = id
 		on_ability_created.emit()
@@ -167,6 +180,8 @@ func remove_ability_after(id: String, seconds: float) -> void:
 		return
 	(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)
 	(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)
+	# A live expiry timer needs the frame back; the tick stops itself once none is left.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Remove Ability")
@@ -212,6 +227,8 @@ func activate_ability(id: String) -> void:
 	on_stack_consumed.emit()
 	if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:
 		a.cooldown = a.max_cooldown
+		# A live cooldown needs the frame back; the tick stops itself once none is left.
+		set_process(true)
 	current_ability_id = id
 	on_ability_activated.emit()
 
@@ -237,6 +254,8 @@ func set_cooldown(id: String, seconds: float) -> void:
 	var cd: float = maxf(0.0, seconds * cooldown_multiplier)
 	(abilities[id] as AbilityData).cooldown = cd
 	(abilities[id] as AbilityData).max_cooldown = cd
+	# A live cooldown needs the frame back; the tick stops itself once none is left.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Reset Cooldown")
@@ -255,6 +274,8 @@ func reset_cooldown(id: String) -> void:
 		on_stack_gained.emit()
 		if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
 			a.cooldown = a.max_cooldown
+			# A live cooldown needs the frame back; the tick stops itself once none is left.
+			set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Max Stacks")
@@ -316,6 +337,8 @@ func consume_stack(id: String) -> void:
 	on_stack_consumed.emit()
 	if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:
 		a.cooldown = a.max_cooldown
+		# A live cooldown needs the frame back; the tick stops itself once none is left.
+		set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Ability Enabled")
@@ -418,6 +441,8 @@ func reset_cooldown_for_tag(tag: String) -> void:
 			on_stack_gained.emit()
 			if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
 				a.cooldown = a.max_cooldown
+				# A live cooldown needs the frame back; the tick stops itself once none is left.
+				set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Cooldown Multiplier")
@@ -440,6 +465,9 @@ func load_ability_set(resource: Resource) -> void:
 	var rows: Variant = resource.get("abilities")
 	if not (rows is Array):
 		return
+	# A loadout can carry temporary abilities, so the tick comes back on; it switches itself
+	# off again on the first frame nothing is counting down.
+	set_process(true)
 	for row: Variant in (rows as Array):
 		if not (row is Dictionary):
 			continue
@@ -671,6 +699,15 @@ func _ids_with_tag(tag: String) -> Array:
 			out.append(id)
 	return out
 
+func _any_ability_on_a_clock() -> bool:
+	# Whether any ability still has a clock running. A loadout of ready abilities changes
+	# nothing frame to frame, so only a cooldown or an expiry timer is worth a frame.
+	for id: String in abilities.keys():
+		var a: AbilityData = abilities[id]
+		if a.cooldown > 0.0 or a.expiration > 0.0:
+			return true
+	return false
+
 ## @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
@@ -715,5 +752,8 @@ func load_state(state: Dictionary) -> void:
 		a.tags = (entry.get("tags", []) as Array).duplicate(true)
 		a.expiration = float(entry.get("expiration", 0.0))
 		a.max_expiration = float(entry.get("max_expiration", 0.0))
+	# Restored abilities may be mid-cooldown, so the tick comes back on; it switches itself
+	# off again on the first frame nothing is counting down.
+	set_process(true)
 
 # Simple Abilities (event-sheet parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired.

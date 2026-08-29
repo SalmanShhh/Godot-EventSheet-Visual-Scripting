@@ -28,20 +28,20 @@ signal path_complete
 ## @ace_name("On Waypoint Reached")
 signal waypoint_reached
 
-## The navigation agent's height.
-@export var agent_height: float = 1.8
-## The navigation agent's radius (match your collider).
-@export var agent_radius: float = 0.5
 ## Drive the sibling FPS Controller (or the body itself) automatically. Off = paths still compute; read Path Move X/Z and steer yourself.
 @export var auto_control: bool = true
-## Agents steer around each other (applies to the built-in driver; a driver sibling owns its own velocity).
-@export var avoidance_enabled: bool = false
-## The built-in driver's gravity (a driver sibling applies its own).
-@export var gravity: float = 9.8
 ## The built-in driver's speed (m/s). A driver sibling uses its own speed.
 @export var move_speed: float = 4.0
+## The built-in driver's gravity (a driver sibling applies its own).
+@export var gravity: float = 9.8
+## The navigation agent's radius (match your collider).
+@export var agent_radius: float = 0.5
+## The navigation agent's height.
+@export var agent_height: float = 1.8
 ## How close (m) counts as having arrived at the target.
 @export var target_desired_distance: float = 1.0
+## Agents steer around each other (applies to the built-in driver; a driver sibling owns its own velocity).
+@export var avoidance_enabled: bool = false
 
 # --- Internal state ---
 var _agent: NavigationAgent3D = null
@@ -90,6 +90,9 @@ func _find_driver() -> Node:
 
 func _ready() -> void:
 	_ensure_agent()
+	# The agent is inserted now, but it has nowhere to walk until a Find Path To row runs, and
+	# the tick can only steer along a path - so an idle agent costs nothing per physics frame.
+	set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
 	if host == null or _agent == null or not is_instance_valid(_agent):
@@ -153,6 +156,9 @@ func find_path_to(x: float, y: float, z: float, mode: String) -> void:
 	_active = true
 	_pending_check = true
 	_pending_mode = mode
+	# There is a route to walk, and the reachability verdict lands a tick later - both need
+	# the physics frame back on.
+	set_physics_process(true)
 
 ## @ace_action
 ## @ace_name("Find Path To Node")
@@ -179,6 +185,10 @@ func stop_pathfinding() -> void:
 	_pending_check = false
 	_move_x = 0.0
 	_move_z = 0.0
+	# No path means the tick has nothing to steer, so it stops costing a physics frame -
+	# Find Path To turns it back on. The driver is handed back below either way, and Path
+	# Move X/Z keep answering zero from the plain numbers just settled.
+	set_physics_process(false)
 	var driver: Node = _find_driver()
 	if driver != null:
 		driver.set("ai_move_x", 0.0)

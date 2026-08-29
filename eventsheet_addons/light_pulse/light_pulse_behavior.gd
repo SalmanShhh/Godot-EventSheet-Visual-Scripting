@@ -23,7 +23,13 @@ func _enter_tree() -> void:
 @export_range(0.05, 60, 0.05) var period_seconds: float = 2.0
 ## Whether the pulse is running right now. On means it starts breathing the moment the scene
 ## does.
-@export var running: bool = true
+@export var running: bool = true:
+	set(value):
+		running = value
+		# Every write lands here - a sheet's Set Running action, the Inspector, another script -
+		# so processing follows the breath whoever switched it. A delay still counts down per
+		# frame, which is why waiting counts as running here.
+		set_process(value or _waiting > 0.0)
 
 ## The property this host spells brightness with - `energy` on a 2D light, `light_energy` on
 ## a 3D one. Resolved once when the behaviour starts, because a light answers to exactly one
@@ -39,6 +45,12 @@ var _waiting: float = 0.0
 func _ready() -> void:
 	if not _bind_to_light():
 		push_warning("Light Pulse needs a light for a parent - a PointLight2D, an OmniLight3D, or any other light node.")
+		# No light to drive means no frame will ever have work; stop paying for the tick at all.
+		set_process(false)
+		return
+	# Processing runs only while the breath does - a pulse authored as stopped costs nothing
+	# until Start Pulsing.
+	set_process(running)
 
 func _process(delta: float) -> void:
 	if host == null or _brightness_property.is_empty():
@@ -84,6 +96,8 @@ func _apply_light(brightness: float) -> void:
 func start_pulsing(after_seconds: float = 0.0) -> void:
 	_waiting = maxf(after_seconds, 0.0)
 	running = _waiting <= 0.0
+	# A delayed start still counts its delay down per frame - waiting is not idle.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Pulsing")
@@ -94,6 +108,8 @@ func start_pulsing(after_seconds: float = 0.0) -> void:
 func stop_pulsing(settle_at: float = 1.0) -> void:
 	running = false
 	_waiting = 0.0
+	# A stopped beacon costs nothing per frame; Start Pulsing turns processing back on.
+	set_process(false)
 	if host == null or _brightness_property.is_empty():
 		return
 	_apply_light(settle_at)

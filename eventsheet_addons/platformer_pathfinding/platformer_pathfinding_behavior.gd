@@ -43,40 +43,40 @@ signal waypoint_reached
 ## @ace_name("On Nav Graph Built")
 signal nav_graph_built
 
-## How close (px, horizontally) counts as reaching a waypoint.
-@export var arrive_distance: float = 10.0
 ## Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself.
 @export var auto_control: bool = true
-## Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires.
-@export var coyote_time: float = 0.12
-## Draw the active path as a line in the world.
-@export var debug_draw: bool = false
-## The fallback driver's gravity.
-@export var fallback_gravity: float = 980.0
-## The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived.
-@export var fallback_jump_velocity: float = -400.0
-## No movement sibling? The built-in fallback driver moves the CharacterBody2D itself at this speed.
-@export var fallback_move_speed: float = 200.0
-## Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time).
-@export var jump_distance_override: float = 0.0
-## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
-@export var jump_height_override: float = 0.0
-## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
-@export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
-## With Ledge Restriction on, drops up to this many pixels are still allowed (0 = no drops at all).
-@export var ledge_leniency: float = 0.0
-## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
-@export var ledge_restriction: bool = false
+## How close (px, horizontally) counts as reaching a waypoint.
+@export var arrive_distance: float = 10.0
 ## The furthest safe drop (px) the graph will route through.
 @export var max_fall_distance: float = 320.0
+## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
+@export var jump_height_override: float = 0.0
+## Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time).
+@export var jump_distance_override: float = 0.0
+## Draw the active path as a line in the world.
+@export var debug_draw: bool = false
+## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
+@export var variable_jump: bool = true
+## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
+@export var ledge_restriction: bool = false
+## With Ledge Restriction on, drops up to this many pixels are still allowed (0 = no drops at all).
+@export var ledge_leniency: float = 0.0
+## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
+@export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
+## Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires.
+@export var coyote_time: float = 0.12
 ## While following a node (Find Path To Node), how often the route may refresh.
 @export var repath_interval: float = 0.5
 ## The route only refreshes when the followed node has moved at least this many pixels from where the current path was aimed.
 @export var repath_threshold: float = 24.0
 ## No progress toward the current waypoint for this long fires On Waypoint Stuck and re-routes from wherever the agent actually is.
 @export var stuck_timeout: float = 1.5
-## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
-@export var variable_jump: bool = true
+## No movement sibling? The built-in fallback driver moves the CharacterBody2D itself at this speed.
+@export var fallback_move_speed: float = 200.0
+## The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived.
+@export var fallback_jump_velocity: float = -400.0
+## The fallback driver's gravity.
+@export var fallback_gravity: float = 980.0
 
 # --- Internal state (the graph lives per agent) ---
 var _tilemap: TileMapLayer = null
@@ -208,6 +208,11 @@ func _physics_process(delta: float) -> void:
 			find_path_to(followed.x, followed.y, _goal_mode)
 			repathed.emit()
 	if _path.is_empty():
+		# No route, no deferred request, nobody being followed and no hazard to watch means
+		# there is nothing this tick could do - a parked agent costs nothing per frame until
+		# a path verb or Add Hazard turns processing back on.
+		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty():
+			set_physics_process(false)
 		return
 	var waypoint: Dictionary = _path[_path_index]
 	var target: Vector2 = waypoint["world"]
@@ -383,6 +388,12 @@ func regenerate_nav_graph() -> void:
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
 func find_path_to(x: float, y: float, mode: String) -> void:
+	# A route to walk is work every frame again. Coming back from parked the floor
+	# bookkeeping was not being kept, so the coyote window starts closed rather than
+	# handing out a takeoff the agent did not earn while it stood still.
+	if not is_physics_processing():
+		_floor_grace = INF
+		set_physics_process(true)
 	# A repath while riding a mid-travel moving platform is DEFERRED (the current path
 	# keeps driving): a fresh route would start from a ground node and steer the rider
 	# off the shaft in mid-air.
@@ -581,6 +592,9 @@ func clear_portals() -> void:
 ## @ace_codegen_template("$PlatformerPathfinding.add_hazard({x}, {y}, {width}, {height}, {deadly})")
 func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
 	_hazards.append({"rect": Rect2(x, y, width, height), "deadly": deadly})
+	# A hazard is watched per frame (On Hazard Entered fires on the way in), so a parked
+	# agent starts paying for its tick again the moment one exists.
+	set_physics_process(true)
 
 ## @ace_action
 ## @ace_name("Clear Hazards")

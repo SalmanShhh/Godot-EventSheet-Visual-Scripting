@@ -20,7 +20,6 @@ static func build() -> bool:
 		"period": {"type": "float", "default": 4.0, "exported": true, "description": "Seconds for one full wave cycle."},
 		"magnitude": {"type": "float", "default": 50.0, "exported": true, "description": "Peak strength of the oscillation (pixels, degrees, or scale/opacity factor by movement)."},
 		"phase_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Phase offset in degrees - shifts where in the cycle the wave starts."},
-		"active": {"type": "bool", "default": true, "exported": true, "description": "When off, pauses the oscillation and leaves the host in place."},
 		"wave_value": {"type": "float", "default": 0.0, "exported": false},
 		"time": {"type": "float", "default": 0.0, "exported": false},
 		"base_x": {"type": "float", "default": 0.0, "exported": false},
@@ -34,6 +33,25 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
 	sheet.events.append(about)
+	# The on/off knob is a PROPERTY rather than a plain exported variable: an inline setter means
+	# EVERY write - a sheet's Set Active row, the Inspector, another script - re-derives whether the
+	# per-frame tick should run, so a paused wave costs nothing however it was paused. It is written
+	# as a variable ROW rather than through the variables dictionary above because only the row path
+	# carries an accessor body; the declaration line it emits is the one the dictionary emitted.
+	var active_var: LocalVariable = LocalVariable.new()
+	active_var.name = "active"
+	active_var.type = TYPE_BOOL
+	active_var.type_name = "bool"
+	active_var.default_value = true
+	active_var.exported = true
+	active_var.description = "When off, pauses the oscillation and leaves the host in place."
+	active_var.setter_param = "value"
+	active_var.setter_body = "\n".join(PackedStringArray([
+		"active = value",
+		"# A paused wave costs nothing per frame; turning it back on restores the tick.",
+		"set_process(value)"
+	]))
+	sheet.events.append(active_var)
 	var extra_block_0: RawCodeRow = RawCodeRow.new()
 	extra_block_0.code = "\n".join(PackedStringArray([
 		"## @ace_hidden",
@@ -94,6 +112,17 @@ static func build() -> bool:
 		"\treturn {}"
 	]))
 	sheet.events.append(extra_block_1)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# Processing runs only while the wave does - an oscillation authored inactive costs",
+		"# nothing per frame until Set Sine Active turns it on.",
+		"set_process(active)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -135,7 +164,9 @@ static func build() -> bool:
 	set_sine_active_fn.params.append(set_sine_active_fn_is_active)
 	var set_sine_active_fn_body: RawCodeRow = RawCodeRow.new()
 	set_sine_active_fn_body.code = "\n".join(PackedStringArray([
-		"active = is_active"
+		"active = is_active",
+		"# A paused wave costs nothing per frame; resuming turns processing back on.",
+		"set_process(is_active)"
 	]))
 	set_sine_active_fn.events.append(set_sine_active_fn_body)
 	sheet.functions.append(set_sine_active_fn)

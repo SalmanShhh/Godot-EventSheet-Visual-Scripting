@@ -26,8 +26,6 @@ static func build() -> bool:
 		"cost_growth": {"type": "float", "default": 1.15, "exported": true, "attributes": {"tooltip": "How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price."}},
 		"base_output": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0."}},
 		"output_multiplier": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier."}},
-		"owned": {"type": "int", "default": 0, "exported": true, "attributes": {"tooltip": "How many are owned. Set a starting count here, or leave 0 and buy them in play."}},
-		"cycle_time": {"type": "float", "default": 0.0, "exported": true, "attributes": {"tooltip": "0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect."}},
 		"_cycle_progress": {"type": "float", "default": 0.0, "exported": false},
 		"_pending": {"type": "float", "default": 0.0, "exported": false},
 		"last_spent": {"type": "float", "default": 0.0, "exported": false},
@@ -37,6 +35,28 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Idle Generator: a buy-more-to-make-more building. Cost climbs geometrically (base_cost * cost_growth^owned); Buy One / Buy Amount / Buy Max compute the exact geometric-series price and record it as Last Cost for your sheet to Spend. Continuous mode gives Output Per Second; set Cycle Time > 0 for a fill-and-collect building that fires On Cycle Complete. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
+
+	# The two knobs the cycle clock depends on, written here rather than through the variables dict
+	# so they can carry setters (the variables dict has no spelling for one).
+	var cycle_decls: RawCodeRow = RawCodeRow.new()
+	cycle_decls.code = "\n".join(PackedStringArray([
+		"# The two facts the cycle clock is derived from. Both are properties, so a plain write to",
+		"# either - the reflected Set Cycle Time / Set Owned actions, the Inspector, another script -",
+		"# re-derives it the same way the Buy verbs do. Calling the refresh from here is safe before",
+		"# the node exists: both are typed, so one read before the other is initialized sees 0 and",
+		"# simply parks the clock, which the second write then corrects.",
+		"## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.",
+		"@export var cycle_time: float = 0.0:",
+		"\tset(value):",
+		"\t\tcycle_time = value",
+		"\t\t_refresh_processing()",
+		"## How many are owned. Set a starting count here, or leave 0 and buy them in play.",
+		"@export var owned: int = 0:",
+		"\tset(value):",
+		"\t\towned = value",
+		"\t\t_refresh_processing()"
+	]))
+	sheet.events.append(cycle_decls)
 
 	# Triggers + the private geometric-cost helpers (un-exposed). base_cost / cost_growth / owned are the
 	# member vars above; the closed forms read them directly.
@@ -77,9 +97,25 @@ static func build() -> bool:
 		"\t\tcount -= 1",
 		"\twhile _cost_for_n(count + 1) <= budget:",
 		"\t\tcount += 1",
-		"\treturn maxi(count, 0)"
+		"\treturn maxi(count, 0)",
+		"",
+		"# The fill-and-collect cycle is the only thing this generator spends a frame on: continuous",
+		"# output is worked out on demand by Output Per Second, and a generator nobody owns produces",
+		"# nothing either way. Every verb that can change those two facts calls this, and so do the",
+		"# two properties themselves, so a generator sitting at zero costs nothing per frame.",
+		"func _refresh_processing() -> void:",
+		"\tset_process(cycle_time > 0.0 and owned > 0)"
 	]))
 	sheet.events.append(block)
+
+	# A generator authored with no units, or one in continuous mode, has no per-frame work at all.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "_refresh_processing()"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	# Cycle mode: advance the fill timer, bank a lump per completed cycle, fire On Cycle Complete.
 	var tick: EventRow = EventRow.new()
@@ -104,6 +140,7 @@ static func build() -> bool:
 			"last_spent = _cost_for_n(1)",
 			"owned += 1",
 			"last_bought = 1",
+			"_refresh_processing()",
 			"on_purchased.emit()"
 		])))
 	Lib.append_function(sheet, "buy_amount", "Buy Amount", "Idle Generator", "Adds `count` units at once and records the total price as Last Cost.",
@@ -113,6 +150,7 @@ static func build() -> bool:
 			"last_spent = _cost_for_n(count)",
 			"owned += count",
 			"last_bought = count",
+			"_refresh_processing()",
 			"on_purchased.emit()"
 		])))
 	Lib.append_function(sheet, "buy_max", "Buy Max", "Idle Generator", "Buys as many as `budget` affords, recording the exact total as Last Cost and the count as Last Bought. Buys nothing if not even one is affordable.",
@@ -125,14 +163,15 @@ static func build() -> bool:
 			"last_spent = _cost_for_n(count)",
 			"owned += count",
 			"last_bought = count",
+			"_refresh_processing()",
 			"on_purchased.emit()"
 		])))
 	Lib.append_function(sheet, "set_owned", "Set Owned", "Idle Generator", "Forces the owned count to a value (clamped to 0). Does not record a cost.",
 		[["count", "int"]],
-		"owned = maxi(count, 0)")
+		"owned = maxi(count, 0)\n_refresh_processing()")
 	Lib.append_function(sheet, "grant", "Grant", "Idle Generator", "Adds free units - a reward or a starting bonus (no cost recorded).",
 		[["count", "int"]],
-		"owned += maxi(count, 0)")
+		"owned += maxi(count, 0)\n_refresh_processing()")
 	Lib.append_function(sheet, "set_output_multiplier", "Set Output Multiplier", "Idle Generator", "Sets the overall output multiplier - feed it your composed prestige x upgrade x boost value.",
 		[["multiplier", "float"]],
 		"output_multiplier = multiplier")
@@ -145,7 +184,8 @@ static func build() -> bool:
 		[], "\n".join(PackedStringArray([
 			"owned = 0",
 			"_pending = 0.0",
-			"_cycle_progress = 0.0"
+			"_cycle_progress = 0.0",
+			"_refresh_processing()"
 		])))
 
 	# --- Conditions ---
@@ -205,7 +245,10 @@ static func build() -> bool:
 		"\towned = int(state.get(\"owned\", 0))",
 		"\t_cycle_progress = float(state.get(\"cycle_progress\", 0.0))",
 		"\t_pending = float(state.get(\"pending\", 0.0))",
-		"\toutput_multiplier = float(state.get(\"output_multiplier\", 1.0))"
+		"\toutput_multiplier = float(state.get(\"output_multiplier\", 1.0))",
+		"\t# A loaded save can bring back a generator that owns units, so the cycle clock has to be",
+		"\t# switched back on for the state that came back rather than the one authored in the scene.",
+		"\t_refresh_processing()"
 	]))
 	sheet.events.append(persistence)
 

@@ -14,12 +14,12 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("LOSBehavior behavior requires a Node2D parent.")
 
-## Physics layers the sight raycast tests against - matching bodies block the view.
-@export var collision_mask: int = 1
-## Field of view angle in degrees centered on the node's facing - 360 sees all around.
-@export var cone_of_view_degrees: float = 360.0
 ## Maximum distance the node can see - targets farther away are never visible.
 @export var sight_range: float = 400.0
+## Field of view angle in degrees centered on the node's facing - 360 sees all around.
+@export var cone_of_view_degrees: float = 360.0
+## Physics layers the sight raycast tests against - matching bodies block the view.
+@export var collision_mask: int = 1
 
 ## @ace_expression
 ## @ace_name("Nearest Visible In Group")
@@ -38,7 +38,15 @@ func nearest_visible_in_group(group: String) -> Node2D:
 			best = candidate
 	return best
 
+func _ready() -> void:
+	# These eyes answer when asked, not on a schedule: every condition casts its own ray at
+	# the moment the row runs. Nothing accumulates between frames, so the per-frame callback
+	# is switched off and the sensor costs nothing until something asks it a question.
+	set_process(false)
+
 func _process(delta: float) -> void:
+	# Deliberately empty: the sight checks run when a row asks them. Processing is turned off
+	# on ready, so anything added here needs a set_process(true) to run.
 	pass
 
 ## @ace_condition

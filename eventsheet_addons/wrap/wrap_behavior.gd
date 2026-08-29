@@ -37,7 +37,12 @@ signal wrapped(side: String)
 ## Half the host's height in pixels - it must be FULLY off screen before wrapping.
 @export var half_height: float = 16.0
 ## Master on/off - Set Wrap Enabled flips it at runtime.
-@export var wrap_enabled: bool = true
+@export var wrap_enabled: bool = true:
+	set(value):
+		wrap_enabled = value
+		# Every write lands here - a sheet's Set Wrap Enabled action, the Inspector, another
+		# script - so the edge test stops and restarts with the knob whoever switched it.
+		set_physics_process(value)
 
 # --- Internal state ---
 # The custom rectangle (world space) used when wrap_space is "custom" - Rect2 cannot
@@ -53,6 +58,11 @@ func _wrap_rect() -> Rect2:
 	if viewport == null:
 		return custom_bounds
 	return viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()
+
+func _ready() -> void:
+	# The edge test only runs while wrapping is on - a host authored with Wrap off costs
+	# nothing per physics frame until Set Wrap Enabled turns it on.
+	set_physics_process(wrap_enabled)
 
 func _physics_process(delta: float) -> void:
 	if not wrap_enabled or host == null:
@@ -100,6 +110,8 @@ func _physics_process(delta: float) -> void:
 ## @ace_codegen_template("$WrapBehavior.set_wrap_enabled({enabled})")
 func set_wrap_enabled(enabled: bool) -> void:
 	wrap_enabled = enabled
+	# Wrapping off means no edge test to run, so stop paying for the physics frame.
+	set_physics_process(enabled)
 
 ## @ace_action
 ## @ace_name("Set Custom Wrap Bounds")

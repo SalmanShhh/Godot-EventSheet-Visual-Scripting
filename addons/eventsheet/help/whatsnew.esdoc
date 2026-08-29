@@ -6,6 +6,30 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Stopped behaviors cost zero frame time
+
+- **A stopped behavior parks its own tick.** 43 behavior packs used to run their per-frame
+  callback every frame and early-return while idle; each now switches the callback off at the
+  moment it stops, finishes, or runs out of work, and back on in every verb that starts it. A
+  behavior authored as stopped never pays for a frame at all, and a delayed start keeps ticking
+  on purpose - a behavior counting down a delay or cooldown is waiting, not idle.
+- **Finish points park the tick before their trigger fires**, so a row answering On Arrived, On
+  Timer, On Boost Expired or On Drained can start the next run from inside the handler and the
+  behavior wakes cleanly.
+- **Flipping a gate property directly still wakes it.** The exported on/off knobs (Running,
+  Active, Rotate Enabled, Enabled Movement and kin) carry a setter now, so the generated
+  Set-property action on a sheet, the Inspector while the game runs, and any other script all
+  restart processing exactly like the verb does.
+- **Conditions and expressions keep answering while parked** - Is Flickering, Has Path, Speed
+  and the rest read plain settled variables, checked pack by pack.
+- **Packs whose whole job is watching still watch.** Character controllers applying gravity and
+  polling input every frame, chases and pins tracking a target, and the monotonic clocks (Save
+  System's playtime, Storylet Weaver's cooldown clock) keep ticking - the standard is that IDLE
+  costs nothing, not that nothing ticks.
+- A runtime smoke test pins the mechanism itself: a subprocess scene tree spawns a crowd of idle
+  behavior instances and asserts every callback really is off, reading the processing flags
+  rather than wall-clock time, so it cannot flake under load.
+
 ### No walls - the picker and the errors never dead-end
 
 - **A fixable reason greys an entry, never hides it.** The behavior-host verbs off a plain sheet,

@@ -142,6 +142,9 @@ func _ready() -> void:
 	_noise.seed = randi()
 	if host is Node3D:
 		_base_scale3 = (host as Node3D).scale
+	# No shake, no kick, no bob on the first frame, and every verb that starts one turns
+	# processing back on - so an idle Juice 3D costs nothing per frame.
+	set_process(false)
 
 func _on_tree_exiting() -> void:
 	_unapply()
@@ -169,6 +172,15 @@ func _process(delta: float) -> void:
 	# Additive apply: pull last frame's offsets off first, so the pose the controller wrote
 	# this frame is the base - the effects ride on TOP of mouse look, never against it.
 	_unapply()
+	# Every effect has settled and last frame's offsets are already back off the camera, so the
+	# next frame has nothing to do: stop paying for the tick until a verb starts another effect.
+	# A held lean is NOT settled - it is re-applied after every unapply, so it keeps the tick
+	# alive, as does the tween still writing it.
+	var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO
+	var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001
+	var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()
+	if not (kicks_busy or effects_busy or lean_running):
+		set_process(false)
 	var cam: Camera3D = _camera()
 	if cam == null:
 		return
@@ -210,6 +222,7 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$Juice3DBehavior.shake({strength})")
 func shake(strength: float) -> void:
 	trauma = clampf(trauma + strength, 0.0, 1.0)
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Shake")
@@ -231,6 +244,7 @@ func stop_shake() -> void:
 func recoil(vertical_kick: float, horizontal_spread: float) -> void:
 	_recoil_pitch += vertical_kick
 	_recoil_yaw += randf_range(-horizontal_spread, horizontal_spread)
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Start Head Bob")
@@ -242,6 +256,7 @@ func start_head_bob(amplitude: float, frequency: float) -> void:
 	_bob_amplitude = amplitude
 	_bob_frequency = maxf(frequency, 0.01)
 	_bob_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Head Bob")
@@ -262,6 +277,7 @@ func start_jitter(position_amount: float, roll_degrees: float) -> void:
 	_jitter_offset = position_amount
 	_jitter_roll = roll_degrees
 	_jitter_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Jitter")
@@ -285,6 +301,7 @@ func lean(degrees: float, duration: float) -> void:
 	tw.tween_property(self, "_lean_roll", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: lean_finished.emit())
 	_lean_tween = tw
+	set_process(true)
 
 ## @ace_action
 ## @ace_featured
@@ -296,6 +313,7 @@ func lean(degrees: float, duration: float) -> void:
 ## @ace_codegen_template("$Juice3DBehavior.fov_punch({amount})")
 func fov_punch(amount: float) -> void:
 	_fov_kick += amount
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Zoom FOV To")
@@ -339,6 +357,7 @@ func kick_away_from(world_position: Vector3, strength: float) -> void:
 	var away: Vector3 = cam.global_position - world_position
 	away = away.normalized() if away.length() > 0.001 else Vector3.UP
 	_kick_vec += away * strength
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Start Blinking")
@@ -350,6 +369,7 @@ func start_blinking(times_per_second: float) -> void:
 	_blink_rate = maxf(times_per_second, 0.1)
 	_blink_time = 0.0
 	_blink_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Blinking")

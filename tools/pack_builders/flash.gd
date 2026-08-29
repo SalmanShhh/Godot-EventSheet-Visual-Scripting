@@ -37,6 +37,16 @@ static func build() -> bool:
 	finished_signal.ace_category = "Flash"
 	sheet.events.append(finished_signal)
 
+	# A host is authored not flashing, and a host that is not flashing has nothing to blink:
+	# processing starts off, so a behavior no row ever flashes costs nothing per frame.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(false)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# On Process: while flashing on a live host, blink at the interval and finish when the timer ends.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -73,6 +83,12 @@ static func build() -> bool:
 	var restore_alpha: RawCodeRow = RawCodeRow.new()
 	restore_alpha.code = "host.modulate.a = 1.0"
 	finish.actions.append(restore_alpha)
+	# A burst that has run out is finished, not merely quiet - stop paying for the tick until
+	# Flash asks for another one. It goes off BEFORE the trigger fires, so a row that starts a
+	# fresh flash from On Flash Finished turns processing back on and is not switched off again.
+	var finish_idle: RawCodeRow = RawCodeRow.new()
+	finish_idle.code = "set_process(false)"
+	finish.actions.append(finish_idle)
 	finish.actions.append(_action("EmitSignal", {"signal_name": "flash_finished", "args": ""}))
 	tick.sub_events.append(finish)
 	sheet.events.append(tick)
@@ -89,6 +105,11 @@ static func build() -> bool:
 	flash_body.actions.append(_action("SetVar", {"var_name": "remaining", "value": "seconds"}))
 	flash_body.actions.append(_action("SetVar", {"var_name": "accumulator", "value": "0.0"}))
 	flash_body.actions.append(_action("SetVar", {"var_name": "flashing", "value": "true"}))
+	# A blinking host needs the frame it blinks in; the burst's own last tick and Stop Flash
+	# turn processing back off.
+	var flash_tick: RawCodeRow = RawCodeRow.new()
+	flash_tick.code = "set_process(true)"
+	flash_body.actions.append(flash_tick)
 	flash.events.append(flash_body)
 	sheet.functions.append(flash)
 
@@ -101,6 +122,10 @@ static func build() -> bool:
 	stop_flash.description = "Stops flashing and restores visibility."
 	var stop_set: EventRow = EventRow.new()
 	stop_set.actions.append(_action("SetVar", {"var_name": "flashing", "value": "false"}))
+	# A host that is not blinking costs nothing per frame; Flash turns processing back on.
+	var stop_idle: RawCodeRow = RawCodeRow.new()
+	stop_idle.code = "set_process(false)"
+	stop_set.actions.append(stop_idle)
 	stop_flash.events.append(stop_set)
 	var stop_restore: EventRow = EventRow.new()
 	stop_restore.conditions.append(_cond("IsValid", {"target": "host"}))

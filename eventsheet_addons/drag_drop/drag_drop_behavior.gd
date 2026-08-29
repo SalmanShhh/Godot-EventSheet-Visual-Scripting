@@ -27,27 +27,27 @@ signal drag_cancelled
 ## @ace_name("On Snapped")
 signal snapped
 
-var break_action: int = 0
-## Gap that auto-ends the drag; 0 disables.
-@export var break_distance: float = 0.0
-var distance_from_point: float = 0.0
-var dragging: bool = false
-var drop_reason: String = "manual"
-## Active at start; disabling mid-drag cancels silently.
-@export var enabled: bool = true
 ## Max catch-up speed (px/s); 0 = instant snap each tick.
 @export var follow_speed: float = 0.0
+## Gap that auto-ends the drag; 0 disables.
+@export var break_distance: float = 0.0
+## Active at start; disabling mid-drag cancels silently.
+@export var enabled: bool = true
+var dragging: bool = false
 var follow_uid: int = -1
+var distance_from_point: float = 0.0
+var throw_speed: float = 0.0
 var has_throw_override: bool = false
-var is_snapping_flag: bool = false
-var magnet_strength: float = 0.0
-var snap_mode: int = 0
+var drop_reason: String = "manual"
+var break_action: int = 0
 var snap_positions: Array = []
-var snap_radius: float = 0.0
 var snap_uids: Array[int] = []
+var snap_radius: float = 0.0
+var snap_mode: int = 0
+var magnet_strength: float = 0.0
+var is_snapping_flag: bool = false
 var snapped_uid: int = -1
 var throw_cursor: int = 0
-var throw_speed: float = 0.0
 
 ## Per-tick movement lock (8Direction style).
 @export_enum("free", "up_down", "left_right", "four_dir", "eight_dir") var directions: int = 0
@@ -58,6 +58,11 @@ var throw_vel: Vector2 = Vector2.ZERO
 var override_throw: Vector2 = Vector2.ZERO
 var snap_target: Vector2 = Vector2.ZERO
 var throw_history: PackedVector2Array = PackedVector2Array()
+
+func _ready() -> void:
+	# The follow / magnet / break-distance work only exists during a drag, so a node sitting
+	# there waiting to be picked up costs nothing per frame. Start Drag turns the tick on.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if not enabled or not dragging or host == null:
@@ -118,6 +123,8 @@ func start_drag(drag_point_x: float, drag_point_y: float, grab_mode: int) -> voi
 	throw_history = PackedVector2Array()
 	throw_cursor = 0
 	is_snapping_flag = false
+	# A drag is the only thing this behavior does per frame, so the tick starts with it.
+	set_process(true)
 	drag_started.emit()
 
 ## @ace_action
@@ -217,6 +224,8 @@ func set_dragdrop_enabled(is_enabled: bool) -> void:
 	enabled = is_enabled
 	if not is_enabled and dragging:
 		dragging = false
+		# Cancelling the drag ends the only per-frame work there is.
+		set_process(false)
 		follow_uid = -1
 		has_throw_override = false
 		is_snapping_flag = false
@@ -469,6 +478,9 @@ func _end_drag(apply_throw: bool, reason: String) -> void:
 		throw_vel = Vector2.ZERO
 	throw_speed = throw_vel.length()
 	dragging = false
+	# The drag is over, so the tick stops - set BEFORE the triggers below, so a handler that
+	# starts a new drag on the spot turns it straight back on.
+	set_process(false)
 	follow_uid = -1
 	has_throw_override = false
 	is_snapping_flag = false

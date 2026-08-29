@@ -21,10 +21,13 @@ signal timer_finished
 
 ## Length of the countdown in seconds; the timer resets to this each time it repeats.
 @export var duration: float = 1.0
-var remaining: float = 0.0
 ## When on, the timer restarts after firing On Timer instead of stopping.
 @export var repeating: bool = false
+var remaining: float = 0.0
 var running: bool = false
+
+func _ready() -> void:
+	set_process(running)
 
 func _process(delta: float) -> void:
 	if running:
@@ -35,6 +38,7 @@ func _process(delta: float) -> void:
 				remaining = duration
 			else:
 				running = false
+				set_process(false)
 
 ## @ace_action
 ## @ace_name("Start Timer")
@@ -46,6 +50,7 @@ func start_timer(seconds: float) -> void:
 	duration = seconds
 	remaining = seconds
 	running = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Timer")
@@ -55,6 +60,7 @@ func start_timer(seconds: float) -> void:
 ## @ace_codegen_template("$TimerBehavior.stop_timer()")
 func stop_timer() -> void:
 	running = false
+	set_process(false)
 
 ## @ace_hidden
 func save_state() -> Dictionary:
@@ -75,5 +81,8 @@ func load_state(state: Dictionary) -> void:
 	running = bool(state.get("running", false))
 	duration = float(state.get("duration", 1.0))
 	repeating = bool(state.get("repeating", false))
+	# A loaded save can restore a timer that was mid-countdown, so processing follows the
+	# state that came back rather than the state the scene was authored with.
+	set_process(running)
 
 # Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating').

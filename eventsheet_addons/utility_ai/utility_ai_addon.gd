@@ -84,6 +84,10 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+	# Cooldowns are the only thing this brain spends a frame on, and a fresh brain has none:
+	# deciding happens when Evaluate is called, not every frame. Any verb that starts a
+	# cooldown turns the tick back on.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	for name: String in _cooldowns.keys():
@@ -92,6 +96,9 @@ func _process(delta: float) -> void:
 			_cooldowns.erase(name)
 			_cooldown_action = name
 			on_cooldown_ended.emit()
+	# With nothing left cooling down there is nothing to count, so the brain stops paying for a
+	# frame. Recomputed after the triggers, because a handler may have started a fresh cooldown.
+	set_process(not _cooldowns.is_empty())
 
 ## @ace_action
 ## @ace_featured
@@ -125,6 +132,7 @@ func add_consideration(action_name: String, input_key: String, curve: String, we
 func remove_action(action_name: String) -> void:
 	_actions.erase(action_name)
 	_cooldowns.erase(action_name)
+	set_process(not _cooldowns.is_empty())
 	if _current == action_name:
 		_current = ""
 
@@ -223,6 +231,8 @@ func mark_complete() -> void:
 	if cd > 0.0:
 		_cooldowns[name] = cd
 		_cooldown_action = name
+		# A cooldown is counted down per frame, so starting one wakes the tick up.
+		set_process(true)
 		on_cooldown_started.emit()
 	evaluate()
 
@@ -249,9 +259,12 @@ func interrupt() -> void:
 func set_cooldown(action_name: String, seconds: float) -> void:
 	if seconds <= 0.0:
 		_cooldowns.erase(action_name)
+		set_process(not _cooldowns.is_empty())
 	else:
 		_cooldowns[action_name] = seconds
 		_cooldown_action = action_name
+		# A cooldown is counted down per frame, so starting one wakes the tick up.
+		set_process(true)
 		on_cooldown_started.emit()
 
 ## @ace_action
@@ -262,6 +275,8 @@ func set_cooldown(action_name: String, seconds: float) -> void:
 ## @ace_codegen_template("$UtilityBrain.clear_cooldowns()")
 func clear_cooldowns() -> void:
 	_cooldowns.clear()
+	# Nothing left to count down means nothing left to spend a frame on.
+	set_process(false)
 
 ## @ace_condition
 ## @ace_name("Is Running")

@@ -43,9 +43,15 @@ func _blob_texture(opacity: float) -> GradientTexture2D:
 	texture.height = 128
 	return texture
 
+func _ready() -> void:
+	set_physics_process(false)
+
 func _physics_process(delta: float) -> void:
 	_clock += delta
 	var kept: Array = []
+	# Counted while the ledger is walked: a decal with no lifetime is never aged, so a canvas of
+	# permanent splats and no blob shadows has nothing for the next frame to do.
+	var aging: int = 0
 	for entry: Dictionary in _decals:
 		var decal: Decal = entry["node"] if is_instance_valid(entry["node"]) else null
 		if decal == null:
@@ -58,6 +64,7 @@ func _physics_process(delta: float) -> void:
 				continue
 			if age >= lifetime:
 				decal.modulate.a = 1.0 - (age - lifetime) / maxf(fade_seconds, 0.01)
+			aging += 1
 		kept.append(entry)
 	_decals = kept
 	var live_blobs: Array = []
@@ -81,10 +88,19 @@ func _physics_process(delta: float) -> void:
 					at = hit["position"]
 		decal.global_position = at + Vector3.UP * 0.05
 	_blobs = live_blobs
+	# Nothing left to age and nothing left to follow: stop paying for the tick until the next
+	# timed decal or blob shadow is spawned. The clock stands still while it is off, which is
+	# what keeps a decal spawned after the pause from being born already old.
+	if aging == 0 and _blobs.is_empty():
+		set_physics_process(false)
 
 ## @ace_hidden
 func _track(decal: Decal, lifetime: float) -> void:
 	_decals.append({"node": decal, "born": _clock, "lifetime": lifetime})
+	# Only a decal with a lifetime has to be aged, so only that one buys back the physics tick;
+	# a decal that stays forever is stamped once and never looked at again.
+	if lifetime > 0.0:
+		set_physics_process(true)
 	while _decals.size() > maxi(max_decals, 1):
 		var oldest: Dictionary = _decals.pop_front()
 		if is_instance_valid(oldest["node"]):
@@ -130,6 +146,8 @@ func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_ma
 	_decal_parent().add_child(decal)
 	decal.global_position = (follow as Node3D).global_position
 	_blobs.append({"id": follow.get_instance_id(), "decal": decal, "mask": collision_mask_3d})
+	# A shadow follows its character every physics frame, so it needs the tick back.
+	set_physics_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Blob Shadow")
@@ -172,6 +190,8 @@ func clear_decals() -> void:
 		if is_instance_valid(blob["decal"]):
 			(blob["decal"] as Decal).queue_free()
 	_blobs = []
+	# An empty canvas has nothing to age and nothing to follow.
+	set_physics_process(false)
 
 ## @ace_action
 ## @ace_name("Set Max Decals")

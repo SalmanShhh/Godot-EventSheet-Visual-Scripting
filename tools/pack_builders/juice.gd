@@ -204,7 +204,10 @@ static func build() -> bool:
 		"if host is Node2D:",
 		"\t_base_scale = (host as Node2D).scale",
 		"elif host is Control:",
-		"\t_base_scale = (host as Control).scale"
+		"\t_base_scale = (host as Control).scale",
+		"# Nothing is shaking, bobbing, blinking or springing on the first frame, and every verb that",
+		"# starts one of those turns processing back on - so an idle Juice costs nothing per frame.",
+		"set_process(false)"
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
@@ -529,7 +532,15 @@ static func build() -> bool:
 		"\t_trail_timer -= delta",
 		"\tif _trail_timer <= 0.0:",
 		"\t\t_trail_timer = maxf(_trail_interval, 0.01)",
-		"\t\t_stamp_ghost()"
+		"\t\t_stamp_ghost()",
+		"# The frame ended with nothing left to animate: stop paying for the tick until a verb starts",
+		"# another effect. A held camera counts as work - _cam_driving stays true until the mixer above",
+		"# has handed the camera back to the pose it was found in - and so does a running Tilt tween,",
+		"# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.",
+		"var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
+		"var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()",
+		"if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active):",
+		"\tset_process(false)"
 	]))
 	tick_extras.actions.append(tick_extras_body)
 	sheet.events.append(tick_extras)
@@ -537,7 +548,7 @@ static func build() -> bool:
 	# --- Actions (fire-and-forget) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice", "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.",
 		[["strength", "float"]],
-		"trauma = clampf(trauma + strength, 0.0, 1.0)")
+		"trauma = clampf(trauma + strength, 0.0, 1.0)\nset_process(true)")
 	_default(sheet, "strength", "0.4")
 	Lib.append_function(sheet, "stop_shake", "Stop Shake", "Juice", "Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).",
 		[],
@@ -547,12 +558,12 @@ static func build() -> bool:
 		"_camera_override = get_node_or_null(camera_path) as Camera2D")
 	Lib.append_function(sheet, "recoil", "Recoil", "Juice", "Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.",
 		[["angle_degrees", "float"], ["strength", "float"]],
-		"_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength")
+		"_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength\nset_process(true)")
 	_default(sheet, "angle_degrees", "-90")
 	_default(sheet, "strength", "12")
 	Lib.append_function(sheet, "start_head_bob", "Start Head Bob", "Juice", "Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.",
 		[["amplitude", "float"], ["frequency", "float"]],
-		"_bob_amplitude = amplitude\n_bob_frequency = maxf(frequency, 0.01)\n_bob_active = true")
+		"_bob_amplitude = amplitude\n_bob_frequency = maxf(frequency, 0.01)\n_bob_active = true\nset_process(true)")
 	_default(sheet, "amplitude", "6")
 	_default(sheet, "frequency", "2.2")
 	Lib.append_function(sheet, "stop_head_bob", "Stop Head Bob", "Juice", "Stops the head bob (the camera returns to rest once every other effect settles too).",
@@ -560,14 +571,14 @@ static func build() -> bool:
 		"_bob_active = false")
 	Lib.append_function(sheet, "start_jitter", "Start Jitter", "Juice", "Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.",
 		[["amount", "float"]],
-		"_jitter_amount = amount\n_jitter_active = true")
+		"_jitter_amount = amount\n_jitter_active = true\nset_process(true)")
 	_default(sheet, "amount", "3")
 	Lib.append_function(sheet, "stop_jitter", "Stop Jitter", "Juice", "Stops the jitter wobble.",
 		[],
 		"_jitter_active = false")
 	Lib.append_function(sheet, "tilt_to", "Tilt To", "Juice", "Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.",
 		[["degrees", "float"], ["duration", "float"]],
-		"if _tilt_tween != null:\n\t_tilt_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_property(self, \"_tilt_roll\", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: tilt_finished.emit())\n_tilt_tween = tw")
+		"if _tilt_tween != null:\n\t_tilt_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_property(self, \"_tilt_roll\", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: tilt_finished.emit())\n_tilt_tween = tw\nset_process(true)")
 	_default(sheet, "degrees", "6")
 	_default(sheet, "duration", "0.3")
 	Lib.append_function(sheet, "zoom_by_percent", "Zoom By Percent", "Juice", "Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.",
@@ -592,7 +603,7 @@ static func build() -> bool:
 	_default(sheet, "duration", "0.4")
 	Lib.append_function(sheet, "spring_squash", "Spring Squash", "Juice", "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).",
 		[["stretch", "float"]],
-		"if host == null:\n\treturn\nvar s: float = clampf(stretch, -0.9, 5.0)\n_squash_value = Vector2(_base_scale.x / (1.0 + s), _base_scale.y * (1.0 + s))\n_squash_velocity = Vector2.ZERO\n_squash_spring_active = true\n_apply_host_scale(_squash_value)")
+		"if host == null:\n\treturn\nvar s: float = clampf(stretch, -0.9, 5.0)\n_squash_value = Vector2(_base_scale.x / (1.0 + s), _base_scale.y * (1.0 + s))\n_squash_velocity = Vector2.ZERO\n_squash_spring_active = true\n_apply_host_scale(_squash_value)\nset_process(true)")
 	_default(sheet, "stretch", "0.3")
 	Lib.append_function(sheet, "slowmo", "Slowmo", "Juice", "Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.",
 		[["target_scale", "float"], ["hold_duration", "float"], ["duration_clock", "String"]],
@@ -618,7 +629,7 @@ static func build() -> bool:
 	_default(sheet, "seconds", "0.12")
 	Lib.append_function(sheet, "start_blinking", "Start Blinking", "Juice", "Strobes the host's opacity (full / faint) - the invulnerability-frames look, a low-health warning, an interactable highlight. Runs until Stop Blinking.",
 		[["times_per_second", "float"], ["min_alpha", "float"]],
-		"if host is CanvasItem and not _blink_active:\n\t_blink_base_alpha = (host as CanvasItem).modulate.a\n_blink_rate = maxf(times_per_second, 0.1)\n_blink_min_alpha = clampf(min_alpha, 0.0, 1.0)\n_blink_time = 0.0\n_blink_active = true")
+		"if host is CanvasItem and not _blink_active:\n\t_blink_base_alpha = (host as CanvasItem).modulate.a\n_blink_rate = maxf(times_per_second, 0.1)\n_blink_min_alpha = clampf(min_alpha, 0.0, 1.0)\n_blink_time = 0.0\n_blink_active = true\nset_process(true)")
 	_default(sheet, "times_per_second", "8")
 	_default(sheet, "min_alpha", "0.15")
 	Lib.append_function(sheet, "stop_blinking", "Stop Blinking", "Juice", "Stops the blink and restores the host's opacity.",
@@ -645,13 +656,13 @@ static func build() -> bool:
 	# ── Directional camera kick from a world point ──
 	Lib.append_function(sheet, "kick_away_from", "Kick Camera Away From Point", "Juice", "Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location, so the kick always reads as pushback. Composes with Shake.",
 		[["world_position", "Vector2"], ["strength", "float"]],
-		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar away: Vector2 = cam.get_screen_center_position() - world_position\naway = away.normalized() if away.length() > 0.001 else Vector2.UP\n_recoil_vec += away * strength")
+		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar away: Vector2 = cam.get_screen_center_position() - world_position\naway = away.normalized() if away.length() > 0.001 else Vector2.UP\n_recoil_vec += away * strength\nset_process(true)")
 	_default(sheet, "strength", "14")
 
 	# ── Ghost trail ──
 	Lib.append_function(sheet, "start_ghost_trail", "Start Ghost Trail", "Juice", "Starts stamping fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups, bullet-time evades. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Runs until Stop Ghost Trail.",
 		[["stamps_per_second", "float"], ["fade_seconds", "float"], ["tint", "Color"]],
-		"_ghost_sprite = _resolve_ghost_sprite()\n_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)\n_trail_fade = maxf(fade_seconds, 0.05)\n_trail_tint = tint\n_trail_timer = 0.0\n_trail_active = true")
+		"_ghost_sprite = _resolve_ghost_sprite()\n_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)\n_trail_fade = maxf(fade_seconds, 0.05)\n_trail_tint = tint\n_trail_timer = 0.0\n_trail_active = true\nset_process(true)")
 	_default(sheet, "stamps_per_second", "20")
 	_default(sheet, "fade_seconds", "0.4")
 	_default(sheet, "tint", "Color(1, 1, 1, 0.6)")

@@ -65,6 +65,8 @@ static func build() -> bool:
 	ready_body.code = "\n".join(PackedStringArray([
 		"layer = 128",
 		"_shown = not start_hidden",
+		"# No surface yet, so no frame to pay for: the first verb that builds one turns the tick on.",
+		"set_process(false)",
 	]))
 	ready_row.actions.append(ready_body)
 	sheet.events.append(ready_row)
@@ -119,6 +121,10 @@ static func _runtime_block() -> RawCodeRow:
 		"\t_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
 		"\t_surface.draw.connect(_paint_overlay)",
 		"\t_surface.visible = _shown",
+		"\t# The per-frame cost starts HERE, with the surface: until a row has drawn something there",
+		"\t# is nothing to age out and nothing to repaint, and a release build never reaches this line",
+		"\t# at all, so the overlay's tick is bought only by a project that actually uses it.",
+		"\tset_process(true)",
 		"\treturn true",
 		"",
 		"# Ages every timed entry out and repaints. Called once a frame by the pack's own tick row.",

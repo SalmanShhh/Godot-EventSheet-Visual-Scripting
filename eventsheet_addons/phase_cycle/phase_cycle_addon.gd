@@ -19,6 +19,9 @@ var _seconds_per: float = 0.0
 var _elapsed: float = 0.0
 var _running: bool = false
 
+func _ready() -> void:
+	set_process(_running)
+
 func _process(delta: float) -> void:
 	advance(delta)
 
@@ -40,6 +43,9 @@ func cycle_phases(phases: String, seconds_each: float) -> void:
 	_elapsed = 0.0
 	_seconds_per = maxf(seconds_each, 0.0)
 	_running = not _phases.is_empty() and _seconds_per > 0.0
+	# An empty list, or a length of zero, leaves nothing for a frame to advance - and the
+	# clock is switched on before the first trigger so a handler that stops it here wins.
+	set_process(_running)
 	if _running:
 		on_phase_changed.emit("", _phases[0])
 
@@ -51,6 +57,8 @@ func cycle_phases(phases: String, seconds_each: float) -> void:
 ## @ace_codegen_template("Phases.stop_cycle()")
 func stop_cycle() -> void:
 	_running = false
+	# A frozen cycle costs nothing per frame; Cycle Phases turns the clock back on.
+	set_process(false)
 
 ## @ace_condition
 ## @ace_name("Phase Is")
@@ -124,5 +132,7 @@ func load_state(state: Dictionary) -> void:
 	_seconds_per = float(state.get("seconds_per", 0.0))
 	_elapsed = float(state.get("elapsed", 0.0))
 	_running = bool(state.get("running", false))
+	# A save taken mid-cycle reopens mid-cycle, so the clock follows the restored state.
+	set_process(_running)
 
 # Phase Cycle (autoload): register as the Phases autoload, then Cycle Phases("day,night", 60) once at startup. The autoload ticks its own clock every frame - there is nothing to drive from a sheet. On Phase Changed fires at every roll with (previous, next); Phase Is branches on the current phase; Phase Progress runs 0-1 through it and wraps. This pack is an event sheet - extend it by editing it.

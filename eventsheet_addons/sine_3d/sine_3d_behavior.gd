@@ -14,24 +14,33 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Sine3DBehavior behavior requires a Node3D parent.")
 
-## When on the oscillation runs; turn off to freeze the host.
-@export var active: bool = true
-var base_captured: bool = false
-var base_rot_y: float = 0.0
-var base_x: float = 0.0
-var base_y: float = 0.0
-var base_z: float = 0.0
-## Peak offset from the start position (degrees for rotation-y).
-@export var magnitude: float = 2.0
 ## Which axis the host oscillates on - x, y, z position or rotation around Y.
 @export_enum("x", "y", "z", "rotation-y") var movement: String = "y"
+## The waveform shape used for the oscillation.
+@export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 ## Seconds the wave takes to complete one full cycle.
 @export var period: float = 4.0
+## Peak offset from the start position (degrees for rotation-y).
+@export var magnitude: float = 2.0
 ## Starting offset into the wave cycle, in degrees.
 @export var phase_degrees: float = 0.0
 var time: float = 0.0
-## The waveform shape used for the oscillation.
-@export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
+var base_x: float = 0.0
+var base_y: float = 0.0
+var base_z: float = 0.0
+var base_rot_y: float = 0.0
+var base_captured: bool = false
+## When on the oscillation runs; turn off to freeze the host.
+@export var active: bool = true:
+	set(value):
+		active = value
+		# A frozen host costs nothing per frame; turning it back on restores the tick.
+		set_process(value)
+
+func _ready() -> void:
+	# Processing runs only while the wobble does - a host authored frozen costs nothing
+	# per frame until Set Sine 3D Active turns it on.
+	set_process(active)
 
 func _process(delta: float) -> void:
 	if not active or host == null:
@@ -62,6 +71,8 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$Sine3DBehavior.set_sine3d_active({is_active})")
 func set_sine3d_active(is_active: bool) -> void:
 	active = is_active
+	# A frozen host costs nothing per frame; resuming turns processing back on.
+	set_process(is_active)
 
 ## @ace_action
 ## @ace_name("Set Phase")
