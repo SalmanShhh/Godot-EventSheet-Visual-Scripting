@@ -21,10 +21,10 @@ static func build() -> bool:
 				"info": "One entry in Set Names per set, one entry in Set Colors per set, and every set holds one colour per entry in Role Names, in that order."}},
 		"role_names": {"type": "PackedStringArray", "default": [], "exported": true,
 			"attributes": {"tooltip": "What each position in a set means (\"Danger\", \"Safe\", \"Neutral\"). Every set fills these roles in this order."}},
-		"set_names": {"type": "PackedStringArray", "default": [], "exported": true,
-			"attributes": {"tooltip": "One name per colour set (\"Default\", \"Deuteranopia\", \"Protanopia\"). This is the name the player picks."}},
 		"set_colors": {"type": "Array[PackedColorArray]", "default": [], "exported": true,
-			"attributes": {"tooltip": "One colour array per set, in the same order as Set Names. Inside an array the colours follow Role Names."}}
+			"attributes": {"tooltip": "One colour array per set, in the same order as Set Names. Inside an array the colours follow Role Names."}},
+		"set_names": {"type": "PackedStringArray", "default": [], "exported": true,
+			"attributes": {"tooltip": "One name per colour set (\"Default\", \"Deuteranopia\", \"Protanopia\"). This is the name the player picks."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/color_palette_resource/color_palette_resource",
 		"res://eventsheet_addons/color_palette_resource/icon.svg")

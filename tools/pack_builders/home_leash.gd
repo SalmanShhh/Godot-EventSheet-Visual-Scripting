@@ -16,10 +16,10 @@ static func build() -> bool:
 	sheet.addon_category = "Home & Leash"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"capture_on_ready": {"type": "bool", "default": true, "exported": true, "description": "Plant home where the host starts, so the leash works before you set one by hand."},
-		"_home": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
 		"_has_home": {"type": "bool", "default": false, "exported": false},
-		"_returning": {"type": "bool", "default": false, "exported": false}
+		"_home": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"_returning": {"type": "bool", "default": false, "exported": false},
+		"capture_on_ready": {"type": "bool", "default": true, "exported": true, "description": "Plant home where the host starts, so the leash works before you set one by hand."}
 	}
 
 	var about: CommentRow = CommentRow.new()

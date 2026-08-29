@@ -26,10 +26,10 @@ static func build() -> bool:
 	sheet.variables = {
 		"enable_pity": {"type": "bool", "default": true, "exported": true, "description": "When on, a roll is guaranteed at or above the pity rarity once the miss streak reaches the threshold.",
 			"attributes": {"tooltip": "Guarantee a high-rarity roll after a streak of misses.", "group": "Pity"}},
-		"pity_threshold": {"type": "int", "default": 10, "exported": true, "description": "How many misses in a row before the next roll is guaranteed pity-rarity-or-better.",
-			"attributes": {"tooltip": "Misses in a row before the next roll is guaranteed pity-rarity-or-better.", "range": {"min": "1", "max": "200", "step": "1"}, "group": "Pity"}},
 		"pity_rarity": {"type": "String", "default": "epic", "exported": true, "description": "The rarity (by name) that pity guarantees a roll at or above.",
-			"attributes": {"tooltip": "The rarity (by name) that pity guarantees at or above.", "group": "Pity"}}
+			"attributes": {"tooltip": "The rarity (by name) that pity guarantees at or above.", "group": "Pity"}},
+		"pity_threshold": {"type": "int", "default": 10, "exported": true, "description": "How many misses in a row before the next roll is guaranteed pity-rarity-or-better.",
+			"attributes": {"tooltip": "Misses in a row before the next roll is guaranteed pity-rarity-or-better.", "range": {"min": "1", "max": "200", "step": "1"}, "group": "Pity"}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "SkinVault: register as the SkinVault autoload. Register rarities + skins, then unlock via Roll (weighted, with pity), Purchase (your wallet confirms), or Grant. React with On Skin Unlocked. It owns ownership; you build the UI. This pack is an event sheet - extend it by editing it."

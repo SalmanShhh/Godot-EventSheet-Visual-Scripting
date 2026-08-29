@@ -16,13 +16,13 @@ static func build() -> bool:
 	sheet.custom_class_name = "LootTableResource"
 	sheet.class_description = "A loot table's drops as a data asset. Fill the entries grid in the Inspector, save as a .tres, and load it with the LootBox Load From Resource action or the Loot Table Loader behavior."
 	sheet.variables = {
-		"table_name": {"type": "String", "default": "loot", "exported": true,
-			"attributes": {"tooltip": "The name this table registers under in the LootBox when loaded."}},
 		"entries": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"tooltip": "One row per possible drop: the item id, its weight (higher = commoner), and comma-separated tags.", "drawer": "table", "table_columns": [{"name": "item", "type": "String"}, {"name": "weight", "type": "float"}, {"name": "tags", "type": "String"}]}},
 		"pity_tag": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Optional: a tag to guarantee after a streak of misses (leave blank for no pity)."}},
 		"pity_threshold": {"type": "int", "default": 0, "exported": true,
-			"attributes": {"tooltip": "How many misses before the pity tag is guaranteed (0 = off).", "range": {"min": "0", "max": "500", "step": "1"}}}
+			"attributes": {"tooltip": "How many misses before the pity tag is guaranteed (0 = off).", "range": {"min": "0", "max": "500", "step": "1"}}},
+		"table_name": {"type": "String", "default": "loot", "exported": true,
+			"attributes": {"tooltip": "The name this table registers under in the LootBox when loaded."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/loot_table_resource/loot_table_resource")

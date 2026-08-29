@@ -14,19 +14,19 @@ static func build() -> bool:
 	sheet.addon_category = "Car"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"max_speed": {"type": "float", "default": 400.0, "exported": true, "description": "Top forward speed in pixels per second (reverse tops out at half this)."},
+		"_drifting": {"type": "bool", "default": false, "exported": false},
 		"acceleration": {"type": "float", "default": 300.0, "exported": true, "description": "How fast speed builds while on the throttle, in pixels per second squared."},
-		"deceleration": {"type": "float", "default": 400.0, "exported": true, "description": "How fast the car coasts back to a stop when off the throttle, in pixels per second squared."},
-		"steer_degrees": {"type": "float", "default": 180.0, "exported": true, "description": "Turn rate in degrees per second at full steering."},
-		"drift_recover": {"type": "float", "default": 0.15, "exported": true, "description": "How strongly velocity snaps back toward the heading each frame (1 = grippy, low = drifty)."},
-		"turn_while_stopped": {"type": "bool", "default": false, "exported": true, "description": "Allows steering while the car is stopped."},
-		"drift_angle_threshold": {"type": "float", "default": 15.0, "exported": true, "description": "Angle in degrees between velocity and heading before a drift is counted."},
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "AI drive: read ai_throttle_axis/ai_steer_axis instead of the keyboard (a sheet or AI driver flips this on to steer)."}},
-		"ai_throttle_axis": {"type": "float", "default": 0.0, "exported": false},
 		"ai_steer_axis": {"type": "float", "default": 0.0, "exported": false},
+		"ai_throttle_axis": {"type": "float", "default": 0.0, "exported": false},
+		"deceleration": {"type": "float", "default": 400.0, "exported": true, "description": "How fast the car coasts back to a stop when off the throttle, in pixels per second squared."},
+		"drift_angle_threshold": {"type": "float", "default": 15.0, "exported": true, "description": "Angle in degrees between velocity and heading before a drift is counted."},
+		"drift_recover": {"type": "float", "default": 0.15, "exported": true, "description": "How strongly velocity snaps back toward the heading each frame (1 = grippy, low = drifty)."},
+		"max_speed": {"type": "float", "default": 400.0, "exported": true, "description": "Top forward speed in pixels per second (reverse tops out at half this)."},
 		"speed": {"type": "float", "default": 0.0, "exported": false},
-		"_drifting": {"type": "bool", "default": false, "exported": false}
+		"steer_degrees": {"type": "float", "default": 180.0, "exported": true, "description": "Turn rate in degrees per second at full steering."},
+		"turn_while_stopped": {"type": "bool", "default": false, "exported": true, "description": "Allows steering while the car is stopped."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Car behavior (event-sheet parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."

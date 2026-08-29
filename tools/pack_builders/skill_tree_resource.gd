@@ -29,13 +29,13 @@ static func build() -> bool:
 	sheet.addon_category = "Upgrades"
 	sheet.addon_tags = PackedStringArray(["skill", "progression", "resource"])
 	sheet.variables = {
-		"tree_name": {"type": "String", "default": "skills", "exported": true,
-			"attributes": {"group": "Identity",
-				"tooltip": "A readable name for this tree (\"Warrior\", \"Ship upgrades\"), read back with the Tree Name expression for a screen's title."}},
 		"starting_points": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"group": "Identity",
 				"tooltip": "How many skill points a fresh save begins with. Load Skill Tree hands this to the points counter, so a tree that opens with three free picks needs no extra row.",
 				"range": {"min": "0", "max": "999", "step": "1"}}},
+		"tree_name": {"type": "String", "default": "skills", "exported": true,
+			"attributes": {"group": "Identity",
+				"tooltip": "A readable name for this tree (\"Warrior\", \"Ship upgrades\"), read back with the Tree Name expression for a screen's title."}},
 		"skills": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Skills",
 				"tooltip": "One row per node of the tree. `id` is the string every action, condition and expression addresses (keep it short and unique). `name` is what the player reads. `cost` is what unlocking one level costs in skill points. `requires` names the ids that must be unlocked first, separated by commas (blank = a root node). `max_level` is how many times it can be taken (1 = a one-off perk). `grants` is what unlocking applies to a StatForge stack, written as `stat op amount` with an optional ` per level` and several separated by `;` - `x` or `*` multiplies, `+` and `-` add, `=` overrides, so `speed x1.1 per level` is a 10%-per-level speed buff. `column` and `row` place the node on a skill-tree screen; leave both at -1 to have the screen lay the tree out by depth.",

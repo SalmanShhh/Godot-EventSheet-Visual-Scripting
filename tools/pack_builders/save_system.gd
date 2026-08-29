@@ -22,27 +22,27 @@ static func build() -> bool:
 	sheet.class_description = "Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back."
 	sheet.addon_tags = PackedStringArray(["persistence"])
 	sheet.variables = {
-		"slot": {"type": "int", "default": 0, "exported": true,
-			"attributes": {"tooltip": "Active save slot (each slot is its own file).", "range": {"min": "0", "max": "9", "step": "1"}, "group": "Save System"}},
-		"save_directory": {"type": "String", "default": "user://", "exported": true,
-			"attributes": {"tooltip": "Where save files live."}},
+		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false},
+		"autosave_interval": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Seconds between autosaves (0 = off). Fires On Before Save first.", "range": {"min": "0", "max": "600", "step": "1"}}},
+		"backup_count": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "How many earlier versions of each slot to keep (0 = off). Every write copies the slot's previous bytes into a ring beside the save, so Restore Slot From Backup can go back to a save that was written perfectly and is simply wrong.", "range": {"min": "0", "max": "50", "step": "1"}}},
+		"encryption_key": {"type": "String", "default": "", "exported": true,
+			"attributes": {"tooltip": "Non-empty = encrypted saves (keep the key out of screenshots!)."}},
 		"file_pattern": {"type": "String", "default": "save_{slot}.cfg", "exported": true,
 			"attributes": {"tooltip": "{slot} becomes the slot number."}},
-		"section": {"type": "String", "default": "save", "exported": true,
-			"attributes": {"tooltip": "ConfigFile section / JSON namespace for values."}},
 		"format": {"type": "String", "default": "config", "exported": true, "options": ["config", "json", "binary", "csv", "ini", "xml"],
 			"attributes": {"tooltip": "config = ConfigFile (Godot-native), json = readable text, binary = compact store_var, csv = spreadsheet rows, ini = portable [section] key=value, xml = structured <entry> tags. All six preserve exact types."}},
 		"persist_group": {"type": "String", "default": "persist", "exported": true,
 			"attributes": {"tooltip": "Nodes in this group (and their behaviors) auto-save via save_state()/load_state() on Save Game / Load Game."}},
-		"encryption_key": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "Non-empty = encrypted saves (keep the key out of screenshots!)."}},
-		"autosave_interval": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "Seconds between autosaves (0 = off). Fires On Before Save first.", "range": {"min": "0", "max": "600", "step": "1"}}},
+		"save_directory": {"type": "String", "default": "user://", "exported": true,
+			"attributes": {"tooltip": "Where save files live."}},
 		"save_version": {"type": "int", "default": 1, "exported": true,
 			"attributes": {"tooltip": "The save shape number THIS build writes. Bump it whenever your saved data changes shape, and Load Game fires On Save Needs Upgrade for every older file so migration rows can fix it before anything reads it. 1 = nothing to migrate yet (and nothing is stamped, so files stay exactly as they were).", "range": {"min": "1", "max": "999", "step": "1"}}},
-		"backup_count": {"type": "int", "default": 0, "exported": true,
-			"attributes": {"tooltip": "How many earlier versions of each slot to keep (0 = off). Every write copies the slot's previous bytes into a ring beside the save, so Restore Slot From Backup can go back to a save that was written perfectly and is simply wrong.", "range": {"min": "0", "max": "50", "step": "1"}}},
-		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false}
+		"section": {"type": "String", "default": "save", "exported": true,
+			"attributes": {"tooltip": "ConfigFile section / JSON namespace for values."}},
+		"slot": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Active save slot (each slot is its own file).", "range": {"min": "0", "max": "9", "step": "1"}, "group": "Save System"}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it."

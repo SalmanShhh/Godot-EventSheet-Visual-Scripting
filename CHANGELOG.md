@@ -502,6 +502,21 @@
   companion data assets documented inside a partner's guide), and the test-file count. The pack count
   was stale in the migration guide in both of its halves, and in three test comments.
 
+### Fixed - the bundled packs and their builders agree again
+
+- **Rebuilding the bundled packs no longer rewrites them.** `eventsheet_addons/` is compiler
+  output, so one run of the pack build is supposed to leave the repository untouched; it was
+  rewriting 30 of the 112 packs, because those builders declared their variables in one order
+  while the shipped files carried another. Member order is not a private detail - a pack's head
+  bars read in file order and a `.tres` stores its properties in the script's declaration order -
+  so the builders were brought to the shipped files, which are what people already have. The
+  packs themselves are unchanged.
+- **A builder that stops reproducing its pack now fails the suite** instead of waiting for the
+  next person to run the rebuild and read the drift as their own doing. `pack_builder_matches_shipped_test`
+  rebuilds two packs through their real builders, into a scratch directory so nothing in the
+  repository is touched, and compares the bytes with the shipped files, naming the first line
+  that differs.
+
 ### Fixed - what this pass's own review found
 
 - **The scene list reads in path order on every platform.** The `.tscn` walk handed files back in

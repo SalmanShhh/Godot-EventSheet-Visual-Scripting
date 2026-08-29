@@ -19,12 +19,12 @@ static func build() -> bool:
 	sheet.variables = {
 		"default_duration": {"type": "float", "default": 0.3, "exported": true,
 			"attributes": {"tooltip": "Seconds used when a tween call passes 0.", "range": {"min": "0.01", "max": "10", "step": "0.01"}}},
-		"transition": {"type": "String", "default": "sine", "exported": true,
-			"description": "Motion curve every tween uses (sine, bounce, elastic, and so on).",
-			"options": ["linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring"]},
 		"easing": {"type": "String", "default": "out", "exported": true,
 			"description": "Where the motion eases - in, out, or both ends.",
-			"options": ["in", "out", "in_out", "out_in"]}
+			"options": ["in", "out", "in_out", "out_in"]},
+		"transition": {"type": "String", "default": "sine", "exported": true,
+			"description": "Motion curve every tween uses (sine, bounce, elastic, and so on).",
+			"options": ["linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring"]}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action - Tween Position / Scale / Rotation / Alpha / any property."

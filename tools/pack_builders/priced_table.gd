@@ -24,12 +24,12 @@ static func build() -> bool:
 	sheet.addon_category = "Priced Tables"
 	sheet.addon_tags = PackedStringArray(["shop", "economy", "purchase", "unlock"])
 	sheet.variables = {
+		"local_wallet": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "The fallback purse, used ONLY when no wallet node and no CurrencyLedger autoload answer. It is one number for every currency (this table's own money), which is enough for a prototype or a single-shop game; install a shared wallet the moment you have two tables."}},
 		"price_table": {"type": "Resource", "default": null, "exported": true,
 			"attributes": {"tooltip": "Optional: drop a PriceTableResource (.tres) here to load its entries on ready - the data-driven way to stock a table without events. You can also load one later (or a different one) with Load Price Table."}},
 		"wallet_group": {"type": "String", "default": "wallet", "exported": true,
-			"attributes": {"tooltip": "The group this table looks in for a wallet node before it tries the CurrencyLedger autoload. Any node in the group that has a balance(currency) and a spend(currency, amount) function qualifies - that is the whole contract, so your own purse works too."}},
-		"local_wallet": {"type": "float", "default": 0.0, "exported": true,
-			"attributes": {"tooltip": "The fallback purse, used ONLY when no wallet node and no CurrencyLedger autoload answer. It is one number for every currency (this table's own money), which is enough for a prototype or a single-shop game; install a shared wallet the moment you have two tables."}}
+			"attributes": {"tooltip": "The group this table looks in for a wallet node before it tries the CurrencyLedger autoload. Any node in the group that has a balance(currency) and a spend(currency, amount) function qualifies - that is the whole contract, so your own purse works too."}}
 	}
 
 	var about: CommentRow = CommentRow.new()
