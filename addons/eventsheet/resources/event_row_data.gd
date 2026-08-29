@@ -50,6 +50,11 @@ var firing: bool = false
 # fire reads as a fading flash instead of a hard blink (an event still firing re-bumps it
 # every streamed batch and holds near full glow).
 var firing_intensity: float = 0.0
+# True on a row that arrived as a worked example rather than being typed: the values in it are the
+# example's, and the reader is meant to replace them. The renderer dashes each literal in such a row
+# with the same stroke rhythm a fold mark's badge is dashed with. View-only and session-only - it is
+# never serialized, so an example the reader keeps is an ordinary row the moment the editor reopens.
+var tunable: bool = false
 var line_number: int = 0
 # The event-sheet stable event number (1-based, sheet order through groups and sub-events);
 # 0 for non-event rows. View-only, recomputed per rebuild - never serialized.

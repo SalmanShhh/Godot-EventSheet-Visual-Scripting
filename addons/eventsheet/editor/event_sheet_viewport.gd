@@ -2628,6 +2628,11 @@ var _fired_uids: Dictionary = {}
 # a fire read as a flash instead of a hard blink.
 var _fired_intensity: Dictionary = {}
 const FIRING_FADE_SECONDS := 0.6
+# The rows that arrived as a worked example, by event uid: the dashed tune-me marks under their
+# literals. Session-only and view-only, exactly like the trace highlight above - nothing about a
+# worked example is written into the sheet, so the marks survive scrolling and edits but never a
+# reopen, and a `.gd` still round-trips byte for byte.
+var _tunable_uids: Dictionary = {}
 
 
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
@@ -2659,6 +2664,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	if row_data != null and entry is EventRow and (not _fired_uids.is_empty() or not _fired_intensity.is_empty()):
 		row_data.firing = _fired_uids.has((entry as EventRow).event_uid)
 		row_data.firing_intensity = float(_fired_intensity.get((entry as EventRow).event_uid, 0.0))
+	if row_data != null and entry is EventRow and not _tunable_uids.is_empty():
+		row_data.tunable = _tunable_uids.has((entry as EventRow).event_uid)
 	return row_data
 
 
@@ -2700,6 +2707,45 @@ func set_fired_events(uids: PackedStringArray) -> void:
 		_fired_intensity[uid] = 1.0
 	_apply_firing_to_rows()
 	queue_redraw()
+
+
+## The tune-me marks: the rows named here arrived as a worked example, so every literal in them is
+## dashed to say it is the example's value and not an answer. ADDS to what is already marked, because
+## a reader who inserts two examples is reading both of them.
+##
+## Nothing is stored - a row is marked while this session has it on screen, and a reopened sheet has
+## no marks at all, which is the honest state: by then the values are the reader's own.
+func set_tunable_events(uids: PackedStringArray) -> void:
+	if uids.is_empty():
+		return
+	for uid: String in uids:
+		if not uid.strip_edges().is_empty():
+			_tunable_uids[uid] = true
+	_apply_tunable_to_rows()
+	queue_redraw()
+
+
+## Whether a row is currently marked as a worked example's, by its event uid. The one read of the
+## set, so a test asks the viewport rather than reaching into it.
+func is_event_tunable(uid: String) -> bool:
+	return _tunable_uids.has(uid)
+
+
+## Drops every tune-me mark - what a reader does when the example has become their own rows, and what
+## the dock does when the sheet in this pane is replaced.
+func clear_tunable_events() -> void:
+	if _tunable_uids.is_empty():
+		return
+	_tunable_uids.clear()
+	_apply_tunable_to_rows()
+	queue_redraw()
+
+
+func _apply_tunable_to_rows() -> void:
+	for entry: Dictionary in get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource is EventRow:
+			row_data.tunable = _tunable_uids.has((row_data.source_resource as EventRow).event_uid)
 
 
 ## Fades every pulse toward 0 and repaints while any is alive; an event still firing gets

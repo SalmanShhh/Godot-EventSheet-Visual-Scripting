@@ -2497,7 +2497,12 @@ static func _read_text_file(path: String) -> String:
 ##
 ## Never hold a row or resource reference across this call - the undo funnel commits by replacing
 ## resources with snapshot duplicates, so re-fetch from current_sheet() afterwards.
-static func insert_snippet(text: String, label: String = "Insert Snippet") -> bool:
+##
+## `as_example` dashes the rows that land with the tune-me marks: the reader asked for a WORKED
+## EXAMPLE, so every literal in it is the example's value rather than an answer, and the marks say so
+## until they edit the row or reopen the sheet. It changes nothing about what is inserted or what it
+## compiles to - a marked row and an unmarked one emit the same bytes.
+static func insert_snippet(text: String, label: String = "Insert Snippet", as_example: bool = false) -> bool:
 	if not _dock_alive():
 		return false
 	if not EventSheetSnippet.is_snippet_text(text):
@@ -2508,7 +2513,10 @@ static func insert_snippet(text: String, label: String = "Insert Snippet") -> bo
 	# outlived a tab close would otherwise report a successful insert into no sheet at all.
 	if current_sheet() == null:
 		return false
-	return _dock._paste_snippet_text(text, label)
+	var inserted: bool = _dock._paste_snippet_text(text, label)
+	if inserted and as_example:
+		_dock.mark_last_insert_as_example()
+	return inserted
 
 
 ## How much of what a sheet says about the NETWORK arrived as rows:

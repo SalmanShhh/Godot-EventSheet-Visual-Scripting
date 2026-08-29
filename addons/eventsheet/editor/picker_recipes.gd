@@ -119,7 +119,8 @@ static func insert(recipe: Dictionary, label: String = "Insert recipe") -> bool:
 	var text: String = EventSheetSnippet.serialize_rows(sheet.events, sheet)
 	if text.is_empty():
 		return false
-	return EventSheets.insert_snippet(text, label)
+	# as_example: a recipe is a guide's worked example, marked exactly as the figure it came from.
+	return EventSheets.insert_snippet(text, label, true)
 
 
 ## Drops the session cache - for tests, and for a bundle rebuilt underneath a running editor.

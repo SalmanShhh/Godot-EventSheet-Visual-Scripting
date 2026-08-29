@@ -50,6 +50,12 @@ const REGION_ROW_WASH_ALPHA := 0.06
 const REGION_RULE_ALPHA := 0.75
 const REGION_DASH_LENGTH := 3.0
 
+## How far below the text baseline a tune-me mark sits, as a fraction of the font size, and how much
+## of the muted ink it keeps. Both are small: the mark has to be findable without competing with the
+## words it sits under, which are the thing the reader came to read.
+const TUNE_MARK_DROP_RATIO := 0.22
+const TUNE_MARK_ALPHA := 0.9
+
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
 static var _icon_plate_style: StyleBoxFlat = null
@@ -979,6 +985,54 @@ func _draw_dashed_outline(control: Control, rect: Rect2, ink: Color) -> void:
 		)
 
 
+## The tune-me marks: a dashed rule under each literal of a row that arrived as a worked example.
+##
+## The MARK is the one the editor already draws - `draw_dashed_line` at REGION_DASH_LENGTH, the same
+## rhythm a fold mark's badge and a region's body rule are stroked with - so a reader who has met one
+## dashed mark in this editor has met them all. It sits below the text baseline rather than through
+## it: a strike-through already means "disabled" here, and a dashed underline has to read as an
+## invitation instead.
+##
+## Which runs are marked comes from the row's OWN value ranges - the typed-literal spans the sentence
+## already tints - so there is no second idea anywhere of what counts as a value in a row. A "muted"
+## run is a reading's lead (`effect.` in front of a dial's name), not a value anybody would retype, so
+## it is skipped.
+func _draw_tune_marks(
+	control: Control,
+	baseline: Vector2,
+	text: String,
+	value_ranges: Array,
+	max_width: float,
+	font: Font,
+	font_size: int,
+	ink: Color
+) -> void:
+	if value_ranges.is_empty() or text.is_empty():
+		return
+	var limit: float = baseline.x + max_width
+	var underline_y: float = baseline.y + maxf(float(font_size) * TUNE_MARK_DROP_RATIO, 2.0)
+	var mark_ink: Color = Color(ink, ink.a * TUNE_MARK_ALPHA)
+	for range_entry: Variant in value_ranges:
+		if not (range_entry is Array) or (range_entry as Array).size() < 2:
+			continue
+		var entry: Array = range_entry as Array
+		if entry.size() >= 3 and str(entry[2]) == "muted":
+			continue
+		var start: int = int(entry[0])
+		var length: int = int(entry[1])
+		if start < 0 or length <= 0 or start >= text.length():
+			continue
+		var lead_width: float = font.get_string_size(text.substr(0, start),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		var run_width: float = font.get_string_size(text.substr(start, length),
+			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		var from_x: float = baseline.x + lead_width
+		if from_x >= limit or run_width <= 0.0:
+			continue
+		control.draw_dashed_line(Vector2(from_x, underline_y),
+			Vector2(minf(from_x + run_width, limit), underline_y), mark_ink, 1.0, REGION_DASH_LENGTH)
+
+
 func _draw_spans(
 	control: Control,
 	row_data: EventRowData,
@@ -1304,6 +1358,12 @@ func _draw_spans(
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
 				text_width, font, draw_font_size, color, emphasis_value_color,
 				reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
+		# The tune-me marks: on a row that arrived as a worked example, every literal in it is the
+		# EXAMPLE's value and the reader is meant to replace it. A dashed rule under each one says so
+		# without changing one character of what the row reads as.
+		if row_data.tunable and span_index != editing_span_index:
+			_draw_tune_marks(control, Vector2(text_x, baseline_y), draw_text, value_ranges,
+				text_width, font, draw_font_size, reading.muted_text_color)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:

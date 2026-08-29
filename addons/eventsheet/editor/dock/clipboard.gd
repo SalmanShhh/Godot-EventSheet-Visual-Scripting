@@ -277,7 +277,48 @@ func paste_snippet(snippet: Dictionary, action_name: String = "Paste Snippet", e
 		var provider_note: String = "" if provider_names.is_empty() else " Uses providers: %s." % ", ".join(provider_names)
 		var retarget_note: String = "" if extra_note.strip_edges().is_empty() else " %s" % extra_note.strip_edges()
 		_dock._mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s%s" % [rows.size(), int(counters["variables_created"]), provider_note, retarget_note])
+		_landed_event_uids = landed_event_uids(rows)
 	return changed
+
+
+## The event uids the last snippet insert put into the sheet, and the reason they are recorded here:
+## this is the one function that knows which rows just landed, and the mutation funnel replaces every
+## resource with a snapshot duplicate on commit, so a caller holding the ROWS afterwards is holding
+## objects the sheet no longer contains. A uid survives that, because the duplicate carries it.
+##
+## Read once and cleared by the reader, so nothing accumulates: it answers "what did the insert I
+## just asked for land", never "what has ever been pasted".
+var _landed_event_uids: PackedStringArray = PackedStringArray()
+
+
+## The uids of the insert that just happened, emptied by the read.
+func take_landed_event_uids() -> PackedStringArray:
+	var uids: PackedStringArray = _landed_event_uids
+	_landed_event_uids = PackedStringArray()
+	return uids
+
+
+## Every event uid in a run of inserted rows, nested rows included. Static and pure, so the walk is
+## pinned without a dock around it.
+static func landed_event_uids(rows: Array) -> PackedStringArray:
+	var uids: PackedStringArray = PackedStringArray()
+	for row: Variant in rows:
+		_collect_event_uids(row as Resource, uids)
+	return uids
+
+
+static func _collect_event_uids(row: Resource, into: PackedStringArray) -> void:
+	if row is EventRow:
+		var event: EventRow = row as EventRow
+		if not event.event_uid.strip_edges().is_empty():
+			into.append(event.event_uid)
+		for sub_event: Variant in event.sub_events:
+			_collect_event_uids(sub_event as Resource, into)
+		return
+	if row is EventGroup:
+		var group: EventGroup = row as EventGroup
+		for child: Variant in (group.events if not group.events.is_empty() else group.rows):
+			_collect_event_uids(child as Resource, into)
 
 
 ## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline

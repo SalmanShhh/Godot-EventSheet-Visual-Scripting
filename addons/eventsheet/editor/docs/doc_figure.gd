@@ -231,7 +231,8 @@ func _on_insert_pressed() -> void:
 	var text: String = snippet_text()
 	if text.is_empty():
 		return
-	if EventSheets.insert_snippet(text, "Insert Figure"):
+	# as_example: a figure IS the worked example, so its literals land wearing the tune-me marks.
+	if EventSheets.insert_snippet(text, "Insert Figure", true):
 		snippet_inserted.emit()
 
 
@@ -272,7 +273,7 @@ static func insert_definition(definition: ACEDefinition, label: String = "Add Fr
 	var text: String = EventSheetSnippet.serialize_rows(sheet.events, sheet)
 	if text.is_empty():
 		return false
-	return EventSheets.insert_snippet(text, label)
+	return EventSheets.insert_snippet(text, label, true)
 
 
 ## A one-row sheet showing `definition` exactly as the picker would drop it: every parameter at

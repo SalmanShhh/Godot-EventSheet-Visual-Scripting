@@ -1830,6 +1830,21 @@ func _paste_snippet_text(text: String, action_name: String = "Paste Snippet") ->
 	return _clipboard_glue._paste_snippet_text(text, action_name)
 
 
+## Dashes the rows the LAST snippet insert landed as a worked example's, in every open pane. The
+## reader asked for a guide's example, so its literals are the example's values and are marked as
+## such until they edit them or reopen the sheet - nothing about the mark is written to the file.
+## Returns how many rows were marked, so a caller can say nothing rather than claim a mark it did
+## not get.
+func mark_last_insert_as_example() -> int:  # EventSheets.insert_snippet(as_example)
+	var uids: PackedStringArray = _clipboard_glue.take_landed_event_uids()
+	if uids.is_empty():
+		return 0
+	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if pane != null:
+			pane.set_tunable_events(uids)
+	return uids.size()
+
+
 func _add_gdscript_action_to_context_row() -> void:  # row context menu + inflow_gdscript_test
 	_clipboard_glue._add_gdscript_action_to_context_row()
 
