@@ -89,8 +89,9 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert lands rows in the sheet.
 signal snippet_inserted()
 
-## Emitted when an example asks to be opened in a scratch sheet of its own. The Manual does not own
-## the tab strip, so it names what it wants and its host opens it.
+## Emitted when a TUTORIAL starts and wants the sheet it walks the reader through. That is the one
+## caller: a figure's offer is Insert, into the sheet the reader already has open, as one undo step.
+## The Manual does not own the tab strip, so it names what it wants and its host opens it.
 signal scratch_requested(example_name: String, sheet: EventSheetResource)
 
 ## Emitted when a tutorial step names a control the reader should use, so the host can make the real
@@ -206,8 +207,6 @@ func _init() -> void:
 	_page.doc_requested.connect(func(doc_id: String, anchor: String) -> void: show_doc(doc_id, anchor))
 	_page.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_page.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
-	_page.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
-		scratch_requested.emit(example_name, example))
 	_page.action_requested.connect(_on_page_action)
 	# A page is BUILT before it is laid out, so the bearing taken while building it has no positions
 	# to read. Its own layout is what says there are some, and a fold opening or closing re-fires it.
@@ -215,8 +214,6 @@ func _init() -> void:
 	_panel = EventSheetDocPanel.new()
 	_panel.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_panel.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
-	_panel.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
-		scratch_requested.emit(example_name, example))
 	_panel.doc_requested.connect(func(doc_id: String) -> void: show_doc(doc_id))
 	_panel.doc_requested_at.connect(func(doc_id: String, anchor: String) -> void:
 		show_doc(doc_id, anchor))

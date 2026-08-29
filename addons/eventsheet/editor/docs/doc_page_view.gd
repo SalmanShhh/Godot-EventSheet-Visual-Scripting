@@ -56,10 +56,6 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert landed its rows in the reader's sheet, so a host can say so.
 signal snippet_inserted()
 
-## Emitted when a figure on this page asks for its example in a scratch sheet. A page cannot open a
-## tab any more than it can run a button's action - it names what it wants and the host does it.
-signal scratch_requested(example_name: String, sheet: EventSheetResource)
-
 ## Emitted when the reader presses a button a derived page carries ("Write this guide"). The page
 ## names the action and its argument; running it is the host's business.
 signal action_requested(action: String, argument: String)
@@ -728,10 +724,6 @@ func _figure(body: String, caption: String) -> Control:
 	figure.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	figure.set_caption(caption)
 	figure.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
-	figure.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
-		# A figure's caption is the nearest heading above it, and an UNCAPTIONED one has nothing to
-		# name its tab with - so the page it sits on names it instead.
-		scratch_requested.emit(example_name if not example_name.is_empty() else _doc_title, example))
 	if not figure.show_sheet(sheet):
 		figure.queue_free()
 		return null

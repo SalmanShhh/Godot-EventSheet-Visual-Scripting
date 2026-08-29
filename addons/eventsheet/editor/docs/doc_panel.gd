@@ -83,10 +83,6 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert lands rows in the sheet, so a host can close or report.
 signal snippet_inserted()
 
-## Emitted when the reader asks for the verb's own example in a scratch sheet of its own. The panel
-## does not own a tab strip, so it says what it wants and the host opens it.
-signal scratch_requested(example_name: String, sheet: EventSheetResource)
-
 ## Emitted when the reader asks to be taken to one of the rows of THIS sheet that already use the
 ## verb on screen. `index` walks the list, so "go to first" is 0 and "next" is the one after the
 ## one they were shown. The panel never touches the sheet itself - a host reveals the row.
@@ -420,10 +416,6 @@ func _figure_block(definition: ACEDefinition) -> Control:
 		figure.free()
 		return null
 	figure.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
-	figure.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
-		# The panel replaces the figure's own caption with its section label, so the example has no
-		# name of its own here - the VERB is what the reader is trying out.
-		scratch_requested.emit(EventSheetL10n.translate(definition.display_name), example))
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
 	column.add_child(EventSheetPopupUI.small_caps_label("How this reads on the sheet"))

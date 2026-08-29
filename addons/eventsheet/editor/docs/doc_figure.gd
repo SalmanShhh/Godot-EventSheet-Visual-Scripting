@@ -37,16 +37,11 @@ signal guide_requested()
 ## Emitted after a successful Insert, so a host can close itself or update its status line.
 signal snippet_inserted()
 
-## Emitted when the reader asks for this example in a scratch sheet of its own. The figure does not
-## own a tab strip, so it says what it wants and the host opens it.
-signal scratch_requested(example_name: String, sheet: EventSheetResource)
-
 var _caption: Label = null
 var _viewport: EventSheetViewport = null
 var _frame: ScrollContainer = null
 var _insert_button: Button = null
 var _copy_button: Button = null
-var _scratch_button: Button = null
 var _guide_button: Button = null
 var _sheet: EventSheetResource = null
 ## The width ceiling actually handed to the viewport, so a resize that ends where it started - a
@@ -89,13 +84,10 @@ func _init() -> void:
 	_guide_button.visible = false
 	_guide_button.pressed.connect(func() -> void: guide_requested.emit())
 	buttons.add_child(_guide_button)
-	# The sandbox, and it comes BEFORE Insert on purpose: a reader who has not decided yet should
-	# reach the harmless option first. Insert changes a file of their project; this one cannot.
-	_scratch_button = Button.new()
-	_scratch_button.text = EventSheetDocScratch.try_it_label()
-	_scratch_button.tooltip_text = EventSheetDocScratch.try_it_tooltip()
-	_scratch_button.pressed.connect(_on_scratch_pressed)
-	buttons.add_child(_scratch_button)
+	# Insert is the figure's answer for "let me try this", and it is the only one. Putting the rows
+	# into the sheet the reader already has open, as ONE undo step, is what makes the offer safe:
+	# undo puts the sheet back exactly as it was. A separate place to practise in would be a second
+	# home for the reader's work with none of that guarantee.
 	_insert_button = Button.new()
 	_insert_button.text = "Add these events"
 	_insert_button.tooltip_text = "Puts these events into the open sheet at the caret, as one undo step."
@@ -234,18 +226,6 @@ func _on_insert_pressed() -> void:
 	# as_example: a figure IS the worked example, so its literals land wearing the tune-me marks.
 	if EventSheets.insert_snippet(text, "Insert Figure", true):
 		snippet_inserted.emit()
-
-
-## "Try it in a scratch sheet": the figure hands out a DUPLICATE of its rows, never the sheet it is
-## drawing. A scratch tab is editable by definition, and a reader typing into it must not be editing
-## the illustration they are reading beside it.
-func _on_scratch_pressed() -> void:
-	if _sheet == null:
-		return
-	var copy: EventSheetResource = _sheet.duplicate(true) as EventSheetResource
-	if copy == null:
-		return
-	scratch_requested.emit(_caption.text.strip_edges(), copy)
 
 
 func _on_copy_pressed() -> void:

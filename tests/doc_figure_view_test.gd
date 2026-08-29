@@ -38,7 +38,36 @@ static func run() -> bool:
 	all_passed = _test_definition_figures() and all_passed
 	all_passed = _test_theme_home() and all_passed
 	all_passed = _test_insert_snippet() and all_passed
+	all_passed = _test_the_only_offer_is_into_the_readers_own_sheet() and all_passed
 	return all_passed
+
+
+# ── 6. The offer: the reader's own sheet, or nothing ──────────────────────────────────────
+
+
+## A figure offers exactly two things - put these rows in the sheet you have open, or copy them.
+## There is deliberately no third button offering somewhere ELSE to try them: a separate practice
+## surface is a second home for the reader's work, with none of the safety that makes Insert safe.
+## What makes Insert safe is that it is ONE undo step in a file the reader already owns.
+static func _test_the_only_offer_is_into_the_readers_own_sheet() -> bool:
+	var figure: EventSheetDocFigure = EventSheetDocFigure.new()
+	var labels: Array[String] = []
+	for button: Button in _buttons_of(figure):
+		if button.visible:
+			labels.append(button.text)
+	var all_passed: bool = _check("a figure's buttons are Insert and Copy, in that order",
+		", ".join(labels), "Add these events, Copy")
+	figure.free()
+	return all_passed
+
+
+static func _buttons_of(node: Node) -> Array[Button]:
+	var found: Array[Button] = []
+	for child: Node in node.get_children():
+		if child is Button:
+			found.append(child as Button)
+		found.append_array(_buttons_of(child))
+	return found
 
 
 # ── 1. Sizing: content in both axes, neither floor ────────────────────────────────────────

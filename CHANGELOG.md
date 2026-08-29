@@ -6230,6 +6230,29 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   its provider declaration twice, which is a duplicate-member parse error, and its member name failed
   the style gate - the gate had been red on it.
 
+### Fixed, after reading the pass back
+
+- **A figure's offer is your own sheet, and only that.** Every illustration in the Manual carried a
+  button offering to open the example somewhere else to practise in, drawn to the LEFT of "Add these
+  events" so it was met first. A separate place to practise is a second home for a reader's work with
+  none of the safety that makes Insert safe: Insert is one undo step in a file they already own, and
+  undo puts the sheet back exactly as it was. The figure now offers Insert and Copy, the relays that
+  existed only to carry that button are gone, and a test walks a figure's buttons and pins the pair.
+- **A single-test selector can no longer print the whole suite's verdict.** `EVENTFORGE_TEST_ONLY` is
+  the documented way to run one test and it survives for the rest of a shell session once set. The
+  parallel launcher inherited it, ran that one test in every shard, printed the same
+  "All tests passed." the full suite prints - and STAMPED it as this tree's answer, so every later
+  run replayed it. The launcher now clears the variable before it starts anything and says that it
+  did; the test pins that the clearing happens before the first process is launched.
+- **A stamped verdict answers for the engine it was measured in.** The tree identity behind the
+  stamp was built from the commit and the working tree only, so swapping Godot builds under an
+  unchanged checkout inherited the previous build's verdict. The engine binary's path, size and
+  write time are part of the identity now, and a test asks the launcher for two identities with two
+  different binaries and requires them to differ.
+- **The suite lock stops waiting eventually.** A run queued behind a holder that was alive but wedged
+  waited forever with no output. It now gives up after 30 minutes (`-LockTimeoutMinutes`) and says
+  where the holder's pid is written.
+
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
