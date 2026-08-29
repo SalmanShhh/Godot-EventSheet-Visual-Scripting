@@ -5289,3 +5289,36 @@ Export the Manual as a site,将手册导出为站点
 "The whole Manual as plain HTML files, with its search, that open in a browser with no server.",整本手册导出为带搜索的纯 HTML 文件，无需服务器即可在浏览器中打开。
 Write out the translator's missing keys,导出译者缺少的键
 One spreadsheet of every key your game asks for that a catalog does not answer yet.,一张表，列出你的游戏需要但目前没有任何目录能回答的所有键。
+Spawn A Copy,生成一个副本
+"Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.",复制一份场景，把它添加到指定的父节点下并放到你说的位置。副本会得到你选的名字，本事件中后面的每一行都可以说出这个名字 - 它是生成代码里真正的变量，而不是一次查找。把位置保持为 global_position 就会在本节点处生成，把父节点保持为 self 就会把副本放在本节点下。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]",在 {at} 生成 [b]{scene}[/b] 的副本，命名为 [b]{name}[/b]，放在 [i]{parent}[/i] 下
+"The scene to copy - one of this sheet's declared scenes by name, or a load() of a scene path.",要复制的场景 - 本表已声明的场景名称，或者对场景路径的 load()。
+"What to call the new copy. Following rows in this event say this name, and it is the variable name the emitted code uses.",新副本叫什么。本事件中后面的行会说出这个名字，它也是生成代码使用的变量名。
+"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.",副本落在哪里，以位置表示。保持为 global_position 就会在本节点处生成。
+Under,父节点
+"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.",副本被添加在哪个节点下。保持为 self 就会放在本节点下，也可以指定一个图层把生成物集中在一起。
+Spawn A Copy Safely,安全地生成一个副本
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.",同样的生成，但改在下一个空闲时刻添加，而不是立刻。请在碰撞或刚体回调里使用：Godot 在物理服务器忙碌时会拒绝添加子节点，而这一行会等它完成而不是报错。位置在添加之前设定，所以它是相对父节点的位置，而不是世界坐标。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",在 {at} 生成 [b]{scene}[/b] 的副本，命名为 [b]{name}[/b]，放在 [i]{parent}[/i] 下，在下一个空闲时刻添加
+Make A Copy,做一个副本
+"Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.",复制一份场景并给它一个名字，但暂不加入场景树。本事件中后面的行可以用这个名字来布置副本，准备好后由一行“添加子节点”把它放入世界。
+"Make a copy of [b]{scene}[/b], called [b]{name}[/b]",做一个 [b]{scene}[/b] 的副本，命名为 [b]{name}[/b]
+Place Of,的位置
+"Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.",给出节点自己在世界中的位置。把 Marker2D 放在东西应该出现的地方，这一行就会读它 - 移动标记就能移动生成点，无需改表。
+place of [i]{node}[/i],[i]{node}[/i] 的位置
+"The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.",要读取位置的节点 - 你在场景里放的 Marker2D、一个出生点、玩家。
+Random Place Along Path,路径上的随机位置
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.",给出 Path2D 曲线上某处的随机点。点是按行进距离选的，而不是按曲线段，所以一段长直路与一个急弯的概率完全相同。
+random place along [i]{path}[/i],[i]{path}[/i] 上的随机位置
+The Path2D whose curve to pick a point on.,要在其曲线上取点的 Path2D。
+Random Place Inside Shape,形状内的随机位置
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",给出碰撞形状内的随机点 - 也就是你围着生成区画的那个 Area2D。矩形和圆会直接按尺寸一步均匀撒点，既不做拒绝采样也不重试；其他形状则给出自己的中心，而不是猜一个。
+random place inside [i]{shape}[/i],[i]{shape}[/i] 内的随机位置
+The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,要在其内撒点的 CollisionShape2D - 即标记生成区的那个 Area2D 上的那一个。
+Random Place Off Screen Edge,屏幕边缘外的随机位置
+"Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.",给出四个屏幕边缘之一的外侧一个随机点，以世界坐标表示 - 一波敌人就是从那里来的。每次执行这一行都会重新挑边，而边距让副本在进入画面前不被看到。
+random place off a screen edge (+{margin}),屏幕边缘外的随机位置 (+{margin})
+"How far outside the screen edge the point sits, in pixels.",点在屏幕边缘外多远，以像素计。
+the new copy,新副本
+Recognisers,识别表
+the spellings a lift knows,读取时认得的写法

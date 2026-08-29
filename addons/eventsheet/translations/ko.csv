@@ -5289,3 +5289,36 @@ Export the Manual as a site,설명서를 사이트로 내보내기
 "The whole Manual as plain HTML files, with its search, that open in a browser with no server.",설명서 전체를 검색 기능이 포함된 평범한 HTML 파일로 만듭니다. 서버 없이 브라우저에서 열립니다.
 Write out the translator's missing keys,번역자에게 줄 빠진 키 내보내기
 One spreadsheet of every key your game asks for that a catalog does not answer yet.,게임이 요청하지만 아직 어떤 카탈로그도 답하지 않는 모든 키를 담은 표입니다.
+Spawn A Copy,복사본 생성
+"Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.","씬에서 사본을 하나 만들어 부모 아래에 추가하고 지정한 위치에 놓습니다. 사본은 선택한 이름을 갖고, 이 이벤트의 이후 모든 행이 그 이름을 말할 수 있습니다. 생성된 코드 안의 실제 변수이며 조회가 아닙니다. 이 노드의 위치에서 생성하려면 위치를 global_position으로, 이 노드 아래에 두려면 아래를 self로 두세요."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]","[b]{scene}[/b]의 사본을 [b]{name}[/b](으)로 {at}에, [i]{parent}[/i] 아래에 생성"
+"The scene to copy - one of this sheet's declared scenes by name, or a load() of a scene path.",복사할 씬입니다. 이 시트가 선언한 씬 이름이거나 씬 경로의 load()입니다.
+"What to call the new copy. Following rows in this event say this name, and it is the variable name the emitted code uses.","새 사본을 부를 이름입니다. 이 이벤트의 다음 행들이 이 이름을 말하며, 생성된 코드가 쓰는 변수 이름입니다."
+"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.",사본이 놓일 위치입니다. global_position 그대로 두면 이 노드의 위치에 생성됩니다.
+Under,아래
+"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.","사본을 추가할 부모 노드입니다. self 그대로 두면 이 노드 아래에 추가되고, 레이어를 지정하면 생성물을 모아둘 수 있습니다."
+Spawn A Copy Safely,사본을 안전하게 생성
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.","같은 생성이지만 지금이 아니라 다음 유휴 시점에 추가됩니다. 충돌이나 보디 핸들러 안에서 쓰세요. Godot는 물리 서버가 바쁨 동안 자식 추가를 거부하는데, 이 행은 오류 대신 기다립니다. 위치는 추가 전에 정해지므로 월드 좌표가 아니라 부모 기준 위치입니다."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment","[b]{scene}[/b]의 사본을 [b]{name}[/b](으)로 {at}에, [i]{parent}[/i] 아래에 생성하고 다음 유휴 시점에 추가"
+Make A Copy,사본 만들기
+"Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.","씬의 사본을 하나 만들고 이름을 주지만 아직 씬 트리에는 넣지 않습니다. 이 이벤트의 다음 행들이 그 이름으로 사본을 준비하고, 준비가 되면 자식 추가 행이 세계에 넣습니다."
+"Make a copy of [b]{scene}[/b], called [b]{name}[/b]",[b]{scene}[/b]의 사본을 만들고 [b]{name}[/b](으)로 이름 짓기
+Place Of,의 위치
+"Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.","노드 자신의 월드 위치를 줍니다. 물건이 나타나야 할 곳에 Marker2D를 놓으면 이것이 그것을 읽으므로, 마커를 옮기면 시트를 건드리지 않고도 생성 위치가 옮겨집니다."
+place of [i]{node}[/i],[i]{node}[/i]의 위치
+"The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.","위치를 읽을 노드입니다. 씬에 놓은 Marker2D, 생성 지점, 플레이어 등입니다."
+Random Place Along Path,경로 위의 무작위 위치
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.","Path2D 곡선 위 어느 지점을 무작위로 줍니다. 곡선 구간이 아니라 진행 거리로 고르므로, 긴 직선 구간도 급한 모서리와 똑같은 확률입니다."
+random place along [i]{path}[/i],[i]{path}[/i] 위의 무작위 위치
+The Path2D whose curve to pick a point on.,점을 고를 곡선을 가진 Path2D입니다.
+Random Place Inside Shape,도형 안의 무작위 위치
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",충돌 도형 안의 무작위 점을 줍니다. 생성 구역 주위에 그린 Area2D를 말합니다. 직사각형과 원은 치수를 직접 재서 한 번에 고르게 뿌려집니다. 기각 샘플링도 재시도도 없습니다. 그 밖의 도형은 추측 대신 자기 중심을 줍니다.
+random place inside [i]{shape}[/i],[i]{shape}[/i] 안의 무작위 위치
+The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,뿌릴 대상인 CollisionShape2D입니다. 생성 구역을 표시하는 Area2D에 달린 것입니다.
+Random Place Off Screen Edge,화면 가장자리 밖의 무작위 위치
+"Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.","네 화면 가장자리 중 하나의 바로 바깥에 있는 무작위 점을 월드 좌표로 줍니다. 웨이브가 들어오는 곳입니다. 가장자리는 행이 실행될 때마다 다시 고르며, 여백 덕분에 사본은 들어올 때까지 보이지 않습니다."
+random place off a screen edge (+{margin}),화면 가장자리 밖의 무작위 위치 (+{margin})
+"How far outside the screen edge the point sits, in pixels.",점이 화면 가장자리 밖으로 얼마나 떨어져 있는지를 픽셀로 지정합니다.
+the new copy,새 사본
+Recognisers,인식기
+the spellings a lift knows,읽어들이기가 아는 표기들

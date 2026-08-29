@@ -65,6 +65,9 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/game_state_aces.gd",
 	"res://addons/eventforge/registration/modules/math_words_aces.gd",
 	"res://addons/eventforge/registration/modules/space_words_aces.gd",
+	# The spawn sentence: the row that names a new copy, the deferred spelling beside it, and the
+	# four expressions that answer "where". One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/spawn_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -294,7 +297,7 @@ const FULLY_KEYED_MODULES: Array[String] = [
 	"game_mechanics_aces.gd", "game_state_aces.gd", "light_node_aces.gd", "lighting_aces.gd",
 	"math_words_aces.gd", "multiplayer_aces.gd", "resource_aces.gd", "scene_lighting_aces.gd",
 	"spatial_aces.gd", "space_words_aces.gd", "spatial_words_aces.gd", "table_aces.gd",
-	"text_extract_aces.gd", "text_format_aces.gd"
+	"spawn_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
 ]
 
 

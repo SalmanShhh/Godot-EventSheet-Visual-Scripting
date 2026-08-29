@@ -6,6 +6,39 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Spawning, said in sentences
+
+- **A spawn is a sentence with a name in it.** **Spawn A Copy** makes one copy of a scene, adds it
+  under a parent and puts it where you say - three plain statements, in the order Godot wants them.
+  The row asks what to call the copy, and that name becomes a real local variable in the emitted
+  code, so every following row in the same event can simply say it. There is no spawning system
+  behind this, no registry and no manager node: the row writes
+  `var new_enemy = Enemy.instantiate()`, an `add_child`, and a placement line, which is exactly what
+  the same three lines written by hand look like. The parent is stated on the row even when it is
+  this node, because a copy that quietly ends up somewhere else is the hardest kind of spawn to find
+  later. The frozen path-string **Spawn Scene** rows are untouched and stay the answer for a scene
+  path built at runtime.
+- **The deferred spelling says so on the row.** **Spawn A Copy Safely** writes
+  `call_deferred(\"add_child\", …)` and reads `…, added on the next idle moment`. Godot refuses to add
+  a child while the physics server is flushing, which is most of what a collision handler is, so
+  this is the row that handler wants - and it admits the deferral in its own sentence rather than
+  doing it quietly. It sets the place before handing the copy over, because the copy is not in a
+  tree yet when that line runs.
+- **The name a spawn row gives a copy is offered to the rows after it.** Any expression field in the
+  sheet suggests it, said with the scene it is a copy of, beside the trigger parameters and the
+  sheet's own variables. **Make A Copy** is the same name-minting statement on its own, for a copy
+  that needs setting up before it joins the tree - and it is the row a hand-written
+  `var b = Bullet.instantiate()` opens as, so an opened file keeps the author's own name for the
+  thing, down to the byte.
+- **Four words for where it lands, each one expression.** **Place Of** reads a node's own place (drop
+  a Marker2D and move the spawn without touching the sheet); **Random Place Along Path** samples a
+  Path2D's curve by distance travelled, so a long straight is exactly as likely as a tight corner;
+  **Random Place Inside Shape** scatters inside a CollisionShape2D - rectangles and circles measured
+  directly and evenly in one step, with no rejection sampling and no retries, and every other shape
+  giving its own centre rather than a guess; **Random Place Off Screen Edge** gives a point just
+  outside one of the four edges in world coordinates. Each is plain GDScript and works in any field
+  that takes a position, not only in a spawn row.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

@@ -3221,6 +3221,12 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# every bare identifier in every file - both rows say a CLEARER sentence about a line that
 	# already lifts, so they author only and the general spellings keep their existing rows.
 	"SetBool", "IsBoolSet",
+	# Make A Copy, for the same reason and no other: its template IS the instancing line, and the
+	# shipped reading of an instantiate already says more about that line than the row can - it
+	# gathers the instancing, the layer it went onto, where it was put and the property set on the
+	# way in into ONE sentence, and it keeps the author's own name for the copy in it. The row is an
+	# authoring word here; the reading stays the one that opens the line.
+	"MakeNewCopy",
 	# Rows whose template is a perfectly ordinary line - `x = y`, `x = ""`,
 	# `x += 1`, `x = load(p)`, `list[i]`, `list.size()`, `a in b`, `absf(a - b)`. Each is exactly
 	# right for the row that writes it and hopelessly general for the index that reads lines BACK:

@@ -587,6 +587,7 @@ static func _build_expression_entries(sheet: EventSheetResource) -> Array[Dictio
 	var entries: Array[Dictionary] = _variable_entries(sheet)
 	entries.append_array(_function_entries(sheet))
 	entries.append_array(_parameter_entries(sheet))
+	entries.append_array(_spawn_chip_entries(sheet))
 	entries.append_array(_enum_entries(sheet, ""))
 	if sheet != null and ClassDB.class_exists(sheet.host_class):
 		for info: Dictionary in ClassDB.class_get_property_list(sheet.host_class):
@@ -635,6 +636,62 @@ static func _parameter_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 				event_function.function_name, SEPARATOR, EventSheetL10n.translate("parameter")],
 				"kind": KIND_VARIABLE})
 	return entries
+
+
+## The rows that name a new copy, and the parameter each one names it in. A spawn row declares a
+## real local variable, so the name it was given is a name the rows after it can say - and this is
+## the list that offers it. Kept as data rather than as an `if` chain so a spawn row added later is
+## offered the moment it says which parameter carries its name.
+const SPAWN_NAME_PARAMS: Dictionary = {
+	"SpawnNewCopy": "name",
+	"SpawnNewCopyDeferred": "name",
+	"MakeNewCopy": "name",
+}
+
+
+## Every name a spawn row in this sheet gave a new copy, said with the scene it is a copy of. The
+## chip a following row picks its object from: `var new_enemy = Enemy.instantiate()` is what the row
+## emitted, so `new_enemy` is simply what the code already says by the time the next row runs.
+##
+## Sheet-wide rather than event-wide on purpose: this list feeds a FIELD, and a field does not know
+## which event it is being edited in. Offering a name is not the same as promising it is in scope -
+## the emitted code is where scope is decided, and a name used outside its event fails to compile
+## there, loudly, rather than quietly resolving to the wrong thing here.
+static func _spawn_chip_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	if sheet == null:
+		return entries
+	var seen: Dictionary = {}
+	for row: Variant in sheet.events:
+		var event: EventRow = row as EventRow
+		if event == null:
+			continue
+		for entry: Variant in event.actions:
+			var action: ACEAction = entry as ACEAction
+			if action == null or not SPAWN_NAME_PARAMS.has(action.ace_id):
+				continue
+			var chip: String = str(action.params.get(str(SPAWN_NAME_PARAMS[action.ace_id]), "")).strip_edges()
+			if chip.is_empty() or not chip.is_valid_identifier() or seen.has(chip):
+				continue
+			seen[chip] = true
+			entries.append({"text": chip, "detail": "%s %s %s" % [
+				_spawn_scene_word(str(action.params.get("scene", ""))), SEPARATOR,
+				EventSheetL10n.translate("the new copy")], "kind": KIND_VARIABLE})
+	return entries
+
+
+## The scene a spawn row names, said the short way a detail line has room for: the declared name as
+## written (`Enemy`), or the file name out of a `load("res://…")` path. "" when the field holds
+## something this cannot read, which leaves the detail saying only what the name IS.
+static func _spawn_scene_word(scene: String) -> String:
+	var text: String = scene.strip_edges()
+	if text.is_valid_identifier():
+		return text
+	var opened: int = text.find("\"")
+	var closed: int = text.rfind("\"")
+	if opened >= 0 and closed > opened:
+		return text.substr(opened + 1, closed - opened - 1).get_file()
+	return text
 
 
 ## The identifier being typed at the end of `text`, or "" when the caret is not inside one. What a

@@ -5289,3 +5289,36 @@ Export the Manual as a site,Экспортировать руководство 
 "The whole Manual as plain HTML files, with its search, that open in a browser with no server.",Всё руководство в виде простых HTML-файлов вместе с поиском - открываются в браузере без сервера.
 Write out the translator's missing keys,Выписать недостающие ключи для переводчика
 One spreadsheet of every key your game asks for that a catalog does not answer yet.,"Таблица со всеми ключами, которые просит игра и на которые пока не отвечает ни один каталог."
+Spawn A Copy,Создать копию
+"Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.","Создаёт одну копию сцены, добавляет её под родителя и ставит туда, куда вы скажете. Копия получает выбранное вами имя, и каждая следующая строка этого события может назвать это имя - это настоящая переменная в сгенерированном коде, а не поиск. Оставьте Где как global_position, чтобы создавать там, где этот узел, и Под как self, чтобы держать копию под ним."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]","Создать копию [b]{scene}[/b] как [b]{name}[/b] в {at}, под [i]{parent}[/i]"
+"The scene to copy - one of this sheet's declared scenes by name, or a load() of a scene path.",Сцена для копирования - одна из объявленных в этом листе сцен по имени или load() пути сцены.
+"What to call the new copy. Following rows in this event say this name, and it is the variable name the emitted code uses.","Как назвать новую копию. Следующие строки этого события называют это имя, и это имя переменной в сгенерированном коде."
+"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.","Куда попадёт копия, в виде позиции. Оставьте global_position, чтобы создавать там, где этот узел."
+Under,Под
+"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.","Узел, под который добавляется копия. Оставьте self, чтобы добавить её под этот узел, или укажите слой, чтобы держать созданное вместе."
+Spawn A Copy Safely,Безопасно создать копию
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.","То же создание, но добавленное в ближайший свободный момент, а не прямо сейчас. Используйте внутри обработчика столкновений или тела: Godot отказывается добавлять ребёнка, пока сервер физики занят, а эта строка ждёт вместо ошибки. Место задаётся до добавления, поэтому оно относительно родителя, а не мировая позиция."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment","Создать копию [b]{scene}[/b] как [b]{name}[/b] в {at}, под [i]{parent}[/i], добавив в ближайший свободный момент"
+Make A Copy,Сделать копию
+"Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.","Создаёт одну копию сцены и даёт ей имя, пока не добавляя в дерево сцены. Следующие строки этого события могут назвать это имя и настроить копию, а строка Добавить ребёнка поместит её в мир, когда она готова."
+"Make a copy of [b]{scene}[/b], called [b]{name}[/b]",Сделать копию [b]{scene}[/b] по имени [b]{name}[/b]
+Place Of,Место
+"Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.","Даёт собственное место узла в мире. Поставьте Marker2D там, где должны появляться вещи, и это его читает - переместить маркер значит переместить создание, не трогая лист."
+place of [i]{node}[/i],место [i]{node}[/i]
+"The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.","Узел, чьё место читается - Marker2D, поставленный в сцене, точка появления, игрок."
+Random Place Along Path,Случайное место вдоль пути
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.","Даёт случайную точку где-то вдоль кривой Path2D. Точка выбирается по пройденному расстоянию, а не по сегменту, поэтому длинный прямой участок ровно так же вероятен, как крутой поворот."
+random place along [i]{path}[/i],случайное место вдоль [i]{path}[/i]
+The Path2D whose curve to pick a point on.,"Path2D, на кривой которого выбирается точка."
+Random Place Inside Shape,Случайное место внутри формы
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.","Даёт случайную точку внутри формы столкновений - той Area2D, что вы обвели вокруг зоны появления. Прямоугольники и круги измеряются напрямую и рассеиваются равномерно за один шаг, без выборки с отклонением и без повторов; любая другая форма даёт свой центр вместо догадки."
+random place inside [i]{shape}[/i],случайное место внутри [i]{shape}[/i]
+The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,"CollisionShape2D, внутри которой рассеивать - та, что на Area2D, отмечающей зону появления."
+Random Place Off Screen Edge,Случайное место за краем экрана
+"Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.","Даёт случайную точку чуть за одним из четырёх краёв экрана, в мировых координатах - оттуда приходит волна. Край выбирается заново каждый раз, когда строка выполняется, а отступ держит копию вне видимости, пока она не войдёт."
+random place off a screen edge (+{margin}),случайное место за краем экрана (+{margin})
+"How far outside the screen edge the point sits, in pixels.","Насколько точка находится за краем экрана, в пикселях."
+the new copy,новая копия
+Recognisers,Распознаватели
+the spellings a lift knows,"написания, которые знает разбор"

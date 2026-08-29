@@ -5289,3 +5289,36 @@ Export the Manual as a site,Das Handbuch als Website exportieren
 "The whole Manual as plain HTML files, with its search, that open in a browser with no server.","Das ganze Handbuch als einfache HTML-Dateien, mit seiner Suche, die sich ohne Server im Browser öffnen."
 Write out the translator's missing keys,Die fehlenden Schlüssel für die Übersetzung herausschreiben
 One spreadsheet of every key your game asks for that a catalog does not answer yet.,"Eine Tabelle mit jedem Schlüssel, nach dem Ihr Spiel fragt und den noch kein Katalog beantwortet."
+Spawn A Copy,Eine Kopie erzeugen
+"Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.","Erstellt eine Kopie einer Szene, hängt sie unter ein übergeordnetes Objekt und setzt sie an die angegebene Stelle. Die Kopie erhält den von Ihnen gewählten Namen, und jede folgende Zeile in diesem Ereignis kann diesen Namen nennen - er ist eine echte Variable im erzeugten Code, keine Suche. Lassen Sie Bei auf global_position, um dort zu erzeugen, wo dieser Knoten ist, und Unter auf self, um die Kopie unter diesem Knoten zu halten."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]","Kopie von [b]{scene}[/b] als [b]{name}[/b] bei {at} erzeugen, unter [i]{parent}[/i]"
+"The scene to copy - one of this sheet's declared scenes by name, or a load() of a scene path.","Die zu kopierende Szene - eine der in diesem Blatt deklarierten Szenen beim Namen, oder ein load() eines Szenenpfads."
+"What to call the new copy. Following rows in this event say this name, and it is the variable name the emitted code uses.","Wie die neue Kopie heißen soll. Folgende Zeilen in diesem Ereignis nennen diesen Namen, und er ist der Variablenname im erzeugten Code."
+"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.","Wo die Kopie landet, als Position. Lassen Sie global_position stehen, um dort zu erzeugen, wo dieser Knoten ist."
+Under,Unter
+"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.","Der Knoten, unter dem die Kopie hinzugefügt wird. Lassen Sie self stehen, um sie unter diesem Knoten hinzuzufügen, oder nennen Sie eine Ebene, um Erzeugungen zusammenzuhalten."
+Spawn A Copy Safely,Eine Kopie sicher erzeugen
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.","Dieselbe Erzeugung, aber im nächsten Leerlaufmoment statt sofort. Nutzen Sie sie in einem Kollisions- oder Körper-Handler: Godot verweigert das Hinzufügen eines Kindes, solange der Physik-Server beschäftigt ist, und diese Zeile wartet, statt einen Fehler zu erzeugen. Die Stelle wird vor dem Hinzufügen gesetzt, ist also relativ zum übergeordneten Knoten und keine Weltposition."
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment","Kopie von [b]{scene}[/b] als [b]{name}[/b] bei {at} erzeugen, unter [i]{parent}[/i], im nächsten Leerlaufmoment hinzugefügt"
+Make A Copy,Eine Kopie machen
+"Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.","Erstellt eine Kopie einer Szene und gibt ihr einen Namen, ohne sie schon zum Szenenbaum hinzuzufügen. Folgende Zeilen in diesem Ereignis können den Namen nennen, um die Kopie einzurichten, und eine Zeile Kind hinzufügen setzt sie in die Welt, wenn sie fertig ist."
+"Make a copy of [b]{scene}[/b], called [b]{name}[/b]","Kopie von [b]{scene}[/b] machen, genannt [b]{name}[/b]"
+Place Of,Ort von
+"Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.","Gibt den eigenen Ort eines Knotens in der Welt. Setzen Sie einen Marker2D dorthin, wo Dinge erscheinen sollen, und dies liest ihn - den Marker zu verschieben verschiebt die Erzeugung, ohne das Blatt anzufassen."
+place of [i]{node}[/i],Ort von [i]{node}[/i]
+"The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.","Der Knoten, dessen Ort gelesen wird - ein Marker2D, den Sie in die Szene gesetzt haben, ein Startpunkt, die Spielfigur."
+Random Place Along Path,Zufälliger Ort entlang eines Pfades
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.","Gibt einen zufälligen Punkt irgendwo entlang der Kurve eines Path2D. Der Punkt wird nach zurückgelegter Strecke gewählt, nicht nach Kurvenabschnitt, sodass eine lange Gerade genauso wahrscheinlich ist wie eine enge Ecke."
+random place along [i]{path}[/i],zufälliger Ort entlang [i]{path}[/i]
+The Path2D whose curve to pick a point on.,"Der Path2D, auf dessen Kurve ein Punkt gewählt wird."
+Random Place Inside Shape,Zufälliger Ort in einer Form
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.","Gibt einen zufälligen Punkt innerhalb einer Kollisionsform - dem Area2D, das Sie um eine Erzeugungszone gezogen haben. Rechtecke und Kreise werden direkt vermessen und in einem Schritt gleichmäßig gestreut, ohne Verwerfungsstichprobe und ohne Wiederholungen; jede andere Form gibt ihren eigenen Mittelpunkt statt einer Schätzung."
+random place inside [i]{shape}[/i],zufälliger Ort in [i]{shape}[/i]
+The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,"Die CollisionShape2D, in der gestreut wird - die am Area2D, das die Erzeugungszone markiert."
+Random Place Off Screen Edge,Zufälliger Ort außerhalb eines Bildschirmrands
+"Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.","Gibt einen zufälligen Punkt knapp außerhalb eines der vier Bildschirmränder, in Weltkoordinaten - von dort kommt eine Welle. Der Rand wird bei jedem Durchlauf neu gewählt, und der Abstand hält die Kopie außer Sicht, bis sie hereinkommt."
+random place off a screen edge (+{margin}),zufälliger Ort außerhalb eines Bildschirmrands (+{margin})
+"How far outside the screen edge the point sits, in pixels.","Wie weit außerhalb des Bildschirmrands der Punkt liegt, in Pixeln."
+the new copy,die neue Kopie
+Recognisers,Erkenner
+the spellings a lift knows,"die Schreibweisen, die ein Einlesen kennt"

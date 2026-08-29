@@ -137,6 +137,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `current_animation_position` | [Animation Position](ace:Core/AnimationPosition) | Animation | Vocabulary |
 | `current_scene` | [Current Scene Root](ace:Core/GetSceneRoot) | Nodes | Vocabulary |
 | `current_tab` | [Switch To Tab](ace:Core/SwitchToTab) | UI | Vocabulary |
+| `curve` | [Random Place Along Path](ace:Core/PlaceAlongPath) | Spawn | Vocabulary |
 | `damping` | [Set Spring Damping](ace:Core/SetDampedSpringDamping) | Joints | Vocabulary |
 | `darkened` | [Darken Color](ace:Core/ColorDarken) | Color | Vocabulary |
 | `dashed_line` | [Draw Dashed Line](ace:Core/DrawDashedLine) | Drawing | Vocabulary |
@@ -223,6 +224,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_animation` | [Reached Marker](ace:Core/AnimationPastMarker) | Animation | Vocabulary |
 | `get_as_text` | 's contents | Object | Object expressions |
 | `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
+| `get_baked_length` | [Random Place Along Path](ace:Core/PlaceAlongPath) | Spawn | Vocabulary |
 | `get_base_control` | [Add Window](ace:Core/AddEditorWindow) | Editor Tools: Panels & menus | Vocabulary |
 | `get_basename` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
 | `get_bus_count` | [Bus Count](ace:Core/AudioBusCount) | Audio Server | Vocabulary |
@@ -419,7 +421,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `insert` | [Insert At](ace:Core/ArrayInsert) | Variables: Array | Vocabulary |
 | `inspect_object` | [Inspect In Editor](ace:Core/InspectInEditor) | Editor Tools | Vocabulary |
 | `instance_from_id` | [Pick By UID](ace:Core/PickByUid) | Nodes: Picking | Vocabulary |
-| `instantiate` | [Spawn Scene Instance](ace:Core/SpawnScene) | Scene | Vocabulary |
+| `instantiate` | [Make A Copy](ace:Core/MakeNewCopy) | Spawn | Vocabulary |
 | `int` | [Is Even](ace:Core/IsEven) | Compare: Numbers | Vocabulary |
 | `intersect_point` | [Query Bodies At Point (2D)](ace:Core/QueryBodiesAtPoint2D) | Overlap 2D | Vocabulary |
 | `intersect_ray` | [World Raycast Hits? (2D)](ace:Core/WorldRaycastHit2D) | Raycast 2D | Vocabulary |

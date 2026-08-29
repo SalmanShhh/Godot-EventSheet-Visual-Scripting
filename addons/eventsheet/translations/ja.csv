@@ -5289,3 +5289,36 @@ Export the Manual as a site,マニュアルをサイトとして書き出す
 "The whole Manual as plain HTML files, with its search, that open in a browser with no server.",マニュアル全体を、検索付きのプレーンな HTML ファイルとして書き出します。サーバーなしでブラウザーから開けます。
 Write out the translator's missing keys,翻訳者に渡す不足キーを書き出す
 One spreadsheet of every key your game asks for that a catalog does not answer yet.,ゲームが求めているのに、まだどのカタログも答えていないキーをすべて並べた表です。
+Spawn A Copy,コピーを生成
+"Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.",シーンのコピーを 1 つ作り、親の下に追加して指定した場所に置きます。コピーには選んだ名前が付き、このイベント内の以降の行はその名前を使えます。出力されるコード内の実際の変数であり、検索ではありません。このノードの位置に生成するなら 位置 を global_position のままにし、このノードの下に置くなら 親 を self のままにしてください。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成
+"The scene to copy - one of this sheet's declared scenes by name, or a load() of a scene path.",コピーするシーン。このシートが宣言したシーンの名前、またはシーンパスの load() です。
+"What to call the new copy. Following rows in this event say this name, and it is the variable name the emitted code uses.",新しいコピーの名前。このイベント内の以降の行がこの名前を使い、出力されるコードの変数名になります。
+"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.",コピーが着地する位置。global_position のままにすると、このノードの位置に生成されます。
+Under,親
+"The node the copy is added under. Leave it as self to add it under this one, or name a layer to keep spawns together.",コピーを追加する親ノード。self のままにするとこのノードの下に追加されます。レイヤーを指定すれば生成をまとめられます。
+Spawn A Copy Safely,コピーを安全に生成
+"The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.",同じ生成を、今すぐではなく次のアイドルの瞬間に追加します。衝突やボディのハンドラ内で使ってください。Godot は物理サーバーが作業中の間は子の追加を拒否しますが、この行はエラーにせず待ちます。位置は追加前に設定されるため、ワールド座標ではなく親からの相対位置です。
+"Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成し、次のアイドルの瞬間に追加
+Make A Copy,コピーを作る
+"Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.",シーンのコピーを 1 つ作って名前を付けますが、まだシーンツリーには追加しません。このイベント内の以降の行がその名前でコピーを整え、準備ができたら「子を追加」の行がワールドに置きます。
+"Make a copy of [b]{scene}[/b], called [b]{name}[/b]",[b]{scene}[/b] のコピーを作り、[b]{name}[/b] と命名
+Place Of,の場所
+"Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.",ノード自身のワールド上の場所を返します。物を出したい場所に Marker2D を置けばこれがそれを読み取るので、マーカーを動かすだけでシートを触らずに生成位置が変わります。
+place of [i]{node}[/i],[i]{node}[/i] の場所
+"The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.",場所を読み取るノード。シーンに置いた Marker2D、出現地点、プレイヤーなどです。
+Random Place Along Path,パス上のランダムな場所
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.",Path2D のカーブ上のどこかのランダムな点を返します。点はカーブの区間ではなく進んだ距離で選ばれるため、長い直線部も急なコーナーも同じくらい選ばれます。
+random place along [i]{path}[/i],[i]{path}[/i] 上のランダムな場所
+The Path2D whose curve to pick a point on.,点を選ぶカーブを持つ Path2D。
+Random Place Inside Shape,シェイプ内のランダムな場所
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",コリジョンシェイプの内側のランダムな点を返します。出現ゾーンを囲んだ Area2D のことです。矩形と円は寸法から直接測って一度で均等に散らします。棄却サンプリングも再試行もありません。それ以外の形は推測せず自分の中心を返します。
+random place inside [i]{shape}[/i],[i]{shape}[/i] 内のランダムな場所
+The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,散らす対象の CollisionShape2D。出現ゾーンを示す Area2D に付いているものです。
+Random Place Off Screen Edge,画面端の外側のランダムな場所
+"Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.",画面の 4 つの端のいずれかのすぐ外側にあるランダムな点をワールド座標で返します。ウェーブがやってくる場所です。端は行が実行されるたびに選び直され、余白によってコピーは入ってくるまで見えません。
+random place off a screen edge (+{margin}),画面端の外側のランダムな場所 (+{margin})
+"How far outside the screen edge the point sits, in pixels.",点が画面端からどれだけ外側にあるかをピクセルで指定します。
+the new copy,新しいコピー
+Recognisers,認識テーブル
+the spellings a lift knows,読み取りが知っている書き方

@@ -2021,6 +2021,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"movement": "Making-Things-Move-In-2D",
 	# The moves that name their space and the three turns are 2D movement, whatever else they say.
 	"space_words": "Making-Things-Move-In-2D",
+	"spawn": "Spawning-Copies-Of-Scenes",
 	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.
