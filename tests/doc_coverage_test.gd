@@ -70,7 +70,76 @@ static func run() -> bool:
 	passed = _a_stub_stays_red_until_somebody_writes_it() and passed
 	passed = _both_readers_say_the_same_sentence() and passed
 	passed = _the_page_obeys_the_band_scale_law() and passed
+	passed = _one_verb_in_two_spellings_is_one_verb() and passed
+	passed = _the_stub_fix_adds_a_section_and_changes_nothing_else() and passed
 	EventSheetDocCoverage.clear_cache()
+	return passed
+
+
+# ── The fix hands back the file it was given, plus one section ────────────────────────────────
+
+
+## A guide checked out on Windows has CRLF endings, and the stub fix writes its result straight back
+## over the file. Normalizing the text on the way through turned a one-row addition into a whole-file
+## rewrite - every line changed, nothing to review. So the fix is measured here in BYTES: the source
+## has to survive verbatim inside its own output, whichever ending it arrived with.
+static func _the_stub_fix_adds_a_section_and_changes_nothing_else() -> bool:
+	var missing: PackedStringArray = PackedStringArray(["Set Line Length"])
+	var passed: bool = true
+
+	var written: String = EventSheetDocCoverage.insert_stubs(FIXTURE_GUIDE, missing)
+	passed = _check("the stubbed verb is in the guide now", written.contains("| Set Line Length |"),
+		true) and passed
+	passed = _check("an LF guide comes back with no carriage return anywhere",
+		written.contains("\r"), false) and passed
+
+	var crlf_source: String = FIXTURE_GUIDE.replace("\n", "\r\n")
+	var crlf_written: String = EventSheetDocCoverage.insert_stubs(crlf_source, missing)
+	passed = _check("a CRLF guide keeps every line ending it arrived with",
+		crlf_written.count("\n"), crlf_written.count("\r\n")) and passed
+	# The bytes themselves, split at the seam: everything before the new section is the file as it
+	# was, and everything after it is the rest of the file as it was.
+	var seam: int = crlf_written.find("### Not written yet")
+	passed = _check("the new section is somewhere in the output", seam > 0, true) and passed
+	var head: String = crlf_written.substr(0, seam)
+	var tail: String = crlf_written.substr(crlf_written.find("\r\n\r\n## Use cases"))
+	passed = _check("nothing before the new section was rewritten",
+		crlf_source.begins_with(head.rstrip("\r\n")), true) and passed
+	passed = _check("nothing after it was rewritten", crlf_source.ends_with(tail), true) and passed
+
+	passed = _check("a guide missing nothing is handed straight back",
+		EventSheetDocCoverage.insert_stubs(crlf_source, PackedStringArray()),
+		crlf_source) and passed
+	return passed
+
+
+# ── Two spellings of one verb ─────────────────────────────────────────────────────────────────
+
+
+## The comparison behind "the guide never names it" and "no verb answers to it". Both questions are
+## the same loose match asked in opposite directions, so a spelling this refuses to reconcile is
+## reported TWICE - once in each column - which is the signature the corpus audit shows when the
+## rule is too strict rather than when a guide is stale.
+##
+## A trigger is the case that bit: the vocabulary derives it from the signal it listens for
+## (`anchored`), and every guide writes the row the way the sheet reads it ("On Anchored").
+static func _one_verb_in_two_spellings_is_one_verb() -> bool:
+	var passed: bool = true
+	passed = _check("the method spelling and the display name are one verb",
+		EventSheetDocAceReference.names_match(PackedStringArray(["Advance Objective"]),
+			"advance_objective"), true) and passed
+	passed = _check("a trigger's signal name meets the guide's \"On\" row",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On Anchored"]),
+			"anchored"), true) and passed
+	passed = _check("and the same match holds asked the other way round",
+		EventSheetDocAceReference.names_match(PackedStringArray(["anchored"]),
+			"On Anchored"), true) and passed
+	passed = _check("a name that really is gone still does not match anything",
+		EventSheetDocAceReference.names_match(PackedStringArray(["Retract Line", "Fire Hook"]),
+			"Reel In"), false) and passed
+	passed = _check("\"on\" alone keeps its letters rather than comparing as nothing",
+		EventSheetDocAceReference.names_match(PackedStringArray(["On"]), "Fire Hook"),
+		false) and passed
 	return passed
 
 
@@ -177,8 +246,14 @@ static func _both_readers_say_the_same_sentence() -> bool:
 	var findings: Array[Dictionary] = EventSheetDocsDoctor.page_findings(report)
 	passed = _check("the Doctor headline is the build tool's line, character for character",
 		str(findings[0].get("message", "")), EventSheetDocCoverage.advisory_line(report)) and passed
-	passed = _check("a verb nobody documented is a warning, not a note",
-		str(findings[1].get("severity", "")), "warning") and passed
+	# EVERY LINE IN THIS SECTION IS A NOTE. Whether a guide "names" a verb is decided by comparing
+	# two spellings of it, and a guide is allowed to document a verb under a friendlier name than the
+	# raw member - so this cannot be the section that turns somebody's Doctor page amber. A section
+	# that arrives amber on a stock install is one its reader learns to scroll past.
+	passed = _check("a verb nobody documented is a note, because the comparison behind it is loose",
+		str(findings[1].get("severity", "")), "info") and passed
+	passed = _check("and so is a name no verb answers to",
+		str(findings[2].get("severity", "")), "info") and passed
 	passed = _check("a stale name is offered what does exist",
 		str(findings[2].get("message", "")).contains("Retract Line"), true) and passed
 	passed = _check("a thin description is a note carrying its draft",

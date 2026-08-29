@@ -12,8 +12,8 @@
 # the build output cannot say different things about the same guide.
 #
 # WHAT IT REPORTS, and what each one is worth:
-#   a verb the guide never lists       a warning. The reader searched and concluded it does not exist.
-#   a name no verb answers to          a warning, with the nearest three that DO exist, because the
+#   a verb the guide never lists       a note. The reader searched and concluded it does not exist.
+#   a name no verb answers to          a note, with the nearest three that DO exist, because the
 #                                      overwhelmingly common cause is a rename and the answer is
 #                                      usually one of the three.
 #   a description that says nothing    a note, with a draft composed from the verb's own name and
@@ -21,6 +21,14 @@
 #   a verb the changelog never names   a note. The pack is in the ledger, so it shipped; this verb of
 #                                      it was never written about. That is the release ritual's
 #                                      remember-at-tag-time step, running continuously.
+#
+# EVERY LINE IS A NOTE, AND THE FIRST TWO ESPECIALLY. Both of those are decided by comparing two
+# SPELLINGS of a verb - the vocabulary's and the guide author's - and the two are allowed to differ:
+# a guide documents a verb under a friendlier name than the raw member all over the shipped corpus,
+# which is exactly the freedom the paragraph below promises writers. A comparison that is
+# deliberately loose must not be the thing that turns somebody's Doctor page amber: a section that
+# arrives amber on a stock install is a section its reader learns to scroll past, and then the one
+# genuinely renamed verb it was built to catch scrolls past with it.
 #
 # NOTHING HERE FAILS A BUILD. A guide legitimately documents a verb under a friendlier name and
 # legitimately leaves plumbing out, so every line is something a human decides about. What the
@@ -162,7 +170,7 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	out.append(_finding(CHECK_ID, "info", path, EventSheetDocCoverage.advisory_line(page), page_id))
 	var missing: PackedStringArray = page.get("missing", PackedStringArray())
 	for index: int in range(mini(missing.size(), LINES_PER_GUIDE_LIMIT)):
-		out.append(_finding(EventSheetDocCoverage.CHECK_UNLISTED, "warning", path,
+		out.append(_finding(EventSheetDocCoverage.CHECK_UNLISTED, "info", path,
 			EventSheetL10n.translate("%s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.") % [
 				page_id.get_file(), missing[index]],
 			missing[index]))
@@ -171,7 +179,7 @@ static func page_findings(page: Dictionary) -> Array[Dictionary]:
 	for index: int in range(mini(extra.size(), LINES_PER_GUIDE_LIMIT)):
 		var name: String = extra[index]
 		var closest: PackedStringArray = nearest.get(name, PackedStringArray())
-		out.append(_finding(EventSheetDocCoverage.CHECK_UNANSWERED, "warning", path,
+		out.append(_finding(EventSheetDocCoverage.CHECK_UNANSWERED, "info", path,
 			EventSheetL10n.translate("%s documents \"%s\" and no verb answers to it. Nearest that do: %s.") % [
 				page_id.get_file(), name, ", ".join(closest)] if not closest.is_empty()
 			else EventSheetL10n.translate("%s documents \"%s\" and no verb answers to it, nor anything near it.") % [

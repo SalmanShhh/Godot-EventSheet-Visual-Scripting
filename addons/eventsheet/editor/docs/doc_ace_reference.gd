@@ -405,10 +405,10 @@ static func diff_for_page(page_id: String, blocks: Array[Dictionary]) -> Diction
 	var missing: PackedStringArray = PackedStringArray()
 	var extra: PackedStringArray = PackedStringArray()
 	for name: String in derived:
-		if not _names_match(written, name):
+		if not names_match(written, name):
 			missing.append(name)
 	for name: String in written:
-		if not _names_match(derived, name):
+		if not names_match(derived, name):
 			extra.append(name)
 	diff["missing"] = missing
 	diff["extra"] = extra
@@ -418,10 +418,18 @@ static func diff_for_page(page_id: String, blocks: Array[Dictionary]) -> Diction
 ## Verb names are compared loosely on purpose: a guide writes the method (`advance_objective`)
 ## where the registry publishes the display name ("Advance Objective"), and reporting every one of
 ## those as a difference would bury the real ones.
-static func _names_match(names: PackedStringArray, wanted: String) -> bool:
+##
+## A TRIGGER IS WRITTEN TWO WAYS AND IS ONE VERB. The vocabulary derives a trigger from the signal
+## it listens for - `anchored`, `bound_hit` - and every guide in the corpus writes the row the way
+## the sheet reads it, "On Anchored", "On Hit Bound". Comparing those literally reported the same
+## trigger twice on every page that has one: once as a verb the guide never lists and once as a name
+## no verb answers to. So the leading "on" is optional on either side of the comparison.
+static func names_match(names: PackedStringArray, wanted: String) -> bool:
 	var normalized: String = _normalize(wanted)
+	var without_on: String = _without_leading_on(normalized)
 	for name: String in names:
-		if _normalize(name) == normalized:
+		var other: String = _normalize(name)
+		if other == normalized or _without_leading_on(other) == without_on:
 			return true
 	return false
 
@@ -433,6 +441,17 @@ static func _normalize(name: String) -> String:
 		if (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
 			out += character
 	return out
+
+
+## A normalized name with a leading "on" taken off, when taking it off leaves a name behind - "on"
+## itself compares as nothing, so it keeps its letters. Both sides of a comparison are reduced this
+## way, so "On Anchored" and `anchored` meet in the middle. It is a LOOSE match by
+## design: this reader's whole job is to stop reporting two spellings of one verb as two problems,
+## and everything it produces is advisory.
+static func _without_leading_on(normalized: String) -> String:
+	if normalized.length() > 2 and normalized.begins_with("on"):
+		return normalized.substr(2)
+	return normalized
 
 
 ## A table cell back to a bare verb name: the code span the guides write it in, stripped.

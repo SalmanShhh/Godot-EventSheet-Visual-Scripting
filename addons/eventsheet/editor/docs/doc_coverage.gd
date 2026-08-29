@@ -301,6 +301,12 @@ static func stub_rows(missing: PackedStringArray, params_by_name: Dictionary = {
 ## table: which of a guide's three tables a verb belongs in is a judgement (an action that reads
 ## like a condition is common), and a fix that guessed would file verbs wrongly under a heading a
 ## reader trusts. An honest heading naming what these are is better than a confident wrong one.
+##
+## EVERY BYTE THE FIX DID NOT ADD IS THE BYTE IT FOUND, line endings included. The guide is scanned
+## where it lies rather than through a normalized copy, and the rows are joined with the file's own
+## ending - so a guide checked out with CRLF comes back with the one added section and nothing else
+## touched. A fix that promises one new row and hands back a whole-file diff is not a fix anybody
+## can review.
 static func insert_stubs(source: String, missing: PackedStringArray,
 		params_by_name: Dictionary = {}) -> String:
 	var rows: PackedStringArray = stub_rows(missing, params_by_name)
@@ -315,17 +321,21 @@ static func insert_stubs(source: String, missing: PackedStringArray,
 		"|------|-----------|-------------|",
 	])
 	section.append_array(rows)
-	var text: String = source.replace("\r\n", "\n")
-	var at: int = _ace_section_end(text)
-	var head: String = text.substr(0, at).rstrip("\n")
-	var tail: String = text.substr(at)
-	return "%s\n\n%s\n%s" % [head, "\n".join(section), tail]
+	var newline: String = "\r\n" if source.contains("\r\n") else "\n"
+	var at: int = _ace_section_end(source)
+	var head: String = source.substr(0, at).rstrip("\r\n")
+	var tail: String = source.substr(at)
+	return "%s%s%s%s%s%s" % [head, newline, newline, newline.join(section), newline, tail]
 
 
 ## Where the ACE reference section ends in raw Markdown: the next heading at "## " or above after
 ## it, or the end of the file. Found on the text rather than on parsed blocks because the fix has to
 ## give back a FILE, and re-emitting a guide from its blocks would rewrite prose nobody asked it to
 ## touch - the lossless rule the whole plugin runs on, applied to somebody's documentation.
+##
+## The offset is a byte position in the text it was HANDED, CRLF and all: a split on "\n" leaves the
+## "\r" on the end of each line, which strip_edges removes for the comparison and line.length() still
+## counts for the offset.
 static func _ace_section_end(text: String) -> int:
 	var lines: PackedStringArray = text.split("\n")
 	var offset: int = 0

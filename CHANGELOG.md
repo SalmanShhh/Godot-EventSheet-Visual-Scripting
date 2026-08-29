@@ -6263,6 +6263,20 @@ the default 0.1 s only ever adds a jump that used to be dropped.
 - **The engine-reference test leaves the reference cache as cold as it found it.** It warmed a
   session-wide file map with whatever this machine had really harvested and never dropped it, so
   every later test in a serial run inherited it. It drops the map on the way in and on the way out.
+- **A trigger written two ways is one verb.** The guide-coverage audit derives a trigger from the
+  signal it listens for (`anchored`) and every guide in the corpus writes the row the way the sheet
+  reads it ("On Anchored"), so the audit reported the same trigger twice on every page that has one:
+  once as a verb the guide never lists, once as a name no verb answers to. The leading "On" is
+  optional on either side of the comparison now.
+- **The Docs section of the Doctor reports notes, not warnings.** Whether a guide "names" a verb is
+  decided by comparing two spellings of it, and a guide is expressly allowed to document a verb
+  under a friendlier name than the raw member - so that comparison cannot be the thing that turns a
+  Doctor page amber. A section that arrives amber on a stock install is one its reader learns to
+  scroll past, and the genuinely renamed verb it exists to catch would scroll past with it.
+- **The stub fix adds a section and changes nothing else.** "Stub this verb in the guide" normalized
+  the whole file's line endings on the way through, so a guide checked out with CRLF came back
+  entirely rewritten by a fix whose promise is one added row. The guide is scanned where it lies and
+  the new rows are joined with the file's own ending; the test pins the bytes on a CRLF fixture.
 
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
