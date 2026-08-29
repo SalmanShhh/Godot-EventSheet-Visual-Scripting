@@ -2222,9 +2222,6 @@ Start,Empezar
 Carry on,Continuar
 Tutorials,Tutoriales
 What's new,Novedades
-Try it in a scratch sheet,Pruébalo en una hoja de borrador
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Abre este ejemplo en su propia pestaña de borrador: editable, en memoria y nunca escrita en tu proyecto."
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Una hoja de borrador del Manual. Solo vive en memoria: no se escribe nada en tu proyecto salvo que uses Guardar como, se cierra sin preguntar y desaparece en la próxima sesión."
 Was this page helpful?,¿Te ha resultado útil esta página?
 "Thanks - noted on this machine, and sent nowhere.",Gracias: anotado en este equipo y no enviado a ninguna parte.
 Noted on this machine. Report a problem opens the tracker if you want to say why.,Anotado en este equipo. Informar de un problema abre el rastreador si quieres contar por qué.
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,Texto más grande en el Manual.
 This page is not translated yet - help translate it,Esta página aún no está traducida: ayuda a traducirla
 Opens the page for the word this editor uses.,Abre la página de la palabra que usa este editor.
 Every word that is spelled differently here.,Todas las palabras que aquí se escriben de otra forma.
-"Opened a scratch sheet - in memory only, never written to your project.","Hoja de borrador abierta: solo en memoria, nunca escrita en tu proyecto."
-Open a sheet first - a scratch tab needs the event-sheet workspace.,Abre antes una hoja: una pestaña de borrador necesita el espacio de trabajo de hojas de eventos.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","Hoja de borrador: solo en memoria, nunca escrita en tu proyecto salvo que uses Guardar como."
 Initial value,Valor inicial
 + Add instance variable,+ Añadir variable de instancia
 This object has no instance variables yet.,Este objeto aún no tiene variables de instancia.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,leido como el patron %s porque
 Hand-written,Escrito a mano
 As events,Como eventos
 Common Game Patterns,Patrones habituales de juego
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","Las formas de las que se compone un juego: a la izquierda escritas a mano, a la derecha leidas como eventos. Cada ejemplo es un archivo real que este editor abre: Insertar pone las filas en tu hoja, Probarlo las abre en una hoja de pruebas."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","Las formas de las que se compone un juego: a la izquierda escritas a mano, a la derecha leidas como eventos. Cada ejemplo es un archivo real que este editor abre: Insertar pone las filas en tu hoja."
 Adopt behavior,Adoptar comportamiento
 Adopt behavior: %s,Adoptar comportamiento: %s
 Adopt behavior: %s…,Adoptar comportamiento: %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,Movimiento reducido
 Speak This Row,Leer esta fila
 What do you want to happen?,¿Qué quieres que ocurra?
 Proposed,Propuesta
-Try in a scratch sheet,Probar en una hoja de borrador
 Discard,Descartar
 Reading Comfort,Comodidad de lectura
 Dyslexia-friendly text,Texto adaptado a la dislexia

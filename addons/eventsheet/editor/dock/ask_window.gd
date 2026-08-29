@@ -6,8 +6,8 @@ extends RefCounted
 #
 # Three states and no fourth. The box opens saying whether Ask is on; pressing Ask sends the one
 # request EventSheetAsk builds and shows the proposal as a plain listing in the sheet's own words;
-# and the proposal sits there until the reader presses "Add these events", "Try in a scratch sheet"
-# or "Discard". Arriving applies nothing.
+# and the proposal sits there until the reader presses "Add these events" or "Discard". Arriving
+# applies nothing.
 #
 # All the judgement - what is sent, what a reply must look like, which rows survive the registry -
 # lives in EventSheetAsk, so it is pinned headless. This class is the window, the three buttons and
@@ -18,7 +18,6 @@ var _window: Window = null
 var _prompt_edit: TextEdit = null
 var _proposal_label: RichTextLabel = null
 var _add_button: Button = null
-var _scratch_button: Button = null
 var _mode_label: Label = null
 ## Built on the first live call and kept: the one socket this plugin ever opens.
 var _http: HTTPRequest = null
@@ -72,11 +71,6 @@ func _build() -> void:
 	_add_button.disabled = true
 	_add_button.pressed.connect(_add_pressed)
 	buttons.add_child(_add_button)
-	_scratch_button = Button.new()
-	_scratch_button.text = "Try in a scratch sheet"
-	_scratch_button.disabled = true
-	_scratch_button.pressed.connect(_scratch_pressed)
-	buttons.add_child(_scratch_button)
 	var discard_button: Button = Button.new()
 	discard_button.text = "Discard"
 	discard_button.pressed.connect(_discard_pressed)
@@ -158,7 +152,6 @@ func _show_answer(reply: String, definitions: Array) -> void:
 func _set_proposal(rows: Array) -> void:
 	_proposal = rows
 	_add_button.disabled = _proposal.is_empty()
-	_scratch_button.disabled = _proposal.is_empty()
 
 
 func _add_pressed() -> void:
@@ -177,17 +170,6 @@ func _add_pressed() -> void:
 	if added:
 		_dock._set_status("Added %d event(s) from Ask." % events.size())
 		_window.hide()
-
-
-func _scratch_pressed() -> void:
-	var registry: EventSheetACERegistry = _dock.get_ace_registry()
-	var definitions: Array = registry.get_all_definitions() if registry != null else []
-	var scratch: EventSheetResource = EventSheetAsk.proposal_sheet(_proposal, definitions,
-		_dock._current_sheet, Callable(EventSheetDock, "_fresh_uid_token"))
-	if _dock.open_scratch_sheet("Ask", scratch):
-		_window.hide()
-	else:
-		_dock._set_status("Could not open a scratch sheet for the proposal.", true)
 
 
 func _discard_pressed() -> void:

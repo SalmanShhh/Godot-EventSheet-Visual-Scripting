@@ -13,8 +13,9 @@
 # THE TOUR IS STEP 0. The tour already walks the parts of the editor; making it the first step of
 # the first tutorial is what stops a beginner having to choose between two front doors.
 #
-# WHERE THE STEPS RUN: on a scratch sheet (EventSheetDocScratch), so a first-timer practises without
-# touching a file of their project and closes the tab without being asked to save anything.
+# WHERE THE STEPS RUN: on the sheet the reader already has open. A step never writes anything by
+# itself - it names a control and checks what the sheet holds - so the reader stays in charge of a
+# file they chose, and an ordinary undo takes back anything they did not mean.
 #
 # THE ID SCHEME (joins the frozen set):
 #   "reference:tutorials"        the list
@@ -50,7 +51,7 @@ const TUTORIALS: Array[Dictionary] = [
 		"id": "first-event",
 		"title": "Your first event",
 		"minutes": 5,
-		"lead": "Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, on a scratch sheet nobody will miss.",
+		"lead": "Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.",
 		"steps": [
 			{
 				"text": "Start with the tour: Tools ▸ Start the Tour… points at each part of the editor you are about to use. Come back here when it finishes - or press Next now and learn them as you go.",
@@ -286,7 +287,7 @@ const TUTORIALS: Array[Dictionary] = [
 				"check": "sheet_group_runs_on",
 			},
 			{
-				"text": "Give the players a value to agree on: Add ▸ Instance Variable…, and call it hp. In a sheet attached to a scene, right-click that row ▸ Keep in Step ▸ Always hands the value to a MultiplayerSynchronizer - a scratch sheet has no scene, so that half is the one thing to do again in a project of your own.",
+				"text": "Give the players a value to agree on: Add ▸ Instance Variable…, and call it hp. In a sheet attached to a scene, right-click that row ▸ Keep in Step ▸ Always hands the value to a MultiplayerSynchronizer - a sheet with no scene behind it cannot do that half, so try it in one that has.",
 				"control": "Add",
 				"check": "sheet_has_variable",
 			},
@@ -589,7 +590,7 @@ static func list_blocks() -> Array[Dictionary]:
 		{"kind": "heading", "level": 1, "text": PAGE_TITLE, "bbcode": PAGE_TITLE,
 			"slug": EventSheetDocMarkdown.slug(PAGE_TITLE)},
 		{"kind": "paragraph", "bbcode":
-			"These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run on a scratch sheet, so nothing in your project is touched."},
+			"These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run in the sheet you have open, and every step is one ordinary undo."},
 	]
 	for entry: Dictionary in TUTORIALS:
 		var id: String = str(entry.get("id", ""))
@@ -600,7 +601,7 @@ static func list_blocks() -> Array[Dictionary]:
 			progress_label(id, step_reached(id))]})
 		blocks.append({"kind": "button",
 			"label": "Start" if step_reached(id) <= 0 else "Carry on",
-			"tooltip": "Opens a scratch sheet and walks this tutorial step by step.",
+			"tooltip": "Walks this tutorial step by step, in the sheet you have open.",
 			"action": ACTION_START, "argument": id})
 	return blocks
 

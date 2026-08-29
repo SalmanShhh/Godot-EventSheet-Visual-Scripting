@@ -2222,9 +2222,6 @@ Start,Commencer
 Carry on,Continuer
 Tutorials,Tutoriels
 What's new,Nouveautés
-Try it in a scratch sheet,Essayer dans une feuille brouillon
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Ouvre cet exemple dans un onglet brouillon dédié - modifiable, en mémoire, jamais écrit dans votre projet."
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Une feuille brouillon du Manuel. Elle ne vit qu'en mémoire : rien n'est écrit dans votre projet sauf si vous faites Enregistrer sous, elle se ferme sans rien demander et disparaît à la prochaine session."
 Was this page helpful?,Cette page vous a-t-elle été utile ?
 "Thanks - noted on this machine, and sent nowhere.","Merci - noté sur cette machine, et envoyé nulle part."
 Noted on this machine. Report a problem opens the tracker if you want to say why.,Noté sur cette machine. Signaler un problème ouvre le suivi si vous voulez dire pourquoi.
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,Texte plus grand dans le Manuel.
 This page is not translated yet - help translate it,Cette page n'est pas encore traduite - aidez à la traduire
 Opens the page for the word this editor uses.,Ouvre la page du mot utilisé par cet éditeur.
 Every word that is spelled differently here.,Tous les mots qui s'écrivent autrement ici.
-"Opened a scratch sheet - in memory only, never written to your project.","Feuille brouillon ouverte - en mémoire seulement, jamais écrite dans votre projet."
-Open a sheet first - a scratch tab needs the event-sheet workspace.,Ouvrez d'abord une feuille - un onglet brouillon a besoin de l'espace de travail des feuilles d'événements.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","Feuille brouillon - en mémoire seulement, jamais écrite dans votre projet sauf si vous faites Enregistrer sous."
 Initial value,Valeur initiale
 + Add instance variable,+ Ajouter une variable d'instance
 This object has no instance variables yet.,Cet objet n'a pas encore de variables d'instance.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,lu comme le motif %s parce que
 Hand-written,Ecrit a la main
 As events,En evenements
 Common Game Patterns,Motifs de jeu courants
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","Les formes dont un jeu est fait : a gauche ecrites a la main, a droite lues en evenements. Chaque exemple est un vrai fichier que cet editeur ouvre - Inserer place les lignes dans votre feuille, Essayer les ouvre dans une feuille de brouillon."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","Les formes dont un jeu est fait : a gauche ecrites a la main, a droite lues en evenements. Chaque exemple est un vrai fichier que cet editeur ouvre - Inserer place les lignes dans votre feuille."
 Adopt behavior,Adopter le comportement
 Adopt behavior: %s,Adopter le comportement : %s
 Adopt behavior: %s…,Adopter le comportement : %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,Mouvement réduit
 Speak This Row,Lire cette ligne
 What do you want to happen?,Que voulez-vous qu'il se passe ?
 Proposed,Proposition
-Try in a scratch sheet,Essayer dans une feuille brouillon
 Discard,Abandonner
 Reading Comfort,Confort de lecture
 Dyslexia-friendly text,Texte adapté à la dyslexie

@@ -2222,9 +2222,6 @@ Start,Starten
 Carry on,Weitermachen
 Tutorials,Übungen
 What's new,Was ist neu
-Try it in a scratch sheet,In einem Notizblatt ausprobieren
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Öffnet dieses Beispiel in einem eigenen Notiz-Tab - bearbeitbar, nur im Speicher, nie in dein Projekt geschrieben."
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Ein Notizblatt aus dem Handbuch. Es lebt nur im Speicher - ohne Speichern unter wird nichts in dein Projekt geschrieben, es schließt ohne Nachfrage und ist in der nächsten Sitzung weg."
 Was this page helpful?,War diese Seite hilfreich?
 "Thanks - noted on this machine, and sent nowhere.",Danke - auf diesem Rechner vermerkt und nirgendwohin gesendet.
 Noted on this machine. Report a problem opens the tracker if you want to say why.,"Auf diesem Rechner vermerkt. Problem melden öffnet den Tracker, falls du sagen möchtest, warum."
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,Größerer Text im Handbuch.
 This page is not translated yet - help translate it,"Diese Seite ist noch nicht übersetzt - hilf mit, sie zu übersetzen"
 Opens the page for the word this editor uses.,"Öffnet die Seite zu dem Wort, das dieser Editor verwendet."
 Every word that is spelled differently here.,"Jedes Wort, das hier anders heißt."
-"Opened a scratch sheet - in memory only, never written to your project.","Notizblatt geöffnet - nur im Speicher, nie in dein Projekt geschrieben."
-Open a sheet first - a scratch tab needs the event-sheet workspace.,Öffne zuerst ein Blatt - ein Notiz-Tab braucht den Ereignisblatt-Arbeitsbereich.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","Notizblatt - nur im Speicher, ohne Speichern unter nie in dein Projekt geschrieben."
 Initial value,Anfangswert
 + Add instance variable,+ Instanzvariable hinzufügen
 This object has no instance variables yet.,Dieses Objekt hat noch keine Instanzvariablen.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,"gelesen als Muster %s, weil"
 Hand-written,Von Hand geschrieben
 As events,Als Ereignisse
 Common Game Patterns,Ubliche Spielmuster
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","Die Formen, aus denen ein Spiel besteht: links von Hand geschrieben, rechts als Ereignisse gelesen. Jedes Beispiel ist eine echte Datei, die dieser Editor offnet - Einfugen legt die Zeilen in dein Blatt, Ausprobieren offnet sie in einem Notizblatt."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","Die Formen, aus denen ein Spiel besteht: links von Hand geschrieben, rechts als Ereignisse gelesen. Jedes Beispiel ist eine echte Datei, die dieser Editor offnet - Einfugen legt die Zeilen in dein Blatt."
 Adopt behavior,Verhalten ubernehmen
 Adopt behavior: %s,Verhalten ubernehmen: %s
 Adopt behavior: %s…,Verhalten ubernehmen: %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,Reduzierte Bewegung
 Speak This Row,Diese Zeile vorlesen
 What do you want to happen?,Was soll passieren?
 Proposed,Vorschlag
-Try in a scratch sheet,In einem Notizblatt ausprobieren
 Discard,Verwerfen
 Reading Comfort,Lesekomfort
 Dyslexia-friendly text,Legasthenie-freundlicher Text

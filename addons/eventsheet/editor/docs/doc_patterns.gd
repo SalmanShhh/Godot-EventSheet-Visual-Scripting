@@ -46,7 +46,7 @@ static func blocks() -> Array[Dictionary]:
 	var blocks: Array[Dictionary] = [
 		{"kind": "heading", "level": 1, "text": PAGE_TITLE},
 		{"kind": "paragraph", "bbcode": EventSheetL10n.translate(
-			"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.")}
+			"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.")}
 	]
 	for pattern: String in EventSheetPatternVocabulary.documented_ids():
 		blocks.append_array(pattern_blocks(pattern))

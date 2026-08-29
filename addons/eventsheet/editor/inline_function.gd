@@ -164,7 +164,7 @@ static func summary(function_name: String, sites: int, rows: int) -> String:
 
 
 ## A deep copy of the verb's body actions with each parameter renamed to the argument the call
-## passes. The rename runs on a SCRATCH sheet holding just those rows, which is what lets the
+## passes. The rename runs on a TEMPORARY sheet holding just those rows, which is what lets the
 ## shipped rename_symbol (params, templates, raw code and pick filters in one pass) do the work.
 static func _bound_body_copy(function: EventFunction, call_action: ACEAction) -> Array[Resource]:
 	var copies: Array[Resource] = []

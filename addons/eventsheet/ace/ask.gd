@@ -20,7 +20,7 @@
 # fewer rows than it meant to. It can never propose something the sheet cannot say.
 #
 # And nothing is applied by arriving. The proposal is a preview; it becomes rows only when the
-# reader presses "Add these events" or "Try in a scratch sheet".
+# reader presses "Add these events".
 #
 # The HTTP call is injected (`transport`), so the whole pipeline - request, schema, validation,
 # rejection, proposal - is testable headless against a fake endpoint with no network at all.
@@ -313,19 +313,6 @@ static func proposal_events(rows: Array, definitions: Array, uid_source: Callabl
 			condition.codegen_template = _baked_template(definition, uid_source)
 			current.conditions.append(condition)
 	return events
-
-
-## A sheet holding nothing but the proposal - what "Try in a scratch sheet" opens. The host class
-## is copied from the sheet the reader asked from, so the scratch rows compile in the same world.
-static func proposal_sheet(rows: Array, definitions: Array, host: EventSheetResource,
-		uid_source: Callable = Callable()) -> EventSheetResource:
-	var sheet: EventSheetResource = EventSheetResource.new()
-	if host != null:
-		sheet.host_class = host.host_class
-		sheet.host_node_path = host.host_node_path
-	for event: Variant in proposal_events(rows, definitions, uid_source):
-		sheet.events.append(event)
-	return sheet
 
 
 static func _params_with_target(definition: ACEDefinition, row: Dictionary) -> Dictionary:

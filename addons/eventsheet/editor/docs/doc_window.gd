@@ -92,11 +92,6 @@ func _ensure_built() -> void:
 		_dock._set_status("Opened %s in your browser." % target.get_file()))
 	_browser.snippet_inserted.connect(func() -> void:
 		_dock._set_status("Inserted the illustrated rows below your selection - one undo step."))
-	# "Try it in a scratch sheet", and a tutorial's Start. The window does not own the tab strip
-	# either, so it asks through the same public path the dock does.
-	_browser.scratch_requested.connect(func(example_name: String, sheet: EventSheetResource) -> void:
-		if EventSheets.open_scratch_sheet(example_name, sheet):
-			_dock._set_status("Opened a scratch sheet - in memory only, never written to your project."))
 	_browser.control_highlight_requested.connect(func(control_label: String) -> void:
 		EventSheets.pulse_control(control_label))
 	# Esc gives the sheet its focus back, and closes the window that was over it.

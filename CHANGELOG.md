@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch
+  sheet was a temporary practice surface: the Manual's tutorials, its examples and the Ask box's
+  proposal could each open a tab with no file behind it, badged in the tab strip, closed without a
+  prompt and thrown away at the end of the session. It is removed because a place that looks exactly
+  like your project but is not one is error-prone - work done there is lost by design, and nothing
+  in Godot behaves that way, so there was nothing for a reader to recognise it by. Everything it
+  carried now happens where it belongs: a tutorial's steps run in the sheet you already have open,
+  a figure's example arrives through **Insert** as one ordinary undo step, and the Ask box proposes
+  rows for **Add these events** or **Discard**. Removed with it: the `EventSheetDocScratch` module,
+  the dock's scratch tab and its close-without-asking exception, the "Try it in a scratch sheet" and
+  "Try in a scratch sheet" buttons, the `eventsheets_scratch` sheet metadata, and every translation
+  of those strings.
+- **`EventSheets.open_scratch_sheet()` is deleted from the public API.** Method shapes on
+  `EventSheets` are normally a compatibility promise kept by deprecating rather than renaming. This
+  one is deleted outright: it is the only entry point to a feature judged wrong to keep, the plugin
+  is pre-1.0, and leaving a call that opens nothing would be worse than leaving no call at all. This
+  is a one-time exception, made on purpose and recorded here so it is not read as a precedent.
+
 ### The Manual - one search, and the engine's own words
 
 - **A page refreshed into the search index stays in it.** Saving a sheet rebuilds that one

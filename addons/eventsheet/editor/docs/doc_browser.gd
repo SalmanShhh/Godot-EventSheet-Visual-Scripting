@@ -89,11 +89,6 @@ signal link_activated(target: String)
 ## Emitted after a figure's Insert lands rows in the sheet.
 signal snippet_inserted()
 
-## Emitted when a TUTORIAL starts and wants the sheet it walks the reader through. That is the one
-## caller: a figure's offer is Insert, into the sheet the reader already has open, as one undo step.
-## The Manual does not own the tab strip, so it names what it wants and its host opens it.
-signal scratch_requested(example_name: String, sheet: EventSheetResource)
-
 ## Emitted when a tutorial step names a control the reader should use, so the host can make the real
 ## one pulse. The label is the control's own text, which is how it is resolved - there is no map of
 ## keys to buttons for anybody to keep up to date.
@@ -589,7 +584,7 @@ func _on_page_action(action: String, argument: String) -> void:
 	show_doc(_current_id)
 
 
-## Walking a tutorial: Start opens a scratch sheet and the first card, Back and Next move a step,
+## Walking a tutorial: Start draws the first card, Back and Next move a step,
 ## Skip goes back to the list. Every one of them REMEMBERS where the reader got to before it draws,
 ## so closing the editor mid-tutorial and coming back lands on the same card.
 ##
@@ -605,9 +600,9 @@ func _on_tutorial_action(action: String, tutorial_id: String) -> void:
 	var at: int = EventSheetDocTutorials.step_reached(id)
 	match action:
 		EventSheetDocTutorials.ACTION_START:
-			# A tutorial runs on a sheet nobody minds losing. The host opens it; a Manual that could
-			# not reach a tab strip still walks the steps on whatever sheet is already open.
-			scratch_requested.emit(str(EventSheetDocTutorials.tutorial(id).get("title", "")), null)
+			# The steps run on the sheet the reader already has open - Start only draws the card the
+			# reader left off at, which is what the fall-through below does for every action.
+			pass
 		EventSheetDocTutorials.ACTION_BACK:
 			at = EventSheetDocTutorials.moved_step(id, at, -1)
 		EventSheetDocTutorials.ACTION_NEXT:

@@ -259,7 +259,6 @@ func _ensure_content() -> void:
 	_browser.connect("snippet_inserted", _on_snippet_inserted)
 	_browser.connect("row_requested", _on_row_requested)
 	_browser.connect("project_row_requested", _on_project_row_requested)
-	_browser.connect("scratch_requested", _on_scratch_requested)
 	_browser.connect("control_highlight_requested", _on_control_highlight_requested)
 	_browser.connect("focus_returned", _on_focus_returned)
 
@@ -452,18 +451,6 @@ func _on_project_row_requested(sheet_path: String, line: int) -> void:
 
 func _on_snippet_inserted() -> void:
 	_set_status("Inserted the illustrated rows below your selection - one undo step.")
-
-
-## "Try it in a scratch sheet", and a tutorial's Start. Both go through the same public, guarded
-## path a third-party caller would use, so there is one way a scratch tab opens rather than two.
-func _on_scratch_requested(example_name: String, sheet: EventSheetResource) -> void:
-	var api: Script = load(API_PATH) as Script
-	if api == null:
-		return
-	if bool(api.call("open_scratch_sheet", example_name, sheet)):
-		_set_status("Opened a scratch sheet - in memory only, never written to your project.")
-	else:
-		_set_status("Open a sheet first - a scratch tab needs the event-sheet workspace.")
 
 
 ## A tutorial step naming a control the reader should use. The Manual does not own the toolbar, so

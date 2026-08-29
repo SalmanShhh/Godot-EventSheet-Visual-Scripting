@@ -570,8 +570,8 @@ rewriting your game into one that does less.
 **Manual ▸ Common Game Patterns** shows every pattern as two columns - the hand-written GDScript
 on the left, the same text read as events on the right. The right column is drawn by the same
 renderer your sheet uses, from the same file the reading tests open, so the page cannot show you a
-shape the sheet does not actually read. Each one has Insert (put these rows in my sheet), Try it
-(open them in a scratch sheet), and Adopt behavior where one ships. **Add ▸ Pattern…** opens the
+shape the sheet does not actually read. Each one has Insert (put these rows in my sheet) and Adopt
+behavior where one ships. **Add ▸ Pattern…** opens the
 same page, most common first.
 
 The Doctor knows the halves of every pattern it recognises, so it can spot the classic

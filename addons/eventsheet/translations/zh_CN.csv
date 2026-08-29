@@ -2222,9 +2222,6 @@ Start,开始
 Carry on,继续
 Tutorials,教程
 What's new,更新内容
-Try it in a scratch sheet,在草稿表中试一试
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.",在独立的草稿标签页中打开此示例 - 可编辑、仅存于内存，绝不写入你的项目。
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.",来自手册的草稿表。它只存在于内存中 - 除非你使用另存为，否则不会写入你的项目；关闭时不会询问，下次会话也不会恢复。
 Was this page helpful?,这个页面对你有帮助吗？
 "Thanks - noted on this machine, and sent nowhere.",谢谢 - 已记录在本机，未发送到任何地方。
 Noted on this machine. Report a problem opens the tracker if you want to say why.,已记录在本机。若想说明原因，点“报告问题”可打开问题追踪页。
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,手册文字变大。
 This page is not translated yet - help translate it,此页面尚未翻译 - 帮助翻译它
 Opens the page for the word this editor uses.,打开本编辑器所用词语的页面。
 Every word that is spelled differently here.,所有在这里叫法不同的词。
-"Opened a scratch sheet - in memory only, never written to your project.",已打开草稿表 - 仅存于内存，绝不写入你的项目。
-Open a sheet first - a scratch tab needs the event-sheet workspace.,请先打开一个表 - 草稿标签页需要事件表工作区。
-"Scratch sheet - in memory only, never written to your project unless you Save As.",草稿表 - 仅存于内存，除非另存为，否则绝不写入你的项目。
 Initial value,初始值
 + Add instance variable,+ 添加实例变量
 This object has no instance variables yet.,此对象还没有实例变量。
@@ -2591,7 +2585,7 @@ read as the %s pattern because,读作 %s 模式的依据
 Hand-written,手写代码
 As events,作为事件
 Common Game Patterns,常见游戏模式
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.",构成一款游戏的形态：左边是手写代码，右边是读作事件的样子。每个示例都是本编辑器真正能打开的文件：插入会把这些行放进你的表，试一试会在草稿表中打开它们。
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.",构成一款游戏的形态：左边是手写代码，右边是读作事件的样子。每个示例都是本编辑器真正能打开的文件：插入会把这些行放进你的表。
 Adopt behavior,采用行为
 Adopt behavior: %s,采用行为：%s
 Adopt behavior: %s…,采用行为：%s…
@@ -2941,7 +2935,6 @@ Reduced Motion,减少动态效果
 Speak This Row,朗读此行
 What do you want to happen?,你想让什么发生？
 Proposed,建议
-Try in a scratch sheet,在草稿表中试用
 Discard,放弃
 Reading Comfort,阅读舒适度
 Dyslexia-friendly text,适合阅读障碍的文字

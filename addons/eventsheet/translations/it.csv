@@ -2222,9 +2222,6 @@ Start,Inizia
 Carry on,Continua
 Tutorials,Tutorial
 What's new,Novità
-Try it in a scratch sheet,Provalo in un foglio di prova
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Apre questo esempio in una scheda di prova dedicata - modificabile, in memoria, mai scritta nel tuo progetto."
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Un foglio di prova del Manuale. Vive solo in memoria: nulla viene scritto nel tuo progetto a meno di un Salva con nome, si chiude senza chiedere e sparisce alla prossima sessione."
 Was this page helpful?,Questa pagina è stata utile?
 "Thanks - noted on this machine, and sent nowhere.",Grazie - annotato su questo computer e non inviato da nessuna parte.
 Noted on this machine. Report a problem opens the tracker if you want to say why.,Annotato su questo computer. Segnala un problema apre il tracker se vuoi dire perché.
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,Testo più grande nel Manuale.
 This page is not translated yet - help translate it,Questa pagina non è ancora tradotta - aiuta a tradurla
 Opens the page for the word this editor uses.,Apre la pagina della parola usata da questo editor.
 Every word that is spelled differently here.,Tutte le parole che qui si scrivono diversamente.
-"Opened a scratch sheet - in memory only, never written to your project.","Foglio di prova aperto - solo in memoria, mai scritto nel tuo progetto."
-Open a sheet first - a scratch tab needs the event-sheet workspace.,Apri prima un foglio - una scheda di prova richiede lo spazio di lavoro dei fogli di eventi.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","Foglio di prova - solo in memoria, mai scritto nel tuo progetto a meno di un Salva con nome."
 Initial value,Valore iniziale
 + Add instance variable,+ Aggiungi variabile di istanza
 This object has no instance variables yet.,Questo oggetto non ha ancora variabili di istanza.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,letto come schema %s perche
 Hand-written,Scritto a mano
 As events,Come eventi
 Common Game Patterns,Schemi di gioco comuni
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","Le forme di cui e fatto un gioco: a sinistra scritte a mano, a destra lette come eventi. Ogni esempio e un file vero che questo editor apre: Inserisci mette le righe nel tuo foglio, Provalo le apre in un foglio di prova."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","Le forme di cui e fatto un gioco: a sinistra scritte a mano, a destra lette come eventi. Ogni esempio e un file vero che questo editor apre: Inserisci mette le righe nel tuo foglio."
 Adopt behavior,Adotta il comportamento
 Adopt behavior: %s,Adotta il comportamento: %s
 Adopt behavior: %s…,Adotta il comportamento: %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,Movimento ridotto
 Speak This Row,Leggi questa riga
 What do you want to happen?,Che cosa vuoi che succeda?
 Proposed,Proposta
-Try in a scratch sheet,Prova in un foglio di prova
 Discard,Scarta
 Reading Comfort,Comfort di lettura
 Dyslexia-friendly text,Testo adatto alla dislessia

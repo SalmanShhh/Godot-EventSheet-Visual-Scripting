@@ -2222,9 +2222,6 @@ Start,Начать
 Carry on,Продолжить
 Tutorials,Уроки
 What's new,Что нового
-Try it in a scratch sheet,Попробовать в черновом листе
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.","Открывает этот пример в отдельной черновой вкладке - редактируемой, только в памяти, никогда не записываемой в проект."
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","Черновой лист из Руководства. Он существует только в памяти: пока вы не выберете Сохранить как, в проект ничего не записывается, он закрывается без вопросов и не восстанавливается в следующей сессии."
 Was this page helpful?,Была ли эта страница полезной?
 "Thanks - noted on this machine, and sent nowhere.",Спасибо - отмечено на этом компьютере и никуда не отправлено.
 Noted on this machine. Report a problem opens the tracker if you want to say why.,"Отмечено на этом компьютере. Кнопка «Сообщить о проблеме» открывает трекер, если хотите объяснить почему."
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,Крупнее текст в Руководстве.
 This page is not translated yet - help translate it,Эта страница ещё не переведена - помогите её перевести
 Opens the page for the word this editor uses.,"Открывает страницу слова, которое использует этот редактор."
 Every word that is spelled differently here.,"Все слова, которые здесь называются иначе."
-"Opened a scratch sheet - in memory only, never written to your project.","Открыт черновой лист - только в памяти, в проект не записывается."
-Open a sheet first - a scratch tab needs the event-sheet workspace.,Сначала откройте лист - черновой вкладке нужно рабочее пространство листов событий.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","Черновой лист - только в памяти, в проект не записывается, пока вы не выберете Сохранить как."
 Initial value,Начальное значение
 + Add instance variable,+ Добавить переменную экземпляра
 This object has no instance variables yet.,У этого объекта пока нет переменных экземпляра.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,"прочитано как шаблон %s, по�
 Hand-written,Написано вручную
 As events,Как события
 Common Game Patterns,Типовые игровые шаблоны
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","Формы, из которых состоит игра: слева написанное вручную, справа прочитанное как события. Каждый пример - настоящий файл, который этот редактор открывает: Вставить кладёт строки в ваш лист, Попробовать открывает их в черновом листе."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","Формы, из которых состоит игра: слева написанное вручную, справа прочитанное как события. Каждый пример - настоящий файл, который этот редактор открывает: Вставить кладёт строки в ваш лист."
 Adopt behavior,Перейти на поведение
 Adopt behavior: %s,Перейти на поведение: %s
 Adopt behavior: %s…,Перейти на поведение: %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,Меньше движения
 Speak This Row,Прочитать эту строку
 What do you want to happen?,Что должно произойти?
 Proposed,Предложение
-Try in a scratch sheet,Попробовать в черновом листе
 Discard,Отклонить
 Reading Comfort,Удобство чтения
 Dyslexia-friendly text,Текст для дислексии

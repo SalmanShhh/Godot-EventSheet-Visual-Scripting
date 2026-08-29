@@ -168,7 +168,7 @@ behavior's designer knobs, read off the pack's own scripts with their defaults -
 in the pack renames on the page, and nobody writes that table either. The last column only appears
 when at least one row on the page has something to say in it.
 
-### Tutorials, and the scratch sheet examples run in
+### Tutorials
 
 ![Manual, Tutorials: the tree lists Tutorials, What the marks on a sheet mean, Coming from another event-sheet editor and What's new; the page lists five tutorials, each with a lead line, a time estimate and a Start button](images/manual-tutorials.png)
 
@@ -180,10 +180,9 @@ as data in `addons/eventsheet/editor/docs/doc_tutorials.gd` - `{text, control, c
 where `control` is the EXACT label of a toolbar control and `check` names a pure predicate over the
 sheet. Adding a step is adding a Dictionary; adding a new kind of check is one `match` arm.
 
-Every figure in a guide also offers **Try it in a scratch sheet**: the example opens in a tab of its
-own, editable, in memory, with no path. Nothing is written to the reader's project unless they Save
-As, the tab closes without asking, and it is not restored next session. Write your examples knowing
-a reader may be about to play with them rather than only read them.
+A figure in a guide offers **Insert**, which puts the example's rows in the sheet the reader already
+has open, as one undo step. Write your examples knowing a reader may be about to put them straight
+into a real sheet rather than only read them.
 
 ### What's new
 

@@ -8,7 +8,7 @@
 #
 # Nothing here is new refactoring machinery: object references go through
 # EventSheetRefactor.replace_node_reference (token-safe - $Enemy never touches $EnemySpawner) and
-# variable names through EventSheetRefactor.rename_symbol on a SCRATCH sheet holding the snippet's
+# variable names through EventSheetRefactor.rename_symbol on a TEMPORARY sheet holding the snippet's
 # own rows + declarations, which is exactly what "Rename Everywhere..." runs on the open sheet. The
 # rename therefore rewrites the declaration key AND every reference inside params, templates, raw
 # code and pick filters, with no second implementation to keep in step.
@@ -74,7 +74,7 @@ static func remap(snippet: Dictionary, mapping: Dictionary) -> Dictionary:
 		counts["objects"] = int(counts["objects"]) + EventSheetRefactor.replace_node_reference(rows, str(pair[0]), OBJECT_SENTINEL % index)
 	for index: int in range(object_pairs.size()):
 		EventSheetRefactor.replace_node_reference(rows, OBJECT_SENTINEL % index, str((object_pairs[index] as Array)[1]))
-	# The scratch sheet is what lets the shipped rename run here: rename_symbol renames a variables
+	# The temporary sheet is what lets the shipped rename run here: rename_symbol renames a variables
 	# KEY plus every reference in the rows it is given, which is precisely the snippet's own scope.
 	var scratch: EventSheetResource = EventSheetResource.new()
 	scratch.variables = variables

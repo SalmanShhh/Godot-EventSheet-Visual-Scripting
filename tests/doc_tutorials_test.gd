@@ -1,9 +1,8 @@
-# Godot EventSheets - THE MANUAL, batch 7: the tutorials you do, the sandbox they run in, the fixed
-# shape of a reference page, what's new, the wayfinding and the reader's own language.
+# Godot EventSheets - THE MANUAL, batch 7: the tutorials you do, the fixed shape of a reference
+# page, what's new, the wayfinding and the reader's own language.
 #
 # Everything pinned here is a DECISION rather than a pixel, because no headless run lays anything
-# out: which step a fixture sheet completes, what a scratch tab is called and why it closes without
-# asking, the ORDER of a reference page's sections, the id What's new lives at, the sentence a
+# out: which step a fixture sheet completes, the ORDER of a reference page's sections, the id What's new lives at, the sentence a
 # search that found nothing prints, and which page a reader in another language is shown.
 #
 # The one thing that cannot be tested here is the live vocabulary - there is no registry outside a
@@ -21,7 +20,6 @@ static func run() -> bool:
 	all_passed = _test_tutorial_catalogue() and all_passed
 	all_passed = _test_step_completion() and all_passed
 	all_passed = _test_walking_the_steps() and all_passed
-	all_passed = _test_scratch_tabs() and all_passed
 	all_passed = _test_reference_shape() and all_passed
 	all_passed = _test_whats_new() and all_passed
 	all_passed = _test_glossary_redirect() and all_passed
@@ -264,36 +262,6 @@ static func _test_walking_the_steps() -> bool:
 		" ▸ ".join(Array(EventSheetDocReference.breadcrumb("reference:tutorial/first-event",
 			"Your first event"))),
 		"Manual ▸ Tutorials ▸ Your first event") and all_passed
-	return all_passed
-
-
-## What makes a tab scratch, what it is called, and why it closes without asking.
-static func _test_scratch_tabs() -> bool:
-	var all_passed: bool = true
-	var sheet: EventSheetResource = EventSheetResource.new()
-	all_passed = _check("an ordinary sheet is not scratch",
-		EventSheetDocScratch.is_scratch(sheet), false) and all_passed
-	all_passed = _check("and closing it asks the usual question",
-		EventSheetDocScratch.closes_without_asking(sheet), false) and all_passed
-	EventSheetDocScratch.mark(sheet, "Wait For Signal")
-	all_passed = _check("marking it makes it one",
-		EventSheetDocScratch.is_scratch(sheet), true) and all_passed
-	all_passed = _check("it remembers the example it holds",
-		EventSheetDocScratch.example_name(sheet), "Wait For Signal") and all_passed
-	all_passed = _check("the tab reads in its pinned words",
-		EventSheetDocScratch.tab_title("Wait For Signal"), "✎ Scratch - Wait For Signal") and all_passed
-	all_passed = _check("an unnamed example is still a scratch tab",
-		EventSheetDocScratch.tab_title(""), "✎ Scratch") and all_passed
-	all_passed = _check("and it closes without asking",
-		EventSheetDocScratch.closes_without_asking(sheet), true) and all_passed
-	# Save As gives it a home, and a sheet with a home is not a scratch pad any more.
-	EventSheetDocScratch.claim_saved(sheet)
-	all_passed = _check("saving it somewhere ends that",
-		EventSheetDocScratch.is_scratch(sheet), false) and all_passed
-	all_passed = _check("and the close guard comes back",
-		EventSheetDocScratch.closes_without_asking(sheet), false) and all_passed
-	all_passed = _check("the button says what it does",
-		EventSheetDocScratch.try_it_label(), "Try it in a scratch sheet") and all_passed
 	return all_passed
 
 

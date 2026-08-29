@@ -2222,9 +2222,6 @@ Start,시작
 Carry on,계속하기
 Tutorials,튜토리얼
 What's new,새로운 기능
-Try it in a scratch sheet,임시 시트에서 시험해 보기
-"Opens this example in a scratch tab of its own - editable, in memory, never written to your project.",이 예제를 전용 임시 탭에서 엽니다. 편집할 수 있고 메모리에만 있으며 프로젝트에 기록되지 않습니다.
-"A scratch sheet from the Manual. It lives in memory only - nothing is written to your project unless you Save As, it closes without asking, and it is gone next session.","설명서의 임시 시트입니다. 메모리에만 존재하며, 다른 이름으로 저장하지 않는 한 프로젝트에 아무것도 기록되지 않고, 묻지 않고 닫히며, 다음 세션에는 남지 않습니다."
 Was this page helpful?,이 페이지가 도움이 되었나요?
 "Thanks - noted on this machine, and sent nowhere.",감사합니다. 이 컴퓨터에만 기록되었고 어디에도 전송되지 않았습니다.
 Noted on this machine. Report a problem opens the tracker if you want to say why.,이 컴퓨터에 기록했습니다. 이유를 알리고 싶다면 문제 신고로 트래커를 열 수 있습니다.
@@ -2236,9 +2233,6 @@ Larger text in the Manual.,설명서 글자를 크게.
 This page is not translated yet - help translate it,이 페이지는 아직 번역되지 않았습니다 - 번역에 참여하기
 Opens the page for the word this editor uses.,이 에디터가 쓰는 낱말의 페이지를 엽니다.
 Every word that is spelled differently here.,여기서는 다르게 부르는 모든 낱말.
-"Opened a scratch sheet - in memory only, never written to your project.",임시 시트를 열었습니다. 메모리에만 있고 프로젝트에 기록되지 않습니다.
-Open a sheet first - a scratch tab needs the event-sheet workspace.,먼저 시트를 여세요. 임시 탭에는 이벤트 시트 작업 공간이 필요합니다.
-"Scratch sheet - in memory only, never written to your project unless you Save As.","임시 시트 - 메모리에만 있으며, 다른 이름으로 저장하지 않는 한 프로젝트에 기록되지 않습니다."
 Initial value,초기값
 + Add instance variable,+ 인스턴스 변수 추가
 This object has no instance variables yet.,이 오브젝트에는 아직 인스턴스 변수가 없습니다.
@@ -2591,7 +2585,7 @@ read as the %s pattern because,%s 패턴으로 읽은 근거
 Hand-written,직접 쓴 코드
 As events,이벤트로
 Common Game Patterns,자주 쓰는 게임 패턴
-"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet, or Try it to open them in a scratch sheet.","게임을 이루는 형태들을 왼쪽은 직접 쓴 코드로, 오른쪽은 이벤트로 읽은 모습으로 나란히 둡니다. 모든 예제는 이 편집기가 실제로 여는 파일입니다. 삽입하면 시트에 행이 들어가고, 시험해 보기는 임시 시트에서 엽니다."
+"The shapes a game is made of, each one written by hand on the left and read as events on the right. Every example is a real file this editor opens: press Insert to put the rows in your sheet.","게임을 이루는 형태들을 왼쪽은 직접 쓴 코드로, 오른쪽은 이벤트로 읽은 모습으로 나란히 둡니다. 모든 예제는 이 편집기가 실제로 여는 파일입니다. 삽입하면 시트에 행이 들어갑니다."
 Adopt behavior,비헤이비어 도입
 Adopt behavior: %s,비헤이비어 도입: %s
 Adopt behavior: %s…,비헤이비어 도입: %s…
@@ -2941,7 +2935,6 @@ Reduced Motion,동작 줄이기
 Speak This Row,이 행 읽어 주기
 What do you want to happen?,무엇이 일어나길 원하나요?
 Proposed,제안
-Try in a scratch sheet,임시 시트에서 시도
 Discard,버리기
 Reading Comfort,읽기 편의
 Dyslexia-friendly text,난독증 친화 텍스트
