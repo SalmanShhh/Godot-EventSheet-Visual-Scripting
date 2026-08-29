@@ -210,6 +210,18 @@
   taken out of the world without a `queue_free` of its own - its whole branch freed at once - is not
   seen by this trigger, and the shipped **On Group Emptied** condition is the row for that.
 
+- **The two random placements answer in the world's frame.** **Random Place Along Path** and
+  **Random Place Inside Shape** added a LOCAL point to `global_position`, which is only right while
+  nothing above the node is rotated or scaled. Measured under a parent at (500, 500) turned a quarter
+  turn and scaled twice: the path row answered (550, 500) where the point on the curve really was
+  (500, 600), and the shape row put a rectangle's corner at (550, 510) where it really was
+  (480, 600). Rotation alone was enough, so a spawn zone turned to face down a corridor scattered
+  inside an upright box of the same size rather than inside the one drawn. Both go through
+  `to_global` now, which is the one-token spelling of the transform that was missing; the sampling
+  itself was always even and always one step, and still is. The empty-curve case is stated properly
+  too: a Path2D with no points gives the path's own place AND prints `No points in Curve2D.` on every
+  evaluation, which the page had presented as a quiet degradation.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

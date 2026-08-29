@@ -5308,11 +5308,11 @@ Place Of,の場所
 place of [i]{node}[/i],[i]{node}[/i] の場所
 "The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.",場所を読み取るノード。シーンに置いた Marker2D、出現地点、プレイヤーなどです。
 Random Place Along Path,パス上のランダムな場所
-"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.",Path2D のカーブ上のどこかのランダムな点を返します。点はカーブの区間ではなく進んだ距離で選ばれるため、長い直線部も急なコーナーも同じくらい選ばれます。
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner. A curve is drawn in the path's own space, so the point is handed back through to_global and comes out where the curve really is, even under a rotated or scaled parent.",Path2D の曲線上のどこかにランダムな点を返します。点は曲線の区間ごとではなく進んだ距離で選ばれるので、長い直線もきついカーブもまったく同じ確率です。曲線はパス自身の空間に描かれるため、点は to_global を通して返され、親が回転や拡大されていても曲線が実際にある場所に出ます。
 random place along [i]{path}[/i],[i]{path}[/i] 上のランダムな場所
-The Path2D whose curve to pick a point on.,点を選ぶカーブを持つ Path2D。
+"The Path2D whose curve to pick a point on. Draw the curve first: an empty one has no length, and Godot prints an error every time the line is evaluated.",曲線上の点を選ぶ対象の Path2D です。先に曲線を描いてください。空の曲線には長さがなく、この行が評価されるたびに Godot がエラーを出します。
 Random Place Inside Shape,シェイプ内のランダムな場所
-"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",コリジョンシェイプの内側のランダムな点を返します。出現ゾーンを囲んだ Area2D のことです。矩形と円は寸法から直接測って一度で均等に散らします。棄却サンプリングも再試行もありません。それ以外の形は推測せず自分の中心を返します。
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess. The measurement is in the shape's own space and is handed back through to_global, so a rotated or scaled shape scatters inside the box you drew rather than inside an upright one of the same size.",コリジョン形状の内側にランダムな点を返します。スポーン範囲として描いた Area2D のことです。長方形と円はその寸法から直接、一度の計算で均一に散らされ、棄却サンプリングも再試行もありません。それ以外の形状は当て推量の代わりに自分の中心を返します。測るのは形状自身の空間で、点は to_global を通して返されるので、回転や拡大された形状でも、まっすぐな同じ大きさの箱ではなく実際に描いた箱の内側に散ります。
 random place inside [i]{shape}[/i],[i]{shape}[/i] 内のランダムな場所
 The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,散らす対象の CollisionShape2D。出現ゾーンを示す Area2D に付いているものです。
 Random Place Off Screen Edge,画面端の外側のランダムな場所

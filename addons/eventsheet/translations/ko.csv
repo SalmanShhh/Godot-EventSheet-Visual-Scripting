@@ -5308,11 +5308,11 @@ Place Of,의 위치
 place of [i]{node}[/i],[i]{node}[/i]의 위치
 "The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.","위치를 읽을 노드입니다. 씬에 놓은 Marker2D, 생성 지점, 플레이어 등입니다."
 Random Place Along Path,경로 위의 무작위 위치
-"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.","Path2D 곡선 위 어느 지점을 무작위로 줍니다. 곡선 구간이 아니라 진행 거리로 고르므로, 긴 직선 구간도 급한 모서리와 똑같은 확률입니다."
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner. A curve is drawn in the path's own space, so the point is handed back through to_global and comes out where the curve really is, even under a rotated or scaled parent.","Path2D의 곡선 위 어딘가에 무작위 지점을 줍니다. 지점은 곡선 구간이 아니라 이동한 거리로 고르므로, 긴 직선 구간도 급한 커브와 정확히 같은 확률입니다. 곡선은 경로 자신의 공간에 그려지므로 지점은 to_global을 거쳐 돌아오며, 부모가 회전되거나 크기가 바뀌어 있어도 곡선이 실제로 있는 자리에 나옵니다."
 random place along [i]{path}[/i],[i]{path}[/i] 위의 무작위 위치
-The Path2D whose curve to pick a point on.,점을 고를 곡선을 가진 Path2D입니다.
+"The Path2D whose curve to pick a point on. Draw the curve first: an empty one has no length, and Godot prints an error every time the line is evaluated.","곡선 위에서 점을 고를 Path2D입니다. 곡선을 먼저 그리세요. 비어 있는 곡선은 길이가 없고, 이 줄이 평가될 때마다 Godot이 오류를 출력합니다."
 Random Place Inside Shape,도형 안의 무작위 위치
-"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",충돌 도형 안의 무작위 점을 줍니다. 생성 구역 주위에 그린 Area2D를 말합니다. 직사각형과 원은 치수를 직접 재서 한 번에 고르게 뿌려집니다. 기각 샘플링도 재시도도 없습니다. 그 밖의 도형은 추측 대신 자기 중심을 줍니다.
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess. The measurement is in the shape's own space and is handed back through to_global, so a rotated or scaled shape scatters inside the box you drew rather than inside an upright one of the same size.","충돌 도형 안의 무작위 지점을 줍니다. 생성 구역으로 그려 둔 Area2D 말입니다. 사각형과 원은 각자의 치수에서 곧바로, 한 번에 고르게 흩뿌려지며 기각 샘플링도 재시도도 없습니다. 그 밖의 도형은 어림짐작 대신 자기 중심을 돌려줍니다. 측정은 도형 자신의 공간에서 이루어지고 지점은 to_global을 거쳐 돌아오므로, 회전되거나 크기가 바뀐 도형도 똑바로 선 같은 크기의 상자가 아니라 실제로 그린 상자 안에 흩뿌립니다."
 random place inside [i]{shape}[/i],[i]{shape}[/i] 안의 무작위 위치
 The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,뿌릴 대상인 CollisionShape2D입니다. 생성 구역을 표시하는 Area2D에 달린 것입니다.
 Random Place Off Screen Edge,화면 가장자리 밖의 무작위 위치

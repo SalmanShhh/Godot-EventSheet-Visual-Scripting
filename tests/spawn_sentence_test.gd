@@ -59,15 +59,24 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 	# Every placement word, as the exact expression it writes.
 	passed = _check("place of a node", str(by_id.get("PlaceAtNode", ACEDescriptor.new()).codegen_template),
 		"{node}.global_position") and passed
-	passed = _check("a random place along a path samples the curve by distance",
+	# THE FRAME, not merely the maths. A curve is drawn in its path's own space and a shape is
+	# measured in its own, so both are handed back through to_global: adding a local point to
+	# global_position is right only while nothing above the node is rotated or scaled, and a rotated
+	# spawn zone is the commonest thing in a level there is.
+	passed = _check("a random place along a path samples the curve by distance, in the world's frame",
 		str(by_id.get("PlaceAlongPath", ACEDescriptor.new()).codegen_template),
-		"({path}.global_position + {path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))") and passed
+		"{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))") and passed
 	passed = _check("a random place inside a shape measures the shape rather than retrying",
 		str(by_id.get("PlaceInsideShape", ACEDescriptor.new()).codegen_template),
-		"({shape}.global_position + (({shape}.shape as RectangleShape2D).size * Vector2(randf() - 0.5, randf() - 0.5)"
+		"{shape}.to_global(({shape}.shape as RectangleShape2D).size * Vector2(randf() - 0.5, randf() - 0.5)"
 		+ " if {shape}.shape is RectangleShape2D"
 		+ " else (Vector2.RIGHT.rotated(randf() * TAU) * ({shape}.shape as CircleShape2D).radius * sqrt(randf())"
-		+ " if {shape}.shape is CircleShape2D else Vector2.ZERO)))") and passed
+		+ " if {shape}.shape is CircleShape2D else Vector2.ZERO))") and passed
+	# A local point ADDED to global_position is the bug this replaced; neither row may go back to it.
+	for placement_id: String in ["PlaceAlongPath", "PlaceInsideShape"]:
+		passed = _check("%s does not add a local point to a global one" % placement_id,
+			str(by_id.get(placement_id, ACEDescriptor.new()).codegen_template).contains(".global_position +"),
+			false) and passed
 	passed = _check("the shape sampling says what it does and does not do",
 		str(by_id.get("PlaceInsideShape", ACEDescriptor.new()).description).contains("no rejection sampling"), true) and passed
 	passed = _check("a random place off a screen edge answers in world coordinates",

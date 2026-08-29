@@ -109,6 +109,11 @@ Six more say the copies in the plural, because a game that spawns one thing soon
   circle from its own radius, evenly, in one step. There is no rejection sampling and no retry loop,
   so the line costs the same every time it runs. Any other shape gives its own centre instead of a
   guess.
+- **The two sampling words answer in the world's frame.** A curve is drawn in its Path2D's own space
+  and a shape is measured in its CollisionShape2D's, so both hand the point back through `to_global`
+  rather than adding it to `global_position`. Adding is only right while nothing above the node is
+  rotated or scaled - and a spawn zone turned to face down a corridor is the commonest thing in a
+  level there is.
 - **Nothing here needs the plugin at runtime.** Every row compiles to `instantiate()`, `add_child`,
   `call_deferred`, `randf()` and arithmetic. Uninstall the editor and the game still builds.
 
@@ -555,8 +560,8 @@ it; removing after a delay instead is the other way, and the note says so.
 | Spawn A Copy Safely | The same spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
 | Make A Copy | Makes a copy and names it, without adding it to the tree. | `var {name} = {scene}.instantiate()` |
 | Place Of | Gives a node's own place in the world. | `{node}.global_position` |
-| Random Place Along Path | Gives a random point along a Path2D's curve. | `({path}.global_position + {path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
-| Random Place Inside Shape | Gives a random point inside a collision shape. | `({shape}.global_position + …)` |
+| Random Place Along Path | Gives a random point along a Path2D's curve. | `{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
+| Random Place Inside Shape | Gives a random point inside a collision shape. | `{shape}.to_global(…)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
 | Remove Now | Removes the object at the end of this frame. | `{object}.queue_free()` |
 | Remove After Seconds | Removes the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
@@ -700,8 +705,13 @@ Last One Removed on that crowd drop the key.
 - **A shape that is not a rectangle or a circle gives its centre.** That is deliberate rather than a
   bug: scattering evenly inside an arbitrary polygon is a loop, not an expression. Use a rectangle or
   a circle for the zone, or write the loop yourself.
-- **Random Place Along Path needs a baked curve.** A Path2D with an empty curve has no length, and
-  the row gives the path's own position. Draw the curve first.
+- **Random Place Along Path needs a baked curve.** A Path2D with an empty curve has no length, so
+  the row gives the path's own position - and Godot prints `No points in Curve2D.` every single time
+  the line is evaluated, which on a per-frame spawner is a flooded log rather than a quiet
+  degradation. Draw the curve first.
+- **A rotated spawn zone stays rotated.** Both sampling words go through `to_global`, so the point
+  comes out inside the shape you actually drew and along the curve where it actually runs, whatever
+  the node or its parents are turned or scaled to.
 - **Spawning every tick fills the tree fast.** Put a cooldown, a counter or a Once At A Time condition
   above the row - a spawn is cheap, ten thousand of them are not.
 - **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody

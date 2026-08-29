@@ -5308,11 +5308,11 @@ Place Of,的位置
 place of [i]{node}[/i],[i]{node}[/i] 的位置
 "The node to read the place of - a Marker2D you dropped in the scene, a spawn point, the player.",要读取位置的节点 - 你在场景里放的 Marker2D、一个出生点、玩家。
 Random Place Along Path,路径上的随机位置
-"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.",给出 Path2D 曲线上某处的随机点。点是按行进距离选的，而不是按曲线段，所以一段长直路与一个急弯的概率完全相同。
+"Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner. A curve is drawn in the path's own space, so the point is handed back through to_global and comes out where the curve really is, even under a rotated or scaled parent.",在 Path2D 曲线上的某处给出一个随机点。这个点是按走过的距离来选的，而不是按曲线分段，所以一段长直线和一个急弯的概率完全一样。曲线是画在路径自己的空间里的，所以这个点会经由 to_global 返回，即使父节点被旋转或缩放，它也会落在曲线真正所在的位置。
 random place along [i]{path}[/i],[i]{path}[/i] 上的随机位置
-The Path2D whose curve to pick a point on.,要在其曲线上取点的 Path2D。
+"The Path2D whose curve to pick a point on. Draw the curve first: an empty one has no length, and Godot prints an error every time the line is evaluated.",要在其曲线上取点的 Path2D。请先画好曲线：空曲线没有长度，而且每次求值这一行时 Godot 都会打印一条错误。
 Random Place Inside Shape,形状内的随机位置
-"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.",给出碰撞形状内的随机点 - 也就是你围着生成区画的那个 Area2D。矩形和圆会直接按尺寸一步均匀撒点，既不做拒绝采样也不重试；其他形状则给出自己的中心，而不是猜一个。
+"Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess. The measurement is in the shape's own space and is handed back through to_global, so a rotated or scaled shape scatters inside the box you drew rather than inside an upright one of the same size.",在一个碰撞形状内部给出一个随机点 - 也就是你围着生成区域画的那个 Area2D。矩形和圆形直接按自身尺寸一步算出均匀的散布，没有拒绝采样，也没有重试；其他形状则给出自己的中心，而不是一个猜测。测量是在形状自己的空间里做的，点会经由 to_global 返回，所以旋转或缩放过的形状会散布在你真正画出的那个框里，而不是一个同样大小的正框里。
 random place inside [i]{shape}[/i],[i]{shape}[/i] 内的随机位置
 The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.,要在其内撒点的 CollisionShape2D - 即标记生成区的那个 Area2D 上的那一个。
 Random Place Off Screen Edge,屏幕边缘外的随机位置

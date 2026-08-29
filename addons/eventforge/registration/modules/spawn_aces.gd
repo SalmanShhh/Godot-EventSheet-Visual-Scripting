@@ -27,6 +27,14 @@
 # screen edge. They compose - any of them can go in any field that takes a position - and none of
 # them needs this module to be installed to keep working, because each is plain GDScript.
 #
+# AND EVERY ONE OF THEM ANSWERS IN THE WORLD'S FRAME. A curve is drawn in its Path2D's own space and
+# a shape is measured in its CollisionShape2D's, so the two that sample a local point hand it back
+# through `to_global` rather than adding it to `global_position`. Adding is right only while nothing
+# above the node is rotated or scaled: under a parent turned a quarter turn, a point fifty pixels
+# along a curve came out fifty pixels to the RIGHT of the path instead of below it, and a rotated
+# collision shape scattered inside an upright box of the same size rather than inside the one drawn.
+# `to_global` is the one-token spelling of the transform that was missing.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant); this file
 # only changes where the descriptors are AUTHORED.
 @tool
@@ -89,10 +97,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		CATEGORY, "place of [i]{node}[/i]", "Node2D")
 		.described("Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet."))
 	descriptors.append(F.make_descriptor("Core", "PlaceAlongPath", "Random Place Along Path", ACEDescriptor.ACEType.EXPRESSION,
-		"({path}.global_position + {path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))", "",
-		[F.make_param("path", "String", "self", "Path", "The Path2D whose curve to pick a point on.", "scene_node")],
+		"{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))", "",
+		[F.make_param("path", "String", "self", "Path", "The Path2D whose curve to pick a point on. Draw the curve first: an empty one has no length, and Godot prints an error every time the line is evaluated.", "scene_node")],
 		CATEGORY, "random place along [i]{path}[/i]", "Path2D")
-		.described("Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner."))
+		.described("Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner. A curve is drawn in the path's own space, so the point is handed back through to_global and comes out where the curve really is, even under a rotated or scaled parent."))
 	# HOW THIS SAMPLES, said plainly rather than left to the reader: rectangles and circles are
 	# sampled from their own measurements in one step - no rejection sampling, no retry loop, so the
 	# line costs the same every time it runs. The circle takes the square root of the roll so points
@@ -100,13 +108,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# gives the shape's own centre, because guessing at a polygon's inside from one expression would
 	# be a loop pretending to be a value.
 	descriptors.append(F.make_descriptor("Core", "PlaceInsideShape", "Random Place Inside Shape", ACEDescriptor.ACEType.EXPRESSION,
-		"({shape}.global_position + (({shape}.shape as RectangleShape2D).size * Vector2(randf() - 0.5, randf() - 0.5)"\
+		"{shape}.to_global(({shape}.shape as RectangleShape2D).size * Vector2(randf() - 0.5, randf() - 0.5)"\
 		+ " if {shape}.shape is RectangleShape2D"\
 		+ " else (Vector2.RIGHT.rotated(randf() * TAU) * ({shape}.shape as CircleShape2D).radius * sqrt(randf())"\
-		+ " if {shape}.shape is CircleShape2D else Vector2.ZERO)))", "",
+		+ " if {shape}.shape is CircleShape2D else Vector2.ZERO))", "",
 		[F.make_param("shape", "String", "self", "Shape", "The CollisionShape2D to scatter inside - the one on the Area2D marking the spawn zone.", "scene_node")],
 		CATEGORY, "random place inside [i]{shape}[/i]", "CollisionShape2D")
-		.described("Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess."))
+		.described("Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess. The measurement is in the shape's own space and is handed back through to_global, so a rotated or scaled shape scatters inside the box you drew rather than inside an upright one of the same size."))
 	descriptors.append(F.make_descriptor("Core", "PlaceAtScreenEdge", "Random Place Off Screen Edge", ACEDescriptor.ACEType.EXPRESSION,
 		"(get_viewport().get_canvas_transform().affine_inverse() * (Vector2(randf() * get_viewport_rect().size.x,"\
 		+ " -{margin} if randi() % 2 == 0 else get_viewport_rect().size.y + {margin})"\
