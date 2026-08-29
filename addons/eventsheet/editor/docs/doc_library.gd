@@ -19,7 +19,7 @@
 #    "unlisted": [id]}                     pages the index forgot - a build-check output
 #
 # Everything is cached per session behind a single load: a page is read from disk on demand (the
-# whole corpus is ~2 MB of Markdown and a reader opens one page at a time), while the manifest -
+# whole corpus is about 4 MB of Markdown and a reader opens one page at a time), while the manifest -
 # which the tree needs immediately - is parsed once.
 @tool
 class_name EventSheetDocLibrary
@@ -47,7 +47,7 @@ const FIGURES_HEADER := "[eventsheet-figures v1]"
 ## rebuild on every suite run, and this reads every page in the corpus.
 ##
 ## It is baked because of what it costs otherwise: building it in the editor means reading the whole
-## 3.2 MB corpus and splitting all of it into words, on the reader's FIRST KEYSTROKE. Baked, a
+## 4 MB corpus and splitting all of it into words, on the reader's FIRST KEYSTROKE. Baked, a
 ## keystroke searches a table that was read once and touches no file at all.
 ##
 ## WHAT IT COSTS, measured rather than estimated, because this is derived data stored a second time
@@ -110,14 +110,7 @@ static func manifest() -> Dictionary:
 		return _manifest
 	_manifest_loaded = true
 	_manifest = {}
-	var text: String = _read(MANIFEST_PATH)
-	if text.is_empty():
-		return _manifest
-	var newline: int = text.find("\n")
-	if newline < 0 or text.substr(0, newline).strip_edges() != MANIFEST_HEADER:
-		push_warning("EventSheetDocLibrary: %s is not an %s bundle." % [MANIFEST_PATH, MANIFEST_HEADER])
-		return _manifest
-	var payload: Variant = str_to_var(text.substr(newline + 1))
+	var payload: Variant = payload_of(MANIFEST_PATH, MANIFEST_HEADER)
 	if payload is Dictionary:
 		_manifest = payload as Dictionary
 	return _manifest
@@ -131,14 +124,7 @@ static func gate_verdicts() -> Dictionary:
 		return _gates
 	_gates_loaded = true
 	_gates = {}
-	var text: String = _read(FIGURES_PATH)
-	if text.is_empty():
-		return _gates
-	var newline: int = text.find("\n")
-	if newline < 0 or text.substr(0, newline).strip_edges() != FIGURES_HEADER:
-		push_warning("EventSheetDocLibrary: %s is not an %s file." % [FIGURES_PATH, FIGURES_HEADER])
-		return _gates
-	var payload: Variant = str_to_var(text.substr(newline + 1))
+	var payload: Variant = payload_of(FIGURES_PATH, FIGURES_HEADER)
 	if payload is Dictionary:
 		_gates = (payload as Dictionary).get("gates", {}) as Dictionary
 	return _gates
@@ -151,15 +137,23 @@ static func search_entries() -> Array:
 		return _search
 	_search_loaded = true
 	_search = []
-	var payload: Variant = _payload(SEARCH_PATH, SEARCH_HEADER)
+	var payload: Variant = payload_of(SEARCH_PATH, SEARCH_HEADER)
 	if payload is Dictionary:
 		_search = (payload as Dictionary).get("pages", []) as Array
 	return _search
 
 
 ## A versioned-text file's payload, or null when it is absent or carries a header this build does
-## not know. One reader for both baked files, so a third one needs no third copy of this.
-static func _payload(path: String, header: String) -> Variant:
+## not know. THE ONE READER for every baked file in the bundle - the manifest, the figure verdicts
+## and the search index - so a fourth baked file needs no fourth copy of this.
+##
+## An older bundle is a NULL, never an error. The bundle format grows: the search index was added
+## beside the manifest, and the next one will be added the same way. A build that ships a header
+## this reader does not know, or does not ship the file at all, has to degrade to "there is no baked
+## table here" - the manifest falls back to an empty tree, the verdicts to gating every fence live, the
+## search index to indexing each page on demand. Regenerating the bundle is the fix; taking the
+## editor down is never one.
+static func payload_of(path: String, header: String) -> Variant:
 	var text: String = _read(path)
 	if text.is_empty():
 		return null

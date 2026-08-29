@@ -38,6 +38,55 @@ static func run() -> bool:
 	all_passed = _test_ace_reference() and all_passed
 	all_passed = _test_baked_index() and all_passed
 	all_passed = _test_never_empty() and all_passed
+	all_passed = _test_older_bundle_degrades() and all_passed
+	return all_passed
+
+
+## AN OLDER BUNDLE REGENERATES, IT DOES NOT CRASH. The bundle format grows - the search index was
+## added beside the manifest that shipped before it - so a plugin can be handed a bundle written by
+## an older build, or one whose header this build does not know. Every baked file is read through
+## one reader, and its contract is that either case answers "there is no baked table here" so the
+## caller falls back to the live path.
+##
+## Written against files under user:// rather than against the shipped bundle, because the assertion
+## is about the RULE. Moving the installed bundle aside to test it would leave a repository without
+## one if the process died mid-test.
+static func _test_older_bundle_degrades() -> bool:
+	var all_passed: bool = true
+	var header := "[eventsheet-search v1]"
+	var missing := "user://doc_search_test_absent.esdoc"
+	if FileAccess.file_exists(missing):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(missing))
+	all_passed = _check("a baked file that is not there reads as no payload",
+		EventSheetDocLibrary.payload_of(missing, header) == null, true) and all_passed
+
+	# A bundle from a LATER format: the payload is perfectly good text, and the header is the only
+	# thing that says this reader must not trust it.
+	var newer := "user://doc_search_test_newer.esdoc"
+	var newer_file: FileAccess = FileAccess.open(newer, FileAccess.WRITE)
+	if newer_file == null:
+		return _check("the fixture bundle is writable", false, true) and all_passed
+	newer_file.store_string("[eventsheet-search v2]\n{\n\"pages\": []\n}")
+	newer_file.close()
+	all_passed = _check("a header this build does not know reads as no payload",
+		EventSheetDocLibrary.payload_of(newer, header) == null, true) and all_passed
+
+	# And the header this build DOES know still parses, so the guard is about the version rather
+	# than about refusing everything.
+	var current := "user://doc_search_test_current.esdoc"
+	var current_file: FileAccess = FileAccess.open(current, FileAccess.WRITE)
+	if current_file == null:
+		return _check("the fixture bundle is writable", false, true) and all_passed
+	current_file.store_string("%s\n{\n\"pages\": []\n}" % header)
+	current_file.close()
+	var payload: Variant = EventSheetDocLibrary.payload_of(current, header)
+	all_passed = _check("the header this build knows still parses", payload is Dictionary, true) and all_passed
+	if payload is Dictionary:
+		all_passed = _check("the parsed payload is the one the file carried",
+			(payload as Dictionary).has("pages"), true) and all_passed
+
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(newer))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(current))
 	return all_passed
 
 
