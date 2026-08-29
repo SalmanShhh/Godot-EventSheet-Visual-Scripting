@@ -384,8 +384,11 @@ from that, and they are the reason to reach for this rather than for a branch:
 - **Nothing new is registered.** The table is a `const` in the sheet's own head. There is no
   registry, no manager node and no autoload, and deleting the plugin leaves the same dictionary and
   the same three lines behind.
-- **The head still says what this sheet spawns.** The spawns band is read off the emitted line
-  rather than off a row's name, so each declared scene appears on it in its own right.
+- **The head says the row's own words.** The spawns band is read off the emitted line rather than
+  off a row's name, so a table indexed in the Scene field reads there as `KINDS[kind]`, with no file
+  behind it to click - which is the honest reading, because which scene it is is decided as the game
+  runs. The scenes themselves are named on the Declare row that holds the table, which is where they
+  were chosen.
 
 Keep it a table only while the kinds really are interchangeable. A kind that needs its own extra
 setup rows is a second event, not another entry, and a chain of `if kind == …` inside one event is
