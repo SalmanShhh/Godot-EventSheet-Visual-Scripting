@@ -86,6 +86,10 @@ static func build() -> bool:
 		"\tif _next >= _entries.size():",
 		"\t\t_running = false",
 		"\t\t_finished = true",
+		"\t\t# The plan has played out, so there is no clock left to keep - stop paying for the tick.",
+		"\t\t# Turned off BEFORE the trigger fires, so a handler that chains the next wave with Start",
+		"\t\t# Encounter turns processing back on and is not undone by this line.",
+		"\t\tset_process(false)",
 		"\t\ton_encounter_finished.emit()",
 		"",
 		"# The pooling seam. Nothing here depends on the Object Pool pack: the node given to Use Object",
@@ -225,7 +229,10 @@ static func build() -> bool:
 		"if auto_start:",
 		"\t# Deferred so the first beat cannot spawn before the host's sheet has connected its",
 		"\t# triggers - the host readies AFTER this child, and On Entry Spawned would be missed.",
-		"\tstart_encounter.call_deferred()"
+		"\tstart_encounter.call_deferred()",
+		"# A timeline that is not running has no clock to advance; Start Encounter is what wakes it,",
+		"# including the deferred one above.",
+		"set_process(_running)"
 	]))
 	on_ready.actions.append(on_ready_body)
 	sheet.events.append(on_ready)
@@ -273,18 +280,18 @@ static func build() -> bool:
 	Lib.append_function(sheet, "clear_encounter", "Clear Encounter", "Encounter Timeline",
 		"Empties the plan and rewinds everything - no beats, clock at 0, nothing running. Load Encounter does this for you; call it yourself before building a plan out of Add Encounter Entry rows.",
 		[],
-		"_entries.clear()\n_clock = 0.0\n_next = 0\n_spawned = 0\n_running = false\n_finished = false")
+		"_entries.clear()\n_clock = 0.0\n_next = 0\n_spawned = 0\n_running = false\n_finished = false\n# Nothing loaded and nothing running - no frame has any work to do until a plan is started.\nset_process(false)")
 
 	# --- Running ---
 	Lib.append_function(sheet, "start_encounter", "Start Encounter", "Encounter Timeline",
 		"Runs the plan from the top: the clock restarts at 0, the spawn tally resets, and each beat fires as its time arrives. An encounter with no beats finishes on its very next frame, so On Encounter Finished still tells you the wave is over.",
 		[],
-		"_clock = 0.0\n_next = 0\n_spawned = 0\n_running = true\n_finished = false")
+		"_clock = 0.0\n_next = 0\n_spawned = 0\n_running = true\n_finished = false\n# A running encounter needs the frames it counts its clock in.\nset_process(true)")
 
 	Lib.append_function(sheet, "stop_encounter", "Stop Encounter", "Encounter Timeline",
 		"Freezes the encounter where it stands - the clock stops and no further beat spawns. Already-spawned nodes are left alone (they are yours). Elapsed Seconds keeps its value, so a paused wave can be inspected; Start Encounter restarts from the top.",
 		[],
-		"_running = false")
+		"_running = false\n# A frozen encounter costs nothing per frame; Start Encounter turns the clock back on.\nset_process(false)")
 
 	Lib.append_function(sheet, "use_pool_node", "Use Object Pool Node", "Encounter Timeline",
 		"Spawns through THIS pool node instead of searching for the ObjectPool autoload - for a per-arena pool, or a pool you wrote yourself. The contract is three functions: has_pool(name), create_pool(name, scene_path, prewarm) and spawn(name); a node missing any of them is ignored and the timeline instantiates scenes as usual. Pass nothing to go back to the autoload.",
@@ -472,7 +479,10 @@ static func build() -> bool:
 		"\t_next = int(state.get(\"next\", 0))",
 		"\t_spawned = int(state.get(\"spawned\", 0))",
 		"\t_running = bool(state.get(\"running\", false))",
-		"\t_finished = bool(state.get(\"finished\", false))"
+		"\t_finished = bool(state.get(\"finished\", false))",
+		"\t# A save taken mid-wave reopens mid-wave, so the clock follows the state that came back",
+		"\t# rather than the state the scene was authored with.",
+		"\tset_process(_running)"
 	]))
 	sheet.events.append(persistence)
 

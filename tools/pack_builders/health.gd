@@ -178,7 +178,17 @@ static func build() -> bool:
 		"\tvar out: Array = []",
 		"\tfor entry: Array in indexed:",
 		"\t\tout.append(entry[0])",
-		"\treturn out"
+		"\treturn out",
+		"",
+		"# Whether any pool still has something to decay. Health itself never changes on its own -",
+		"# damage, healing and invincibility are all answered the moment they are asked - so a",
+		"# decaying shield is the only reason this behavior needs a frame at all.",
+		"func _any_pool_decaying() -> bool:",
+		"\tfor pool_name: String in health_pools.keys():",
+		"\t\tvar pool: HealthPool = health_pools[pool_name]",
+		"\t\tif pool.amount > 0.0 and pool.decay_rate > 0.0:",
+		"\t\t\treturn true",
+		"\treturn false"
 	]))
 	sheet.events.append(block)
 
@@ -189,7 +199,10 @@ static func build() -> bool:
 	on_ready.trigger_id = "OnReady"
 	var on_ready_body: RawCodeRow = RawCodeRow.new()
 	on_ready_body.code = "\n".join(PackedStringArray([
-		"current_health = max_health"
+		"current_health = max_health",
+		"# A node with no shield or armour has nothing to count down, so it pays for no frame.",
+		"# Any action that gives it a decaying pool turns the tick back on.",
+		"set_process(false)"
 	]))
 	on_ready.actions.append(on_ready_body)
 	sheet.events.append(on_ready)
@@ -201,6 +214,7 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if health_pools.is_empty():",
+		"\tset_process(false)",
 		"\treturn",
 		"var depleted: Array = []",
 		"for pool_name in _sorted_pool_keys():",
@@ -211,7 +225,10 @@ static func build() -> bool:
 		"\t\t\tdepleted.append(pool_name)",
 		"for pool_name in depleted:",
 		"\tlast_trigger_pool_type = pool_name",
-		"\ton_health_pool_depleted.emit()"
+		"\ton_health_pool_depleted.emit()",
+		"# Asked LAST, so a pool granted by an On Health Pool Depleted handler this very frame",
+		"# keeps the tick alive: once nothing is decaying, the countdown switches itself off.",
+		"set_process(_any_pool_decaying())"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -339,6 +356,8 @@ static func build() -> bool:
 		"\treturn",
 		"var pool: HealthPool = _get_pool(type)",
 		"pool.amount = pool.amount + amount",
+		"# A pool that might decay needs the frame back; the tick stops itself once none does.",
+		"set_process(true)",
 		"last_trigger_pool_type = type",
 		"on_health_pool_added.emit()"
 	])), "Add [b]{amount}[/b] to the [b]{type}[/b] pool")
@@ -348,6 +367,8 @@ static func build() -> bool:
 		[["type", "String"], ["amount", "float"]], "\n".join(PackedStringArray([
 		"var pool: HealthPool = _get_pool(type)",
 		"var new_amount: float = maxf(0.0, amount)",
+		"# A pool that might decay needs the frame back; the tick stops itself once none does.",
+		"set_process(true)",
 		"if new_amount > pool.amount:",
 		"\tpool.amount = new_amount",
 		"\tlast_trigger_pool_type = type",
@@ -373,7 +394,9 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_health_pool_decay_rate", "Set Health Pool Decay Rate", "Health",
 		"Sets a pool's per-second decay rate.",
 		[["type", "String"], ["rate", "float"]], "\n".join(PackedStringArray([
-		"_get_pool(type).decay_rate = maxf(0.0, rate)"
+		"_get_pool(type).decay_rate = maxf(0.0, rate)",
+		"# A pool that might decay needs the frame back; the tick stops itself once none does.",
+		"set_process(true)"
 	])), "Set [b]{type}[/b] pool decay rate to [b]{rate}[/b]")
 
 	Lib.append_function(sheet, "set_health_pool_absorption_rate", "Set Health Pool Absorption Rate", "Health",
@@ -387,7 +410,9 @@ static func build() -> bool:
 		[["type", "String"], ["decay_rate", "float"], ["absorption_rate", "float"]], "\n".join(PackedStringArray([
 		"var pool: HealthPool = _get_pool(type)",
 		"pool.decay_rate = maxf(0.0, decay_rate)",
-		"pool.absorption_rate = maxf(0.0, absorption_rate)"
+		"pool.absorption_rate = maxf(0.0, absorption_rate)",
+		"# A pool that might decay needs the frame back; the tick stops itself once none does.",
+		"set_process(true)"
 	])), "Set [b]{type}[/b] pool rates to decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b]")
 
 	Lib.append_function(sheet, "set_health_pool_priority", "Set Health Pool Priority", "Health",
@@ -403,7 +428,9 @@ static func build() -> bool:
 		"pool.amount = maxf(0.0, amount)",
 		"pool.decay_rate = maxf(0.0, decay_rate)",
 		"pool.absorption_rate = maxf(0.0, absorption_rate)",
-		"pool.priority = priority"
+		"pool.priority = priority",
+		"# A pool that might decay needs the frame back; the tick stops itself once none does.",
+		"set_process(true)"
 	])), "Setup [b]{type}[/b] pool: [b]{amount}[/b] HP, decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b], priority [b]{priority}[/b]")
 
 	Lib.append_function(sheet, "revive", "Revive", "Health",
@@ -451,7 +478,10 @@ static func build() -> bool:
 		"\t\tpool.decay_rate = float(data.get(\"decay_rate\", 0.0))",
 		"\t\tpool.absorption_rate = float(data.get(\"absorption_rate\", 1.0))",
 		"\t\tpool.priority = float(data.get(\"priority\", 0.0))",
-		"\t\thealth_pools[pool_name] = pool"
+		"\t\thealth_pools[pool_name] = pool",
+		"\t# Restored pools may be mid-decay, so the tick comes back on; it stops itself again",
+		"\t# on the first frame nothing is decaying.",
+		"\tset_process(true)"
 	]))
 	sheet.events.append(persistence)
 

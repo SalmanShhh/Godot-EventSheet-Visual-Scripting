@@ -24,7 +24,6 @@ static func build() -> bool:
 		"deceleration": {"type": "float", "default": 2400.0, "exported": true, "attributes": {"tooltip": "Slow-down rate when axis released (px/s^2)."}},
 		"allow_sliding": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "Slide along solids instead of hard-stop."}},
 		"default_controls": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "Read ui_left/right/up/down each tick (keyboard+gamepad)."}},
-		"enabled": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "Master on/off."}},
 		"constrain_to_layout": {"type": "bool", "default": false, "exported": true, "attributes": {"tooltip": "Clamp inside the viewport/constraint bounds."}},
 		"mouse_smoothing": {"type": "float", "default": 0.15, "exported": false},
 		"has_mouse_target": {"type": "bool", "default": false, "exported": false},
@@ -57,9 +56,24 @@ static func build() -> bool:
 	about.text = "Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D - event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
 	sheet.events.append(about)
 
-	# Exported int enums + Vector2 / Rect2 runtime state - declared verbatim at class level.
+	# The master switch, the exported int enums and the Vector2 / Rect2 runtime state - declared
+	# verbatim at class level. `enabled` is written here rather than through sheet.variables so it
+	# can carry a setter (the variables dict has no spelling for one).
 	var decls: RawCodeRow = RawCodeRow.new()
 	decls.code = "\n".join(PackedStringArray([
+		"## Master on/off.",
+		"@export var enabled: bool = true:",
+		"\tset(value):",
+		"\t\tenabled = value",
+		"\t\t# Every write lands here - a sheet's Set Enabled action, the Inspector, another script -",
+		"\t\t# so the physics tick follows the switch whoever flipped it. A switched-off cursor is",
+		"\t\t# steering nothing and pays for no frame.",
+		"\t\tif not value:",
+		"\t\t\t# The tick's own first-idle frame used to zero the report; with the tick parked the",
+		"\t\t\t# write happens here instead, so Speed and Is Moving never answer with the last",
+		"\t\t\t# frame the cursor moved.",
+		"\t\t\treport_vel = Vector2.ZERO",
+		"\t\tset_physics_process(value)",
 		"## Movement axis constraint.",
 		"@export_enum(\"up_down\", \"left_right\", \"four\", \"eight\") var direction_mode: int = 3",
 		"## Point = origin inside shape; Overlap = shapes overlap.",
@@ -301,6 +315,16 @@ static func build() -> bool:
 		"\treturn Rect2(0, 0, 1920, 1080)"
 	]))
 	sheet.events.append(block)
+
+	# A cursor that was authored switched off is not steering anything, so it does not pay for a
+	# physics frame either - Set Enabled turns the tick back on.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_physics_process(enabled)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	# Physics-tick integrator (5-stage order).
 	var tick: EventRow = EventRow.new()
@@ -652,6 +676,8 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_cursor_enabled", "Set Enabled", "Virtual Cursor",
 		"Master on/off.",
 		[["is_enabled", "bool"]], "\n".join(PackedStringArray([
+		"# The property's own setter parks the tick and zeroes the movement report, so the verb",
+		"# and a sheet's Set Enabled property write behave identically.",
 		"enabled = is_enabled"
 	])))
 

@@ -28,7 +28,13 @@ signal bound_hit(side: String)
 ## Half the host's height in pixels (edge binding uses it; match your sprite).
 @export var half_height: float = 16.0
 ## Master on/off - Set Bound Enabled flips it at runtime.
-@export var bound_enabled: bool = true
+@export var bound_enabled: bool = true:
+	set(value):
+		bound_enabled = value
+		# Every write lands here - a sheet's Set Bound Enabled action, the Inspector, another
+		# script - so the clamp stops and restarts with the knob whoever switched it. Only
+		# processing is synced: the pressed-side memory belongs to the verb that clears it.
+		set_physics_process(value)
 
 # --- Internal state ---
 # The custom rectangle (world space) used when bound_space is "custom" - Rect2 cannot
@@ -45,6 +51,11 @@ func _bound_rect() -> Rect2:
 	if viewport == null:
 		return custom_bounds
 	return viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()
+
+func _ready() -> void:
+	# The clamp only runs while binding is on - a host authored with Bound off costs nothing
+	# per physics frame until Set Bound Enabled turns it on.
+	set_physics_process(bound_enabled)
 
 func _physics_process(delta: float) -> void:
 	if not bound_enabled or host == null:
@@ -85,6 +96,9 @@ func set_bound_enabled(enabled: bool) -> void:
 	bound_enabled = enabled
 	if not enabled:
 		_pressed_sides = {}
+	# Nothing to clamp while binding is off, and Is At Bound reads the cleared sides above,
+	# so it keeps answering correctly with the physics frame switched off.
+	set_physics_process(enabled)
 
 ## @ace_action
 ## @ace_name("Set Custom Bounds")

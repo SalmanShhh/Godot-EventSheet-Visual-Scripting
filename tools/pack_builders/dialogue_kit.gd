@@ -120,6 +120,16 @@ static func build() -> bool:
 	]))
 	sheet.events.append(block)
 
+	# Both per-frame jobs below - the typewriter and the advance-button poll - only mean anything
+	# while a conversation is up, and no conversation is up until Start Dialogue.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(dialogue_active)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# The typewriter + the one-button advance, per frame while a conversation runs.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -153,6 +163,8 @@ static func build() -> bool:
 		"if dialogue_active or line_queue.is_empty():",
 		"\treturn",
 		"dialogue_active = true",
+		"# A conversation is on screen now: the typewriter and the advance button both need the frame.",
+		"set_process(true)",
 		"_set_panel_visible(true)",
 		"on_dialogue_started.emit()",
 		"_show_next_line()"
@@ -181,6 +193,9 @@ static func build() -> bool:
 		"typing = false",
 		"line_queue.clear()",
 		"_set_panel_visible(false)",
+		"# A closed panel types nothing and listens for nothing. Turned off BEFORE the trigger, so a",
+		"# handler that opens the next conversation from here turns the frame back on for itself.",
+		"set_process(false)",
 		"on_dialogue_finished.emit()"
 	])))
 

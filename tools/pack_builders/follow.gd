@@ -73,6 +73,18 @@ static func build() -> bool:
 		"\treturn from + (contact - (to - from).normalized() * 0.5 - world_from)"
 	]))
 	sheet.events.append(signal_block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# A chase has to watch its target every frame while it is on, so processing tracks the one",
+		"# state that turns it off: Stop Following. A follow authored as stopped costs nothing until",
+		"# Start Following or Follow Group.",
+		"set_process(following)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -129,7 +141,10 @@ static func build() -> bool:
 		"target_path = path",
 			"target_group = \"\"",
 		"following = true",
-		"history = []"
+		"history = []",
+		"# The chase is on again, and a chase reads its target every frame - the recorded path",
+		"# delayed mode replays is gathered by that same tick.",
+		"set_process(true)"
 	]))
 	start_following_fn.events.append(start_following_fn_body)
 	sheet.functions.append(start_following_fn)
@@ -150,7 +165,10 @@ static func build() -> bool:
 		"target_group = group",
 		"target_path = \"\"",
 		"following = true",
-		"history = []"
+		"history = []",
+		"# The chase is on again, and a chase reads its target every frame - the recorded path",
+		"# delayed mode replays is gathered by that same tick.",
+		"set_process(true)"
 	]))
 	follow_group_fn.events.append(follow_group_fn_body)
 	sheet.functions.append(follow_group_fn)
@@ -163,7 +181,10 @@ static func build() -> bool:
 	stop_following_fn.description = "Stops trailing the target."
 	var stop_following_fn_body: RawCodeRow = RawCodeRow.new()
 	stop_following_fn_body.code = "\n".join(PackedStringArray([
-		"following = false"
+		"following = false",
+		"# Nothing is being trailed any more, so the frame that watched the target is wasted work -",
+		"# Start Following and Follow Group turn it back on, and both start a fresh history anyway.",
+		"set_process(false)"
 	]))
 	stop_following_fn.events.append(stop_following_fn_body)
 	sheet.functions.append(stop_following_fn)

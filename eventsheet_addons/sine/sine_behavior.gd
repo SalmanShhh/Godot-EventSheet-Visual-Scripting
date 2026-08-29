@@ -14,27 +14,36 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("SineBehavior behavior requires a Node2D parent.")
 
-## When off, pauses the oscillation and leaves the host in place.
-@export var active: bool = true
-var base_alpha: float = 1.0
-var base_captured: bool = false
+## Which host property the wave drives - position, size, angle, opacity, or value-only.
+@export_enum("horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only") var movement: String = "horizontal"
+## Waveform shape of the oscillation - sine, triangle, sawtooth, reverse-sawtooth, or square.
+@export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
+## Seconds for one full wave cycle.
+@export var period: float = 4.0
+## Peak strength of the oscillation (pixels, degrees, or scale/opacity factor by movement).
+@export var magnitude: float = 50.0
+## Phase offset in degrees - shifts where in the cycle the wave starts.
+@export var phase_degrees: float = 0.0
+var wave_value: float = 0.0
+var time: float = 0.0
+var base_x: float = 0.0
+var base_y: float = 0.0
 var base_rotation: float = 0.0
 var base_scale_x: float = 1.0
 var base_scale_y: float = 1.0
-var base_x: float = 0.0
-var base_y: float = 0.0
-## Peak strength of the oscillation (pixels, degrees, or scale/opacity factor by movement).
-@export var magnitude: float = 50.0
-## Which host property the wave drives - position, size, angle, opacity, or value-only.
-@export_enum("horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only") var movement: String = "horizontal"
-## Seconds for one full wave cycle.
-@export var period: float = 4.0
-## Phase offset in degrees - shifts where in the cycle the wave starts.
-@export var phase_degrees: float = 0.0
-var time: float = 0.0
-## Waveform shape of the oscillation - sine, triangle, sawtooth, reverse-sawtooth, or square.
-@export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
-var wave_value: float = 0.0
+var base_alpha: float = 1.0
+var base_captured: bool = false
+## When off, pauses the oscillation and leaves the host in place.
+@export var active: bool = true:
+	set(value):
+		active = value
+		# A paused wave costs nothing per frame; turning it back on restores the tick.
+		set_process(value)
+
+func _ready() -> void:
+	# Processing runs only while the wave does - an oscillation authored inactive costs
+	# nothing per frame until Set Sine Active turns it on.
+	set_process(active)
 
 func _process(delta: float) -> void:
 	if not active or host == null:
@@ -66,6 +75,8 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
 func set_sine_active(is_active: bool) -> void:
 	active = is_active
+	# A paused wave costs nothing per frame; resuming turns processing back on.
+	set_process(is_active)
 
 ## @ace_action
 ## @ace_name("Update Initial State")

@@ -21,23 +21,38 @@ signal on_purchased
 ## @ace_name("On Cycle Complete")
 signal on_cycle_complete
 
-var _cycle_progress: float = 0.0
-var _pending: float = 0.0
 ## Cost of the FIRST unit. Each further unit costs cost_growth times more.
 @export var base_cost: float = 10.0
-## Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0.
-@export var base_output: float = 1.0
 ## How much each unit multiplies the price (1.15 = +15% each, the genre default). 1.0 = flat price.
 @export var cost_growth: float = 1.15
-## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.
-@export var cycle_time: float = 0.0
-var last_bought: int = 0
-var last_collected: float = 0.0
-var last_spent: float = 0.0
+## Output of ONE unit - per second in continuous mode, or per cycle when Cycle Time > 0.
+@export var base_output: float = 1.0
 ## A multiplier over the whole generator's output - feed it your composed prestige x upgrade x boost multiplier.
 @export var output_multiplier: float = 1.0
+var _cycle_progress: float = 0.0
+var _pending: float = 0.0
+var last_spent: float = 0.0
+var last_bought: int = 0
+var last_collected: float = 0.0
+
+# The two facts the cycle clock is derived from. Both are properties, so a plain write to
+# either - the reflected Set Cycle Time / Set Owned actions, the Inspector, another script -
+# re-derives it the same way the Buy verbs do. Calling the refresh from here is safe before
+# the node exists: both are typed, so one read before the other is initialized sees 0 and
+# simply parks the clock, which the second write then corrects.
+## 0 = continuous production (Output Per Second). Above 0 = a fill-and-collect cycle this many seconds long (AdVenture-Capitalist style); read Pending and call Collect.
+@export var cycle_time: float = 0.0:
+	set(value):
+		cycle_time = value
+		_refresh_processing()
 ## How many are owned. Set a starting count here, or leave 0 and buy them in play.
-@export var owned: int = 0
+@export var owned: int = 0:
+	set(value):
+		owned = value
+		_refresh_processing()
+
+func _ready() -> void:
+	_refresh_processing()
 
 func _process(delta: float) -> void:
 	if cycle_time <= 0.0 or owned <= 0:
@@ -59,6 +74,7 @@ func buy_one() -> void:
 	last_spent = _cost_for_n(1)
 	owned += 1
 	last_bought = 1
+	_refresh_processing()
 	on_purchased.emit()
 
 ## @ace_action
@@ -73,6 +89,7 @@ func buy_amount(count: int) -> void:
 	last_spent = _cost_for_n(count)
 	owned += count
 	last_bought = count
+	_refresh_processing()
 	on_purchased.emit()
 
 ## @ace_action
@@ -90,6 +107,7 @@ func buy_max(budget: float) -> void:
 	last_spent = _cost_for_n(count)
 	owned += count
 	last_bought = count
+	_refresh_processing()
 	on_purchased.emit()
 
 ## @ace_action
@@ -100,6 +118,7 @@ func buy_max(budget: float) -> void:
 ## @ace_codegen_template("$IdleGeneratorBehavior.set_owned({count})")
 func set_owned(count: int) -> void:
 	owned = maxi(count, 0)
+	_refresh_processing()
 
 ## @ace_action
 ## @ace_name("Grant")
@@ -109,6 +128,7 @@ func set_owned(count: int) -> void:
 ## @ace_codegen_template("$IdleGeneratorBehavior.grant({count})")
 func grant(count: int) -> void:
 	owned += maxi(count, 0)
+	_refresh_processing()
 
 ## @ace_action
 ## @ace_name("Set Output Multiplier")
@@ -140,6 +160,7 @@ func reset_generator() -> void:
 	owned = 0
 	_pending = 0.0
 	_cycle_progress = 0.0
+	_refresh_processing()
 
 ## @ace_condition
 ## @ace_name("Can Afford Next")
@@ -298,6 +319,13 @@ func _max_affordable(budget: float) -> int:
 		count += 1
 	return maxi(count, 0)
 
+func _refresh_processing() -> void:
+	# The fill-and-collect cycle is the only thing this generator spends a frame on: continuous
+	# output is worked out on demand by Output Per Second, and a generator nobody owns produces
+	# nothing either way. Every verb that can change those two facts calls this, and so do the
+	# two properties themselves, so a generator sitting at zero costs nothing per frame.
+	set_process(cycle_time > 0.0 and owned > 0)
+
 ## @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
@@ -317,5 +345,8 @@ func load_state(state: Dictionary) -> void:
 	_cycle_progress = float(state.get("cycle_progress", 0.0))
 	_pending = float(state.get("pending", 0.0))
 	output_multiplier = float(state.get("output_multiplier", 1.0))
+	# A loaded save can bring back a generator that owns units, so the cycle clock has to be
+	# switched back on for the state that came back rather than the one authored in the scene.
+	_refresh_processing()
 
 # Idle Generator: a buy-more-to-make-more building. Cost climbs geometrically (base_cost * cost_growth^owned); Buy One / Buy Amount / Buy Max compute the exact geometric-series price and record it as Last Cost for your sheet to Spend. Continuous mode gives Output Per Second; set Cycle Time > 0 for a fill-and-collect building that fires On Cycle Complete. This pack is an event sheet - extend it by editing it.

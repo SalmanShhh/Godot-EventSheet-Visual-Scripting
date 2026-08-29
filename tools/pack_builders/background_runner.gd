@@ -59,7 +59,10 @@ static func build() -> bool:
 	on_ready.trigger_id = "OnReady"
 	var ready_body: RawCodeRow = RawCodeRow.new()
 	ready_body.code = "\n".join(PackedStringArray([
-		"_mutex = Mutex.new()"
+		"_mutex = Mutex.new()",
+		"# The poll below exists to notice a finished task, and nothing is in flight yet - Run In",
+		"# Background is what starts the polling.",
+		"set_process(false)"
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
@@ -70,6 +73,7 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if _tasks.is_empty():",
+		"\tset_process(false)",
 		"\treturn",
 		"for __i: int in range(_tasks.size() - 1, -1, -1):",
 		"\tvar __entry: Array = _tasks[__i]",
@@ -80,7 +84,10 @@ static func build() -> bool:
 		"\t\t_results.erase(__entry[1])",
 		"\t\t_mutex.unlock()",
 		"\t\t_tasks.remove_at(__i)",
-		"\t\tdone.emit(__result)"
+		"\t\tdone.emit(__result)",
+		"# With nothing in flight there is nothing to poll for. Recomputed after the triggers,",
+		"# because an On Done handler is free to start the next task from inside it.",
+		"set_process(not _tasks.is_empty())"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -92,7 +99,9 @@ static func build() -> bool:
 		"var __cid: int = _next_id",
 		"_next_id += 1",
 		"var __tid: int = WorkerThreadPool.add_task(_run_task.bind(work, __cid))",
-		"_tasks.append([__tid, __cid])"
+		"_tasks.append([__tid, __cid])",
+		"# A task in flight has to be polled for every frame until it lands.",
+		"set_process(true)"
 	])))
 	Lib.append_function(sheet, "run_batch_in_background", "Run Batch In Background", "Background",
 		"Fans an array across worker threads: runs work.bind(item) for each item (On Done fires per item). The callable must be PURE.",

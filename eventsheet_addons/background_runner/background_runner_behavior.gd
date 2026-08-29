@@ -27,9 +27,13 @@ var _mutex: Mutex = null
 
 func _ready() -> void:
 	_mutex = Mutex.new()
+	# The poll below exists to notice a finished task, and nothing is in flight yet - Run In
+	# Background is what starts the polling.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if _tasks.is_empty():
+		set_process(false)
 		return
 	for __i: int in range(_tasks.size() - 1, -1, -1):
 		var __entry: Array = _tasks[__i]
@@ -41,6 +45,9 @@ func _process(delta: float) -> void:
 			_mutex.unlock()
 			_tasks.remove_at(__i)
 			done.emit(__result)
+	# With nothing in flight there is nothing to poll for. Recomputed after the triggers,
+	# because an On Done handler is free to start the next task from inside it.
+	set_process(not _tasks.is_empty())
 
 ## @ace_action
 ## @ace_featured
@@ -57,6 +64,8 @@ func run_in_background(work: Callable) -> void:
 	_next_id += 1
 	var __tid: int = WorkerThreadPool.add_task(_run_task.bind(work, __cid))
 	_tasks.append([__tid, __cid])
+	# A task in flight has to be polled for every frame until it lands.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Run Batch In Background")

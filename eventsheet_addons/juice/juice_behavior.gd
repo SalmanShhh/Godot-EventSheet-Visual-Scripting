@@ -211,6 +211,9 @@ func _ready() -> void:
 		_base_scale = (host as Node2D).scale
 	elif host is Control:
 		_base_scale = (host as Control).scale
+	# Nothing is shaking, bobbing, blinking or springing on the first frame, and every verb that
+	# starts one of those turns processing back on - so an idle Juice costs nothing per frame.
+	set_process(false)
 
 func _on_tree_exiting() -> void:
 	var __owned_time := _hitstop_active or (_slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running())
@@ -302,6 +305,14 @@ func _process(delta: float) -> void:
 		if _trail_timer <= 0.0:
 			_trail_timer = maxf(_trail_interval, 0.01)
 			_stamp_ghost()
+	# The frame ended with nothing left to animate: stop paying for the tick until a verb starts
+	# another effect. A held camera counts as work - _cam_driving stays true until the mixer above
+	# has handed the camera back to the pose it was found in - and so does a running Tilt tween,
+	# which writes _tilt_roll for the mixer to apply rather than touching the camera itself.
+	var camera_busy: bool = _cam_driving or trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
+	var tilt_running: bool = _tilt_tween != null and is_instance_valid(_tilt_tween) and _tilt_tween.is_running()
+	if not (camera_busy or tilt_running or _squash_spring_active or _blink_active or _trail_active):
+		set_process(false)
 
 ## @ace_action
 ## @ace_featured
@@ -313,6 +324,7 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$JuiceBehavior.shake({strength})")
 func shake(strength: float) -> void:
 	trauma = clampf(trauma + strength, 0.0, 1.0)
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Shake")
@@ -347,6 +359,7 @@ func use_camera(camera_path: NodePath) -> void:
 ## @ace_codegen_template("$JuiceBehavior.recoil({angle_degrees}, {strength})")
 func recoil(angle_degrees: float, strength: float) -> void:
 	_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Start Head Bob")
@@ -358,6 +371,7 @@ func start_head_bob(amplitude: float, frequency: float) -> void:
 	_bob_amplitude = amplitude
 	_bob_frequency = maxf(frequency, 0.01)
 	_bob_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Head Bob")
@@ -377,6 +391,7 @@ func stop_head_bob() -> void:
 func start_jitter(amount: float) -> void:
 	_jitter_amount = amount
 	_jitter_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Jitter")
@@ -400,6 +415,7 @@ func tilt_to(degrees: float, duration: float) -> void:
 	tw.tween_property(self, "_tilt_roll", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: tilt_finished.emit())
 	_tilt_tween = tw
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Zoom By Percent")
@@ -492,6 +508,7 @@ func spring_squash(stretch: float) -> void:
 	_squash_velocity = Vector2.ZERO
 	_squash_spring_active = true
 	_apply_host_scale(_squash_value)
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Slowmo")
@@ -584,6 +601,7 @@ func start_blinking(times_per_second: float, min_alpha: float) -> void:
 	_blink_min_alpha = clampf(min_alpha, 0.0, 1.0)
 	_blink_time = 0.0
 	_blink_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Blinking")
@@ -665,6 +683,7 @@ func kick_away_from(world_position: Vector2, strength: float) -> void:
 	var away: Vector2 = cam.get_screen_center_position() - world_position
 	away = away.normalized() if away.length() > 0.001 else Vector2.UP
 	_recoil_vec += away * strength
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Start Ghost Trail")
@@ -679,6 +698,7 @@ func start_ghost_trail(stamps_per_second: float, fade_seconds: float, tint: Colo
 	_trail_tint = tint
 	_trail_timer = 0.0
 	_trail_active = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Ghost Trail")

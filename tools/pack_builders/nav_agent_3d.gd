@@ -160,7 +160,12 @@ static func build() -> bool:
 	on_ready.trigger_provider_id = "Core"
 	on_ready.trigger_id = "OnReady"
 	var ready_body: RawCodeRow = RawCodeRow.new()
-	ready_body.code = "_ensure_agent()"
+	ready_body.code = "\n".join(PackedStringArray([
+		"_ensure_agent()",
+		"# The agent is inserted now, but it has nowhere to walk until a Find Path To row runs, and",
+		"# the tick can only steer along a path - so an idle agent costs nothing per physics frame.",
+		"set_physics_process(false)"
+	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
 
@@ -229,7 +234,10 @@ static func build() -> bool:
 			"agent.target_position = Vector3(x, y, z)",
 			"_active = true",
 			"_pending_check = true",
-			"_pending_mode = mode"
+			"_pending_mode = mode",
+			"# There is a route to walk, and the reachability verdict lands a tick later - both need",
+			"# the physics frame back on.",
+			"set_physics_process(true)"
 		])))
 	_default(sheet, "mode", "nearest")
 	_param_options(sheet, "mode", ["nearest", "reach"])
@@ -247,6 +255,10 @@ static func build() -> bool:
 			"_pending_check = false",
 			"_move_x = 0.0",
 			"_move_z = 0.0",
+			"# No path means the tick has nothing to steer, so it stops costing a physics frame -",
+			"# Find Path To turns it back on. The driver is handed back below either way, and Path",
+			"# Move X/Z keep answering zero from the plain numbers just settled.",
+			"set_physics_process(false)",
 			"var driver: Node = _find_driver()",
 			"if driver != null:",
 			"\tdriver.set(\"ai_move_x\", 0.0)",

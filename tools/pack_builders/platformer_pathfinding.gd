@@ -551,6 +551,11 @@ static func build() -> bool:
 		"\t\tfind_path_to(followed.x, followed.y, _goal_mode)",
 		"\t\trepathed.emit()",
 		"if _path.is_empty():",
+		"\t# No route, no deferred request, nobody being followed and no hazard to watch means",
+		"\t# there is nothing this tick could do - a parked agent costs nothing per frame until",
+		"\t# a path verb or Add Hazard turns processing back on.",
+		"\tif not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty():",
+		"\t\tset_physics_process(false)",
 		"\treturn",
 		"var waypoint: Dictionary = _path[_path_index]",
 		"var target: Vector2 = waypoint[\"world\"]",
@@ -713,6 +718,12 @@ static func build() -> bool:
 		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.",
 		[["x", "float"], ["y", "float"], ["mode", "String"]],
 		"\n".join(PackedStringArray([
+			"# A route to walk is work every frame again. Coming back from parked the floor",
+			"# bookkeeping was not being kept, so the coyote window starts closed rather than",
+			"# handing out a takeoff the agent did not earn while it stood still.",
+			"if not is_physics_processing():",
+			"\t_floor_grace = INF",
+			"\tset_physics_process(true)",
 			"# A repath while riding a mid-travel moving platform is DEFERRED (the current path",
 			"# keeps driving): a fresh route would start from a ground node and steer the rider",
 			"# off the shaft in mid-air.",
@@ -843,7 +854,12 @@ static func build() -> bool:
 	Lib.append_function(sheet, "add_hazard", "Add Hazard", "Platformer Pathfinding",
 		"Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.",
 		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"], ["deadly", "bool"]],
-		"_hazards.append({\"rect\": Rect2(x, y, width, height), \"deadly\": deadly})")
+		"\n".join(PackedStringArray([
+			"_hazards.append({\"rect\": Rect2(x, y, width, height), \"deadly\": deadly})",
+			"# A hazard is watched per frame (On Hazard Entered fires on the way in), so a parked",
+			"# agent starts paying for its tick again the moment one exists.",
+			"set_physics_process(true)"
+		])))
 	Lib.append_function(sheet, "clear_hazards", "Clear Hazards", "Platformer Pathfinding",
 		"Removes every hazard (routing sees the change immediately).",
 		[],

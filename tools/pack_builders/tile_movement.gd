@@ -14,21 +14,21 @@ static func build() -> bool:
 	sheet.addon_category = "Tile Movement"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"tile_size": {"type": "float", "default": 64.0, "exported": true, "description": "Pixel size of one grid tile - each step moves the host this many pixels."},
-		"move_time": {"type": "float", "default": 0.15, "exported": true, "description": "Seconds to slide across one tile."},
-		"default_controls": {"type": "bool", "default": true, "exported": true, "description": "When on, the arrow keys step the host one tile at a time."},
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer)."}},
 		"ai_move_x": {"type": "float", "default": 0.0, "exported": false},
 		"ai_move_y": {"type": "float", "default": 0.0, "exported": false},
-		"moving": {"type": "bool", "default": false, "exported": false},
+		"default_controls": {"type": "bool", "default": true, "exported": true, "description": "When on, the arrow keys step the host one tile at a time."},
 		"from_x": {"type": "float", "default": 0.0, "exported": false},
 		"from_y": {"type": "float", "default": 0.0, "exported": false},
-		"to_x": {"type": "float", "default": 0.0, "exported": false},
-		"to_y": {"type": "float", "default": 0.0, "exported": false},
-		"progress": {"type": "float", "default": 0.0, "exported": false},
+		"move_time": {"type": "float", "default": 0.15, "exported": true, "description": "Seconds to slide across one tile."},
+		"moving": {"type": "bool", "default": false, "exported": false},
 		"pending_x": {"type": "float", "default": 0.0, "exported": false},
-		"pending_y": {"type": "float", "default": 0.0, "exported": false}
+		"pending_y": {"type": "float", "default": 0.0, "exported": false},
+		"progress": {"type": "float", "default": 0.0, "exported": false},
+		"tile_size": {"type": "float", "default": 64.0, "exported": true, "description": "Pixel size of one grid tile - each step moves the host this many pixels."},
+		"to_x": {"type": "float", "default": 0.0, "exported": false},
+		"to_y": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Tile Movement behavior (event-sheet parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."

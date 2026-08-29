@@ -224,6 +224,9 @@ static func build() -> bool:
 		"\tpin_offset = Vector3.ZERO",
 		"\tpin_turn_offset = Quaternion.IDENTITY",
 		"\t_clear_pin_modes()",
+		"\t# A pin has to copy its anchor every physics frame while it holds, so processing follows",
+		"\t# the pin itself: on the moment there is something to ride, off again at Unpin.",
+		"\tset_physics_process(pin_enabled)",
 		"",
 		"# Remembers the gap between the host and a seat, in the seat's own frame when asked to, and",
 		"# the turn between the two as a quaternion so it composes correctly on every axis.",
@@ -234,6 +237,18 @@ static func build() -> bool:
 		"\t\t* host.global_basis.get_rotation_quaternion()"
 	]))
 	sheet.events.append(block)
+
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# Nothing is being ridden until a Pin To row names something, and the tick can do no work",
+		"# without an anchor - so a pin that has not been made yet costs nothing per physics frame.",
+		"set_physics_process(is_pinned())"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -268,6 +283,9 @@ static func build() -> bool:
 			"anchor = target",
 			"pin_enabled = is_instance_valid(target)",
 			"_clear_pin_modes()",
+			"# The host rides something from this frame on, which is per-frame work; a target that",
+			"# is already gone leaves the tick off rather than running it for nothing.",
+			"set_physics_process(pin_enabled)",
 			"if not pin_enabled or host == null:",
 			"\treturn",
 			"_remember_gap(target)"
@@ -280,7 +298,10 @@ static func build() -> bool:
 			"pin_enabled = is_instance_valid(target)",
 			"pin_offset = Vector3(offset_x, offset_y, offset_z)",
 			"pin_turn_offset = Quaternion.IDENTITY",
-			"_clear_pin_modes()"
+			"_clear_pin_modes()",
+			"# The host rides something from this frame on, which is per-frame work; a target that",
+			"# is already gone leaves the tick off rather than running it for nothing.",
+			"set_physics_process(pin_enabled)"
 		])))
 	Lib.append_function(sheet, "set_pin_offset", "Set Pin Offset", "Pin 3D",
 		"Moves the host to a new distance from the object it is riding, in world units.",
@@ -335,6 +356,9 @@ static func build() -> bool:
 			"_clear_pin_modes()",
 			"pin_point = point_name",
 			"pin_mode = \"position and angle\"",
+			"# The host rides something from this frame on, which is per-frame work; a target that",
+			"# is already gone leaves the tick off rather than running it for nothing.",
+			"set_physics_process(pin_enabled)",
 			"if not pin_enabled or host == null:",
 			"\treturn",
 			"var seat: Node3D = _pin_seat()",
@@ -375,7 +399,14 @@ static func build() -> bool:
 	Lib.append_function(sheet, "unpin", "Unpin", "Pin 3D",
 		"Lets go. The host stays exactly where it was and moves on its own again.",
 		[],
-		"anchor = null\npin_enabled = false\n_clear_pin_modes()")
+		"\n".join(PackedStringArray([
+			"anchor = null",
+			"pin_enabled = false",
+			"_clear_pin_modes()",
+			"# Let go and the host moves on its own, so the copy-every-frame work is over - Pin To",
+			"# turns processing back on. The host keeps the place it already had, written before this.",
+			"set_physics_process(false)"
+		])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {

@@ -113,6 +113,10 @@ func run_the_clock(times_faster: float) -> void:
 ## @ace_codegen_template("$DayNightCycleBehavior.pause_the_clock()")
 func pause_the_clock() -> void:
 	_paused = true
+	# A stopped clock has no hour to advance, so it stops costing a frame too; Resume The Clock
+	# starts it again. The Inspector knobs stay live - a day length or a clock scale of 0 is read
+	# in the tick rather than switched off here, so changing either while the game runs works.
+	set_process(false)
 
 ## @ace_action
 ## @ace_name("Resume The Clock")
@@ -122,6 +126,7 @@ func pause_the_clock() -> void:
 ## @ace_codegen_template("$DayNightCycleBehavior.resume_the_clock()")
 func resume_the_clock() -> void:
 	_paused = false
+	set_process(true)
 
 ## @ace_condition
 ## @ace_name("It Is Day")

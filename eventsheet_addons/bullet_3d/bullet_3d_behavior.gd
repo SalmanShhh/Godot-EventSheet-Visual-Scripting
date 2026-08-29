@@ -18,30 +18,46 @@ func _enter_tree() -> void:
 ## @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)
 
-var distance_travelled: float = 0.0
-## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.
-@export var enabled_movement: bool = true
-## Downward acceleration pulling the bullet's vertical velocity down each second.
-@export var gravity: float = 0.0
-var launched: bool = false
 ## Units per second the bullet travels along the host's forward (-Z).
 @export var speed: float = 10.0
-## Also stop the sweep on Area3D nodes, which it ignores by default.
-@export var step_hits_areas: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
+## Downward acceleration pulling the bullet's vertical velocity down each second.
+@export var gravity: float = 0.0
 ## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through thin geometry between two frames.
 @export var stepping: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Also stop the sweep on Area3D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
+var distance_travelled: float = 0.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0
 var vel_z: float = 0.0
+var launched: bool = false
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it
 # lives here). Any direction works - the arc bends toward it; normalized before use.
 ## The direction gravity pulls the arc toward (default straight down).
 @export var gravity_direction: Vector3 = Vector3.DOWN
+## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.
+@export var enabled_movement: bool = true:
+	set(value):
+		enabled_movement = value
+		# There is no enable verb here, so a bullet parked by a stepping hit is sent on its way
+		# by a plain write to this flag - the reflected Set Enabled Movement action, the
+		# Inspector, another script. Every one of them lands here, which is what turns the tick
+		# back on; a frozen bullet costs nothing per frame until then.
+		set_process(value)
+
+func _ready() -> void:
+	if host == null:
+		# Nothing to move means no frame will ever have work; stop paying for the tick at all.
+		set_process(false)
+		return
+	# The tick runs only while the bullet is actually flying - a shot authored frozen, or one
+	# parked by a stepping hit, costs nothing per frame until it is launched again.
+	set_process(enabled_movement)
 
 func _process(delta: float) -> void:
 	if host == null or not enabled_movement:
@@ -70,6 +86,9 @@ func _process(delta: float) -> void:
 			distance_travelled += step_from.distance_to(host.global_position)
 			if stop_on_step_hit:
 				enabled_movement = false
+				# A parked bullet is finished flying - stop paying for a tick that would only
+				# early-return, until something launches it again.
+				set_process(false)
 			on_bullet_hit.emit(step_hit.get("collider"), step_hit.get("position", step_from), step_hit.get("normal", Vector3.ZERO))
 			return
 	host.position += motion
@@ -89,6 +108,9 @@ func launch_forward() -> void:
 	vel_y = forward.y
 	vel_z = forward.z
 	launched = true
+	# Launching re-syncs the tick to whether the bullet is moving, so a shot re-enabled
+	# through its Inspector flag and then relaunched still flies.
+	set_process(enabled_movement)
 
 ## @ace_action
 ## @ace_name("Set Bullet 3D Speed")
@@ -105,6 +127,9 @@ func set_bullet3d_speed(value: float) -> void:
 	vel_y = direction.y * value
 	vel_z = direction.z * value
 	launched = true
+	# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled
+	# through its Inspector flag still flies.
+	set_process(enabled_movement)
 
 ## @ace_action
 ## @ace_name("Set Gravity Direction")

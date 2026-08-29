@@ -27,28 +27,33 @@ signal reload_started
 ## @ace_name("On Reload Complete")
 signal reload_completed
 
-var _burst_left: int = 0
-var _cooldown: float = 0.0
-var _reload_timer: float = 0.0
-var _reloading: bool = false
-## Reload automatically when the magazine runs dry.
-@export var auto_reload: bool = true
-## Shots per burst when fire_mode = 2.
-@export var burst_count: int = 3
-## Rounds loaded right now (set to your magazine size to start full).
-@export var current_ammo: int = 12
-## 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
-@export var fire_mode: int = 0
-## Shots per second (the cooldown between shots is 1 / fire_rate).
-@export var fire_rate: float = 8.0
-## Reloads never spend reserve ammo.
-@export var infinite_reserve: bool = false
 ## Magazine size (rounds before a reload).
 @export var max_ammo: int = 12
-## Seconds a reload takes.
-@export var reload_time: float = 1.2
+## Rounds loaded right now (set to your magazine size to start full).
+@export var current_ammo: int = 12
 ## Spare rounds a reload draws from.
 @export var reserve_ammo: int = 96
+## Shots per second (the cooldown between shots is 1 / fire_rate).
+@export var fire_rate: float = 8.0
+## Seconds a reload takes.
+@export var reload_time: float = 1.2
+## 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
+@export var fire_mode: int = 0
+## Shots per burst when fire_mode = 2.
+@export var burst_count: int = 3
+## Reload automatically when the magazine runs dry.
+@export var auto_reload: bool = true
+## Reloads never spend reserve ammo.
+@export var infinite_reserve: bool = false
+var _cooldown: float = 0.0
+var _reloading: bool = false
+var _reload_timer: float = 0.0
+var _burst_left: int = 0
+
+func _ready() -> void:
+	# A weapon that has not been fired or reloaded has no cooldown, no reload and no burst
+	# to advance; Fire and Reload turn the tick back on the moment there is one.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
@@ -62,6 +67,9 @@ func _process(delta: float) -> void:
 			_fire_one()
 		else:
 			_burst_left = 0
+	# Asked LAST, so a shot or reload started by an On Fire / On Reload Complete handler this
+	# very frame keeps the tick alive: once no clock is running, it switches itself off.
+	set_process(_weapon_is_busy())
 
 ## @ace_action
 ## @ace_featured
@@ -98,6 +106,8 @@ func reload() -> void:
 	_reloading = true
 	_reload_timer = reload_time
 	_burst_left = 0
+	# A reload is a clock, so the tick comes back on to run it down.
+	set_process(true)
 	reload_started.emit()
 
 ## @ace_action
@@ -201,6 +211,8 @@ func _fire_one() -> void:
 	# fall through to empty/auto-reload when the magazine runs dry.
 	current_ammo -= 1
 	_cooldown = 1.0 / maxf(fire_rate, 0.01)
+	# A cooldown is a clock, so the tick comes back on to run it down.
+	set_process(true)
 	fired.emit()
 	if current_ammo <= 0:
 		_burst_left = 0
@@ -218,6 +230,11 @@ func _complete_reload() -> void:
 	_reloading = false
 	_reload_timer = 0.0
 	reload_completed.emit()
+
+func _weapon_is_busy() -> bool:
+	# Whether anything is still on a clock. A holstered weapon - off cooldown, not reloading,
+	# no burst queued - has nothing to count down, so it should not cost a frame.
+	return _cooldown > 0.0 or _reloading or _burst_left > 0
 
 ## @ace_hidden
 func save_state() -> Dictionary:

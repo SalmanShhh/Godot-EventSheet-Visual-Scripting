@@ -238,6 +238,9 @@ static func build() -> bool:
 		"\t\tthrow_vel = Vector2.ZERO",
 		"\tthrow_speed = throw_vel.length()",
 		"\tdragging = false",
+		"\t# The drag is over, so the tick stops - set BEFORE the triggers below, so a handler that",
+		"\t# starts a new drag on the spot turns it straight back on.",
+		"\tset_process(false)",
 		"\tfollow_uid = -1",
 		"\thas_throw_override = false",
 		"\tis_snapping_flag = false",
@@ -250,6 +253,19 @@ static func build() -> bool:
 		"\t\tsnapped.emit()"
 	]))
 	sheet.events.append(block)
+
+	# Nothing follows anything until a drag starts, so no frame is paid for before then.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# The follow / magnet / break-distance work only exists during a drag, so a node sitting",
+		"# there waiting to be picked up costs nothing per frame. Start Drag turns the tick on.",
+		"set_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	# Per-frame follow / direction-lock / magnet / throw-history / break-distance.
 	var tick: EventRow = EventRow.new()
@@ -313,6 +329,8 @@ static func build() -> bool:
 		"throw_history = PackedVector2Array()",
 		"throw_cursor = 0",
 		"is_snapping_flag = false",
+		"# A drag is the only thing this behavior does per frame, so the tick starts with it.",
+		"set_process(true)",
 		"drag_started.emit()"
 	])))
 
@@ -383,6 +401,8 @@ static func build() -> bool:
 		"enabled = is_enabled",
 		"if not is_enabled and dragging:",
 		"\tdragging = false",
+		"\t# Cancelling the drag ends the only per-frame work there is.",
+		"\tset_process(false)",
 		"\tfollow_uid = -1",
 		"\thas_throw_override = false",
 		"\tis_snapping_flag = false",

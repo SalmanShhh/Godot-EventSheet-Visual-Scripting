@@ -102,6 +102,8 @@ static func build() -> bool:
 		"func _fire_one() -> void:",
 		"\tcurrent_ammo -= 1",
 		"\t_cooldown = 1.0 / maxf(fire_rate, 0.01)",
+		"\t# A cooldown is a clock, so the tick comes back on to run it down.",
+		"\tset_process(true)",
 		"\tfired.emit()",
 		"\tif current_ammo <= 0:",
 		"\t\t_burst_left = 0",
@@ -118,9 +120,27 @@ static func build() -> bool:
 		"\t\treserve_ammo -= taken",
 		"\t_reloading = false",
 		"\t_reload_timer = 0.0",
-		"\treload_completed.emit()"
+		"\treload_completed.emit()",
+		"",
+		"# Whether anything is still on a clock. A holstered weapon - off cooldown, not reloading,",
+		"# no burst queued - has nothing to count down, so it should not cost a frame.",
+		"func _weapon_is_busy() -> bool:",
+		"\treturn _cooldown > 0.0 or _reloading or _burst_left > 0"
 	]))
 	sheet.events.append(block)
+
+	# Nothing is on a clock at startup, so the weapon pays for no frame until it is used.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# A weapon that has not been fired or reloaded has no cooldown, no reload and no burst",
+		"# to advance; Fire and Reload turn the tick back on the moment there is one.",
+		"set_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 
 	# Core loop: tick the cooldown, finish a timed reload, and feed burst-mode follow-up shots.
 	var tick: EventRow = EventRow.new()
@@ -138,7 +158,10 @@ static func build() -> bool:
 		"\t\t_burst_left -= 1",
 		"\t\t_fire_one()",
 		"\telse:",
-		"\t\t_burst_left = 0"
+		"\t\t_burst_left = 0",
+		"# Asked LAST, so a shot or reload started by an On Fire / On Reload Complete handler this",
+		"# very frame keeps the tick alive: once no clock is running, it switches itself off.",
+		"set_process(_weapon_is_busy())"
 	]))
 	tick.actions.append(loop)
 	sheet.events.append(tick)
@@ -171,6 +194,8 @@ static func build() -> bool:
 			"_reloading = true",
 			"_reload_timer = reload_time",
 			"_burst_left = 0",
+			"# A reload is a clock, so the tick comes back on to run it down.",
+			"set_process(true)",
 			"reload_started.emit()"
 		])))
 	Lib.append_function(sheet, "cancel_reload", "Cancel Reload", "Weapon",

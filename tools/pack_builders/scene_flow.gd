@@ -17,8 +17,8 @@ static func build() -> bool:
 	sheet.addon_category = "Scenes"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"fade_seconds": {"type": "float", "default": 0.4, "exported": true, "attributes": {"tooltip": "Fade-out (and fade-in) duration in seconds.", "range": {"min": "0.05", "max": "5", "step": "0.05"}}},
-		"fade_color": {"type": "Color", "default": Color(0, 0, 0, 1), "exported": true, "attributes": {"tooltip": "The cover colour the screen fades through."}}
+		"fade_color": {"type": "Color", "default": Color(0, 0, 0, 1), "exported": true, "attributes": {"tooltip": "The cover colour the screen fades through."}},
+		"fade_seconds": {"type": "float", "default": 0.4, "exported": true, "attributes": {"tooltip": "Fade-out (and fade-in) duration in seconds.", "range": {"min": "0.05", "max": "5", "step": "0.05"}}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Scene Flow behavior: scene changes with a polished fade, from one node. The fade runner parents itself to the TREE ROOT (not the dying scene), so the fade-out, the swap, and the fade-in all survive the change. Fade To Scene / Go To Scene / Fade Reload / Reload / Quit Game cover a whole menu's needs with zero code."

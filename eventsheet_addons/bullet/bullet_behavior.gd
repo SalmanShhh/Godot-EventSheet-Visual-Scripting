@@ -18,30 +18,46 @@ func _enter_tree() -> void:
 ## @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)
 
+## Travel speed in pixels per second.
+@export var speed: float = 300.0
 ## Change in speed per second along the direction of motion.
 @export var acceleration: float = 0.0
-## Rotates the host to face its direction of motion.
-@export var align_rotation: bool = true
-var distance_travelled: float = 0.0
-## When off, the bullet stops moving.
-@export var enabled_movement: bool = true
 ## Downward pull added to vertical speed each second.
 @export var gravity: float = 0.0
 ## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward.
 @export_range(0, 360, 1) var gravity_angle: float = 90.0
-var launched: bool = false
-## Travel speed in pixels per second.
-@export var speed: float = 300.0
-## Also stop the sweep on Area2D nodes, which it ignores by default.
-@export var step_hits_areas: bool = false
-## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
-@export var step_mask: int = 1
+## Rotates the host to face its direction of motion.
+@export var align_rotation: bool = true
 ## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through a thin wall between two frames.
 @export var stepping: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Also stop the sweep on Area2D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
 ## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
 @export var stop_on_step_hit: bool = true
+var distance_travelled: float = 0.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0
+var launched: bool = false
+
+## When off, the bullet stops moving.
+@export var enabled_movement: bool = true:
+	set(value):
+		enabled_movement = value
+		# Every write lands here - Set Bullet Enabled, the reflected Set Enabled Movement action,
+		# the Inspector, another script - so the tick follows the switch whoever flipped it. A
+		# frozen bullet costs nothing per frame.
+		set_process(value)
+
+func _ready() -> void:
+	if host == null:
+		# Nothing to move means no frame will ever have work; stop paying for the tick at all.
+		set_process(false)
+		return
+	# The tick runs only while the bullet is actually flying - a shot authored frozen, or one
+	# parked by a stepping hit, costs nothing per frame until Set Bullet Enabled starts it again.
+	set_process(enabled_movement)
 
 func _process(delta: float) -> void:
 	if host == null or not enabled_movement:
@@ -76,6 +92,9 @@ func _process(delta: float) -> void:
 				host.rotation = motion.angle()
 			if stop_on_step_hit:
 				enabled_movement = false
+				# A parked bullet is finished flying - stop paying for a tick that would only
+				# early-return, until Set Bullet Enabled sends it on its way again.
+				set_process(false)
 			on_bullet_hit.emit(step_hit.get("collider"), step_hit.get("position", step_from), step_hit.get("normal", Vector2.ZERO))
 			return
 	host.position += motion
@@ -97,6 +116,9 @@ func set_bullet_speed(value: float) -> void:
 	vel_x = direction.x * value
 	vel_y = direction.y * value
 	launched = true
+	# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled
+	# through its Inspector flag rather than through Set Bullet Enabled still flies.
+	set_process(enabled_movement)
 
 ## @ace_action
 ## @ace_name("Set Angle Of Motion")
@@ -108,6 +130,9 @@ func set_angle_of_motion(degrees: float) -> void:
 	vel_x = cos(deg_to_rad(degrees)) * speed
 	vel_y = sin(deg_to_rad(degrees)) * speed
 	launched = true
+	# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled
+	# through its Inspector flag rather than through Set Bullet Enabled still flies.
+	set_process(enabled_movement)
 
 ## @ace_action
 ## @ace_name("Set Gravity Angle")
@@ -126,5 +151,7 @@ func set_gravity_angle(angle: float) -> void:
 ## @ace_codegen_template("$BulletBehavior.set_bullet_enabled({is_enabled})")
 func set_bullet_enabled(is_enabled: bool) -> void:
 	enabled_movement = is_enabled
+	# A frozen bullet costs nothing per frame; enabling it turns the tick back on.
+	set_process(is_enabled)
 
 # Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled).

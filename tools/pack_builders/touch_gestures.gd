@@ -30,20 +30,20 @@ static func build() -> bool:
 	sheet.addon_category = "Touch Gestures"
 	sheet.addon_tags = PackedStringArray(["input", "touch", "gestures"])
 	sheet.variables = {
-		"swipe_min_distance": {"type": "float", "default": 100.0, "exported": true,
-			"attributes": {"tooltip": "How far the finger must travel, in pixels, before the drag counts as a swipe.", "range": {"min": "10.0", "max": "600.0", "step": "5.0"}}},
-		"swipe_max_seconds": {"type": "float", "default": 0.4, "exported": true,
-			"attributes": {"tooltip": "How long the finger may take. A slow drag over the same distance is a drag, not a swipe.", "range": {"min": "0.05", "max": "3.0", "step": "0.05"}}},
+		"debug_logging": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Print every swipe and every match to the Output panel while tuning the thresholds."}},
 		"eight_way": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Off: four directions (left, right, up, down). On: the four diagonals as well (up left, up right, down left, down right)."}},
-		"shape_tolerance": {"type": "float", "default": 0.22, "exported": true,
-			"attributes": {"tooltip": "How far a stroke may sit from a taught shape and still count, 0 to 1. Higher is more forgiving and more likely to confuse two similar shapes.", "range": {"min": "0.02", "max": "0.8", "step": "0.01"}}},
 		"minimum_stroke_points": {"type": "int", "default": 8, "exported": true,
 			"attributes": {"tooltip": "How many gathered points a stroke needs before it is worth matching. A tap gathers one or two.", "range": {"min": "4", "max": "64", "step": "1"}}},
 		"shape_library": {"type": "Resource", "default": null, "exported": true,
 			"attributes": {"tooltip": "A Touch Shape Library data asset holding the taught shapes. Leave it empty to teach shapes that only live for this run."}},
-		"debug_logging": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Print every swipe and every match to the Output panel while tuning the thresholds."}}
+		"shape_tolerance": {"type": "float", "default": 0.22, "exported": true,
+			"attributes": {"tooltip": "How far a stroke may sit from a taught shape and still count, 0 to 1. Higher is more forgiving and more likely to confuse two similar shapes.", "range": {"min": "0.02", "max": "0.8", "step": "0.01"}}},
+		"swipe_max_seconds": {"type": "float", "default": 0.4, "exported": true,
+			"attributes": {"tooltip": "How long the finger may take. A slow drag over the same distance is a drag, not a swipe.", "range": {"min": "0.05", "max": "3.0", "step": "0.05"}}},
+		"swipe_min_distance": {"type": "float", "default": 100.0, "exported": true,
+			"attributes": {"tooltip": "How far the finger must travel, in pixels, before the drag counts as a swipe.", "range": {"min": "10.0", "max": "600.0", "step": "5.0"}}}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Touch Gestures: attach under any node. It reads the touch events itself and fires On Swipe (direction, distance, seconds) and On Shape Drawn (name). Teach a shape by drawing it and calling Teach Shape From Stroke - the attached library is updated there and then. Save Shapes To Library is what writes that library to its file from a running game. On desktop, turn on Project Settings > Input Devices > Pointing > Emulate Touch From Mouse to try it with the mouse."

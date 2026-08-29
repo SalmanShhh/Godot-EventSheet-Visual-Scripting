@@ -24,20 +24,47 @@ static func build() -> bool:
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},
 		"vel_z": {"type": "float", "default": 0.0, "exported": false},
-		"launched": {"type": "bool", "default": false, "exported": false},
-		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit."}
+		"launched": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
 	sheet.events.append(about)
+	# The two exports the variables dict cannot spell: a Vector3 literal, and a property with a
+	# setter.
 	var gravity_block: RawCodeRow = RawCodeRow.new()
 	gravity_block.code = "\n".join(PackedStringArray([
 		"# Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it",
 		"# lives here). Any direction works - the arc bends toward it; normalized before use.",
 		"## The direction gravity pulls the arc toward (default straight down).",
-		"@export var gravity_direction: Vector3 = Vector3.DOWN"
+		"@export var gravity_direction: Vector3 = Vector3.DOWN",
+		"## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.",
+		"@export var enabled_movement: bool = true:",
+		"\tset(value):",
+		"\t\tenabled_movement = value",
+		"\t\t# There is no enable verb here, so a bullet parked by a stepping hit is sent on its way",
+		"\t\t# by a plain write to this flag - the reflected Set Enabled Movement action, the",
+		"\t\t# Inspector, another script. Every one of them lands here, which is what turns the tick",
+		"\t\t# back on; a frozen bullet costs nothing per frame until then.",
+		"\t\tset_process(value)"
 	]))
 	sheet.events.append(gravity_block)
+
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\t# Nothing to move means no frame will ever have work; stop paying for the tick at all.",
+		"\tset_process(false)",
+		"\treturn",
+		"# The tick runs only while the bullet is actually flying - a shot authored frozen, or one",
+		"# parked by a stepping hit, costs nothing per frame until it is launched again.",
+		"set_process(enabled_movement)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -69,6 +96,9 @@ static func build() -> bool:
 		"\t\tdistance_travelled += step_from.distance_to(host.global_position)",
 		"\t\tif stop_on_step_hit:",
 		"\t\t\tenabled_movement = false",
+		"\t\t\t# A parked bullet is finished flying - stop paying for a tick that would only",
+		"\t\t\t# early-return, until something launches it again.",
+		"\t\t\tset_process(false)",
 		"\t\ton_bullet_hit.emit(step_hit.get(\"collider\"), step_hit.get(\"position\", step_from), step_hit.get(\"normal\", Vector3.ZERO))",
 		"\t\treturn",
 		"host.position += motion",
@@ -126,7 +156,10 @@ static func build() -> bool:
 		"vel_x = forward.x",
 		"vel_y = forward.y",
 		"vel_z = forward.z",
-		"launched = true"
+		"launched = true",
+		"# Launching re-syncs the tick to whether the bullet is moving, so a shot re-enabled",
+		"# through its Inspector flag and then relaunched still flies.",
+		"set_process(enabled_movement)"
 	]))
 	launch_forward_fn.events.append(launch_forward_fn_body)
 	sheet.functions.append(launch_forward_fn)
@@ -150,7 +183,10 @@ static func build() -> bool:
 		"vel_x = direction.x * value",
 		"vel_y = direction.y * value",
 		"vel_z = direction.z * value",
-		"launched = true"
+		"launched = true",
+		"# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled",
+		"# through its Inspector flag still flies.",
+		"set_process(enabled_movement)"
 	]))
 	set_bullet3d_speed_fn.events.append(set_bullet3d_speed_fn_body)
 	sheet.functions.append(set_bullet3d_speed_fn)

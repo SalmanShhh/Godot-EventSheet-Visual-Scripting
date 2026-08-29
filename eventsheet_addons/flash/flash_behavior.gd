@@ -19,11 +19,14 @@ func _enter_tree() -> void:
 ## @ace_category("Flash")
 signal flash_finished
 
-var accumulator: float = 0.0
-var flashing: bool = false
 ## Seconds between visibility toggles - smaller values blink faster.
 @export var interval: float = 0.1
 var remaining: float = 0.0
+var accumulator: float = 0.0
+var flashing: bool = false
+
+func _ready() -> void:
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if flashing and is_instance_valid(host):
@@ -40,6 +43,7 @@ func _process(delta: float) -> void:
 			flashing = false
 			host.visible = true
 			host.modulate.a = 1.0
+			set_process(false)
 			flash_finished.emit()
 
 ## @ace_action
@@ -52,6 +56,7 @@ func flash(seconds: float) -> void:
 	remaining = seconds
 	accumulator = 0.0
 	flashing = true
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Flash")
@@ -61,6 +66,7 @@ func flash(seconds: float) -> void:
 ## @ace_codegen_template("$FlashBehavior.stop_flash()")
 func stop_flash() -> void:
 	flashing = false
+	set_process(false)
 	if is_instance_valid(host):
 		host.visible = true
 

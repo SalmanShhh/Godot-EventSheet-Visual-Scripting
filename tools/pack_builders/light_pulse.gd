@@ -39,7 +39,13 @@ static func build() -> bool:
 		"@export_range(0.05, 60, 0.05) var period_seconds: float = 2.0",
 		"## Whether the pulse is running right now. On means it starts breathing the moment the scene",
 		"## does.",
-		"@export var running: bool = true",
+		"@export var running: bool = true:",
+		"\tset(value):",
+		"\t\trunning = value",
+		"\t\t# Every write lands here - a sheet's Set Running action, the Inspector, another script -",
+		"\t\t# so processing follows the breath whoever switched it. A delay still counts down per",
+		"\t\t# frame, which is why waiting counts as running here.",
+		"\t\tset_process(value or _waiting > 0.0)",
 		""
 	])
 	# No reach knob: a breath is a brightness effect here, so the binding block comes without the
@@ -63,6 +69,8 @@ static func build() -> bool:
 		"func start_pulsing(after_seconds: float = 0.0) -> void:",
 		"\t_waiting = maxf(after_seconds, 0.0)",
 		"\trunning = _waiting <= 0.0",
+		"\t# A delayed start still counts its delay down per frame - waiting is not idle.",
+		"\tset_process(true)",
 		"",
 		"## Stops the pulse and leaves the light at one steady brightness - the number the row names.",
 		"## @ace_action",
@@ -71,6 +79,8 @@ static func build() -> bool:
 		"func stop_pulsing(settle_at: float = 1.0) -> void:",
 		"\trunning = false",
 		"\t_waiting = 0.0",
+		"\t# A stopped beacon costs nothing per frame; Start Pulsing turns processing back on.",
+		"\tset_process(false)",
 		"\tif host == null or _brightness_property.is_empty():",
 		"\t\treturn",
 		"\t_apply_light(settle_at)",
@@ -91,7 +101,13 @@ static func build() -> bool:
 	var ready_body: RawCodeRow = RawCodeRow.new()
 	ready_body.code = "\n".join(PackedStringArray([
 		"if not _bind_to_light():",
-		"\tpush_warning(\"Light Pulse needs a light for a parent - a PointLight2D, an OmniLight3D, or any other light node.\")"
+		"\tpush_warning(\"Light Pulse needs a light for a parent - a PointLight2D, an OmniLight3D, or any other light node.\")",
+		"\t# No light to drive means no frame will ever have work; stop paying for the tick at all.",
+		"\tset_process(false)",
+		"\treturn",
+		"# Processing runs only while the breath does - a pulse authored as stopped costs nothing",
+		"# until Start Pulsing.",
+		"set_process(running)"
 	]))
 	ready_row.actions.append(ready_body)
 	sheet.events.append(ready_row)

@@ -22,14 +22,14 @@ signal spring_reached(spring_name: String)
 ## @ace_name("On Spring Started")
 signal spring_started(spring_name: String)
 
-var color_springs: Dictionary = {}
+## Spring force toward the target (higher = snappier).
+@export_range(1, 1000, 1) var default_stiffness: float = 170.0
 ## 0 = oscillate forever, 1 = no overshoot.
 @export_range(0, 1, 0.01) var default_damping: float = 0.85
 ## Distance + speed below which a spring counts as settled.
 @export var default_precision: float = 0.01
-## Spring force toward the target (higher = snappier).
-@export_range(1, 1000, 1) var default_stiffness: float = 170.0
 var springs: Dictionary = {}
+var color_springs: Dictionary = {}
 
 ## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).
 class SpringEntry:
@@ -90,6 +90,13 @@ func _color_entry(spring_name: String) -> ColorSpringEntry:
 		color_springs[spring_name] = entry
 	return color_springs[spring_name]
 
+func _ready() -> void:
+	# An empty bank has nothing to integrate, so it costs no frames until a spring verb
+	# starts one. Guarded rather than unconditional: a row may already have sprung something
+	# before this node was readied.
+	if springs.is_empty() and color_springs.is_empty():
+		set_process(false)
+
 func _process(delta: float) -> void:
 	# Each spring integrates itself (framerate-independent); host springs write to the parent.
 	for spring_name: Variant in springs.keys():
@@ -106,6 +113,20 @@ func _process(delta: float) -> void:
 			continue
 		if centry.integrate(delta):
 			spring_reached.emit(str(color_name))
+	# A bank with nothing left to settle costs nothing per frame; every spring verb turns
+	# processing back on. Re-read after the emits above, so a row that starts a new spring
+	# from On Spring Reached keeps its frames.
+	var still_settling: bool = false
+	for pending: Variant in springs.values():
+		if (pending as SpringEntry).active:
+			still_settling = true
+			break
+	if not still_settling:
+		for color_pending: Variant in color_springs.values():
+			if (color_pending as ColorSpringEntry).active:
+				still_settling = true
+				break
+	set_process(still_settling)
 
 ## @ace_action
 ## @ace_featured
@@ -121,6 +142,8 @@ func spring_to(spring_name: String, target: float) -> void:
 	entry.from_value = entry.value
 	entry.target = target
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 	if not was_active:
 		spring_started.emit(spring_name)
 
@@ -137,6 +160,8 @@ func spring_between(spring_name: String, from_value: float, to_value: float) -> 
 	entry.velocity = 0.0
 	entry.target = to_value
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Spring Value")
@@ -164,6 +189,8 @@ func add_impulse(spring_name: String, amount: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	entry.velocity += amount
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Spring")
@@ -200,6 +227,8 @@ func spring_host_x(target: float) -> void:
 	entry.from_value = entry.value
 	entry.target = target
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Spring Host Y")
@@ -214,6 +243,8 @@ func spring_host_y(target: float) -> void:
 	entry.from_value = entry.value
 	entry.target = target
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Spring Host Angle")
@@ -228,6 +259,8 @@ func spring_host_angle(degrees: float) -> void:
 	entry.from_value = entry.value
 	entry.target = degrees
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Spring Host Scale")
@@ -242,6 +275,8 @@ func spring_host_scale(target: float) -> void:
 	entry.from_value = entry.value
 	entry.target = target
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Color Value")
@@ -267,6 +302,8 @@ func spring_color(spring_name: String, target_color: Color) -> void:
 	var was_active := entry.active
 	entry.target = target_color
 	entry.active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 	if not was_active:
 		spring_started.emit(spring_name)
 
@@ -293,6 +330,8 @@ func resume_spring(spring_name: String) -> void:
 		(springs[spring_name] as SpringEntry).active = true
 	if color_springs.has(spring_name):
 		(color_springs[spring_name] as ColorSpringEntry).active = true
+	# A moving spring needs its per-frame integration back.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Remove Spring")

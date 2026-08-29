@@ -23,7 +23,13 @@ static func build() -> bool:
 	block.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## Spin on/off - Set Rotation Enabled flips it at runtime.",
-		"@export var rotate_enabled: bool = true",
+		"@export var rotate_enabled: bool = true:",
+		"\tset(value):",
+		"\t\trotate_enabled = value",
+		"\t\t# Every write lands here - a sheet's Set Rotate Enabled action, the Inspector, another",
+		"\t\t# script - so the physics frame follows the spin whoever switched it, not just the",
+		"\t\t# Set Rotation Enabled row.",
+		"\t\tset_physics_process(value)",
 		"## Rotation speed in degrees per second (negative = the other way).",
 		"@export var speed: float = 90.0",
 		"## Speed change in degrees per second, per second (0 = constant speed).",
@@ -51,6 +57,8 @@ static func build() -> bool:
 		"## @ace_name(\"Set Rotation Enabled\")",
 		"func set_rotation_enabled(enabled: bool) -> void:",
 		"\trotate_enabled = enabled",
+		"\t# A stopped spin costs nothing per physics frame; turning it back on restores the tick.",
+		"\tset_physics_process(enabled)",
 		"",
 		"## Sets the live rotation speed in degrees per second (negative = the other way).",
 		"## @ace_action",
@@ -108,6 +116,18 @@ static func build() -> bool:
 		"\treturn {}"
 	]))
 	sheet.events.append(block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# Physics processing runs only while the spin does - a host authored with Spin off costs",
+		"# nothing per frame until Set Rotation Enabled turns it on. Speed is deliberately not part",
+		"# of this test: Acceleration can ramp a spin up from a standing start.",
+		"set_physics_process(rotate_enabled)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"

@@ -17,9 +17,9 @@ static func build() -> bool:
 	sheet.addon_category = "State Machine"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Go to state."},
+		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false},
 		"previous_state": {"type": "String", "default": "", "exported": false},
-		"_state_entered_ticks": {"type": "int", "default": 0, "exported": false}
+		"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Go to state."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "State machine behavior: Go to state / Current state is from any sheet; On any state change fires with (previous, next)."

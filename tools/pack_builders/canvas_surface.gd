@@ -66,7 +66,10 @@ static func build() -> bool:
 		"\t\t_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS if auto_clear else SubViewport.CLEAR_MODE_NEVER",
 		"",
 		"func _ready() -> void:",
-		"\tset_physics_process(true)",
+		"\t# Ribbons are the only thing this surface needs a frame for, and a fresh surface has none:",
+		"\t# every other draw is queued and redrawn on demand rather than polled, so an ordinary canvas",
+		"\t# costs nothing per frame until Start Ribbon asks for one.",
+		"\tset_physics_process(false)",
 		"\t_ensure()",
 		"",
 		"## The display sprite lives on the HOST, not on this surface, so freeing (or re-creating) the surface",
@@ -501,6 +504,8 @@ static func build() -> bool:
 		"\tribbon_line.end_cap_mode = Line2D.LINE_CAP_ROUND",
 		"\t_drawer.add_child(ribbon_line)",
 		"\t_ribbons.append({\"id\": follow.get_instance_id(), \"line\": ribbon_line, \"trail\": [], \"length\": maxi(point_count, 2)})",
+		"\t# A ribbon is refreshed every physics frame, so the first one buys the tick back.",
+		"\tset_physics_process(true)",
 		"",
 		"func set_ribbon_texture(follow: Node, texture_res: Texture2D) -> void:",
 		"\tif follow == null:",
@@ -521,6 +526,8 @@ static func build() -> bool:
 		"\t\telse:",
 		"\t\t\tkept.append(ribbon)",
 		"\t_ribbons = kept",
+		"\tif _ribbons.is_empty():",
+		"\t\tset_physics_process(false)",
 		"",
 		"func _physics_process(_delta: float) -> void:",
 		"\tif _ribbons.is_empty() or _drawer == null:",
@@ -542,7 +549,11 @@ static func build() -> bool:
 		"\t\tfor point: Variant in trail:",
 		"\t\t\tmapped.append(to_canvas(point))",
 		"\t\tribbon_line.points = mapped",
-		"\t_ribbons = kept"
+		"\t_ribbons = kept",
+		"\t# The last ribbon's followed node was freed: nothing is left to refresh, so stop paying for",
+		"\t# the frame until another Start Ribbon.",
+		"\tif _ribbons.is_empty():",
+		"\t\tset_physics_process(false)"
 	]))
 	sheet.events.append(block)
 	return Lib.save_pack(sheet, "res://eventsheet_addons/canvas_surface/canvas_surface")

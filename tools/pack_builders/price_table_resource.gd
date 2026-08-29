@@ -23,12 +23,6 @@ static func build() -> bool:
 	sheet.addon_category = "Priced Tables"
 	sheet.addon_tags = PackedStringArray(["shop", "economy", "resource"])
 	sheet.variables = {
-		"table_name": {"type": "String", "default": "shop", "exported": true,
-			"attributes": {"group": "Identity",
-				"tooltip": "A readable name for this table (\"Blacksmith\", \"Tier 2 upgrades\"), read back with the Table Name expression for a shop window's title."}},
-		"default_currency": {"type": "String", "default": "gold", "exported": true,
-			"attributes": {"group": "Identity",
-				"tooltip": "The currency id used by any entry that leaves its own currency cell blank - so a single-currency shop only fills it in once."}},
 		"entries": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Entries",
 				"tooltip": "One row per thing that can be bought. `id` is the string every action, condition and expression addresses (keep it short and unique). `label` is what the player reads. `price` is what it costs, in `currency` (blank = the table's Default Currency). `stock` is how many are left: -1 means unlimited, 0 means sold out. TICK `locked` to start an entry closed until Set Entry Unlocked opens it (a fresh row is unticked, so it sells straight away). `requires` is a plain-language note about the condition YOUR game checks (\"needs the guild badge\") - the pack never interprets it, it only hands it back for your UI.",
@@ -39,6 +33,12 @@ static func build() -> bool:
 					{"name": "currency", "type": "String"},
 					{"name": "stock", "type": "int"},
 					{"name": "locked", "type": "bool"},
-					{"name": "requires", "type": "String"}]}}
+					{"name": "requires", "type": "String"}]}},
+		"default_currency": {"type": "String", "default": "gold", "exported": true,
+			"attributes": {"group": "Identity",
+				"tooltip": "The currency id used by any entry that leaves its own currency cell blank - so a single-currency shop only fills it in once."}},
+		"table_name": {"type": "String", "default": "shop", "exported": true,
+			"attributes": {"group": "Identity",
+				"tooltip": "A readable name for this table (\"Blacksmith\", \"Tier 2 upgrades\"), read back with the Table Name expression for a shop window's title."}}
 	}
 	return Lib.save_pack(sheet, "res://eventsheet_addons/price_table_resource/price_table_resource")

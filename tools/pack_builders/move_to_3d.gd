@@ -54,6 +54,9 @@ static func build() -> bool:
 		"\tif stop_on_step_hit:",
 		"\t\twaypoints.clear()",
 		"\t\tmoving = false",
+		"\t\t# A blocked path that drops its queue is stopped, so nothing is left for the tick to",
+		"\t\t# do - Move To Position and Add Waypoint turn processing back on.",
+		"\t\tset_process(false)",
 		"\tpath_blocked.emit()",
 		"\tvar contact: Vector3 = step_hit.get(\"position\", world_from)",
 		"\t# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not",
@@ -62,6 +65,18 @@ static func build() -> bool:
 		"\treturn from + (contact - (to - from).normalized() * 0.01 - world_from)"
 	]))
 	sheet.events.append(signal_block)
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# A host that has not been sent anywhere yet has nothing to glide toward, so the tick starts",
+		"# off and every verb that hands it a destination turns it back on. `moving` is what the whole",
+		"# tick is gated on, so reading it here keeps the two in step with no second flag.",
+		"set_process(moving)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -75,6 +90,10 @@ static func build() -> bool:
 		"\twaypoints.pop_front()",
 		"\tif waypoints.is_empty():",
 		"\t\tmoving = false",
+		"\t\t# The last stop is reached, so there is nothing left to glide toward. Processing goes",
+		"\t\t# off BEFORE the trigger fires, so a row that answers On Arrived with another Move To",
+		"\t\t# turns it straight back on.",
+		"\t\tset_process(false)",
 		"\t\tarrived.emit()"
 	]))
 	tick.actions.append(tick_body)
@@ -101,7 +120,9 @@ static func build() -> bool:
 	var move_to_position_3d_fn_body: RawCodeRow = RawCodeRow.new()
 	move_to_position_3d_fn_body.code = "\n".join(PackedStringArray([
 		"waypoints = [Vector3(x, y, z)]",
-		"moving = true"
+		"moving = true",
+		"# There is somewhere to be again, so the per-frame glide is worth paying for.",
+		"set_process(true)"
 	]))
 	move_to_position_3d_fn.events.append(move_to_position_3d_fn_body)
 	sheet.functions.append(move_to_position_3d_fn)
@@ -127,7 +148,9 @@ static func build() -> bool:
 	var add_waypoint_3d_fn_body: RawCodeRow = RawCodeRow.new()
 	add_waypoint_3d_fn_body.code = "\n".join(PackedStringArray([
 		"waypoints.append(Vector3(x, y, z))",
-		"moving = true"
+		"moving = true",
+		"# A stop appended to an empty queue restarts the glide, so the tick has to come back on.",
+		"set_process(true)"
 	]))
 	add_waypoint_3d_fn.events.append(add_waypoint_3d_fn_body)
 	sheet.functions.append(add_waypoint_3d_fn)
@@ -141,7 +164,9 @@ static func build() -> bool:
 	var stop_moving_3d_fn_body: RawCodeRow = RawCodeRow.new()
 	stop_moving_3d_fn_body.code = "\n".join(PackedStringArray([
 		"moving = false",
-		"waypoints = []"
+		"waypoints = []",
+		"# A stopped mover costs nothing per frame; Move To Position turns processing back on.",
+		"set_process(false)"
 	]))
 	stop_moving_3d_fn.events.append(stop_moving_3d_fn_body)
 	sheet.functions.append(stop_moving_3d_fn)

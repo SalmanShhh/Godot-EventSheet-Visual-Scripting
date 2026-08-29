@@ -23,6 +23,9 @@ static func build() -> bool:
 	sheet.addon_category = "Quest"
 	sheet.addon_tags = PackedStringArray(["quest", "objective", "resource"])
 	sheet.variables = {
+		"next_quest": {"type": "String", "default": "", "exported": true,
+			"attributes": {"group": "Chain",
+				"tooltip": "Optional: the quest id to start automatically the moment this one completes - how a questline is chained. Register that quest first (Register Quest) so the autoload knows its objectives. Leave blank to end here."}},
 		"quest_id": {"type": "String", "default": "quest", "exported": true,
 			"attributes": {"group": "Identity",
 				"tooltip": "The id this quest is tracked under - every Quest action, condition and expression addresses it by this string. Keep it short and unique (\"bridge_repair\")."}},
@@ -35,9 +38,6 @@ static func build() -> bool:
 				"drawer": "table", "table_columns": [
 					{"name": "name", "type": "String"},
 					{"name": "needed", "type": "int"}]}},
-		"next_quest": {"type": "String", "default": "", "exported": true,
-			"attributes": {"group": "Chain",
-				"tooltip": "Optional: the quest id to start automatically the moment this one completes - how a questline is chained. Register that quest first (Register Quest) so the autoload knows its objectives. Leave blank to end here."}},
 		"reward_note": {"type": "String", "default": "", "exported": true,
 			"attributes": {"group": "Reward",
 				"tooltip": "A plain-language note about the payout (\"200 gold and the river key\"), shown in your own UI via the Quest Reward Note expression. The engine never grants it for you - hand it out in On Quest Completed."}}

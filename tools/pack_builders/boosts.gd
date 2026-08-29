@@ -42,6 +42,19 @@ static func build() -> bool:
 	]))
 	sheet.events.append(block)
 
+	# An autoload with no boost running has nothing to count down, so it pays for no frame.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# No boost is running at startup, so nothing is counted down and no frame is paid for.",
+		"# Start Boost turns the tick back on the moment there is a timer to run.",
+		"set_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# Self-tick: count every active boost down, fire On Boost Expired as each ends.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -49,6 +62,7 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if _boosts.is_empty():",
+		"\tset_process(false)",
 		"\treturn",
 		"var expired: Array = []",
 		"for id: String in _boosts.keys():",
@@ -62,7 +76,10 @@ static func build() -> bool:
 		"\tif _boosts.has(id) and _boosts[id].remaining <= 0.0:",
 		"\t\t_boosts.erase(id)",
 		"\t\t_last_expired_id = id",
-		"\t\ton_boost_expired.emit()"
+		"\t\ton_boost_expired.emit()",
+		"# Asked LAST, so a boost started by an On Boost Expired handler this very frame keeps the",
+		"# tick alive: once the last boost is gone, the countdown switches itself off.",
+		"set_process(not _boosts.is_empty())"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -71,11 +88,15 @@ static func build() -> bool:
 	Lib.append_function(sheet, "start_boost", "Start Boost", "Boosts", "Starts (or restarts) a timed multiplier by id for `duration` seconds and fires On Boost Started.",
 		[["id", "String"], ["multiplier", "float"], ["duration", "float"]], "\n".join(PackedStringArray([
 			"_boosts[id] = {\"multiplier\": multiplier, \"remaining\": maxf(duration, 0.0), \"tag\": \"\"}",
+			"# A running boost is a countdown, so the tick comes back on to run it.",
+			"set_process(true)",
 			"on_boost_started.emit()"
 		])))
 	Lib.append_function(sheet, "start_tagged_boost", "Start Tagged Boost", "Boosts", "Like Start Boost, but with a tag so Multiplier For Tag can group it (e.g. \"production\", \"click\").",
 		[["id", "String"], ["multiplier", "float"], ["duration", "float"], ["tag", "String"]], "\n".join(PackedStringArray([
 			"_boosts[id] = {\"multiplier\": multiplier, \"remaining\": maxf(duration, 0.0), \"tag\": tag}",
+			"# A running boost is a countdown, so the tick comes back on to run it.",
+			"set_process(true)",
 			"on_boost_started.emit()"
 		])))
 	Lib.append_function(sheet, "extend_boost", "Extend Boost", "Boosts", "Adds seconds to an active boost's timer (does nothing if it is not active).",
@@ -140,7 +161,10 @@ static func build() -> bool:
 		"func load_state(state: Dictionary) -> void:",
 		"\tif state.is_empty():",
 		"\t\treturn",
-		"\t_boosts = (state.get(\"boosts\", {}) as Dictionary).duplicate(true)"
+		"\t_boosts = (state.get(\"boosts\", {}) as Dictionary).duplicate(true)",
+		"\t# Restored boosts resume mid-countdown, so the tick comes back on; it switches itself",
+		"\t# off again on the first frame no boost is left.",
+		"\tset_process(true)"
 	]))
 	sheet.events.append(persistence)
 

@@ -18,10 +18,10 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"auto_connect_buttons": {"type": "bool", "default": true, "exported": true, "attributes": {"tooltip": "On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI."}},
-		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
+		"last_button_name": {"type": "String", "default": "", "exported": false},
 		"needle_colour": {"type": "Color", "default": Color(0.66, 0.80, 1.0, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle is drawn in while the value is inside its warning mark."}},
 		"needle_warning_colour": {"type": "Color", "default": Color(1.0, 0.45, 0.38, 1.0), "exported": true, "attributes": {"tooltip": "The colour a Set Needle needle turns once the value has drifted past its warning mark."}},
-		"last_button_name": {"type": "String", "default": "", "exported": false},
+		"toast_seconds": {"type": "float", "default": 2.0, "exported": true, "attributes": {"tooltip": "How long a toast stays before fading (seconds).", "range": {"min": "0.2", "max": "10", "step": "0.1"}}},
 		"ui_cache": {"type": "Dictionary", "default": {}, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()

@@ -27,15 +27,15 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["ai", "planning"])
 	sheet.variables = {
-		"root_task": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name."}},
 		"auto_replan_on_fail": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Mark Failed re-plans from the root instead of giving up."}},
-		"world_state": {"type": "Dictionary", "default": {}, "exported": false},
-		"primitives": {"type": "Dictionary", "default": {}, "exported": false},
 		"compounds": {"type": "Dictionary", "default": {}, "exported": false},
 		"plan": {"type": "Array", "default": [], "exported": false},
-		"plan_index": {"type": "int", "default": 0, "exported": false}
+		"plan_index": {"type": "int", "default": 0, "exported": false},
+		"primitives": {"type": "Dictionary", "default": {}, "exported": false},
+		"root_task": {"type": "String", "default": "", "exported": true,
+			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name."}},
+		"world_state": {"type": "Dictionary", "default": {}, "exported": false}
 	}
 
 	var about: CommentRow = CommentRow.new()

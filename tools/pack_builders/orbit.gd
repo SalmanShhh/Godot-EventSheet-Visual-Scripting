@@ -14,16 +14,16 @@ static func build() -> bool:
 	sheet.addon_category = "Orbit"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
+		"angle": {"type": "float", "default": 0.0, "exported": false},
+		"center_captured": {"type": "bool", "default": false, "exported": false},
+		"center_x": {"type": "float", "default": 0.0, "exported": false},
+		"center_y": {"type": "float", "default": 0.0, "exported": false},
+		"match_rotation": {"type": "bool", "default": false, "exported": true, "description": "When on, the node rotates to face its direction of travel."},
+		"offset_angle_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Tilts the whole ellipse by this many degrees."},
 		"primary_radius": {"type": "float", "default": 100.0, "exported": true, "description": "Orbit radius on the primary axis, in pixels."},
 		"secondary_radius": {"type": "float", "default": 0.0, "exported": true, "description": "Orbit radius on the second axis, in pixels; 0 makes a circle from primary_radius."},
 		"speed_degrees": {"type": "float", "default": 90.0, "exported": true, "description": "Degrees per second traveled around the orbit; negative reverses direction."},
-		"offset_angle_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Tilts the whole ellipse by this many degrees."},
-		"match_rotation": {"type": "bool", "default": false, "exported": true, "description": "When on, the node rotates to face its direction of travel."},
-		"angle": {"type": "float", "default": 0.0, "exported": false},
-		"total_rotation": {"type": "float", "default": 0.0, "exported": false},
-		"center_x": {"type": "float", "default": 0.0, "exported": false},
-		"center_y": {"type": "float", "default": 0.0, "exported": false},
-		"center_captured": {"type": "bool", "default": false, "exported": false}
+		"total_rotation": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Orbit behavior (event-sheet parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction."

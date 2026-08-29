@@ -23,7 +23,6 @@ static func build() -> bool:
 		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
 		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
 		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit."},
-		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},
@@ -32,6 +31,38 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
 	sheet.events.append(about)
+
+	# The freeze switch, written here rather than through the variables dict so it can carry a
+	# setter (the variables dict has no spelling for one).
+	var enabled_block: RawCodeRow = RawCodeRow.new()
+	enabled_block.code = "\n".join(PackedStringArray([
+		"## When off, the bullet stops moving.",
+		"@export var enabled_movement: bool = true:",
+		"\tset(value):",
+		"\t\tenabled_movement = value",
+		"\t\t# Every write lands here - Set Bullet Enabled, the reflected Set Enabled Movement action,",
+		"\t\t# the Inspector, another script - so the tick follows the switch whoever flipped it. A",
+		"\t\t# frozen bullet costs nothing per frame.",
+		"\t\tset_process(value)"
+	]))
+	sheet.events.append(enabled_block)
+
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\t# Nothing to move means no frame will ever have work; stop paying for the tick at all.",
+		"\tset_process(false)",
+		"\treturn",
+		"# The tick runs only while the bullet is actually flying - a shot authored frozen, or one",
+		"# parked by a stepping hit, costs nothing per frame until Set Bullet Enabled starts it again.",
+		"set_process(enabled_movement)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -69,6 +100,9 @@ static func build() -> bool:
 		"			host.rotation = motion.angle()",
 		"		if stop_on_step_hit:",
 		"			enabled_movement = false",
+		"			# A parked bullet is finished flying - stop paying for a tick that would only",
+		"			# early-return, until Set Bullet Enabled sends it on its way again.",
+		"			set_process(false)",
 		"		on_bullet_hit.emit(step_hit.get(\"collider\"), step_hit.get(\"position\", step_from), step_hit.get(\"normal\", Vector2.ZERO))",
 		"		return",
 		"host.position += motion",
@@ -109,7 +143,10 @@ static func build() -> bool:
 		"\tdirection = Vector2.from_angle(host.rotation)",
 		"vel_x = direction.x * value",
 		"vel_y = direction.y * value",
-		"launched = true"
+		"launched = true",
+		"# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled",
+		"# through its Inspector flag rather than through Set Bullet Enabled still flies.",
+		"set_process(enabled_movement)"
 	]))
 	set_bullet_speed_fn.events.append(set_bullet_speed_fn_body)
 	sheet.functions.append(set_bullet_speed_fn)
@@ -128,7 +165,10 @@ static func build() -> bool:
 	set_angle_of_motion_fn_body.code = "\n".join(PackedStringArray([
 		"vel_x = cos(deg_to_rad(degrees)) * speed",
 		"vel_y = sin(deg_to_rad(degrees)) * speed",
-		"launched = true"
+		"launched = true",
+		"# Re-aiming a bullet re-syncs the tick to whether it is moving, so a shot re-enabled",
+		"# through its Inspector flag rather than through Set Bullet Enabled still flies.",
+		"set_process(enabled_movement)"
 	]))
 	set_angle_of_motion_fn.events.append(set_angle_of_motion_fn_body)
 	sheet.functions.append(set_angle_of_motion_fn)
@@ -162,7 +202,9 @@ static func build() -> bool:
 	set_bullet_enabled_fn.params.append(set_bullet_enabled_fn_is_enabled)
 	var set_bullet_enabled_fn_body: RawCodeRow = RawCodeRow.new()
 	set_bullet_enabled_fn_body.code = "\n".join(PackedStringArray([
-		"enabled_movement = is_enabled"
+		"enabled_movement = is_enabled",
+		"# A frozen bullet costs nothing per frame; enabling it turns the tick back on.",
+		"set_process(is_enabled)"
 	]))
 	set_bullet_enabled_fn.events.append(set_bullet_enabled_fn_body)
 	sheet.functions.append(set_bullet_enabled_fn)

@@ -23,12 +23,12 @@ signal on_entry_spawned(node: Node, group_name: String)
 ## @ace_category("Encounter Timeline")
 signal on_encounter_finished
 
-## Start the encounter as soon as this node is ready, instead of waiting for a Start Encounter action. Handy for an arena that begins the moment its scene loads; leave it off when a cutscene or a door should decide.
-@export var auto_start: bool = false
 ## Optional: drop an EncounterResource (.tres) here to load its beats on ready - the data-driven way to plan an encounter without events. You can also load one later (or a different difficulty) with Load Encounter.
 @export var encounter: Resource = null
 ## When on (the default), spawns go through the ObjectPool autoload IF one is registered - a long encounter then reuses nodes instead of creating and freeing them. With no ObjectPool installed, or with this off, the timeline instantiates the scene itself. Either way the triggers fire identically.
 @export var use_object_pool: bool = true
+## Start the encounter as soon as this node is ready, instead of waiting for a Start Encounter action. Handy for an arena that begins the moment its scene loads; leave it off when a cutscene or a door should decide.
+@export var auto_start: bool = false
 
 # The loaded plan, kept sorted by time: one record per beat, {at, scene, count, group, note}.
 # _next is the index of the beat that has not played yet, so the clock never re-reads the past.
@@ -109,6 +109,9 @@ func _ready() -> void:
 		# Deferred so the first beat cannot spawn before the host's sheet has connected its
 		# triggers - the host readies AFTER this child, and On Entry Spawned would be missed.
 		start_encounter.call_deferred()
+	# A timeline that is not running has no clock to advance; Start Encounter is what wakes it,
+	# including the deferred one above.
+	set_process(_running)
 
 ## @ace_action
 ## @ace_featured
@@ -167,6 +170,8 @@ func clear_encounter() -> void:
 	_spawned = 0
 	_running = false
 	_finished = false
+	# Nothing loaded and nothing running - no frame has any work to do until a plan is started.
+	set_process(false)
 
 ## @ace_action
 ## @ace_featured
@@ -181,6 +186,8 @@ func start_encounter() -> void:
 	_spawned = 0
 	_running = true
 	_finished = false
+	# A running encounter needs the frames it counts its clock in.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Stop Encounter")
@@ -190,6 +197,8 @@ func start_encounter() -> void:
 ## @ace_codegen_template("$EncounterTimelineBehavior.stop_encounter()")
 func stop_encounter() -> void:
 	_running = false
+	# A frozen encounter costs nothing per frame; Start Encounter turns the clock back on.
+	set_process(false)
 
 ## @ace_action
 ## @ace_name("Use Object Pool Node")
@@ -421,6 +430,10 @@ func advance(delta: float) -> void:
 	if _next >= _entries.size():
 		_running = false
 		_finished = true
+		# The plan has played out, so there is no clock left to keep - stop paying for the tick.
+		# Turned off BEFORE the trigger fires, so a handler that chains the next wave with Start
+		# Encounter turns processing back on and is not undone by this line.
+		set_process(false)
 		on_encounter_finished.emit()
 
 func _spawn_entry(entry: Dictionary) -> void:
@@ -507,5 +520,8 @@ func load_state(state: Dictionary) -> void:
 	_spawned = int(state.get("spawned", 0))
 	_running = bool(state.get("running", false))
 	_finished = bool(state.get("finished", false))
+	# A save taken mid-wave reopens mid-wave, so the clock follows the state that came back
+	# rather than the state the scene was authored with.
+	set_process(_running)
 
 # Encounter Timeline behavior: attach it to whatever runs the encounter and drop an Encounter resource (.tres) on its slot. Start Encounter plays the beats back on their own clock - the behavior ticks itself, so there is nothing to drive from a sheet - spawning each beat's scene at its at_seconds, adding every copy to the beat's group, and firing On Entry Spawned per node then On Encounter Finished after the last beat. It spawns through the ObjectPool autoload when one is installed and instantiates the scene when none is. Write Encounter Report saves a plain-text plan of the whole encounter. This pack is an event sheet - extend it by editing it.

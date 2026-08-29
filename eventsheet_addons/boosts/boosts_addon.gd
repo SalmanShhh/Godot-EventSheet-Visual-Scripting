@@ -20,8 +20,14 @@ var _boosts: Dictionary = {}
 # The boost that just ran out (read inside On Boost Expired).
 var _last_expired_id: String = ""
 
+func _ready() -> void:
+	# No boost is running at startup, so nothing is counted down and no frame is paid for.
+	# Start Boost turns the tick back on the moment there is a timer to run.
+	set_process(false)
+
 func _process(delta: float) -> void:
 	if _boosts.is_empty():
+		set_process(false)
 		return
 	var expired: Array = []
 	for id: String in _boosts.keys():
@@ -36,6 +42,9 @@ func _process(delta: float) -> void:
 			_boosts.erase(id)
 			_last_expired_id = id
 			on_boost_expired.emit()
+	# Asked LAST, so a boost started by an On Boost Expired handler this very frame keeps the
+	# tick alive: once the last boost is gone, the countdown switches itself off.
+	set_process(not _boosts.is_empty())
 
 ## @ace_action
 ## @ace_featured
@@ -47,6 +56,8 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("Boost.start_boost({id}, {multiplier}, {duration})")
 func start_boost(id: String, multiplier: float, duration: float) -> void:
 	_boosts[id] = {"multiplier": multiplier, "remaining": maxf(duration, 0.0), "tag": ""}
+	# A running boost is a countdown, so the tick comes back on to run it.
+	set_process(true)
 	on_boost_started.emit()
 
 ## @ace_action
@@ -57,6 +68,8 @@ func start_boost(id: String, multiplier: float, duration: float) -> void:
 ## @ace_codegen_template("Boost.start_tagged_boost({id}, {multiplier}, {duration}, {tag})")
 func start_tagged_boost(id: String, multiplier: float, duration: float, tag: String) -> void:
 	_boosts[id] = {"multiplier": multiplier, "remaining": maxf(duration, 0.0), "tag": tag}
+	# A running boost is a countdown, so the tick comes back on to run it.
+	set_process(true)
 	on_boost_started.emit()
 
 ## @ace_action
@@ -182,5 +195,8 @@ func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
 	_boosts = (state.get("boosts", {}) as Dictionary).duplicate(true)
+	# Restored boosts resume mid-countdown, so the tick comes back on; it switches itself
+	# off again on the first frame no boost is left.
+	set_process(true)
 
 # Boosts: register as the Boost autoload. Start Boost(id, multiplier, duration) begins a timed multiplier that counts itself down and fires On Boost Expired when it ends. Total Multiplier multiplies every active boost together; Multiplier For Tag narrows it to a group. Fold Total Multiplier into your production alongside prestige and upgrade multipliers. This pack is an event sheet - extend it by editing it.

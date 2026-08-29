@@ -41,6 +41,10 @@ static func build() -> bool:
 		"## @ace_hidden",
 		"func _track(decal: Decal, lifetime: float) -> void:",
 		"\t_decals.append({\"node\": decal, \"born\": _clock, \"lifetime\": lifetime})",
+		"\t# Only a decal with a lifetime has to be aged, so only that one buys back the physics tick;",
+		"\t# a decal that stays forever is stamped once and never looked at again.",
+		"\tif lifetime > 0.0:",
+		"\t\tset_physics_process(true)",
 		"\twhile _decals.size() > maxi(max_decals, 1):",
 		"\t\tvar oldest: Dictionary = _decals.pop_front()",
 		"\t\tif is_instance_valid(oldest[\"node\"]):",
@@ -72,6 +76,16 @@ static func build() -> bool:
 	]))
 	sheet.events.append(block)
 
+	# A painter starts with nothing painted, so it starts with nothing to tick: the physics frame is
+	# bought back by the first timed decal or blob shadow and dropped again when the last one goes.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_physics_process(false)"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	# Physics tick: age lifetimes (fade then free) and keep blob shadows ground-snapped
 	# under their followed nodes.
 	var tick: EventRow = EventRow.new()
@@ -81,6 +95,9 @@ static func build() -> bool:
 	tick_body.code = "\n".join(PackedStringArray([
 		"_clock += delta",
 		"var kept: Array = []",
+		"# Counted while the ledger is walked: a decal with no lifetime is never aged, so a canvas of",
+		"# permanent splats and no blob shadows has nothing for the next frame to do.",
+		"var aging: int = 0",
 		"for entry: Dictionary in _decals:",
 		"\tvar decal: Decal = entry[\"node\"] if is_instance_valid(entry[\"node\"]) else null",
 		"\tif decal == null:",
@@ -93,6 +110,7 @@ static func build() -> bool:
 		"\t\t\tcontinue",
 		"\t\tif age >= lifetime:",
 		"\t\t\tdecal.modulate.a = 1.0 - (age - lifetime) / maxf(fade_seconds, 0.01)",
+		"\t\taging += 1",
 		"\tkept.append(entry)",
 		"_decals = kept",
 		"var live_blobs: Array = []",
@@ -115,7 +133,12 @@ static func build() -> bool:
 		"\t\t\tif not hit.is_empty():",
 		"\t\t\t\tat = hit[\"position\"]",
 		"\tdecal.global_position = at + Vector3.UP * 0.05",
-		"_blobs = live_blobs"
+		"_blobs = live_blobs",
+		"# Nothing left to age and nothing left to follow: stop paying for the tick until the next",
+		"# timed decal or blob shadow is spawned. The clock stands still while it is off, which is",
+		"# what keeps a decal spawned after the pause from being born already old.",
+		"if aging == 0 and _blobs.is_empty():",
+		"\tset_physics_process(false)"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -150,6 +173,8 @@ static func build() -> bool:
 		"\t_decal_parent().add_child(decal)",
 		"\tdecal.global_position = (follow as Node3D).global_position",
 		"\t_blobs.append({\"id\": follow.get_instance_id(), \"decal\": decal, \"mask\": collision_mask_3d})",
+		"\t# A shadow follows its character every physics frame, so it needs the tick back.",
+		"\tset_physics_process(true)",
 		"",
 		"## Removes the blob shadow following a node.",
 		"## @ace_action",
@@ -188,6 +213,8 @@ static func build() -> bool:
 		"\t\tif is_instance_valid(blob[\"decal\"]):",
 		"\t\t\t(blob[\"decal\"] as Decal).queue_free()",
 		"\t_blobs = []",
+		"\t# An empty canvas has nothing to age and nothing to follow.",
+		"\tset_physics_process(false)",
 		"",
 		"## Changes the FIFO cap - the oldest decals free immediately if over it.",
 		"## @ace_action",

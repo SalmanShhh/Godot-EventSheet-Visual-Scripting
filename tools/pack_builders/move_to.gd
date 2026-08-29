@@ -78,6 +78,9 @@ static func build() -> bool:
 	step_stop.conditions.append(_cond("ExpressionIsTrue", {"expr": "stop_on_step_hit"}))
 	step_stop.actions.append(_action("CallMethod", {"target": "waypoints", "method": "clear", "args": ""}))
 	step_stop.actions.append(_action("SetVar", {"var_name": "moving", "value": "false"}))
+	# A blocked path that drops its queue is stopped, so the tick has nothing left to do - stop
+	# paying for it until a Move To Position or an Add Waypoint gives it somewhere to go.
+	step_stop.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "false"}))
 	step_fn.events.append(step_stop)
 
 	var step_report: EventRow = EventRow.new()
@@ -88,6 +91,15 @@ static func build() -> bool:
 	step_report.actions.append(_action("ReturnValue", {"value": "from + (step_hit.get(\"position\", world_from) - (to - from).normalized() * 0.5 - world_from)"}))
 	step_fn.events.append(step_report)
 	sheet.functions.append(step_fn)
+
+	# On Ready: a host that has not been sent anywhere yet has nothing to glide toward, so the tick
+	# starts off and every verb that gives it a destination turns it back on. `moving` is the state
+	# the whole tick is gated on, so reading it here keeps the two in step with no second flag.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	ready_row.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "moving"}))
+	sheet.events.append(ready_row)
 
 	# On Process: while moving with a live host and queued waypoints, glide toward the head waypoint;
 	# pop it on arrival and fire On Arrived when the queue empties.
@@ -112,6 +124,9 @@ static func build() -> bool:
 	var finished: EventRow = EventRow.new()
 	finished.conditions.append(_cond("ExpressionIsTrue", {"expr": "waypoints.is_empty()"}))
 	finished.actions.append(_action("SetVar", {"var_name": "moving", "value": "false"}))
+	# The last stop is reached, so nothing is left to glide toward. Processing goes off BEFORE the
+	# trigger fires, so a row that answers On Arrived with another Move To turns it straight back on.
+	finished.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "false"}))
 	finished.actions.append(_action("EmitSignal", {"signal_name": "arrived", "args": ""}))
 	reached.sub_events.append(finished)
 	tick.sub_events.append(reached)
@@ -122,6 +137,8 @@ static func build() -> bool:
 	var move_to_position_body: EventRow = EventRow.new()
 	move_to_position_body.actions.append(_action("SetVar", {"var_name": "waypoints", "value": "[Vector2(x, y)]"}))
 	move_to_position_body.actions.append(_action("SetVar", {"var_name": "moving", "value": "true"}))
+	# There is somewhere to be again, so the per-frame glide is worth paying for.
+	move_to_position_body.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "true"}))
 	move_to_position.events.append(move_to_position_body)
 	sheet.functions.append(move_to_position)
 
@@ -130,6 +147,8 @@ static func build() -> bool:
 	var add_waypoint_body: EventRow = EventRow.new()
 	add_waypoint_body.actions.append(_action("CallMethod", {"target": "waypoints", "method": "append", "args": "Vector2(x, y)"}))
 	add_waypoint_body.actions.append(_action("SetVar", {"var_name": "moving", "value": "true"}))
+	# A stop appended to an empty queue restarts the glide, so the tick has to come back on.
+	add_waypoint_body.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "true"}))
 	add_waypoint.events.append(add_waypoint_body)
 	sheet.functions.append(add_waypoint)
 
@@ -138,6 +157,8 @@ static func build() -> bool:
 	var stop_moving_body: EventRow = EventRow.new()
 	stop_moving_body.actions.append(_action("SetVar", {"var_name": "moving", "value": "false"}))
 	stop_moving_body.actions.append(_action("SetVar", {"var_name": "waypoints", "value": "[]"}))
+	# A stopped mover costs nothing per frame; Move To Position turns processing back on.
+	stop_moving_body.actions.append(_action("CallMethod", {"target": "self", "method": "set_process", "args": "false"}))
 	stop_moving.events.append(stop_moving_body)
 	sheet.functions.append(stop_moving)
 

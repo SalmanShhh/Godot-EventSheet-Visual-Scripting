@@ -61,11 +61,27 @@ static func build() -> bool:
 		"\treturn best"
 	]))
 	sheet.events.append(extra_block_0)
+
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# These eyes answer when asked, not on a schedule: every condition casts its own ray at",
+		"# the moment the row runs. Nothing accumulates between frames, so the per-frame callback",
+		"# is switched off and the sensor costs nothing until something asks it a question.",
+		"set_process(false)"
+	]))
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
+
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
+		"# Deliberately empty: the sight checks run when a row asks them. Processing is turned off",
+		"# on ready, so anything added here needs a set_process(true) to run.",
 		"pass"
 	]))
 	tick.actions.append(tick_body)

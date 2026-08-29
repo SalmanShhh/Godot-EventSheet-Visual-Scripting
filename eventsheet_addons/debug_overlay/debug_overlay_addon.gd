@@ -11,11 +11,11 @@ extends CanvasLayer
 ## @ace_category("Debug Overlay")
 signal overlay_toggled(shown: bool)
 
-## Start hidden: rows still record, nothing is drawn until you press the toggle key.
-@export_group("Debug Overlay")
-@export var start_hidden: bool = false
 ## Key that shows and hides the overlay while the game runs, by name (F3, F1, Tab, Escape). Leave blank for no key.
+@export_group("Debug Overlay")
 @export var toggle_key: String = "F3"
+## Start hidden: rows still record, nothing is drawn until you press the toggle key.
+@export var start_hidden: bool = false
 
 # The drawing surface is a plain Control child whose `draw` signal we paint from, so the
 # whole overlay stays one dependency-free script with no second file to ship. It is null
@@ -38,6 +38,8 @@ func _process(delta: float) -> void:
 func _ready() -> void:
 	layer = 128
 	_shown = not start_hidden
+	# No surface yet, so no frame to pay for: the first verb that builds one turns the tick on.
+	set_process(false)
 
 ## @ace_action
 ## @ace_featured
@@ -184,6 +186,10 @@ func _ensure_surface() -> bool:
 	_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_surface.draw.connect(_paint_overlay)
 	_surface.visible = _shown
+	# The per-frame cost starts HERE, with the surface: until a row has drawn something there
+	# is nothing to age out and nothing to repaint, and a release build never reaches this line
+	# at all, so the overlay's tick is bought only by a project that actually uses it.
+	set_process(true)
 	return true
 
 ## @ace_hidden

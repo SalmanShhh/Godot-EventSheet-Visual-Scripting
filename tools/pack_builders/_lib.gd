@@ -8,7 +8,17 @@
 # generated pack stays self-contained - removing the editor never dangles its @icon (clean_removal_test).
 const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
 
+# Where save_pack writes. Empty (the only value the build tool ever uses) means the shipped path
+# the builder asked for. A gate that wants to regenerate a pack WITHOUT touching the repository
+# sets a scratch directory here, calls the builder's build(), reads the file back and clears this
+# again - the pack is then produced by the real builder through the real pipeline, so a builder
+# that no longer reproduces its shipped pack fails instead of hiding until someone rebuilds.
+static var output_override_dir: String = ""
 
+
+## The order the members are DECLARED in a builder is the order they are emitted in, so a
+## builder's `sheet.variables` order is part of the shipped pack, not a private detail: change it
+## and the pack's file, its head bars and any .tres saved against it all change with it.
 static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
 	# The whole pack pipeline (icon auto-detect, the four byte-gated de-coding lifts, stable
 	# row uids, banner-less .gd-is-the-pack compile) lives on the PUBLIC API now -
@@ -20,7 +30,16 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# the Addon Pack banner chip shows it and future update tooling compares against it.
 	if sheet.addon_version.strip_edges().is_empty():
 		sheet.addon_version = "1.0.0"
-	var compile_result: Dictionary = EventSheets.publish_pack(sheet, base_path, icon_path)
+	# The pack-local icon is resolved against the path the builder ASKED for, not the path the
+	# bytes land on, so a redirected build still emits the shipped @icon line.
+	if sheet.custom_class_icon.strip_edges().is_empty():
+		var local_icon: String = base_path.get_base_dir() + "/icon.svg"
+		if FileAccess.file_exists(local_icon):
+			sheet.custom_class_icon = local_icon
+	var write_path: String = base_path
+	if not output_override_dir.is_empty():
+		write_path = output_override_dir.path_join(base_path.get_file())
+	var compile_result: Dictionary = EventSheets.publish_pack(sheet, write_path, icon_path)
 	if not bool(compile_result.get("success", false)):
 		push_error("Failed to compile %s.gd: %s" % [base_path, compile_result.get("errors")])
 		return false

@@ -44,7 +44,13 @@ static func build() -> bool:
 		"@export var also_flicker_reach: bool = false",
 		"## Whether the flicker is running right now. On means it starts flickering the moment the",
 		"## scene does.",
-		"@export var running: bool = true",
+		"@export var running: bool = true:",
+		"\tset(value):",
+		"\t\trunning = value",
+		"\t\t# Every write lands here - a sheet's Set Running action, the Inspector, another script -",
+		"\t\t# so processing follows the flame whoever switched it. A delay still counts down per",
+		"\t\t# frame, which is why waiting counts as running here.",
+		"\t\tset_process(value or _waiting > 0.0)",
 		""
 	])
 	# The flame is the one of the two light packs that scales reach, so its binding block gets the
@@ -69,6 +75,8 @@ static func build() -> bool:
 		"func start_flickering(after_seconds: float = 0.0) -> void:",
 		"\t_waiting = maxf(after_seconds, 0.0)",
 		"\trunning = _waiting <= 0.0",
+		"\t# A delayed start still counts its delay down per frame - waiting is not idle.",
+		"\tset_process(true)",
 		"",
 		"## Stops the flicker and leaves the light at one steady brightness - the number the row",
 		"## names, so a torch that goes out settles dark and one that is merely calmed settles lit.",
@@ -80,6 +88,8 @@ static func build() -> bool:
 		"func stop_flickering(settle_at: float = 1.0) -> void:",
 		"\trunning = false",
 		"\t_waiting = 0.0",
+		"\t# A stopped flame costs nothing per frame; Start Flickering turns processing back on.",
+		"\tset_process(false)",
 		"\tif host == null or _brightness_property.is_empty():",
 		"\t\treturn",
 		"\t_apply_light(settle_at, 1.0)",
@@ -101,11 +111,16 @@ static func build() -> bool:
 	ready_body.code = "\n".join(PackedStringArray([
 		"if not _bind_to_light():",
 		"\tpush_warning(\"Light Flicker needs a light for a parent - a PointLight2D, an OmniLight3D, or any other light node.\")",
+		"\t# No light to drive means no frame will ever have work; stop paying for the tick at all.",
+		"\tset_process(false)",
 		"\treturn",
 		"_flame = FastNoiseLite.new()",
 		"# A seed per instance, so two torches in one room never flicker in step.",
 		"_flame.seed = randi()",
-		"_flame.frequency = 0.06"
+		"_flame.frequency = 0.06",
+		"# Processing runs only while the flame does - a flicker authored as stopped costs nothing",
+		"# until Start Flickering.",
+		"set_process(running)"
 	]))
 	ready_row.actions.append(ready_body)
 	sheet.events.append(ready_row)

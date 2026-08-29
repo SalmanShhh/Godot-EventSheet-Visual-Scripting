@@ -39,21 +39,21 @@ signal on_health_pool_absorbed
 ## @ace_name("On Health Pool Depleted")
 signal on_health_pool_depleted
 
-var _invincible_until: int = 0
-var current_health: float = 100.0
-## queue_free the host the moment health reaches 0 (after On Death fires).
-@export var destroy_on_death: bool = false
-var health_absorption_rate: float = 1.0
-var health_pools: Dictionary = {}
+## Starting max HP; current_health initialises to this.
+@export_range(1, 10000, 1) var max_health: float = 100.0
 ## Start invulnerable: takeDamage is a no-op while true.
 @export var invulnerable: bool = false
+## queue_free the host the moment health reaches 0 (after On Death fires).
+@export var destroy_on_death: bool = false
+var current_health: float = 100.0
 var is_dead_flag: bool = false
 var last_damage: float = 0.0
 var last_heal: float = 0.0
-var last_pool_damage_absorbed: float = 0.0
+var health_absorption_rate: float = 1.0
+var health_pools: Dictionary = {}
 var last_trigger_pool_type: String = ""
-## Starting max HP; current_health initialises to this.
-@export_range(1, 10000, 1) var max_health: float = 100.0
+var last_pool_damage_absorbed: float = 0.0
+var _invincible_until: int = 0
 
 ## A named health pool (shield / armour) - typed so the absorption + decay hot paths read
 ## fields directly instead of float()-casting an untyped Dictionary entry every frame.
@@ -70,9 +70,13 @@ func _get_pool(type: String) -> HealthPool:
 
 func _ready() -> void:
 	current_health = max_health
+	# A node with no shield or armour has nothing to count down, so it pays for no frame.
+	# Any action that gives it a decaying pool turns the tick back on.
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if health_pools.is_empty():
+		set_process(false)
 		return
 	var depleted: Array = []
 	for pool_name in _sorted_pool_keys():
@@ -84,6 +88,9 @@ func _process(delta: float) -> void:
 	for pool_name in depleted:
 		last_trigger_pool_type = pool_name
 		on_health_pool_depleted.emit()
+	# Asked LAST, so a pool granted by an On Health Pool Depleted handler this very frame
+	# keeps the tick alive: once nothing is decaying, the countdown switches itself off.
+	set_process(_any_pool_decaying())
 
 ## @ace_action
 ## @ace_featured
@@ -242,6 +249,8 @@ func add_health_pool(type: String, amount: float) -> void:
 		return
 	var pool: HealthPool = _get_pool(type)
 	pool.amount = pool.amount + amount
+	# A pool that might decay needs the frame back; the tick stops itself once none does.
+	set_process(true)
 	last_trigger_pool_type = type
 	on_health_pool_added.emit()
 
@@ -255,6 +264,8 @@ func add_health_pool(type: String, amount: float) -> void:
 func set_health_pool(type: String, amount: float) -> void:
 	var pool: HealthPool = _get_pool(type)
 	var new_amount: float = maxf(0.0, amount)
+	# A pool that might decay needs the frame back; the tick stops itself once none does.
+	set_process(true)
 	if new_amount > pool.amount:
 		pool.amount = new_amount
 		last_trigger_pool_type = type
@@ -292,6 +303,8 @@ func clear_all_health_pools() -> void:
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_decay_rate({type}, {rate})")
 func set_health_pool_decay_rate(type: String, rate: float) -> void:
 	_get_pool(type).decay_rate = maxf(0.0, rate)
+	# A pool that might decay needs the frame back; the tick stops itself once none does.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Health Pool Absorption Rate")
@@ -314,6 +327,8 @@ func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: flo
 	var pool: HealthPool = _get_pool(type)
 	pool.decay_rate = maxf(0.0, decay_rate)
 	pool.absorption_rate = maxf(0.0, absorption_rate)
+	# A pool that might decay needs the frame back; the tick stops itself once none does.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Set Health Pool Priority")
@@ -338,6 +353,8 @@ func setup_health_pool(type: String, amount: float, decay_rate: float, absorptio
 	pool.decay_rate = maxf(0.0, decay_rate)
 	pool.absorption_rate = maxf(0.0, absorption_rate)
 	pool.priority = priority
+	# A pool that might decay needs the frame back; the tick stops itself once none does.
+	set_process(true)
 
 ## @ace_action
 ## @ace_name("Revive")
@@ -485,6 +502,16 @@ func _sorted_pool_keys() -> Array:
 		out.append(entry[0])
 	return out
 
+func _any_pool_decaying() -> bool:
+	# Whether any pool still has something to decay. Health itself never changes on its own -
+	# damage, healing and invincibility are all answered the moment they are asked - so a
+	# decaying shield is the only reason this behavior needs a frame at all.
+	for pool_name: String in health_pools.keys():
+		var pool: HealthPool = health_pools[pool_name]
+		if pool.amount > 0.0 and pool.decay_rate > 0.0:
+			return true
+	return false
+
 ## @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
@@ -520,5 +547,8 @@ func load_state(state: Dictionary) -> void:
 		pool.absorption_rate = float(data.get("absorption_rate", 1.0))
 		pool.priority = float(data.get("priority", 0.0))
 		health_pools[pool_name] = pool
+	# Restored pools may be mid-decay, so the tick comes back on; it stops itself again
+	# on the first frame nothing is decaying.
+	set_process(true)
 
 # Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. Grant Invincibility opens a timed i-frame window - damage is ignored while invincible, and On Damaged does not fire. current_health seeds to max_health On Ready.

@@ -215,6 +215,18 @@ static func build() -> bool:
 		"\t\t\ton_combo_failed.emit()"
 	]))
 	sheet.events.append(block)
+	# The clock below only ever measures the gap BETWEEN two buffered inputs, so an empty buffer
+	# gives it nothing to measure: the next Press Input becomes the baseline every input after it
+	# is compared against, whether the clock ran in between or not. Press Input starts it, Clear
+	# Buffer stops it again, and a combo with a window still open keeps it running - an autoload
+	# nobody has pressed anything into costs no frames at all.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "set_process(not _buffer.is_empty())"
+	ready_row.actions.append(ready_body)
+	sheet.events.append(ready_row)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -249,10 +261,10 @@ static func build() -> bool:
 	# --- Input ---
 	Lib.append_function(sheet, "press_input", "Press Input", "ComboBox", "Pushes one input token into the buffer and checks every combo. Call this from your own input events (a key, a gamepad button, a swipe, a network packet). Fires On Combo Matched / On Partial Progress / On Combo Failed as needed.",
 		[["token", "String"]],
-		"_buffer.append({\"token\": token, \"time\": _clock})\nwhile _buffer.size() > buffer_length:\n\t_buffer.remove_at(0)\nif debug_logging:\n\tprint(\"[ComboBox] input \", token, \" buffer=\", _buffer.size())\n_evaluate()")
+		"_buffer.append({\"token\": token, \"time\": _clock})\n# The buffer now holds something to time against, so the clock has to run again.\nset_process(true)\nwhile _buffer.size() > buffer_length:\n\t_buffer.remove_at(0)\nif debug_logging:\n\tprint(\"[ComboBox] input \", token, \" buffer=\", _buffer.size())\n_evaluate()")
 	Lib.append_function(sheet, "clear_buffer", "Clear Buffer", "ComboBox", "Empties the buffer and resets all partial progress (fires On Buffer Cleared). Call it on a context change - entering a cutscene or menu - so old inputs cannot leak into new combos.",
 		[],
-		"_cleared_count = _buffer.size()\n_buffer.clear()\n_progress.clear()\non_buffer_cleared.emit()")
+		"_cleared_count = _buffer.size()\n_buffer.clear()\n_progress.clear()\n# No inputs and no partial motions left, so there is no gap left to measure. Stopped BEFORE the\n# trigger, so a handler that presses an input from here starts the clock again for itself.\nset_process(false)\non_buffer_cleared.emit()")
 
 	# --- Management ---
 	Lib.append_function(sheet, "enable_combo", "Enable Combo", "ComboBox", "Enables a combo so it takes part in matching.",

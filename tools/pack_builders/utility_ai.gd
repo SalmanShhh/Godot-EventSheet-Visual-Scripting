@@ -179,7 +179,13 @@ static func build() -> bool:
 	on_ready.trigger_provider_id = "Core"
 	on_ready.trigger_id = "OnReady"
 	var ready_body: RawCodeRow = RawCodeRow.new()
-	ready_body.code = "_rng.randomize()"
+	ready_body.code = "\n".join(PackedStringArray([
+		"_rng.randomize()",
+		"# Cooldowns are the only thing this brain spends a frame on, and a fresh brain has none:",
+		"# deciding happens when Evaluate is called, not every frame. Any verb that starts a",
+		"# cooldown turns the tick back on.",
+		"set_process(false)"
+	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
 	# Per-frame: tick active cooldowns down; fire On Cooldown Ended as each expires. Iterating a keys()
@@ -194,7 +200,10 @@ static func build() -> bool:
 		"\tif float(_cooldowns[name]) <= 0.0:",
 		"\t\t_cooldowns.erase(name)",
 		"\t\t_cooldown_action = name",
-		"\t\ton_cooldown_ended.emit()"
+		"\t\ton_cooldown_ended.emit()",
+		"# With nothing left cooling down there is nothing to count, so the brain stops paying for a",
+		"# frame. Recomputed after the triggers, because a handler may have started a fresh cooldown.",
+		"set_process(not _cooldowns.is_empty())"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -216,7 +225,7 @@ static func build() -> bool:
 	_default(sheet, "curve_slope", "1.0")
 	Lib.append_function(sheet, "remove_action", "Remove Action", "Utility AI", "Removes an action (and any cooldown on it). Clears the current action if it was the one running.",
 		[["action_name", "String"]],
-		"_actions.erase(action_name)\n_cooldowns.erase(action_name)\nif _current == action_name:\n\t_current = \"\"")
+		"_actions.erase(action_name)\n_cooldowns.erase(action_name)\nset_process(not _cooldowns.is_empty())\nif _current == action_name:\n\t_current = \"\"")
 	Lib.append_function(sheet, "set_action_enabled", "Set Action Enabled", "Utility AI", "Enables or disables an action without removing it (a disabled action is never chosen).",
 		[["action_name", "String"], ["enabled", "bool"]],
 		"if _actions.has(action_name):\n\t_actions[action_name].enabled = enabled")
@@ -268,7 +277,7 @@ static func build() -> bool:
 		"if not _actions.has(action_name):\n\treturn\n_decision_score = 0.0\n_decide(action_name, true)")
 	Lib.append_function(sheet, "mark_complete", "Mark Action Complete", "Utility AI", "Marks the running action finished: fires On Action Completed, starts its cooldown if it has one, then re-evaluates. Call it when your gameplay finishes performing the action (it already re-evaluates, so do not also call Evaluate).",
 		[],
-		"if _current == \"\":\n\treturn\nvar name: String = _current\non_action_completed.emit()\nvar cd: float = float(_actions[name].cooldown) if _actions.has(name) else 0.0\nif cd > 0.0:\n\t_cooldowns[name] = cd\n\t_cooldown_action = name\n\ton_cooldown_started.emit()\nevaluate()")
+		"if _current == \"\":\n\treturn\nvar name: String = _current\non_action_completed.emit()\nvar cd: float = float(_actions[name].cooldown) if _actions.has(name) else 0.0\nif cd > 0.0:\n\t_cooldowns[name] = cd\n\t_cooldown_action = name\n\t# A cooldown is counted down per frame, so starting one wakes the tick up.\n\tset_process(true)\n\ton_cooldown_started.emit()\nevaluate()")
 	Lib.append_function(sheet, "interrupt", "Interrupt Action", "Utility AI", "Stops the running action if it is interruptible (fires On Action Interrupted) and re-evaluates. A non-interruptible action is left alone.",
 		[],
 		"if _current == \"\" or not _actions.has(_current):\n\treturn\nif not bool(_actions[_current].interruptible):\n\treturn\non_action_interrupted.emit()\nevaluate()")
@@ -276,10 +285,10 @@ static func build() -> bool:
 	# --- Cooldowns ---
 	Lib.append_function(sheet, "set_cooldown", "Set Action Cooldown", "Utility AI", "Starts (or, with seconds <= 0, clears) a cooldown on an action - so it cannot be chosen until the timer expires. Fires On Cooldown Started.",
 		[["action_name", "String"], ["seconds", "float"]],
-		"if seconds <= 0.0:\n\t_cooldowns.erase(action_name)\nelse:\n\t_cooldowns[action_name] = seconds\n\t_cooldown_action = action_name\n\ton_cooldown_started.emit()")
+		"if seconds <= 0.0:\n\t_cooldowns.erase(action_name)\n\tset_process(not _cooldowns.is_empty())\nelse:\n\t_cooldowns[action_name] = seconds\n\t_cooldown_action = action_name\n\t# A cooldown is counted down per frame, so starting one wakes the tick up.\n\tset_process(true)\n\ton_cooldown_started.emit()")
 	Lib.append_function(sheet, "clear_cooldowns", "Clear Cooldowns", "Utility AI", "Clears every active cooldown on this brain (e.g. a refresh powerup).",
 		[],
-		"_cooldowns.clear()")
+		"_cooldowns.clear()\n# Nothing left to count down means nothing left to spend a frame on.\nset_process(false)")
 
 	# --- Conditions ---
 	_condition(sheet, "is_running", "Is Running", "Utility AI", "Whether the brain's current action is this one.", [["action_name", "String"]],

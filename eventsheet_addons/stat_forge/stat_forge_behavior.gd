@@ -31,7 +31,15 @@ signal threshold_crossed(rule_id: String, stat: String, total: float)
 # --- Designer knobs (tune in the Inspector) ---
 ## Temporary buffs count down automatically every frame. Off: drive time yourself
 ## with Advance Timers (turn-based games advance per turn).
-@export var auto_tick: bool = true
+@export var auto_tick: bool = true:
+	set(value):
+		auto_tick = value
+		# Every write lands here - a sheet's Set Auto Tick action, the Inspector, another script -
+		# so the timers follow the knob whoever turned it. The predicate is the tick's own:
+		# auto-ticking with nothing counting down is still idle. Safe before the node exists,
+		# because the buff table is a typed Dictionary and reads as an empty one until it is
+		# initialized, never as a null.
+		set_physics_process(value and _any_buff_timer_running())
 ## What happens when a computed total leaves the min/max range: clamp stops at the
 ## boundary, wrap loops around, none applies no limit.
 @export_enum("clamp", "wrap", "none") var overflow_mode: String = "clamp"
@@ -57,9 +65,17 @@ var _last_rule: String = ""
 func each_buff() -> Array:
 	return _buffs.keys()
 
+func _ready() -> void:
+	# A node with no timed buff has nothing to count down, so it pays for no frame. Add Buff
+	# with a duration turns the timers back on.
+	set_physics_process(false)
+
 func _physics_process(delta: float) -> void:
 	if auto_tick:
 		advance_timers(delta)
+	# Asked LAST, so a buff applied by an On Buff Expired handler this very frame keeps the
+	# timers alive: once no countdown is left, they switch themselves off.
+	set_physics_process(auto_tick and _any_buff_timer_running())
 
 ## @ace_expression
 ## @ace_name("Stat Total")
@@ -199,6 +215,9 @@ func add_buff(buff_id: String, stat: String, value: float, mode: String = "add",
 	for tag: String in tags.split(",", false):
 		tag_list.append(tag.strip_edges())
 	_buffs[buff_id] = {"stat": stat, "value": value, "mode": mode, "tags": tag_list, "source": source, "active": true, "time_left": duration if duration > 0.0 else -1.0, "duration": duration, "paused": false}
+	if duration > 0.0:
+		# A timed buff is a countdown, so the auto-tick comes back on to run it.
+		set_physics_process(auto_tick)
 	buff_added.emit(buff_id, stat)
 	_check_thresholds()
 
@@ -294,6 +313,8 @@ func refresh_buff(buff_id: String, duration: float) -> void:
 		var buff: Dictionary = _buffs[buff_id]
 		buff["time_left"] = duration
 		buff["duration"] = duration
+		# A restarted countdown needs the frame back; the timers stop once none is running.
+		set_physics_process(auto_tick)
 
 ## @ace_action
 ## @ace_name("Set Buff Timer Paused")
@@ -303,6 +324,9 @@ func refresh_buff(buff_id: String, duration: float) -> void:
 func set_buff_timer_paused(buff_id: String, paused: bool) -> void:
 	if _buffs.has(buff_id):
 		(_buffs[buff_id] as Dictionary)["paused"] = paused
+		if not paused:
+			# Unfreezing a countdown needs the frame back; the timers stop once none runs.
+			set_physics_process(auto_tick)
 
 ## @ace_action
 ## @ace_name("Advance Timers")
@@ -399,6 +423,13 @@ func _check_thresholds() -> void:
 		_last_totals[stat] = new_totals[stat]
 
 ## @ace_hidden
+func _any_buff_timer_running() -> bool:
+	for buff: Dictionary in _buffs.values():
+		if float(buff["time_left"]) > 0.0 and not bool(buff["paused"]):
+			return true
+	return false
+
+## @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -419,5 +450,8 @@ func load_state(state: Dictionary) -> void:
 	# Restoring the last-seen totals keeps threshold rules from spuriously re-firing
 	# on the first change after a load.
 	_last_totals = (state.get("last_totals", {}) as Dictionary).duplicate(true)
+	# Restored buffs resume mid-countdown, so the timers come back on; they switch off
+	# again on the first frame nothing is counting down.
+	set_physics_process(auto_tick)
 
 # StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two actions run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it.
