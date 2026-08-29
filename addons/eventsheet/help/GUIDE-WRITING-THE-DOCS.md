@@ -15,9 +15,11 @@ before you write. Read this once; after that the gates will tell you when you sl
 7. [When a guide falls behind its pack - Doctor > Docs](#when-a-guide-falls-behind-its-pack---doctor--docs)
 8. [House rules the suite enforces](#house-rules-the-suite-enforces)
 9. [Regenerate before you commit](#regenerate-before-you-commit)
-10. [Documenting a third-party pack](#documenting-a-third-party-pack)
-11. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
-12. [Common mistakes](#common-mistakes)
+10. [Housekeeping: the chores, and the three doors to them](#housekeeping-the-chores-and-the-three-doors-to-them)
+11. [The Manual as a site](#the-manual-as-a-site)
+12. [Documenting a third-party pack](#documenting-a-third-party-pack)
+13. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
+14. [Common mistakes](#common-mistakes)
 
 ## Where docs live, and where they show up
 
@@ -528,6 +530,86 @@ godot --headless --path . --script tools/vocabulary_doc.gd
 Both regenerations are byte-stable: running twice produces identical files, so a diff after
 regeneration is exactly your change and nothing else. The release ritual in `CONTRIBUTING.md`
 includes both steps.
+
+## Housekeeping: the chores, and the three doors to them
+
+![The Docs Housekeeping dialog: a checkbox per chore, each with a sentence saying what it would cost to do by hand, a Run button, a button that writes a CI workflow, and the report panel underneath](images/docs-housekeeping.png)
+
+Six chores keep documentation from rotting, and every one of them is something a person can do by
+hand: rewrite the page each sheet writes about itself, harvest the engine's own class reference,
+draft the descriptions nothing has written yet, check coverage and drift, export the Manual as a
+site, write out a translator's missing keys. They are tedious rather than hard, which is exactly the
+kind of work that gets forgotten.
+
+They live in one place and have three doors:
+
+- **Tools > Docs Housekeeping…** - checkboxes, remembered per project, and one report at the end.
+- **The command line**, for a commit hook or a build:
+
+  ```
+  godot --headless --path . --script addons/eventsheet/cli.gd -- docs-check
+  godot --headless --path . --script addons/eventsheet/cli.gd -- docs-export --out=res://site
+  godot --headless --path . --script addons/eventsheet/cli.gd -- docs-harvest
+  ```
+
+  It exits `0` when there is nothing to fix, `1` when there is, and `2` when the command was wrong,
+  which is the only thing a hook can read. `--limit=<n>` reads only the first n guides, which is
+  worth it locally: outside the editor a pack's verbs are reflected off its scripts rather than read
+  from the live vocabulary, and that is seconds per guide.
+- **CI**, written for you. The dialog's *Write a CI workflow…* button shows you the exact file
+  first, then writes it to `.github/workflows/eventsheets-docs.yml`. It is pinned to the Godot
+  version this project is open in, it runs the check and the export, and it attaches the site to the
+  run as an artifact. After that the file is yours: the plugin never reads it again, and deleting it
+  costs you nothing but the file.
+
+**What fails and what only reports.** `docs-check` fails on **drift** - a shipped page whose bytes
+differ from the source it was copied from is wrong, and nobody has to judge it. Coverage findings
+("this guide never names that verb") are printed but never fail: they are a reading somebody may
+disagree with, and a gate that goes red on a judgement call is a gate a team learns to ignore.
+
+**Automation only does what a person could do by hand.** It produces the same report whichever door
+ran it, and it never publishes: the drafting chore writes to `DRAFT-descriptions.md` in the project's
+docs folder and stops there. Nothing writes a description into a sheet or a guide - keeping the ones
+that are true is a person's decision, and it is the only part of this that is actually writing.
+
+**Saving a sheet refreshes its own page.** If a sheet already has a manual page, saving rewrites that
+one page and re-derives that one search entry. Just that sheet: never a walk of the project, so the
+cost of saving does not grow with the size of the game. A project that never asked for a manual does
+not acquire one because somebody pressed Ctrl+S.
+
+## The Manual as a site
+
+The whole Manual - guides, the dictionary, the pages your own sheets write - exports as a folder of
+plain HTML with its search in it:
+
+```
+godot --headless --path . --script tools/export_docs_site.gd -- --out=res://eventsheet_docs/site
+```
+
+No server, no build step and no network: open `index.html` from a file manager and it works. The
+search is the same baked table the editor searches, re-emitted as one JavaScript file, so a query
+that finds a page in the dock finds it in the browser.
+
+**The same bundle in produces the same bytes out.** Export twice, hash the two folders, and they are
+identical - `tests/doc_site_test.gd` is where that is kept honest. Nothing is stamped with a time, a
+machine or a path, so an exported site can be committed and a diff of two exports is the writing that
+happened in between.
+
+**Figures are cached by the hash of the fence body.** A browser cannot draw live rows, so a figure
+travels as a picture of them, drawn by the real renderer. Drawing needs a window, so it is a separate
+non-headless pass:
+
+```
+godot --path . --script tools/render_docs_figures.gd
+```
+
+It draws only what has no picture yet, so a reworded guide whose example did not change costs
+nothing. A figure with no picture exports as the code card it is a picture of - which is why the
+export works headlessly, on a build machine, on the first run.
+
+`--locale=<code>` exports a translated site: a page the language has no copy of is exported in
+English and marked as untranslated on the page. And wherever the harvested engine reference appears,
+the CC BY credit for the Godot Engine documentation appears with it.
 
 ## Documenting a third-party pack
 

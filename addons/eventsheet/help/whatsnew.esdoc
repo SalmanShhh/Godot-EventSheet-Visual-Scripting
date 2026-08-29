@@ -8,6 +8,41 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Reading becomes having
 
+- **The Manual exports as a site you can open anywhere.** Guides, the dictionary, the pages your own
+  sheets write - the whole corpus as a folder of plain HTML with its search in it, opened from a file
+  manager with no server, no account and no build step. The search is the same baked table the editor
+  searches, re-emitted as one JavaScript file, so a query that finds a page in the dock finds it in a
+  browser. The same bundle in produces the same bytes out: export twice, hash the two folders, and
+  they are identical, which is what lets a team commit the site and read what CHANGED about their
+  documentation in a pull request. A worked example travels as a picture of its rows, drawn by the
+  real renderer and cached by the hash of the fence body - so a reworded guide whose example did not
+  change costs nothing to re-export, and a figure with no picture yet degrades to the code it is a
+  picture of rather than failing the export. `--locale` exports a translated site with the
+  untranslated pages marked on the page, and the engine's own reference carries its CC BY credit
+  wherever it appears.
+- **The documentation chores, in one window, on a command line, and in CI - written once.** Six
+  chores that a person can do by hand and therefore forgets: rewrite the page each sheet writes about
+  itself, harvest the engine's class reference, draft the descriptions nothing has written yet, check
+  coverage and drift, export the site, write out a translator's missing keys. Tools > Docs
+  Housekeeping ticks them off with checkboxes the project remembers and shows one report at the end;
+  `addons/eventsheet/cli.gd` runs the same code from a terminal with an exit code a commit hook can
+  read; and a button writes you a GitHub Actions workflow - shown in full before it is written,
+  pinned to the Godot version this project is open in, and yours afterwards, because the plugin never
+  reads it again. `docs-check` fails on drift, where a shipped copy differs from its source and
+  nobody has to judge it; coverage findings are printed and never fail, because a gate that goes red
+  on a judgement call is a gate a team learns to ignore.
+- **Automation that never publishes.** The drafting chore writes its suggestions to one drafts file
+  and stops: nothing is written into a sheet or a guide, and the file says so at the top. Keeping the
+  drafts that are true stays a person's decision.
+- **Saving a sheet refreshes its own page and nothing else.** A sheet that already has a manual page
+  gets that one page rewritten and that one search entry re-derived on save - never a walk of the
+  project, so the cost of saving does not grow with the size of the game, and a project that never
+  asked for a manual does not acquire one because somebody pressed Ctrl+S.
+- **A megabyte-long CHANGELOG no longer stalls the guide audit.** The ledger sweep reduced its text
+  one character at a time in GDScript, which is minutes on a shipped changelog and looked like a hang
+  rather than a wait. It reduces through the engine's own scanner now; the per-name reduction is
+  unchanged, and the suite pins that the two agree.
+
 - **The guide audit is a page now, not build noise.** The help-bundle builder already compared every
   pack guide against what its pack actually publishes, and printed the answer into a build log nobody
   reads on a tool you only run while editing a guide. That question moved into a shared reader, and
