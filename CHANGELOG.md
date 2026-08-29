@@ -84,10 +84,12 @@
   zero with nothing else failing anywhere.
 - **The cap is on the row, and so is the policy.** "At most twelve alive" is two different games
   depending on what happens at twelve, so there is a row per answer and each says which it is in its
-  own sentence rather than hiding behind a setting. **Spawn A Copy, Oldest Goes First** reads the
-  crowd once, removes the member Godot lists first to make room and then spawns, so the new copy
+  own sentence rather than hiding behind a setting. **Spawn A Copy, The First Makes Room** reads the
+  crowd once, removes members from the front until the new one fits and then spawns, so the new copy
   always appears - what a bullet, a footstep or a skid mark wants; `maxi({cap}, 1)` is what makes
-  the index always safe, whatever number was typed. **Spawn A Copy Unless The Crowd Is Full** does
+  `pop_front()` always safe, whatever number was typed. Both cap rows read the members that are
+  STAYING: `queue_free()` leaves a node in its group until the end of the frame, so a read that took
+  them all would count ghosts and would hand the same ghost to the next spawn of the same frame. **Spawn A Copy Unless The Crowd Is Full** does
   nothing at all when the crowd is full - what an enemy wave wants - and declares the name BEFORE
   its branch, so the rows after it can still say it and an **Is Still Here** row can tell a skipped
   spawn from a real one.
@@ -179,6 +181,24 @@
   by module over the 78 vocabulary modules rather than read off an aggregate registry. The pack count
   did not move and is the folder's own in every place it appears: 112, of which 93 have a guide of
   their own and 19 are companion data assets documented inside a partner's guide.
+
+### Fixed
+
+- **The cap is a cap again, on a frame that spawns more than once.** **Spawn A Copy, The First Makes
+  Room** read the crowd straight out of the group, and `queue_free()` leaves a member in its group
+  until the end of the frame - so a second spawn in the same frame read the same crowd, freed the
+  SAME member again and added one. Under a cap of twelve, three spawns in one frame left fourteen
+  alive and the next such frame sixteen: a shotgun blast, a particle burst and a wave spawned in a
+  loop are exactly the shapes a capped crowd is for. Both cap rows now read the members that are
+  staying, and the make-room row frees until the new copy fits rather than exactly once, so the
+  sentence is true the moment the line has run. The row's ending changed with it - "the first in the
+  crowd makes room" rather than "the oldest goes first", which was tree order wearing the word
+  "oldest": under one parent that spawns by adding children they are the same member, and after a
+  `move_child` or across two parents they are not. **How Many Alive** is deliberately still the
+  group's own size, and says so: a member removed this frame counts until the end of it. The
+  make-room row is now RUN as well as read in the suite - three spawns in one frame against a
+  stand-in tree that behaves the way Godot's does about `queue_free` - because a pin on the emitted
+  text cannot see this class of bug at all.
 
 ### Removed
 

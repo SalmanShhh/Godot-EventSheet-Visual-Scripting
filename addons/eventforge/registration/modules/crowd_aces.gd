@@ -18,8 +18,18 @@
 #
 # THE CAP IS ON THE ROW, AND SO IS THE POLICY. "At most twelve alive" is two different games
 # depending on what happens at twelve, so there is a row per answer and each one says which it is in
-# its own sentence: the oldest goes first, or the spawn is skipped. Neither is a default the other
-# hides behind.
+# its own sentence: the first in the crowd makes room, or the spawn is skipped. Neither is a default
+# the other hides behind.
+#
+# AND A MEMBER ON ITS WAY OUT IS NOT ONE OF THE TWELVE. `queue_free()` marks a node and leaves it in
+# the tree - and therefore in its group - until the end of the frame. A cap that read the group
+# straight would count those ghosts, and worse, a second spawn in the same frame would read the same
+# crowd, free the SAME member again and add one: three spawns in one frame under a cap of twelve
+# leave fourteen alive, and the next such frame leaves sixteen. So both cap rows read the members
+# that are STAYING - `filter(... not is_queued_for_deletion())` - which makes the count mean what the
+# row says and makes the member chosen a different one each time. How Many Alive below is
+# deliberately not filtered: it is the group's own size, and a member is in the group until the end
+# of the frame it was removed in.
 #
 # WHEN THE LAST ONE GOES, measured rather than assumed. SceneTree.node_removed fires as a node
 # leaves, and at that moment the leaving node is STILL registered in its groups - so the crowd being
@@ -72,39 +82,48 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.featured())
 
 	# ── The cap, and the two answers to reaching it ────────────────────────────────────
-	# One row per policy. The first reads the crowd once into a local, because it needs both the
-	# size and the member it is about to remove and asking the tree twice could answer differently.
-	# `maxi({cap}, 1)` is the reason index 0 is always safe: the branch only runs when at least one
-	# member is there, whatever number the author typed in the cap.
-	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowdOldestFirst", "Spawn A Copy, Oldest Goes First", ACEDescriptor.ACEType.ACTION,
-		"var crowd_{name} = get_tree().get_nodes_in_group({crowd})\n"\
-		+ "if crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}[0].queue_free()\n"\
+	# One row per policy. Both read the crowd once into a local, because both need the count and one
+	# of them needs the member it is about to remove, and asking the tree twice could answer
+	# differently. The read SKIPS the members already on their way out, for the reason the header
+	# states: those are ghosts, and counting or freeing one again is how a cap stops capping.
+	# `maxi({cap}, 1)` is the reason `pop_front()` is always safe: the loop only runs when at least
+	# one member is staying, whatever number the author typed in the cap. It is a `while` rather than
+	# an `if` so the row's sentence is true the moment the line has run, even on a crowd that was
+	# already over its cap when the frame began.
+	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowdOldestFirst", "Spawn A Copy, The First Makes Room", ACEDescriptor.ACEType.ACTION,
+		"var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n"\
+		+ "while crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}.pop_front().queue_free()\n"\
 		+ "var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)\n"\
 		+ "{parent}.add_child({name})\n{name}.global_position = {at}", "",
 		[_scene_param(), _name_param(), _crowd_param(), _cap_param(), _at_param(), _parent_param()],
-		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the oldest goes first", "Node2D")
-		.described("Spawns a copy into the crowd, and when the crowd is already full removes one member to make room, so the count never climbs past the cap. The one removed is the member Godot lists first, which under a parent that spawns by adding children is the earliest one still alive. The new copy always appears, which is what a bullet or a footstep wants.")
+		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room", "Node2D")
+		.described("Spawns a copy into the crowd, and when the crowd is already full removes members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones removed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.")
 		.featured())
-	# The other policy. The name is declared BEFORE the branch on purpose: a following row can still
-	# say it either way, and what it holds when the crowd was full is nothing - which is a thing the
-	# sheet can ask about with Is Still Here rather than a silence it has to guess at.
+	# The other policy, reading the crowd the same way so that "alive" means one thing in both rows.
+	# The name is declared BEFORE the branch on purpose: a following row can still say it either way,
+	# and what it holds when the crowd was full is nothing - which is a thing the sheet can ask about
+	# with Is Still Here rather than a silence it has to guess at.
 	descriptors.append(F.make_descriptor("Core", "SpawnIntoCrowdUnlessFull", "Spawn A Copy Unless The Crowd Is Full", ACEDescriptor.ACEType.ACTION,
-		"var {name}: Node = null\n"\
-		+ "if get_tree().get_node_count_in_group({crowd}) < {cap}:\n"\
+		"var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())\n"\
+		+ "var {name}: Node = null\n"\
+		+ "if crowd_{name}.size() < {cap}:\n"\
 		+ "\t{name} = {scene}.instantiate()\n\t{name}.add_to_group({crowd}, true)\n"\
 		+ "\t{parent}.add_child({name})\n\t{name}.global_position = {at}", "",
 		[_scene_param(), _name_param(), _crowd_param(), _cap_param(), _at_param(), _parent_param()],
 		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full", "Node2D")
-		.described("Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart."))
+		.described("Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. A member already on its way out has stopped counting against the cap, so a spawn in the same frame something died in still happens. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart."))
 
 	# ── Counting them ──────────────────────────────────────────────────────────────────
 	# The group's size, which is the whole of what "how many are alive" means when the crowd is a
-	# group: a freed member leaves the group as it leaves the tree, so the number is never stale.
+	# group: a freed member leaves the group as it leaves the tree, so nothing has to be kept in step.
+	# Left UNFILTERED on purpose - this is the group's own size, and paying for an array and a lambda
+	# on a line a HUD reads every frame to shave off a member that has one frame left would be a worse
+	# trade than saying so.
 	descriptors.append(F.make_descriptor("Core", "CrowdCount", "How Many Alive", ACEDescriptor.ACEType.EXPRESSION,
 		"get_tree().get_node_count_in_group({crowd})", "",
 		[_crowd_param()],
 		CATEGORY, "[b]{crowd}[/b] alive")
-		.described("How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so this is always the number that is actually in the world.")
+		.described("How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member removed this frame is still counted until the end of it, which is what queue_free means everywhere else too.")
 		.featured())
 
 	# ── When the last one goes ─────────────────────────────────────────────────────────

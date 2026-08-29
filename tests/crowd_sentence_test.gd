@@ -5,10 +5,13 @@
 #      second argument vanishes the moment its branch is packed back into a scene - after which
 #      every count in the sheet silently answers zero. The flag is pinned as a literal line, because
 #      dropping it breaks nothing that any other test can see.
-#   2. THE CAP, AND THE POLICY. Two rows, two different files. The oldest-goes-first row reads the
-#      crowd once and removes a member before spawning; the skip row declares the name BEFORE its
-#      branch, so a following row can still say it. Both are pinned as their exact lines: swap the
-#      order in either and the game changes while the descriptors still look right.
+#   2. THE CAP, AND THE POLICY. Two rows, two different files. The make-room row reads the crowd
+#      once and removes members before spawning; the skip row declares the name BEFORE its branch,
+#      so a following row can still say it. Both are pinned as their exact lines: swap the order in
+#      either and the game changes while the descriptors still look right. And the make-room row is
+#      RUN as well as read, because the way a cap stops capping - a member freed twice in one frame,
+#      because queue_free leaves it in its group until the end of that frame - is invisible to any
+#      pin on the text.
 #   3. THE COUNT. One expression, the group's own size, pinned as the text it writes.
 #   4. THE LAST ONE OUT. The trigger is the scene tree's node_removed signal and the gate is an
 #      ORDINARY CONDITION in the sheet, so this pins the connect line, the handler's signature, and
@@ -35,6 +38,7 @@ static func run() -> bool:
 	passed = _test_the_descriptors_say_what_they_emit() and passed
 	passed = _test_the_crowd_spawn_joins_the_group_persistently() and passed
 	passed = _test_the_cap_says_its_policy_in_its_own_lines() and passed
+	passed = _test_the_cap_holds_when_one_frame_spawns_several() and passed
 	passed = _test_the_count_is_the_groups_own_size() and passed
 	passed = _test_the_last_one_out_is_a_signal_and_a_visible_gate() and passed
 	passed = _test_applying_the_trigger_puts_the_gate_in_the_sheet() and passed
@@ -83,24 +87,27 @@ static func _test_the_descriptors_say_what_they_emit() -> bool:
 		_template(by_id, "SpawnIntoCrowd"),
 		"var {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)"
 		+ "\n{parent}.add_child({name})\n{name}.global_position = {at}") and passed
-	passed = _check("the oldest-goes-first row reads the crowd once, then makes room, then spawns",
+	passed = _check("the make-room row reads the staying members, then makes room, then spawns",
 		_template(by_id, "SpawnIntoCrowdOldestFirst"),
 		"var crowd_{name} = get_tree().get_nodes_in_group({crowd})"
-		+ "\nif crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}[0].queue_free()"
+		+ ".filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())"
+		+ "\nwhile crowd_{name}.size() >= maxi({cap}, 1):\n\tcrowd_{name}.pop_front().queue_free()"
 		+ "\nvar {name} = {scene}.instantiate()\n{name}.add_to_group({crowd}, true)"
 		+ "\n{parent}.add_child({name})\n{name}.global_position = {at}") and passed
 	passed = _check("the skip row declares the name before the branch that may not run",
 		_template(by_id, "SpawnIntoCrowdUnlessFull"),
-		"var {name}: Node = null"
-		+ "\nif get_tree().get_node_count_in_group({crowd}) < {cap}:"
+		"var crowd_{name} = get_tree().get_nodes_in_group({crowd})"
+		+ ".filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())"
+		+ "\nvar {name}: Node = null"
+		+ "\nif crowd_{name}.size() < {cap}:"
 		+ "\n\t{name} = {scene}.instantiate()\n\t{name}.add_to_group({crowd}, true)"
 		+ "\n\t{parent}.add_child({name})\n\t{name}.global_position = {at}") and passed
 	passed = _check("how many are alive is the group's own size",
 		_template(by_id, "CrowdCount"), "get_tree().get_node_count_in_group({crowd})") and passed
 	# The policy is IN THE SENTENCE, not in a setting beside it: a reader of the row knows what
 	# happens at the cap without opening anything.
-	passed = _check("the oldest-goes-first row says its policy on the row",
-		str(_descriptor(by_id, "SpawnIntoCrowdOldestFirst").display_text).ends_with("the oldest goes first"), true) and passed
+	passed = _check("the make-room row says its policy on the row",
+		str(_descriptor(by_id, "SpawnIntoCrowdOldestFirst").display_text).ends_with("the first in the crowd makes room"), true) and passed
 	passed = _check("the skip row says its policy on the row",
 		str(_descriptor(by_id, "SpawnIntoCrowdUnlessFull").display_text).ends_with("skip spawning when full"), true) and passed
 	# The gate is spelled once. The dock bakes the module's own constant onto the condition it adds,
@@ -146,13 +153,17 @@ static func _test_the_cap_says_its_policy_in_its_own_lines() -> bool:
 		"scene": ENEMY, "name": "e", "crowd": CROWD, "cap": "12",
 		"at": "global_position", "parent": "self"
 	}, "user://eventforge_crowd_oldest.gd")
-	passed = _check("the crowd is read once, into a local named after the copy",
-		oldest.contains("\tvar crowd_e = get_tree().get_nodes_in_group(\"enemies\")"), true) and passed
-	# maxi(cap, 1) is what makes index 0 safe whatever number the author typed: the branch cannot
+	# THE MEMBERS THAT ARE STAYING, not everything the group still lists. queue_free marks a node and
+	# leaves it in its group until the end of the frame, so a read that took them all would count
+	# ghosts and would hand the same ghost to the next spawn of the same frame.
+	passed = _check("the crowd is read once, into a local named after the copy, skipping the leavers",
+		oldest.contains("\tvar crowd_e = get_tree().get_nodes_in_group(\"enemies\")"
+			+ ".filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())"), true) and passed
+	# maxi(cap, 1) is what makes pop_front() safe whatever number the author typed: the loop cannot
 	# run on an empty crowd, so the emitted line never reaches past the end of the array.
-	passed = _check("room is made only when there is somebody to make it from",
-		oldest.contains("\tif crowd_e.size() >= maxi(12, 1):\n\t\tcrowd_e[0].queue_free()"), true) and passed
-	var make_room_at: int = oldest.find("crowd_e[0].queue_free()")
+	passed = _check("room is made until it fits, and only from somebody who is staying",
+		oldest.contains("\twhile crowd_e.size() >= maxi(12, 1):\n\t\tcrowd_e.pop_front().queue_free()"), true) and passed
+	var make_room_at: int = oldest.find("crowd_e.pop_front().queue_free()")
 	var spawn_at: int = oldest.find("var e = load(\"res://enemy.tscn\").instantiate()")
 	passed = _check("room is made before the new copy arrives, so the cap is never passed",
 		make_room_at >= 0 and make_room_at < spawn_at, true) and passed
@@ -165,11 +176,159 @@ static func _test_the_cap_says_its_policy_in_its_own_lines() -> bool:
 	# holds when the crowd was full is nothing - which Is Still Here can ask about.
 	passed = _check("the name is declared where the rows after it can still say it",
 		skip.contains("\tvar e: Node = null"), true) and passed
+	passed = _check("the skip row asks the same question about the same members",
+		skip.contains("\tvar crowd_e = get_tree().get_nodes_in_group(\"enemies\")"
+			+ ".filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())"), true) and passed
 	passed = _check("nothing at all happens when the crowd is full",
-		skip.contains("\tif get_tree().get_node_count_in_group(\"enemies\") < 12:"), true) and passed
+		skip.contains("\tif crowd_e.size() < 12:"), true) and passed
 	passed = _check("the spawn is the branch's body, not a line beside it",
 		skip.contains("\t\te = load(\"res://enemy.tscn\").instantiate()"), true) and passed
 	return passed
+
+
+# ── 3b. The cap, RUN rather than read ──
+
+
+## The lines a compile-time pin cannot judge. Three spawns in ONE frame is the shape a shotgun, a
+## particle burst and a wave spawned in a for-loop all have, and it is the shape the cap has to
+## survive: `queue_free()` leaves a member in its group until the end of the frame, so a row that
+## read the group straight would hand the SAME member to all three spawns and grow the crowd by two.
+##
+## The emitted lines are RUN, against a stand-in tree that behaves the way Godot's does about
+## queue_free - the member stays listed and answers is_queued_for_deletion() - because that is the
+## whole of the bug and no amount of reading the text can see it. `run_tests.gd` has no main loop, so
+## a real SceneTree is not available here; what the harness fakes is exactly the two behaviours the
+## row depends on, and nothing else.
+static func _test_the_cap_holds_when_one_frame_spawns_several() -> bool:
+	var passed: bool = true
+	var action: ACEAction = _action("SpawnIntoCrowdOldestFirst", {
+		"scene": "scene", "name": "made", "crowd": "\"foes\"", "cap": "12",
+		"at": "Vector2.ZERO", "parent": "self"
+	})
+	var emitted: String = ActionCodegen.generate_action(action)
+	var host: Object = _running_host(emitted)
+	if host == null:
+		return _check("the emitted crowd lines can be run at all", false, true)
+	for _spawn: int in 3:
+		host.call("spawn")
+	passed = _check("three spawns in one frame free three different members",
+		str(host.get("freed")), str(["m0", "m1", "m2"])) and passed
+	host.call("end_of_frame")
+	passed = _check("and the crowd settles at its cap rather than above it",
+		int(host.call("alive")), 12) and passed
+	# The frame after, which is where the unfiltered read climbed a second time.
+	for _spawn: int in 3:
+		host.call("spawn")
+	host.call("end_of_frame")
+	passed = _check("a second such frame does not climb either",
+		int(host.call("alive")), 12) and passed
+	host.call("dispose")
+	return passed
+
+
+## A host the emitted lines can run inside: a stand-in tree holding twelve members, a stand-in scene
+## that makes more, and the two answers Godot gives about a member that was told to go.
+static func _running_host(emitted_lines: String) -> Object:
+	var body: String = ""
+	for line: String in emitted_lines.split("\n"):
+		body += "\t%s\n" % line
+	var harness: GDScript = GDScript.new()
+	harness.source_code = CROWD_HARNESS_SOURCE + body
+	if harness.reload() != OK:
+		return null
+	return harness.new()
+
+
+## The stand-in, as source. `queue_free()` records the member and marks it - it does NOT leave the
+## group - which is precisely what Godot does until the end of the frame, and `end_of_frame()` is the
+## sweep that finally drops them.
+const CROWD_HARNESS_SOURCE: String = """extends RefCounted
+
+
+class CrowdMember extends Node:
+	var label: String = ""
+	var going: bool = false
+	var global_position = null
+	var freed: Array = []
+
+	@warning_ignore("native_method_override")
+	func is_queued_for_deletion() -> bool:
+		return going
+
+	@warning_ignore("native_method_override")
+	func queue_free() -> void:
+		freed.append(label)
+		going = true
+
+
+class StandInTree extends RefCounted:
+	var members: Array = []
+
+	func get_nodes_in_group(_group_name: String) -> Array:
+		return members.duplicate()
+
+	func get_node_count_in_group(_group_name: String) -> int:
+		return members.size()
+
+
+class StandInScene extends RefCounted:
+	var made: int = 0
+	var freed: Array = []
+
+	func instantiate():
+		made += 1
+		var member = CrowdMember.new()
+		member.label = "new%d" % made
+		member.freed = freed
+		return member
+
+
+var freed: Array = []
+var everyone: Array = []
+var tree = StandInTree.new()
+var scene = StandInScene.new()
+
+
+func _init() -> void:
+	scene.freed = freed
+	for index in 12:
+		var member = CrowdMember.new()
+		member.label = "m%d" % index
+		member.freed = freed
+		everyone.append(member)
+		tree.members.append(member)
+
+
+func get_tree():
+	return tree
+
+
+func add_child(node) -> void:
+	everyone.append(node)
+	tree.members.append(node)
+
+
+func dispose() -> void:
+	for member in everyone:
+		member.free()
+	everyone.clear()
+	tree.members.clear()
+
+
+func alive() -> int:
+	return tree.members.size()
+
+
+func end_of_frame() -> void:
+	var staying: Array = []
+	for member in tree.members:
+		if not member.is_queued_for_deletion():
+			staying.append(member)
+	tree.members = staying
+
+
+func spawn() -> void:
+"""
 
 
 # ── 4. Counting them ──

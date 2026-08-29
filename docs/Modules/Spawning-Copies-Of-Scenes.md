@@ -44,8 +44,8 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 
 - **Spawn A Copy Into The Crowd** - the same spawn, with the copy joined to a group named after the
   scene.
-- **Spawn A Copy, Oldest Goes First** and **Spawn A Copy Unless The Crowd Is Full** - the cap, with
-  what happens at the cap written into the row's own sentence.
+- **Spawn A Copy, The First Makes Room** and **Spawn A Copy Unless The Crowd Is Full** - the cap,
+  with what happens at the cap written into the row's own sentence.
 - **How Many Alive** - the group's size, in any field that takes a number.
 - **On The Last One Removed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
   and the question it puts in the sheet underneath itself.
@@ -264,21 +264,33 @@ the group as it leaves the tree.
 "At most twelve alive" is two different games depending on what happens at twelve, so there is a row
 per answer and each says which it is in its own sentence.
 
-**Spawn A Copy, Oldest Goes First** removes a member to make room and then spawns, so the new copy
+**Spawn A Copy, The First Makes Room** removes members to make room and then spawns, so the new copy
 always appears:
 
 ```
-var crowd_new_mark = get_tree().get_nodes_in_group("marks")
-if crowd_new_mark.size() >= maxi(20, 1):
-	crowd_new_mark[0].queue_free()
+var crowd_new_mark = get_tree().get_nodes_in_group("marks").filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())
+while crowd_new_mark.size() >= maxi(20, 1):
+	crowd_new_mark.pop_front().queue_free()
 var new_mark = Mark.instantiate()
 ```
 
-The crowd is read once into a local, because the row needs both the size and the member it is about
-to remove. `maxi(cap, 1)` is what makes `[0]` always safe: the branch cannot run on an empty crowd,
-whatever number you typed. The one removed is the member Godot lists first, which under a parent
-that spawns by adding children is the earliest one still alive. This is what a bullet, a footstep or
-a skid mark wants.
+The crowd is read once into a local, because the row needs both the size and the members it is about
+to remove. `maxi(cap, 1)` is what makes `pop_front()` always safe: the loop cannot run on an empty
+crowd, whatever number you typed.
+
+**The read skips the members that are already leaving, and that is the whole of why the cap holds.**
+`queue_free()` marks a node and leaves it in the tree - and therefore in its group - until the end of
+the frame. A row that read the group straight would hand the same member to every spawn of that
+frame: three spawns under a cap of twenty would free the same one three times and add three, leaving
+twenty-two alive, and the next such frame twenty-four. Skipping the leavers means the count means
+what the row says and a different member makes room each time. It is a `while` rather than an `if`
+for the same reason: whatever the crowd was when the line was reached, it fits the cap when the line
+has run.
+
+The members removed are taken from the front of the crowd, which is the order Godot lists a group
+in. Under a parent that spawns by adding children that is the earliest one still alive; after a
+`move_child`, or with copies spread over two parents, it is the tree's order rather than the spawn's.
+This is what a bullet, a footstep or a skid mark wants.
 
 **Spawn A Copy Unless The Crowd Is Full** does nothing at all when the crowd is full:
 
@@ -542,8 +554,8 @@ it; removing after a delay instead is the other way, and the note says so.
 | Fade Out Then Remove | Fades the object out, waits, then removes it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
 | Is Still Here | True while the object has not been removed. | `is_instance_valid({object})` |
 | Spawn A Copy Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy, Oldest Goes First | Makes room by removing the first member, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd})`, `if crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}[0].queue_free()`, … |
-| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var {name}: Node = null`, `if get_tree().get_node_count_in_group({crowd}) < {cap}:`, … |
+| Spawn A Copy, The First Makes Room | Makes room by removing members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
+| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
 | On The Last One Removed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
 | Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
@@ -627,9 +639,10 @@ variable honest afterwards.
 Last One Removed event on the same crowd opens the door, pays the reward and starts the next wave.
 Nothing counts the enemies down; the trigger is the last one leaving.
 
-**23. A skid-mark trail that never grows.** Spawn A Copy, Oldest Goes First with a cap of 20 into a
-`marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
-the tree never fills.
+**23. A skid-mark trail that never grows.** Spawn A Copy, The First Makes Room with a cap of 20 into
+a `marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
+the tree never fills - including on a frame that lays down several marks at once, because the row
+skips the marks already on their way out rather than removing one of them twice.
 
 **24. A spawner that respects a limit.** Spawn A Copy Unless The Crowd Is Full with a cap of 12. A
 timer that fires every second simply does nothing while twelve are alive, and starts again when one
@@ -700,10 +713,15 @@ Last One Removed on that crowd drop the key.
   `add_to_group`. Editing that out looks harmless and breaks every count the day the branch is packed
   into a scene file.
 - **The cap rows are two rows, not one row with a setting.** If a spawn keeps vanishing, you picked
-  the skip row; if an old one keeps vanishing, you picked the oldest-first row. The sentence on the
-  row says which.
-- **"Oldest" means the member Godot lists first.** Under a parent that spawns by adding children that
-  is the earliest one alive. Reparent members yourself and the order is the tree's, not the spawn's.
+  the skip row; if an old one keeps vanishing, you picked the make-room row. The sentence on the row
+  says which.
+- **"The first in the crowd" means the member Godot lists first.** Under a parent that spawns by
+  adding children that is the earliest one alive. Reparent members yourself, or spread them over two
+  parents, and the order is the tree's, not the spawn's.
+- **The cap rows ignore members already on their way out; How Many Alive does not.** A member is in
+  its group until the end of the frame it was removed in, so the count can read one higher than the
+  cap for the rest of that frame. That is queue_free, not a miscount - and it is exactly why the cap
+  rows skip those members instead of counting or freeing them a second time.
 - **The skipped spawn leaves the name holding nothing.** Rows after Spawn A Copy Unless The Crowd Is
   Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
 - **On The Last One Removed never fires for a crowd that was already empty.** It answers a member
