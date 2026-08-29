@@ -1,7 +1,7 @@
 # Built-in Module Guides
 
-Deep-dive guides for the **built-in vocabulary** - the 1,556 actions, conditions and expressions
-(and 50 triggers) that are already in the picker on a fresh install, before you enable a single
+Deep-dive guides for the **built-in vocabulary** - the 1,687 actions, conditions and expressions
+(and 68 triggers) that are already in the picker on a fresh install, before you enable a single
 behavior pack. They are authored as the vocabulary modules in `addons/eventforge/registration/modules/`, one
 file per subject, and this index groups their guides by what you are trying to do rather than by
 which file they came from.
@@ -67,7 +67,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 
 - [Finding And Rearranging Nodes](Finding-And-Rearranging-Nodes.md) - spawn, reparent, reorder, rename and free nodes, and pick the ones you need by child, name pattern or group.
 - [Scenes, Pausing And Turning Nodes Off](Scenes-Pausing-And-Turning-Nodes-Off.md) - change what is on screen, pause the whole game, and the difference between hidden, disabled and paused.
-- [Spawning Copies Of Scenes](Spawning-Copies-Of-Scenes.md) - the spawn sentence, the name it leaves behind for the rows after it, and the four expressions that answer where a copy lands.
+- [Spawning Copies Of Scenes](Spawning-Copies-Of-Scenes.md) - the spawn sentence, the name it leaves behind for the rows after it, the four expressions that answer where a copy lands, removing without leaving ghosts, the crowd and its cap, a table of kinds, routing through a pool, and the same sentences over the network.
 - [Groups, Tags And Systems](Groups-Tags-And-Systems.md) - a group as a tag, as a set to count and total, and as a system you run one method over.
 - [Triggers, Signals And When Rows Run](Triggers-Signals-And-When-Rows-Run.md) - the lifecycle and per-frame triggers, scene-tree and Area signals, On Signal and Emit Signal, and the gates that turn "every tick" into "once".
 - [Multiplayer](Multiplayer.md) - messages one peer runs on the others, who is the host, who owns which object, and this peer's own id.

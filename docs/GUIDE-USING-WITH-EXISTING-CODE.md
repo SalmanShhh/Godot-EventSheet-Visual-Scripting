@@ -1008,6 +1008,36 @@ to the function it names, the same jump the Outline panel makes.
   write it is - and every one names the pattern it read as, which is what the event's pattern chip
   and the Manual show.
 
+- **A spawn keeps your own name for the copy.** `var b = Bullet.instantiate()` is a row, the
+  `add_child(b)` beside it is the Add Child row, and `b.global_position = muzzle.global_position` is
+  the property row - three rows in one event, with `b` kept exactly as you spelled it, because that
+  identifier is what the file says and every row after it in that event simply says it too.
+  `call_deferred("add_child", b)` reads as the deferred add it is, so a spawn out of a collision
+  handler still says on the row that the parenting waits for the physics step. `add_to_group("enemies",
+  true)` reads as the crowd the copy joins and `get_tree().get_node_count_in_group("enemies")` as how
+  many are alive, so a hand-written spawner opens with its cap and its count already in the sheet's
+  words. None of these readings needs a spawn row to have written the line: the head's **spawns**
+  band is read off the emitted line rather than off a row's name, so an opened `.gd` grows the same
+  band a picked row would have.
+
+- **The two removal chains people write by hand are one row each.**
+  `get_tree().create_timer(2.0).timeout.connect(queue_free)` reads `Remove After Seconds`, in both
+  spellings - the bare one on a node removing itself, and `connect($Enemy.queue_free)` on a node
+  removing another. `$Ghost.create_tween().tween_property($Ghost, "modulate:a", 0.0,
+  0.5).finished.connect($Ghost.queue_free)` reads `Fade Out Then Remove`, and only when all three
+  mentions name the same object: a tween started on one node that fades a second and frees a third is
+  somebody else's line and keeps the reading it had. A fade whose object is left implicit stays the
+  plain statement it was, because the row could not reproduce that spelling byte for byte. `0` and
+  `0.0` are both matched as the fade's target and each saves back as itself.
+
+- **A guard you wrote by hand stays your guard.** `if is_instance_valid(boss): boss.queue_free()`
+  opens as a Remove Now row inside the question you asked, and saves back byte for byte - the
+  compiler writes nothing extra, because the sheet has already asked. That is the same rule read from
+  the other side: a removal whose object is a variable typed as a node, or a copy a spawn row minted
+  in a DIFFERENT event, compiles inside `is_instance_valid`, and the row echoes the exact line the
+  file holds at its right edge. `self` and node paths are never guarded, and no row outside the three
+  removal rows is touched.
+
   ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
 
 - **A Control built in code reads as the thing it builds, and a hand-painted canvas in the Drawing

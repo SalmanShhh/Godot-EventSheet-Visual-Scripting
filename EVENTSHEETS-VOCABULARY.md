@@ -3429,6 +3429,23 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Date: Time Text** - Returns the player's current clock time as a text string.
 - **Date: Today** - Returns the player's current calendar date as a text string.
 
+### Crowd (`res://addons/eventforge/registration/modules/crowd_aces.gd`)
+Crowd (the copies a sheet spawned, counted, capped, and missed when they go)
+
+#### Triggers
+- **On The Last One Removed** (`crowd: String`) - Runs the moment the last member of a crowd leaves the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. The On Group Emptied condition asks the same question a different way, on a per-frame trigger, by remembering last tick's count; this one needs neither the tick nor the memory.
+
+#### Conditions
+- **Crowd Is Down To This One** (`crowd: String, node: String`) - The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.
+
+#### Actions
+- **Spawn A Copy Into The Crowd** (`scene: String, name: String, crowd: String, at: String, parent: String`) - Spawns a copy the way Spawn A Copy does, and puts it in a group named after the scene, so the rows below can count them, cap them and hear when the last one goes. The group is joined with Godot's persistent flag, which is what keeps it there if the branch is ever packed back into a scene file.
+- **Spawn A Copy, Oldest Goes First** (`scene: String, name: String, crowd: String, cap: String, at: String, parent: String`) - Spawns a copy into the crowd, and when the crowd is already full removes one member to make room, so the count never climbs past the cap. The one removed is the member Godot lists first, which under a parent that spawns by adding children is the earliest one still alive. The new copy always appears, which is what a bullet or a footstep wants.
+- **Spawn A Copy Unless The Crowd Is Full** (`scene: String, name: String, crowd: String, cap: String, at: String, parent: String`) - Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart.
+
+#### Expressions
+- **How Many Alive** (`crowd: String`) - How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so this is always the number that is actually in the world.
+
 ### Cursor Canvas (`res://addons/eventforge/registration/modules/cursor_canvas_aces.gd`)
 what the cursor is aiming at, and how far things are ON THE CANVAS.
 
@@ -4485,6 +4502,17 @@ RegEx text matching (the Regex* verbs event-sheet authors expect, Godot-native).
 - **All Matches** (`holder: String, text: String`) - Returns every match a kept pattern finds in the text, as a list.
 - **Replace Matches** (`holder: String, text: String, replacement: String`) - Returns the text with every match of a kept pattern replaced.
 
+### Removal (`res://addons/eventforge/registration/modules/removal_aces.gd`)
+Remove (taking a thing out of the world, without leaving a ghost behind)
+
+#### Conditions
+- **Is Still Here** (`object: String`) - True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves.
+
+#### Actions
+- **Remove Now** (`object: String`) - Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.
+- **Remove After Seconds** (`object: String, seconds: String`) - Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.
+- **Fade Out Then Remove** (`object: String, seconds: String`) - Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly.
+
 ### Rendering (`res://addons/eventforge/registration/modules/rendering_aces.gd`)
 Rendering vocabulary (the RenderingServer from events).
 
@@ -4653,6 +4681,20 @@ the 3D page: moving, turning, placing, and the point at an angle
 #### Expressions
 - **Facing Along** (`direction: String`) - The facing that looks along a direction - what Rotate Toward Facing turns toward.
 - **Point At Angle** (`angle: String, distance: String`) - The point an angle and a distance name. Add it to a centre for a place on a circle; grow the distance every tick and it draws a spiral.
+
+### Spawn (`res://addons/eventforge/registration/modules/spawn_aces.gd`)
+Spawn (the spawn sentence, the name it leaves behind, and where it lands)
+
+#### Actions
+- **Spawn A Copy** (`scene: String, name: String, at: String, parent: String`) - Makes one copy of a scene, adds it under a parent and puts it where you say. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.
+- **Spawn A Copy Safely** (`scene: String, name: String, at: String, parent: String`) - The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position.
+- **Make A Copy** (`scene: String, name: String`) - Makes one copy of a scene and gives it a name, without adding it to the scene tree yet. Following rows in this event can say the name to set the copy up, and an Add Child row puts it in the world when it is ready.
+
+#### Expressions
+- **Place Of** (`node: String`) - Gives a node's own place in the world. Drop a Marker2D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet.
+- **Random Place Along Path** (`path: String`) - Gives a random point somewhere along a Path2D's curve. The point is picked by distance travelled rather than by curve segment, so a long straight stretch is exactly as likely as a tight corner.
+- **Random Place Inside Shape** (`shape: String`) - Gives a random point inside a collision shape - the Area2D you drew around a spawn zone. Rectangles and circles are measured directly and scattered evenly in one step, with no rejection sampling and no retries; every other shape gives its own centre instead of a guess.
+- **Random Place Off Screen Edge** (`margin: String`) - Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in.
 
 ### System (`res://addons/eventforge/registration/modules/system_aces.gd`)
 System (event-sheet System parity)
