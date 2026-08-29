@@ -65,13 +65,50 @@ const FIXTURE_XML := """<?xml version="1.0" encoding="UTF-8" ?>
 
 
 static func run() -> bool:
+	# On the way IN as well as out: an earlier test in the same process may have warmed the module's
+	# file map with this machine's real harvest, and what is pinned below is the cold reading.
+	_clean_up()
 	var all_passed: bool = true
 	all_passed = _test_cache_key() and all_passed
 	all_passed = _test_parse() and all_passed
 	all_passed = _test_plain() and all_passed
 	all_passed = _test_scan() and all_passed
 	all_passed = _test_doc_ids() and all_passed
+	all_passed = _test_the_credit_rides_with_the_text() and all_passed
 	_clean_up()
+	return all_passed
+
+
+## THE LICENCE TERM ON EVERY SURFACE, not just on the Manual page. The engine's prose reaches a
+## reader in three more places than the class page: a member's detail line in the picker, in the
+## parameters dialog and in the expression completions (all three build that line in one function),
+## and a search result's hover. Each of those quotes CC BY text, so each carries the credit - and a
+## line built from the project's OWN `##` comments must not, because nothing was quoted.
+static func _test_the_credit_rides_with_the_text() -> bool:
+	var all_passed: bool = true
+	var credit: String = EventSheetDocEngineReference.CREDIT_LINE
+
+	var inherited: Dictionary = {"name": "queue_free", "args": "",
+		"doc": "Queues this node for deletion.", "from": "Node"}
+	all_passed = _check("an inherited member's detail line credits the engine",
+		EventSheetScriptMembers.detail_of(inherited),
+		"Queues this node for deletion. · %s" % credit) and all_passed
+	var declared: Dictionary = {"name": "take_damage", "args": "amount: int",
+		"doc": "Hurts the player.", "from": ""}
+	all_passed = _check("a line built from the file's own comment credits nobody",
+		EventSheetScriptMembers.detail_of(declared),
+		"amount: int · Hurts the player.") and all_passed
+	var undescribed: Dictionary = {"name": "set_owner", "args": "owner: Node", "doc": "", "from": "Node"}
+	all_passed = _check("an inherited member with no harvested prose quotes nothing, so it credits nothing",
+		EventSheetScriptMembers.detail_of(undescribed), "owner: Node") and all_passed
+
+	all_passed = _check("a search row that quotes the engine credits it on hover",
+		EventSheetDocBrowser.result_tooltip({"title": "Timer",
+			"subtitle": "A countdown timer.", "credit": credit}),
+		"Timer\nA countdown timer.\n%s" % credit) and all_passed
+	all_passed = _check("a search row that quotes nothing has the tooltip it always had",
+		EventSheetDocBrowser.result_tooltip({"title": "Wait", "subtitle": "Modules/Timing"}),
+		"Wait\nModules/Timing") and all_passed
 	return all_passed
 
 
@@ -250,10 +287,14 @@ static func _write(path: String, text: String) -> void:
 		file.store_string(text)
 
 
-## The fixture tree, removed. CI runs the whole suite in ONE process, so a test that left files
-## under user:// would be handing whatever runs next a folder it did not make.
+## The fixture tree, removed - and the module's session cache with it. CI runs the whole suite in
+## ONE process, so a test that left files under user:// would be handing whatever runs next a folder
+## it did not make, and a test that left the file map WARM would be handing it this machine's real
+## harvest: asking for any class scans the cache directory once and keeps the answer for the rest of
+## the process. Both are dropped here, so the next test starts as cold as a fresh editor.
 static func _clean_up() -> void:
 	_remove_tree(FIXTURE_ROOT)
+	EventSheetDocEngineReference.reload()
 
 
 static func _remove_tree(directory: String) -> void:

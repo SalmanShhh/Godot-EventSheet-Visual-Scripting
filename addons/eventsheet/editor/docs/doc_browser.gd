@@ -1220,11 +1220,18 @@ static func result_row_text(result: Dictionary) -> String:
 	return line
 
 
-## The rest of the row, on hover: where it sits in the Manual.
+## The rest of the row, on hover: where it sits in the Manual, and - for a row whose subtitle was
+## quoted from somewhere with a licence on it - the credit that licence requires. The searcher
+## attaches that credit to the row it built, so the rule lives beside the text rather than here.
 static func result_tooltip(result: Dictionary) -> String:
 	var subtitle: String = str(result.get("subtitle", "")).strip_edges()
 	var title: String = str(result.get("title", ""))
-	return title if subtitle.is_empty() else "%s\n%s" % [title, subtitle]
+	if subtitle.is_empty():
+		return title
+	var credit: String = str(result.get("credit", "")).strip_edges()
+	if credit.is_empty():
+		return "%s\n%s" % [title, subtitle]
+	return "%s\n%s\n%s" % [title, subtitle, credit]
 
 
 ## The tree, derived from the bundle's own grouping (which is itself derived from the docs index).

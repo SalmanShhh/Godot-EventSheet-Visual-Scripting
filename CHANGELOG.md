@@ -6252,6 +6252,17 @@ the default 0.1 s only ever adds a jump that used to be dropped.
 - **The suite lock stops waiting eventually.** A run queued behind a holder that was alive but wedged
   waited forever with no output. It now gives up after 30 minutes (`-LockTimeoutMinutes`) and says
   where the holder's pid is written.
+- **The engine's text is credited on every surface that shows it, not only on its page.** The class
+  page and the exported site carried "Godot Engine documentation, used under CC BY 4.0."; the three
+  other places that quote the same prose did not. A member's detail line - in the verb picker, the
+  parameters dialog and the expression completions, all three of which build that line in one
+  function - now ends with the credit when the description was harvested from the engine, and not
+  when it came from the project's own `##` comments. A search result that shows the engine's own
+  one-line description carries the credit on hover, attached by the searcher that quoted it. That
+  is a term of the licence rather than a courtesy.
+- **The engine-reference test leaves the reference cache as cold as it found it.** It warmed a
+  session-wide file map with whatever this machine had really harvested and never dropped it, so
+  every later test in a serial run inherited it. It drops the map on the way in and on the way out.
 
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 

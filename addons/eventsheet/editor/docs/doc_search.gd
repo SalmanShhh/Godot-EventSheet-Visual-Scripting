@@ -660,6 +660,10 @@ static func _engine_hits(wanted: String) -> Array[Dictionary]:
 			"subtitle": brief if not brief.is_empty() else "Godot class reference",
 			"doc_id": EventSheetDocEngineReference.doc_id(class_id), "anchor": "",
 			"definition": null, "used": 0, "score": score,
+			# THE CREDIT RIDES WITH THE TEXT. `brief` is the engine's own sentence, published under
+			# CC BY 4.0, and attribution is a term of that licence rather than a courtesy. A row
+			# showing the plain fallback label quotes nothing, so it carries no credit either.
+			"credit": EventSheetDocEngineReference.CREDIT_LINE if not brief.is_empty() else "",
 		})
 		if hits.size() >= MAX_ENGINE_HITS:
 			break

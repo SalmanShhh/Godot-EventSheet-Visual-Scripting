@@ -124,15 +124,24 @@ static func signal_sources(sheet: EventSheetResource) -> Array[Dictionary]:
 
 ## The detail line a picker or a completion entry shows for one member: its arguments, then its own
 ## description. "" for a member with neither, because an empty explanation is worse than none.
+##
+## THE CREDIT RIDES WITH THE TEXT. A description for an INHERITED member is the engine's own prose,
+## published under CC BY 4.0, and attribution is a term of that licence rather than a courtesy - so
+## a line built from it ends with the credit, and a line built from the file's own `##` comments
+## does not. This is the one place the three surfaces that show a member (the picker, the parameters
+## dialog and the expression completions) build that line, so there is one rule and not three.
 static func detail_of(member: Dictionary) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	var args: String = str(member.get("args", "")).strip_edges()
 	if not args.is_empty():
 		parts.append(args)
 	var doc: String = str(member.get("doc", "")).strip_edges()
+	var from: String = str(member.get("from", "")).strip_edges()
 	if not doc.is_empty():
 		parts.append(doc)
-	var from: String = str(member.get("from", "")).strip_edges()
+		# `from` is set only where the description was harvested from the engine reference.
+		if not from.is_empty():
+			parts.append(EventSheetDocEngineReference.CREDIT_LINE)
 	if parts.is_empty() and not from.is_empty():
 		parts.append(EventSheetL10n.translate("from %s") % from)
 	return " · ".join(parts)
