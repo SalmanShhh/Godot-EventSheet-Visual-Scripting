@@ -95,6 +95,42 @@ groups, and a behavior's Include bar opens that behavior's reference. With the M
 **Follow selection** does the same thing as you click around, and pauses the moment you click
 inside the Manual to read (press the pin again to resume).
 
+### One answer, at three depths
+
+What F1 opens for a row is one page carrying three answers, in this order, because they are the
+same answer at three levels of knowing:
+
+1. **the entry** - what the verb is, what it ships as, what it takes;
+2. **Taught in** - the section of a written guide that teaches it, with a **Learn more** link that
+   lands on that heading rather than at the top of the page;
+3. **Filling it in** - the sentences the Parameters dialog puts under each of its fields, so you can
+   read them before you open the form.
+
+![A row's F1 page: the entry's description, a Taught in line naming the guide section with a Learn more link, and a Filling it in card carrying one paragraph per field, above the syntax and parameters band](images/row-doors.png)
+
+Nothing in the second or third depth is written twice. The section is found by the Manual's own
+ranked search over its own index, so a heading you rename here renames the link with it, and a verb
+the guides do not cover simply gets no link rather than one that lands on a page with nothing about
+it. The field sentences are read out of the same table the dialog's own foot reads. Which is also
+why writing a guide section whose **heading names a verb** is the single most useful thing you can
+do for that verb's entry: the heading is what the link lands on.
+
+The Parameters dialog carries the same **Learn more** link at the foot, on the row it is writing.
+
+### Your game is the example gallery
+
+An entry also answers backwards: it says where **your** project already uses the verb, and lists the
+rows. Clicking one opens that sheet at that event.
+
+![The foot of the same page: an In your project card reading Used 3 times in your project - open one, with three rows naming the file and line of each use](images/row-doors-project.png)
+
+The walk is made fresh every time the entry is drawn and stored nowhere - a cached count is a count
+that is wrong the moment somebody adds a row. Sheets there is a model of (the tabs you have open,
+the `.tres` files) are walked exactly, and the `.gd` files nobody has opened are recognised by the
+literal runs of the verb's own codegen line, because `.gd` is the default sheet format and lifting
+every script in a project would cost seconds at the moment you pressed a key. A verb your project
+has never used says so plainly - the absence is the answer, and it is worth knowing.
+
 ![Searching the Manual for "wait": the results list tags every row - glossary, System reference, engine reference, guide, behavior reference - and the glossary page is open beside it at the word wait, with the search term highlighted](images/manual-search.png)
 
 **One search box** covers all of it - conditions, actions, expressions, guides, System reference,

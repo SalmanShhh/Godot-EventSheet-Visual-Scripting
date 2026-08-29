@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Every row is a door, both ways
+
+- **One answer, at three depths.** F1 on a row (and its "What does this do?" menu item) now opens
+  the verb's entry, the written section that teaches it, and what the Parameters dialog says about
+  each of its fields - in one panel, in that order, because they are one answer given at three
+  levels of knowing and a reader who has to scroll between them is reading three pages again.
+  Neither of the two new depths is a second copy of anything: the section is a join against the
+  Manual's own baked search index, so a guide that renames a heading renames the link with it, and
+  the field sentences are read out of the very table the dialog's foot reads. A verb the written
+  guides do not cover simply gets no link, rather than one that lands on a page with nothing about
+  it.
+- **The Parameters dialog gained the way out.** Its help strip carries a "Learn more" link naming
+  the guide section that teaches the row being written, and landing on the heading itself rather
+  than at the top of the guide.
+- **The door swings back: your game is the example gallery.** A reference entry now says where your
+  own project already uses the verb - "Used 12 times across 3 sheets in your project" - and lists
+  the rows, each one a click away from opening that sheet at that event. The walk is made fresh
+  every time the entry is drawn and stored nowhere: a cached count is a count that is wrong the
+  moment somebody adds a row. Sheets there is a model of (the open tabs, the `.tres` files) are
+  walked exactly; the `.gd` files nobody has opened are recognised by the literal runs of the verb's
+  own codegen line, because `.gd` is the default sheet format and lifting every script in a project
+  would cost seconds at the moment the reader pressed a key. A verb the project has never used says
+  so plainly - the absence is the answer.
+- **One cross-sheet landing, not two.** Opening a row in another sheet from the Manual goes through
+  the same door the Find results bar uses, including the part that is actually hard: a `.gd` opens
+  on a worker thread, so the landing is remembered before the open and re-tried when the finished
+  sheet swaps in.
+- **The same doors from the search and the picker.** A verb found in the Manual's search box, and
+  the info affordance beside an entry in the picker, resolve to the same entry a row's F1 does -
+  one page rather than three surfaces each explaining a verb their own way.
+
 ### The Manual - one search, and the engine's own words
 
 - **The search index ships baked.** The reader's first keystroke used to build it: reading the whole
