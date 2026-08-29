@@ -5210,3 +5210,37 @@ is on screen,화면에 있음
 The node to ask about.,물어볼 대상 노드입니다.
 The child that was just added under this node. Filled in for you when the trigger fires.,이 노드 아래에 방금 추가된 자식입니다. 트리거가 발생할 때 자동으로 채워집니다.
 The child that is leaving this node. Filled in for you when the trigger fires.,이 노드에서 벗어나는 중인 자식입니다. 트리거가 발생할 때 자동으로 채워집니다.
+this run,이번 실행
+no run yet,아직 실행 없음
+last run,마지막 실행
+"last run, %s","마지막 실행, %s"
+Event %d,이벤트 %d
+never fired,한 번도 실행되지 않음
+fired %s time,%s회 실행
+fired %s times,%s회 실행
+%.2f ms each,회당 %.2f ms
+%.1f times a frame,프레임당 %.1f회
+Project View,프로젝트 보기
+Every sheet,모든 시트
+Runs as,실행 대상
+Events,이벤트
+Described,설명됨
+Findings,발견 항목
+"A name, a node, an animation, a mode…","이름, 노드, 애니메이션, 모드…"
+Find,찾기
+Find across every sheet,모든 시트에서 찾기
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.","이름은 한 가지가 아닙니다. 쓰기, 읽기, 비교는 서로 다른 사실이며, 패싯이 어느 쪽을 찾고 있는지 정합니다."
+Hits,결과
+Your Game: the selected sheet's own page,내 게임: 선택한 시트 자신의 페이지
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.",이 페이지는 시트를 선택할 때마다 새로 구성되므로 오래될 수 없습니다. 위에서 시트를 선택하면 읽을 수 있습니다.
+%d of %d described,%d / %d개 설명됨
+Autoload sheet,자동 로드 시트
+Behavior sheet,비헤이비어 시트
+Test sheet,테스트 시트
+"Node type %s, extending %s","노드 타입 %s, %s 확장"
+Sheet on %s,%s의 시트
+%s constant,%s 상수
+"%s, exported","%s, 내보냄"
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: 이 프로젝트의 스크립트 %d개 중 측정을 위해 열 수 있는 것이 없습니다. 플러그인을 설치해도 바뀐 것은 없습니다 - 시트로 열기 전까지 스크립트는 코드 그대로입니다.
+%d more node(s) mirrored by a negative scale,음수 스케일로 뒤집힌 노드 %d개 더
+%d more node(s) scaled unevenly and turned,고르지 않게 스케일되고 회전한 노드 %d개 더

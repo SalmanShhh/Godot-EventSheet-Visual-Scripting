@@ -5210,3 +5210,37 @@ is on screen,画面内にある
 The node to ask about.,問い合わせる対象のノードです。
 The child that was just added under this node. Filled in for you when the trigger fires.,このノードの下に今追加された子ノードです。トリガーが発火したときに自動で入ります。
 The child that is leaving this node. Filled in for you when the trigger fires.,このノードから離れようとしている子ノードです。トリガーが発火したときに自動で入ります。
+this run,今回の実行
+no run yet,実行はまだありません
+last run,前回の実行
+"last run, %s",前回の実行、%s
+Event %d,イベント %d
+never fired,一度も実行されていません
+fired %s time,%s 回実行
+fired %s times,%s 回実行
+%.2f ms each,1 回あたり %.2f ms
+%.1f times a frame,1 コマあたり %.1f 回
+Project View,プロジェクトビュー
+Every sheet,すべてのシート
+Runs as,実行対象
+Events,イベント
+Described,説明済み
+Findings,指摘
+"A name, a node, an animation, a mode…",名前、ノード、アニメーション、モード…
+Find,検索
+Find across every sheet,すべてのシートを検索
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.",名前は一つの事実ではありません。書き込み、読み取り、比較はそれぞれ別の事実で、どれを探しているかはファセットが決めます。
+Hits,ヒット
+Your Game: the selected sheet's own page,あなたのゲーム: 選んだシート自身のページ
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.",このページは選ぶたびにシートから組み立てられるので、古くなることがありません。上でシートを選ぶと読めます。
+%d of %d described,%d / %d 件に説明あり
+Autoload sheet,オートロードシート
+Behavior sheet,ビヘイビアシート
+Test sheet,テストシート
+"Node type %s, extending %s",ノード型 %s（%s を継承）
+Sheet on %s,%s 上のシート
+%s constant,%s 定数
+"%s, exported",%s、エクスポート
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: このプロジェクトの %d 個のスクリプトのうち、測定のために開けたものはありません。プラグインを入れても何も変わっていません - スクリプトはシートとして開くまでコードのままです。
+%d more node(s) mirrored by a negative scale,負のスケールで反転しているノードが他に %d 件
+%d more node(s) scaled unevenly and turned,不均一にスケールされて回転しているノードが他に %d 件

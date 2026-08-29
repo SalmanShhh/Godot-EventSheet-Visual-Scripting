@@ -5210,3 +5210,37 @@ is on screen,在屏幕上
 The node to ask about.,要询问的节点。
 The child that was just added under this node. Filled in for you when the trigger fires.,刚刚添加到该节点下的子节点。触发时会自动为你填好。
 The child that is leaving this node. Filled in for you when the trigger fires.,正在离开该节点的子节点。触发时会自动为你填好。
+this run,本次运行
+no run yet,尚无运行记录
+last run,上次运行
+"last run, %s",上次运行，%s
+Event %d,事件 %d
+never fired,从未触发
+fired %s time,触发 %s 次
+fired %s times,触发 %s 次
+%.2f ms each,每次 %.2f 毫秒
+%.1f times a frame,每帧 %.1f 次
+Project View,项目视图
+Every sheet,所有事件表
+Runs as,运行为
+Events,事件
+Described,已描述
+Findings,发现项
+"A name, a node, an animation, a mode…",名称、节点、动画、模式…
+Find,查找
+Find across every sheet,在所有事件表中查找
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.",名称不是一件事：写入、读取和比较是关于它的不同事实，分面决定你在找哪一个。
+Hits,命中
+Your Game: the selected sheet's own page,你的游戏：所选事件表自己的页面
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.",每次选择事件表时都会重新生成该页面，因此它不会过时。在上方选择一个事件表即可阅读。
+%d of %d described,%d / %d 项已描述
+Autoload sheet,自动加载事件表
+Behavior sheet,行为事件表
+Test sheet,测试事件表
+"Node type %s, extending %s",节点类型 %s，继承 %s
+Sheet on %s,%s 上的事件表
+%s constant,%s 常量
+"%s, exported",%s，已导出
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: 本项目共 %d 个脚本，但没有一个能被打开以进行测量。安装插件本身没有改变任何东西 - 在你把脚本作为事件表打开之前，它仍然只是代码。
+%d more node(s) mirrored by a negative scale,另有 %d 个节点因负缩放而被镜像
+%d more node(s) scaled unevenly and turned,另有 %d 个节点被不均匀缩放并旋转

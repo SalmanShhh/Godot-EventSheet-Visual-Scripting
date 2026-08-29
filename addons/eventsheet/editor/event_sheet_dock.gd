@@ -595,6 +595,11 @@ func _on_translations_maybe_changed() -> void:
 	# added, a scene saved or an action declared in Project Settings changes them with nothing in any
 	# sheet having moved.
 	EventSheetCompletions.clear_cache()
+	# And what a script the rows are AIMED at declares - the methods a Call Method field offers and
+	# the signals a Connect Signal one does. Entries are keyed by the file's identity, so a saved
+	# script adds a key and the superseded one would sit there for the rest of the session: correct,
+	# and one entry per save of every script until the editor restarts.
+	EventSheetScriptMembers.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:

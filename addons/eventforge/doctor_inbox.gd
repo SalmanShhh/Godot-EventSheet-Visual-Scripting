@@ -109,12 +109,19 @@ static func sections(triaged: Array[Dictionary]) -> Array[Dictionary]:
 
 
 ## A check id, in words. Derived from the id rather than looked up in a table, so a section added
-## tomorrow is titled the moment it reports and nobody has to remember to name it here.
+## tomorrow is titled the moment it reports and nobody has to remember to name it here - and derived
+## titles are the reason this one is not written as a literal the way the severity headings above
+## are: there is no list of them to write.
+##
+## It still goes through the catalog, so a heading a project has named in its own drop-in CSV comes
+## back named. A heading nobody has keyed comes through in the check's own words, which the sweep
+## cannot see because the argument is computed - so the words themselves have to be readable, and
+## the sentence a reader acts on is the finding's own message under it, which IS keyed.
 static func label_for(check_id: String) -> String:
 	var words: String = check_id.replace("-", " ").strip_edges()
 	if words.is_empty():
-		return "Other"
-	return words.substr(0, 1).to_upper() + words.substr(1)
+		return EventSheetL10n.translate("Other")
+	return EventSheetL10n.translate(words.substr(0, 1).to_upper() + words.substr(1))
 
 
 ## The one line the status bar gets: what was found, and how much of it is new.

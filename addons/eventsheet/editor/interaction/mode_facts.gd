@@ -188,6 +188,11 @@ static func member_for(word: String) -> String:
 	return trimmed.replace(" ", "_").to_upper()
 
 
+## How many modes the band names before it starts counting. A band is a place to look, not a list of
+## everything: a game with twenty modes says the first few and how many more there are.
+const BAND_NAMES_SHOWN: int = 6
+
+
 ## The band's reading: the modes this sheet declares and the one it starts in, in one line, because
 ## that is one fact - what the modes of this game ARE. Empty for a sheet that declares none.
 static func band_reading(sheet: EventSheetResource) -> String:
@@ -195,7 +200,10 @@ static func band_reading(sheet: EventSheetResource) -> String:
 	if said.is_empty():
 		return ""
 	var opening: String = starts_in(sheet)
-	var listed: String = " · ".join(said)
+	var shown: PackedStringArray = said.slice(0, BAND_NAMES_SHOWN)
+	var listed: String = " · ".join(shown)
+	if said.size() > shown.size():
+		listed += " · " + EventSheetL10n.translate("%d more") % (said.size() - shown.size())
 	return listed if opening.is_empty() else "%s - starts in %s" % [listed, opening]
 
 

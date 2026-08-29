@@ -648,6 +648,36 @@
   later test that pins cold state on continuous integration, which runs the suite serially in one.
   Both now start cold and end cold.
 
+- **The transform bands name three and count the rest.** A scene with fifty mirrored bodies grew
+  fifty head bands, one per node, while the animations band added to the same head in the same pass
+  did the right thing beside it. A head is a place to look, not an inventory: three of a kind are
+  named and the others counted in one line after them. The modes band counts past six the same way.
+- **A score over nothing measured is not 100%.** The Interop line reported a perfect adoption score
+  for a project whose candidate scripts all failed to open - the one number nobody had taken. It says
+  what happened instead: how many scripts there are, and that none of them could be opened to
+  measure.
+- **What a script declares is dropped when the script changes.** The cache behind the Call Method and
+  Connect Signal fields said in its own comment that it was dropped on the editor's filesystem ping,
+  and nothing dropped it. Its entries are keyed by the file's identity, so every save of every script
+  added a key and the superseded one stayed for the rest of the session. It is now on the same hook
+  as every other by-file reader, and the hook's own gate names it.
+- **The picker's law is the law the picker keeps.** The note above the gate table named three things
+  that may still be hidden and the picker hid a fourth. The list is closed and stated with its
+  reasons - a reader's own choices, a deprecated row, and a project-scoped template whose per-scene
+  copies are what the picker lists - and the picker asks one shared answer rather than deciding for
+  itself, so the words and the behaviour cannot drift. The suite walks every shipped definition
+  through that answer and fails on a hide outside the list, having first proved the answer on a
+  definition wearing each mark: a gated entry is on screen to explain itself, and a hidden one is
+  not, so the hiding path needed a gate of its own.
+- **The Doctor's section headings, the run labels and the Project View speak the other eight
+  languages.** The inbox argued at length that a heading nobody keyed is the one English line in a
+  translated window, and then derived its own section headings from check ids without going near the
+  catalog; they go through it now, so a project that names a section in its own drop-in file gets
+  that name. The gutter's run labels ("last run, %s", "fired 12 times", "0.42 ms each"), everything
+  the Project View window says, and the sentences the project manual writes about a sheet
+  ("Behavior sheet", "3 of 8 described", "int, exported") were all bare English in a pass that keyed
+  its other new words. Thirty-four keys, in all eight catalogs, in the terminology already there.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be

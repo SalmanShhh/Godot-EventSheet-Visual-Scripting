@@ -64,6 +64,14 @@ static func run() -> bool:
 	ok = _check("a corpus with nothing in it reports nothing",
 		EventSheetInteropDoctor.report(PackedStringArray()).size(), 0) and ok
 
+	# A score over nothing is not 100. A project whose candidates could not be opened at all used to
+	# read as a perfect one, which is the one number nobody had taken.
+	var unmeasurable: Array[Dictionary] = EventSheetInteropDoctor.report(
+		PackedStringArray(["res://tests/fixtures/interop_corpus/not_a_file.gd"]))
+	ok = _check("nothing measured says so instead of claiming a full score",
+		str(unmeasurable[0].get("message", "")) if not unmeasurable.is_empty() else "",
+		"Interop: 1 script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") and ok
+
 	# The section asks the project index how many other files call each function, which starts the
 	# project-wide scan and leaves three caches warm. Continuous integration runs the whole suite
 	# serially in ONE process, so anything left warm here is inherited by every later test that pins

@@ -64,10 +64,12 @@ static func is_live() -> bool:
 ## What the numbers ARE, in the words the tooltip and the status line use.
 static func label() -> String:
 	if is_live():
-		return "this run"
+		return EventSheetL10n.translate("this run")
 	if _stored.is_empty():
-		return "no run yet"
-	return "last run" if _stored_when.is_empty() else "last run, %s" % _stored_when
+		return EventSheetL10n.translate("no run yet")
+	if _stored_when.is_empty():
+		return EventSheetL10n.translate("last run")
+	return EventSheetL10n.translate("last run, %s") % _stored_when
 
 
 ## WHEN the stored run was written, and "" when no run has been written at all. It is the identity
@@ -207,18 +209,20 @@ static func chip_text(uid: String, costs: bool) -> String:
 static func tooltip_for(uid: String, event_number: int = 0) -> String:
 	if not has_numbers() or uid.is_empty():
 		return ""
-	var lead: String = "Event %d: " % event_number if event_number > 0 else ""
+	var lead: String = (EventSheetL10n.translate("Event %d") % event_number) + ": " if event_number > 0 else ""
 	var count: int = calls_for(uid)
 	var run_words: String = " (%s)" % label()
 	if count == 0:
-		return lead + "never fired" + run_words + "."
+		return lead + EventSheetL10n.translate("never fired") + run_words + "."
 	var parts: PackedStringArray = PackedStringArray()
-	parts.append("fired %s time%s" % [EventSheetTraceHitCounts.format_count(count), "" if count == 1 else "s"])
+	var fires: String = EventSheetTraceHitCounts.format_count(count)
+	parts.append(EventSheetL10n.translate("fired %s time") % fires if count == 1
+		else EventSheetL10n.translate("fired %s times") % fires)
 	var ms: float = ms_for(uid)
 	if ms >= 0.0:
-		parts.append("%.2f ms each" % ms)
+		parts.append(EventSheetL10n.translate("%.2f ms each") % ms)
 	if is_absurd(uid):
-		parts.append("%.1f times a frame" % fires_per_frame(uid))
+		parts.append(EventSheetL10n.translate("%.1f times a frame") % fires_per_frame(uid))
 	return lead + ", ".join(parts) + run_words + "."
 
 
