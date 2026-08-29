@@ -5075,3 +5075,138 @@ Log (Debug Builds Only) compiles the line out of a release game.,Лог (тол�
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,"%s стоит %.2f мс кадра в последнем измеренном запуске - %d%% от %.1f мс, которые есть у кадра при 60 fps."
 "A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Слот сохранения этой игры хранит %d значени(й), записанных из %d скрипт(ов): %s. Всё, чего нет в этом списке, вернётся к начальному значению при загрузке слота."
 %s and %d more,%s и ещё %d
+Go To Mode,Перейти в режим
+Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,"Переводит всю игру в другой режим и сообщает об этом. Группы, работающие в режиме, сами запускаются и останавливаются; строки При входе и При выходе делают работу самого момента."
+Game State,Состояние игры
+Go to mode {mode},Перейти в режим {mode}
+Mode,Режим
+Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.,Один из объявленных режимов этой игры. Объявляются они в диалоге «Изменить режимы» в шапке листа.
+In Mode,В режиме
+"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.","Истинно, пока игра находится в этом режиме. Для целой группы строк укажите это один раз на группе - слово «работает в» у группы делает то же для каждой строки внутри."
+In mode {mode},В режиме {mode}
+Push Mode,Наложить режим
+"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.","Переходит в режим, ЗАПОМИНАЯ тот, что под ним - меню, открытое поверх паузы, которая лежит поверх игры. «Назад» возвращает к тому, что было под этим, - это ошибка клавиши Escape, решённая в самом словаре."
+Push mode {mode},Наложить режим {mode}
+Go Back,Назад
+"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.","Возвращает к режиму под этим - меню закрывается на паузу, поверх которой оно открылось. Если ничего не наложено, не делает ничего, поэтому его безопасно повесить на клавишу."
+Go back,Назад
+On Entering Mode,При входе в режим
+"Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.","Выполняется в момент, когда игра входит в этот режим. При выходе срабатывает СНАЧАЛА, всегда в таком порядке, чтобы комната опустела прежде, чем наполнится следующая."
+On entering {mode},При входе в {mode}
+On Leaving Mode,При выходе из режима
+"Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.","Выполняется в момент, когда игра покидает этот режим, прежде всего, что отвечает на режим, в который она входит. Приглушите музыку здесь и верните её в другом."
+On leaving {mode},При выходе из {mode}
+Keep Between,Держать между
+"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.","Удерживает значение в диапазоне, что бы с ним ни делали ещё - здоровье, которое не может превысить максимум, громкость, которая не уходит в минус, зум камеры с нижней и верхней границей. Записано здесь один раз вместо двух сравнений везде, где значение меняется."
+Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i],Держать [b]{var_name}[/b] между [i]{low}[/i] и [i]{high}[/i]
+The value being kept in range.,"Значение, удерживаемое в диапазоне."
+At least,Не менее
+It never goes below this.,Ниже этого не опускается.
+At most,Не более
+It never goes above this.,Выше этого не поднимается.
+Move Toward (each tick),Приближать (за тик)
+"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.","Плавно подводит значение к другому - устаканивающийся зум камеры, догоняющая полоса, выцветающий цвет. За каждый тик оно закрывает долю оставшегося разрыва, поэтому замедляется у цели и никогда не доходит до конца. Это же означает, что на быстрой машине оно проходит больше, чем на медленной: если скорость должна быть одинаковой везде, используйте «Приближать (плавно)», которое говорит то же самое за секунду."
+Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick,Приближать [b]{var_name}[/b] к [i]{target}[/i] на [i]{weight}[/i] за тик
+The value being eased.,"Значение, которое приближают."
+The value it heads for.,"Значение, к которому оно движется."
+Each tick,За тик
+How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.,"Какую долю оставшегося разрыва оно закрывает за тик. 0,1 - это десятая часть пути."
+Rescale,Перевести шкалу
+"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.","Переводит число, измеренное по одной шкале, в то же число по другой - здоровье в очках в диапазон полосы от 0 до 1, температуру в положение цвета, проценты ползунка в громкость. Формула, которую никто не помнит, названная по своему назначению."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b],Перевести [i]{amount}[/i] из [i]{in_low}[/i]..[i]{in_high}[/i] в [i]{out_low}[/i]..[i]{out_high}[/i] в [b]{into}[/b]
+Where the rescaled number is put.,Куда записывается пересчитанное число.
+The number being rescaled.,"Число, которое пересчитывают."
+What counts as empty in the number's own range.,Что считается пустым в собственном диапазоне числа.
+What counts as full in the number's own range.,Что считается полным в собственном диапазоне числа.
+Into range,Целевой диапазон
+What empty becomes.,Во что превращается пустое.
+What full becomes.,Во что превращается полное.
+Wrap Around,Заворачивать
+"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.","Пускает значение по кругу вместо того, чтобы дать ему уйти за край - курс, который проходит 360 и возвращается к 0, индекс, который шагает за последний элемент и возвращается к первому, часы. Нижняя граница включена, верхняя нет - поэтому 360 и 0 это один и тот же курс, а не два."
+Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i],Заворачивать [b]{var_name}[/b] в [i]{low}[/i]..[i]{high}[/i]
+The value being wrapped.,"Значение, которое заворачивают."
+The low end it comes back to.,"Нижняя граница, к которой оно возвращается."
+The high end it goes past.,"Верхняя граница, за которую оно уходит."
+Move Forward,Двигать вперёд
+"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.","Двигает 2D-узел туда, КУДА ОН СМОТРИТ, куда бы это ни было - корабль под тягой, пуля вдоль собственного ствола, машина по направлению капота. Поворот узла поворачивает и направление - именно это отличает такое движение от движения по осям мира."
+Move [b]forward[/b] [i]{speed}[/i]/s · its own facing,Двигать [b]вперёд[/b] [i]{speed}[/i]/с · собственное направление
+Pixels a second.,Пикселей в секунду.
+Move (the world's way),Двигать (по осям мира)
+"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.","Двигает 2D-узел так, как это понимает ЭКРАН, как бы узел ни был повёрнут - плывущие облака, падающий снег, платформа на рельсах. Поворот узла ничего не меняет в том, куда он идёт, - именно это отличает такое движение от движения по собственному направлению."
+Move [b]{direction}[/b] [i]{speed}[/i]/s · the world's way,Двигать [b]{direction}[/b] [i]{speed}[/i]/с · по осям мира
+Which way the SCREEN means - it does not turn with the node.,Направление в понимании ЭКРАНА - оно не поворачивается вместе с узлом.
+"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.","Ведёт 2D-узел вокруг точки с постоянной скоростью, сохраняя расстояние - луна вокруг планеты, дверь на петле, поворачивающаяся спутниковая тарелка. Орбита, которую все пишут через синус и косинус, названная тем, чем она является. Собственный угол узла не трогается: поверните и его, если он должен смотреть по ходу движения."
+Turn around [i]{centre}[/i] at [b]{degrees_per_second}[/b]°/s,Кружить вокруг [i]{centre}[/i] со скоростью [b]{degrees_per_second}[/b]°/с
+"The place it goes round - a marker, another node's position, a point.","Место, вокруг которого он кружит, - маркер, позиция другого узла, точка."
+"Degrees a second, turning clockwise on screen; a negative number goes the other way.","Градусов в секунду, по часовой стрелке на экране; отрицательное число вращает в другую сторону."
+Face,Повернуться к
+"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.","Поворачивает 2D-узел к месту с предельной скоростью, а не мгновенно - турель, ведущая цель; враг, которому надо развернуться, прежде чем броситься. Он никогда не проскакивает и останавливается, когда смотрит куда надо."
+"Face [i]{target}[/i], max [b]{degrees_per_second}[/b]°/s","Повернуться к [i]{target}[/i], не быстрее [b]{degrees_per_second}[/b]°/с"
+"The place to turn toward - a node's global position, or a point.","Место, к которому поворачиваться, - глобальная позиция узла или точка."
+Max degrees per second,Макс. градусов в секунду
+The fastest it may turn. Make it huge to snap.,"Максимальная скорость поворота. Поставьте очень большую, чтобы поворот был мгновенным."
+Swing,Качнуть
+"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.","Качает 2D-узел на заданный угол за заданное время и оставляет его там - открывающаяся дверь, опущенный рычаг, подъёмный мост. Он вращается вокруг СОБСТВЕННОГО начала координат узла, поэтому где стоит это начало, там и петля: сдвиньте его к краю двери в редакторе, и дверь будет открываться на своём краю."
+Swing [b]{degrees}[/b]° over [i]{seconds}[/i] s,Качнуть на [b]{degrees}[/b]° за [i]{seconds}[/i] с
+How far it swings from where it is now.,Насколько он повернётся от нынешнего положения.
+Over,За
+How long the swing takes.,Сколько длится качание.
+Queue Animation,Поставить анимацию в очередь
+"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.","Ставит анимацию в очередь, чтобы она автоматически проигралась по окончании текущей - цепочки комбо или возврат в покой после атаки, без таймера."
+queue animation {animation},поставить анимацию {animation} в очередь
+The clip to play once the current one finishes.,"Клип, который проиграется, как только закончится текущий."
+Set Current Animation,Задать текущую анимацию
+Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,"Меняет, какой клип является текущим (присваивание сразу запускает его) - прямая установка, когда аргументы смешивания у Воспроизвести не нужны."
+set current animation to {animation},задать текущую анимацию {animation}
+The clip to make current (assigning it also plays it).,"Клип, который станет текущим (присваивание также его проигрывает)."
+Has Animation,Есть анимация
+True when this player owns a clip by that name - guard a Play so a missing animation never errors.,"Истинно, когда у этого проигрывателя есть клип с таким именем - подстрахуйте им Воспроизвести, чтобы отсутствующая анимация никогда не давала ошибку."
+has animation {animation},есть анимация {animation}
+Clip name to check for.,Имя клипа для проверки.
+Play Then,"Воспроизвести, затем"
+"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.","Проигрывает одну анимацию и ставит следующую за ней - атака, затем покой; прыжок, затем падение. Ожидание берёт на себя сам движок: вторая стартует в момент окончания первой, и нет таймера, который надо держать в такт. ЗАЦИКЛЕННАЯ анимация не заканчивается никогда, поэтому цепочка за ней не наступает."
+Play {animation} then {next},"Воспроизвести {animation}, затем {next}"
+The clip to play now.,"Клип, который проигрывается сейчас."
+Then,Затем
+The clip that plays the moment the first one ends.,"Клип, который проигрывается в момент окончания первого."
+Reached Marker,Достигнут маркер
+"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.","Истинно, как только головка воспроизведения клипа прошла именованный момент на его дорожке - кадр, в котором приходится удар, в единственной форме, доступной ключевой анимации. Сдвиньте этот момент в панели анимации, и он сдвинется; строка при этом не меняется."
+{animation} has reached {marker},{animation} достигла {marker}
+The clip whose timeline the moment lives on.,"Клип, на дорожке которого находится этот момент."
+Marker,Маркер
+The named moment on that clip's timeline.,Именованный момент на дорожке этого клипа.
+On Something Went Wrong,Когда что-то пошло не так
+"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.","Выполняется, когда во время работы игры происходит ошибка скрипта - в том числе в сборке, которая уже у игрока, а не только в редакторе. Отчёт говорит, что и где не удалось. Сохраните его в файл, покажите окно «пришлите нам это» или просто пропустите сломанное и играйте дальше."
+On something went wrong ([b]report[/b]),Когда что-то пошло не так ([b]report[/b])
+report,report
+"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.","Что и где не удалось, словами самого движка - сообщение, скрипт и строка. Заполняется за вас при срабатывании триггера."
+On The Frame Running Long,"На кадре, идущем долго"
+"True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.","Истинно на ЕДИНСТВЕННОМ кадре, где игра превышала бюджет всю указанную вами серию, и молчит после этого, пока кадр снова не уложится в бюджет. Здесь игра сама убавляет свои эффекты. Нужен покадровый триггер."
+On the frame running long [b]{ms}[/b] ms for [b]{frames}[/b] frames,"На кадре, идущем дольше [b]{ms}[/b] мс уже [b]{frames}[/b] кадров"
+Over Milliseconds,Дольше миллисекунд
+A frame longer than this counts as a long one. 16.6 is one frame at 60 FPS.,"Кадр длиннее этого считается долгим. 16,6 - это один кадр при 60 кадрах в секунду."
+For Frames,В течение кадров
+How many long frames in a row before this fires. One hitch is not a problem; half a second of them is.,"Сколько долгих кадров подряд нужно, чтобы это сработало. Один рывок - не беда; полсекунды рывков - беда."
+On The Frame Recovered,"На кадре, где всё выправилось"
+"True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.","Истинно на ЕДИНСТВЕННОМ кадре, где игра всю указанную серию шла с запасом, после того как раньше превышала бюджет. Здесь эффекты возвращаются. Оно никогда не срабатывает, пока не было долгого отрезка, так что игра, начавшая хорошо, не услышит ничего. Нужен покадровый триггер."
+On the frame recovered under [b]{ms}[/b] ms for [b]{frames}[/b] frames,"На кадре, где [b]{frames}[/b] кадров подряд уложились в [b]{ms}[/b] мс"
+Under Milliseconds,Быстрее миллисекунд
+A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,Кадр короче этого считается спокойным. Держите его заметно ниже порога долгого кадра - именно зазор между двумя значениями не даёт игре дёргаться туда-сюда.
+How many calm frames in a row before this fires. Long enough that a lull in the action is not mistaken for a fix.,"Сколько спокойных кадров подряд нужно, чтобы это сработало. Достаточно много, чтобы затишье в действии не приняли за исправление."
+Draw In Front Of,Рисовать перед
+"Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.","Ставит этот узел на шаг впереди другого в порядке отрисовки, каким бы ни был порядок того узла. Относительность здесь намеренная: передвиньте пару, и порядок сохранится, тогда как два вручную выставленных числа со временем разойдутся."
+Rendering,Отрисовка
+draw in front of {other},рисовать перед {other}
+In front of,Перед
+The node to draw over - this one takes its drawing order plus one.,"Узел, поверх которого рисовать, - этот берёт его порядок отрисовки плюс один."
+Show Only To,Показывать только
+"Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.","Ограничивает, какие камеры рисуют этот узел: камера рисует только то, что есть и в её маске отсечения, и в слое видимости узла. Имена слоёв - собственные имена проекта (Настройки проекта > Имена слоёв > 2D Render); именно так метка мини-карты видна мини-карте и никому больше."
+show only to {layers},показывать только {layers}
+Visible to,Видно для
+"The visibility layers that may see this node, by their project names.","Слои видимости, которым позволено видеть этот узел, под их именами в проекте."
+Is On Screen,На экране
+"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.","Истинно, пока узел находится в том, что показывает камера. Работает через собственный VisibleOnScreenNotifier2D движка и добавляет его узлу при первом обращении, если у узла его нет, - обычный дочерний узел, который виден в сцене, который можно двигать, менять в размере и оставить."
+is on screen,на экране
+The node to ask about.,"Узел, о котором спрашивают."
+The child that was just added under this node. Filled in for you when the trigger fires.,"Дочерний узел, только что добавленный под этим узлом. Заполняется за вас при срабатывании триггера."
+The child that is leaving this node. Filled in for you when the trigger fires.,"Дочерний узел, покидающий этот узел. Заполняется за вас при срабатывании триггера."

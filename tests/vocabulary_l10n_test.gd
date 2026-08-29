@@ -60,6 +60,11 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/multiplayer_aces.gd",
 	"res://addons/eventforge/registration/modules/light_node_aces.gd",
 	"res://addons/eventforge/registration/modules/scene_lighting_aces.gd",
+	# The game's own mode, and the value-shaping and movement words. Three modules that shipped
+	# whole, so the whole of each is owed.
+	"res://addons/eventforge/registration/modules/game_state_aces.gd",
+	"res://addons/eventforge/registration/modules/math_words_aces.gd",
+	"res://addons/eventforge/registration/modules/space_words_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -82,6 +87,14 @@ const EXTENDED_MODULES: Dictionary = {
 		"TrailNewest", "TrailLength", "LogTrail", "SaveTrailCsv", "ClearTrail",
 		"FrameOverBudget", "FpsBelowFor", "StartMeasuring", "StopMeasuring", "MeasuredLast",
 		"MeasuredAverage", "MeasuredPeak", "LogMeasurements", "ClearMeasurements",
+		# The two edges of the budget: the frame it went long on, and the frame it came right on.
+		"FrameRunningLong", "FrameRecovered",
+	],
+	# The wire's own words need no entry of their own: multiplayer_aces.gd is listed above as a
+	# WHOLLY new module, so every descriptor it grows is already swept.
+	# Drawing order as a sentence, and the on-screen question.
+	"res://addons/eventforge/registration/modules/rendering_aces.gd": [
+		"RenderingDrawInFrontOf", "RenderingShowOnlyTo", "RenderingIsOnScreen",
 	],
 	# The flow wave: the service registry, the capability loop and the deferral verbs.
 	"res://addons/eventforge/registration/modules/node_aces.gd": [
@@ -91,9 +104,10 @@ const EXTENDED_MODULES: Dictionary = {
 		"RemoveChild", "HierarchyAddChild", "HierarchyRemoveFromParent", "SetIgnoreParentMovement",
 		"CopyPlaceTo", "StopCopyingPlace", "ForEachChildOf", "MoveChild", "QueueFreeNode",
 	],
-	# The hierarchy wave's two triggers, and the element-input trigger that shipped beside them.
+	# The hierarchy wave's two triggers, the element-input trigger that shipped beside them, and the
+	# error trigger a shipped build fires.
 	"res://addons/eventforge/registration/modules/core_aces.gd": [
-		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree",
+		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree", "OnSomethingWentWrong",
 	],
 	# The data wave: watched data files and the data-folder validation verbs.
 	"res://addons/eventforge/registration/modules/resource_aces.gd": [
@@ -116,6 +130,9 @@ const EXTENDED_MODULES: Dictionary = {
 	"res://addons/eventforge/registration/modules/animation_player_aces.gd": [
 		"AnimationIsBetween", "PauseAnimationFor",
 		"OnAnimationFrame", "SpriteAnimationFrameIs", "OnAnimationEvent",
+		# The names picked off the scene: the two rows that wave added, and the three whose fields
+		# stopped being free text.
+		"PlayThenQueue", "AnimationPastMarker", "QueueAnimation", "SetAnimationTime", "HasAnimation",
 	],
 	# The press remembered for a moment so an input made slightly too early still lands,
 	# in seconds and in the frame-counted spelling beside it.
@@ -274,9 +291,10 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_MODULES: Array[String] = [
 	"clipboard_aces.gd", "cursor_canvas_aces.gd", "editor_author_aces.gd", "facing_aces.gd",
-	"game_mechanics_aces.gd", "light_node_aces.gd", "lighting_aces.gd", "multiplayer_aces.gd",
-	"resource_aces.gd", "scene_lighting_aces.gd", "spatial_aces.gd", "spatial_words_aces.gd",
-	"table_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"
+	"game_mechanics_aces.gd", "game_state_aces.gd", "light_node_aces.gd", "lighting_aces.gd",
+	"math_words_aces.gd", "multiplayer_aces.gd", "resource_aces.gd", "scene_lighting_aces.gd",
+	"spatial_aces.gd", "space_words_aces.gd", "spatial_words_aces.gd", "table_aces.gd",
+	"text_extract_aces.gd", "text_format_aces.gd"
 ]
 
 

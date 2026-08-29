@@ -71,8 +71,14 @@ static func _node() -> ACEParam:
 	return F.make_param("node", "Node", "self", "On", "The canvas host - any Node2D. Its drawing surface is created on first use.", "expression")
 
 
+## A pixel coordinate on the drawing surface. The sentence is composed from the label rather than
+## repeated twenty-six times, so every coordinate field on every drawing row says the same true
+## thing, and a field added tomorrow says it too.
 static func _num(param_id: String, label: String) -> ACEParam:
-	return F.make_param(param_id, "float", "0.0", label, "", "expression")
+	var axis: String = "across" if label.ends_with("X") else "down"
+	return F.make_param(param_id, "float", "0.0", label,
+		"How far %s, in pixels, in the surface's own coordinates - the space a child node of it would sit in." % axis,
+		"expression")
 
 
 static func _color() -> ACEParam:

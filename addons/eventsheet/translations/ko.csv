@@ -5075,3 +5075,138 @@ Log (Debug Builds Only) compiles the line out of a release game.,로그(디버�
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s는 마지막으로 측정한 실행에서 한 프레임당 %.2f ms를 씁니다 - 한 프레임의 %d%%입니다 (60 fps에서 한 프레임은 %.1f ms).
 "A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",이 게임의 저장 슬롯에는 값 %d개가 들어가며 스크립트 %d개에서 기록됩니다: %s. 이 목록에 없는 것은 슬롯을 불러오면 처음 값으로 돌아갑니다.
 %s and %d more,%s 외 %d개
+Go To Mode,모드로 전환
+Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,"게임 전체를 다른 모드로 옮기고 이를 알립니다. 특정 모드에서 실행되는 그룹은 스스로 시작하고 멈추며, 진입할 때와 벗어날 때 행이 그 순간의 작업을 맡습니다."
+Game State,게임 상태
+Go to mode {mode},{mode} 모드로 전환
+Mode,모드
+Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.,이 게임에서 선언된 모드 중 하나입니다. 선언은 시트 머리말의 모드 편집 대화상자에서 합니다.
+In Mode,모드일 때
+"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.","게임이 이 모드에 있는 동안 참입니다. 행 그룹 전체에는 대신 그룹에 한 번만 지정하세요. 그룹의 ""실행 모드"" 단어가 그 안의 모든 행에 대해 같은 일을 합니다."
+In mode {mode},{mode} 모드일 때
+Push Mode,모드 쌓기
+"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.","아래에 있던 모드를 기억한 채로 다른 모드로 갑니다 - 플레이 위에 놓인 일시정지, 그 위에 열린 메뉴. 돌아가기는 이 아래에 있던 것으로 되돌아가며, 이는 이스케이프 키 버그를 어휘로 해결한 것입니다."
+Push mode {mode},{mode} 모드 쌓기
+Go Back,돌아가기
+"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.",이 아래에 있는 모드로 돌아갑니다 - 메뉴는 그 위에 열렸던 일시정지 위로 닫힙니다. 쌓인 것이 없으면 아무 일도 하지 않으므로 키에 안전하게 지정할 수 있습니다.
+Go back,돌아가기
+On Entering Mode,모드에 진입할 때
+"Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.","게임이 이 모드에 진입하는 순간 실행됩니다. 벗어날 때가 항상 먼저 발생하며, 이 순서는 늘 같습니다. 다음 방을 채우기 전에 방을 비우기 위해서입니다."
+On entering {mode},{mode} 진입할 때
+On Leaving Mode,모드에서 벗어날 때
+"Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.","게임이 이 모드에서 벗어나는 순간, 진입하는 모드에 반응하는 어떤 것보다 먼저 실행됩니다. 여기서 음악을 줄이고 다른 쪽에서 되돌리세요."
+On leaving {mode},{mode} 벗어날 때
+Keep Between,사이에 유지
+"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.","다른 무엇이 값을 바꾸더라도 값을 범위 안에 유지합니다 - 최대치를 넘을 수 없는 체력, 음수가 될 수 없는 음량, 하한과 상한이 있는 카메라 줌. 값이 바뀌는 곳마다 비교 두 개를 쓰는 대신 여기서 한 번 씁니다."
+Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i],[b]{var_name}[/b] 을(를) [i]{low}[/i] 와(과) [i]{high}[/i] 사이에 유지
+The value being kept in range.,범위 안에 유지되는 값입니다.
+At least,최소
+It never goes below this.,이 값 아래로는 내려가지 않습니다.
+At most,최대
+It never goes above this.,이 값 위로는 올라가지 않습니다.
+Move Toward (each tick),가까이 이동 (매 틱)
+"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.","값을 다른 값 쪽으로 부드럽게 이동시킵니다 - 자리를 잡아가는 카메라 줌, 따라붙는 막대, 옅어지는 색. 매 틱마다 남은 간격의 일정 비율을 좁히므로 도착할수록 느려지고 완전히 도달하지는 않습니다. 이는 빠른 기기에서 더 많이 움직인다는 뜻이기도 합니다. 어디서나 같은 속도여야 한다면 같은 내용을 초 단위로 말하는 가까이 이동 (부드럽게)를 사용하세요."
+Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick,매 틱 [b]{var_name}[/b] 을(를) [i]{target}[/i] 쪽으로 [i]{weight}[/i] 만큼 이동
+The value being eased.,이동되는 값입니다.
+The value it heads for.,향해 가는 값입니다.
+Each tick,매 틱
+How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.,매 틱마다 남은 간격을 얼마나 좁힐지. 0.1은 십분의 일입니다.
+Rescale,범위 변환
+"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.","한 척도로 측정한 수를 다른 척도의 같은 수로 바꿉니다 - 점수 단위의 체력을 막대의 0에서 1로, 온도를 색의 위치로, 슬라이더의 퍼센트를 음량으로. 아무도 외우지 못하는 계산을, 그 쓰임새의 말로 표현한 것입니다."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b],[i]{amount}[/i] 을(를) [i]{in_low}[/i]..[i]{in_high}[/i] 에서 [i]{out_low}[/i]..[i]{out_high}[/i] 로 변환하여 [b]{into}[/b] 에 넣기
+Where the rescaled number is put.,변환된 수를 넣을 곳입니다.
+The number being rescaled.,변환되는 수입니다.
+What counts as empty in the number's own range.,그 수 자신의 범위에서 비어 있음으로 치는 값입니다.
+What counts as full in the number's own range.,그 수 자신의 범위에서 가득 참으로 치는 값입니다.
+Into range,대상 범위
+What empty becomes.,비어 있음이 무엇이 되는지.
+What full becomes.,가득 참이 무엇이 되는지.
+Wrap Around,되돌아 감싸기
+"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.","값이 끝을 넘어가 버리지 않고 고리를 따라 돌게 합니다 - 360을 지나 0으로 돌아오는 방향, 마지막 항목을 지나 처음으로 가는 인덱스, 시계. 아래 끝은 포함하고 위 끝은 포함하지 않으므로 360과 0은 둘이 아니라 같은 방향이 됩니다."
+Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i],[b]{var_name}[/b] 을(를) [i]{low}[/i]..[i]{high}[/i] 에서 되돌아 감싸기
+The value being wrapped.,되돌아 감싸지는 값입니다.
+The low end it comes back to.,되돌아오는 아래 끝입니다.
+The high end it goes past.,지나가는 위 끝입니다.
+Move Forward,앞으로 이동
+"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.","2D 노드를 바라보는 방향으로 이동시킵니다 - 추진 중인 우주선, 총열 방향으로 나아가는 탄, 보닛 방향으로 나아가는 자동차. 노드를 돌리면 방향도 함께 돌아가며, 이것이 세계 기준으로 움직이는 것과의 차이입니다."
+Move [b]forward[/b] [i]{speed}[/i]/s · its own facing,[b]앞으로[/b] [i]{speed}[/i]/초 이동 · 자신의 방향
+Pixels a second.,초당 픽셀 수입니다.
+Move (the world's way),이동 (세계 기준)
+"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.","노드가 어떻게 회전해 있든, 화면이 뜻하는 방향으로 2D 노드를 이동시킵니다 - 흘러가는 구름, 내리는 눈, 레일 위의 발판. 노드를 회전해도 가는 방향은 바뀌지 않으며, 이것이 자신의 방향을 따라 움직이는 것과의 차이입니다."
+Move [b]{direction}[/b] [i]{speed}[/i]/s · the world's way,[b]{direction}[/b] 로 [i]{speed}[/i]/초 이동 · 세계 기준
+Which way the SCREEN means - it does not turn with the node.,화면이 뜻하는 방향입니다. 노드와 함께 회전하지 않습니다.
+"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.","2D 노드를 한 점 둘레로 일정한 속도로, 거리를 유지한 채 돌립니다 - 행성을 도는 달, 경첩에 달린 문, 훑고 지나가는 위성 접시. 모두가 사인과 코사인으로 쓰는 궤도를, 그것이 무엇인지로 말한 것입니다. 노드 자신의 각도는 건드리지 않으므로, 진행 방향을 바라보게 하려면 함께 회전시키세요."
+Turn around [i]{centre}[/i] at [b]{degrees_per_second}[/b]°/s,[i]{centre}[/i] 둘레를 [b]{degrees_per_second}[/b]°/초 로 회전
+"The place it goes round - a marker, another node's position, a point.","둘레를 도는 지점입니다 - 표식, 다른 노드의 위치, 한 점."
+"Degrees a second, turning clockwise on screen; a negative number goes the other way.",초당 각도이며 화면상 시계 방향입니다. 음수는 반대 방향으로 돕니다.
+Face,바라보기
+"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.","2D 노드를 어떤 지점 쪽으로 즉시 꺾지 않고 최대 속도로 돌려 바라보게 합니다 - 목표를 따라가는 포탑, 돌진하기 전에 몸을 돌려야 하는 적. 결코 지나치지 않으며 올바른 방향을 보게 되면 멈춥니다."
+"Face [i]{target}[/i], max [b]{degrees_per_second}[/b]°/s","[i]{target}[/i] 바라보기, 최대 [b]{degrees_per_second}[/b]°/초"
+"The place to turn toward - a node's global position, or a point.",바라볼 지점입니다 - 노드의 전역 위치 또는 한 점.
+Max degrees per second,초당 최대 각도
+The fastest it may turn. Make it huge to snap.,회전할 수 있는 최대 속도입니다. 아주 크게 하면 즉시 꺾입니다.
+Swing,휘두르기
+"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.","2D 노드를 일정 시간에 걸쳐 일정 각도만큼 휘두르고 그대로 둡니다 - 열리는 문, 당겨진 레버, 도개교. 노드 자신의 원점을 중심으로 회전하므로 그 원점의 위치가 곧 경첩입니다. 에디터에서 원점을 문 가장자리로 옮기면 문은 가장자리를 축으로 열립니다."
+Swing [b]{degrees}[/b]° over [i]{seconds}[/i] s,[i]{seconds}[/i] 초 동안 [b]{degrees}[/b]° 휘두르기
+How far it swings from where it is now.,지금 위치에서 얼마나 휘두를지입니다.
+Over,동안
+How long the swing takes.,휘두르는 데 걸리는 시간입니다.
+Queue Animation,애니메이션 예약
+"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.",현재 애니메이션이 끝나면 자동으로 재생될 애니메이션을 예약합니다 - 콤보 연결이나 공격 후 대기 자세로 돌아가기를 타이머 없이.
+queue animation {animation},애니메이션 {animation} 예약
+The clip to play once the current one finishes.,현재 클립이 끝나면 재생할 클립입니다.
+Set Current Animation,현재 애니메이션 설정
+Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,어떤 클립을 현재 클립으로 할지 바꿉니다(대입하면 재생도 시작됩니다). 재생의 블렌드 인자가 필요 없을 때 쓰는 직접 지정입니다.
+set current animation to {animation},현재 애니메이션을 {animation} 로 설정
+The clip to make current (assigning it also plays it).,현재 클립으로 만들 클립입니다(대입하면 재생도 됩니다).
+Has Animation,애니메이션 있음
+True when this player owns a clip by that name - guard a Play so a missing animation never errors.,이 플레이어가 그 이름의 클립을 가지고 있을 때 참입니다. 재생 앞에 두면 없는 애니메이션 때문에 오류가 나지 않습니다.
+has animation {animation},애니메이션 {animation} 있음
+Clip name to check for.,확인할 클립 이름입니다.
+Play Then,재생 후
+"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.","하나의 애니메이션을 재생하고 그 뒤에 다음 것을 세웁니다 - 공격 후 대기, 점프 후 낙하. 기다림은 엔진 자신의 것이라 첫 번째가 끝나는 순간 두 번째가 시작되며, 맞춰 둘 타이머가 없습니다. 반복되는 애니메이션은 끝나지 않으므로 그 뒤의 연결은 오지 않습니다."
+Play {animation} then {next},{animation} 재생 후 {next}
+The clip to play now.,지금 재생할 클립입니다.
+Then,그다음
+The clip that plays the moment the first one ends.,첫 번째 클립이 끝나는 순간 재생되는 클립입니다.
+Reached Marker,마커 도달
+"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.","클립의 재생 위치가 타임라인 위의 이름 붙은 순간을 지나면 참이 됩니다 - 타격이 닿는 프레임을, 키프레임 애니메이션이 가질 수 있는 유일한 형태로 표현한 것입니다. 애니메이션 패널에서 그 순간을 옮기면 함께 움직이며, 행은 바뀌지 않습니다."
+{animation} has reached {marker},{animation} 이(가) {marker} 에 도달
+The clip whose timeline the moment lives on.,그 순간이 놓인 타임라인을 가진 클립입니다.
+Marker,마커
+The named moment on that clip's timeline.,"그 클립의 타임라인 위에 있는, 이름 붙은 순간입니다."
+On Something Went Wrong,무언가 잘못되었을 때
+"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.","게임이 실행되는 중에 스크립트 오류가 발생하면 실행됩니다 - 에디터 안에서만이 아니라 플레이어가 손에 든 빌드에서도. 보고서는 무엇이 어디서 실패했는지 알려 줍니다. 파일로 저장하거나, ""이것을 보내 주세요"" 대화상자를 띄우거나, 그냥 망가진 부분을 건너뛰고 계속 진행해도 됩니다."
+On something went wrong ([b]report[/b]),무언가 잘못되었을 때 ([b]report[/b])
+report,report
+"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.","무엇이 어디서 실패했는지를 엔진의 표현 그대로 - 메시지, 스크립트, 줄 번호. 트리거가 발생할 때 자동으로 채워집니다."
+On The Frame Running Long,프레임이 길어진 순간
+"True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.","지정한 횟수 동안 계속 예산을 넘긴 바로 그 한 프레임에서만 참이 되고, 그 뒤로는 다시 예산 안에 드는 프레임이 올 때까지 조용합니다. 게임이 스스로 효과를 낮추는 지점입니다. 매 프레임 트리거가 필요합니다."
+On the frame running long [b]{ms}[/b] ms for [b]{frames}[/b] frames,[b]{frames}[/b] 프레임 연속 [b]{ms}[/b] ms 초과일 때
+Over Milliseconds,초과 밀리초
+A frame longer than this counts as a long one. 16.6 is one frame at 60 FPS.,이보다 긴 프레임을 긴 프레임으로 칩니다. 16.6은 60 FPS에서의 한 프레임입니다.
+For Frames,연속 프레임 수
+How many long frames in a row before this fires. One hitch is not a problem; half a second of them is.,"이것이 발생하기까지 필요한 긴 프레임의 연속 횟수입니다. 한 번의 끊김은 문제가 아니지만, 반 초 동안 이어지면 문제입니다."
+On The Frame Recovered,프레임이 회복된 순간
+"True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.","예산을 넘긴 적이 있은 뒤, 지정한 횟수 동안 계속 여유롭게 돌아간 바로 그 한 프레임에서만 참이 됩니다. 효과를 되돌리는 지점입니다. 긴 구간이 한 번도 없었다면 결코 발생하지 않으므로, 처음부터 쾌적한 게임은 아무것도 듣지 않습니다. 매 프레임 트리거가 필요합니다."
+On the frame recovered under [b]{ms}[/b] ms for [b]{frames}[/b] frames,[b]{frames}[/b] 프레임 연속 [b]{ms}[/b] ms 미만으로 회복될 때
+Under Milliseconds,미만 밀리초
+A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,이보다 짧은 프레임을 안정된 것으로 칩니다. 긴 프레임 기준보다 넉넉히 낮게 두세요. 두 값의 간격이 게임이 오르내리며 흔들리는 것을 막아 줍니다.
+How many calm frames in a row before this fires. Long enough that a lull in the action is not mistaken for a fix.,이것이 발생하기까지 필요한 안정된 프레임의 연속 횟수입니다. 상황이 잠시 잠잠해진 것을 개선으로 착각하지 않을 만큼 길게 두세요.
+Draw In Front Of,앞에 그리기
+"Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.","상대 노드의 순서가 무엇이든, 이 노드를 그리기 순서에서 한 단계 앞에 둡니다. 일부러 상대적으로 만든 것입니다. 둘을 어디로 옮겨도 순서는 유지되지만, 손으로 정한 두 숫자는 결국 어긋납니다."
+Rendering,렌더링
+draw in front of {other},{other} 앞에 그리기
+In front of,앞에 둘 대상
+The node to draw over - this one takes its drawing order plus one.,그 앞에 그릴 대상 노드입니다. 이 노드는 그 노드의 그리기 순서에 1을 더한 값을 가집니다.
+Show Only To,이들에게만 보이기
+"Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.","어떤 카메라가 이 노드를 그릴지 제한합니다. 카메라는 자신의 컬 마스크와 노드의 가시성 레이어가 겹치는 것만 그립니다. 레이어 이름은 프로젝트 자신의 것이며(프로젝트 설정 > 레이어 이름 > 2D Render), 미니맵 표식이 미니맵에만 보이는 것이 바로 이 방식입니다."
+show only to {layers},{layers} 에게만 보이기
+Visible to,보이는 대상
+"The visibility layers that may see this node, by their project names.",이 노드를 볼 수 있는 가시성 레이어를 프로젝트에서의 이름으로 지정합니다.
+Is On Screen,화면에 있음
+"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.","카메라가 비추는 범위 안에 노드가 있는 동안 참입니다. 엔진 자신의 VisibleOnScreenNotifier2D를 통해 동작하며, 노드에 그것이 없으면 처음 물어볼 때 하나를 추가합니다. 씬에서 보이고 옮기고 크기를 바꾸고 그대로 둘 수 있는 평범한 자식 노드입니다."
+is on screen,화면에 있음
+The node to ask about.,물어볼 대상 노드입니다.
+The child that was just added under this node. Filled in for you when the trigger fires.,이 노드 아래에 방금 추가된 자식입니다. 트리거가 발생할 때 자동으로 채워집니다.
+The child that is leaving this node. Filled in for you when the trigger fires.,이 노드에서 벗어나는 중인 자식입니다. 트리거가 발생할 때 자동으로 채워집니다.

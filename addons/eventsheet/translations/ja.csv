@@ -5075,3 +5075,138 @@ Log (Debug Builds Only) compiles the line out of a release game.,ログ (デバ�
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s は最後に計測した実行で 1 フレームあたり %.2f ms かかっています - 1 フレームの %d%% です (60 fps の 1 フレームは %.1f ms)。
 "A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",このゲームのセーブスロットには %d 個の値が入り、%d 個のスクリプトから書き込まれます: %s。この一覧にないものは、スロットを読み込むと初期値に戻ります。
 %s and %d more,%s ほか %d 件
+Go To Mode,モードへ移行
+Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,ゲーム全体を別のモードへ移し、それを通知します。あるモードで動作するグループは自動的に開始・停止し、入るとき・出るときの行がその瞬間の処理を担当します。
+Game State,ゲーム状態
+Go to mode {mode},モード {mode} へ移行
+Mode,モード
+Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.,このゲームで宣言されたモードのどれか。宣言はシート見出しの「モードを編集」ダイアログで行います。
+In Mode,モード中
+"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.",ゲームがこのモードにある間、真になります。行のグループ全体には、代わりにグループに一度だけ指定してください。グループの「実行モード」がその中のすべての行に対して同じことを行います。
+In mode {mode},モード {mode} 中
+Push Mode,モードを重ねる
+"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.",下にあるモードを覚えたまま別のモードへ移ります - プレイ中の上に重なった一時停止、その上に開いたメニュー。戻るはこの下にあったものへ帰ります。エスケープキーの不具合を語彙そのもので解決したものです。
+Push mode {mode},モード {mode} を重ねる
+Go Back,戻る
+"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.",この下にあるモードへ戻ります - メニューは、その上に開いた一時停止の上へ閉じます。何も重なっていなければ何も起こらないため、キーに割り当てても安全です。
+Go back,戻る
+On Entering Mode,モードに入ったとき
+"Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.",ゲームがこのモードに入った瞬間に実行されます。出るときが必ず先に発火し、その順序は常に一定です。次の部屋を満たす前に、前の部屋を空にするためです。
+On entering {mode},{mode} に入ったとき
+On Leaving Mode,モードを出たとき
+"Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.",ゲームがこのモードを出た瞬間、入る側のモードに応答するものより先に実行されます。ここで音楽をフェードアウトし、もう一方で戻します。
+On leaving {mode},{mode} を出たとき
+Keep Between,範囲内に保つ
+"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.",他で何が起きても、値を範囲の中に保ちます - 最大値を超えられない体力、負にならない音量、下限と上限を持つカメラズーム。値が変わるたびに二つの比較を書く代わりに、ここで一度書きます。
+Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i],[b]{var_name}[/b] を [i]{low}[/i] から [i]{high}[/i] の範囲に保つ
+The value being kept in range.,範囲内に保たれる値です。
+At least,下限
+It never goes below this.,これより下がることはありません。
+At most,上限
+It never goes above this.,これより上がることはありません。
+Move Toward (each tick),近づける（毎ティック）
+"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.",値をもう一方の値へなめらかに近づけます - 落ち着いていくカメラズーム、追いつくバー、褪せていく色。毎ティックで差の一定割合を詰めるため、近づくほど遅くなり、完全には到達しません。つまり速いマシンほど大きく動きます。どこでも同じ速さにしたい場合は、同じことを毎秒で言う「近づける（なめらか）」を使ってください。
+Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick,毎ティック [b]{var_name}[/b] を [i]{target}[/i] へ [i]{weight}[/i] 近づける
+The value being eased.,近づけられる値です。
+The value it heads for.,向かう先の値です。
+Each tick,毎ティック
+How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.,毎ティックで残りの差をどれだけ詰めるか。0.1 は十分の一です。
+Rescale,スケール変換
+"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.",ある尺度で測った数値を、別の尺度で測った同じ数値に変換します - ポイント表示の体力をバーの 0 から 1 へ、温度を色の位置へ、スライダーの百分率を音量へ。誰も覚えていない計算を、その用途の言葉で言い表したものです。
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b],[i]{amount}[/i] を [i]{in_low}[/i]..[i]{in_high}[/i] から [i]{out_low}[/i]..[i]{out_high}[/i] へ変換して [b]{into}[/b] に入れる
+Where the rescaled number is put.,変換後の数値を入れる先です。
+The number being rescaled.,変換される数値です。
+What counts as empty in the number's own range.,その数値自身の範囲で「空」とみなす値です。
+What counts as full in the number's own range.,その数値自身の範囲で「満」とみなす値です。
+Into range,変換先の範囲
+What empty becomes.,「空」が何になるか。
+What full becomes.,「満」が何になるか。
+Wrap Around,折り返す
+"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.",値を末端から外へ出さず、輪の上を回らせます - 360 を越えて 0 に戻る向き、最後の項目を越えて先頭に戻る添字、時計。下端は含み、上端は含みません。だからこそ 360 と 0 は二つではなく同じ向きになります。
+Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i],[b]{var_name}[/b] を [i]{low}[/i]..[i]{high}[/i] で折り返す
+The value being wrapped.,折り返される値です。
+The low end it comes back to.,戻ってくる下端です。
+The high end it goes past.,越えていく上端です。
+Move Forward,前進する
+"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.",2D ノードを、それが向いている方向へ移動させます - 推力を受けた船、自分の銃身に沿って飛ぶ弾、ボンネットの向きに進む車。ノードを回すと方向も一緒に回ります。これが「世界の向きに動かす」との違いです。
+Move [b]forward[/b] [i]{speed}[/i]/s · its own facing,[b]前方[/b]へ [i]{speed}[/i]/秒 移動 · 自分の向き
+Pixels a second.,毎秒のピクセル数です。
+Move (the world's way),移動（世界の向き）
+"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.",ノードがどう回っていても、画面が意味する向きへ 2D ノードを移動させます - 流れる雲、降る雪、レール上の足場。ノードを回しても進む先は変わりません。これが「自分の向きに沿って動かす」との違いです。
+Move [b]{direction}[/b] [i]{speed}[/i]/s · the world's way,[b]{direction}[/b] へ [i]{speed}[/i]/秒 移動 · 世界の向き
+Which way the SCREEN means - it does not turn with the node.,画面が意味する向きです。ノードと一緒に回りません。
+"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.",2D ノードを、一定の速さで点のまわりに、距離を保ったまま回します - 惑星をめぐる月、蝶番の扉、掃引するパラボラアンテナ。誰もがサインとコサインで書く軌道を、そのままの名前で言い表したものです。ノード自身の角度は変えません。進む方向を向かせたいときは、あわせて回転させてください。
+Turn around [i]{centre}[/i] at [b]{degrees_per_second}[/b]°/s,[i]{centre}[/i] のまわりを [b]{degrees_per_second}[/b]°/秒 で回る
+"The place it goes round - a marker, another node's position, a point.",まわる中心となる場所です - 目印、別のノードの位置、ある点。
+"Degrees a second, turning clockwise on screen; a negative number goes the other way.",毎秒の角度で、画面上では時計回りです。負の数は逆回りになります。
+Face,向く
+"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.",2D ノードを、ある場所へ瞬時に向けるのではなく、上限の速さで回して向かせます - 目標を追う砲塔、突進する前に向き直る必要のある敵。行き過ぎることはなく、正しい向きになった時点で止まります。
+"Face [i]{target}[/i], max [b]{degrees_per_second}[/b]°/s",[i]{target}[/i] を向く、最大 [b]{degrees_per_second}[/b]°/秒
+"The place to turn toward - a node's global position, or a point.",向く先の場所です - ノードのグローバル座標、またはある点。
+Max degrees per second,最大の毎秒角度
+The fastest it may turn. Make it huge to snap.,回転できる最大の速さです。非常に大きくすると瞬時に向きます。
+Swing,振る
+"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.",2D ノードを、ある時間をかけてある角度だけ振り、そこに残します - 開く扉、倒したレバー、跳ね橋。ノード自身の原点を中心に回るため、その原点の位置が蝶番になります。エディタで原点を扉の端へ動かせば、扉は端を軸に開きます。
+Swing [b]{degrees}[/b]° over [i]{seconds}[/i] s,[i]{seconds}[/i] 秒かけて [b]{degrees}[/b]° 振る
+How far it swings from where it is now.,いまの位置からどれだけ振るかです。
+Over,所要時間
+How long the swing takes.,振りにかかる時間です。
+Queue Animation,アニメーションを予約
+"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.",現在のアニメーションが終わったときに自動で再生されるアニメーションを予約します - コンボの連鎖や、攻撃のあと待機に戻る動きを、タイマーなしで。
+queue animation {animation},アニメーション {animation} を予約
+The clip to play once the current one finishes.,現在のクリップが終わったら再生するクリップです。
+Set Current Animation,現在のアニメーションを設定
+Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,どのクリップを現在のものにするかを切り替えます（代入すると再生も始まります）。再生のブレンド引数が不要なときの直接指定です。
+set current animation to {animation},現在のアニメーションを {animation} にする
+The clip to make current (assigning it also plays it).,現在のものにするクリップです（代入すると再生もされます）。
+Has Animation,アニメーションを持つ
+True when this player owns a clip by that name - guard a Play so a missing animation never errors.,このプレイヤーがその名前のクリップを持っているとき真になります。再生の前に置けば、存在しないアニメーションでエラーになりません。
+has animation {animation},アニメーション {animation} を持つ
+Clip name to check for.,確認するクリップ名です。
+Play Then,再生してから
+"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.",一つのアニメーションを再生し、その後ろに次を並べます - 攻撃のあと待機、ジャンプのあと落下。待つのはエンジン自身で、最初が終わった瞬間に二つ目が始まります。合わせておくタイマーは要りません。ループするアニメーションは決して終わらないため、その後ろの連鎖は来ません。
+Play {animation} then {next},{animation} を再生してから {next}
+The clip to play now.,いま再生するクリップです。
+Then,そのあと
+The clip that plays the moment the first one ends.,最初のクリップが終わった瞬間に再生されるクリップです。
+Reached Marker,マーカーに到達
+"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.",クリップの再生位置が、タイムライン上の名前付きの瞬間を通過したときに真になります - 攻撃が当たるコマを、キーフレームアニメーションが持ちうる唯一の形で表したものです。アニメーションパネルでその瞬間をずらせば一緒に動き、行のほうは変わりません。
+{animation} has reached {marker},{animation} が {marker} に到達した
+The clip whose timeline the moment lives on.,その瞬間が置かれているタイムラインを持つクリップです。
+Marker,マーカー
+The named moment on that clip's timeline.,そのクリップのタイムライン上にある、名前付きの瞬間です。
+On Something Went Wrong,何かが失敗したとき
+"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.",ゲームの実行中にスクリプトのエラーが起きたときに実行されます - エディタの中だけでなく、プレイヤーの手元にあるビルドでも。レポートには何がどこで失敗したかが入ります。ファイルに保存する、「これを送ってください」というダイアログを出す、あるいは壊れた処理を飛ばして遊び続ける、どれでも構いません。
+On something went wrong ([b]report[/b]),何かが失敗したとき（[b]report[/b]）
+report,report
+"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.",何がどこで失敗したかを、エンジンの言葉のまま - メッセージ、スクリプト、行番号。トリガーが発火したときに自動で入ります。
+On The Frame Running Long,フレームが長引いたとき
+"True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.",指定した回数のあいだ連続で予算を超えていた、その一フレームだけで真になり、その後は再び予算内のフレームが来るまで黙ります。ゲームが自分でエフェクトを落とす場所です。フレームごとのトリガーが必要です。
+On the frame running long [b]{ms}[/b] ms for [b]{frames}[/b] frames,[b]{frames}[/b] フレーム連続で [b]{ms}[/b] ms を超えたとき
+Over Milliseconds,超過ミリ秒
+A frame longer than this counts as a long one. 16.6 is one frame at 60 FPS.,これより長いフレームを「長い」とみなします。16.6 は 60 FPS での一フレームです。
+For Frames,連続フレーム数
+How many long frames in a row before this fires. One hitch is not a problem; half a second of them is.,これが発火するまでに必要な、長いフレームの連続数です。一度のひっかかりは問題ではありませんが、半秒続けば問題です。
+On The Frame Recovered,フレームが回復したとき
+"True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.",予算を超えていたあとで、指定した回数のあいだ連続で余裕をもって動いた、その一フレームだけで真になります。エフェクトを戻す場所です。長い区間が一度も起きていなければ決して発火しないため、最初から快調なゲームには何も届きません。フレームごとのトリガーが必要です。
+On the frame recovered under [b]{ms}[/b] ms for [b]{frames}[/b] frames,[b]{frames}[/b] フレーム連続で [b]{ms}[/b] ms 未満に回復したとき
+Under Milliseconds,未満ミリ秒
+A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,これより短いフレームを「落ち着いている」とみなします。長いフレームのしきい値より十分に下げてください。二つの差こそが、ゲームが上下にばたつくのを防ぎます。
+How many calm frames in a row before this fires. Long enough that a lull in the action is not mistaken for a fix.,これが発火するまでに必要な、落ち着いたフレームの連続数です。アクションの小休止が改善と取り違えられない程度に長くしてください。
+Draw In Front Of,手前に描く
+"Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.",相手のノードの順序が何であれ、このノードを描画順で一段だけ手前に置きます。あえて相対にしています。二つをどこへ動かしても順序は保たれますが、手で設定した二つの数値はやがてずれていきます。
+Rendering,描画
+draw in front of {other},{other} の手前に描く
+In front of,手前に置く相手
+The node to draw over - this one takes its drawing order plus one.,その手前に描く相手のノードです。こちらはその描画順に 1 を足した値を取ります。
+Show Only To,これにだけ見せる
+"Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.",どのカメラがこのノードを描くかを制限します。カメラは、自分のカリングマスクとノードの可視レイヤーが共通する部分だけを描きます。レイヤー名はプロジェクト自身のもの（プロジェクト設定 > レイヤー名 > 2D Render）で、ミニマップ用の目印がミニマップにだけ見えるのはこの仕組みです。
+show only to {layers},{layers} にだけ見せる
+Visible to,見せる相手
+"The visibility layers that may see this node, by their project names.",このノードを見てよい可視レイヤーを、プロジェクトでの名前で指定します。
+Is On Screen,画面内にある
+"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.",カメラが映している範囲の中にノードがあるあいだ真になります。エンジン自身の VisibleOnScreenNotifier2D を使い、ノードがそれを持っていなければ、最初に問われたときに一つ追加します。シーン内で見え、移動もサイズ変更もでき、そのまま残せる普通の子ノードです。
+is on screen,画面内にある
+The node to ask about.,問い合わせる対象のノードです。
+The child that was just added under this node. Filled in for you when the trigger fires.,このノードの下に今追加された子ノードです。トリガーが発火したときに自動で入ります。
+The child that is leaving this node. Filled in for you when the trigger fires.,このノードから離れようとしている子ノードです。トリガーが発火したときに自動で入ります。

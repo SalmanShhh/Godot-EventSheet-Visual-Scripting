@@ -5075,3 +5075,138 @@ Log (Debug Builds Only) compiles the line out of a release game.,Log (solo en co
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s cuesta %.2f ms de un fotograma en la última ejecución medida - %d%% de los %.1f ms que tiene un fotograma a 60 fps.
 "A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Una ranura de guardado de este juego contiene %d valor(es), escritos desde %d script(s): %s. Todo lo que no esté en esta lista vuelve a su valor inicial cuando se carga una ranura."
 %s and %d more,%s y %d más
+Go To Mode,Ir a modo
+Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,Lleva todo el juego a otro modo y lo anuncia. Los grupos que se ejecutan en un modo arrancan y se detienen solos; las filas Al entrar y Al salir hacen el trabajo del momento en sí.
+Game State,Estado del juego
+Go to mode {mode},Ir a modo {mode}
+Mode,Modo
+Which of this game's declared modes. The Edit modes dialog on the sheet head is where they are declared.,Cuál de los modos declarados de este juego. Se declaran en el diálogo Editar modos de la cabecera de la hoja.
+In Mode,En modo
+"True while the game is in this mode. For a whole group of rows, say it once on the group instead - the group's own ""runs in"" word does this for every row inside it.","Verdadero mientras el juego está en este modo. Para todo un grupo de filas, dilo una vez en el grupo - la palabra ""se ejecuta en"" del grupo hace esto por cada fila que contiene."
+In mode {mode},En modo {mode}
+Push Mode,Apilar modo
+"Goes to a mode REMEMBERING the one underneath - a menu opened over a pause that sits over playing. Go back returns to whatever was under this one, which is the escape-key bug solved in the vocabulary.","Va a un modo RECORDANDO el que hay debajo - un menú abierto sobre una pausa que está sobre el juego. Volver regresa a lo que hubiera debajo, que es el fallo de la tecla Escape resuelto en el vocabulario."
+Push mode {mode},Apilar modo {mode}
+Go Back,Volver
+"Returns to the mode under this one - the menu closes onto the pause it opened over. With nothing pushed it does nothing at all, which is what makes it safe to bind to a key.","Vuelve al modo que hay debajo de este - el menú se cierra sobre la pausa encima de la que se abrió. Si no hay nada apilado no hace nada en absoluto, que es lo que hace seguro asignarlo a una tecla."
+Go back,Volver
+On Entering Mode,Al entrar en el modo
+"Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.","Se ejecuta en el momento en que el juego entra en este modo. Al salir se dispara PRIMERO, siempre en ese orden, para que la sala se vacíe antes de llenar la siguiente."
+On entering {mode},Al entrar en {mode}
+On Leaving Mode,Al salir del modo
+"Runs the moment the game leaves this mode, before anything answering the mode it is entering. Fade the music down here and bring it back in the other one.","Se ejecuta en el momento en que el juego sale de este modo, antes que nada que responda al modo al que entra. Baja aquí la música y vuelve a subirla en el otro."
+On leaving {mode},Al salir de {mode}
+Keep Between,Mantener entre
+"Holds a value inside a range whatever else does to it - health that cannot pass its maximum, a volume that cannot go negative, a camera zoom with a floor and a ceiling. Written once here instead of two comparisons everywhere the value changes.","Mantiene un valor dentro de un rango haga lo que haga el resto - salud que no puede pasar de su máximo, un volumen que no puede ser negativo, un zoom de cámara con suelo y techo. Se escribe una vez aquí en lugar de dos comparaciones en cada sitio donde el valor cambia."
+Keep [b]{var_name}[/b] between [i]{low}[/i] and [i]{high}[/i],Mantener [b]{var_name}[/b] entre [i]{low}[/i] y [i]{high}[/i]
+The value being kept in range.,El valor que se mantiene en el rango.
+At least,Al menos
+It never goes below this.,Nunca baja de esto.
+At most,Como mucho
+It never goes above this.,Nunca sube de esto.
+Move Toward (each tick),Acercar (cada tick)
+"Eases a value toward another one - a camera zoom settling, a bar catching up, a colour fading. It closes a share of the gap every tick, so it slows as it arrives and never quite lands. That also means it moves further on a fast machine than a slow one: when the speed has to be the same everywhere, use Move Toward (smooth), which says the same thing per second.","Acerca suavemente un valor a otro - un zoom de cámara que se asienta, una barra que alcanza, un color que se apaga. Cierra una parte de la distancia en cada tick, así que frena al llegar y nunca aterriza del todo. Eso también significa que avanza más en una máquina rápida que en una lenta: cuando la velocidad tiene que ser igual en todas partes, usa Acercar (suave), que dice lo mismo por segundo."
+Move [b]{var_name}[/b] toward [i]{target}[/i] by [i]{weight}[/i] each tick,Acercar [b]{var_name}[/b] a [i]{target}[/i] en [i]{weight}[/i] cada tick
+The value being eased.,El valor que se acerca.
+The value it heads for.,El valor hacia el que va.
+Each tick,Cada tick
+How much of the remaining gap it closes every tick. 0.1 is a tenth of the way.,"Cuánto de la distancia restante cierra en cada tick. 0,1 es una décima parte del camino."
+Rescale,Reescalar
+"Turns a number measured on one scale into the same number measured on another - health in points into a bar's 0 to 1, a temperature into a colour's position, a slider's percent into a volume. The maths nobody remembers, said as what it is for.","Convierte un número medido en una escala en el mismo número medido en otra - salud en puntos al 0 a 1 de una barra, una temperatura a la posición de un color, el porcentaje de un deslizador a un volumen. La cuenta que nadie recuerda, dicha por lo que sirve."
+Rescale [i]{amount}[/i] from [i]{in_low}[/i]..[i]{in_high}[/i] to [i]{out_low}[/i]..[i]{out_high}[/i] into [b]{into}[/b],Reescalar [i]{amount}[/i] de [i]{in_low}[/i]..[i]{in_high}[/i] a [i]{out_low}[/i]..[i]{out_high}[/i] en [b]{into}[/b]
+Where the rescaled number is put.,Dónde se guarda el número reescalado.
+The number being rescaled.,El número que se reescala.
+What counts as empty in the number's own range.,Lo que cuenta como vacío en el rango propio del número.
+What counts as full in the number's own range.,Lo que cuenta como lleno en el rango propio del número.
+Into range,Rango destino
+What empty becomes.,En qué se convierte el vacío.
+What full becomes.,En qué se convierte el lleno.
+Wrap Around,Dar la vuelta
+"Sends a value round a loop instead of letting it run off the end - a heading that passes 360 and comes back at 0, an index that walks past the last item and back to the first, a clock. The low end is included and the high end is not, which is what makes 360 and 0 the same heading rather than two.","Manda un valor a dar la vuelta en lugar de dejar que se salga por el final - un rumbo que pasa de 360 y vuelve en 0, un índice que pasa del último elemento y vuelve al primero, un reloj. El extremo bajo se incluye y el alto no, que es lo que hace que 360 y 0 sean el mismo rumbo y no dos."
+Wrap [b]{var_name}[/b] around [i]{low}[/i]..[i]{high}[/i],Dar la vuelta a [b]{var_name}[/b] en [i]{low}[/i]..[i]{high}[/i]
+The value being wrapped.,El valor que da la vuelta.
+The low end it comes back to.,El extremo bajo al que vuelve.
+The high end it goes past.,El extremo alto que rebasa.
+Move Forward,Mover hacia delante
+"Moves a 2D node the way it is FACING, whatever way that happens to be - a ship under thrust, a bullet down its own barrel, a car along its bonnet. Turning the node turns the direction with it, which is what tells this apart from moving the world's way.","Mueve un nodo 2D en la dirección a la que MIRA, sea cual sea - una nave bajo empuje, una bala por su propio cañón, un coche hacia su capó. Girar el nodo gira la dirección con él, y eso es lo que lo distingue de moverse a la manera del mundo."
+Move [b]forward[/b] [i]{speed}[/i]/s · its own facing,Mover [b]hacia delante[/b] [i]{speed}[/i]/s · su propia orientación
+Pixels a second.,Píxeles por segundo.
+Move (the world's way),Mover (a la manera del mundo)
+"Moves a 2D node the way the SCREEN means, however the node is turned - drifting clouds, falling snow, a platform on rails. Rotating the node changes nothing about where it goes, which is what tells this apart from moving along its own facing.","Mueve un nodo 2D como lo entiende la PANTALLA, esté girado como esté - nubes que pasan, nieve que cae, una plataforma sobre raíles. Girar el nodo no cambia nada de a dónde va, y eso es lo que lo distingue de moverse según su propia orientación."
+Move [b]{direction}[/b] [i]{speed}[/i]/s · the world's way,Mover [b]{direction}[/b] [i]{speed}[/i]/s · a la manera del mundo
+Which way the SCREEN means - it does not turn with the node.,Qué dirección entiende la PANTALLA - no gira con el nodo.
+"Carries a 2D node round a point at a steady rate, keeping its distance - a moon round a planet, a door on its hinge, a satellite dish sweeping. The orbit everybody writes with sine and cosine, said as what it is. The node's own angle is not touched: turn it as well if it should face the way it travels.","Lleva un nodo 2D alrededor de un punto a un ritmo constante, manteniendo la distancia - una luna alrededor de un planeta, una puerta en su bisagra, una antena parabólica barriendo. La órbita que todo el mundo escribe con seno y coseno, dicha por lo que es. El ángulo propio del nodo no se toca: gíralo también si debe mirar hacia donde viaja."
+Turn around [i]{centre}[/i] at [b]{degrees_per_second}[/b]°/s,Girar alrededor de [i]{centre}[/i] a [b]{degrees_per_second}[/b]°/s
+"The place it goes round - a marker, another node's position, a point.","El lugar alrededor del que gira - un marcador, la posición de otro nodo, un punto."
+"Degrees a second, turning clockwise on screen; a negative number goes the other way.","Grados por segundo, girando en el sentido de las agujas del reloj en pantalla; un número negativo va al revés."
+Face,Encarar
+"Turns a 2D node toward a place at a top speed instead of snapping to it - the turret leading its target, the enemy that has to swing round before it can charge. It never overshoots, and it stops when it is looking the right way.","Gira un nodo 2D hacia un lugar a una velocidad máxima en vez de saltar de golpe - la torreta que sigue a su objetivo, el enemigo que tiene que darse la vuelta antes de poder cargar. Nunca se pasa, y se detiene cuando ya mira en la dirección correcta."
+"Face [i]{target}[/i], max [b]{degrees_per_second}[/b]°/s","Encarar [i]{target}[/i], máx. [b]{degrees_per_second}[/b]°/s"
+"The place to turn toward - a node's global position, or a point.","El lugar hacia el que girar - la posición global de un nodo, o un punto."
+Max degrees per second,Grados por segundo máx.
+The fastest it may turn. Make it huge to snap.,Lo más rápido que puede girar. Ponlo enorme para que salte de golpe.
+Swing,Batir
+"Swings a 2D node round by an amount over a time and leaves it there - a door opening, a lever thrown, a drawbridge. It turns about the node's OWN origin, so where that origin sits is the hinge: move it to the door's edge in the editor and the door swings on its edge.","Bate un nodo 2D una cantidad durante un tiempo y lo deja ahí - una puerta que se abre, una palanca accionada, un puente levadizo. Gira alrededor del origen PROPIO del nodo, así que donde esté ese origen está la bisagra: muévelo al borde de la puerta en el editor y la puerta girará sobre su borde."
+Swing [b]{degrees}[/b]° over [i]{seconds}[/i] s,Batir [b]{degrees}[/b]° durante [i]{seconds}[/i] s
+How far it swings from where it is now.,Cuánto bate desde donde está ahora.
+Over,Durante
+How long the swing takes.,Cuánto dura el batido.
+Queue Animation,Encolar animación
+"Lines up an animation to play automatically when the current one ends - combo chains, or dropping back to idle after an attack, without a timer.","Pone en cola una animación para que se reproduzca automáticamente cuando termine la actual - cadenas de combo, o volver a reposo tras un ataque, sin temporizador."
+queue animation {animation},encolar animación {animation}
+The clip to play once the current one finishes.,El clip que se reproduce cuando termine el actual.
+Set Current Animation,Fijar animación actual
+Switches which clip is current (assigning it starts it) - a direct set when you don't need Play's blend arguments.,Cambia cuál es el clip actual (asignarlo lo inicia) - un ajuste directo cuando no necesitas los argumentos de mezcla de Reproducir.
+set current animation to {animation},fijar animación actual a {animation}
+The clip to make current (assigning it also plays it).,El clip que pasa a ser el actual (asignarlo también lo reproduce).
+Has Animation,Tiene animación
+True when this player owns a clip by that name - guard a Play so a missing animation never errors.,Verdadero cuando este reproductor tiene un clip con ese nombre - protege un Reproducir para que una animación que falte nunca dé error.
+has animation {animation},tiene animación {animation}
+Clip name to check for.,Nombre de clip que comprobar.
+Play Then,Reproducir y luego
+"Plays one animation and lines the next one up behind it - attack then idle, jump then fall. The waiting is the engine's own: the second starts the moment the first finishes, with no timer to keep in step. An animation that LOOPS never finishes, so a chain behind one never comes.","Reproduce una animación y pone la siguiente detrás - ataque y luego reposo, salto y luego caída. La espera la lleva el propio motor: la segunda arranca en el momento en que la primera termina, sin temporizador que mantener a compás. Una animación EN BUCLE nunca termina, así que una cadena detrás de ella nunca llega."
+Play {animation} then {next},Reproducir {animation} y luego {next}
+The clip to play now.,El clip que se reproduce ahora.
+Then,Luego
+The clip that plays the moment the first one ends.,El clip que se reproduce en el momento en que termina el primero.
+Reached Marker,Marca alcanzada
+"True once a clip's play head has passed a named moment on its timeline - the frame the hit lands on, in the only form a keyframed animation has. Retiming the moment in the Animation panel moves it; the row does not change.","Verdadero en cuanto el cabezal de un clip ha pasado un momento con nombre en su línea de tiempo - el fotograma en el que cae el golpe, en la única forma que tiene una animación por claves. Cambiar el momento de sitio en el panel de Animación lo mueve; la fila no cambia."
+{animation} has reached {marker},{animation} ha alcanzado {marker}
+The clip whose timeline the moment lives on.,El clip en cuya línea de tiempo vive el momento.
+Marker,Marca
+The named moment on that clip's timeline.,El momento con nombre en la línea de tiempo de ese clip.
+On Something Went Wrong,Cuando algo salió mal
+"Runs when a script error happens while the game is running - in a build a player is holding, not only in the editor. The report says what failed and where. Save it to a file, show a ""please send this"" dialog, or just skip the broken thing and keep playing.","Se ejecuta cuando ocurre un error de script mientras el juego corre - en una compilación que tiene un jugador en las manos, no solo en el editor. El informe dice qué falló y dónde. Guárdalo en un archivo, muestra un diálogo de ""por favor envía esto"", o simplemente sáltate lo roto y sigue jugando."
+On something went wrong ([b]report[/b]),Cuando algo salió mal ([b]report[/b])
+report,report
+"What failed and where, as the engine said it - the message, the script and the line. Filled in for you when the trigger fires.","Qué falló y dónde, tal como lo dijo el motor - el mensaje, el script y la línea. Se rellena por ti cuando el disparador se activa."
+On The Frame Running Long,En el fotograma que va largo
+"True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.","Verdadero en el ÚNICO fotograma en que el juego ha estado por encima del presupuesto durante toda la racha que indiques, y callado después hasta que vuelva a haber un fotograma dentro del presupuesto. Aquí es donde un juego baja sus propios efectos. Necesita un disparador por fotograma."
+On the frame running long [b]{ms}[/b] ms for [b]{frames}[/b] frames,En el fotograma que lleva [b]{frames}[/b] fotogramas por encima de [b]{ms}[/b] ms
+Over Milliseconds,Por encima de milisegundos
+A frame longer than this counts as a long one. 16.6 is one frame at 60 FPS.,"Un fotograma más largo que esto cuenta como largo. 16,6 es un fotograma a 60 FPS."
+For Frames,Durante fotogramas
+How many long frames in a row before this fires. One hitch is not a problem; half a second of them is.,Cuántos fotogramas largos seguidos antes de que esto se dispare. Un tirón no es un problema; media segundo de ellos sí.
+On The Frame Recovered,En el fotograma recuperado
+"True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.","Verdadero en el ÚNICO fotograma en que el juego ha ido holgado durante toda la racha que indiques, después de haber estado por encima del presupuesto. Aquí es donde los efectos vuelven a encenderse. Nunca se dispara antes de que haya habido una racha larga, así que un juego que empezó bien no oye nada. Necesita un disparador por fotograma."
+On the frame recovered under [b]{ms}[/b] ms for [b]{frames}[/b] frames,En el fotograma recuperado por debajo de [b]{ms}[/b] ms durante [b]{frames}[/b] fotogramas
+Under Milliseconds,Por debajo de milisegundos
+A frame shorter than this counts as calm. Keep it comfortably under the long threshold - the gap between the two is what stops the game flapping.,Un fotograma más corto que esto cuenta como tranquilo. Mantenlo holgadamente por debajo del umbral de largo - la separación entre ambos es lo que impide que el juego oscile.
+How many calm frames in a row before this fires. Long enough that a lull in the action is not mistaken for a fix.,Cuántos fotogramas tranquilos seguidos antes de que esto se dispare. Suficientes para que una pausa en la acción no se confunda con una mejora.
+Draw In Front Of,Dibujar delante de
+"Puts this node one step in front of another in the drawing order, whatever that other node's order happens to be. Relative on purpose: move the pair around and they keep their order, where two hand-set numbers drift apart.","Coloca este nodo un paso por delante de otro en el orden de dibujo, sea cual sea el orden de ese otro nodo. Relativo a propósito: mueve el par de sitio y conservan su orden, mientras que dos números puestos a mano se van desincronizando."
+Rendering,Renderizado
+draw in front of {other},dibujar delante de {other}
+In front of,Delante de
+The node to draw over - this one takes its drawing order plus one.,El nodo sobre el que dibujar - este toma el orden de dibujo de aquel más uno.
+Show Only To,Mostrar solo a
+"Limits which cameras draw this node: a camera only draws what its cull mask and the node's visibility layer share. The layer names are the project's own (Project Settings > Layer Names > 2D Render), which is how a minimap marker gets seen by the minimap and by nothing else.","Limita qué cámaras dibujan este nodo: una cámara solo dibuja lo que comparten su máscara de descarte y la capa de visibilidad del nodo. Los nombres de capa son los del proyecto (Ajustes del proyecto > Nombres de capa > 2D Render), y así un marcador de minimapa lo ve el minimapa y nada más."
+show only to {layers},mostrar solo a {layers}
+Visible to,Visible para
+"The visibility layers that may see this node, by their project names.","Las capas de visibilidad que pueden ver este nodo, por sus nombres de proyecto."
+Is On Screen,Está en pantalla
+"True while the node is inside what a camera is showing. It works through the engine's own VisibleOnScreenNotifier2D, and adds one to the node the first time the row is asked if the node has none - a plain child you can see in the scene, move, resize and keep.","Verdadero mientras el nodo está dentro de lo que muestra una cámara. Funciona a través del propio VisibleOnScreenNotifier2D del motor, y añade uno al nodo la primera vez que se pregunta si no lo tiene - un hijo normal que puedes ver en la escena, mover, redimensionar y conservar."
+is on screen,está en pantalla
+The node to ask about.,El nodo por el que se pregunta.
+The child that was just added under this node. Filled in for you when the trigger fires.,El hijo que se acaba de añadir bajo este nodo. Se rellena por ti cuando el disparador se activa.
+The child that is leaving this node. Filled in for you when the trigger fires.,El hijo que está saliendo de este nodo. Se rellena por ti cuando el disparador se activa.
