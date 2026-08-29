@@ -306,7 +306,8 @@ static func build_manifest(pages: Dictionary) -> Dictionary:
 	var titles: Dictionary = {}
 	for id: Variant in pages:
 		titles[str(id)] = title_of(read_text(str(pages[id])), str(id))
-	var groups: Array = index_groups(read_text(INDEX_SOURCE), pages)
+	var index_text: String = read_text(INDEX_SOURCE)
+	var groups: Array = index_groups(index_text, pages)
 	# The index page itself leads the tree. It never links to itself, so without this it would be
 	# reported as a guide nobody indexed - and the reader would lose the one page that explains
 	# what the rest are for.
@@ -347,7 +348,25 @@ static func build_manifest(pages: Dictionary) -> Dictionary:
 			unlisted.append(str(id))
 	if not unlisted.is_empty():
 		groups.append({"title": "More guides", "ids": unlisted})
-	return {"version": 1, "pages": titles, "groups": groups, "unlisted": unlisted}
+	return {"version": 1, "pages": titles, "groups": groups, "tracks": index_tracks(index_text, pages),
+		"unlisted": unlisted}
+
+
+## The index's own learning paths, baked so the reader has them without parsing a Markdown page to
+## draw a list of tracks. Parsed by the SAME function that reads a studio's index at runtime, so the
+## format a studio writes is by construction the format this understands - `ids` becomes a plain
+## Array here because that is what var_to_str round-trips through the manifest.
+static func index_tracks(index_text: String, pages: Dictionary) -> Array:
+	var tracks: Array = []
+	for track: Dictionary in EventSheetDocTracks.parse(index_text):
+		var ids: Array = []
+		for id: String in (track.get("ids", PackedStringArray()) as PackedStringArray):
+			if pages.has(id) and not ids.has(id):
+				ids.append(id)
+		if ids.is_empty():
+			continue
+		tracks.append({"title": str(track.get("title", "")), "blurb": str(track.get("blurb", "")), "ids": ids})
+	return tracks
 
 
 ## The group carrying `title`, or an empty Dictionary when the tree has none.
@@ -371,6 +390,12 @@ static func set_title(doc_set: String) -> String:
 
 ## The docs index's own grouping: every "## Heading" and the guide links under it, in document
 ## order. A link the bundle does not carry is skipped, so the tree never offers a dead page.
+##
+## The LEARNING PATHS section is deliberately not a group. Its pages are already grouped above by
+## what they are about, and a track lists them again by the order they teach in - so grouping it too
+## would put every page on a track into the tree twice, under two headings, which reads as a bug and
+## is one. The same section becomes `tracks` instead (see index_tracks): one authored list, two
+## derived readings, no second place to edit.
 static func index_groups(index_text: String, pages: Dictionary) -> Array:
 	var groups: Array = []
 	var current: Dictionary = {}
@@ -380,7 +405,9 @@ static func index_groups(index_text: String, pages: Dictionary) -> Array:
 		if stripped.begins_with("## "):
 			if not current.is_empty() and not (current["ids"] as Array).is_empty():
 				groups.append(current)
-			current = {"title": stripped.substr(3).strip_edges(), "ids": []}
+			current = {}
+			if stripped.substr(3).strip_edges() != EventSheetDocTracks.SECTION_HEADING:
+				current = {"title": stripped.substr(3).strip_edges(), "ids": []}
 			continue
 		if current.is_empty():
 			continue

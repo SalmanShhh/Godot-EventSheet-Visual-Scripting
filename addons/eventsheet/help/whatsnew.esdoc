@@ -6,6 +6,32 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Reading becomes having
+
+- **Every worked example in the guides lands in your sheet wearing tune-me marks.** The Manual's
+  figures already inserted themselves as real rows in one undo step; now the literals in those rows -
+  every number, every string the example chose - carry a dashed rule underneath, in the same stroke
+  the editor dashes a fold mark with. It says what a static picture never could: these values are the
+  example's, and they are yours to replace. The marks are drawn from the row's own typed-value runs,
+  so nothing new decides what a value is; they live only in the pane that is showing them, so a
+  marked row and a typed row compile to the same bytes and a reopened sheet has no marks at all.
+- **The picker's recipes and the guides' figures are one thing, said twice.** The recipe shelf is
+  derived from the figure store rather than kept beside it, and a recipe inserts through the same
+  guarded path a figure does - so it lands marked too.
+- **Learning paths: the guides, put in an order.** Four named tracks - Your first game, Coming from
+  another editor, Multiplayer, Performance - each an ordered reading of guides that already exist.
+  A track holds nothing of its own: it is a list in the documentation index, and the Manual's new
+  Learning paths page draws it. Your studio declares its own by writing the same list in your
+  project's own docs index.
+- **Tick a page off as you read it.** Opening a guide ticks it; the page lets you take the tick back.
+  The ticks live in a `user://` file - this project, this machine - so they are never committed,
+  never synced, and never seen by anyone you did not show them to.
+- **\"Read next\" is derived from your own rows.** A project whose sheets already speak a family's
+  vocabulary, on a track whose page you have not opened, gets that page suggested once, on the quiet
+  status line, through the same offer budget the rest of the editor spends - so a suggestion you
+  ignored is never made again. The join runs against the Manual's own baked search index, so nothing
+  holds a second opinion about which guide teaches which verb.
+
 ### Comments are the book
 
 - **A comment row is one of GDScript's two kinds, and nothing else.** A row whose line opens `##` is

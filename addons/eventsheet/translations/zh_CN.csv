@@ -5258,3 +5258,12 @@ Shows in the manual.,显示在手册中。
 The line this row writes.,这一行写出的代码行。
 Still to do,待办
 Note,备注
+%d of %d read,已读 %d / %d
+Your rows already use %d verb(s) this page teaches: %s (%s),你的行已经用到本页讲解的 %d 个动词：%s (%s)
+"Guides you already have, in the order that teaches them. Tick a page off as you read it - the ticks stay on this machine, in this project, and are never written into your game.",你已经拥有的指南，按讲授的顺序排列。读完一页就打上勾 - 勾只留在这台机器的这个项目里，绝不会写进你的游戏。
+No paths are declared. A path is a list in a documentation index - add a Learning paths section to your project's own index and it appears here.,"没有声明任何路径。路径就是文档索引里的一个列表 - 在你项目自己的索引中加入 ""Learning paths"" 一节，它就会出现在这里。"
+Opens this page.,打开这一页。
+"Ticks this page off, or takes the tick back. Kept on this machine only.",给这一页打勾，或撤销勾选。只保存在这台机器上。
+Mark read,标为已读
+Read it now,现在就读
+Opens the page your rows point at.,打开你的行所指向的那一页。

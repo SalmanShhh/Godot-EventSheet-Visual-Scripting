@@ -5258,3 +5258,12 @@ Shows in the manual.,Apparaît dans le manuel.
 The line this row writes.,La ligne que cette rangée écrit.
 Still to do,À faire
 Note,Note
+%d of %d read,%d sur %d lues
+Your rows already use %d verb(s) this page teaches: %s (%s),Vos lignes utilisent déjà %d verbe(s) enseigné(s) par cette page : %s (%s)
+"Guides you already have, in the order that teaches them. Tick a page off as you read it - the ticks stay on this machine, in this project, and are never written into your game.","Des guides que vous avez déjà, dans l'ordre qui les enseigne. Cochez une page à mesure que vous la lisez - les coches restent sur cette machine, dans ce projet, et ne sont jamais écrites dans votre jeu."
+No paths are declared. A path is a list in a documentation index - add a Learning paths section to your project's own index and it appears here.,"Aucun parcours n'est déclaré. Un parcours est une liste dans un index de documentation - ajoutez une section ""Learning paths"" à l'index de votre projet et il apparaîtra ici."
+Opens this page.,Ouvre cette page.
+"Ticks this page off, or takes the tick back. Kept on this machine only.","Coche cette page, ou retire la coche. Conservé uniquement sur cette machine."
+Mark read,Marquer comme lue
+Read it now,La lire maintenant
+Opens the page your rows point at.,Ouvre la page vers laquelle pointent vos lignes.

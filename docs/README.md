@@ -92,3 +92,51 @@ parameters, and what each row ships as.
 ## Addon packs
 
 - [Addon Guides Index](Addons/README.md) - deep-dive guides for every bundled behavior pack in `eventsheet_addons/`.
+
+## Learning paths
+
+An ordered reading of guides that are already listed on this page. A path holds nothing of its own -
+it is a list, in the order that teaches, and the Manual draws it as a track you can tick off as you
+go (the ticks stay on your machine and are never committed). Adding a path to your own project's
+docs index, in exactly this format, puts it in the Manual beside these.
+
+### Your first game
+
+You have never built one, and you would like to finish something small.
+
+1. [Recipes](GUIDE-RECIPES.md)
+2. [Block Styles - How To Read Every Row](GUIDE-BLOCK-STYLES.md)
+3. [Variables, Groups and the Sheet Head](GUIDE-VARIABLES-GROUPS-AND-THE-SHEET-HEAD.md)
+4. [Common Game Patterns Without Code](GUIDE-COMMON-GAME-PATTERNS.md)
+5. [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md)
+6. [Autocomplete and Quick Add](GUIDE-AUTOCOMPLETE-AND-QUICK-ADD.md)
+
+### Coming from another editor
+
+You have shipped games in another event-sheet tool, or you already write GDScript.
+
+1. [Migration Guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md)
+2. [Coming from GDScript](GUIDE-COMING-FROM-GDSCRIPT.md)
+3. [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md)
+4. [Glossary](REFERENCE-GLOSSARY.md)
+5. [Custom ACEs](GUIDE-CUSTOM-ACES.md)
+6. [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md)
+
+### Multiplayer
+
+Your game is going to be played by more than one person at a time.
+
+1. [Multiplayer with Godot's Built-in Tools](GUIDE-MULTIPLAYER-WITH-GODOTS-BUILT-IN-TOOLS.md)
+2. [Sharing Events Between Scripts](GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS.md)
+3. [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md)
+4. [Composition and Systems](GUIDE-COMPOSITION-SYSTEMS.md)
+
+### Performance
+
+The game works and now it has to keep working with everything on screen at once.
+
+1. [Performance](REFERENCE-PERFORMANCE.md)
+2. [Composition and Systems](GUIDE-COMPOSITION-SYSTEMS.md)
+3. [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md)
+4. [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md)
+5. [Randomness and Procedural Generation](GUIDE-PROCEDURAL-GENERATION.md)

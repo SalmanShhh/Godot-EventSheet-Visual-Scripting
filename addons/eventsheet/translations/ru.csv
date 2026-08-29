@@ -5258,3 +5258,12 @@ Shows in the manual.,Показывается в руководстве.
 The line this row writes.,"Строка, которую пишет этот ряд."
 Still to do,Ещё сделать
 Note,Заметка
+%d of %d read,Прочитано %d из %d
+Your rows already use %d verb(s) this page teaches: %s (%s),"Ваши строки уже используют %d глагол(ов), которым учит эта страница: %s (%s)"
+"Guides you already have, in the order that teaches them. Tick a page off as you read it - the ticks stay on this machine, in this project, and are never written into your game.","Руководства, которые у вас уже есть, в порядке обучения. Отмечайте прочитанные страницы - отметки остаются на этой машине, в этом проекте, и никогда не попадают в вашу игру."
+No paths are declared. A path is a list in a documentation index - add a Learning paths section to your project's own index and it appears here.,"Пути не объявлены. Путь - это список в оглавлении документации: добавьте раздел ""Learning paths"" в оглавление своего проекта, и он появится здесь."
+Opens this page.,Открывает эту страницу.
+"Ticks this page off, or takes the tick back. Kept on this machine only.",Отмечает эту страницу или снимает отметку. Хранится только на этой машине.
+Mark read,Отметить прочитанной
+Read it now,Прочитать сейчас
+Opens the page your rows point at.,"Открывает страницу, на которую указывают ваши строки."

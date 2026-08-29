@@ -11,11 +11,12 @@ before you write. Read this once; after that the gates will tell you when you sl
 3. [Naming a guide](#naming-a-guide)
 4. [The shape of an addon or module guide](#the-shape-of-an-addon-or-module-guide)
 5. [Worked examples that draw themselves - the figure fences](#worked-examples-that-draw-themselves---the-figure-fences)
-6. [House rules the suite enforces](#house-rules-the-suite-enforces)
-7. [Regenerate before you commit](#regenerate-before-you-commit)
-8. [Documenting a third-party pack](#documenting-a-third-party-pack)
-9. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
-10. [Common mistakes](#common-mistakes)
+6. [Learning paths](#learning-paths)
+7. [House rules the suite enforces](#house-rules-the-suite-enforces)
+8. [Regenerate before you commit](#regenerate-before-you-commit)
+9. [Documenting a third-party pack](#documenting-a-third-party-pack)
+10. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
+11. [Common mistakes](#common-mistakes)
 
 ## Where docs live, and where they show up
 
@@ -377,6 +378,51 @@ Every recognized figure is compiled by the suite (`tests/doc_figures_test.gd`), 
 renamed under a figure breaks a test instead of a guide. Figure verdicts are baked into the
 bundle at build time (a verdict costs a full import and compile), and the suite re-derives every
 one live and fails on disagreement.
+
+### The rows land wearing tune-me marks
+
+![A figure and its Add these events button, and the same rows inserted with a dashed mark under every value the example chose](images/doc-figure-tune-marks.png)
+
+Pressing **Add these events** puts a figure's rows into the open sheet, at the caret, as one undo
+step. What lands is not quite what a typed row looks like: every literal in it - each number, each
+string the example picked - carries a dashed rule underneath, drawn in the same stroke the editor
+dashes a fold mark's badge with. That is the whole message of the mark: *these are the example's
+values, and they are yours to replace.*
+
+The marks are drawn from the row's own typed-value runs, so a figure does not decide separately what
+counts as a value; a reading's muted lead (the `effect.` in front of a shader dial) is skipped,
+because nobody retypes that. They live in the pane showing them and nowhere else - a marked row and a
+typed row compile to identical bytes, and reopening the sheet clears every mark, which is the honest
+state by then.
+
+The **picker's recipe shelf** is the same source seen from the other side: the recipes offered when a
+search finds nothing are the guides' figures, derived from the figure store rather than kept in a
+list beside it, and inserted through the same guarded path - so a recipe lands marked too.
+
+## Learning paths
+
+![The Manual's Learning paths page: four tracks, each with its blurb, an N of M read line, and one numbered row per page with a Mark read tick beside it](images/doc-learning-paths.png)
+
+A **track** is an ordered reading of guides that already exist - and it is a list in a documentation
+index, nothing more. `docs/README.md` carries a `## Learning paths` section; each `### Heading` under
+it opens a track, the first line of prose is its blurb, and every link below that is a page, in the
+order it should be read. That section is the only place a track is written: the build step reads it
+into the bundle exactly as it reads the index's grouped link list into the Manual's tree, and it is
+deliberately NOT also a tree group - the pages on a track are already grouped by subject above it,
+and listing them twice would read as a bug.
+
+A studio declares its own tracks by writing the same section in its own project's docs index. Same
+format, same parser; a track whose title matches a shipped one replaces it.
+
+**Ticks.** Opening a guide ticks it off, and the Learning paths page lets you take the tick back. The
+ticks live in a `user://` config - this project, this machine - so they are never committed, never
+synced, and never seen by anyone you did not show them to.
+
+**Read next.** A project whose sheets already use a family's vocabulary, on a track whose page its
+author has not opened, gets that page suggested once, on the status line, through the same offer
+budget the rest of the editor spends. The join runs against the Manual's own baked search index, so
+nothing anywhere holds a second opinion about which guide teaches which verb - and a page nothing in
+your rows points at is never suggested at all.
 
 ## The Common Game Patterns page draws itself from fixtures
 

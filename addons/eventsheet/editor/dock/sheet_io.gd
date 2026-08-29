@@ -303,6 +303,20 @@ func _finish_gd_open(sheet: EventSheetResource, raw_sheet: EventSheetResource, r
 		_dock._set_status("Opened %s as code - stopped working out the events, so every function is shown as a script block. Reopen the file to try again." % resolved_path.get_file())
 		return
 	_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(sheet))])
+	_offer_read_next(sheet)
+
+
+## The one unprompted suggestion this surface makes: a guide on a learning path that teaches verbs
+## THIS sheet already uses, and that the reader has not opened. Spent through the editor's shared
+## offer budget, so it is made once and a reader who ignored it is never asked again - and it is a
+## quiet status line, never a dialog, because it is an observation and not a question.
+func _offer_read_next(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
+	var suggestion: Dictionary = EventSheetDocTracks.suggest_for([sheet] as Array[EventSheetResource])
+	if not EventSheetDocTracks.may_offer(suggestion):
+		return
+	_dock._set_status(EventSheetDocTracks.suggestion_text(suggestion))
 
 
 ## Marks the rows built from lines the ENGINE could not parse, using the errors the open job already

@@ -5258,3 +5258,12 @@ Shows in the manual.,マニュアルに載ります。
 The line this row writes.,この行が書き出す行。
 Still to do,これからやること
 Note,メモ
+%d of %d read,%d / %d 読了
+Your rows already use %d verb(s) this page teaches: %s (%s),あなたの行はこのページが教える動詞を既に %d 個使っています: %s (%s)
+"Guides you already have, in the order that teaches them. Tick a page off as you read it - the ticks stay on this machine, in this project, and are never written into your game.",すでに手元にあるガイドを、学ぶ順に並べたものです。読んだページにチェックを付けてください - チェックはこのマシンのこのプロジェクトに残り、ゲームには書き込まれません。
+No paths are declared. A path is a list in a documentation index - add a Learning paths section to your project's own index and it appears here.,"学習パスは宣言されていません。パスとはドキュメント索引の中の一覧です - プロジェクトの索引に ""Learning paths"" の節を書けばここに現れます。"
+Opens this page.,このページを開きます。
+"Ticks this page off, or takes the tick back. Kept on this machine only.",このページにチェックを付けます（もう一度押すと外れます）。このマシンにのみ残ります。
+Mark read,読了にする
+Read it now,今すぐ読む
+Opens the page your rows point at.,あなたの行が指し示すページを開きます。

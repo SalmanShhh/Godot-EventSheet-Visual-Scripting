@@ -5258,3 +5258,12 @@ Shows in the manual.,설명서에 표시됩니다.
 The line this row writes.,이 행이 쓰는 줄.
 Still to do,할 일
 Note,메모
+%d of %d read,%d / %d 읽음
+Your rows already use %d verb(s) this page teaches: %s (%s),이 페이지가 가르치는 동사를 이미 %d개 사용하고 있습니다: %s (%s)
+"Guides you already have, in the order that teaches them. Tick a page off as you read it - the ticks stay on this machine, in this project, and are never written into your game.",이미 가지고 있는 안내서를 배우는 순서로 늘어놓았습니다. 읽은 쪽에 표시하세요 - 표시는 이 컴퓨터의 이 프로젝트에만 남고 게임에는 기록되지 않습니다.
+No paths are declared. A path is a list in a documentation index - add a Learning paths section to your project's own index and it appears here.,"선언된 경로가 없습니다. 경로란 문서 색인 속의 목록입니다 - 프로젝트 색인에 ""Learning paths"" 절을 추가하면 여기에 나타납니다."
+Opens this page.,이 쪽을 엽니다.
+"Ticks this page off, or takes the tick back. Kept on this machine only.",이 쪽에 표시하거나 표시를 되돌립니다. 이 컴퓨터에만 남습니다.
+Mark read,읽음으로 표시
+Read it now,지금 읽기
+Opens the page your rows point at.,당신의 행이 가리키는 쪽을 엽니다.

@@ -562,6 +562,15 @@ func _on_page_action(action: String, argument: String) -> void:
 		EventSheetDocTutorials.ACTION_SKIP, EventSheetDocTutorials.ACTION_NEXT:
 			_on_tutorial_action(action, argument)
 			return
+		EventSheetDocTracks.ACTION_OPEN:
+			show_doc(argument)
+			return
+		EventSheetDocTracks.ACTION_TICK:
+			# The tick is the reader's, both ways: pressing it again takes it back. The page is
+			# redrawn rather than patched, because the track's own progress line changed too.
+			EventSheetDocTracks.set_read(argument, not EventSheetDocTracks.is_read(argument))
+			show_doc(_current_id)
+			return
 		ACTION_TRANSLATIONS:
 			# The FOLDER, in the reader's own file manager. There is no web form here and no upload:
 			# a translated page is a Markdown file beside the English one, and this shows them where.
@@ -840,7 +849,10 @@ func _route(doc_id: String, anchor: String) -> bool:
 ## legend. Drawn by the page view like any guide, because it is a page - it simply was not written
 ## by anybody.
 func _show_reference(doc_id: String, kind: String, name: String, anchor: String) -> bool:
-	var blocks: Array[Dictionary] = EventSheetDocReference.blocks_for(kind, name)
+	# The learning paths are the one derived page that reasons about the reader's OWN rows, so it is
+	# handed the open sheet rather than reaching for a dock it cannot see from here.
+	var blocks: Array[Dictionary] = EventSheetDocTracks.blocks_for_sheets(_open_sheets()) \
+		if kind == EventSheetDocReference.KIND_TRACKS else EventSheetDocReference.blocks_for(kind, name)
 	if blocks.is_empty():
 		return false
 	if not _query.is_empty():
@@ -871,6 +883,14 @@ func _show_reference(doc_id: String, kind: String, name: String, anchor: String)
 	else:
 		_restore_scroll(doc_id)
 	return true
+
+
+## The sheets this reader is actually working in, for the one page that reasons about their rows.
+## The OPEN sheet is the live version of their file - a row added a second ago exists only in memory
+## - so it is the honest input, and an empty list when nothing is open is an honest answer too.
+func _open_sheets() -> Array[EventSheetResource]:
+	var sheet: EventSheetResource = EventSheets.current_sheet()
+	return ([] if sheet == null else [sheet]) as Array[EventSheetResource]
 
 
 ## The editor's own class reference, one hop out of the Manual. Reported honestly: a build whose
@@ -943,6 +963,11 @@ func _show_page(page_id: String, anchor: String, doc_id: String) -> bool:
 		_page.expand_all()
 	_build_mini_nav()
 	_select_tree_item(page_id)
+	# Opening a guide ticks it off. Recorded on the page that ENDED UP on screen rather than on the
+	# tree row that was clicked, so a reader who arrived from a link, from a search hit or from a
+	# track has read it exactly as much as one who pressed the row - the same rule What's new uses
+	# for its own dot. The tick is theirs to take back from the learning-paths page.
+	EventSheetDocTracks.set_read(page_id, true)
 	if not anchor.strip_edges().is_empty():
 		_page.jump_to_anchor(anchor)
 	else:
@@ -1242,7 +1267,10 @@ func _build_manual_group(root: TreeItem) -> void:
 	# The tutorials lead, because doing one answers every question the pages below would be
 	# answering in prose. Then the legend - what are those marks on my rows - then the words from
 	# another editor, then the behaviors by the names they are known by, then what changed.
-	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_LEGEND,
+	# The learning paths sit right behind the tutorials: both answer "what do I do first", one by
+	# walking the reader through a sheet and one by ordering the reading.
+	for kind: String in [EventSheetDocReference.KIND_TUTORIALS, EventSheetDocReference.KIND_TRACKS,
+			EventSheetDocReference.KIND_LEGEND,
 			EventSheetDocReference.KIND_GLOSSARY, EventSheetDocReference.KIND_DICTIONARY,
 			# The editor-building words, beside the other two word pages: it answers the same
 			# question ("what do you call this?") for the reader who is building a tool.

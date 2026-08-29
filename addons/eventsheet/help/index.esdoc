@@ -230,6 +230,23 @@
 "REFERENCE-MCP-SERVER": "MCP Server - AI Tooling for Godot EventSheets",
 "REFERENCE-PERFORMANCE": "Performance - Frame-Spreading and Time-Budgeting"
 },
+"tracks": [{
+"blurb": "You have never built one, and you would like to finish something small.",
+"ids": ["GUIDE-RECIPES", "GUIDE-BLOCK-STYLES", "GUIDE-VARIABLES-GROUPS-AND-THE-SHEET-HEAD", "GUIDE-COMMON-GAME-PATTERNS", "GUIDE-SAVING-AND-LOADING", "GUIDE-AUTOCOMPLETE-AND-QUICK-ADD"],
+"title": "Your first game"
+}, {
+"blurb": "You have shipped games in another event-sheet tool, or you already write GDScript.",
+"ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "GUIDE-COMING-FROM-GDSCRIPT", "GUIDE-USING-WITH-EXISTING-CODE", "REFERENCE-GLOSSARY", "GUIDE-CUSTOM-ACES", "GUIDE-VERSION-CONTROL"],
+"title": "Coming from another editor"
+}, {
+"blurb": "Your game is going to be played by more than one person at a time.",
+"ids": ["GUIDE-MULTIPLAYER-WITH-GODOTS-BUILT-IN-TOOLS", "GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS", "GUIDE-SAVING-AND-LOADING", "GUIDE-COMPOSITION-SYSTEMS"],
+"title": "Multiplayer"
+}, {
+"blurb": "The game works and now it has to keep working with everything on screen at once.",
+"ids": ["REFERENCE-PERFORMANCE", "GUIDE-COMPOSITION-SYSTEMS", "GUIDE-WORKING-WITH-LISTS", "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING", "GUIDE-PROCEDURAL-GENERATION"],
+"title": "Performance"
+}],
 "unlisted": [],
 "version": 1
 }
