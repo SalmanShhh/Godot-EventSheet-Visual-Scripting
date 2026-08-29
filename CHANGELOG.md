@@ -605,6 +605,15 @@
   arms it, it comes off the engine when that instance leaves the tree, and the next instance arms it
   afresh.
 
+- **The "no way out of a mode" check can now find one.** It was silent in every game that enters
+  more than one mode, because it answered the reachability question by asking whether the sheet
+  contained some OTHER mode - which for Menu → Playing → Game Over is true the moment the second
+  mode exists, so the mode nothing leaves was cleared by the two above it. It reads the rows now: a
+  row is a way out of a mode when nothing shuts it out of that mode (it is inside a group that runs
+  in it, or under an In mode row naming it, or gated on no mode at all) and it goes somewhere else,
+  pushes, or goes back. A row gated on a different mode is shut out, and a row that runs once when
+  the game starts is how the game begins rather than how a player gets unstuck.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
