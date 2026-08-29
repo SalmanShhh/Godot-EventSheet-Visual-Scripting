@@ -6295,6 +6295,43 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   all afternoon and disagrees on another machine. The two exports it compares now carry sheet pages,
   including two sheets that share a file name, and it compares both exports' file lists rather than
   only the first, so a file the second export added is a difference and not an invisible one.
+- **The tune-me marks do not outlive the sheet they describe.** The dashes that say "this literal is
+  the example's value, not your answer" were never cleared: the set grew for the whole session
+  across every insert and every tab switch in a pane, and a row of a later-opened sheet that shared
+  an event uid with a marked one drew dashes it never earned. A pane handed a different sheet drops
+  them; the same sheet re-seated after an edit is still the same reading and keeps them.
+- **The read-next suggestion is made once, as promised.** It was booked against the page it happened
+  to name, and the suggestion is derived from whichever sheet is being opened - so every sheet with
+  a different answer bought a fresh offer, and a session of opening files was a session of being
+  nudged. It is booked against the offer itself now, and the budget is asked BEFORE the suggestion
+  is worked out, so a session that has made its one offer no longer takes a census of every sheet it
+  opens and puts forty of its verbs through the search index for an answer it will not show.
+- **Two comments that described code that was not there.** The tune-me clear said the dock called it
+  when a sheet was replaced, and nothing called it at all; the offer budget's reset said the editor
+  called it on project close, and only tests do. The first is now true because the call was added;
+  the second is now true because the sentence was corrected. The Docs Housekeeping window likewise
+  said its ticked chores were a team-shared property of the project two lines above storing them
+  where no teammate can see them, and said a first Run would surprise nobody while defaulting to a
+  chore that writes files - both now say what the code does.
+- **One name for the project's ledger.** The chores read `res://CHANGELOG.md` as a literal while the
+  Doctor and the bundle build both asked for the same file by name, in the three callers that exist
+  specifically so one question gets one answer.
+- **"Learn more" lands on a section, or it is not offered.** The rule that decided which guide
+  teaches a verb accepted a BODY hit - the verb's words appearing somewhere in a page's prose - and
+  almost every long guide mentions almost every common word, so the candidates arrived tied at that
+  strength with no heading between them and the winner was whichever page sorted first
+  alphabetically. Measured on the shipped corpus: "Print Log" was taught by the ComboBox guide,
+  "Play Sound" by Advanced Random, "Pick Nearest" by Drag And Drop, each behind a confident-looking
+  section line and a link that opened a guide with nothing about that row on it. A section now has
+  to be named in a page's title or one of its headings, which is also what makes the landing a
+  heading rather than the top of a guide. Where nothing in the corpus names a verb, the panel says
+  nothing - the answer that module was written to give.
+- **An exported page says which language it is in.** Every page declared `lang="en"` whatever
+  `--locale` asked for, so a French site was read out in the wrong voice by a screen reader and
+  hyphenated by the wrong rules by a browser, silently both times. The language is the export's own,
+  never the editor's - the same command on two machines still writes the same bytes. The site's
+  furniture (its footer, the search placeholder, the Contents link) stays English, and the file now
+  says why: translating it through the running editor's catalog is exactly what would break that.
 
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
