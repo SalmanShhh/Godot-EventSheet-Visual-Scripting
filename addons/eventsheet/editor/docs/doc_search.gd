@@ -5,7 +5,7 @@
 #
 #   1. THE INDEX. One entry per page - its title, every heading with its slug, and a blob of the
 #      page's unique words. The blob is the whole reason this is affordable: the corpus is about
-#      2 MB of Markdown, and keeping the prose would cost that for the life of the editor, while
+#      4 MB of Markdown, and keeping the prose would cost that for the life of the editor, while
 #      the unique words of a page are a fraction of it and answer the only question a body match
 #      asks ("does this page talk about that word").
 #   2. THE HIGHLIGHT. A hit is shown by RE-EMITTING the page's BBCode with [bgcolor] around the
@@ -59,7 +59,7 @@ static var _indexed_page_count: int = 0
 ## `words` is a blob of the page's unique lowercase words, each surrounded by spaces, so a
 ## word-prefix test is one native find() instead of a loop over a Dictionary.
 ## The SHIPPED half of it is BAKED (addons/eventsheet/help/search.esdoc, written by the bundle
-## build): a keystroke then searches a table that was read once, rather than paying for ~2 MB of
+## build): a keystroke then searches a table that was read once, rather than paying for ~4 MB of
 ## Markdown to be read and split into words on the reader's first keypress. Only the pages the
 ## bundle cannot know about - a pack's own guide.md, the project's own notes - are indexed live,
 ## and there are a handful of those.

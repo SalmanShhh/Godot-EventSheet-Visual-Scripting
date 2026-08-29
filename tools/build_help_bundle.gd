@@ -14,7 +14,7 @@
 #   (derived)          ->  addons/eventsheet/help/search.esdoc
 #
 # WHAT IT COSTS, measured rather than estimated, because the payload is the whole argument against
-# shipping a corpus at all: 147 pages, 3.2 MB - the top-level guides plus 72 addon guides plus the
+# shipping a corpus at all: 191 pages, 4.0 MB of Markdown - the top-level guides plus 93 addon guides plus the
 # module guides - which roughly doubles an installed plugin. Every commit that edits a guide has to
 # regenerate this, and about 30% of this repo's commits edit a guide.
 #
@@ -319,7 +319,7 @@ static func build_manifest(pages: Dictionary) -> Dictionary:
 		for id: Variant in ((entry as Dictionary).get("ids", []) as Array):
 			grouped[str(id)] = true
 	# The secondary doc sets are grouped by DIRECTORY, not by the index: they are discovered, and
-	# an index that has to list 72 addon guides by hand is an index that will fall behind.
+	# an index that has to list 93 addon guides by hand is an index that will fall behind.
 	for doc_set: String in DOC_SETS:
 		if doc_set.is_empty():
 			continue

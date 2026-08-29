@@ -6,104 +6,36 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Reading becomes having
+### The Manual - one search, and the engine's own words
 
-- **The Manual exports as a site you can open anywhere.** Guides, the dictionary, the pages your own
-  sheets write - the whole corpus as a folder of plain HTML with its search in it, opened from a file
-  manager with no server, no account and no build step. The search is the same baked table the editor
-  searches, re-emitted as one JavaScript file, so a query that finds a page in the dock finds it in a
-  browser. The same bundle in produces the same bytes out: export twice, hash the two folders, and
-  they are identical, which is what lets a team commit the site and read what CHANGED about their
-  documentation in a pull request. A worked example travels as a picture of its rows, drawn by the
-  real renderer and cached by the hash of the fence body - so a reworded guide whose example did not
-  change costs nothing to re-export, and a figure with no picture yet degrades to the code it is a
-  picture of rather than failing the export. `--locale` exports a translated site with the
-  untranslated pages marked on the page, and the engine's own reference carries its CC BY credit
-  wherever it appears.
-- **The documentation chores, in one window, on a command line, and in CI - written once.** Six
-  chores that a person can do by hand and therefore forgets: rewrite the page each sheet writes about
-  itself, harvest the engine's class reference, draft the descriptions nothing has written yet, check
-  coverage and drift, export the site, write out a translator's missing keys. Tools > Docs
-  Housekeeping ticks them off with checkboxes the project remembers and shows one report at the end;
-  `addons/eventsheet/cli.gd` runs the same code from a terminal with an exit code a commit hook can
-  read; and a button writes you a GitHub Actions workflow - shown in full before it is written,
-  pinned to the Godot version this project is open in, and yours afterwards, because the plugin never
-  reads it again. `docs-check` fails on drift, where a shipped copy differs from its source and
-  nobody has to judge it; coverage findings are printed and never fail, because a gate that goes red
-  on a judgement call is a gate a team learns to ignore.
-- **Automation that never publishes.** The drafting chore writes its suggestions to one drafts file
-  and stops: nothing is written into a sheet or a guide, and the file says so at the top. Keeping the
-  drafts that are true stays a person's decision.
-- **Saving a sheet refreshes its own page and nothing else.** A sheet that already has a manual page
-  gets that one page rewritten and that one search entry re-derived on save - never a walk of the
-  project, so the cost of saving does not grow with the size of the game, and a project that never
-  asked for a manual does not acquire one because somebody pressed Ctrl+S.
-- **A megabyte-long CHANGELOG no longer stalls the guide audit.** The ledger sweep reduced its text
-  one character at a time in GDScript, which is minutes on a shipped changelog and looked like a hang
-  rather than a wait. It reduces through the engine's own scanner now; the per-name reduction is
-  unchanged, and the suite pins that the two agree.
-
-- **The guide audit is a page now, not build noise.** The help-bundle builder already compared every
-  pack guide against what its pack actually publishes, and printed the answer into a build log nobody
-  reads on a tool you only run while editing a guide. That question moved into a shared reader, and
-  the Doctor grew a Docs section that asks the same reader the same question - so the build output
-  and the page cannot say different things about one guide. It reports four kinds of rot: a verb the
-  pack publishes that the guide never names, a name in the guide that no verb answers to (with the
-  nearest three that do, because it is almost always a rename), a description cell that says nothing,
-  and a verb the CHANGELOG has never mentioned for a pack the CHANGELOG does - the release ritual's
-  \"write down what changed\" step, running continuously instead of being remembered at tag time.
-  Nothing here fails a build: a guide legitimately documents a friendlier name and legitimately
-  leaves plumbing out, so every line is a note or a warning a person decides about.
-- **The fix that refuses to fake a green page.** The chip on an undocumented verb writes a stub row
-  into the guide carrying an unfilled placeholder, and that placeholder goes on reporting itself as a
-  description that says nothing until somebody replaces it. It does the mechanical typing and
-  declines the part that would be a lie. The thin-description chip offers a draft composed from the
-  verb's own name and parameters, and says on the row that it is a draft.
-
-- **Every worked example in the guides lands in your sheet wearing tune-me marks.** The Manual's
-  figures already inserted themselves as real rows in one undo step; now the literals in those rows -
-  every number, every string the example chose - carry a dashed rule underneath, in the same stroke
-  the editor dashes a fold mark with. It says what a static picture never could: these values are the
-  example's, and they are yours to replace. The marks are drawn from the row's own typed-value runs,
-  so nothing new decides what a value is; they live only in the pane that is showing them, so a
-  marked row and a typed row compile to the same bytes and a reopened sheet has no marks at all.
-- **The picker's recipes and the guides' figures are one thing, said twice.** The recipe shelf is
-  derived from the figure store rather than kept beside it, and a recipe inserts through the same
-  guarded path a figure does - so it lands marked too.
-- **Learning paths: the guides, put in an order.** Four named tracks - Your first game, Coming from
-  another editor, Multiplayer, Performance - each an ordered reading of guides that already exist.
-  A track holds nothing of its own: it is a list in the documentation index, and the Manual's new
-  Learning paths page draws it. Your studio declares its own by writing the same list in your
-  project's own docs index.
-- **Tick a page off as you read it.** Opening a guide ticks it; the page lets you take the tick back.
-  The ticks live in a `user://` file - this project, this machine - so they are never committed,
-  never synced, and never seen by anyone you did not show them to.
-- **\"Read next\" is derived from your own rows.** A project whose sheets already speak a family's
-  vocabulary, on a track whose page you have not opened, gets that page suggested once, on the quiet
-  status line, through the same offer budget the rest of the editor spends - so a suggestion you
-  ignored is never made again. The join runs against the Manual's own baked search index, so nothing
-  holds a second opinion about which guide teaches which verb.
-
-### Comments are the book
-
-- **A comment row is one of GDScript's two kinds, and nothing else.** A row whose line opens `##` is
-  DOCUMENTATION - it reads at full strength, leads with a paragraph mark, and its words become the
-  prose of the manual page the sheet writes about itself. A row whose line opens a single `#` is a
-  private note: dimmed, and it never leaves the sheet. There is no \"publish this comment\" field to
-  disagree with the file, because the marker the row writes IS the setting.
-- **Authoring is one checkbox.** \"Shows in the manual\" on the Edit Comment dialog. Ticked writes
-  `##`, unticked writes `#`, and the echo now standing at the right edge of every comment row shows
-  the line the row really writes, either way. A row already on the side you picked keeps its exact
-  marker, so a `##` lifted from a file without a trailing space re-emits byte for byte.
-- **The manual sets your `##` rows as prose**, in sheet order, each carrying the chapter it was
-  written under - and the project-wide find reaches them. Neither reaches a `#` note by any route.
-- **A `#` line is never documentation debt.** Coverage counts `##` paragraphs and the things you
-  declared; a private note moves no number anywhere. The single exception is a note opening `TODO`
-  or `FIXME`, which is listed once in \"Still to do\" in the Project View - a to-do list, not a book.
-- **Drift reaches groups and prose.** The check that reports a function description no longer naming
-  anything its rows do now judges a group's description and a `##` paragraph by the same rule, a
-  paragraph being checked against the rows it introduces up to the next paragraph. And draft offers
-  now spend a once-per-thing, once-per-session budget, so nothing asks twice.
+- **The search index ships baked.** The reader's first keystroke used to build it: reading the whole
+  4 MB corpus and splitting all of it into words, in the editor, on that keypress. The bundle now
+  carries the table (`search.esdoc`, 1.3 MB for 191 pages - the unique words rather than the prose),
+  so a keystroke searches something already in memory and touches no file. The build regenerates it
+  from the pages and the suite fails on any difference, so the copy cannot quietly disagree with the
+  corpus it came from. Only a pack's own `guide.md` and a project's own notes are still indexed
+  live, because the bundle cannot know about them. A bundle written before this - one with no baked
+  table, or one carrying a version header this build does not know - is read as having none, and the
+  pages it does ship are indexed live instead: an old bundle regenerates, it does not crash.
+- **A search never comes back empty.** A query nothing matches now answers with the nearest sections
+  by similarity - which is what catches a misspelling or a plural - and, under them, one row
+  offering to ask for the page, which opens the tracker with the search already in the title,
+  through the same channel the foot of every page already uses. A blank panel tells a reader their
+  question was wrong; it is far likelier that a page is missing.
+- **The engine's class reference, harvested from the engine in front of you.** The running binary
+  prints its own reference (`--doctool`), once, in the background, cached under `user://` keyed by
+  the engine's version string - so an upgrade re-harvests and everything else never runs it again.
+  Nothing is downloaded and nothing is written by hand. It surfaces in three places and it is the
+  same text in all three: a class page in the Manual, pickers describing built-in methods and
+  signals in the same slot a script's `##` lines fill, and an Engine group in the search - ranked
+  below the plugin's own answers, because an exact hit on a class name is still one hop further out
+  than a guide about the same thing in the sheet's own words.
+- **The engine text is credited where it appears.** The Godot class reference is CC BY 4.0, so every
+  page built from it carries \"Godot Engine documentation, used under CC BY 4.0.\", and an exported
+  static site is handed the same one line for any page that quotes it.
+- **The door swings back, and the guide now says so.** `##` comments are Godot's own documentation
+  convention, so the descriptions written on a sheet's functions are rendered by the engine's own F1
+  as well as by this Manual. One convention, two viewers, nothing written twice.
 
 ### Every row is a door, both ways
 
@@ -136,34 +68,128 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the info affordance beside an entry in the picker, resolve to the same entry a row's F1 does -
   one page rather than three surfaces each explaining a verb their own way.
 
-### The Manual - one search, and the engine's own words
+### Reading becomes having - a guide's example lands in your sheet
 
-- **The search index ships baked.** The reader's first keystroke used to build it: reading the whole
-  3.2 MB corpus and splitting all of it into words, in the editor, on that keypress. The bundle now
-  carries the table (`search.esdoc`, 1.3 MB for 191 pages - the unique words rather than the prose),
-  so a keystroke searches something already in memory and touches no file. The build regenerates it
-  from the pages and the suite fails on any difference, so the copy cannot quietly disagree with the
-  corpus it came from. Only a pack's own `guide.md` and a project's own notes are still indexed
-  live, because the bundle cannot know about them.
-- **A search never comes back empty.** A query nothing matches now answers with the nearest sections
-  by similarity - which is what catches a misspelling or a plural - and, under them, one row
-  offering to ask for the page, which opens the tracker with the search already in the title,
-  through the same channel the foot of every page already uses. A blank panel tells a reader their
-  question was wrong; it is far likelier that a page is missing.
-- **The engine's class reference, harvested from the engine in front of you.** The running binary
-  prints its own reference (`--doctool`), once, in the background, cached under `user://` keyed by
-  the engine's version string - so an upgrade re-harvests and everything else never runs it again.
-  Nothing is downloaded and nothing is written by hand. It surfaces in three places and it is the
-  same text in all three: a class page in the Manual, pickers describing built-in methods and
-  signals in the same slot a script's `##` lines fill, and an Engine group in the search - ranked
-  below the plugin's own answers, because an exact hit on a class name is still one hop further out
-  than a guide about the same thing in the sheet's own words.
-- **The engine text is credited where it appears.** The Godot class reference is CC BY 4.0, so every
-  page built from it carries \"Godot Engine documentation, used under CC BY 4.0.\", and an exported
-  static site is handed the same one line for any page that quotes it.
-- **The door swings back, and the guide now says so.** `##` comments are Godot's own documentation
-  convention, so the descriptions written on a sheet's functions are rendered by the engine's own F1
-  as well as by this Manual. One convention, two viewers, nothing written twice.
+- **Every worked example in the guides lands in your sheet wearing tune-me marks.** The Manual's
+  figures already inserted themselves as real rows in one undo step; now the literals in those rows -
+  every number, every string the example chose - carry a dashed rule underneath, in the same stroke
+  the editor dashes a fold mark with. It says what a static picture never could: these values are the
+  example's, and they are yours to replace. The marks are drawn from the row's own typed-value runs,
+  so nothing new decides what a value is; they live only in the pane that is showing them, so a
+  marked row and a typed row compile to the same bytes and a reopened sheet has no marks at all.
+- **The picker's recipes and the guides' figures are one thing, said twice.** The recipe shelf is
+  derived from the figure store rather than kept beside it, and a recipe inserts through the same
+  guarded path a figure does - so it lands marked too.
+
+### Learning paths - the guides, put in an order
+
+- **Four named tracks.** Your first game, Coming from another editor, Multiplayer, Performance -
+  each an ordered reading of guides that already exist. A track holds nothing of its own: it is a
+  list in the documentation index, and the Manual's new Learning paths page draws it. Your studio
+  declares its own by writing the same list in your project's own docs index.
+- **Tick a page off as you read it.** Opening a guide ticks it; the page lets you take the tick back.
+  The ticks live in a `user://` file - this project, this machine - so they are never committed,
+  never synced, and never seen by anyone you did not show them to.
+- **\"Read next\" is derived from your own rows.** A project whose sheets already speak a family's
+  vocabulary, on a track whose page you have not opened, gets that page suggested once, on the quiet
+  status line, through the same offer budget the rest of the editor spends - so a suggestion you
+  ignored is never made again. The join runs against the Manual's own baked search index, so nothing
+  holds a second opinion about which guide teaches which verb.
+
+### Comments are the book
+
+- **A comment row is one of GDScript's two kinds, and nothing else.** A row whose line opens `##` is
+  DOCUMENTATION - it reads at full strength, leads with a paragraph mark, and its words become the
+  prose of the manual page the sheet writes about itself. A row whose line opens a single `#` is a
+  private note: dimmed, and it never leaves the sheet. There is no \"publish this comment\" field to
+  disagree with the file, because the marker the row writes IS the setting.
+- **Authoring is one checkbox.** \"Shows in the manual\" on the Edit Comment dialog. Ticked writes
+  `##`, unticked writes `#`, and the echo now standing at the right edge of every comment row shows
+  the line the row really writes, either way. A row already on the side you picked keeps its exact
+  marker, so a `##` lifted from a file without a trailing space re-emits byte for byte.
+- **The manual sets your `##` rows as prose**, in sheet order, each carrying the chapter it was
+  written under - and the project-wide find reaches them. Neither reaches a `#` note by any route.
+- **A `#` line is never documentation debt.** Coverage counts `##` paragraphs and the things you
+  declared; a private note moves no number anywhere. The single exception is a note opening `TODO`
+  or `FIXME`, which is listed once in \"Still to do\" in the Project View - a to-do list, not a book.
+- **Drift reaches groups and prose.** The check that reports a function description no longer naming
+  anything its rows do now judges a group's description and a `##` paragraph by the same rule, a
+  paragraph being checked against the rows it introduces up to the next paragraph. And draft offers
+  now spend a once-per-thing, once-per-session budget, so nothing asks twice.
+
+### When a guide falls behind its pack - the audit becomes a Doctor page
+
+- **The guide audit is a page now, not build noise.** The help-bundle builder already compared every
+  pack guide against what its pack actually publishes, and printed the answer into a build log nobody
+  reads on a tool you only run while editing a guide. That question moved into a shared reader, and
+  the Doctor grew a Docs section that asks the same reader the same question - so the build output
+  and the page cannot say different things about one guide. It reports four kinds of rot: a verb the
+  pack publishes that the guide never names, a name in the guide that no verb answers to (with the
+  nearest three that do, because it is almost always a rename), a description cell that says nothing,
+  and a verb the CHANGELOG has never mentioned for a pack the CHANGELOG does - the release ritual's
+  \"write down what changed\" step, running continuously instead of being remembered at tag time.
+  Nothing here fails a build: a guide legitimately documents a friendlier name and legitimately
+  leaves plumbing out, so every line is a note or a warning a person decides about.
+- **The fix that refuses to fake a green page.** The chip on an undocumented verb writes a stub row
+  into the guide carrying an unfilled placeholder, and that placeholder goes on reporting itself as a
+  description that says nothing until somebody replaces it. It does the mechanical typing and
+  declines the part that would be a lie. The thin-description chip offers a draft composed from the
+  verb's own name and parameters, and says on the row that it is a draft.
+- **A megabyte-long CHANGELOG no longer stalls the guide audit.** The ledger sweep reduced its text
+  one character at a time in GDScript, which is minutes on a shipped changelog and looked like a hang
+  rather than a wait. It reduces through the engine's own scanner now; the per-name reduction is
+  unchanged, and the suite pins that the two agree.
+
+### The documentation chores - one window, one command line, one CI file
+
+- **The documentation chores, in one window, on a command line, and in CI - written once.** Six
+  chores that a person can do by hand and therefore forgets: rewrite the page each sheet writes about
+  itself, harvest the engine's class reference, draft the descriptions nothing has written yet, check
+  coverage and drift, export the site, write out a translator's missing keys. Tools > Docs
+  Housekeeping ticks them off with checkboxes the project remembers and shows one report at the end;
+  `addons/eventsheet/cli.gd` runs the same code from a terminal with an exit code a commit hook can
+  read; and a button writes you a GitHub Actions workflow - shown in full before it is written,
+  pinned to the Godot version this project is open in, and yours afterwards, because the plugin never
+  reads it again. `docs-check` fails on drift, where a shipped copy differs from its source and
+  nobody has to judge it; coverage findings are printed and never fail, because a gate that goes red
+  on a judgement call is a gate a team learns to ignore.
+- **Automation that never publishes.** The drafting chore writes its suggestions to one drafts file
+  and stops: nothing is written into a sheet or a guide, and the file says so at the top. Keeping the
+  drafts that are true stays a person's decision.
+- **Saving a sheet refreshes its own page and nothing else.** A sheet that already has a manual page
+  gets that one page rewritten and that one search entry re-derived on save - never a walk of the
+  project, so the cost of saving does not grow with the size of the game, and a project that never
+  asked for a manual does not acquire one because somebody pressed Ctrl+S.
+
+### The Manual as a site you can open anywhere
+
+- **The Manual exports as a site you can open anywhere.** Guides, the dictionary, the pages your own
+  sheets write - the whole corpus as a folder of plain HTML with its search in it, opened from a file
+  manager with no server, no account and no build step. The search is the same baked table the editor
+  searches, re-emitted as one JavaScript file, so a query that finds a page in the dock finds it in a
+  browser. The same bundle in produces the same bytes out: export twice, hash the two folders, and
+  they are identical, which is what lets a team commit the site and read what CHANGED about their
+  documentation in a pull request. A worked example travels as a picture of its rows, drawn by the
+  real renderer and cached by the hash of the fence body - so a reworded guide whose example did not
+  change costs nothing to re-export, and a figure with no picture yet degrades to the code it is a
+  picture of rather than failing the export. `--locale` exports a translated site with the
+  untranslated pages marked on the page, and the engine's own reference carries its CC BY credit
+  wherever it appears.
+
+### Writing the docs - the pass documents itself
+
+- **The guide to the documentation system covers everything this pass built.** Finding an answer,
+  the three depths behind F1, worked examples that draw themselves, learning paths, the Doctor's
+  Docs page, the chores and their three doors, and the exported site are all in
+  `docs/GUIDE-WRITING-THE-DOCS.md` - the one page an author reads before writing anything here.
+- **The comments rule is written where an author will look for it.** A new section shows one sheet
+  carrying every description surface at once, maps each surface to the exact line of the file it is,
+  and states the rule the sheet did not invent: `##` is documentation, a single `#` is private, and
+  the marker the row writes is the only setting there is. Its worked examples are compiled-shape
+  fences hung from lifecycle handlers, so the page that explains figures now draws them.
+- **The front-page figures are measured, not remembered.** The native vocabulary is counted
+  module by module off this tree rather than read off an aggregate registry, and the guide and pack
+  counts are the folders' own.
 
 ### The test runner - a verdict that keeps, one suite at a time, and the ten slowest
 
