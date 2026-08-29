@@ -568,6 +568,119 @@ What changed in the build you have installed (v0.17.0), in the words the release
   was measured.
 - **The pack count is one number again.** One half of the moving-in guide said 105 packs and the
   other said 111; 111 is what the tree holds.
+- **An angle field stops eating the end of your variable's name.** The unit a reader says out loud
+  was found by testing the last three letters and nothing else, so `angle_deg` - the single likeliest
+  name an angle variable ever has - was read as \"the value `angle_` said degrees\", and the row
+  compiled to a variable the game does not have. `aim_rad` and `turn_grad` went the same way. A unit
+  now has to STAND ALONE to count: after a space, or straight after the number it belongs to
+  (`1.2rad`), and never mid-identifier.
+- **Nothing is wrapped round a PI at the end of an expression either.** `spin_speed * PI` and
+  `x * TAU` name the constant as plainly as `PI/4` does, and both were being written
+  `deg_to_rad(spin_speed * PI)` - the exact conversion the rule exists to prevent - because the test
+  only looked at the front of the string and at a PI with a space on both sides. The constants are
+  now found wherever in the expression they sit, on word boundaries, so `SPIN` and `TAUNT` still name
+  nothing.
+- **A stored angle reads back by what it says, which is what the setting always promised.** A project
+  that thinks in radians flips what a bare number a reader TYPES means; it never meant to change how
+  a stored sheet is read. But a bare number was being read back through the setting, so opening
+  somebody else's sheet in a radian project showed \"30 rad\" on a row that compiles to
+  `deg_to_rad(30.0)` - the row and the code disagreeing, which is the one outcome this rule exists to
+  rule out. The reading no longer asks the setting at all: a bare number is degrees, because a bare
+  number is what a degree slot stores, and a radian project's own typing is converted on the way in.
+
+- **The safe hoist can no longer point a row at a different node.** \"Remember the node once\" is the
+  fix that ships in the one-click batch precisely because it changes nothing about what the game
+  does - and it could. The variable it writes is named after the path, readable names collapse
+  (`UI/Bar`, `../UI/Bar`, `./UI/Bar` and `%Bar` all read as one), and an existing variable of that
+  name was accepted without anyone comparing the path it held. So two rows aimed at two different
+  nodes both ended up reading the first one's variable. A declaration is now reused only when it
+  already holds the very lookup the row wants; a different path earns its own numbered neighbour,
+  and a name somebody took for something else is never taken over. The dialog's before/after is
+  answered by the same function that writes the fix, so the name on the receipt is the name that
+  lands.
+
+- **The shipped error reporter registers once, and gives itself back.** The debug-session reporter
+  has always been guarded against arming twice, for the reason stated beside it: every logger hears
+  every error, so duplicates say each failure that many times. Its shipped twin - the one that runs
+  in the build a player is holding - had no such guard. Four instances of one sheet in a scene
+  registered four loggers and reported each failure four times, and nothing ever took one off again,
+  so a level loaded and freed twenty times left twenty dead loggers on the engine for the rest of the
+  process, each of them consulted on every error. There is one now: the first instance to be ready
+  arms it, it comes off the engine when that instance leaves the tree, and the next instance arms it
+  afresh.
+
+- **The \"no way out of a mode\" check can now find one.** It was silent in every game that enters
+  more than one mode, because it answered the reachability question by asking whether the sheet
+  contained some OTHER mode - which for Menu → Playing → Game Over is true the moment the second
+  mode exists, so the mode nothing leaves was cleared by the two above it. It reads the rows now: a
+  row is a way out of a mode when nothing shuts it out of that mode (it is inside a group that runs
+  in it, or under an In mode row naming it, or gated on no mode at all) and it goes somewhere else,
+  pushes, or goes back. A row gated on a different mode is shut out, and a row that runs once when
+  the game starts is how the game begins rather than how a player gets unstuck.
+
+- **Project View's Findings and Milliseconds columns have something in them.** The page joins what
+  already exists and takes both numbers as arguments, which is what stops it starting a Doctor run
+  to draw itself - and the one place that opened it passed neither, so both columns were empty in
+  every real session while the model's own tests, which hand them in, stayed green. The dock now
+  hands over what this session already has: the last Doctor run's findings, kept beside the badge
+  counts they were already being reduced to, and what the last profiled run cost each open sheet,
+  summed from the rows the run measured. A sheet nothing measured still shows no number at all. The
+  gathering is one function, so a test reads what the window is handed rather than what the model
+  does with it. The doc comment above it also claimed the sheets came from the project index; they
+  come from the open tabs, as the code nine lines below always said.
+
+- **\"Only log in debug builds\" changes the sheet you are looking at, and shows the line it changed.**
+  The finding comes off a text scan of every script in the project, so the file it names is almost
+  never the one on screen - and the chip opened it, which replaced the reader's tab without asking
+  and, for a `.gd` (the default sheet format), arrived as a read-only preview whose rows have not
+  been lifted yet. So the swap found no Log rows, did nothing, and told the reader the console line
+  must have been written by hand. The chip now works on the OPEN sheet and says where to go
+  otherwise, tells a sheet that is still opening apart from one with nothing to guard, and reports
+  what it did as the receipt that was already written for it and never shown: the first line before
+  and after, with the rest counted.
+- **The same rule for the other two fixes that edit a sheet.** Making the environment this scene's
+  own and extracting a repeated number both opened the file they named for the same reasons and with
+  the same two consequences. Both now change the sheet in front of the reader or say where to go.
+  The note at the top of the file no longer claims every fix goes through the sheet's undo funnel
+  either: two of them change a project setting, and they say so in their own words.
+
+- **Two new gates stop warming project caches for everybody after them.** The Interop section asks
+  the project index how many other files call each function, which starts the project-wide scan and
+  leaves three caches ready; the listing-order gate leaves the scene walk cached. Neither dropped
+  what it warmed, which is the exact shape of the leak this pass fixed once already: it is invisible
+  in the sharded local run, where leaker and victims are in different processes, and it reaches every
+  later test that pins cold state on continuous integration, which runs the suite serially in one.
+  Both now start cold and end cold.
+
+- **The transform bands name three and count the rest.** A scene with fifty mirrored bodies grew
+  fifty head bands, one per node, while the animations band added to the same head in the same pass
+  did the right thing beside it. A head is a place to look, not an inventory: three of a kind are
+  named and the others counted in one line after them. The modes band counts past six the same way.
+- **A score over nothing measured is not 100%.** The Interop line reported a perfect adoption score
+  for a project whose candidate scripts all failed to open - the one number nobody had taken. It says
+  what happened instead: how many scripts there are, and that none of them could be opened to
+  measure.
+- **What a script declares is dropped when the script changes.** The cache behind the Call Method and
+  Connect Signal fields said in its own comment that it was dropped on the editor's filesystem ping,
+  and nothing dropped it. Its entries are keyed by the file's identity, so every save of every script
+  added a key and the superseded one stayed for the rest of the session. It is now on the same hook
+  as every other by-file reader, and the hook's own gate names it.
+- **The picker's law is the law the picker keeps.** The note above the gate table named three things
+  that may still be hidden and the picker hid a fourth. The list is closed and stated with its
+  reasons - a reader's own choices, a deprecated row, and a project-scoped template whose per-scene
+  copies are what the picker lists - and the picker asks one shared answer rather than deciding for
+  itself, so the words and the behaviour cannot drift. The suite walks every shipped definition
+  through that answer and fails on a hide outside the list, having first proved the answer on a
+  definition wearing each mark: a gated entry is on screen to explain itself, and a hidden one is
+  not, so the hiding path needed a gate of its own.
+- **The Doctor's section headings, the run labels and the Project View speak the other eight
+  languages.** The inbox argued at length that a heading nobody keyed is the one English line in a
+  translated window, and then derived its own section headings from check ids without going near the
+  catalog; they go through it now, so a project that names a section in its own drop-in file gets
+  that name. The gutter's run labels (\"last run, %s\", \"fired 12 times\", \"0.42 ms each\"), everything
+  the Project View window says, and the sentences the project manual writes about a sheet
+  (\"Behavior sheet\", \"3 of 8 described\", \"int, exported\") were all bare English in a pass that keyed
+  its other new words. Thirty-four keys, in all eight catalogs, in the terminology already there.
 
 ### Performance - a project ten times this one, and what the editor costs on it
 
