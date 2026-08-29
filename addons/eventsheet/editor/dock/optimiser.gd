@@ -117,31 +117,39 @@ func _hoist(finding: Dictionary) -> Dictionary:
 	var param: String = str(finding.get("param", ""))
 	if ace == null or path.is_empty() or param.is_empty():
 		return {}
-	var name: String = EventSheetPerformanceFindings.remembered_name(path)
 	var sheet: EventSheetResource = _dock._current_sheet
-	if not _declare_remembered_node(sheet, name, path):
+	var name: String = _declare_remembered_node(sheet, path)
+	if name.is_empty():
 		return {}
 	return _write_param(ace, param, name, path, finding)
 
 
 ## The declaration the hoist writes: a node reference resolved at ready time, kept untyped because
 ## the node's class is the scene's business and a wrong annotation here would crash the game rather
-## than mis-read it. Already there (a second row wanting the same node) is a success, not a clash.
-func _declare_remembered_node(sheet: EventSheetResource, name: String, path: String) -> bool:
-	if sheet == null or name.is_empty():
-		return false
+## than mis-read it. Returns the name the row should point at, or "" when there is nothing to write.
+##
+## The name comes from the one answer the receipt reads too, so what the reader approved and what
+## lands are the same variable. A declaration already holding this very lookup (a second row wanting
+## the same node) is reused; nothing else is ever pointed at.
+func _declare_remembered_node(sheet: EventSheetResource, path: String) -> String:
+	if sheet == null:
+		return ""
+	var name: String = EventSheetPerformanceFindings.remembered_name_in(sheet, path)
+	if name.is_empty():
+		return ""
+	var wanted: String = EventSheetPerformanceFindings.remembered_lookup(path)
 	for entry: Variant in sheet.events:
 		var existing: LocalVariable = entry as LocalVariable
 		if existing != null and existing.name == name:
-			return existing.onready
+			return name if existing.onready and str(existing.default_value).strip_edges() == wanted else ""
 	var declared: LocalVariable = LocalVariable.new()
 	declared.name = name
 	declared.type_name = "Variant"
 	declared.onready = true
-	declared.default_value = "get_node(\"%s\")" % path
+	declared.default_value = wanted
 	declared.description = "Looked up once, at ready time."
 	sheet.events.insert(0, declared)
-	return true
+	return name
 
 
 ## The timing one: the event keeps its per-frame trigger and gains the condition that lets it

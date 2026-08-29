@@ -80,12 +80,12 @@ func _fill_one(finding: Dictionary) -> void:
 	_body.add_child(EventSheetPopupUI.labelled_card(EventSheetL10n.translate("WHAT CHANGES"),
 		EventSheetPopupUI.compact_table(
 			PackedStringArray([EventSheetL10n.translate("Now"), EventSheetL10n.translate("After")]),
-			[diff_lines(finding)], 1)))
+			[diff_lines(finding, _dock._current_sheet)], 1)))
 	var cost: String = cost_words(finding)
 	if not cost.is_empty():
 		_body.add_child(EventSheetPopupUI.hint_label(cost))
 	_help_strip.describe(_heading(finding), _explanation(finding))
-	_help_strip.set_reading(str(finding.get("message", "")), str(diff_lines(finding)[1]))
+	_help_strip.set_reading(str(finding.get("message", "")), str(diff_lines(finding, _dock._current_sheet)[1]))
 
 
 func _fill_batch(found: Array[Dictionary]) -> void:
@@ -101,7 +101,7 @@ func _fill_batch(found: Array[Dictionary]) -> void:
 		check.button_pressed = true
 		check.focus_entered.connect(func() -> void:
 			_help_strip.describe(_heading(finding), _explanation(finding))
-			_help_strip.set_reading(str(finding.get("message", "")), str(diff_lines(finding)[1])))
+			_help_strip.set_reading(str(finding.get("message", "")), str(diff_lines(finding, _dock._current_sheet)[1])))
 		_checks.append(check)
 		_body.add_child(check)
 	var timing: Array[Dictionary] = []
@@ -119,7 +119,7 @@ func _fill_batch(found: Array[Dictionary]) -> void:
 		EventSheetL10n.translate("Safe fixes · %d row(s)") % _safe.size(),
 		EventSheetL10n.translate("Every ticked fix keeps the game behaving exactly as it does now - only the emitted code changes. They apply as ONE undo step. The ones below change WHEN something happens, so they are opened one at a time."))
 	_help_strip.set_reading("",
-		"" if _safe.is_empty() else str(diff_lines(_safe[0])[1]))
+		"" if _safe.is_empty() else str(diff_lines(_safe[0], _dock._current_sheet)[1]))
 
 
 func _on_confirmed() -> void:
@@ -141,7 +141,10 @@ func _on_confirmed() -> void:
 # ── What the dialog says (static and pure, so the suite reads every word of it) ─────────────
 ## The line this row compiles to now, and the line it would compile to after the fix - the pair the
 ## reader is being asked to approve. Both come from the compiler's own echo of the row.
-static func diff_lines(finding: Dictionary) -> PackedStringArray:
+## `sheet` is what the fix would be written into: the name a hoist lands on depends on what is
+## already declared there, and a receipt showing a different name from the one that lands is not a
+## receipt. Null is allowed - a caller with no sheet in hand gets the plain readable name.
+static func diff_lines(finding: Dictionary, sheet: EventSheetResource = null) -> PackedStringArray:
 	var event_row: EventRow = finding.get("event") as EventRow
 	var lane: Array = []
 	if event_row != null:
@@ -153,7 +156,7 @@ static func diff_lines(finding: Dictionary) -> PackedStringArray:
 	match str(finding.get("fix", "")):
 		EventSheetPerformanceFindings.FIX_HOIST:
 			var path: String = str(finding.get("subject", ""))
-			var name: String = EventSheetPerformanceFindings.remembered_name(path)
+			var name: String = EventSheetPerformanceFindings.remembered_name_in(sheet, path)
 			return PackedStringArray([now, now.replace("get_node(\"%s\")" % path, name).replace("$%s" % path, name)])
 		EventSheetPerformanceFindings.FIX_EVERY_N:
 			return PackedStringArray([

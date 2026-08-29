@@ -584,6 +584,17 @@
   rule out. The reading no longer asks the setting at all: a bare number is degrees, because a bare
   number is what a degree slot stores, and a radian project's own typing is converted on the way in.
 
+- **The safe hoist can no longer point a row at a different node.** "Remember the node once" is the
+  fix that ships in the one-click batch precisely because it changes nothing about what the game
+  does - and it could. The variable it writes is named after the path, readable names collapse
+  (`UI/Bar`, `../UI/Bar`, `./UI/Bar` and `%Bar` all read as one), and an existing variable of that
+  name was accepted without anyone comparing the path it held. So two rows aimed at two different
+  nodes both ended up reading the first one's variable. A declaration is now reused only when it
+  already holds the very lookup the row wants; a different path earns its own numbered neighbour,
+  and a name somebody took for something else is never taken over. The dialog's before/after is
+  answered by the same function that writes the fix, so the name on the receipt is the name that
+  lands.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
