@@ -121,12 +121,27 @@ static func _test_save_refreshes_only_what_exists() -> bool:
 
 
 ## The search entry for one page is rebuilt in place, and the rest of the index does not move.
+##
+## EVERY SIZE HERE IS READ BACK THROUGH index(), never from the refresh call's own answer, and that
+## is the point rather than a convenience: the index rebuilds itself whenever the number of pages it
+## was built for stops matching the number the library offers, so a refresh that left those two
+## counts disagreeing would be discarded by the very next read while still reporting success.
 static func _test_search_refreshes_one_page() -> bool:
+	# BOTH CACHES ARE DROPPED FIRST, and that is what makes this deterministic rather than a test
+	# whose answer depends on which of its neighbours ran. The two counts can only differ when the
+	# library offers an id whose file cannot be read, and a discovery cache holding a page that has
+	# since been deleted is exactly how one appears - an earlier test in this same process writes
+	# and removes one. Re-scanning leaves every offered page readable, which is the state where
+	# recording the wrong count is visible on the very next read.
+	EventSheetDocLibrary.reload()
+	EventSheetDocSearch.reload()
 	var before: int = EventSheetDocSearch.index().size()
 	var id: String = "Project/fixture-page"
 	var passed: bool = _check("a page the index has never seen joins it",
 		EventSheetDocSearch.refresh_page(id, "Fixture", "# Fixture\n\n## Swinging\n\nRope.\n"), true)
 	passed = _check("as one entry", EventSheetDocSearch.index().size(), before + 1) and passed
+	passed = _check("and it is still there on the read after that",
+		EventSheetDocSearch.index().size(), before + 1) and passed
 	passed = _check("refreshing it again does not add a second",
 		EventSheetDocSearch.refresh_page(id, "Fixture", "# Fixture\n\nRope and hooks.\n"),
 		true) and passed

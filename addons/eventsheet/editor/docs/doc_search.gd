@@ -152,7 +152,14 @@ static func refresh_page(page_id: String, title: String, source: String) -> bool
 			_index[index] = entry
 			return true
 	_index.append(entry)
-	_indexed_page_count = _index.size()
+	# The guard in index() counts the ids the LIBRARY offers, not the entries this array holds, and
+	# the two are not the same number: an id whose file cannot be read is skipped when the index is
+	# built, so a corpus with one of those has fewer entries than ids. Recording the entry count
+	# here would therefore leave the two disagreeing, and the very next read would decide the corpus
+	# had changed, rebuild, and throw this refresh away - which is the whole thing this function
+	# exists to avoid. The library's own count is what the guard compares against, so that is what
+	# is recorded.
+	_indexed_page_count = EventSheetDocLibrary.page_ids().size()
 	return true
 
 

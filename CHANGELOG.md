@@ -4,6 +4,14 @@
 
 ### The Manual - one search, and the engine's own words
 
+- **A page refreshed into the search index stays in it.** Saving a sheet rebuilds that one
+  page's entry rather than dropping the whole index, and the index rebuilds itself whenever the
+  number of pages it was built for stops matching the number the library offers. Those two
+  counts are not the same quantity - a page whose file cannot be read is offered but not
+  indexed - and the refresh was recording the wrong one, so the next keystroke decided the
+  corpus had changed and rebuilt, throwing the refreshed page away while the refresh itself
+  had reported success. It records the library's own count now, and the test reads the index
+  twice so a refresh that only survives until the next read cannot pass again.
 - **The search index ships baked.** The reader's first keystroke used to build it: reading the whole
   4 MB corpus and splitting all of it into words, in the editor, on that keypress. The bundle now
   carries the table (`search.esdoc`, 1.3 MB for 191 pages - the unique words rather than the prose),
