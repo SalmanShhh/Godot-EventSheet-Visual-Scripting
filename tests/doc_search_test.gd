@@ -36,6 +36,101 @@ static func run() -> bool:
 	all_passed = _test_discovery() and all_passed
 	all_passed = _test_user_docs_setting() and all_passed
 	all_passed = _test_ace_reference() and all_passed
+	all_passed = _test_baked_index() and all_passed
+	all_passed = _test_never_empty() and all_passed
+	return all_passed
+
+
+## THE BAKED INDEX. The bundle carries the search table so a keystroke never reads the corpus, and
+## the two halves of that are pinned here: the round trip loses nothing that the ranking compares
+## against, and what ships is what a rebuild would write - byte for byte, or a reader searches a
+## corpus that is not the one installed.
+static func _test_baked_index() -> bool:
+	var all_passed: bool = true
+	var entry: Dictionary = EventSheetDocSearch.entry_for("SAMPLE", "Lists and Arrays",
+		"# Lists and Arrays\n\n## Appending\n\nAppend, insert, remove.\n")
+	var round_tripped: Dictionary = EventSheetDocSearch.rehydrated(EventSheetDocSearch.baked(entry))
+	all_passed = _check("a baked entry keeps its title", str(round_tripped.get("title", "")),
+		"Lists and Arrays") and all_passed
+	all_passed = _check("a baked entry rebuilds the lowercase title the ranking compares against",
+		str(round_tripped.get("title_lower", "")), "lists and arrays") and all_passed
+	all_passed = _check("a baked entry keeps its words",
+		str(round_tripped.get("words", "")), str(entry.get("words", ""))) and all_passed
+	var headings: Array = round_tripped.get("headings", []) as Array
+	all_passed = _check("a baked entry keeps its headings", headings.size(), 1) and all_passed
+	if headings.size() == 1:
+		var heading: Dictionary = headings[0] as Dictionary
+		all_passed = _check("a baked heading keeps its slug and rebuilds its lowercase copy",
+			"%s|%s" % [str(heading.get("slug", "")), str(heading.get("lower", ""))],
+			"appending|appending") and all_passed
+	# A rehydrated entry ranks the same way an entry built from the page does. Pinned as ORDER
+	# against the freshly built one, because that is the only property the bake has to preserve.
+	var pages: Array[Dictionary] = [round_tripped]
+	all_passed = _check("a rehydrated entry still answers a heading query",
+		EventSheetDocSearch.rank_pages(pages, "appending").size(), 1) and all_passed
+
+	# The shipped file itself: it parses, it covers the corpus, and it is what the build would
+	# write. The last one is the gate - a stale index is a search over a corpus nobody installed.
+	var shipped: Array = EventSheetDocLibrary.search_entries()
+	all_passed = _check("the bundle ships a search index", shipped.size() > 0, true) and all_passed
+	var builder: GDScript = load("res://tools/build_help_bundle.gd")
+	if builder == null:
+		return _check("the build tool loads", false, true) and all_passed
+	var corpus: Dictionary = builder.collect_pages()
+	all_passed = _check("the baked index covers every shipped page", shipped.size(), corpus.size()) and all_passed
+	all_passed = _check("the baked index is what a rebuild would write",
+		FileAccess.get_file_as_string(EventSheetDocLibrary.SEARCH_PATH), builder.search_text(corpus)) and all_passed
+	return all_passed
+
+
+## NO EMPTY RESULTS, EVER. A query nothing matches gets the nearest sections and then the offer to
+## ask for the page - never a blank panel, which reads to a reader as "you asked the wrong thing".
+##
+## The nearest-section half is pinned against a fixture so the assertion is about the RULE (the
+## closest title wins) rather than about whatever the corpus happens to contain this week.
+static func _test_never_empty() -> bool:
+	var all_passed: bool = true
+	var pages: Array[Dictionary] = [
+		EventSheetDocSearch.entry_for("LISTS", "Lists and Arrays", "# Lists and Arrays\n\nAppend.\n"),
+		EventSheetDocSearch.entry_for("SAVING", "Saving and Loading", "# Saving and Loading\n\nSlots.\n"),
+	]
+	var nearest: Array[Dictionary] = EventSheetDocSearch.nearest_sections("listz and arrays", pages)
+	all_passed = _check("a misspelling reaches the nearest section", nearest.size() > 0, true) and all_passed
+	if not nearest.is_empty():
+		all_passed = _check("the nearest section is the page the query nearly spells",
+			str(nearest[0].get("doc_id", "")), "guide:LISTS") and all_passed
+		all_passed = _check("a nearest row says it is a near miss rather than a hit",
+			str(nearest[0].get("subtitle", "")),
+			"nothing matched exactly - this is the nearest section") and all_passed
+		all_passed = _check("a nearest row carries no leftover sorting keys",
+			nearest[0].has("similarity"), false) and all_passed
+	all_passed = _check("a query nothing resembles at all offers no nearest section",
+		EventSheetDocSearch.nearest_sections("qqqqzzzz", pages).size(), 0) and all_passed
+
+	# The row of last resort: it names the reader's own words, it opens no page, and it carries the
+	# query so the caller files THAT rather than making them type it again.
+	var ask: Dictionary = EventSheetDocSearch.ask_row("  widget frobnication  ")
+	all_passed = _check("the ask row names what was searched for", str(ask.get("title", "")),
+		"Ask for a page about \"widget frobnication\"") and all_passed
+	all_passed = _check("the ask row opens no page", str(ask.get("doc_id", "")), "") and all_passed
+	all_passed = _check("the ask row carries the query", str(ask.get("query", "")),
+		"widget frobnication") and all_passed
+	all_passed = _check("the ask row is tagged in the Manual's own words",
+		EventSheetDocSearch.kind_label(EventSheetDocSearch.KIND_ASK), "ask for this page") and all_passed
+	# It files through the SAME channel the foot of every page uses - one address, not two.
+	all_passed = _check("asking for a page files through the tracker with the search in the title",
+		EventSheetDocFeedback.ask_url("https://example.com/repo/", "widget frobnication"),
+		"https://example.com/repo/issues/new?title=Manual%3A%20no%20page%20about%20widget%20frobnication") and all_passed
+	all_passed = _check("an empty search files nothing",
+		EventSheetDocFeedback.ask_url("https://example.com/repo", "  "), "") and all_passed
+
+	# The whole search, end to end: a query nothing in this corpus answers still comes back with
+	# rows, and the last of them is the offer to ask.
+	var results: Array[Dictionary] = EventSheetDocSearch.search_all("zzqqxwv frobnication")
+	all_passed = _check("a search nothing answers is never empty", results.is_empty(), false) and all_passed
+	if not results.is_empty():
+		all_passed = _check("the last row offered is the offer to ask",
+			str(results[results.size() - 1].get("kind", "")), EventSheetDocSearch.KIND_ASK) and all_passed
 	return all_passed
 
 

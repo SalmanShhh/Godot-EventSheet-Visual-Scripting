@@ -72,8 +72,9 @@ const READING_MAX_WIDTH := 720.0
 ## Named here because this is the one place that name means something.
 const ACTION_TRANSLATIONS := "open_translations"
 
-## The one doc-id scheme this surface does not draw itself: the engine's own class reference,
-## which the editor already has a renderer for.
+## The engine's own class reference. Drawn here as a page once this machine has harvested the
+## running engine's reference, and handed to the editor's own help until then - so the door works
+## before any harvest has finished rather than only after one.
 const ENGINE_SCHEME := "engine:"
 
 ## The guide list's width, and the wider one a list of RESULTS gets: a guide row is a name, a
@@ -819,7 +820,7 @@ func _route(doc_id: String, anchor: String) -> bool:
 	# The engine's own class reference is not this surface's to draw - it is the editor's, and the
 	# editor draws it better. A reader who asked for a Godot class gets the Script editor's help.
 	if doc_id.strip_edges().begins_with(ENGINE_SCHEME):
-		return _open_engine_help(doc_id.strip_edges().substr(ENGINE_SCHEME.length()))
+		return _open_engine_page(doc_id.strip_edges().substr(ENGINE_SCHEME.length()))
 	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
 	if str(route.get("scheme", "")) == "reference":
 		return _show_reference(doc_id, str(route.get("reference_kind", "")),
@@ -866,6 +867,29 @@ func _show_reference(doc_id: String, kind: String, name: String, anchor: String)
 
 ## The editor's own class reference, one hop out of the Manual. Reported honestly: a build whose
 ## script editor cannot be asked answers false rather than pretending it opened something.
+## The engine's own class reference. Drawn HERE - as a page like any other, with the credit its
+## licence requires - when this machine has harvested the running engine's reference; handed to the
+## editor's own help when it has not, which is what makes the door work on the very first click,
+## before any harvest has finished. Either way the reader pressed one thing and got the answer.
+func _open_engine_page(target: String) -> bool:
+	var split: Dictionary = EventSheetDocEngineReference.split_doc_id(target)
+	var class_id: String = str(split.get("class", ""))
+	var blocks: Array[Dictionary] = EventSheetDocEngineReference.blocks_for(class_id)
+	if blocks.is_empty():
+		EventSheetDocEngineReference.begin_harvest()
+		return _open_engine_help(class_id)
+	if not _query.is_empty():
+		blocks = EventSheetDocSearch.highlight_blocks(blocks, _query)
+	var doc_id: String = EventSheetDocEngineReference.doc_id(class_id, str(split.get("member", "")))
+	if not _page.show_blocks(blocks, doc_id):
+		return _open_engine_help(class_id)
+	_current_id = doc_id
+	_panel.visible = false
+	_page.visible = true
+	_build_mini_nav()
+	return true
+
+
 func _open_engine_help(class_id: String) -> bool:
 	var wanted: String = class_id.strip_edges()
 	if wanted.is_empty() or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
@@ -1117,7 +1141,7 @@ func _build_results(query: String) -> void:
 		item.set_text(0, result_row_text(result))
 		item.set_tooltip_text(0, result_tooltip(result))
 		item.set_metadata(0, {"doc_id": str(result.get("doc_id", "")),
-			"anchor": str(result.get("anchor", ""))})
+			"anchor": str(result.get("anchor", "")), "ask": str(result.get("query", ""))})
 		var definition: ACEDefinition = result.get("definition", null) as ACEDefinition
 		if definition != null:
 			_result_definitions[item] = definition
@@ -1334,6 +1358,16 @@ func _on_tree_selected() -> void:
 		return
 	if metadata is Dictionary:
 		var result: Dictionary = metadata as Dictionary
+		# The last row of a search nothing answered: there is no page to open, so this one files the
+		# reader's own words instead - in their browser, in the tracker, for them to send or not.
+		var ask: String = str(result.get("ask", ""))
+		if not ask.is_empty():
+			var url: String = EventSheetDocFeedback.ask_url(EventSheets.DOCS_REPO_URL, ask)
+			if not url.is_empty():
+				OS.shell_open(url)
+				link_activated.emit(url)
+			_fold_contents()
+			return
 		show_doc(str(result.get("doc_id", "")), str(result.get("anchor", "")))
 		_fold_contents()
 		return

@@ -102,6 +102,18 @@ static func report_url(repo_url: String, page_title: String, doc_id: String) -> 
 	return "%s%s?title=%s" % [base, ISSUES_PATH, title.uri_encode()]
 
 
+## The URL behind "ask for a page about …" - the row a search with no answers ends on. It is the
+## SAME channel "Report a problem" uses, deliberately: a reader answering the documentation back has
+## one address, whether what they have to say is "this page is wrong" or "there is no page". It
+## opens the tracker with their search already in the title; it never submits anything.
+static func ask_url(repo_url: String, query: String) -> String:
+	var base: String = repo_url.strip_edges().trim_suffix("/")
+	var wanted: String = query.strip_edges()
+	if base.is_empty() or wanted.is_empty():
+		return ""
+	return "%s%s?title=%s" % [base, ISSUES_PATH, ("Manual: no page about %s" % wanted).uri_encode()]
+
+
 # ── Text size ─────────────────────────────────────────────────────────────────────────────────
 
 

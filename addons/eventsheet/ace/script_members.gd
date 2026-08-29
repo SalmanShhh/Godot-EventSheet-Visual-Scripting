@@ -192,7 +192,11 @@ static func _append_inherited(members: Array[Dictionary], class_text: String, ki
 		if name.is_empty() or name.begins_with(_PRIVATE_PREFIX) or seen.has(name):
 			continue
 		seen[name] = true
-		members.append({"name": name, "args": _argument_text(info), "doc": "",
+		# The engine's OWN sentence for a built-in member, in the same slot a script's `##` lines
+		# fill - one convention, described once. "" until this machine has harvested the reference,
+		# which reads exactly as it did before: an inherited member with nothing said about it.
+		members.append({"name": name, "args": _argument_text(info),
+			"doc": EventSheetDocEngineReference.member_description(class_text, name),
 			"from": class_text})
 
 

@@ -58,6 +58,11 @@ static var _indexed_page_count: int = 0
 ##   {id, title, title_lower, headings:[{text, slug, lower}], words}
 ## `words` is a blob of the page's unique lowercase words, each surrounded by spaces, so a
 ## word-prefix test is one native find() instead of a loop over a Dictionary.
+## The SHIPPED half of it is BAKED (addons/eventsheet/help/search.esdoc, written by the bundle
+## build): a keystroke then searches a table that was read once, rather than paying for ~2 MB of
+## Markdown to be read and split into words on the reader's first keypress. Only the pages the
+## bundle cannot know about - a pack's own guide.md, the project's own notes - are indexed live,
+## and there are a handful of those.
 static func index() -> Array[Dictionary]:
 	var ids: PackedStringArray = EventSheetDocLibrary.page_ids()
 	if _index_built and _indexed_page_count == ids.size():
@@ -65,12 +70,67 @@ static func index() -> Array[Dictionary]:
 	_index_built = true
 	_indexed_page_count = ids.size()
 	_index = []
+	var baked: Dictionary = {}
+	for entry: Variant in EventSheetDocLibrary.search_entries():
+		var page: Dictionary = rehydrated(entry as Dictionary)
+		var id: String = str(page.get("id", ""))
+		if not id.is_empty():
+			baked[id] = page
 	for id: String in ids:
+		if baked.has(id):
+			_index.append(baked[id] as Dictionary)
+			continue
 		var source: String = EventSheetDocLibrary.page_source(id)
 		if source.is_empty():
 			continue
 		_index.append(entry_for(id, EventSheetDocLibrary.page_title(id), source))
 	return _index
+
+
+## One baked entry, with the lowercase copies the ranking compares against put back. They are
+## DERIVED rather than baked because they are exactly the title and the heading text again: baking
+## them would nearly double the file to store a fact it already carries, and a baked lowercase copy
+## that disagreed with its own source would be a second store of the same fact.
+static func rehydrated(entry: Dictionary) -> Dictionary:
+	var headings: Array[Dictionary] = []
+	for found: Variant in (entry.get("headings", []) as Array):
+		var heading: Dictionary = (found as Dictionary).duplicate()
+		heading["lower"] = str(heading.get("text", "")).to_lower()
+		headings.append(heading)
+	var title: String = str(entry.get("title", ""))
+	return {
+		"id": str(entry.get("id", "")),
+		"title": title,
+		"title_lower": title.to_lower(),
+		"headings": headings,
+		"words": str(entry.get("words", "")),
+	}
+
+
+## The inverse: one index entry stripped to what the bundle stores.
+static func baked(entry: Dictionary) -> Dictionary:
+	var headings: Array = []
+	for found: Variant in (entry.get("headings", []) as Array):
+		var heading: Dictionary = found as Dictionary
+		headings.append({"text": str(heading.get("text", "")), "slug": str(heading.get("slug", ""))})
+	return {
+		"id": str(entry.get("id", "")),
+		"title": str(entry.get("title", "")),
+		"headings": headings,
+		"words": str(entry.get("words", "")),
+	}
+
+
+## The baked index's exact bytes: the frozen header line, then the payload. `entries` is expected in
+## the order the caller wants them stored, and every collection inside one entry is already built in
+## document (headings) or sorted (words) order, so two builds over the same corpus write the same
+## file.
+static func bundle_text(entries: Array) -> String:
+	var pages: Array = []
+	for entry: Variant in entries:
+		pages.append(baked(entry as Dictionary))
+	return "%s\n%s\n" % [EventSheetDocLibrary.SEARCH_HEADER,
+		var_to_str({"version": 1, "pages": pages})]
 
 
 ## Drops the index, so a rebuilt bundle (or a pack guide dropped into the project) is searchable
@@ -293,9 +353,35 @@ static func _result(page: Dictionary, heading: Dictionary, score: int, order: in
 ## because they are what a reader is usually naming, and the glossary last because it translates a
 ## word rather than answering with one.
 const KIND_ORDER: Array[String] = [
-	"trigger", "condition", "action", "expression", "guide", "reference", "behavior", "engine",
-	"glossary",
+	"trigger", "condition", "action", "expression", "guide", "reference", "behavior",
+	"glossary", "engine", "ask",
 ]
+
+## The kinds that sort BELOW every answer this plugin has of its own, whatever they scored. The
+## engine's class reference is a real answer and often an exact one - a reader who types "Node2D"
+## gets a perfect prefix match on the class - but it is one hop further out than the sheet's own
+## words, so a guide about the thing wins over the class the thing is built on. The offer to ask for
+## a page that does not exist yet sorts under everything, because it is the answer of last resort.
+const DEMOTED_KINDS: Array[String] = ["engine", "ask"]
+
+## How many rows at the foot of a full list are kept for the demoted kinds. Without it, ranking them
+## below the plugin's own answers and then cutting the list to a screenful means they are never seen
+## at all: a corpus this size answers a common word with a dozen guides before the engine's class
+## for it gets a look in.
+const DEMOTED_RESERVE := 3
+
+## The row a query with no answers gets: an offer to ask for the page, filed through the same
+## channel the foot of every page already uses. `doc_id` is empty on purpose - there is no page to
+## open, and a caller tells this row apart by its kind rather than by a magic address.
+const KIND_ASK := "ask"
+
+## How many nearest sections a query with no real hits is offered before the offer to ask. Enough to
+## be a direction, few enough that a reader can see they are guesses.
+const MAX_NEAREST := 5
+
+## How alike a page title or heading has to be to a query with no hits before it is offered as a
+## nearest section. Below this the row is noise wearing the shape of an answer.
+const NEAREST_SIMILARITY := 0.35
 
 ## The words the result rows are tagged with, per kind. The Manual's own vocabulary: these are the
 ## same words its tree uses, so a tag names a place the reader can go rather than a category only
@@ -303,7 +389,7 @@ const KIND_ORDER: Array[String] = [
 const KIND_LABELS := {
 	"trigger": "trigger", "condition": "condition", "action": "action", "expression": "expression",
 	"guide": "guide", "reference": "System reference", "behavior": "behavior reference",
-	"engine": "engine reference", "glossary": "glossary",
+	"engine": "engine reference", "glossary": "glossary", "ask": "ask for this page",
 }
 
 ## How many engine classes and glossary terms one query may offer. Both lists are long and neither
@@ -331,6 +417,13 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 	results.append_array(_godot_word_hits(query))
 	results.append_array(_behavior_index_hits(wanted))
 	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		# The demoted kinds sort below everything this plugin can answer itself, whatever they
+		# scored: an exact hit on an engine class name is still one hop further out than a guide
+		# that talks about the same thing in the sheet's own words.
+		var demoted_a: bool = DEMOTED_KINDS.has(str(a["kind"]))
+		var demoted_b: bool = DEMOTED_KINDS.has(str(b["kind"]))
+		if demoted_a != demoted_b:
+			return demoted_b
 		if int(a["score"]) != int(b["score"]):
 			return int(a["score"]) < int(b["score"])
 		var kind_a: int = KIND_ORDER.find(str(a["kind"]))
@@ -338,9 +431,99 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 		if kind_a != kind_b:
 			return kind_a < kind_b
 		return str(a["title"]) < str(b["title"]))
-	if limit > 0 and results.size() > limit:
-		results.resize(limit)
-	return results
+	# NO EMPTY RESULTS, EVER. A search box that answers a real question with a blank panel tells the
+	# reader the question was wrong; it is far likelier the corpus is. So a query nothing matched
+	# gets the sections that come nearest, and under them the offer to ask for the page.
+	if results.is_empty():
+		results.append_array(nearest_sections(wanted))
+		results.append(ask_row(query))
+	return _trimmed(results, limit)
+
+
+## The list cut to `limit`, with room KEPT for the demoted kinds. Ranking them below the plugin's
+## own answers is right; dropping them off the end of the list is not, and a corpus this size makes
+## that the normal outcome - "timer" alone answers with fourteen guides and pack references before
+## the engine's Timer class gets a look in. So the last few rows belong to the demoted kinds
+## whenever there are any, and it is the weakest of the plugin's own answers that goes instead.
+static func _trimmed(results: Array[Dictionary], limit: int) -> Array[Dictionary]:
+	if limit <= 0 or results.size() <= limit:
+		return results
+	var own: Array[Dictionary] = []
+	var demoted: Array[Dictionary] = []
+	for row: Dictionary in results:
+		if DEMOTED_KINDS.has(str(row.get("kind", ""))):
+			demoted.append(row)
+		else:
+			own.append(row)
+	if demoted.is_empty():
+		own.resize(limit)
+		return own
+	if demoted.size() > DEMOTED_RESERVE:
+		demoted.resize(DEMOTED_RESERVE)
+	if own.size() > limit - demoted.size():
+		own.resize(limit - demoted.size())
+	own.append_array(demoted)
+	return own
+
+
+## The sections that come NEAREST a query nothing matched, best first. Similarity rather than the
+## matching above on purpose: the matching has already said no, and what is left to offer is "this
+## is the closest thing the corpus has" - a misspelling, a plural, a word from another editor.
+##
+## Pure over a supplied index for the same reason rank_pages is, so the suite pins which fixture
+## page a misspelling reaches for.
+static func nearest_sections(query: String, pages: Array[Dictionary] = index()) -> Array[Dictionary]:
+	var wanted: String = query.strip_edges().to_lower()
+	if wanted.is_empty():
+		return []
+	var scored: Array[Dictionary] = []
+	for order: int in range(pages.size()):
+		var page: Dictionary = pages[order]
+		var best: float = str(page.get("title_lower", "")).similarity(wanted)
+		var heading: Dictionary = {}
+		for found: Variant in (page.get("headings", []) as Array):
+			var candidate: float = str((found as Dictionary).get("lower", "")).similarity(wanted)
+			if candidate > best:
+				best = candidate
+				heading = found as Dictionary
+		if best < NEAREST_SIMILARITY:
+			continue
+		var title: String = str(page.get("title", ""))
+		var heading_text: String = str(heading.get("text", ""))
+		scored.append({
+			"kind": _kind_for_page(str(page.get("id", ""))),
+			"title": title if heading_text.is_empty() else "%s ▸ %s" % [title, heading_text],
+			"subtitle": "nothing matched exactly - this is the nearest section",
+			"doc_id": "guide:%s" % str(page.get("id", "")),
+			"anchor": str(heading.get("slug", "")),
+			"definition": null, "used": 0, "score": SCORE_BODY,
+			# Sorted on, then dropped: a caller reads `score` like every other row.
+			"similarity": best, "order": order,
+		})
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if not is_equal_approx(float(a["similarity"]), float(b["similarity"])):
+			return float(a["similarity"]) > float(b["similarity"])
+		return int(a["order"]) < int(b["order"]))
+	if scored.size() > MAX_NEAREST:
+		scored.resize(MAX_NEAREST)
+	for row: Dictionary in scored:
+		row.erase("similarity")
+		row.erase("order")
+	return scored
+
+
+## The offer of last resort: ask for the page that does not exist. It carries the query the reader
+## typed so the caller files THAT rather than making them type it again, and it goes through the
+## channel the foot of every page already uses - there is one way to answer this documentation back,
+## not two.
+static func ask_row(query: String) -> Dictionary:
+	return {
+		"kind": KIND_ASK,
+		"title": "Ask for a page about \"%s\"" % query.strip_edges(),
+		"subtitle": "opens the tracker with your search already in the title",
+		"doc_id": "", "anchor": "", "definition": null, "used": 0,
+		"score": SCORE_HEADING_SUBSEQUENCE, "query": query.strip_edges(),
+	}
 
 
 ## The word a result kind is tagged with. "" for a kind this build does not know, so a caller
@@ -438,13 +621,20 @@ static func _engine_hits(wanted: String) -> Array[Dictionary]:
 		# rows that share nothing with the query but their letters.
 		if score < 0 or score > 1:
 			continue
+		# The engine's OWN one-line description when this machine has harvested it, and the plain
+		# label when it has not. The harvest is started here rather than waited on: a reader who
+		# searches for a class gets the row now and its text the next time they ask.
+		var brief: String = str(EventSheetDocEngineReference.class_doc(class_id).get("brief", ""))
 		hits.append({
-			"kind": "engine", "title": class_id, "subtitle": "Godot class reference",
-			"doc_id": "engine:%s" % class_id, "anchor": "", "definition": null, "used": 0,
-			"score": score,
+			"kind": "engine", "title": class_id,
+			"subtitle": brief if not brief.is_empty() else "Godot class reference",
+			"doc_id": EventSheetDocEngineReference.doc_id(class_id), "anchor": "",
+			"definition": null, "used": 0, "score": score,
 		})
 		if hits.size() >= MAX_ENGINE_HITS:
 			break
+	if not hits.is_empty():
+		EventSheetDocEngineReference.begin_harvest()
 	return hits
 
 

@@ -41,6 +41,22 @@ const MANIFEST_HEADER := "[eventsheet-help v1]"
 const FIGURES_PATH := "res://addons/eventsheet/help/figures.esdoc"
 const FIGURES_HEADER := "[eventsheet-figures v1]"
 
+## The SEARCH INDEX, baked beside the manifest at build time: one entry per shipped page, carrying
+## its title, its headings with their slugs, and the blob of its unique words. Separate from the
+## manifest for the same reason the figure verdicts are - the manifest has to stay cheap enough to
+## rebuild on every suite run, and this reads every page in the corpus.
+##
+## It is baked because of what it costs otherwise: building it in the editor means reading the whole
+## 3.2 MB corpus and splitting all of it into words, on the reader's FIRST KEYSTROKE. Baked, a
+## keystroke searches a table that was read once and touches no file at all.
+##
+## WHAT IT COSTS, measured rather than estimated, because this is derived data stored a second time
+## and that always needs a reason: 1.3 MB for 191 pages - the unique words of the corpus rather than
+## its prose. The reason is the keystroke above; the guard is that the build regenerates it from the
+## pages and the suite fails on any difference, so the copy can never quietly disagree.
+const SEARCH_PATH := "res://addons/eventsheet/help/search.esdoc"
+const SEARCH_HEADER := "[eventsheet-search v1]"
+
 ## The bundle sub-directory each secondary doc set lives in, and the tree section it becomes.
 const ADDONS_DIR := "Addons"
 const MODULES_DIR := "Modules"
@@ -80,6 +96,10 @@ static var _external_loaded: bool = false
 ## but never wrong.
 static var _gates: Dictionary = {}
 static var _gates_loaded: bool = false
+
+## The baked search entries, read once per session. Empty is a valid state for the same reason.
+static var _search: Array = []
+static var _search_loaded: bool = false
 
 
 ## The manifest, or an empty Dictionary when no bundle is installed (a source checkout that has
@@ -124,6 +144,32 @@ static func gate_verdicts() -> Dictionary:
 	return _gates
 
 
+## The baked search entries, read once per session: [{id, title, headings, words}]. Empty when no
+## bundle is installed, which simply means the reader's first keystroke builds the index instead.
+static func search_entries() -> Array:
+	if _search_loaded:
+		return _search
+	_search_loaded = true
+	_search = []
+	var payload: Variant = _payload(SEARCH_PATH, SEARCH_HEADER)
+	if payload is Dictionary:
+		_search = (payload as Dictionary).get("pages", []) as Array
+	return _search
+
+
+## A versioned-text file's payload, or null when it is absent or carries a header this build does
+## not know. One reader for both baked files, so a third one needs no third copy of this.
+static func _payload(path: String, header: String) -> Variant:
+	var text: String = _read(path)
+	if text.is_empty():
+		return null
+	var newline: int = text.find("\n")
+	if newline < 0 or text.substr(0, newline).strip_edges() != header:
+		push_warning("EventSheetDocLibrary: %s is not an %s file." % [path, header])
+		return null
+	return str_to_var(text.substr(newline + 1))
+
+
 ## Drops the cached manifest AND the discovered pages, so a rebuild - or a guide.md dropped into a
 ## pack while the editor is open - lands without a restart (and so a test can read a freshly
 ## written bundle).
@@ -134,6 +180,8 @@ static func reload() -> void:
 	_external = {}
 	_gates_loaded = false
 	_gates = {}
+	_search_loaded = false
+	_search = []
 
 
 ## Every page id the reader can open: the shipped bundle first (manifest order, sorted at build

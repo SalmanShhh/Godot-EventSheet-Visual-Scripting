@@ -11,6 +11,7 @@
 #   (derived)          ->  addons/eventsheet/help/index.esdoc
 #   (derived)          ->  addons/eventsheet/help/figures.esdoc
 #   (derived)          ->  addons/eventsheet/help/whatsnew.esdoc
+#   (derived)          ->  addons/eventsheet/help/search.esdoc
 #
 # WHAT IT COSTS, measured rather than estimated, because the payload is the whole argument against
 # shipping a corpus at all: 147 pages, 3.2 MB - the top-level guides plus 72 addon guides plus the
@@ -93,6 +94,7 @@ func _init() -> void:
 		write_text(EventSheetDocLibrary.FIGURES_PATH, figures_text(gates))
 		write_text(EventSheetDocWhatsNew.BUNDLE_PATH, whats_new_text())
 		write_text(EventSheetDocDictionary.BUNDLE_PATH, dictionary_text())
+		write_text(EventSheetDocLibrary.SEARCH_PATH, search_text(pages))
 		drifted = PackedStringArray()
 	print("help: pages=%d drifted=%d" % [pages.size(), drifted.size()])
 	print("help: figure verdicts baked=%d drawable=%d" % [gates.size(), _drawable_count(gates)])
@@ -175,6 +177,23 @@ static func dictionary_text() -> String:
 	return EventSheetDocDictionary.bundle_text(EventSheetDocDictionary.entries(registry))
 
 
+## The search index's exact bytes: one entry per shipped page - its title, its headings with their
+## slugs, and the blob of its unique words. Baked here because the alternative is paying for the
+## whole corpus to be read and split into words in the editor, on the reader's first keystroke.
+##
+## Only the SHIPPED pages are baked. A pack's own guide.md and the reader's project notes are not in
+## this corpus and are indexed live by the reader, which is a handful of small files rather than the
+## 3 MB this saves. `pages` is already sorted by id, so the file is byte-stable across runs.
+static func search_text(pages: Dictionary) -> String:
+	var entries: Array = []
+	for id: Variant in pages:
+		var source: String = read_text(str(pages[id]))
+		if source.is_empty():
+			continue
+		entries.append(EventSheetDocSearch.entry_for(str(id), title_of(source, str(id)), source))
+	return EventSheetDocSearch.bundle_text(entries)
+
+
 ## The figure file's exact bytes: the frozen header line, then the payload, built in sorted order.
 static func figures_text(gates: Dictionary) -> String:
 	return "%s\n%s\n" % [EventSheetDocLibrary.FIGURES_HEADER, var_to_str({"version": 1, "gates": gates})]
@@ -245,6 +264,11 @@ static func drifted_pages(pages: Dictionary) -> PackedStringArray:
 	var expected: String = manifest_text(build_manifest(pages))
 	if read_text(MANIFEST_PATH) != expected:
 		drifted.append("index.esdoc")
+	# The baked search index is gated HERE rather than beside the figure verdicts above, because
+	# this function is the one CI runs (through tests/doc_library_test.gd) and a stale index is the
+	# same kind of wrong as a stale page: the reader searches a corpus that is not the one shipped.
+	if read_text(EventSheetDocLibrary.SEARCH_PATH) != search_text(pages):
+		drifted.append("search.esdoc")
 	return drifted
 
 
