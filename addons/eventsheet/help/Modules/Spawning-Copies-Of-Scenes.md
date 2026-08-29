@@ -56,11 +56,14 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 2. [Core concepts](#core-concepts)
 3. [Removing what you spawned](#removing-what-you-spawned)
 4. [The crowd](#the-crowd)
-5. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
-6. [The four things that go wrong](#the-four-things-that-go-wrong)
-7. [Reference tables](#reference-tables)
-8. [Use cases](#use-cases)
-9. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Many kinds from one row - the kinds table](#many-kinds-from-one-row---the-kinds-table)
+6. [Reusing copies instead of making them - routing through a pool](#reusing-copies-instead-of-making-them---routing-through-a-pool)
+7. [The same sentences over the network](#the-same-sentences-over-the-network)
+8. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
+9. [The four things that go wrong](#the-four-things-that-go-wrong)
+10. [Reference tables](#reference-tables)
+11. [Use cases](#use-cases)
+12. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -74,6 +77,10 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 - **A trail, a swarm or a burst with a hard limit**, capped on the row with the policy said out loud.
 - **A wave that announces its own end** when the last member leaves, with nothing counting down.
 - **Reading somebody else's script** and seeing their own name for the copy kept in the row.
+- **Several kinds of enemy from one row**, chosen by a name a wave table holds.
+- **Bullets a profiler asked you to stop making**, routed through a pool without changing the rows
+  between the two ends.
+- **A copy every player has to agree exists**, said in the same sentences over the network.
 
 ## Core concepts
 
@@ -105,6 +112,41 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 - **Nothing here needs the plugin at runtime.** Every row compiles to `instantiate()`, `add_child`,
   `call_deferred`, `randf()` and arithmetic. Uninstall the editor and the game still builds.
 
+### The whole spawn, in one event
+
+One spawn row and the rows that say the name it minted. This is the compiled shape, which is also
+the shape an already-written script opens in.
+
+<!-- caption: A spawn and the name it leaves behind: the copy is made, added under this node, and placed at a marker -->
+```gdscript
+extends Node2D
+
+const Enemy := preload("res://enemy.tscn")
+
+
+func _ready() -> void:
+	var new_enemy = Enemy.instantiate()
+	self.add_child(new_enemy)
+	new_enemy.global_position = $SpawnPoint.global_position
+```
+
+Inside a collision handler the same spawn is written the deferred way, and the row says so rather
+than doing it quietly. The place is set before the copy is handed over, because the copy is not in a
+tree yet on that line.
+
+<!-- caption: The safe spawn: the place set first, and the copy added on the next idle moment -->
+```gdscript
+extends Area2D
+
+const Spark := preload("res://spark.tscn")
+
+
+func _on_body_entered(body: Node2D) -> void:
+	var new_spark = Spark.instantiate()
+	new_spark.position = global_position
+	self.call_deferred("add_child", new_spark)
+```
+
 ## Removing what you spawned
 
 Removing a node in Godot is `queue_free()`. The three removal rows are that call with the wait each
@@ -129,6 +171,34 @@ awaits the tween, and then removes. Because that wait is a real gap in game time
 whether the object is still there before it removes it, and the line that asks is part of the row's
 own code rather than something added quietly.
 
+**The freed object is still there for the rest of the line's own frame.** That is the one lesson
+worth reading twice, because it is the opposite of what "remove now" sounds like. A row after the
+removal that reads the object still works. A row after it that expects the object to be gone does
+not, and no error says so.
+
+<!-- caption: A bullet that cleans itself up: the free is hung off a scene-tree timer, so nothing blocks and nothing counts down -->
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	get_tree().create_timer(2.0).timeout.connect(queue_free)
+```
+
+The fade spelling people write by hand is one statement too, and it opens as the Fade Out Then
+Remove row with the author's own object kept in it.
+
+<!-- caption: The fade-then-remove one-liner: the tween walks the alpha down and the free is hung off its finish -->
+```gdscript
+extends Node2D
+
+var ghost: Node2D = null
+
+
+func _on_died() -> void:
+	ghost.create_tween().tween_property(ghost, "modulate:a", 0.0, 0.5).finished.connect(ghost.queue_free)
+```
+
 ### The guard, and why you can see it
 
 A name that outlives the line that set it can name nothing at all by the time a later row says it.
@@ -149,6 +219,18 @@ would rather not have it.
 **It stands down when you already asked.** Put an Is Still Here (or the shipped Object Still Exists)
 condition on the event and the compiler writes nothing extra - your question is the one that gets
 written, once. That is also what makes a file guarded by hand open and save back byte for byte.
+
+<!-- caption: A stored node removed from a later event: the guard is a line in the file, not a wrapper around the row -->
+```gdscript
+extends Node2D
+
+var target: Node2D = null
+
+
+func _on_timeout() -> void:
+	if is_instance_valid(target):
+		target.queue_free()
+```
 
 **Nothing else is guarded.** `self` cannot dangle, a `$Path` re-resolves every time it is read, and
 every row outside these three is left exactly as it was. Emitted code does not change under your
@@ -211,6 +293,23 @@ it holds when the spawn was skipped is nothing - which an Is Still Here row can 
 than a silence you have to guess at. This is what an enemy wave wants, where a spawn that arrives by
 pushing another one out is worse than no spawn.
 
+<!-- caption: A skid-mark trail capped at twenty: the crowd is read once, the member Godot lists first goes, and the new mark joins the group as it arrives -->
+```gdscript
+extends Node2D
+
+const Mark := preload("res://mark.tscn")
+
+
+func _physics_process(delta: float) -> void:
+	var crowd_new_mark = get_tree().get_nodes_in_group("marks")
+	if crowd_new_mark.size() >= maxi(20, 1):
+		crowd_new_mark[0].queue_free()
+	var new_mark = Mark.instantiate()
+	new_mark.add_to_group("marks", true)
+	self.add_child(new_mark)
+	new_mark.global_position = global_position
+```
+
 ### Counting them, and missing them
 
 **How Many Alive** is the group's own size, `get_tree().get_node_count_in_group("enemies")`. It is an
@@ -237,6 +336,127 @@ groups at that moment**, which is why "the crowd is down to just the one that is
 The shipped **On Group Emptied** condition asks the same question a different way - on a per-frame
 trigger, by remembering last tick's count. It is unchanged and still the answer when you want the
 check to ride an existing tick. This trigger needs neither the tick nor the memory.
+
+<!-- caption: A wave that announces its own end: the tree's node-removed signal, and the visible gate that narrows it to one crowd -->
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	get_tree().node_removed.connect(_on_node_removed)
+
+
+func _on_node_removed(node: Node) -> void:
+	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+		open_door()
+```
+
+## Many kinds from one row - the kinds table
+
+A game that spawns grunts, archers and bombers does not want three spawn rows and a chain of
+conditions choosing between them. It wants one row, and a table saying which scene each name means.
+The Scene field is an expression, so the table can simply be indexed in it - and the shape that
+comes out is the plain **factory** every hand-written spawner ends up with, written once at the top
+of the sheet instead of buried in a branch.
+
+<!-- caption: One spawn row for every kind: a table of scenes at the top of the sheet, indexed in the Scene field -->
+```gdscript
+extends Node2D
+
+const KINDS := {
+	"grunt": preload("res://grunt.tscn"),
+	"archer": preload("res://archer.tscn"),
+}
+
+
+func spawn_kind(kind: String, at: Vector2) -> void:
+	var new_enemy = KINDS[kind].instantiate()
+	self.add_child(new_enemy)
+	new_enemy.global_position = at
+```
+
+The table is an ordinary Declare row with a chip per entry, so adding a kind is adding a chip. The
+spawn row underneath never changes, and neither does anything that calls it. Three things follow
+from that, and they are the reason to reach for this rather than for a branch:
+
+- **A wave is data.** `KINDS[wave_entry]` and `KINDS.keys().pick_random()` both go straight in the
+  Scene field, so a wave table, a difficulty curve or a save file can decide the kind.
+- **Nothing new is registered.** The table is a `const` in the sheet's own head. There is no
+  registry, no manager node and no autoload, and deleting the plugin leaves the same dictionary and
+  the same three lines behind.
+- **The head still says what this sheet spawns.** The spawns band is read off the emitted line
+  rather than off a row's name, so each declared scene appears on it in its own right.
+
+Keep it a table only while the kinds really are interchangeable. A kind that needs its own extra
+setup rows is a second event, not another entry, and a chain of `if kind == …` inside one event is
+the thing this replaces rather than the thing it hides.
+
+## Reusing copies instead of making them - routing through a pool
+
+`instantiate()` is not free, and a bullet game makes thousands of them. The bundled **Object Pool**
+pack is the answer, and taking it is a matter of routing the two ends of the spawn somewhere else -
+not of learning a second way to spawn:
+
+- The **Spawn** expression hands out a ready copy - reusing a free one, or making a new one when the
+  pool has none - so it goes in the field a Make A Copy row would have filled.
+- The **Despawn** action hands the copy back instead of freeing it, so it replaces the Remove Now
+  row. Everything between the two is unchanged: the same property rows, the same crowd row, the same
+  placement expression.
+
+```
+ObjectPool.create_pool("shots", "res://bullet.tscn", 32)
+var new_shot = ObjectPool.spawn("shots")
+ObjectPool.despawn(new_shot)
+```
+
+**The head is where you see that the routing took.** The spawns band is read off the emitted line,
+and a pooled spawn does not instantiate anything - so the band reads the pool's two calls instead.
+The declaring call names the scene AND the pool, so the band says `bullet.tscn - pooled as shots`; a
+sheet that only hands copies out says the pool's own name, which is all that line knows. A spawn row
+you meant to route and did not still reads as a plain scene on the same band, which is the fastest
+way to find the one you missed.
+
+Two things do not change when you pool, and both are the point:
+
+- **A pooled copy is still a node in a group.** How Many Alive, On The Last One Removed and every
+  crowd row keep working, because they ask the tree rather than the pool.
+- **A despawned copy is not a freed copy.** It is hidden with its processing off, so `_ready` does
+  not run again and anything the copy remembered is still there. Reset what a fresh copy would have
+  had - health, alpha, velocity - on the rows after the Spawn expression.
+
+Pool only what a profiler asked you to. A pool is a second lifetime for an object, and the day it
+goes wrong is the day something reappears wearing last life's state.
+
+## The same sentences over the network
+
+There is no second spawning vocabulary for a networked game. Godot's own answer is a
+`MultiplayerSpawner` node, and it already has rows: **Spawn A Scene** makes one copy on the host and
+on every peer at once, **Despawn** takes a copy out everywhere, and **On Spawned** / **On Despawned**
+are the triggers that say a copy arrived or left. They are the shipped multiplayer words, unchanged
+by anything on this page.
+
+Spawn A Scene writes four lines, and the order in them is the whole difference from a local spawn:
+the copy is NAMED before it joins the tree, because the name is what travels to the other peers and
+is how the peer that owns it is worked out on the far side.
+
+```
+var __spawn_1 = load("res://player.tscn").instantiate()
+__spawn_1.name = str(id)
+__spawn_1.position = Vector2.ZERO
+self.get_node(self.spawn_path).add_child(__spawn_1, true)
+```
+
+Which one to reach for is decided by who has to see the copy, and nothing else:
+
+- **Only this machine has to see it** - a muzzle flash, a shell casing, a hit spark, a floating
+  damage number. Spawn A Copy. Sending it would be bandwidth spent on something nobody checks.
+- **Everybody has to agree it exists** - a player, an enemy, a pickup, a projectile that can hit
+  somebody. Spawn A Scene, run on the host, with the scene in that spawner's own list.
+
+The rest of this page still applies to both. A networked copy is an ordinary node once it lands, so
+it can join a crowd, be counted by How Many Alive, and be the last one whose removal opens the door.
+The one row not to mix in is Remove Now on a copy the spawner owns: **Despawn** is the removal that
+travels, and freeing the copy on one peer alone leaves the others holding it.
 
 ## What the sheet says it spawns
 
@@ -490,3 +710,16 @@ Last One Removed on that crowd drop the key.
 - **A guard you did not ask for is telling you something.** It appears only on a name that can
   already be gone. If you would rather not see it, keep the removal in the event that made the copy,
   or ask Is Still Here yourself.
+- **A kinds table is one row's worth of choice, not a place to hide setup.** If a kind needs its own
+  rows after the spawn, give it its own event. A dictionary that has grown a branch inside it has
+  turned back into the chain it replaced.
+- **A missing key in a kinds table is a crash, not a blank.** `KINDS["archr"]` errors. Spell the
+  keys once, in the Declare row, and read them from there (`KINDS.keys()`) rather than typing the
+  same word again in a spawn row.
+- **A despawned copy remembers everything.** Pooling replaces the free, not the reset: health,
+  alpha, velocity and any timer the copy was running are exactly as it left them. Set what a fresh
+  copy would have had on the rows straight after the pool's Spawn.
+- **Do not free a pooled copy.** Remove Now on a node that came out of a pool takes it out of the
+  pool's own accounting, and the pool then hands out a freed node. Despawn is its removal.
+- **Do not Remove Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
+  other one. Despawn is the removal that travels.
