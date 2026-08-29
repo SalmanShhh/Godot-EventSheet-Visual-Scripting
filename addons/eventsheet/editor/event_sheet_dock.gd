@@ -7223,6 +7223,7 @@ func _resource_contains_descendant(source: Resource, candidate: Resource) -> boo
 var _words_settings_dialog: EventSheetWordsSettingsDialog = null
 var _addon_manager_dialog: EventSheetAddonManagerDialog = null
 var _add_behavior_dialog: EventSheetAddBehaviorDialog = null
+var _docs_housekeeping_dialog: EventSheetDocsHousekeepingDialog = null
 
 
 ## Settings ▸ Words: every choosable word on one page. A change is baked into row TEXT at build
@@ -7253,6 +7254,17 @@ func open_addon_manager() -> void:
 		add_child(_addon_manager_dialog)
 	_addon_manager_dialog.refresh()
 	_addon_manager_dialog.popup_centered(Vector2i(760, 500))
+
+
+## Tools ▸ Docs Housekeeping: the documentation chores, with checkboxes and one report. The window
+## is handed the sheets this session has open, so the chores document what the person can see as
+## well as what is on disk.
+func open_docs_housekeeping() -> void:
+	if _docs_housekeeping_dialog == null:
+		_docs_housekeeping_dialog = EventSheetDocsHousekeepingDialog.new()
+		_docs_housekeeping_dialog.configure(func() -> Dictionary: return _open_sheets_by_path())
+		add_child(_docs_housekeeping_dialog)
+	_docs_housekeeping_dialog.popup_centered(Vector2i(720, 560))
 
 
 ## Object bar ▸ right-click an object ▸ Add behavior…: every pack, in one dialog.

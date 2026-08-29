@@ -5282,3 +5282,15 @@ The %d worst are listed below.,下面列出最严重的 %d 篇。
 "%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s 记录了“%s”，但没有动词叫这个名字。最接近的是：%s。
 "%s documents ""%s"" and no verb answers to it, nor anything near it.",%s 记录了“%s”，但没有动词叫这个名字，也没有相近的。
 "%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s 列出了 %s，“做什么”一栏是空的。草稿：“%s”
+Rewrite the project manual and refresh the search,重写项目手册并刷新搜索
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.",写出每张表格关于自身的页面，然后重新读取手册，让新页面可被搜索。
+Harvest the engine's documentation,采集引擎文档
+Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,仅当尚未采集此 Godot 版本时执行。不会下载任何内容：引擎自己写出参考文档。
+Draft the descriptions nothing has written yet,为尚无人书写的描述起草
+Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,汇总到一个草稿文件中。不会写入任何表格或指南 - 草稿始终是草稿，直到你亲自采用。
+Check coverage and drift,检查覆盖与偏离
+Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.,报告指南未回答的内容，以及随附副本与其来源页面的偏离之处。
+Export the Manual as a site,将手册导出为站点
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server.",整本手册导出为带搜索的纯 HTML 文件，无需服务器即可在浏览器中打开。
+Write out the translator's missing keys,导出译者缺少的键
+One spreadsheet of every key your game asks for that a catalog does not answer yet.,一张表，列出你的游戏需要但目前没有任何目录能回答的所有键。

@@ -291,13 +291,40 @@ static func discover_pages(packs_root: String, docs_dir: String) -> Dictionary:
 		if FileAccess.file_exists(guide):
 			_record_external(found, "%s/%s" % [PACKS_SET, pack_dir], guide)
 	if not docs_dir.is_empty() and DirAccess.dir_exists_absolute(docs_dir):
-		var names: PackedStringArray = DirAccess.get_files_at(docs_dir)
-		names.sort()
-		for file_name: String in names:
-			if file_name.get_extension().to_lower() != "md":
-				continue
-			_record_external(found, "%s/%s" % [PROJECT_SET, file_name.get_basename()], docs_dir.path_join(file_name))
+		_record_markdown_in(found, docs_dir, PROJECT_SET)
+		# One level down as well, so a project can keep its notes in folders - and so the pages a
+		# sheet writes about itself have somewhere to live that is not mixed in with hand-written
+		# prose. One level and no deeper: a docs folder is a shelf, not a file system.
+		var directories: PackedStringArray = _sorted_directories(docs_dir)
+		for directory: String in directories:
+			_record_markdown_in(found, docs_dir.path_join(directory),
+				"%s/%s" % [PROJECT_SET, directory])
 	return found
+
+
+## Every .md directly inside one folder, recorded under `set_prefix`. Sorted, because a directory
+## walk hands its files back in the filesystem's own order and the reader's tree is this order.
+static func _record_markdown_in(found: Dictionary, directory: String, set_prefix: String) -> void:
+	var names: PackedStringArray = DirAccess.get_files_at(directory)
+	names.sort()
+	for file_name: String in names:
+		if file_name.get_extension().to_lower() != "md":
+			continue
+		_record_external(found, "%s/%s" % [set_prefix, file_name.get_basename()],
+			directory.path_join(file_name))
+
+
+## The page id a discovered file is known by, or "" for a file outside the corpus. The inverse of
+## page_path for the discovered sets, and the reason it exists is the one-page refresh: something
+## that just rewrote a file has a path and needs the id the search filed it under.
+static func id_for_page_path(path: String) -> String:
+	var wanted: String = path.strip_edges()
+	if wanted.is_empty():
+		return ""
+	for id: Variant in external_pages():
+		if str((external_pages()[id] as Dictionary).get("path", "")) == wanted:
+			return str(id)
+	return ""
 
 
 ## Where the reader's project keeps its own guides. A ProjectSettings key, mirroring

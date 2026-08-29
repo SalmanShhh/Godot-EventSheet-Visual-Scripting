@@ -119,6 +119,38 @@ static func begin_harvest() -> bool:
 	return _harvest_pid >= 0
 
 
+## The same harvest, run to completion before this returns, answering how many classes it wrote.
+##
+## The polled form above exists so the editor never freezes on a click. A terminal has the opposite
+## requirement: a command that returned before its work was done would report a docs check against a
+## reference that is not there yet, and a build hook would go green for the wrong reason. So this one
+## blocks, and it is the form the command line and the housekeeping chore call.
+##
+## Answers 0 when the engine could not be run or wrote nothing, and skips the work entirely when this
+## version is already harvested - the receipt is what makes that cheap to ask.
+static func harvest_now() -> int:
+	if is_harvested():
+		return files().size()
+	var binary: String = OS.get_executable_path()
+	if binary.is_empty():
+		return 0
+	var target: String = ProjectSettings.globalize_path(cache_dir())
+	if target.is_empty():
+		return 0
+	DirAccess.make_dir_recursive_absolute(cache_dir())
+	var output: Array = []
+	OS.execute(binary, PackedStringArray([
+		"--headless", "--path", ProjectSettings.globalize_path("res://"), "--doctool", target,
+		"--quit",
+	]), output, true)
+	var found: Dictionary = scan_files(cache_dir())
+	if found.is_empty():
+		return 0
+	write_receipt(cache_dir(), found.size())
+	reload()
+	return found.size()
+
+
 ## Whether a started harvest has finished since the last call, writing the receipt when it has.
 ## A host polls this from a timer; nothing here waits on a process.
 static func poll_harvest() -> bool:

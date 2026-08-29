@@ -447,6 +447,7 @@ func _on_save_requested() -> void:
 	if not _dock._current_sheet.external_source_path.is_empty():
 		if _save_backed_sheet():
 			_dock._set_status("Saved GDScript: %s" % _dock._current_sheet.external_source_path.get_file())
+			_refresh_documentation_for(_dock._current_sheet.external_source_path)
 			_reload_after_editor_save()
 		return
 	if _dock._current_sheet_path.is_empty() and _dock._current_sheet.resource_path.is_empty():
@@ -462,6 +463,7 @@ func _on_save_requested() -> void:
 		_dock._current_sheet.take_over_path(save_path)
 		_dock._current_sheet_path = save_path
 		_dock._dirty = false
+		_refresh_documentation_for(save_path)
 		# Save As can change the path - keep the saved session pointing at it
 		# (sweep catch: sessions otherwise lag until the next tab switch).
 		_dock._persist_session()
@@ -488,6 +490,14 @@ func _on_save_requested() -> void:
 			_dock._set_status("Saved: %s" % save_path.get_file())
 	else:
 		_dock._set_status("Save failed (error %d)." % err, true)
+
+
+## What a save costs this sheet's own documentation: its manual page rewritten and its entry in the
+## Manual's search re-derived. JUST THIS SHEET - no walk of the project, so the cost of saving does
+## not grow with the size of the game, and nothing is created that was not already there (a project
+## that never asked for a manual does not acquire one because somebody pressed Ctrl+S).
+func _refresh_documentation_for(sheet_path: String) -> void:
+	EventSheetDocChores.refresh_after_save(sheet_path, _dock._current_sheet)
 
 
 func _on_save_as_requested() -> void:

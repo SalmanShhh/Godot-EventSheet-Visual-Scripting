@@ -5282,3 +5282,15 @@ The %d worst are listed below.,아래에 가장 심한 %d개를 표시합니다.
 "%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s은(는) “%s”을(를) 문서화했지만 대응하는 동사가 없습니다. 가장 가까운 것: %s.
 "%s documents ""%s"" and no verb answers to it, nor anything near it.",%s은(는) “%s”을(를) 문서화했지만 대응하는 동사도 비슷한 것도 없습니다.
 "%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s은(는) %s을(를) “하는 일” 없이 나열합니다. 초안: “%s”
+Rewrite the project manual and refresh the search,프로젝트 설명서를 다시 쓰고 검색을 갱신
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","각 시트가 스스로에 대해 쓰는 페이지를 작성한 뒤, 새 페이지를 검색할 수 있도록 설명서를 다시 읽습니다."
+Harvest the engine's documentation,엔진 문서 수확
+Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,"이 Godot 버전을 아직 수확하지 않았을 때만 실행합니다. 내려받는 것은 없고, 엔진이 스스로 참조 문서를 씁니다."
+Draft the descriptions nothing has written yet,아직 아무도 쓰지 않은 설명의 초안 작성
+Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"하나의 초안 파일로 모읍니다. 시트나 안내서에는 아무것도 적용되지 않으며, 초안은 당신이 옮기기 전까지 초안으로 남습니다."
+Check coverage and drift,적용 범위와 어긋남 점검
+Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.,"안내서가 답하지 않는 것과, 배포된 사본이 원본 페이지에서 어긋난 곳을 보고합니다."
+Export the Manual as a site,설명서를 사이트로 내보내기
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server.",설명서 전체를 검색 기능이 포함된 평범한 HTML 파일로 만듭니다. 서버 없이 브라우저에서 열립니다.
+Write out the translator's missing keys,번역자에게 줄 빠진 키 내보내기
+One spreadsheet of every key your game asks for that a catalog does not answer yet.,게임이 요청하지만 아직 어떤 카탈로그도 답하지 않는 모든 키를 담은 표입니다.

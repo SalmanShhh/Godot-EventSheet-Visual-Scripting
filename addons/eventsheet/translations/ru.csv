@@ -5282,3 +5282,15 @@ The %d worst are listed below.,Ниже перечислены %d худших.
 "%s documents ""%s"" and no verb answers to it. Nearest that do: %s.","%s документирует «%s», но ни один глагол так не называется. Ближайшие: %s."
 "%s documents ""%s"" and no verb answers to it, nor anything near it.","%s документирует «%s», но ни один глагол так не называется, и похожих нет."
 "%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s перечисляет %s без единого слова в графе «что делает». Черновик: «%s»
+Rewrite the project manual and refresh the search,Переписать руководство проекта и обновить поиск
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Записывает страницу, которую каждый лист пишет о себе, затем перечитывает руководство, чтобы новые страницы находились поиском."
+Harvest the engine's documentation,Собрать документацию движка
+Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Только если эта версия Godot ещё не собрана. Ничего не загружается: движок сам пишет свой справочник.
+Draft the descriptions nothing has written yet,"Набросать описания, которых ещё никто не написал"
+Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"Собираются в один файл черновиков. Ничего не применяется к листу или руководству - черновик остаётся черновиком, пока вы сами его не перенесёте."
+Check coverage and drift,Проверить охват и расхождения
+Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.,"Сообщает, на что не отвечают руководства и где отгруженная копия разошлась со страницей, с которой она скопирована."
+Export the Manual as a site,Экспортировать руководство как сайт
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server.",Всё руководство в виде простых HTML-файлов вместе с поиском - открываются в браузере без сервера.
+Write out the translator's missing keys,Выписать недостающие ключи для переводчика
+One spreadsheet of every key your game asks for that a catalog does not answer yet.,"Таблица со всеми ключами, которые просит игра и на которые пока не отвечает ни один каталог."

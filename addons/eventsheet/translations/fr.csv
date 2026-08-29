@@ -5282,3 +5282,15 @@ The %d worst are listed below.,Les %d pires figurent ci-dessous.
 "%s documents ""%s"" and no verb answers to it. Nearest that do: %s.",%s documente « %s » et aucun verbe n'y répond. Les plus proches : %s.
 "%s documents ""%s"" and no verb answers to it, nor anything near it.","%s documente « %s » et aucun verbe n'y répond, ni rien d'approchant."
 "%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s énumère %s sans rien sous « ce que ça fait ». Brouillon : « %s »
+Rewrite the project manual and refresh the search,Réécrire le manuel du projet et rafraîchir la recherche
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Écrit la page que chaque feuille écrit sur elle-même, puis relit le manuel pour que les nouvelles pages soient trouvables."
+Harvest the engine's documentation,Récolter la documentation du moteur
+Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Seulement si cette version de Godot n'a pas encore été récoltée. Rien n'est téléchargé : le moteur écrit sa propre référence.
+Draft the descriptions nothing has written yet,Rédiger un brouillon des descriptions que personne n'a écrites
+Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,Rassemblés dans un seul fichier de brouillons. Rien n'est appliqué à une feuille ni à un guide - un brouillon reste un brouillon jusqu'à ce que vous le déplaciez.
+Check coverage and drift,Vérifier la couverture et les écarts
+Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.,Signale ce à quoi les guides ne répondent pas et où une copie livrée s'est écartée de la page dont elle vient.
+Export the Manual as a site,Exporter le manuel sous forme de site
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server.","Tout le manuel en fichiers HTML simples, avec sa recherche, qui s'ouvrent dans un navigateur sans serveur."
+Write out the translator's missing keys,Écrire les clés manquantes pour la traduction
+One spreadsheet of every key your game asks for that a catalog does not answer yet.,Un tableur de chaque clé que votre jeu demande et à laquelle aucun catalogue ne répond encore.

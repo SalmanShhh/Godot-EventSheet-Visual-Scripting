@@ -488,6 +488,7 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Project Doctor…", 7)
 	tools_popup.add_item("Check Sheet for Errors", 14)
 	tools_popup.add_item("Vocabulary Doc", 8)
+	tools_popup.add_item("Docs Housekeeping…", 25)
 	tools_popup.add_separator()
 	tools_popup.add_item("Sheet Backups…", 9)
 	tools_popup.add_item("Save as Template", 10)
@@ -518,6 +519,7 @@ func build(root: Node) -> void:
 			24: _dock._open_project_view()
 			7: _dock._open_project_doctor()
 			8: _dock._generate_vocabulary_doc()
+			25: _dock.open_docs_housekeeping()
 			9: _dock._open_sheet_backups()
 			10: _dock._save_as_project_template()
 			11: _dock._attach_behavior_to_selection()
@@ -534,6 +536,7 @@ func build(root: Node) -> void:
 			23: _dock.open_addon_manager()
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(24), "Every open sheet on one page - how big each is, how much of it is described, what the Doctor said about it - plus a search that reaches all of them and the page each sheet writes about itself.")
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(25), "The documentation chores in one window: rewrite the page each sheet writes about itself, check what the guides do not answer, export the Manual as a browsable site, write out a translator's missing keys. Nothing is published - drafts stay drafts.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(23), "Every installed pack with its version: enable or disable one, read its guide, check for updates, import a pack from a .zip or a URL, or publish yours.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(22), "The Manual: the tutorials, the guides, and a reference page for every object and behavior. F1 opens help for whatever is selected; Ctrl+F1 reopens the page you were reading.")
 	# The dot: a reader who has not opened What's new since the plugin's version changed gets a mark

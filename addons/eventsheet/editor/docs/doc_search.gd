@@ -133,6 +133,29 @@ static func bundle_text(entries: Array) -> String:
 		var_to_str({"version": 1, "pages": pages})]
 
 
+## ONE page's entry, rebuilt in place - the whole cost of saving a sheet whose page changed.
+##
+## The alternative is dropping the index and paying for the whole corpus to be re-read on the next
+## keystroke, which is a project-sized cost for a one-page edit and gets worse the bigger the project
+## grows. Nothing else about the index moves: the entry keeps its position, so the search's tie-break
+## by document order is unchanged.
+##
+## An index that has not been built yet is left alone: it will read the new page when it is built,
+## and building it here would pay the whole cost this function exists to avoid.
+static func refresh_page(page_id: String, title: String, source: String) -> bool:
+	var id: String = page_id.strip_edges()
+	if id.is_empty() or not _index_built:
+		return false
+	var entry: Dictionary = entry_for(id, title, source)
+	for index: int in range(_index.size()):
+		if str(_index[index].get("id", "")) == id:
+			_index[index] = entry
+			return true
+	_index.append(entry)
+	_indexed_page_count = _index.size()
+	return true
+
+
 ## Drops the index, so a rebuilt bundle (or a pack guide dropped into the project) is searchable
 ## without an editor restart.
 static func reload() -> void:

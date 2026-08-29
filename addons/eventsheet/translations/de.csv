@@ -5282,3 +5282,15 @@ The %d worst are listed below.,Die %d schlimmsten stehen unten.
 "%s documents ""%s"" and no verb answers to it. Nearest that do: %s.","%s dokumentiert „%s“, und kein Verb hört darauf. Am nächsten liegen: %s."
 "%s documents ""%s"" and no verb answers to it, nor anything near it.","%s dokumentiert „%s“, und kein Verb hört darauf, auch nichts Ähnliches."
 "%s lists %s with nothing under ""what it does"". Draft: ""%s""",%s führt %s ohne Angabe unter „Was es tut“ auf. Entwurf: „%s“
+Rewrite the project manual and refresh the search,Projekthandbuch neu schreiben und Suche aktualisieren
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.","Schreibt die Seite, die jedes Blatt über sich selbst schreibt, und liest das Handbuch neu ein, damit die neuen Seiten durchsuchbar sind."
+Harvest the engine's documentation,Die Dokumentation der Engine ernten
+Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes its own reference.,Nur wenn diese Godot-Version noch nicht geerntet wurde. Es wird nichts heruntergeladen: die Engine schreibt ihre eigene Referenz.
+Draft the descriptions nothing has written yet,"Beschreibungen entwerfen, die noch niemand geschrieben hat"
+Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.,"In einer Entwurfsdatei gesammelt. Nichts wird auf ein Blatt oder eine Anleitung angewendet - ein Entwurf bleibt ein Entwurf, bis Sie ihn übernehmen."
+Check coverage and drift,Abdeckung und Abweichung prüfen
+Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.,"Meldet, was die Anleitungen nicht beantworten und wo eine ausgelieferte Kopie von der Seite abweicht, aus der sie kopiert wurde."
+Export the Manual as a site,Das Handbuch als Website exportieren
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server.","Das ganze Handbuch als einfache HTML-Dateien, mit seiner Suche, die sich ohne Server im Browser öffnen."
+Write out the translator's missing keys,Die fehlenden Schlüssel für die Übersetzung herausschreiben
+One spreadsheet of every key your game asks for that a catalog does not answer yet.,"Eine Tabelle mit jedem Schlüssel, nach dem Ihr Spiel fragt und den noch kein Katalog beantwortet."

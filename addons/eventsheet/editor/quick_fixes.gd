@@ -345,17 +345,7 @@ static func _is_the_open_sheet(dock: Variant, sheet_path: String) -> bool:
 ## says where it went. A file rather than a report line, because forty keys is a job somebody does in
 ## a spreadsheet.
 static func _export_missing_keys() -> Dictionary:
-	var sources: Dictionary = EventSheetShipItDoctor.project_sources()
-	var text: String = EventSheetShipItDoctor.missing_keys_csv(
-		EventSheetShipItDoctor.used_translation_keys(sources), EventSheetShipItDoctor.catalog_keys())
-	if text.is_empty():
-		return {"ok": true, "message": "Every key the game asks for is answered by every catalog - nothing to write out."}
-	var file: FileAccess = FileAccess.open(EventSheetQuickFixes.MISSING_KEYS_PATH, FileAccess.WRITE)
-	if file == null:
-		return {"ok": false, "message": "Could not write %s." % EventSheetQuickFixes.MISSING_KEYS_PATH}
-	file.store_string(text)
-	file.close()
-	return {"ok": true, "message": "Wrote the missing keys to %s - one row per key, one column per catalog." % EventSheetQuickFixes.MISSING_KEYS_PATH}
+	return EventSheetDocChores.export_missing_keys()
 
 
 ## Writes "Make the environment this scene's own" at the top of the sheet the finding points at, so
