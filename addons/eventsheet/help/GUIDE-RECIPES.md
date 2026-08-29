@@ -14,6 +14,8 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 6. [Debugging 101](#6-debugging-101)
    - [Making It Faster - The Costs In The Gutter](#6a-making-it-faster---the-costs-in-the-gutter)
    - [When It Breaks On Somebody Else's Machine](#6b-when-it-breaks-on-somebody-elses-machine)
+   - [Before You Ship - The Ship It Audit](#6c-before-you-ship---the-ship-it-audit)
+   - [The Doctor's Front Page Is A Triage Inbox](#6d-the-doctors-front-page-is-a-triage-inbox)
 7. [Author Your Own Behavior and ACEs](#7-author-your-own-behavior-and-aces)
 8. [Helper ACEs That Save a Code Drop](#8-helper-aces-that-save-a-code-drop)
 9. [Coordinating Many Nodes - With Node, Groups and Aggregates](#9-coordinating-many-nodes---with-node-groups-and-aggregates)
@@ -202,6 +204,63 @@ it feeds. A sheet without the trigger emits not one line of any of it. The Docto
 per project when nothing in the game handles it, and **Never ask again** is remembered in the
 project, because a game that swallows its own errors on purpose is a decision rather than an
 oversight.
+
+---
+
+## 6c. Before You Ship - The Ship It Audit
+
+Every other section of **Tools ▸ Project Doctor…** asks whether a sheet is right. **Ship It** asks a
+different question: can this project be handed to somebody else? It reports six things nobody is
+looking at on the day the game is finally finished.
+
+| What it says | Why it stops a release |
+| --- | --- |
+| **Nothing to build from** | there is no export preset, so there is no release to make |
+| **A console line a player would see** | a script writes to the console where an exported release build still runs it |
+| **It still looks like a new project** | the game has no name of its own, or still wears the engine's icon, so the taskbar shows Godot's logo |
+| **A language that is short** | a translation catalog is missing keys the game asks for, so a player reads the raw key |
+| **The frame it has to fit in** | the last measured run does not fit the 16.7 ms a 60 fps frame has, named as a share of it - *"36% of the 16.7 ms a 60 fps frame has"* |
+| **What gets saved** | a page, not a warning: the values a save slot of this game actually holds, so "does my save keep the coins" is read rather than guessed |
+
+Two of them do more than tell you.
+
+**The console line has a one-click answer, and it is a word that already ships.** *Only log in debug
+builds* swaps the sheet's plain Log rows for **Log (Debug Builds Only)** in one undoable edit, keeping
+the message and the stream you typed. The line then compiles to `if OS.is_debug_build(): print(…)`
+and is skipped entirely in a release build. The receipt is shown before anything is touched:
+
+```
+print("hit")   ->   if OS.is_debug_build(): print("hit")
+```
+
+A line you already guarded yourself - in either spelling, or commented out - is not accused. A check
+that cries wolf gets switched off, so the passing cases were the ones worth getting right.
+
+**A short catalog comes back as a file.** Forty missing keys is a job, not a sentence, so *Write the
+missing keys out* writes a ready-to-fill translation CSV into the user directory - one row per key,
+one column per catalog - instead of listing them in a report line. It is byte-deterministic, and a
+project whose catalogs answer everything writes no file at all.
+
+Two lists here obey the band scale law: a save page naming five values says three of them and counts
+the rest, and a file with several console lines names the first and counts the rest. A hundred names
+is not a report.
+
+## 6d. The Doctor's Front Page Is A Triage Inbox
+
+The audit grew sections faster than it grew a way to read them, so it opens on a page rather than a
+list: worst first, then a fixed order inside each severity, with the sections themselves ordered by
+the worst thing in them. Two audits of an unchanged project read exactly the same, which is the only
+reason the **new** mark can be trusted.
+
+The summary line is one sentence and says both halves:
+
+```
+Project Doctor: 2 error(s), 2 warning(s), 1 note(s). 5 new since you last looked.
+```
+
+Read it and the second half goes away, because a finding's identity is the finding itself - its
+check, its file and its subject - not where it sits on the page. A finding that moved is not new. A
+finding whose wording changed is not new. The same warning about a **different** file is.
 
 ---
 

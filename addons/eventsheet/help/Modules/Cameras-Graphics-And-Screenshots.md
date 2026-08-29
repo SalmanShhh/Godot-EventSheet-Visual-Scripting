@@ -541,6 +541,26 @@ On photo key pressed
   -> Show  (On node $Hud)
 ```
 
+**25. A crate that stays one step in front of the player, and a marker only the minimap draws.** The
+visibility layer is set once when the node wakes up; the drawing order is a relationship, so it is
+kept every frame rather than guessed at once. This is also exactly what the two lines look like when
+somebody wrote them by hand, which is why such a file opens as these rows and saves back unchanged -
+`z_index = $Player.z_index + 1` always as **draw in front of $Player**, and the layer line as
+**Show only to "minimap"** once the project has named that layer. A layer nobody named keeps the
+number it already had, because there is no word to say instead.
+
+```gdscript
+extends Node2D
+
+
+func _ready() -> void:
+	visibility_layer = 2
+
+
+func _process(_delta: float) -> void:
+	z_index = $Player.z_index + 1
+```
+
 ### Other use cases
 
 **A dynamic FOV rig.** Read Camera FOV every frame and Tween Camera FOV toward a value derived from speed, so the view widens as the player accelerates and settles when they stop.

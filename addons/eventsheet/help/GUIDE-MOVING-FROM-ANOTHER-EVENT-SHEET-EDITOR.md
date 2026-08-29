@@ -25,7 +25,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 
 - **You're porting a C3 game by hand.** Migration is a sheet-by-sheet rebuild (faster than it sounds, because the grammar is the same), and every table here is a lookup for "what is X called now?"
 - **You keep typing C3 words into the picker.** Good - keep doing that. The picker's search understands C3 phrasing ("every tick", "on created", "spawn") via synonym aliases, so type what you know and the Godot equivalent surfaces.
-- **You leaned on a C3 behavior and want its twin.** 111 packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, Platform Info, the UHTN planner and more) - see [the three lanes](#7-behaviors-and-plugins---the-three-lanes).
+- **You leaned on a C3 behavior and want its twin.** 112 packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, Platform Info, the UHTN planner and more) - see [the three lanes](#7-behaviors-and-plugins---the-three-lanes).
 - **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
 - **You expect events to run top to bottom, and includes to run where the include line sits.** Inside a sheet you get exactly that; between triggers, between nodes, and for includes the answer changes - [section 5](#5-when-does-my-code-run---top-to-bottom-and-where-that-stops) draws the three boundaries.
 - **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
@@ -53,6 +53,10 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Layers | CanvasLayers / scene tree order |
 | Effects on an object | A `ShaderMaterial` on the node, and **the shader file names its own dials**: every `uniform` a `.gdshader` declares becomes a picker entry on the nodes wearing it, so the row reads **Boss ▸ Set `effect.dissolve` to 0.7** and a dial the shader does not have cannot be typed. Six packs ship the commonest ones ready-made (Hit Flash, Dissolve, Outline, Grayscale, Wave), each installing its shader into your project as a file you can edit |
 | Effects on a layer | The **Screen FX** pack: one `CanvasLayer` holding a `ColorRect` whose shader reads the frame so far. Shockwave, an awaited Fade you build a scene transition out of, Blur and Chromatic pulse - and the rectangle hides itself whenever every effect is idle, so an unused layer draws nothing |
+| Z elevation, and a layer's visibility | **Draw in front of** (`z_index = other.z_index + 1`, the one drawing-order line whose meaning is a sentence rather than a number), **Show only to**, whose list is the project's own visibility-layer names, and **Is on screen** as a question |
+| Effects quality / a graphics settings screen | **Quality is a folder.** One preset is a `.tres` file in `res://settings/quality/`, so adding a quality word is adding a file and nothing has to be registered. The word stands for values over settings you already declared, so a save file carries the values rather than the word, deleting a preset cannot break anybody's save, and a setting declared later grows a field in every preset. Nudge one value afterwards and the label reads **Custom**, worked out by comparison rather than stored |
+| Layout state, and the "escape key closes the wrong thing" bug | **Game modes.** A game's modes are four ordinary declarations, not a new kind of thing: **Go to mode**, **In mode**, **On entering** / **On leaving**, and a group that says which mode it runs in - so a whole group of rules starts and stops running by itself. **Push mode** remembers the one underneath (a menu over a pause over playing) and **Go back** returns to it, which is that bug solved in the vocabulary rather than in a variable. On leaving always fires before On entering |
+| The settings dialog, and a controls screen | The **Game Settings** pack, built on one declaration per setting. **Bind To Setting** is one row in both directions - the control writes the setting and the setting moves the control, so a quality preset or a second menu still open moves it back too. **Menu Rows From Declarations** fills a container with one labelled, bound control per declaration, so adding an option later is one Declare row and no scene edit. **Controls Page From The Input Map** does the same for rebinding, and a key something else already answers to fires **On Binding Conflict** with three answers as three rows - swap, take it anyway, or pick another key - instead of quietly stacking two actions on one key. **Apply With A Way Back** starts a countdown before a screen mode you might not be able to see your way out of |
 | The expression language | **GDScript** - there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
 | Functions (event sheets) | Sheet functions - callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** action) |
@@ -83,6 +87,10 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | dt | `delta` |
 | lerp(a, b, x) | `lerp(a, b, x)` |
 | clamp / min / max / abs | Same names in GDScript |
+| clamp / lerp / wrap / remap as *rows* | **Keep Between**, **Move Toward (each tick)**, **Wrap Around** and **Rescale** - the same four calls said as what they are for (health that cannot pass its maximum, a bar catching up, a heading that passes 360 and comes back at 0, points into a bar's 0 to 1). Each row IS the call in its echo, so `value = clampf(value, 0.0, max_hp)` you wrote by hand opens as the row and saves back as your own bytes |
+| Move at angle / Move forward | **Move Forward** goes the way the node is FACING (`position += transform.x * speed * delta`) and **Move (the world's way)** goes the way the screen means whatever the node is turned to (`global_position += direction * speed * delta`). Turning the node turns the first and not the second, which is the whole distinction |
+| Rotate toward / Rotate around | **Face** turns toward a place at a top speed and never overshoots; **Turn Around** carries a node round a point at a steady rate keeping its distance; **Swing** turns by an amount over a time about the node's own origin, so where you put that origin is the hinge |
+| Angles in degrees | **The unit rides the value.** A plain number in an angle field is degrees and is written through `deg_to_rad`; type `1.2 rad` or `PI/4` and it stays radians and is emitted raw, with nothing wrapped round your `PI`. The row says which it ended up meaning. There is no unit picker to get wrong |
 
 The picker's search understands C3 phrasing ("every tick", "on created", "spawn"…) via
 synonym aliases, so type what you know and the Godot equivalent surfaces.
@@ -269,7 +277,7 @@ The picker wraps the native feature:
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
 
-**111 are bundled** (93 with a guide of their own, the other 18 companion data assets and loaders
+**112 are bundled** (93 with a guide of their own, the other 19 companion data assets and loaders
 documented inside their partner's guide):
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D), Rotate, Fade, Bound To, Wrap** (Follow now
