@@ -45,9 +45,14 @@ static func run() -> bool:
 
 
 ## WHICH SECTION TEACHES A VERB. A heading beats a whole page at the same strength, because a
-## heading is the paragraph that teaches it and a page title is a place to start scrolling. And
-## evidence weaker than a body hit is refused outright: a subsequence match on a title matches
-## almost every page for almost every query, so acting on one would be a confident wrong answer.
+## heading is the paragraph that teaches it and a page title is a place to start scrolling.
+##
+## AND THE LANDING HAS TO BE NAMEABLE. A body hit means the verb's words appear somewhere in a
+## page's prose, which is not a section: it carries no heading to land on, and since almost every
+## long guide mentions almost every common word, the candidates arrive TIED at that strength and the
+## winner is whichever page sorted first. Measured on the shipped corpus, that had "Print Log"
+## taught by the ComboBox guide and "Play Sound" by Advanced Random, each behind a confident section
+## line. Nothing weaker than a title or heading match is a section, and no section means no row.
 static func _test_teaching_section() -> bool:
 	var results: Array[Dictionary] = [
 		{"doc_id": "guide:GUIDE-A", "page_id": "GUIDE-A", "title": "Guide A", "heading": "",
@@ -72,6 +77,22 @@ static func _test_teaching_section() -> bool:
 			{"doc_id": "guide:GUIDE-C", "title": "Guide C", "heading": "", "anchor": "",
 				"score": EventSheetDocSearch.SCORE_TITLE_SUBSEQUENCE},
 		] as Array[Dictionary]), {}) and all_passed
+	# A field of body hits is what the shipped corpus actually hands this function for a common
+	# verb: several pages, all tied, none with a heading. Whichever sorted first used to win.
+	all_passed = _check("a page that merely mentions the verb somewhere teaches nobody",
+		EventSheetDocTeaches.best_section([
+			{"doc_id": "guide:Addons/ComboBox", "title": "ComboBox", "heading": "", "anchor": "",
+				"score": EventSheetDocSearch.SCORE_BODY},
+			{"doc_id": "guide:Addons/Debug-Overlay", "title": "Debug Overlay", "heading": "",
+				"anchor": "", "score": EventSheetDocSearch.SCORE_BODY},
+		] as Array[Dictionary]), {}) and all_passed
+	all_passed = _check("but a heading that names it is still a section",
+		str(EventSheetDocTeaches.best_section([
+			{"doc_id": "guide:Addons/ComboBox", "title": "ComboBox", "heading": "", "anchor": "",
+				"score": EventSheetDocSearch.SCORE_BODY},
+			{"doc_id": "guide:GUIDE-DEBUGGING", "title": "Debugging", "heading": "Print Log",
+				"anchor": "print-log", "score": EventSheetDocSearch.SCORE_HEADING_SUBSTRING},
+		] as Array[Dictionary]).get("anchor", "")), "print-log") and all_passed
 	all_passed = _check("nothing found is nothing offered",
 		EventSheetDocTeaches.best_section([] as Array[Dictionary]), {}) and all_passed
 

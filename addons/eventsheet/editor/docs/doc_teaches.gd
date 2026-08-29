@@ -26,10 +26,16 @@ extends RefCounted
 ## first handful only ever picks a worse page.
 const SECTION_CANDIDATES := 8
 
-## The weakest evidence a section is allowed to be chosen on. A subsequence match on a title (the
-## query's letters scattered through it, in order) matches almost every page for almost every
-## query, so a section chosen on one would be a confident-looking wrong answer.
-const WEAKEST_ACCEPTED_SCORE := EventSheetDocSearch.SCORE_BODY
+## The weakest evidence a section is allowed to be chosen on: a match on a page's TITLE or on one of
+## its HEADINGS. Everything weaker is a body match - the verb's words appear somewhere in the page's
+## prose - and a body match is not a section. It has no heading to land on, so "Learn more" opened
+## the top of a guide; and since almost every long guide mentions almost every common word, the
+## candidates arrived tied at that strength and the winner was whichever page sorted first. That is
+## how "Print Log" came to be taught by the ComboBox guide.
+##
+## A landing has to be nameable. If nothing in the corpus names this verb in a title or a heading,
+## the honest answer is that the written corpus does not cover it, and the panel draws no row at all.
+const WEAKEST_ACCEPTED_SCORE := EventSheetDocSearch.SCORE_HEADING_SUBSTRING
 
 
 ## The guide section that teaches a verb, as {doc_id, page_id, title, heading, anchor}, or {} when

@@ -85,10 +85,12 @@ static func _test_page_shape() -> bool:
 	# because the whole point of the plan is that the page does not inherit the assembler's order.
 	# This verb is REFLECTED, so it declares no field blurbs and no field kinds: the section that
 	# repeats what the Parameters dialog says about each field has nothing to say and draws nothing,
-	# which is why it is absent here and present on an authored verb.
+	# which is why it is absent here and present on an authored verb. The "which guide teaches this"
+	# section is absent for the same reason - nothing in the corpus TITLES or HEADS a section with
+	# this verb's name, and a page that merely mentions it somewhere is not a section to land on.
 	all_passed = _check("a pack verb's page reads in the fixed order",
 		", ".join(EventSheetDocPanel.section_plan(blocks)),
-		"title, description, teaches, syntax, parameters, preview, usage, project_usage, patterns, actions, about, link") and all_passed
+		"title, description, syntax, parameters, preview, usage, project_usage, patterns, actions, about, link") and all_passed
 	var shuffled: Array[Dictionary] = []
 	for index: int in range(blocks.size()):
 		shuffled.append(blocks[blocks.size() - 1 - index])
