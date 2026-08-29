@@ -15,7 +15,9 @@ class_name EventSheetProjectViewPanel
 extends RefCounted
 
 ## The columns of the roll-up, in the order a reader scans them: what it is, how big, how much of it
-## is described, and then only the numbers that exist for it.
+## is described, and then only the numbers that exist for it. Each is a catalog key, translated where
+## the header is set - the translation sweep reads literals out of a call and cannot see a table, so
+## these six words are carried in the catalogs deliberately rather than by being swept up.
 const COLUMN_TITLES: PackedStringArray = ["Sheet", "Runs as", "Events", "Described", "Findings", "Milliseconds"]
 
 var _dock: Control = null
@@ -49,7 +51,7 @@ func _ensure_window() -> void:
 	if _window != null:
 		return
 	_window = Window.new()
-	_window.title = "Project View"
+	_window.title = EventSheetL10n.translate("Project View")
 	_window.size = Vector2i(800, 600)
 	_window.close_requested.connect(func() -> void: _window.hide())
 	var box: VBoxContainer = VBoxContainer.new()
@@ -60,18 +62,18 @@ func _ensure_window() -> void:
 	_tree.hide_root = true
 	_tree.columns = COLUMN_TITLES.size()
 	for index: int in range(COLUMN_TITLES.size()):
-		_tree.set_column_title(index, COLUMN_TITLES[index])
+		_tree.set_column_title(index, EventSheetL10n.translate(COLUMN_TITLES[index]))
 	_tree.column_titles_visible = true
 	_tree.custom_minimum_size = Vector2(0.0, 120.0)
 	_tree.item_selected.connect(_on_sheet_selected)
-	var sheets_card: PanelContainer = EventSheetPopupUI.titled_card("Every sheet", _tree)
+	var sheets_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Every sheet"), _tree)
 	sheets_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(sheets_card)
 
 	var find_row: HBoxContainer = HBoxContainer.new()
 	find_row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_find_edit = LineEdit.new()
-	_find_edit.placeholder_text = "A name, a node, an animation, a mode…"
+	_find_edit.placeholder_text = EventSheetL10n.translate("A name, a node, an animation, a mode…")
 	_find_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_find_edit.text_submitted.connect(func(_text: String) -> void: _run_find())
 	find_row.add_child(_find_edit)
@@ -81,23 +83,23 @@ func _ensure_window() -> void:
 	_facet_button.item_selected.connect(func(_index: int) -> void: _run_find())
 	find_row.add_child(_facet_button)
 	var find_button: Button = Button.new()
-	find_button.text = "Find"
+	find_button.text = EventSheetL10n.translate("Find")
 	find_button.pressed.connect(_run_find)
 	find_row.add_child(find_button)
-	box.add_child(EventSheetPopupUI.titled_card("Find across every sheet", find_row))
+	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find across every sheet"), find_row))
 	box.add_child(EventSheetPopupUI.hint_label(
-		"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.", 720.0))
+		EventSheetL10n.translate("A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting."), 720.0))
 
 	_results = Tree.new()
 	_results.hide_root = true
 	_results.columns = 3
-	_results.set_column_title(0, "Sheet")
-	_results.set_column_title(1, "Where")
-	_results.set_column_title(2, "Match")
+	_results.set_column_title(0, EventSheetL10n.translate("Sheet"))
+	_results.set_column_title(1, EventSheetL10n.translate("Where"))
+	_results.set_column_title(2, EventSheetL10n.translate("Match"))
 	_results.column_titles_visible = true
 	_results.custom_minimum_size = Vector2(0.0, 90.0)
 	_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var results_card: PanelContainer = EventSheetPopupUI.titled_card("Hits", _results)
+	var results_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Hits"), _results)
 	results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(results_card)
 
@@ -105,11 +107,11 @@ func _ensure_window() -> void:
 	_manual_view.editable = false
 	_manual_view.custom_minimum_size = Vector2(0.0, 130.0)
 	_manual_view.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	var manual_card: PanelContainer = EventSheetPopupUI.titled_card("Your Game: the selected sheet's own page", _manual_view)
+	var manual_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Your Game: the selected sheet's own page"), _manual_view)
 	manual_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(manual_card)
 	box.add_child(EventSheetPopupUI.hint_label(
-		"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.", 720.0))
+		EventSheetL10n.translate("This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it."), 720.0))
 
 	var margined: MarginContainer = EventSheetPopupUI.margined(box)
 	margined.set_anchors_preset(Control.PRESET_FULL_RECT)

@@ -104,12 +104,22 @@ static func _test_a_bare_number_is_degrees() -> bool:
 		"45 where the template converts": EventForgeAngleUnits.stored("45", EventForgeAngleUnits.DEGREES),
 		"an expression": EventForgeAngleUnits.stored("aim_angle"),
 		"nothing": EventForgeAngleUnits.stored(""),
+		# A name that merely ENDS in those three letters said no unit, so it keeps every letter it
+		# was typed with. Chopping the tail off would emit a variable the game does not have.
+		"a name ending in deg": EventForgeAngleUnits.stored("angle_deg"),
+		"a name ending in rad": EventForgeAngleUnits.stored("aim_rad"),
+		"a name ending in grad": EventForgeAngleUnits.stored("turn_grad"),
+		"a unit said straight after the number": EventForgeAngleUnits.stored("1.2rad"),
 	}, {
 		"45 where the slot wants radians": "deg_to_rad(45)",
 		"45 deg where the slot wants radians": "deg_to_rad(45)",
 		"45 where the template converts": "45",
 		"an expression": "deg_to_rad(aim_angle)",
 		"nothing": "",
+		"a name ending in deg": "deg_to_rad(angle_deg)",
+		"a name ending in rad": "deg_to_rad(aim_rad)",
+		"a name ending in grad": "deg_to_rad(turn_grad)",
+		"a unit said straight after the number": "1.2",
 	})
 
 
@@ -120,19 +130,31 @@ static func _test_radians_are_kept_raw() -> bool:
 	var settings_before: Variant = ProjectSettings.get_setting(EventForgeAngleUnits.SETTING, null)
 	ProjectSettings.set_setting(EventForgeAngleUnits.SETTING, EventForgeAngleUnits.RADIANS)
 	var in_a_radian_project: String = EventForgeAngleUnits.stored("45")
+	var typed_into_a_field: String = EventForgeAngleUnits.stored("45", EventForgeAngleUnits.DEGREES)
+	var read_back_there: String = LENS.read(LENS.LENS_ANGLE, "30")
 	ProjectSettings.set_setting(EventForgeAngleUnits.SETTING, settings_before)
 	return _check("a radian spelling is kept exactly as it was written", {
 		"PI/4 where the slot wants radians": EventForgeAngleUnits.stored("PI/4"),
 		"TAU * 0.125 where the slot wants radians": EventForgeAngleUnits.stored("TAU * 0.125"),
 		"1.2 rad where the slot wants radians": EventForgeAngleUnits.stored("1.2 rad"),
 		"PI/4 where the template converts": EventForgeAngleUnits.stored("PI/4", EventForgeAngleUnits.DEGREES),
+		"an expression ending in PI": EventForgeAngleUnits.stored("spin_speed * PI"),
+		"an expression ending in TAU": EventForgeAngleUnits.stored("x * TAU"),
+		"a name that merely contains those letters": EventForgeAngleUnits.stored("SPIN * TAUNT"),
 		"45 in a radian project": in_a_radian_project,
+		"45 typed into a field in a radian project": typed_into_a_field,
+		"a bare 30 read back in a radian project": read_back_there,
 	}, {
 		"PI/4 where the slot wants radians": "PI/4",
 		"TAU * 0.125 where the slot wants radians": "TAU * 0.125",
 		"1.2 rad where the slot wants radians": "1.2",
 		"PI/4 where the template converts": "rad_to_deg(PI/4)",
+		"an expression ending in PI": "spin_speed * PI",
+		"an expression ending in TAU": "x * TAU",
+		"a name that merely contains those letters": "deg_to_rad(SPIN * TAUNT)",
 		"45 in a radian project": "45",
+		"45 typed into a field in a radian project": "rad_to_deg(45)",
+		"a bare 30 read back in a radian project": "30°",
 	})
 
 

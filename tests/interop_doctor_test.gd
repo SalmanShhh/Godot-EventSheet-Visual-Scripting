@@ -23,6 +23,9 @@ const PICKUP: String = "res://tests/fixtures/interop_corpus/pickup.gd"
 
 static func run() -> bool:
 	var ok: bool = true
+	# From cold, so what the section says here is what it says in a fresh editor rather than what an
+	# earlier test happened to leave in the project caches.
+	_drop_the_project_caches()
 
 	# ── The mark, read off the file ─────────────────────────────────────────────────────────
 	ok = _check("a marked script says so", EventSheetInteropDoctor.stays_code(SOLVER), true) and ok
@@ -61,7 +64,29 @@ static func run() -> bool:
 	ok = _check("a corpus with nothing in it reports nothing",
 		EventSheetInteropDoctor.report(PackedStringArray()).size(), 0) and ok
 
+	# A score over nothing is not 100. A project whose candidates could not be opened at all used to
+	# read as a perfect one, which is the one number nobody had taken.
+	var unmeasurable: Array[Dictionary] = EventSheetInteropDoctor.report(
+		PackedStringArray(["res://tests/fixtures/interop_corpus/not_a_file.gd"]))
+	ok = _check("nothing measured says so instead of claiming a full score",
+		str(unmeasurable[0].get("message", "")) if not unmeasurable.is_empty() else "",
+		"Interop: 1 script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") and ok
+
+	# The section asks the project index how many other files call each function, which starts the
+	# project-wide scan and leaves three caches warm. Continuous integration runs the whole suite
+	# serially in ONE process, so anything left warm here is inherited by every later test that pins
+	# what a cold project answers - and the sharded local run, which puts them in other processes,
+	# would never show it.
+	_drop_the_project_caches()
 	return ok
+
+
+## The three the section warms, dropped together. They are one question asked three ways - what this
+## project's scenes are, what its scripts are, and who calls whom - so they are also dropped as one.
+static func _drop_the_project_caches() -> void:
+	EventSheetProjectShareIndex.clear_cache()
+	EventSheetSceneConnections.clear_cache()
+	EventSheetProjectDoctor.clear_project_scripts()
 
 
 static func _severities(findings: Array[Dictionary]) -> PackedStringArray:

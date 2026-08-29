@@ -319,14 +319,25 @@ static func drag_intent_for(entry: Dictionary) -> String:
 # this panel promised not to have. It shows what the last run found, handed to it by whoever ran it.
 
 static var _doctor_by_path: Dictionary = {}
+## And the findings themselves, exactly as the run reported them. One store, so every page that
+## wants to say what the Doctor found reads the same run rather than starting one of its own.
+static var _doctor_findings: Array = []
 
 
 ## Records a Doctor run's findings for the bar to badge with. Called by whoever ran it.
 static func set_doctor_findings(findings: Array) -> void:
+	_doctor_findings = findings.duplicate()
 	_doctor_by_path = badge_map(findings)
 
 
+## The last Doctor run of this session, empty when nobody has run one. Read by whoever needs the
+## findings rather than the badge counts; nothing here ever runs the Doctor to fill it.
+static func doctor_findings() -> Array:
+	return _doctor_findings
+
+
 static func clear_doctor_findings() -> void:
+	_doctor_findings = []
 	_doctor_by_path = {}
 
 

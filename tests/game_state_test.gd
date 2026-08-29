@@ -102,8 +102,41 @@ static func _run_findings() -> bool:
 	stuck.events.append(_row("OnProcess", [], [_go_to_mode("PLAYING")]))
 	all_passed = _check("a way out clears it",
 		_kind_for(EventSheetModeFacts.findings(stuck), "Cutscene"), "") and all_passed
-	all_passed = _check("and a mode a group runs in counts as used",
-		_kind_for(EventSheetModeFacts.findings(stuck), "Playing"), "") and all_passed
+
+	# THE REACHABILITY IS THE WHOLE QUESTION. A three-mode game where every mode is entered and only
+	# the last one has nothing leaving it: the finding has to name that one and only that one, which
+	# it cannot do by asking whether the sheet has more than one mode in it.
+	var chain: EventSheetResource = _modes_sheet()
+	chain.events.append(_row("OnReady", [], [_go_to_mode("MENU")]))
+	chain.events.append(_row("OnProcess", [_in_mode("MENU")], [_go_to_mode("PLAYING")]))
+	chain.events.append(_row("OnProcess", [_in_mode("PLAYING")], [_go_to_mode("CUTSCENE")]))
+	chain.events.append(_row("OnProcess", [_in_mode("CUTSCENE")], [_action("hud_shown = false")]))
+	var chained: Array[Dictionary] = EventSheetModeFacts.findings(chain)
+	all_passed = _check("the mode at the end of the chain is the one nobody leaves",
+		_kind_for(chained, "Cutscene"), EventSheetModeFacts.KIND_NO_WAY_OUT) and all_passed
+	all_passed = _check("and the modes with a row leaving them are clear",
+		[_kind_for(chained, "Menu"), _kind_for(chained, "Playing")], ["", ""]) and all_passed
+
+	# A row gated on ANOTHER mode cannot be the way out of this one, and a row that runs once when
+	# the game starts is how the game begins rather than how a player gets unstuck.
+	var one_shot: EventSheetResource = _modes_sheet()
+	one_shot.events.append(_row("OnProcess", [_in_mode("PLAYING")], [_go_to_mode("CUTSCENE")]))
+	one_shot.events.append(_row("OnReady", [], [_go_to_mode("MENU")]))
+	all_passed = _check("neither shape is a way out of the cutscene",
+		_kind_for(EventSheetModeFacts.findings(one_shot), "Cutscene"),
+		EventSheetModeFacts.KIND_NO_WAY_OUT) and all_passed
+
+	# Go back is a way out of anything that can reach it, and a group's own "runs in" gates the rows
+	# inside it exactly as an In mode condition on each of them would.
+	var popped: EventSheetResource = _modes_sheet()
+	popped.events.append(_row("OnProcess", [_in_mode("PLAYING")], [_go_to_mode("CUTSCENE")]))
+	var while_watching: EventGroup = EventGroup.new()
+	while_watching.name = "Cutscene"
+	while_watching.runs_in = "Cutscene"
+	while_watching.events.append(_row("OnProcess", [], [_go_back_mode()]))
+	popped.events.append(while_watching)
+	all_passed = _check("a Go back inside the group that runs in the mode is the way out",
+		_kind_for(EventSheetModeFacts.findings(popped), "Cutscene"), "") and all_passed
 	return all_passed
 
 
@@ -426,6 +459,29 @@ static func _go_to_mode(member: String) -> ACEAction:
 	action.ace_id = "GoToMode"
 	action.params = {EventSheetModeFacts.MODE_PARAM: member}
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "GoToMode")
+	if descriptor != null:
+		action.codegen_template = descriptor.codegen_template
+	return action
+
+
+## The shipped In mode condition, so a row can be gated on a mode the way an author gates one.
+static func _in_mode(member: String) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = "InMode"
+	condition.params = {EventSheetModeFacts.MODE_PARAM: member}
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "InMode")
+	if descriptor != null:
+		condition.codegen_template = descriptor.codegen_template
+	return condition
+
+
+## And the shipped Go back, which leaves whatever mode it runs in.
+static func _go_back_mode() -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "GoBackMode"
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "GoBackMode")
 	if descriptor != null:
 		action.codegen_template = descriptor.codegen_template
 	return action

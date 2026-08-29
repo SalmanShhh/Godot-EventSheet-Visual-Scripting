@@ -179,6 +179,8 @@ static func run() -> bool:
 		filesystem_hook.contains("EventSheetSceneConnections.clear_cache()"), true) and all_passed
 	all_passed = _check("and the listing of the project's own scripts",
 		filesystem_hook.contains("EventSheetProjectDoctor.clear_project_scripts()"), true) and all_passed
+	all_passed = _check("and what a script the rows are aimed at declares",
+		filesystem_hook.contains("EventSheetScriptMembers.clear_cache()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
 	all_passed = _check("the settings hook drops the Input Map read",
 		settings_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed

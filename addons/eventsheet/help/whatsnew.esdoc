@@ -6,407 +6,6 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Stopped behaviors cost zero frame time
-
-- **A stopped behavior parks its own tick.** 43 behavior packs used to run their per-frame
-  callback every frame and early-return while idle; each now switches the callback off at the
-  moment it stops, finishes, or runs out of work, and back on in every verb that starts it. A
-  behavior authored as stopped never pays for a frame at all, and a delayed start keeps ticking
-  on purpose - a behavior counting down a delay or cooldown is waiting, not idle.
-- **Finish points park the tick before their trigger fires**, so a row answering On Arrived, On
-  Timer, On Boost Expired or On Drained can start the next run from inside the handler and the
-  behavior wakes cleanly.
-- **Flipping a gate property directly still wakes it.** The exported on/off knobs (Running,
-  Active, Rotate Enabled, Enabled Movement and kin) carry a setter now, so the generated
-  Set-property action on a sheet, the Inspector while the game runs, and any other script all
-  restart processing exactly like the verb does.
-- **Conditions and expressions keep answering while parked** - Is Flickering, Has Path, Speed
-  and the rest read plain settled variables, checked pack by pack.
-- **Packs whose whole job is watching still watch.** Character controllers applying gravity and
-  polling input every frame, chases and pins tracking a target, and the monotonic clocks (Save
-  System's playtime, Storylet Weaver's cooldown clock) keep ticking - the standard is that IDLE
-  costs nothing, not that nothing ticks.
-- A runtime smoke test pins the mechanism itself: a subprocess scene tree spawns a crowd of idle
-  behavior instances and asserts every callback really is off, reading the processing flags
-  rather than wall-clock time, so it cannot flake under load.
-
-### No walls - the picker and the errors never dead-end
-
-- **A fixable reason greys an entry, never hides it.** The behavior-host verbs off a plain sheet,
-  the Editor object off a game sheet, and a verb whose node the open scene lacks all stay listed -
-  greyed, with the one-line reason on the entry and the Add button wearing the fix (\"Add an
-  AnimationPlayer to the scene\", \"Switch Tool on for this sheet\", \"Make this a behavior sheet…\",
-  \"Attach this sheet to a scene…\"). Pressing the fix performs it - the node lands through the
-  editor's own undo, Tool flips through the sheet's - and the row's dialog opens right after. A
-  node trigger on a sheet no scene carries says that too, since a trigger without a source can
-  never fire. One table holds every gate, each reason and fix speaks the eight bundled languages,
-  and the suite walks every picker source and fails any entry gated without both.
-- **The picker never renders an empty list.** A query that matches nothing gets the quick-add
-  ranker's relaxed reading first - the nearest entries, the ones one bad word away - and then
-  **Recipes**: whole worked examples enumerated from the guides' own self-drawing figures, so the
-  docs and the picker share one source, inserted as real rows through the Manual's one-undo
-  snippet path.
-- **Creating a name is an offer, never a silence.** Declaring an unknown name from a field opens
-  the declaration dialog pre-filled with the type read from how the expression uses it (compared
-  to 0.5 is a float, joined to text is a String), the did-you-mean names still come first so a
-  typo never mints a twin, and a control named jump is added to the Input Map already bound to
-  Space - said in the answer, changed in Project Settings like any binding.
-- **The tools find you, once, quietly.** Ask-why offers itself at the first never-fired trigger
-  the hit counts reveal, Row Timings at the first stuttering window, and the \"nothing happened at
-  all\" run says its own cause - the game streamed while no scene carries this sheet's script. One
-  quiet status line per offer, once per session, all words in the eight languages, with a
-  persisted global switch (Toggle Rescue Tips in the command palette).
-- **The Doctor hears pasted error text.** A note row still speaking Godot's own words (\"Invalid
-  call. Nonexistent function…\") gets an advisory finding so it can be re-said as the row would
-  say it - or fixed and deleted.
-
-### Declarations - one place to name things, and the Doctor hears the silence
-
-- **Add ▸ Declare.** Every way to give something a name, gathered as one submenu: Variable,
-  Constant, Node reference, Resource, Enum, Signal, Collection. Each entry opens the same dialog
-  its scattered sibling opens - the Constant and Node reference entries arrive with the right
-  boxes already ticked, Collection opens the variable dialog on the List type whose Items editor
-  is the grid, and Enum and Signal drop a fresh row straight into its editor, the same
-  insert-then-name beat Add Group uses. Nothing moved and nothing forked: the existing entries,
-  keys and dialogs all still work, this is the place to FIND them.
-- **The Doctor names two kinds of quiet.** An enum value nothing in the project ever writes
-  (\"Enum value Mode.HURT is declared but nothing ever names it\") and a signal announced but never
-  heard - no scene connection, no connect call, no await - each an advisory note on the generated
-  script that declares it. Only compiled sheet output is judged (in hand-written code an unused
-  name can be an offer to code not written yet), the usage corpus is every script in the project,
-  published packs stay exempt as vocabulary, and both judgements are deliberately generous (a name
-  handed around as a string counts as a listener), because accusing a working game is worse than
-  missing a tidy-up.
-
-### Self-documenting sheets - one description per thing, and no second store
-
-- **A function, a variable, a group, a signal and the sheet itself each carry ONE description**, and
-  it is the `##` documentation comment the generated GDScript already writes above the declaration -
-  not a field this plugin invented. Typing it into a dialog and typing it into the file are the same
-  act, the words survive a save byte for byte, and a reader who never installs the plugin sees them.
-  Every reader now asks one place for it, so a list and the file can no longer disagree.
-- **An undescribed thing reads \"no description yet\"**, in one wording, wherever it is listed - a soft
-  nudge at the moment somebody is already looking at the thing, which is the only moment writing the
-  line is cheap. Nothing is blocked and no count goes red.
-- **Descriptions draft themselves from the thing's own rows.** A function that sets hp and prints a
-  line drafts \"Set self.hp = hp - amount; print hit\"; a group drafts from what its rows react to; the
-  sheet head drafts from its groups; a parameter drafts from the first row that uses it. Composed
-  deterministically out of the rows and nothing else - no model, no network, no clock - so the same
-  sheet drafts the same sentence on every machine. A long function names its first steps and counts
-  the rest rather than composing a forty-clause line.
-- **A draft is honest and is never written on its own.** A block of hand-written code composes to
-  \"runs its own code\" rather than a guess, and a draft is computed fresh each time it is shown, so it
-  can never overwrite words a person wrote and there is nowhere for a stale one to hide. The Function
-  dialog offers the draft under the Doc comment field, and pressing the button fills the field for
-  editing rather than saving anything.
-- **Doctor: \"describe the undescribed\".** Every describable thing with no line, each carrying the
-  draft its own rows compose. Notes only, because a project with no descriptions is a working
-  project.
-- **Doctor: the drift note.** A description a person accepted describes the rows as they were. When
-  those rows are replaced, the words go on sounding authoritative while being wrong - so a
-  description whose function no longer names anything it talks about is listed with a fresh draft
-  beside the old words. Rewording is not drift; only losing the subject is.
-
-### The project manual, and the Project View
-
-- **Your game writes its own manual.** One page per sheet - what it is, what it remembers, what it
-  can be asked to do, what it announces, how its rules are grouped - composed the moment it is
-  opened, never stored, so it cannot be the usual documentation that was written once and wrong
-  within a month. The same sheet composes the same bytes every time, so a team can export the pages,
-  commit them, and read what changed about their game in a pull request.
-- **The footer states coverage as a fact**: \"3 of 6 described\", with the names of the ones still to
-  write. No colour, no bar, no grade.
-- **Project View (Tools › Project View…)**: every open sheet on one page - what it runs as, how many
-  events, how much of it is described, how many findings the Doctor had for it, and the milliseconds
-  a stored profiler run measured. Every column is a number that already existed somewhere; the join
-  happens once when the window opens, never per frame and never as a new scan of the project. A sheet
-  nobody profiled shows an EMPTY milliseconds cell rather than a zero, because zero is a claim
-  nobody made.
-- **Find across every sheet, by what was done with the name.** `hp` written is a different fact from
-  `hp` read and from `hp` compared, and the facet says which one you are hunting - plus node names,
-  animations and modes. Every hit names its sheet and the function or group it sits in.
-- **Merge defence.** A sheet opened from a file a merge damaged reports BOTH parents' spellings
-  rather than quietly keeping one, and the sentence it states names neither as the right one.
-
-### Ship It - the audit learns what stops a finished game leaving the building
-
-- **A new Doctor section that is not about whether the game works.** Every other section asks whether
-  a sheet is right. This one asks whether the project can be handed to somebody else, and it reports
-  six things nobody is looking at when the game is finally finished: there is **no export preset**,
-  so there is nothing to build a release from; a script **writes to the console** where an exported
-  release build still runs it; the game **still wears the engine's own name and icon**, so the
-  taskbar shows Godot's logo; a **translation catalog is short** of keys the game asks for, so a
-  player reads the raw key; the **last measured run** does not fit the 16.7 ms a 60 fps frame has;
-  and, as a page rather than a warning, **what a save slot of this game actually holds**.
-- **The console line has a one-click answer, and it is a word that already ships.** \"Only log in
-  debug builds\" swaps the sheet's plain Log rows for **Log (Debug Builds Only)** in one undoable
-  edit, keeping the message and the stream the author typed - the line then compiles to
-  `if OS.is_debug_build(): print(…)` and is skipped entirely in a release build. The receipt says
-  what the line read as before and what it reads as after, before anything is touched.
-- **A short catalog comes back as a FILE.** Forty missing keys is a job, not a sentence, so \"Write
-  the missing keys out\" writes a ready-to-fill translation CSV - one row per key, one column per
-  catalog - into the user directory rather than listing them in a report line. Byte-deterministic,
-  so exporting twice writes the same file and a diff between two exports is the work in between.
-- **The frame budget is only ever claimed where something was measured.** The check reads the run the
-  profiler already brought into memory and never loads one itself, names the costliest file and its
-  share of the frame, and says nothing at all when no run has happened. Studios extend the section
-  the way a pack does: it is registered through the same public Doctor seam.
-
-### The Doctor's front page is now a triage inbox
-
-- **One page, worst first.** The audit grew sections faster than it grew a way to read them, and
-  sixty findings in the order the checks happened to run is a junk drawer. The window now opens on
-  every finding from every section in one tree: errors, then warnings, then notes, each grouped under
-  a heading that counts what it holds, and inside each a fixed order so two audits of an unchanged
-  project read identically.
-- **\"New since you last looked.\"** Every finding carries an identity - what it is about, never where
-  it appeared - and the identities of the last read are kept in the reader's own user directory. A
-  finding that moved up the page because something above it was fixed is not new; a check reworded
-  overnight does not flood the page; the same warning about a different file is new. The mark is a
-  dot in the first column and a count on the status line, and closing the window (or \"Mark all as
-  read\") is what \"I have looked at this\" means.
-- **Every line is still a destination.** The section a finding came from is a column of its own, so a
-  reader can see at a glance that eleven of twelve notes come from one sweep and judge the sweep
-  rather than the notes; double-click still opens the sheet, and a selected finding still shows the
-  one-step fixes it has.
-
-### Multiplayer - the wire's own words
-
-- **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given
-  three to five arguments - the channel count and the two bandwidth caps - stayed a script block on
-  purpose, because no row could say them. Now they open as **Host a game (Advanced)** and
-  **Join a game (Advanced)**: the same three-line run with the dials said out loud, writing back
-  only the arguments the author wrote. ENet's own signatures, so a declaration naming any other
-  peer kind still refuses the lift rather than claiming a line that would not run.
-- **Compression and raw packets read too.** `peer.host.compress(ENetConnection.COMPRESS_*)` opens
-  as **Compress network traffic** with the codec as a dropdown and the receiver riding back out as
-  written; `multiplayer.multiplayer_peer.put_packet(bytes)` opens as **Send raw bytes**, and
-  `get_packet()` is the **Next raw packet** expression. The shipped Host, Join and message rows are
-  untouched - these stand beside them, and the plain rows stay the ones to reach for until a game
-  needs the dials.
-- All 32 new strings speak the eight bundled languages, and the three guides that named these
-  spellings as the honest leftovers now name what is left: the `var error = ...` spelling that
-  checks what a call answered, and a `create_client` that binds its own local port.
-
-### Game state - the game's mode, declared once instead of asked a hundred times
-
-- **Modes are four ordinary declarations, and that is the whole design.** An enum, a variable, a
-  signal and a stack - lines anybody could have typed, and which most hand-written projects already
-  have. Nothing is stored anywhere else. A project that wrote them by hand is already using this and
-  does not know it; a project that never asked for modes has none of it, and no band, no vocabulary
-  and no findings appear anywhere.
-- **The modes band on the sheet head**, reading the enum and the mode the game opens in - \"Playing ·
-  Paused · Cutscene · Menu - starts in Menu\" - with **Edit modes…** beside it. The dialog writes the
-  four declarations as undoable rows, and asks each mode's policy once: does the tree keep
-  processing, is the mouse shown. Those two are Godot's own documented pause pattern; \"does gameplay
-  input reach the game\" is the first of them, and the strip says so rather than offering a third
-  dropdown that writes the same line.
-- **Groups say which mode they run in.** One muted word on the group head, the same shape and the
-  same guard path as \"runs on host\", so a whole group of rows stops asking for itself and the one
-  row that would have forgotten cannot. It rides in the group's own annotation and comes back on
-  open.
-- **Go to mode · In mode · Push mode · Go back.** Going to a mode is ONE plain assignment, because
-  the announcement lives in the mode variable's own setter - which is where Godot puts \"and tell
-  everybody\", and what makes a hand-written `mode = Mode.PLAYING` already correct. Push and Go back
-  are the stack a game grows the first time a menu opens over a pause that sits over playing: the
-  escape-key bug, answered in the vocabulary.
-- **On entering X / On leaving X**, sharing one handler off the one signal, with leaving written
-  first - always, so nobody discovers the order by bug.
-- **What a running game shows.** Live Values streams the mode and the stack as names rather than
-  numbers, and keeps the trail: \"Menu › Playing › Cutscene\", the how-did-we-get-here answer, kept in
-  the editor so the game carries no history nobody reads to play it. \"Why didn't this fire?\" gains
-  the line it could not say before: it runs in Playing, the game was in Cutscene.
-- **Doctor finds the two mode bugs**: a mode rows can reach and never leave (the softlock, found at
-  authoring rather than by a player), and a mode nothing uses at all.
-
-### Performance - what the frame is being spent on, on the row that spends it
-
-- **Milliseconds in the gutter.** The trace already knew how long each row's fires took; it kept the
-  numbers in a panel and lost them when the editor closed. They are now a chip in the left margin
-  beside the event number - one number per row, amber over a millisecond a fire, red over four -
-  and they SURVIVE: the run is written to disk when the game stops and read back once when a sheet
-  opens, so a profiled run you took last night is still on the rows this morning. Nothing is ever
-  measured in the editor, and with the lens off the gutter is exactly what it always was.
-- **Counts and costs are one overlay.** Hit counts and costs share the chip and the tooltip, which
-  carries both plus which run they came from. A row that fired twenty times a frame is called out in
-  amber; a row that never fired keeps its hollow red mark, now in the colour that means \"look here\".
-- **Run with profiler.** One button on the run strip (and in Tools): it arms the trace, clears the
-  old numbers, turns the costs lens on and plays. Play for a while, stop, and the sheet is
-  annotated. Tools also has Clear Measured Costs, which deletes the stored run as well as this
-  session's - \"clear\" has to mean the file too, or the word is a lie.
-- **The optimiser: Doctor › Performance, and Tools › Optimise This Sheet…** The six classic ways a
-  frame gets spent, read out of the sheet rather than out of a run: a node path resolved every frame,
-  a group scanned every frame, a distance measured with a square root, a big literal loop in one
-  tick, a row making copies while another frees them, and a label rewritten every frame. Each is a
-  note under the row it is about (while the costs lens is on) and a line in the Doctor.
-- **Fixes are visible, undoable row edits, with the diff shown first.** Two of them the plugin
-  performs: a constant lookup becomes a variable resolved once at ready time (the row keeps reading
-  the same, the emitted line changes), and a per-frame scan gains a \"re-check every 0.2 s\" condition
-  the author could have added themselves. The confirm shows the line now and the line after, so what
-  is approved is what happens. The safe ones apply together as ONE undo step; the ones that change
-  timing stay one at a time, with the reason they are not in the batch stated beside them.
-- **Receipts.** A fixed row wears what the fix actually did after the next profiled run - \"2.40 ->
-  0.30 ms a fire\" - and says just as plainly when it did not help, with a way to put it back. An
-  optimiser that never shows its receipts teaches superstition.
-
-### Troubleshooting - the two questions a stuck game gets asked
-
-- **\"Why didn't this fire?\" knows about the run and about the rest of the sheet.** The answer now
-  opens with what the run counted for the row itself, because a trigger that never arrived is the
-  whole answer and reading three condition verdicts to reach it wastes your time. Under it, the plain
-  facts from elsewhere in the sheet: the group this row sits in, whether it is switched off, and
-  whether another row switches it off while the game runs. Facts, never a sentence joining them into
-  a cause. Two buttons: jump to the row, and watch the value the blocking condition was about. With
-  no run at all the menu item says so - \"Run the game first, then ask\".
-- **On Something Went Wrong.** The first thing here that works in a BUILD. A sheet carrying this
-  trigger declares a signal, arms a logger with the engine, and hears about every script error the
-  running game hits - once per failing line, with what failed and where. A shipped game can save the
-  report, show the player a \"please send this\", or skip the broken cosmetic and keep playing. The
-  editor's error strip only ever helped while you were the one running it. A sheet without the
-  trigger emits not one line of any of it, and the Doctor asks about it once per project - with
-  \"Never ask again\" beside the question, remembered in the project.
-
-### Math and space - the words, with the call in the echo
-
-- **Keep between, Move toward, Rescale, Wrap around.** The four functions every game leans on and
-  the four names beginners bounce off, as whole statements rather than expressions to assemble by
-  hand. Each template IS the call its echo shows, so somebody's hand-written
-  `hp = clampf(hp, 0, max_hp)` opens as the Keep row and saves back byte for byte, and the row
-  dropped from the picker writes exactly the line they would have typed.
-- **10% is a reading, not a second value.** `lerp` takes the fraction and the row emits the
-  fraction; the percentage is how the canvas says 0.1 out loud, through the same lens family that
-  reads a darkness colour as \"81% dark\". The strip teaches the one thing the shape hides: a share of
-  the gap each tick eases in and never quite arrives, and the frame-rate-independent form of the
-  same idea is the row beside it.
-- **THE UNIT RIDES THE VALUE.** A plain number in an angle field is degrees - there is no unit
-  picker, because the unit is already in what was typed. Radians are not locked out: write `PI/4`,
-  or say it out loud (`1.2 rad`), and the field keeps what you meant with exactly the one conversion
-  that makes it true. The row always SHOWS which unit it ended up meaning, so the sentence and the
-  code can never quietly disagree, and a per-project setting flips what a bare number means for
-  teams that think in radians (what is written after that, never what is already stored).
-- **Every move says whose space it means.** \"Move forward 240/s · its own facing\" is
-  `position += transform.x * …`; \"Move right 20/s · the world's way\" is `global_position += …`.
-  Both spellings lift. The 3D leg of the same rule already shipped, whose dropdown is the basis
-  expression itself.
-- **The three turns.** Turn around a point at a rate (the orbit everybody hand-rolls with sine and
-  cosine), Face a target at a top speed (which never overshoots), and Swing by an amount over a time
-  about the node's own origin - which is where the hinge is, and the row says so.
-- **The transform facts a scene can be asked about, said where they bite.** The head names the
-  scaled thing this node sits inside and does the reader's own arithmetic (\"its own 10 is the
-  world's 20\"), the body mirrored by a negative scale whose shapes and raycasts flip with the art
-  (with the sprite's own flip named as the fix), and the node scaled unevenly that turns and will
-  therefore shear. All three are read from the scene at open, stored nowhere, and gone the moment
-  their cause is.
-
-### Animations - the name is picked, never typed
-
-- **An animation name comes off the scene.** The attached scene lists what really exists - an
-  AnimationPlayer's clips with their lengths and loop modes, an AnimatedSprite's flipbooks with
-  their real frame counts and the named markers on a keyframed timeline - and every animation field
-  is completed from that list, grouped by the node that declares each name and saying how long it
-  runs or that it loops. A name the scene has never heard of goes amber with the nearest real one
-  offered as the fix, because `play(\"atack\")` plays nothing and reports nothing. A name built while
-  the game runs is still typeable, so the shipped free-string rows keep working.
-- **Play X then Y.** One row plays an animation with the next one queued behind it, so the waiting
-  is the engine's own rather than a timer somebody guessed the length of. An animation that LOOPS
-  never finishes, so a queue behind one is never reached - and that is now said while the row is
-  being written, and on the head, rather than found at run time.
-- **The `animations` band.** One line per animation node, naming the clips THIS sheet plays with
-  their lengths and counting the rest (\"uses idle loop · swing 0.8 s · 127 more in Anim\"). The full
-  list stays one click away; a character with a hundred and thirty-one clips is still a one-line
-  fact.
-- **The frame field is the animation.** A flipbook's frame number now has the strip of its own
-  frames under it - one cell per frame, numbered from 0 the way Godot numbers them, the chosen one
-  lit, hovering a cell shows it large and the arrow keys step one frame. A long strip scrolls. The
-  plain number box never goes away. A keyframed clip has no frames at all, so it never gets a strip:
-  its moments are the named markers on its timeline, and the new \"has reached\" row asks the
-  animation where its marker is rather than storing a number - retiming it in the Animation panel
-  moves the moment and the row does not change.
-- **`play(\"attack\")` and `queue(&\"idle\")` open as the rows they are.** Godot takes a plain string
-  or a StringName in both calls and everybody picks by habit; the shipped templates wrote one form
-  of each, so half the animation code in the world stayed a wall of text. Both spellings now lift,
-  and the file gets its own bytes back.
-- New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
-  sheet order, with the row that holds it.
-
-### Rendering - drawing order, the long frame, and quality as a folder
-
-- **Draw in front of X.** Drawing order set RELATIVE to another node rather than as a number two
-  people have to keep in step: the row writes `crate.z_index = player.z_index + 1`, so moving the
-  pair around keeps their order. A project that already had that line opens on the row, and saves
-  back byte for byte.
-- **Show only to a named visibility layer.** Which cameras may draw a thing is a bitmask nobody
-  should be computing, so the field is the named-mask picker the collision layers already use,
-  pointed at the other list Godot names in Project Settings (Layer Names > 2D Render). Tick
-  \"minimap\" and the minimap camera draws the marker and nothing else does. A hand-written
-  `visibility_layer = 2` reads back in the project's own words.
-- **Is on screen.** The engine answers this with a node rather than a property, so the row works
-  through a `VisibleOnScreenNotifier2D` - the node's own if it has one, and otherwise a plain child
-  added the first time the row is asked, visible in the scene and yours to move, resize and keep.
-- **On the frame running long / On the frame recovered.** The frame-budget conditions that shipped
-  answer \"is it slow right now\", which is true sixty times a second and gives a row nowhere to put
-  \"and do something about it\". These two speak ONCE: the first on the frame a run of long frames
-  reaches the length you named, the second once the calm has lasted - and never at all unless
-  something was long first, so a game that started well hears nothing. Two thresholds with a gap
-  between them is what stops a game flicking its own quality up and down on the boundary forever.
-- **Apply quality Medium, and the preset is a file.** A quality word is not a setting of its own: it
-  is a set of values over settings that already exist. Each word IS a `.tres` in
-  `res://settings/quality/`, the folder is the list, and adding a preset is adding a file - nothing
-  registers it. Low, Medium and High are written on request, and New preset copies the one you had
-  picked and opens it in the Inspector. Apply Quality writes the values as ordinary setting changes,
-  so the handlers you already wrote do the work; Apply Quality One Step walks the presets' own Rank
-  and stops at the ends.
-- **\"Custom\" is worked out, never stored.** The quality label compares the values in force against
-  each preset file, so nudging one graphics setting flips the label on its own and no save file
-  carries a word that could go stale. Saves hold the values, which is why a custom setup survives an
-  update and deleting a preset file cannot break anyone's game - their values still load, and the
-  label simply reads Custom.
-- **A graphics option declared later belongs in every preset.** Every key of a preset's values shows
-  in the Inspector as a field of its own, named and typed by what is stored under it, so declaring
-  `motion_blur` and filling it in is all it takes for every preset file to have a motion blur field.
-  New: `EventSheetQualityPresets`, and the Quality Preset companion resource.
-
-### Options menus - one declaration, one control, and the conflict answered
-
-- **Bind to setting: one row, both directions.** A slider that writes `music_volume` and a
-  `music_volume` that moves the slider are one fact seen twice, so they are one row. The control
-  shows the value in force the moment it is bound, and anything else that changes the setting - a
-  quality preset, Reset To Defaults, a second menu still open - moves the control back, because the
-  binding hangs off the announcement rather than off the menu. A dropdown with no items of its own
-  takes the setting's declared choices.
-- **The pair have to fit, and the reason is a sentence.** A checkbox bound to a percent says
-  `music_volume is a percent and wants a slider - this is a checkbox.` in the output log as it binds,
-  and Binding Mismatch hands the same words to a row. A control the pack does not recognise is never
-  complained about - a custom one may show anything, and a wrong guess costs more than no guess.
-- **The menu grows itself.** A setting declared with a page has a row on it: Menu Rows From
-  Declarations fills a container with one labelled, bound control per declaration, so adding an
-  option later is ONE Declare row with no scene edit and no new glue. The rows are plain Godot
-  controls in a plain container, and a control you made yourself and NAMED after a setting is used
-  instead of a generated one - no lock-in in either direction. Declare is now the single entry point
-  for an option of any kind: difficulty, motion blur, invert Y are one Declare row plus one On
-  Setting Changed reaction each.
-- **The focus neighbours are wired as the page is built.** A pad's up and down and the Tab key walk
-  the page in the order it is drawn, from the first frame, and Unreachable Controls names anything a
-  keyboard cannot get to. An options menu that needs a mouse is a bug found at certification rather
-  than in the studio.
-- **Apply with a way back.** Apply a screen mode the monitor cannot show and the menu you need in
-  order to undo it is the thing you cannot see. Apply With A Way Back remembers every value and
-  starts a countdown; Keep These Settings answers it, and silence puts everything back through
-  ordinary Set Setting changes (so the menu follows) and fires On Settings Reverted. Seconds Left To
-  Keep is the countdown label.
-- **Rebinding, with the conflict answered at bind time.** Controls Page From The Input Map builds one
-  row per action your project declares - keyboard and pad in their own columns, a reset on each row,
-  actions added later appearing on their own. A key something else already answers to fires On
-  Binding Conflict instead of quietly stacking two actions on one key, and the three answers are
-  three rows: Swap The Binding (the two trade, nobody ends up without a key), Take The Binding Anyway
-  (honest rather than tidy - the other action really has lost its key and turns up in Unbound
-  Actions), and Pick Another Key. Bindings save into the same `user://settings.cfg` as everything
-  else, and a reset restores what the project ships with.
-- **Doctor > Options** asks the two questions nobody thinks to: an action with no binding on any
-  device, and a quality preset that says nothing about a setting its neighbours answer for - which is
-  what makes Low after High a different Low from Low after Medium. Both read small files (Project
-  Settings and the quality folder), so a project with neither pays almost nothing.
-
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost
@@ -479,6 +78,409 @@ What changed in the build you have installed (v0.17.0), in the words the release
   means: opened read-only as code, never lifted, never offered a behaviour, never counted against the
   adoption number. A comment on purpose, so the decision survives the plugin being uninstalled and
   reads as what it is to whoever opens the file next, in any editor.
+
+### Declarations - one place to name things, and the Doctor hears the silence
+
+- **Add ▸ Declare.** Every way to give something a name, gathered as one submenu: Variable,
+  Constant, Node reference, Resource, Enum, Signal, Collection. Each entry opens the same dialog
+  its scattered sibling opens - the Constant and Node reference entries arrive with the right
+  boxes already ticked, Collection opens the variable dialog on the List type whose Items editor
+  is the grid, and Enum and Signal drop a fresh row straight into its editor, the same
+  insert-then-name beat Add Group uses. Nothing moved and nothing forked: the existing entries,
+  keys and dialogs all still work, this is the place to FIND them.
+- **The Doctor names two kinds of quiet.** An enum value nothing in the project ever writes
+  (\"Enum value Mode.HURT is declared but nothing ever names it\") and a signal announced but never
+  heard - no scene connection, no connect call, no await - each an advisory note on the generated
+  script that declares it. Only compiled sheet output is judged (in hand-written code an unused
+  name can be an offer to code not written yet), the usage corpus is every script in the project,
+  published packs stay exempt as vocabulary, and both judgements are deliberately generous (a name
+  handed around as a string counts as a listener), because accusing a working game is worse than
+  missing a tidy-up.
+
+### Self-documenting sheets - one description per thing, and no second store
+
+- **A function, a variable, a group, a signal and the sheet itself each carry ONE description**, and
+  it is the `##` documentation comment the generated GDScript already writes above the declaration -
+  not a field this plugin invented. Typing it into a dialog and typing it into the file are the same
+  act, the words survive a save byte for byte, and a reader who never installs the plugin sees them.
+  Every reader now asks one place for it, so a list and the file can no longer disagree.
+- **An undescribed thing reads \"no description yet\"**, in one wording, wherever it is listed - a soft
+  nudge at the moment somebody is already looking at the thing, which is the only moment writing the
+  line is cheap. Nothing is blocked and no count goes red.
+- **Descriptions draft themselves from the thing's own rows.** A function that sets hp and prints a
+  line drafts \"Set self.hp = hp - amount; print hit\"; a group drafts from what its rows react to; the
+  sheet head drafts from its groups; a parameter drafts from the first row that uses it. Composed
+  deterministically out of the rows and nothing else - no model, no network, no clock - so the same
+  sheet drafts the same sentence on every machine. A long function names its first steps and counts
+  the rest rather than composing a forty-clause line.
+- **A draft is honest and is never written on its own.** A block of hand-written code composes to
+  \"runs its own code\" rather than a guess, and a draft is computed fresh each time it is shown, so it
+  can never overwrite words a person wrote and there is nowhere for a stale one to hide. The Function
+  dialog offers the draft under the Doc comment field, and pressing the button fills the field for
+  editing rather than saving anything.
+- **Doctor: \"describe the undescribed\".** Every describable thing with no line, each carrying the
+  draft its own rows compose. Notes only, because a project with no descriptions is a working
+  project.
+- **Doctor: the drift note.** A description a person accepted describes the rows as they were. When
+  those rows are replaced, the words go on sounding authoritative while being wrong - so a
+  description whose function no longer names anything it talks about is listed with a fresh draft
+  beside the old words. Rewording is not drift; only losing the subject is.
+
+### The project manual, and the Project View
+
+- **Your game writes its own manual.** One page per sheet - what it is, what it remembers, what it
+  can be asked to do, what it announces, how its rules are grouped - composed the moment it is
+  opened, never stored, so it cannot be the usual documentation that was written once and wrong
+  within a month. The same sheet composes the same bytes every time, so a team can export the pages,
+  commit them, and read what changed about their game in a pull request.
+- **The footer states coverage as a fact**: \"3 of 6 described\", with the names of the ones still to
+  write. No colour, no bar, no grade.
+- **Project View (Tools › Project View…)**: every open sheet on one page - what it runs as, how many
+  events, how much of it is described, how many findings the Doctor had for it, and the milliseconds
+  a stored profiler run measured. Every column is a number that already existed somewhere; the join
+  happens once when the window opens, never per frame and never as a new scan of the project. A sheet
+  nobody profiled shows an EMPTY milliseconds cell rather than a zero, because zero is a claim
+  nobody made.
+- **Find across every sheet, by what was done with the name.** `hp` written is a different fact from
+  `hp` read and from `hp` compared, and the facet says which one you are hunting - plus node names,
+  animations and modes. Every hit names its sheet and the function or group it sits in.
+- **Merge defence.** A sheet opened from a file a merge damaged reports BOTH parents' spellings
+  rather than quietly keeping one, and the sentence it states names neither as the right one.
+
+### Animations - the name is picked, never typed
+
+- **An animation name comes off the scene.** The attached scene lists what really exists - an
+  AnimationPlayer's clips with their lengths and loop modes, an AnimatedSprite's flipbooks with
+  their real frame counts and the named markers on a keyframed timeline - and every animation field
+  is completed from that list, grouped by the node that declares each name and saying how long it
+  runs or that it loops. A name the scene has never heard of goes amber with the nearest real one
+  offered as the fix, because `play(\"atack\")` plays nothing and reports nothing. A name built while
+  the game runs is still typeable, so the shipped free-string rows keep working.
+- **Play X then Y.** One row plays an animation with the next one queued behind it, so the waiting
+  is the engine's own rather than a timer somebody guessed the length of. An animation that LOOPS
+  never finishes, so a queue behind one is never reached - and that is now said while the row is
+  being written, and on the head, rather than found at run time.
+- **The `animations` band.** One line per animation node, naming the clips THIS sheet plays with
+  their lengths and counting the rest (\"uses idle loop · swing 0.8 s · 127 more in Anim\"). The full
+  list stays one click away; a character with a hundred and thirty-one clips is still a one-line
+  fact.
+- **The frame field is the animation.** A flipbook's frame number now has the strip of its own
+  frames under it - one cell per frame, numbered from 0 the way Godot numbers them, the chosen one
+  lit, hovering a cell shows it large and the arrow keys step one frame. A long strip scrolls. The
+  plain number box never goes away. A keyframed clip has no frames at all, so it never gets a strip:
+  its moments are the named markers on its timeline, and the new \"has reached\" row asks the
+  animation where its marker is rather than storing a number - retiming it in the Animation panel
+  moves the moment and the row does not change.
+- **`play(\"attack\")` and `queue(&\"idle\")` open as the rows they are.** Godot takes a plain string
+  or a StringName in both calls and everybody picks by habit; the shipped templates wrote one form
+  of each, so half the animation code in the world stayed a wall of text. Both spellings now lift,
+  and the file gets its own bytes back.
+- New: `EventSheets.values_for_hint` - every value a sheet's rows hold in one kind of field, in
+  sheet order, with the row that holds it.
+
+### Math and space - the words, with the call in the echo
+
+- **Keep between, Move toward, Rescale, Wrap around.** The four functions every game leans on and
+  the four names beginners bounce off, as whole statements rather than expressions to assemble by
+  hand. Each template IS the call its echo shows, so somebody's hand-written
+  `hp = clampf(hp, 0, max_hp)` opens as the Keep row and saves back byte for byte, and the row
+  dropped from the picker writes exactly the line they would have typed.
+- **10% is a reading, not a second value.** `lerp` takes the fraction and the row emits the
+  fraction; the percentage is how the canvas says 0.1 out loud, through the same lens family that
+  reads a darkness colour as \"81% dark\". The strip teaches the one thing the shape hides: a share of
+  the gap each tick eases in and never quite arrives, and the frame-rate-independent form of the
+  same idea is the row beside it.
+- **THE UNIT RIDES THE VALUE.** A plain number in an angle field is degrees - there is no unit
+  picker, because the unit is already in what was typed. Radians are not locked out: write `PI/4`,
+  or say it out loud (`1.2 rad`), and the field keeps what you meant with exactly the one conversion
+  that makes it true. The row always SHOWS which unit it ended up meaning, so the sentence and the
+  code can never quietly disagree, and a per-project setting flips what a bare number means for
+  teams that think in radians (what is written after that, never what is already stored).
+- **Every move says whose space it means.** \"Move forward 240/s · its own facing\" is
+  `position += transform.x * …`; \"Move right 20/s · the world's way\" is `global_position += …`.
+  Both spellings lift. The 3D leg of the same rule already shipped, whose dropdown is the basis
+  expression itself.
+- **The three turns.** Turn around a point at a rate (the orbit everybody hand-rolls with sine and
+  cosine), Face a target at a top speed (which never overshoots), and Swing by an amount over a time
+  about the node's own origin - which is where the hinge is, and the row says so.
+- **The transform facts a scene can be asked about, said where they bite.** The head names the
+  scaled thing this node sits inside and does the reader's own arithmetic (\"its own 10 is the
+  world's 20\"), the body mirrored by a negative scale whose shapes and raycasts flip with the art
+  (with the sprite's own flip named as the fix), and the node scaled unevenly that turns and will
+  therefore shear. All three are read from the scene at open, stored nowhere, and gone the moment
+  their cause is.
+
+### Rendering - drawing order, the long frame, and quality as a folder
+
+- **Draw in front of X.** Drawing order set RELATIVE to another node rather than as a number two
+  people have to keep in step: the row writes `crate.z_index = player.z_index + 1`, so moving the
+  pair around keeps their order. A project that already had that line opens on the row, and saves
+  back byte for byte.
+- **Show only to a named visibility layer.** Which cameras may draw a thing is a bitmask nobody
+  should be computing, so the field is the named-mask picker the collision layers already use,
+  pointed at the other list Godot names in Project Settings (Layer Names > 2D Render). Tick
+  \"minimap\" and the minimap camera draws the marker and nothing else does. A hand-written
+  `visibility_layer = 2` reads back in the project's own words.
+- **Is on screen.** The engine answers this with a node rather than a property, so the row works
+  through a `VisibleOnScreenNotifier2D` - the node's own if it has one, and otherwise a plain child
+  added the first time the row is asked, visible in the scene and yours to move, resize and keep.
+- **On the frame running long / On the frame recovered.** The frame-budget conditions that shipped
+  answer \"is it slow right now\", which is true sixty times a second and gives a row nowhere to put
+  \"and do something about it\". These two speak ONCE: the first on the frame a run of long frames
+  reaches the length you named, the second once the calm has lasted - and never at all unless
+  something was long first, so a game that started well hears nothing. Two thresholds with a gap
+  between them is what stops a game flicking its own quality up and down on the boundary forever.
+- **Apply quality Medium, and the preset is a file.** A quality word is not a setting of its own: it
+  is a set of values over settings that already exist. Each word IS a `.tres` in
+  `res://settings/quality/`, the folder is the list, and adding a preset is adding a file - nothing
+  registers it. Low, Medium and High are written on request, and New preset copies the one you had
+  picked and opens it in the Inspector. Apply Quality writes the values as ordinary setting changes,
+  so the handlers you already wrote do the work; Apply Quality One Step walks the presets' own Rank
+  and stops at the ends.
+- **\"Custom\" is worked out, never stored.** The quality label compares the values in force against
+  each preset file, so nudging one graphics setting flips the label on its own and no save file
+  carries a word that could go stale. Saves hold the values, which is why a custom setup survives an
+  update and deleting a preset file cannot break anyone's game - their values still load, and the
+  label simply reads Custom.
+- **A graphics option declared later belongs in every preset.** Every key of a preset's values shows
+  in the Inspector as a field of its own, named and typed by what is stored under it, so declaring
+  `motion_blur` and filling it in is all it takes for every preset file to have a motion blur field.
+  New: `EventSheetQualityPresets`, and the Quality Preset companion resource.
+
+### Game state - the game's mode, declared once instead of asked a hundred times
+
+- **Modes are four ordinary declarations, and that is the whole design.** An enum, a variable, a
+  signal and a stack - lines anybody could have typed, and which most hand-written projects already
+  have. Nothing is stored anywhere else. A project that wrote them by hand is already using this and
+  does not know it; a project that never asked for modes has none of it, and no band, no vocabulary
+  and no findings appear anywhere.
+- **The modes band on the sheet head**, reading the enum and the mode the game opens in - \"Playing ·
+  Paused · Cutscene · Menu - starts in Menu\" - with **Edit modes…** beside it. The dialog writes the
+  four declarations as undoable rows, and asks each mode's policy once: does the tree keep
+  processing, is the mouse shown. Those two are Godot's own documented pause pattern; \"does gameplay
+  input reach the game\" is the first of them, and the strip says so rather than offering a third
+  dropdown that writes the same line.
+- **Groups say which mode they run in.** One muted word on the group head, the same shape and the
+  same guard path as \"runs on host\", so a whole group of rows stops asking for itself and the one
+  row that would have forgotten cannot. It rides in the group's own annotation and comes back on
+  open.
+- **Go to mode · In mode · Push mode · Go back.** Going to a mode is ONE plain assignment, because
+  the announcement lives in the mode variable's own setter - which is where Godot puts \"and tell
+  everybody\", and what makes a hand-written `mode = Mode.PLAYING` already correct. Push and Go back
+  are the stack a game grows the first time a menu opens over a pause that sits over playing: the
+  escape-key bug, answered in the vocabulary.
+- **On entering X / On leaving X**, sharing one handler off the one signal, with leaving written
+  first - always, so nobody discovers the order by bug.
+- **What a running game shows.** Live Values streams the mode and the stack as names rather than
+  numbers, and keeps the trail: \"Menu › Playing › Cutscene\", the how-did-we-get-here answer, kept in
+  the editor so the game carries no history nobody reads to play it. \"Why didn't this fire?\" gains
+  the line it could not say before: it runs in Playing, the game was in Cutscene.
+- **Doctor finds the two mode bugs**: a mode rows can reach and never leave (the softlock, found at
+  authoring rather than by a player), and a mode nothing uses at all.
+
+### Options menus - one declaration, one control, and the conflict answered
+
+- **Bind to setting: one row, both directions.** A slider that writes `music_volume` and a
+  `music_volume` that moves the slider are one fact seen twice, so they are one row. The control
+  shows the value in force the moment it is bound, and anything else that changes the setting - a
+  quality preset, Reset To Defaults, a second menu still open - moves the control back, because the
+  binding hangs off the announcement rather than off the menu. A dropdown with no items of its own
+  takes the setting's declared choices.
+- **The pair have to fit, and the reason is a sentence.** A checkbox bound to a percent says
+  `music_volume is a percent and wants a slider - this is a checkbox.` in the output log as it binds,
+  and Binding Mismatch hands the same words to a row. A control the pack does not recognise is never
+  complained about - a custom one may show anything, and a wrong guess costs more than no guess.
+- **The menu grows itself.** A setting declared with a page has a row on it: Menu Rows From
+  Declarations fills a container with one labelled, bound control per declaration, so adding an
+  option later is ONE Declare row with no scene edit and no new glue. The rows are plain Godot
+  controls in a plain container, and a control you made yourself and NAMED after a setting is used
+  instead of a generated one - no lock-in in either direction. Declare is now the single entry point
+  for an option of any kind: difficulty, motion blur, invert Y are one Declare row plus one On
+  Setting Changed reaction each.
+- **The focus neighbours are wired as the page is built.** A pad's up and down and the Tab key walk
+  the page in the order it is drawn, from the first frame, and Unreachable Controls names anything a
+  keyboard cannot get to. An options menu that needs a mouse is a bug found at certification rather
+  than in the studio.
+- **Apply with a way back.** Apply a screen mode the monitor cannot show and the menu you need in
+  order to undo it is the thing you cannot see. Apply With A Way Back remembers every value and
+  starts a countdown; Keep These Settings answers it, and silence puts everything back through
+  ordinary Set Setting changes (so the menu follows) and fires On Settings Reverted. Seconds Left To
+  Keep is the countdown label.
+- **Rebinding, with the conflict answered at bind time.** Controls Page From The Input Map builds one
+  row per action your project declares - keyboard and pad in their own columns, a reset on each row,
+  actions added later appearing on their own. A key something else already answers to fires On
+  Binding Conflict instead of quietly stacking two actions on one key, and the three answers are
+  three rows: Swap The Binding (the two trade, nobody ends up without a key), Take The Binding Anyway
+  (honest rather than tidy - the other action really has lost its key and turns up in Unbound
+  Actions), and Pick Another Key. Bindings save into the same `user://settings.cfg` as everything
+  else, and a reset restores what the project ships with.
+- **Doctor > Options** asks the two questions nobody thinks to: an action with no binding on any
+  device, and a quality preset that says nothing about a setting its neighbours answer for - which is
+  what makes Low after High a different Low from Low after Medium. Both read small files (Project
+  Settings and the quality folder), so a project with neither pays almost nothing.
+
+### Multiplayer - the wire's own words
+
+- **The channels-and-bandwidth signatures open as rows.** `create_server` and `create_client` given
+  three to five arguments - the channel count and the two bandwidth caps - stayed a script block on
+  purpose, because no row could say them. Now they open as **Host a game (Advanced)** and
+  **Join a game (Advanced)**: the same three-line run with the dials said out loud, writing back
+  only the arguments the author wrote. ENet's own signatures, so a declaration naming any other
+  peer kind still refuses the lift rather than claiming a line that would not run.
+- **Compression and raw packets read too.** `peer.host.compress(ENetConnection.COMPRESS_*)` opens
+  as **Compress network traffic** with the codec as a dropdown and the receiver riding back out as
+  written; `multiplayer.multiplayer_peer.put_packet(bytes)` opens as **Send raw bytes**, and
+  `get_packet()` is the **Next raw packet** expression. The shipped Host, Join and message rows are
+  untouched - these stand beside them, and the plain rows stay the ones to reach for until a game
+  needs the dials.
+- All 32 new strings speak the eight bundled languages, and the three guides that named these
+  spellings as the honest leftovers now name what is left: the `var error = ...` spelling that
+  checks what a call answered, and a `create_client` that binds its own local port.
+
+### No walls - the picker and the errors never dead-end
+
+- **A fixable reason greys an entry, never hides it.** The behavior-host verbs off a plain sheet,
+  the Editor object off a game sheet, and a verb whose node the open scene lacks all stay listed -
+  greyed, with the one-line reason on the entry and the Add button wearing the fix (\"Add an
+  AnimationPlayer to the scene\", \"Switch Tool on for this sheet\", \"Make this a behavior sheet…\",
+  \"Attach this sheet to a scene…\"). Pressing the fix performs it - the node lands through the
+  editor's own undo, Tool flips through the sheet's - and the row's dialog opens right after. A
+  node trigger on a sheet no scene carries says that too, since a trigger without a source can
+  never fire. One table holds every gate, each reason and fix speaks the eight bundled languages,
+  and the suite walks every picker source and fails any entry gated without both.
+- **The picker never renders an empty list.** A query that matches nothing gets the quick-add
+  ranker's relaxed reading first - the nearest entries, the ones one bad word away - and then
+  **Recipes**: whole worked examples enumerated from the guides' own self-drawing figures, so the
+  docs and the picker share one source, inserted as real rows through the Manual's one-undo
+  snippet path.
+- **Creating a name is an offer, never a silence.** Declaring an unknown name from a field opens
+  the declaration dialog pre-filled with the type read from how the expression uses it (compared
+  to 0.5 is a float, joined to text is a String), the did-you-mean names still come first so a
+  typo never mints a twin, and a control named jump is added to the Input Map already bound to
+  Space - said in the answer, changed in Project Settings like any binding.
+- **The tools find you, once, quietly.** Ask-why offers itself at the first never-fired trigger
+  the hit counts reveal, Row Timings at the first stuttering window, and the \"nothing happened at
+  all\" run says its own cause - the game streamed while no scene carries this sheet's script. One
+  quiet status line per offer, once per session, all words in the eight languages, with a
+  persisted global switch (Toggle Rescue Tips in the command palette).
+- **The Doctor hears pasted error text.** A note row still speaking Godot's own words (\"Invalid
+  call. Nonexistent function…\") gets an advisory finding so it can be re-said as the row would
+  say it - or fixed and deleted.
+
+### Troubleshooting - the two questions a stuck game gets asked
+
+- **\"Why didn't this fire?\" knows about the run and about the rest of the sheet.** The answer now
+  opens with what the run counted for the row itself, because a trigger that never arrived is the
+  whole answer and reading three condition verdicts to reach it wastes your time. Under it, the plain
+  facts from elsewhere in the sheet: the group this row sits in, whether it is switched off, and
+  whether another row switches it off while the game runs. Facts, never a sentence joining them into
+  a cause. Two buttons: jump to the row, and watch the value the blocking condition was about. With
+  no run at all the menu item says so - \"Run the game first, then ask\".
+- **On Something Went Wrong.** The first thing here that works in a BUILD. A sheet carrying this
+  trigger declares a signal, arms a logger with the engine, and hears about every script error the
+  running game hits - once per failing line, with what failed and where. A shipped game can save the
+  report, show the player a \"please send this\", or skip the broken cosmetic and keep playing. The
+  editor's error strip only ever helped while you were the one running it. A sheet without the
+  trigger emits not one line of any of it, and the Doctor asks about it once per project - with
+  \"Never ask again\" beside the question, remembered in the project.
+
+### Performance - what the frame is being spent on, on the row that spends it
+
+- **Milliseconds in the gutter.** The trace already knew how long each row's fires took; it kept the
+  numbers in a panel and lost them when the editor closed. They are now a chip in the left margin
+  beside the event number - one number per row, amber over a millisecond a fire, red over four -
+  and they SURVIVE: the run is written to disk when the game stops and read back once when a sheet
+  opens, so a profiled run you took last night is still on the rows this morning. Nothing is ever
+  measured in the editor, and with the lens off the gutter is exactly what it always was.
+- **Counts and costs are one overlay.** Hit counts and costs share the chip and the tooltip, which
+  carries both plus which run they came from. A row that fired twenty times a frame is called out in
+  amber; a row that never fired keeps its hollow red mark, now in the colour that means \"look here\".
+- **Run with profiler.** One button on the run strip (and in Tools): it arms the trace, clears the
+  old numbers, turns the costs lens on and plays. Play for a while, stop, and the sheet is
+  annotated. Tools also has Clear Measured Costs, which deletes the stored run as well as this
+  session's - \"clear\" has to mean the file too, or the word is a lie.
+- **The optimiser: Doctor › Performance, and Tools › Optimise This Sheet…** The six classic ways a
+  frame gets spent, read out of the sheet rather than out of a run: a node path resolved every frame,
+  a group scanned every frame, a distance measured with a square root, a big literal loop in one
+  tick, a row making copies while another frees them, and a label rewritten every frame. Each is a
+  note under the row it is about (while the costs lens is on) and a line in the Doctor.
+- **Fixes are visible, undoable row edits, with the diff shown first.** Two of them the plugin
+  performs: a constant lookup becomes a variable resolved once at ready time (the row keeps reading
+  the same, the emitted line changes), and a per-frame scan gains a \"re-check every 0.2 s\" condition
+  the author could have added themselves. The confirm shows the line now and the line after, so what
+  is approved is what happens. The safe ones apply together as ONE undo step; the ones that change
+  timing stay one at a time, with the reason they are not in the batch stated beside them.
+- **Receipts.** A fixed row wears what the fix actually did after the next profiled run - \"2.40 ->
+  0.30 ms a fire\" - and says just as plainly when it did not help, with a way to put it back. An
+  optimiser that never shows its receipts teaches superstition.
+
+### Ship It - the audit learns what stops a finished game leaving the building
+
+- **A new Doctor section that is not about whether the game works.** Every other section asks whether
+  a sheet is right. This one asks whether the project can be handed to somebody else, and it reports
+  six things nobody is looking at when the game is finally finished: there is **no export preset**,
+  so there is nothing to build a release from; a script **writes to the console** where an exported
+  release build still runs it; the game **still wears the engine's own name and icon**, so the
+  taskbar shows Godot's logo; a **translation catalog is short** of keys the game asks for, so a
+  player reads the raw key; the **last measured run** does not fit the 16.7 ms a 60 fps frame has;
+  and, as a page rather than a warning, **what a save slot of this game actually holds**.
+- **The console line has a one-click answer, and it is a word that already ships.** \"Only log in
+  debug builds\" swaps the sheet's plain Log rows for **Log (Debug Builds Only)** in one undoable
+  edit, keeping the message and the stream the author typed - the line then compiles to
+  `if OS.is_debug_build(): print(…)` and is skipped entirely in a release build. The receipt says
+  what the line read as before and what it reads as after, before anything is touched.
+- **A short catalog comes back as a FILE.** Forty missing keys is a job, not a sentence, so \"Write
+  the missing keys out\" writes a ready-to-fill translation CSV - one row per key, one column per
+  catalog - into the user directory rather than listing them in a report line. Byte-deterministic,
+  so exporting twice writes the same file and a diff between two exports is the work in between.
+- **The frame budget is only ever claimed where something was measured.** The check reads the run the
+  profiler already brought into memory and never loads one itself, names the costliest file and its
+  share of the frame, and says nothing at all when no run has happened. Studios extend the section
+  the way a pack does: it is registered through the same public Doctor seam.
+
+### The Doctor's front page is now a triage inbox
+
+- **One page, worst first.** The audit grew sections faster than it grew a way to read them, and
+  sixty findings in the order the checks happened to run is a junk drawer. The window now opens on
+  every finding from every section in one tree: errors, then warnings, then notes, each grouped under
+  a heading that counts what it holds, and inside each a fixed order so two audits of an unchanged
+  project read identically.
+- **\"New since you last looked.\"** Every finding carries an identity - what it is about, never where
+  it appeared - and the identities of the last read are kept in the reader's own user directory. A
+  finding that moved up the page because something above it was fixed is not new; a check reworded
+  overnight does not flood the page; the same warning about a different file is new. The mark is a
+  dot in the first column and a count on the status line, and closing the window (or \"Mark all as
+  read\") is what \"I have looked at this\" means.
+- **Every line is still a destination.** The section a finding came from is a column of its own, so a
+  reader can see at a glance that eleven of twelve notes come from one sweep and judge the sweep
+  rather than the notes; double-click still opens the sheet, and a selected finding still shows the
+  one-step fixes it has.
+
+### Documentation - every family's worked examples draw themselves
+
+- **The new words got their worked examples, as rows rather than as prose.** The math and movement
+  words, the two drawing-order lines, and the animation rows that pick their names off the scene each
+  gained numbered use cases written in the COMPILED shape, so the reader sees the example drawn as
+  live, insertable rows in their own theme rather than as a code card. Every one of them is a file
+  somebody could have written by hand, which is the same claim the round-trip gate makes about them
+  from the other side: the fence in the guide and the fixture in the suite are the same bytes.
+- **Three families that had shipped without a page have one.** Add ▸ Declare and the two kinds of
+  quiet the Doctor hears are in the variables guide, beside the dialog they open. Ship It and the
+  Doctor's triage front page are in the recipes guide, under the debugging chapter that already held
+  the profiler and the error trigger. The animation guide says the name comes off the scene, and that
+  a keyframed clip has markers where a flipbook has frames.
+- **The reading list and the concept map caught up.** A reader arriving from another event-sheet
+  editor now finds Z elevation, layer visibility, graphics quality, layout state, the settings screen
+  and the four value-shaping words in the concept map, and the existing-code guide's reading list
+  names the animation spellings, the maths-and-moves lines and the two drawing-order lines - each
+  saying what opens as what, and what rides back out untouched.
+- **A table that had stopped being a table.** The three networking readings this pass added sat under
+  a blank line inside the multiplayer reading table, which ends a markdown table: they had been
+  rendering as loose text since they landed.
+- **The published figures were re-measured off this tree** rather than carried forward: 1,671 native
+  ACEs and 67 triggers over 75 vocabulary modules, 112 packs (93 with a guide of their own, 19
+  companion data assets documented inside a partner's guide), and the test-file count. The pack count
+  was stale in the migration guide in both of its halves, and in three test comments.
 
 ### Fixed - what this pass's own review found
 
@@ -558,6 +560,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **Two budgets that could not fail, and three figures that flattered the pass.** The Project Doctor's audit budget was set above the whole
   band the code it guards used to measure at, so losing the entire 40-second saving would still have
   passed; it is 65 s now, measured 41 to 48 across seven runs and set under the old band on purpose.
+  Three later runs on a quiet machine came in at 68.7, 77.0 and 70.4, and the budget is deliberately
+  left where it is rather than raised to fit a number nobody has explained: what it is asking for is
+  the slow section found. The measurements and the reasoning are recorded beside the number itself.
   The Add picker's budget was measured with no sheet in the picker, so the scene shelves - the one
   path that builds an entry per node per dial per verb on every keystroke - answered null before
   doing any work; it is measured with a sheet whose scene really wears materials, the shelf count is
@@ -566,6 +571,119 @@ What changed in the build you have installed (v0.17.0), in the words the release
   was measured.
 - **The pack count is one number again.** One half of the moving-in guide said 105 packs and the
   other said 111; 111 is what the tree holds.
+- **An angle field stops eating the end of your variable's name.** The unit a reader says out loud
+  was found by testing the last three letters and nothing else, so `angle_deg` - the single likeliest
+  name an angle variable ever has - was read as \"the value `angle_` said degrees\", and the row
+  compiled to a variable the game does not have. `aim_rad` and `turn_grad` went the same way. A unit
+  now has to STAND ALONE to count: after a space, or straight after the number it belongs to
+  (`1.2rad`), and never mid-identifier.
+- **Nothing is wrapped round a PI at the end of an expression either.** `spin_speed * PI` and
+  `x * TAU` name the constant as plainly as `PI/4` does, and both were being written
+  `deg_to_rad(spin_speed * PI)` - the exact conversion the rule exists to prevent - because the test
+  only looked at the front of the string and at a PI with a space on both sides. The constants are
+  now found wherever in the expression they sit, on word boundaries, so `SPIN` and `TAUNT` still name
+  nothing.
+- **A stored angle reads back by what it says, which is what the setting always promised.** A project
+  that thinks in radians flips what a bare number a reader TYPES means; it never meant to change how
+  a stored sheet is read. But a bare number was being read back through the setting, so opening
+  somebody else's sheet in a radian project showed \"30 rad\" on a row that compiles to
+  `deg_to_rad(30.0)` - the row and the code disagreeing, which is the one outcome this rule exists to
+  rule out. The reading no longer asks the setting at all: a bare number is degrees, because a bare
+  number is what a degree slot stores, and a radian project's own typing is converted on the way in.
+
+- **The safe hoist can no longer point a row at a different node.** \"Remember the node once\" is the
+  fix that ships in the one-click batch precisely because it changes nothing about what the game
+  does - and it could. The variable it writes is named after the path, readable names collapse
+  (`UI/Bar`, `../UI/Bar`, `./UI/Bar` and `%Bar` all read as one), and an existing variable of that
+  name was accepted without anyone comparing the path it held. So two rows aimed at two different
+  nodes both ended up reading the first one's variable. A declaration is now reused only when it
+  already holds the very lookup the row wants; a different path earns its own numbered neighbour,
+  and a name somebody took for something else is never taken over. The dialog's before/after is
+  answered by the same function that writes the fix, so the name on the receipt is the name that
+  lands.
+
+- **The shipped error reporter registers once, and gives itself back.** The debug-session reporter
+  has always been guarded against arming twice, for the reason stated beside it: every logger hears
+  every error, so duplicates say each failure that many times. Its shipped twin - the one that runs
+  in the build a player is holding - had no such guard. Four instances of one sheet in a scene
+  registered four loggers and reported each failure four times, and nothing ever took one off again,
+  so a level loaded and freed twenty times left twenty dead loggers on the engine for the rest of the
+  process, each of them consulted on every error. There is one now: the first instance to be ready
+  arms it, it comes off the engine when that instance leaves the tree, and the next instance arms it
+  afresh.
+
+- **The \"no way out of a mode\" check can now find one.** It was silent in every game that enters
+  more than one mode, because it answered the reachability question by asking whether the sheet
+  contained some OTHER mode - which for Menu → Playing → Game Over is true the moment the second
+  mode exists, so the mode nothing leaves was cleared by the two above it. It reads the rows now: a
+  row is a way out of a mode when nothing shuts it out of that mode (it is inside a group that runs
+  in it, or under an In mode row naming it, or gated on no mode at all) and it goes somewhere else,
+  pushes, or goes back. A row gated on a different mode is shut out, and a row that runs once when
+  the game starts is how the game begins rather than how a player gets unstuck.
+
+- **Project View's Findings and Milliseconds columns have something in them.** The page joins what
+  already exists and takes both numbers as arguments, which is what stops it starting a Doctor run
+  to draw itself - and the one place that opened it passed neither, so both columns were empty in
+  every real session while the model's own tests, which hand them in, stayed green. The dock now
+  hands over what this session already has: the last Doctor run's findings, kept beside the badge
+  counts they were already being reduced to, and what the last profiled run cost each open sheet,
+  summed from the rows the run measured. A sheet nothing measured still shows no number at all. The
+  gathering is one function, so a test reads what the window is handed rather than what the model
+  does with it. The doc comment above it also claimed the sheets came from the project index; they
+  come from the open tabs, as the code nine lines below always said.
+
+- **\"Only log in debug builds\" changes the sheet you are looking at, and shows the line it changed.**
+  The finding comes off a text scan of every script in the project, so the file it names is almost
+  never the one on screen - and the chip opened it, which replaced the reader's tab without asking
+  and, for a `.gd` (the default sheet format), arrived as a read-only preview whose rows have not
+  been lifted yet. So the swap found no Log rows, did nothing, and told the reader the console line
+  must have been written by hand. The chip now works on the OPEN sheet and says where to go
+  otherwise, tells a sheet that is still opening apart from one with nothing to guard, and reports
+  what it did as the receipt that was already written for it and never shown: the first line before
+  and after, with the rest counted.
+- **The same rule for the other two fixes that edit a sheet.** Making the environment this scene's
+  own and extracting a repeated number both opened the file they named for the same reasons and with
+  the same two consequences. Both now change the sheet in front of the reader or say where to go.
+  The note at the top of the file no longer claims every fix goes through the sheet's undo funnel
+  either: two of them change a project setting, and they say so in their own words.
+
+- **Two new gates stop warming project caches for everybody after them.** The Interop section asks
+  the project index how many other files call each function, which starts the project-wide scan and
+  leaves three caches ready; the listing-order gate leaves the scene walk cached. Neither dropped
+  what it warmed, which is the exact shape of the leak this pass fixed once already: it is invisible
+  in the sharded local run, where leaker and victims are in different processes, and it reaches every
+  later test that pins cold state on continuous integration, which runs the suite serially in one.
+  Both now start cold and end cold.
+
+- **The transform bands name three and count the rest.** A scene with fifty mirrored bodies grew
+  fifty head bands, one per node, while the animations band added to the same head in the same pass
+  did the right thing beside it. A head is a place to look, not an inventory: three of a kind are
+  named and the others counted in one line after them. The modes band counts past six the same way.
+- **A score over nothing measured is not 100%.** The Interop line reported a perfect adoption score
+  for a project whose candidate scripts all failed to open - the one number nobody had taken. It says
+  what happened instead: how many scripts there are, and that none of them could be opened to
+  measure.
+- **What a script declares is dropped when the script changes.** The cache behind the Call Method and
+  Connect Signal fields said in its own comment that it was dropped on the editor's filesystem ping,
+  and nothing dropped it. Its entries are keyed by the file's identity, so every save of every script
+  added a key and the superseded one stayed for the rest of the session. It is now on the same hook
+  as every other by-file reader, and the hook's own gate names it.
+- **The picker's law is the law the picker keeps.** The note above the gate table named three things
+  that may still be hidden and the picker hid a fourth. The list is closed and stated with its
+  reasons - a reader's own choices, a deprecated row, and a project-scoped template whose per-scene
+  copies are what the picker lists - and the picker asks one shared answer rather than deciding for
+  itself, so the words and the behaviour cannot drift. The suite walks every shipped definition
+  through that answer and fails on a hide outside the list, having first proved the answer on a
+  definition wearing each mark: a gated entry is on screen to explain itself, and a hidden one is
+  not, so the hiding path needed a gate of its own.
+- **The Doctor's section headings, the run labels and the Project View speak the other eight
+  languages.** The inbox argued at length that a heading nobody keyed is the one English line in a
+  translated window, and then derived its own section headings from check ids without going near the
+  catalog; they go through it now, so a project that names a section in its own drop-in file gets
+  that name. The gutter's run labels (\"last run, %s\", \"fired 12 times\", \"0.42 ms each\"), everything
+  the Project View window says, and the sentences the project manual writes about a sheet
+  (\"Behavior sheet\", \"3 of 8 described\", \"int, exported\") were all bare English in a pass that keyed
+  its other new words. Thirty-four keys, in all eight catalogs, in the terminology already there.
 
 ### Performance - a project ten times this one, and what the editor costs on it
 

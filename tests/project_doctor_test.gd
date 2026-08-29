@@ -6,7 +6,7 @@
 class_name ProjectDoctorTest
 extends RefCounted
 
-## The whole audit, over this whole repository: 111 packs, every demo, every committed sheet, and
+## The whole audit, over this whole repository: 112 packs, every demo, every committed sheet, and
 ## the fifty-odd checks the union runs. Measured 81-92 seconds across four runs before three things
 ## were fixed: a pin reading that ran three times over every file that had no pin in it, a read of
 ## every scene in the project per script anybody asked about, and a directory walk repeated once per

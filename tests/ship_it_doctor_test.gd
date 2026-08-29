@@ -31,6 +31,7 @@ static func run() -> bool:
 	ok = _test_the_frame_it_has_to_fit_in() and ok
 	ok = _test_what_gets_saved() and ok
 	ok = _test_the_one_click_guard() and ok
+	ok = _test_the_chip_the_reader_presses() and ok
 	return ok
 
 
@@ -185,6 +186,69 @@ static func _test_the_one_click_guard() -> bool:
 	ok = _check("and running it again changes nothing",
 		EventSheetShipItDoctor.guard_debug_rows(sheet), 0) and ok
 	return ok
+
+
+## And the chip, through the dock the reader is really pressing it in. The half above proves what the
+## swap writes; this proves that pressing "Only log in debug builds" reaches it - and that a finding
+## about a file somebody else has open says where to go instead of quietly replacing the tab in front
+## of them and then blaming them for writing the line by hand.
+static func _test_the_chip_the_reader_presses() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var event: EventRow = EventRow.new()
+	var noisy: ACEAction = ACEAction.new()
+	noisy.ace_id = EventSheetShipItDoctor.PLAIN_LOG_ACE
+	noisy.params = {"message": "\"hit\"", "level": "print"}
+	event.actions.append(noisy)
+	sheet.events.append(event)
+	sheet.host_class = "Node"
+	sheet.external_source_path = "res://noisy.gd"
+
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(sheet)
+	var elsewhere: Dictionary = EventSheetQuickFixes.apply("guard_debug_rows",
+		{"check": "ship-debug-rows", "path": "res://somebody_elses.gd"}, {"dock": dock})
+	var ok: bool = _check("a finding about a file that is not open says where to go",
+		elsewhere, {"ok": false,
+			"message": "Open somebody_elses.gd and swap its Log rows for Log (Debug Builds Only) - double-clicking the finding opens it."})
+	ok = _check("and the open sheet is left exactly as it was",
+		str((dock._current_sheet.events[0] as EventRow).actions[0].get("ace_id")),
+		EventSheetShipItDoctor.PLAIN_LOG_ACE) and ok
+
+	var here: Dictionary = EventSheetQuickFixes.apply("guard_debug_rows",
+		{"check": "ship-debug-rows", "path": "res://noisy.gd"}, {"dock": dock})
+	ok = _check("pressing it on the sheet in front of you swaps the row and shows the line",
+		here, {"ok": true,
+			"message": "1 row(s) guarded. print(\"hit\") → if OS.is_debug_build(): print(\"hit\") - one Ctrl+Z takes it back."}) and ok
+	ok = _check("the row really is the debug-builds-only verb now",
+		str((dock._current_sheet.events[0] as EventRow).actions[0].get("ace_id")),
+		EventSheetShipItDoctor.DEBUG_LOG_ACE) and ok
+	ok = _check("a receipt naming forty lines names one and counts the rest",
+		EventSheetQuickFixes.guard_receipt_line([
+			{"before": "print(\"a\")", "after": "if OS.is_debug_build(): print(\"a\")"},
+			{"before": "print(\"b\")", "after": "if OS.is_debug_build(): print(\"b\")"},
+			{"before": "print(\"c\")", "after": "if OS.is_debug_build(): print(\"c\")"},
+		]),
+		"print(\"a\") → if OS.is_debug_build(): print(\"a\"), and 2 more like it") and ok
+	ok = _check("and a sheet still opening is told apart from one with nothing to guard",
+		_guard_a_read_only_sheet(), {"ok": false,
+			"message": "still.gd is still opening - it reads as code until its rows have been lifted. Try again once it has finished."}) and ok
+	dock.free()
+	return ok
+
+
+## The read-only case on its own: a `.gd` opened as a preview has not been lifted yet, so its rows
+## are a wall of code and a swap would find nothing to swap.
+static func _guard_a_read_only_sheet() -> Dictionary:
+	var preview: EventSheetResource = EventSheetResource.new()
+	preview.host_class = "Node"
+	preview.external_source_path = "res://still.gd"
+	preview.read_only = true
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(preview)
+	var answer: Dictionary = EventSheetQuickFixes.apply("guard_debug_rows",
+		{"check": "ship-debug-rows", "path": "res://still.gd"}, {"dock": dock})
+	dock.free()
+	return answer
 
 
 static func _messages(found: Array[Dictionary]) -> PackedStringArray:

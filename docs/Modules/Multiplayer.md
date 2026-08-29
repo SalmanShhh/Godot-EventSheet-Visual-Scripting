@@ -131,6 +131,20 @@ Ships as is the template the row compiles to, so you can see exactly what lands 
 | Leave The Game | Drops this peer's connection and puts the game back to single player | `multiplayer.multiplayer_peer = null` |
 | Spawn | Makes one copy of a scene on the host and on every peer at once | `{target}.spawn({data})` |
 
+### Multiplayer: the wire itself
+
+Four rows and one expression for a game that has outgrown the plain pair above. All of them are ENet
+and say so: the longer `create_server` is ENet's own signature, and writing it at a WebSocket or
+WebRTC peer is not a working line of GDScript.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Host A Game (Advanced) | Hosts with the network dials said out loud: how many channels messages travel down, and caps on what this peer receives and sends | the same three lines with `create_server({port}, {max_players}, {channels}, {in_bandwidth}, {out_bandwidth})`, and `ENetMultiplayerPeer` spelled out |
+| Join A Game (Advanced) | Joins with the same dials the host set - the channel count has to match what the host opened | the same three lines with `create_client({address}, {port}, {channels}, {in_bandwidth}, {out_bandwidth})` |
+| Compress Network Traffic | Squeezes every packet this connection sends and unpacks what arrives. Both sides must pick the same codec, and it is said after hosting or joining | `{peer}.host.compress(ENetConnection.{mode})` |
+| Send Raw Bytes | Sends bytes straight through the connection - no message name, no arguments, nothing decoded for you | `multiplayer.multiplayer_peer.put_packet({bytes})` |
+| Next Raw Packet | The next raw packet waiting on the connection, as bytes | `multiplayer.multiplayer_peer.get_packet()` |
+
 ### Multiplayer: what the connection tells you
 
 | Name | What it does | Ships as |

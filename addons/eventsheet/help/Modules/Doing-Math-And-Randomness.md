@@ -792,6 +792,39 @@ Math: Is Within Cone Of  ( Guard.global_position, Guard Facing, Player.global_po
   -> Variables: Add  ( 2 * Strength Toward ( Player, 600 ) )  to  suspicion
 ```
 
+**43. Health that cannot pass its maximum, and a heading that comes back round.** Keep Between and
+Wrap Around are one row each, instead of two comparisons written everywhere the value changes. Both
+name the same variable twice in the emitted line, which is the shape of the statement rather than a
+quirk of the row.
+
+```gdscript
+extends Node2D
+
+var value := 0.0
+var max_hp := 100.0
+
+
+func _process(_delta: float) -> void:
+	value = clampf(value, 0.0, max_hp)
+	value = wrapf(value, 0.0, 360.0)
+```
+
+**44. A bar catching up, and points read as a fraction.** Move Toward closes a share of the gap each
+tick; Rescale puts a number measured on one scale onto another and names where the answer goes. This
+is also what a file somebody wrote by hand looks like, which is why it opens as these rows.
+
+```gdscript
+extends Node2D
+
+var value := 0.0
+var max_hp := 100.0
+
+
+func _process(_delta: float) -> void:
+	value = lerp(value, 1.5, 0.1)
+	value = remap(value, 0.0, max_hp, 0.0, 1.0)
+```
+
 ### Other use cases
 
 **Screen-shake decay.** Feed the shake amount through Move Toward with a per-second step so it always

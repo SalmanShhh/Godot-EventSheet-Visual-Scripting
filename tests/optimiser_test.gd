@@ -20,6 +20,7 @@ static func run() -> bool:
 	all_passed = _run_silence() and all_passed
 	all_passed = _run_diff() and all_passed
 	all_passed = _run_repairs() and all_passed
+	all_passed = _run_two_paths_one_name() and all_passed
 	all_passed = _run_receipts() and all_passed
 	EventSheetRunProfile.forget()
 	EventSheetOptimiserReceipts.forget_all_for_test()
@@ -81,6 +82,21 @@ static func _run_findings() -> bool:
 		EventSheetPerformanceFindings.remembered_name("UI/Bar"), "ui_bar") and all_passed
 	all_passed = _check("a unique-name path loses its marker",
 		EventSheetPerformanceFindings.remembered_name("%HealthBar"), "health_bar") and all_passed
+
+	# Readable names COLLAPSE: four different paths all read as `ui_bar`. So the name a hoist lands
+	# on is answered against the sheet, and a declaration is reused only when it holds the very
+	# lookup this row wants - pointing a row at somebody else's variable would move the game.
+	var collides: EventSheetResource = _sheet([_remembered("ui_bar", "get_node(\"UI/Bar\")")])
+	all_passed = _check("the declaration that already holds this node is the one to point at",
+		EventSheetPerformanceFindings.remembered_name_in(collides, "UI/Bar"), "ui_bar") and all_passed
+	all_passed = _check("a different path reading as the same name gets its own",
+		EventSheetPerformanceFindings.remembered_name_in(collides, "../UI/Bar"), "ui_bar_2") and all_passed
+	collides.events.append(_remembered("ui_bar_2", "get_node(\"../UI/Bar\")"))
+	all_passed = _check("and a third one steps past both",
+		EventSheetPerformanceFindings.remembered_name_in(collides, "./UI/Bar"), "ui_bar_3") and all_passed
+	all_passed = _check("a name a person took for something else is never taken over",
+		EventSheetPerformanceFindings.remembered_name_in(
+			_sheet([_plain_variable("ui_bar", "42")]), "UI/Bar"), "ui_bar_2") and all_passed
 	return all_passed
 
 
@@ -192,6 +208,36 @@ static func _run_repairs() -> bool:
 	return all_passed
 
 
+# ── 4b. Two paths that read as one name, hoisted in one batch ─────────────────────────────
+## The batch is sold as behaviour-preserving, so the one thing it must never do is point two rows at
+## one variable when they were aimed at two different nodes.
+static func _run_two_paths_one_name() -> bool:
+	var all_passed: bool = true
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	var sheet: EventSheetResource = _sheet([
+		_tick_row([_action("{target}.value = 1", {"target": "get_node(\"UI/Bar\")"})]),
+		_tick_row([_action("{target}.value = 2", {"target": "get_node(\"../UI/Bar\")"})]),
+	])
+	sheet.host_class = "Node2D"
+	sheet.external_source_path = "user://__eventsheets_optimiser_names_probe.gd"
+	dock.setup(sheet)
+	all_passed = _check("both lookups are hoisted in one step", dock._optimiser.apply_safe(), 2) and all_passed
+	var declared: Dictionary = {}
+	for entry: Variant in dock._current_sheet.events:
+		var variable: LocalVariable = entry as LocalVariable
+		if variable != null:
+			declared[variable.name] = str(variable.default_value)
+	all_passed = _check("each path earns its own declaration", declared, {
+		"ui_bar": "get_node(\"UI/Bar\")",
+		"ui_bar_2": "get_node(\"../UI/Bar\")",
+	}) and all_passed
+	all_passed = _check("and each row still reaches the node it was aimed at",
+		_action_lines(dock._current_sheet),
+		PackedStringArray(["ui_bar.value = 1", "ui_bar_2.value = 2"])) and all_passed
+	dock.free()
+	return all_passed
+
+
 # ── 5. The receipt ────────────────────────────────────────────────────────────────────────
 static func _run_receipts() -> bool:
 	var all_passed: bool = true
@@ -259,6 +305,24 @@ static func _row(trigger_id: String, actions: Array) -> EventRow:
 	return row
 
 
+## A declaration of the shape the hoist writes: resolved once, at ready time.
+static func _remembered(name: String, lookup: String) -> LocalVariable:
+	var declared: LocalVariable = LocalVariable.new()
+	declared.name = name
+	declared.type_name = "Variant"
+	declared.onready = true
+	declared.default_value = lookup
+	return declared
+
+
+## And an ordinary one somebody wrote themselves, which happens to wear the same name.
+static func _plain_variable(name: String, value: String) -> LocalVariable:
+	var declared: LocalVariable = LocalVariable.new()
+	declared.name = name
+	declared.default_value = value
+	return declared
+
+
 static func _action(template: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
@@ -287,6 +351,16 @@ static func _first_action_line(sheet: EventSheetResource) -> String:
 	if row == null or row.actions.is_empty():
 		return ""
 	return EventSheetLightingFindings.compiled_line(row.actions[0] as Resource)
+
+
+## The line every event row of the sheet compiles to, in sheet order.
+static func _action_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: Variant in sheet.events:
+		var row: EventRow = entry as EventRow
+		if row != null and not row.actions.is_empty():
+			lines.append(EventSheetLightingFindings.compiled_line(row.actions[0] as Resource))
+	return lines
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

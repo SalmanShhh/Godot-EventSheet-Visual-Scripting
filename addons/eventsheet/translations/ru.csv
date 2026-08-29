@@ -5210,3 +5210,37 @@ is on screen,на экране
 The node to ask about.,"Узел, о котором спрашивают."
 The child that was just added under this node. Filled in for you when the trigger fires.,"Дочерний узел, только что добавленный под этим узлом. Заполняется за вас при срабатывании триггера."
 The child that is leaving this node. Filled in for you when the trigger fires.,"Дочерний узел, покидающий этот узел. Заполняется за вас при срабатывании триггера."
+this run,текущий запуск
+no run yet,запусков ещё не было
+last run,последний запуск
+"last run, %s","последний запуск, %s"
+Event %d,Событие %d
+never fired,ни разу не сработало
+fired %s time,сработало %s раз
+fired %s times,сработало %s раз
+%.2f ms each,по %.2f мс
+%.1f times a frame,%.1f раз за кадр
+Project View,Обзор проекта
+Every sheet,Все листы
+Runs as,Запускается как
+Events,События
+Described,Описано
+Findings,Замечания
+"A name, a node, an animation, a mode…","Имя, узел, анимация, режим…"
+Find,Найти
+Find across every sheet,Поиск по всем листам
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.","Имя - это не одно и то же: запись, чтение и сравнение - разные факты о нём, и фасет говорит, какой из них вы ищете."
+Hits,Совпадения
+Your Game: the selected sheet's own page,Ваша игра: собственная страница выбранного листа
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.","Эта страница составляется из листа при каждом выборе, поэтому не может устареть. Выберите лист выше, чтобы прочитать её."
+%d of %d described,описано %d из %d
+Autoload sheet,Лист автозагрузки
+Behavior sheet,Лист поведения
+Test sheet,Тестовый лист
+"Node type %s, extending %s","Тип узла %s, расширяет %s"
+Sheet on %s,Лист на %s
+%s constant,константа %s
+"%s, exported","%s, экспортируется"
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: %d скрипт(ов) в этом проекте, и ни один не удалось открыть для измерения. Установка плагина ничего не изменила - скрипт остаётся кодом, пока вы не откроете его как лист."
+%d more node(s) mirrored by a negative scale,"ещё %d узл(ов), отражённых отрицательным масштабом"
+%d more node(s) scaled unevenly and turned,ещё %d узл(ов) с неравномерным масштабом и поворотом

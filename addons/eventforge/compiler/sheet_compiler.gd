@@ -698,8 +698,12 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	if _wants_trouble_reporter(all_events):
 		lines.append("")
 		lines.append("## Announces each script error to this sheet, once per failing line, wherever the game")
-		lines.append("## is running - in the editor or in a build a player is holding.")
+		lines.append("## is running - in the editor or in a build a player is holding. ONE logger for the")
+		lines.append("## whole game: every logger hears every error, so a second one would say each failure")
+		lines.append("## twice. `armed` is the one that is registered, and it is taken off the engine again")
+		lines.append("## when the node holding it leaves the tree.")
 		lines.append("class __EventSheetsTroubleReporter extends Logger:")
+		lines.append("\tstatic var armed: Object = null")
 		lines.append("\tvar sheet: Object = null")
 		lines.append("\tvar _said: Dictionary = {}")
 		lines.append("")
@@ -3088,12 +3092,24 @@ static func _emit_error_reporter_arming(lines: PackedStringArray) -> void:
 	lines.append("\t\tOS.add_logger(__EventSheetsErrorReporter.new())")
 
 
-## The three lines that put the shipped reporter on the engine's error channel. No debugger test:
-## this one is for the build, and a build has no debugger.
+## The lines that put the shipped reporter on the engine's error channel. No debugger test: this one
+## is for the build, and a build has no debugger.
+##
+## ONE logger, whatever the scene holds. Every logger hears every error, so a scene with four
+## instances of the same sheet used to register four and say each failure four times - and none of
+## them was ever taken off again, so a level loaded and freed twenty times left twenty dead loggers
+## on the engine for the rest of the process. The first instance to be ready arms it and gives it
+## back when it leaves the tree, and the next instance arms it afresh.
 static func _emit_trouble_reporter_arming(lines: PackedStringArray) -> void:
-	lines.append("\tvar __trouble := __EventSheetsTroubleReporter.new()")
-	lines.append("\t__trouble.sheet = self")
-	lines.append("\tOS.add_logger(__trouble)")
+	lines.append("\tif __EventSheetsTroubleReporter.armed == null:")
+	lines.append("\t\tvar __trouble := __EventSheetsTroubleReporter.new()")
+	lines.append("\t\t__trouble.sheet = self")
+	lines.append("\t\t__EventSheetsTroubleReporter.armed = __trouble")
+	lines.append("\t\tOS.add_logger(__trouble)")
+	lines.append("\t\ttree_exiting.connect(func() -> void:")
+	lines.append("\t\t\tif __EventSheetsTroubleReporter.armed == __trouble:")
+	lines.append("\t\t\t\tOS.remove_logger(__trouble)")
+	lines.append("\t\t\t\t__EventSheetsTroubleReporter.armed = null)")
 
 
 ## True when this sheet declares the game's modes: the `Mode` enum and both the members the mode

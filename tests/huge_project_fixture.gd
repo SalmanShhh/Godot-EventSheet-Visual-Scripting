@@ -19,7 +19,7 @@
 #
 # WHAT IT CANNOT DO: `res://` is fixed when the process starts, so the whole-project scanners (the
 # Doctor's sheet list, the picker's vocabulary, the shared-resource index) cannot be pointed at it.
-# Those are measured against this repository instead, which carries 111 packs and every demo, and
+# Those are measured against this repository instead, which carries 112 packs and every demo, and
 # the budget test says so where it does it.
 #
 # USAGE - a helper, not a test (it declares no `run`, so the suite skips it):

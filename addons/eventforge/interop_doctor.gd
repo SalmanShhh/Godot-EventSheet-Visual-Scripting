@@ -118,9 +118,15 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var candidates: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in sized:
 		candidates.append(str(entry["path"]))
+	# A percentage over nothing is not 0 and it is certainly not 100: it is a number nobody took. A
+	# project whose candidates all failed to open says so, rather than claiming a full score for a
+	# measurement that never happened.
+	var summary: String = EventSheetL10n.translate("Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
+		if measured.is_empty() \
+		else EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
+			candidates.size(), measured.size(), _average_reads_as(measured)]
 	findings.append(_finding("info", CHECK_ID, measured[0].get("path", "") if not measured.is_empty() else "",
-		EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
-			candidates.size(), measured.size(), _average_reads_as(measured)], ""))
+		summary, ""))
 	for entry: Dictionary in measured:
 		findings.append(_finding("info", CHECK_SCRIPT, str(entry["path"]), _script_line(entry), ""))
 		var adoptable: PackedStringArray = entry["adoptable"]
@@ -176,11 +182,12 @@ static func _measure(ordered: PackedStringArray) -> Array[Dictionary]:
 	return measured
 
 
-## The share that reads as rows across what was measured, floored - and 100 for nothing measured,
-## the same rule every other coverage number here follows.
+## The share that reads as rows across what was measured, floored. Never asked with nothing measured
+## - the sentence above says so in words instead, because a percentage of no measurements is a claim
+## nobody made in either direction.
 static func _average_reads_as(measured: Array[Dictionary]) -> int:
 	if measured.is_empty():
-		return 100
+		return 0
 	var total: int = 0
 	for entry: Dictionary in measured:
 		total += int(entry["reads_as"])

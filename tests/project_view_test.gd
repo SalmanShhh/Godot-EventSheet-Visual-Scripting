@@ -88,6 +88,55 @@ static func run() -> bool:
 		EventSheetProjectViewModel.merge_damage_sentence(damaged[0]),
 		"Conflict 1: HEAD against armour-pass came back from a merge with two spellings (HEAD and armour-pass). Both are kept until you pick one.") and all_passed
 
+	all_passed = _run_wiring() and all_passed
+	return all_passed
+
+
+# ── The wiring: what the DOCK hands the page ──────────────────────────────────────────────
+## The model above is pure over its arguments, which is exactly why the arguments have to be pinned
+## too: a page whose findings and milliseconds are never passed shows two empty columns however well
+## the join behaves. This asks the dock what it would hand the window.
+static func _run_wiring() -> bool:
+	var all_passed: bool = true
+	EventSheetProjectOutline.clear_doctor_findings()
+	EventSheetRunProfile.forget()
+
+	var player: EventSheetResource = _player_sheet()
+	var timed: EventRow = (player.events[0] as EventGroup).events[0] as EventRow
+	timed.event_uid = "player-damage-row"
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(EventSheetResource.new())
+	dock._open_sheet_in_tab(player, "res://player.tres")
+	dock._open_sheet_in_tab(_menu_sheet(), "res://menu.tres")
+
+	EventSheetProjectOutline.set_doctor_findings([
+		{"path": "res://player.tres", "severity": "warning", "message": "one"},
+		{"path": "res://player.tres", "severity": "info", "message": "two"},
+	])
+	# A run that fired the damage row four times for 8 ms altogether.
+	EventSheetRunProfile.adopt_run_for_test(timed.event_uid, 4, 4, 8000, "a measured run")
+
+	var inputs: Dictionary = dock._project_view_inputs()
+	all_passed = _check("the dock hands the page the sheets its tabs hold",
+		(inputs["sheets"] as Dictionary).keys(),
+		["res://player.tres", "res://menu.tres"]) and all_passed
+	all_passed = _check("the last Doctor run's findings, rather than an empty array",
+		(inputs["findings"] as Array).size(), 2) and all_passed
+	all_passed = _check("and what the last profiled run cost each sheet, with the unmeasured one absent",
+		inputs["timings"], {"res://player.tres": 8.0}) and all_passed
+
+	var rows: Array[Dictionary] = EventSheetProjectViewModel.rows(
+		inputs["sheets"], inputs["findings"], inputs["timings"])
+	all_passed = _check("so the page's two right-hand columns arrive filled",
+		["%d" % int(rows[1].get("findings", 0)), "%.1f" % float(rows[1].get("milliseconds"))],
+		["2", "8.0"]) and all_passed
+	all_passed = _check("and the sheet nobody profiled still shows no number at all",
+		rows[0].get("milliseconds") == null, true) and all_passed
+
+	dock.free()
+	EventSheetProjectOutline.clear_doctor_findings()
+	EventSheetRunProfile.forget()
+	EventSheetRunProfile.forget_stored_for_test()
 	return all_passed
 
 

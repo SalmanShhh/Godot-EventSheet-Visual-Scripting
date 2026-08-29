@@ -170,7 +170,7 @@ static func coverage(sheet: EventSheetResource) -> Dictionary:
 ## The one-line sentence a coverage footer states. Reads as a fact, never as a score to chase.
 static func coverage_sentence(sheet: EventSheetResource) -> String:
 	var numbers: Dictionary = coverage(sheet)
-	return "%d of %d described" % [int(numbers.get("described", 0)), int(numbers.get("total", 0))]
+	return EventSheetL10n.translate("%d of %d described") % [int(numbers.get("described", 0)), int(numbers.get("total", 0))]
 
 
 ## A function's head as a reader writes it - "heal(amount: int) -> void" - built from the same
@@ -230,14 +230,14 @@ static func _sheet_title(sheet: EventSheetResource) -> String:
 ## What kind of sheet this is, in the words the editor uses for it.
 static func _sheet_detail(sheet: EventSheetResource) -> String:
 	if sheet.autoload_mode:
-		return "Autoload sheet"
+		return EventSheetL10n.translate("Autoload sheet")
 	if sheet.behavior_mode:
-		return "Behavior sheet"
+		return EventSheetL10n.translate("Behavior sheet")
 	if sheet.test_mode:
-		return "Test sheet"
+		return EventSheetL10n.translate("Test sheet")
 	if not sheet.custom_class_name.strip_edges().is_empty():
-		return "Node type %s, extending %s" % [sheet.custom_class_name.strip_edges(), sheet.host_class]
-	return "Sheet on %s" % sheet.host_class
+		return EventSheetL10n.translate("Node type %s, extending %s") % [sheet.custom_class_name.strip_edges(), sheet.host_class]
+	return EventSheetL10n.translate("Sheet on %s") % sheet.host_class
 
 
 ## A variable's type word plus whether it is exported, which is what a reader of the manual wants
@@ -251,8 +251,8 @@ static func _variable_detail(sheet: EventSheetResource, variable_name: String) -
 	if type_name.strip_edges().is_empty():
 		type_name = "Variant"
 	if bool(entry.get("const", false)):
-		return "%s constant" % type_name
-	return "%s, exported" % type_name if bool(entry.get("exported", true)) else type_name
+		return EventSheetL10n.translate("%s constant") % type_name
+	return EventSheetL10n.translate("%s, exported") % type_name if bool(entry.get("exported", true)) else type_name
 
 
 ## A signal's declared arguments, as the emitted `signal` line spells them.
@@ -266,7 +266,7 @@ static func _signal_detail(signal_row: Resource) -> String:
 ## How much a group holds, as a count of its immediate rows - the roll-up a chapter heading wants.
 static func _group_detail(group: EventGroup) -> String:
 	var rows: Array = group.events if not group.events.is_empty() else group.rows
-	return "1 event" if rows.size() == 1 else "%d events" % rows.size()
+	return EventSheetL10n.translate("1 event") if rows.size() == 1 else EventSheetL10n.translate("%d events") % rows.size()
 
 
 ## The recursive walk that finds every declared signal and every group, at any depth, in sheet order.

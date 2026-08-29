@@ -307,3 +307,39 @@ static func remembered_name(path: String) -> String:
 		snake = snake.replace("__", "_")
 	snake = snake.lstrip("_")
 	return "the_" + snake if snake.is_empty() or snake[0].is_valid_int() else snake
+
+
+## The lookup a remembered declaration holds - the whole of its value, so "does this variable already
+## hold the node this row wants" is one string comparison rather than a guess.
+static func remembered_lookup(path: String) -> String:
+	return "get_node(\"%s\")" % path
+
+
+## The variable a hoist of this path would point at, given the sheet as it stands - what the fix
+## writes and what the receipt shows, from one answer so the two cannot disagree.
+##
+## THE NAME IS NOT THE PATH. Readable names collapse: "UI/Bar", "../UI/Bar" and "ui/bar" all read as
+## `ui_bar`, and `%Bar` reads the same as `Bar`. So an existing declaration is reused only when it
+## already holds this very lookup; one holding a different path earns a numbered neighbour, because
+## pointing the row at somebody else's variable would change which node the game touches, and this
+## fix is offered as the one that changes nothing.
+static func remembered_name_in(sheet: EventSheetResource, path: String) -> String:
+	var base: String = remembered_name(path)
+	if sheet == null or base.is_empty():
+		return base
+	var wanted: String = remembered_lookup(path)
+	var taken: Dictionary = {}
+	for entry: Variant in sheet.events:
+		var existing: LocalVariable = entry as LocalVariable
+		if existing == null:
+			continue
+		if existing.onready and str(existing.default_value).strip_edges() == wanted \
+				and (existing.name == base or existing.name.begins_with(base + "_")):
+			return existing.name
+		taken[existing.name] = true
+	var name: String = base
+	var suffix: int = 2
+	while taken.has(name):
+		name = "%s_%d" % [base, suffix]
+		suffix += 1
+	return name

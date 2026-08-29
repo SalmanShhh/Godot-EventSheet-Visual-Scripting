@@ -5210,3 +5210,37 @@ is on screen,ist auf dem Bildschirm
 The node to ask about.,"Der Knoten, nach dem gefragt wird."
 The child that was just added under this node. Filled in for you when the trigger fires.,"Das Kind, das gerade unter diesem Knoten hinzugefügt wurde. Wird beim Auslösen des Triggers für Sie ausgefüllt."
 The child that is leaving this node. Filled in for you when the trigger fires.,"Das Kind, das diesen Knoten verlässt. Wird beim Auslösen des Triggers für Sie ausgefüllt."
+this run,dieser Durchlauf
+no run yet,noch kein Durchlauf
+last run,letzter Durchlauf
+"last run, %s","letzter Durchlauf, %s"
+Event %d,Ereignis %d
+never fired,nie ausgelöst
+fired %s time,%s mal ausgelöst
+fired %s times,%s mal ausgelöst
+%.2f ms each,je %.2f ms
+%.1f times a frame,%.1f mal pro Bild
+Project View,Projektansicht
+Every sheet,Alle Blätter
+Runs as,Läuft als
+Events,Ereignisse
+Described,Beschrieben
+Findings,Befunde
+"A name, a node, an animation, a mode…","Ein Name, ein Knoten, eine Animation, ein Modus…"
+Find,Suchen
+Find across every sheet,In allen Blättern suchen
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.","Ein Name ist nicht eine Sache: geschrieben, gelesen und verglichen sind verschiedene Tatsachen über ihn, und die Facette sagt, welche davon du suchst."
+Hits,Treffer
+Your Game: the selected sheet's own page,Dein Spiel: die eigene Seite des gewählten Blatts
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.","Diese Seite wird bei jeder Auswahl aus dem Blatt zusammengestellt und kann daher nicht veralten. Wähle oben ein Blatt aus, um sie zu lesen."
+%d of %d described,%d von %d beschrieben
+Autoload sheet,Autoload-Blatt
+Behavior sheet,Verhaltensblatt
+Test sheet,Testblatt
+"Node type %s, extending %s","Knotentyp %s, erweitert %s"
+Sheet on %s,Blatt auf %s
+%s constant,%s-Konstante
+"%s, exported","%s, exportiert"
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: %d Skript(e) in diesem Projekt, und keines davon ließ sich zum Messen öffnen. Die Installation des Plugins hat nichts geändert - ein Skript bleibt Code, bis du es als Blatt öffnest."
+%d more node(s) mirrored by a negative scale,%d weitere(r) Knoten durch negative Skalierung gespiegelt
+%d more node(s) scaled unevenly and turned,%d weitere(r) Knoten ungleichmäßig skaliert und gedreht

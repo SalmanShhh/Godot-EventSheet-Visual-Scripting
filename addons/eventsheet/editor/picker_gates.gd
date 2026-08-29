@@ -13,10 +13,20 @@
 #   fix_label  what the Add button says while this entry is gated
 #   fix_id     what the dock does when it is pressed
 #
-# A gate without a reason and a fix is not allowed to exist - the suite walks this table and every
-# picker source and fails on any entry that would be hidden or disabled without both. The ONLY
-# things the picker may still truly hide are the reader's own choices (an entry they hid, Simple
-# Mode) and deprecated rows, none of which is a fixable project state.
+# A gate without a reason and a fix is not allowed to exist - the suite walks this table and the
+# hiding decision below and fails on any entry that would be hidden or disabled without both.
+#
+# WHAT MAY STILL BE HIDDEN is a closed list, and `hidden_reason` is the whole of it, so the words
+# here and the picker's behaviour cannot drift apart:
+#   the reader's own choices   an entry they hid, and Simple Mode's advanced rows
+#   deprecated rows            still compile where they are used; never offered for NEW work
+#   a project-scoped template  a row whose choices come from the scene is offered as the COPIES
+#                              built from it - one per node, both halves already answered - so the
+#                              bare template is not browsable. The family is on screen either way,
+#                              which is why this is not a wall: hiding the template hides nothing a
+#                              reader could have picked.
+# None of the three is a fixable project state, which is the property that matters: nothing
+# disappears because of something a reader could put right and was never told about.
 #
 # Pure and static over its inputs: a definition and a context Dictionary in, a gate (or nothing)
 # out, so the whole surface is pinned headlessly.
@@ -100,6 +110,36 @@ static func context_for(sheet: EventSheetResource, is_behavior_sheet: bool,
 			classes.append(node_class)
 	context["scene_classes"] = classes
 	return context
+
+
+## The reasons an entry may be left out of the listing altogether, as the ids the suite addresses.
+## Frozen the way the gate ids are.
+const HIDDEN_DEPRECATED := "deprecated"
+const HIDDEN_PROJECT_TEMPLATE := "project_scoped_template"
+const HIDDEN_READERS_CHOICE := "readers_choice"
+
+## The metadata a definition wears for each: the deprecation mark, the mark that says a row's choices
+## come from the project, and the scene node a COPY of such a row was built for.
+const DEPRECATED_META := "deprecated"
+const PROJECT_SCOPED_META := "project_scoped"
+const SCENE_TARGET_META := "eventsheet_light_target"
+
+
+## Why this definition is not in the listing at all, "" when it is. THE WHOLE CLOSED LIST: the picker
+## asks here rather than deciding for itself, so the law stated at the top of this file is the law
+## the picker keeps, and the suite can walk every shipped definition through it.
+##
+## `readers_choice` is not answered here - it is a live editor switch, not a fact about the
+## definition - but it is named in the list so the three reasons are countable in one place.
+static func hidden_reason(definition: ACEDefinition) -> String:
+	if definition == null:
+		return ""
+	if bool(definition.metadata.get(DEPRECATED_META, false)):
+		return HIDDEN_DEPRECATED
+	if bool(definition.metadata.get(PROJECT_SCOPED_META, false)) \
+			and str(definition.metadata.get(SCENE_TARGET_META, "")).is_empty():
+		return HIDDEN_PROJECT_TEMPLATE
+	return ""
 
 
 ## The one question the picker asks per entry: the gate this definition is behind in this context,

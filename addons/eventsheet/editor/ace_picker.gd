@@ -2360,15 +2360,11 @@ func _bold_font() -> Font:
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
-	# Deprecated ACEs are hidden from the picker so they can't be added to NEW work - but they still
-	# compile in sheets that already use them (the compatibility covenant; see ACEDescriptor.deprecated).
-	if bool(definition.metadata.get("deprecated", false)):
-		return false
-	# A row the project names the choices for is offered as the COPIES built from the open scene -
-	# one per node per dial, with both already answered. The bare row is not browsable, because all
-	# it could do is ask for the very name it exists to stop somebody typing.
-	if bool(definition.metadata.get("project_scoped", false)) \
-			and str(definition.metadata.get(SCENE_TARGET_META, "")).is_empty():
+	# The two hides that are facts about the definition - a deprecated row (still compiles where it
+	# is used, never offered for new work) and a project-scoped TEMPLATE (offered as the copies built
+	# from the open scene instead, one per node, both halves already answered). Asked of the gates so
+	# there is one closed list of what may vanish, and the suite walks it.
+	if not EventSheetPickerGates.hidden_reason(definition).is_empty():
 		return false
 	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …).
 	if _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call()) and _SIMPLE_MODE_DENYLIST.has(definition.provider_id + "::" + definition.id):

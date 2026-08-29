@@ -64,10 +64,12 @@ static func is_live() -> bool:
 ## What the numbers ARE, in the words the tooltip and the status line use.
 static func label() -> String:
 	if is_live():
-		return "this run"
+		return EventSheetL10n.translate("this run")
 	if _stored.is_empty():
-		return "no run yet"
-	return "last run" if _stored_when.is_empty() else "last run, %s" % _stored_when
+		return EventSheetL10n.translate("no run yet")
+	if _stored_when.is_empty():
+		return EventSheetL10n.translate("last run")
+	return EventSheetL10n.translate("last run, %s") % _stored_when
 
 
 ## WHEN the stored run was written, and "" when no run has been written at all. It is the identity
@@ -93,6 +95,67 @@ static func ms_for(uid: String) -> float:
 	if measured <= 0:
 		return -1.0
 	return float(entry.get("usec", 0)) / float(measured) / 1000.0
+
+
+## Milliseconds the run spent in this row ALTOGETHER, or -1.0 when nothing about it was measurable.
+## The per-fire cost answers "is this row expensive"; this one answers "what did this row cost the
+## run", which is the question a page comparing whole sheets is asking.
+static func total_ms_for(uid: String) -> float:
+	if is_live():
+		var live_usec: int = EventSheetTraceTimings.usec_for(uid)
+		return -1.0 if EventSheetTraceTimings.measured_calls_for(uid) <= 0 else float(live_usec) / 1000.0
+	var entry: Dictionary = _stored.get(uid, {})
+	if int(entry.get("measured", 0)) <= 0:
+		return -1.0
+	return float(entry.get("usec", 0)) / 1000.0
+
+
+## What the run cost each of these sheets: path -> milliseconds, and NO ENTRY AT ALL for a sheet
+## whose rows nothing measured. An absent entry is what makes the page leave the cell empty instead
+## of claiming a sheet was free.
+##
+## One pass over rows already in hand, joined against a run already parsed - no scan, no file, and
+## nothing measured in the editor.
+static func milliseconds_by_sheet(sheets: Dictionary) -> Dictionary:
+	var by_path: Dictionary = {}
+	if not has_numbers():
+		return by_path
+	for key: Variant in sheets.keys():
+		var sheet: Variant = sheets[key]
+		if not (sheet is EventSheetResource):
+			continue
+		var total: float = -1.0
+		for uid: String in _row_uids(sheet as EventSheetResource):
+			var ms: float = total_ms_for(uid)
+			if ms >= 0.0:
+				total = ms if total < 0.0 else total + ms
+		if total >= 0.0:
+			by_path[str(key)] = total
+	return by_path
+
+
+## Every row identity in a sheet, its functions included - the keys a run's numbers are filed under.
+static func _row_uids(sheet: EventSheetResource) -> PackedStringArray:
+	var uids: PackedStringArray = PackedStringArray()
+	_collect_uids(sheet.events, uids)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			var event_function: EventFunction = entry
+			_collect_uids(event_function.events if not event_function.events.is_empty()
+				else event_function.rows, uids)
+	return uids
+
+
+static func _collect_uids(rows: Array, into: PackedStringArray) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row
+			_collect_uids(group.events if not group.events.is_empty() else group.rows, into)
+		elif row is EventRow:
+			var event_row: EventRow = row
+			if not event_row.event_uid.is_empty():
+				into.append(event_row.event_uid)
+			_collect_uids(event_row.sub_events, into)
 
 
 ## Frames the run reported - the denominator of "how often does this fire".
@@ -146,18 +209,20 @@ static func chip_text(uid: String, costs: bool) -> String:
 static func tooltip_for(uid: String, event_number: int = 0) -> String:
 	if not has_numbers() or uid.is_empty():
 		return ""
-	var lead: String = "Event %d: " % event_number if event_number > 0 else ""
+	var lead: String = (EventSheetL10n.translate("Event %d") % event_number) + ": " if event_number > 0 else ""
 	var count: int = calls_for(uid)
 	var run_words: String = " (%s)" % label()
 	if count == 0:
-		return lead + "never fired" + run_words + "."
+		return lead + EventSheetL10n.translate("never fired") + run_words + "."
 	var parts: PackedStringArray = PackedStringArray()
-	parts.append("fired %s time%s" % [EventSheetTraceHitCounts.format_count(count), "" if count == 1 else "s"])
+	var fires: String = EventSheetTraceHitCounts.format_count(count)
+	parts.append(EventSheetL10n.translate("fired %s time") % fires if count == 1
+		else EventSheetL10n.translate("fired %s times") % fires)
 	var ms: float = ms_for(uid)
 	if ms >= 0.0:
-		parts.append("%.2f ms each" % ms)
+		parts.append(EventSheetL10n.translate("%.2f ms each") % ms)
 	if is_absurd(uid):
-		parts.append("%.1f times a frame" % fires_per_frame(uid))
+		parts.append(EventSheetL10n.translate("%.1f times a frame") % fires_per_frame(uid))
 	return lead + ", ".join(parts) + run_words + "."
 
 

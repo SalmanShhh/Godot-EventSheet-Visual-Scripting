@@ -8,6 +8,11 @@
 #      yields an entry that is gated without those two lines - no silent wall can be added.
 #   3. The empty-result shelves have something to say: the relaxed ranker finds nearest entries,
 #      and the guides' self-drawing figures are enumerable as insertable recipes.
+#
+# And the other half of promise 2, which a walk over the gates alone cannot see: an entry that is
+# HIDDEN is not on screen to carry a reason at all, so the reasons an entry may be hidden are a
+# closed list, every shipped definition is walked through it, and the answer is proved on a
+# definition wearing each mark before the sweep is trusted.
 @tool
 class_name PickerNoWallsTest
 extends RefCounted
@@ -182,7 +187,61 @@ static func _test_no_silent_walls() -> bool:
 	ok = _check("the walk saw real gates (the contexts trip them)", gated > 0, true) and ok
 	ok = _check("no definition is gated without a reason and a fix: %s" % ", ".join(faulty),
 		faulty.is_empty(), true) and ok
+	ok = _test_nothing_vanishes_for_another_reason(registry) and ok
 	return ok
+
+
+## Promise 2b: the HIDING path, which the gate walk above never touches. A gated entry is on screen
+## and says what to do; a hidden one is not on screen at all, so the list of reasons an entry may be
+## hidden has to be closed - and it has to be the list the picker actually keeps, not the one the
+## comment above it claims.
+static func _test_nothing_vanishes_for_another_reason(registry: EventSheetACERegistry) -> bool:
+	var allowed: PackedStringArray = PackedStringArray([
+		EventSheetPickerGates.HIDDEN_DEPRECATED,
+		EventSheetPickerGates.HIDDEN_PROJECT_TEMPLATE,
+	])
+	var reasons: Dictionary = {}
+	var unexpected: PackedStringArray = PackedStringArray()
+	for definition: ACEDefinition in registry.get_all_definitions():
+		var reason: String = EventSheetPickerGates.hidden_reason(definition)
+		if reason.is_empty():
+			continue
+		reasons[reason] = int(reasons.get(reason, 0)) + 1
+		if not allowed.has(reason):
+			unexpected.append("%s/%s -> %s" % [definition.provider_id, definition.id, reason])
+	_print_hiding_sweep(reasons)
+	var ok: bool = _check("no shipped entry is hidden for a reason outside the closed list: %s"
+		% ", ".join(unexpected), unexpected.is_empty(), true)
+	# Proved by value before it is trusted: the answer really does fire on a definition wearing each
+	# mark, so a walk that found nothing cannot pass for having asked nothing.
+	ok = _check("a deprecated row is hidden, and says which of the three reasons it is",
+		EventSheetPickerGates.hidden_reason(_marked({EventSheetPickerGates.DEPRECATED_META: true})),
+		EventSheetPickerGates.HIDDEN_DEPRECATED) and ok
+	ok = _check("a project-scoped template is hidden because its per-scene copies are what is listed",
+		EventSheetPickerGates.hidden_reason(_marked({EventSheetPickerGates.PROJECT_SCOPED_META: true})),
+		EventSheetPickerGates.HIDDEN_PROJECT_TEMPLATE) and ok
+	ok = _check("but a copy built FOR a node is offered like anything else",
+		EventSheetPickerGates.hidden_reason(_marked({
+			EventSheetPickerGates.PROJECT_SCOPED_META: true,
+			EventSheetPickerGates.SCENE_TARGET_META: "$Torch",
+		})), "") and ok
+	ok = _check("and an ordinary row is hidden for nothing at all",
+		EventSheetPickerGates.hidden_reason(_marked({})), "") and ok
+	return ok
+
+
+## A definition wearing exactly the metadata under test, so each answer is proved on its own.
+static func _marked(metadata: Dictionary) -> ACEDefinition:
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.provider_id = "Core"
+	definition.id = "PickerGateProbe"
+	definition.metadata = metadata
+	return definition
+
+
+## The counts the sweep saw, printed so a run that hid nothing is visible rather than silent.
+static func _print_hiding_sweep(reasons: Dictionary) -> void:
+	print("[PASS] picker_no_walls_test: the hiding sweep saw %s" % str(reasons))
 
 
 ## Promise 3: the empty-result shelves. The relaxed ranker ranks near-misses the strict filter

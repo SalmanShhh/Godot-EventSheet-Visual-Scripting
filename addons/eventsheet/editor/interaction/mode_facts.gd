@@ -188,6 +188,11 @@ static func member_for(word: String) -> String:
 	return trimmed.replace(" ", "_").to_upper()
 
 
+## How many modes the band names before it starts counting. A band is a place to look, not a list of
+## everything: a game with twenty modes says the first few and how many more there are.
+const BAND_NAMES_SHOWN: int = 6
+
+
 ## The band's reading: the modes this sheet declares and the one it starts in, in one line, because
 ## that is one fact - what the modes of this game ARE. Empty for a sheet that declares none.
 static func band_reading(sheet: EventSheetResource) -> String:
@@ -195,7 +200,10 @@ static func band_reading(sheet: EventSheetResource) -> String:
 	if said.is_empty():
 		return ""
 	var opening: String = starts_in(sheet)
-	var listed: String = " · ".join(said)
+	var shown: PackedStringArray = said.slice(0, BAND_NAMES_SHOWN)
+	var listed: String = " · ".join(shown)
+	if said.size() > shown.size():
+		listed += " · " + EventSheetL10n.translate("%d more") % (said.size() - shown.size())
 	return listed if opening.is_empty() else "%s - starts in %s" % [listed, opening]
 
 
@@ -305,7 +313,7 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 		# A mode rows can get INTO but never out of is the softlock. "Out of" means any row that goes
 		# somewhere else, or the Go back that pops whatever was underneath - a mode only ever pushed
 		# onto the stack has a way out by construction.
-		if entered.has(bare) and not _has_way_out(sheet, bare, entered):
+		if entered.has(bare) and not _has_way_out(sheet, bare):
 			found.append({
 				"kind": KIND_NO_WAY_OUT, "severity": "warning", "subject": word,
 				"message": EventSheetL10n.translate("Rows go to %s and none of them ever leaves it. A player who reaches that mode is stuck in it.") % word,
@@ -313,29 +321,89 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 	return found
 
 
-## True when SOMETHING in this sheet can move the game out of one mode: another mode to go to, or a
-## Go back row popping the stack.
-static func _has_way_out(sheet: EventSheetResource, member: String, entered: PackedStringArray) -> bool:
-	if _uses_go_back(sheet.events):
-		return true
-	for other: String in entered:
-		if other != member:
-			return true
-	return false
+## The rows that cannot be the way out of a mode reached later in the game, whatever they do: they
+## run once, when the game starts or when the object goes. A Go to mode under one of them is how the
+## game BEGINS, not how a player leaves the mode they are stuck in.
+const ONE_SHOT_TRIGGER_IDS: PackedStringArray = ["OnReady", "OnEnterTree", "OnExitTree"]
 
 
-static func _uses_go_back(items: Array) -> bool:
+## True when a row that can RUN while the game is in this mode moves it somewhere else.
+##
+## The question is reachability, so it has to be asked of the rows themselves. A row is asked when
+## nothing shuts it out of the mode - it is inside a group that runs in this mode, or under an In
+## mode / On entering row naming it, or gated on no mode at all, which is a row that runs whatever
+## the game is doing. A row gated on a DIFFERENT mode is shut out, which is exactly why "some other
+## mode exists in this sheet" was never an answer to this question.
+##
+## Leaving means Go back (popping whatever was underneath), Push mode (the mode underneath is
+## remembered and Go back returns to it), or a Go to naming any mode but this one.
+static func _has_way_out(sheet: EventSheetResource, member: String) -> bool:
+	return _leaves_mode(sheet.events, member, PackedStringArray())
+
+
+static func _leaves_mode(items: Array, member: String, gates: PackedStringArray) -> bool:
 	for item: Variant in items:
 		if item is EventGroup:
-			if _uses_go_back(EventSheetGroupFacts.children(item as EventGroup)):
+			var group: EventGroup = item as EventGroup
+			if _leaves_mode(EventSheetGroupFacts.children(group), member,
+					_with_gate(gates, member_for(group.runs_in))):
 				return true
 			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
-		for action: Variant in event_row.actions:
-			if action is Resource and str((action as Resource).get("ace_id")) == "GoBackMode":
-				return true
-		if _uses_go_back(event_row.sub_events):
+		var here: PackedStringArray = _row_gates(event_row, gates)
+		if not _shut_out(here, member) and _row_leaves(event_row, member):
+			return true
+		if _leaves_mode(event_row.sub_events, member, here):
+			return true
+	return false
+
+
+## The mode gates in force for this row - the ones inherited from the groups and rows above it, plus
+## the ones the row states itself (In mode conditions, and the mode an On entering row answers).
+static func _row_gates(event_row: EventRow, gates: PackedStringArray) -> PackedStringArray:
+	var here: PackedStringArray = gates.duplicate()
+	if event_row.trigger_id == ENTERING_TRIGGER_ID:
+		here = _with_gate(here, str(event_row.trigger_params.get(MODE_PARAM, "")).strip_edges())
+	for condition: Variant in event_row.conditions:
+		if condition is Resource and str((condition as Resource).get("ace_id")) == "InMode":
+			var params: Variant = (condition as Resource).get("params")
+			if params is Dictionary:
+				here = _with_gate(here, str((params as Dictionary).get(MODE_PARAM, "")).strip_edges())
+	return here
+
+
+static func _with_gate(gates: PackedStringArray, gate: String) -> PackedStringArray:
+	var bare: String = gate.strip_edges()
+	if bare.is_empty() or gates.has(bare):
+		return gates
+	var grown: PackedStringArray = gates.duplicate()
+	grown.append(bare)
+	return grown
+
+
+## True when these gates keep the row from ever running in this mode - any gate naming another one.
+static func _shut_out(gates: PackedStringArray, member: String) -> bool:
+	for gate: String in gates:
+		if gate != member:
+			return true
+	return false
+
+
+## True when this row's own actions move the game out of the mode being judged.
+static func _row_leaves(event_row: EventRow, member: String) -> bool:
+	if ONE_SHOT_TRIGGER_IDS.has(event_row.trigger_id):
+		return false
+	for action: Variant in event_row.actions:
+		if not (action is Resource):
+			continue
+		var ace_id: String = str((action as Resource).get("ace_id"))
+		if ace_id == "GoBackMode" or ace_id == "PushMode":
+			return true
+		if ace_id != "GoToMode":
+			continue
+		var params: Variant = (action as Resource).get("params")
+		if params is Dictionary and str((params as Dictionary).get(MODE_PARAM, "")).strip_edges() != member:
 			return true
 	return false

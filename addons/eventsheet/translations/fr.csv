@@ -5210,3 +5210,37 @@ is on screen,est à l'écran
 The node to ask about.,Le nœud sur lequel porte la question.
 The child that was just added under this node. Filled in for you when the trigger fires.,L'enfant qui vient d'être ajouté sous ce nœud. Rempli pour vous au déclenchement.
 The child that is leaving this node. Filled in for you when the trigger fires.,L'enfant qui quitte ce nœud. Rempli pour vous au déclenchement.
+this run,cette exécution
+no run yet,aucune exécution
+last run,dernière exécution
+"last run, %s","dernière exécution, %s"
+Event %d,Événement %d
+never fired,jamais déclenché
+fired %s time,déclenché %s fois
+fired %s times,déclenché %s fois
+%.2f ms each,%.2f ms chacune
+%.1f times a frame,%.1f fois par image
+Project View,Vue du projet
+Every sheet,Toutes les feuilles
+Runs as,S'exécute comme
+Events,Événements
+Described,Décrit
+Findings,Constats
+"A name, a node, an animation, a mode…","Un nom, un nœud, une animation, un mode…"
+Find,Rechercher
+Find across every sheet,Rechercher dans toutes les feuilles
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.","Un nom n'est pas une seule chose : écrit, lu et comparé sont des faits différents à son sujet, et la facette indique lequel vous cherchez."
+Hits,Résultats
+Your Game: the selected sheet's own page,Votre jeu : la page propre de la feuille sélectionnée
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.","Cette page est composée à partir de la feuille à chaque sélection, elle ne peut donc pas être périmée. Sélectionnez une feuille ci-dessus pour la lire."
+%d of %d described,%d sur %d décrits
+Autoload sheet,Feuille Autoload
+Behavior sheet,Feuille de comportement
+Test sheet,Feuille de test
+"Node type %s, extending %s","Type de nœud %s, étend %s"
+Sheet on %s,Feuille sur %s
+%s constant,constante %s
+"%s, exported","%s, exportée"
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop : %d script(s) de ce projet, et aucun n'a pu être ouvert pour être mesuré. Installer le plugin n'a rien changé - un script reste du code jusqu'à ce que vous l'ouvriez comme feuille."
+%d more node(s) mirrored by a negative scale,%d nœud(s) de plus mis en miroir par une échelle négative
+%d more node(s) scaled unevenly and turned,%d nœud(s) de plus mis à l'échelle inégalement et tournés

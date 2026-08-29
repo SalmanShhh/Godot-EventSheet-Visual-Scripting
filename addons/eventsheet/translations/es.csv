@@ -5210,3 +5210,37 @@ is on screen,está en pantalla
 The node to ask about.,El nodo por el que se pregunta.
 The child that was just added under this node. Filled in for you when the trigger fires.,El hijo que se acaba de añadir bajo este nodo. Se rellena por ti cuando el disparador se activa.
 The child that is leaving this node. Filled in for you when the trigger fires.,El hijo que está saliendo de este nodo. Se rellena por ti cuando el disparador se activa.
+this run,esta ejecución
+no run yet,aún sin ejecución
+last run,última ejecución
+"last run, %s","última ejecución, %s"
+Event %d,Evento %d
+never fired,nunca se disparó
+fired %s time,se disparó %s vez
+fired %s times,se disparó %s veces
+%.2f ms each,%.2f ms cada una
+%.1f times a frame,%.1f veces por fotograma
+Project View,Vista del proyecto
+Every sheet,Todas las hojas
+Runs as,Se ejecuta como
+Events,Eventos
+Described,Descrito
+Findings,Hallazgos
+"A name, a node, an animation, a mode…","Un nombre, un nodo, una animación, un modo…"
+Find,Buscar
+Find across every sheet,Buscar en todas las hojas
+"A name is not one thing: written, read and compared are different facts about it, and the facet says which one you are hunting.","Un nombre no es una sola cosa: escrito, leído y comparado son hechos distintos sobre él, y la faceta dice cuál estás buscando."
+Hits,Resultados
+Your Game: the selected sheet's own page,Tu juego: la página propia de la hoja seleccionada
+"This page is composed from the sheet every time you select it, so it cannot be out of date. Select a sheet above to read it.","Esta página se compone de la hoja cada vez que la seleccionas, así que no puede quedar desactualizada. Selecciona una hoja arriba para leerla."
+%d of %d described,%d de %d descritos
+Autoload sheet,Hoja de Autoload
+Behavior sheet,Hoja de comportamiento
+Test sheet,Hoja de prueba
+"Node type %s, extending %s","Tipo de nodo %s, extiende %s"
+Sheet on %s,Hoja en %s
+%s constant,constante %s
+"%s, exported","%s, exportada"
+"Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: %d script(s) de este proyecto, y ninguno pudo abrirse para medirlo. Instalar el plugin no cambió nada: un script es código hasta que lo abres como hoja."
+%d more node(s) mirrored by a negative scale,%d nodo(s) más reflejados por una escala negativa
+%d more node(s) scaled unevenly and turned,%d nodo(s) más escalados de forma desigual y girados

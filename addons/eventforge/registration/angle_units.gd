@@ -41,6 +41,10 @@ const DEGREE_SIGN: String = "°"
 ## The names that make an expression radian-shaped on sight. A reader who wrote PI meant PI.
 const RADIAN_WORDS: Array[String] = ["PI", "TAU"]
 
+## The compiled test for those names, built once. Every angle row of an opened sheet asks it while
+## its text is composed, so the pattern is compiled for the session rather than for the question.
+static var _radian_words_regex: RegEx = null
+
 
 ## What the project means by a bare number, "degrees" unless it says otherwise.
 static func default_unit() -> String:
@@ -72,10 +76,18 @@ static func stored(typed: String, wants: String = RADIANS) -> String:
 
 
 ## The unit a reader said out loud at the end of what they typed, "" when they said none.
+##
+## Said OUT LOUD means the word stands on its own: after a space ("45 deg") or straight after the
+## number it belongs to ("1.2rad"). A name that merely ends in those three letters - `angle_deg`,
+## `aim_rad`, `turn_grad` - said nothing, and reading a unit off it would chop the tail off the
+## identifier and emit a variable the game does not have.
 static func said_unit(typed: String) -> String:
 	var lowered: String = typed.strip_edges().to_lower()
 	for suffix: String in [RADIAN_SUFFIX, DEGREE_SUFFIX]:
-		if lowered.ends_with(suffix):
+		if not lowered.ends_with(suffix) or lowered.length() == suffix.length():
+			continue
+		var before: String = lowered[lowered.length() - suffix.length() - 1]
+		if before == " " or before == "\t" or before == "." or before.is_valid_int():
 			return suffix
 	return ""
 
@@ -83,6 +95,12 @@ static func said_unit(typed: String) -> String:
 ## What the ROW says the value is: the number with its unit, always, whichever way it was written.
 ## A value nothing can be said about (a variable, a call) reads as itself - the row would rather say
 ## nothing than claim a unit it cannot know.
+##
+## The project setting is NOT consulted here, and that is the point of the whole file: what is stored
+## already says which unit it is, so a bare number is degrees whichever way the project thinks. A
+## reader who thinks in radians has their typing converted on the way IN (a plain number they type
+## is written `rad_to_deg(…)` into a slot the template converts back), so a bare number never means
+## radians in a stored sheet - and turning the setting on cannot re-read somebody else's file.
 static func reading(value: String) -> String:
 	var text: String = value.strip_edges()
 	if text.is_empty():
@@ -96,7 +114,7 @@ static func reading(value: String) -> String:
 	if is_radian_spelling(text):
 		return "%s %s" % [text, RADIAN_SUFFIX]
 	if text.is_valid_float():
-		return text + DEGREE_SIGN if default_unit() == DEGREES else "%s %s" % [text, RADIAN_SUFFIX]
+		return text + DEGREE_SIGN
 	return text
 
 
@@ -112,11 +130,17 @@ static func inside(value: String, call_name: String) -> String:
 
 ## True when an expression is written in radians on its own evidence - it names PI or TAU. A bare
 ## number is NOT one of these: what a bare number means is what the project setting says.
+##
+## The name has to stand alone to count, which is what the word boundaries are for: `spin_speed * PI`
+## and `x * TAU` name the constant wherever in the expression they sit, while `SPIN`, `TAUNT` and
+## `my_PI_value` do not name it at all. An expression that ends in the constant is the common
+## spelling and was the one this missed, so a reader's own PI came back wrapped in `deg_to_rad`.
 static func is_radian_spelling(value: String) -> bool:
-	var text: String = value.strip_edges()
-	for word: String in RADIAN_WORDS:
-		if text == word or text.begins_with(word + " ") or text.begins_with(word + "/") \
-				or text.begins_with(word + "*") or text.contains(" %s " % word) \
-				or text.contains("(%s" % word):
-			return true
-	return false
+	return _radian_words().search(value.strip_edges()) != null
+
+
+static func _radian_words() -> RegEx:
+	if _radian_words_regex == null:
+		_radian_words_regex = RegEx.new()
+		_radian_words_regex.compile("\\b(%s)\\b" % "|".join(PackedStringArray(RADIAN_WORDS)))
+	return _radian_words_regex

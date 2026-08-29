@@ -17,20 +17,21 @@ row shown here comes with the code it compiles to, so you can check.
 4. [Static locals: a local that remembers](#static-locals-a-local-that-remembers)
 5. [Type words, and the GDScript they write](#type-words-and-the-gdscript-they-write)
 6. [The code echo and the View dial](#the-code-echo-and-the-view-dial)
-7. [Adding a variable](#adding-a-variable)
-8. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
-9. [Who owns a variable](#who-owns-a-variable)
-10. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
-11. [The Compare dialog](#the-compare-dialog)
-12. [Invert, or, and else](#invert-or-and-else)
-13. [Picking with a test](#picking-with-a-test)
-14. [The parameters dialog](#the-parameters-dialog)
-15. [The sheet head, band by band](#the-sheet-head-band-by-band)
-16. [What the scene adds: keeps in step, spawned by, and the sync mark](#what-the-scene-adds-keeps-in-step-spawned-by-and-the-sync-mark)
-17. [The Sheet Type dialog](#the-sheet-type-dialog)
-18. [Groups](#groups)
-19. [Regions](#regions)
-20. [Tips and common mistakes](#tips-and-common-mistakes)
+7. [Add ▸ Declare: every way to give something a name](#add--declare-every-way-to-give-something-a-name)
+8. [Adding a variable](#adding-a-variable)
+9. [Editing a variable row on the canvas](#editing-a-variable-row-on-the-canvas)
+10. [Who owns a variable](#who-owns-a-variable)
+11. [Asking a question: the comparison rows](#asking-a-question-the-comparison-rows)
+12. [The Compare dialog](#the-compare-dialog)
+13. [Invert, or, and else](#invert-or-and-else)
+14. [Picking with a test](#picking-with-a-test)
+15. [The parameters dialog](#the-parameters-dialog)
+16. [The sheet head, band by band](#the-sheet-head-band-by-band)
+17. [What the scene adds: keeps in step, spawned by, and the sync mark](#what-the-scene-adds-keeps-in-step-spawned-by-and-the-sync-mark)
+18. [The Sheet Type dialog](#the-sheet-type-dialog)
+19. [Groups](#groups)
+20. [Regions](#regions)
+21. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## The variable sentence
 
@@ -239,6 +240,44 @@ GDScript theme you already read code in.
 In **code** the row IS the line: the sentence spans step aside, the echo comes up to full strength,
 and the badge, the wash, the drag, the rename and the dialog are all unchanged. It is a toolbar
 setting, never a row on the sheet. Simple Mode pins it to **sentence**.
+
+## Add ▸ Declare: every way to give something a name
+
+A sheet names seven kinds of thing, and for most of this plugin's life each one lived on its own
+menu somewhere. **Add ▸ Declare** is the one place they are all listed:
+
+| Entry | What it opens |
+|---|---|
+| **Variable…** | the Add variable dialog described below, on whatever scope you used last |
+| **Constant…** | the same dialog with the Constant tick already ticked |
+| **Node reference…** | the same dialog with **On ready** already ticked - the `@onready var hero := $Hero` shape |
+| **Resource…** | the resource declaration dialog |
+| **Enum…** | drops a fresh enum row straight into its editor, ready to be named |
+| **Signal…** | drops a fresh signal row straight into its editor, ready to be named |
+| **Collection…** | the variable dialog on the List type, whose Items editor is the grid |
+
+Nothing moved and nothing forked. Every entry opens the dialog its scattered sibling already opened,
+and every one of those siblings, key and menu still works exactly as it did. The submenu is the place
+to **find** them - the answer to "I know this sheet can name a thing, but which menu was it on".
+
+Enum and Signal follow the beat **Add Group** uses: the row lands first and you name it in place,
+because a fresh enum with no values and a fresh signal with no name are both easier to see than to
+describe in a dialog.
+
+### The Doctor hears a name nothing uses
+
+Two advisory notes ride with this, both on the generated script that declares the name:
+
+- **An enum value nothing ever writes** - *"Enum value Mode.HURT is declared but nothing ever names
+  it"*. The corpus is every script in the project, not just this sheet.
+- **A signal announced but never heard** - nothing in the project connects it, no scene wires it,
+  and no row awaits it.
+
+Both are deliberately generous, and only compiled sheet output is judged. In hand-written code an
+unused name is often an offer to code not written yet, a name handed around as a string counts as a
+listener, and published packs are exempt because their vocabulary exists to be used by somebody
+else's project. Accusing a working game is worse than missing a tidy-up, so neither finding is ever
+more than a note.
 
 ## Adding a variable
 

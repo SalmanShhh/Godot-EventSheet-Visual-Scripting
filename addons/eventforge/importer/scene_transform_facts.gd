@@ -12,6 +12,9 @@
 #
 # NOTHING IS STORED and nothing is guessed. Every sentence is derived from the scene on every ask,
 # so a `.gd` still round-trips byte for byte and a fact disappears the moment its cause does.
+#
+# AND IT NAMES A FEW AND COUNTS THE REST. A scene with fifty mirrored bodies has one problem, not
+# fifty bands: three of a kind are named and the others counted in one line after them.
 @tool
 class_name EventSheetSceneTransformFacts
 extends RefCounted
@@ -26,6 +29,11 @@ const BODY_CLASSES: PackedStringArray = ["CollisionObject2D", "CollisionObject3D
 ## `Vector2(1, 1.0000001)` is a scene nobody scaled.
 const TOLERANCE: float = 0.001
 
+## How many nodes of one kind the head names before it starts counting. A head is a place to LOOK,
+## not an inventory: a scene with fifty mirrored bodies has one problem, not fifty bands, and a
+## reader who has read three of them has understood the fourth.
+const BANDS_SHOWN: int = 3
+
 
 ## The `transform` bands of the sheet's one attached scene: the facts that are about to bite, and
 ## nothing else. Empty for a scene with nothing scaled, which is most scenes.
@@ -38,10 +46,18 @@ static func bands(script_path: String) -> Array[Dictionary]:
 	var inside: Dictionary = scaled_ancestor(nodes, script_path)
 	if not inside.is_empty():
 		built.append(_band(inside_reading(inside), inside["node"], scene_path, false))
-	for node: Dictionary in mirrored_bodies(nodes):
-		built.append(_band(mirrored_warning(node), node, scene_path, true))
-	for node: Dictionary in shearing_nodes(nodes):
-		built.append(_band(shear_warning(node), node, scene_path, true))
+	var mirrored: Array[Dictionary] = mirrored_bodies(nodes)
+	for index: int in range(mini(mirrored.size(), BANDS_SHOWN)):
+		built.append(_band(mirrored_warning(mirrored[index]), mirrored[index], scene_path, true))
+	if mirrored.size() > BANDS_SHOWN:
+		built.append(_band(EventSheetL10n.translate("%d more node(s) mirrored by a negative scale")
+			% (mirrored.size() - BANDS_SHOWN), mirrored[BANDS_SHOWN], scene_path, true))
+	var shearing: Array[Dictionary] = shearing_nodes(nodes)
+	for index: int in range(mini(shearing.size(), BANDS_SHOWN)):
+		built.append(_band(shear_warning(shearing[index]), shearing[index], scene_path, true))
+	if shearing.size() > BANDS_SHOWN:
+		built.append(_band(EventSheetL10n.translate("%d more node(s) scaled unevenly and turned")
+			% (shearing.size() - BANDS_SHOWN), shearing[BANDS_SHOWN], scene_path, true))
 	return built
 
 

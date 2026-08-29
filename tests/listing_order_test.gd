@@ -11,6 +11,10 @@ extends RefCounted
 
 static func run() -> bool:
 	var passed: bool = true
+	# The scene walk caches itself for the session. Continuous integration runs the whole suite
+	# serially in ONE process, so a cache warmed here would be inherited by every later test that
+	# pins what a cold project answers - the walk is done from cold and dropped again on the way out.
+	EventSheetSceneConnections.clear_cache()
 	var scene_paths: PackedStringArray = EventSheetSceneConnections.scene_paths()
 	var doctor_scripts: PackedStringArray = EventSheetProjectDoctor._walk_project_scripts()
 	passed = _check_sorted("scene_paths()", scene_paths) and passed
@@ -22,6 +26,7 @@ static func run() -> bool:
 	# these two sweep the repository itself, which is never empty of scenes or scripts.
 	passed = _check("scene_paths() found the repository's scenes", scene_paths.is_empty(), false) and passed
 	passed = _check("doctor walk found the repository's scripts", doctor_scripts.is_empty(), false) and passed
+	EventSheetSceneConnections.clear_cache()
 	return passed
 
 
