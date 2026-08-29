@@ -206,6 +206,25 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 	passed = _check("a hand-written guard re-emits byte for byte",
 		_compile(imported, "user://eventforge_remove_asked_back.gd") == source, true) and passed
 
+	# AND A PUBLISHED VERB'S BODY IS THIS SHEET'S ROWS TOO. The walk used to read sheet.events only, so
+	# a question asked by an event INSIDE a verb was recorded nowhere and the compiler wrapped a second
+	# `if` around the author's own one - in the same sheet where a top-level event got exactly one.
+	var in_a_verb: EventSheetResource = _sheet()
+	in_a_verb.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
+	var verb: EventFunction = EventFunction.new()
+	verb.function_name = "clear_the_target"
+	var guarded_event: EventRow = EventRow.new()
+	guarded_event.conditions.append(_condition("IsStillHere", {"object": "held_enemy"}))
+	var inner: EventRow = EventRow.new()
+	inner.actions.append(_action("RemoveNow", {"object": "held_enemy"}))
+	guarded_event.sub_events.append(inner)
+	verb.events.append(guarded_event)
+	in_a_verb.functions.append(verb)
+	var verb_output: String = _compile(in_a_verb, "user://eventforge_remove_in_verb.gd")
+	passed = _check("a question asked inside a verb is not asked again under it",
+		verb_output.count("is_instance_valid(held_enemy)"), 1) and passed
+	passed = _check("and the verb the guard walked still parses", _parses(verb_output), true) and passed
+
 	# A PARENT'S question counts as asked for every row under it: the sub-event runs inside that `if`.
 	var nested: EventSheetResource = _sheet()
 	nested.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}

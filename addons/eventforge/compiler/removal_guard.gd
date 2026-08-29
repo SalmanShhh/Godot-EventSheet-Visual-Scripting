@@ -87,6 +87,19 @@ static func facts(sheet: EventSheetResource) -> Dictionary:
 		if descriptor is Dictionary and _is_node_type(str((descriptor as Dictionary).get("type", ""))):
 			stored[str(key)] = true
 	_collect(sheet.events, stored, asked, {})
+	# A PUBLISHED VERB'S BODY IS THIS SHEET'S ROWS TOO. Without this the walk answered about half a
+	# sheet: a removal inside a verb, under an event whose own condition already asked "is it still
+	# here", got a SECOND guard wrapped around the first, because the enclosing question was recorded
+	# nowhere. The findings walk and the completion walk both read sheet.functions, and three walkers
+	# over one sheet disagreeing about where its names live is the shape of a bug nobody can reproduce.
+	#
+	# Only the ASKED map grows here, and deliberately. A node-typed local declared inside a verb is a
+	# local of that call: it is set and used in the same run, so nothing can have freed it in between
+	# and a guard on it would only ever be true.
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_collect(event_function.events, {}, asked, {})
 	return {"stored": stored, "asked": asked}
 
 

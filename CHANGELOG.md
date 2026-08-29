@@ -240,6 +240,14 @@
   which is what "stated once and applied nowhere else" was supposed to mean; a timeline step, which
   compiles through the same helper, is covered by the same change.
 
+- **The guard's walk reads a published verb's rows too.** It read `sheet.events` only, so a question
+  asked by an event INSIDE a verb was recorded nowhere and the compiler wrapped a second
+  `if is_instance_valid(…)` around the author's own one - in the same sheet where a top-level event
+  got exactly one. The findings walk and the completion walk had always read `sheet.functions`; three
+  walkers over one sheet disagreeing about where its names live is the shape of a bug nobody can
+  reproduce. Only the asked-already map grows there, and deliberately: a node-typed local declared
+  inside a verb is set and used in the same call, so a guard on it could only ever be true.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch
