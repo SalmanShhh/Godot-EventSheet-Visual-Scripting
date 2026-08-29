@@ -166,6 +166,68 @@ Figures need no translating at all: a figure is real rows drawn by the real rend
 already go through the plugin's translation domain, so an English page shows a Spanish reader
 Spanish rows.
 
+### One search over everything
+
+![One search over the whole Manual: guides, System and behavior reference and the glossary in one tagged list, with the Engine group at its foot](images/doc-search-engine-group.png)
+
+There is one search box, and it searches everything the reader can reach: your guides, the
+generated System and Behavior reference, the tutorials, the dictionary, a pack's own `guide.md`, the
+project's own notes, and the engine's class reference. Every result row is **tagged** with what it
+is - *guide*, *action*, *System reference*, *engine reference* - so one list can hold all of it
+without the reader having to know which half their word lived in.
+
+Two rules decide the order, and knowing them is what makes a guide findable:
+
+- **Where the hit landed outranks how it matched.** A page *titled* after the word beats a page with
+  a matching *heading*, which beats a page that merely mentions it in prose. So the words you put in
+  a title and in headings are the words your page can be found by - a heading of "Slots, formats and
+  when to write" is findable; "Some notes" is not.
+- **The plugin's own answers come before the engine's.** An exact hit on a Godot class name still
+  sorts under a guide that talks about the same thing in the sheet's own words.
+
+The index is **baked into the shipped bundle** at build time (`search.esdoc`), so a keystroke
+searches a table that is already in memory rather than reading three megabytes of Markdown on the
+reader's first keypress. That is another derived file the drift check covers: edit a guide, forget
+to regenerate, and the suite fails rather than shipping a search over a corpus nobody installed.
+
+**A search never comes back empty.** When nothing matches, the reader gets the nearest sections by
+similarity - which is what catches a misspelling or a plural - and under them one row offering to
+ask for the page, which opens the tracker with their search already in the title. A blank panel
+tells a reader their question was wrong; it is far likelier that the corpus is missing a page, and
+that row is how you find out which one.
+
+### The engine's own reference, harvested
+
+Half of what a reader wants explained is not this plugin's vocabulary at all - it is
+`global_position`, `queue_free`, `body_entered`. That text already exists and is already correct for
+the exact build in front of them, so none of it is written here and none of it is downloaded: the
+running binary prints its own class reference (`--doctool`), once, in the background, cached under
+`user://` keyed by the engine's version string. Upgrade Godot and the key changes, so the next
+harvest is the new engine's text; never upgrade and it never runs again.
+
+It shows up in three places, and in all three it is the same text:
+
+- **F1 on a row whose echo names an engine property** opens the engine's own page for it, at that
+  member.
+- **Pickers describe built-in methods and signals** with the engine's own sentence, in the same slot
+  a script's `##` lines fill for the members you wrote.
+- **Search gains an Engine group**, ranked below the plugin's own answers as above.
+
+The engine reference is published under CC BY 4.0, so every surface that shows it shows the line
+*Godot Engine documentation, used under CC BY 4.0.* with it, and an exported static site carries the
+same line onto any page that quotes it. That is a licence term, not decoration - if you add a
+surface that shows engine text, it shows the credit.
+
+### The door swings back
+
+`##` comments are **Godot's own documentation convention**, not something this plugin invented. The
+engine renders them in its own class reference for any script with a `class_name`, which is why the
+descriptions you write on a sheet's functions - and the ones a pack's `@ace_*` annotations put into
+emitted code - are readable in Godot's F1 too, with no export step and nothing written twice.
+
+One convention, two viewers. When you are deciding where a description belongs, that is the answer:
+write it as a `##` line on the thing it describes, and both readers get it.
+
 ## The three doc sets
 
 | Set | Where | What it is | Discovered how |
@@ -331,9 +393,10 @@ godot --headless --path . --script tools/build_help_bundle.gd
 godot --headless --path . --script tools/build_help_bundle.gd --check
 ```
 
-The bundle also carries two derived files the same check covers: `figures.esdoc` (the figure
-verdicts) and `whatsnew.esdoc` (the What's new page). So **a CHANGELOG edit needs this regeneration
-too**, not only a guide edit.
+The bundle also carries four derived files the same check covers: `figures.esdoc` (the figure
+verdicts), `whatsnew.esdoc` (the What's new page), `dictionary.esdoc` (the call dictionary) and
+`search.esdoc` (the baked search index). So **a CHANGELOG edit needs this regeneration too**, not
+only a guide edit.
 
 The second command must print `drifted=0`. `tests/doc_library_test.gd` runs the same
 comparison in the suite, so a forgotten regeneration fails the build rather than shipping stale

@@ -6,6 +6,35 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The Manual - one search, and the engine's own words
+
+- **The search index ships baked.** The reader's first keystroke used to build it: reading the whole
+  3.2 MB corpus and splitting all of it into words, in the editor, on that keypress. The bundle now
+  carries the table (`search.esdoc`, 1.3 MB for 191 pages - the unique words rather than the prose),
+  so a keystroke searches something already in memory and touches no file. The build regenerates it
+  from the pages and the suite fails on any difference, so the copy cannot quietly disagree with the
+  corpus it came from. Only a pack's own `guide.md` and a project's own notes are still indexed
+  live, because the bundle cannot know about them.
+- **A search never comes back empty.** A query nothing matches now answers with the nearest sections
+  by similarity - which is what catches a misspelling or a plural - and, under them, one row
+  offering to ask for the page, which opens the tracker with the search already in the title,
+  through the same channel the foot of every page already uses. A blank panel tells a reader their
+  question was wrong; it is far likelier that a page is missing.
+- **The engine's class reference, harvested from the engine in front of you.** The running binary
+  prints its own reference (`--doctool`), once, in the background, cached under `user://` keyed by
+  the engine's version string - so an upgrade re-harvests and everything else never runs it again.
+  Nothing is downloaded and nothing is written by hand. It surfaces in three places and it is the
+  same text in all three: a class page in the Manual, pickers describing built-in methods and
+  signals in the same slot a script's `##` lines fill, and an Engine group in the search - ranked
+  below the plugin's own answers, because an exact hit on a class name is still one hop further out
+  than a guide about the same thing in the sheet's own words.
+- **The engine text is credited where it appears.** The Godot class reference is CC BY 4.0, so every
+  page built from it carries \"Godot Engine documentation, used under CC BY 4.0.\", and an exported
+  static site is handed the same one line for any page that quotes it.
+- **The door swings back, and the guide now says so.** `##` comments are Godot's own documentation
+  convention, so the descriptions written on a sheet's functions are rendered by the engine's own F1
+  as well as by this Manual. One convention, two viewers, nothing written twice.
+
 ### The test runner - a verdict that keeps, one suite at a time, and the ten slowest
 
 - **A green run stamps the tree it was green for.** The launcher records the working tree's content
