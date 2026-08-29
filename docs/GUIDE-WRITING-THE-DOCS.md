@@ -8,18 +8,19 @@ before you write. Read this once; after that the gates will tell you when you sl
 
 1. [Where docs live, and where they show up](#where-docs-live-and-where-they-show-up)
 2. [The three doc sets](#the-three-doc-sets)
-3. [Naming a guide](#naming-a-guide)
-4. [The shape of an addon or module guide](#the-shape-of-an-addon-or-module-guide)
-5. [Worked examples that draw themselves - the figure fences](#worked-examples-that-draw-themselves---the-figure-fences)
-6. [Learning paths](#learning-paths)
-7. [When a guide falls behind its pack - Doctor > Docs](#when-a-guide-falls-behind-its-pack---doctor--docs)
-8. [House rules the suite enforces](#house-rules-the-suite-enforces)
-9. [Regenerate before you commit](#regenerate-before-you-commit)
-10. [Housekeeping: the chores, and the three doors to them](#housekeeping-the-chores-and-the-three-doors-to-them)
-11. [The Manual as a site](#the-manual-as-a-site)
-12. [Documenting a third-party pack](#documenting-a-third-party-pack)
-13. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
-14. [Common mistakes](#common-mistakes)
+3. [The fourth surface: descriptions and comments in the reader's own sheet](#the-fourth-surface-descriptions-and-comments-in-the-readers-own-sheet)
+4. [Naming a guide](#naming-a-guide)
+5. [The shape of an addon or module guide](#the-shape-of-an-addon-or-module-guide)
+6. [Worked examples that draw themselves - the figure fences](#worked-examples-that-draw-themselves---the-figure-fences)
+7. [Learning paths](#learning-paths)
+8. [When a guide falls behind its pack - Doctor > Docs](#when-a-guide-falls-behind-its-pack---doctor--docs)
+9. [House rules the suite enforces](#house-rules-the-suite-enforces)
+10. [Regenerate before you commit](#regenerate-before-you-commit)
+11. [Housekeeping: the chores, and the three doors to them](#housekeeping-the-chores-and-the-three-doors-to-them)
+12. [The Manual as a site](#the-manual-as-a-site)
+13. [Documenting a third-party pack](#documenting-a-third-party-pack)
+14. [The verification loop for a docs change](#the-verification-loop-for-a-docs-change)
+15. [Common mistakes](#common-mistakes)
 
 ## Where docs live, and where they show up
 
@@ -226,7 +227,7 @@ Two rules decide the order, and knowing them is what makes a guide findable:
   sorts under a guide that talks about the same thing in the sheet's own words.
 
 The index is **baked into the shipped bundle** at build time (`search.esdoc`), so a keystroke
-searches a table that is already in memory rather than reading three megabytes of Markdown on the
+searches a table that is already in memory rather than reading four megabytes of Markdown on the
 reader's first keypress. That is another derived file the drift check covers: edit a guide, forget
 to regenerate, and the suite fails rather than shipping a search over a corpus nobody installed.
 
@@ -273,8 +274,8 @@ write it as a `##` line on the thing it describes, and both readers get it.
 | Set | Where | What it is | Discovered how |
 |---|---|---|---|
 | Guides | `docs/GUIDE-*.md`, `docs/*.md` | Topic guides, references, patterns, migration | listed in `docs/README.md` |
-| Addon guides | `docs/Addons/<Title-Case-Words>.md` | One per behavior pack (72 and counting) | by directory |
-| Module guides | `docs/Modules/<Title-Case-Words>.md` | One per family of builtin vocabulary (36 over 48 modules) | by directory |
+| Addon guides | `docs/Addons/<Title-Case-Words>.md` | One per behavior pack (93 of the 112 packs; the other 19 are companion data assets and loaders, documented inside their partner's guide) | by directory |
+| Module guides | `docs/Modules/<Title-Case-Words>.md` | One per family of builtin vocabulary (43 guides over 75 module files) | by directory |
 
 The addon and module sets are discovered as **directories** - nothing lists a guide by name, so a
 new guide ships by existing. `docs/internal/` never ships; specs and process notes live there.
@@ -289,6 +290,91 @@ Which set a new page belongs to:
   guide's reference table and use cases.
 - Anything else - a workflow, a concept, a migration - is a top-level guide, indexed by hand in
   `docs/README.md` under the group it belongs to.
+
+## The fourth surface: descriptions and comments in the reader's own sheet
+
+The three sets above are the pages *you* write. There is a fourth body of documentation this project
+ships machinery for and writes none of: the prose a reader puts on their own game. It matters to a
+docs author for one reason - the rules are not this plugin's, so there is nothing to teach and
+nothing to invent, and a guide that says otherwise is wrong.
+
+**The whole rule is GDScript's own.** A line opening `##` is documentation; a line opening a single
+`#` is private to the file. Godot renders `##` in its own class reference for any script with a
+`class_name`, so a description written on a sheet is readable in the engine's F1 with no export step.
+The sheet adopts that whole and adds nothing: there is no "publish this" field anywhere, because the
+marker the row writes **is** the setting. One fact, one store, two readers.
+
+### The same sheet, as rows and as the file
+
+This is one worked example. In the Manual it draws as rows, because it is a compiled shape that
+round-trips; on GitHub and in an exported site it is the file. Both are the same bytes - which is the
+point of the section, so it is deliberately not written out twice.
+
+![The example below drawn as rows: a sheet head whose class line carries the sheet's own description, an Instance number coyote_time = 0.12 row with its declaration echoed beside it, a signal row under its sentence, an On created event holding a documentation note, two Set actions and a private note, and a Still Forgiven condition function under its own sentence](images/description-surfaces.png)
+
+<!-- caption: One sheet carrying every description surface at once -->
+```eventsheet
+extends CharacterBody2D
+
+## The player, and the one rule that makes a late jump still count.
+
+## @ace_group(uid="ground_rules", name="Ground rules", description="Everything that decides whether the player is standing on something.")
+
+## How long after leaving a ledge a jump is still allowed.
+var coyote_time: float = 0.12
+
+## The player walked off an edge without jumping.
+signal slipped_off
+
+func _ready() -> void:
+	## The numbers this sheet is built on.
+	coyote_time = 0.12
+	# measured against the six-frame input buffer, do not round this
+	velocity = Vector2.ZERO
+
+## True while the ledge is still forgiving the player.
+func still_forgiven(since_left_ground: float) -> bool:
+	return since_left_ground < coyote_time
+```
+
+Every surface, and the line of that file it is:
+
+| What carries a description | The line above, exactly | Why there |
+|---|---|---|
+| the sheet | `## The player, and the one rule ...`, the `##` block right after `extends` | Godot's own class-doc position |
+| a group | the `description=` field inside `## @ace_group(...)` | a group has no GDScript declaration of its own to sit above |
+| a variable | the `##` line above `var coyote_time`, which is also its Inspector tooltip | where a Godot reader already looks |
+| a signal | the `##` prose above `signal slipped_off` | same |
+| a function | the `##` line above `func still_forgiven` | a function *published* as a verb carries its prose in `## @ace_description(...)` instead, because the picker's words and the reader's words must be one text |
+| a documentation comment row | `## The numbers this sheet is built on.`, inside the body | prose of the manual page, in sheet order |
+| a private comment row | `# measured against the six-frame input buffer ...` | never leaves the sheet: not the manual, not the search, not an export |
+
+`EventSheetDescriptions` is the one reader and the one writer for the first five, so the picker
+entry, a completion detail, a dialog's help strip, the generated manual, the Project View and the
+Doctor all ask the same place. Nothing caches a description anywhere else.
+
+### The checkbox, and both spellings
+
+Authoring the comment kind is one checkbox: right-click a comment row, **Edit Comment…**, tick
+**Shows in the manual**. Ticked writes `## `, unticked writes `# `. The row restyles as you confirm
+and the echo at its right edge shows the line it now really writes.
+
+Two things about that are worth knowing before you document it:
+
+- **Both spellings open as the same row kind.** Type `##` or `#` into the `.gd` yourself and the
+  sheet reads it as a comment row on the matching side. A `#` written with no space after it comes
+  back with no space after it - the exact marker is kept, so re-ticking a box on a row that was
+  already documentation does not silently respell it.
+- **A `#` line is never documentation debt.** Coverage counts `##` paragraphs and the descriptions of
+  declared things. A private note moves no number and nothing nudges you to promote it. The one
+  exception is a comment opening `TODO` or `FIXME`, which is listed by name under **Still to do** in
+  the Project View - a to-do list, which is a different thing from a book, and it still never reaches
+  the manual.
+
+**Where to write about this.** `docs/GUIDE-DESCRIBING-YOUR-GAME.md` is the reader-facing page; this
+section is the author-facing half, and it exists so a guide never invents a third story. If you find
+yourself explaining in some other guide what `##` means, link nothing and write nothing - say the one
+sentence at the top of this section and move on.
 
 ## Naming a guide
 
@@ -369,6 +455,24 @@ into a file); row count does not discriminate, which is why there is no "two row
 
 So: to make an example draw itself, write it as the compiled shape a sheet produces, header
 included. To keep an example as code, leave the header off or add `<!-- no-figure -->`.
+
+This is the whole of it - a header, then lifecycle handlers with the rows under them. Nothing in it
+is figure syntax, and it is the same text you would get by saving the sheet:
+
+<!-- caption: The smallest example that draws itself -->
+```gdscript
+extends Node2D
+
+func _ready() -> void:
+	position = Vector2(64.0, 32.0)
+
+func _process(delta: float) -> void:
+	if position.x > 320.0:
+		position.x = 0.0
+```
+
+Two handlers become two events; the `if` becomes the event's condition and the line under it the
+action. Drop the `extends` line and the same body is a code block, because a fragment is not a sheet.
 
 Captions: a figure's caption is the nearest heading above it, or `<!-- caption: ... -->` on the
 line above the fence. The caption comment works above **both** fence kinds, so wanting a caption
