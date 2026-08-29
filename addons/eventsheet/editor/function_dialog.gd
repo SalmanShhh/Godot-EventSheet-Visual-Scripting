@@ -302,7 +302,10 @@ func open_for_edit(event_function: EventFunction) -> void:
 func _show_draft_offer(event_function: EventFunction) -> void:
 	_drafted_description = EventSheetDescriptionDrafts.for_function(event_function)
 	var already_described: bool = not EventSheetDescriptions.for_function(event_function).is_empty()
-	_draft_row.visible = not already_described and not _drafted_description.is_empty()
+	# The shared offer budget decides, so a person who ignored this suggestion is not shown it again
+	# on every open of the same function, and the group dialog cannot spend the same budget twice.
+	_draft_row.visible = EventSheetDescriptionDrafts.may_offer("function",
+		event_function.function_name, already_described, _drafted_description)
 	if _draft_row.visible:
 		_draft_hint.text = "No description yet. Its own rows say: \"%s\"" % _drafted_description
 

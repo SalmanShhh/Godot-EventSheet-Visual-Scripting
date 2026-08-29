@@ -193,6 +193,9 @@ var _group_color_seed: Color = Color(0, 0, 0, 0)
 ## strip and the tests all read the same list.
 const GROUP_FIELD_ORDER: PackedStringArray = ["Name", "Description", "Runs on", "Active on start", "Can be switched at runtime", "Colour", "Runs in"]
 
+## What the description field shows when nothing is offered in its place - an example, not a default.
+const GROUP_DESCRIPTION_PLACEHOLDER := "Damage, hits and death."
+
 
 ## The ONE group dialog: name, description, active on start, switchable at runtime, colour.
 ## Everything a group IS, in one place, instead of a name field plus three separate menu items.
@@ -206,6 +209,7 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_edit_target = group
 	_group_name_edit.text = group.group_name if not group.group_name.strip_edges().is_empty() else group.name
 	_group_desc_edit.text = group.description
+	_offer_group_draft(group)
 	_group_enabled_check.button_pressed = group.enabled
 	_group_runtime_check.button_pressed = group.runtime_toggleable
 	_group_runs_on.select(EventSheetGroupFacts.runs_on_index(group.runs_on))
@@ -221,6 +225,18 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_edit_dialog.popup_centered()
 	_group_name_edit.grab_focus()
 	_group_name_edit.select_all()
+
+
+## Shows what this group's rows would say about it, as the description field's own placeholder - an
+## offer that cannot overwrite anything, because a placeholder is not text. Only for a group with no
+## description, only when its rows compose something, and only once per group per session: the shared
+## offer budget decides, so a person who ignored the suggestion is not shown it again on every open.
+func _offer_group_draft(group: EventGroup) -> void:
+	_group_desc_edit.placeholder_text = GROUP_DESCRIPTION_PLACEHOLDER
+	var draft: String = EventSheetDescriptionDrafts.for_group(group)
+	var described: bool = not EventSheetDescriptions.for_group(group).is_empty()
+	if EventSheetDescriptionDrafts.may_offer("group", EventSheetDescriptions.group_name_of(group), described, draft):
+		_group_desc_edit.placeholder_text = draft
 
 
 func _build_group_edit_dialog() -> void:
@@ -242,7 +258,7 @@ func _build_group_edit_dialog() -> void:
 	_group_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("Name", _group_name_edit))
 	_group_desc_edit = LineEdit.new()
-	_group_desc_edit.placeholder_text = "Damage, hits and death."
+	_group_desc_edit.placeholder_text = GROUP_DESCRIPTION_PLACEHOLDER
 	_group_desc_edit.text_changed.connect(func(_text: String) -> void: _refresh_group_reading())
 	box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
 	# Who runs this group's events over a network. A dropdown, described choice by choice, and

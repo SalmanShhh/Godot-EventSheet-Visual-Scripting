@@ -46,8 +46,7 @@ const STRUCTURAL_WORDS: PackedStringArray = ["self", "true", "false", "null", "a
 static func for_function(event_function: EventFunction) -> String:
 	if event_function == null:
 		return ""
-	var rows: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
-	return _compose(_phrases(rows))
+	return _compose(_phrases(_rows_of(event_function)))
 
 
 ## The draft for one group: what its rows REACT TO rather than what they do, because that is what a
@@ -79,14 +78,43 @@ static func for_sheet(sheet: EventSheetResource) -> String:
 	return _compose(_phrases(sheet.events))
 
 
+## THE OFFER BUDGET: what has already been offered this session, as a set of keys. A draft is shown
+## ONCE per thing per session - a person who dismissed the offer for `heal` is not asked about `heal`
+## again while the editor is open, whichever surface asks. Session-only on purpose: this is a
+## conversation, not a preference, and it has no business surviving a restart or landing in a file.
+static var _offered: Dictionary = {}
+
+
+## Whether a draft may be OFFERED for this thing right now, and books the offer when the answer is
+## yes. The key is "kind:name", which is the same key the coverage list uses, so the dialog that asks
+## about a function and the panel that asks about a group cannot both spend a budget of one.
+##
+## Never offers when the thing already has words: an accepted description is an answer, and asking
+## again is the nagging this budget exists to prevent.
+static func may_offer(kind: String, name: String, already_described: bool, draft: String) -> bool:
+	if already_described or draft.strip_edges().is_empty():
+		return false
+	var key: String = "%s:%s" % [kind, name]
+	if _offered.has(key):
+		return false
+	_offered[key] = true
+	return true
+
+
+## Forgets every offer made so far. The editor calls this when a project is closed, and a test calls
+## it on the way in AND on the way out - a static set that outlived its test would decide the next
+## test's answer, and the suite runs serially in one process.
+static func clear_offers() -> void:
+	_offered.clear()
+
+
 ## The draft for one of a function's parameters, taken from how the function's rows USE it: the first
 ## row that names the parameter says what it is for. Empty when no row mentions it - a parameter
 ## nothing reads has nothing honest to say about itself.
 static func for_parameter(event_function: EventFunction, param_id: String) -> String:
 	if event_function == null or param_id.strip_edges().is_empty():
 		return ""
-	var rows: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
-	for phrase: String in _phrases(rows):
+	for phrase: String in _phrases(_rows_of(event_function)):
 		if _mentions_word(phrase, param_id):
 			return "Used to %s" % _lower_lead(phrase)
 	return ""
@@ -122,13 +150,73 @@ static func function_description_drifted(event_function: EventFunction) -> bool:
 	var described: String = EventSheetDescriptions.for_function(event_function)
 	if described.strip_edges().is_empty():
 		return false
-	var subjects: PackedStringArray = _subjects(event_function)
+	return _drifted(described, _rows_of(event_function))
+
+
+## The same question about a GROUP's description: does the chapter's prose still talk about what its
+## rows do? Asked exactly the way it is asked of a function, because a description is a description
+## and a reader who was told a group is about landing does not care that a group is not a function.
+static func group_description_drifted(group: EventGroup) -> bool:
+	if group == null:
+		return false
+	return _drifted(EventSheetDescriptions.for_group(group),
+		group.events if not group.events.is_empty() else group.rows)
+
+
+## And the same question about the sheet's PROSE PARAGRAPHS - its `##` comment rows. A paragraph
+## claims something about the rows it introduces, so the rows it is checked against are the ones that
+## FOLLOW it in its own container, up to the next paragraph: that run is what the paragraph is about,
+## and it is the run that gets replaced when somebody reworks a section and leaves the words above it.
+##
+## Returns one entry per drifted paragraph, {text, where}, in sheet order. Says nothing about a
+## paragraph that introduces no rows - there is no drift without something to check against.
+static func drifted_paragraphs(sheet: EventSheetResource) -> Array[Dictionary]:
+	var drifted: Array[Dictionary] = []
+	if sheet == null:
+		return drifted
+	_walk_paragraphs(sheet.events, "", drifted)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			var event_function: EventFunction = function_entry as EventFunction
+			_walk_paragraphs(_rows_of(event_function), event_function.function_name, drifted)
+	return drifted
+
+
+## THE drift test, over any run of rows: an accepted line has drifted when it mentions none of the
+## identifiers those rows name today. One implementation, so a function, a group and a paragraph are
+## all judged by the same rule rather than by three that slowly diverge.
+static func _drifted(described: String, rows: Array) -> bool:
+	if described.strip_edges().is_empty():
+		return false
+	var subjects: PackedStringArray = _subjects_of(rows)
 	if subjects.is_empty():
 		return false
 	for subject: String in subjects:
 		if _mentions_word(described, subject):
 			return false
 	return true
+
+
+## The recursive half of the paragraph drift walk. A documentation comment row opens a run; the run
+## ends at the next one or at the end of the container.
+static func _walk_paragraphs(rows: Array, where: String, drifted: Array[Dictionary]) -> void:
+	for index: int in range(rows.size()):
+		var entry: Variant = rows[index]
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_walk_paragraphs(group.events if not group.events.is_empty() else group.rows,
+				EventSheetDescriptions.group_name_of(group), drifted)
+		elif entry is CommentRow and EventSheetSheetProse.is_readable(entry as CommentRow):
+			var paragraph: CommentRow = entry as CommentRow
+			var introduced: Array = []
+			for follow: int in range(index + 1, rows.size()):
+				if rows[follow] is CommentRow and EventSheetSheetProse.is_readable(rows[follow] as CommentRow):
+					break
+				introduced.append(rows[follow])
+			if _drifted(paragraph.text, introduced):
+				drifted.append({"text": paragraph.text.strip_edges(), "where": where})
+		elif entry is EventRow:
+			_walk_paragraphs((entry as EventRow).sub_events, where, drifted)
 
 
 ## The words a drift check looks for in an accepted description: the identifiers the function's rows
@@ -139,8 +227,7 @@ static func function_description_drifted(event_function: EventFunction) -> bool:
 ##
 ## Structural words that every second row carries (`self`, `true`, a bare number) are not subjects: a
 ## description matching on `self` would match everything and the check would never fire.
-static func _subjects(event_function: EventFunction) -> PackedStringArray:
-	var rows: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+static func _subjects_of(rows: Array) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for value: String in _named_values(rows):
 		for token: String in _identifier_tokens(value):
@@ -331,6 +418,14 @@ static func _find_group(sheet: EventSheetResource, name: String) -> EventGroup:
 	if sheet == null:
 		return null
 	return _find_group_in(sheet.events, name)
+
+
+## A function's rows through both the current field and the older alias. One place, so the drift
+## check, the draft and the subject walk cannot read a function's body three slightly different ways.
+static func _rows_of(event_function: EventFunction) -> Array:
+	if event_function == null:
+		return []
+	return event_function.events if not event_function.events.is_empty() else event_function.rows
 
 
 ## The recursive half of the group lookup above.
