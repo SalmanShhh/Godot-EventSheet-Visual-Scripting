@@ -169,9 +169,10 @@ static func drafts_path() -> String:
 
 
 ## The file a sheet's own manual page is written to. One definition, so the chore that writes every
-## page and the save that refreshes ONE cannot disagree about which file that sheet owns.
+## page and the save that refreshes ONE cannot disagree about which file that sheet owns - and the
+## stem itself comes from the manual, which the site exporter also asks, so all three agree.
 static func manual_page_path(sheet_path: String) -> String:
-	var name: String = sheet_path.strip_edges().trim_suffix("/").get_file().get_basename()
+	var name: String = EventSheetProjectManual.page_stem(sheet_path)
 	if name.is_empty():
 		return ""
 	return "%s/%s.md" % [manual_dir(), name]

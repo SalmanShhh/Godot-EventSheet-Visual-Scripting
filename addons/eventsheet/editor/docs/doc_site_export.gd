@@ -177,11 +177,12 @@ static func _engine_pages(options: Dictionary) -> Array[Dictionary]:
 	return pages
 
 
-## A sheet path folded to the stem a page id can carry. Nothing but the file name is kept, because a
-## page id built out of a path would publish the folder layout of whoever ran the export.
+## A sheet path folded to the stem a page id can carry. The manual's own rule, asked rather than
+## repeated: the file name, plus a tail derived from its folder when it has one, so two sheets
+## called main.gd in two folders are two pages here and not one page written twice - and so that a
+## published page id never spells out the shape of somebody's project.
 static func _manual_key(key: String) -> String:
-	var name: String = key.strip_edges().trim_suffix("/").get_file()
-	return name.get_basename() if not name.get_basename().is_empty() else name
+	return EventSheetProjectManual.page_stem(key)
 
 
 static func _first_heading(source: String) -> String:

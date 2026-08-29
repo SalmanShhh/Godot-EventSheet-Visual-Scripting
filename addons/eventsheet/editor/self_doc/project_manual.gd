@@ -37,6 +37,53 @@ const SECTION_ORDER: PackedStringArray = ["variable", "function", "signal", "gro
 ## How many undescribed names a footer spells out before it counts the rest.
 const FOOTER_NAMED_LIMIT: int = 12
 
+## How many hex characters disambiguate a sheet that lives in a folder. Six is 16 million: a project
+## would need thousands of same-named sheets before two of them collided, and a longer tail buys
+## nothing a reader can use.
+const STEM_HASH_LENGTH: int = 6
+
+
+## The name a sheet's page is filed under - its file name, plus a tail derived from where the file
+## lives when it lives anywhere but the project root.
+##
+## THE FILE NAME ALONE IS NOT A NAME. `res://player/main.gd` and `res://enemy/main.gd` are two
+## sheets, and keying their pages on "main" had the second silently overwrite the first: one page on
+## disk, one entry in the search, and an exported site listing the id twice with one file behind it.
+## The tail is a hash rather than the folder because a page id is published - it goes into an
+## exported site that gets committed - and the id should say which sheet it is without publishing
+## the shape of somebody's project.
+##
+## One definition, asked by the chore that writes every page, by the save that refreshes one, and by
+## the site exporter, so the three cannot disagree about which page a sheet owns.
+static func page_stem(sheet_path: String) -> String:
+	var path: String = sheet_path.strip_edges().trim_suffix("/")
+	var name: String = path.get_file()
+	var stem: String = name.get_basename()
+	if stem.is_empty():
+		stem = name
+	if stem.is_empty():
+		return ""
+	var folder: String = path.get_base_dir().trim_prefix("res://").trim_suffix("/")
+	if folder.is_empty():
+		return stem
+	return "%s-%s" % [stem, _folder_tail(folder)]
+
+
+## A folder path reduced to a short, stable, machine-independent tail. Deterministic by hand rather
+## than through String.hash(), whose value is an engine implementation detail and could change an
+## exported site's file names between Godot versions.
+static func _folder_tail(folder: String) -> String:
+	var accumulated: int = 2166136261
+	for index: int in range(folder.length()):
+		accumulated = (accumulated ^ folder.unicode_at(index)) & 0xFFFFFFFF
+		accumulated = (accumulated * 16777619) & 0xFFFFFFFF
+	var digits: String = "0123456789abcdef"
+	var tail: String = ""
+	for _step: int in range(STEM_HASH_LENGTH):
+		tail = digits[accumulated & 0xF] + tail
+		accumulated >>= 4
+	return tail
+
 
 ## One sheet's page, as Markdown. Deterministic: the same sheet composes the same string every time,
 ## so the export can be committed and diffed.

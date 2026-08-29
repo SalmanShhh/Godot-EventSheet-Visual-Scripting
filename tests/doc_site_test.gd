@@ -168,6 +168,17 @@ static func _test_search_data() -> bool:
 
 
 ## The law. Two exports of the same pages, into two folders, byte for byte.
+##
+## THE SHEET PAGES ARE IN THE LAW, and they are the reason the law exists. A library page comes off
+## a sorted id list, so its order was never in doubt; a sheet page is composed from a DICTIONARY the
+## caller hands over, and dictionary order is exactly the kind of thing that agrees with itself all
+## afternoon and disagrees on somebody else's machine. So the options below carry sheets, and two of
+## them share a file name in different folders - which is also the case that used to write one page
+## twice under one id and lose the other.
+##
+## Not in the law: the harvested engine pages, which exist only where somebody has run a harvest, so
+## a test that included them would be exercising the law on some machines and not on others. What
+## makes THEIR order safe is pinned where the harvest is read - the scan sorts, and its test says so.
 static func _test_same_bytes_twice() -> bool:
 	_clear(WORK_ROOT)
 	var ids: PackedStringArray = PackedStringArray()
@@ -180,18 +191,31 @@ static func _test_same_bytes_twice() -> bool:
 		# better than passing for the wrong reason.
 		print("[doc_site] no help bundle installed - byte identity not exercised")
 		return true
-	var options: Dictionary = {"page_ids": Array(ids), "scan_project": false,
+	var options: Dictionary = {"page_ids": Array(ids), "sheets": _sheets_in_two_folders(),
 		"figures_dir": "%s/figures" % WORK_ROOT}
 	var first: Dictionary = EventSheetDocSiteExport.export_site("%s/a" % WORK_ROOT, options)
 	var second: Dictionary = EventSheetDocSiteExport.export_site("%s/b" % WORK_ROOT, options)
 	var passed: bool = _check("both exports wrote the same page count",
 		int(first.get("pages", 0)), int(second.get("pages", 0)))
+	# BOTH FILE LISTS, not just the first: a second export that wrote an EXTRA file is a difference,
+	# and walking only the first export's list is exactly how that difference stays invisible.
+	var first_files: PackedStringArray = first.get("files", PackedStringArray())
+	var second_files: PackedStringArray = second.get("files", PackedStringArray())
+	passed = _check("both exports wrote the same files, in the same order",
+		", ".join(first_files), ", ".join(second_files)) and passed
 	var differing: PackedStringArray = PackedStringArray()
-	for relative: String in (first.get("files", PackedStringArray()) as PackedStringArray):
+	for relative: String in first_files:
 		if _read("%s/a/%s" % [WORK_ROOT, relative]) != _read("%s/b/%s" % [WORK_ROOT, relative]):
 			differing.append(relative)
 	passed = _check("every exported file is byte-identical to the other export's",
 		", ".join(differing), "") and passed
+	# The two sheets are two pages, under two ids, with two files behind them.
+	var sheet_pages: PackedStringArray = PackedStringArray()
+	for relative: String in first_files:
+		if relative.begins_with("pages/Manual__"):
+			sheet_pages.append(relative)
+	passed = _check("two sheets called main in two folders are two pages on the site",
+		sheet_pages.size(), 2) and passed
 	# And the folder holds nothing the export did not write: a page deleted from the corpus has to
 	# disappear from the site, which only works because the export clears what it owns first.
 	_write("%s/a/pages/GHOST.html" % WORK_ROOT, "left over")
@@ -199,6 +223,25 @@ static func _test_same_bytes_twice() -> bool:
 	passed = _check("a page that is no longer in the corpus is cleared out",
 		FileAccess.file_exists("%s/a/pages/GHOST.html" % WORK_ROOT), false) and passed
 	return passed
+
+
+## Two sheets with one file name, in two folders - the case that decides whether a sheet's page is
+## keyed by its name or by the file it came from. Each carries a described function so the two pages
+## have different words in them and a page written over the other would be visible.
+static func _sheets_in_two_folders() -> Dictionary:
+	return {
+		"res://player/main.gd": _sheet_describing("Jump", "Sends the player upwards."),
+		"res://enemy/main.gd": _sheet_describing("Charge", "Runs at whatever it last saw."),
+	}
+
+
+static func _sheet_describing(function_name: String, detail: String) -> EventSheetResource:
+	var sheet := EventSheetResource.new()
+	var function := EventFunction.new()
+	function.function_name = function_name
+	function.description = detail
+	sheet.functions.append(function)
+	return sheet
 
 
 static func _read(path: String) -> String:

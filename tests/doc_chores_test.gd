@@ -89,10 +89,29 @@ static func _test_drafts_stay_drafts() -> bool:
 	return passed
 
 
+## ONE PAGE PER SHEET, and the emphasis is on ONE. A sheet at the project root is filed under its
+## own name; a sheet in a folder carries a tail derived from that folder, because the file NAME is
+## not a name - res://player/main.gd and res://enemy/main.gd are two sheets, and filing both under
+## "main" had one silently overwrite the other on disk, in the search index and in the exported site.
+## The tail is derived rather than the folder spelled out, so a published page id does not carry the
+## shape of somebody's project.
 static func _test_one_page_per_sheet() -> bool:
-	var passed: bool = _check("a sheet's page is named after the sheet and nothing else",
-		EventSheetDocChores.manual_page_path("res://levels/deep/player.tres"),
-		"%s/player.md" % EventSheetDocChores.manual_dir())
+	var directory: String = EventSheetDocChores.manual_dir()
+	var passed: bool = _check("a sheet at the project root is filed under its own name",
+		EventSheetDocChores.manual_page_path("res://player.tres"), "%s/player.md" % directory)
+	var one: String = EventSheetDocChores.manual_page_path("res://player/main.gd")
+	var two: String = EventSheetDocChores.manual_page_path("res://enemy/main.gd")
+	passed = _check("two sheets with one file name in two folders own two pages",
+		one == two, false) and passed
+	passed = _check("and both pages are still recognisably that sheet",
+		one.get_file().begins_with("main-") and two.get_file().begins_with("main-"), true) and passed
+	passed = _check("the same sheet asks for the same page every time",
+		EventSheetDocChores.manual_page_path("res://player/main.gd"), one) and passed
+	passed = _check("and the page id says nothing about the folder it came from",
+		one.contains("player") or two.contains("enemy"), false) and passed
+	passed = _check("the exporter derives the same stem the chore writes to",
+		"%s/%s.md" % [directory, EventSheetProjectManual.page_stem("res://player/main.gd")],
+		one) and passed
 	passed = _check("a path with no file name owns no page",
 		EventSheetDocChores.manual_page_path("res://"), "") and passed
 	return passed

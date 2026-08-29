@@ -320,12 +320,19 @@ static func build_manifest(pages: Dictionary) -> Dictionary:
 			grouped[str(id)] = true
 	# The secondary doc sets are grouped by DIRECTORY, not by the index: they are discovered, and
 	# an index that has to list 93 addon guides by hand is an index that will fall behind.
+	#
+	# A PAGE BELONGS TO EXACTLY ONE GROUP. The index links each set's own index page by hand
+	# (Addons/README under "Addon packs", Modules/README under "Built-in vocabulary"), and the
+	# discovery below finds those same two pages in the directories it walks - so without this skip
+	# each of them was placed twice: listed twice in the Manual's contents, and exported twice under
+	# one id, where the second page written silently replaced the first and one of the two links
+	# opened the wrong group's page.
 	for doc_set: String in DOC_SETS:
 		if doc_set.is_empty():
 			continue
 		var ids: Array = []
 		for id: Variant in pages:
-			if str(id).begins_with("%s/" % doc_set):
+			if str(id).begins_with("%s/" % doc_set) and not grouped.has(str(id)):
 				ids.append(str(id))
 				grouped[str(id)] = true
 		if ids.is_empty():
@@ -400,6 +407,10 @@ static func set_title(doc_set: String) -> String:
 static func index_groups(index_text: String, pages: Dictionary) -> Array:
 	var groups: Array = []
 	var current: Dictionary = {}
+	# A page belongs to ONE group, the first that claims it. An index that links a guide from two
+	# sections is describing it twice, not shipping two pages, and a tree that listed it twice would
+	# be exported as two entries for one file.
+	var placed: Dictionary = {}
 	var matcher: RegEx = RegEx.create_from_string("\\]\\(([^)]+\\.md)\\)")
 	for line: String in index_text.replace("\r\n", "\n").split("\n"):
 		var stripped: String = line.strip_edges()
@@ -414,7 +425,8 @@ static func index_groups(index_text: String, pages: Dictionary) -> Array:
 			continue
 		for found: RegExMatch in matcher.search_all(stripped):
 			var id: String = found.get_string(1).trim_suffix(".md")
-			if pages.has(id) and not (current["ids"] as Array).has(id):
+			if pages.has(id) and not placed.has(id):
+				placed[id] = true
 				(current["ids"] as Array).append(id)
 	if not current.is_empty() and not (current["ids"] as Array).is_empty():
 		groups.append(current)

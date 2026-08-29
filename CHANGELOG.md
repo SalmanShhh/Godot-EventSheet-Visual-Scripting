@@ -6277,6 +6277,24 @@ the default 0.1 s only ever adds a jump that used to be dropped.
   the whole file's line endings on the way through, so a guide checked out with CRLF came back
   entirely rewritten by a fix whose promise is one added row. The guide is scanned where it lies and
   the new rows are joined with the file's own ending; the test pins the bytes on a CRLF fixture.
+- **Two sheets called `main.gd` are two pages.** A sheet's manual page was keyed by its file name
+  alone, so `res://player/main.gd` and `res://enemy/main.gd` owned the same page: the second one
+  written silently replaced the first, on disk, in the search index, and in the exported site, where
+  the id was listed twice with one file behind it. A page is keyed by the file it came from now -
+  the name plus a short tail derived from its folder, so the id says which sheet it is without
+  publishing the shape of somebody's project. The chore that writes every page, the save that
+  refreshes one, and the site exporter all ask the same function for that name.
+- **The Manual's contents list every page once.** The docs index links the addon and module index
+  pages by hand, and the directory walk that discovers the rest found those same two pages again, so
+  each was placed in two groups: listed twice in the contents, and exported twice under one id where
+  the second page written replaced the first and one of the two links opened the wrong page. A page
+  belongs to the first group that claims it.
+- **The site's byte-identity law now covers the pages that needed it.** It was gated over shipped
+  Markdown only - pages that come off a sorted id list, whose order was never in doubt - and excluded
+  the pages composed from a caller's Dictionary, which is exactly the order that agrees with itself
+  all afternoon and disagrees on another machine. The two exports it compares now carry sheet pages,
+  including two sheets that share a file name, and it compares both exports' file lists rather than
+  only the first, so a file the second export added is a difference and not an invisible one.
 
 ## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
