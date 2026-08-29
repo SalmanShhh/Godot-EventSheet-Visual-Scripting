@@ -207,9 +207,9 @@ func _on_died() -> void:
 ### The guard, and why you can see it
 
 A name that outlives the line that set it can name nothing at all by the time a later row says it.
-There are exactly two of those in a sheet: a **variable typed as a node** (it survives from frame to
-frame) and a **copy a spawn row minted in a different event**. When a removal row's object is one of
-those, the compiler writes the check Godot's own answer calls for:
+There is exactly one of those in a sheet: a **variable typed as a node**, which survives from frame
+to frame with nothing about this event having put it there. When a removal row's object is one, the
+compiler writes the check Godot's own answer calls for:
 
 ```
 if is_instance_valid(boss):
@@ -236,6 +236,14 @@ func _on_timeout() -> void:
 	if is_instance_valid(target):
 		target.queue_free()
 ```
+
+**A copy named in another event is not guarded either, and the reason is scope.** The name a spawn
+row gives a copy is a local variable in the handler that row compiled into. A removal row in a
+different event saying that name does not compile at all - Godot answers `Identifier "boss" not
+declared in the current scope` - and wrapping it in a question that cannot see the name either would
+only add a second line that does not compile, echoed on the row as protection. Keep the removal in
+the event that made the copy, or hold the copy in a variable typed as a node, which is the case the
+guard is for.
 
 **Nothing else is guarded.** `self` cannot dangle, a `$Path` re-resolves every time it is read, and
 every row outside these three is left exactly as it was. Emitted code does not change under your

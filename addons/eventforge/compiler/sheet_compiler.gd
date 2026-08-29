@@ -98,8 +98,8 @@ static var _behavior_host_default: String = ""
 static var _compile_mutex: Mutex = Mutex.new()
 
 ## What the removal guard knows about THIS sheet's names (see EventForgeRemovalGuard.facts): which
-## ones hold a node across frames, and which ones a spawn row minted in which event. Filled once per
-## compile, read per removal row.
+## ones hold a node across frames, and which events have already asked whether one is still here.
+## Filled once per compile, read per removal row.
 static var _removal_guard_facts: Dictionary = {}
 
 
@@ -2199,10 +2199,10 @@ static func _emit_event_body(
 					continue
 				_emit_leading_body_blanks(action_item, lines)
 				# THE REMOVAL GUARD, written where it is needed and shown where it is written: a row
-				# that reaches into an object which may already be gone (a name a spawn row minted in
-				# another event, a variable holding a node across frames) compiles inside
-				# `if is_instance_valid(<it>):`. The rule lives in one place and stands down whenever
-				# the sheet's own conditions already asked - see EventForgeRemovalGuard.
+				# that reaches into an object which may already be gone - a variable holding a node
+				# across frames - compiles inside `if is_instance_valid(<it>):`. The rule lives in one
+				# place and stands down whenever the sheet's own conditions already asked - see
+				# EventForgeRemovalGuard.
 				var removal_guard: String = EventForgeRemovalGuard.guard_expression(
 					action_item, event_row, _removal_guard_facts)
 				var statement_indent: String = body_indent

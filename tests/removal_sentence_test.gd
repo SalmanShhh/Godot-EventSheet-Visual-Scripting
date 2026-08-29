@@ -4,10 +4,12 @@
 #   1. THE LINES. Each removal row is a plain queue_free with a stated wait in front of it, and all
 #      of them are pinned as the exact statements they write. The fade row's own guard is part of its
 #      template, so the check it does after the await is pinned there too.
-#   2. THE GUARD IS WRITTEN WHERE IT IS NEEDED. A row whose object is a name that outlives the line
-#      that set it (a variable holding a node, a copy a spawn row minted in another event) compiles
-#      inside `if is_instance_valid(...)`, indented under it. A row on `self` or a node path does not,
-#      because neither can be a dangling reference.
+#   2. THE GUARD IS WRITTEN WHERE IT IS NEEDED, AND THE FILE IT WROTE INTO STILL PARSES. A row whose
+#      object is a variable holding a node - the one name that outlives the line that set it -
+#      compiles inside `if is_instance_valid(...)`, indented under it, and the emitted script is
+#      loaded to prove it. A row on `self`, a node path, or a copy a spawn row minted in ANOTHER
+#      event does not: the first two cannot dangle, and the third is a local the other event cannot
+#      say at all, so a guard there would only wrap a line that does not compile.
 #   3. AND IT STANDS DOWN WHEN THE SHEET ALREADY ASKED. An event whose own condition is the question,
 #      or whose parent's is, gets ONE guard, not two - and a file written that way by hand re-emits
 #      byte for byte, which is the whole reason the stand-down exists.
@@ -100,24 +102,33 @@ static func _test_the_guard_is_written_where_it_is_needed() -> bool:
 	# A STORED NODE REFERENCE: a sheet variable typed as a node survives from frame to frame, so
 	# nothing about this event put the value there and nothing about this event can vouch for it.
 	var stored: EventSheetResource = _sheet()
-	stored.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	stored.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	stored.events.append(_event([_action("RemoveNow", {"object": "held_enemy"})]))
 	var stored_output: String = _compile(stored, "user://eventforge_remove_stored.gd")
 	passed = _check("a stored node reference is removed inside the guard",
 		stored_output.contains("\tif is_instance_valid(held_enemy):\n\t\theld_enemy.queue_free()"), true) and passed
+	# AND THE GUARDED FILE PARSES. The guard writes a line into somebody's script; a pin on the text
+	# says the line is there and says nothing about whether the file still loads.
+	passed = _check("and the file the guard wrote into still parses",
+		_parses(stored_output), true) and passed
 
-	# A NAME FROM ANOTHER EVENT: the copy was minted in the event above, a whole frame of other work
-	# ago, so the name may name nothing by the time this row runs.
+	# A NAME MINTED IN ANOTHER EVENT IS NOT GUARDED, and the reason is scope rather than safety. A
+	# spawn row's name is a LOCAL, scoped to the handler it was written in (and, under a condition, to
+	# that `if`), so a removal row in a different event does not compile whether it is wrapped or not:
+	# the file reads "Identifier "boss" not declared in the current scope" either way. A guard the row
+	# echoes as protection, on a line that cannot compile, claims something that is not there.
 	var across: EventSheetResource = _sheet()
 	across.events.append(_event([_action("SpawnNewCopy", {
 		"scene": BULLET, "name": "boss", "at": "global_position", "parent": "self"})]))
 	across.events.append(_event([_action("RemoveNow", {"object": "boss"})]))
 	var across_output: String = _compile(across, "user://eventforge_remove_across.gd")
-	passed = _check("a copy named in another event is removed inside the guard",
-		across_output.contains("\tif is_instance_valid(boss):\n\t\tboss.queue_free()"), true) and passed
+	passed = _check("a copy named in another event is not wrapped in a guard that could not see it",
+		across_output.contains("is_instance_valid"), false) and passed
+	passed = _check("the removal row there is the plain call it always was",
+		across_output.contains("\tboss.queue_free()"), true) and passed
 
-	# THE SAME NAME IN ITS OWN EVENT: the copy was made two lines up, in this same run, so the check
-	# could only ever be true and the row is left alone.
+	# THE SAME NAME IN ITS OWN EVENT: the copy was made two lines up, in this same run, so nothing
+	# about the name can have changed and the row is left alone.
 	var same: EventSheetResource = _sheet()
 	same.events.append(_event([
 		_action("SpawnNewCopy", {"scene": BULLET, "name": "boss", "at": "global_position", "parent": "self"}),
@@ -135,7 +146,7 @@ static func _test_the_guard_is_written_where_it_is_needed() -> bool:
 
 	# The wait rows reach into the object on their first line too, so they are guarded the same way.
 	var waited: EventSheetResource = _sheet()
-	waited.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	waited.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	waited.events.append(_event([_action("RemoveAfterSeconds", {"object": "held_enemy", "seconds": "2.0"})]))
 	passed = _check("the timer row is guarded on a stored reference too",
 		_compile(waited, "user://eventforge_remove_stored_timer.gd").contains(
@@ -147,7 +158,7 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 	var passed: bool = true
 	# The sheet asked the question itself, so the compiler does not ask it again. ONE `if`, not two.
 	var asked: EventSheetResource = _sheet()
-	asked.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	asked.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	var event: EventRow = _event([_action("RemoveNow", {"object": "held_enemy"})])
 	event.conditions.append(_condition("IsStillHere", {"object": "held_enemy"}))
 	asked.events.append(event)
@@ -167,7 +178,7 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 
 	# A PARENT'S question counts as asked for every row under it: the sub-event runs inside that `if`.
 	var nested: EventSheetResource = _sheet()
-	nested.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	nested.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	var parent: EventRow = _event([])
 	parent.conditions.append(_condition("IsValidInstance", {"object": "held_enemy"}))
 	var child: EventRow = EventRow.new()
@@ -180,7 +191,7 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 	# A NEGATED question is the opposite question: the branch where the thing is gone needs the guard
 	# more than anywhere else, so it still gets one.
 	var negated: EventSheetResource = _sheet()
-	negated.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	negated.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	var negated_event: EventRow = _event([_action("RemoveNow", {"object": "held_enemy"})])
 	var negated_condition: ACECondition = _condition("IsStillHere", {"object": "held_enemy"})
 	negated_condition.negated = true
@@ -197,7 +208,7 @@ static func _test_the_guard_stands_down_when_the_sheet_already_asked() -> bool:
 static func _test_the_echo_is_the_line_the_file_holds() -> bool:
 	var passed: bool = true
 	var sheet: EventSheetResource = _sheet()
-	sheet.variables = {"held_enemy": {"type": "Node2D", "default": "null", "exported": false}}
+	sheet.variables = {"held_enemy": {"type": "Node2D", "default": null, "exported": false}}
 	var event: EventRow = _event([_action("RemoveNow", {"object": "held_enemy"})])
 	sheet.events.append(event)
 	var facts: Dictionary = EventForgeRemovalGuard.facts(sheet)
@@ -311,6 +322,14 @@ static func _compiled_with(ace_id: String, params: Dictionary, path: String) -> 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
 	return str(SheetCompiler.compile(sheet, path).get("output", ""))
+
+
+## True when emitted GDScript actually loads. A pin on the text says a line is present; this says the
+## file it is present in is still a file Godot will run.
+static func _parses(source: String) -> bool:
+	var script: GDScript = GDScript.new()
+	script.source_code = source
+	return script.reload() == OK
 
 
 static func _check(label: String, got: Variant, expected: Variant) -> bool:

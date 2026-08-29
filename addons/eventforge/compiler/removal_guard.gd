@@ -19,17 +19,23 @@
 # be magic, and magic in emitted code is the one thing this plugin does not do.
 #
 # THE RULE, stated once and applied nowhere else. A name is MAYBE-GONE when it outlives the line
-# that set it, which is exactly two situations:
+# that set it, which is exactly one situation:
 #
-#   1. A STORED NODE REFERENCE. The sheet declares a variable whose type is a Node, so the value
-#      survives from frame to frame and nothing about this event put it there.
-#   2. A NAME FROM ANOTHER EVENT. A row somewhere in this sheet declared a local by instancing a
-#      scene (`var boss = Boss.instantiate()`), and the removal row saying that name is in a
-#      DIFFERENT event. Inside the minting event the copy was made two lines ago and asking would be
-#      noise; outside it, a whole frame of other work has run.
+#   A STORED NODE REFERENCE. The sheet declares a variable whose type is a Node, so the value
+#   survives from frame to frame and nothing about this event put it there.
 #
 # Everything else is left alone: `self` is never gone, a node path re-resolves every time it is
 # read, a call answers for itself, and a literal is a literal.
+#
+# AND A COPY NAMED IN ANOTHER EVENT IS NOT ONE OF THEM, though it looks like the same problem. A
+# spawn row's name is a LOCAL - `var boss = Boss.instantiate()` - scoped to the handler it was
+# written in and, under a condition, to that `if`. A removal row in another event saying `boss` does
+# not compile at all, guard or no guard: the file reads "Identifier "boss" not declared in the
+# current scope", and wrapping it in `is_instance_valid(boss)` only adds a second line that cannot
+# see the name either. The one shape where it DOES parse - two unconditioned events in the same
+# handler - is a check between two lines of the same run, where it can only ever be true. So the
+# guard says nothing about minted names: a rule whose every reachable case is either a broken file or
+# a no-op, echoed on the row as protection, is worse than no rule.
 #
 # AND IT STANDS DOWN WHEN THE SHEET ALREADY ASKED. An event whose own condition (or an enclosing
 # event's) is "Object Still Exists" / "Is Still Here" on the same name has already asked the
@@ -66,33 +72,22 @@ const ASKING_ACE_IDS: Dictionary = {
 	"IsStillHere": "object",
 }
 
-## The shape of a row that MINTS a name by instancing a scene, read off the row's own template rather
-## than from a list of ace_ids: `var {name} = {scene}.instantiate()`. Derived on purpose - a spawn row
-## added later is covered the moment its template declares a local this way, and a row that declares a
-## local holding something other than a fresh instance is not a candidate at all.
-const MINTING_TEMPLATE_PATTERN: String = "^var \\{(?<slot>[A-Za-z_][A-Za-z0-9_]*)\\}[ \\t]*=.*\\.instantiate\\(\\)"
-
-## Compiled once for the life of the session: this is asked of every action of every compile.
-static var _minting_regex: RegEx = null
-
 
 ## What this sheet's names mean, gathered once per compile (and once per canvas sweep): {"stored":
-## {name: true}, "chips": {name: event_uid}, "asked": {event_uid: {name: true}}}. Handed to
-## `guard_expression` for every row, so the walk over the sheet happens once rather than per action -
-## and so the compiler and the row builder answer from ONE derivation rather than from two that can
-## drift.
+## {name: true}, "asked": {event_uid: {name: true}}}. Handed to `guard_expression` for every row, so
+## the walk over the sheet happens once rather than per action - and so the compiler and the row
+## builder answer from ONE derivation rather than from two that can drift.
 static func facts(sheet: EventSheetResource) -> Dictionary:
 	var stored: Dictionary = {}
-	var chips: Dictionary = {}
 	var asked: Dictionary = {}
 	if sheet == null:
-		return {"stored": stored, "chips": chips, "asked": asked}
+		return {"stored": stored, "asked": asked}
 	for key: Variant in sheet.variables.keys():
 		var descriptor: Variant = sheet.variables[key]
 		if descriptor is Dictionary and _is_node_type(str((descriptor as Dictionary).get("type", ""))):
 			stored[str(key)] = true
-	_collect(sheet.events, stored, chips, asked, {})
-	return {"stored": stored, "chips": chips, "asked": asked}
+	_collect(sheet.events, stored, asked, {})
+	return {"stored": stored, "asked": asked}
 
 
 ## The expression a row must be guarded on, or "" when it must not be.
@@ -110,15 +105,7 @@ static func guard_expression(action: ACEAction, event_row: EventRow, sheet_facts
 		"" if event_row == null else event_row.event_uid, {})
 	if inherited.has(name) or _event_asks_about(event_row, name):
 		return ""
-	if bool((sheet_facts.get("stored", {}) as Dictionary).get(name, false)):
-		return name
-	var chips: Dictionary = sheet_facts.get("chips", {})
-	if not chips.has(name):
-		return ""
-	# The minting event's own rows are not guarded: the copy was made a line or two above, in this
-	# same run, and a check there would only ever be true.
-	var here: String = "" if event_row == null else event_row.event_uid
-	return "" if str(chips[name]) == here and not here.is_empty() else name
+	return name if bool((sheet_facts.get("stored", {}) as Dictionary).get(name, false)) else ""
 
 
 ## The guard's line, at an indent: the exact text the file gets, and the exact text the row echoes.
@@ -151,11 +138,11 @@ static func _is_node_type(type_name: String) -> bool:
 	return text == "Object" or ClassDB.is_parent_class(text, "Node")
 
 
-## Walks every row of a sheet once, filling the stored-reference map, the minted-name map, and the
-## per-event record of which names an ENCLOSING event has already asked about. Recursive because a
-## spawn row can sit in a sub-event and its name is still a name the file holds - and because a
-## sub-event runs inside its parent's `if`, which is what makes the parent's question its own.
-static func _collect(rows: Array, stored: Dictionary, chips: Dictionary, asked: Dictionary,
+## Walks every row of a sheet once, filling the stored-reference map and the per-event record of
+## which names an ENCLOSING event has already asked about. Recursive because a variable can be
+## declared in a sub-event and is still a name the file holds - and because a sub-event runs inside
+## its parent's `if`, which is what makes the parent's question its own.
+static func _collect(rows: Array, stored: Dictionary, asked: Dictionary,
 		inherited: Dictionary) -> void:
 	for entry: Variant in rows:
 		if entry is LocalVariable:
@@ -168,30 +155,8 @@ static func _collect(rows: Array, stored: Dictionary, chips: Dictionary, asked: 
 		var event_row: EventRow = entry as EventRow
 		if not event_row.event_uid.is_empty() and not inherited.is_empty():
 			asked[event_row.event_uid] = inherited
-		for action_entry: Variant in event_row.actions:
-			var minted: String = minted_name(action_entry as ACEAction) if action_entry is ACEAction else ""
-			if not minted.is_empty() and not chips.has(minted):
-				chips[minted] = event_row.event_uid
-		_collect(event_row.sub_events, stored, chips, asked,
+		_collect(event_row.sub_events, stored, asked,
 			inherited.merged(asked_names(event_row), true))
-
-
-## The name a row mints, or "" when it mints none: the local its own template declares out of a fresh
-## instance. Read off the template so the answer follows the code the row actually writes.
-static func minted_name(action: ACEAction) -> String:
-	if action == null:
-		return ""
-	var first_line: String = _template_of(action).split("\n")[0]
-	if first_line.is_empty():
-		return ""
-	if _minting_regex == null:
-		_minting_regex = RegEx.new()
-		_minting_regex.compile(MINTING_TEMPLATE_PATTERN)
-	var hit: RegExMatch = _minting_regex.search(first_line)
-	if hit == null:
-		return ""
-	var minted: String = str(_params_of(action).get(hit.get_string("slot"), "")).strip_edges()
-	return minted if minted.is_valid_identifier() else ""
 
 
 ## True when one of the event's own conditions already asks whether `name` is still here.
@@ -220,14 +185,3 @@ static func _asked_name(entry: Variant) -> String:
 ## An action's params, under either spelling (the early alias field is still read everywhere else).
 static func _params_of(action: ACEAction) -> Dictionary:
 	return action.params if not action.params.is_empty() else action.parameters
-
-
-## The template a row compiles through: the baked one when it has one (a lifted spelling, an addon
-## ACE), the registry's otherwise. The same order ActionCodegen resolves in, so this can never read a
-## different template than the one that gets emitted.
-static func _template_of(action: ACEAction) -> String:
-	var template: String = action.codegen_template
-	if not template.strip_edges().is_empty():
-		return template
-	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
-	return "" if descriptor == null else descriptor.codegen_template

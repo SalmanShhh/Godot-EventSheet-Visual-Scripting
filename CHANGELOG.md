@@ -50,9 +50,8 @@
   it runs once the fade is done. Nothing new is invented for any of them: the emitted code is the
   same code somebody would write by hand.
 - **The guard is written where it is needed, and shown where it is written.** A removal row whose
-  object is a name that outlives the line that set it - a variable typed as a node, or a copy a
-  spawn row minted in a DIFFERENT event - compiles inside `if is_instance_valid(…):`, which is
-  Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
+  object is a name that outlives the line that set it - a variable typed as a node - compiles inside
+  `if is_instance_valid(…):`, which is Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
   guard line is echoed at the end of the row in the script editor's own colours, exactly as a
   variable row echoes its declaration, so the sheet shows the line the file holds and you can see
   which name asked for it. It stands down entirely when the sheet already asked - an **Is Still
@@ -221,6 +220,17 @@
   itself was always even and always one step, and still is. The empty-curve case is stated properly
   too: a Path2D with no points gives the path's own place AND prints `No points in Curve2D.` on every
   evaluation, which the page had presented as a quiet degradation.
+
+- **The removal guard dropped the half of its rule that could not compile.** It also fired on a copy
+  a spawn row named in a DIFFERENT event, and that name is a local: scoped to the handler it was
+  written in, and under a condition to that `if`. Compiled and loaded, the emitted file answered
+  `Identifier "boss" not declared in the current scope` - the guard line could not see the name any
+  more than the row could - and in the single shape where it did parse, two unconditioned events in
+  one handler, it was a check between two lines of the same run that could only ever be true. So
+  every reachable case was a broken file or a no-op, echoed on the row as protection. The rule is now
+  the one situation it was always right about: a variable typed as a node. The row's own echo, the
+  stand-down when the sheet already asked, and the byte-for-byte round trip of a hand-written guard
+  are untouched, and the suite now LOADS the emitted script rather than only reading it.
 
 ### Removed
 
