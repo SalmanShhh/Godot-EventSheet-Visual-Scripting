@@ -614,6 +614,17 @@
   pushes, or goes back. A row gated on a different mode is shut out, and a row that runs once when
   the game starts is how the game begins rather than how a player gets unstuck.
 
+- **Project View's Findings and Milliseconds columns have something in them.** The page joins what
+  already exists and takes both numbers as arguments, which is what stops it starting a Doctor run
+  to draw itself - and the one place that opened it passed neither, so both columns were empty in
+  every real session while the model's own tests, which hand them in, stayed green. The dock now
+  hands over what this session already has: the last Doctor run's findings, kept beside the badge
+  counts they were already being reduced to, and what the last profiled run cost each open sheet,
+  summed from the rows the run measured. A sheet nothing measured still shows no number at all. The
+  gathering is one function, so a test reads what the window is handed rather than what the model
+  does with it. The doc comment above it also claimed the sheets came from the project index; they
+  come from the open tabs, as the code nine lines below always said.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be

@@ -4210,15 +4210,28 @@ func _open_project_find(initial_query: String = "") -> void:
 var _project_view: EventSheetProjectViewPanel = null
 
 
-## Opens the Project View. The sheets are gathered here, once, from the ones already open plus the
-## ones the project index knows about; the panel joins them and shows the result. Findings and
-## profiler milliseconds are handed in only when this session already HAS them - the window never
-## starts a Doctor run or a profiler run to fill a column, because a page that costs a run is a page
-## nobody opens twice.
+## Opens the Project View. The sheets are gathered here, once, from the tabs this session has open;
+## the panel joins them and shows the result. Findings and profiler milliseconds are handed in from
+## what this session already HAS - the last Doctor run and the last profiled run - and are empty when
+## nobody has run either. The window never starts a run of its own to fill a column, because a page
+## that costs a run is a page nobody opens twice.
 func _open_project_view() -> void:
 	if _project_view == null:
 		_project_view = EventSheetProjectViewPanel.new(self)
-	_project_view.open(_open_sheets_by_path())
+	var inputs: Dictionary = _project_view_inputs()
+	_project_view.open(inputs["sheets"], inputs["findings"], inputs["timings"])
+
+
+## Everything the page is built from, gathered in one place so what the window is handed is what a
+## test can read. The three are what this session already has: the open tabs, the last Doctor run's
+## findings, and what the last profiled run cost each of those sheets.
+func _project_view_inputs() -> Dictionary:
+	var sheets: Dictionary = _open_sheets_by_path()
+	return {
+		"sheets": sheets,
+		"findings": EventSheetProjectOutline.doctor_findings(),
+		"timings": EventSheetRunProfile.milliseconds_by_sheet(sheets),
+	}
 
 
 ## The sheets this session already has in hand, keyed by the path each was opened from. Open tabs
