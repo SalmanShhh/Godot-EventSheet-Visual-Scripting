@@ -4,10 +4,11 @@
 # ones the command line and the CI job run - this window is a door, and it deliberately knows
 # nothing about how a manual page is written or what a drift check compares.
 #
-# WHAT IT REMEMBERS, and where. The ticked boxes are a property of the PROJECT rather than of the
-# person: a team that regenerates the manual and exports the site wants everybody's Run to do that,
-# and somebody who joined this week should not have to be told. They live in a small file beside the
-# project's other generated state, so ticking a box never shows up as a change in version control.
+# WHAT IT REMEMBERS, and where. The ticked boxes are remembered per CHECKOUT, in this project's own
+# generated state, so they survive closing the window and never show up as a change in version
+# control. They are not shared with a team and are not meant to be: the thing a team shares is the
+# CI file this window writes, which runs the chores on every push and is reviewed like any other
+# file. A checkbox that produced a diff would be a checkbox nobody ticked.
 #
 # ONE REPORT, AT THE END. Not a line per chore as it goes: the interesting question is what the whole
 # run found, and a panel that scrolls while you read it is a panel nobody reads. The report is the
@@ -22,13 +23,21 @@ extends AcceptDialog
 
 ## Where the ticked boxes are remembered. Inside .godot/ because that folder is already the project's
 ## own generated state and is already out of version control everywhere - a preference that produced
-## a diff would be a preference nobody sets.
+## a diff would be a preference nobody sets. That also means these ticks belong to this checkout and
+## not to a team - what a team shares is the CI file this window writes, which is reviewed like any
+## other file and runs the same chores on every push.
 const SETTINGS_PATH := "res://.godot/eventsheets_housekeeping.cfg"
 const SETTINGS_SECTION := "chores"
 
-## What a project that has never opened this window runs: the two chores that only ever describe
-## what is already there. Nothing that writes a site or drafts prose is on by default - a first Run
-## should surprise nobody.
+## What a project that has never opened this window runs: the manual, and the coverage-and-drift
+## check that only reports. Nothing that exports a site, drafts prose or harvests the engine is on
+## by default.
+##
+## THE MANUAL CHORE DOES WRITE FILES - a page per open sheet, under the project's docs folder - and
+## that is why its checkbox spells that out in words before anybody presses Run. A first Run should
+## surprise nobody, and what prevents the surprise is the sentence beside the tick, not a default
+## that quietly does nothing: a window of chores whose default runs no chore teaches its reader that
+## the button does not work.
 const DEFAULT_CHORES: PackedStringArray = ["manual", "check"]
 
 var _boxes: Dictionary = {}
