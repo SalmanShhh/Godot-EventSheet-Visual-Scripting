@@ -27,8 +27,11 @@ static func run() -> bool:
 		{"path": "res://player.tres", "severity": "warning", "message": "one"},
 		{"path": "res://player.tres", "severity": "info", "message": "two"},
 	]
+	# 4.31, not 4.25: a half-way value like 4.25 is exactly representable and "%.1f" rounds it
+	# half-even on one platform's C library and half-away on another's - the sentence read "4.2"
+	# on Linux and "4.3" on Windows. A fixture value off the boundary formats the same everywhere.
 	var rows: Array[Dictionary] = EventSheetProjectViewModel.rows(sheets, findings,
-		{"res://player.tres": 4.25})
+		{"res://player.tres": 4.31})
 	var paths: PackedStringArray = PackedStringArray()
 	for row: Dictionary in rows:
 		paths.append(str(row.get("path", "")))
@@ -46,7 +49,7 @@ static func run() -> bool:
 	all_passed = _check("the row carries the Doctor's findings for that path, and nobody else's",
 		int(player_row.get("findings", 0)), 2) and all_passed
 	all_passed = _check("a profiled sheet carries the milliseconds the stored run measured",
-		float(player_row.get("milliseconds")), 4.25) and all_passed
+		float(player_row.get("milliseconds")), 4.31) and all_passed
 	all_passed = _check("a sheet nobody profiled has no millisecond number at all, rather than a zero",
 		rows[0].get("milliseconds") == null, true) and all_passed
 	all_passed = _check("a sheet with no findings is not blamed for anybody else's",
