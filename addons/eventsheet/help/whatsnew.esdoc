@@ -215,6 +215,30 @@ What changed in the build you have installed (v0.17.0), in the words the release
   come off the crash trail each process already writes, so suite growth is visible to whoever caused
   it rather than to whoever bisects it next year.
 
+### Stopped behaviors cost zero frame time
+
+- **A stopped behavior parks its own tick.** 43 behavior packs used to run their per-frame
+  callback every frame and early-return while idle; each now switches the callback off at the
+  moment it stops, finishes, or runs out of work, and back on in every verb that starts it. A
+  behavior authored as stopped never pays for a frame at all, and a delayed start keeps ticking
+  on purpose - a behavior counting down a delay or cooldown is waiting, not idle.
+- **Finish points park the tick before their trigger fires**, so a row answering On Arrived, On
+  Timer, On Boost Expired or On Drained can start the next run from inside the handler and the
+  behavior wakes cleanly.
+- **Flipping a gate property directly still wakes it.** The exported on/off knobs (Running,
+  Active, Rotate Enabled, Enabled Movement and kin) carry a setter now, so the generated
+  Set-property action on a sheet, the Inspector while the game runs, and any other script all
+  restart processing exactly like the verb does.
+- **Conditions and expressions keep answering while parked** - Is Flickering, Has Path, Speed
+  and the rest read plain settled variables, checked pack by pack.
+- **Packs whose whole job is watching still watch.** Character controllers applying gravity and
+  polling input every frame, chases and pins tracking a target, and the monotonic clocks (Save
+  System's playtime, Storylet Weaver's cooldown clock) keep ticking - the standard is that IDLE
+  costs nothing, not that nothing ticks.
+- A runtime smoke test pins the mechanism itself: a subprocess scene tree spawns a crowd of idle
+  behavior instances and asserts every callback really is off, reading the processing flags
+  rather than wall-clock time, so it cannot flake under load.
+
 ### Existing codebases - the lift walls come down
 
 - **`func hurt(amount):` opens as a function.** A head with no return annotation is what almost
@@ -690,6 +714,21 @@ What changed in the build you have installed (v0.17.0), in the words the release
   ACEs and 67 triggers over 75 vocabulary modules, 112 packs (93 with a guide of their own, 19
   companion data assets documented inside a partner's guide), and the test-file count. The pack count
   was stale in the migration guide in both of its halves, and in three test comments.
+
+### Fixed - the bundled packs and their builders agree again
+
+- **Rebuilding the bundled packs no longer rewrites them.** `eventsheet_addons/` is compiler
+  output, so one run of the pack build is supposed to leave the repository untouched; it was
+  rewriting 30 of the 112 packs, because those builders declared their variables in one order
+  while the shipped files carried another. Member order is not a private detail - a pack's head
+  bars read in file order and a `.tres` stores its properties in the script's declaration order -
+  so the builders were brought to the shipped files, which are what people already have. The
+  packs themselves are unchanged.
+- **A builder that stops reproducing its pack now fails the suite** instead of waiting for the
+  next person to run the rebuild and read the drift as their own doing. `pack_builder_matches_shipped_test`
+  rebuilds two packs through their real builders, into a scratch directory so nothing in the
+  repository is touched, and compares the bytes with the shipped files, naming the first line
+  that differs.
 
 ### Fixed - what this pass's own review found
 
