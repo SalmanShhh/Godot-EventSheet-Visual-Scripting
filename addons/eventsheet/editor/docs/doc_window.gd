@@ -109,6 +109,10 @@ func _ensure_built() -> void:
 	_browser.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
 		if not EventSheets.reveal_verb_row(provider_id, ace_id, index):
 			_dock._set_status("That row is not used in this sheet."))
+	# And one of the reader's own rows elsewhere in the project, which needs the file opened first.
+	_browser.project_row_requested.connect(func(sheet_path: String, line: int) -> void:
+		if not EventSheets.reveal_project_row(sheet_path, line):
+			_dock._set_status("Could not open that sheet."))
 	var body: VBoxContainer = EventSheetPopupUI.form_box()
 	body.add_child(_browser)
 	var online_button: Button = Button.new()

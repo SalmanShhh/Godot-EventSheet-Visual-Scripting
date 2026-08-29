@@ -5244,3 +5244,12 @@ Sheet on %s,%s의 시트
 "Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: 이 프로젝트의 스크립트 %d개 중 측정을 위해 열 수 있는 것이 없습니다. 플러그인을 설치해도 바뀐 것은 없습니다 - 시트로 열기 전까지 스크립트는 코드 그대로입니다.
 %d more node(s) mirrored by a negative scale,음수 스케일로 뒤집힌 노드 %d개 더
 %d more node(s) scaled unevenly and turned,고르지 않게 스케일되고 회전한 노드 %d개 더
+Not used anywhere in this project yet.,이 프로젝트에서는 아직 어디에서도 쓰이지 않았습니다.
+Used once in your project - open it.,프로젝트에서 한 번 쓰입니다 - 열기.
+Used %d times in your project - open one.,프로젝트에서 %d번 쓰입니다 - 하나 열기.
+Used %d times across %d sheets in your project - open one.,"프로젝트에서 %d번, %d개의 시트에 걸쳐 쓰입니다 - 하나 열기."
+"Opens the guide section that teaches this, at the heading itself.",이것을 설명하는 안내서의 절을 그 제목 위치에서 엽니다.
+Learn more,자세히 보기
+Opens that sheet and selects the event.,해당 시트를 열고 이벤트를 선택합니다.
+Could not open that sheet.,해당 시트를 열 수 없습니다.
+Opened %s at the event that uses it.,%s 을(를) 그것을 쓰는 이벤트 위치에서 열었습니다.

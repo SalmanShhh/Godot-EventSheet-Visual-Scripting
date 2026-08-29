@@ -5244,3 +5244,12 @@ Sheet on %s,Blatt auf %s
 "Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: %d Skript(e) in diesem Projekt, und keines davon ließ sich zum Messen öffnen. Die Installation des Plugins hat nichts geändert - ein Skript bleibt Code, bis du es als Blatt öffnest."
 %d more node(s) mirrored by a negative scale,%d weitere(r) Knoten durch negative Skalierung gespiegelt
 %d more node(s) scaled unevenly and turned,%d weitere(r) Knoten ungleichmäßig skaliert und gedreht
+Not used anywhere in this project yet.,In diesem Projekt bisher nirgends verwendet.
+Used once in your project - open it.,Einmal in deinem Projekt verwendet - öffnen.
+Used %d times in your project - open one.,%d-mal in deinem Projekt verwendet - eine öffnen.
+Used %d times across %d sheets in your project - open one.,%d-mal in %d Blättern deines Projekts verwendet - eine öffnen.
+"Opens the guide section that teaches this, at the heading itself.","Öffnet den Abschnitt der Anleitung, der das erklärt - direkt bei der Überschrift."
+Learn more,Mehr erfahren
+Opens that sheet and selects the event.,Öffnet dieses Blatt und wählt das Ereignis aus.
+Could not open that sheet.,Dieses Blatt konnte nicht geöffnet werden.
+Opened %s at the event that uses it.,"%s beim Ereignis geöffnet, das es verwendet."

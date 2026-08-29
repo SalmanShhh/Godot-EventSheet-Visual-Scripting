@@ -2347,6 +2347,32 @@ static func reveal_verb_row(provider_id: String, ace_id: String, index: int = 0)
 	return viewport != null and viewport.reveal_resource(rows[index])
 
 
+## Where the reader's whole PROJECT already uses a verb, as [{sheet, count, rows}] - the reverse
+## door of a reference entry, which turns their own game into its example gallery.
+##
+## The join is made fresh every time it is asked for and stored nowhere: the sheets it walks are the
+## open tabs and the files already on disk, and a cached count is a count that is wrong the moment
+## somebody adds a row. Empty outside the editor, where there are no tabs to ask.
+static func project_uses_of(definition: ACEDefinition) -> Array[Dictionary]:
+	if definition == null:
+		return []
+	var open_sheets: Dictionary = {}
+	if _dock_alive():
+		open_sheets = EventSheetFindReferences.open_sheets_of(_dock)
+	return EventSheetDocProjectUsage.gather(definition, open_sheets)
+
+
+## Opens the sheet a project-wide result names and lands on the event at `line`, the same way a Find
+## results row does - one door for "take me to that row in that file", so the Manual and the find
+## bar can never disagree about how a cross-sheet landing works.
+##
+## False when there is no workspace open, so a caller reports it rather than looking like it worked.
+static func reveal_project_row(sheet_path: String, line: int) -> bool:
+	if not _dock_alive() or sheet_path.strip_edges().is_empty():
+		return false
+	return _dock._find_results.jump_to_line(sheet_path, line)
+
+
 ## Every verb the LIVE registry currently offers, as immutable ACEDefinitions. Editor-only like
 ## provider_verbs: an empty array when no dock is open, so a headless caller falls back to a
 ## script-level derivation rather than reporting a project with no vocabulary.

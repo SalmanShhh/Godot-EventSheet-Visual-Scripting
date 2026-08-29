@@ -59,15 +59,21 @@ const EXTERNAL_LINK_GLYPH := "↗"
 const SECTION_FOR_BLOCK := {
 	"title": "title", "note": "note", "prose": "description", "ships_as": "syntax",
 	"params": "parameters", "figure": "preview", "usage": "usage", "patterns": "patterns",
-	"see_also": "see_also",
+	"see_also": "see_also", "teaches": "teaches", "strip": "strip",
+	"project_usage": "project_usage",
 	"entry_actions": "actions", "about": "about", "link": "link",
 }
 
 ## THE READING ORDER, fixed for every reference page: what it is, what it does, what you type, what
 ## you fill in, what it looks like on the sheet, and where it comes from.
+##
+## The three DEPTHS of the same answer sit together at the top - the entry's own prose, the written
+## section that teaches it, and the sentences the Parameters dialog puts under its fields - because
+## they are one answer given at three levels of knowing, and a reader who has to scroll between
+## them is reading three pages again.
 const SECTION_ORDER: Array[String] = [
-	"title", "note", "description", "syntax", "parameters", "preview", "usage", "patterns",
-	"see_also", "actions", "about", "link",
+	"title", "note", "description", "teaches", "strip", "syntax", "parameters", "preview",
+	"usage", "project_usage", "patterns", "see_also", "actions", "about", "link",
 ]
 
 ## Emitted when the reader activates a read-more link. The panel opens it as well (that is the
@@ -86,9 +92,20 @@ signal scratch_requested(example_name: String, sheet: EventSheetResource)
 ## one they were shown. The panel never touches the sheet itself - a host reveals the row.
 signal row_requested(provider_id: String, ace_id: String, index: int)
 
+## Emitted when the reader asks to be taken to one of the rows ELSEWHERE in their project that uses
+## the verb on screen. A cross-sheet landing needs the file and the line rather than a resource: the
+## row in the opened tab is a different object from the one this list found, and a line number is a
+## position that survives the open. The panel never opens anything - a host does.
+signal project_row_requested(sheet_path: String, line: int)
+
 ## Emitted when the reader follows a "See also" chip, so a host navigates the way it does for any
 ## other link.
 signal doc_requested(doc_id: String)
+
+## The same navigation, landing on one HEADING of the page rather than at its top. Its own signal
+## rather than a second argument on the one above, because every existing listener is wired to the
+## one-argument shape and a page opened at the wrong place is worse than one opened at the top.
+signal doc_requested_at(doc_id: String, anchor: String)
 
 var _doc_id: String = ""
 var _doc_title: String = ""
@@ -254,8 +271,14 @@ func _section_control(section: String, by_section: Dictionary) -> Control:
 			return _parameters_column(block)
 		"preview":
 			return _figure_block(block.get("definition", null) as ACEDefinition)
+		"teaches":
+			return _teaches_block(block)
+		"strip":
+			return _strip_block(block.get("items", []) as Array)
 		"usage":
 			return _usage_block(str(block.get("provider_id", "")), str(block.get("ace_id", "")))
+		"project_usage":
+			return _project_usage_block(block.get("definition", null) as ACEDefinition)
 		"patterns":
 			return _patterns_block(str(block.get("provider_id", "")), str(block.get("ace_id", "")))
 		"see_also":
@@ -437,6 +460,86 @@ func _usage_block(provider_id: String, ace_id: String) -> Control:
 				_usage_index = (_usage_index + 1) % used
 				row_requested.emit(provider_id, ace_id, _usage_index)))
 	return EventSheetPopupUI.panel_section(row)
+
+
+## THE SECOND DEPTH: the written section that teaches this verb, one click away and landing on the
+## heading rather than at the top of the guide. The line names where the reader is being sent, so
+## following it is a decision rather than a surprise.
+func _teaches_block(block: Dictionary) -> Control:
+	var line: String = str(block.get("line", "")).strip_edges()
+	var doc_id: String = str(block.get("doc_id", ""))
+	if line.is_empty() or doc_id.is_empty():
+		return null
+	var anchor: String = str(block.get("anchor", ""))
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("Taught in"))
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	var label: Label = _wrapped_label(line, COLUMN_WRAP_WIDTH * 2.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	row.add_child(_small_button("Learn more", "Opens the guide section that teaches this, at the heading itself.",
+		func() -> void: doc_requested_at.emit(doc_id, anchor)))
+	column.add_child(row)
+	return column
+
+
+## THE THIRD DEPTH: the sentences the Parameters dialog puts under its fields, on the page as well.
+## The dialog is where a reader meets them, and this is where a reader who has not opened it yet
+## can read the same words - one wording, two surfaces, because both ask the same table.
+func _strip_block(items: Array) -> Control:
+	if items.is_empty():
+		return null
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("Filling it in"))
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	for entry: Variant in items:
+		var item: Dictionary = entry as Dictionary
+		var field: VBoxContainer = VBoxContainer.new()
+		field.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(2.0)))
+		field.add_child(EventSheetPopupUI.small_caps_label(str(item.get("heading", ""))))
+		field.add_child(_wrapped_label(str(item.get("body", ""))))
+		body.add_child(field)
+	column.add_child(EventSheetPopupUI.panel_section(body))
+	return column
+
+
+## THE DOOR SWINGING BACK: where the reader's own project already uses this verb, as rows they can
+## open. Counted HERE rather than baked into the blocks for the same reason the sheet-local count is
+## - the project under the page changes while the page is open, and the join is cheap enough to run
+## when the entry is drawn.
+##
+## A verb the project never uses says so in one line, and offers nothing to click: the absence IS
+## the answer, and a reader who has not needed a verb yet has learned something from reading that.
+func _project_usage_block(definition: ACEDefinition) -> Control:
+	if definition == null:
+		return null
+	var found: Array[Dictionary] = EventSheets.project_uses_of(definition)
+	var counts: Dictionary = EventSheetDocProjectUsage.totals(found)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("In your project"))
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	body.add_child(_wrapped_label(EventSheetDocProjectUsage.sentence(
+		int(counts.get("total", 0)), int(counts.get("sheets", 0)))))
+	var chips: HFlowContainer = HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(4.0)))
+	chips.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	for entry: Dictionary in EventSheetDocProjectUsage.trimmed(found):
+		var sheet_path: String = str(entry.get("sheet", ""))
+		for row: Variant in (entry.get("rows", []) as Array):
+			var line: int = int((row as Dictionary).get("line", 0))
+			chips.add_child(_small_button(EventSheetDocProjectUsage.row_label(sheet_path, line),
+				"Opens that sheet and selects the event.",
+				func() -> void: project_row_requested.emit(sheet_path, line)))
+	if chips.get_child_count() > 0:
+		body.add_child(chips)
+	column.add_child(EventSheetPopupUI.panel_section(body))
+	return column
 
 
 ## The PATTERNS this verb is part of, as links to their pages. Derived from the claims on the

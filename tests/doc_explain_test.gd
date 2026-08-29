@@ -83,9 +83,12 @@ static func _test_page_shape() -> bool:
 
 	# The reading order. Pinned by VALUE, and then pinned again against a REVERSED block list,
 	# because the whole point of the plan is that the page does not inherit the assembler's order.
+	# This verb is REFLECTED, so it declares no field blurbs and no field kinds: the section that
+	# repeats what the Parameters dialog says about each field has nothing to say and draws nothing,
+	# which is why it is absent here and present on an authored verb.
 	all_passed = _check("a pack verb's page reads in the fixed order",
 		", ".join(EventSheetDocPanel.section_plan(blocks)),
-		"title, description, syntax, parameters, preview, usage, patterns, actions, about, link") and all_passed
+		"title, description, teaches, syntax, parameters, preview, usage, project_usage, patterns, actions, about, link") and all_passed
 	var shuffled: Array[Dictionary] = []
 	for index: int in range(blocks.size()):
 		shuffled.append(blocks[blocks.size() - 1 - index])

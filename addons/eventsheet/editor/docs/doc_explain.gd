@@ -25,6 +25,9 @@
 #                                          same two facts as metadata badges
 #   note       text                        a deprecation steer (loud, above the prose)
 #   prose      text                        what it does, in the reader's language
+#   teaches    doc_id, anchor, line        the written section that teaches it, and where it sits
+#   strip      items:[{heading, body}]     what the Parameters dialog says about each of its fields
+#   project_usage definition               where the reader's own project already uses it
 #   ships_as   code                        the GDScript line it compiles to
 #   params     items:[{name, detail,       each parameter, one string for a form row and the same
 #              type, default, description}] facts split into table columns
@@ -220,6 +223,21 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 	if description.is_empty():
 		description = str(definition.metadata.get("display_template", definition.display_name))
 	blocks.append({"kind": "prose", "text": EventSheetL10n.translate(description)})
+	# The second and third DEPTHS of the same answer, right under the first: the written section
+	# that teaches the verb, and what the Parameters dialog says about each of its fields. Both are
+	# joins - against the Manual's baked search index and against the dialog's own strip table - so
+	# neither is a second copy of anything, and a verb the guides do not cover simply has no row.
+	var section: Dictionary = EventSheetDocTeaches.teaching_section(definition)
+	if not section.is_empty():
+		blocks.append({
+			"kind": "teaches",
+			"doc_id": str(section.get("doc_id", "")),
+			"anchor": str(section.get("anchor", "")),
+			"line": EventSheetDocTeaches.section_line(section),
+		})
+	var strip_items: Array[Dictionary] = EventSheetDocTeaches.strip_items(definition)
+	if not strip_items.is_empty():
+		blocks.append({"kind": "strip", "items": strip_items})
 	var template: String = ships_as(definition)
 	if not template.is_empty():
 		blocks.append({"kind": "ships_as", "code": template})
@@ -234,6 +252,9 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 	# here. The counting itself is the panel's, because it needs the sheet that is open right now
 	# and this assembly is pure over the definition it was handed.
 	blocks.append({"kind": "usage", "provider_id": definition.provider_id, "ace_id": definition.id})
+	# And the same question asked of the whole project rather than of the sheet on screen: the door
+	# swinging back, so the reader's own game answers "what does this look like in practice".
+	blocks.append({"kind": "project_usage", "definition": definition})
 	# And which PATTERNS this verb belongs to. The list is derived from the claims in front of
 	# the reader (the panel does the deriving, for the same reason it does the counting above), so a
 	# verb is named by a pattern precisely because a claim on their own sheet says it is.

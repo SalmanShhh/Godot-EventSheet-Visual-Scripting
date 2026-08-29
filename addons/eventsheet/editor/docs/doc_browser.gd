@@ -106,6 +106,10 @@ signal focus_returned()
 ## already use its verb. The host owns the sheet, so the host does the revealing.
 signal row_requested(provider_id: String, ace_id: String, index: int)
 
+## Emitted when a reference entry asks to be taken to a row ELSEWHERE in the project that uses its
+## verb. The host owns the tab strip, so the host does the opening.
+signal project_row_requested(sheet_path: String, line: int)
+
 var _tree: Tree = null
 var _search: LineEdit = null
 var _scroll: ScrollContainer = null
@@ -214,8 +218,12 @@ func _init() -> void:
 	_panel.scratch_requested.connect(func(example_name: String, example: EventSheetResource) -> void:
 		scratch_requested.emit(example_name, example))
 	_panel.doc_requested.connect(func(doc_id: String) -> void: show_doc(doc_id))
+	_panel.doc_requested_at.connect(func(doc_id: String, anchor: String) -> void:
+		show_doc(doc_id, anchor))
 	_panel.row_requested.connect(func(provider_id: String, ace_id: String, index: int) -> void:
 		row_requested.emit(provider_id, ace_id, index))
+	_panel.project_row_requested.connect(func(sheet_path: String, line: int) -> void:
+		project_row_requested.emit(sheet_path, line))
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
 	column.add_child(_panel)

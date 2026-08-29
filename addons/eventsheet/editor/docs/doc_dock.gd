@@ -258,6 +258,7 @@ func _ensure_content() -> void:
 	_browser.connect("link_activated", _on_link_activated)
 	_browser.connect("snippet_inserted", _on_snippet_inserted)
 	_browser.connect("row_requested", _on_row_requested)
+	_browser.connect("project_row_requested", _on_project_row_requested)
 	_browser.connect("scratch_requested", _on_scratch_requested)
 	_browser.connect("control_highlight_requested", _on_control_highlight_requested)
 	_browser.connect("focus_returned", _on_focus_returned)
@@ -435,6 +436,18 @@ func _on_row_requested(provider_id: String, ace_id: String, index: int) -> void:
 		_set_status("Selected the event that uses it.")
 	else:
 		_set_status("That row is not used in this sheet.")
+
+
+## One of the reader's OWN rows, elsewhere in the project. The Manual does not own the tab strip
+## either, so the same public reveal opens the sheet and lands on the line.
+func _on_project_row_requested(sheet_path: String, line: int) -> void:
+	var api: Script = load(API_PATH) as Script
+	if api == null:
+		return
+	if bool(api.call("reveal_project_row", sheet_path, line)):
+		_set_status("Opened %s at the event that uses it." % sheet_path.get_file())
+	else:
+		_set_status("Could not open that sheet.")
 
 
 func _on_snippet_inserted() -> void:

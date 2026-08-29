@@ -163,7 +163,22 @@ func _jump_to(leaf: TreeItem) -> void:
 	var sheet_path: String = str((metadata as Dictionary).get("sheet", ""))
 	var row_resource: Variant = (metadata as Dictionary).get("row", null)
 	var line: int = int((metadata as Dictionary).get("line", 0))
-	if not sheet_path.is_empty() and sheet_path != _dock._current_sheet_path:
+	if jump_to_line(sheet_path, line):
+		return
+	if row_resource is Resource and _dock._active_view() != null:
+		_dock._active_view().reveal_resource(row_resource as Resource)
+
+
+## "Take me to that row, in that file" - the ONE cross-sheet landing in the editor. The find results
+## and the Manual's project-wide usage list both ask for it here, because the tricky half is not the
+## jump but the WAIT: opening a `.gd` finishes on a worker thread, so the landing is remembered
+## before the open and re-tried when the lifted sheet swaps in.
+##
+## False when there is nothing to land on (no path and no line), which is what lets a caller holding
+## a row resource fall back to revealing it directly.
+func jump_to_line(sheet_path: String, line: int) -> bool:
+	if not sheet_path.is_empty() and sheet_path != _dock._current_sheet_path \
+			and sheet_path != _current_source_path():
 		_dock._navigate.record_current()
 		# Remembered BEFORE the open, because opening a `.gd` finishes on a worker thread: the raw
 		# pass lands the sheet now and the lifted one replaces it a moment later, and the landing has
@@ -172,13 +187,12 @@ func _jump_to(leaf: TreeItem) -> void:
 		_pending_path = sheet_path
 		_dock._navigate.open_or_focus(sheet_path)
 		_land_pending()
-		return
+		return true
 	if line > 0:
 		# The row on screen, by the line it emits at - the same door Ctrl+G and the code panel use.
 		_dock.goto_generated_line(line)
-		return
-	if row_resource is Resource and _dock._active_view() != null:
-		_dock._active_view().reveal_resource(row_resource as Resource)
+		return true
+	return false
 
 
 ## Lands on the remembered line, if the sheet it belongs to is the one now on screen. Called once

@@ -452,6 +452,11 @@ class HelpStrip extends PanelContainer:
 	## The one-click answers to whatever the strip is complaining about. Empty (and hidden) while
 	## the strip is merely describing something.
 	var fixes_row: HBoxContainer = null
+	## The way OUT of the dialog and into the guide section that teaches this row. Its own row rather
+	## than a fix, because a fix answers a problem with the value in front of you and this answers
+	## "I do not know what this row is for" - and because show_note() rebuilds the fixes on every
+	## keystroke, while the row being written does not change while the dialog is open.
+	var learn_more_row: HBoxContainer = null
 	## Which voice the strip is speaking in right now - readable, so a test can pin the state
 	## without sampling a colour.
 	var tone: String = TONE_NORMAL
@@ -485,6 +490,10 @@ class HelpStrip extends PanelContainer:
 		fixes_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
 		fixes_row.visible = false
 		box.add_child(fixes_row)
+		learn_more_row = HBoxContainer.new()
+		learn_more_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+		learn_more_row.visible = false
+		box.add_child(learn_more_row)
 		reads_as_row = _reading_row("READS AS")
 		reads_as_value = reads_as_row.get_child(1) as Label
 		box.add_child(reads_as_row)
@@ -559,6 +568,28 @@ class HelpStrip extends PanelContainer:
 				button.pressed.connect(action as Callable)
 			fixes_row.add_child(button)
 		fixes_row.visible = fixes_row.get_child_count() > 0
+
+
+	## The door out of the dialog and into the written guide: one flat link naming the section that
+	## teaches this row, and where it lands. An empty label hides the row, which is what a verb the
+	## guides do not cover gets - a dead "Learn more" is worse than none.
+	##
+	## Rebuilt rather than reused, so a second call replaces the landing instead of stacking a
+	## second link beside a stale one.
+	func offer_learn_more(label: String, action: Callable = Callable()) -> void:
+		for old_link: Node in learn_more_row.get_children():
+			learn_more_row.remove_child(old_link)
+			old_link.queue_free()
+		if label.strip_edges().is_empty() or not action.is_valid():
+			learn_more_row.visible = false
+			return
+		var link: Button = Button.new()
+		link.text = label
+		link.flat = true
+		link.tooltip_text = EventSheetL10n.translate("Opens the guide section that teaches this, at the heading itself.")
+		link.pressed.connect(action)
+		learn_more_row.add_child(link)
+		learn_more_row.visible = true
 
 
 	## Heading, paragraph, tone and fixes in one call - the shape every caller actually wants, and

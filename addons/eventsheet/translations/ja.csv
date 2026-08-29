@@ -5244,3 +5244,12 @@ Sheet on %s,%s 上のシート
 "Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: このプロジェクトの %d 個のスクリプトのうち、測定のために開けたものはありません。プラグインを入れても何も変わっていません - スクリプトはシートとして開くまでコードのままです。
 %d more node(s) mirrored by a negative scale,負のスケールで反転しているノードが他に %d 件
 %d more node(s) scaled unevenly and turned,不均一にスケールされて回転しているノードが他に %d 件
+Not used anywhere in this project yet.,このプロジェクトではまだどこでも使われていません。
+Used once in your project - open it.,プロジェクト内で1回使われています - 開く。
+Used %d times in your project - open one.,プロジェクト内で %d 回使われています - 1つ開く。
+Used %d times across %d sheets in your project - open one.,プロジェクト内で %d 回、%d 個のシートにわたって使われています - 1つ開く。
+"Opens the guide section that teaches this, at the heading itself.",これを教えているガイドの節を、その見出しの位置で開きます。
+Learn more,詳しく見る
+Opens that sheet and selects the event.,そのシートを開き、イベントを選択します。
+Could not open that sheet.,そのシートを開けませんでした。
+Opened %s at the event that uses it.,%s を、それを使っているイベントの位置で開きました。

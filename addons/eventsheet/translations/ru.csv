@@ -5244,3 +5244,12 @@ Sheet on %s,Лист на %s
 "Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: %d скрипт(ов) в этом проекте, и ни один не удалось открыть для измерения. Установка плагина ничего не изменила - скрипт остаётся кодом, пока вы не откроете его как лист."
 %d more node(s) mirrored by a negative scale,"ещё %d узл(ов), отражённых отрицательным масштабом"
 %d more node(s) scaled unevenly and turned,ещё %d узл(ов) с неравномерным масштабом и поворотом
+Not used anywhere in this project yet.,Пока нигде не используется в этом проекте.
+Used once in your project - open it.,Используется один раз в вашем проекте - откройте.
+Used %d times in your project - open one.,Используется %d раз в вашем проекте - откройте одно.
+Used %d times across %d sheets in your project - open one.,Используется %d раз в %d листах вашего проекта - откройте одно.
+"Opens the guide section that teaches this, at the heading itself.","Открывает раздел руководства, который этому учит, прямо на заголовке."
+Learn more,Подробнее
+Opens that sheet and selects the event.,Открывает этот лист и выделяет событие.
+Could not open that sheet.,Не удалось открыть этот лист.
+Opened %s at the event that uses it.,"Открыт %s на событии, которое его использует."

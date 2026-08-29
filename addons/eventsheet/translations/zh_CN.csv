@@ -5244,3 +5244,12 @@ Sheet on %s,%s 上的事件表
 "Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: 本项目共 %d 个脚本，但没有一个能被打开以进行测量。安装插件本身没有改变任何东西 - 在你把脚本作为事件表打开之前，它仍然只是代码。
 %d more node(s) mirrored by a negative scale,另有 %d 个节点因负缩放而被镜像
 %d more node(s) scaled unevenly and turned,另有 %d 个节点被不均匀缩放并旋转
+Not used anywhere in this project yet.,本项目中尚未在任何地方使用。
+Used once in your project - open it.,在你的项目中使用了 1 次 - 打开它。
+Used %d times in your project - open one.,在你的项目中使用了 %d 次 - 打开其中一个。
+Used %d times across %d sheets in your project - open one.,在你的项目中使用了 %d 次，分布在 %d 个表中 - 打开其中一个。
+"Opens the guide section that teaches this, at the heading itself.",打开讲解这一点的指南章节，直接定位到标题。
+Learn more,了解更多
+Opens that sheet and selects the event.,打开该表并选中该事件。
+Could not open that sheet.,无法打开该表。
+Opened %s at the event that uses it.,已打开 %s，并定位到使用它的事件。

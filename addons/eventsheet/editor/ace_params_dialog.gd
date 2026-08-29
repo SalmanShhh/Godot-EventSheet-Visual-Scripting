@@ -3536,6 +3536,25 @@ func _describe_dialog_itself() -> void:
 	var doing: String = _build_hint_text().strip_edges()
 	_help_strip.show_note(_definition.display_name,
 		doing if about.is_empty() else "%s  %s" % [about, doing])
+	_offer_learn_more()
+
+
+## The way from this form to the guide section that teaches the row it is writing. The section is
+## found by the Manual's own ranked search over its own baked index - the same table the Manual's
+## search box ranks - so a guide that renames a heading renames this link with it, and a verb the
+## written corpus does not cover simply gets no link.
+func _offer_learn_more() -> void:
+	if _help_strip == null or _definition == null:
+		return
+	var section: Dictionary = EventSheetDocTeaches.teaching_section(_definition)
+	if section.is_empty():
+		_help_strip.offer_learn_more("")
+		return
+	var doc_id: String = str(section.get("doc_id", ""))
+	var anchor: String = str(section.get("anchor", ""))
+	_help_strip.offer_learn_more(
+		"%s  ·  %s" % [EventSheetL10n.translate("Learn more"), EventSheetDocTeaches.section_line(section)],
+		func() -> void: EventSheets.open_docs(doc_id, anchor))
 
 
 ## The plainer reading of what is already typed, as a button on the strip: a Set value whose
