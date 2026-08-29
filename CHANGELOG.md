@@ -640,6 +640,14 @@
   The note at the top of the file no longer claims every fix goes through the sheet's undo funnel
   either: two of them change a project setting, and they say so in their own words.
 
+- **Two new gates stop warming project caches for everybody after them.** The Interop section asks
+  the project index how many other files call each function, which starts the project-wide scan and
+  leaves three caches ready; the listing-order gate leaves the scene walk cached. Neither dropped
+  what it warmed, which is the exact shape of the leak this pass fixed once already: it is invisible
+  in the sharded local run, where leaker and victims are in different processes, and it reaches every
+  later test that pins cold state on continuous integration, which runs the suite serially in one.
+  Both now start cold and end cold.
+
 ### Performance - a project ten times this one, and what the editor costs on it
 
 - **A huge project, fabricated rather than committed.** Every timing pin in this suite used to be
