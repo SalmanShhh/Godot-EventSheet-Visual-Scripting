@@ -558,12 +558,22 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 	var emitter: String = str(definition.metadata.get(ACEPickerDialog.SIGNAL_SOURCE_META, ""))
 	if not emitter.is_empty():
 		event_row.trigger_source_path = emitter
+	# trigger_args is the handler's ARGUMENT LIST - what the engine hands the function, which the row
+	# shows as payload chips beside the trigger. A slot the trigger's own SENTENCE fills is not one of
+	# those: "On collision with {group}" asks the author for a group, and baking it in here made a
+	# picked "On overlap with enemies" row draw `group` as though the engine handed it over. So a
+	# parameter the sentence names is left out, derived from the descriptor rather than listed - a
+	# trigger that grows a field tomorrow is right the day it ships.
+	var sentence: String = ""
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(definition.provider_id, definition.id)
+	if descriptor != null:
+		sentence = descriptor.get_display_text()
 	var parts: PackedStringArray = PackedStringArray()
 	for parameter in definition.parameters:
 		if not (parameter is Dictionary):
 			continue
 		var param_id: String = str((parameter as Dictionary).get("id", ""))
-		if param_id.is_empty():
+		if param_id.is_empty() or sentence.contains("{%s}" % param_id):
 			continue
 		var param_type: int = int((parameter as Dictionary).get("type", TYPE_NIL))
 		parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])

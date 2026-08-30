@@ -74,6 +74,37 @@ static func run() -> bool:
 	ok = _test_the_refusal() and ok
 	ok = _test_the_question() and ok
 	ok = _test_the_help_strip() and ok
+	ok = _test_the_filter_is_not_a_payload_chip() and ok
+	return ok
+
+
+## The row shows the payload the ENGINE hands the handler - the body that arrived - and the group is
+## not one of those: it is the field the author filled in, and it is already in the row's sentence.
+## Baked into the handler's argument list, a picked "On overlap with enemies" row drew `group` beside
+## `body` as though the signal had handed it over.
+static func _test_the_filter_is_not_a_payload_chip() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheetResource.new())
+	var definition: ACEDefinition = dock._ace_registry.find_definition("Core", "OnOverlapWithGroup")
+	var ok: bool = _check("the filtered trigger is registered", definition != null, true)
+	if definition == null:
+		dock.free()
+		return false
+	var event: EventRow = EventRow.new()
+	var trigger: ACECondition = ACECondition.new()
+	trigger.provider_id = "Core"
+	trigger.ace_id = "OnOverlapWithGroup"
+	trigger.params = {"group": "\"enemies\""}
+	event.trigger = trigger
+	dock._ace_apply._bake_trigger_signature(event, definition)
+	ok = _check("the group the sentence already says is not baked as an argument",
+		event.trigger_args.contains("group"), false) and ok
+	ok = _check("while the arrival the engine hands over still is",
+		event.trigger_args.contains("body"), true) and ok
+	ok = _check("and the group itself still reaches the compiler as a trigger param",
+		str(event.trigger_params.get("group", "")), "\"enemies\"") and ok
+	dock.free()
 	return ok
 
 
