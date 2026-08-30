@@ -228,6 +228,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_axis` | [Input Axis](ace:Core/GetInputAxis) | Input | Vocabulary |
 | `get_baked_length` | [Random Place Along Path](ace:Core/PlaceAlongPath) | Spawn | Vocabulary |
 | `get_base_control` | [Add Window](ace:Core/AddEditorWindow) | Editor Tools: Panels & menus | Vocabulary |
+| `get_base_dir` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |
 | `get_basename` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
 | `get_bus_count` | [Bus Count](ace:Core/AudioBusCount) | Audio Server | Vocabulary |
 | `get_bus_index` | [Bus Exists](ace:Core/AudioBusExists) | Audio Server | Vocabulary |
@@ -384,6 +385,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `global_shader_parameter_get` | [Global Shader Parameter](ace:Core/RenderingGetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_shader_parameter_set` | [Set Global Shader Parameter](ace:Core/RenderingSetGlobalShaderParam) | Rendering | Vocabulary |
 | `global_transform` | [Forward Direction](ace:Core/ObjectForward) | Native 3D | Vocabulary |
+| `globalize_path` | [Open The Player's Data Folder](ace:Core/OpenUserDataFolder) | Files | Vocabulary |
 | `glow_enabled` | [Set Glow On/Off](ace:Core/SetGlow) | Environment | Vocabulary |
 | `glow_intensity` | [Set Glow Strength](ace:Core/SetGlowStrength) | Environment | Vocabulary |
 | `go_back` | [Go Back](ace:Core/GoBackMode) | Game State | Vocabulary |
@@ -841,6 +843,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools: Plugin lifecycle | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
+| `var` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |
 | `var_to_str` | [To Text](ace:Core/Stringify) | Debug | Vocabulary |
 | `variant_to_base64` | [Share Code For](ace:Core/ShareCodeFor) | Utility: Window | Vocabulary |
 | `velocity` | [Get Velocity](ace:Core/GetVelocity2D) | General Expressions | Vocabulary |

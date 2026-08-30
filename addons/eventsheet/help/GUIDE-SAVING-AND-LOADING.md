@@ -13,6 +13,7 @@ The whole system is built on one small idea, the save-state seam, and one drop-i
   - [Targeted saving vs whole-game saving](#targeted-saving-vs-whole-game-saving)
   - [The six save formats](#the-six-save-formats)
   - [Save Studio](#save-studio)
+  - [Where a file goes: user:// and res://](#where-a-file-goes-user-and-res)
 - [Use cases](#use-cases)
 - [Other use cases](#other-use-cases)
 - [Tips and common mistakes](#tips-and-common-mistakes)
@@ -112,6 +113,33 @@ Save Studio is a tool window you open from the editor's Tools menu. It has three
 1. **Format Preview** lets you pick an addon and a format and see exactly what its save file will look like on disk, before you commit to anything.
 2. **Save Slots** browses the real `user://` save files in your project, shows their contents, and exports them to disk in any format, optionally converting the format on the way out.
 3. **Add Save Support** points at any script, lets you tick the variables worth persisting (data is pre-ticked while node references are left off by default), and generates a copy-paste `save_state` and `load_state` pair that follows the convention. This is how you give your own addons and tools save support without writing the boilerplate by hand.
+
+### Where a file goes: user:// and res://
+
+Everything above is about a GAME SAVE, and a game save is the Save System addon's job: it picks the slot, the format and the folder for you, and you never type a path. The Files vocabulary is for the other kind of file - a level you export, a log you write while testing, a CSV a designer drops in, a screenshot the player asks for. Reach for Save Value and Load Value for progress; reach for Write Text File and Read Text File for a file you chose the name of yourself. Neither one duplicates the other, and a save written through Write Text File loses the slots, the backups and the format conversion that come with the seam.
+
+Once you are typing a path, there are exactly two places to type it, and the difference is the single commonest way a game that runs perfectly here fails on the first machine you send it to:
+
+| Place | What it is | Writable? |
+| --- | --- | --- |
+| `user://` | The player's own folder, one per player. Survives the game being updated. | Yes - this is where a game writes |
+| `res://` | The game's own files, packed into the build. | No - READ-ONLY once exported |
+
+`res://` is a folder while you are in the editor and a packed archive afterwards, so a write there works every time you test it and silently does nothing in an exported build. Every path field in the Files vocabulary says which of the two you are in, under the box, as you type; the Parameters strip adds where `user://` really lives on each desktop platform, and the **Open The Player's Data Folder** action opens that folder on the player's machine while the game runs.
+
+![A parameters dialog with two path fields, each carrying a muted line under it naming the place that path is in, and a help strip explaining both places](images/file-place-field.png)
+
+Three things the Doctor's **Files** section watches for, each with a one-click fix that shows you the before and the after and lands as a single undo step:
+
+- **A write aimed at `res://`** - the export trap above. The fix rewrites the path under `user://`.
+- **An absolute path** (`D:/games/...`, `/home/...`) - a folder that exists on one computer and on no other. The fix rewrites it under `user://`.
+- **An unguarded read of `user://`** - the first run of a game has no save, no settings and no log, and Godot answers a missing file with empty text rather than an error. This one is a note, not a warning, and its fix is a respelling: **Read Text File (or a fallback)** takes what to use when the file is missing as its second parameter, and compiles to the `file_exists` check written into the line where you can see it. Leave that second parameter blank and it compiles to the plain read, unchanged.
+
+The guard is never behind your back. Opened as a sheet, a guarded read reads as the question and its two answers, with the exact line of code echoed beside each row:
+
+![An event sheet showing a guarded read as a file-exists condition with its else branch, a make-directory row, and the write under it, each with its emitted line echoed on the right](images/file-guarded-read.png)
+
+**Write Text File (in a folder)** covers the other half of the same lesson: Godot will not create a folder on the way to opening a file, so a write into `user://runs/latest.txt` fails until something makes `runs`. The row carries the choice - make the folder first, or the folder is already there - and the `make_dir_recursive_absolute` line it adds is emitted above the write and shown on the row, never behind your back.
 
 ## Use cases
 

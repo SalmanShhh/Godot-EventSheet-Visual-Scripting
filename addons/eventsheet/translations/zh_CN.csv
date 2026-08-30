@@ -5566,3 +5566,16 @@ Notifications,通知
 "Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.",当游戏从暂停恢复时，在同样的节点上运行。它是暂停事件的另一半，也是音乐和菜单恢复原状的地方。
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.",作为这个对象身上发生的最后一件事运行，就在它的内存消失之前。它不同于被销毁时 - 那是节点离开场景树，可能发生多次 - 这件事恰好发生一次，之后什么也不会有，所以这里正是把别处持有的句柄交还回去的地方。
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.",当玩家关闭窗口时运行 - 点击关闭按钮，或系统要求游戏退出。如果项目设置为自行处理，收到这条通知时游戏不会自己退出，这正是为「要先保存吗？」这样的询问留下的余地。
+"user:// - the player's folder: writable, one per player, survives updates.","user:// - 玩家的文件夹：可写入，每位玩家各一份，更新后依然保留。"
+"res:// - the game's own files: READ-ONLY once exported.","res:// - 游戏自身的文件：导出后为只读。"
+"an absolute path: this folder exists on one computer and nowhere else.","绝对路径：这个文件夹只存在于一台电脑上，别处没有。"
+"user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// 是玩家机器上真实存在的文件夹：Windows 上是 %APPDATA%\Godot\app_userdata\<project>，macOS 上是 ~/Library/Application Support/Godot/app_userdata/<project>，Linux 上是 ~/.local/share/godot/app_userdata/<project>。“打开玩家的数据文件夹”会在游戏运行时打开它。"
+"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s 向 res:// 路径写入，这在这里可行，但在每个导出的版本中都会失败 - 游戏构建之后 res:// 是打包的归档，而不是文件夹。首先：%s。"
+"A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","游戏应写入 user:// - 玩家的文件夹，可写入、每位玩家各一份，并且在游戏更新后依然保留。"
+"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s 通过绝对路径访问文件，而该路径指向的文件夹只存在于一台电脑上。首先：%s。"
+"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","游戏写入的文件应放在 user:// 下；随游戏一起发布的文件应放在 res:// 下、项目之内。"
+"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s 读取 user:// 文件，却没有说明文件不存在时该用什么，而游戏的首次运行没有存档、没有设置、也没有日志。Godot 返回的是空文本而不是错误，于是游戏把“什么都没有”当成数据来读。首先：%s。"
+"Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","“读取文本文件（或一个后备值）”把答案说了出来，而这道保护就写在这一行里。"
+"%d more like it in this file.","此文件中还有 %d 处相同的情况。"
+"the player's folder","玩家的文件夹"
+"the game's own files, read-only once exported","游戏自身的文件，导出后只读"

@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### A path says which place it is in
+
+- **Every path field states its place.** Under each path box in the Files vocabulary sits a muted
+  line naming where that path really is: `user://` - the player's folder, writable, one per player,
+  and it survives the game being updated - or `res://`, the game's own files, read-only the moment
+  the game is exported. A path built while the game runs still says which place it begins in, and a
+  path whose place cannot be read says nothing at all rather than guessing. The Parameters strip adds
+  what each place allows and where `user://` really is on Windows, macOS and Linux.
+- **Completion for the player's folder.** A path field now completes against BOTH places: what is in
+  `user://` at the time you are typing, then the project's own files. `user://` leads, because that
+  is where a path in this vocabulary almost always belongs.
+- **Open The Player's Data Folder.** One action that opens the real folder `user://` stands for, on
+  the player's own machine, while the game runs - `OS.shell_open` over the globalized path.
+- **The Doctor's Files section, with three one-click fixes.** A write aimed at a `res://` path is the
+  export trap: it works in the editor and fails in every exported build, silently, because `res://`
+  is a packed archive once the game is built. An absolute path (`D:/games/...`, `/home/...`) names a
+  folder on one computer and on no other. And a read of a `user://` file that does not say what to
+  use when the file is missing meets a first run with no save, no settings and no log. Each fix shows
+  what the value read as and what it reads as now, and lands as one undo step.
+- **The visible guard.** **Read Text File (or a fallback)** takes what to use when the file is not
+  there as its SECOND PARAMETER - the familiar default argument, not a clause bolted onto the
+  sentence - and compiles to the `file_exists` check written into the line, which the row echoes.
+  Leave that parameter blank and it compiles to the plain read, unchanged. The frozen Read Text File
+  beside it is untouched.
+- **The folder is made where you can see it.** **Write Text File (in a folder)** carries the stated
+  choice "make the folder first", which emits the `make_dir_recursive_absolute` line above the write
+  and shows it on the row. Godot does not create folders on the way to opening a file, and a folder
+  appearing out of nowhere would be the kind of magic this plugin does not do.
+- **What a project already wrote still opens.** The plain read, the `open` / `get_as_text` pair, the
+  hand-written `file_exists` ternary with its own fallback, and a `make_dir_recursive_absolute`
+  prelude above a write all open as rows and save back byte-identically.
+- Game saves are still the Save System's territory - slots, formats, backups - and the guide says
+  where the line between the two is.
+
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an

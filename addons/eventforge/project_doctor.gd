@@ -169,6 +169,10 @@ static func run() -> Dictionary:
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.
 	EventSheetShipItDoctor.ensure_registered()
+	# The Files section: the three path mistakes that run perfectly here and behave differently on
+	# the machine the game is sent to - a write aimed at res://, a folder that exists on one
+	# computer, and a read of a file the first run has not written yet. Same seam, same reason.
+	EventSheetFilesDoctor.ensure_registered()
 	# The Reading section: the project's stays-code lines, grouped by the shape they share. The one
 	# page here that reports nothing wrong - it is a ledger of where curation has not reached yet,
 	# and it takes its head percentage through the same shared reader the head bar's chip and the

@@ -114,6 +114,19 @@ const OFFERED := {
 	"ship-debug-rows": [
 		{"id": "guard_debug_rows", "label": "Only log in debug builds"},
 	],
+	# Paths. All three swap one place for another (or one spelling for another) in the rows
+	# themselves, so each shows what the line reads as before and after and lands as one undo step.
+	# The third is deliberately not a correction: an unguarded read is not wrong, and its chip says
+	# the guard out loud rather than changing what the game gets.
+	"files-write-to-res": [
+		{"id": "write_under_user", "label": "Write it under user:// instead"},
+	],
+	"files-absolute-path": [
+		{"id": "path_under_user", "label": "Put it under user://"},
+	],
+	"files-unguarded-read": [
+		{"id": "respell_guarded_read", "label": "Say what to use when it is missing"},
+	],
 	# A short catalog is a JOB, not a sentence: the chip writes the missing keys out as a
 	# ready-to-fill translation file rather than listing forty of them in a report line.
 	"ship-translation-coverage": [
@@ -282,6 +295,8 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Put the rows that use %s under Pin ▸ Is Pinned, or under a condition asking whether it is still there - a pin whose anchor is gone reads a place off nothing." % subject}
 		"guard_debug_rows":
 			return _guard_debug_rows(str(finding.get("path", "")), dock)
+		"write_under_user", "path_under_user", "respell_guarded_read":
+			return _rewrite_paths(fix_id, str(finding.get("path", "")), dock)
 		"export_missing_keys":
 			return _export_missing_keys()
 		"write_doc_stubs":
@@ -337,6 +352,64 @@ static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
 		return {"ok": false, "message": "No plain Log rows in %s - the console line is written by hand, so guard it where it is typed." % sheet_path.get_file()}
 	return {"ok": true, "message": "%d row(s) guarded. %s - one Ctrl+Z takes it back."
 		% [guarded[0], guard_receipt_line(receipt)]}
+
+
+## What each path fix is called when it is described, what it reads on a sheet, and what it writes.
+## One table rather than three near-identical functions: the three differ only in which rule they
+## run and in the sentence they say, and a fourth path rule should be a row here.
+static func path_fixes() -> Dictionary:
+	return {
+		"write_under_user": {
+			"title": "Write it under user:// instead",
+			"read": Callable(EventSheetFilesDoctor, "res_write_receipt"),
+			"write": Callable(EventSheetFilesDoctor, "rewrite_res_writes"),
+			"nothing": "No res:// write rows in %s - the path is written by hand, so change it where it is typed.",
+		},
+		"path_under_user": {
+			"title": "Put it under user://",
+			"read": Callable(EventSheetFilesDoctor, "absolute_path_receipt"),
+			"write": Callable(EventSheetFilesDoctor, "rewrite_absolute_paths"),
+			"nothing": "No absolute paths in the rows of %s - the path is written by hand, so change it where it is typed.",
+		},
+		"respell_guarded_read": {
+			"title": "Say what to use when it is missing",
+			"read": Callable(EventSheetFilesDoctor, "guarded_read_receipt"),
+			"write": Callable(EventSheetFilesDoctor, "respell_guarded_reads"),
+			"nothing": "No unguarded user:// reads in the rows of %s - the read is written by hand, so respell it where it is typed.",
+		},
+	}
+
+
+## The three path fixes, applied to the sheet in front of the reader in ONE undoable edit through the
+## dock's own funnel, each saying what the value read as before and after.
+##
+## IT ONLY EVER TOUCHES THE OPEN SHEET, for the reason the debug-log swap does: these findings come
+## off a scan of every script in the project, so the file one names is usually not the one on screen,
+## and a `.gd` opened here would arrive as a read-only preview whose rows have not been lifted yet.
+static func _rewrite_paths(fix_id: String, sheet_path: String, dock: Variant) -> Dictionary:
+	var rule: Dictionary = path_fixes().get(fix_id, {})
+	var elsewhere: String = "Open %s and change the path on the row - double-clicking the finding opens it." % sheet_path.get_file()
+	if dock == null or not dock.has_method("_perform_undoable_sheet_edit"):
+		return {"ok": false, "message": elsewhere}
+	if not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null or sheet.read_only:
+		return {"ok": false, "message": "%s is still opening - it reads as code until its rows have been lifted. Try again once it has finished." % sheet_path.get_file()}
+	var nothing: String = str(rule["nothing"]) % sheet_path.get_file()
+	var receipt: Array[Dictionary] = (rule["read"] as Callable).call(sheet)
+	if receipt.is_empty():
+		return {"ok": false, "message": nothing}
+	var writer: Callable = rule["write"]
+	var rewritten: Array[int] = [0]
+	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", str(rule["title"]),
+		func() -> bool:
+			rewritten[0] = int(writer.call(dock.get("_current_sheet")))
+			return rewritten[0] > 0))
+	if not applied:
+		return {"ok": false, "message": nothing}
+	return {"ok": true, "message": "%d value(s) changed. %s - one Ctrl+Z takes it back."
+		% [rewritten[0], guard_receipt_line(receipt)]}
 
 
 ## The receipt one guard swap leaves: what the first line read as, what it reads as now, and how many
