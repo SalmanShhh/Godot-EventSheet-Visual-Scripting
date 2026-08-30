@@ -5383,6 +5383,6 @@ Move the removal last,把移除移到最后
 "Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","生成：有 %d 个脚本会添加或移除节点，已读取 %d 个，其中 %d 个存在运行时会出错的地方。"
 This row is already added on the next idle moment.,这一行已经是在下一个空闲时刻添加的。
 Guard %s,为 %s 加上判断
-This event already asks whether it is still here.,这个事件已经在问它是否还在了。
+This event already asks whether %s is still here.,这个事件已经在问 %s 是否还在了。
 The removal is already the last row of this event.,移除已经是这个事件的最后一行了。
 "The removal runs last now, after everything that reads it.",移除现在排在最后，在所有读取它的行之后运行。

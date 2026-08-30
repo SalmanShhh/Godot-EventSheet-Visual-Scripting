@@ -5383,6 +5383,6 @@ Move the removal last,제거 행을 맨 뒤로
 "Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","생성: 노드를 추가하거나 제거하는 스크립트 %d개, 그중 %d개를 읽었고 %d개에 실행 중 문제가 생길 부분이 있습니다."
 This row is already added on the next idle moment.,이 행은 이미 다음 유휴 시점에 추가됩니다.
 Guard %s,%s에 확인 추가
-This event already asks whether it is still here.,이 이벤트는 이미 아직 있는지 확인하고 있습니다.
+This event already asks whether %s is still here.,이 이벤트는 이미 %s 이(가) 아직 있는지 확인하고 있습니다.
 The removal is already the last row of this event.,제거 행은 이미 이 이벤트의 마지막 행입니다.
 "The removal runs last now, after everything that reads it.",제거 행은 이제 그것을 읽는 모든 행 뒤에 마지막으로 실행됩니다.

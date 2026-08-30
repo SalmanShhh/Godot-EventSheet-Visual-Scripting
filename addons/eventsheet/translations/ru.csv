@@ -5383,6 +5383,6 @@ Move the removal last,Переместить удаление в конец
 "Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","Порождение: %d скрипт(ов), добавляющих или удаляющих узлы, %d прочитано, %d из них с тем, что сломается во время выполнения."
 This row is already added on the next idle moment.,Эта строка уже добавляется в ближайший свободный момент.
 Guard %s,Защитить %s
-This event already asks whether it is still here.,"Это событие уже спрашивает, здесь ли он ещё."
+This event already asks whether %s is still here.,"Это событие уже спрашивает, здесь ли ещё %s."
 The removal is already the last row of this event.,Удаление уже последняя строка этого события.
 "The removal runs last now, after everything that reads it.","Удаление теперь выполняется последним, после всего, что его читает."

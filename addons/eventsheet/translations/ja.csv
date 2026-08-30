@@ -5383,6 +5383,6 @@ Move the removal last,取り除く行を最後へ
 "Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","生成: ノードを追加または削除するスクリプト %d 件、うち %d 件を読み、%d 件に実行時に破綻するものがあります。"
 This row is already added on the next idle moment.,この行はすでに次のアイドル時に追加されます。
 Guard %s,%s に確認を入れる
-This event already asks whether it is still here.,このイベントはすでに、まだ存在するかを確かめています。
+This event already asks whether %s is still here.,このイベントはすでに、%s がまだ存在するかを確かめています。
 The removal is already the last row of this event.,取り除く行はすでにこのイベントの最後の行です。
 "The removal runs last now, after everything that reads it.",取り除く行は、それを読むすべての行のあとで最後に実行されるようになりました。

@@ -5771,10 +5771,13 @@ func _guard_the_reference(note_meta: Dictionary, subject: String) -> void:
 		return
 	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Guard %s") % name_text,
 			func() -> bool:
-				for entry: Variant in event_row.conditions:
-					var existing: ACECondition = entry as ACECondition
-					if existing != null and existing.ace_id == EventSheetSpawnFindings.GUARD_ACE_ID:
-						return false
+				# BY THE NAME, not by the row kind. Two stored names reached into by rows of the same
+				# event each earn their own finding, so a dedupe on "this event already has an Is Still
+				# Here" refused the second repair for a question asked about something else entirely.
+				# Asked through the compiler's own rule, which reads both shipped spellings of the
+				# question and counts a negated one as not asked - the same answer the guard gives.
+				if EventForgeRemovalGuard.asked_names(event_row).has(name_text):
+					return false
 				var guard: ACECondition = ACECondition.new()
 				guard.provider_id = "Core"
 				guard.ace_id = EventSheetSpawnFindings.GUARD_ACE_ID
@@ -5783,7 +5786,7 @@ func _guard_the_reference(note_meta: Dictionary, subject: String) -> void:
 				# reached into the name is a guard that ran too late.
 				event_row.conditions.insert(0, guard)
 				return true):
-		_set_status(EventSheetL10n.translate("This event already asks whether it is still here."))
+		_set_status(EventSheetL10n.translate("This event already asks whether %s is still here.") % name_text)
 		return
 	_set_status(EventSheetSpawnFindings.respell_receipt(name_text,
 		"is_instance_valid(%s)" % name_text))

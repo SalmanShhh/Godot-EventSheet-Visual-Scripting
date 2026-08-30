@@ -248,6 +248,14 @@
   reproduce. Only the asked-already map grows there, and deliberately: a node-typed local declared
   inside a verb is set and used in the same call, so a guard on it could only ever be true.
 
+- **"Guard it" is about the name it was clicked for.** The repair deduped on the row KIND, so it
+  refused whenever the event already held ANY Is Still Here condition, whatever object that one asked
+  about - and it never looked for the shipped Object Still Exists spelling at all. Two stored names
+  reached into by rows of one event each earn their own finding, so fixing the first made the second
+  button do nothing while saying, truthfully but about something else, that the event had already
+  asked. It asks the compiler's own rule now, which reads both spellings and counts a negated
+  question as not asked, and the status line names the name.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

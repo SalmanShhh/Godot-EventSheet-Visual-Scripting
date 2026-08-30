@@ -5383,6 +5383,6 @@ Move the removal last,Sposta la rimozione in fondo
 "Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","Generazione: %d script che aggiungono o rimuovono nodi, %d letti, %d con qualcosa che andrà storto a run time."
 This row is already added on the next idle moment.,Questa riga viene già aggiunta al prossimo momento libero.
 Guard %s,Proteggi %s
-This event already asks whether it is still here.,Questo evento chiede già se è ancora qui.
+This event already asks whether %s is still here.,Questo evento chiede già se %s è ancora qui.
 The removal is already the last row of this event.,La rimozione è già l'ultima riga di questo evento.
 "The removal runs last now, after everything that reads it.","La rimozione ora viene eseguita per ultima, dopo tutto ciò che lo legge."

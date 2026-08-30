@@ -34,6 +34,7 @@ static func run() -> bool:
 	passed = _test_the_scene_that_spawns_itself() and passed
 	passed = _test_freed_but_still_booked() and passed
 	passed = _test_the_deferred_respelling() and passed
+	passed = _test_the_guard_repair_is_about_the_name() and passed
 	passed = _test_the_doctor_files_each_kind() and passed
 	return passed
 
@@ -387,6 +388,48 @@ static func _test_the_deferred_respelling() -> bool:
 			"call_deferred(\"add_child\", bullet)"),
 		"add_child(bullet) -> call_deferred(\"add_child\", bullet)") and passed
 	return passed
+
+
+# ── 6b. "Guard it", and the name it is about ──
+
+
+## The repair adds a question about ONE name, so it may only refuse when that name is the one already
+## asked about. Two stored names reached into by rows of the same event each earn their own finding
+## (the rule dedupes by name across the sheet, not by event), so a dedupe on the row KIND made the
+## second button do nothing while truthfully saying the event had already asked - about the other one.
+static func _test_the_guard_repair_is_about_the_name() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet: EventSheetResource = _sheet()
+	sheet.variables = {
+		"held_boss": {"type": "Node2D", "default": null, "exported": false},
+		"held_door": {"type": "Node2D", "default": null, "exported": false},
+	}
+	sheet.events.append(_event("OnProcess", [
+		_action("SetProperty", {"target": "held_boss", "property": "\"visible\"", "value": "true"}),
+		_action("SetProperty", {"target": "held_door", "property": "\"visible\"", "value": "true"}),
+	]))
+	dock.setup(sheet)
+	var passed: bool = true
+	# The row is re-fetched from the live sheet after every edit: the undo funnel commits by REPLACING
+	# resources with snapshot duplicates, so a row held across it is a row that no longer exists.
+	for name_text: String in ["held_boss", "held_door"]:
+		dock._guard_the_reference({"variable_note_event": _live_event(dock)}, name_text)
+	var asked: Dictionary = EventForgeRemovalGuard.asked_names(_live_event(dock))
+	passed = _check("each name gets its own question", asked.keys().size(), 2) and passed
+	passed = _check("the first name is asked about", asked.has("held_boss"), true) and passed
+	passed = _check("and so is the second", asked.has("held_door"), true) and passed
+	# And it still refuses the one it should: the same name twice is one question, not two.
+	dock._guard_the_reference({"variable_note_event": _live_event(dock)}, "held_door")
+	passed = _check("asking twice about one name adds nothing",
+		EventForgeRemovalGuard.asked_names(_live_event(dock)).keys().size(), 2) and passed
+	dock.free()
+	return passed
+
+
+## The dock's own copy of the sheet's first event, fetched fresh.
+static func _live_event(dock: EventSheetDock) -> EventRow:
+	return dock._current_sheet.events[0] as EventRow
 
 
 # ── 7. The Doctor's section ──
