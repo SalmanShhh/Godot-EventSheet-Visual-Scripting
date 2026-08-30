@@ -603,11 +603,19 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 	# the same reason the language gate is: visible in the sheet, editable, deletable, and a plain
 	# condition on disk. Built through the ordinary create-from-definition step, so the floor gates'
 	# memory is baked with a fresh uid exactly as any other stateful condition's is.
+	#
+	# AND IT GOES FIRST, wherever the event already had questions. The floor gates read a memory of
+	# last step's footing and update it in the same call, so the call has to happen on EVERY step -
+	# and a sheet's conditions compile to the terms of one `and` chain, which GDScript short-circuits.
+	# Behind a question that is false the gate is simply not evaluated, the memory is not brought up
+	# to date, and the first step the question in front of it goes true reports a landing that never
+	# happened. Leading the chain, nothing can skip it. (Moving it back down the row by hand puts that
+	# back: it is an ordinary condition, and the order of a row's questions is the author's.)
 	var edge_gate_id: String = COLLISION_EDGES.gate_for(definition.id)
-	if not edge_gate_id.is_empty() and event_row.conditions.is_empty():
+	if not edge_gate_id.is_empty() and not _has_condition(event_row, edge_gate_id):
 		var edge_gate_definition: ACEDefinition = _dock._find_definition(definition.provider_id, edge_gate_id)
 		if edge_gate_definition != null:
-			event_row.conditions.append(_create_condition_from_definition(edge_gate_definition, {}))
+			event_row.conditions.insert(0, _create_condition_from_definition(edge_gate_definition, {}))
 	# On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
 	# every clip - so which frame the event answers is a condition under it, added here for the same
 	# reason the language gate is: visible in the sheet, editable, deletable, and a plain condition on
@@ -624,6 +632,15 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 			"target": event_row.trigger_source_path.strip_edges()
 		}
 		event_row.conditions.append(frame_gate)
+
+
+## True when this event already asks one particular question. What keeps an auto-added gate from
+## being added twice to a row that has one, whichever route the trigger arrived by.
+func _has_condition(event_row: EventRow, ace_id: String) -> bool:
+	for entry: Variant in event_row.conditions:
+		if entry is ACECondition and (entry as ACECondition).ace_id == ace_id:
+			return true
+	return false
 
 
 ## Bakes the trigger signature onto event_row FROM its already-built trigger condition -

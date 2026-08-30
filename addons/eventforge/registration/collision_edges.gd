@@ -37,6 +37,32 @@
 # off the row - the gate can be read, edited, disabled and deleted like any other condition, and it
 # is an ordinary condition on disk.
 #
+# AND THE FLOOR GATE IS THE ROW'S FIRST QUESTION. A sheet's conditions compile to the terms of one
+# `and` chain, and GDScript short-circuits it: a term behind a question that is false is not
+# evaluated at all. The floor gates read the memory and update it in the same call, so a step that
+# never reaches them is a step the memory misses - and the next step the question in front goes true,
+# the stale memory reports a landing that never happened. The gate is therefore inserted at the FRONT
+# of the row when the trigger is applied, whatever the event already asked. It is still an ordinary
+# condition and the order of a row's questions is still the author's; moving it down behind another
+# question is what re-opens this, which is why it is written here rather than left to be discovered.
+#
+# WHAT THE FLOOR EDGES DO AT THE EDGES. Four consequences of "the floor answer is a memory of last
+# step", every one of them true of the hand-written pattern exactly as it is of the row. None is a
+# defect to be fixed; each is a fact somebody building a jump on this has to be told, so they are
+# said here as well as in the guide:
+#
+#   first physics step   is_on_floor() is false until the body has moved once, so a character
+#                        standing on the ground when the level opens is off the floor on step one and
+#                        on it by step two - a landing, by the only definition there is.
+#   spawned airborne     not on the floor then, not on the floor now, so no edge. The landing arrives
+#                        on the step the feet really touch down, which is correct and worth saying.
+#   paused               _physics_process does not run while the node is paused, so the memory stops
+#                        where it was and the first step after the pause compares against the footing
+#                        from before it.
+#   a flickering slope   is_on_floor() can go false for one step across a seam or a corner, and each
+#                        of those is a real leave-and-land pair here. Floor Snap Length on the body
+#                        is the engine's own answer to it.
+#
 # Three readers share this file so they can never disagree: the trigger resolver (which callback an
 # edge trigger compiles into, and which handler it shares), the dock's apply step (which gate goes
 # under which trigger), and the suite.

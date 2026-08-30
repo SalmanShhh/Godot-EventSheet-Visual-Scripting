@@ -17,6 +17,12 @@
 #      names a project uses for its own memory ride out untouched, because the name is not a value.
 #   6. THE WALL THAT TEACHES. A touch row on a scene that has nothing physical in it greys with a
 #      reason that IS the fix, in the collision family's own words.
+#   7. THE FOUR THINGS AN EDGE DOES AT THE EDGES. The first physics step, a body spawned airborne, a
+#      paused node and a flickering slope are real behaviours of a memory of last step - true of the
+#      hand-written pattern exactly as they are of the row. They cannot be pinned by running physics
+#      (no scene tree here), so what is pinned is that they are SAID, in the module every reader of
+#      these rows shares and in the guide - because an unstated real behaviour is indistinguishable
+#      from a bug the first time somebody meets it.
 #
 # Values are pinned, never counts.
 @tool
@@ -28,6 +34,10 @@ extends RefCounted
 const EDGE_MODULE_PATH: String = "res://addons/eventforge/registration/modules/collision_edge_aces.gd"
 const EDGES_PATH: String = "res://addons/eventforge/registration/collision_edges.gd"
 const FILTERS_PATH: String = "res://addons/eventforge/registration/collision_filters.gd"
+
+## The guide these rows are explained in - read as text, because what is pinned about it is that it
+## still says the four things a reader has to be told.
+const GUIDE_PATH: String = "res://docs/GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT.md"
 
 ## The uid a hand-built row bakes, standing in for the one the dock mints at apply time.
 const UID: String = "1"
@@ -46,7 +56,30 @@ static func run() -> bool:
 	passed = _test_the_handwritten_landing_re_emits_byte_for_byte() and passed
 	passed = _test_a_touch_row_with_nothing_to_touch_says_what_to_add() and passed
 	passed = _test_every_node_family_teaches_its_own_line() and passed
+	passed = _test_the_edges_of_the_edge_are_said_out_loud() and passed
 	return passed
+
+
+## The four real behaviours of a memory of last step. Physics does not step in this runner, so what
+## is pinned is that each of them is STATED - in the module every reader of these rows shares, and in
+## the guide somebody building a jump actually opens. An unstated real behaviour is indistinguishable
+## from a bug the first time it happens to somebody, and all four of these have happened to everybody.
+static func _test_the_edges_of_the_edge_are_said_out_loud() -> bool:
+	var module: String = FileAccess.get_file_as_string(EDGES_PATH)
+	var guide: String = FileAccess.get_file_as_string(GUIDE_PATH)
+	var said: Array = []
+	for phrase: Array in [
+			["the first physics step", "is_on_floor() is false until the body has moved once",
+				"is false until the body has moved once"],
+			["a body spawned airborne", "not on the floor then, not on the floor now",
+				"starts in the air is right"],
+			["a paused node", "does not run while the node is paused",
+				"does not run while the node is paused"],
+			["a flickering slope", "can go false for one step", "can go false for a single step"]]:
+		said.append([str(phrase[0]), module.contains(str(phrase[1])), guide.contains(str(phrase[2]))])
+	return _check("every edge of the edge is said in the module and in the guide", said,
+		[["the first physics step", true, true], ["a body spawned airborne", true, true],
+			["a paused node", true, true], ["a flickering slope", true, true]])
 
 
 # ── 1. The ordering ──
@@ -200,6 +233,38 @@ static func _test_applying_an_edge_trigger_puts_the_gate_in_the_sheet() -> bool:
 			gate.member_declaration.contains("__was_on_floor_"), wants_memory) and passed
 		passed = _check("and the uid placeholder is baked out of it",
 			gate.codegen_template.contains("{uid}"), false) and passed
+	# AND THE GATE LEADS THE ROW. A trigger applied to an event that already asks something used to
+	# get no gate at all - the event then ran on every physics step while its trigger said "on
+	# landed" - and a gate added BEHIND another question is one GDScript's `and` chain can skip
+	# entirely, which leaves the memory a step behind and reports a landing that never happened the
+	# first step the question in front of it goes true.
+	var landed: ACEDefinition = dock._ace_registry.find_definition("Core", "OnLanded")
+	var conditioned: EventRow = EventRow.new()
+	var applied: ACECondition = ACECondition.new()
+	applied.provider_id = "Core"
+	applied.ace_id = "OnLanded"
+	conditioned.trigger = applied
+	var alive: ACECondition = ACECondition.new()
+	alive.provider_id = "Core"
+	alive.ace_id = "CompareVariable"
+	alive.codegen_template = "hp > 0"
+	conditioned.conditions.append(alive)
+	conditioned.actions.append(_print("\"landed\""))
+	dock._ace_apply._bake_trigger_signature(conditioned, landed)
+	passed = _check("a trigger applied to an event that already asks something still gets its gate",
+		conditioned.conditions.size(), 2) and passed
+	passed = _check("and the gate is the row's FIRST question",
+		(conditioned.conditions[0] as ACECondition).ace_id, "JustLanded") and passed
+	dock._ace_apply._bake_trigger_signature(conditioned, landed)
+	passed = _check("baking the same trigger again never adds a second gate",
+		conditioned.conditions.size(), 2) and passed
+	var ordered_sheet: EventSheetResource = EventSheetResource.new()
+	ordered_sheet.host_class = "CharacterBody2D"
+	ordered_sheet.events.append(conditioned)
+	var gate_line: String = _line_beginning(
+		_compile(ordered_sheet, "user://eventforge_edge_ordered.gd"), "\tif self.__just_landed_")
+	passed = _check("so the emitted chain cannot short-circuit past the update",
+		gate_line.ends_with("() and hp > 0:"), true) and passed
 	dock.free()
 	return passed
 
@@ -390,6 +455,15 @@ static func _template_of(ace_id: String) -> String:
 static func _member_of(ace_id: String) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	return "" if descriptor == null else str(descriptor.member_template)
+
+
+## The first emitted line that starts with a piece of text, "" when there is none. What lets an
+## assertion be about the SHAPE of a line whose uid it has no business predicting.
+static func _line_beginning(output: String, prefix: String) -> String:
+	for line: String in output.split("\n"):
+		if line.begins_with(prefix):
+			return line
+	return ""
 
 
 static func _compile(sheet: EventSheetResource, path: String) -> String:
