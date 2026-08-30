@@ -37,6 +37,34 @@ What changed in the build you have installed (v0.17.0), in the words the release
   entries were shipping without the generated fixture and the byte round-trip every other entry gets.
   They are found now, and they pass.
 
+### The bench a recogniser is written on, and the code it is measured against
+
+- **Tools > Lift Workbench.** Paste hand-written GDScript into a scratch buffer and the window
+  answers three questions about it as you type: what claims each line (the lift family and entry id
+  that recognised it, the plainer name of the row it otherwise arrived as, or \"stays code\"), the rows
+  it opens as (drawn by the real viewport, read-only, not a mock-up of it), and what it saves back as
+  (green when the bytes come back identical, red with the exact two lines when they do not). The
+  refresh is debounced and the buffer is the whole scope - it never touches the project - so the
+  window costs nothing to leave open, and nothing at all until it is first asked for.
+- **Draft an example, from the line that motivated it.** Select a line nothing claims and the
+  by-example form opens pre-filled with it: mark the value spans, and the derived entry comes back to
+  be read - pattern, canonical spelling, sample values - or refused with the sentence that says why.
+  Adding it appends it to a scratch table the workbench keeps to itself, which is asked first on
+  every refresh and marked \"draft\" while it claims anything, so a draft is never mistaken for a
+  shipped spelling and nothing under the project is written.
+- **A corpus of whole files, and the pins that make coverage a visible diff.** `tests/corpus/` holds
+  four scripts a real Godot developer would plausibly have written - a tutorial-style player
+  controller, an enum-and-match door state machine, a networking lobby autoload, and a pickup with
+  tweens and a camera shake. One gate opens and saves every one of them byte-identically, and pins
+  each file's reading as numbers: the share that reads as rows, the lines a lift entry claims by
+  name, and the lines that stay honest code. Moving a pin means editing the test, which is the point -
+  a coverage change arrives as a deliberate diff with the delta stated instead of a floor quietly
+  absorbing it.
+- **One reader, three callers.** The workbench's claim question and the corpus's percentage both run
+  through the walk the head bar's reading-coverage chip already uses, so the number a developer is
+  shown on a buffer, the number the gate pins on a file, and the number a reader sees on the Include
+  bar cannot drift apart.
+
 ### Collisions, written down
 
 - **A guide for what touches what.** It leads with the decision the rest of the subject hangs off -

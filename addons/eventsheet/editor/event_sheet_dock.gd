@@ -347,6 +347,9 @@ var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
 var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
+## Tools ▸ Lift Workbench (dock/lift_workbench.gd). Null until somebody asks for it: a developer tool
+## nobody opens should not cost a window, and loading it by path keeps it off the boot path.
+var _lift_workbench: RefCounted = null
 var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
@@ -4480,6 +4483,16 @@ func _generate_vocabulary_doc() -> void:
 ## load_state() generator for addon authors (dock/save_studio.gd).
 func _open_save_studio() -> void:
 	_save_studio.open()
+
+
+## Tools ▸ Lift Workbench: the developer-side bench a recogniser is written on - paste code, see per
+## line what claims it, the rows it opens as, and whether it saves back byte-identically
+## (dock/lift_workbench.gd). Built on first open, so a workspace that never asks for it pays nothing.
+func open_lift_workbench() -> void:
+	if _lift_workbench == null:
+		_lift_workbench = load("res://addons/eventsheet/editor/dock/lift_workbench.gd").new()
+		_lift_workbench.init(self)
+	_lift_workbench.open()
 
 
 ## Tools ▸ Translation Studio: the whole handoff to a translator - extract the strings, read the

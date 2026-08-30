@@ -499,6 +499,8 @@ func build(root: Node) -> void:
 	# everything about one handoff in one window.
 	tools_popup.add_item("Translation Studio…", 21)
 	tools_popup.add_item("Lift Report…", 12)
+	tools_popup.add_item("Lift Workbench…", 26)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(26), "Paste hand-written GDScript and see, line by line, what claims it, the rows it opens as, and whether it saves back byte-identically.")
 	tools_popup.add_item("Addon manager…", 23)
 	tools_popup.add_separator()
 	tools_popup.add_item("Welcome…", 13)
@@ -526,6 +528,7 @@ func build(root: Node) -> void:
 			18: _dock.toggle_behavior_preview()
 			19: _dock._open_save_studio()
 			12: _dock._open_lift_report()
+			26: _dock.open_lift_workbench()
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
 			16: _dock._open_shortcuts_help()
