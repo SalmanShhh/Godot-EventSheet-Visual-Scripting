@@ -546,6 +546,20 @@ func _insert_into_expression_target(snippet: String) -> void:
 		_host._validate_expression_field(line_edit)
 
 
+## One definition's parameters as {id: default value} - what the optional segments of its template
+## are collapsed against, since an inserted expression starts on its own defaults.
+func _default_params(definition: ACEDefinition) -> Dictionary:
+	var params: Dictionary = {}
+	for parameter: Variant in definition.parameters:
+		if not (parameter is Dictionary):
+			continue
+		var param_dict: Dictionary = parameter as Dictionary
+		var param_key: String = str(param_dict.get("id", ""))
+		if not param_key.is_empty():
+			params[param_key] = str(param_dict.get("default_value", param_dict.get("default", "")))
+	return params
+
+
 ## Returns the code template inserted for an expression definition (with default params).
 func _expression_template(definition: ACEDefinition) -> String:
 	var template: String = str(definition.metadata.get("codegen_template", ""))
@@ -556,6 +570,11 @@ func _expression_template(definition: ACEDefinition) -> String:
 	if template.is_empty():
 		var display: String = definition.format_display({})
 		return display if not display.is_empty() else definition.display_name
+	# An expression whose SHAPE depends on a parameter (a read with a fallback is the file_exists
+	# ternary; the same read without one is the plain call) carries optional segments, which are
+	# collapsed against the defaults through the compiler's own reading of them - so what this
+	# inserts and what the compiler would emit for the same values cannot drift apart.
+	template = ActionCodegen.collapse_optional_segments(template, _default_params(definition))
 	# Substitute default parameter values into the codegen template placeholders.
 	for index in range(definition.parameters.size()):
 		var parameter: Variant = definition.parameters[index]

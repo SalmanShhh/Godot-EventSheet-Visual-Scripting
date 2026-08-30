@@ -96,8 +96,56 @@ static func _params_with_host(params: Dictionary, host_default: String, template
 ## literal; an unresolved optional `{, key}` or `{key.}` is dropped (matching the old trailing strip).
 static var _template_re: RegEx
 
+## The OPTIONAL SEGMENT idiom, in its two spellings:
+##
+##     {?key}…{/key}          keep this when `key` has a non-blank value
+##     {?key=word}…{/key}     keep this when `key` reads exactly `word`
+##
+## and drop the whole segment - marks and all - when it does not. The second spelling is what a
+## STATED CHOICE compiles through: a dropdown's two answers are both words a reader picked, so
+## neither of them is "blank", and the row has to say which one it is either way.
+##
+## THE THREE SLOT IDIOMS ABOVE FILL A HOLE; THIS ONE CHOOSES A SHAPE. A read with a fallback is a
+## different line from a read without one (`get_file_as_string(p)` against the file_exists ternary
+## around it), and a write that makes its folder first is a different line from one that does not -
+## so the choice cannot be spelled as a value dropped into a hole. It is spelled as a segment,
+## because the alternative was two verbs for one sentence, and a reader who clears a field expects
+## the sentence to go back to what it was rather than to need a different word.
+##
+## A SEGMENT IS NEVER NESTED and never re-scanned. The inner text is emitted through the ordinary
+## slot pass exactly as if it had been written inline, so a param value that happens to contain
+## `{?…}` is a value, not a segment - the same opacity the slot pass already promises.
+static var _segment_re: RegEx
+
+
+## Collapses every optional segment of a template against the values a row holds. Public because the
+## expression picker fills a template too, and a shape that changed in one place and not the other
+## would be two answers to one question.
+static func collapse_optional_segments(template: String, params: Dictionary) -> String:
+	if not template.contains("{?"):
+		return template
+	if _segment_re == null:
+		_segment_re = RegEx.new()
+		_segment_re.compile("\\{\\?([A-Za-z_][A-Za-z0-9_]*)(=[^}]*)?\\}([\\s\\S]*?)\\{/\\1\\}")
+	var result: String = ""
+	var cursor: int = 0
+	for hit: RegExMatch in _segment_re.search_all(template):
+		result += template.substr(cursor, hit.get_start() - cursor)
+		var key_name: String = hit.get_string(1)
+		var wanted: String = hit.get_string(2)
+		var held: String = str(params.get(key_name, "")).strip_edges()
+		var keep: bool = not held.is_empty()
+		if wanted.begins_with("="):
+			keep = held == wanted.substr(1)
+		if keep:
+			result += hit.get_string(3)
+		cursor = hit.get_end()
+	result += template.substr(cursor)
+	return result
+
 
 static func _apply_template(template: String, params: Dictionary) -> String:
+	template = collapse_optional_segments(template, params)
 	if _template_re == null:
 		_template_re = RegEx.new()
 		_template_re.compile("\\{(,?)\\s*([A-Za-z_][A-Za-z0-9_]*)(\\.?)\\}")

@@ -33,7 +33,8 @@ const EMITTER_SCRIPTS: Array[String] = [
 ## defaults to being swept rather than to being trusted.
 const DURABLE_STATICS: Dictionary = {
 	"_compile_mutex": "the lock itself - serializing compiles is what protects the working state below",
-	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state"
+	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state",
+	"_segment_re": "a compiled RegEx cached for the session; it has no per-compile state"
 }
 
 ## Every working-state static the sweep expects to find, pinned as a VALUE rather than counted. A static

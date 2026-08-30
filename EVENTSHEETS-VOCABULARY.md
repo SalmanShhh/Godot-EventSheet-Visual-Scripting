@@ -3780,12 +3780,15 @@ File management (read / write / JSON, plus directory + file operations).
 - **Move / Rename File** (`from: String, to: String`) - Moves or renames a file (or folder) to a new path.
 - **Make Directory** (`path: String`) - Creates a folder, building any missing parent folders along the way.
 - **Remove Directory** (`path: String`) - Deletes an empty folder (clear out its files first).
+- **Write Text File (in a folder)** (`path: String, text: String, folder: String`) - Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back.
+- **Open The Player's Data Folder** (`path: String`) - Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.
 
 #### Expressions
 - **Read Text File** (`path: String`) - Returns the whole file's contents as text (empty if it's missing or unreadable).
 - **File Size (bytes)** (`path: String`) - Returns a file's size in bytes, or zero if the file doesn't exist.
 - **List Files** (`path: String`) - Returns the list of file names inside a folder (empty if the folder is missing).
 - **List Subdirectories** (`path: String`) - Returns the list of subfolder names inside a folder.
+- **Read Text File (or a fallback)** (`path: String, fallback: String`) - Reads a whole file as text, using the fallback you name when the file is not there. The guard is written into the line and shown on the row, so nothing happens that the code does not say.
 
 ### Game Accessibility (`res://addons/eventforge/registration/modules/game_accessibility_aces.gd`)
 Accessibility for the GAME: the options every project should be one row
