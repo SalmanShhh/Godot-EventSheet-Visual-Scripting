@@ -610,11 +610,11 @@ static func _test_the_doctor_files_a_real_finding() -> bool:
 
 ## The fixture: a parenting inside the physics callback, which is the rule the pre-read admits on two
 ## words in one function body and the rules then confirm by reading the rows.
-const PHYSICS_SPAWN_SOURCE: String = """extends Node2D
-
-
-func _physics_process(_delta: float) -> void:
-	var foe = load("res://enemy.tscn").instantiate()
-	add_child(foe)
-	foe.global_position = global_position
-"""
+##
+## WRITTEN AS ESCAPED LINES rather than as a `"""` block ON PURPOSE. This file is in the corpus the
+## Doctor sweeps over its own repository, and a block quote would put a real `func _physics_process`
+## with a real `add_child` at column 0 inside it - which this very section would then open, lift and
+## report as a finding against the test that wrote it.
+const PHYSICS_SPAWN_SOURCE: String = "extends Node2D\n\n\nfunc _physics_process(_delta: float) -> void:\n"\
+	+ "\tvar foe = load(\"res://enemy.tscn\").instantiate()\n"\
+	+ "\tadd_child(foe)\n\tfoe.global_position = global_position\n"
