@@ -5542,17 +5542,17 @@ On object freed,オブジェクト解放時
 Event Is Action Pressed,イベントがアクションの押下である
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",このハンドラーに渡されたイベントが、指定したアクションが押された瞬間であれば真になります。ハンドラーが持っているイベントの押下側で、今どうなっているかを尋ねるものではありません。それはアクションが押されているが答えます。
 Input Event,入力イベント
-{action} was pressed,{action} が押された
+this event is {action} going down,このイベントは {action} の押下
 "The action this event has to be, from the Input Map.",このイベントが該当すべきアクション。入力マップから選びます。
 Event Is Action Pressed Or Repeating,イベントがアクションの押下またはリピートである
 "The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.",同じ押下に、キーを押し続けたときの自動リピートを含めたもの - スティックを倒し続ける間スクロールし続けるメニューに向き、ジャンプには向きません。
-{action} was pressed or is repeating,{action} が押された、またはリピート中
+"this event is {action} going down, or repeating",このイベントは {action} の押下、またはリピート
 Event Is Action Released,イベントがアクションの解放である
 "True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.",このハンドラーに渡されたイベントが、指定したアクションが離された瞬間であれば真になります。ためて放つ攻撃や、押し続けていた操作を離すときに使います。
-{action} was released,{action} が離された
+this event is {action} coming up,このイベントは {action} の解放
 Event Is The Action,イベントがそのアクションである
 "True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.",向きに関係なく、そのイベントが指定したアクションのものであれば真になります。押し込みの強さを読む前に尋ねる行です。強さは、どの操作から来たか分かって初めて意味を持ちます。
-the event is {action},イベントが {action} である
+this event is {action},このイベントは {action}
 Event Action Strength,イベントのアクション強度
 "How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.",このイベントの元になった操作がどれだけ押し込まれているか、0 から 1 まで - スティックやトリガーは全範囲、キーは 0 か 1 になります。
 how hard {action} is held in this event,このイベントで {action} がどれだけ押し込まれているか

@@ -1360,12 +1360,15 @@ to the function it names, the same jump the Outline panel makes.
   and the sheet writes its `On <action> pressed` event.
 - **A handler that asks the event reads as the question it is.** The commonest shape inside `_input`
   and `_unhandled_input` there is - `if event.is_action_pressed("jump"):` - used to read as
-  *Expression Is True*, the honest catch-all. It reads **`"jump"` was pressed**, from the **Input
-  Event** section, beside the press widened to include a held key's auto-repeats
+  *Expression Is True*, the honest catch-all. It reads **this event is `"jump"` going down**, from the
+  **Input Event** section, beside the press widened to include a held key's auto-repeats
   (`is_action_pressed("jump", true)`), the release, the question of which action an event belongs to
   at all, and how hard it is held in this event. Both of Godot's quotings answer to the same row,
   because the `&` in `&"jump"` is a spelling rather than a value and rides back out untouched, and
-  the action names come from the project's own Input Map exactly as the polled rows' do. These are
+  the action names come from the project's own Input Map exactly as the polled rows' do. Every one of
+  these sentences opens with *this event is*, which no polled row says: the **Input** section's rows
+  ask the keyboard how things stand right now and read *`"jump"` is pressed* or *just pressed*, and
+  telling the two apart by the tense of one verb is not something a reader should have to do. These are
   the rows for the inside of a handler; the **Input** section's rows ask the keyboard how things
   stand right now, which is what an every-tick event wants, and the two are filed apart so a reader
   scanning one list never has to tell them apart by their small print.

@@ -41,6 +41,12 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 ## Where these rows are filed. Deliberately NOT the "Input" section the polled family lives in: a
 ## reader scanning that list should not have to tell two nearly identically worded rows apart by
 ## their small print, and the section's own sentence is what says which one they are looking at.
+##
+## AND THE ROW SAYS IT TOO, because a section heading exists in the picker and a ROW is read on the
+## canvas, where there is no heading above it. Every sentence here opens with "this event is", which
+## no polled row says and none ever will: the polled family asks the Input singleton how things stand
+## right now and reads "{action} is pressed" / "just pressed". Telling a handler's question from a
+## poll by the tense of one verb is not a distinction anybody should have to make while scanning.
 const CAT := "Input Event"
 
 
@@ -59,25 +65,25 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "EventIsActionPressed", "Event Is Action Pressed",
 		ACEDescriptor.ACEType.CONDITION, "event.is_action_pressed(&{action})", "",
 		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "{action} was pressed")
+		CAT, "this event is {action} going down")
 		.described("True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers."))
 
 	descriptors.append(F.make_descriptor("Core", "EventIsActionPressedRepeating", "Event Is Action Pressed Or Repeating",
 		ACEDescriptor.ACEType.CONDITION, "event.is_action_pressed(&{action}, true)", "",
 		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "{action} was pressed or is repeating")
+		CAT, "this event is {action} going down, or repeating")
 		.described("The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not."))
 
 	descriptors.append(F.make_descriptor("Core", "EventIsActionReleased", "Event Is Action Released",
 		ACEDescriptor.ACEType.CONDITION, "event.is_action_released(&{action})", "",
 		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "{action} was released")
+		CAT, "this event is {action} coming up")
 		.described("True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control."))
 
 	descriptors.append(F.make_descriptor("Core", "EventIsAction", "Event Is The Action",
 		ACEDescriptor.ACEType.CONDITION, "event.is_action(&{action})", "",
 		[_action_param("The action this event has to be, from the Input Map.")],
-		CAT, "the event is {action}")
+		CAT, "this event is {action}")
 		.described("True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from."))
 
 	descriptors.append(F.make_descriptor("Core", "EventActionStrength", "Event Action Strength",

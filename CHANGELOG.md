@@ -66,7 +66,7 @@
 
 - **The input handler asks the event now.** `if event.is_action_pressed("jump"):` inside `_input` or
   `_unhandled_input` used to open as *Expression Is True* - the honest catch-all, and the plainest
-  thing a sheet could say about the commonest input shape there is. It reads as *"jump" was pressed*,
+  thing a sheet could say about the commonest input shape there is. It reads as *this event is "jump" going down*,
   beside three more: the press widened to include a held key's repeats, the release, and the question
   of which action an event belongs to at all. Both of Godot's quotings answer to the same row, because
   the `&` is a spelling rather than a value and rides back out untouched, and the action names come
@@ -703,6 +703,13 @@
   labels they fill, which is where the lines nothing claims actually live), and the ledger over the
   whole corpus is pinned as values: the ranked shape and its count, the tail, and the lines that hold
   no statement to shape.
+- **A handler's question says so on the row, not only in the picker.** The new Input Event sentences
+  were one word of tense away from the polled Input rows that mean a genuinely different thing -
+  *"jump" was pressed* against *"jump" just pressed* - and the defence for that was the picker's
+  section heading, which does not exist on a sheet row. Every sentence in the family now opens with
+  *this event is* (*this event is "jump" going down*, *coming up*, *going down, or repeating*), which
+  no polled row says: one asks the event a handler was handed, the other asks the Input singleton how
+  things stand right now. Display words only - the ace_ids and the code they write are untouched.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

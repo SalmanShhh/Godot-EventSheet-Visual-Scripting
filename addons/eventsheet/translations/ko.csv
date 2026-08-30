@@ -5542,17 +5542,17 @@ On object freed,객체 해제 시
 Event Is Action Pressed,이벤트가 액션 눌림임
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","이 핸들러에 전달된 이벤트가 지정한 액션을 누르는 순간이면 참입니다. 핸들러가 들고 있는 이벤트의 누름 쪽이며, 지금 상태가 어떤지 묻는 것이 아닙니다. 그것은 액션이 눌려 있음이 답합니다."
 Input Event,입력 이벤트
-{action} was pressed,{action} 이(가) 눌렸다
+this event is {action} going down,이 이벤트는 {action} 누름
 "The action this event has to be, from the Input Map.",이 이벤트가 해당해야 하는 액션. 입력 맵에서 가져옵니다.
 Event Is Action Pressed Or Repeating,이벤트가 액션 눌림 또는 반복임
 "The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","같은 눌림에 키를 계속 누를 때 오는 자동 반복까지 포함한 것 - 스틱을 누르고 있는 동안 계속 넘어가는 메뉴에 맞고, 점프에는 맞지 않습니다."
-{action} was pressed or is repeating,{action} 이(가) 눌렸거나 반복 중
+"this event is {action} going down, or repeating",이 이벤트는 {action} 누름 또는 반복
 Event Is Action Released,이벤트가 액션 뗌임
 "True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","이 핸들러에 전달된 이벤트가 지정한 액션을 떼는 순간이면 참입니다. 모아서 놓는 공격이나, 누르고 있던 조작을 놓을 때 씁니다."
-{action} was released,{action} 이(가) 떼어졌다
+this event is {action} coming up,이 이벤트는 {action} 뗌
 Event Is The Action,이벤트가 그 액션임
 "True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.",방향과 상관없이 그 이벤트가 지정한 액션의 것이면 참입니다. 얼마나 세게 눌렸는지 읽기 전에 물어보는 행입니다. 세기는 어떤 조작에서 왔는지 알아야 의미가 있습니다.
-the event is {action},이벤트가 {action} 임
+this event is {action},이 이벤트는 {action}
 Event Action Strength,이벤트 액션 세기
 "How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","이 이벤트를 만든 조작이 얼마나 눌렸는지, 0에서 1까지 - 스틱이나 트리거는 전체 범위를, 키는 0 또는 1을 돌려줍니다."
 how hard {action} is held in this event,이 이벤트에서 {action} 이(가) 얼마나 눌렸는지

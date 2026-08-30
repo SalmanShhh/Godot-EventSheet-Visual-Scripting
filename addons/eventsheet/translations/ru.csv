@@ -5542,17 +5542,17 @@ On object freed,При освобождении объекта
 Event Is Action Pressed,Событие - нажатие действия
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Истина, когда событие, переданное этому обработчику, - нажатие названного действия. Это половина события, которую держит обработчик, а не вопрос о том, как дела обстоят сейчас: на него отвечает Действие нажато."
 Input Event,Событие ввода
-{action} was pressed,{action} была нажата
+this event is {action} going down,это событие - нажатие {action}
 "The action this event has to be, from the Input Map.","Действие, которым должно быть это событие, из карты ввода."
 Event Is Action Pressed Or Repeating,Событие - нажатие или автоповтор действия
 "The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","То же нажатие, расширенное автоповторами удерживаемой клавиши - то, что нужно меню, прокручивающемуся, пока держат стик, и не нужно прыжку."
-{action} was pressed or is repeating,{action} была нажата или повторяется
+"this event is {action} going down, or repeating",это событие - нажатие {action} или его повтор
 Event Is Action Released,Событие - отпускание действия
 "True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","Истина, когда событие, переданное этому обработчику, - отпускание названного действия: для атак с зарядкой и для отпускания удерживаемого управления."
-{action} was released,{action} была отпущена
+this event is {action} coming up,это событие - отпускание {action}
 Event Is The Action,Событие относится к действию
 "True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.","Истина, когда событие вообще относится к названному действию, в какую бы сторону оно ни шло. Строка, которую спрашивают перед чтением силы нажатия: сила осмысленна только тогда, когда известно, от какого управления она пришла."
-the event is {action},событие - это {action}
+this event is {action},это событие - {action}
 Event Action Strength,Сила действия события
 "How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","Насколько нажато управление, стоящее за этим событием, от 0 до 1 - стик или триггер дают весь диапазон, клавиша - 0 или 1."
 how hard {action} is held in this event,насколько сильно удерживается {action} в этом событии

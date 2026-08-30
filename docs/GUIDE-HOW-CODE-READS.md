@@ -206,7 +206,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 | Before | Now |
 |---|---|
-| *Expression Is True* over the whole condition | *"jump" was pressed*, from the **Input Event** section, beside *was pressed or is repeating*, *was released* and *the event is "jump"* |
+| *Expression Is True* over the whole condition | *this event is "jump" going down*, from the **Input Event** section, beside *going down, or repeating*, *coming up* and *this event is "jump"* |
 
 Both of Godot's quotings answer to the same row, because the `&` is a spelling rather than a value
 and rides back out untouched, and the action names come from the project's own Input Map. These are

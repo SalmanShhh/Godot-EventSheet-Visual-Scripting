@@ -5542,17 +5542,17 @@ On object freed,Alla liberazione dell'oggetto
 Event Is Action Pressed,L'evento è azione premuta
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vero quando l'evento passato a questo gestore è l'azione indicata mentre viene premuta. La metà di pressione dell'evento che il gestore ha in mano - non una domanda su come stanno le cose adesso, a cui risponde invece Azione premuta."
 Input Event,Evento di input
-{action} was pressed,{action} è stata premuta
+this event is {action} going down,questo evento è {action} in pressione
 "The action this event has to be, from the Input Map.","L'azione che questo evento deve essere, dalla mappa di input."
 Event Is Action Pressed Or Repeating,L'evento è azione premuta o ripetuta
 "The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","La stessa pressione, allargata alle ripetizioni automatiche di un tasto tenuto premuto - ciò che serve a un menu che scorre mentre tieni la levetta, e non a un salto."
-{action} was pressed or is repeating,{action} è stata premuta o si sta ripetendo
+"this event is {action} going down, or repeating","questo evento è {action} in pressione, o in ripetizione"
 Event Is Action Released,L'evento è azione rilasciata
 "True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","Vero quando l'evento passato a questo gestore è l'azione indicata che viene rilasciata, per le mosse da caricare e rilasciare e per lasciare un comando tenuto premuto."
-{action} was released,{action} è stata rilasciata
+this event is {action} coming up,questo evento è {action} al rilascio
 Event Is The Action,L'evento è l'azione
 "True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.","Vero quando l'evento appartiene all'azione indicata, in qualunque direzione stia andando. La riga da chiedere prima di leggere quanto è premuta, perché un'intensità ha senso solo quando sai da quale comando arriva."
-the event is {action},l'evento è {action}
+this event is {action},questo evento è {action}
 Event Action Strength,Intensità dell'azione dell'evento
 "How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","Quanto è premuto il comando dietro questo evento, da 0 a 1 - una levetta o un grilletto dà l'intera gamma, un tasto dà 0 o 1."
 how hard {action} is held in this event,quanto è tenuta premuta {action} in questo evento
