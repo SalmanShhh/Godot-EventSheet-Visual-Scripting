@@ -281,6 +281,12 @@
   log rather than a quiet degradation. Both are measured against a running engine now, and both say
   what it actually does.
 
+- **The session-restore test stops racing a neighbour for one file in `user://`.** It hands
+  `eventsheets_session.cfg` from one dock to another, and another test writes and then deletes the
+  same file; the shards are separate processes over one `user://` directory, so across two of them
+  the restore could find a session somebody else had already taken away. It runs in the serial tail
+  now, declared the way every other test that needs the machine to itself declares it.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

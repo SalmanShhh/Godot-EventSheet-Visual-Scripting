@@ -4,9 +4,20 @@
 # session restore re-opened every .gd as a fresh read-only preview, so a sheet you were editing came
 # back LOCKED on every restart - friction, especially now that .gd is the default format. The session
 # now records which sheets were unlocked and restores that state.
+#
+# THIS TEST OWNS THE SESSION FILE WHILE IT RUNS. It writes user://eventsheets_session.cfg through one
+# dock and reads it back through a second, and tedium_test writes and then DELETES the same file -
+# one file, one user:// directory, and the shards are separate processes sharing it. In one process
+# the two never overlap; across two they race, and the restore finds a session somebody else has
+# already taken away. So this one runs in the serial tail (see PARALLEL_UNSAFE below), which costs a
+# second and removes a red run that has nothing wrong with the tree.
 @tool
 class_name SessionEditableRestoreTest
 extends RefCounted
+
+## Runs in the serial tail rather than in a shard: it hands a file in user:// from one dock to
+## another, and a neighbouring process deletes that same file.
+const PARALLEL_UNSAFE: bool = true
 
 const PROBE := "user://__eventsheet_session_probe.gd"
 const SESSION := "user://eventsheets_session.cfg"

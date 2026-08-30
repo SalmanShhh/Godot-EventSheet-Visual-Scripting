@@ -78,14 +78,20 @@ const FUNCTION_LEAD := "func "
 ## NO WALL CLOCK. A ceiling measured in milliseconds makes the report depend on how fast the machine
 ## reading it is: the same project, audited on a laptop and on a build server, would file different
 ## findings, and a report that changes without the project changing is not a report anybody can act
-## on. The count is bounded by the same thing the clock was there to bound - how many scripts get
-## opened - and it is the same on every machine. The candidates are ranked strongest-evidence-first,
-## so the scripts a cut loses are the weakest ones rather than an arbitrary tail.
+## on. The count bounds the same thing the clock was there to bound - how many scripts get opened -
+## and it is the same on every machine. The candidates are ranked strongest-evidence-first, so the
+## scripts a cut loses are the weakest ones rather than an arbitrary tail.
+##
+## AND THE NUMBER IS WHAT THE CLOCK WAS BUYING, not a wish. Opening a script as a sheet costs about a
+## second, and this repository's own strongest candidates - which include the plugin's tools and tests
+## rather than a game's scripts - cost 2.3, 0.6, 0.3 and 0.3 seconds. Three and a bit seconds was what
+## the old three-second budget actually allowed here, so four is that same audit written down instead
+## of raced for. Raising it is a conversation about the whole audit's budget, which is nearly spent.
 ##
 ## Only this project-wide sweep is capped. The notes on a sheet's own rows are derived from that one
 ## sheet whenever the canvas rebuilds, so the sheet in front of a reader is never one the ceiling cut
 ## off.
-const MEASURED_LIMIT: int = 12
+const MEASURED_LIMIT: int = 4
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
