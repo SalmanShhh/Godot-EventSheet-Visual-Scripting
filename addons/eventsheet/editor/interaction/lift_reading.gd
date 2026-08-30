@@ -123,15 +123,10 @@ static func table_claim(line: String, scratch_entries: Array = []) -> Dictionary
 	if text.is_empty() or text.begins_with("#"):
 		return {}
 	if not scratch_entries.is_empty():
-		# A REFUSED entry has no pattern, and an empty pattern matches every line - so a draft the
-		# example engine could not answer would otherwise claim the whole buffer. Shipped families
-		# never reach that state (the validator fails the suite on a refusal), but a draft typed into
-		# the workbench does, which is exactly why the filter lives here rather than in the table.
-		var usable: Array = []
-		for entry: Variant in scratch_entries:
-			if entry is Dictionary and not (entry as Dictionary).has(EventForgeLiftTable.REFUSAL_KEY):
-				usable.append(entry)
-		var drafted: Dictionary = EventForgeLiftTable.match_line(usable, text)
+		# A draft the example engine could not answer is a REFUSAL, and a refusal has no pattern to
+		# match with. The table engine drops those itself, so a draft that says nothing simply claims
+		# nothing here rather than claiming the whole buffer.
+		var drafted: Dictionary = EventForgeLiftTable.match_line(scratch_entries, text)
 		if not drafted.is_empty():
 			return {"family": "draft", "entry_id": str(drafted.get("entry_id", "")),
 				"ace_id": str(drafted.get("ace_id", ""))}

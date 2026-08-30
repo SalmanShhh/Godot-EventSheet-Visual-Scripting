@@ -157,6 +157,19 @@ static func _test_the_engine() -> bool:
 	# The indentation is the lifter's business, not the table's.
 	ok = _check("a statement is matched dedented",
 		str(EventForgeLiftTable.match_line(table, "\t\tset hp to 1").get("entry_id", "")), "specific") and ok
+	# A REFUSAL carries a sentence and no pattern, and the empty string is a pattern that matches
+	# every line ever written. One of those in one installed pack would claim every statement in
+	# every opened file, so it is asked here on the lines it would have taken.
+	var refused: Array = [EventForgeLiftExample.entry("bad", "method:whatever",
+		"start_flickering([[oops]])")]
+	ok = _check("a refused entry is a refusal, not a table",
+		str((refused[0] as Dictionary).has(EventForgeLiftTable.REFUSAL_KEY)), "true") and ok
+	for line: String in ["hp -= 1", "queue_free()", "$Door.open(true)"]:
+		ok = _check("and it claims nothing: %s" % line,
+			EventForgeLiftTable.match_line(refused, line), {}) and ok
+	ok = _check("nor does an entry whose pattern is blank",
+		EventForgeLiftTable.match_line([{"id": "blank", "ace_id": "A", "pattern": "",
+			"shape": "", "slots": {}}], "hp -= 1"), {}) and ok
 	return ok
 
 

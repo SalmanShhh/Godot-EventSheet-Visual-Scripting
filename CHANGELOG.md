@@ -633,6 +633,12 @@
 
 ### Fixed
 
+- **One malformed pack spelling no longer claims every line in the project.** A refused lift entry
+  carries the sentence saying why instead of a pattern, and the empty string is a pattern that
+  matches every line ever written - so a single bad `@ace_lift_example` in any installed pack turned
+  every statement in every opened file into a row under an id no registry has heard of. The table
+  engine now skips an entry that has no table on it, which is where the check belongs: a pack's
+  spellings are read off disk at run time, with no validator between them and the match.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

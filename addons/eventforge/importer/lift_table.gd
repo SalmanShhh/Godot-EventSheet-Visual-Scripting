@@ -102,12 +102,24 @@ static var _compiled: Dictionary = {}
 ##
 ## Returns {entry_id, ace_id, provider, params, template}: `params` is what the row shows, `template`
 ## the spelling to bake onto it so emission writes the author's bytes back.
+##
+## AN ENTRY WITH NO TABLE ON IT NEVER MATCHES. A refusal carries its sentence instead of a pattern,
+## and the empty string is a pattern that matches every line ever written - so one malformed spelling
+## in one installed pack would otherwise claim every statement in every opened file, and hand each
+## one back under an ace_id no registry has heard of. The refusal is caught here rather than by each
+## caller in turn, because `entries()` is walked off disk at run time by callers that have no
+## validator between them and the match.
 static func match_line(entries: Array, line: String) -> Dictionary:
 	var text: String = line.strip_edges()
 	if text.is_empty():
 		return {}
 	for entry: Dictionary in entries:
-		var regex: RegEx = _regex(str(entry.get("pattern", "")))
+		if entry.has(REFUSAL_KEY):
+			continue
+		var pattern: String = str(entry.get("pattern", ""))
+		if pattern.is_empty():
+			continue
+		var regex: RegEx = _regex(pattern)
 		if regex == null:
 			continue
 		var hit: RegExMatch = regex.search(text)
