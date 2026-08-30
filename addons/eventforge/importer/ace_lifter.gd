@@ -31,7 +31,14 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/effect_lift.gd"),
 	preload("res://addons/eventforge/importer/animation_lift.gd"),
 	preload("res://addons/eventforge/importer/removal_lift.gd"),
+	preload("res://addons/eventforge/importer/collision_layer_lift.gd"),
 ]
+
+## The families that also recognise a CONDITION term - the same list, filtered by the second static
+## a family declares when its vocabulary has a question in it as well as verbs. Asked before the
+## general reverse index for the same reason: the index reads a term by its shape alone and cannot
+## know which of two identically spelled rows a file means.
+const CONDITION_SPELLING_METHOD: String = "match_condition"
 
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
 ## `_ready` connection map - see _parse_connections/_lift_function).
@@ -245,6 +252,10 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# `material.set_shader_parameter(&"dissolve", 0.7)` only means "turn the dissolve dial" when the
 	# scene says this node wears a material and that material's shader declares `dissolve`.
 	EventForgeEffectLift.note_source(source, _scene_source_path_of(sheet))
+	# And which of the project's two lists of layer names this file's collision lines are about:
+	# `set_collision_mask_value(2, true)` is spelled identically in 2D and 3D, and only the class the
+	# file extends says which "layer 2" it means.
+	EventForgeCollisionLayerLift.note_source(source, _scene_source_path_of(sheet))
 	# And the groups' own "who runs it", resolved per slug (a group inherits its parent's
 	# answer), so the guard the compiler wrote in front of each event can be taken back off.
 	_note_group_guards(source)
@@ -2783,13 +2794,16 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		if candidate.begins_with("not (") and candidate.ends_with(")"):
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
-		var matched: Dictionary = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
+		var matched: Dictionary = _matched_condition_spelling(candidate)
+		if matched.is_empty():
+			matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
 		if matched.is_empty():
 			return false
 		var condition: ACECondition = ACECondition.new()
 		condition.provider_id = str(matched.get("provider", ""))
 		condition.ace_id = str(matched.get("ace_id", ""))
 		condition.params = matched.get("params", {})
+		condition.codegen_template = str(matched.get("template", ""))
 		condition.negated = negated
 		# Both spellings of an inverted comparison are the SAME row: `not (hp <= 0)` lifts to the
 		# comparison with the invert on, reading `hp > 0` exactly as a file that wrote the short form
@@ -2799,6 +2813,19 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		condition.negation_wrapped = negated and not _flips_when_inverted(matched).is_empty()
 		event.conditions.append(condition)
 	return true
+
+
+## The row one condition TERM means to a family that knows what such a term is about, or {} when no
+## family claims it. The same seam the action path has, and asked first for the same reason: a family
+## reads the file it is lifting and the general index reads only the shape of the line.
+static func _matched_condition_spelling(term: String) -> Dictionary:
+	for family: GDScript in SPELLING_FAMILIES:
+		if not family.has_method(CONDITION_SPELLING_METHOD):
+			continue
+		var spelled: Dictionary = family.call(CONDITION_SPELLING_METHOD, term)
+		if not spelled.is_empty():
+			return spelled
+	return {}
 
 
 ## The flipped params of a matched condition, or {} when its ACE is not the plain `{a} {op} {b}`

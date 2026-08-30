@@ -71,6 +71,25 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "IsOnCollisionLayer", "Is On Collision Layer", ACEDescriptor.ACEType.CONDITION, "get_collision_layer_value({layer})", "", [F.make_param("layer", "String", "1", "Layer", "Layer number (1-32).", "expression")], "Collisions", "is on layer {layer}", "CollisionObject2D")
 		.described("True when this object occupies the given collision layer."))
 
+	# ── The same three knobs said in the project's own words ──
+	#
+	# The bit verbs above are the numbers as the engine has them: a layer, a switch, and the reader
+	# left to remember which of `1` and `3` is the wall. A project that named its layers already
+	# said which - so these five rows take the NAME, and are the ones the picker leads with.
+	#
+	# WHAT IS EMITTED IS STILL THE NUMBER. `set_collision_mask_value(2, true)` is the engine's own
+	# call and it is what the file gets; the name lives in project.godot, where Godot keeps it, and
+	# the sentence resolves the number back to it when the row is drawn. So the emitted line carries
+	# no comment residue, no name, and nothing that would go stale when the layer is renamed.
+	#
+	# THE PAIR SHIPS FOR BOTH DIMENSIONS rather than being derived from the host class, because the
+	# picker files rows by node class - a CharacterBody3D sheet would never be offered a row filed
+	# under CollisionObject2D - and because the two lists of names are genuinely different lists.
+	# The parameter's own hint is what says which of them a row reads: a 2D row can only mean a 2D
+	# layer, so the hint that opens the picker is the hint the sentence reads back through.
+	descriptors.append_array(_named_layer_descriptors("CollisionObject2D", "", "physics_layer_name_2d", "2D"))
+	descriptors.append_array(_named_layer_descriptors("CollisionObject3D", "3D", "physics_layer_name_3d", "3D"))
+
 	# ── CollisionShape2D: toggle (deferred so it is safe to call mid-physics) ──
 	descriptors.append(F.make_descriptor("Core", "EnableCollisionShape", "Enable Collision Shape", ACEDescriptor.ACEType.ACTION, "set_deferred(&\"disabled\", false)", "", [], "Collisions", "Enable collision shape", "CollisionShape2D")
 		.described("Switches this collision shape back on so it can collide again."))
@@ -99,4 +118,51 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetOverlappingBodies3D", "Overlapping Bodies (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_overlapping_bodies()", "", [], "Collisions", "overlapping bodies", "Area3D")
 		.described("Fires with the list of physics bodies currently inside this 3D Area."))
 
+	return descriptors
+
+
+## The five named-layer rows for one dimension. Written once and built twice because the sentences
+## are the same sentences - only the class they are filed under and the list of names they read
+## change, and spelling them out twice would be two places for one wording to drift.
+##
+## `suffix` is what keeps the two sets of ace_ids apart ("" for the 2D rows, which came first in the
+## module's own convention, "3D" for their twins), `hint` is the picker and the reading lens, and
+## `dimension_word` is what the descriptions say so a reader in the picker knows which list of
+## layer names the row is about before they open it.
+static func _named_layer_descriptors(host_class: String, suffix: String, hint: String,
+		dimension_word: String) -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	var mask_note: String = "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ %s Physics. A layer the project never named shows as its number, and can be named from here." % dimension_word
+	var layer_note: String = "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ %s Physics. A layer the project never named shows as its number, and can be named from here." % dimension_word
+	var name_suffix: String = "" if suffix.is_empty() else " (%s)" % suffix
+	descriptors.append(F.make_descriptor("Core", "CollideWithLayer%s" % suffix,
+		"Collide With Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
+		"set_collision_mask_value({layer}, true)", "",
+		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
+		"Collisions", "Collide with {layer}", host_class)
+		.described("Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.").featured())
+	descriptors.append(F.make_descriptor("Core", "StopCollidingWithLayer%s" % suffix,
+		"Stop Colliding With Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
+		"set_collision_mask_value({layer}, false)", "",
+		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
+		"Collisions", "Stop colliding with {layer}", host_class)
+		.described("Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible."))
+	descriptors.append(F.make_descriptor("Core", "BeOnLayer%s" % suffix,
+		"Be On Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
+		"set_collision_layer_value({layer}, true)", "",
+		[F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)],
+		"Collisions", "Be on layer {layer}", host_class)
+		.described("Puts this object on one named collision layer, so everything watching that layer starts noticing it."))
+	descriptors.append(F.make_descriptor("Core", "LeaveLayer%s" % suffix,
+		"Leave Layer%s" % name_suffix, ACEDescriptor.ACEType.ACTION,
+		"set_collision_layer_value({layer}, false)", "",
+		[F.make_param("layer", "String", "1", "Layer", layer_note, hint).with_lens(hint)],
+		"Collisions", "Leave layer {layer}", host_class)
+		.described("Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves."))
+	descriptors.append(F.make_descriptor("Core", "IsSetToCollideWithLayer%s" % suffix,
+		"Is Set To Collide With Layer%s" % name_suffix, ACEDescriptor.ACEType.CONDITION,
+		"get_collision_mask_value({layer})", "",
+		[F.make_param("layer", "String", "1", "Layer", mask_note, hint).with_lens(hint)],
+		"Collisions", "is set to collide with {layer}", host_class)
+		.described("True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now."))
 	return descriptors

@@ -5386,3 +5386,40 @@ Guard %s,Proteggi %s
 This event already asks whether %s is still here.,Questo evento chiede già se %s è ancora qui.
 The destroy is already the last row of this event.,La distruzione è già l'ultima riga di questo evento.
 "The destroy runs last now, after everything that reads it.","La distruzione ora viene eseguita per ultima, dopo tutto ciò che lo legge."
+Collisions,Collisioni
+Collide With Layer,Collidi con il livello
+Collide With Layer (3D),Collidi con il livello (3D)
+Stop Colliding With Layer,Smetti di collidere con il livello
+Stop Colliding With Layer (3D),Smetti di collidere con il livello (3D)
+Be On Layer,Stai sul livello
+Be On Layer (3D),Stai sul livello (3D)
+Leave Layer,Lascia il livello
+Leave Layer (3D),Lascia il livello (3D)
+Is Set To Collide With Layer,È impostato per collidere con il livello
+Is Set To Collide With Layer (3D),È impostato per collidere con il livello (3D)
+Collide with {layer},Collidi con {layer}
+Stop colliding with {layer},Smetti di collidere con {layer}
+Be on layer {layer},Stai sul livello {layer}
+Leave layer {layer},Lascia il livello {layer}
+is set to collide with {layer},è impostato per collidere con {layer}
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.","Inizia a osservare un livello di collisione con nome, così questo oggetto urta (e rileva) tutto ciò che vi si trova. I livelli su cui questo oggetto si trova sono un'altra questione: per quello c'è Stai sul livello."
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.","Smette di osservare un livello di collisione con nome, così questo oggetto attraversa tutto ciò che vi si trova: il passaggio attraverso una piattaforma, e l'istante in cui uno scatto diventa intangibile."
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.","Mette questo oggetto su un livello di collisione con nome, così tutto ciò che osserva quel livello inizia a notarlo."
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.","Toglie questo oggetto da un livello di collisione con nome, così tutto ciò che osserva quel livello smette di notarlo: i fotogrammi di invulnerabilità dopo un colpo, detti come il livello che lascia."
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.","Vero quando questo oggetto sta osservando un livello di collisione con nome. Chiede dell'IMPOSTAZIONE, non di un contatto in corso."
+Layer,Livello
+Name it…,Assegna un nome…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.","Assegna un nome a questo livello in Impostazioni progetto ▸ Nomi livelli, così ogni riga che lo riguarda può dirlo."
+Name for layer %d,Nome per il livello %d
+Layer Names,Nomi livelli
+"Type the layer's name first, then Name it…","Digita prima il nome del livello, poi Assegna un nome…"
+"""%s"" is already layer %d.","""%s"" è già il livello %d."
+Layer %d could not be named.,Non è stato possibile assegnare un nome al livello %d.
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Livello %d: %d ▸ ""%s"". Annulla rimette il numero."
+Name physics layer,Assegna un nome al livello fisico
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s si rivolge al livello di collisione %d, e Godot ha i livelli da 1 a 32: quella chiamata non fa nulla."
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s riguarda il livello di collisione %d, che questo progetto non nomina: la riga si legge come il numero mentre ogni altra riga si legge come una parola. Assegnagli un nome in Impostazioni progetto ▸ Nomi livelli, oppure punta la riga al livello rinominato."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Il livello da osservare, con il nome che questo progetto gli ha dato in Impostazioni progetto ▸ Nomi livelli ▸ Fisica 2D. Un livello che il progetto non ha mai nominato mostra il suo numero e può essere nominato da qui."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Il livello da osservare, con il nome che questo progetto gli ha dato in Impostazioni progetto ▸ Nomi livelli ▸ Fisica 3D. Un livello che il progetto non ha mai nominato mostra il suo numero e può essere nominato da qui."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Il livello su cui stare, con il nome che questo progetto gli ha dato in Impostazioni progetto ▸ Nomi livelli ▸ Fisica 2D. Un livello che il progetto non ha mai nominato mostra il suo numero e può essere nominato da qui."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Il livello su cui stare, con il nome che questo progetto gli ha dato in Impostazioni progetto ▸ Nomi livelli ▸ Fisica 3D. Un livello che il progetto non ha mai nominato mostra il suo numero e può essere nominato da qui."

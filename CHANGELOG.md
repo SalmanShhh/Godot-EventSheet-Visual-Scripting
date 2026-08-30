@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Layers speak their names
+
+- **Five collision rows that say the layer's name instead of its number.** **Collide with `<Layer>`**
+  and **Stop colliding with `<Layer>`** set what an object notices; **Be on layer `<Layer>`** and
+  **Leave layer `<Layer>`** set what notices it; **is set to collide with `<Layer>`** asks. The
+  Layer field is a live picker over the layer names this project declared in Project Settings, and a
+  layer the project never named shows as its number with a field beside it to name it - written to
+  Project Settings through the editor's own undo, with the before and after said back on the
+  dialog's help strip. The pair ships for both dimensions (`CollisionObject2D` and
+  `CollisionObject3D`), because Godot keeps two lists of layer names and the picker files rows by
+  node class; the parameter's own hint is what decides which list a row reads.
+- **What is emitted is the engine's own call with the number in it.**
+  `set_collision_mask_value(2, true)`, `set_collision_layer_value(3, false)`,
+  `get_collision_mask_value(2)` - no comment residue, no name in the file. The names live in
+  project.godot where Godot keeps them, and the sentence resolves the number back to the name when
+  the row is drawn, so renaming a layer renames every row about it and moves no file. The frozen bit
+  verbs (**Set Collision Layer Bit**, **Set Collision Mask Bit**, **Is On Collision Layer**) are
+  untouched and stand beside them for the number-first spelling.
+- **The same calls, written by hand, open as those sentences.** A hand-written
+  `set_collision_mask_value(2, true)` lifts to **Collide with Enemies**, with the number resolved to
+  the project's word at read time - and to the 3D row when the file extends a 3D body, because the
+  two calls are spelled identically in both dimensions and only the file's own `extends` can say
+  which list of names it means. A layer number the project does not name reads as the number, which
+  is honest. Raw bit arithmetic on `collision_layer` / `collision_mask` is untouched: it is about a
+  set of layers rather than one, and it keeps the readings it already had.
+- **A new Doctor section, Collision Layers.** A row about a layer number this project does not name
+  - renamed away, renumbered, or never named - is a note in the triage inbox, and a number outside
+  1-32 is a warning, because Godot has thirty-two layers and that call silently does nothing. Both
+  say nothing at all in a project that names no layers: numbers are a perfectly good way to work,
+  and the note exists because the project already speaks in names and one row cannot.
+
 ### Spawning, said in sentences
 
 - **A spawn is a sentence with a name in it.** **Spawn A Copy** makes one copy of a scene, adds it
@@ -141,11 +172,11 @@
 	destroy rows are never noted, because the compiler already writes their guard.
   - **A scene that spawns itself.** Reported as an error, by reachability rather than by matching
 	text: only a spawn of this sheet's own scene that is reached unconditionally when a copy is
-    created. A spawn of the same scene under a condition is a game, not a loop. It carries no repair,
-    because the answer is a decision about the game.
+	created. A spawn of the same scene under a condition is a game, not a loop. It carries no repair,
+	because the answer is a decision about the game.
   - **Freed, and still booked.** A destroy, and a later row in the same event that hangs a timer or a
-    tween on the very node it destroyed. "Move the destroy last" puts it after everything that reads
-    it, and the note names destroying after a delay as the other way.
+	tween on the very node it destroyed. "Move the destroy last" puts it after everything that reads
+	it, and the note names destroying after a delay as the other way.
 - Each check is pinned twice - on a sheet that has the bug and on the sheet beside it that does not -
   so neither a check that only fires nor one that never does can pass. Run over this repository's own
   showcases and packs with no ceiling on it, the four report five things and all five are real:

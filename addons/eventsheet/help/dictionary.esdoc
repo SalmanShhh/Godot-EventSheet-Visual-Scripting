@@ -247,6 +247,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_collision_count` | [ShapeCast Hit Count (2D)](ace:Core/ShapeCast2DCount) | Raycast 2D | Vocabulary |
 | `get_collision_face_index` | [RayCast Hit Face Index (3D)](ace:Core/RayCast3DFaceIndex) | Raycast 3D | Vocabulary |
 | `get_collision_layer_value` | [Is On Collision Layer](ace:Core/IsOnCollisionLayer) | Collisions | Vocabulary |
+| `get_collision_mask_value` | [Is Set To Collide With Layer](ace:Core/IsSetToCollideWithLayer) | Collisions | Vocabulary |
 | `get_collision_normal` | [RayCast Hit Normal (2D)](ace:Core/RayCast2DGetNormal) | Raycast 2D | Vocabulary |
 | `get_collision_point` | [RayCast Hit Point (2D)](ace:Core/RayCast2DGetPoint) | Raycast 2D | Vocabulary |
 | `get_command_palette` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |

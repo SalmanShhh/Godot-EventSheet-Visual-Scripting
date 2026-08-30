@@ -134,6 +134,8 @@ const HINT_PARAGRAPHS: Dictionary = {
 	"bbcode_text": "Text with the engine's own markup - the buttons wrap the selection, and the preview under the box is what the label will show.",
 	"physics_layer_2d": "The 2D physics layers this row looks at, by their project names. Tick as many as apply.",
 	"physics_layer_3d": "The 3D physics layers this row looks at, by their project names. Tick as many as apply.",
+	"physics_layer_name_2d": "One 2D physics layer, by the name this project gave it in Project Settings > Layer Names > 2D Physics. The row stores the layer's NUMBER, which is what the engine's own call takes; the name is how the row reads it back, so renaming the layer renames the sentence and never touches the emitted line. A layer the project never named shows as its number with a field to name it.",
+	"physics_layer_name_3d": "One 3D physics layer, by the name this project gave it in Project Settings > Layer Names > 3D Physics. The row stores the layer's NUMBER, which is what the engine's own call takes; the name is how the row reads it back, so renaming the layer renames the sentence and never touches the emitted line. A layer the project never named shows as its number with a field to name it.",
 	"render_layer_2d": "The visibility layers that may see this node, by their project names (Project Settings > Layer Names > 2D Render). A camera draws what its own cull mask and this share, so a marker ticked for the minimap layer alone is drawn by the minimap camera and by nothing else.",
 	"quality_preset": "A quality preset file from res://settings/quality/ - the folder IS the list, so adding a preset is adding a file. New preset copies the picked one and opens it in the Inspector. The word is a shorthand for values over settings you already declared; nudging one of them afterwards changes that setting and the quality label reads Custom on its own.",
 	"feature_tag": "A build feature tag - the engine's own set plus every tag your export presets declare. host and client are tags you add to two presets yourself; dedicated_server comes from Godot's own server preset, whose build is run with --headless.",
@@ -181,6 +183,8 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"max_players": "a number",
 	"shader_dial": "a shader dial",
 	"render_layer_2d": "visibility layers",
+	"physics_layer_name_2d": "a named layer",
+	"physics_layer_name_3d": "a named layer",
 	"quality_preset": "a quality preset",
 }
 

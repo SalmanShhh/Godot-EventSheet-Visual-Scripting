@@ -116,7 +116,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"lens ▸ Make current",
 	"sparks ▸ Particles  Start spraying",
 	"sparks ▸ Particles  Restart",
-	"ReadingWords4Player ▸ Enable collisions with 2",
+	# Re-pin: the named-layer verbs lift, so watching a layer is now the Collide With Layer row.
+	"System ▸ Collide with 2",
 	"ReadingWords4Player ▸ Set collisions off",
 	# The analogue read belongs to the pad, not to System
 	"Gamepad ▸ Set hp to strength of \"gas\"",

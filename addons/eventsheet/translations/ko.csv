@@ -5386,3 +5386,40 @@ Guard %s,%s에 확인 추가
 This event already asks whether %s is still here.,이 이벤트는 이미 %s 이(가) 아직 있는지 확인하고 있습니다.
 The destroy is already the last row of this event.,파괴 행은 이미 이 이벤트의 마지막 행입니다.
 "The destroy runs last now, after everything that reads it.",파괴 행은 이제 그것을 읽는 모든 행 뒤에 마지막으로 실행됩니다.
+Collisions,충돌
+Collide With Layer,레이어와 충돌
+Collide With Layer (3D),레이어와 충돌 (3D)
+Stop Colliding With Layer,레이어와 충돌 중지
+Stop Colliding With Layer (3D),레이어와 충돌 중지 (3D)
+Be On Layer,레이어에 속하기
+Be On Layer (3D),레이어에 속하기 (3D)
+Leave Layer,레이어에서 나가기
+Leave Layer (3D),레이어에서 나가기 (3D)
+Is Set To Collide With Layer,레이어와 충돌하도록 설정됨
+Is Set To Collide With Layer (3D),레이어와 충돌하도록 설정됨 (3D)
+Collide with {layer},{layer}와 충돌
+Stop colliding with {layer},{layer}와 충돌 중지
+Be on layer {layer},{layer} 레이어에 속하기
+Leave layer {layer},{layer} 레이어에서 나가기
+is set to collide with {layer},{layer}와 충돌하도록 설정됨
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.","이름이 붙은 충돌 레이어를 감지하기 시작하여, 이 오브젝트가 그 레이어 위의 것과 부딪히고 감지합니다. 이 오브젝트가 어느 레이어에 속하는지는 별개의 질문이며, 그것은 레이어에 속하기가 담당합니다."
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.","이름이 붙은 충돌 레이어를 더 이상 감지하지 않아, 이 오브젝트가 그 레이어 위의 것을 그대로 통과합니다. 발판 아래로 내려가는 동작이나, 대시 중 잠깐 무적이 되는 순간입니다."
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.","이 오브젝트를 이름이 붙은 충돌 레이어에 올려, 그 레이어를 보고 있는 모든 것이 이 오브젝트를 감지하게 합니다."
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.","이 오브젝트를 이름이 붙은 충돌 레이어에서 빼내, 그 레이어를 보고 있는 것들이 감지하지 못하게 합니다. 피격 후 무적 시간을 떠나는 레이어로 말한 것입니다."
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.",이 오브젝트가 이름이 붙은 충돌 레이어를 현재 감지하고 있을 때 참입니다. 지금 일어나는 접촉이 아니라 설정을 묻습니다.
+Layer,레이어
+Name it…,이름 지정…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.","프로젝트 설정 ▸ 레이어 이름에서 이 레이어에 이름을 지정하면, 이 레이어에 관한 모든 행이 그 이름으로 말할 수 있습니다."
+Name for layer %d,레이어 %d의 이름
+Layer Names,레이어 이름
+"Type the layer's name first, then Name it…",먼저 레이어 이름을 입력한 다음 이름 지정…을 누르세요.
+"""%s"" is already layer %d.","""%s""은(는) 이미 레이어 %d입니다."
+Layer %d could not be named.,레이어 %d의 이름을 지정할 수 없습니다.
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","레이어 %d: %d ▸ ""%s"". 실행 취소하면 번호로 되돌아갑니다."
+Name physics layer,물리 레이어 이름 지정
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s이(가) 충돌 레이어 %d을(를) 가리키지만, Godot의 레이어는 1부터 32까지입니다. 이 호출은 아무것도 하지 않습니다."
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s은(는) 충돌 레이어 %d에 관한 것이지만, 이 프로젝트는 그 레이어에 이름을 붙이지 않았습니다. 다른 행은 단어로 읽히는데 이 행만 숫자로 읽힙니다. 프로젝트 설정 ▸ 레이어 이름에서 이름을 붙이거나, 이름이 바뀐 레이어로 행을 돌리세요."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","감시할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 2D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","감시할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 3D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","속할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 2D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","속할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 3D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."

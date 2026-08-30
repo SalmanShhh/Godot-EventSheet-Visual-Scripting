@@ -42,6 +42,13 @@ const LENS_FRACTION: String = "fraction_percent"
 ## an autoload's members are read with, and the same one the expression fields accept.
 const LENS_EFFECT_DIAL: String = "effect_dial"
 
+## A collision layer, said in the project's own words: the row stores the NUMBER the engine's
+## `set_collision_mask_value` takes, and the sentence reads back the name Project Settings gave that
+## number. Two lenses because Godot keeps two lists - a 3D node's layer 2 and a 2D node's layer 2 are
+## different names - and the parameter's own hint is what says which list it belongs to.
+const LENS_PHYSICS_LAYER_2D: String = "physics_layer_name_2d"
+const LENS_PHYSICS_LAYER_3D: String = "physics_layer_name_3d"
+
 ## The lead itself, so the canvas can mute exactly those characters and the tests can name them.
 const EFFECT_LEAD: String = "effect."
 
@@ -64,7 +71,18 @@ static func read(lens: String, value: String) -> String:
 			return EventForgeAngleUnits.reading(value)
 		LENS_FRACTION:
 			return fraction_percent(value)
+		LENS_PHYSICS_LAYER_2D:
+			return physics_layer(value, EventForgePhysicsLayers.DIMENSION_2D)
+		LENS_PHYSICS_LAYER_3D:
+			return physics_layer(value, EventForgePhysicsLayers.DIMENSION_3D)
 	return value
+
+
+## `2` as `Enemies` - the name the project gave that layer. A number the project never named reads as
+## the number, and so does an expression: the row's value is the author's own GDScript and the name
+## is only ever a reading of it.
+static func physics_layer(value: String, dimension: String) -> String:
+	return EventForgePhysicsLayers.words_for_value(value, dimension)
 
 
 ## `0.1` as "10%", `0.25` as "25%". Only a plain number is read: an expression is the author's own
@@ -110,8 +128,13 @@ static func lens_of(parameter_dict: Dictionary) -> String:
 	if not declared.is_empty():
 		return declared
 	# An angle field is an angle field: every one of them wants the same reading, and asking each
-	# descriptor to say so again would be a hundred places for one of them to forget.
-	return LENS_ANGLE if str(parameter_dict.get("hint", "")).strip_edges() == LENS_ANGLE else ""
+	# descriptor to say so again would be a hundred places for one of them to forget. A named-layer
+	# field is the same bargain - the hint that picks the picker is the hint that picks the list the
+	# sentence reads back from, so the two can never disagree.
+	var hint: String = str(parameter_dict.get("hint", "")).strip_edges()
+	if hint == LENS_ANGLE or hint == LENS_PHYSICS_LAYER_2D or hint == LENS_PHYSICS_LAYER_3D:
+		return hint
+	return ""
 
 
 ## `Color("26304d")` as "81%, tinted #26304d" - how dark the layer is, and what colour the dark is.

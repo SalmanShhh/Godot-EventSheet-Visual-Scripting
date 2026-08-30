@@ -5658,10 +5658,7 @@ static func enum_hint_member(hint_string: String, index: int) -> String:
 ## project never named it. Read live rather than cached: a layer renamed in Project Settings a minute
 ## ago must read by its new name without an editor restart.
 static func physics_layer_name(layer_number: int, dimension: String) -> String:
-	if layer_number < 1 or layer_number > 32:
-		return ""
-	return str(ProjectSettings.get_setting(
-		"layer_names/%s/layer_%d" % [dimension, layer_number], "")).strip_edges()
+	return EventForgePhysicsLayers.name_of(layer_number, dimension)
 
 
 ## Every layer a MASK holds, in the project's own words, as `"World", "Player"` - or "" when the

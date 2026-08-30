@@ -3166,6 +3166,8 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Has Overlapping Bodies** (`target: String`) - True when this Area2D currently overlaps any physics body.
 - **Has Overlapping Areas** (`target: String`) - True when this Area2D currently overlaps any other area.
 - **Is On Collision Layer** (`layer: String, target: String`) - True when this object occupies the given collision layer.
+- **Is Set To Collide With Layer** (`layer: String, target: String`) - True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.
+- **Is Set To Collide With Layer (3D)** (`layer: String, target: String`) - True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.
 - **Is By Wall (3D)** - True when this 3D character is pressing against a wall.
 - **Is Touching Ceiling (3D)** - True when this 3D character is touching a ceiling above.
 - **Is Jumping (3D)** - True while this 3D character is moving upward. In 3D, Y grows upward, so going up is a POSITIVE vertical speed - the opposite sign from the 2D question.
@@ -3176,6 +3178,14 @@ Collision vocabulary (the "Helper ACEs for collisions").
 #### Actions
 - **Set Collision Layer Bit** (`layer: String, enabled: String, target: String`) - Turns a collision layer on or off, controlling what this object sits on.
 - **Set Collision Mask Bit** (`mask: String, enabled: String, target: String`) - Turns a collision mask bit on or off, controlling what this object detects.
+- **Collide With Layer** (`layer: String, target: String`) - Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.
+- **Stop Colliding With Layer** (`layer: String, target: String`) - Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.
+- **Be On Layer** (`layer: String, target: String`) - Puts this object on one named collision layer, so everything watching that layer starts noticing it.
+- **Leave Layer** (`layer: String, target: String`) - Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.
+- **Collide With Layer (3D)** (`layer: String, target: String`) - Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.
+- **Stop Colliding With Layer (3D)** (`layer: String, target: String`) - Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.
+- **Be On Layer (3D)** (`layer: String, target: String`) - Puts this object on one named collision layer, so everything watching that layer starts noticing it.
+- **Leave Layer (3D)** (`layer: String, target: String`) - Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.
 - **Enable Collision Shape** (`target: String`) - Switches this collision shape back on so it can collide again.
 - **Disable Collision Shape** (`target: String`) - Switches this collision shape off, safely, so it stops colliding.
 

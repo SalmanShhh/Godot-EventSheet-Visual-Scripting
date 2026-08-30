@@ -116,9 +116,11 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Call Reset (at end of frame)",
 	"CharacterBody2D ▸ Set visible to true (at end of frame)",
 	# The project's own names for its physics layers
-	# Re-pin: sitting on a layer is what this body is to the others, so the row says Solid and keeps
-	# the project's own name for the layer with its number after it.
-	"CharacterBody2D ▸ Solid ▸ On layer Enemies (layer 2)",
+	# Re-pin: the line is now the ROW a picker would have authored - "Be on layer Enemies" - because
+	# the named-layer verbs lift. The project's own word for the layer is still what the row says;
+	# what changed is that the sentence and the picker now agree, so editing the layer is a field
+	# rather than a script block.
+	"System ▸ Be on layer Enemies",
 	"CharacterBody2D ▸ Set collision layers to \"World\", \"Player\"",
 	# A number written where an enum is expected
 	"CharacterBody2D ▸ Set process mode to Always",

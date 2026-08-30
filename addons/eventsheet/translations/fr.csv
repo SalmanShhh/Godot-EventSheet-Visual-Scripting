@@ -5386,3 +5386,40 @@ Guard %s,Protéger %s
 This event already asks whether %s is still here.,Cet événement demande déjà si %s est encore là.
 The destroy is already the last row of this event.,La destruction est déjà la dernière ligne de cet événement.
 "The destroy runs last now, after everything that reads it.","La destruction s'exécute maintenant en dernier, après tout ce qui le lit."
+Collisions,Collisions
+Collide With Layer,Entrer en collision avec le calque
+Collide With Layer (3D),Entrer en collision avec le calque (3D)
+Stop Colliding With Layer,Ne plus entrer en collision avec le calque
+Stop Colliding With Layer (3D),Ne plus entrer en collision avec le calque (3D)
+Be On Layer,Être sur le calque
+Be On Layer (3D),Être sur le calque (3D)
+Leave Layer,Quitter le calque
+Leave Layer (3D),Quitter le calque (3D)
+Is Set To Collide With Layer,Est réglé pour entrer en collision avec le calque
+Is Set To Collide With Layer (3D),Est réglé pour entrer en collision avec le calque (3D)
+Collide with {layer},Entrer en collision avec {layer}
+Stop colliding with {layer},Ne plus entrer en collision avec {layer}
+Be on layer {layer},Être sur le calque {layer}
+Leave layer {layer},Quitter le calque {layer}
+is set to collide with {layer},est réglé pour entrer en collision avec {layer}
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.","Commence à surveiller un calque de collision nommé, de sorte que cet objet heurte (et détecte) tout ce qui s'y trouve. Les calques sur lesquels cet objet se trouve sont une autre question - pour cela, utilisez Être sur le calque."
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.","Cesse de surveiller un calque de collision nommé, de sorte que cet objet traverse tout ce qui s'y trouve - la traversée d'une plateforme, et l'instant où un dash devient intangible."
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.","Place cet objet sur un calque de collision nommé, de sorte que tout ce qui surveille ce calque commence à le remarquer."
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.","Retire cet objet d'un calque de collision nommé, de sorte que tout ce qui surveille ce calque cesse de le remarquer - les images d'invulnérabilité après un coup, dites comme le calque qu'il quitte."
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.","Vrai lorsque cet objet surveille actuellement un calque de collision nommé. Il interroge le RÉGLAGE, pas un contact en cours."
+Layer,Calque
+Name it…,Le nommer…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.","Donnez un nom à ce calque dans Paramètres du projet ▸ Noms des calques, afin que chaque ligne à son sujet puisse le dire."
+Name for layer %d,Nom du calque %d
+Layer Names,Noms des calques
+"Type the layer's name first, then Name it…","Saisissez d'abord le nom du calque, puis Le nommer…"
+"""%s"" is already layer %d.","""%s"" est déjà le calque %d."
+Layer %d could not be named.,Le calque %d n'a pas pu être nommé.
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Calque %d : %d ▸ ""%s"". Annuler rétablit le numéro."
+Name physics layer,Nommer le calque physique
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s s'adresse au calque de collision %d, or Godot possède les calques 1 à 32 - cet appel ne fait rien."
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s concerne le calque de collision %d, que ce projet ne nomme pas - la ligne se lit comme le numéro alors que toutes les autres se lisent comme un mot. Nommez-le dans Paramètres du projet ▸ Noms des calques, ou pointez la ligne vers le calque renommé."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Le calque à surveiller, sous le nom que ce projet lui a donné dans Paramètres du projet ▸ Noms des calques ▸ Physique 2D. Un calque que le projet n'a jamais nommé affiche son numéro et peut être nommé d'ici."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Le calque à surveiller, sous le nom que ce projet lui a donné dans Paramètres du projet ▸ Noms des calques ▸ Physique 3D. Un calque que le projet n'a jamais nommé affiche son numéro et peut être nommé d'ici."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Le calque sur lequel se trouver, sous le nom que ce projet lui a donné dans Paramètres du projet ▸ Noms des calques ▸ Physique 2D. Un calque que le projet n'a jamais nommé affiche son numéro et peut être nommé d'ici."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Le calque sur lequel se trouver, sous le nom que ce projet lui a donné dans Paramètres du projet ▸ Noms des calques ▸ Physique 3D. Un calque que le projet n'a jamais nommé affiche son numéro et peut être nommé d'ici."

@@ -5386,3 +5386,40 @@ Guard %s,%s に確認を入れる
 This event already asks whether %s is still here.,このイベントはすでに、%s がまだ存在するかを確かめています。
 The destroy is already the last row of this event.,破棄する行はすでにこのイベントの最後の行です。
 "The destroy runs last now, after everything that reads it.",破棄する行は、それを読むすべての行のあとで最後に実行されるようになりました。
+Collisions,衝突
+Collide With Layer,レイヤーと衝突する
+Collide With Layer (3D),レイヤーと衝突する (3D)
+Stop Colliding With Layer,レイヤーとの衝突をやめる
+Stop Colliding With Layer (3D),レイヤーとの衝突をやめる (3D)
+Be On Layer,レイヤーに乗る
+Be On Layer (3D),レイヤーに乗る (3D)
+Leave Layer,レイヤーを離れる
+Leave Layer (3D),レイヤーを離れる (3D)
+Is Set To Collide With Layer,レイヤーと衝突する設定になっている
+Is Set To Collide With Layer (3D),レイヤーと衝突する設定になっている (3D)
+Collide with {layer},{layer} と衝突する
+Stop colliding with {layer},{layer} との衝突をやめる
+Be on layer {layer},レイヤー {layer} に乗る
+Leave layer {layer},レイヤー {layer} を離れる
+is set to collide with {layer},{layer} と衝突する設定になっている
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.",名前の付いた衝突レイヤーを見るようになり、そのレイヤーにあるものにぶつかる（そして検出する）ようになります。このオブジェクト自身がどのレイヤーに乗っているかは別の話で、それはレイヤーに乗るの役目です。
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.",名前の付いた衝突レイヤーを見なくなり、そのレイヤーにあるものをすり抜けます。足場をすり抜けて降りる動きや、ダッシュ中だけ当たり判定が消える瞬間です。
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.",このオブジェクトを名前の付いた衝突レイヤーに乗せ、そのレイヤーを見ているものすべてが気づくようにします。
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.",このオブジェクトを名前の付いた衝突レイヤーから外し、そのレイヤーを見ているものが気づかなくなるようにします。被弾後の無敵時間を、離れるレイヤーとして言い表したものです。
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.",このオブジェクトが名前の付いた衝突レイヤーを今見ているときに真になります。設定を尋ねるものであり、今起きている接触を尋ねるものではありません。
+Layer,レイヤー
+Name it…,名前を付ける…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.",プロジェクト設定 ▸ レイヤー名でこのレイヤーに名前を付けると、それについてのすべての行がその名前で言えるようになります。
+Name for layer %d,レイヤー %d の名前
+Layer Names,レイヤー名
+"Type the layer's name first, then Name it…",先にレイヤーの名前を入力してから、名前を付ける… を押してください。
+"""%s"" is already layer %d.","""%s"" はすでにレイヤー %d です。"
+Layer %d could not be named.,レイヤー %d に名前を付けられませんでした。
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","レイヤー %d: %d ▸ ""%s""。元に戻すと番号に戻ります。"
+Name physics layer,物理レイヤーに名前を付ける
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.",%s は衝突レイヤー %d を指していますが、Godot のレイヤーは 1 から 32 までです。この呼び出しは何もしません。
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.",%s は衝突レイヤー %d についてですが、このプロジェクトはそのレイヤーに名前を付けていません。他の行が言葉で読めるのに、この行だけ数字で読めてしまいます。プロジェクト設定 ▸ レイヤー名で名前を付けるか、名前が変わったレイヤーに行を向けてください。
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",見張るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 2D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",見張るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 2D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。

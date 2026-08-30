@@ -5386,3 +5386,40 @@ Guard %s,%s absichern
 This event already asks whether %s is still here.,"Dieses Ereignis fragt bereits, ob %s noch da ist."
 The destroy is already the last row of this event.,Die Zerstörung ist bereits die letzte Zeile dieses Ereignisses.
 "The destroy runs last now, after everything that reads it.","Die Zerstörung läuft jetzt zuletzt, nach allem, was darauf zugreift."
+Collisions,Kollisionen
+Collide With Layer,Mit Ebene kollidieren
+Collide With Layer (3D),Mit Ebene kollidieren (3D)
+Stop Colliding With Layer,Kollision mit Ebene beenden
+Stop Colliding With Layer (3D),Kollision mit Ebene beenden (3D)
+Be On Layer,Auf Ebene sein
+Be On Layer (3D),Auf Ebene sein (3D)
+Leave Layer,Ebene verlassen
+Leave Layer (3D),Ebene verlassen (3D)
+Is Set To Collide With Layer,Ist auf Kollision mit Ebene eingestellt
+Is Set To Collide With Layer (3D),Ist auf Kollision mit Ebene eingestellt (3D)
+Collide with {layer},Mit {layer} kollidieren
+Stop colliding with {layer},Kollision mit {layer} beenden
+Be on layer {layer},Auf Ebene {layer} sein
+Leave layer {layer},Ebene {layer} verlassen
+is set to collide with {layer},ist auf Kollision mit {layer} eingestellt
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.","Beginnt, eine benannte Kollisionsebene zu beachten, sodass dieses Objekt an allem anstößt (und alles erkennt), was darauf liegt. Auf welchen Ebenen dieses Objekt SELBST liegt, ist eine andere Frage - dafür gibt es Auf Ebene sein."
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.","Beachtet eine benannte Kollisionsebene nicht mehr, sodass dieses Objekt glatt durch alles hindurchgeht, was darauf liegt - das Durchfallen durch eine Plattform, und der Moment, in dem ein Sprint unantastbar wird."
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.","Setzt dieses Objekt auf eine benannte Kollisionsebene, sodass alles, was diese Ebene beobachtet, es zu beachten beginnt."
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.","Nimmt dieses Objekt von einer benannten Kollisionsebene, sodass alles, was diese Ebene beobachtet, es nicht mehr beachtet - die unverwundbaren Bilder nach einem Treffer, gesagt als die Ebene, die es verlässt."
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.","Wahr, wenn dieses Objekt eine benannte Kollisionsebene gerade beobachtet. Es fragt nach der EINSTELLUNG, nicht nach einer Berührung, die gerade stattfindet."
+Layer,Ebene
+Name it…,Benennen…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.","Gib dieser Ebene in Projekteinstellungen ▸ Ebenennamen einen Namen, damit jede Zeile über sie ihn nennen kann."
+Name for layer %d,Name für Ebene %d
+Layer Names,Ebenennamen
+"Type the layer's name first, then Name it…","Tippe zuerst den Namen der Ebene ein, dann Benennen…"
+"""%s"" is already layer %d.","""%s"" ist bereits Ebene %d."
+Layer %d could not be named.,Ebene %d konnte nicht benannt werden.
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Ebene %d: %d ▸ ""%s"". Rückgängig stellt die Zahl wieder her."
+Name physics layer,Physikebene benennen
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s spricht Kollisionsebene %d an, und Godot hat die Ebenen 1 bis 32 - dieser Aufruf tut nichts."
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s handelt von Kollisionsebene %d, die dieses Projekt nicht benennt - die Zeile liest sich als Zahl, während jede andere Zeile sich als Wort liest. Benenne sie in Projekteinstellungen ▸ Ebenennamen, oder richte die Zeile auf die umbenannte Ebene."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Die Ebene, auf die geachtet wird, unter dem Namen, den dieses Projekt ihr in Projekteinstellungen ▸ Ebenennamen ▸ 2D-Physik gegeben hat. Eine Ebene, die das Projekt nie benannt hat, zeigt ihre Nummer und kann von hier aus benannt werden."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Die Ebene, auf die geachtet wird, unter dem Namen, den dieses Projekt ihr in Projekteinstellungen ▸ Ebenennamen ▸ 3D-Physik gegeben hat. Eine Ebene, die das Projekt nie benannt hat, zeigt ihre Nummer und kann von hier aus benannt werden."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","Die Ebene, auf der gesessen wird, unter dem Namen, den dieses Projekt ihr in Projekteinstellungen ▸ Ebenennamen ▸ 2D-Physik gegeben hat. Eine Ebene, die das Projekt nie benannt hat, zeigt ihre Nummer und kann von hier aus benannt werden."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","Die Ebene, auf der gesessen wird, unter dem Namen, den dieses Projekt ihr in Projekteinstellungen ▸ Ebenennamen ▸ 3D-Physik gegeben hat. Eine Ebene, die das Projekt nie benannt hat, zeigt ihre Nummer und kann von hier aus benannt werden."

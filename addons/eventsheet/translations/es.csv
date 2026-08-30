@@ -5386,3 +5386,40 @@ Guard %s,Proteger %s
 This event already asks whether %s is still here.,Este evento ya pregunta si %s sigue ahí.
 The destroy is already the last row of this event.,La destrucción ya es la última fila de este evento.
 "The destroy runs last now, after everything that reads it.","La destrucción se ejecuta ahora al final, después de todo lo que lo lee."
+Collisions,Colisiones
+Collide With Layer,Colisionar con capa
+Collide With Layer (3D),Colisionar con capa (3D)
+Stop Colliding With Layer,Dejar de colisionar con capa
+Stop Colliding With Layer (3D),Dejar de colisionar con capa (3D)
+Be On Layer,Estar en la capa
+Be On Layer (3D),Estar en la capa (3D)
+Leave Layer,Salir de la capa
+Leave Layer (3D),Salir de la capa (3D)
+Is Set To Collide With Layer,Está configurado para colisionar con capa
+Is Set To Collide With Layer (3D),Está configurado para colisionar con capa (3D)
+Collide with {layer},Colisionar con {layer}
+Stop colliding with {layer},Dejar de colisionar con {layer}
+Be on layer {layer},Estar en la capa {layer}
+Leave layer {layer},Salir de la capa {layer}
+is set to collide with {layer},está configurado para colisionar con {layer}
+"Starts noticing one named collision layer, so this object bumps into (and detects) whatever sits on it. The layers this object is ON are a separate question - use Be On Layer for that.","Empieza a fijarse en una capa de colisión con nombre, de modo que este objeto choca con (y detecta) todo lo que hay en ella. En qué capas está este objeto es otra cuestión: para eso está Estar en la capa."
+"Stops noticing one named collision layer, so this object passes straight through whatever sits on it - the drop-through-a-platform move, and the moment a dash turns intangible.","Deja de fijarse en una capa de colisión con nombre, de modo que este objeto atraviesa todo lo que hay en ella: el salto que atraviesa una plataforma, y el instante en que un impulso se vuelve intangible."
+"Puts this object on one named collision layer, so everything watching that layer starts noticing it.","Pone este objeto en una capa de colisión con nombre, de modo que todo lo que vigila esa capa empieza a detectarlo."
+"Takes this object off one named collision layer, so everything watching that layer stops noticing it - the invulnerable frames after a hit, said as the layer it leaves.","Quita este objeto de una capa de colisión con nombre, de modo que todo lo que vigila esa capa deja de detectarlo: los fotogramas de invulnerabilidad tras un golpe, dichos como la capa que abandona."
+"True when this object is currently watching one named collision layer. It asks about the SETTING, not about a touch happening now.","Verdadero cuando este objeto está vigilando una capa de colisión con nombre. Pregunta por el AJUSTE, no por un contacto que esté ocurriendo ahora."
+Layer,Capa
+Name it…,Ponerle nombre…
+"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.","Dale un nombre a esta capa en Configuración del proyecto ▸ Nombres de capa, para que toda fila sobre ella pueda decirlo."
+Name for layer %d,Nombre para la capa %d
+Layer Names,Nombres de capa
+"Type the layer's name first, then Name it…",Escribe primero el nombre de la capa y luego Ponerle nombre…
+"""%s"" is already layer %d.","""%s"" ya es la capa %d."
+Layer %d could not be named.,No se pudo nombrar la capa %d.
+"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Capa %d: %d ▸ ""%s"". Deshacer devuelve el número."
+Name physics layer,Nombrar capa de física
+"%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s se dirige a la capa de colisión %d, y Godot tiene las capas 1 a 32: esa llamada no hace nada."
+"%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s trata de la capa de colisión %d, a la que este proyecto no da nombre: la fila se lee como el número mientras que las demás se leen como una palabra. Ponle nombre en Configuración del proyecto ▸ Nombres de capa, o apunta la fila a la capa que se renombró."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","La capa a la que prestar atención, con el nombre que este proyecto le dio en Configuración del proyecto ▸ Nombres de capa ▸ Física 2D. Una capa que el proyecto nunca nombró muestra su número y se puede nombrar desde aquí."
+"The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","La capa a la que prestar atención, con el nombre que este proyecto le dio en Configuración del proyecto ▸ Nombres de capa ▸ Física 3D. Una capa que el proyecto nunca nombró muestra su número y se puede nombrar desde aquí."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","La capa en la que estar, con el nombre que este proyecto le dio en Configuración del proyecto ▸ Nombres de capa ▸ Física 2D. Una capa que el proyecto nunca nombró muestra su número y se puede nombrar desde aquí."
+"The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","La capa en la que estar, con el nombre que este proyecto le dio en Configuración del proyecto ▸ Nombres de capa ▸ Física 3D. Una capa que el proyecto nunca nombró muestra su número y se puede nombrar desde aquí."

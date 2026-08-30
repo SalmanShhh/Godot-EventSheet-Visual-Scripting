@@ -417,6 +417,11 @@ func _ensure_hint_factories() -> void:
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
 			"render_layer_2d": _create_render_layer_2d_field,
+			# The three above take a SET of layers as one mask; these two take ONE layer as its
+			# number, which is what the engine's own per-layer calls read and what a sentence
+			# naming a single layer means.
+			"physics_layer_name_2d": _create_physics_layer_name_2d_field,
+			"physics_layer_name_3d": _create_physics_layer_name_3d_field,
 			"quality_preset": _create_quality_preset_field,
 			"feature_tag": _create_feature_tag_field,
 			# Three fields that take any GDScript exactly as an expression param does, and are
@@ -1165,8 +1170,13 @@ static func project_setting_choices() -> Array:
 ## Says something back through the help strip - the one place this form reports what it thinks, so a
 ## New action… result does not need a surface of its own.
 func _say(message: String) -> void:
+	_say_under(EventSheetL10n.translate("Input Map"), message)
+
+
+## The same strip under another heading, for the doors that write somewhere other than the Input Map.
+func _say_under(title: String, message: String) -> void:
 	if _help_strip != null:
-		_help_strip.show_note(EventSheetL10n.translate("Input Map"), message)
+		_help_strip.show_note(title, message)
 
 
 ## Creates the action the field currently names. Refuses an empty or already-registered name rather
@@ -1300,7 +1310,7 @@ func _create_named_layer_field(key: String, default_value: Variant, dimension: S
 	var popup: PopupMenu = button.get_popup()
 	popup.hide_on_checkable_item_selection = false
 	for layer_index: int in 32:
-		var layer_name: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [dimension, layer_index + 1], "")).strip_edges()
+		var layer_name: String = EventForgePhysicsLayers.name_of(layer_index + 1, dimension)
 		if layer_index >= 8 and layer_name.is_empty() and not ((mask >> layer_index) & 1):
 			continue
 		var label: String = ("Layer %d" % (layer_index + 1)) if layer_name.is_empty() else ("%d  %s" % [layer_index + 1, layer_name])
@@ -1326,10 +1336,134 @@ func _named_layer_summary(mask: int, dimension: String) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for layer_index: int in 32:
 		if (mask >> layer_index) & 1:
-			var layer_name: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [dimension, layer_index + 1], "")).strip_edges()
-			parts.append(layer_name if not layer_name.is_empty() else str(layer_index + 1))
+			parts.append(EventForgePhysicsLayers.words_for(layer_index + 1, dimension))
 	var summary: String = ", ".join(parts)
 	return summary if summary.length() <= 42 else summary.left(39) + "..."
+
+
+func _create_physics_layer_name_2d_field(key: String, default_value: Variant) -> Control:
+	return _create_single_layer_field(key, default_value, EventForgePhysicsLayers.DIMENSION_2D)
+
+
+func _create_physics_layer_name_3d_field(key: String, default_value: Variant) -> Control:
+	return _create_single_layer_field(key, default_value, EventForgePhysicsLayers.DIMENSION_3D)
+
+
+## The NAMED-LAYER picker: one layer, by the name the project gave it. The mask picker beside it
+## answers "which layers", this one answers "which layer", and the difference is the whole reason
+## both exist - a row that says "Collide with Enemies" takes one layer, and a tick list of thirty-two
+## would make a reader choose one of them anyway.
+##
+## The value submitted is the plain layer NUMBER, because that is what the engine's own
+## `set_collision_mask_value` takes and what the emitted line must carry. The button reads that
+## number back as the name, so the field and the row say the same word.
+##
+## AND THE DOOR: a layer the project never named shows as its number with a name field beside it, so
+## the moment you notice the layer has no name is the moment you can give it one - written to
+## Project Settings through the editor's own undo, with the before and after said back on the strip.
+## The door disappears the instant the picked layer has a name, because then there is nothing to do.
+func _create_single_layer_field(key: String, default_value: Variant, dimension: String) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var default_text: String = str(default_value).strip_edges()
+	var picked: int = default_text.to_int() if default_text.is_valid_int() else 1
+	var button: MenuButton = MenuButton.new()
+	button.flat = false
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.set_meta("physics_layer_number", picked)
+	button.set_meta("physics_layer_dimension", dimension)
+	var name_edit: LineEdit = LineEdit.new()
+	name_edit.custom_minimum_size = Vector2(EventSheetPalette.scaled(140), 0.0)
+	var name_button: Button = Button.new()
+	name_button.text = EventSheetL10n.translate("Name it…")
+	name_button.tooltip_text = EventSheetL10n.translate(
+		"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.")
+	var refresh_door: Callable = func() -> void:
+		var number: int = int(button.get_meta("physics_layer_number"))
+		var unnamed: bool = EventForgePhysicsLayers.name_of(number, dimension).is_empty()
+		name_edit.placeholder_text = EventSheetL10n.translate("Name for layer %d") % number
+		name_edit.visible = unnamed
+		name_button.visible = unnamed
+	_fill_layer_menu(button, dimension, picked)
+	button.get_popup().index_pressed.connect(func(index: int) -> void:
+		var number: int = button.get_popup().get_item_id(index)
+		button.set_meta("physics_layer_number", number)
+		_fill_layer_menu(button, dimension, number)
+		button.text = EventForgePhysicsLayers.words_for(number, dimension)
+		refresh_door.call())
+	name_button.pressed.connect(func() -> void:
+		_name_physics_layer(button, name_edit, dimension)
+		_fill_layer_menu(button, dimension, int(button.get_meta("physics_layer_number")))
+		button.text = EventForgePhysicsLayers.words_for(
+			int(button.get_meta("physics_layer_number")), dimension)
+		refresh_door.call())
+	button.text = EventForgePhysicsLayers.words_for(picked, dimension)
+	refresh_door.call()
+	row.add_child(button)
+	row.add_child(name_edit)
+	row.add_child(name_button)
+	_fields[key] = button
+	return row
+
+
+## The picker's own list, rebuilt from the project every time it could have changed. Radio checks
+## rather than tick boxes: this field holds one layer, and the widget should say so before it is
+## opened. A named layer reads by its name with its number beside it, an unnamed one reads as the
+## number alone, and the layer the row already points at is always listed even past the eighth.
+func _fill_layer_menu(button: MenuButton, dimension: String, picked: int) -> void:
+	var popup: PopupMenu = button.get_popup()
+	popup.clear()
+	for layer: Dictionary in EventForgePhysicsLayers.listed_layers(dimension, picked):
+		var number: int = int(layer["number"])
+		var label: String = "%d  %s" % [number, str(layer["name"])] if bool(layer["named"]) \
+			else "%s %d" % [EventSheetL10n.translate("Layer"), number]
+		popup.add_radio_check_item(label, number)
+		popup.set_item_checked(popup.item_count - 1, number == picked)
+
+
+## Names the picked layer, and says what changed. Refuses an empty name and refuses to rename a layer
+## that already has one - renaming moves every row pointing at it, which is a decision for Project
+## Settings and not a side effect of authoring one row.
+##
+## The write goes through the editor's own undo when there is an editor around, so the single Ctrl+Z
+## that takes back the row also takes back the name it wrote. Outside the editor (a test, a headless
+## run) it is the plain write, which is the same file with no history to put it in.
+func _name_physics_layer(button: MenuButton, name_edit: LineEdit, dimension: String) -> void:
+	var number: int = int(button.get_meta("physics_layer_number"))
+	var wanted: String = name_edit.text.strip_edges()
+	var heading: String = EventSheetL10n.translate("Layer Names")
+	if wanted.is_empty():
+		_say_under(heading, EventSheetL10n.translate("Type the layer's name first, then Name it…"))
+		return
+	var taken: int = EventForgePhysicsLayers.number_of(wanted, dimension)
+	if taken > 0:
+		_say_under(heading, EventSheetL10n.translate("\"%s\" is already layer %d.") % [wanted, taken])
+		return
+	if not _write_layer_name(number, dimension, wanted):
+		_say_under(heading, EventSheetL10n.translate("Layer %d could not be named.") % number)
+		return
+	name_edit.text = ""
+	_say_under(heading, EventSheetL10n.translate("Layer %d: %d ▸ \"%s\". Undo puts the number back.")
+		% [number, number, wanted])
+
+
+## The write itself, undoable where there is an editor to undo it in.
+func _write_layer_name(number: int, dimension: String, wanted: String) -> bool:
+	var undo: Object = _undo_manager()
+	if undo == null:
+		return EventForgePhysicsLayers.name_layer(number, dimension, wanted)
+	undo.call("create_action", EventSheetL10n.translate("Name physics layer"))
+	undo.call("add_do_method", EventForgePhysicsLayers, "name_layer", number, dimension, wanted)
+	undo.call("add_undo_method", EventForgePhysicsLayers, "unname_layer", number, dimension)
+	undo.call("commit_action")
+	return not EventForgePhysicsLayers.name_of(number, dimension).is_empty()
+
+
+## The editor's undo history, or null when there is no editor to join.
+func _undo_manager() -> Object:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	return EditorInterface.get_editor_undo_redo()
 
 
 ## hint may carry a required base type ("variable_reference:Array") - the dropdown then
@@ -2976,6 +3110,10 @@ func _extract_value(field: Control) -> Variant:
 		return (field as CheckBox).button_pressed
 	if field is MenuButton and field.has_meta("physics_mask"):
 		return int(field.get_meta("physics_mask"))
+	# The named-layer picker holds ONE layer, and what the row carries is its number - the argument
+	# the engine's own per-layer calls take. The name is only ever the reading of that number.
+	if field is MenuButton and field.has_meta("physics_layer_number"):
+		return int(field.get_meta("physics_layer_number"))
 	# An input-window prompt field: a tick, a label and (on the open row) a control, read back as the
 	# one line they stand for - so nothing above this has to know the prompt is code at all.
 	if field.has_meta("input_prompt_kind"):

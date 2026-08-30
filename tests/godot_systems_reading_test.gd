@@ -97,7 +97,9 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"System ▸ Accelerate x toward dir * Speed at Accel (per second)",
 	"System ▸ Limit Speed to Max Speed",
 	"System ▸ Move (and slide along what it hits)",
-	"CharacterBody2D ▸ Disable collisions with 2",
+	# Re-pin: the named-layer verbs lift, so the line is now the ROW a picker would have authored.
+	# The project never named layer 2, so the row says the number - which is all anyone can call it.
+	"System ▸ Stop colliding with 2",
 	"System ▸ Ignore collisions with platform",
 	"System ▸ Rotate toward target angle at 5 (per second)",
 	# The path words

@@ -143,6 +143,14 @@ const EXTENDED_MODULES: Dictionary = {
 		# stopped being free text.
 		"PlayThenQueue", "AnimationPastMarker", "QueueAnimation", "SetAnimationTime", "HasAnimation",
 	],
+	# The layers said in the project's own words: the two mask verbs, the two layer verbs and the
+	# question beside them, each in both dimensions.
+	"res://addons/eventforge/registration/modules/collision_aces.gd": [
+		"CollideWithLayer", "StopCollidingWithLayer", "BeOnLayer", "LeaveLayer",
+		"IsSetToCollideWithLayer",
+		"CollideWithLayer3D", "StopCollidingWithLayer3D", "BeOnLayer3D", "LeaveLayer3D",
+		"IsSetToCollideWithLayer3D",
+	],
 	# The press remembered for a moment so an input made slightly too early still lands,
 	# in seconds and in the frame-counted spelling beside it.
 	"res://addons/eventforge/registration/modules/timed_input_aces.gd": [

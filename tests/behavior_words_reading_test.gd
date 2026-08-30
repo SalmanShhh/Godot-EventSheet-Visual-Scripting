@@ -166,7 +166,8 @@ static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	"CharacterBody2D ▸ Drag & Drop ▸ Is dragging",
 	"CharacterBody2D ▸ Jump-thru ▸ Set enabled (one-way: solid from above only)",
 	"CharacterBody2D ▸ Solid ▸ Set disabled",
-	"CharacterBody2D ▸ Solid ▸ On layer 1",
+	# Re-pin: the named-layer verbs lift, so sitting on a layer is now the Be On Layer row.
+	"System ▸ Be on layer 1",
 	"CharacterBody2D ▸ Is overlapping at offset (0, 1) (a solid)",
 	"Advanced Random ▸ Set seed to \"level-1\"",
 	"Advanced Random ▸ Set noise type to Perlin",
