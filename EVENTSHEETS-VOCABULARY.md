@@ -3201,6 +3201,29 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Floor Normal (3D)** - Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement.
 - **Overlapping Bodies (3D)** (`target: String`) - Fires with the list of physics bodies currently inside this 3D Area.
 
+### Collision Edge (`res://addons/eventforge/registration/modules/collision_edge_aces.gd`)
+the EDGE sentences: the step a standing state changed.
+
+#### Triggers
+- **On Landed** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
+- **On Left The Ground** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
+- **On Landed (3D)** - Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.
+- **On Left The Ground (3D)** - Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.
+- **On First Overlap** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
+- **On Last Overlap Ended** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
+- **On First Overlap (3D)** (`body: Node`) - Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.
+- **On Last Overlap Ended (3D)** (`body: Node`) - Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.
+
+#### Conditions
+- **Just Landed** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
+- **Just Left The Ground** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
+- **Just Landed (3D)** - True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.
+- **Just Left The Ground (3D)** - True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.
+- **Is The First One In** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
+- **Was The Last One Out** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
+- **Is The First One In (3D)** (`target: String`) - True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.
+- **Was The Last One Out (3D)** (`target: String`) - True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.
+
 ### Collision Filter (`res://addons/eventforge/registration/modules/collision_filter_aces.gd`)
 the filtered collision sentences.
 

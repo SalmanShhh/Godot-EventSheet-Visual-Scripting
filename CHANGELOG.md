@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### The step something changed
+
+- **On landed / On left the ground.** The two moments a platformer is built out of, said as rows.
+  Neither is a signal - Godot answers "am I on the floor?" as a standing question, and the MOMENT it
+  changed is this step's answer against last step's. So the row carries the memory every platformer
+  already writes by hand: a was-on-the-floor variable, the comparison, and the update after it, in
+  that order and visible in the row's echo. The ordering is the whole of it - a memory brought up to
+  date before the question is asked always agrees with the present, and the row could never be true.
+  Landing lives in the physics step it is a moment of, so a landing event and a plain physics event
+  share one `_physics_process` rather than asking for two.
+- **On first overlap / On last overlap ended.** The same idea where the engine already does the
+  remembering: an area's arrivals and departures ARE signals, and the overlap list is already up to
+  date when one is raised - so "this is the first one in" is a list of exactly one, and "that was the
+  last one out" is an empty list. The pressure plate, the room waking up, the room going quiet.
+- **The edge is a row, not a wrapper.** Picking any of the eight puts an ordinary condition
+  underneath - *just landed*, *is the first one in* - which you can read, edit, disable and delete
+  like any other, and which is a plain condition on disk.
+- **The landing check every platformer already contains opens as that row.**
+  `if is_on_floor() and not was_on_floor:` reads back as **On landed** with *just landed* under it,
+  and the file is written back byte-for-byte - including the name the project gave its own memory,
+  because the name is the author's spelling and not a value the row shows. Both orders of the two
+  halves are claimed, and so is the two-variable form where this step's footing went into a local
+  first. An `if` that asks for more than the edge is deliberately left alone.
+- **A touch row on a scene that cannot touch says what to add.** The entry stays listed and greys,
+  and its reason is the fix: "Nothing in this scene can touch anything yet - this row needs an
+  Area2D", with the Add button turning into *Add an Area2D to the scene*, performed through the
+  editor's own undo and then carrying on to the row you wanted.
+- **Every touch row's dialog teaches its own node family.** Four answers where there were two: an
+  area DETECTS, a character body is DRIVEN by your rows, a rigid body is THROWN by physics, a static
+  body STANDS still. Which one a row is filed under decides what you may expect of it, and that is
+  the fact a beginner is missing while they fill the form in.
+
 ### The touch, with a filter on it
 
 - **On collision with `<Group>` / On stopped colliding with `<Group>`, and their Area twins.** The

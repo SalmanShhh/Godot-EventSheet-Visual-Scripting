@@ -11,6 +11,8 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__eventsheets_aim_floor` | [Cursor Is Over Object (3D)](ace:Core/CursorIsOverObject3D) | Mouse | Vocabulary |
 | `__eventsheets_object_at_2d` | [Object Under Cursor (2D)](ace:Core/ObjectUnderCursor2D) | Mouse | Vocabulary |
 | `__eventsheets_tile_under` | [Tile Under Cursor](ace:Core/TileUnderCursor) | Mouse | Vocabulary |
+| `__just_landed_` | [Just Landed](ace:Core/JustLanded) | Collisions | Vocabulary |
+| `__just_left_the_ground_` | [Just Left The Ground](ace:Core/JustLeftTheGround) | Collisions | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
