@@ -43,6 +43,11 @@ var debug_state: String = ""
 # Set by the viewport from EventSheetDiagnostics: a non-empty message paints a red error
 # marker on the row and shows in its tooltip (the "error → row" deep-link). "" = no error.
 var error_message: String = ""
+# The QUIET AMBER STATE. Set by the viewport when a finding is about this row and its words belong
+# somewhere else: an amber left stripe and a faint wash, with the sentence on the row's tooltip and
+# in the help strip once the row is selected. Nothing is drawn INSIDE the row - no note, no icon, no
+# inline text - so a sheet with nothing wrong looks exactly as it always did. "" = nothing wrong.
+var attention_note: String = ""
 # Live event trace: true while this event is in the latest streamed "fired" frame - a transient
 # highlight so you can watch which events fire in real time during a debug run.
 var firing: bool = false

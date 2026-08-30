@@ -136,6 +136,23 @@ const OFFERED := {
 	"docs-empty-description": [
 		{"id": "insert_draft_description", "label": "Insert the draft for %s"},
 	],
+	# Collisions. The sheet says nothing about these - a finding puts its row into the quiet amber
+	# state and stops - so the inbox is one of the two places the words and the doors live, and the
+	# doors have to be the real ones. Two of them write one property of the scene through the editor's
+	# own undo; the third only selects the node, because adding a shape or turning a platform over is
+	# a decision about the game's geometry that no tool should make on anybody's behalf.
+	"collisions-nothing-can-reach": [
+		{"id": "watch_the_layer", "label": "Watch the layer they are on"},
+	],
+	"collisions-monitoring-off": [
+		{"id": "switch_monitoring_on", "label": "Switch monitoring on"},
+	],
+	"collisions-no-shape": [
+		{"id": "show_the_node", "label": "Show me the node in the scene"},
+	],
+	"collisions-one-way-facing": [
+		{"id": "show_the_node", "label": "Show me the node in the scene"},
+	],
 }
 
 ## Where a guide has to live for a chip to edit it: the packs of THIS project. A shipped guide under
@@ -278,6 +295,12 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"insert_draft_description":
 			return {"ok": true, "message": "Open %s and put the drafted sentence in the description cell for %s - it is a starting line composed from the verb's own name and parameters, not a claim about what it does." % [
 				str(finding.get("path", "")).get_file(), subject]}
+		# All three reach the SCENE, and all three go through the very door the row's own help strip
+		# offers - so a reader who clicks in the inbox and a reader who clicks under the row get one
+		# operation, one undo step and one receipt rather than two implementations of each.
+		"watch_the_layer", "switch_monitoring_on", "show_the_node":
+			return _collision_door(str(finding.get("check", "")), subject,
+				str(finding.get("path", "")), dock)
 		"unpin_before_free":
 			return {"ok": true, "message": "Add Pin ▸ Unpin on the row above the one that destroys %s, so the pin lets go before the object it rides is gone." % subject}
 	return {"ok": false, "message": "No fix named %s." % fix_id}
@@ -339,6 +362,36 @@ static func _is_the_open_sheet(dock: Variant, sheet_path: String) -> bool:
 		return true
 	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
 	return sheet != null and str(sheet.external_source_path).strip_edges() == sheet_path
+
+
+## One collision door, opened from the inbox. The finding on the page is the FILED one - a severity,
+## a check id, a file and a subject - and the door needs the node and the layer, so the row-level
+## finding is derived again from the open sheet and matched by its subject. That is the same
+## derivation the sheet itself makes, so the two surfaces cannot disagree about which node is meant.
+##
+## IT ONLY EVER TOUCHES THE OPEN SHEET, for the reason every other chip here does: this section comes
+## off a sweep of the whole project, so the file a finding names is usually not the one on screen.
+## Double-clicking the finding is what opens its sheet; the chip is what acts once it is there.
+static func _collision_door(check_id: String, subject: String, sheet_path: String,
+		dock: Variant) -> Dictionary:
+	var elsewhere: String = "Open %s and the row's help strip offers this door - double-clicking the finding opens it." % sheet_path.get_file()
+	if dock == null or not dock.has_method("apply_collision_fix") \
+			or not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null:
+		return {"ok": false, "message": elsewhere}
+	var wanted_kind: String = ""
+	for kind: Variant in EventSheetCollisionsDoctor.CHECK_FOR_KIND.keys():
+		if str(EventSheetCollisionsDoctor.CHECK_FOR_KIND[kind]) == check_id:
+			wanted_kind = str(kind)
+	for finding: Dictionary in EventSheetCollisionFindings.findings(sheet,
+			str(sheet.external_source_path)):
+		if str(finding.get("kind", "")) != wanted_kind or str(finding.get("subject", "")) != subject:
+			continue
+		var said: String = str(dock.call("apply_collision_fix", finding))
+		return {"ok": not said.is_empty(), "message": said}
+	return {"ok": false, "message": "%s no longer reports this - the scene may already have been changed." % sheet_path.get_file()}
 
 
 ## Writes the keys the game asks for and no catalog answers into a ready-to-fill translation CSV, and

@@ -142,6 +142,11 @@ static func run() -> Dictionary:
 	# The Collision Layers section: a row about a layer number the project no longer names. Same
 	# seam, same reason - a pack shipping collision verbs of its own lands in this section too.
 	EventSheetCollisionLayerDoctor.ensure_registered()
+	# The Collisions section beside it: a trigger that is correct and can never fire, because the
+	# mask, the monitoring switch or the missing shape is in the `.tscn` and the row is in the `.gd`.
+	# It is the ONLY place those words appear - the sheet itself stays quiet - so it rides the same
+	# seam and shows up in all four runners.
+	EventSheetCollisionsDoctor.ensure_registered()
 	# The Docs section: whether the guides still describe the packs they are about. It rides the same
 	# seam for the same reason - a studio's own pack guide is audited exactly like a shipped one - and
 	# it asks EventSheetDocCoverage, which is also what the help-bundle builder asks, so the page and

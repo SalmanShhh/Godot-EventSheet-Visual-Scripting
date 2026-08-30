@@ -640,6 +640,15 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var error_stripe: Color = reading_style.error_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
 		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
+	if not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
+		# The quiet amber state: the same left stripe and faint wash an error wears, in the note
+		# colour instead of the error one, and with NOTHING drawn inside the row. The words are in the
+		# tooltip and in the help strip under the selection - a row that only misbehaves must be
+		# findable at a glance without turning the sheet into a list of complaints. An error still
+		# wins: a line that cannot run is not merely something to look at.
+		var attention_stripe: Color = EventSheetActiveTheme.chrome().object_bar_warning_color
+		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), attention_stripe, true)
+		control.draw_rect(row_fill_rect, Color(attention_stripe.r, attention_stripe.g, attention_stripe.b, 0.07), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
 		# Live event trace: a cyan left stripe + faint wash on events firing right now (debug
 		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading

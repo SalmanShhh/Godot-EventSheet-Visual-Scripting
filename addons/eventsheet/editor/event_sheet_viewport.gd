@@ -3637,6 +3637,11 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	if hovered_error_row != null and not hovered_error_row.error_message.is_empty():
 		return "⚠ %s" % hovered_error_row.error_message
+	# And the quiet amber state under it: a row that runs and cannot do what it says. The stripe is
+	# the whole of the sheet's signal, so the hover is where the sentence first becomes readable -
+	# the help strip says the same words once the row is selected.
+	if hovered_error_row != null and not hovered_error_row.attention_note.is_empty():
+		return hovered_error_row.attention_note
 	# The event number answers "has this even run?" on hover, with nothing turned on and nothing
 	# left behind - the one-off form of the hit-count lens. Silent unless a traced run has actually
 	# streamed: an unknown count is never dressed up as a zero.

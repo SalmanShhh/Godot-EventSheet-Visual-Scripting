@@ -190,6 +190,14 @@ var _title_dirty_dot: Label = null
 var _status_label: Label = null
 ## The status bar's right half: "event 4 of 61 · line 38" for the selected row.
 var _row_address_label: Label = null
+## THE SELECTED ROW'S HELP STRIP. A row in the quiet amber state says nothing in the sheet; this is
+## where its sentence and its one door are read, and only while that row is selected. Hidden the rest
+## of the time, which is nearly always - a button that can never do anything is worse than no button.
+var _row_help_label: Label = null
+var _row_help_button: Button = null
+## The finding the door acts on, held only between the selection that showed it and the click that
+## answers it.
+var _row_help_finding: Dictionary = {}
 var _theme_picker: OptionButton = null
 var _provider_dialog: Window = null
 var _provider_list: ItemList = null
@@ -575,6 +583,10 @@ func _on_translations_maybe_changed() -> void:
 	# was invisible and a deleted one went on being claimed until the editor restarted.
 	EventSheetSceneLights.clear_cache()
 	EventSheetSceneLightingFacts.clear_cache()
+	# And what it says about COLLISION: the layer census and the group memberships are answers about
+	# every scene in the project, so a mask edited in the Inspector a second ago has to reach the head
+	# band and the amber state rather than be answered from the numbers before it.
+	EventSheetSceneCollisionFacts.clear_cache()
 	# And the PARSE those two are derived from. Every scene reader in the plugin walks one shared node
 	# list per file, held for as long as the file is unchanged - so dropping the derived answers above
 	# without dropping the parse under them would re-derive yesterday's nodes. This clear takes the
@@ -6711,6 +6723,7 @@ func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palet
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_update_row_address_status()
+	_update_row_help_strip(_row_data)
 	_update_code_panel_highlight()
 	_follow_selection_in_manual()
 	# The Scene dock's half of the two-way link: the node this row is about is selected there (and
@@ -6996,6 +7009,94 @@ func _update_row_address_status() -> void:
 		_viewport.get_selected_row_data() if _viewport != null else null,
 		_current_sheet)
 	_row_address_label.tooltip_text = _row_address_label.text
+
+
+## The selected row's help strip. A row in the quiet amber state carries its finding's sentence and
+## nothing else; here is where that sentence is read, with the one door it offers beside it. Both are
+## hidden the moment the selection moves to a row with nothing wrong, so the strip is only ever
+## present when there is something for it to say.
+func _update_row_help_strip(row_data: EventRowData) -> void:
+	_row_help_finding = {}
+	if _row_help_label == null or _row_help_button == null:
+		return
+	_row_help_label.visible = false
+	_row_help_button.visible = false
+	if row_data == null or _current_sheet == null:
+		return
+	var event_row: EventRow = row_data.source_resource as EventRow
+	if event_row == null:
+		return
+	var found: Array[Dictionary] = EventSheetCollisionFindings.for_event(
+		_collision_findings(), event_row)
+	if found.is_empty():
+		return
+	_row_help_label.text = EventSheetCollisionFindings.strip_text(found, event_row)
+	_row_help_label.tooltip_text = _row_help_label.text
+	_row_help_label.visible = true
+	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
+	# one row would be a menu rather than a strip.
+	_row_help_finding = found[0]
+	var label: String = str(_row_help_finding.get("fix_label", ""))
+	_row_help_button.text = label
+	_row_help_button.visible = not label.is_empty()
+
+
+## The collision findings of the sheet in front of the reader, derived on the ask. The canvas holds
+## its own per-sweep copy; this one is for the strip, which is asked once per selection rather than
+## once per row.
+func _collision_findings() -> Array[Dictionary]:
+	if _current_sheet == null:
+		return []
+	return EventSheetCollisionFindings.findings(_current_sheet,
+		str(_current_sheet.external_source_path))
+
+
+## The help strip's door was clicked. Every answer here is a one-property write into the SCENE
+## through the editor's own undo, so one Ctrl+Z takes it back - and the status line says what the
+## line read as before and what it reads as now, because a tool that edits somebody's scene owes
+## them the two lines side by side.
+func apply_selected_row_fix() -> void:
+	apply_collision_fix(_row_help_finding)
+
+
+## One collision finding's door, wherever it was clicked from - the row's help strip, or the chip in
+## the Doctor's inbox. Returns the sentence it put on the status line, so the inbox can show the same
+## receipt the sheet does.
+func apply_collision_fix(finding: Dictionary) -> String:
+	if finding.is_empty():
+		return ""
+	var scene_path: String = str(finding.get("scene", ""))
+	var node_path: String = str(finding.get("node", ""))
+	var said: String = ""
+	# Only a write earns a rebuild: the third door selects a node and changes nothing, and rebuilding
+	# a sheet to show that nothing moved is a scan nobody asked for.
+	var wrote: bool = false
+	match str(finding.get("fix", "")):
+		EventSheetCollisionFindings.FIX_SEE_THE_LAYER:
+			var written: Dictionary = EventSheetSceneCollisionFacts.let_it_see(
+				scene_path, node_path, int(finding.get("layer", 0)))
+			wrote = bool(written.get("ok", false))
+			said = EventSheetSceneCollisionFacts.receipt(written) if wrote \
+				else str(written.get("reason", ""))
+			_set_status(said, not wrote)
+		EventSheetCollisionFindings.FIX_MONITORING_ON:
+			var switched: Dictionary = EventSheetSceneCollisionFacts.turn_monitoring_on(
+				scene_path, node_path)
+			wrote = bool(switched.get("ok", false))
+			said = EventSheetSceneCollisionFacts.receipt(switched) if wrote \
+				else str(switched.get("reason", ""))
+			_set_status(said, not wrote)
+		EventSheetCollisionFindings.FIX_SHOW_IN_SCENE:
+			# Not a fix: a door. Adding a shape or turning a platform over is a decision about the
+			# game's geometry, so this takes the reader to the node and stops there.
+			var shown: bool = EventSheetSceneReplication.reveal_node(scene_path, node_path)
+			said = EventSheetL10n.translate("%s is selected in %s.") % [
+				str(finding.get("node_name", "")), scene_path.get_file()] if shown \
+				else EventSheetL10n.translate("%s is not in the project any more.") % scene_path.get_file()
+			_set_status(said, not shown)
+	if wrote:
+		_refresh_after_edit()
+	return said
 
 
 ## The status bar's address sentence for one row, as a pure function so tests can pin the words.

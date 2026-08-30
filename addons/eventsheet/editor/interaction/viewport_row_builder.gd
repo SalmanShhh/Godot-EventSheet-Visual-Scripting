@@ -108,6 +108,11 @@ const FINDINGS_LIGHTING := "lighting"
 const FINDINGS_EFFECTS := "effects"
 const FINDINGS_PERFORMANCE := "performance"
 const FINDINGS_SPAWNING := "spawning"
+## The collisions family is in this list but is NOT one of the families above it: it hangs no note
+## row at all. A collision finding puts its row into the quiet amber state and stops - the words live
+## in the Doctor's inbox and in the help strip under the selected row, because a sheet is a place to
+## read what the game does rather than a place to be told off in.
+const FINDINGS_COLLISIONS := "collisions"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -6394,6 +6399,12 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.debug_state = str(_viewport._debug_rows.get(row_data.row_uid, ""))
 	row_data.disabled = not event_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
+	# THE QUIET SHEET LAW, in one line: a collision finding about this row sets the amber state and
+	# writes nothing into the sheet. No note row is built for this family on purpose - the sentence is
+	# read in the Doctor's inbox and in the help strip once the row is selected, and a sheet with
+	# nothing wrong grows nothing at all.
+	row_data.attention_note = EventSheetCollisionFindings.strip_text(
+		_sheet_findings(FINDINGS_COLLISIONS), event_row)
 	# Event-row spans are the expensive part of building a sheet, so they are built
 	# lazily via _ensure_event_spans() only when a row is laid out/hit-tested. The
 	# line count (which drives row height/metrics) is computed cheaply up front so
@@ -8966,6 +8977,11 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 					str(sheet.external_source_path) if sheet != null else "")
 				_sheet_findings_cache[family] = EventSheetSpawnFindings.findings(sheet,
 					scenes[0] if scenes.size() > 0 else "")
+			FINDINGS_COLLISIONS:
+				# Asked of the SCRIPT rather than of the scene: the rules need the node this sheet's
+				# file sits on, and the reader that answers that is the one the head's bands read.
+				_sheet_findings_cache[family] = EventSheetCollisionFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]
@@ -13073,6 +13089,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.verb_kind = row.verb_kind
 	slice_row.language_block = row.language_block
 	slice_row.error_message = row.error_message
+	slice_row.attention_note = row.attention_note
 	slice_row.ternary_view = true
 	slice_row.ternary_anchor_uid = row.row_uid
 	slice_row.action_slice_from = slice_from
