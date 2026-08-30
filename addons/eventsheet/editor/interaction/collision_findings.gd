@@ -123,13 +123,23 @@ static func findings(sheet: EventSheetResource, script_path: String = "",
 ## The findings anchored at one event row - what the canvas puts into the amber state, and what the
 ## help strip says once that row is selected. Matched by IDENTITY, so the caller never has to name a
 ## row that has no name.
+##
+## ONE FINDING, EVERY ROW IT IS ABOUT. A switched-off Area makes every row waiting on it unreachable,
+## and the sentence says so - but only the first of them wore the amber stripe, so a reader scanning
+## the sheet saw one flagged row among five equally dead ones. A finding therefore carries the whole
+## list of rows it is about, while staying ONE finding: the Doctor files one line, and every affected
+## row is amber.
 static func for_event(found: Array[Dictionary], event_row: EventRow) -> Array[Dictionary]:
 	var mine: Array[Dictionary] = []
 	if event_row == null:
 		return mine
 	for entry: Dictionary in found:
-		if str(entry.get("anchor", "")) == ANCHOR_EVENT and entry.get("event") == event_row:
-			mine.append(entry)
+		if str(entry.get("anchor", "")) != ANCHOR_EVENT:
+			continue
+		for anchored: Variant in (entry.get("events", []) as Array):
+			if anchored == event_row:
+				mine.append(entry)
+				break
 	return mine
 
 
@@ -200,6 +210,8 @@ static func _nothing_can_reach_it(collidable: Dictionary, events: Array[Dictiona
 		scenes: PackedStringArray, found: Array[Dictionary]) -> void:
 	var dimension: String = str(collidable.get("dimension", EventForgePhysicsLayers.DIMENSION_2D))
 	var mask: int = int(collidable.get("mask_bits", 0))
+	# Subject -> the rows that share it. Five rows waiting on one group and one wrong mask are ONE
+	# finding, said once - and all five of them wear the amber stripe, because all five are dead.
 	var seen: Dictionary = {}
 	for event: Dictionary in events:
 		var groups: PackedStringArray = event.get("groups", PackedStringArray())
@@ -222,8 +234,10 @@ static func _nothing_can_reach_it(collidable: Dictionary, events: Array[Dictiona
 			continue
 		var subject: String = "%s|%s" % [str(collidable.get("name", "")), named_group]
 		if seen.has(subject):
+			(seen[subject] as Array).append(event.get("event") as EventRow)
 			continue
-		seen[subject] = true
+		var anchors: Array[EventRow] = [event.get("event") as EventRow]
+		seen[subject] = anchors
 		var layer_words: String = EventSheetSceneCollisionFacts.all_words_for_bits(wanted, dimension)
 		var message: String = ""
 		if named_group.is_empty():
@@ -236,7 +250,9 @@ static func _nothing_can_reach_it(collidable: Dictionary, events: Array[Dictiona
 				EventSheetSceneCollisionFacts.all_words_for_bits(mask, dimension),
 				named_group, layer_words]
 		var first_layer: int = EventSheetSceneCollisionFacts.layer_numbers(wanted)[0]
-		var finding: Dictionary = _finding(KIND_CANNOT_SEE, "warning", event.get("event") as EventRow,
+		# The anchor list is the one held in `seen`, so a row met later under the same subject joins
+		# the finding that was already filed for it rather than filing a second one.
+		var finding: Dictionary = _finding(KIND_CANNOT_SEE, "warning", anchors,
 			subject, message, FIX_SEE_THE_LAYER,
 			EventSheetL10n.translate("Watch %s") % EventForgePhysicsLayers.words_for(first_layer, dimension),
 			collidable)
@@ -252,7 +268,7 @@ static func _monitoring_is_off(collidable: Dictionary, events: Array[Dictionary]
 		return
 	if events.is_empty():
 		return
-	found.append(_finding(KIND_MONITORING_OFF, "warning", events[0].get("event") as EventRow,
+	found.append(_finding(KIND_MONITORING_OFF, "warning", _all_events(events),
 		str(collidable.get("name", "")),
 		EventSheetL10n.translate("%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.") % str(collidable.get("name", "")),
 		FIX_MONITORING_ON, EventSheetL10n.translate("Switch monitoring on"), collidable))
@@ -261,12 +277,16 @@ static func _monitoring_is_off(collidable: Dictionary, events: Array[Dictionary]
 ## A collision object with no shape under it. This is Godot's OWN configuration warning, carried to
 ## the sheet that depends on the node: the Scene dock shows it beside a node nobody is looking at
 ## while the row that needs it is being written somewhere else.
+##
+## Said to a sheet that is WAITING on the node, and to no other. A collision object still being built
+## has no shape yet and that is not news; carried to a sheet with no touch row in it, the finding had
+## no row to hang on, rendered nowhere, and was reported by a Doctor section that would never have
+## opened the file either - a sentence nobody could read, about nothing that had gone wrong yet.
 static func _it_has_no_shape(collidable: Dictionary, events: Array[Dictionary],
 		found: Array[Dictionary]) -> void:
-	if bool(collidable.get("has_shape", false)):
+	if bool(collidable.get("has_shape", false)) or events.is_empty():
 		return
-	var anchor: EventRow = _first_event(events)
-	found.append(_finding(KIND_NO_SHAPE, "warning", anchor, str(collidable.get("name", "")),
+	found.append(_finding(KIND_NO_SHAPE, "warning", _all_events(events), str(collidable.get("name", "")),
 		EventSheetL10n.translate("%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.") % str(collidable.get("name", "")),
 		FIX_SHOW_IN_SCENE, EventSheetL10n.translate("Show me in the scene"), collidable))
 
@@ -282,12 +302,16 @@ static func _the_one_way_faces_down(collidable: Dictionary, events: Array[Dictio
 	# question anywhere in them, and then told them their rows were waiting for one.
 	if not asks_about_landing(lines):
 		return
-	var anchor: EventRow = _first_event(events)
+	# A sheet that asks about landing without waiting on a touch - a moving platform is written as a
+	# physics loop - has no row to point at, so this one is filed against the SHEET and read in the
+	# Doctor. That is the one finding here with nowhere in the canvas to live, and it is honest about
+	# it rather than picking a row at random.
+	var anchors: Array[EventRow] = _all_events(events)
 	for shape: Variant in collidable.get("one_way", []) as Array:
 		var one_way: Dictionary = shape
 		if not bool(one_way.get("faces_down", false)):
 			continue
-		found.append(_finding(KIND_ONE_WAY_FACING, "info", anchor,
+		found.append(_finding(KIND_ONE_WAY_FACING, "info", anchors,
 			"%s|%s" % [str(collidable.get("name", "")), str(one_way.get("name", ""))],
 			EventSheetL10n.translate("%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.") % str(one_way.get("name", "")),
 			FIX_SHOW_IN_SCENE, EventSheetL10n.translate("Show me in the scene"), collidable))
@@ -320,10 +344,17 @@ static func _walk(items: Array, into: Array[Dictionary], trigger_id: String = ""
 		_walk(event_row.sub_events, into, reached_by, filtered)
 
 
-## The event a finding with no row of its own hangs on: the sheet's first touch trigger, or null when
-## the sheet has none - which is the state that files the finding against the sheet instead.
-static func _first_event(events: Array[Dictionary]) -> EventRow:
-	return null if events.is_empty() else events[0].get("event") as EventRow
+## Every touch row of the sheet, as the rows themselves - what a finding about the NODE rather than
+## about one row is anchored at. All of them, because all of them are equally affected: a switched-off
+## Area makes every row waiting on it unreachable, and flagging only the first would show a reader one
+## dead row among five.
+static func _all_events(events: Array[Dictionary]) -> Array[EventRow]:
+	var rows: Array[EventRow] = []
+	for entry: Dictionary in events:
+		var event_row: EventRow = entry.get("event") as EventRow
+		if event_row != null and not rows.has(event_row):
+			rows.append(event_row)
+	return rows
 
 
 ## The groups one event filters its trigger by, in row order - from BOTH places a sheet can say it.
@@ -369,12 +400,17 @@ static func _collect_lines(items: Array, into: PackedStringArray) -> void:
 
 ## One finding, with every key its three readers address filled in. `scene` and `node` are how a door
 ## finds the node again in the scene the fact came from.
-static func _finding(kind: String, severity: String, event_row: EventRow, subject: String,
+##
+## `events` is every row the finding is about and `event` is the first of them, kept because a caller
+## that only wants somewhere to point reads one row rather than a list. An empty list is a finding
+## about the node with no row in this sheet waiting on it, which anchors at the sheet.
+static func _finding(kind: String, severity: String, anchors: Array[EventRow], subject: String,
 		message: String, fix: String, fix_label: String, collidable: Dictionary) -> Dictionary:
+	var event_row: EventRow = null if anchors.is_empty() else anchors[0]
 	return {
 		"kind": kind, "severity": severity,
 		"anchor": ANCHOR_EVENT if event_row != null else ANCHOR_SHEET,
-		"event": event_row, "subject": subject, "message": message,
+		"event": event_row, "events": anchors, "subject": subject, "message": message,
 		"fix": fix, "fix_label": fix_label,
 		"scene": str(collidable.get("scene_path", "")),
 		"node": str(collidable.get("path", "")),

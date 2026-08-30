@@ -305,6 +305,18 @@ static func _test_monitoring_is_off() -> bool:
 		str(found[0].get("fix", "")), EventSheetCollisionFindings.FIX_MONITORING_ON) and ok
 	ok = _check("an Area that is listening says nothing",
 		_kinds(_findings(DOOR)), PackedStringArray()) and ok
+	# The sentence says EVERY row waiting on one here is unreachable, so every one of them wears the
+	# amber state. Anchored at the first alone, a reader scanning the sheet saw one flagged row among
+	# several equally dead ones - and it is still ONE finding, so the Doctor files one line.
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(HUSHED)
+	var rows: Array[Dictionary] = EventSheetCollisionFindings.touch_events(sheet)
+	var said: Array = []
+	for entry: Dictionary in rows:
+		said.append(not EventSheetCollisionFindings.strip_text(
+			EventSheetCollisionFindings.findings(sheet, HUSHED, SCENES),
+			entry.get("event") as EventRow).is_empty())
+	ok = _check("and every row waiting on the switched-off Area wears the amber state",
+		[rows.size(), said], [2, [true, true]]) and ok
 	return ok
 
 
