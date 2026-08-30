@@ -1012,16 +1012,26 @@ static func behavior_code_lines(sheet: EventSheetResource) -> PackedStringArray:
 	if sheet == null:
 		return lines
 	for entry: Variant in sheet.events:
-		_append_behavior_lines(entry, lines, 0)
+		_append_behavior_lines(entry, lines, 0, true)
 	for entry: Variant in sheet.functions:
 		if entry is EventFunction:
 			for event_entry: Variant in (entry as EventFunction).events:
-				_append_behavior_lines(event_entry, lines, 0)
+				_append_behavior_lines(event_entry, lines, 0, true)
 	return lines
 
 
 ## One row unit of that walk. Depth-limited so a sheet that somehow nests into itself cannot spin.
-static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, depth: int) -> void:
+##
+## `derive_unknown_rows` decides what a row OUTSIDE the override table below contributes. The FACTS
+## walk says yes: a fact about a file must answer the same whether the importer took a line or left
+## it, which is the whole reason this function exists. The PATTERN walk says no, and that is a limit
+## rather than a principle - the behaviour patterns' evidence fragments were written against the
+## narrower input this walk used to produce, and widening it makes some of them claim shapes they were
+## never meant to (`.is_colliding()` on its own is not a sight test, and it is a sight test's evidence).
+## Widening the pattern claimer means going through that evidence table, which is its own piece of work
+## and not this one.
+static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, depth: int,
+		derive_unknown_rows: bool = false) -> void:
 	if depth > 64 or entry == null or not (entry is Resource):
 		return
 	if entry is RawCodeRow:
@@ -1033,17 +1043,17 @@ static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, dep
 		return
 	if entry is EventRow:
 		var event_row: EventRow = entry as EventRow
-		_append_behavior_lines(event_row.trigger, lines, depth + 1)
+		_append_behavior_lines(event_row.trigger, lines, depth + 1, derive_unknown_rows)
 		for local: Variant in event_row.local_variables:
-			_append_behavior_lines(local, lines, depth + 1)
+			_append_behavior_lines(local, lines, depth + 1, derive_unknown_rows)
 		for condition: Variant in event_row.conditions:
-			_append_behavior_lines(condition, lines, depth + 1)
+			_append_behavior_lines(condition, lines, depth + 1, derive_unknown_rows)
 		for action: Variant in event_row.actions:
-			_append_behavior_lines(action, lines, depth + 1)
+			_append_behavior_lines(action, lines, depth + 1, derive_unknown_rows)
 		for sub_event: Variant in event_row.sub_events:
-			_append_behavior_lines(sub_event, lines, depth + 1)
+			_append_behavior_lines(sub_event, lines, depth + 1, derive_unknown_rows)
 		return
-	var line: String = _lifted_row_line(entry as Resource)
+	var line: String = _lifted_row_line(entry as Resource, derive_unknown_rows)
 	if not line.is_empty():
 		lines.append(line)
 	# The head's own declarations are rows of a kind of their own, and a sheet may gain more of them.
@@ -1057,7 +1067,7 @@ static func _append_behavior_lines(entry: Variant, lines: PackedStringArray, dep
 ## The statement one LIFTED row stands for, in the spelling the row's own reading is built from - so
 ## a fact and a claim answer the same whether the importer took the line or left it. "" when the row
 ## has no such statement, which is the cue to leave it out rather than guess at one.
-static func _lifted_row_line(resource: Resource) -> String:
+static func _lifted_row_line(resource: Resource, derive_unknown_rows: bool = false) -> String:
 	var params: Variant = resource.get("params")
 	if not (params is Dictionary) or (params as Dictionary).is_empty():
 		params = resource.get("parameters")
@@ -1091,7 +1101,37 @@ static func _lifted_row_line(resource: Resource) -> String:
 			return "return %s" % str(values.get("value", ""))
 		"CallMethod":
 			return "%s.%s(%s)" % [target, str(values.get("method", "")), str(values.get("args", ""))]
-	return ""
+	# EVERY OTHER ROW ANSWERS FOR ITSELF. The table above is an OVERRIDE list, not a census: those ids
+	# are the ones whose statement is not simply what they emit (a target folded in, a spelling the
+	# facts want plainer). Anything else is asked to write its own line, which is exactly what a row
+	# does when the file is saved - so a vocabulary added tomorrow contributes to these facts on the
+	# strength of existing, rather than on somebody remembering to come back here.
+	#
+	# That memory is what this fixes rather than adds to: the input window's own control is written
+	# inside an `if`, and the day that `if` gained a row of its own the window stopped being able to
+	# say which control it was waiting for - because the new row was not in the table and the old
+	# catch-all had been.
+	#
+	# ONE LINE ONLY. These facts are read line by line, and a multi-statement template (the ones that
+	# declare a companion variable and then use it) has no single statement to stand for. Those keep
+	# the old answer: nothing, which leaves them out rather than guessing at them.
+	return _emitted_row_line(resource) if derive_unknown_rows else ""
+
+
+## The single statement a row emits, or "" when it emits none or more than one. Read through the same
+## two emitters the compiler writes the file with, so a fact and a saved file can never disagree about
+## what a row says.
+static func _emitted_row_line(resource: Resource) -> String:
+	var emitted: String = ""
+	if resource is ACECondition:
+		emitted = ConditionCodegen.generate_condition(resource as ACECondition)
+	elif resource is ACEAction:
+		emitted = ActionCodegen.generate_action(resource as ACEAction)
+	else:
+		return ""
+	if emitted.contains("\n") or emitted.strip_edges().is_empty():
+		return ""
+	return emitted.strip_edges()
 
 
 ## True when a declaration's value IS the ray a sight test is cast with - a node whose name says
@@ -1861,6 +1901,15 @@ static func blank_tick_reading(trigger_id: String, has_conditions: bool, pattern
 ## The notification a `_notification` branch reads as. Only the ones an event sheet already has a
 ## word for are named; every other notification humanizes, which says what happened without pretending
 ## the sheet has a trigger of its own for it.
+##
+## FOUR OF THESE ALSO HAVE A ROW IN THE PICKER (the Notifications section), and the words have to be
+## the SAME words: a notification lifted out of a file and one picked off a list are the same event,
+## and calling them two things would make a reader ask which is which.
+## `notification_trigger_words_test` fails the suite if the table and the descriptors ever drift.
+##
+## `NOTIFICATION_PREDELETE` reads "On object freed" rather than the "On destroyed" it once said,
+## because On destroyed is already what a node LEAVING THE TREE reads as - which can happen more than
+## once, and is not this. Two different moments cannot share one sentence.
 const NOTIFICATION_TRIGGER_WORDS: Dictionary = {
 	"NOTIFICATION_APPLICATION_PAUSED": "On suspended",
 	"NOTIFICATION_APPLICATION_RESUMED": "On resumed",
@@ -1869,7 +1918,7 @@ const NOTIFICATION_TRIGGER_WORDS: Dictionary = {
 	"NOTIFICATION_WM_CLOSE_REQUEST": "On close",
 	"NOTIFICATION_PAUSED": "On paused",
 	"NOTIFICATION_UNPAUSED": "On unpaused",
-	"NOTIFICATION_PREDELETE": "On destroyed"
+	"NOTIFICATION_PREDELETE": "On object freed"
 }
 
 ## The trigger id prefix a lifted `_notification` branch carries, with Godot's own constant after it.

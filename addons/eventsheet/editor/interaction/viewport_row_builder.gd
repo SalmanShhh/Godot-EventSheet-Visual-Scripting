@@ -5858,6 +5858,14 @@ func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable,
 	if row_data == null or variable == null or not variable.has_property_accessors():
 		return
 	var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
+	# The OTHER spelling of a property names the functions instead of writing them inline. There is no
+	# body under the declaration to read, so these rows say what there is to say - that setting this
+	# value calls that function - and the function itself reads as the function it is, further down the
+	# sheet, where it was written.
+	if variable.has_named_accessors():
+		row_data.children.append_array(_build_named_accessor_rows(variable, indent + 1, row_data.row_uid))
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+		return
 	# The accessors read as EVENTS first: a setter is a trigger, a getter an expression. Only
 	# when a body does not lift cleanly do they fall back to the verbatim language block below.
 	var read_rows: Array[EventRowData] = _build_property_accessor_reading(variable, param, indent + 1, row_data.row_uid)
@@ -5870,6 +5878,79 @@ func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable,
 		if not variable.getter_body.strip_edges().is_empty():
 			row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+
+
+## The sub-rows a NAMED property grows: one per accessor the declaration points at, saying which
+## function runs and when. `set = _set_health` reads `➜ <Object> On health set  → _set_health`, the
+## same trigger row an inline `set(value):` reads as, with the function's name where its body would
+## have been.
+##
+## Nothing is inlined here on purpose. The function is written somewhere else in the file, it reads as
+## itself where it was written, and copying its rows under the declaration would show the same code
+## twice and leave a reader wondering which of the two they are allowed to edit.
+##
+## Pure view: the rows are inert, nothing addresses them, and the file's own text is untouched - the
+## byte round-trip never sees this.
+func _build_named_accessor_rows(variable: LocalVariable, indent: int,
+		uid_base: String) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	var object_name: String = _script_object_name()
+	if object_name.strip_edges().is_empty():
+		object_name = EventSheetSentence.OBJECT_SYSTEM
+	var accessors: Array = [
+		["set", variable.setter_name.strip_edges(), EventSheetL10n.translate("On %s set")],
+		["get", variable.getter_name.strip_edges(), EventSheetL10n.translate("On %s read")]
+	]
+	for accessor: Array in accessors:
+		var function_name: String = str(accessor[1])
+		if function_name.is_empty():
+			continue
+		rows.append(_build_named_accessor_row(variable, object_name, str(accessor[0]),
+			function_name, str(accessor[2]), indent, uid_base))
+	return rows
+
+
+## One named accessor's row: the trigger badge, the sentence, and the function it calls on a chip.
+func _build_named_accessor_row(variable: LocalVariable, object_name: String, kind: String,
+		function_name: String, sentence: String, indent: int, uid_base: String) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = indent
+	row.row_type = EventRowData.RowType.EVENT
+	row.row_uid = "property_named_%s_%s" % [kind, uid_base]
+	row.line_count = 1
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+	var badge_glyph: String = _apply_trigger_tempo(badge_meta, _viewport._get_event_style(), "")
+	badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+	badge_meta["line_index"] = 0
+	badge_meta["badge_style"] = "trigger"
+	row.spans.append(_make_span(badge_glyph, SemanticSpan.SpanType.KEYWORD, badge_meta))
+	row.spans.append(_make_span(sentence % variable.name.replace("_", " "),
+		SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "trigger",
+			"ace_index": -1,
+			"chip": true,
+			"editable": false,
+			"hoverable": false,
+			"line_index": 0,
+			"object_label": object_name
+		}.merged(condition_style_meta, true)))
+	# The function goes in the RIGHT lane, where a thing that runs belongs - the trigger asks and the
+	# action does, which is the sheet's whole grammar. It also gives the row a right half: a trigger
+	# row with nothing on its right keeps the condition lane at its minimum, and the sentence is then
+	# cut off after two characters.
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	row.spans.append(_make_span(function_name, SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "property_accessor_function",
+		"ace_index": 0,
+		"editable": false,
+		"hoverable": false,
+		"line_index": 0,
+		"object_label": object_name
+	}.merged(action_style, true)))
+	return row
 
 
 ## A property's accessors, read as the events they are instead of as code under the variable row.
@@ -10253,6 +10334,30 @@ func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 		var name_part: String = argument.strip_edges().split(":")[0].split("=")[0].strip_edges()
 		if not name_part.is_empty():
 			chips.append(name_part.replace("_", " "))
+	return _with_bound_values(event_row, chips)
+
+
+## The payload chips with any BOUND VALUES written into them: `pressed.connect(_open.bind(3))` hands
+## the handler a 3 that the signal never carried, and the row reads `slot = 3` rather than a bare
+## `slot` a reader then has to go and look up.
+##
+## Godot appends bound values to the END of the handler's arguments, so the LAST ones are the bound
+## ones - which is what makes this a pairing rather than a guess. The values are read off the connect
+## line the lift kept verbatim, the same place the one-shot flag is read from: nothing extra is stored
+## on the row, and nothing here can move a byte of what the file emits.
+##
+## A bind with more values than the handler declares is left alone. That handler does not run, and a
+## row inventing chips for it would be saying the wiring is fine when it is not.
+func _with_bound_values(event_row: EventRow, chips: PackedStringArray) -> PackedStringArray:
+	var connect_line: String = str(event_row.get_meta("__source_connect_line", ""))
+	if connect_line.is_empty() or not connect_line.contains(".bind("):
+		return chips
+	var values: PackedStringArray = EventSheetACELifter.bound_arguments(connect_line)
+	if values.is_empty() or values.size() > chips.size():
+		return chips
+	var first: int = chips.size() - values.size()
+	for index: int in range(values.size()):
+		chips[first + index] = "%s = %s" % [chips[first + index], values[index]]
 	return chips
 
 
