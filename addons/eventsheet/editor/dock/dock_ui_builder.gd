@@ -370,17 +370,15 @@ func build_ui() -> void:
 	_dock._row_address_label.name = "EventSheetRowAddress"
 	_dock._row_address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_dock._row_address_label.modulate = EventSheetActiveTheme.chrome().row_address_color
-	# Live edit: the ⟳ offer sits between the message and the address, hidden unless a game is
-	# running and this sheet has an unapplied edit - a button that can never do anything is worse
-	# than no button.
 	# The selected row's help strip: the sentence a quiet amber row will not say inside the sheet,
 	# and the one door that answers it. Both hidden unless the selected row has a finding, so a sheet
-	# with nothing wrong shows the status bar it always showed.
+	# with nothing wrong shows the status bar it always showed. Its colour is taken from the theme
+	# each time it is SHOWN rather than once here, so a theme reloaded mid-session does not leave the
+	# strip wearing the old theme's warning colour.
 	_dock._row_help_label = Label.new()
 	_dock._row_help_label.name = "EventSheetRowHelp"
 	_dock._row_help_label.clip_text = true
 	_dock._row_help_label.visible = false
-	_dock._row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
 	status_strip.add_child(_dock._row_help_label)
 	_dock._row_help_button = Button.new()
 	_dock._row_help_button.name = "EventSheetRowHelpFix"
@@ -388,6 +386,9 @@ func build_ui() -> void:
 	_dock._row_help_button.visible = false
 	_dock._row_help_button.pressed.connect(_dock.apply_selected_row_fix)
 	status_strip.add_child(_dock._row_help_button)
+	# Live edit: the ⟳ offer sits between the message and the address, hidden unless a game is
+	# running and this sheet has an unapplied edit - a button that can never do anything is worse
+	# than no button.
 	_dock._live_edit_bar.init(_dock)
 	_dock._live_edit_bar.build(status_strip)
 	status_strip.add_child(_dock._row_address_label)

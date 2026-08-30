@@ -7032,6 +7032,9 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		return
 	_row_help_label.text = EventSheetCollisionFindings.strip_text(found, event_row)
 	_row_help_label.tooltip_text = _row_help_label.text
+	# The colour is read from the theme every time the strip is shown, not once when it was built: a
+	# theme reloaded mid-session would otherwise leave it wearing the old theme's warning colour.
+	_row_help_label.modulate = EventSheetActiveTheme.chrome().object_bar_warning_color
 	_row_help_label.visible = true
 	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
 	# one row would be a menu rather than a strip.
