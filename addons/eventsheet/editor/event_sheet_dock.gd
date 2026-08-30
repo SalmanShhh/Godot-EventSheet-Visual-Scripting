@@ -7043,14 +7043,13 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	_row_help_button.visible = false
 	if row_data == null or _current_sheet == null:
 		return
-	var event_row: EventRow = row_data.source_resource as EventRow
-	if event_row == null:
-		return
-	var found: Array[Dictionary] = EventSheetCollisionFindings.for_event(
-		_collision_findings(), event_row)
+	# The findings were joined onto the row when the sheet was built - one join, read back here, so
+	# the amber state and this strip can never disagree about what is wrong. Any row can carry one:
+	# an event, a variable's declaration, a message's function head.
+	var found: Array[Dictionary] = row_data.attention_findings
 	if found.is_empty():
 		return
-	_row_help_label.text = EventSheetCollisionFindings.strip_text(found, event_row)
+	_row_help_label.text = row_data.attention_note
 	_row_help_label.tooltip_text = _row_help_label.text
 	# The colour is read from the theme every time the strip is shown, not once when it was built: a
 	# theme reloaded mid-session would otherwise leave it wearing the old theme's warning colour.
@@ -7064,22 +7063,27 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	_row_help_button.visible = not label.is_empty()
 
 
-## The collision findings of the sheet in front of the reader, derived on the ask. The canvas holds
-## its own per-sweep copy; this one is for the strip, which is asked once per selection rather than
-## once per row.
-func _collision_findings() -> Array[Dictionary]:
-	if _current_sheet == null:
-		return []
-	return EventSheetCollisionFindings.findings(_current_sheet,
-		str(_current_sheet.external_source_path))
-
-
-## The help strip's door was clicked. Every answer here is a one-property write into the SCENE
-## through the editor's own undo, so one Ctrl+Z takes it back - and the status line says what the
-## line read as before and what it reads as now, because a tool that edits somebody's scene owes
-## them the two lines side by side.
+## The help strip's door was clicked. The finding's family tag says whose door it is: a collision
+## finding writes one property of the SCENE through the editor's own undo, and every other family's
+## fix is the very dock operation its inbox chip runs - one gesture, wherever it was clicked from.
 func apply_selected_row_fix() -> void:
-	apply_collision_fix(_row_help_finding)
+	var finding: Dictionary = _row_help_finding
+	if finding.is_empty():
+		return
+	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
+		apply_collision_fix(finding)
+		return
+	# The row the fix will rewrite is named by its LANE and SLOT rather than held: the fix runs
+	# through the undo funnel, and the funnel replaces resources as it commits.
+	_apply_finding_note_fix(str(finding.get("fix", "")), str(finding.get("subject", "")), {
+		"variable_note_name": str(finding.get("subject", "")),
+		"variable_note_fix": str(finding.get("fix", "")),
+		"variable_note_event": finding.get("event"),
+		"variable_note_to": str(finding.get("to", "")),
+		"variable_note_lane": str(finding.get("lane", "")),
+		"variable_note_index": int(finding.get("index", -1)),
+		"variable_note_param": str(finding.get("param", ""))
+	})
 
 
 ## One collision finding's door, wherever it was clicked from - the row's help strip, or the chip in

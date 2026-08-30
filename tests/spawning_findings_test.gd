@@ -35,6 +35,7 @@ static func run() -> bool:
 	passed = _test_freed_but_still_booked() and passed
 	passed = _test_the_deferred_respelling() and passed
 	passed = _test_the_guard_repair_is_about_the_name() and passed
+	passed = _test_the_strip_reads_the_stamp() and passed
 	passed = _test_the_doctor_files_each_kind() and passed
 	passed = _test_the_doctor_files_a_real_finding() and passed
 	return passed
@@ -431,6 +432,48 @@ static func _test_the_guard_repair_is_about_the_name() -> bool:
 ## The dock's own copy of the sheet's first event, fetched fresh.
 static func _live_event(dock: EventSheetDock) -> EventRow:
 	return dock._current_sheet.events[0] as EventRow
+
+
+## THE QUIET SHEET LAW's other half: the sheet's only signal is the amber state, and the words wait
+## in the row's stamp for THIS strip. Selecting the stamped row shows the finding's sentence and its
+## one door; clicking the door runs the family's own dock operation - the same edit the inbox chip
+## makes - and a row with nothing wrong hides the whole strip again.
+static func _test_the_strip_reads_the_stamp() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet: EventSheetResource = _sheet()
+	sheet.events.append(_event("OnBodyEntered", [_raw("add_child(Bullet.instantiate())")]))
+	dock.setup(sheet)
+	var passed: bool = true
+	var stamped: EventRowData = null
+	for candidate: EventRowData in dock._viewport._root_rows:
+		if not candidate.attention_note.is_empty():
+			stamped = candidate
+	passed = _check("the canvas stamped the amber row", stamped != null, true) and passed
+	if stamped == null:
+		dock.free()
+		return false
+	passed = _check("and hung no note row under it", stamped.children.size(), 0) and passed
+	dock._update_row_help_strip(stamped)
+	passed = _check("selecting it puts the finding's sentence on the strip",
+		dock._row_help_label.text,
+		"This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.") and passed
+	passed = _check("and shows it", dock._row_help_label.visible, true) and passed
+	passed = _check("with the door's own label on the button",
+		dock._row_help_button.text, "Add it on the next idle moment") and passed
+	passed = _check("and the button shown", dock._row_help_button.visible, true) and passed
+	# The door itself: the strip's click respells the very line, through the undo funnel.
+	dock.apply_selected_row_fix()
+	var respelled: Variant = _live_event(dock).actions[0]
+	passed = _check("the strip's door writes the deferred spelling of the same line",
+		str((respelled as RawCodeRow).code) if respelled is RawCodeRow else "",
+		"call_deferred(\"add_child\", Bullet.instantiate())") and passed
+	# And nothing wrong means nothing said.
+	dock._update_row_help_strip(EventRowData.new())
+	passed = _check("a clean row hides the sentence", dock._row_help_label.visible, false) and passed
+	passed = _check("and the door", dock._row_help_button.visible, false) and passed
+	dock.free()
+	return passed
 
 
 # ── 7. The Doctor's section ──

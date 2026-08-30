@@ -1,9 +1,9 @@
-# Godot EventSheets - a spawning finding said under the row, with its repair beside it (preview).
+# Godot EventSheets - a spawning finding as the quiet amber state (preview).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
-# The point of the picture is where the sentence LIVES: not in a report somewhere else, but under the
-# very row that has the problem, in the amber the sheet already uses for "this runs and misbehaves",
-# with the one click that fixes it at the right edge.
+# The point of the picture is where the sentence does NOT live: the rows with the problems wear the
+# quiet amber state and nothing else changes in the sheet. The words and the one-click repair wait
+# in the Doctor's inbox and in the help strip under the row once it is selected.
 #
 # Two of the four are shown together because they are the two a spawning sheet earns first: a node
 # parented inside a collision callback, which Godot refuses outright, and a wait booked against
@@ -11,7 +11,7 @@
 @tool
 extends RefCounted
 
-const PREVIEW_NAME: String = "spawning-finding-note"
+const PREVIEW_NAME: String = "spawning-quiet-sheet"
 const PREVIEW_SIZE: Vector2i = Vector2i(2000, 280)
 
 const ENEMY: String = "Shard"

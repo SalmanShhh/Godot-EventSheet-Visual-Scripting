@@ -43,7 +43,7 @@ static func run() -> bool:
 	ok = _test_a_shared_environment() and ok
 	ok = _test_the_one_click_fix() and ok
 	ok = _test_the_section() and ok
-	ok = _test_the_note_under_the_row() and ok
+	ok = _test_the_quiet_state_on_the_row() and ok
 	return ok
 
 
@@ -238,15 +238,27 @@ static func _test_the_section() -> bool:
 		EventSheetLightingDoctor.holds_lighting(SWAMP_SCENE), true) and ok
 
 
-## The canvas half: a finding about a row is said UNDER that row, in the note the sheet already uses
-## for an unknown variable - one note look and one fix click, not three.
-static func _test_the_note_under_the_row() -> bool:
-	var notes: PackedStringArray = _note_messages(GDScriptImporter.new().import_external(CRYPT))
-	var ok: bool = _check("the crypt's shared environment is said under the event that writes it",
-		notes.size(), 1)
-	return _check("in the finding's own words, with the one click that repairs it beside them",
-		notes[0] if not notes.is_empty() else "",
-		"Turn Fog On writes lighting_environment.tres, which lighting_scene_swamp.tscn also uses - the change follows the player into those scenes. Give this scene its own copy first. Make the environment this scene's own") and ok
+## The canvas half: a finding about a row puts THAT row into the quiet amber state and nothing else
+## changes in the sheet - no note row, no icon, no inline sentence. The words and the one door wait
+## in the row's own stamp, which is what the help strip reads once the row is selected.
+static func _test_the_quiet_state_on_the_row() -> bool:
+	var stamped: Array[Dictionary] = _attention_stamps(GDScriptImporter.new().import_external(CRYPT))
+	var ok: bool = _check("the crypt's shared environment puts the event that writes it into the amber state",
+		stamped.size(), 1)
+	if stamped.is_empty():
+		return false
+	ok = _check("whose strip sentence is the finding's own words",
+		str(stamped[0].get("note", "")),
+		"Turn Fog On writes lighting_environment.tres, which lighting_scene_swamp.tscn also uses - the change follows the player into those scenes. Give this scene its own copy first.") and ok
+	var carried: Array = stamped[0].get("findings", []) as Array
+	ok = _check("with the one click that repairs it waiting in the stamp",
+		str((carried[0] as Dictionary).get("fix_label", "")) if not carried.is_empty() else "",
+		"Make the environment this scene's own") and ok
+	ok = _check("said by the family whose door the strip will knock on",
+		str((carried[0] as Dictionary).get("family", "")) if not carried.is_empty() else "",
+		"lighting") and ok
+	return _check("and no note row is hung under the event",
+		_note_messages(GDScriptImporter.new().import_external(CRYPT)).size(), 0) and ok
 
 
 # ── the walk ────────────────────────────────────────────────────────────────────
@@ -278,10 +290,29 @@ static func _row_facts(action: ACEAction) -> PackedStringArray:
 		str(action.params.get("target", "")), action.codegen_template])
 
 
+## Every row of this sheet the canvas put into the quiet amber state, in row order, with the stamp
+## it carries: the strip's sentence and the findings behind it. Read off the built rows, which is
+## what the help strip actually reads.
+static func _attention_stamps(sheet: EventSheetResource) -> Array[Dictionary]:
+	sheet.read_only = true
+	var style := EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport := EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var stamped: Array[Dictionary] = []
+	for row_data: EventRowData in _rows(viewport._root_rows, viewport):
+		if not row_data.attention_note.is_empty():
+			stamped.append({"note": row_data.attention_note, "findings": row_data.attention_findings})
+	viewport.free()
+	return stamped
+
+
 ## Every note the canvas hangs under a row of this sheet, in row order, as the spans read left to
-## right: the message and the button beside it. Read off the built spans, which is what a reader
-## actually sees - and the button has to be there, because a finding whose repair is one click is
-## only one click while the button is on the row.
+## right: the message and the button beside it. Kept as the negative half of the quiet-state pin -
+## a finding must never grow one of these.
 static func _note_messages(sheet: EventSheetResource) -> PackedStringArray:
 	sheet.read_only = true
 	var style := EventSheetEditorStyle.new()

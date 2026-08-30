@@ -640,15 +640,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var error_stripe: Color = reading_style.error_stripe_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
 		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
-	if not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
-		# The quiet amber state: the same left stripe and faint wash an error wears, in the note
-		# colour instead of the error one, and with NOTHING drawn inside the row. The words are in the
-		# tooltip and in the help strip under the selection - a row that only misbehaves must be
-		# findable at a glance without turning the sheet into a list of complaints. An error still
-		# wins: a line that cannot run is not merely something to look at.
-		var attention_stripe: Color = EventSheetActiveTheme.chrome().object_bar_warning_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), attention_stripe, true)
-		control.draw_rect(row_fill_rect, Color(attention_stripe.r, attention_stripe.g, attention_stripe.b, 0.07), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
 		# Live event trace: a cyan left stripe + faint wash on events firing right now (debug
 		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading
@@ -666,6 +657,18 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_fill_rect, row_selection, true)
 		if row_data.row_type != EventRowData.RowType.EVENT:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
+	if not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
+		# The quiet amber state: a faint warning-colour tint over the row and a thin inset of the
+		# same colour just inside its edge, with NOTHING drawn inside the row - no note, no icon, no
+		# sentence. The words live in the Doctor's inbox and in the help strip under the selection.
+		# A row that only misbehaves must be findable at a glance without turning the sheet into a
+		# list of complaints. An error still wins: a line that cannot run is not merely something to
+		# look at. Drawn over the selection fill rather than under it, so selecting the row - the
+		# very gesture that makes the strip speak - does not wash the amber away. The inset is
+		# softened rather than full-strength for the same reason the tint is faint: quiet means quiet.
+		var attention: Color = EventSheetActiveTheme.chrome().object_bar_warning_color
+		control.draw_rect(row_fill_rect, Color(attention.r, attention.g, attention.b, 0.10), true)
+		control.draw_rect(row_fill_rect.grow(-1.0), Color(attention.r, attention.g, attention.b, 0.45), false, 2.0)
 	# Hover feedback: individual conditions/actions highlight per-cell (drawn in _draw_spans).
 	# Whole-row hover is only for single-cell rows (group/comment/variable); on a multi-cell
 	# event it lights up the entire block and reads as "selected", which is confusing.

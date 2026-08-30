@@ -106,21 +106,36 @@ static func script_findings(script_path: String, source: String) -> Array[Dictio
 		return findings
 	var dimension: String = EventForgePhysicsLayers.dimension_for_class(
 		EventForgeCollisionLayerLift.extended_class(source))
+	for note: Dictionary in line_findings(script_path.get_file(), dimension, source):
+		var filed: Dictionary = note.duplicate()
+		filed["path"] = script_path
+		filed["subject"] = "%s|%d" % [script_path, int(note.get("layer", 0))]
+		findings.append(filed)
+	return findings
+
+
+## The same two notes, asked of any blob of code - a whole file, or the lines one sheet row emits.
+## This is the row-state reader's half of the section: the wording is the section's own, the gates
+## are the section's own (a project that names no layers hears nothing about unnamed ones), and the
+## label is whatever file the caller is reading. Each finding carries the bare number under `layer`
+## and `subject`, so a caller that files it can widen the subject to its own identity key.
+static func line_findings(label: String, dimension: String, text: String) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
 	var names_any: bool = EventForgePhysicsLayers.names_any(dimension)
-	var seen: Dictionary = {}
-	for number: int in layer_numbers(source):
-		if seen.has(number):
-			continue
-		seen[number] = true
+	for number: int in layer_numbers(text):
 		if not EventForgePhysicsLayers.is_layer_number(number):
-			findings.append(_finding("warning", CHECK_NOT_A_LAYER, script_path,
-				EventSheetL10n.translate("%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.") % [script_path.get_file(), number],
-				"%s|%d" % [script_path, number]))
+			var out_of_range: Dictionary = _finding("warning", CHECK_NOT_A_LAYER, "",
+				EventSheetL10n.translate("%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.") % [label, number],
+				str(number))
+			out_of_range["layer"] = number
+			findings.append(out_of_range)
 			continue
 		if names_any and EventForgePhysicsLayers.name_of(number, dimension).is_empty():
-			findings.append(_finding("info", CHECK_UNNAMED, script_path,
-				EventSheetL10n.translate("%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.") % [script_path.get_file(), number],
-				"%s|%d" % [script_path, number]))
+			var unnamed: Dictionary = _finding("info", CHECK_UNNAMED, "",
+				EventSheetL10n.translate("%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.") % [label, number],
+				str(number))
+			unnamed["layer"] = number
+			findings.append(unnamed)
 	return findings
 
 
