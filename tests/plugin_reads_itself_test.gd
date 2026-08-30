@@ -14,6 +14,12 @@
 # of runs has been over most of the editor. A failure names the day seed and the file, so it is
 # reproducible even though the sample moves.
 #
+# AND ONE THING THE SAMPLE CANNOT ANSWER. The wordless-row measure is a regex over a row's TEXT, so a
+# row the DERIVED layer has named - the method resolved off its receiver's class, the chips carrying
+# the method's own parameter names - still scores exactly as it did before. So there is a second,
+# NAMED set of five files at the bottom of this gate with a floor on how many generic calls that layer
+# names in each: not sampled, so the number is the same on every machine and every run.
+#
 # CEILINGS ARE MEASURED, THEN RATCHETED, NEVER GUESSED. Every number below was read off the tree it
 # was written on (the probe that produced them is the same `EventSheetGenericRows.measure` the Doctor
 # and the bar use). They are set just above what the worst file in each group scores today, so any
@@ -81,6 +87,24 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 ## carry its cause and is DELETED the day that cause is fixed - never added to make a red run green.
 const KNOWN_DRIFT: PackedStringArray = []
 
+## HOW MANY GENERIC CALLS THE DERIVED LAYER NAMES, per file, as a FLOOR. Measured, then ratcheted.
+##
+## The wordless-row ceiling above cannot see the derived layer at all: `is_generic_code` is a regex
+## over a row's TEXT, and a derived reading changes the row's words without touching its code, so
+## `_dock._refresh_after_edit()` scores as a wordless row whether or not the layer has named the
+## method, its parameter names and its description. That is correct for what that number measures and
+## it leaves the pass's central claim with unit coverage only. This is the whole-file measurement:
+## five of the editor's own files, chosen for having enough generic calls to be worth counting, with
+## the number the derived layer names in each today. It is a FLOOR - naming fewer fails, naming more
+## is the work landing - and the honest way to move one is to raise it after the work that earns it.
+const DERIVED_FLOOR: Dictionary = {
+	"res://addons/eventforge/compiler/sheet_compiler.gd": 6,
+	"res://addons/eventsheet/editor/dock/multi_view_manager.gd": 11,
+	"res://addons/eventsheet/editor/dock/quick_prompt_dialogs.gd": 16,
+	"res://addons/eventsheet/editor/event_sheet_exposed_node.gd": 8,
+	"res://addons/eventsheet/editor/objects_panel.gd": 10,
+}
+
 ## The files under addons/ and tools/ that still put lines in a script block, with the count each one
 ## has today. Everything else in the editor's own source reaches zero. An entry here is a debt with a
 ## cause, not a licence: it is deleted the day the cause is fixed, and never added to make a red run
@@ -100,7 +124,36 @@ static func run() -> bool:
 	all_passed = _test_roles() and all_passed
 	all_passed = _test_generic_measure() and all_passed
 	all_passed = _test_corpus() and all_passed
+	all_passed = _test_the_derived_layer_names_something() and all_passed
 	return all_passed
+
+
+## THE DERIVED LAYER, measured on whole files rather than on hand-built lines. Not sampled: these five
+## are named, so the number is the same on every machine and on every run, and a reading that stopped
+## resolving a receiver - or a declaration map that started declining one it used to answer for -
+## fails here rather than passing quietly under a ceiling that cannot see it.
+static func _test_the_derived_layer_names_something() -> bool:
+	var passed: bool = true
+	var below: PackedStringArray = PackedStringArray()
+	var said: PackedStringArray = PackedStringArray()
+	var paths: PackedStringArray = PackedStringArray(DERIVED_FLOOR.keys())
+	paths.sort()
+	for path: String in paths:
+		var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+		var measure: Dictionary = EventSheetGenericRows.derived_measure(sheet)
+		var named: int = int(measure.get("derived", 0))
+		said.append("%s %d/%d" % [path.get_file(), named, int(measure.get("statements", 0))])
+		if named < int(DERIVED_FLOOR[path]):
+			below.append("%s (%d named, floor %d)" % [path, named, int(DERIVED_FLOOR[path])])
+	print("  derived layer: %s" % ", ".join(said))
+	passed = _check("no file names fewer generic calls than its floor", below,
+		PackedStringArray()) and passed
+	# And the refusal, on the same measure: a sheet the layer can say nothing about scores zero
+	# rather than scoring high for the wrong reason.
+	passed = _check("a sheet that is not there names nothing",
+		EventSheetGenericRows.derived_measure(null),
+		{"derived": 0, "statements": 0, "percent": 0}) and passed
+	return passed
 
 
 ## THE GATE ITSELF: both marks, or nothing. A game that installed the plugin has the descriptor

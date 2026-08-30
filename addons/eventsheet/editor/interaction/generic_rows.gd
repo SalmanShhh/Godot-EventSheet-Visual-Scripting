@@ -56,6 +56,75 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 	return {"generic": generic, "rows": rows, "percent": percent}
 
 
+## THE OTHER HALF OF THE SAME QUESTION, over one sheet: {"derived", "statements", "percent"}.
+##
+## `measure` above counts the rows that say NOTHING of their own, and it is a pure regex over a row's
+## text - which means it cannot see the derived layer at all. A statement the derived reading names
+## (its receiver's class known, the method resolved, its arguments named by the method's own parameter
+## names) still scores as a bare call there, because the row's CODE is unchanged. That is correct for
+## what that number measures and useless as evidence that the layer works, so this counts the same
+## statements from the other side: how many of a file's verbatim statements the derived layer has
+## words for.
+##
+## Only CALLS, because that is what the derived call reading claims, and only the rows the importer
+## files as the GENERIC CALL - the statement catch-all, which is the lowest-specificity claim there is
+## and therefore exactly the derived layer's territory. A curated recogniser's row is not counted:
+## it never reaches the derived layer at all, and counting it either way would say nothing.
+##
+## Pure and static over the sheet, so a gate can pin it per file without a viewport - which is the
+## point. Nothing else in the repo can observe this layer working on a whole file.
+const CALL_ACE_ID: String = "CallMethod"
+
+static func derived_measure(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {"derived": 0, "statements": 0, "percent": 0}
+	var context: Dictionary = EventSheetViewportReadingRows.sentence_context_extras(sheet)
+	var facts: Dictionary = {
+		"context": context,
+		"class_map": EventSheetViewportReadingRows.object_class_map(sheet),
+		"autoloads": EventSheetViewportReadingRows.autoload_singletons()
+	}
+	var tally: Dictionary = {"derived": 0, "statements": 0}
+	_walk_derived(sheet.events, facts, tally)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_walk_derived((function_entry as EventFunction).events, facts, tally)
+	var statements: int = int(tally["statements"])
+	var derived: int = int(tally["derived"])
+	return {"derived": derived, "statements": statements,
+		"percent": 0 if statements <= 0 else int(floor(100.0 * float(derived) / float(statements)))}
+
+
+static func _walk_derived(items: Array, facts: Dictionary, tally: Dictionary) -> void:
+	for item: Variant in items:
+		if item is ACEAction and (item as ACEAction).ace_id == CALL_ACE_ID:
+			# The row builder's own spelling of the line this row means, so the two cannot disagree
+			# about what the derived layer was asked.
+			var params: Dictionary = (item as ACEAction).params
+			_count_derived("%s.%s(%s)" % [str(params.get("target", "")),
+				str(params.get("method", "")), str(params.get("args", ""))], facts, tally)
+		elif item is RawCodeRow:
+			var code: String = (item as RawCodeRow).code
+			if not code.contains("\n"):
+				_count_derived(code.strip_edges(), facts, tally)
+		elif item is EventRow:
+			_walk_derived((item as EventRow).actions, facts, tally)
+			_walk_derived((item as EventRow).sub_events, facts, tally)
+		elif item is EventFunction:
+			_walk_derived((item as EventFunction).events, facts, tally)
+		elif item is EventGroup:
+			_walk_derived((item as EventGroup).events, facts, tally)
+
+
+static func _count_derived(code: String, facts: Dictionary, tally: Dictionary) -> void:
+	if EventSheetSentence.call_parts(code).is_empty():
+		return
+	tally["statements"] = int(tally["statements"]) + 1
+	if not EventSheetDerivedCalls.derived_pieces(code, facts["context"] as Dictionary,
+			facts["class_map"] as Dictionary, facts["autoloads"] as Dictionary).is_empty():
+		tally["derived"] = int(tally["derived"]) + 1
+
+
 ## The reading health of the editor's own source, per role group:
 ##   [{role, files, percent, worst_percent, worst_path}]
 ## in ROLE_ORDER, skipping a group with no files. `per_role_limit` bounds how many files of a group

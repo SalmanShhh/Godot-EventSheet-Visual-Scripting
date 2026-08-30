@@ -710,6 +710,13 @@
   *this event is* (*this event is "jump" going down*, *coming up*, *going down, or repeating*), which
   no polled row says: one asks the event a handler was handed, the other asks the Input singleton how
   things stand right now. Display words only - the ace_ids and the code they write are untouched.
+- **A gate can now see the derived layer working.** The dogfood gate's headline metric is a regex
+  over a row's TEXT, and a derived reading changes a row's words without touching its code - so
+  `_dock._refresh_after_edit()` scored as a wordless row whether or not the layer had named the
+  method, its parameters and its description, and the pass's central claim shipped with unit coverage
+  only. There is a whole-file measurement now: five NAMED files of the editor's own source (never a
+  rotating sample, so the number is the same on every machine) with a floor on how many generic calls
+  the derived layer names in each.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`
