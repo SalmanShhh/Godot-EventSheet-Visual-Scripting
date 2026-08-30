@@ -63,6 +63,10 @@ var _variable_entries: Array[Dictionary] = []
 ## Who owns the variables in scope - the object this row belongs to, as the title leads with.
 var _row_owner: String = ""
 var _definition: ACEDefinition = null
+
+## The four group-filtered touch triggers, read through the one file every reader of them shares.
+## By path, so the dialog never waits on the editor's class cache.
+const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
 var _variable_names_provider: Callable = Callable()
@@ -3628,6 +3632,14 @@ func _describe_field(key: String) -> void:
 	if note.is_empty():
 		# A Spawn row is the one row that edits the SCENE as well as itself, so the two things
 		# the scene has to say about it are said while the field that decides them still has focus.
+		# A filtered touch trigger teaches the one thing its author has to know while the With
+		# field is open: whether this node stops what arrives or only notices it. The two answers
+		# are the two sides the same signal is filed under, so the row itself says which it is.
+		var touch_note: String = _touch_filter_note(key)
+		if not touch_note.is_empty():
+			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
+				"%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), touch_note])
+			return
 		var scene_note: Dictionary = _scene_verb_note(key, param)
 		if not scene_note.is_empty():
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
@@ -3640,6 +3652,19 @@ func _describe_field(key: String) -> void:
 		return
 	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
 		str(note.get("level", "")), _fix_offers(key, note))
+
+
+## The blocking-or-noticing lesson for a filtered touch trigger's With field, or "" for every
+## other field of every other row. Read off the row's own node class, which is what the picker
+## filed it under, so the sentence is about the node in front of the author rather than about
+## collisions in general.
+func _touch_filter_note(key: String) -> String:
+	if _definition == null or key != CollisionFilters.GROUP_PARAM:
+		return ""
+	if not CollisionFilters.is_filtered(_definition.id):
+		return ""
+	return EventSheetL10n.translate(
+		CollisionFilters.side_note(str(_definition.metadata.get("node_type", ""))))
 
 
 ## What the SCENE has to say about the field being filled in, as `{"body", "level"}`, or {} for

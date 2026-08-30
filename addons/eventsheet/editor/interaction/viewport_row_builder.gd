@@ -9599,6 +9599,41 @@ static var _trailing_zero_regex: RegEx = null
 ## wins ("On Damaged", including any @ace_name); an unresolved signal id still humanizes
 ## ("signal:door_opened" -> "On Door Opened"). Display-only: the stored trigger_id (frozen API)
 ## and the compiled output are untouched.
+## A trigger row's words: its own sentence when the event has FILLED IN every slot of it, and its
+## plain name otherwise. "On collision with {group}" is only a sentence once a group is chosen;
+## until then, and for every trigger whose slots are payload the engine fills at run time (the
+## body that entered, the report of what went wrong), there is nothing to put in them and the name
+## is the honest reading. Derived from the descriptor rather than listed, so a trigger that grows a
+## parameter tomorrow reads as its sentence the moment the parameter is filled.
+func _trigger_sentence(event_row: EventRow) -> String:
+	var name_words: String = _trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
+		event_row.trigger_provider_id, event_row.trigger_id)
+	if descriptor == null:
+		return name_words
+	var sentence: String = EventSheetL10n.translate(descriptor.get_display_text().strip_edges())
+	if sentence.is_empty() or not sentence.contains("{"):
+		return name_words
+	for parameter: ACEParam in descriptor.params:
+		var slot: String = "{%s}" % parameter.id
+		if not sentence.contains(slot):
+			continue
+		var filled: String = str(event_row.trigger_params.get(parameter.id, "")).strip_edges()
+		if filled.is_empty():
+			return name_words
+		sentence = sentence.replace(slot, _unquoted(filled))
+	return name_words if sentence.contains("{") else sentence
+
+
+## A quoted literal as a reader says it: `"enemies"` is the group Enemies, not a piece of code.
+## Anything that is not a plain quoted string is left exactly as it was typed.
+func _unquoted(text: String) -> String:
+	var bare: String = text.lstrip("&")
+	if bare.length() >= 2 and bare.begins_with("\"") and bare.ends_with("\""):
+		return bare.substr(1, bare.length() - 2)
+	return text
+
+
 func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, trigger_id)
 	if definition != null and not definition.display_name.strip_edges().is_empty():
@@ -10200,8 +10235,20 @@ func _fanout_metadata(lane: String, ace_index: int, line_index: int, signal_name
 func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
 	var chips: PackedStringArray = PackedStringArray()
 	var args: String = event_row.trigger_args.strip_edges()
-	if args.is_empty() or event_row.trigger_id.is_empty():
+	if event_row.trigger_id.is_empty():
 		return chips
+	if args.is_empty():
+		# A PICKED trigger records no argument list - only a lifted handler does. Its payload is
+		# still knowable, because the resolver already says what signature the handler is emitted
+		# with, so a row picked from the list shows the same chips a lifted one does instead of
+		# leaving the reader to open the code. Signal-backed triggers only: a lifecycle argument
+		# like `delta` is the engine talking to the function, not news the event hands anybody.
+		var signature: Dictionary = TriggerResolver.resolve_trigger(event_row)
+		if str(signature.get("signal_name", "")).is_empty():
+			return chips
+		args = str(signature.get("args", "")).strip_edges()
+		if args.is_empty():
+			return chips
 	for argument: String in args.split(","):
 		var name_part: String = argument.strip_edges().split(":")[0].split("=")[0].strip_edges()
 		if not name_part.is_empty():
@@ -10798,7 +10845,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		var trigger_words: String = EventSheetViewportReadingRows.tick_trigger_words(
 			event_row.trigger_id,
-			_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id)
+			_trigger_sentence(event_row)
 		)
 		var trigger_object: String = _handler_object_label(event_row)
 		# ── lens hook ──────────────────────────────────────────────────────────────────────────
