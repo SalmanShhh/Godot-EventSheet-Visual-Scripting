@@ -350,9 +350,10 @@ static func _descriptor(ace_id: String) -> ACEDescriptor:
 	return null
 
 
+## Silent on success, and loud on failure. A per-assertion [PASS] line puts hundreds of
+## bracketed lines around the run's verdict, which is exactly how a suite result gets misread.
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
-		print("[PASS] collision_filter_test: %s" % label)
 		return true
 	print("[FAIL] collision_filter_test: %s" % label)
 	print("  expected: %s" % str(expected))

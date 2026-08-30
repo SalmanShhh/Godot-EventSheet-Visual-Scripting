@@ -31,7 +31,6 @@ extends RefCounted
 
 ## The modules, loaded BY PATH so the test does not wait on the editor class cache having been
 ## regenerated for a newly added file.
-const EDGE_MODULE_PATH: String = "res://addons/eventforge/registration/modules/collision_edge_aces.gd"
 const EDGES_PATH: String = "res://addons/eventforge/registration/collision_edges.gd"
 const FILTERS_PATH: String = "res://addons/eventforge/registration/collision_filters.gd"
 
@@ -439,16 +438,6 @@ static func _print(value: String) -> ACEAction:
 	action.ace_id = "Print"
 	action.params = {"value": value}
 	return action
-
-
-## The edge module's descriptors by id, read straight off the module rather than the registry so the
-## shipped words and the shipped template are the ones under test.
-static func _descriptors() -> Dictionary:
-	var by_id: Dictionary = {}
-	for descriptor: Variant in (load(EDGE_MODULE_PATH) as GDScript).call("get_descriptors"):
-		if descriptor is ACEDescriptor:
-			by_id[str((descriptor as ACEDescriptor).ace_id)] = descriptor
-	return by_id
 
 
 static func _template_of(ace_id: String) -> String:
