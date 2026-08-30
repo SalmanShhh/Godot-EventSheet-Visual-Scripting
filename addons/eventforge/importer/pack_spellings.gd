@@ -93,6 +93,23 @@ static func match_line(line: String) -> Dictionary:
 	return EventForgeLiftTable.match_line(entries(), line)
 
 
+## The same answer with the PACK that gave it named: the match plus a `path`, or {} when no pack
+## claims the line. What a reader showing which vocabulary claimed which line needs - a pack spelling
+## is a lift-table entry, so it belongs at the entry layer, and the file it came out of is the half a
+## developer can go and open. Walks the tables in place rather than through `tables()`, which hands
+## back a deep copy and is asked here once per line of a buffer.
+static func match_line_named(line: String) -> Dictionary:
+	_ensure_built()
+	for path: String in _sorted_keys(_tables):
+		var claimed: Dictionary = EventForgeLiftTable.match_line(_tables[path] as Array, line)
+		if claimed.is_empty():
+			continue
+		var named: Dictionary = claimed.duplicate()
+		named["path"] = path
+		return named
+	return {}
+
+
 ## Every problem with the shipped pack spellings, as sentences - empty when they are sound. Three
 ## kinds, in one list because a pack author fixes them in one place: an entry that refused to build,
 ## an entry that is malformed or cannot re-emit its own fixture, and an entry that shadows a built-in.

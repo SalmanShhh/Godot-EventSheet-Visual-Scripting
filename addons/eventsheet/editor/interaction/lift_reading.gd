@@ -137,6 +137,15 @@ static func table_claim(line: String, scratch_entries: Array = []) -> Dictionary
 			continue
 		return {"family": str(path).get_file().trim_suffix(".gd"),
 			"entry_id": str(claimed.get("entry_id", "")), "ace_id": str(claimed.get("ace_id", ""))}
+	# And the spellings the installed PACKS teach, in the same order the lifter asks them: after the
+	# built-in families (a pack may not shadow one) and before the general reading. A pack spelling IS
+	# a lift-table entry - a file and an id a developer can go and open - so it belongs at this layer
+	# rather than falling through to the plainer one, which is where it landed while this walked only
+	# the importer folder.
+	var taught: Dictionary = EventForgePackSpellings.match_line_named(text)
+	if not taught.is_empty():
+		return {"family": str(taught.get("path", "")).get_file().trim_suffix(".gd"),
+			"entry_id": str(taught.get("entry_id", "")), "ace_id": str(taught.get("ace_id", ""))}
 	return {}
 
 
@@ -427,7 +436,9 @@ static func _family_paths() -> PackedStringArray:
 
 
 ## Drops the family cache. The panel calls it when a draft is appended, so a developer who has just
-## edited a real family file sees the new spelling without restarting the editor.
+## edited a real family file sees the new spelling without restarting the editor. The packs' own
+## tables are not cached here - the pack scanner holds them for the session, and asking it means one
+## place to invalidate rather than two that can disagree.
 static func clear_cache() -> void:
 	_family_cache = {}
 	_family_order = PackedStringArray()

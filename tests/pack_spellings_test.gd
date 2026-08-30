@@ -128,6 +128,17 @@ static func _test_a_hand_written_file() -> bool:
 		(lifted[1] as ACEAction).codegen_template, "{target.}start_flickering()") and ok
 	ok = _check("and the bare-variable call keeps the plain generic reading",
 		(lifted[3] as ACEAction).params.get("method", ""), "stop_flickering") and ok
+	# And the reader that shows WHICH vocabulary claimed a line has to see the pack. A pack spelling
+	# is a lift-table entry - a file and an id somebody can go and open - so it is an entry claim, not
+	# the plainer general reading, and the claim names the pack file it came out of.
+	var claimed: Dictionary = EventSheetLiftReading.table_claim("$LightFlickerBehavior.start_flickering(0.5)")
+	ok = _check("a pack-taught line is claimed by the pack, named", claimed,
+		{"family": "light_flicker_behavior", "entry_id": "LightFlickerBehavior.start_flickering#1",
+			"ace_id": "method:start_flickering"}) and ok
+	var layers: Dictionary = EventSheetLiftReading.layer_counts(
+		EventSheetLiftReading.read(source, "res://tests/imagined_flicker.gd"))
+	ok = _check("so the file's four claimed lines count at the entry layer",
+		int(layers[EventSheetLiftReading.LAYER_ENTRY]), 4) and ok
 	# The other half of the claim, and the one worth pinning: the SAME bytes with no table installed
 	# still read - as the plain generic call every unclaimed method lands on. A table landing later
 	# upgrades those rows in place; it never decides whether a file can be opened at all.

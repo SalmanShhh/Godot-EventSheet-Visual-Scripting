@@ -648,6 +648,12 @@
   `get_node("Path")`, and is what the shipped spellings take; a pack asking for the wide `receiver`
   is refused by name, at the same gate every other bad example fails. A bare-variable call keeps the
   generic reading it always had, which is the floor and is honest.
+- **A pack-taught claim shows as the entry it is.** The reader that says which vocabulary claimed
+  which line - the workbench's per-line claim, the Doctor's Reading page, the corpus tally - walked
+  only the recogniser families inside the plugin, so a line a PACK claimed fell through to the
+  plainer general reading and the entry count under-reported by the same amount. A pack spelling is a
+  lift-table entry, with a file and an id a developer can go and open, and it is now asked in the
+  same order the lifter asks it: after the built-in families, before the general reading.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`
