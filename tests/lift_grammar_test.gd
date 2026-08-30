@@ -91,6 +91,18 @@ static func _test_the_fragments() -> bool:
 		"\"hit hard\"": "\"hit hard\"",
 		"attack": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.quoted_literal("a"), "a", text)) and ok
+	# Between the two above, and the difference is the whole reason it exists: the value is the quoted
+	# text WITH its quotes and WITHOUT the ampersand, because that is what an `&{action}` template
+	# writes back and what the action field's own dropdown offers.
+	ok = Pins.check("lift_grammar_test/text", {
+		"\"jump\"": "\"jump\"",
+		"&\"jump\"": "\"jump\"",
+		"\"ui_page_down\"": "\"ui_page_down\"",
+		"\"\"": "\"\"",
+		"\"move left\"": "\"move left\"",
+		"jump": NO_MATCH,
+		"&jump": NO_MATCH
+	}, func(text: String) -> String: return _captured(G.quoted_text("a"), "a", text)) and ok
 	ok = Pins.check("lift_grammar_test/word", {
 		"peer": "peer",
 		"_was_on_floor": "_was_on_floor",
@@ -177,7 +189,7 @@ static func _test_a_bad_example_is_refused() -> bool:
 		"rpc([[my message: x]])": "my message is not a name a capture can take",
 		"rpc([[m: x]], [[m: y]])": "two spans are named m",
 		"rpc([[m|noun: x]])": "there is no noun fragment - the fragments are receiver, name, literal,"\
-			+ " word, argument, expression",
+			+ " text, word, argument, expression",
 		"rpc([[m|name|word: x]])": "the span m|name|word names more than one fragment",
 		"rpc([[m|name: take_damage]])": "the m span reads take_damage, which is not a name",
 		"rpc([[a: 1]], [[b: 2]])": "two spans are expressions, and a span that wide swallows the text"\

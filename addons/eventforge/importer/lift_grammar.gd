@@ -1,10 +1,11 @@
 # EventForge - the CAPTURE GRAMMAR: the handful of spans every recogniser table keeps re-spelling.
 #
 # A lift entry is a pattern with holes in it, and across every family in this folder the holes turn
-# out to be the same six things. A receiver that may or may not be written. A message name in either
+# out to be the same seven things. A receiver that may or may not be written. A message name in either
 # of the two quotings Godot accepts. A whole quoted literal, quotes and all, because some rows hold
-# the literal rather than the word inside it. One argument of a call. The expression that runs to the
-# end of the line. And one bare identifier.
+# the literal rather than the word inside it. The same literal WITHOUT the ampersand, because the
+# fields that name an action or a group hold `"jump"` and let the template write the `&`. One argument
+# of a call. The expression that runs to the end of the line. And one bare identifier.
 #
 # Written per family that is six regex fragments copied six times, each with its own private idea of
 # what an identifier is - and the day one of them widens, the others silently do not. Written here it
@@ -55,11 +56,12 @@ const NODE_CHAIN: String = "\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9
 ## canonicalised into a byte-gate failure.
 const SEPARATOR: String = ",[ \\t]*"
 
-## The fragments by the word a table author asks for them by. Six, because these are the spans the
+## The fragments by the word a table author asks for them by. Seven, because these are the spans the
 ## families actually repeat; the list doubles as what a by-example builder may name.
 const FRAGMENT_RECEIVER: String = "receiver"
 const FRAGMENT_NAME: String = "name"
 const FRAGMENT_LITERAL: String = "literal"
+const FRAGMENT_TEXT: String = "text"
 const FRAGMENT_WORD: String = "word"
 const FRAGMENT_ARGUMENT: String = "argument"
 const FRAGMENT_EXPRESSION: String = "expression"
@@ -67,7 +69,7 @@ const FRAGMENT_EXPRESSION: String = "expression"
 ## Every fragment name, in the order a reader meets them. Sorted by nothing on purpose: this is the
 ## order the header above explains them in, and it is the same on every machine.
 const FRAGMENT_NAMES: PackedStringArray = [FRAGMENT_RECEIVER, FRAGMENT_NAME, FRAGMENT_LITERAL,
-	FRAGMENT_WORD, FRAGMENT_ARGUMENT, FRAGMENT_EXPRESSION]
+	FRAGMENT_TEXT, FRAGMENT_WORD, FRAGMENT_ARGUMENT, FRAGMENT_EXPRESSION]
 
 ## The metacharacters a literal run of the author's own text has to be protected from. An unescaped
 ## `.` matches any character at all, which is how a pattern for `create_timer(` quietly also claims
@@ -113,6 +115,19 @@ static func quoted_literal(name: String) -> String:
 	return "(?<%s>&?\"[^\"]*\")" % name
 
 
+## THE QUOTED LITERAL WITH THE AMPERSAND LEFT OUTSIDE IT: the value is `"jump"`, quotes and all, and
+## a leading `&` is the author's spelling rather than the row's value. This is the span an input
+## action, a group name and a property name are held in all over the shipped vocabulary, whose
+## templates spell the field as `&{action}` - the `&` belongs to the TEMPLATE, so a lift that took it
+## into the value would hand the row a chip the field's own dropdown does not offer.
+##
+## Between the other two on purpose: `quoted_name` gives the bare word inside the quotes and
+## `quoted_literal` gives everything including the `&`, and neither is what a `&{slot}` template wants
+## back.
+static func quoted_text(name: String) -> String:
+	return "&?(?<%s>\"[^\"]*\")" % name
+
+
 ## One bare identifier as the value - a variable the line names, a group, a word the row shows.
 static func word(name: String) -> String:
 	return "(?<%s>%s)" % [name, IDENTIFIER]
@@ -142,6 +157,8 @@ static func fragment_pattern(fragment: String, name: String) -> String:
 			return quoted_name(name)
 		FRAGMENT_LITERAL:
 			return quoted_literal(name)
+		FRAGMENT_TEXT:
+			return quoted_text(name)
 		FRAGMENT_WORD:
 			return word(name)
 		FRAGMENT_ARGUMENT:
