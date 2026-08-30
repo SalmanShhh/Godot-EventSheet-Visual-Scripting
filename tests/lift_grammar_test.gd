@@ -67,6 +67,20 @@ static func _test_the_fragments() -> bool:
 		"state.machine.": NO_MATCH,
 		"$Torch": NO_MATCH
 	}, func(text: String) -> String: return _captured(G.receiver("target"), "target", text))
+	# The NARROW receiver, and the one difference that matters: a bare variable is refused. An entry
+	# with no second way to be sure takes this one, because a bare identifier matches every receiver in
+	# the language and claiming those on a call name alone takes lines away from readings that already
+	# say more about them.
+	ok = Pins.check("lift_grammar_test/node", {
+		"$Torch.": "$Torch",
+		"%Hud.": "%Hud",
+		"get_node(\"Room/Lamp\").": "get_node(\"Room/Lamp\")",
+		"": "",
+		"torch.": NO_MATCH,
+		"self.": NO_MATCH,
+		"state.machine.": NO_MATCH
+	}, func(text: String) -> String:
+		return _captured(G.fragment_pattern(G.FRAGMENT_NODE, "target"), "target", text)) and ok
 	# The widest receiver, taken where nothing has to be true about it: a chain matches, and captures
 	# nothing, because the row never shows it.
 	ok = Pins.check("lift_grammar_test/receiver_chain", {
@@ -188,8 +202,8 @@ static func _test_a_bad_example_is_refused() -> bool:
 		"rpc([[: x]])": "a span with no name before the colon is not a name a capture can take",
 		"rpc([[my message: x]])": "my message is not a name a capture can take",
 		"rpc([[m: x]], [[m: y]])": "two spans are named m",
-		"rpc([[m|noun: x]])": "there is no noun fragment - the fragments are receiver, name, literal,"\
-			+ " text, word, argument, expression",
+		"rpc([[m|noun: x]])": "there is no noun fragment - the fragments are receiver, node, name,"\
+			+ " literal, text, word, argument, expression",
 		"rpc([[m|name|word: x]])": "the span m|name|word names more than one fragment",
 		"rpc([[m|name: take_damage]])": "the m span reads take_damage, which is not a name",
 		"rpc([[a: 1]], [[b: 2]])": "two spans are expressions, and a span that wide swallows the text"\

@@ -639,6 +639,15 @@
   every statement in every opened file into a row under an id no registry has heard of. The table
   engine now skips an entry that has no table on it, which is where the check belongs: a pack's
   spellings are read off disk at run time, with no validator between them and the match.
+- **A pack's spelling claims a node, not every object in the language.** Every by-example receiver
+  span silently compiled to the widest set the capture grammar has - the one that also matches a bare
+  variable - so a pack teaching `start_flickering` claimed the verb by NAME ALONE on any receiver at
+  all, `audio_manager.start_flickering(0.5)` and a bare self-call included. That is the one thing the
+  grammar's own rule forbids without a second way to be sure, and an annotation has nowhere to write
+  one. Examples now say which width they mean: `node` takes `$Path`, `%Unique` and
+  `get_node("Path")`, and is what the shipped spellings take; a pack asking for the wide `receiver`
+  is refused by name, at the same gate every other bad example fails. A bare-variable call keeps the
+  generic reading it always had, which is the floor and is honest.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

@@ -75,8 +75,8 @@ static func build() -> bool:
 		# The two lines somebody who wired this flame by hand actually wrote: with a delay and
 		# without one. Both read as the generic \"call a method\" row until the pack says otherwise,
 		# and saying so upgrades them to this verb without moving a byte of their file.
-		"## @ace_lift_example(\"[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])\")",
-		"## @ace_lift_example(\"[[target|receiver: $LightFlickerBehavior]].start_flickering()\")",
+		"## @ace_lift_example(\"[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])\")",
+		"## @ace_lift_example(\"[[target|node: $LightFlickerBehavior]].start_flickering()\")",
 		"func start_flickering(after_seconds: float = 0.0) -> void:",
 		"\t_waiting = maxf(after_seconds, 0.0)",
 		"\trunning = _waiting <= 0.0",
@@ -90,8 +90,8 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Stop Flickering\")",
 		"## @ace_display_template(\"Stop flickering and settle at [b]{settle_at}[/b]\")",
-		"## @ace_lift_example(\"[[target|receiver: $LightFlickerBehavior]].stop_flickering([[settle_at|argument: 1.0]])\")",
-		"## @ace_lift_example(\"[[target|receiver: $LightFlickerBehavior]].stop_flickering()\")",
+		"## @ace_lift_example(\"[[target|node: $LightFlickerBehavior]].stop_flickering([[settle_at|argument: 1.0]])\")",
+		"## @ace_lift_example(\"[[target|node: $LightFlickerBehavior]].stop_flickering()\")",
 		"func stop_flickering(settle_at: float = 1.0) -> void:",
 		"\trunning = false",
 		"\t_waiting = 0.0",

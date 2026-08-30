@@ -14,13 +14,21 @@
 # up exactly as it picks up a hand-written one, because it IS one.
 #
 # THE MARKER. A value span is `[[name: text]]`, or `[[name|fragment: text]]` to say which of the
-# capture grammar's fragments it is (`EventForgeLiftGrammar` - receiver, name, literal, word,
+# capture grammar's fragments it is (`EventForgeLiftGrammar` - node, receiver, name, literal, word,
 # argument, expression). `name` is what the row calls the value; `text` is what a real line would have
 # there, and it doubles as the sample the fixture is generated from. Unnamed, the fragment is
 # `expression` - the whole of the rest of the value, which is what a person means by "a value goes
-# here". A receiver span is written without its dot (`[[object|receiver: $Enemy]].queue_free`), the
+# here". A receiver span is written without its dot (`[[object|node: $Enemy]].queue_free`), the
 # dot after it is taken into the fragment, and the slot comes back as `{object.}`, which is how a row
 # with the field cleared writes the bare member operation.
+#
+# WHICH RECEIVER WORD. `node` claims the three spellings a row addresses a node by - `$Path`,
+# `%Unique`, `get_node("Path")` - and is what an example writes. `receiver` also claims a bare
+# variable, which matches every receiver in the language, so an entry taking it claims the verb's
+# name on ANY object, a bare self-call included; the grammar allows that only where the entry has a
+# second way to be sure the variable really is the node it wants. Whether it has one is not something
+# the example can say, so it is not refused here - `wide_receiver_in` names the span and the caller
+# that knows where the entry came from decides (a pack's, which can carry no guard, is refused).
 #
 # TWO SPELLINGS ARE TWO EXAMPLES. `rpc("f", 1)` and `f.rpc(1)` are not one example with a choice in
 # it - a choice is the thing this cannot check - so each is its own entry, exactly as the hand-written
@@ -51,6 +59,12 @@ const TEXT_MARK: String = ":"
 ## The key a refusal travels back under, inside this file. It becomes the table's own refusal key on
 ## the way out, which is what the validator reads.
 const REFUSED: String = "refused"
+
+## The key the walk names a WIDE receiver span under, inside this file. It never reaches an entry:
+## whether a wide span is allowed depends on what else the entry carries - a `guard`, or a family a
+## person reviewed - which the example itself cannot say. `wide_receiver_in` is how a caller that
+## does know asks.
+const WIDE: String = "wide"
 
 ## One capture name, as a name may be spelled. The same identifier the grammar matches in a line,
 ## asked here of the marker rather than of the code.
@@ -88,11 +102,19 @@ static func entry(id: String, ace_id: String, example: String, extras: Dictionar
 	return made
 
 
-## The sentence this example would be refused with, or "" when it builds. The same walk as `entry`,
-## for a caller that wants to ask before it builds - a test table, or a tool checking an example
-## somebody typed.
-static func refusal(example: String) -> String:
-	return str(_build(example).get(REFUSED, ""))
+## The sentence this example would be refused with, or "" when it builds. Asked through `entry`
+## itself rather than beside it, so a caller checking an example before it builds - a test table, a
+## tool checking something somebody typed - is told the same thing the entry would have said.
+static func refusal(example: String, extras: Dictionary = {}) -> String:
+	return str(entry("", "", example, extras).get(EventForgeLiftTable.REFUSAL_KEY, ""))
+
+
+## The name of the first span in this example that asks for the WIDE receiver, or "" when none does.
+## The wide word also matches a bare variable, so an entry taking it claims its verb on every object
+## in the language; the grammar allows that only where the entry has a second way to be sure, and the
+## only caller that can answer that question is the one that knows where the entry came from.
+static func wide_receiver_in(example: String) -> String:
+	return str(_build(example).get(WIDE, ""))
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────
@@ -109,6 +131,7 @@ static func _build(example: String) -> Dictionary:
 	var params: PackedStringArray = PackedStringArray()
 	var slots: Dictionary = {}
 	var defaults: Dictionary = {}
+	var wide: String = ""
 	var expressions: int = 0
 	var after_a_span: bool = false
 	var index: int = 0
@@ -137,6 +160,8 @@ static func _build(example: String) -> Dictionary:
 			if expressions > 1:
 				return {REFUSED: "two spans are expressions, and a span that wide swallows the text"\
 					+ " after it - name a narrower fragment on all but one"}
+		if fragment == G.FRAGMENT_RECEIVER and wide.is_empty():
+			wide = name
 		index = close + CLOSE.length()
 		if G.fragment_takes_a_dot(fragment):
 			if example.substr(index, 1) != ".":
@@ -153,7 +178,7 @@ static func _build(example: String) -> Dictionary:
 			defaults[name] = ""
 		after_a_span = true
 	return {"pattern": pattern, "shape": shape, "params": params, "slots": slots,
-		"defaults": defaults}
+		"defaults": defaults, WIDE: wide}
 
 
 ## One span's three words - the capture's name, the fragment it is, and the text a real line would

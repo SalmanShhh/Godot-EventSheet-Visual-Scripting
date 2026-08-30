@@ -8,10 +8,12 @@
 #
 # So this pins, in order: the shipped tables are sound (an entry generates its own fixture line, is
 # claimed by itself, and re-emits byte for byte); the id a spelling names is the one the generator
-# really publishes, asked of a real pack rather than assumed; five hand-written lines lift to the
-# pack's verbs and the file still round-trips; and every way a spelling can be wrong is refused OUT
-# LOUD - a shadowed built-in, a near-collision between two packs, an example above no verb, an
-# example on a verb that is not an action, an example that cannot be built at all.
+# really publishes, asked of a real pack rather than assumed; the three node spellings in a
+# hand-written file lift to the pack's verbs while a bare variable keeps the plainer reading, and the
+# file still round-trips; and every way a spelling can be wrong is refused OUT LOUD - a shadowed
+# built-in, a near-collision between two packs, an example above no verb, an example on a verb that
+# is not an action, an example claiming a receiver too wide to be sure of, an example that cannot be
+# built at all.
 @tool
 class_name PackSpellingsTest
 extends RefCounted
@@ -80,8 +82,10 @@ static func _test_the_id_is_the_published_one() -> bool:
 	return ok
 
 
-## The point of the whole mechanism, on a file nobody generated: five ways of writing the same two
-## verbs, all five read as the pack's verbs, and the file still saves as itself.
+## The point of the whole mechanism, on a file nobody generated: the three ways a row addresses a node
+## all read as the pack's verbs, the file still saves as itself, and the ONE spelling a pack may not
+## claim - a bare variable, which is every receiver in the language - keeps the plainer reading it
+## already had.
 static func _test_a_hand_written_file() -> bool:
 	var source: String = "\n".join(PackedStringArray([
 		"extends Node",
@@ -90,8 +94,8 @@ static func _test_a_hand_written_file() -> bool:
 		"",
 		"func _ready() -> void:",
 		"\t$LightFlickerBehavior.start_flickering(0.5)",
-		"\tflicker.start_flickering()",
-		"\tflicker.stop_flickering(1.0)",
+		"\t%Flicker.start_flickering()",
+		"\t$Torch/LightFlickerBehavior.stop_flickering(1.0)",
 		"\tflicker.stop_flickering()",
 		"\tget_node(\"LightFlickerBehavior\").start_flickering(0.25)",
 		""
@@ -103,11 +107,14 @@ static func _test_a_hand_written_file() -> bool:
 	var read_as: Array = []
 	for action: Variant in _actions_of(sheet):
 		read_as.append("%s::%s" % [(action as ACEAction).provider_id, (action as ACEAction).ace_id])
-	ok = _check("and every spelling in it reads as the pack's own verb", read_as, [
+	# The fourth line is the refusal, said as a value: `flicker` is a variable the file declares as a
+	# plain Node, and a pack claiming its verb on a bare name would be claiming it on every object in
+	# the language. It reads as the generic call, which is honest and is the floor.
+	ok = _check("and every node spelling in it reads as the pack's own verb", read_as, [
 		"LightFlickerBehavior::method:start_flickering",
 		"LightFlickerBehavior::method:start_flickering",
 		"LightFlickerBehavior::method:stop_flickering",
-		"LightFlickerBehavior::method:stop_flickering",
+		"Core::CallMethod",
 		"LightFlickerBehavior::method:start_flickering"]) and ok
 	# The values the row shows, and the author's own line baked on it - which is what makes the
 	# round trip above structural rather than lucky.
@@ -119,6 +126,8 @@ static func _test_a_hand_written_file() -> bool:
 		first.codegen_template, "{target.}start_flickering({after_seconds})") and ok
 	ok = _check("a call with the delay left out keeps the shape it was written in",
 		(lifted[1] as ACEAction).codegen_template, "{target.}start_flickering()") and ok
+	ok = _check("and the bare-variable call keeps the plain generic reading",
+		(lifted[3] as ACEAction).params.get("method", ""), "stop_flickering") and ok
 	# The other half of the claim, and the one worth pinning: the SAME bytes with no table installed
 	# still read - as the plain generic call every unclaimed method lands on. A table landing later
 	# upgrades those rows in place; it never decides whether a file can be opened at all.
@@ -154,16 +163,21 @@ static func _test_the_refusals() -> bool:
 		"extends Node",
 		"",
 		"## @ace_condition",
-		"## @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]].is_lit()\")",
+		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]].is_lit()\")",
 		"func is_lit() -> bool:",
 		"\treturn true",
 		"",
 		"## @ace_action",
-		"## @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]] blink\")",
+		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]] blink\")",
 		"func light() -> void:",
 		"\tpass",
 		"",
-		"## @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]].nothing()\")",
+		"## @ace_action",
+		"## @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]].dim()\")",
+		"func dim() -> void:",
+		"\tpass",
+		"",
+		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]].nothing()\")",
 		"var not_a_verb: int = 0"
 	]))
 	var refusals: PackedStringArray = PackedStringArray()
@@ -172,8 +186,10 @@ static func _test_the_refusals() -> bool:
 	return _check("every example that cannot work says why", refusals, PackedStringArray([
 		"a lift example teaches the spelling of an action, and this verb is @ace_condition",
 		"the receiver span target is not followed by a dot",
+		"the target span is a receiver, which also matches a bare variable, so this spelling would"\
+			+ " claim the verb on any object at all - write it as a node span",
 		"an example sits above no function:"\
-			+ " [[target|receiver: $ImaginedBehavior]].nothing()"]))
+			+ " [[target|node: $ImaginedBehavior]].nothing()"]))
 
 
 ## The two rules about one line and two claimants: a built-in wins outright (and the pack is refused
@@ -183,7 +199,7 @@ static func _test_shadowing_and_collisions() -> bool:
 	# animation family's, and a pack re-labelling it would quietly rename a row the engine already
 	# reads better than it does.
 	var shadowing: Array = [EventForgeLiftExample.entry("imagined.play#1", "method:play",
-		"[[target|receiver: $Imagined]].play([[anim_name|argument: \"walk\"]])",
+		"[[target|node: $Imagined]].play([[anim_name|argument: \"walk\"]])",
 		{"provider": "ImaginedBehavior"})]
 	var problems: PackedStringArray = EventForgePackSpellings.problems_for(IMAGINED_PACK, shadowing)
 	var ok: bool = _check("a spelling that shadows a built-in is refused, naming both",
@@ -191,10 +207,10 @@ static func _test_shadowing_and_collisions() -> bool:
 			+ " animation_lift.gd already claims - a pack may not shadow a built-in spelling"]))
 	# And two packs that both know one line. Neither is wrong; the reader is told which one wins.
 	var mine: Array = [EventForgeLiftExample.entry("imagined.blink#1", "method:blink",
-		"[[target|receiver: $Imagined]].blink([[seconds|argument: 0.5]])",
+		"[[target|node: $Imagined]].blink([[seconds|argument: 0.5]])",
 		{"provider": "ImaginedBehavior"})]
 	var theirs: Array = [EventForgeLiftExample.entry("other.blink#1", "method:blink",
-		"[[target|receiver: $Other]].blink([[seconds|argument: 0.5]])", {"provider": "OtherBehavior"})]
+		"[[target|node: $Other]].blink([[seconds|argument: 0.5]])", {"provider": "OtherBehavior"})]
 	ok = _check("two packs spelling one line are told who claims it",
 		EventForgePackSpellings.advisories_for({IMAGINED_PACK: mine, OTHER_IMAGINED_PACK: theirs}),
 		PackedStringArray(["other_behavior.gd: other.blink#1 reads as imagined_behavior.gd's"\

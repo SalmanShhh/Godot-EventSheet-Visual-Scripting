@@ -292,7 +292,7 @@ Two doors, and both of them move words rather than bytes.
 
 **If the lines are calls into a pack you ship**, teach the reader the spellings your verbs are
 written as. `## @ace_lift_example` above a verb takes the line the way a person writes it with the
-value spans marked - `[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])` -
+value spans marked - `[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])` -
 and a hand-written file that calls your pack reads as your rows instead of as generic method calls.
 The line the author wrote is stored on the row, so saving writes their file back exactly; an example
 that cannot keep that promise fails the pack build by name rather than shipping. The full form, its

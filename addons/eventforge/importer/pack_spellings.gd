@@ -11,7 +11,7 @@
 #
 #     ## @ace_action
 #     ## @ace_name("Start Flickering")
-#     ## @ace_lift_example("[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")
+#     ## @ace_lift_example("[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")
 #     func start_flickering(after_seconds: float = 0.0) -> void:
 #
 # The text inside is a marked EXAMPLE (EventForgeLiftExample) - the line as a person writes it, with
@@ -36,7 +36,10 @@
 #      sorted pack order this file walks so the answer is the same on every machine.
 #   3. An example this cannot build is a REFUSAL carrying its sentence, never a silent nothing. A verb
 #      that is not an action refuses too: an example teaches the spelling of a VERB today, and a
-#      condition or expression annotated with one would otherwise look wired and do nothing.
+#      condition or expression annotated with one would otherwise look wired and do nothing. So does
+#      an example whose receiver span takes the grammar's WIDE word: that one matches a bare variable
+#      as well as the three node spellings, which would claim the verb by name alone on every object
+#      in the language, and an annotation has nowhere to write the guard that would earn it.
 @tool
 class_name EventForgePackSpellings
 extends RefCounted
@@ -275,6 +278,8 @@ static func _entries_for(examples: PackedStringArray, kinds: PackedStringArray, 
 		var refusal: String = _kind_refusal(kinds)
 		if function_name.is_empty():
 			refusal = "the example is not above a function this can name"
+		if refusal.is_empty():
+			refusal = _wide_receiver_refusal(examples[index])
 		if not refusal.is_empty():
 			found.append({"id": id, "ace_id": ace_id, EventForgeLiftTable.REFUSAL_KEY: refusal})
 			continue
@@ -290,6 +295,23 @@ static func _kind_refusal(kinds: PackedStringArray) -> String:
 		if kinds.has(name):
 			return "a lift example teaches the spelling of an action, and this verb is %s" % name
 	return ""
+
+
+## Why this example may not take the WIDE receiver, or "" when it does not ask for one. The wide word
+## matches a bare variable as well as the three node spellings, so an entry taking it claims its verb
+## by NAME ALONE, on any object in the language and on a bare self-call too: a pack teaching
+## `start_flickering` would take `audio_manager.start_flickering(0.5)` away from the reading that
+## already says more about it. The grammar allows the wide set only where an entry has a second way to
+## be sure the variable really is the node it means, and an annotation carries no `guard` - there is
+## nowhere in a `## @ace_lift_example` to write one - so for a pack the answer is always no, and the
+## refusal names the word that does work.
+static func _wide_receiver_refusal(example: String) -> String:
+	var span: String = Example.wide_receiver_in(example)
+	if span.is_empty():
+		return ""
+	return ("the %s span is a %s, which also matches a bare variable, so this spelling would claim" \
+		% [span, EventForgeLiftGrammar.FRAGMENT_RECEIVER]) \
+		+ " the verb on any object at all - write it as a %s span" % EventForgeLiftGrammar.FRAGMENT_NODE
 
 
 ## An example with no verb under it, as the refusal it is. A pack author who wrote one in the wrong

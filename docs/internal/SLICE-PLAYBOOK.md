@@ -178,8 +178,10 @@ a quoted name, the author's own spacing) rides along verbatim. Keep values OUT o
 scenery and the byte gate takes care of itself.
 
 **Do not write the regex by hand.** The value spans repeat across every family, and they are one
-vocabulary in `lift_grammar.gd` (`EventForgeLiftGrammar`): `receiver` (the optional `$Torch.` in
-front, matching as a capture and re-emitting as `{target.}`), `quoted_name` (a name in either
+vocabulary in `lift_grammar.gd` (`EventForgeLiftGrammar`): `node` and `receiver` (the optional
+`$Torch.` in front, matching as a capture and re-emitting as `{target.}` - `node` takes the three
+node spellings, `receiver` also takes a bare variable and may only be used where the entry has a
+guard that proves the variable is the node it wants), `quoted_name` (a name in either
 quoting, where the `&` is scenery), `quoted_literal` (the whole literal as the value), `word`,
 `argument` (one argument of a call) and `expression` (the wide one - never two in a pattern). The
 separator between arguments is `SEPARATOR`, which matches the spacing rather than demanding it, and

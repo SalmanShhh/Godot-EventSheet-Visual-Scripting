@@ -1,7 +1,8 @@
 # EventForge - the CAPTURE GRAMMAR: the handful of spans every recogniser table keeps re-spelling.
 #
 # A lift entry is a pattern with holes in it, and across every family in this folder the holes turn
-# out to be the same seven things. A receiver that may or may not be written. A message name in either
+# out to be the same seven things. A receiver that may or may not be written, in either of the two
+# widths a table may claim one at. A message name in either
 # of the two quotings Godot accepts. A whole quoted literal, quotes and all, because some rows hold
 # the literal rather than the word inside it. The same literal WITHOUT the ampersand, because the
 # fields that name an action or a group hold `"jump"` and let the template write the `&`. One argument
@@ -56,9 +57,17 @@ const NODE_CHAIN: String = "\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9
 ## canonicalised into a byte-gate failure.
 const SEPARATOR: String = ",[ \\t]*"
 
-## The fragments by the word a table author asks for them by. Seven, because these are the spans the
+## The fragments by the word a table author asks for them by. Eight, because these are the spans the
 ## families actually repeat; the list doubles as what a by-example builder may name.
+##
+## THE TWO RECEIVER WORDS ARE THE TWO SETS ABOVE, said out loud rather than left to a default. `node`
+## is the narrow one - the three ways a row addresses a node - and it is what an entry takes when
+## nothing about the line proves a bare variable holds the node it wants. `receiver` is the wide one,
+## and the rule the constants above state applies to it whichever way it is asked for: a bare
+## identifier matches every receiver in the language, so an entry may only take it when it has a
+## second way to be sure (a guard). An entry with no guard writes `node`.
 const FRAGMENT_RECEIVER: String = "receiver"
+const FRAGMENT_NODE: String = "node"
 const FRAGMENT_NAME: String = "name"
 const FRAGMENT_LITERAL: String = "literal"
 const FRAGMENT_TEXT: String = "text"
@@ -68,8 +77,8 @@ const FRAGMENT_EXPRESSION: String = "expression"
 
 ## Every fragment name, in the order a reader meets them. Sorted by nothing on purpose: this is the
 ## order the header above explains them in, and it is the same on every machine.
-const FRAGMENT_NAMES: PackedStringArray = [FRAGMENT_RECEIVER, FRAGMENT_NAME, FRAGMENT_LITERAL,
-	FRAGMENT_TEXT, FRAGMENT_WORD, FRAGMENT_ARGUMENT, FRAGMENT_EXPRESSION]
+const FRAGMENT_NAMES: PackedStringArray = [FRAGMENT_RECEIVER, FRAGMENT_NODE, FRAGMENT_NAME,
+	FRAGMENT_LITERAL, FRAGMENT_TEXT, FRAGMENT_WORD, FRAGMENT_ARGUMENT, FRAGMENT_EXPRESSION]
 
 ## The metacharacters a literal run of the author's own text has to be protected from. An unescaped
 ## `.` matches any character at all, which is how a pattern for `create_timer(` quietly also claims
@@ -153,6 +162,8 @@ static func fragment_pattern(fragment: String, name: String) -> String:
 	match fragment:
 		FRAGMENT_RECEIVER:
 			return receiver(name)
+		FRAGMENT_NODE:
+			return receiver(name, NODE_PATHS)
 		FRAGMENT_NAME:
 			return quoted_name(name)
 		FRAGMENT_LITERAL:
@@ -169,15 +180,15 @@ static func fragment_pattern(fragment: String, name: String) -> String:
 
 
 ## True when a fragment may match nothing at all, so the row still needs a value for it when the line
-## does not say one. The receiver alone, today: "On node" left blank is a spelling too.
+## does not say one. The two receiver words: "On node" left blank is a spelling too.
 static func fragment_is_optional(fragment: String) -> bool:
-	return fragment == FRAGMENT_RECEIVER
+	return fragment == FRAGMENT_RECEIVER or fragment == FRAGMENT_NODE
 
 
-## True when a fragment takes the separator AFTER it into itself. The receiver alone: the dot belongs
-## to the idiom rather than to the line, which is what `{target.}` says.
+## True when a fragment takes the separator AFTER it into itself. The two receiver words: the dot
+## belongs to the idiom rather than to the line, which is what `{target.}` says.
 static func fragment_takes_a_dot(fragment: String) -> bool:
-	return fragment == FRAGMENT_RECEIVER
+	return fragment == FRAGMENT_RECEIVER or fragment == FRAGMENT_NODE
 
 
 ## True when a shape answers for a param - under either spelling, the plain `{name}` or the optional

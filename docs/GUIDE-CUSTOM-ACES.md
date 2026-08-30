@@ -338,7 +338,7 @@ same whether or not your script is `@tool`.
 | `@ace_param_hint(param_name hint)` | Set a parameter's widget (see the [hint table](#parameter-hints-the-widget-vocabulary)). |
 | `@ace_param_options(param_name a,b,c)` | Give a parameter a fixed dropdown. Entries may be labeled `value=Label` (`@ace_param_options(mode fit=Fit to screen, fill=Fill)`), so the menu reads as English while the row inserts the value. |
 | `@ace_param_autocomplete(param_name a,b,c)` | Give a parameter an editable suggestion list. |
-| `@ace_lift_example("line")` | A line this verb is written as **by hand**, so an opened script that calls your pack reads as your row instead of as a generic method call. Write the line as a person writes it and mark the value spans - `@ace_lift_example("[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")`. Repeat it for each spelling (one with the argument, one without). See [Teaching the reader your spellings](#teaching-the-reader-your-spellings). |
+| `@ace_lift_example("line")` | A line this verb is written as **by hand**, so an opened script that calls your pack reads as your row instead of as a generic method call. Write the line as a person writes it and mark the value spans - `@ace_lift_example("[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")`. Repeat it for each spelling (one with the argument, one without). See [Teaching the reader your spellings](#teaching-the-reader-your-spellings). |
 | `@ace_icon(name)` | Set a picker icon. |
 | `@ace_tags(a,b)` | Add search tags. |
 | `@ace_requires(a, b)` (class-level) | Declare what the pack needs installed: bare class names (`StatSheetResource`), `autoload:Name`, or `pack:folder_name`. The Project Doctor warns when an in-use pack's requirement is missing - the finding is clickable and opens the pack. Sheet-built packs set it via the sheet's `addon_requires` field. |
@@ -356,18 +356,28 @@ your verbs are written as, and those rows become your verbs, with your names and
 ![The same hand-written file read twice: as generic calls, and as the pack's own verbs once it teaches its spellings](images/pack-taught-spellings.png)
 
 Write the example as a line, not as a pattern. The value spans are marked `[[name: text]]`, or
-`[[name|fragment: text]]` to say which kind of value it is (`receiver`, `name`, `literal`, `word`,
+`[[name|fragment: text]]` to say which kind of value it is (`node`, `name`, `literal`, `word`,
 `argument`, `expression`); the text inside is what a real line would have there, and it doubles as
-the sample the gate tests the entry with. A receiver is written without its dot. Two spellings are two
-examples - one with the argument, one without - because a choice is the thing an example cannot check.
+the sample the gate tests the entry with. A `node` span is the receiver in front of the call, written
+without its dot. Two spellings are two examples - one with the argument, one without - because a
+choice is the thing an example cannot check.
+
+A `node` span claims the three ways a row addresses a node: `$Path`, `%Unique` and
+`get_node("Path")`. It deliberately does not claim a bare variable - `flicker.start_flickering()` -
+because a bare name matches every receiver in the language, and a pack claiming its verb on all of
+them would take lines away from readings that already say more about them. Those lines keep the
+generic call reading, which is the floor and is honest. (The grammar has a wider `receiver` word for
+the recogniser families inside the plugin, which pair it with a second check; an annotation has
+nowhere to write one, so a pack example asking for it is refused by name.)
 
 Three rules hold you to it, and all three are enforced rather than advised:
 
 - **The bytes never move.** The line the author wrote is stored on the row, so saving writes their
   file back exactly. Landing a table late upgrades the words and nothing else.
 - **An example that cannot work fails the build.** Every entry generates its own line, has to be
-  claimed by itself, and has to re-emit byte for byte; an example above no verb, or on a condition
-  rather than an action, is refused by name.
+  claimed by itself, and has to re-emit byte for byte; an example above no verb, on a condition
+  rather than an action, or asking for a receiver wider than the three node spellings, is refused by
+  name.
 - **You may not shadow a built-in spelling**, and where two packs spell one line the Project Doctor
   says so: the pack first in folder order claims it.
 
