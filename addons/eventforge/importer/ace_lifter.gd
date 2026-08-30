@@ -43,6 +43,7 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/collision_layer_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_filter_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
+	preload("res://addons/eventforge/importer/input_event_lift.gd"),
 ]
 
 ## The families that also recognise a CONDITION term - the same list, filtered by the second static
@@ -121,6 +122,11 @@ const PLUGIN_LIFECYCLE_TRIGGERS: Dictionary = {
 ## only - both trigger ids resolve to the same emitted `_enter_tree`, so a stale value cannot move a
 ## single byte of what the file compiles to.
 static var _lift_host_class: String = ""
+
+## The matcher behind "which functions does this file publish as verbs" - an `## @ace_*` block and
+## the `func` it belongs to. Compiled once for the session, like every other pattern here, because it
+## runs over every raw block of every opened file.
+static var _annotated_function_matcher: RegEx = null
 
 ## ACEs whose template reads its TRIGGER'S OWN ARGUMENTS rather than the host, mapped to the trigger
 ## that supplies them. Such a template only compiles inside that handler, so it may only lift there:
@@ -1638,8 +1644,20 @@ static func _parse_connect_line(line: String) -> Dictionary:
 	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
 	# flags without the compiler ever having to understand them.
 	var flags_pattern: String = "(?:, *((?:Object\\.)?CONNECT_[A-Z_]+(?: *\\| *(?:Object\\.)?CONNECT_[A-Z_]+)*))?"
-	var member_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)" + flags_pattern + "\\)$")
-	var string_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)" + flags_pattern + "\\)$")
+	# The optional `.bind(…)` between the handler's name and the closing bracket. Godot's way of
+	# handing a handler something the SIGNAL does not carry - which button of five was pressed, which
+	# door this timer belongs to - and it is spelled onto the connect rather than onto the handler, so
+	# a parser that stopped at the handler's name refused the whole line and stranded the handler as a
+	# helper function nobody could see the caller of. The bound values ride along as text: they are
+	# read for the chips beside the trigger row and are otherwise never taken apart, because the line
+	# itself is what gets written back (see __source_connect_line).
+	#
+	# One level of brackets inside, which is what `.bind(Vector2(0, 1))` needs and as far as a pattern
+	# can count. A bind whose arguments nest deeper is not claimed, and its handler stays the helper it
+	# reads as today.
+	var bind_pattern: String = "(?:\\.bind\\(([^()]*(?:\\([^()]*\\)[^()]*)*)\\))?"
+	var member_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)" + bind_pattern + flags_pattern + "\\)$")
+	var string_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)" + bind_pattern + flags_pattern + "\\)$")
 	var line_match: RegExMatch = member_regex.search(line)
 	if line_match == null:
 		line_match = string_regex.search(line)
@@ -1654,9 +1672,28 @@ static func _parse_connect_line(line: String) -> Dictionary:
 		"handler": line_match.get_string(3),
 		"signal": line_match.get_string(2),
 		"source": source,
-		"flags": line_match.get_string(4),
+		"bound": line_match.get_string(4),
+		"flags": line_match.get_string(5),
 		"line": line,
 	}
+
+
+## The values a connect line BOUND to its handler, one per chip, or [] when it bound nothing.
+## Read off the connect line the lift kept verbatim - the same place the one-shot flag is read from -
+## so nothing new is stored on the row and nothing here can move a byte of what the file emits.
+##
+## Split at TOP-LEVEL commas only, because `bind(Vector2(0, 1), 2)` binds two values and not three.
+static func bound_arguments(connect_line: String) -> PackedStringArray:
+	var values: PackedStringArray = PackedStringArray()
+	var parsed: Dictionary = _parse_connect_line(connect_line)
+	var bound: String = str(parsed.get("bound", "")).strip_edges()
+	if bound.is_empty():
+		return values
+	for piece: String in EventSheetBlockRegistry.split_params_top_level(bound):
+		var value: String = piece.strip_edges()
+		if not value.is_empty():
+			values.append(value)
+	return values
 
 
 ## The file the sheet under lift came from: the importer's hint when it set one, else whatever the
@@ -1692,15 +1729,60 @@ static func _parse_all_connections(sheet: EventSheetResource) -> Dictionary:
 	# are read FIRST so a connect actually written in the file still wins: the code is the closer
 	# authority on its own bytes, and only a code connect has a line to re-emit.
 	var connections: Dictionary = EventSheetSceneConnections.for_script(_scene_source_path_of(sheet)).duplicate(true)
+	var published: Dictionary = _published_verb_names(sheet)
 	for entry: Variant in sheet.events:
 		var raw_row: RawCodeRow = entry as RawCodeRow
 		if raw_row == null or not raw_row.code.contains(".connect("):
 			continue
 		for line: String in raw_row.code.split("\n"):
 			var parsed: Dictionary = _parse_connect_line(line)
-			if not parsed.is_empty():
-				connections[str(parsed["handler"])] = parsed
+			if parsed.is_empty():
+				continue
+			# A function the file PUBLISHES AS A VERB is not a signal handler, whatever is wired to
+			# it. The two readings are not equal and the choice is not close: "On pressed" says when
+			# one wiring of it runs, and the verb says what it IS, everywhere in the project, with its
+			# own name, parameters and description. A pack wires the same verb to a button per action
+			# in a loop - so reading it as a handler would take a published row away and put a trigger
+			# in its place that could only ever describe one of those wirings.
+			if published.has(str(parsed["handler"])):
+				continue
+			connections[str(parsed["handler"])] = parsed
 	return connections
+
+
+## The functions this file publishes as VERBS, as a set of names. A verb is a function carrying an
+## `## @ace_*` annotation block, which is the same thing the ACE Studio writes and the same thing the
+## analyzer reads off disk - so a pack's own rows and this question can never disagree about which
+## functions are vocabulary.
+## The rows are JOINED before they are read, because by this point in the lift an annotation block
+## and the function it belongs to are often two rows rather than one - the trailing-run pass peels a
+## `## @ace_*` header off the function under it so the two can be lifted separately. Read per row,
+## the block would name no function and the function would carry no block, and every verb in every
+## pack would answer "no" to this question.
+static func _published_verb_names(sheet: EventSheetResource) -> Dictionary:
+	var names: Dictionary = {}
+	if sheet == null:
+		return names
+	var joined: PackedStringArray = PackedStringArray()
+	for entry: Variant in sheet.events:
+		var raw_row: RawCodeRow = entry as RawCodeRow
+		if raw_row != null:
+			joined.append(raw_row.code)
+	var text: String = "\n".join(joined)
+	if not text.contains("## @ace_"):
+		return names
+	for hit: RegExMatch in _annotated_function_regex().search_all(text):
+		names[hit.get_string(1)] = true
+	return names
+
+
+## An `## @ace_*` line, whatever else sits between it and the `func` it belongs to (more annotations,
+## a plain `##` doc, an `@rpc`), and then that function's name. Compiled once for the session.
+static func _annotated_function_regex() -> RegEx:
+	if _annotated_function_matcher == null:
+		_annotated_function_matcher = RegEx.create_from_string(
+			"(?m)^## @ace_[^\\n]*\\n(?:^(?:##|@)[^\\n]*\\n)*^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\(")
+	return _annotated_function_matcher
 
 
 ## The EventRows a mid-file lifecycle/signal handler lifts to, or [] when it must stay raw. The
