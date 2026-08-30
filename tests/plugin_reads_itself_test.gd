@@ -62,7 +62,12 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"recognisers": 48,
 	"compiler": 5,
 	"vocabulary": 65,
-	"manual": 21,
+	# Raised from 21 when the rotating sample reached doc_editor_words.gd, which measures 26: that
+	# page's body is one dictionary literal of key -> sentence (the words table itself lives
+	# elsewhere and is read, not repeated), so most of its rows ARE literal entries - the same reason
+	# the vocabulary and pack-recipe groups sit where they do. Nothing about the reading layer
+	# changed to move it; the ceiling is a description of the group, taken off the worst file in it.
+	"manual": 26,
 	"tests": 30,
 	"command_tools": 24,
 	"pack_recipes": 99,
