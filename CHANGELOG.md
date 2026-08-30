@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Collisions, written down
+
+- **A guide for what touches what.** It leads with the decision the rest of the subject hangs off -
+  detect only is an Area, blocks and is driven by your rows is a CharacterBody, blocks and is thrown
+  by physics is a RigidBody, blocks and stands still is a StaticBody - and each row of that table
+  names the triggers and conditions that come alive with the choice, which is what the picker filing
+  rows by node class means in practice. Then the asymmetry, taught once and plainly: a layer is where
+  an object sits, a mask is what it watches, and A notices B when A's mask covers a layer B sits on,
+  which is why a perfect mask on the bullet does nothing for an enemy nobody put on a layer. Then the
+  filtered sentences, the edges, the deep verbs woven in rather than re-documented, the readings, and
+  the two Doctor sections with the receipt each door leaves.
+- **The concept map has collision rows.** A reader arriving from another event-sheet editor looks up
+  Solid, Jump-thru, "on collision with `<object type>`" and "is on floor", and found a bare pair of
+  signal names. All four are rows now, beside the node-family table and the layer vocabulary, and the
+  lane-one table gains the line for "my collision event never fires" - which is the Doctor's section,
+  said where somebody looks for it.
+- **The reading list says what a collision script opens as.** Three entries in the existing-code
+  guide: the guard-first handler in both of its spellings and what is deliberately not claimed, the
+  was-on-floor pattern with the two-variable form and every name a project gives its own memory, and
+  the four layer calls with the number that stays in the file while the name is resolved at read
+  time.
+- **The figures are re-measured, module by module.** 1,791 built-in verbs across 80 vocabulary
+  modules, 84 of them triggers, and 2,429 parameters between them - where the front page still said
+  1,755 and 68, which was the count before this pass. Descriptions were measured at the same time and
+  are the reason the number can be published: zero blank descriptions and zero blank parameter
+  descriptions, over every verb of every module.
+
 ### The step something changed
 
 - **On landed / On left the ground.** The two moments a platformer is built out of, said as rows.
