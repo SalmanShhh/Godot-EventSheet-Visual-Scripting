@@ -1097,6 +1097,72 @@ to the function it names, the same jump the Outline panel makes.
   Parameter** row that shipped before this - which claims nothing about any shader, and is the honest
   reading of a name nothing can check. The Doctor is what tells you which of the two you have.
 
+- **A guard-first touch handler reads as the filtered trigger it is.** The commonest shape in any
+  collision script is a `body_entered` handler whose first statement leaves for anything outside one
+  group, and it opens as **On collision with `<Group>`** - or as **On overlap with `<Group>`** when
+  the emitting node is an Area, which is the same signal read from the side that only notices rather
+  than blocks. The whole handler is the event: the guard is the row's **With** field, and everything
+  after it is the rows underneath.
+
+  ```gdscript
+  func _on_body_entered(body: Node) -> void:
+  	if not body.is_in_group("enemies"):
+  		return
+  	print(body.name)
+  ```
+
+  Both spellings are claimed - the two-line one above and the `if not …: return` one people write in
+  a hurry - and each hands back the bytes it matched, so re-emission writes your own spacing, your
+  own `&"name"` if that is how you quoted it, and your own argument name. The GROUP is the only thing
+  the row stores. A guard that asks for MORE than the group (`if not body.is_in_group("enemies") or
+  dead:`) is deliberately not claimed, because a row that dropped the rest of the question would not
+  write the file back. `body_exited` reads the same way, as the *stopped colliding* / *overlap ended*
+  half.
+
+  Both hand-written spellings of the standing question open as **is touching `<Group>`** as well:
+  `get_overlapping_bodies().any(func(b: Node) -> bool: return b.is_in_group("enemies"))` asks the
+  area and filters, `get_tree().get_nodes_in_group("enemies").any(overlaps_body)` asks the group and
+  filters by overlap, and both are the same question from the two ends. The lambda's parameter name
+  is your spelling, not a value the row shows, which is what makes it ride back out untouched.
+
+- **The was-on-floor pattern reads as On landed.** Every platformer already contains the three parts
+  of a landing check - a variable remembering last step's footing, an `if` comparing this step
+  against it, and a line bringing the memory up to date - and the middle part is the one whose
+  meaning is not in its own spelling:
+
+  ```gdscript
+  var was_on_floor: bool = false
+
+
+  func _physics_process(delta: float) -> void:
+  	if is_on_floor() and not was_on_floor:
+  		land()
+  	was_on_floor = is_on_floor()
+  ```
+
+  `is_on_floor() and not was_on_floor` would otherwise split into two rows that separately mean
+  nothing ("is on the floor" AND "not some variable"), so it is claimed whole and reads **just
+  landed**, under an event that reads **On landed**. The declaration and the update line are ordinary
+  rows already. Both orders of the two halves are claimed, and so is the two-variable form where this
+  step's footing went into a local first (`on_floor and not was_on_floor`) - there the claim rests on
+  the two NAMES, one reading as footing now and one as footing before, so `grounded_last_frame`,
+  `was_grounded` and `_was_on_floor` all read. **The name of your memory is not a value the row
+  shows**, which is precisely what makes it come back exactly as it went in. `was_on_floor and not
+  is_on_floor()` is the departure, **just left the ground**. An `if` that asks for more than the edge
+  (`is_on_floor() and not was_on_floor and hp > 0`) is left to the general reading.
+
+- **A collision layer call reads as the project's word for that layer.**
+  `set_collision_mask_value(2, true)` reads **Collide with Enemies**, `(2, false)` reads **Stop
+  colliding with Enemies**, `set_collision_layer_value(3, true)` reads **Be on layer Player**, its
+  `false` twin reads **Leave layer Player**, and `get_collision_mask_value(2)` reads **is set to
+  collide with Enemies**. The NUMBER is what the row stores, always: the name is resolved when the
+  row is drawn, so a layer renamed tomorrow renames the sentence and the file never moves, and a
+  layer this project never named reads as its number, which is honest. Which of Godot's two lists of
+  names a line means is decided by the FILE - a script that extends a 3D body means 3D layers, since
+  the two calls are spelled identically in both dimensions. Raw bit arithmetic beside them
+  (`collision_mask |= 4`, `collision_layer = 0`) is untouched: it is about a set of layers rather
+  than one, and it keeps the readings it already had.
+
 - **An animation played through a node path reads as the row, in whichever spelling you used.**
   `$Anim.play("idle")` and `$Anim.queue(&"swing")` are the same two calls people write with and
   without the ampersand, and both open. The whole literal is the value - quotes and `&` included -
