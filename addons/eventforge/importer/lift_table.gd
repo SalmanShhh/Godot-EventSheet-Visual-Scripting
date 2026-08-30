@@ -66,24 +66,30 @@ const FAMILY_DIR: String = "res://addons/eventforge/importer/"
 
 ## Keys every entry must carry, and the ones it may.
 const REQUIRED_KEYS: Array[String] = ["id", "ace_id", "pattern", "shape", "slots"]
-const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard"]
+const OPTIONAL_KEYS: Array[String] = ["provider", "params", "defaults", "guard", "error"]
+
+## The key a REFUSED entry carries instead of a table. A builder that derives an entry from something
+## (an example, a descriptor, a word map) and cannot do it mechanically says so here rather than
+## guessing, and the validator turns that sentence into a failing suite naming the entry. An entry
+## that refuses is never silently dropped: a table short of one spelling looks exactly like a table
+## that was never asked for it.
+const REFUSAL_KEY: String = "error"
+
+## A shape's slots, as the emitter itself reads them - the plain `{name}`, the optional prefix
+## `{name.}` and the optional comma `{,name}`. Compiled from the same three shapes ActionCodegen
+## compiles, so a slot the emitter would fill and the validator would not see cannot exist.
+const SLOT_PATTERN: String = "\\{(?:,?)\\s*(?<name>[A-Za-z_][A-Za-z0-9_]*)(?:\\.?)\\}"
 
 ## The provider an entry belongs to unless it says otherwise. Every builtin family is Core.
 const DEFAULT_PROVIDER: String = "Core"
 
-## The node spellings a row can address a node by, as a pattern fragment: `$Path`, `%Unique` and
-## `get_node("Path")`. All three are the author's own text and ride back out untouched, which is why
-## the receiver they sit in is not part of any sentence. Here rather than in one family because
-## every node-scoped family needs exactly these.
-const NODE_PATHS: String = "\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"\
-	+ "|get_node\\(\"[A-Za-z_][A-Za-z0-9_/]*\"\\)"
-
-## The same, plus the bare variable a node was held in. A family takes this WIDER set only when it
-## has a second way to be sure the variable really is the node it wants (the shader table asks the
-## scene which variables hold a material-wearing node); a family with no such check takes the paths
-## above, because a bare identifier matches every receiver in the language and claiming those on a
-## call name alone would take lines away from the readings that already say more about them.
-const NODE_REFERENCE: String = NODE_PATHS + "|[A-Za-z_][A-Za-z0-9_]*"
+## The node spellings a row can address a node by, and the wider set that adds the bare variable a
+## node was held in. Both live in the capture grammar beside the receiver fragment that spells them
+## (`EventForgeLiftGrammar`); they are named here too because every node-scoped family already
+## reaches for them through this class, and an ace_id is not the only thing a table author has
+## learned by heart.
+const NODE_PATHS: String = EventForgeLiftGrammar.NODE_PATHS
+const NODE_REFERENCE: String = EventForgeLiftGrammar.NODE_REFERENCE
 
 ## One compiled RegEx per pattern for the life of the session: these run on every statement of every
 ## opened file, and recompiling per line was the entire cost of the hand-written matchers.
@@ -123,18 +129,30 @@ static func match_line(entries: Array, line: String) -> Dictionary:
 
 ## Every problem with a table, as sentences - empty when it is sound. Run by the harness over every
 ## family, so a malformed entry fails the suite instead of quietly never matching.
+##
+## Every entry, old and new, is asked the same five questions: does its pattern anchor to the whole
+## statement, is every group in it named, is every value the shape shows backed by a capture and every
+## capture the row shows answered by the shape, and is its fixture line its own rather than one an
+## earlier entry in the same family already claims. A table author only ever gets one of those wrong
+## once, because the answer arrives as a failing suite naming the entry rather than as a spelling that
+## quietly never lifts.
 static func validate(entries: Array) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
 	var seen: Dictionary = {}
+	var fixture_lines: Dictionary = {}
 	for entry: Variant in entries:
 		if not (entry is Dictionary):
 			problems.append("an entry is not a Dictionary")
 			continue
 		var table_entry: Dictionary = entry
 		var id: String = str(table_entry.get("id", ""))
+		var named: String = id if not id.is_empty() else "(unnamed entry)"
+		if table_entry.has(REFUSAL_KEY):
+			problems.append("%s: refused - %s" % [named, str(table_entry[REFUSAL_KEY])])
+			continue
 		for key: String in REQUIRED_KEYS:
 			if not table_entry.has(key):
-				problems.append("%s: no %s" % [id if not id.is_empty() else "(unnamed entry)", key])
+				problems.append("%s: no %s" % [named, key])
 		if id.is_empty():
 			continue
 		if seen.has(id):
@@ -145,6 +163,7 @@ static func validate(entries: Array) -> PackedStringArray:
 				problems.append("%s: unknown key %s" % [id, key])
 		problems.append_array(_validate_pattern(table_entry, id))
 		problems.append_array(_validate_slots(table_entry, id))
+		problems.append_array(_validate_fixture_line(table_entry, id, fixture_lines))
 	return problems
 
 
@@ -196,28 +215,22 @@ static func _params_of(entry: Dictionary, hit: RegExMatch) -> Dictionary:
 	return params
 
 
-## The OPTIONAL-PREFIX spelling of a param - `{target.}`, the receiver idiom every node-scoped
-## descriptor writes. The dot lives INSIDE the braces, so the emitter writes it only along with a
-## value: a row whose receiver is cleared emits `energy = 1.2`, where `{target}.` would leave the
-## dot behind and hand the author a line that does not parse.
+## The receiver fragment's two halves, as the families already ask this class for them: the shape
+## slot `{target.}` and the optional capture that matches it. Both are the capture grammar's, and are
+## answered through it rather than beside it, so widening one can never leave the other behind.
 static func optional_prefix_slot(name: String) -> String:
-	return "{%s.}" % name
+	return EventForgeLiftGrammar.optional_prefix_slot(name)
 
 
-## The same idiom as a PATTERN: the receiver a node-scoped line opens with, as one optional capture.
-## Optional because "On node" is optional on every one of these rows - leave it blank and the line is
-## the bare member operation, `energy = 1.2` or `material.set_shader_parameter(…)`, which is the
-## commonest shape a sheet attached to its own node writes. `name` is the capture, so a line naming
-## the same node twice can be matched with one group per mention and a guard asked whether they agree.
 static func receiver(name: String = "target", spellings: String = NODE_REFERENCE) -> String:
-	return "(?:(?<%s>%s)\\.)?" % [name, spellings]
+	return EventForgeLiftGrammar.receiver(name, spellings)
 
 
 ## True when a shape answers for a param - under either spelling, the plain `{name}` or the
 ## optional prefix `{name.}`. The one question the validator and the splice below both ask, so a
 ## shape written in the receiver idiom cannot be sound to one of them and unknown to the other.
 static func shape_answers(shape: String, name: String) -> bool:
-	return shape.contains("{%s}" % name) or shape.contains(optional_prefix_slot(name))
+	return EventForgeLiftGrammar.shape_answers(shape, name)
 
 
 ## The matched line with every param capture spliced out for its slot. Spliced from the RIGHT so an
@@ -273,6 +286,11 @@ static func _validate_pattern(entry: Dictionary, id: String) -> PackedStringArra
 		return problems
 	if not (pattern.begins_with("^") and pattern.ends_with("$")):
 		problems.append("%s: the pattern must anchor to the whole statement (^…$)" % id)
+	# A group with no name is a span nothing can read: the splice that stores the author's spelling
+	# works from NAMED captures, so an unnamed one costs the same to match and can never become a
+	# value. Write `(?:...)` for scenery and `(?<name>...)` for anything the row shows.
+	if _has_an_unnamed_group(pattern):
+		problems.append("%s: every group in the pattern must be named or non-capturing" % id)
 	# A param is a NAMED capture by definition - it is the span the template splices out. The pattern
 	# is read as text here rather than matched against the shape, because the shape is a template with
 	# `{slots}` in it and no pattern of a real spelling would match one.
@@ -292,15 +310,75 @@ static func _validate_slots(entry: Dictionary, id: String) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
 	var shape: String = str(entry.get("shape", ""))
 	var slots: Dictionary = entry.get("slots", {})
+	var params: PackedStringArray = param_names(entry)
 	for name: String in slots.keys():
 		if not shape_answers(shape, name):
 			problems.append("%s: the shape has no {%s} for the sample value" % [id, name])
-	for name: String in param_names(entry):
+	for name: String in params:
 		if shape_answers(shape, name) and not slots.has(name):
 			problems.append("%s: no sample value for {%s}" % [id, name])
 		elif not shape_answers(shape, name) and not (entry.get("defaults", {}) as Dictionary).has(name):
 			problems.append("%s: %s is neither in the shape nor given a default" % [id, name])
+	# And the other way round. A slot the shape spells that no capture answers for is a `{name}` the
+	# emitter would write into somebody's file verbatim, which is the one failure mode of this whole
+	# mechanism that a byte gate cannot see: the entry never matched, so nothing ever generated it.
+	for name: String in shape_slot_names(shape):
+		if not params.has(name):
+			problems.append("%s: the shape's {%s} is backed by no capture" % [id, name])
 	return problems
+
+
+## Every name a shape has a slot for, in the order it spells them, without repeats. Read with the
+## emitter's own three slot spellings, so this and the fill cannot disagree about what a slot is.
+static func shape_slot_names(shape: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var regex: RegEx = _regex(SLOT_PATTERN)
+	if regex == null:
+		return names
+	for hit: RegExMatch in regex.search_all(shape):
+		var name: String = hit.get_string("name")
+		if not names.has(name):
+			names.append(name)
+	return names
+
+
+## Two entries in one family must not answer to the same generated line. Where they do, the harness
+## would fail the second one with "its own spelling is claimed by it" and leave a table author
+## looking at a regex; said here it names both entries and the line they are fighting over.
+static func _validate_fixture_line(entry: Dictionary, id: String, seen: Dictionary) -> PackedStringArray:
+	var problems: PackedStringArray = PackedStringArray()
+	var line: String = ActionCodegen._apply_template(str(entry.get("shape", "")),
+		entry.get("slots", {}) as Dictionary)
+	if seen.has(line):
+		problems.append("%s: its fixture line is already %s's" % [id, str(seen[line])])
+		return problems
+	seen[line] = id
+	return problems
+
+
+## True when a pattern has a capturing group with no name. Read as text, tracking the two places a
+## bracket means something else: after a backslash it is a bracket the author wants matched, and
+## inside a character class it is one of the characters allowed there.
+static func _has_an_unnamed_group(pattern: String) -> bool:
+	var index: int = 0
+	var in_class: bool = false
+	while index < pattern.length():
+		var character: String = pattern[index]
+		if character == "\\":
+			index += 2
+			continue
+		if in_class:
+			in_class = character != "]"
+			index += 1
+			continue
+		if character == "[":
+			in_class = true
+			index += 1
+			continue
+		if character == "(" and pattern.substr(index + 1, 1) != "?":
+			return true
+		index += 1
+	return false
 
 
 ## Every `.gd` in the family folder, sorted, so discovery is the same on every machine.

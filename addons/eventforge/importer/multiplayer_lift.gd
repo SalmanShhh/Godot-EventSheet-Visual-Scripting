@@ -254,17 +254,24 @@ const SEND_AUDIENCES: Array[Dictionary] = [
 	{"id": "peer", "ace_id": "SendMessageToPeer", "call": "rpc_id\\((?<peer>.+?),[ \\t]*", "spelling": "rpc_id({peer}, ", "peer": "peer"}
 ]
 
-## An optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`). Not a param: the row says
-## nothing about it, so it rides into the stored spelling verbatim and comes back unchanged.
-const SEND_RECEIVER: String = "(?:(?:\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_.]*)\\.)?"
 
-## The message name as a STRING, in either quoting. The `&` is the author's spelling, not a value, so
-## it stays outside the capture and rides into the template the same way the receiver does.
-const SEND_NAME: String = "&?\"(?<message>[A-Za-z_][A-Za-z0-9_]*)\""
-
-## The separator as WRITTEN. Everything outside a param capture is kept verbatim, so a call spelled
-## without the space re-emits without it instead of being canonicalised into a byte-gate failure.
-const SEND_GAP: String = ",[ \\t]*"
+## THE SPANS A SEND IS MADE OF, spelled by the capture grammar rather than here. Four of them, and
+## not one is peculiar to networking:
+##
+##   an optional receiver in front of the call (`$Other.`, `%Ui.`, `state.`) - NOT a param, because
+##     the row says nothing about it, so it rides into the stored spelling verbatim; taken in the
+##     widest spelling (a dotted chain) precisely because nothing has to be true about it;
+##   the message name as a STRING, in either quoting, where the `&` is the author's spelling rather
+##     than a value and stays outside the capture;
+##   the separator as WRITTEN, so a call spelled without the space re-emits without it instead of
+##     being canonicalised into a byte-gate failure;
+##   and the arguments, which are one expression however many commas are in them.
+##
+## This family is where those four were written out by hand first, and it is the one migrated onto
+## the shared vocabulary first: its spellings are the best-tested in the folder, so a fragment that
+## did not reproduce them exactly would have been caught by the byte gate that already stood here.
+static func _send_receiver() -> String:
+	return EventForgeLiftGrammar.receiver("", EventForgeLiftGrammar.NODE_CHAIN)
 
 
 ## The two single-statement families, as table entries: the six sends, then the two ways of leaving.
@@ -277,7 +284,7 @@ static func lift_entries() -> Array[Dictionary]:
 		entries.append(_send_entry(audience, true))
 		entries.append(_send_entry(audience, false))
 	entries.append(_leave_entry("leave_by_closing_the_peer",
-		"^(?<peer>[A-Za-z_][A-Za-z0-9_]*)\\.close\\(\\)$", "peer.close()",
+		"^%s\\.close\\(\\)$" % EventForgeLiftGrammar.word("peer"), "peer.close()",
 		Callable(EventForgeMultiplayerLift, "_peer_is_declared")))
 	entries.append(_leave_entry("leave_via_the_tree",
 		"^get_tree\\(\\)\\.get_multiplayer\\(\\)\\.multiplayer_peer = null$",
@@ -294,7 +301,8 @@ static func lift_entries() -> Array[Dictionary]:
 	})
 	entries.append({
 		"id": "send_raw_bytes", "ace_id": "SendRawBytes",
-		"pattern": "^multiplayer\\.multiplayer_peer\\.put_packet\\((?<bytes>.+)\\)$",
+		"pattern": "^multiplayer\\.multiplayer_peer\\.put_packet\\(%s\\)$"\
+			% EventForgeLiftGrammar.expression("bytes"),
 		"shape": "multiplayer.multiplayer_peer.put_packet({bytes})",
 		"params": PackedStringArray(["bytes"]),
 		"slots": {"bytes": "bytes"}
@@ -313,8 +321,10 @@ static func _send_entry(audience: Dictionary, with_arguments: bool) -> Dictionar
 	var entry: Dictionary = {
 		"id": "send_%s%s" % [str(audience["id"]), "_with_arguments" if with_arguments else ""],
 		"ace_id": str(audience["ace_id"]),
-		"pattern": "^%s%s%s%s" % [SEND_RECEIVER, str(audience["call"]), SEND_NAME,
-			"%s(?<args>.+)\\)$" % SEND_GAP if with_arguments else "\\)$"],
+		"pattern": "^%s%s%s%s" % [_send_receiver(), str(audience["call"]),
+			EventForgeLiftGrammar.quoted_name("message"),
+			"%s%s\\)$" % [EventForgeLiftGrammar.SEPARATOR,
+				EventForgeLiftGrammar.expression("args")] if with_arguments else "\\)$"],
 		"shape": "%s\"{message}\"%s)" % [str(audience["spelling"]), ", {args}" if with_arguments else ""],
 		"slots": {"message": "take_damage" if with_arguments else "ping"}
 	}

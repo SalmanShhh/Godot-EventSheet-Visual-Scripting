@@ -156,20 +156,28 @@ static func _only_the_torch(captures: Dictionary) -> bool:
 
 ## Validation, by the sentences it produces. Every way an entry can be wrong is seeded once, because
 ## a validator nobody has watched fail is a validator that passes everything.
+##
+## Every entry below has its OWN spelling, so the seeded faults do not collide with each other - the
+## one pair that shares a fixture line shares it deliberately, because that is one of the faults.
 static func _test_a_broken_table_is_named() -> bool:
 	var problems: PackedStringArray = EventForgeLiftTable.validate([
 		{"id": "twin", "ace_id": "A", "pattern": "^a$", "shape": "a", "slots": {}},
 		{"id": "twin", "ace_id": "A", "pattern": "^b$", "shape": "b", "slots": {}},
-		{"id": "loose", "ace_id": "A", "pattern": "a", "shape": "a", "slots": {}},
+		{"id": "loose", "ace_id": "A", "pattern": "c", "shape": "c", "slots": {}},
 		{"id": "uncaptured", "ace_id": "A", "pattern": "^a (?<one>.+)$", "params": ["two"],
 			"shape": "a {two}", "slots": {"two": "x"}},
-		{"id": "unsampled", "ace_id": "A", "pattern": "^a (?<one>.+)$", "params": ["one"],
-			"shape": "a {one}", "slots": {}},
-		{"id": "unshaped", "ace_id": "A", "pattern": "^a (?<one>.+)$", "params": ["one"],
-			"shape": "a", "slots": {"one": "x"}},
-		{"id": "stray", "ace_id": "A", "pattern": "^a$", "shape": "a", "slots": {}, "colour": "red"},
-		{"id": "unguarded", "ace_id": "A", "pattern": "^a$", "shape": "a", "slots": {}, "guard": "nope"},
-		{"ace_id": "A", "pattern": "^a$", "shape": "a"}
+		{"id": "unsampled", "ace_id": "A", "pattern": "^d (?<one>.+)$", "params": ["one"],
+			"shape": "d {one}", "slots": {}},
+		{"id": "unshaped", "ace_id": "A", "pattern": "^e (?<one>.+)$", "params": ["one"],
+			"shape": "e", "slots": {"one": "x"}},
+		{"id": "stray", "ace_id": "A", "pattern": "^f$", "shape": "f", "slots": {}, "colour": "red"},
+		{"id": "unguarded", "ace_id": "A", "pattern": "^g$", "shape": "g", "slots": {}, "guard": "nope"},
+		{"id": "grouped", "ace_id": "A", "pattern": "^i (i+)$", "shape": "i", "slots": {}},
+		{"id": "unbacked", "ace_id": "A", "pattern": "^j$", "shape": "j {k}", "slots": {}},
+		{"id": "echo", "ace_id": "A", "pattern": "^m$", "shape": "m", "slots": {}},
+		{"id": "echo_again", "ace_id": "A", "pattern": "^n$", "shape": "m", "slots": {}},
+		EventForgeLiftExample.entry("by_example", "A", ""),
+		{"ace_id": "A", "pattern": "^z$", "shape": "z"}
 	])
 	return _check("every broken entry is named, and why", problems, PackedStringArray([
 		"twin: two entries share this id",
@@ -180,6 +188,10 @@ static func _test_a_broken_table_is_named() -> bool:
 		"unshaped: one is neither in the shape nor given a default",
 		"stray: unknown key colour",
 		"unguarded: the guard is not a callable",
+		"grouped: every group in the pattern must be named or non-capturing",
+		"unbacked: the shape's {k} is backed by no capture",
+		"echo_again: its fixture line is already echo's",
+		"by_example: refused - the example is empty",
 		"(unnamed entry): no id",
 		"(unnamed entry): no slots"
 	]))
