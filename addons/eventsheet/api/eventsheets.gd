@@ -1892,6 +1892,7 @@ const MODULE_GUIDE_OVERRIDES := {
 	"collision": "Collisions-Joints-And-World-Physics",
 	# The filtered touch sentences are the same reader's question as the rest of the collision
 	# vocabulary, asked one row later, so they share its guide rather than opening a second one.
+	"collision_edge": "Collisions-Joints-And-World-Physics",
 	"collision_filter": "Collisions-Joints-And-World-Physics",
 	"comparison": "Comparing-Values",
 	"timed_input": "Timers-Waiting-And-Cooldowns",

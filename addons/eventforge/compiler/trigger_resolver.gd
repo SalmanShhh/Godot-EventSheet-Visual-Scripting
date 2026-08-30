@@ -13,6 +13,10 @@ extends RefCounted
 ## cache has seen the new script.
 const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
 
+## The eight EDGE triggers - the step a standing state changed - read through the one file every
+## reader of them shares. Loaded by path for the same reason the filters are.
+const CollisionEdges := preload("res://addons/eventforge/registration/collision_edges.gd")
+
 
 ## The trigger id a TOP-LEVEL event actually compiles as. A blank event - no trigger picked - means
 ## in an event sheet exactly what it looks like: it runs every tick, so it compiles as the every-tick
@@ -38,6 +42,12 @@ static func get_trigger_key(event: EventRow) -> String:
 	var provider_id: String = event.trigger_provider_id
 	if event.trigger_id.is_empty():
 		provider_id = EVERY_TICK_TRIGGER_PROVIDER_ID
+	if CollisionEdges.is_edge(trigger_id):
+		# An edge is a MOMENT of a callback, not a callback of its own: landing is a moment of the
+		# physics step, a first overlap a moment of the arrival signal. So an edge event groups into
+		# the handler that callback already owns - two functions of one name would not parse - and
+		# which moment it answers is the gate condition under it, which is a term of its own `if`.
+		trigger_id = CollisionEdges.host_trigger_for(trigger_id)
 	if trigger_id == MENU_TRIGGER_ID:
 		# Every item of ONE menu shares a single handler, for the same reason every notification
 		# shares `_notification`: the engine calls one function with the id that was chosen, and which
@@ -161,6 +171,17 @@ static func notification_constant_for(trigger_id: String) -> String:
 	return trigger_id.substr(NOTIFICATION_PREFIX.length())
 
 
+## The trigger id whose SIGNATURE this event compiles under. It is the event's own id for every
+## trigger but the eight edges, each of which is a moment of a callback something else already owns
+## and therefore shares that callback's handler (see get_trigger_key, which groups them the same way
+## for the same reason).
+static func _handler_trigger_id(event: EventRow) -> String:
+	var trigger_id: String = effective_trigger_id(event)
+	if CollisionEdges.is_edge(trigger_id):
+		return CollisionEdges.host_trigger_for(trigger_id)
+	return trigger_id
+
+
 ## Resolves trigger metadata for code generation:
 ## - function_name/args: the handler signature to emit
 ## - signal_name: non-empty for signal-backed triggers (the compiler emits
@@ -170,7 +191,7 @@ static func notification_constant_for(trigger_id: String) -> String:
 static func resolve_trigger(event: EventRow) -> Dictionary:
 	var source_path: String = event.trigger_source_path.strip_edges()
 	var source_token: String = _identifier_for_source(source_path)
-	match effective_trigger_id(event):
+	match _handler_trigger_id(event):
 		"OnReady":
 			return _lifecycle("_ready", "")
 		"OnProcess":
@@ -430,7 +451,11 @@ const TEMPO_SIGNAL := "signal"          # ➜ reacts to a signal - the honest de
 ## shipped green ➜ badge so unclassified ids never look broken).
 static func tempo_class_for(trigger_id: String) -> String:
 	match trigger_id:
-		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick":
+		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick", \
+				"OnLanded", "OnLanded3D", "OnLeftTheGround", "OnLeftTheGround3D":
+			# The two floor edges are moments of the physics step, so they are asked EVERY step even
+			# though they answer on almost none of them. The badge says the tempo the event really
+			# runs at, not the tempo it fires at, because that is the number a hot path is about.
 			return TEMPO_EVERY_TICK
 		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput", "OnInputEvent", "On2DViewportInput", \
 				"OnControlInput":

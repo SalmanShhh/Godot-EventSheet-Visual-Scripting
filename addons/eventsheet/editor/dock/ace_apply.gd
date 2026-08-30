@@ -34,6 +34,10 @@ extends RefCounted
 ## the line they compile to can only ever be written in one place.
 const CROWD_ACES := preload("res://addons/eventforge/registration/modules/crowd_aces.gd")
 
+## The eight EDGE triggers and the gate each one puts under itself, read through the one file every
+## reader of them shares.
+const COLLISION_EDGES := preload("res://addons/eventforge/registration/collision_edges.gd")
+
 var _dock: Control = null
 
 
@@ -593,6 +597,17 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 			CROWD_ACES.REMOVED_NODE_ARGUMENT: CROWD_ACES.REMOVED_NODE_ARGUMENT
 		}
 		event_row.conditions.append(crowd_gate)
+	# An EDGE trigger is a moment of a callback something else already owns - landing is a moment of
+	# the physics step, a first overlap a moment of the arrival signal - so the trigger says which
+	# callback the event lives in and the gate under it says which moment it answers. Added here for
+	# the same reason the language gate is: visible in the sheet, editable, deletable, and a plain
+	# condition on disk. Built through the ordinary create-from-definition step, so the floor gates'
+	# memory is baked with a fresh uid exactly as any other stateful condition's is.
+	var edge_gate_id: String = COLLISION_EDGES.gate_for(definition.id)
+	if not edge_gate_id.is_empty() and event_row.conditions.is_empty():
+		var edge_gate_definition: ACEDefinition = _dock._find_definition(definition.provider_id, edge_gate_id)
+		if edge_gate_definition != null:
+			event_row.conditions.append(_create_condition_from_definition(edge_gate_definition, {}))
 	# On Animation Frame is the SPRITE's frame_changed signal, which fires for every frame of
 	# every clip - so which frame the event answers is a condition under it, added here for the same
 	# reason the language gate is: visible in the sheet, editable, deletable, and a plain condition on
