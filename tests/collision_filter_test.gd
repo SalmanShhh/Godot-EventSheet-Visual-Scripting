@@ -69,6 +69,7 @@ static func run() -> bool:
 	var ok: bool = _test_the_rows()
 	ok = _test_what_is_emitted() and ok
 	ok = _test_two_groups_are_two_handlers() and ok
+	ok = _test_one_group_spelled_twice_is_one_handler() and ok
 	ok = _test_the_lift() and ok
 	ok = _test_the_refusal() and ok
 	ok = _test_the_question() and ok
@@ -137,6 +138,35 @@ static func _test_two_groups_are_two_handlers() -> bool:
 	ok = _check("and both are connected",
 		[output.contains("connect(_on_body_entered_enemies)"),
 			output.contains("connect(_on_body_entered_pickups)")], [true, true]) and ok
+	return ok
+
+
+## THE OTHER HALF of the rule above, and the one that breaks the file rather than the reading: two
+## rows that name ONE group in two spellings are one handler, because the name a filtered handler
+## wears is the name the grouping key is made of. Keyed on the row's raw text instead, `"enemies"` and
+## `&"enemies"` are two groups with one function name - two `func _on_body_entered_enemies` and two
+## identical connect lines - and the emitted file does not parse at all.
+static func _test_one_group_spelled_twice_is_one_handler() -> bool:
+	var output: String = _compiled(_sheet([
+		["OnOverlapWithGroup", "\"enemies\""], ["OnOverlapWithGroup", "&\"enemies\""]]))
+	var ok: bool = _check("one group spelled two ways is ONE handler",
+		_count(output, "func _on_body_entered_enemies("), 1)
+	ok = _check("connected once", _count(output, "body_entered.connect(_on_body_entered_enemies)"), 1) and ok
+	ok = _check("with one guard and both rows under it",
+		_body_of(output, "_on_body_entered_enemies"),
+		["\tif not body.is_in_group(\"enemies\"):", "\t\treturn", "\tprint(body.name)",
+			"\tprint(body.name)"]) and ok
+	# And the proof that matters: the emitted text is a script Godot will load. A duplicate function
+	# name is a PARSE error, which every other assertion in this file would sail straight past.
+	ok = _check("and the emitted script parses", _parses(output), "") and ok
+	# The same rule from the other end: two groups that are really two must never collapse onto one
+	# name, however their digests are made - an expression has no name to read, so the digest under it
+	# is the whole hash rather than a few digits of it.
+	var by_expression: String = _compiled(_sheet([
+		["OnOverlapWithGroup", "self.name"], ["OnOverlapWithGroup", "self.get_class()"]]))
+	ok = _check("and two expression-named groups stay two handlers",
+		[_count(by_expression, "func _on_body_entered_filtered_"), _parses(by_expression)],
+		[2, ""]) and ok
 	return ok
 
 
@@ -249,6 +279,23 @@ static func _body_of(output: String, function_name: String) -> Array:
 				break
 			body.append(line)
 	return body
+
+
+## How many times a piece of text appears in the output. Counted rather than asked about, because
+## "is this handler there" and "is this handler there TWICE" are different questions and only the
+## second one catches a file that will not parse.
+static func _count(output: String, needle: String) -> int:
+	return output.count(needle)
+
+
+## Whether the emitted text is a script the engine will really load, as "" when it is. Two functions
+## of one name is a PARSE error, and every assertion about text in this file sails straight past one:
+## the output still contains the handler, still contains the connect, and still reads correctly.
+static func _parses(output: String) -> String:
+	var script: GDScript = GDScript.new()
+	script.source_code = output
+	var result: int = script.reload()
+	return "" if result == OK else "the emitted script does not load (error %d)" % result
 
 
 static func _opened(source: String) -> EventSheetResource:

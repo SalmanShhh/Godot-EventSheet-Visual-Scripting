@@ -100,16 +100,23 @@ static func group_token(group_expression: String) -> String:
 ## can sit on the same node for the same signal and two functions may not share a name.
 ##
 ## A plain group name reads as itself (`_on_body_entered_enemies`), which is the whole point. A group
-## named by an expression has no name to read, so it says only that it is filtered, plus a short
-## stable digest that keeps two different expressions in two functions. A row nobody has filled in
-## yet says just `_filtered`, and every such row shares that one handler.
+## named by an expression has no name to read, so it says only that it is filtered, plus a stable
+## digest that keeps two different expressions in two functions. A row nobody has filled in yet says
+## just `_filtered`, and every such row shares that one handler.
+##
+## THIS IS ALSO THE GROUPING KEY. Whatever answers the same here IS one handler, because the compiler
+## keys a filtered event by this very suffix - so two spellings of one group (`"enemies"` and
+## `&"enemies"`) are one function rather than two functions of one name, and two expressions that are
+## not the same expression can never become one either. The digest is therefore the WHOLE hash, not a
+## few digits of it: a truncated digest is two different filters wearing one name, which is a file
+## that does not parse.
 static func handler_suffix(group_expression: String) -> String:
 	var token: String = group_token(group_expression)
 	if not token.is_empty():
 		return token
 	if group_expression.strip_edges().is_empty():
 		return "_filtered"
-	return "_filtered_%s" % str(abs(hash(group_expression.strip_edges()))).substr(0, 4)
+	return "_filtered_%x" % abs(hash(group_expression.strip_edges()))
 
 
 ## The name of the first argument a handler signature declares ("body: Node" -> "body"), which is the

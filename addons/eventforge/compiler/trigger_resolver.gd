@@ -79,9 +79,16 @@ static func get_trigger_key(event: EventRow) -> String:
 		# overlap with" are one engine signal read from the blocking and the noticing side, so two
 		# such rows on one node and one group are two halves of ONE handler. Keying them apart would
 		# ask for the same function name twice, which does not parse.
+		#
+		# And the group rides in the key as its HANDLER SUFFIX rather than as the text the row holds,
+		# because the suffix is what names the function below. Keyed on the raw text, `"enemies"` and
+		# `&"enemies"` are two keys that resolve to one name - two `func _on_body_entered_enemies` and
+		# two identical connect lines in one file, which does not parse. One normalisation, both
+		# readings.
 		return "%s::%s::%s::%s" % [provider_id,
 			str((CollisionFilters.FILTERED_TRIGGERS[trigger_id] as Dictionary)["stem"]),
-			event.trigger_source_path, CollisionFilters.group_of(event)]
+			event.trigger_source_path,
+			CollisionFilters.handler_suffix(CollisionFilters.group_of(event))]
 	return "%s::%s::%s" % [provider_id, trigger_id, event.trigger_source_path]
 
 
