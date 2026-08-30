@@ -56,10 +56,11 @@ const SHAPE_CLASSES: PackedStringArray = [
 const ONE_WAY_PROPERTY := "one_way_collision"
 const ROTATION_PROPERTY := "rotation"
 
-## Half a turn, in radians. A shape rotated further than a quarter turn from upright has its
-## blocking side pointing downwards, which is the whole of the facing question - a platform that
-## lets bodies through from above and stops them from below.
-const QUARTER_TURN := 0.7853981633974483
+## A quarter turn, in radians. A shape turned further than this from upright has its blocking side
+## pointing downwards, which is the whole of the facing question - a platform that lets bodies
+## through from above and stops them from below. Turned exactly a quarter it blocks sideways and
+## nothing lands on it either way, so the test is strictly greater.
+const QUARTER_TURN := PI / 2.0
 
 ## The engine's own class every collision object descends from, per dimension. Asked of ClassDB so a
 ## node type nobody listed here is still recognised, and matched on the name's tail when the class is
@@ -270,13 +271,20 @@ static func _one_way_shapes(shapes: Array[Dictionary]) -> Array[Dictionary]:
 		var properties: Dictionary = shape.get("properties", {})
 		if not _bool_property(properties, ONE_WAY_PROPERTY, false):
 			continue
-		var turned: float = absf(str(properties.get(ROTATION_PROPERTY, "0")).to_float())
 		found.append({
 			"name": str(shape.get("name", "")),
 			"path": str(shape.get("path", "")),
-			"faces_down": turned > QUARTER_TURN,
+			"faces_down": faces_down(str(properties.get(ROTATION_PROPERTY, "0")).to_float()),
 		})
 	return found
+
+
+## Whether one rotation turns a one-way shape's blocking side downwards. Wrapped to the half turn
+## either side of upright FIRST, because a scene file writes whatever the author dragged the handle
+## to: `rotation = 6.2` is five degrees short of a full turn - upright - and reading it raw makes it
+## the most turned-over shape in the project. A full turn is no turn.
+static func faces_down(rotation: float) -> bool:
+	return absf(wrapf(rotation, -PI, PI)) > QUARTER_TURN
 
 
 static func _int_property(properties: Dictionary, key: String, fallback: int) -> int:

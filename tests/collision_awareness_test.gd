@@ -110,6 +110,17 @@ static func _test_the_reader() -> bool:
 	var ledge: Dictionary = _collidable("res://tests/fixtures/collision_scene_ledge.tscn", "Ledge")
 	ok = _check("an upright one-way shape is not turned over",
 		bool(((ledge.get("one_way", []) as Array)[0] as Dictionary).get("faces_down", true)), false) and ok
+	# The facing itself, at the four rotations that decide it. A quarter turn is where the blocking
+	# side stops pointing up, and a rotation is wrapped to the half turn either side of upright first:
+	# a scene writes whatever the handle was dragged to, and `rotation = 6.2` is five degrees short of
+	# a full turn - upright - rather than the most turned-over shape in the project.
+	ok = _check("the facing is read at the quarter turn, not before it",
+		[EventSheetSceneCollisionFacts.faces_down(0.0),
+			EventSheetSceneCollisionFacts.faces_down(0.8727),
+			EventSheetSceneCollisionFacts.faces_down(PI),
+			EventSheetSceneCollisionFacts.faces_down(6.2),
+			EventSheetSceneCollisionFacts.faces_down(-3.0)],
+		[false, false, true, false, true]) and ok
 	# The bit arithmetic underneath all of it - Godot numbers layers from 1 and stores them from 0,
 	# which is the off-by-one every hand-written mask check gets wrong once.
 	ok = _check("layer 1 is the first bit", EventSheetSceneCollisionFacts.bit_of(1), 1) and ok
