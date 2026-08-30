@@ -21,6 +21,11 @@
 class_name EventSheetACELifter
 extends RefCounted
 
+## The four group-filtered touch triggers, read through the one file the resolver and the
+## compiler read them through too. By path rather than by class name, like every other constant
+## here, so the lifter never waits on the editor's class cache.
+const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
+
 ## The families that recognise a spelling by what it MEANS rather than by its shape, asked in this
 ## order before the general reverse index. Each answers `match_line(line)` with the row that spelling
 ## is, or {} when it does not claim it - so adding a family here is adding one line, and a family
@@ -32,12 +37,17 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/animation_lift.gd"),
 	preload("res://addons/eventforge/importer/removal_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_layer_lift.gd"),
+	preload("res://addons/eventforge/importer/collision_filter_lift.gd"),
 ]
 
 ## The families that also recognise a CONDITION term - the same list, filtered by the second static
 ## a family declares when its vocabulary has a question in it as well as verbs. Asked before the
 ## general reverse index for the same reason: the index reads a term by its shape alone and cannot
 ## know which of two identically spelled rows a file means.
+## The static a family declares when its vocabulary has VERBS in it. A family of questions only
+## (the filtered-overlap one) declares none, and is simply not asked.
+const ACTION_SPELLING_METHOD: String = "match_line"
+
 const CONDITION_SPELLING_METHOD: String = "match_condition"
 
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
@@ -1793,6 +1803,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_source: String = ""
 	# The connect line VERBATIM, so emission reproduces the author's own spelling of it.
 	var connect_line: String = ""
+	# The group a FILTERED touch handler guards on, and the guard exactly as it was written. Both
+	# ride onto every event of the handler below: the group is what the row shows in its With
+	# field, the lines are what emission writes back, so the file returns byte-for-byte.
+	var filter_group: String = ""
+	var filter_guard: PackedStringArray = PackedStringArray()
 	# True when the wiring lives in the .tscn instead. There is no connect line to reproduce and
 	# none may be invented: the script's bytes must come back exactly as they went in.
 	var scene_connected: bool = false
@@ -1892,6 +1907,29 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			trigger_id = "signal:%s" % signal_name
 			trigger_provider = ""
 			trigger_args = header_match.get_string(2)
+	# A handler whose FIRST statement is a group early return is not a bare touch trigger with an
+	# odd line at the top - it is the filtered one, and the guard IS the filter. Read here so the
+	# row opens with its With field filled instead of stranding the line as something the sheet
+	# has no words for. Only the exact early-return shape is claimed; an `if` that guards on more
+	# than the group means more than this row can say, and is left to read as itself.
+	if CollisionFilters.FILTERED_FOR_BARE.has(trigger_id):
+		var guard: Dictionary = CollisionFilters.match_guard(function_lines, index)
+		var subject: String = str(guard.get("subject", ""))
+		if not subject.is_empty() and subject == CollisionFilters.first_argument_name(trigger_args):
+			# Which of the two wordings this is comes from the class that raises the signal: a body
+			# blocks what it hits and reads as a collision, an Area only notices and reads as an
+			# overlap. An unknown class reads as the collision, which is the primary wording - and
+			# either way the bytes are identical, so a mis-read side costs words and nothing else.
+			var emitting_class: String = source_class
+			if emitting_class.is_empty() and trigger_source.is_empty():
+				emitting_class = _lift_host_class
+			var filtered_id: String = CollisionFilters.filtered_trigger_for(trigger_id, emitting_class)
+			if not filtered_id.is_empty():
+				trigger_id = filtered_id
+				filter_group = str(guard.get("group", ""))
+				for guard_index: int in range(index, int(guard.get("next", index))):
+					filter_guard.append(function_lines[guard_index])
+				index = int(guard.get("next", index))
 	var reverse_entries: Array = _build_reverse_entries()
 	# The trigger id doubles as the lift SCOPE: an ACE reading this handler's own arguments is only in
 	# the running here (see TRIGGER_SCOPED_ACES), and the scope rides every nested block with it.
@@ -1902,6 +1940,10 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	for event: Variant in events:
 		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
 			return {"ok": false}
+	if not filter_group.is_empty():
+		for event: Variant in events:
+			(event as EventRow).trigger_params[CollisionFilters.GROUP_PARAM] = filter_group
+			(event as EventRow).set_meta(CollisionFilters.SOURCE_GUARD_META, filter_guard)
 	if not source_header.is_empty():
 		# Every event of this handler carries the source spelling - the section emitter reads
 		# it off whichever event leads the group, so top-of-sheet reordering cannot lose it.
@@ -2898,7 +2940,11 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	# a light, the shader has never heard of that dial) simply does not claim the line, which falls
 	# through to the general index and stays whatever it already was.
 	for family: GDScript in SPELLING_FAMILIES:
-		var spelled: Dictionary = family.call("match_line", line)
+		# A family whose vocabulary is all QUESTIONS declares no verb matcher, exactly as one with
+		# no questions declares no condition matcher. Asked the same way on both sides.
+		if not family.has_method(ACTION_SPELLING_METHOD):
+			continue
+		var spelled: Dictionary = family.call(ACTION_SPELLING_METHOD, line)
 		if spelled.is_empty():
 			continue
 		_flush_raw(event, pending_raw, blank_box)
