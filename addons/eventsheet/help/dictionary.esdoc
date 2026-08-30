@@ -435,6 +435,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_action_just_pressed` | [On Action Just Pressed](ace:Core/IsActionJustPressed) | Input | Vocabulary |
 | `is_action_just_released` | [On Action Just Released](ace:Core/IsActionJustReleased) | Input | Vocabulary |
 | `is_action_pressed` | [Is Action Pressed](ace:Core/IsActionPressed) | Input | Vocabulary |
+| `is_action_released` | [Event Is Action Released](ace:Core/EventIsActionReleased) | Input Event | Vocabulary |
 | `is_ancestor_of` | [Is Ancestor Of](ace:Core/IsAncestorOf) | Nodes | Vocabulary |
 | `is_anything_pressed` | [Anything Is Pressed](ace:Core/IsAnythingPressed) | Keyboard | Vocabulary |
 | `is_bus_effect_enabled` | [Is Bus Effect Enabled](ace:Core/AudioIsBusEffectEnabled) | Audio Server | Vocabulary |

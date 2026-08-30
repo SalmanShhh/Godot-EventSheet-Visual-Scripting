@@ -2,6 +2,52 @@
 
 ## [Unreleased]
 
+### Four hand-written idioms the sheet had no words for
+
+- **The input handler asks the event now.** `if event.is_action_pressed("jump"):` inside `_input` or
+  `_unhandled_input` used to open as *Expression Is True* - the honest catch-all, and the plainest
+  thing a sheet could say about the commonest input shape there is. It reads as *"jump" was pressed*,
+  beside three more: the press widened to include a held key's repeats, the release, and the question
+  of which action an event belongs to at all. Both of Godot's quotings answer to the same row, because
+  the `&` is a spelling rather than a value and rides back out untouched, and the action names come
+  from the project's own Input Map exactly as the polled Input rows' do. These are the rows for the
+  inside of a handler; the Input section's rows ask the keyboard how things stand right now, which is
+  what an every-tick event wants.
+- **A property that names its accessors is a property.** Godot has two spellings for a guarded value,
+  and the sheet only read one. `var health: int = 100:` followed by `set = _set_health,` opens as the
+  variable row it is, with a *On health set → _set_health* sub-row under it saying which function runs
+  and when - and the functions themselves go on reading as the functions they are, where they were
+  written, rather than being copied under the declaration twice. Before, those two accessor lines were
+  not statements, so nothing could lift them and they took the declaration above them into a code
+  block. Every shape the emitter would not write back the same way - the other order, a trailing comma
+  with nothing after it, a name that is not one name - still stays the verbatim block it was.
+- **A connect that binds values still wires a trigger.** `pressed.connect(_on_open.bind(3))` was
+  refused by the connect reader outright, which stranded the handler as a helper function nobody could
+  see the caller of. It reads as the trigger it is, and the bound values land on the payload chips
+  paired with the arguments they fill - `slot = 3` rather than a bare `slot` a reader then has to go
+  and look up. Godot appends bound values to the end of a handler's arguments, which is what makes
+  that a pairing rather than a guess. A function the file publishes as a VERB is never re-read as a
+  handler, however it is wired: the verb says what it IS, everywhere, and a trigger could only ever
+  describe one of its wirings.
+- **The four notifications a game reacts to have names.** Paused, unpaused, the window's close
+  request and an object about to be freed are pickable rows now, filed under Notifications, and every
+  one of them compiles into the same `match what:` the engine's one-callback design asks for. They
+  have lifted out of hand-written files since the notification reading shipped; what they lacked was a
+  name, so the reading called them by their constant. `NOTIFICATION_PREDELETE` also stops reading *On
+  destroyed*: that is what a node LEAVING THE TREE reads as, which can happen more than once and is
+  not this, so it reads *On object freed* and the two moments stop sharing one sentence.
+- **Two more files in the corpus, both at 100%.** `pause_menu.gd` (an input handler, buttons wired
+  with bound values, and the pause notifications) went from 40 lines of code to none, with four of its
+  lines now claimed by a lift entry by name; `player_stats.gd` (properties in both spellings) went
+  from 75% and two lines of code to 100% and none.
+- **Two things the reading was quietly getting wrong, found on the way.** Measuring a buffer used to
+  SAVE it: the reading compiled to the file it had been asked to read, which is invisible while a file
+  round-trips byte-identically and is exactly wrong the moment one does not - the byte gate would have
+  overwritten the fixture with the drifted bytes and passed on the next run. And the half-lifted view
+  a whole-file fact is read from was a hand-maintained list of row ids, so a fact stopped working the
+  day the line it was about gained a row: an input window could no longer say which control it was
+  waiting for. Rows answer for themselves now, through the same emitters the file is saved with.
+
 ### Every property too
 
 - **The Inspector's own three columns, on a row.** A write to a property of an object whose class
