@@ -45,10 +45,19 @@ const LAYER_QUIET: String = "quiet"
 ## just be code.
 const STAYS_CODE: String = "stays code"
 
-## Where a reading compiles to. Nothing is written there - SheetCompiler takes a path to put in the
-## source map and in the emitted header, and the reading only ever reads the string it hands back.
-## Named plainly because the canvas shows the file name at the head of the sheet, and a buffer with no
-## file behind it should say so rather than showing an internal scratch name.
+## WHERE A READING'S BYTES GO, and the reason this is not the file being read. `SheetCompiler.compile`
+## does not only hand its output back: it WRITES it, to the output path it was given or, failing that,
+## to the sheet's own source path. A reading that let it default would therefore save every buffer it
+## measured back over the file it came from - which is invisible while a file round-trips
+## byte-identically (the compiler skips a write whose bytes already match) and is exactly wrong the
+## moment one does not: the gate would overwrite the fixture with the drifted bytes and pass on the
+## next run, having repaired the evidence. So a reading always compiles to this scratch path, and the
+## file behind the buffer is never opened for writing.
+##
+## It stays the sheet's `external_source_path` all the same - that is what puts it in the source map
+## and switches the compiler onto the order-preserving path - so the only thing this changes is where
+## the bytes land. Named plainly because the canvas shows the file name at the head of the sheet, and a
+## buffer with no file behind it should say so rather than showing an internal scratch name.
 const SCRATCH_PATH: String = "user://buffer.gd"
 
 
@@ -75,7 +84,8 @@ static func read(source: String, script_path: String = "", scratch_entries: Arra
 	# the buffer as a fresh sheet and call every file in the corpus drifted.
 	if sheet.external_source_path.is_empty():
 		sheet.external_source_path = script_path if not script_path.is_empty() else SCRATCH_PATH
-	var compiled: Dictionary = SheetCompiler.compile(sheet, sheet.external_source_path)
+	# The scratch path, never the file's own - see SCRATCH_PATH. A reading measures; it does not save.
+	var compiled: Dictionary = SheetCompiler.compile(sheet, SCRATCH_PATH)
 	var emitted: String = str(compiled.get("output", ""))
 	reading["emitted"] = emitted
 	reading["identical"] = emitted == source
@@ -109,7 +119,7 @@ static func layer_counts(reading: Dictionary) -> Dictionary:
 ## FIRST and come back marked as the scratch family they are, so a draft never looks like a shipped
 ## spelling.
 static func table_claim(line: String, scratch_entries: Array = []) -> Dictionary:
-	var text: String = line.strip_edges()
+	var text: String = _asked_term(line.strip_edges())
 	if text.is_empty() or text.begins_with("#"):
 		return {}
 	if not scratch_entries.is_empty():
@@ -136,6 +146,26 @@ static func table_claim(line: String, scratch_entries: Array = []) -> Dictionary
 
 
 # ── the pieces ──────────────────────────────────────────────────────────────────
+
+
+## The part of a line a lift table is actually asked about. For a statement that is the whole line;
+## for a BRANCH it is the question inside it, because a condition family's entries are written to
+## match the term (`event.is_action_pressed("jump")`) and never the branch that carries it.
+##
+## Without this a condition family could never show at the entry layer: its lines fell through to the
+## general reading, which named them correctly and said nothing about WHICH vocabulary named them -
+## so a family of questions looked, on the tally, exactly like a family nobody had written.
+##
+## Only the three heads the emitter itself writes, and only when the line ends in the colon that
+## makes it a branch. A line beginning with the word "if" that is not a branch (there is no such
+## statement in GDScript) cannot reach this, and a term is asked exactly as it was written.
+static func _asked_term(text: String) -> String:
+	if not text.ends_with(":"):
+		return text
+	for head: String in ["if ", "elif ", "while "]:
+		if text.begins_with(head):
+			return text.substr(head.length(), text.length() - head.length() - 1).strip_edges()
+	return text
 
 
 ## One entry per source line, in this order and for this reason:
