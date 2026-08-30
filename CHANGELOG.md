@@ -661,6 +661,14 @@
   column showed it, the hover described it. A name the file uses both ways is now in none of the
   declaration maps, so those rows keep the plainer view they already had. The bytes never moved
   either way, which is why no gate could see it.
+- **The muted word beside a derived row is always the class.** Two lenses wanted that slot, and the
+  wrong one was winning: for a receiver declared as a class the project itself wrote, the
+  declaration lens moved the class into the object column and left the VARIABLE NAME muted - which is
+  exactly what a curated row looks like - so on those rows the one mark that tells the two layers
+  apart said the opposite of what it means. A derived row's muted word is now the class the verb was
+  read off, on both the raw-statement and the picked-row path, and is left off only where the object
+  column is already saying that class. The guide's own "telling them apart at a glance" table was
+  wrong in both directions and now says what is really there.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

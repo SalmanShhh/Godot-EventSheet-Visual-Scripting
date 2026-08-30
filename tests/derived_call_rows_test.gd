@@ -203,6 +203,24 @@ static func _test_the_two_layers_look_different() -> bool:
 	# that a file of derived rows reads as greyed out.
 	ok = _check("the derived tone sits back from a curated one",
 		ViewportRowBuilder.DERIVED_TONE_BLEND, 0.4) and ok
+	# THE SECOND MARK, and the one a reader uses when the tone is not enough: the muted word beside
+	# the object. On a derived row it is always a CLASS. The declaration lens would put a variable
+	# NAME there for a class the project itself declared - which is what a curated row looks like -
+	# so on a derived row the class wins outright, and is left off only where the object column is
+	# already saying it.
+	for pair: Array in [
+		[{"class": "Timer"}, "beat", "Timer"],
+		[{"class": "EventSheetACERegistry"}, "_registry", "EventSheetACERegistry"],
+		# Already said: the object column is the class, in words or as written.
+		[{"class": "EventSheetACERegistry"}, "ACE registry", ""],
+		[{"class": "Timer"}, "Timer", ""],
+		# Nothing was read off anything: no mark, and the row keeps the plainer view it had.
+		[{}, "beat", ""],
+	]:
+		ok = _check("the muted word beside \"%s\" is %s" % [str(pair[1]),
+			"nothing" if str(pair[2]).is_empty() else str(pair[2])],
+			EventSheetDerivedCalls.muted_note(pair[0] as Dictionary, str(pair[1])),
+			str(pair[2])) and ok
 	return ok
 
 

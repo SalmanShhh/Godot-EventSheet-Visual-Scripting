@@ -14873,21 +14873,25 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	# what it was called: `_registry` reads `ACE registry`, with `registry` muted beside it. Applied
 	# after the attribution above, so an autoload or a pack's own object still wins.
 	var object_note: String = ""
-	var typed_object: Dictionary = EventSheetViewportReadingRows.typed_object_label(
-		object_label, sentence_context(), _viewport.humanize_names_enabled())
-	if not typed_object.is_empty():
-		object_label = str(typed_object.get("label", object_label))
-		object_note = str(typed_object.get("note", ""))
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# The SECOND half of the derived layer's own look: the class the verb was read off, muted beside
 	# the object. It says where a derived reading came from in the same breath as saying whose row it
-	# is, which is what stops the plainer verb from reading as a row somebody forgot to finish. Never
-	# written over a note the declaration lens already put there - that one says the same thing about
-	# the same object, and saying it twice is noise.
-	if not _pending_derived_call.is_empty() and object_note.is_empty():
-		var derived_class: String = str(_pending_derived_call.get("class", "")).strip_edges()
-		if not derived_class.is_empty() and derived_class != object_label:
-			object_note = derived_class
+	# is, which is what stops the plainer verb from reading as a row somebody forgot to finish.
+	#
+	# ON A DERIVED ROW IT IS THE ONLY THING BESIDE THE OBJECT, which is why the declaration lens below
+	# is not asked at all here. That lens answers a different question - what a receiver IS rather
+	# than what it was called - and for a class the project declared it MOVES the class into the
+	# object column and leaves the variable's own name muted. Applied to a derived row that would
+	# invert the layer's own mark: the muted word would be a variable name on the layer whose muted
+	# word is supposed to be a class. One row, one answer, and the derived row's is the class.
+	if not _pending_derived_call.is_empty():
+		object_note = EventSheetDerivedCalls.muted_note(_pending_derived_call, object_label)
+	else:
+		var typed_object: Dictionary = EventSheetViewportReadingRows.typed_object_label(
+			object_label, sentence_context(), _viewport.humanize_names_enabled())
+		if not typed_object.is_empty():
+			object_label = str(typed_object.get("label", object_label))
+			object_note = str(typed_object.get("note", ""))
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
 	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
@@ -16842,18 +16846,21 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	if not _pending_object_note.is_empty() and not str(span.metadata.get("object_label", "")).is_empty():
 		span.metadata["object_note"] = _pending_object_note
 	# What a DERIVED reading of a Call Method row leaves behind: the words for the hover, the page
-	# for F1, and - where the object column has nothing muted beside it yet - the class the verb was
-	# read off, which is the derived layer's own mark. Only the span carrying the sentence takes it,
-	# and the pending is cleared either way so it can never land on the next row.
+	# for F1, and the class the verb was read off, which is the derived layer's own mark. It WINS over
+	# the muted variable name the declaration lens leaves: on a derived row the muted word has to be a
+	# class, or the one mark that tells the two layers apart at a glance says the opposite of what it
+	# means. Skipped only where the object column is already that class in words, because saying it
+	# twice is noise. Only the span carrying the sentence takes it, and the pending is cleared either
+	# way so it can never land on the next row.
 	if not _pending_derived_ace.is_empty():
 		# Either lane: a derived VERB is always an action, and a derived PROPERTY is a Set row on the
 		# right or the same object's question on the left, so the condition lane takes it too.
 		var derived_lane: String = str(span.metadata.get("kind", ""))
 		if (derived_lane == "action" or derived_lane == "condition") and not text.is_empty():
 			span.metadata.merge(_derived_ace_meta(), true)
-			var read_class: String = str(_pending_derived_ace.get("class", "")).strip_edges()
-			if str(span.metadata.get("object_note", "")).is_empty() and not read_class.is_empty() \
-					and read_class != str(span.metadata.get("object_label", "")):
+			var read_class: String = EventSheetDerivedCalls.muted_note(_pending_derived_ace,
+				str(span.metadata.get("object_label", "")))
+			if not read_class.is_empty():
 				span.metadata["object_note"] = read_class
 		_pending_derived_ace = {}
 	_pending_object_note = ""

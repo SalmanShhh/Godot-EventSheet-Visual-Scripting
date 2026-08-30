@@ -188,6 +188,25 @@ static func doc_id_for(class_text: String, method: String) -> String:
 	return EventSheetDocEngineReference.doc_id(bare, method.strip_edges())
 
 
+## THE MUTED WORD a derived row carries beside its object: the class the verb was read off, or "" when
+## the object column is already saying that class and repeating it would be noise.
+##
+## It always WINS over the variable name the declaration lens leaves on a curated row. That lens
+## answers a different question - what a receiver IS rather than what it was called - and for a class
+## the project declared it moves the class INTO the object column and mutes the variable's own name.
+## Left to run on a derived row it inverts the one mark that tells the two layers apart at a glance:
+## the muted word beside a derived object has to be a class, because a name there is what a curated
+## row looks like. One row, one answer, and both call sites ask this.
+static func muted_note(reading: Dictionary, object_label: String) -> String:
+	var read_class: String = str(reading.get("class", "")).strip_edges()
+	var shown: String = object_label.strip_edges()
+	if read_class.is_empty() or read_class == shown:
+		return ""
+	if EventSheetViewportReadingRows.class_object_label(read_class) == shown:
+		return ""
+	return read_class
+
+
 ## The hover a derived row carries above its code: what the verb does, in the method's own words,
 ## with the credit when those words are the engine's. "" when nothing said anything about it, which
 ## is honest and leaves the row hovering as the line it is.

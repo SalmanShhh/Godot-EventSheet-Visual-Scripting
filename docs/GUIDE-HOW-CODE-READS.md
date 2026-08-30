@@ -59,9 +59,15 @@ You should never have to hover a row to know which layer wrote it. Two marks do 
 | | The curated sentence | The derived row |
 |---|---|---|
 | The verb | The row's bold weight - a written sentence | The plainer call style, drawn a shade back |
-| Beside the object | Nothing. The words are not the class's | The class it was read off, muted: `Timer`, `Light2D` |
+| The muted word beside the object | A variable NAME, and only when the object column is showing a class in its place: `_registry` reads *ACE registry*, with *registry* muted | A CLASS, always the one the verb was read off: `Timer`, `Light2D` |
 | Where the words came from | A person, in a recogniser table or an ACE descriptor | The class reference, or the `##` lines in your own script |
 | What it promises | This is what this line MEANS | This is what this member IS |
+
+Most curated rows have nothing muted beside the object at all - the second mark only appears when
+the file declared its receiver as a class the project itself wrote, which is the one case where the
+class says more than the variable name does. So the question a reader asks of a muted word is not
+*is there one* but *which kind of word is it*: a name is the curated layer, a class is the derived
+one.
 
 ![Three plain GDScript calls - beat.set_one_shot(true), hp_bar.set_indeterminate(true), hp_bar.set_show_percentage(false) - shown above the same three lines opened as a sheet: one event holding three rows reading beat Timer - Set one shot to true, hp_bar ProgressBar - Set indeterminate to true, hp_bar ProgressBar - Set show percentage to false](images/derived-call-rows.png)
 
