@@ -5,20 +5,26 @@
 #
 #   nothing can reach it   - the trigger waits on a touch, and the node's mask does not cover the
 #                            layer the bodies it is waiting for actually sit on. Named by LAYER, so
-#                            the sentence says which tick box is missing.
+#                            the sentence says which tick box is missing. Not said at all of a sheet
+#                            that sets its own layer or mask: the scene file is then where the node
+#                            STARTS rather than what it watches while the game runs.
 #   monitoring is off      - the Area's own switch is off. Every mask is right, every layer is right,
 #                            and Godot never emits the signal at all.
 #   it has no shape        - a collision object with no CollisionShape child has no extent. Godot
 #                            says so in the Scene dock; nothing said it to the sheet that depends on
-#                            it, which is where the row was written.
+#                            it, which is where the row was written. Said only to a sheet that is
+#                            waiting on the node, because an object still being built has no shape
+#                            yet and that is not news.
 #   the one-way faces down - a one-way platform turned over lets bodies through from above and stops
-#                            them from below, which is the opposite of what a platform is for.
+#                            them from below, which is the opposite of what a platform is for. Only
+#                            said where the sheet is plainly asking about a landing, since a one-way
+#                            shape is turned over deliberately every day.
 #
-# THE QUIET SHEET LAW. None of this renders in the sheet. A finding puts the affected row into the
-# quiet amber state and stops: no note row, no icon, no inline sentence, nothing at all on a sheet
-# with nothing wrong. The WORDS live in two places a reader goes on purpose - the Doctor's triage
-# inbox, and the help strip under the row once the row is selected. A sheet is a place to read what
-# the game does, not a place to be told off in.
+# THE QUIET SHEET LAW. None of this renders in the sheet. A finding puts EVERY affected row into the
+# quiet amber state and stops: no note row, no icon, no inline sentence, no hover, nothing at all on
+# a sheet with nothing wrong. The WORDS live in two places a reader goes on purpose - the Doctor's
+# triage inbox, and the help strip under the row once the row is selected. A sheet is a place to read
+# what the game does, not a place to be told off in.
 #
 # THE SCENE IS THE AUTHORITY AND THE SHEET IS THE QUESTION. Everything about layers, masks, switches
 # and shapes is read through EventSheetSceneCollisionFacts, which reads the project's ONE parse of
@@ -48,9 +54,11 @@ const FIX_SEE_THE_LAYER := "see_the_layer"
 const FIX_MONITORING_ON := "turn_monitoring_on"
 const FIX_SHOW_IN_SCENE := "show_in_scene"
 
-## Where a finding hangs. Three of the four are about a row, so they anchor at the event that holds
-## it; a sheet whose node has no shape and no touch trigger has nothing to point at, and says so
-## against the sheet instead of picking a row at random.
+## Where a finding hangs. Almost every one is about the rows waiting on a node, so it anchors at ALL
+## of them and the canvas puts every one into the amber state. The exception is the one-way advisory
+## on a sheet that asks about landing without waiting on a touch - a moving platform is a physics
+## loop and connects nothing - which has no row to point at and says so against the sheet, read in
+## the Doctor rather than pinned on a row picked at random.
 const ANCHOR_EVENT := "event"
 const ANCHOR_SHEET := "sheet"
 
