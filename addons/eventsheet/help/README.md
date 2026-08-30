@@ -15,6 +15,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Working with Text (and Reading Data Out of It)](GUIDE-WORKING-WITH-TEXT.md) - fitting text to a label, readable numbers, lined-up columns, pulling a piece out of a line, quote-aware splitting, a spreadsheet read as records end to end, and turning a parse failure into a sentence.
 - [Working with Values (and Copying Them Around)](GUIDE-WORKING-WITH-VALUES.md) - loaded values that might be missing or the wrong shape: emptiness across types, one-row fallbacks, checked conversions, named parts, the shared-.tres copy trap, presets, share codes and the clipboard, and remember/restore.
 - [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) - line of sight, hitscan shots, ground checks, click-to-select, and explosion radii: all four kinds of cast in 2D and 3D, with two playable labs that draw every cast as it happens.
+- [Collisions: What Touches What](GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT.md) - picking the node (detect, or block and be driven, thrown or standing), layers and the who-sees-whom asymmetry taught once, the touch with a group filter on it, the step something changed, the deep verbs woven in, and the four silent failures the Doctor finds before the game runs.
 - [Make a Behaviour Without Writing Code](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md) - author a whole reusable behaviour from event-sheet rows.
 - [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md) - the save story: six slot formats, the persist group, the `save_state`/`load_state` seam any behaviour can join, slot cards a load menu reads without loading, an autosave the sheet can veto, save migration, a backup ring, and New Game Plus.
 - [Lighting Your Game](GUIDE-LIGHTING-YOUR-GAME.md) - making a night and lighting it: darkness as a percentage, the five knobs and what Godot calls them in each dimension, shadows that actually appear, the flicker and pulse behaviours, a day/night clock, the 3D World object and the shared-environment trap, and the table of what a project you already lit opens as.
@@ -108,8 +109,9 @@ You have never built one, and you would like to finish something small.
 2. [Block Styles - How To Read Every Row](GUIDE-BLOCK-STYLES.md)
 3. [Variables, Groups and the Sheet Head](GUIDE-VARIABLES-GROUPS-AND-THE-SHEET-HEAD.md)
 4. [Common Game Patterns Without Code](GUIDE-COMMON-GAME-PATTERNS.md)
-5. [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md)
-6. [Autocomplete and Quick Add](GUIDE-AUTOCOMPLETE-AND-QUICK-ADD.md)
+5. [Collisions: What Touches What](GUIDE-COLLISIONS-WHAT-TOUCHES-WHAT.md)
+6. [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md)
+7. [Autocomplete and Quick Add](GUIDE-AUTOCOMPLETE-AND-QUICK-ADD.md)
 
 ### Coming from another editor
 
