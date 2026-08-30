@@ -12,7 +12,7 @@
 extends RefCounted
 
 const PREVIEW_NAME: String = "layer-picker-dialog"
-const PREVIEW_SIZE: Vector2i = Vector2i(940, 640)
+const PREVIEW_SIZE: Vector2i = Vector2i(940, 660)
 
 ## The row this dialog belongs to, and the module it is declared in.
 const ACE_ID: String = "CollideWithLayer"
@@ -25,6 +25,10 @@ const SHOWN_LAYER: int = 2
 ## The layer the door in the picture is about: the first one past the named ones, which is what an
 ## unnamed layer looks like when the project has already named others.
 const UNNAMED_LAYER: int = 5
+
+## And the layer a row can also point at: an expression the author wrote, which the field must hand
+## back exactly as it found it.
+const EXPRESSION_LAYER: String = "wall_layer"
 
 
 static func build(host: Window) -> Control:
@@ -39,6 +43,7 @@ static func build(host: Window) -> Control:
 	fields.add_child(EventSheetPopupUI.form_row(layer.get_param_name(), button))
 	fields.add_child(_layer_list())
 	fields.add_child(_naming_door())
+	fields.add_child(_expression_row())
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
 	strip.describe(layer.get_param_name(), layer.get_param_description())
 	# The echo: what the row will write. The NUMBER is what lands in the file - the name is the
@@ -90,8 +95,26 @@ static func _naming_door() -> Control:
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", 2)
 	column.add_child(EventSheetPopupUI.form_row("Layer %d" % UNNAMED_LAYER, row))
+	# The receipt read off the reader that writes it, so the picture cannot say a sentence the door
+	# does not: the settings line as it was, and as it now is.
+	column.add_child(EventSheetPopupUI.hint_label("%s. Undo puts the number back."
+		% EventForgePhysicsLayers.receipt(UNNAMED_LAYER,
+			EventForgePhysicsLayers.DIMENSION_2D, "Hazards"), 460.0))
+	return EventSheetPopupUI.panel_section(column)
+
+
+## The third state of the same field, and the one nobody expects to need a picture: the row was
+## written with an EXPRESSION in the layer slot. The field shows it as itself and hands it back
+## untouched, so opening a row and pressing OK cannot rewrite somebody's code to layer 1.
+static func _expression_row() -> Control:
+	var button: Button = Button.new()
+	button.text = EXPRESSION_LAYER
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 2)
+	column.add_child(EventSheetPopupUI.form_row("Layer", button))
 	column.add_child(EventSheetPopupUI.hint_label(
-		"Layer %d: %d ▸ \"Hazards\". Undo puts the number back." % [UNNAMED_LAYER, UNNAMED_LAYER],
+		"A layer written as an expression reads as itself, and comes back out exactly as it went in",
 		460.0))
 	return EventSheetPopupUI.panel_section(column)
 
