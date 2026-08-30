@@ -13,7 +13,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 ## Table of Contents
 
 1. [Scenarios Where This Page Helps](#1-scenarios-where-this-page-helps)
-2. [The Interop Map](#2-the-interop-map) - and [Your Own Classes Are Already Vocabulary](#2b-your-own-classes-are-already-vocabulary)
+2. [The Interop Map](#2-the-interop-map) - and [Your Own Classes Are Already Vocabulary](#2b-your-own-classes-are-already-vocabulary),
+   where [every call on a known class is a row](#every-call-on-a-known-class-is-a-row)
 3. [Call Your Existing Code from a Sheet](#3-call-your-existing-code-from-a-sheet)
 4. [React to a Signal Your Existing Code Emits](#4-react-to-a-signal-your-existing-code-emits)
 5. [Putting a Sheet on a Node - Two Modes](#5-putting-a-sheet-on-a-node---two-modes)
@@ -107,6 +108,46 @@ comments; the file is backed up first and only comment lines are ever added.
 
 The tooltip tells you which layer a name came from: *"From your project's Inventory -
 inferred from the script, not curated"*, or *"renamed by you"* once you have refined it.
+
+### Every call on a known class is a row
+
+A curated verb is a verb somebody sat down and wrote words for. The API underneath is far
+bigger than that, and your own classes are bigger again - so wherever the sheet can work out
+**what class the receiver is**, an ordinary call reads as an object-verb row without anybody
+having written anything.
+
+It can work that out far more often than you would expect: `self` is the class the script
+extends, an `@onready` node carries its declared type, `var beat: Timer` says so in the
+declaration, an autoload is a script at a known path, and a bare class name is a class. Once
+the class is known, so are the method's parameter names and the method's own description.
+
+<img src="images/derived-call-rows.png" alt="Three plain GDScript calls - beat.set_one_shot(true), hp_bar.set_indeterminate(true), hp_bar.set_show_percentage(false) - shown above the same three lines opened as a sheet: one event holding three rows reading beat Timer - Set one shot to true, hp_bar ProgressBar - Set indeterminate to true, hp_bar ProgressBar - Set show percentage to false." width="620">
+
+Two things mark a **derived** row, so you always know which layer you are looking at:
+
+- the verb reads in the plainer call style rather than the bold weight a curated sentence uses;
+- the object column carries the class it was read off, muted beside the name.
+
+Hovering one shows the method's own words - Godot's class reference for a built-in member, the
+`##` lines above the declaration for a method in your own script - with the exact line of code
+underneath, where it always was. `F1` on a built-in member opens its page in the Manual.
+
+**A receiver the sheet cannot name is never guessed at.** `get_parent().thing()`, a variable
+that only ever gets its value at run time, an untyped local - those keep whatever they already
+read as, and the line goes on being counted as code. That is the honest answer: a guessed
+class would name the wrong method and describe it with somebody else's words.
+
+**Curated always outranks derived**, and it upgrades in place. Where a recogniser claims the
+line, its polished sentence wins exactly as before; and the day a curated table lands for a
+shape your project writes, those rows read the better way the next time the file is opened,
+with the file itself untouched. Same bytes, better words.
+
+The same reading drives the picker. Under **Methods in this project** you get one entry per
+method your own scripts declare, filed under the object it belongs to, with the target, the
+method name and the arguments already answered from the declaration - and the author's `##`
+line as its description.
+
+<img src="images/derived-methods-shelf.png" alt="The Add Action picker searched for take damage: a Methods in this project section holding a Hero - player.gd shelf with one entry, Take damage, described as amount - Takes a hit, and dies once the bar empties." width="620">
 
 ### Naming a raw call you already have
 

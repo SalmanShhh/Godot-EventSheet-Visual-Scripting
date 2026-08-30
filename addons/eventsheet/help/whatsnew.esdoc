@@ -6,6 +6,38 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Every call on a known class is a row
+
+- **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an
+  object-verb row on the spot: the receiver in the object column, the method as the verb, the
+  arguments named by the method's own parameter names. It can know it far more often than it used
+  to - `self` is the class the script extends, an `@onready` node carries its declared type, a
+  `var beat: Timer` says so in the declaration, an autoload is a script at a known path, and a bare
+  class name is a class - and a project script's own methods are read out of the file, so
+  `hero.take_damage(3)` reads with the author's own parameter names rather than a bare 3. The row IS
+  the line it read: nothing is translated, and the byte round-trip is gated on it anyway.
+- **The two layers are visibly different.** A derived reading keeps the plainer call style - the verb
+  unbolded, drawn a shade back - and carries the class it was read off muted beside the object, so a
+  reader always knows whether they are looking at words a person wrote or words the API gave. Where a
+  curated recogniser claims the line, the curated sentence wins exactly as before; landing a curated
+  table later upgrades the derived rows in place on the next open, with the file untouched. Same
+  bytes, better words.
+- **A receiver nothing can name is never guessed at.** `get_parent().thing()`, an untyped local, a
+  name only ever assigned at run time - the reading declines, the row keeps whatever plainer view it
+  already had, and the ledger goes on counting the line. A method the class does not have is not the
+  class's method either, whatever it is spelled like.
+- **The method's own words ride on the row.** Hovering a derived row shows what the verb does - the
+  engine's own class reference for a built-in member, with the credit its licence requires, or the
+  `##` lines above the declaration for a method in your own script - with the exact line of code
+  underneath it, where it always was. `F1` on a built-in member opens its page in the Manual. No new
+  store: both come through doors that already existed.
+- **And the writing half.** The picker grows a **Methods in this project** section: one entry per
+  method your own scripts declare, filed under the node or the autoload it belongs to, with the
+  target, the method name and the arguments already answered off the declaration - a parameter's own
+  default where the author wrote one, the empty value of its declared type where they did not - and
+  the author's `##` line as its description. What used to be a Call Method row with a typed string in
+  it is a first-class entry.
+
 ### One grammar for reading somebody else's code
 
 - **The capture spans are a vocabulary now, not a copied regex.** Opening a hand-written script as a
