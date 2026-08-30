@@ -46,6 +46,11 @@ static var _run_in_progress: bool = false
 ## {"severity": "error"|"warning"|"info", "check": <id>, "path": ..., "message": ...}.
 ## Same contract as the built-ins: never write inside res://. Re-registering an id
 ## replaces the previous check, so plugin reloads never duplicate.
+##
+## A finding may also carry an `order` string, and the front page sorts by that instead of by its
+## usual check-then-file-then-message key. It is for a section whose ORDER IS THE MEANING - a ledger
+## whose groups have to keep their own lines under them - and a section using it must begin the key
+## with its own check id, or its findings walk into the middle of another section's.
 static func register_check(check_id: String, check: Callable) -> void:
 	unregister_check(check_id)
 	_extension_checks.append({"id": check_id, "run": check})
@@ -163,6 +168,11 @@ static func run() -> Dictionary:
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.
 	EventSheetShipItDoctor.ensure_registered()
+	# The Reading section: the project's stays-code lines, grouped by the shape they share. The one
+	# page here that reports nothing wrong - it is a ledger of where curation has not reached yet,
+	# and it takes its head percentage through the same shared reader the head bar's chip and the
+	# corpus pins use, so the three can never quote different numbers for the same bytes.
+	EventSheetReadingDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:

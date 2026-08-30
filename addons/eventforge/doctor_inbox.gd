@@ -181,9 +181,24 @@ static func _before(left: Dictionary, right: Dictionary) -> bool:
 	var right_rank: int = _severity_rank(str(right.get("severity", "info")))
 	if left_rank != right_rank:
 		return left_rank < right_rank
-	var left_key: String = "%s|%s|%s" % [left.get("check", ""), left.get("path", ""), left.get("message", "")]
-	var right_key: String = "%s|%s|%s" % [right.get("check", ""), right.get("path", ""), right.get("message", "")]
-	return left_key < right_key
+	return _sort_key(left) < _sort_key(right)
+
+
+## What a finding sorts by inside its severity: check, then file, then message - fixed, so a reader
+## who scrolled to a line yesterday finds it in the same place today.
+##
+## A section may hand the page its OWN key in an `order` field, and one does: a ledger whose groups
+## have to keep their own lines under them cannot survive being re-sorted by file and message, which
+## would scatter a group's doors across the page and leave a heading above somebody else's rows. The
+## key replaces this one whole, so a section using it must still begin with its own check id or it
+## walks into the middle of another section. A finding without the field is ordered exactly as it
+## always was, which is every finding but that ledger's.
+static func _sort_key(finding: Dictionary) -> String:
+	var own: String = str(finding.get("order", ""))
+	if not own.is_empty():
+		return own
+	return "%s|%s|%s" % [finding.get("check", ""), finding.get("path", ""),
+		finding.get("message", "")]
 
 
 static func _section_before(left: Dictionary, right: Dictionary) -> bool:
