@@ -1899,7 +1899,16 @@ const MODULE_GUIDE_OVERRIDES := {
 	"composition": "Groups-Tags-And-Systems",
 	"console": "Debugging-And-Printing",
 	"controls": "Reading-Keyboard-Mouse-And-Gamepad",
+	# What the ONE event a handler was handed is, which is the same reader's question as the rest of
+	# the input vocabulary - "how do I read the controls" - asked from inside `_input` rather than from
+	# a tick. Same page, one section further down, rather than a page nobody would look for it under.
+	"input_event": "Reading-Keyboard-Mouse-And-Gamepad",
 	"core": "Triggers-Signals-And-When-Rows-Run",
+	# The four things the engine tells a node about through its notification callback are triggers,
+	# and a reader looking for them is asking the triggers guide's question: when does this row run.
+	# The category is plural and the module file is not, so both spellings key the same page.
+	"notification": "Triggers-Signals-And-When-Rows-Run",
+	"notifications": "Triggers-Signals-And-When-Rows-Run",
 	"dev": "Debugging-And-Printing",
 	"device": "Reading-Keyboard-Mouse-And-Gamepad",
 	"drawing": "Particles-And-Drawing-On-Screen",

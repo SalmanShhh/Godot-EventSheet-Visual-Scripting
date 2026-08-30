@@ -225,7 +225,9 @@ static func _notification_trigger_words() -> bool:
 		["NOTIFICATION_WM_CLOSE_REQUEST", "On close"],
 		["NOTIFICATION_PAUSED", "On paused"],
 		["NOTIFICATION_UNPAUSED", "On unpaused"],
-		["NOTIFICATION_PREDELETE", "On destroyed"],
+		# NOT "On destroyed": that is what a node LEAVING THE TREE reads as, which can happen more
+		# than once and is not this. Two different moments cannot share one sentence.
+		["NOTIFICATION_PREDELETE", "On object freed"],
 		# One the sheet has no word for still says what happened, in words rather than in a constant.
 		["NOTIFICATION_WM_MOUSE_ENTER", "On wm mouse enter"]
 	]:

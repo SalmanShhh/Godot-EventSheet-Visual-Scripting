@@ -5538,3 +5538,5 @@ Name physics layer,Physikebene benennen
 "... and %d more line(s) of the same shape.","... und %d weitere Zeile(n) derselben Form."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d Zeile(n) haben Formen, die sonst nichts hier wiederholt. Gezählt statt aufgelistet: eine einmal gesagte Zeile ist niemandes Tabelle und soll Code bleiben."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d Zeile(n) in diesen Abschnitten sind Notizen statt Anweisungen und haben daher gar keine Form."
+On object freed,Bei Objektfreigabe
+On %s read,Wenn %s gelesen wird

@@ -5538,3 +5538,5 @@ Name physics layer,물리 레이어 이름 지정
 "... and %d more line(s) of the same shape.","... 같은 형태의 줄이 %d개 더 있습니다."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d줄은 여기의 다른 어떤 것도 반복하지 않는 형태입니다. 나열하지 않고 셉니다: 한 번만 말해진 줄은 누구의 표도 아니며, 코드로 남는 것이 맞습니다."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","그 구간 안의 %d줄은 문장이 아니라 메모이므로 형태가 전혀 없습니다."
+On object freed,객체 해제 시
+On %s read,%s 읽기 시

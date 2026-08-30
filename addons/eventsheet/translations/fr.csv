@@ -5538,3 +5538,5 @@ Name physics layer,Nommer le calque physique
 "... and %d more line(s) of the same shape.","... et %d ligne(s) de plus de la même forme."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d ligne(s) ont des formes que rien d'autre ici ne répète. Comptées plutôt que listées : une ligne dite une seule fois n'est la table de personne, et elle a vocation à rester du code."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d ligne(s) dans ces passages sont des notes et non des instructions, elles n'ont donc aucune forme."
+On object freed,À la libération de l'objet
+On %s read,Quand %s est lu

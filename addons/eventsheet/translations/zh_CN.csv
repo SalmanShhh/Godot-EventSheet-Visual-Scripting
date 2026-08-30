@@ -5538,3 +5538,5 @@ Name physics layer,命名物理层
 "... and %d more line(s) of the same shape.","... 还有 %d 行是同一种形状。"
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行的形状在这里没有别的内容重复。只作计数而不逐条列出：只说过一次的行不属于任何表格，它本就该留作代码。"
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","这些片段中的 %d 行是注记而非语句，因此完全没有形状。"
+On object freed,对象释放时
+On %s read,当 %s 被读取时

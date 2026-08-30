@@ -5538,3 +5538,5 @@ Name physics layer,Assegna un nome al livello fisico
 "... and %d more line(s) of the same shape.","... e altre %d riga/righe della stessa forma."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d riga/righe hanno forme che nient'altro qui ripete. Contate anziché elencate: una riga detta una volta sola non è la tabella di nessuno, ed è giusto che resti codice."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d riga/righe dentro quei tratti sono note e non istruzioni, quindi non hanno alcuna forma."
+On object freed,Alla liberazione dell'oggetto
+On %s read,Quando %s viene letto

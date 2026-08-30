@@ -268,6 +268,14 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Groups": "Groups",
 	"Helpers": "GDScript",
 	"Input": "InputEvent",
+	# The questions asked of the ONE event a handler was handed. The engine's own class for that
+	# event is the picture, exactly as it is for the polled Input rows above - the difference between
+	# the two sections is which moment they ask about, not what they are about.
+	"Input Event": "InputEvent",
+	# The engine talking to a node through its notification callback. Nothing derivable: a
+	# notification is a number rather than a class, and the editor's own "something is telling you
+	# this" mark is the nearest picture there is.
+	"Notifications": "NodeInfo",
 	"InputMap": "InputEventAction",
 	"Joints": "PinJoint2D",
 	"Keyboard": "InputEventKey",

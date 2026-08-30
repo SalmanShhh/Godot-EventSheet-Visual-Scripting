@@ -5538,3 +5538,5 @@ Name physics layer,物理レイヤーに名前を付ける
 "... and %d more line(s) of the same shape.","... 同じ形の行がさらに %d 行あります。"
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行は、ここの他の何も繰り返さない形です。列挙せずに数えます: 一度しか言われない行は誰のテーブルでもなく、コードのままでよいのです。"
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","それらの区間にある %d 行は文ではなくメモなので、形がまったくありません。"
+On object freed,オブジェクト解放時
+On %s read,%s が読み取られたとき
