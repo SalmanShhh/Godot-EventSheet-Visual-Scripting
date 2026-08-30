@@ -201,6 +201,61 @@ static func side_note(class_text: String) -> String:
 	return AREA_NOTE if side_for_class(class_text) == "area" else BODY_NOTE
 
 
+## The same lesson at the resolution a reader actually needs it at. "Body" covers three node families
+## that behave nothing alike - one you drive, one physics throws, one that never moves - and which of
+## them the row is filed under decides what the author can expect from it. So a touch row's dialog
+## says its own node's line: an area DETECTS, a character is DRIVEN, a rigid body is THROWN, a static
+## body STANDS. Anything else falls back to the body line, which is the true general statement.
+const CHARACTER_NOTE: String = "This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal."
+
+## The same, for a body physics moves on the author's behalf.
+const RIGID_NOTE: String = "This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero."
+
+## And for a body that never moves at all.
+const STATIC_NOTE: String = "This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it."
+
+
+## The one-liner for a node class - four answers where side_note has two. The dialog strip of every
+## touch row shows this one, so the lesson lands on the row being written rather than in a guide the
+## author is not reading right now.
+static func kind_note(class_text: String) -> String:
+	var name_text: String = class_text.strip_edges()
+	if side_for_class(name_text) == "area":
+		return AREA_NOTE
+	if _is_a(name_text, "CharacterBody2D") or _is_a(name_text, "CharacterBody3D"):
+		return CHARACTER_NOTE
+	if _is_a(name_text, "RigidBody2D") or _is_a(name_text, "RigidBody3D"):
+		return RIGID_NOTE
+	if _is_a(name_text, "StaticBody2D") or _is_a(name_text, "StaticBody3D"):
+		return STATIC_NOTE
+	return BODY_NOTE
+
+
+## True when a class IS the named one or descends from it. A class ClassDB does not know (a script
+## class) answers false, which lands on the general body line rather than on a guess.
+static func _is_a(class_text: String, base: String) -> bool:
+	if class_text == base:
+		return true
+	if not ClassDB.class_exists(class_text):
+		return false
+	return ClassDB.is_parent_class(class_text, base)
+
+
+## Every trigger that is ABOUT a touch, beyond the eight filtered ones above: the four bare arrival
+## and departure triggers, and the four that answer the first arrival and the last departure. They
+## are listed rather than derived because "is this row about a touch" is a question about MEANING -
+## a layer verb is filed under the same category and is not about a touch at all - and the dialog
+## strip's lesson is owed to exactly these.
+const TOUCH_TRIGGERS: PackedStringArray = ["OnBodyEntered", "OnBodyExited", "OnAreaEntered",
+	"OnAreaExited", "OnFirstOverlap", "OnFirstOverlap3D", "OnLastOverlapEnded",
+	"OnLastOverlapEnded3D"]
+
+
+## True for every trigger the touch lesson is owed on: the filtered eight and the eight above.
+static func is_touch_trigger(trigger_id: String) -> bool:
+	return is_filtered(trigger_id) or TOUCH_TRIGGERS.has(trigger_id)
+
+
 ## Which dimension a node's class belongs to: "3d" for the 3D families, "2d" otherwise (including a
 ## class nobody named, because 2D is where the bare triggers already live).
 static func dimension_for_class(class_text: String) -> String:

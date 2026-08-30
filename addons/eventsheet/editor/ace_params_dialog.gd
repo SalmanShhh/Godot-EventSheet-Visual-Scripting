@@ -3663,8 +3663,17 @@ func _touch_filter_note(key: String) -> String:
 		return ""
 	if not CollisionFilters.is_filtered(_definition.id):
 		return ""
+	return _node_kind_note()
+
+
+## The one line this row's own node class teaches: an area DETECTS, a character body is DRIVEN, a
+## rigid body is THROWN, a static body STANDS. Read off the class the picker filed the row under, so
+## the sentence is about the node in front of the author rather than about collisions in general.
+func _node_kind_note() -> String:
+	if _definition == null:
+		return ""
 	return EventSheetL10n.translate(
-		CollisionFilters.side_note(str(_definition.metadata.get("node_type", ""))))
+		CollisionFilters.kind_note(str(_definition.metadata.get("node_type", ""))))
 
 
 ## What the SCENE has to say about the field being filled in, as `{"body", "level"}`, or {} for
@@ -3697,6 +3706,14 @@ func _describe_dialog_itself() -> void:
 		return
 	var about: String = _definition.description.strip_edges()
 	var doing: String = _build_hint_text().strip_edges()
+	# Every touch row opens with its node class's own line. Which of the four families a row is filed
+	# under decides what the author may expect of it - whether the thing that arrives is stopped, and
+	# whether the arrival is reported at all - and that is the fact a beginner is missing while they
+	# fill this form in, not while they read a guide later.
+	if CollisionFilters.is_touch_trigger(_definition.id):
+		var kind: String = _node_kind_note()
+		if not kind.is_empty():
+			about = kind if about.is_empty() else "%s  %s" % [about, kind]
 	_help_strip.show_note(_definition.display_name,
 		doing if about.is_empty() else "%s  %s" % [about, doing])
 	_offer_learn_more()

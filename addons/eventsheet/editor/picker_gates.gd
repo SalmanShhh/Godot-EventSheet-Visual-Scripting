@@ -40,6 +40,7 @@ const GATE_BEHAVIOR_HOST := "behavior_host_only"
 const GATE_EDITOR_TOOLS := "editor_tools_only"
 const GATE_NEEDS_NODE := "needs_node_type"
 const GATE_NEEDS_SCENE := "needs_scene"
+const GATE_NEEDS_TOUCH := "needs_something_that_can_touch"
 
 ## The two behavior-host verbs (they read the literal `host`, which only a behavior sheet's
 ## prelude declares) and the category whose rows only run inside the editor. Spelled here because
@@ -48,6 +49,9 @@ const GATE_NEEDS_SCENE := "needs_scene"
 const BEHAVIOR_HOST_PROVIDER := "Core"
 const BEHAVIOR_HOST_ACE_IDS: Array[String] = ["BehaviorHost", "BehaviorHostValid"]
 const EDITOR_TOOLS_CATEGORY := "Editor Tools"
+
+## The category every touching, overlapping, layering and landing row is filed under.
+const COLLISIONS_CATEGORY := "Collisions"
 const CATEGORY_PAGE_SEPARATOR := ": "
 
 ## Every gate the picker can put on an entry. Reasons and fix labels are English source strings -
@@ -69,6 +73,16 @@ const GATES: Array[Dictionary] = [
 	{
 		"id": GATE_NEEDS_NODE,
 		"reason": "Needs a %s in the scene, and there is none yet.",
+		"fix_label": "Add a %s to the scene",
+		"fix_id": "add_node",
+	},
+	{
+		# The same missing node, said in the words of the family that asks for it. A touch row on a
+		# scene with nothing physical in it is the commonest first wall a beginner meets, and "needs
+		# a CollisionObject2D" is a class name they have never heard - so the reason says the thing
+		# they were trying to do and the fix is the same button it always was.
+		"id": GATE_NEEDS_TOUCH,
+		"reason": "Nothing in this scene can touch anything yet - this row needs one: %s.",
 		"fix_label": "Add a %s to the scene",
 		"fix_id": "add_node",
 	},
@@ -169,7 +183,7 @@ static func gate_for(definition: ACEDefinition, context: Dictionary) -> Dictiona
 			return _gate(GATE_NEEDS_SCENE, node_type)
 		return {}
 	if not _scene_has_class(context, node_type):
-		return _gate(GATE_NEEDS_NODE, node_type)
+		return _gate(GATE_NEEDS_TOUCH if is_touch_row(definition) else GATE_NEEDS_NODE, node_type)
 	return {}
 
 
@@ -213,6 +227,16 @@ static func _filled(template: String, node_type: String) -> String:
 	if translated.contains("%s"):
 		return translated % node_type
 	return translated
+
+
+## True for a row of the collision family - the rows whose missing node is said as "nothing here can
+## touch anything" rather than as a class name. Read off the CATEGORY, which is the one thing every
+## row of the family shares and the same thing the picker files it under.
+static func is_touch_row(definition: ACEDefinition) -> bool:
+	if definition == null:
+		return false
+	var category: String = str(definition.category)
+	return category == COLLISIONS_CATEGORY 		or category.begins_with(COLLISIONS_CATEGORY + CATEGORY_PAGE_SEPARATOR)
 
 
 ## True for the two verbs only a behavior sheet's prelude can host. The picker's own
