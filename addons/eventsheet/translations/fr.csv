@@ -5529,7 +5529,7 @@ Name physics layer,Nommer le calque physique
 "The entry this derives","L'entrée ainsi dérivée"
 "Check","Vérifier"
 "Add to the scratch table","Ajouter à la table de brouillon"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","%d script(s) lus sur %d. Le registre ci-dessous porte sur ceux-là ; rouvre le Docteur une fois le reste lu."
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Les %d premiers script(s) sur %d ont été lus, dans l’ordre des chemins. Le registre ci-dessous est un échantillon de ce projet, pas son ensemble - ce sont les mêmes scripts qui sont lus à chaque fois."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% de ce qui a été lu se dessine en lignes, et chacune porte un nom. Rien ne reste du code ici."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% de ce qui a été lu se dessine en lignes - c'est la question du dessin. La question des mots est en dessous : %d ligne(s) restent du code honnête, parce qu'aucun vocabulaire ne les revendique encore. Les deux sont vraies, et ce n'est pas le même nombre."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","%d autre(s) forme(s) sont dites plus d'une fois ici, sur %d ligne(s). Le registre nomme les plus courantes et compte le reste."
@@ -5537,7 +5537,7 @@ Name physics layer,Nommer le calque physique
 "line %d: %s","ligne %d : %s"
 "... and %d more line(s) of the same shape.","... et %d ligne(s) de plus de la même forme."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d ligne(s) ont des formes que rien d'autre ici ne répète. Comptées plutôt que listées : une ligne dite une seule fois n'est la table de personne, et elle a vocation à rester du code."
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d ligne(s) dans ces passages sont des notes et non des instructions, elles n'ont donc aucune forme."
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.","%d ligne(s) dans ces passages ne contiennent aucune instruction à mettre en forme - une note, ou l’intérieur d’un bloc de texte."
 On object freed,À la libération de l'objet
 Event Is Action Pressed,L'événement est une action pressée
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vrai lorsque l'événement remis à ce gestionnaire est l'action nommée qui descend. La moitié appui de l'événement que le gestionnaire tient - pas une question sur l'état actuel, ce à quoi répond Action pressée."

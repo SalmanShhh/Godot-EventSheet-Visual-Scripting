@@ -675,6 +675,13 @@
   expression block it is. One idea, two grammatical categories, in one opened file; the corpus's own
   `player_stats.gd` holds both spellings side by side. The named getter now reads with the same
   expression header the inline one does, with the function that gives the value on the right.
+- **The Doctor's capped walk says what it read, not what it will read next.** Its sentence invited a
+  reader to open the Doctor again "after the rest have been read", and there is no cursor and nothing
+  remembered between runs - so the same first twelve scripts in path order were read every time, and
+  in a real project the alphabetically-first folder was the only thing the Reading page would ever
+  see. The page now says what is true: these are the first few in path order, and the ledger is a
+  sample of the project rather than the whole of it. The branch is exercised by the suite, on a
+  folder bigger than the cap.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

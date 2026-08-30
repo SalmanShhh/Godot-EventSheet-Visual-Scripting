@@ -26,8 +26,12 @@
 # THE WALK IS CAPPED, and says so. Reading a script means importing it, compiling it back and
 # attributing every line, which is cheap per script and not free; a project of four hundred scripts
 # would otherwise pay for all of them on every audit, which is how a section becomes one nobody runs.
-# The first few in path order are read, the rest are counted, and the count is the whole truth about
-# what was skipped.
+# The first few in path order are read and the rest are counted.
+#
+# THE CAP IS A SAMPLE, NOT A QUEUE, and the sentence says that too. There is no cursor and nothing is
+# remembered between runs, so the SAME scripts are read every time - re-opening the Doctor cannot
+# reach the rest, and a sentence inviting a reader to try would be a promise this cannot keep. What it
+# says instead is what is true: these are the first few in path order, and the ledger is about them.
 @tool
 class_name EventSheetReadingDoctor
 extends RefCounted
@@ -93,7 +97,7 @@ static func report(script_paths: PackedStringArray) -> Array[Dictionary]:
 		CHECK_ID, "head"))
 	if read < sorted.size():
 		findings.append(_note("", EventSheetL10n.translate(
-			"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.") % [
+			"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.") % [
 			read, sorted.size()], CHECK_ID, "capped"))
 	findings.append_array(_shape_lines(census))
 	findings.append_array(_tail_lines(census))
@@ -160,7 +164,7 @@ static func _tail_lines(census: Dictionary) -> Array[Dictionary]:
 	var notes: int = int(census.get("notes", 0))
 	if notes > 0:
 		findings.append(_note("", EventSheetL10n.translate(
-			"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.") % notes,
+			"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.") % notes,
 			CHECK_TAIL, "notes"))
 	return findings
 

@@ -5529,7 +5529,7 @@ Name physics layer,Physikebene benennen
 "The entry this derives","Der abgeleitete Eintrag"
 "Check","Prüfen"
 "Add to the scratch table","Zur Notiztabelle hinzufügen"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","%d von %d Skript(en) gelesen. Das Verzeichnis unten handelt von diesen; öffne den Doktor erneut, wenn der Rest gelesen wurde."
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Die ersten %d von %d Skript(en) gelesen, in Pfadreihenfolge. Das Verzeichnis unten ist eine Stichprobe dieses Projekts, nicht das Ganze - es werden jedes Mal dieselben Skripte gelesen."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% des Gelesenen wird als Zeilen gezeichnet, und jede davon trägt einen Namen. Hier bleibt nichts Code."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% des Gelesenen wird als Zeilen gezeichnet - das ist die Frage nach der Darstellung. Die Frage nach den Worten steht darunter: %d Zeile(n) bleiben ehrlicher Code, weil noch kein Wortschatz sie beansprucht. Beides stimmt, und es ist nicht dieselbe Zahl."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","%d weitere Form(en) kommen hier mehr als einmal vor, über %d Zeile(n). Das Verzeichnis nennt die häufigsten und zählt den Rest."
@@ -5537,7 +5537,7 @@ Name physics layer,Physikebene benennen
 "line %d: %s","Zeile %d: %s"
 "... and %d more line(s) of the same shape.","... und %d weitere Zeile(n) derselben Form."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d Zeile(n) haben Formen, die sonst nichts hier wiederholt. Gezählt statt aufgelistet: eine einmal gesagte Zeile ist niemandes Tabelle und soll Code bleiben."
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d Zeile(n) in diesen Abschnitten sind Notizen statt Anweisungen und haben daher gar keine Form."
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.","%d Zeile(n) in diesen Abschnitten enthalten keine Anweisung, die eine Form hätte - eine Notiz oder das Innere eines Textblocks."
 On object freed,Bei Objektfreigabe
 Event Is Action Pressed,Ereignis ist Aktion gedrückt
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Wahr, wenn das Ereignis, das dieser Handler bekommen hat, das Herunterdrücken der genannten Aktion ist. Die Druck-Hälfte des Ereignisses, das der Handler gerade hält - keine Frage danach, wie es jetzt gerade steht; das beantwortet Ist Aktion gedrückt."

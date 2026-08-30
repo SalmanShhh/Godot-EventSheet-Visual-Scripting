@@ -5529,7 +5529,7 @@ Name physics layer,Assegna un nome al livello fisico
 "The entry this derives","La voce che ne deriva"
 "Check","Verifica"
 "Add to the scratch table","Aggiungi alla tabella di lavoro"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","Letti %d script su %d. Il registro qui sotto riguarda quelli; riapri il Dottore dopo che il resto sarà stato letto."
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Letti i primi %d script su %d, in ordine di percorso. Il registro qui sotto è un campione di questo progetto, non tutto: ogni volta vengono letti gli stessi script."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","Il %d%% di ciò che è stato letto si disegna come righe, e ognuna ha un nome. Qui non resta nulla come codice."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","Il %d%% di ciò che è stato letto si disegna come righe - questa è la domanda sul disegno. La domanda sui nomi sta sotto: %d riga/righe restano codice onesto, perché nessun vocabolario le rivendica ancora. Entrambe sono vere, e non sono lo stesso numero."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","Altre %d forma/forme compaiono più di una volta qui, su %d riga/righe. Il registro nomina le più comuni e conta il resto."
@@ -5537,7 +5537,7 @@ Name physics layer,Assegna un nome al livello fisico
 "line %d: %s","riga %d: %s"
 "... and %d more line(s) of the same shape.","... e altre %d riga/righe della stessa forma."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d riga/righe hanno forme che nient'altro qui ripete. Contate anziché elencate: una riga detta una volta sola non è la tabella di nessuno, ed è giusto che resti codice."
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d riga/righe dentro quei tratti sono note e non istruzioni, quindi non hanno alcuna forma."
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.","%d riga/righe dentro quei tratti non contengono istruzioni a cui dare forma: una nota, o l’interno di un blocco di testo."
 On object freed,Alla liberazione dell'oggetto
 Event Is Action Pressed,L'evento è azione premuta
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vero quando l'evento passato a questo gestore è l'azione indicata mentre viene premuta. La metà di pressione dell'evento che il gestore ha in mano - non una domanda su come stanno le cose adesso, a cui risponde invece Azione premuta."

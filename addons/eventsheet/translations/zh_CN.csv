@@ -5529,7 +5529,7 @@ Name physics layer,命名物理层
 "The entry this derives","由此推导出的条目"
 "Check","检查"
 "Add to the scratch table","加入草稿表"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","已读取 %d 个脚本，共 %d 个。下面的清单只关于这些脚本；其余读取后请再次打开体检。"
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",已按路径顺序读取前 %d 个脚本（共 %d 个）。下面的清单只是本项目的一个样本，并非全部 - 每次读取的都是同样的脚本。
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","读取内容的 %d%% 绘制为行，且每一行都有名字。这里没有任何内容仍是代码。"
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","读取内容的 %d%% 绘制为行 - 这是绘制的问题。命名的问题在下面：%d 行仍是诚实的代码，因为还没有词汇认领它们。两者都为真，且不是同一个数字。"
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","这里还有 %d 种形状出现不止一次，共 %d 行。清单列出最常见的，其余只作计数。"
@@ -5537,7 +5537,7 @@ Name physics layer,命名物理层
 "line %d: %s","第 %d 行：%s"
 "... and %d more line(s) of the same shape.","... 还有 %d 行是同一种形状。"
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行的形状在这里没有别的内容重复。只作计数而不逐条列出：只说过一次的行不属于任何表格，它本就该留作代码。"
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","这些片段中的 %d 行是注记而非语句，因此完全没有形状。"
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",这些片段中有 %d 行不含可归纳形态的语句 - 是注释，或是文本块的内部。
 On object freed,对象释放时
 Event Is Action Pressed,事件是动作按下
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",当这个处理函数收到的事件是指定动作被按下时为真。这是处理函数手上那个事件的按下一半，而不是在问此刻的状态 - 那是「动作被按下」回答的问题。

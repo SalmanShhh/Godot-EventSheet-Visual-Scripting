@@ -5529,7 +5529,7 @@ Name physics layer,物理レイヤーに名前を付ける
 "The entry this derives","これから導かれるエントリ"
 "Check","確認"
 "Add to the scratch table","下書きテーブルに追加"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","%d / %d 個のスクリプトを読み取りました。下の台帳はその分です。残りが読まれたらドクターをもう一度開いてください。"
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",パス順で最初の %d 個のスクリプト（全 %d 個中）を読み取りました。以下の記録はこのプロジェクトの一部であり、全体ではありません。毎回同じスクリプトが読み取られます。
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","読み取った分の %d%% が行として描かれ、そのすべてに名前が付いています。ここにコードのまま残るものはありません。"
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","読み取った分の %d%% が行として描かれます - これは描画の問いです。名前の問いはその下にあります: %d 行は正直なコードのまま残ります。まだどの語彙もそれを名乗っていないからです。どちらも本当で、同じ数ではありません。"
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","ここではさらに %d 個の形が複数回現れ、%d 行にわたります。台帳は最も多いものを挙げ、残りを数えます。"
@@ -5537,7 +5537,7 @@ Name physics layer,物理レイヤーに名前を付ける
 "line %d: %s","%d 行目: %s"
 "... and %d more line(s) of the same shape.","... 同じ形の行がさらに %d 行あります。"
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行は、ここの他の何も繰り返さない形です。列挙せずに数えます: 一度しか言われない行は誰のテーブルでもなく、コードのままでよいのです。"
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","それらの区間にある %d 行は文ではなくメモなので、形がまったくありません。"
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",それらの範囲内の %d 行には形にできる文がありません。注釈か、テキストブロックの内側です。
 On object freed,オブジェクト解放時
 Event Is Action Pressed,イベントがアクションの押下である
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",このハンドラーに渡されたイベントが、指定したアクションが押された瞬間であれば真になります。ハンドラーが持っているイベントの押下側で、今どうなっているかを尋ねるものではありません。それはアクションが押されているが答えます。

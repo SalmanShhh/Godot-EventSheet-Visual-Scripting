@@ -5529,7 +5529,7 @@ Name physics layer,물리 레이어 이름 지정
 "The entry this derives","여기서 도출되는 항목"
 "Check","확인"
 "Add to the scratch table","임시 표에 추가"
-"Read %d script(s) of %d. The ledger below is about those; open the Doctor again after the rest have been read.","스크립트 %d개 / %d개를 읽었습니다. 아래 장부는 그 스크립트에 대한 것입니다. 나머지를 읽은 뒤 닥터를 다시 열어 보세요."
+"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",경로 순서로 %d개 스크립트(전체 %d개 중)를 읽었습니다. 아래 기록은 이 프로젝트의 표본이며 전체가 아닙니다. 매번 같은 스크립트를 읽습니다.
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","읽은 내용의 %d%%가 행으로 그려지고, 모든 줄에 이름이 붙어 있습니다. 여기에 코드로 남는 것은 없습니다."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","읽은 내용의 %d%%가 행으로 그려집니다 - 이것은 그리기에 대한 물음입니다. 이름에 대한 물음은 그 아래에 있습니다: %d줄은 정직한 코드로 남습니다. 아직 어떤 어휘도 그것을 주장하지 않기 때문입니다. 둘 다 참이고, 같은 숫자가 아닙니다."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","여기에서 %d개의 형태가 더 여러 번 나타나며, %d줄에 걸쳐 있습니다. 장부는 가장 흔한 것을 이름 짓고 나머지는 셉니다."
@@ -5537,7 +5537,7 @@ Name physics layer,물리 레이어 이름 지정
 "line %d: %s","%d번째 줄: %s"
 "... and %d more line(s) of the same shape.","... 같은 형태의 줄이 %d개 더 있습니다."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d줄은 여기의 다른 어떤 것도 반복하지 않는 형태입니다. 나열하지 않고 셉니다: 한 번만 말해진 줄은 누구의 표도 아니며, 코드로 남는 것이 맞습니다."
-"%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","그 구간 안의 %d줄은 문장이 아니라 메모이므로 형태가 전혀 없습니다."
+"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",해당 구간의 %d개 줄에는 형태를 잡을 문장이 없습니다. 주석이거나 텍스트 블록의 내부입니다.
 On object freed,객체 해제 시
 Event Is Action Pressed,이벤트가 액션 눌림임
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","이 핸들러에 전달된 이벤트가 지정한 액션을 누르는 순간이면 참입니다. 핸들러가 들고 있는 이벤트의 누름 쪽이며, 지금 상태가 어떤지 묻는 것이 아닙니다. 그것은 액션이 눌려 있음이 답합니다."
