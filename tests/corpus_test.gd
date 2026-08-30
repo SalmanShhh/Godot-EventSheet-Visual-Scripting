@@ -7,7 +7,7 @@
 # source: ordinary game code, in the shapes tutorials and engine docs spell them, written to be
 # opened rather than to be maintained.
 #
-# res://tests/corpus/ holds four of them today:
+# res://tests/corpus/ holds six of them today:
 #   player_controller.gd   the first script every project has - a character body, input, a jump
 #   door_state_machine.gd  an enum and one match block, which is how hand-written FSMs are spelled
 #   network_lobby.gd       an autoload that hosts, joins and sends, in the engine's own spellings
