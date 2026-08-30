@@ -272,6 +272,15 @@
   itself. A real script on disk now earns a real finding in the suite, and every one of those is
   pinned as a value.
 
+- **Two troubleshooting lines in the spawning guide were wrong.** "Do not free the same node twice.
+  The second call errors." is true of `free()` and not of `queue_free()`: a second `queue_free()` on
+  one node in one frame prints nothing at all and the node dies once, which is precisely why a cap
+  that freed the same member repeatedly left no trace in any log. And "Random Place Along Path needs
+  a baked curve" understated its own case - an empty curve does give the path's own position, and it
+  also prints `No points in Curve2D.` on every evaluation, which on a per-frame spawner is a flooded
+  log rather than a quiet degradation. Both are measured against a running engine now, and both say
+  what it actually does.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

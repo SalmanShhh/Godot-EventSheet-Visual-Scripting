@@ -729,8 +729,13 @@ Last One Removed on that crowd drop the key.
 - **A removed node is still there for the rest of the frame.** `queue_free()` queues; it does not
   delete. A row after the removal that reads the object still works, and a check that expects it to
   be gone in the same frame does not.
-- **Do not free the same node twice.** The second call errors. Ask Is Still Here first, or let the
-  guard do it by naming a stored reference rather than a path.
+- **Freeing the same node twice is SILENT.** A second `queue_free()` on one node in one frame prints
+  nothing at all - no error, no warning - and the node simply dies once. (That is `queue_free`; a
+  second `free()` is the one that errors.) So a loop that picks a member, frees it and picks again
+  from the same list will happily free the same one over and over with nothing in the log to say so,
+  which is exactly how a cap stops capping. Ask Is Still Here before reaching in, skip the members
+  that answer `is_queued_for_deletion()`, or let the guard do it by naming a stored reference rather
+  than a path.
 - **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
   you want the event to carry straight on, use Remove After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
