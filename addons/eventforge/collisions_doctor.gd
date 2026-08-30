@@ -62,6 +62,12 @@ const TOUCH_WORDS: PackedStringArray = [
 ## project audited on a laptop and on a build server would file different findings. The candidates
 ## are sorted, so a run that does reach the ceiling loses a stable tail rather than an arbitrary one,
 ## and the summary counts every candidate so a capped run reads as a partial one.
+##
+## WHY THIS SECTION HAS ONE AND ITS SISTER DOES NOT. Measuring one candidate here means OPENING it as
+## a sheet - a whole import of a whole file - which is the most expensive thing any section does. The
+## Collision Layers section beside it asks a substring question of text the audit already holds in
+## one read, so a thousand scripts there cost less than six do here. The ceiling is on the cost, not
+## on the subject.
 const MEASURED_LIMIT: int = 6
 
 
@@ -103,6 +109,11 @@ static func report(scripts: PackedStringArray,
 		findings.append_array(found)
 	if waiting <= 0:
 		return findings
+	# A healthy project has no worst file, and the summary still has to point somewhere: an empty path
+	# renders as a line with a gap where the file should be. The first candidate is the honest answer -
+	# the section IS about those scripts, and it is saying they are all right.
+	if worst_path.is_empty():
+		worst_path = ordered[0]
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		EventSheetL10n.translate("Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.") % [
 			waiting, measured, troubled], ""))

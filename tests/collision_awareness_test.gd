@@ -460,6 +460,12 @@ static func _test_the_report() -> bool:
 	ok = _check("the summary counts what it read",
 		str(filed[0].get("message", "")),
 		"Collisions: 6 script(s) waiting on a touch, 6 read, 4 whose trigger cannot fire as the scene stands.") and ok
+	# A healthy project has no worst file, and the summary still has to point somewhere: filed against
+	# an empty path it renders as a line with a gap where the file should be.
+	var healthy: Array[Dictionary] = EventSheetCollisionsDoctor.report(
+		PackedStringArray([DOOR, LEDGE]), SCENES)
+	ok = _check("a section with nothing to report still points at a file",
+		[healthy.size(), str(healthy[0].get("path", ""))], [1, DOOR]) and ok
 	ok = _check("and a project whose scripts never ask about a touch hears nothing at all",
 		EventSheetCollisionsDoctor.report(
 			PackedStringArray(["res://tests/fixtures/lighting_hall_lamp.gd"]), SCENES).size(), 0) and ok
