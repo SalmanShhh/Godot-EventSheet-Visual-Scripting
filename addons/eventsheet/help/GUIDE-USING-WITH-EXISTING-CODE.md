@@ -14,7 +14,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 
 1. [Scenarios Where This Page Helps](#1-scenarios-where-this-page-helps)
 2. [The Interop Map](#2-the-interop-map) - and [Your Own Classes Are Already Vocabulary](#2b-your-own-classes-are-already-vocabulary),
-   where [every call on a known class is a row](#every-call-on-a-known-class-is-a-row)
+   where [every call on a known class is a row](#every-call-on-a-known-class-is-a-row) and
+   [every property too](#every-property-too)
 3. [Call Your Existing Code from a Sheet](#3-call-your-existing-code-from-a-sheet)
 4. [React to a Signal Your Existing Code Emits](#4-react-to-a-signal-your-existing-code-emits)
 5. [Putting a Sheet on a Node - Two Modes](#5-putting-a-sheet-on-a-node---two-modes)
@@ -148,6 +149,39 @@ method name and the arguments already answered from the declaration - and the au
 line as its description.
 
 <img src="images/derived-methods-shelf.png" alt="The Add Action picker searched for take damage: a Methods in this project section holding a Hero - player.gd shelf with one entry, Take damage, described as amount - Takes a hit, and dies once the bar empties." width="620">
+
+### Every property too
+
+The other half of what an object offers reads the same way, and the shape it reads in is the
+one you already know: **object, property, value** - the Inspector's own three columns, in the
+Inspector's own order, with nothing to learn.
+
+- **A write is a Set row.** `torch.shadow_filter_smooth = 0.5` reads *torch ▸ Set
+  shadow\_filter\_smooth to 0.5*, with `Light2D` muted beside the object.
+- **A comparison is a question in the left lane.** `torch.shadow_filter_smooth > 1.0` reads
+  *torch ▸ shadow\_filter\_smooth > 1* - the same compared-variable rendering a sheet variable
+  already gets, on an object's own property.
+- **A read answers where it stands.** A value that is itself a property of something the sheet
+  can name is drawn in the same plainer style the property on the left wears, and its own
+  description rides on the row beside the one being written.
+
+<img src="images/derived-property-rows.png" alt="One event of four lines of GDScript - an if on torch.shadow_filter_smooth, then writes to torch.energy, torch.shadow_filter_smooth and torch.shadow_color - shown above the same event as a sheet reads it: the condition torch Light2D shadow_filter_smooth greater than 1, then three actions, the first reading torch Set brightness to 1.2 with no class beside it and the other two reading torch Light2D Set shadow_filter_smooth to 0.5 and torch Light2D Set shadow_color to color." width="620">
+
+**Curated word maps still outrank the raw property name**, exactly as curated verbs outrank
+derived calls. In the figure above, `torch.energy = 1.2` reads *Set brightness to 1.2* - words
+somebody wrote, so no class is shown beside them - while the two rows under it are read off
+`Light2D` on the spot. The day a word map lands for a property that reads the plainer way
+today, those rows read the polished way the next time the file is opened, with the file
+untouched.
+
+**And the same three refusals.** A receiver whose class nothing can name, a property the class
+does not have, and a bare `hp = 5` with no receiver written down at all: none of them is
+guessed at. Each keeps the plainer view it already had, and goes on being counted as code.
+
+Hovering a derived property row shows its description - Godot's class reference for a built-in
+property, with the credit its licence asks for, or the `##` lines above the `var` in your own
+script (an `@export` annotation between the two does not break the block). `F1` on a built-in
+property opens its page in the Manual.
 
 ### Naming a raw call you already have
 

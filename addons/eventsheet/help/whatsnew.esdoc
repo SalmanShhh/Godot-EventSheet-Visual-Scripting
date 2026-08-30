@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Every property too
+
+- **The Inspector's own three columns, on a row.** A write to a property of an object whose class
+  the sheet can KNOW now reads as object, property, value - `torch.shadow_filter_smooth = 0.5` is
+  *torch ▸ Set shadow_filter_smooth to 0.5*, with `Light2D` muted beside the object. Same receivers
+  the derived calls already resolve (`self`, an `@onready` node, a typed declaration, an autoload, a
+  bare class name), and a project script's own `var` lines are read out of the file, so an `@export`
+  somebody documented answers with the words they wrote above it.
+- **A comparison is a question in the left lane.** `torch.shadow_filter_smooth > 1.0` reads
+  *torch ▸ shadow_filter_smooth > 1* - the compared-variable rendering every sheet variable already
+  gets, generalised to an object's own property. Before, such a line read as the whole expression
+  under System, with the object it is really about nowhere on the row.
+- **A read answers where it stands.** A value that is itself a property of something the sheet can
+  name is drawn in the same plainer style the property on the left wears, and its own description
+  rides on the row beside the one being written - which is where the grammar says an expression
+  answers: inside the slot it fills.
+- **Curated word maps still outrank the raw property name.** `torch.energy = 1.2` on a light stays
+  *Set brightness to 1.2*, because somebody wrote those words; the property beside it that no map
+  claims is read off the class instead, in the plainer derived style. Landing a word map later
+  upgrades those rows in place on the next open, with the file untouched - same bytes, better words.
+- **And the same three refusals.** A receiver whose class nothing can name, a property the class does
+  not have, and a bare `hp = 5` with no receiver written down at all: none is guessed at. Each keeps
+  the plainer view it already had, and the ledger goes on counting the line.
+- **The property's own words ride on the row.** Hovering shows the engine's class reference for a
+  built-in property, with the credit its licence requires, or the `##` lines above the declaration in
+  your own script - an `@export` annotation between the two no longer breaks the block. `F1` on a
+  built-in property opens its page in the Manual.
+
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an
