@@ -804,6 +804,22 @@ pivot turns.
   way. Right-click a sheet variable for **Add setter** / **Add getter** to write the shape yourself.
   The accessor events show wherever the variable is listed - down the event tree and inside the
   head's **Instance variables** folder, which is where a reader goes to find out what a variable IS.
+- **A property that NAMES its accessors is a property too.** Godot's other spelling for a guarded
+  value puts the functions beside the declaration instead of the body under it:
+
+  ```gdscript
+  var health: int = 100:
+  	set = _set_health,
+  	get = _get_health
+  ```
+
+  That reads as the variable row it is, with an **On health set ▸ `_set_health`** sub-row under it
+  saying which function runs and when. The named functions go on reading as the functions they are,
+  where they were written, rather than being copied under the declaration twice. Before, those two
+  lines were not statements, so nothing could lift them and they took the declaration above them into
+  a verbatim block. Every shape the emitter would not write back the same way - the other order, a
+  trailing comma with nothing after it, a name that is not one name - still stays the verbatim block
+  it was, and the bytes are untouched either way.
 
 #### Events - the shapes the file is made of
 
@@ -823,6 +839,16 @@ pivot turns.
   parent, blank means something else and has its own gesture: **Add blank sub-event (B)** puts its
   actions after the parent's, in order, with no `if` written at all.
 
+- **The engine's notifications read by name, not by their constant.** A `_notification(what)` with a
+  `match what:` in it is how Godot hands a node the news it sends through one callback instead of
+  through a signal, and four of those cases are things a game really reacts to: `NOTIFICATION_PAUSED`
+  reads **On paused**, `NOTIFICATION_UNPAUSED` reads **On unpaused**,
+  `NOTIFICATION_WM_CLOSE_REQUEST` reads **On close** (the player pressing the window's X, which is
+  where a "save first?" prompt goes) and `NOTIFICATION_PREDELETE` reads **On object freed**. All four
+  are pickable rows as well, filed under **Notifications**, and every one of them compiles back into
+  the same `match what:` block the file already had. **On object freed is not On destroyed**: a node
+  leaving the tree can happen more than once, this happens exactly once and nothing follows it, so
+  the two moments do not share a sentence.
 - **Every function reads as the trigger it is.** `ƒ  Functions ▸ On Jump`,
   `ƒ  Functions ▸ On Set Third Person  enabled`: the name and one chip per input sit in the CONDITION
   lane, because that lane answers "when does this run?" for every other event and a function's answer is
@@ -1329,6 +1355,17 @@ to the function it names, the same jump the Outline panel makes.
   both places and gets a Doctor warning naming the fix - that is the typo every beginner makes, and until
   now it compiled, printed nothing, and simply never fired. Drag a control off the bar onto the canvas
   and the sheet writes its `On <action> pressed` event.
+- **A handler that asks the event reads as the question it is.** The commonest shape inside `_input`
+  and `_unhandled_input` there is - `if event.is_action_pressed("jump"):` - used to read as
+  *Expression Is True*, the honest catch-all. It reads **`"jump"` was pressed**, from the **Input
+  Event** section, beside the press widened to include a held key's auto-repeats
+  (`is_action_pressed("jump", true)`), the release, the question of which action an event belongs to
+  at all, and how hard it is held in this event. Both of Godot's quotings answer to the same row,
+  because the `&` in `&"jump"` is a spelling rather than a value and rides back out untouched, and
+  the action names come from the project's own Input Map exactly as the polled rows' do. These are
+  the rows for the inside of a handler; the **Input** section's rows ask the keyboard how things
+  stand right now, which is what an every-tick event wants, and the two are filed apart so a reader
+  scanning one list never has to tell them apart by their small print.
 - **Analog reads in the Gamepad object's words.** `Input.get_joy_axis(0, JOY_AXIS_LEFT_X)` reads
   `axis Left analog X of gamepad 0`, `Input.get_joy_name(0)` reads `name of gamepad 0`, and
   `Input.get_connected_joypads().size()` reads `gamepad count`. The stick names are the Gamepad object's
@@ -1970,6 +2007,24 @@ re-emit by appending their lines in order. Double-click any row to open the code
 Recognising a literal is deliberately fussy - a wrapped function call (a bare `(` opens arguments, not a
 value), a literal with a statement after it, and one with a comment above its head are all left as ordinary
 code, because in each of those cases something other than the value would be affected.
+
+**A line that stays code is counted, never hidden.** The head bar's coverage chip says how much of
+the file arrived as rows, and **Tools ▸ Project Doctor ▸ Reading** says the other half of it for the
+whole project: how many lines no vocabulary claims by name, grouped by the SHAPE they share - the
+statement with the author's own words blanked, so `pop.chain().tween_callback(queue_free)` and every
+line like it land in one group reading `name.name().name(name)`. The commonest shapes are ranked with
+three of their own lines opening as doors into the files they are in; the lines whose shape nothing
+else repeats are one counted tail, because a line said once is nobody's table. That page is the one
+Doctor section that reports nothing wrong - it is a ledger of where a curated table would pay next,
+and `tools/reading_shape_census.gd` prints the same ranking headless over any folder you point it at.
+
+**A pack can teach the reader the lines its own verbs are written as.** If the code you are opening
+calls into a behaviour pack, that pack may ship `## @ace_lift_example` beside a verb - the line the
+way a person writes it, with the value spans marked - and those calls read as the pack's own rows
+rather than as generic method calls. The author's line is stored on the row, so the file still saves
+back byte for byte, and a pack whose example cannot keep that promise fails its own build rather than
+shipping. See the Custom ACEs guide to write them for a pack of your own, and
+[How your code reads](GUIDE-HOW-CODE-READS.md) for the three layers this sits at the top of.
 
 ### The things around an object: picking, layers, text and the browser
 
