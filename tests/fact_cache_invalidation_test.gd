@@ -18,6 +18,10 @@ extends RefCounted
 
 const DOCK_PATH := "res://addons/eventsheet/editor/event_sheet_dock.gd"
 
+## The audit, read as text for the same reason the dock is: what is pinned is that its run names the
+## droppers, and a run itself would sweep the whole repository to prove one line.
+const DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -181,6 +185,16 @@ static func run() -> bool:
 		filesystem_hook.contains("EventSheetProjectDoctor.clear_project_scripts()"), true) and all_passed
 	all_passed = _check("and what a script the rows are aimed at declares",
 		filesystem_hook.contains("EventSheetScriptMembers.clear_cache()"), true) and all_passed
+	all_passed = _check("and what the scenes said about collision",
+		filesystem_hook.contains("EventSheetSceneCollisionFacts.clear_cache()"), true) and all_passed
+	# THE AUDIT DROPS THEM TOO. Outside the editor there is no filesystem signal, and the audit is
+	# exactly the thing that runs there - so an audit re-run after a mask was fixed in the Inspector
+	# would answer from the numbers before it. The script listing is dropped at the head of a run for
+	# the same reason, and the scene answers derived from a parse that refreshes underneath them are
+	# the inversion this plugin has been bitten by before.
+	var audit: String = _function_body(_read(DOCTOR_PATH), "static func run() -> Dictionary:")
+	all_passed = _check("a fresh audit drops the scene answers the last one derived",
+		audit.contains("EventSheetSceneCollisionFacts.clear_cache()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
 	all_passed = _check("the settings hook drops the Input Map read",
 		settings_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed

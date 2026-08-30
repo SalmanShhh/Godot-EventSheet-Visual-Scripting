@@ -64,6 +64,13 @@ static func run() -> Dictionary:
 	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
 	# audit see files that appeared since the last one.
 	clear_project_scripts()
+	# And the answers DERIVED from the project's scenes: the collision layer census, the members of a
+	# group, and which collidables a script sits on. The parse under them refreshes by file stamp, so
+	# holding the derived answers over it is the inversion that has bitten this plugin before - an
+	# audit run after a mask was fixed in the Inspector would report the numbers from before it.
+	# Outside the editor there is no filesystem signal to drop them, and the audit is exactly the
+	# thing that runs there.
+	EventSheetSceneCollisionFacts.clear_cache()
 	_run_in_progress = true
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
