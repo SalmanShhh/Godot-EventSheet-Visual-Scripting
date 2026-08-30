@@ -91,7 +91,7 @@ A failed read has always refused to overwrite a good file; now it says so. **On 
 
 **Save All Addons** snapshots every autoload exposing the `save_state` seam, each under its own autoload name, with no list to maintain; **Load All Addons** puts them back and **Addon Saves Itself** (or `For Each Saveable Addon`) tells you which packs take part. The current scene is deliberately not one of them - scene state belongs to the persist group, keyed by node path.
 
-Set `backup_count` above `0` and every write copies the slot's previous bytes into a ring beside the save. **Restore Slot From Backup** puts an earlier version back (`1` is the save before this one), reading the backup back first so a damaged entry leaves the live slot alone; the current file is backed up before the swap, so a restore is never one-way. **Slot Backup Count** and `For Each Backup Of Slot` report the ring. **Never Save This Key** keeps a scratch key out of every write, **Save Size** gives the file's real byte count, and **Save Report** ranks the heaviest keys.
+Set `backup_count` above `0` and every write copies the slot's previous bytes into a ring beside the save. **Restore Slot From Backup** puts an earlier version back (`1` is the save before this one), reading the backup back first so a damaged entry leaves the live slot alone; the current file is backed up before the swap, so a restore is never one-way. **Slot Backup Count** and `For Each Backup Of Slot` report the ring. **Never Save This Key** keeps a throwaway key out of every write, **Save Size** gives the file's real byte count, and **Save Report** ranks the heaviest keys.
 
 ### New Game Plus
 

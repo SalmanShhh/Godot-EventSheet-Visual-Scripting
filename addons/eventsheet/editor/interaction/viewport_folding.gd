@@ -297,7 +297,7 @@ const SUMMARY_ROW_LIMIT := 3
 
 
 ## The summary line for a collapsed row, or "" for a row that is not collapsed (or holds
-## nothing). Cached on the row itself: rows are rebuilt from scratch whenever the sheet
+## nothing). Cached on the row itself: rows are rebuilt from the ground up whenever the sheet
 ## changes, so the cache cannot go stale - it dies with the row that carries it.
 func collapsed_summary(row_data: EventRowData) -> String:
 	if row_data == null or not row_data.folded or row_data.children.is_empty():

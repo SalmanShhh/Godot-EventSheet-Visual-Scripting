@@ -39,10 +39,10 @@ _code_dialog_preview.png.import
 # Generated codegen artifact written by the non-headless render harnesses
 event_sheet_generated.gd
 
-# Test Bench scratch artifacts (generated per run)
+# Test Bench temporary artifacts (generated per run)
 .eventsheets_test_bench.*
 
-# One-shot patch scripts (session scratch; never commit)
+# One-shot patch scripts (session temporary files; never commit)
 tools/_*.py
 /*_preview.png
 /eventsheet_translations/

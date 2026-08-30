@@ -92,11 +92,11 @@ static var _row_group_path: Dictionary = {}
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
 
-# Serializes every compile. The per-compile scratch statics above (and the scratch output file a
-# verify compile writes) are shared process-wide, and opening a .gd as a sheet now runs its lift -
-# which recompiles the whole sheet to byte-verify it - on a WORKER THREAD while the editor keeps
-# painting. A compile-on-save or a Project Doctor pass on the main thread would otherwise stomp
-# that scratch mid-emission. Locked at the two PUBLIC entry points ONLY (compile and
+# Serializes every compile. The per-compile working-state statics above (and the temporary output
+# file a verify compile writes) are shared process-wide, and opening a .gd as a sheet now runs its
+# lift - which recompiles the whole sheet to byte-verify it - on a WORKER THREAD while the editor
+# keeps painting. A compile-on-save or a Project Doctor pass on the main thread would otherwise stomp
+# that working state mid-emission. Locked at the two PUBLIC entry points ONLY (compile and
 # emit_function_block_text); no helper takes it, and neither entry point calls the other, so the
 # lock is never taken twice on one thread and cannot deadlock.
 static var _compile_mutex: Mutex = Mutex.new()
@@ -116,7 +116,7 @@ static var _removal_guard_facts: Dictionary = {}
 ## answer to the whole class of them (tests/compiler_state_leak_test.gd sweeps for the next one).
 ##
 ## `sheet` is the compile about to run, for the one flag that is a SETTING of the sheet rather than
-## scratch; the text emitters pass nothing, because a gate never emits breakpoints.
+## per-compile working state; the text emitters pass nothing, because a gate never emits breakpoints.
 static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_behavior_host_default = ""
 	_emit_breakpoints_flag = sheet != null and sheet.emit_breakpoints
@@ -165,8 +165,9 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		(result["errors"] as Array[String]).append("Sheet is null")
 		return result
 
-	# Everything the LAST compile left in the scratch above, cleared before the external-source path
-	# so no branch of this function can inherit it (see _reset_per_compile_state).
+	# Everything the LAST compile left in the working state above, cleared before the
+	# external-source path so no branch of this function can inherit it
+	# (see _reset_per_compile_state).
 	_reset_per_compile_state(sheet)
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
@@ -812,9 +813,9 @@ static func _write_output_if_changed(path: String, output: String) -> bool:
 ## afterwards append as standard trigger functions at the end. Disabled blocks still emit -
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
-	# The scratch was cleared by the caller. External mode is lossless, so it carries no synthesized
-	# debug members either - the runtime-error reporter and live values ride sheet-native compiles
-	# only, and their flags stay off for this whole path.
+	# The working state was cleared by the caller. External mode is lossless, so it carries no
+	# synthesized debug members either - the runtime-error reporter and live values ride
+	# sheet-native compiles only, and their flags stay off for this whole path.
 	#
 	# Event groups dissolve into the trigger sections here too, so refill the per-compile slug map for
 	# THIS sheet. The `## @ace_group` declarations ride along verbatim in the preserved prelude rows -
@@ -1041,7 +1042,7 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 ## function, as text, with no side effects. A mid-file helper lifts only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
 ## Takes the same compile lock as compile(): the lifter calls this per candidate function from the
-## async-open worker thread, and _emit_function_block reads the same per-compile scratch statics.
+## async-open worker thread, and _emit_function_block reads the same per-compile working state.
 ## The EventRows an anchor owns, in sheet order - they follow the anchor in sheet.events and are
 ## addressed by event_uid, so an edit that reorders or removes one simply narrows the handler
 ## rather than emitting a stale copy.
@@ -1197,12 +1198,13 @@ const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
 ## these events, as text, with no side effects. The handler anchors only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
-## Both text emitters below clear the per-compile scratch first, exactly as compile() does. Their two
-## helpers are reached from _compile_external ONLY, where that scratch is always at its defaults - so
-## leaving a previous BEHAVIOR compile's "host" standing would emit `host.velocity.y += …` for a line
-## the file spells `velocity.y += …` (and a previous DEBUG compile's event-trace flag would staple a
-## trace call into it), the byte gate would refuse the match, and every function in the opened file
-## would fall back to a verbatim block. The gate has to emit what the compile of this sheet emits.
+## Both text emitters below clear the per-compile working state first, exactly as compile() does.
+## Their two helpers are reached from _compile_external ONLY, where that state is always at its
+## defaults - so leaving a previous BEHAVIOR compile's "host" standing would emit
+## `host.velocity.y += …` for a line the file spells `velocity.y += …` (and a previous DEBUG
+## compile's event-trace flag would staple a trace call into it), the byte gate would refuse the
+## match, and every function in the opened file would fall back to a verbatim block. The gate has
+## to emit what the compile of this sheet emits.
 ## `group_guards` is {EventRow: guard expression} - what a full compile fills from the group tree
 ## while flattening it. The anchored probe re-emits ONE handler with no groups around it, so a caller
 ## that took a group's guard off a row hands it back here; every other caller passes nothing and the
@@ -1212,8 +1214,8 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 	_reset_per_compile_state()
 	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
-	var scratch: Dictionary = {"warnings": [], "errors": []}
-	_emit_anchored_trigger_function(events, lines, [], scratch)
+	var discarded_result: Dictionary = {"warnings": [], "errors": []}
+	_emit_anchored_trigger_function(events, lines, [], discarded_result)
 	_runtime_group_guards = {}
 	_compile_mutex.unlock()
 	return "\n".join(lines)
@@ -1223,8 +1225,8 @@ static func emit_function_block_text(event_function: EventFunction, sheet: Event
 	_compile_mutex.lock()
 	_reset_per_compile_state()
 	var lines: PackedStringArray = PackedStringArray()
-	var scratch: Dictionary = {"warnings": [], "errors": []}
-	_emit_function_block(event_function, sheet, lines, [], scratch)
+	var discarded_result: Dictionary = {"warnings": [], "errors": []}
+	_emit_function_block(event_function, sheet, lines, [], discarded_result)
 	_compile_mutex.unlock()
 	return "\n".join(lines)
 
@@ -1527,7 +1529,7 @@ static func _group_slug(group_name: String, used: Dictionary) -> String:
 ## Walks the event tree assigning every EventGroup a deterministic slug (filling `slugs`) and
 ## appending an ordered {slug, parent, group} record to `decls` (parents before children, so the
 ## importer can rebuild nesting). Recurses into group bodies, mirroring _flatten_trigger_rows' walk.
-## A compile hands it the per-compile `_group_slugs`; group_declaration_lines hands it a scratch
+## A compile hands it the per-compile `_group_slugs`; group_declaration_lines hands it a throwaway
 ## dictionary, so asking what a group's line says never disturbs a compile in flight.
 static func _collect_groups(rows: Array, decls: Array, used: Dictionary, slugs: Dictionary,
 		parent_slug: String = "") -> void:

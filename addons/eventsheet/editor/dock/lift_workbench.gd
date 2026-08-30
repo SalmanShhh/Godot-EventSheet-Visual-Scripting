@@ -5,8 +5,8 @@ extends RefCounted
 #
 # Writing a lift family is a loop: paste a line somebody really wrote, find out whether anything
 # claims it, look at the rows it opens as, and check that saving writes the same bytes back. Until
-# now that loop was a scratch fixture, a test run and a diff by hand, once per spelling. This is the
-# same loop in one window, on a buffer, with the answer arriving as you type.
+# now that loop was a throwaway fixture, a test run and a diff by hand, once per spelling. This is
+# the same loop in one window, on a buffer, with the answer arriving as you type.
 #
 # THREE ANSWERS PER BUFFER, all of them from EventSheetLiftReading so this window can never tell a
 # developer something the corpus gate and the head bar's chip would not:
@@ -20,27 +20,23 @@ extends RefCounted
 #                    red with the exact two lines when it does not - because a trailing space is the
 #                    whole bug and "they differ" is not a bug report.
 #
-# THE SCRATCH TABLE IS VISIBLE AND CAN BE EMPTIED. A draft is asked before every shipped spelling,
-# so one over-wide draft claims lines all over the window - and a table nobody can see is a table
-# whose claims have no visible cause. The draft form lists what it holds and carries the button that
-# forgets the lot, which is the whole recovery path, in the window rather than in a file it never
-# names on screen.
+# DRAFTS LAST AS LONG AS THE PANEL DOES. A draft is asked before every shipped spelling, so one
+# over-wide draft claims lines all over the window - which is why the drafts are listed where they
+# are made, with a plain button that clears them. They are held in this object and nowhere else:
+# nothing is written to disk, so closing the panel is itself the way out of a draft that claims too
+# much, and a line can never read as somebody's draft from three sessions ago.
 #
 # THE BUFFER IS THE WHOLE SCOPE. The refresh is debounced rather than per keystroke, and it imports
 # and compiles exactly what is in the box - never the project. That is what keeps a developer tool
 # free to be open all day.
 #
 # DRAFT AN EXAMPLE takes an unclaimed line to the by-example form (EventForgeLiftExample): mark the
-# value spans, get the derived entry back, and append it to a SCRATCH table this window keeps in
-# user://. The scratch table is asked first on every refresh, so a draft claims lines in this window
-# immediately and is marked "draft" while it does - it is never mistaken for a shipped spelling, and
-# nothing under res:// is written. Moving a draft into a real family is a copy and paste of the entry
-# the form shows, which is the point: the form does the mechanical half, a person still decides the
-# spelling is worth shipping.
-
-## Where drafts live between sessions. One line per draft: id, ace id, marked example, tab-separated.
-## Under user:// because a scratch table is a workbench's, not a project's.
-const DRAFTS_PATH: String = "user://eventsheets_lift_drafts.txt"
+# value spans, get the derived entry back, and add it to the drafts this window is holding. Drafts
+# are asked first on every refresh, so a draft claims lines in this window immediately and is marked
+# "draft" while it does - it is never mistaken for a shipped spelling, and nothing on disk is
+# touched. Moving a draft into a real family is a copy and paste of the entry the form shows, which
+# is the point: the form does the mechanical half, a person still decides the spelling is worth
+# shipping.
 
 ## How long the buffer has to go quiet before the reading runs. Long enough that typing a line never
 ## starts a compile, short enough that stopping to look already has the answer waiting.
@@ -88,7 +84,6 @@ func init(dock: Control) -> void:
 func open() -> void:
 	if _window == null:
 		build_window()
-	_load_drafts()
 	refresh()
 	_window.popup_centered(Vector2i(1080, 720))
 
@@ -113,11 +108,9 @@ func reading_for(source: String) -> Dictionary:
 	return EventSheetLiftReading.read(source, "", draft_entries())
 
 
-## What the scratch table holds right now, one line per draft - the ids and the examples, in the
-## order they were added. A draft is asked FIRST on every refresh, so a table nobody can see is a
-## table whose claims have no visible cause: a line reading as somebody's draft from three sessions
-## ago, with nothing in the window to say which draft or how to be rid of it. Said here, beside the
-## button that empties it.
+## What this panel is holding right now, one line per draft - the ids and the examples, in the order
+## they were added. A draft is asked FIRST on every refresh, so drafts nobody can see are claims
+## with no visible cause. Said here, beside the button that clears them.
 func drafts_summary() -> PackedStringArray:
 	var said: PackedStringArray = PackedStringArray()
 	for draft: Variant in _drafts:
@@ -126,12 +119,11 @@ func drafts_summary() -> PackedStringArray:
 	return said
 
 
-## Empties the scratch table, on disk and in the window, and re-reads the buffer so every line it was
-## claiming goes back to whatever claimed it before. The one way out of a draft that claims too much,
-## and the reason it does not mean hand-editing a file the window never names.
-func forget_drafts() -> void:
+## Drops every draft this panel is holding and re-reads the buffer, so each line they were claiming
+## goes back to whatever claimed it before. Closing the panel does the same thing, because the drafts
+## live in this object and nowhere else.
+func clear_drafts() -> void:
 	_drafts = []
-	_save_drafts()
 	EventSheetLiftReading.clear_cache()
 	_fill_drafts_list()
 	refresh()
@@ -150,7 +142,7 @@ func _fill_drafts_list() -> void:
 		_drafts_list.newline()
 
 
-## The scratch table as lift-table entries. A draft that cannot be derived comes back carrying its
+## The drafts as lift-table entries. A draft that cannot be derived comes back carrying its
 ## refusal (the example engine never guesses), and an entry carrying a refusal matches nothing - so a
 ## broken draft is inert here exactly as it would be in a shipped family.
 func draft_entries() -> Array:
@@ -325,40 +317,17 @@ func _check_draft() -> Dictionary:
 	return derived
 
 
-## Appends the draft to the scratch table and re-reads the buffer, so the line it was drafted from
-## changes its claim in front of the author. A refused example is not stored.
+## Adds the draft to the ones this panel is holding and re-reads the buffer, so the line it was
+## drafted from changes its claim in front of the author. A refused example is not stored.
 func _append_draft() -> void:
 	var derived: Dictionary = _check_draft()
 	if derived.has(EventForgeLiftTable.REFUSAL_KEY):
 		return
 	_drafts.append({"id": _draft_id.text.strip_edges(), "ace_id": _draft_ace.text.strip_edges(),
 		"example": _draft_example.text})
-	_save_drafts()
 	EventSheetLiftReading.clear_cache()
 	_fill_drafts_list()
 	refresh()
-
-
-func _load_drafts() -> void:
-	_drafts = []
-	if not FileAccess.file_exists(DRAFTS_PATH):
-		return
-	for line: String in FileAccess.get_file_as_string(DRAFTS_PATH).split("\n"):
-		var parts: PackedStringArray = line.split("\t")
-		if parts.size() < 3 or parts[0].strip_edges().is_empty():
-			continue
-		_drafts.append({"id": parts[0], "ace_id": parts[1], "example": parts[2]})
-
-
-func _save_drafts() -> void:
-	var file: FileAccess = FileAccess.open(DRAFTS_PATH, FileAccess.WRITE)
-	if file == null:
-		return
-	for draft: Variant in _drafts:
-		var row: Dictionary = draft
-		file.store_line("%s\t%s\t%s" % [str(row.get("id", "")), str(row.get("ace_id", "")),
-			str(row.get("example", ""))])
-	file.close()
 
 
 # ── window construction ─────────────────────────────────────────────────────────
@@ -399,7 +368,6 @@ func build_window() -> Window:
 func set_buffer(source: String) -> void:
 	if _buffer == null:
 		build_window()
-	_load_drafts()
 	_buffer.text = source
 	refresh()
 
@@ -488,20 +456,21 @@ func _build_draft_window() -> void:
 	_draft_result.selection_enabled = true
 	body.add_child(EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("The entry this derives"), _draft_result))
+	# The drafts are a plain list, not a named thing: they are the working state of an open form, and
+	# a heading over them would promise something that outlives the window.
 	_drafts_list = RichTextLabel.new()
 	_drafts_list.custom_minimum_size = Vector2(0.0, 72.0)
 	_drafts_list.selection_enabled = true
-	body.add_child(EventSheetPopupUI.titled_card(
-		EventSheetL10n.translate("The scratch table"), _drafts_list))
-	body.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("These are asked before every shipped spelling, in this window only. Nothing under res:// is written.")))
+	body.add_child(_drafts_list)
+	body.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.")))
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
 	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var forget: Button = Button.new()
-	forget.text = EventSheetL10n.translate("Forget the scratch table")
-	forget.tooltip_text = EventSheetL10n.translate("Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.")
-	forget.pressed.connect(forget_drafts)
-	buttons.add_child(forget)
+	var clear: Button = Button.new()
+	clear.text = EventSheetL10n.translate("Clear drafts")
+	clear.tooltip_text = EventSheetL10n.translate("Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.")
+	clear.pressed.connect(clear_drafts)
+	buttons.add_child(clear)
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buttons.add_child(spacer)
@@ -510,7 +479,7 @@ func _build_draft_window() -> void:
 	check.pressed.connect(func() -> void: _check_draft())
 	buttons.add_child(check)
 	var append: Button = Button.new()
-	append.text = EventSheetL10n.translate("Add to the scratch table")
+	append.text = EventSheetL10n.translate("Add draft")
 	append.pressed.connect(_append_draft)
 	buttons.add_child(append)
 	body.add_child(buttons)

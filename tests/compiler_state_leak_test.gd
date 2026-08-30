@@ -1,6 +1,6 @@
 # Godot EventSheets - nothing a compile leaves behind may change the next one.
 #
-# The compiler keeps a handful of statics as per-compile scratch (the breakpoint flag, the group
+# The compiler keeps a handful of statics as per-compile working state (the breakpoint flag, the group
 # maps, the behaviour host default). They are shared process-wide, so anything one compile forgets to
 # clear is standing when the next caller arrives - and the damage never surfaces where it was done. A
 # behaviour compile that left `host` standing made the importer's byte gate emit `host.move_and_slide()`
@@ -29,16 +29,16 @@ const EMITTER_SCRIPTS: Array[String] = [
 	"res://addons/eventforge/compiler/line_row_mapper.gd"
 ]
 
-## The statics that are NOT per-compile scratch, and why. An override list, so a static added later
+## The statics that are NOT per-compile working state, and why. An override list, so a static added later
 ## defaults to being swept rather than to being trusted.
 const DURABLE_STATICS: Dictionary = {
-	"_compile_mutex": "the lock itself - serializing compiles is what protects the scratch below",
+	"_compile_mutex": "the lock itself - serializing compiles is what protects the working state below",
 	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state"
 }
 
-## Every scratch static the sweep expects to find, pinned as a VALUE rather than counted. A static
+## Every working-state static the sweep expects to find, pinned as a VALUE rather than counted. A static
 ## added to the compiler shows up here as a failure with its own name in it, which is the moment to
-## decide whether it is scratch (leave it swept) or durable (name it above, with the reason).
+## decide whether it is working state (leave it swept) or durable (name it above, with the reason).
 const SWEPT_STATICS: Array[String] = [
 	"_behavior_host_default", "_emit_breakpoints_flag", "_emit_event_trace_flag",
 	"_error_reporter_pending", "_group_slugs", "_live_values_payload",
@@ -48,7 +48,7 @@ const SWEPT_STATICS: Array[String] = [
 ]
 
 ## The public statics of the compiler that are not emission entry points: pure answers about a row, a
-## group name or a table enum, with no scratch behind them. Listed so that a NEW public entry point
+## group name or a table enum, with no working state behind them. Listed so that a NEW public entry point
 ## fails this file until somebody decides which it is.
 const PURE_HELPERS: Array[String] = [
 	"condition_source_text", "group_declaration_lines", "guard_token", "static_local_declaration",
@@ -86,12 +86,12 @@ const UNNAMED_OUTPUT: String = "user://__eventsheets_state_leak_probe.gd"
 ## one is added is the day somebody reads this list.
 static func _test_the_swept_set() -> bool:
 	var found: Array[String] = []
-	for entry: Dictionary in _scratch_statics():
+	for entry: Dictionary in _working_statics():
 		found.append(str(entry["name"]))
 	found.sort()
 	var expected: Array[String] = SWEPT_STATICS.duplicate()
 	expected.sort()
-	return _check("the compiler's scratch statics are the ones this sweep knows about", found, expected)
+	return _check("the compiler's working-state statics are the ones this sweep knows about", found, expected)
 
 
 ## Coverage of the entry points themselves: every public static the compiler offers is either swept
@@ -156,7 +156,7 @@ static func _test_the_sweep_can_fail() -> bool:
 
 ## Every static that is not declared durable, as {script, script_name, name, type}. Found by
 ## reflection over the emitter scripts, so the sweep cannot fall behind the compiler.
-static func _scratch_statics() -> Array[Dictionary]:
+static func _working_statics() -> Array[Dictionary]:
 	var statics: Array[Dictionary] = []
 	for path: String in EMITTER_SCRIPTS:
 		var script: Object = load(path)
@@ -201,14 +201,14 @@ static func _emission_runners() -> Array[Dictionary]:
 
 
 ## Runs one emitter clean, then once per poisoned static, and names every static that moved the
-## output. Restores the scratch it found before returning, so no test after this one inherits a
+## output. Restores the working state it found before returning, so no test after this one inherits a
 ## poisoned compiler.
 static func _sweep(emit: Callable) -> PackedStringArray:
 	var defaults: Dictionary = _defaults()
 	_restore(defaults)
 	var clean: String = emit.call()
 	var leaks: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in _scratch_statics():
+	for entry: Dictionary in _working_statics():
 		if not POISON.has(int(entry["type"])):
 			leaks.append("%s (%s): no poison value for type %d" % [str(entry["name"]),
 				str(entry["script_name"]), int(entry["type"])])
@@ -228,18 +228,18 @@ static func _poison_for(type_id: int) -> Variant:
 	return value.duplicate() if value is Dictionary or value is Array else value
 
 
-## The value every scratch static holds after a clean compile - snapshotted rather than assumed, so
+## The value every working-state static holds after a clean compile - snapshotted rather than assumed, so
 ## the sweep restores what it found instead of what it thinks the defaults are.
 static func _defaults() -> Dictionary:
 	SheetCompiler.compile(_plain_sheet(), "")
 	var snapshot: Dictionary = {}
-	for entry: Dictionary in _scratch_statics():
+	for entry: Dictionary in _working_statics():
 		snapshot["%s/%s" % [str(entry["script_name"]), str(entry["name"])]] = (entry["script"] as Object).get(str(entry["name"]))
 	return snapshot
 
 
 static func _restore(defaults: Dictionary) -> void:
-	for entry: Dictionary in _scratch_statics():
+	for entry: Dictionary in _working_statics():
 		var key: String = "%s/%s" % [str(entry["script_name"]), str(entry["name"])]
 		if defaults.has(key):
 			var value: Variant = defaults[key]

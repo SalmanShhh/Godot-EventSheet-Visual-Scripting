@@ -3221,8 +3221,8 @@ func _blocking_expression_field() -> Dictionary:
 	return {}
 
 
-## True unless the lint scratch ITSELF is broken (a sheet variable shadowing a host
-## member makes the scratch unparseable, so every expression "fails" and the OK
+## True unless the lint probe script ITSELF is broken (a sheet variable shadowing a host
+## member makes the probe unparseable, so every expression "fails" and the OK
 ## guardrail would lock the user out - verified by linting a bare literal).
 func _lint_context_healthy() -> bool:
 	if not _lint_context_provider.is_valid():

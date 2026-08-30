@@ -1871,7 +1871,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Use Upgraded Save** (`save_data: Dictionary`) - Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.
 - **Save All Addons** - Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.
 - **Load All Addons** - Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.
-- **Never Save This Key** (`key: String`) - Keeps this key out of every save from now on - cached node lists, scratch buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.
+- **Never Save This Key** (`key: String`) - Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.
 - **Restore Slot From Backup** (`slot_index: int, how_many_back: int`) - Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.
 - **Carry Value Into Next Run** (`key: String`) - Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.
 - **Start New Run** (`slot_index: int`) - Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.
@@ -3011,7 +3011,7 @@ Collections (rich variables)
 - **Tween Property** (`target: String, property: String, value: String, duration: String, transition: String, ease: String`) - Smoothly animates a node's property to a target value over time with an easing curve.
 - **Tween Callback** (`callable: String, delay: String`) - Waits a delay, then calls a method or function once (handy for timed events).
 - **Go To Layout** (`path: String`) - Switches the game to a different layout (a scene file), replacing the current one.
-- **Restart Layout** - Restarts the current layout from scratch, useful for retrying a level.
+- **Restart Layout** - Restarts the current layout from the beginning, useful for retrying a level.
 - **Quit Game** - Closes the game and exits to desktop.
 - **Pause The Game** - Freezes the whole game. Nodes set to Always (or a pause menu's Process Mode) keep running, which is how the menu on top stays alive.
 - **Unpause** - Lets the game run again after Pause The Game.
@@ -4369,12 +4369,12 @@ Particles (GPUParticles2D / CPUParticles2D)
 
 #### Actions
 - **Set Emitting** (`emitting: String, target: String`) - Starts or stops the particle emitter, e.g. switching an effect on.
-- **Restart / Burst** (`target: String`) - Restarts the particle system from scratch, e.g. firing a fresh burst.
+- **Restart / Burst** (`target: String`) - Restarts the particle system from the beginning, e.g. firing a fresh burst.
 - **Set One-Shot** (`one_shot: String, target: String`) - Sets the emitter to fire a single burst then stop, rather than looping.
 - **Set Amount** (`amount: String, target: String`) - Sets how many particles the emitter spawns, controlling effect density.
 - **Set Speed Scale** (`scale: String, target: String`) - Speeds up or slows down the particle effect, e.g. 0 freezes it, 2 doubles it.
 - **Set Emitting (CPU)** (`emitting: String, target: String`) - Starts or stops a CPU particle emitter, e.g. switching an effect on.
-- **Restart / Burst (CPU)** (`target: String`) - Restarts a CPU particle system from scratch, e.g. firing a fresh burst.
+- **Restart / Burst (CPU)** (`target: String`) - Restarts a CPU particle system from the beginning, e.g. firing a fresh burst.
 - **Set Speed Scale (CPU)** (`scale: String, target: String`) - Speeds up or slows down a CPU particle effect, e.g. 0 freezes it, 2 doubles it.
 
 #### Expressions

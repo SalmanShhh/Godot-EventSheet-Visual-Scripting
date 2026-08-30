@@ -28,7 +28,7 @@ recognises - so a picked row and a typed line are the same bytes and read the sa
 
 ## Where this shines
 
-- **A turret that shoots the closest enemy**, without a loop or a scratch variable.
+- **A turret that shoots the closest enemy**, without a loop or a throwaway variable.
 - **A random drop, a random spawn point, a random taunt** out of whatever is in the world.
 - **"Every enemy with more than half health"** as one row that names its result.
 - **Remembering which one** across a save, a table or a signal, by id rather than by reference.
@@ -139,7 +139,7 @@ the rest of the clipboard family.
 
 ## Use cases
 
-**1. A turret that fires at the closest enemy.** Every tick, Pick Nearest of the "enemy" group to the turret's own position into `target`, then, when `target` exists, turn toward it and shoot. No scratch "best distance" variable and no loop in sight.
+**1. A turret that fires at the closest enemy.** Every tick, Pick Nearest of the "enemy" group to the turret's own position into `target`, then, when `target` exists, turn toward it and shoot. No throwaway "best distance" variable and no loop in sight.
 
 **2. A homing missile that keeps its lock.** Pick Nearest once when the missile is created, remember the target's UID, and every tick Pick By UID to get it back - so the missile keeps chasing the one it started on, and gives up cleanly when that one is destroyed.
 

@@ -71,7 +71,7 @@ static func run() -> bool:
 		"return": {"type": TYPE_NIL, "usage": 0},
 		"flags": 0,
 	}
-	var definition: ACEDefinition = EventSheetClassDBSource._method_definition("ScratchAudioSource", method_info)
+	var definition: ACEDefinition = EventSheetClassDBSource._method_definition("TempAudioSource", method_info)
 	# The sentence leads with the verb's DISPLAY name, which is the member title-cased
 	# ("play_cue" -> "Play Cue") - the same read an annotated verb has.
 	ok = _check("the reflected verb carries its sentence",

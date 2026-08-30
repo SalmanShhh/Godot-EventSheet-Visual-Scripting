@@ -3,7 +3,7 @@
 # tools/pack_builders/<name>.gd emits today. Nothing noticed when the two drifted apart, because
 # the disagreement only surfaces when somebody runs the rebuild - and then it looks like their
 # change, not like a debt that had been sitting there. So this gate rebuilds a couple of packs
-# through the real builders (redirected to a scratch directory, so the repository is never
+# through the real builders (redirected to a temporary directory, so the repository is never
 # touched) and compares the bytes against the shipped files.
 #
 # Two packs, not all 112 - the full sweep is the build tool itself
@@ -22,7 +22,7 @@ extends RefCounted
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-const SCRATCH_DIR := "user://eventsheets_pack_builder_gate"
+const TEMP_DIR := "user://eventsheets_pack_builder_gate"
 
 # builder file basename -> the pack .gd it ships.
 const GATED_PACKS := {
@@ -33,7 +33,7 @@ const GATED_PACKS := {
 
 static func run() -> bool:
 	var all_passed: bool = true
-	DirAccess.make_dir_recursive_absolute(SCRATCH_DIR)
+	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
 	for builder_name: String in GATED_PACKS:
 		all_passed = _check_pack(builder_name, str(GATED_PACKS[builder_name])) and all_passed
 	return all_passed
@@ -48,11 +48,11 @@ static func _check_pack(builder_name: String, shipped_path: String) -> bool:
 	if shipped.is_empty():
 		return _check("%s: the shipped pack reads" % builder_name, false, true)
 	# The override is a shared static, so it is cleared the moment the build returns - a later
-	# test that publishes a pack must not inherit this test's scratch directory.
-	Lib.output_override_dir = SCRATCH_DIR
+	# test that publishes a pack must not inherit this test's temporary directory.
+	Lib.output_override_dir = TEMP_DIR
 	var built: bool = bool(builder.call("build"))
 	Lib.output_override_dir = ""
-	var rebuilt_path: String = SCRATCH_DIR.path_join(shipped_path.get_file())
+	var rebuilt_path: String = TEMP_DIR.path_join(shipped_path.get_file())
 	var rebuilt: String = FileAccess.get_file_as_string(rebuilt_path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(rebuilt_path))
 	var passed: bool = _check("%s: the builder compiles" % builder_name, built, true)

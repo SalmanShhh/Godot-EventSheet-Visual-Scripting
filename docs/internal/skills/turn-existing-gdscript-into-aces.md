@@ -440,7 +440,7 @@ treeless in tests because `ConfigFile` does.
    (`tools/build_sample_behaviors.gd`), then the drift audit (`tools/audit_addons.gd`) must
    print `drifted=0`. Regenerate `docs/REFERENCE-ENGINE-ACES.md` with `tools/vocabulary_doc.gd`
    when you add built-in vocabulary.
-8. **There is no single-test filter flag.** Run a scratch SceneTree script that loads the test
+8. **There is no single-test filter flag.** Run a throwaway SceneTree script that loads the test
    script and calls `run()`, then `quit(0)`. If you added a `class_name`, the headless
    `--script` run will not see it until the class cache is regenerated, so `load()` the test
    by path instead.

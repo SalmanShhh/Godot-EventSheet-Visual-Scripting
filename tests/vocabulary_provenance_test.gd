@@ -7,12 +7,12 @@
 class_name VocabularyProvenanceTest
 extends RefCounted
 
-const SCRATCH_PATH: String = "user://scratch_provenance_catalog.tres"
+const TEMP_PATH: String = "user://temp_provenance_catalog.tres"
 
 
 static func run() -> bool:
 	var ok: bool = true
-	EventSheetVocabularyCatalog.reset_for_tests(SCRATCH_PATH)
+	EventSheetVocabularyCatalog.reset_for_tests(TEMP_PATH)
 
 	# Authored vocabulary (a builtin or an annotated provider) carries no mark: it is the
 	# baseline, and labelling 900+ curated verbs would be pure noise.
@@ -62,8 +62,8 @@ static func run() -> bool:
 	ok = _check("resetting restores the inferred provenance",
 		EventSheetVocabularyCatalog.provenance_of(reset[0]), "inferred") and ok
 
-	if ResourceLoader.exists(SCRATCH_PATH):
-		DirAccess.remove_absolute(SCRATCH_PATH)
+	if ResourceLoader.exists(TEMP_PATH):
+		DirAccess.remove_absolute(TEMP_PATH)
 	EventSheetVocabularyCatalog.reset_for_tests()
 	return ok
 

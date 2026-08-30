@@ -154,7 +154,7 @@ static func capability_failure(body: String) -> String:
 	return reason
 
 
-## The verdict computed from scratch, by the lifter and the compiler that ship today. This is what
+## The verdict computed from the ground up, by the lifter and the compiler that ship today. This is what
 ## the build step bakes and what the suite compares against; nothing else should call it.
 static func live_capability_failure(body: String) -> String:
 	if body.strip_edges().is_empty():

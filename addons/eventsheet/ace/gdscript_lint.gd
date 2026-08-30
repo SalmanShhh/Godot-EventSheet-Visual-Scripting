@@ -1,5 +1,5 @@
 # EventSheet - GDScript block lint + completion support
-# Compile-checks block snippets against the sheet's context: the scratch script extends the
+# Compile-checks block snippets against the sheet's context: the probe script extends the
 # sheet's host class and stubs the sheet's variables/functions, so references to them (and
 # host members) resolve. Godot does not expose the ScriptEditor analyzer to plugins; this
 # parse+analyze pass is the supported approximation.
@@ -18,9 +18,9 @@ static var scene_root_provider: Callable = Callable()
 static func lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dictionary:
 	if code.strip_edges().is_empty():
 		return {"ok": true, "error": ""}
-	var scratch: GDScript = GDScript.new()
-	scratch.source_code = build_scratch_source(code, in_flow, sheet)
-	var error: Error = scratch.reload(true)
+	var probe: GDScript = GDScript.new()
+	probe.source_code = build_probe_source(code, in_flow, sheet)
+	var error: Error = probe.reload(true)
 	if error == OK:
 		return {"ok": true, "error": ""}
 	return {"ok": false, "error": "Does not compile (parse/analyze failed - see Output for details)."}
@@ -110,11 +110,11 @@ static func structural_syntax_error(code: String) -> String:
 	return ""
 
 
-## The scratch script used for linting: host-class extends + sheet symbol stubs + the code.
-static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
+## The throwaway probe script used for linting: host-class extends + sheet symbol stubs + the code.
+static func build_probe_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "RefCounted"
-	# Behavior sheets compile to Node components with a typed `host` accessor - the scratch
+	# Behavior sheets compile to Node components with a typed `host` accessor - the probe
 	# script mirrors that so `host.member` references lint correctly.
 	if sheet != null and sheet.behavior_mode:
 		lines.append("extends Node")
@@ -408,8 +408,8 @@ static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 		names.append(str(key))
 	for entry in sheet.events:
 		if entry is LocalVariable and not (entry as LocalVariable).name.strip_edges().is_empty():
-			# build_scratch_source already declares `var host: <Type>` for behaviour sheets, and opening a
-			# behaviour .gd recovers that accessor as a `host` variable row - skip it here so the scratch
+			# build_probe_source already declares `var host: <Type>` for behaviour sheets, and opening a
+			# behaviour .gd recovers that accessor as a `host` variable row - skip it here so the probe
 			# script doesn't get a duplicate `var host` (which fails to parse and spuriously errors the lint).
 			if sheet.behavior_mode and (entry as LocalVariable).name == "host":
 				continue

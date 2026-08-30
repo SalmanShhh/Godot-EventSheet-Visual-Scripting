@@ -17,7 +17,7 @@ extends RefCounted
 
 const COUNTDOWN_PATH := "res://tests/fixtures/patterns/countdown.gd"
 const POOL_PATH := "res://tests/fixtures/patterns/object_pool.gd"
-const SCRATCH_PATH := "user://pattern_ux_emitted.gd"
+const TEMP_PATH := "user://pattern_ux_emitted.gd"
 
 
 static func run() -> bool:
@@ -450,11 +450,11 @@ static func _finding_severity(findings: Array[Dictionary], check_id: String) -> 
 	return ""
 
 
-## The GDScript a sheet emits. Compiled to a SCRATCH path on purpose: the compiler writes its output
+## The GDScript a sheet emits. Compiled to a TEMPORARY path on purpose: the compiler writes its output
 ## to the sheet's own file, so emitting a sheet this test has deliberately rewritten would rewrite
 ## the fixture under every test after it.
 static func _emitted(sheet: EventSheetResource) -> String:
-	return str(SheetCompiler.compile(sheet, SCRATCH_PATH).get("output", ""))
+	return str(SheetCompiler.compile(sheet, TEMP_PATH).get("output", ""))
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

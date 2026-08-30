@@ -5527,13 +5527,12 @@ Name physics layer,Physikebene benennen
 "Entry id","Eintrags-ID"
 "Row it means","Gemeinte Zeile"
 "The entry this derives","Der abgeleitete Eintrag"
-The scratch table,Die Notiztabelle
 Nothing drafted yet.,Noch nichts entworfen.
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Diese werden vor jeder ausgelieferten Schreibweise gefragt, nur in diesem Fenster. Unter res:// wird nichts geschrieben."
-Forget the scratch table,Notiztabelle verwerfen
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","Diese werden vor jeder ausgelieferten Schreibweise gefragt, nur in diesem Fenster. Beim Schließen sind sie weg, und auf der Festplatte wird nichts geschrieben."
+Clear drafts,Entwürfe verwerfen
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Leert die Entwürfe dieses Fensters, sodass jede beanspruchte Zeile wieder das wird, was sie vorher war."
 "Check","Prüfen"
-"Add to the scratch table","Zur Notiztabelle hinzufügen"
+"Add draft","Entwurf hinzufügen"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Die ersten %d von %d Skript(en) gelesen, in Pfadreihenfolge. Das Verzeichnis unten ist eine Stichprobe dieses Projekts, nicht das Ganze - es werden jedes Mal dieselben Skripte gelesen."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% des Gelesenen wird als Zeilen gezeichnet, und jede davon trägt einen Namen. Hier bleibt nichts Code."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% des Gelesenen wird als Zeilen gezeichnet - das ist die Frage nach der Darstellung. Die Frage nach den Worten steht darunter: %d Zeile(n) bleiben ehrlicher Code, weil noch kein Wortschatz sie beansprucht. Beides stimmt, und es ist nicht dieselbe Zahl."

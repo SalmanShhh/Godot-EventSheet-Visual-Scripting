@@ -55,7 +55,7 @@ Where each kind of value lives:
 |---|---|---|
 | **Designer knobs** | An **exported** variable (an **@export badge** shows on the row + in the Inspector) | `move_speed`, `gravity` |
 | **Internal state** | A **non-exported** variable | `remaining`, `flashing`, a coyote timer |
-| **Scratch values** inside one event | **Set Local Variable (typed)** | a loop-local distance |
+| **Throwaway values** inside one event | **Set Local Variable (typed)** | a loop-local distance |
 
 Typed knobs get a live Inspector **drawer** (direction dial, colour swatch, curve, progress bar, texture preview); group many with `@export_group` / `@export_subgroup`.
 
@@ -212,7 +212,7 @@ Send an artist the Flash behaviour and they tune `flash_color` from a colour swa
 - **Loops are the bit people miss.** They are not a row you add from the picker - they live *on the event* as a Pick Filter. Right-click the event → Add Pick Filter.
 - **`host` is already wired.** In behavior mode, node ACEs target the parent automatically; you do not select or path to the host node yourself.
 - **Choose export vs non-export deliberately.** Exported variables are the designer's surface (badge + Inspector drawer); internal state like `remaining` or a coyote timer should stay non-exported so it does not clutter the Inspector.
-- **Use Set Local Variable (typed) for scratch values.** A value that only matters inside one event does not need a sheet variable.
+- **Use Set Local Variable (typed) for throwaway values.** A value that only matters inside one event does not need a sheet variable.
 - **A Signal row is not a trigger until you tick "trigger".** Only then does it publish as an *On ...* entry other sheets can react to.
 - **The return type decides how a function publishes.** void → Action, bool → Condition, anything else → Expression. Pick the return type for the ACE role you want, then tick "Publish to the picker" or it stays sheet-private.
 - **Multiple conditions on a row are AND by default.** Switch the row to OR when you mean "any of these"; use Else (right-click or the chain keys) for if/else, not a duplicated inverted event.

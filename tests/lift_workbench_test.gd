@@ -101,7 +101,7 @@ static func _draft_pins() -> bool:
 	all_passed = _check("...whose shape is the line with a slot where the mark was",
 		str(derived.get("shape", "")), "shake_camera({strength})") and all_passed
 	var claimed: Dictionary = EventSheetLiftReading.table_claim("shake_camera(3.0)", [derived])
-	all_passed = _check("a scratch entry claims the line it was drafted from",
+	all_passed = _check("a drafted entry claims the line it was drafted from",
 		str(claimed.get("entry_id", "")), "shake_the_camera") and all_passed
 	all_passed = _check("...and says it is a draft, not a shipped spelling",
 		str(claimed.get("family", "")), "draft") and all_passed
@@ -120,14 +120,37 @@ static func _draft_pins() -> bool:
 		"the example is all value span and no text of its own, so it would match every line - write"		+ " the line the way a person writes it, with only the values marked") and all_passed
 	all_passed = _check("...even when the span names a fragment",
 		EventForgeLiftExample.refusal("[[x|word: foo]]").is_empty(), false) and all_passed
-	# And the way OUT of a scratch table that claims too much: the window lists what it holds and
-	# empties it, rather than a file it never names on screen being hand-edited.
+	# And the way OUT of a draft that claims too much: the panel lists what it holds and clears it.
 	var bench: EventSheetLiftWorkbench = EventSheetLiftWorkbench.new()
-	bench.forget_drafts()
-	all_passed = _check("an emptied scratch table holds nothing",
+	bench.clear_drafts()
+	all_passed = _check("a cleared panel holds no drafts",
 		bench.drafts_summary(), PackedStringArray()) and all_passed
 	all_passed = _check("...and claims nothing on a buffer",
 		bench.draft_entries(), []) and all_passed
+	all_passed = _drafts_are_panel_scoped() and all_passed
+	return all_passed
+
+
+## DRAFTS LAST AS LONG AS THE PANEL DOES. They are working state, not a feature with a store behind
+## it: one panel's drafts are held on that object, a panel opened afterwards starts empty, and no
+## file is written for them - so a line can never read as somebody's draft from a session that is
+## over, and there is nothing on disk for a person to go and find.
+static func _drafts_are_panel_scoped() -> bool:
+	var all_passed: bool = true
+	# The path the first version of this panel wrote. Removed first, so what is asserted below is that
+	# the panel does not write it, not that this machine happened to be clean.
+	var abandoned_store: String = "user://eventsheets_lift_drafts.txt"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(abandoned_store))
+	var open_panel: EventSheetLiftWorkbench = EventSheetLiftWorkbench.new()
+	open_panel._drafts.append({"id": "shake_the_camera", "ace_id": "ShakeCamera",
+		"example": DRAFT_EXAMPLE})
+	all_passed = _check("the panel that made the draft is holding it",
+		open_panel.drafts_summary(),
+		PackedStringArray(["shake_the_camera - %s" % DRAFT_EXAMPLE])) and all_passed
+	all_passed = _check("a panel opened afterwards holds nothing",
+		EventSheetLiftWorkbench.new().drafts_summary(), PackedStringArray()) and all_passed
+	all_passed = _check("...and nothing was written for them to come back from",
+		FileAccess.file_exists(abandoned_store), false) and all_passed
 	return all_passed
 
 

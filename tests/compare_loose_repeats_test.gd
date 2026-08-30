@@ -166,7 +166,7 @@ static func _run_loose_ends() -> bool:
 	literal_code.code = "print(\"XXX marks the spot\")"
 	sheet.events.append(literal_code)
 	var noted_code: RawCodeRow = RawCodeRow.new()
-	noted_code.code = "var scratch: int = 1  # HACK: temporary"
+	noted_code.code = "var temp: int = 1  # HACK: temporary"
 	sheet.events.append(noted_code)
 	var wider: PackedStringArray = _labels_of(EventSheetLooseEndsPanel.loose_ends(sheet), "todo")
 	ok = _check("a WARNING-styled standing note is not unfinished work",
@@ -175,7 +175,7 @@ static func _run_loose_ends() -> bool:
 	ok = _check("a marker inside a string literal is data, not a note",
 		wider.has("print(\"XXX marks the spot\")"), false) and ok
 	ok = _check("a marker in a real code comment IS indexed",
-		wider.has("var scratch: int = 1  # HACK: temporary"), true) and ok
+		wider.has("var temp: int = 1  # HACK: temporary"), true) and ok
 	sheet.events.resize(4)
 
 	ok = _check("a verb that IS called drops off the list",

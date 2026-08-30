@@ -9,7 +9,7 @@ class_name ProjectVocabularyTest
 extends RefCounted
 
 const TEMP_DIR: String = "res://.eventsheets_vocab_test"
-const TEMP_SCRIPT: String = TEMP_DIR + "/scratch_vocab_source.gd"
+const TEMP_SCRIPT: String = TEMP_DIR + "/temp_vocab_source.gd"
 
 
 static func run() -> bool:
@@ -30,7 +30,7 @@ static func run() -> bool:
 	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
 	var file: FileAccess = FileAccess.open(TEMP_SCRIPT, FileAccess.WRITE)
 	file.store_string("\n".join(PackedStringArray([
-		"class_name ScratchVocabSource",
+		"class_name TempVocabSource",
 		"extends Node",
 		"",
 		"",
@@ -66,7 +66,7 @@ static func run() -> bool:
 	# tautology that passes even if reflection started publishing private members.
 	for method_info: Dictionary in script.get_script_method_list():
 		var member: String = str(method_info.get("name", ""))
-		var definition: ACEDefinition = EventSheetClassDBSource._method_definition("ScratchVocabSource", method_info)
+		var definition: ACEDefinition = EventSheetClassDBSource._method_definition("TempVocabSource", method_info)
 		if definition != null:
 			kinds[member] = definition.ace_type
 			templates[member] = str(definition.metadata.get("codegen_template", ""))
@@ -84,7 +84,7 @@ static func run() -> bool:
 	var singleton_templates: Dictionary = {}
 	for method_info: Dictionary in script.get_script_method_list():
 		var definition: ACEDefinition = EventSheetClassDBSource._method_definition(
-			"ScratchVocabSource", method_info, "Inventory")
+			"TempVocabSource", method_info, "Inventory")
 		if definition != null:
 			singleton_templates[str(method_info.get("name", ""))] = str(definition.metadata.get("codegen_template", ""))
 	ok = _check("an autoload emits through its singleton name",

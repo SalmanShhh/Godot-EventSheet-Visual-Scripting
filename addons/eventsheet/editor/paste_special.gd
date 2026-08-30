@@ -76,18 +76,18 @@ static func remap(snippet: Dictionary, mapping: Dictionary) -> Dictionary:
 		EventSheetRefactor.replace_node_reference(rows, OBJECT_SENTINEL % index, str((object_pairs[index] as Array)[1]))
 	# The temporary sheet is what lets the shipped rename run here: rename_symbol renames a variables
 	# KEY plus every reference in the rows it is given, which is precisely the snippet's own scope.
-	var scratch: EventSheetResource = EventSheetResource.new()
-	scratch.variables = variables
-	scratch.events = rows
+	var staging: EventSheetResource = EventSheetResource.new()
+	staging.variables = variables
+	staging.events = rows
 	var variable_pairs: Array = _accepted_variable_pairs(snippet, mapping)
 	for index: int in range(variable_pairs.size()):
 		var pair: Array = variable_pairs[index]
-		counts["variables"] = int(counts["variables"]) + EventSheetRefactor.rename_symbol(scratch, str(pair[0]), VARIABLE_SENTINEL % index)
+		counts["variables"] = int(counts["variables"]) + EventSheetRefactor.rename_symbol(staging, str(pair[0]), VARIABLE_SENTINEL % index)
 	for index: int in range(variable_pairs.size()):
-		EventSheetRefactor.rename_symbol(scratch, VARIABLE_SENTINEL % index, str((variable_pairs[index] as Array)[1]))
+		EventSheetRefactor.rename_symbol(staging, VARIABLE_SENTINEL % index, str((variable_pairs[index] as Array)[1]))
 	return {
-		"rows": scratch.events,
-		"required_variables": scratch.variables,
+		"rows": staging.events,
+		"required_variables": staging.variables,
 		"providers": snippet.get("providers", []),
 		"remapped": counts
 	}

@@ -269,7 +269,7 @@ static func clear_baked_overrides(class_id: String, written_edits: Array) -> voi
 	save_catalog(catalog)
 
 
-## Tests only: a clean slate pointed at a scratch path, so a run never touches the project's
+## Tests only: a clean slate pointed at a temporary path, so a run never touches the project's
 ## real catalog.
 static func reset_for_tests(path_override: String = "") -> void:
 	_cache = null

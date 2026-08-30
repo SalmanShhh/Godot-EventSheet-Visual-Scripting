@@ -20,7 +20,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetEmitting", "Set Emitting", ACEDescriptor.ACEType.ACTION, "emitting = {emitting}", "", [F.make_param("emitting", "String", "true", "Emitting", "Start / stop emitting.", "", ["true", "false"])], "Particles", "Set emitting {emitting}", "GPUParticles2D")
 		.described("Starts or stops the particle emitter, e.g. switching an effect on."))
 	descriptors.append(F.make_descriptor("Core", "RestartParticles", "Restart / Burst", ACEDescriptor.ACEType.ACTION, "restart()", "", [], "Particles", "Restart particles", "GPUParticles2D")
-		.described("Restarts the particle system from scratch, e.g. firing a fresh burst."))
+		.described("Restarts the particle system from the beginning, e.g. firing a fresh burst."))
 	descriptors.append(F.make_descriptor("Core", "SetOneShot", "Set One-Shot", ACEDescriptor.ACEType.ACTION, "one_shot = {one_shot}", "", [F.make_param("one_shot", "String", "true", "One-Shot", "Emit a single burst then stop.", "", ["true", "false"])], "Particles", "Set one-shot {one_shot}", "GPUParticles2D")
 		.described("Sets the emitter to fire a single burst then stop, rather than looping."))
 	descriptors.append(F.make_descriptor("Core", "SetParticleAmount", "Set Amount", ACEDescriptor.ACEType.ACTION, "amount = {amount}", "", [F.make_param("amount", "String", "8", "Amount", "Number of particles.", "expression")], "Particles", "Set amount to {amount}", "GPUParticles2D")
@@ -35,7 +35,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetEmittingCPU", "Set Emitting (CPU)", ACEDescriptor.ACEType.ACTION, "emitting = {emitting}", "", [F.make_param("emitting", "String", "true", "Emitting", "Start / stop emitting.", "", ["true", "false"])], "Particles", "Set emitting {emitting}", "CPUParticles2D")
 		.described("Starts or stops a CPU particle emitter, e.g. switching an effect on."))
 	descriptors.append(F.make_descriptor("Core", "RestartParticlesCPU", "Restart / Burst (CPU)", ACEDescriptor.ACEType.ACTION, "restart()", "", [], "Particles", "Restart particles", "CPUParticles2D")
-		.described("Restarts a CPU particle system from scratch, e.g. firing a fresh burst."))
+		.described("Restarts a CPU particle system from the beginning, e.g. firing a fresh burst."))
 	descriptors.append(F.make_descriptor("Core", "SetParticleSpeedScaleCPU", "Set Speed Scale (CPU)", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "1 = normal, 0.5 = slow, 0 = frozen, 2 = double speed.", "expression")], "Particles", "Set speed scale to {scale}", "CPUParticles2D")
 		.described("Speeds up or slows down a CPU particle effect, e.g. 0 freezes it, 2 doubles it."))
 

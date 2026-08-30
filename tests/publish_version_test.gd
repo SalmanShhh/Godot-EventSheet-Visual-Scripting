@@ -8,7 +8,7 @@ extends RefCounted
 
 const SOURCE: String = """## @ace_category(\"Waves\")
 ## @ace_version(1.2.3)
-class_name ScratchWaves
+class_name TempWaves
 extends Node
 
 
@@ -52,14 +52,14 @@ static func run() -> bool:
 	all_passed = _check("a short version pads to semver", str(short_version.get("new_version")), "2.1.1") and all_passed
 	all_passed = _check("a multiline note flattens", str(short_version.get("source")).contains("## 2.1.1: a b"), true) and all_passed
 
-	# The API write path, against a scratch file (backup + rewrite + reporting).
-	var scratch_path: String = "user://publish_version_scratch.gd"
-	var out: FileAccess = FileAccess.open(scratch_path, FileAccess.WRITE)
+	# The API write path, against a temporary file (backup + rewrite + reporting).
+	var temp_path: String = "user://publish_version_temp.gd"
+	var out: FileAccess = FileAccess.open(temp_path, FileAccess.WRITE)
 	out.store_string(SOURCE)
 	out.close()
-	var published: Dictionary = EventSheets.publish_pack_version(scratch_path, "minor", "new wave shapes")
+	var published: Dictionary = EventSheets.publish_pack_version(temp_path, "minor", "new wave shapes")
 	all_passed = _check("the API publishes", bool(published.get("ok")), true) and all_passed
-	var rewritten: String = FileAccess.get_file_as_string(scratch_path)
+	var rewritten: String = FileAccess.get_file_as_string(temp_path)
 	all_passed = _check("the file now declares the new version", rewritten.contains("## @ace_version(1.3.0)"), true) and all_passed
 	all_passed = _check("the note is in the file", rewritten.contains("## 1.3.0: new wave shapes"), true) and all_passed
 	all_passed = _check("a missing file fails closed",

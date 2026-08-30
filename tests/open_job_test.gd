@@ -116,7 +116,7 @@ static func _check_cancel_keeps_raw_sheet() -> bool:
 ## The compiler's mutex under real contention: the worker byte-verifies its lift while the main
 ## thread compiles the same kind of sheet in a loop. Both sides must finish and both must be right.
 ## A lock taken twice on one thread would hang here rather than fail, which is the loudest possible
-## signal - and the loop also proves the worker's static scratch is never stomped mid-emission.
+## signal - and the loop also proves the worker's static working state is never stomped mid-emission.
 static func _check_no_deadlock_under_concurrent_compiles() -> bool:
 	var all_passed: bool = true
 	var fixture_source: String = FileAccess.get_file_as_string(FIXTURE_PATH)

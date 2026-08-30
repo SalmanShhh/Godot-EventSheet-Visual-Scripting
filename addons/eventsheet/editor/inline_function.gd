@@ -178,16 +178,16 @@ static func _bound_body_copy(function: EventFunction, call_action: ACEAction) ->
 		return copies
 	var carrier: EventRow = EventRow.new()
 	carrier.actions = copies
-	var scratch: EventSheetResource = EventSheetResource.new()
-	var scratch_rows: Array[Resource] = [carrier]
-	scratch.events = scratch_rows
+	var staging: EventSheetResource = EventSheetResource.new()
+	var staging_rows: Array[Resource] = [carrier]
+	staging.events = staging_rows
 	# String literals are left alone (the fourth argument): this is a VALUE substitution, not the
 	# author renaming a concept, so a body that prints "who is out" keeps printing "who is out"
 	# after `who` is bound to the argument the call passed.
 	for index: int in range(pairs.size()):
-		EventSheetRefactor.rename_symbol(scratch, str((pairs[index] as Array)[0]), _PARAM_SENTINEL % index, true)
+		EventSheetRefactor.rename_symbol(staging, str((pairs[index] as Array)[0]), _PARAM_SENTINEL % index, true)
 	for index: int in range(pairs.size()):
-		EventSheetRefactor.rename_symbol(scratch, _PARAM_SENTINEL % index, str((pairs[index] as Array)[1]), true)
+		EventSheetRefactor.rename_symbol(staging, _PARAM_SENTINEL % index, str((pairs[index] as Array)[1]), true)
 	return carrier.actions
 
 

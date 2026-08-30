@@ -115,10 +115,10 @@ static func _key_saved_trigger() -> bool:
 
 	# The edge case the blurb promises: a key held back never reached the file, so claiming it
 	# saved would be exactly the lie this trigger exists to prevent.
-	system.never_save_key("scratch")
-	system.save_value("scratch", 1)
+	system.never_save_key("temp")
+	system.save_value("temp", 1)
 	ok = _check("a Never Save This Key key raises nothing", ", ".join(seen), "coins@3, hero@3") and ok
-	ok = _check("and it really is not in the file", system.has_save_key("scratch"), false) and ok
+	ok = _check("and it really is not in the file", system.has_save_key("temp"), false) and ok
 
 	_cleanup(system)
 	return ok

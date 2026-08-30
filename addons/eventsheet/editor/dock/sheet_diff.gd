@@ -3,7 +3,7 @@ class_name EventSheetSheetDiff
 extends RefCounted
 # "What changed since the last save?" - in EVENT language, not text lines.
 #
-# Compiles the CURRENT sheet to a scratch path (never the real file - compile writes its output, and
+# Compiles the CURRENT sheet to a temporary path (never the real file - compile writes its output, and
 # a diff must not save behind the user's back), diffs that against the SAVED .gd on disk, and maps
 # the changed lines back to sheet rows through the line↔row mapper - so the answer is "these events
 # change when you save", each clickable to jump to its row, with any disk-only lines listed as what
@@ -93,7 +93,7 @@ static func saved_path_for(sheet: EventSheetResource) -> String:
 	return SheetCompiler._resolve_output_path(sheet, "")
 
 
-## Sheet ▸ What Changed…: compute + show. The current sheet compiles to a SCRATCH path (a diff must
+## Sheet ▸ What Changed…: compute + show. The current sheet compiles to a TEMPORARY path (a diff must
 ## never write the real file); the real file is only read.
 func open() -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
@@ -133,11 +133,11 @@ func open() -> void:
 # which is what turns a one-way report into a two-column comparison: rows that differ HERE, and rows
 # that exist THERE and are missing or different here (each carrying its live resource, so a row can
 # be brought over as ordinary rows). Everything below is static + pure over its arguments except
-# load_side(), which reads one file and compiles to a SCRATCH path - a comparison never writes
+# load_side(), which reads one file and compiles to a TEMPORARY path - a comparison never writes
 # either real file.
 
 ## Where a compared side compiles to. Never a real path: comparing must not save behind anyone's back.
-const COMPARE_SCRATCH_PATH := "user://eventforge_compare_side.gd"
+const COMPARE_TEMP_PATH := "user://eventforge_compare_side.gd"
 ## Where the CURRENT sheet compiles to while comparing. Same rule, separate file so one side's
 ## output can never overwrite the other's mid-compare.
 const COMPARE_HERE_PATH := "user://eventforge_compare_here.gd"
@@ -165,7 +165,7 @@ static func load_side(path: String) -> Dictionary:
 		sheet = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 	if sheet == null:
 		return {"error": "%s could not be read as an event sheet." % path.get_file()}
-	var compiled: Dictionary = SheetCompiler.compile(sheet, COMPARE_SCRATCH_PATH)
+	var compiled: Dictionary = SheetCompiler.compile(sheet, COMPARE_TEMP_PATH)
 	return {
 		"sheet": sheet,
 		"output": str(compiled.get("output", "")),

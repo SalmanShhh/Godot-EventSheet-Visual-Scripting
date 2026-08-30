@@ -12,13 +12,13 @@
 #   3. THE SECTIONS, ordered by the worst thing in them, with counts and a section title derived from
 #      the check id rather than looked up in a table nobody remembers to update.
 #   4. THE SUMMARY LINE, in both of its spellings.
-#   5. THE READING POSITION, written to a scratch file and read back - and the file cleaned up, so the
+#   5. THE READING POSITION, written to a temporary file and read back - and the file cleaned up, so the
 #      next test in the same process starts where this one found things.
 @tool
 class_name DoctorInboxTest
 extends RefCounted
 
-## A scratch reading position, so the test never touches the one the editor keeps.
+## A temporary reading position, so the test never touches the one the editor keeps.
 const STORE_PATH := "user://eventsheets_doctor_seen_test.cfg"
 
 

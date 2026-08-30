@@ -577,7 +577,7 @@ static func run() -> bool:
 		and not preselected.get_parent().collapsed, true) and all_passed
 
 	# Broken lint context: a sheet variable shadowing a host member breaks the
-	# scratch script, so EVERY expression "fails" - OK must still commit.
+	# throwaway lint script, so EVERY expression "fails" - OK must still commit.
 	var broken_sheet: EventSheetResource = EventSheetResource.new()
 	broken_sheet.host_class = "CharacterBody2D"
 	broken_sheet.variables = {"velocity": {"type": "float", "default": 0.0, "exported": true}}

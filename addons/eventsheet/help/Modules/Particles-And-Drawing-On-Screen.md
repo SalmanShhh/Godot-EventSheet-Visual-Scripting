@@ -103,7 +103,7 @@ Every row here takes **On** (the canvas host node).
 |------|--------------|----------|
 | On Particles Finished | Fires once when this particle emitter's one-shot burst finishes playing. | the `finished` signal |
 | Set Emitting | Starts or stops the particle emitter, e.g. switching an effect on. | `emitting = {emitting}` |
-| Restart / Burst | Restarts the particle system from scratch, e.g. firing a fresh burst. | `restart()` |
+| Restart / Burst | Restarts the particle system from the beginning, e.g. firing a fresh burst. | `restart()` |
 | Set One-Shot | Sets the emitter to fire a single burst then stop, rather than looping. | `one_shot = {one_shot}` |
 | Set Amount | Sets how many particles the emitter spawns, controlling effect density. | `amount = {amount}` |
 | Set Speed Scale | Speeds up or slows down the particle effect, e.g. 0 freezes it, 2 doubles it. | `speed_scale = {scale}` |
@@ -115,7 +115,7 @@ Every row here takes **On** (the canvas host node).
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Set Emitting (CPU) | Starts or stops a CPU particle emitter, e.g. switching an effect on. | `emitting = {emitting}` |
-| Restart / Burst (CPU) | Restarts a CPU particle system from scratch, e.g. firing a fresh burst. | `restart()` |
+| Restart / Burst (CPU) | Restarts a CPU particle system from the beginning, e.g. firing a fresh burst. | `restart()` |
 | Set Speed Scale (CPU) | Speeds up or slows down a CPU particle effect. | `speed_scale = {scale}` |
 | Emit Particles (in object) | Turns the object's particle emitter on or off, found automatically. | a `GPUParticles2D` lookup under `{target}`, then `.emitting = {emitting}` |
 

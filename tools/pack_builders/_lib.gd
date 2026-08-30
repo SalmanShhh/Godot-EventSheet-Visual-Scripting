@@ -10,7 +10,7 @@ const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
 
 # Where save_pack writes. Empty (the only value the build tool ever uses) means the shipped path
 # the builder asked for. A gate that wants to regenerate a pack WITHOUT touching the repository
-# sets a scratch directory here, calls the builder's build(), reads the file back and clears this
+# sets a temporary directory here, calls the builder's build(), reads the file back and clears this
 # again - the pack is then produced by the real builder through the real pipeline, so a builder
 # that no longer reproduces its shipped pack fails instead of hiding until someone rebuilds.
 static var output_override_dir: String = ""

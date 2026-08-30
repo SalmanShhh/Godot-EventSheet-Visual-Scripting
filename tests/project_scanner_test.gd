@@ -9,7 +9,7 @@ class_name ProjectScannerTest
 extends RefCounted
 
 const TEMP_DIR: String = "res://.eventsheets_scan_test"
-const TEMP_SCRIPT: String = TEMP_DIR + "/scratch_interop_source.gd"
+const TEMP_SCRIPT: String = TEMP_DIR + "/temp_interop_source.gd"
 
 
 static func run() -> bool:
@@ -40,14 +40,14 @@ static func run() -> bool:
 	# ── class_name read from SOURCE (no load, no instancing) ──
 	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
 	var file: FileAccess = FileAccess.open(TEMP_SCRIPT, FileAccess.WRITE)
-	file.store_string("class_name ScratchInteropSource\nextends Node\n\n\nfunc add_item(id: String) -> void:\n\tpass\n")
+	file.store_string("class_name TempInteropSource\nextends Node\n\n\nfunc add_item(id: String) -> void:\n\tpass\n")
 	file.close()
 	ok = _check("the declared class name is read from the source header",
-		EventSheetProjectScanner.class_name_for_path(TEMP_SCRIPT), "ScratchInteropSource") and ok
+		EventSheetProjectScanner.class_name_for_path(TEMP_SCRIPT), "TempInteropSource") and ok
 	ok = _check("a missing file reads as no class name",
 		EventSheetProjectScanner.class_name_for_path("res://nope_missing.gd"), "") and ok
 	# A script whose header declares nothing must not report a phantom name.
-	var plain_path: String = TEMP_DIR + "/scratch_plain.gd"
+	var plain_path: String = TEMP_DIR + "/temp_plain.gd"
 	var plain: FileAccess = FileAccess.open(plain_path, FileAccess.WRITE)
 	plain.store_string("extends Node\n\n\nfunc tick() -> void:\n\tpass\n")
 	plain.close()
@@ -120,14 +120,14 @@ static func run() -> bool:
 	ProjectSettings.set_setting(EventSheetProjectScanner.EXTRA_PATHS_SETTING, PackedStringArray([TEMP_DIR]))
 	EventSheetProjectScanner.reset_for_tests()
 	var after: Array = EventSheetProjectScanner.list_project_classes()
-	var found_scratch: bool = false
+	var found_temp: bool = false
 	var found_plain: bool = false
 	for entry: Dictionary in after:
 		if str(entry.get("path")) == TEMP_SCRIPT:
-			found_scratch = true
+			found_temp = true
 		if str(entry.get("path")) == plain_path:
 			found_plain = true
-	ok = _check("an opted-in folder's declared class joins the scan", found_scratch, true) and ok
+	ok = _check("an opted-in folder's declared class joins the scan", found_temp, true) and ok
 	# Admitting a class_name-LESS script is the opt-in's whole stated purpose: it is the only
 	# route for such code, and it identifies the script by its PascalCase file name (the same
 	# identity the provider system already assigns).
@@ -138,7 +138,7 @@ static func run() -> bool:
 		if str(entry.get("path")) == plain_path:
 			plain_named = str(entry.get("name"))
 	ok = _check("a class_name-less script is identified by its file name",
-		plain_named, "ScratchPlain") and ok
+		plain_named, "TempPlain") and ok
 
 	# ── A script the provider system ALREADY publishes never joins this scan ──
 	# Reflecting it again would list every public member a second time and defeat @ace_hidden.
@@ -148,9 +148,9 @@ static func run() -> bool:
 	var pack_script: String = EventSheetAddonScanner.list_addon_scripts()[0]
 	ok = _check("a scanned pack script is a published provider",
 		EventSheetProjectScanner.is_published_provider(pack_script), true) and ok
-	var annotated_path: String = TEMP_DIR + "/scratch_annotated.gd"
+	var annotated_path: String = TEMP_DIR + "/temp_annotated.gd"
 	var annotated: FileAccess = FileAccess.open(annotated_path, FileAccess.WRITE)
-	annotated.store_string("## @ace_category(\"Scratch\")\nclass_name ScratchAnnotated\nextends Node\n")
+	annotated.store_string("## @ace_category(\"Temp\")\nclass_name TempAnnotated\nextends Node\n")
 	annotated.close()
 	ok = _check("annotations ALONE do not make a script a published provider",
 		EventSheetProjectScanner.is_published_provider(annotated_path), false) and ok
@@ -158,7 +158,7 @@ static func run() -> bool:
 		EventSheetProjectScanner.is_published_provider(plain_path), false) and ok
 	DirAccess.remove_absolute(annotated_path)
 
-	# ── Cleanup: the setting and the scratch files must not survive the test ──
+	# ── Cleanup: the setting and the temporary files must not survive the test ──
 	ProjectSettings.set_setting(EventSheetProjectScanner.EXTRA_PATHS_SETTING, PackedStringArray())
 	DirAccess.remove_absolute(TEMP_SCRIPT)
 	DirAccess.remove_absolute(plain_path)

@@ -13,13 +13,13 @@
 #             behavior missing the save-state seam, one name kept both by Remember
 #             Between Runs and by the Save System. Never fails CI.
 # The doctor NEVER writes inside res:// - verification recompiles go to a user://
-# scratch file and are compared as text (contrast tools/audit_addons.gd, which repairs
+# temporary file and are compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
 @tool
 class_name EventSheetProjectDoctor
 extends RefCounted
 
-const SCRATCH_PATH := "user://eventsheets_doctor_scratch.gd"
+const TEMP_PATH := "user://eventsheets_doctor_temp.gd"
 
 ## Extension checks registered through EventSheets.register_doctor_check: Array of
 ## {"id": String, "run": Callable}. They run after the built-ins in every runner
@@ -222,7 +222,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "warning", "stale-output", sheet_path,
 				"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
 			continue
-		var result: Dictionary = SheetCompiler.compile(sheet, SCRATCH_PATH)
+		var result: Dictionary = SheetCompiler.compile(sheet, TEMP_PATH)
 		if not bool(result.get("success", false)):
 			_add(findings, "error", "compile", sheet_path,
 				"Sheet no longer compiles: %s" % str(result.get("errors")))
@@ -230,7 +230,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 		if str(result.get("output", "")) != source_of(output_path):
 			_add(findings, "error", "stale-output", sheet_path,
 				"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
-	DirAccess.remove_absolute(SCRATCH_PATH)
+	DirAccess.remove_absolute(TEMP_PATH)
 
 
 ## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
@@ -2820,7 +2820,7 @@ static func clear_project_scripts() -> void:
 ##
 ## Two things are never held. A read taken OUTSIDE a run is not shared at all, because a check asked
 ## on its own is usually being asked about a fixture that is rewritten between the asks. And a
-## `user://` path is a scratch file - a fixture, the verification recompile's own output - written
+## `user://` path is a temporary file - a fixture, the verification recompile's own output - written
 ## and re-read inside one process, where a held read would answer with the file that is no longer
 ## there. The corpus every check walks is res:// throughout, so nothing the sharing is for is left
 ## out of it.
@@ -3588,8 +3588,8 @@ static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: 
 		var pins: PackedStringArray = pinned_anchors(source)
 		# A file that pins nothing has neither note to give, and both readers below answer nothing
 		# for it. Asking them anyway was not free: each takes the pins it was HANDED only when that
-		# list is non-empty, and reads the file again from scratch when it is - so every one of the
-		# thousand files with no pin in it paid for the pin grammar three times over.
+		# list is non-empty, and reads the file again from the beginning when it is - so every
+		# one of the thousand files with no pin in it paid for the pin grammar three times over.
 		if pins.is_empty():
 			continue
 		for anchor: String in double_follow_anchors(source, pins):

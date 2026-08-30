@@ -46,7 +46,7 @@ A few rules tie those fields together, and they are the whole behaviour of the p
 - **Boosts count themselves down.** Every frame the pack subtracts the elapsed time from every active boost. You never run a timer; you just start one and read Time Left if you want a label.
 - **Total Multiplier is a product, not a sum.** Two active boosts at x2 and x3 give a Total Multiplier of 6.0, not 5.0. With no boosts active it is 1.0, so multiplying by it is always safe.
 - **Expiring fires; stopping does not.** When a timer reaches zero the pack removes the boost and fires On Boost Expired (read Last Expired inside it). Stop Boost and Clear Boosts remove boosts silently - they are yours, not the clock's.
-- **Starting an id replaces it.** Start Boost on an already-active id resets its multiplier and duration from scratch. To top up instead of replace, use Extend Boost.
+- **Starting an id replaces it.** Start Boost on an already-active id resets its multiplier and duration from the beginning. To top up instead of replace, use Extend Boost.
 
 This pack never touches money, xp, or any resource. It only tells you the current multiplier; you decide what to multiply. Fold Total Multiplier into your production the same way you fold in prestige and upgrade multipliers.
 

@@ -11,10 +11,11 @@
 # from. "The four families most small scripts are made of" says what a batch letter and a number
 # never did, and it is the same number of characters.
 #
-# Two shapes are swept, across every text file the repository tracks:
+# Three shapes are swept, across every text file the repository tracks:
 #   1. a capital letter followed by one or two digits, standing on its own as a word;
-#   2. the word "mockup", in code, used to point at a design drawing.
-# Both carry a small allow-list, and both prove their detector before they trust their sweep.
+#   2. the word "mockup", in code, used to point at a design drawing;
+#   3. the banned word below, anywhere at all.
+# Each carries a small allow-list, and each proves its detector before it trusts its sweep.
 @tool
 class_name DesignShorthandTest
 extends RefCounted
@@ -69,6 +70,34 @@ const DESIGN_WORD: String = "mockup"
 const DESIGN_WORD_ALLOWED: Array[String] = ["mockup_slate", "mockup slate", "mockup-slate",
 	"mockup_theme"]
 
+## THE BANNED WORD. Twice now a feature arrived under it that nobody asked for - a sheet, then a
+## table of drafts - and both times the word was what made the feature sound like a place a person
+## could keep things, which is the promise neither was meant to make. Working state either lives as
+## long as the thing that holds it or it is a temporary file with a plain name saying so. So the word
+## is not available for either: no name, no string, no comment, no translation may carry it, and a
+## reviewer never has to argue the point again.
+##
+## Matched as a plain substring rather than as a whole word, on purpose: the compounds are exactly
+## how it came back both times.
+const BANNED_WORD: String = "scratch"
+
+## Where the banned word still stands, and why. The changelog is the RECORD - of what shipped, and
+## of the two features that were removed for carrying this very word, down to the public method and
+## the metadata key they were named with. A record rewritten to hide a word it is reporting on stops
+## being a record, and a reader looking up why their call disappeared would find nothing. The file
+## beside it is the help bundle's What's New page, which is BUILT from that changelog - so sweeping
+## it could only ever fail on the same history, and the only way to "fix" that would be to hand-edit
+## a generated file.
+##
+## Nothing is lost by the exemption: a changelog entry cannot introduce a feature. The name would
+## still have to appear in a file, a string or a catalogue, and every one of those is swept.
+const BANNED_WORD_EXEMPT_FILES: Array[String] = ["CHANGELOG.md", "whatsnew.esdoc"]
+
+## The one line of prose that keeps the word, because there the word is a name: the README credits
+## the block-programming project it is named after, beside its own address. An acknowledgement that
+## renamed the thing it acknowledges would be a false attribution.
+const BANNED_WORD_EXEMPT_MARKER: String = "scratch.mit.edu"
+
 ## Compiled once for the whole sweep: these run over every line of every text file, and
 ## recompiling per line turned a two-second gate into a two-minute one.
 static var _shorthand: RegEx = null
@@ -113,13 +142,38 @@ static func run() -> bool:
 	ok = _check("a lowercase letter and a digit is not a label",
 		_first_violation("addons/x.gd", "## the p2 field of the row"), "") and ok
 
+	# The banned word, proved the same way round: it is a hit in code, in prose, in a translation
+	# catalogue and in a file name - and it stands only in the record and in what is built from it.
+	ok = _check("the banned word is a hit in a comment",
+		_first_violation("addons/x.gd", "# kept in a %s table" % BANNED_WORD) != "", true) and ok
+	ok = _check("...and inside a compound, which is how it came back",
+		_first_violation("addons/x.gd", "const %s_PATH := \"user://x.gd\"" % BANNED_WORD.to_upper()) != "",
+		true) and ok
+	ok = _check("...and in a translated string",
+		_first_violation("addons/eventsheet/translations/TEMPLATE.csv",
+			"The %s table," % BANNED_WORD) != "", true) and ok
+	ok = _check("...and in a file name, whatever the file holds",
+		_first_violation("tools/_%s_run.gd" % BANNED_WORD, "extends Node") != "", true) and ok
+	ok = _check("the violation says which word it found",
+		_first_violation("addons/x.gd", "# a %s file" % BANNED_WORD).contains(BANNED_WORD), true) and ok
+	ok = _check("the changelog keeps the record as it was written",
+		_first_violation("CHANGELOG.md", "- the %s table is gone" % BANNED_WORD), "") and ok
+	ok = _check("...and a guide does not get to borrow that",
+		_first_violation("docs/x.md", "- the %s table is gone" % BANNED_WORD) != "", true) and ok
+	ok = _check("a credited project keeps its own name",
+		_first_violation("README.md", "- **[%s](https://%s/)** - for the on-ramp."
+			% [BANNED_WORD.capitalize(), BANNED_WORD_EXEMPT_MARKER]), "") and ok
+	ok = _check("a file built from the record is not swept for it",
+		_first_violation("addons/eventsheet/help/whatsnew.esdoc",
+			"- the %s table shipped" % BANNED_WORD), "") and ok
+
 	# The live sweep. Non-vacuity is asserted before the verdict, for the same reason.
 	var violations: PackedStringArray = PackedStringArray()
 	var scanned: int = _scan_directory("res://", violations)
 	ok = _check("the sweep actually reads this project's text files", scanned > 100, true) and ok
 	for violation: String in violations:
-		print("  design shorthand: %s" % violation)
-	ok = _check("no file names a design note instead of stating what it means (%d scanned)" % scanned,
+		print("  wording: %s" % violation)
+	ok = _check("no file names a design note or carries a banned word (%d scanned)" % scanned,
 		violations.size(), 0) and ok
 	return ok
 
@@ -130,10 +184,17 @@ static func _first_violation(path: String, text: String) -> String:
 	var name_hit: String = _label_in_file_name(path.get_file())
 	if not name_hit.is_empty():
 		return "%s - the file name says '%s' instead of what it pins" % [path, name_hit]
+	if path.get_file().to_lower().contains(BANNED_WORD):
+		return "%s - the file name carries the banned word '%s'" % [path, BANNED_WORD]
 	var is_code: bool = CODE_EXTENSIONS.has(path.get_extension().to_lower())
+	var banned_word_allowed: bool = BANNED_WORD_EXEMPT_FILES.has(path.get_file())
 	var lines: PackedStringArray = text.split("\n")
 	for index: int in lines.size():
 		var line: String = lines[index]
+		if not banned_word_allowed and line.to_lower().contains(BANNED_WORD) \
+				and not line.contains(BANNED_WORD_EXEMPT_MARKER):
+			return "%s:%d - '%s' is not a word this project uses; say what the thing actually is" \
+				% [path, index + 1, BANNED_WORD]
 		if _is_not_prose(line):
 			continue
 		var hit: String = _shorthand_in(line)

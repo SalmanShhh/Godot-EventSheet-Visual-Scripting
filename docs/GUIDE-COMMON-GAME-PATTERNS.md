@@ -9,7 +9,7 @@ written the code versions, even better: you are skipping them entirely.
 
 ## Run something every X seconds
 
-The code version keeps a scratch timer variable, adds `delta` every frame, and resets it when it
+The code version keeps a throwaway timer variable, adds `delta` every frame, and resets it when it
 overflows. The row version is one condition:
 
 - Add a **Run every tick** event, then the condition **Every X Seconds** (System, Time).

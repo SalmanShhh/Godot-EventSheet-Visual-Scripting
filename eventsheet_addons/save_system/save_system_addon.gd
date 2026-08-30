@@ -757,7 +757,7 @@ func addon_saves_itself(addon_name: String) -> bool:
 ## @ace_action
 ## @ace_name("Never Save This Key")
 ## @ace_category("Save System")
-## @ace_description("Keeps this key out of every save from now on - cached node lists, scratch buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.")
+## @ace_description("Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.")
 ## @ace_display_template("never put [b]{key}[/b] in a save")
 ## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.never_save_key({key})")

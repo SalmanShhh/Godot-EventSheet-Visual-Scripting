@@ -190,7 +190,7 @@ static func _scope_of(kind: String, sheet: EventSheetResource) -> String:
 	return str(sheet.get_instance_id() if sheet != null else 0)
 
 
-## Builds one kind's list from scratch. A kind nobody answers comes back empty, which is what makes
+## Builds one kind's list from nothing. A kind nobody answers comes back empty, which is what makes
 ## an unknown hint a plain field rather than a wrong list.
 static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]:
 	var head: String = kind.get_slice(":", 0)
@@ -514,7 +514,8 @@ static func _file_entries(resource_type: String) -> Array[Dictionary]:
 	return entries
 
 
-## Every file under `res://` that is not the plugin's own or the engine's scratch. ONE walk, held
+## Every file under `res://` outside `addons/` and outside dot-folders (the engine's own caches
+## such as `.godot`, and version-control data). ONE walk, held
 ## for the session and dropped when the filesystem changes - the scan a keystroke must never do.
 static func _project_files() -> PackedStringArray:
 	var key: String = "project|__files"

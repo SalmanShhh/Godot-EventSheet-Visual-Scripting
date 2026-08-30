@@ -1093,7 +1093,7 @@ static func build() -> bool:
 		[["addon_name", "String"]],
 		"return _collect_addon_states().has(addon_name)")
 	# What stays out of the file, and what the file costs.
-	Lib.append_function(sheet, "never_save_key", "Never Save This Key", "Save System", "Keeps this key out of every save from now on - cached node lists, scratch buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.",
+	Lib.append_function(sheet, "never_save_key", "Never Save This Key", "Save System", "Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.",
 		[["key", "String"]],
 		"if not _never_save.has(key):\n\t_never_save.append(key)")
 	var save_size: EventFunction = Lib.exposed_function("save_size", "Save Size", "Save System", "How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.", [],

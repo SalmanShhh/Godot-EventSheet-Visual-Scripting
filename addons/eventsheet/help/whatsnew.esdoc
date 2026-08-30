@@ -201,7 +201,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### The bench a recogniser is written on, and the code it is measured against
 
-- **Tools > Lift Workbench.** Paste hand-written GDScript into a scratch buffer and the window
+- **Tools > Lift Workbench.** Paste hand-written GDScript into a buffer and the window
   answers three questions about it as you type: what claims each line (the lift family and entry id
   that recognised it, the plainer name of the row it otherwise arrived as, or \"stays code\"), the rows
   it opens as (drawn by the real viewport, read-only, not a mock-up of it), and what it saves back as
@@ -211,9 +211,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **Draft an example, from the line that motivated it.** Select a line nothing claims and the
   by-example form opens pre-filled with it: mark the value spans, and the derived entry comes back to
   be read - pattern, canonical spelling, sample values - or refused with the sentence that says why.
-  Adding it appends it to a scratch table the workbench keeps to itself, which is asked first on
-  every refresh and marked \"draft\" while it claims anything, so a draft is never mistaken for a
-  shipped spelling and nothing under the project is written.
+  Adding it holds the entry in the open panel, where it is asked first on every refresh and marked
+  \"draft\" while it claims anything, so a draft is never mistaken for a shipped spelling. It lasts
+  exactly as long as the panel does: nothing is written anywhere.
 - **A corpus of whole files, and the pins that make coverage a visible diff.** `tests/corpus/` holds
   four scripts a real Godot developer would plausibly have written - a tutorial-style player
   controller, an enum-and-match door state machine, a networking lobby autoload, and a pickup with
@@ -290,7 +290,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
   four notifications by name, the stays-code ledger and the pack-taught spellings.
 - **The contributor half is in the playbook, where contributor material lives.**
   `docs/internal/SLICE-PLAYBOOK.md` gains the bench a recogniser is written on (its three answers and
-  why the buffer is the whole scope), the draft-an-example loop and its scratch table, the pack's own
+  why the buffer is the whole scope), the draft-an-example loop and its panel-lifetime drafts, the pack's own
   `@ace_lift_example` and the gate it passes at build time, and the corpus rule - a new family adds
   the file that motivated it, pins move up, and the commit that moves one states the delta.
 - **The front-page figures are re-measured, and the census re-run.** 1,800 built-in verbs across 82
@@ -741,14 +741,17 @@ What changed in the build you have installed (v0.17.0), in the words the release
   only. There is a whole-file measurement now: five NAMED files of the editor's own source (never a
   rotating sample, so the number is the same on every machine) with a floor on how many generic calls
   the derived layer names in each.
-- **The workbench's scratch table can be seen and emptied.** Drafts were append-only: written to
-  `user://`, asked before every shipped spelling on every refresh, and never listed or removable from
-  the window - so one over-wide draft claimed every line in the tool with no visible cause and no
-  recovery except hand-editing a file the window never names on screen. The draft form now lists what
-  the scratch table holds and carries the button that forgets the lot. And the over-wide draft itself
-  is refused: an example that is nothing but value spans (`[[x: foo]]`) is not a spelling of anything,
-  it is the whole language, so the example engine declines it by name like every other thing it
-  cannot answer.
+- **The workbench's drafts last as long as the panel, and are listed where they are made.** They
+  were a named feature with a store behind it: written to `user://`, restored on open, asked before
+  every shipped spelling on every refresh, and shown under a heading that promised a place a person
+  could keep things. Nobody asked for that place. The drafts are working state now - held on the open
+  panel and nowhere else, listed as a plain list with a **Clear drafts** button beside it, gone when
+  the panel closes. The file, its read and write paths and the restore-on-open are removed, and the
+  word the feature was named with is removed with them: a repository-wide wording sweep fails the
+  suite on it now, everywhere except the changelog and what is built from the changelog, which are
+  the record. And the over-wide draft itself is refused: an example that is nothing but value spans
+  (`[[x: foo]]`) is not a spelling of anything, it is the whole language, so the example engine
+  declines it by name like every other thing it cannot answer.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `\"enemies\"`

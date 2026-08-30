@@ -26,7 +26,7 @@
 #
 #   • CLONE INTO (Nodes) - the one-row form of Duplicate Node + Add Child + place + group. The
 #     shipped Duplicate Node is an EXPRESSION whose own help tells you to add the clone yourself,
-#     so the everyday copy costs three rows and a scratch variable. This is the LIVE-node twin of
+#     so the everyday copy costs three rows and a throwaway variable. This is the LIVE-node twin of
 #     Spawn Scene (Full), which already does the same job starting from a scene file. The group is
 #     added with persistent = true, because a non-persistent group is dropped when a node is packed
 #     into a scene and every group check then silently never fires.

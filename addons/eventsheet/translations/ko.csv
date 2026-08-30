@@ -5527,13 +5527,12 @@ Name physics layer,물리 레이어 이름 지정
 "Entry id","항목 ID"
 "Row it means","뜻하는 행"
 "The entry this derives","여기서 도출되는 항목"
-The scratch table,임시 표
 Nothing drafted yet.,아직 작성된 초안이 없습니다.
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","이 창에서만, 기본 제공 표기보다 먼저 조회됩니다. res:// 아래에는 아무것도 쓰지 않습니다."
-Forget the scratch table,임시 표 지우기
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","이 창에서만, 기본 제공 표기보다 먼저 조회됩니다. 창을 닫으면 사라지며 디스크에는 아무것도 쓰지 않습니다."
+Clear drafts,초안 지우기
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","이 창이 보관 중인 초안을 비워, 초안이 차지하던 각 줄을 이전 상태로 되돌립니다."
 "Check","확인"
-"Add to the scratch table","임시 표에 추가"
+"Add draft","초안 추가"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",경로 순서로 %d개 스크립트(전체 %d개 중)를 읽었습니다. 아래 기록은 이 프로젝트의 표본이며 전체가 아닙니다. 매번 같은 스크립트를 읽습니다.
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","읽은 내용의 %d%%가 행으로 그려지고, 모든 줄에 이름이 붙어 있습니다. 여기에 코드로 남는 것은 없습니다."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","읽은 내용의 %d%%가 행으로 그려집니다 - 이것은 그리기에 대한 물음입니다. 이름에 대한 물음은 그 아래에 있습니다: %d줄은 정직한 코드로 남습니다. 아직 어떤 어휘도 그것을 주장하지 않기 때문입니다. 둘 다 참이고, 같은 숫자가 아닙니다."

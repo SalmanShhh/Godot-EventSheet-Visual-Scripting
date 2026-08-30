@@ -34,7 +34,7 @@ Looking for a bundled behavior pack instead? See the [addon guides index](../Add
 
 ## Values and data
 
-- [Setting And Changing Variables](Setting-And-Changing-Variables.md) - the plain arithmetic set, the eased and guarded forms, safe fallbacks, and scratch locals and constants.
+- [Setting And Changing Variables](Setting-And-Changing-Variables.md) - the plain arithmetic set, the eased and guarded forms, safe fallbacks, and throwaway locals and constants.
 - [Comparing Values](Comparing-Values.md) - the condition rows an operator cannot express: method comparisons, tolerances, emptiness and type tests.
 - [Doing Math And Randomness](Doing-Math-And-Randomness.md) - every number expression in one place, from Clamp and Lerp to degree-based trig and seeded procedural values.
 - [Working With Lists](Working-With-Lists.md) - the whole Array vocabulary, the higher-order rows (Filter, Map, Reduce, Any Match, All Match), typed lists, and the loop controls.

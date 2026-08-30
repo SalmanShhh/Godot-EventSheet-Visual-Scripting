@@ -31,7 +31,7 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 
 ## 1. Scenarios Where These Recipes Help
 
-- **Your first sheet, a blank editor.** [Hello, Jump](#3-hello-jump---a-platformer-character-in-minutes) gets a playable platformer character moving in minutes, pack or from scratch.
+- **Your first sheet, a blank editor.** [Hello, Jump](#3-hello-jump---a-platformer-character-in-minutes) gets a playable platformer character moving in minutes, pack or from the ground up.
 - **The classic game-loop pieces.** Health and damage, pickups and a score HUD - recipes [4](#4-health-and-damage) and [5](#5-a-pickup-counter) cover the staples every game needs.
 - **Something misbehaves and you're about to add `print()`.** [Debugging 101](#6-debugging-101) shows the built-in lint, breakpoints, Live Values + Watch, and Event Trace instead.
 - **You keep re-typing the same rows.** [Extract-to-Function and Families](#15-reuse-and-scale---extract-to-function-and-families) turn repetition into named, reusable abstractions; [recipe 7](#7-author-your-own-behavior-and-aces) turns your logic into a shareable pack.
@@ -71,7 +71,7 @@ jump height, wall jump - all the juice).
    `velocity`; Move And Slide applies it.
 5. **Save** - the sheet *is* the `.gd`; set it as the node's script and press Play.
 
-Want it from scratch instead of the pack? Three events: *Every Frame* → set horizontal velocity
+Want it from the ground up instead of the pack? Three events: *Every Frame* → set horizontal velocity
 from input; *Is on floor* + *jump pressed* → set `velocity.y`; *Every Frame* → Move And Slide.
 
 ---
@@ -84,7 +84,7 @@ On Damaged / On Death triggers - or roll your own with a variable.
 **With the pack:** attach **Health**, set max HP in the Inspector. On a hit, call its *Take
 Damage* action. Add an event: trigger **On Death** → action *Queue Free* (or play an animation).
 
-**From scratch:** add a global **Variable** `health : int = 100`. On a hit event → *Subtract from
+**From the ground up:** add a global **Variable** `health : int = 100`. On a hit event → *Subtract from
 variable* `health`, amount `10`. Add an event: condition `health <= 0` → action *Queue Free*.
 
 ---

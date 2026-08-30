@@ -133,7 +133,7 @@ static func _leaky_sheet() -> EventSheetResource:
 	group.events = [
 		_comment("Prints landed once the player reaches the ground.", "## "),
 		landed_row,
-		_comment("%s scratch arithmetic nobody should read" % LEAK_WORD, ""),
+		_comment("%s throwaway arithmetic nobody should read" % LEAK_WORD, ""),
 		_comment("FIXME %s tidy this up" % LEAK_WORD, ""),
 	]
 

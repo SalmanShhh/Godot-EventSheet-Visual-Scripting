@@ -155,7 +155,7 @@ it, whether that is Log Measurements, a label, or the Debug Overlay pack.
 **Both conditions need a per-frame trigger** (Every Frame). Frame Took Longer Than asks about the
 frame it is evaluated on, and FPS Below For has to be reached every frame to keep its clock honest.
 **FPS Below For is the one that tells a real drop apart from one stuttery frame**: the framerate has
-to stay under the floor for the whole window, and one healthy frame re-arms it from scratch.
+to stay under the floor for the whole window, and one healthy frame re-arms it from the beginning.
 
 ## Use cases
 

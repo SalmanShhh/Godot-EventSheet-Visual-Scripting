@@ -5527,13 +5527,12 @@ Name physics layer,Nommer le calque physique
 "Entry id","Identifiant d'entrée"
 "Row it means","Ligne qu'elle signifie"
 "The entry this derives","L'entrée ainsi dérivée"
-The scratch table,La table de brouillon
 Nothing drafted yet.,Rien de brouillonné pour l'instant.
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Elles sont consultées avant toute graphie livrée, dans cette fenêtre uniquement. Rien n'est écrit sous res://."
-Forget the scratch table,Oublier la table de brouillon
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","Elles sont consultées avant toute graphie livrée, dans cette fenêtre uniquement. Elles disparaissent à sa fermeture et rien n'est écrit sur le disque."
+Clear drafts,Effacer les brouillons
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Vide les brouillons que cette fenêtre conserve, si bien que chaque ligne qu'ils revendiquaient redevient ce qu'elle était."
 "Check","Vérifier"
-"Add to the scratch table","Ajouter à la table de brouillon"
+"Add draft","Ajouter le brouillon"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Les %d premiers script(s) sur %d ont été lus, dans l’ordre des chemins. Le registre ci-dessous est un échantillon de ce projet, pas son ensemble - ce sont les mêmes scripts qui sont lus à chaque fois."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% de ce qui a été lu se dessine en lignes, et chacune porte un nom. Rien ne reste du code ici."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% de ce qui a été lu se dessine en lignes - c'est la question du dessin. La question des mots est en dessous : %d ligne(s) restent du code honnête, parce qu'aucun vocabulaire ne les revendique encore. Les deux sont vraies, et ce n'est pas le même nombre."

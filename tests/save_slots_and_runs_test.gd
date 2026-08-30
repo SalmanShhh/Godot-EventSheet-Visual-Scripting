@@ -576,7 +576,7 @@ static func _never_save_and_report() -> bool:
 	ok = _check("an empty slot costs nothing", system.save_size(), 0) and ok
 	system.save_value("cached_targets", "x".repeat(400))
 	system.save_value("hp", 12)
-	ok = _check("the scratch key is in the file to begin with", system.has_save_key("cached_targets"), true) and ok
+	ok = _check("the temporary key is in the file to begin with", system.has_save_key("cached_targets"), true) and ok
 	var fat: int = int(system.save_size())
 	ok = _check("Save Size measures the file on disk", fat > 400, true) and ok
 

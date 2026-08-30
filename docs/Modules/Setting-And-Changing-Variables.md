@@ -3,7 +3,7 @@
 A variable is where a game keeps what it knows: score, health, ammo, a name, a flag, a meter that
 fills while a button is held. This guide covers the builtin rows that hold and nudge a value - the
 plain arithmetic set, the eased and guarded forms, the fallbacks that make a loaded value safe to
-store, and the scratch locals and constants that live for one event only.
+store, and the throwaway locals and constants that live for one event only.
 
 This vocabulary is builtin. Each row compiles to the exact GDScript line it names, so a sheet variable
 is a real member of the emitted script and a local really is a `var` inside the handler.
@@ -25,7 +25,7 @@ is a real member of the emitted script and a local really is a `var` inside the 
 - **Cycling indexes** that must stay in range as they wrap.
 - **Loaded values** from a save file or JSON, which might be missing or the wrong kind.
 - **Player names** that fall back to "Player" when the field was left blank.
-- **Scratch values inside one event** - a direction, a target, an intermediate result.
+- **Throwaway values inside one event** - a direction, a target, an intermediate result.
 - **Tuning constants** kept next to the rows that use them.
 - **Picking between two values** in a single cell, with no extra event.
 
@@ -265,7 +265,7 @@ On Ready
 **Value Or** guards null and nothing else, which is right for a lookup that either finds something or
 does not.
 
-**17. A scratch value used by the rows after it.**
+**17. A throwaway value used by the rows after it.**
 
 ```
 Every Physics Tick
@@ -275,9 +275,9 @@ Every Physics Tick
 ```
 
 `heading` exists for this event only. It never becomes a member of the script and never collides with
-another event's scratch value.
+another event's throwaway value.
 
-**18. A typed scratch value, when the type matters.**
+**18. A typed throwaway value, when the type matters.**
 
 ```
 Every Physics Tick

@@ -133,7 +133,7 @@ static func _run_emission() -> bool:
 	all_passed = _check("the row's own action is in the handler", built.contains("print(report)"), true) and all_passed
 	all_passed = _check("the emitted script parses", _parses(built), true) and all_passed
 
-	# A second compile of the QUIET sheet must be quiet again: the flag is per-compile scratch, and a
+	# A second compile of the QUIET sheet must be quiet again: the flag is per-compile temporary state, and a
 	# flag left standing is how one file's compile changes what an unrelated file opens as.
 	sheet.events.clear()
 	var quiet_again: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))

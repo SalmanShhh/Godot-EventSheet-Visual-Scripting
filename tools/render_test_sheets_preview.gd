@@ -107,12 +107,12 @@ func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	return action
 
 
-## Compiles to a SCRATCH path and removes it: with no path given, compile() writes
+## Compiles to a TEMPORARY path and removes it: with no path given, compile() writes
 ## res://event_sheet_generated.gd at the project root, and a test sheet left there is a real
 ## discoverable test the headless runner would pick up on every later run.
 func _compile(sheet: EventSheetResource) -> String:
-	var source: String = str(SheetCompiler.compile(sheet, FIXTURE_DIR + "/_scratch_compile.gd").get("output", ""))
-	DirAccess.remove_absolute(FIXTURE_DIR + "/_scratch_compile.gd")
+	var source: String = str(SheetCompiler.compile(sheet, FIXTURE_DIR + "/_temp_compile.gd").get("output", ""))
+	DirAccess.remove_absolute(FIXTURE_DIR + "/_temp_compile.gd")
 	return source
 
 

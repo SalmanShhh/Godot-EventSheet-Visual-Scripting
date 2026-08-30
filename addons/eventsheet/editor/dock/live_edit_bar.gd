@@ -17,7 +17,7 @@ extends RefCounted
 # (static, pure, pinned headless); this file is the shell.
 
 ## Where a pending compile goes while the strip works out whether it can be reloaded. Never res://.
-const SCRATCH_PATH := "user://eventsheets_live_edit_scratch.gd"
+const TEMP_PATH := "user://eventsheets_live_edit_temp.gd"
 
 var _dock: Control = null
 
@@ -144,13 +144,13 @@ func _restart() -> void:
 
 ## What the open sheet WOULD be if it were saved right now. The comparison has to be against the
 ## pending edit, not against the file on disk - the file on disk is still what is running, which is
-## exactly the other side of the comparison. Compiled to a user:// scratch and removed again: the
+## exactly the other side of the comparison. Compiled to a temporary user:// file and removed again: the
 ## live-edit offer never writes inside res:// until you press it.
 func pending_source() -> String:
 	if _dock._current_sheet == null:
 		return ""
-	var result: Dictionary = SheetCompiler.compile(_dock._current_sheet, SCRATCH_PATH)
-	DirAccess.remove_absolute(SCRATCH_PATH)
+	var result: Dictionary = SheetCompiler.compile(_dock._current_sheet, TEMP_PATH)
+	DirAccess.remove_absolute(TEMP_PATH)
 	return str(result.get("output", ""))
 
 

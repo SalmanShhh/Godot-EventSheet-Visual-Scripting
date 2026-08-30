@@ -27,7 +27,7 @@ Currency Ledger is a data-driven economy you drive from any event sheet. Registe
 - **Shops and vending.** Spend is atomic - the full price leaves or nothing does - and On Spend Failed hands you the shortfall for a clean "not enough gold" message.
 - **Big-number displays.** Format Amount turns 12500 into "12.5K" and 4300000 into "4.3M" so a HUD label never overflows.
 - **Board-game and strategy resource tracks.** Influence, Supply, Settlers, Honour - hard caps and spend guards with no per-resource event logic.
-- **Prestige and reset loops.** Define Currency re-creates a currency from scratch, so a prestige button wipes and re-seeds the whole economy in a row per currency.
+- **Prestige and reset loops.** Define Currency re-creates a currency from nothing, so a prestige button wipes and re-seeds the whole economy in a row per currency.
 
 ---
 
@@ -377,7 +377,7 @@ On Prestige Confirmed
   -> CurrencyLedger: Add  "prestige_points", 1
   -> CurrencyLedger: Define Currency  "gold", 0, 500
   -> CurrencyLedger: Define Currency  "gems", 0, 50
-  # Define Currency re-creates each currency from scratch, clearing the old amount
+  # Define Currency re-creates each currency from nothing, clearing the old amount
 ```
 
 ### Other use cases

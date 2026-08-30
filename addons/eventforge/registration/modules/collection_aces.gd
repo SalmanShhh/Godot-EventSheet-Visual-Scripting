@@ -187,7 +187,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ChangeScene", "Go To Layout", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Layout", "Scene file to switch to.", "expression")], "Scene", "Go to layout {path}")
 		.described("Switches the game to a different layout (a scene file), replacing the current one."))
 	descriptors.append(F.make_descriptor("Core", "ReloadScene", "Restart Layout", ACEDescriptor.ACEType.ACTION, "get_tree().reload_current_scene()", "", [], "Scene", "Restart layout")
-		.described("Restarts the current layout from scratch, useful for retrying a level."))
+		.described("Restarts the current layout from the beginning, useful for retrying a level."))
 	descriptors.append(F.make_descriptor("Core", "QuitGame", "Quit Game", ACEDescriptor.ACEType.ACTION, "get_tree().quit()", "", [], "Scene", "Quit game")
 		.described("Closes the game and exits to desktop."))
 	# The two halves of the pause switch, each as its own row: an author reaches for "pause", not for

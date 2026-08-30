@@ -5527,13 +5527,12 @@ Name physics layer,Assegna un nome al livello fisico
 "Entry id","ID della voce"
 "Row it means","Riga che significa"
 "The entry this derives","La voce che ne deriva"
-The scratch table,La tabella di appunti
 Nothing drafted yet.,Ancora nessuna bozza.
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Vengono interrogate prima di ogni grafia inclusa, solo in questa finestra. Sotto res:// non viene scritto nulla."
-Forget the scratch table,Dimentica la tabella di appunti
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","Vengono interrogate prima di ogni grafia inclusa, solo in questa finestra. Alla chiusura spariscono e sul disco non viene scritto nulla."
+Clear drafts,Cancella le bozze
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Svuota le bozze conservate da questa finestra, così ogni riga che rivendicavano torna a ciò che la rivendicava prima."
 "Check","Verifica"
-"Add to the scratch table","Aggiungi alla tabella di lavoro"
+"Add draft","Aggiungi bozza"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Letti i primi %d script su %d, in ordine di percorso. Il registro qui sotto è un campione di questo progetto, non tutto: ogni volta vengono letti gli stessi script."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","Il %d%% di ciò che è stato letto si disegna come righe, e ognuna ha un nome. Qui non resta nulla come codice."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","Il %d%% di ciò che è stato letto si disegna come righe - questa è la domanda sul disegno. La domanda sui nomi sta sotto: %d riga/righe restano codice onesto, perché nessun vocabolario le rivendica ancora. Entrambe sono vere, e non sono lo stesso numero."

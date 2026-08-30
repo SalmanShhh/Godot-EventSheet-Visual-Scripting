@@ -179,7 +179,7 @@ variables so enum-typed declarations work - exported enum variables get Godot's 
 dropdown for free. They render as keyword-badged rows, edit via dialog (row menu "Add
 Enum Below" / double-click), verify-lift from generated code (non-canonical forms stay
 verbatim blocks), travel in snippets (kind "enum"; older versions drop them via the
-whitelist), feed the lint scratch (expressions referencing them validate), and `State.`
+whitelist), feed the lint probe (expressions referencing them validate), and `State.`
 dot-completes members. Guarded by `tests/enum_row_test.gd`.
 
 ### Pick filters, ƒx autocomplete, external-sheet watcher
@@ -304,7 +304,7 @@ debugger (`event_row.gd`, `sheet_compiler.gd`, `event_sheet_dock.gd`).
   highlighting), moved/deleted/dragged as one action, and **compiled indented inside the
   event body** under its conditions. Both placements get provenance source-map entries.
 - **Edit**: double-click opens a `CodeEdit` dialog (line numbers, GDScript syntax
-  highlighting) with **compile-check linting** - the snippet is validated in a scratch
+  highlighting) with **compile-check linting** - the snippet is validated in a throwaway
   script extending the sheet's host class with sheet variables/functions stubbed
   (`EventSheetGDScriptLint.lint`), live ✓/✗ status - and **completion** (Ctrl+Space)
   offering sheet variables, sheet functions, and host-class members.

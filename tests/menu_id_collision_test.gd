@@ -12,7 +12,7 @@
 # works perfectly; it is the ROUTING that is wrong. So this reads the menu source instead and holds
 # one rule: within a single PopupMenu, a literal id appears once. Ids computed at runtime
 # (`100 + index`, `mode`) are the submenus' own private ranges and are deliberately skipped - they
-# are rebuilt from scratch on every open and never mix with a literal.
+# are rebuilt from the beginning on every open and never mix with a literal.
 @tool
 class_name MenuIdCollisionTest
 extends RefCounted

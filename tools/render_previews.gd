@@ -21,7 +21,7 @@
 #   "$GODOT" --path . --script tools/render_previews.gd -- out=<dir> tools/previews/help_strip.gd …
 #   "$GODOT" --path . --script tools/render_previews.gd -- out=<dir> all
 #
-# `out=` takes an absolute directory (the scratchpad outside the repo is the right place for a
+# `out=` takes an absolute directory (a temporary folder outside the repo is the right place for a
 # picture that is being shown to somebody, not committed). It defaults to `user://previews`.
 @tool
 extends SceneTree

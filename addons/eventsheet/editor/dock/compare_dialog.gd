@@ -6,7 +6,7 @@ extends RefCounted
 # "What Changed Since Save" answers one question (this sheet against its own last save) and keeps
 # answering it unchanged. This is the same machinery with the target unfrozen: the last save, a
 # backup from the shipped ring, another project sheet, or any .gd you browse to. Both sides compile
-# to SCRATCH paths and the comparison runs summarize() in both directions, so the report has two
+# to TEMPORARY paths and the comparison runs summarize() in both directions, so the report has two
 # columns - what differs HERE, and what exists THERE and is missing or different here.
 #
 # The compared sheet is held alive for as long as its result is on screen: every "there" entry

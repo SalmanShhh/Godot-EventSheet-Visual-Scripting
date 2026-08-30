@@ -5,7 +5,7 @@ pattern - and what an expert keeps.*
 
 Every game needs the same two dozen patterns: a state machine, a cooldown, a spawner cadence,
 knockback, a score popup. None of them are hard ideas. What makes them hard is the **spelling**:
-scratch timer variables, prev/now comparisons that depend on frame order, `1.0 - exp(-k * dt)`,
+throwaway timer variables, prev/now comparisons that depend on frame order, `1.0 - exp(-k * dt)`,
 `inverse_lerp`, four timestamps for one jump that feels right. A beginner does not struggle with
 "the dash needs a cooldown" - they struggle with the eleven lines that idea costs, and with the
 three bugs the first attempt always has.
@@ -23,7 +23,7 @@ Each row below names the code burden it deletes. In every case the emitted code 
 form - often *more* correct than the beginner's version, because the row compiles the spelling
 people get wrong.
 
-**Time and state** - the scratch-variable killers:
+**Time and state** - the throwaway-variable killers:
 
 | The row | The code burden it deletes |
 | --- | --- |

@@ -358,7 +358,7 @@ On retry pressed
 
 On new-layout retry pressed
   -> ProcRoom: Regenerate
-  // rebuilds the same seed's layout from scratch, also back at the start
+  // rebuilds the same seed's layout from nothing, also back at the start
 ```
 
 Reset Traversal keeps the built graph and only wipes the flags; Regenerate rebuilds the graph (same seed, same result) and resets state.
@@ -429,4 +429,4 @@ On updating the map
 - **Read Entered Type and Block Reason inside their triggers.** `Entered Id` and `Entered Type` are meaningful inside On Room Entered; `Blocked Id` and `Block Reason` are meaningful inside On Traversal Blocked. Reading them elsewhere gives you whatever the last event left behind.
 - **`max_depth` and `max_per_depth` of -1 mean "no limit".** A type registered with `-1` for both can appear on any interior tier, any number of times. Set a real number only when you want to constrain it.
 - **The boss depth is `Total Depths() - 1`.** A 6-depth map has tiers 0 through 5, so the boss is on tier 5 and the room before it is on `Total Depths() - 2`. Reach for those two expressions when locking the pre-boss room or checking for arrival.
-- **Reset Traversal keeps the layout; Regenerate rebuilds it.** For "try the same map again" use Reset Traversal, which only clears the visited, revealed, and locked flags and drops you at the start. Regenerate replays the same seed to rebuild the graph from scratch (same result) and also returns you to the start.
+- **Reset Traversal keeps the layout; Regenerate rebuilds it.** For "try the same map again" use Reset Traversal, which only clears the visited, revealed, and locked flags and drops you at the start. Regenerate replays the same seed to rebuild the graph from nothing (same result) and also returns you to the start.

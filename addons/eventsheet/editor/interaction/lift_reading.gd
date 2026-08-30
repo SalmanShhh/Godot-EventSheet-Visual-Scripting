@@ -32,7 +32,7 @@ extends RefCounted
 # has a plainer view for is still verbatim. Reported apart, never added together.
 #
 # Everything here is static and pure over the passed source, so the corpus gate runs it headless and
-# the panel runs it on a scratch buffer with no file behind it.
+# the panel runs it on a loose buffer with no file behind it.
 
 ## The four layers a line can be read at. Values are stable, they key the panel's own styling.
 const LAYER_ENTRY: String = "entry"
@@ -51,14 +51,14 @@ const STAYS_CODE: String = "stays code"
 ## measured back over the file it came from - which is invisible while a file round-trips
 ## byte-identically (the compiler skips a write whose bytes already match) and is exactly wrong the
 ## moment one does not: the gate would overwrite the fixture with the drifted bytes and pass on the
-## next run, having repaired the evidence. So a reading always compiles to this scratch path, and the
+## next run, having repaired the evidence. So a reading always compiles to this throwaway path, and the
 ## file behind the buffer is never opened for writing.
 ##
 ## It stays the sheet's `external_source_path` all the same - that is what puts it in the source map
 ## and switches the compiler onto the order-preserving path - so the only thing this changes is where
 ## the bytes land. Named plainly because the canvas shows the file name at the head of the sheet, and a
-## buffer with no file behind it should say so rather than showing an internal scratch name.
-const SCRATCH_PATH: String = "user://buffer.gd"
+## buffer with no file behind it should say so rather than showing an internal working name.
+const THROWAWAY_PATH: String = "user://buffer.gd"
 
 
 ## The whole reading of one buffer:
@@ -66,7 +66,7 @@ const SCRATCH_PATH: String = "user://buffer.gd"
 ## `diff` is {} when the re-emission is byte-identical, and {"line", "expected", "got"} on the first
 ## line where it is not. `lines` carries one entry per source line, in file order:
 ##   {"number", "text", "claim", "layer", "entry_id", "family"}
-static func read(source: String, script_path: String = "", scratch_entries: Array = []) -> Dictionary:
+static func read(source: String, script_path: String = "", draft_entries: Array = []) -> Dictionary:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source(source, true, script_path)
 	var reading: Dictionary = {
 		"sheet": sheet,
@@ -83,14 +83,14 @@ static func read(source: String, script_path: String = "", scratch_entries: Arra
 	# it unset (only opening a real file sets it), so a reading that forgot this line would compile
 	# the buffer as a fresh sheet and call every file in the corpus drifted.
 	if sheet.external_source_path.is_empty():
-		sheet.external_source_path = script_path if not script_path.is_empty() else SCRATCH_PATH
-	# The scratch path, never the file's own - see SCRATCH_PATH. A reading measures; it does not save.
-	var compiled: Dictionary = SheetCompiler.compile(sheet, SCRATCH_PATH)
+		sheet.external_source_path = script_path if not script_path.is_empty() else THROWAWAY_PATH
+	# The throwaway path, never the file's own - see THROWAWAY_PATH. A reading measures; it does not save.
+	var compiled: Dictionary = SheetCompiler.compile(sheet, THROWAWAY_PATH)
 	var emitted: String = str(compiled.get("output", ""))
 	reading["emitted"] = emitted
 	reading["identical"] = emitted == source
 	reading["diff"] = _first_difference(source, emitted)
-	reading["lines"] = _claim_lines(source, sheet, compiled.get("source_map", []) as Array, scratch_entries)
+	reading["lines"] = _claim_lines(source, sheet, compiled.get("source_map", []) as Array, draft_entries)
 	return reading
 
 
@@ -115,18 +115,18 @@ static func layer_counts(reading: Dictionary) -> Dictionary:
 ## cheap half of the reading, and it is what makes the panel's refresh a buffer-sized job rather than
 ## a project-sized one. {} when no table entry claims the line.
 ##
-## `scratch_entries` are entries the caller derived itself (the panel's draft table); they are asked
-## FIRST and come back marked as the scratch family they are, so a draft never looks like a shipped
+## `draft_entries` are entries the caller derived itself (the panel's own drafts); they are asked
+## FIRST and come back marked as the draft family they are, so a draft never looks like a shipped
 ## spelling.
-static func table_claim(line: String, scratch_entries: Array = []) -> Dictionary:
+static func table_claim(line: String, draft_entries: Array = []) -> Dictionary:
 	var text: String = _asked_term(line.strip_edges())
 	if text.is_empty() or text.begins_with("#"):
 		return {}
-	if not scratch_entries.is_empty():
+	if not draft_entries.is_empty():
 		# A draft the example engine could not answer is a REFUSAL, and a refusal has no pattern to
 		# match with. The table engine drops those itself, so a draft that says nothing simply claims
 		# nothing here rather than claiming the whole buffer.
-		var drafted: Dictionary = EventForgeLiftTable.match_line(scratch_entries, text)
+		var drafted: Dictionary = EventForgeLiftTable.match_line(draft_entries, text)
 		if not drafted.is_empty():
 			return {"family": "draft", "entry_id": str(drafted.get("entry_id", "")),
 				"ace_id": str(drafted.get("ace_id", ""))}
@@ -191,7 +191,7 @@ static func _asked_term(text: String) -> String:
 ##      OWN first line (a function header, an event's trigger line, a declaration). A statement in
 ##      the middle of an event is not the trigger, and saying so would name the wrong thing.
 static func _claim_lines(source: String, sheet: EventSheetResource, source_map: Array,
-		scratch_entries: Array) -> Array:
+		draft_entries: Array) -> Array:
 	var lines: Array = []
 	var block_lines: Dictionary = _block_lines(sheet, source_map)
 	var row_lines: Dictionary = _row_lines(sheet)
@@ -210,7 +210,7 @@ static func _claim_lines(source: String, sheet: EventSheetResource, source_map: 
 			entry["claim"] = STAYS_CODE
 			lines.append(entry)
 			continue
-		var claimed: Dictionary = table_claim(text, scratch_entries)
+		var claimed: Dictionary = table_claim(text, draft_entries)
 		if not claimed.is_empty():
 			entry["layer"] = LAYER_ENTRY
 			entry["family"] = str(claimed.get("family", ""))

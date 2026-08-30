@@ -413,7 +413,7 @@ expression, including Clipboard Text, into an edge.
 ## 10. Copying a live node in one row
 
 The shipped **Duplicate Node** is an expression whose own help tells you to add the clone yourself, so
-the everyday copy costs three rows and a scratch variable. **Clone Into** does duplicate, add, place
+the everyday copy costs three rows and a throwaway variable. **Clone Into** does duplicate, add, place
 and optionally group in one action:
 
 ```

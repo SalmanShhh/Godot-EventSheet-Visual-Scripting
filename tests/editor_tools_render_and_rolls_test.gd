@@ -16,7 +16,7 @@ class_name EditorToolsRenderAndRollsTest
 extends RefCounted
 
 const CODEGEN := preload("res://addons/eventforge/compiler/action_codegen.gd")
-const SCRATCH_DIR := "user://eventforge_table_rolls_test"
+const TEMP_DIR := "user://eventforge_table_rolls_test"
 
 ## Every probe run gets its own script path: load() caches by path, so reusing one filename would
 ## silently re-run the FIRST probe for every later table.
@@ -72,7 +72,7 @@ static func run() -> bool:
 	ok = _check("it seeds its own generator", rolls.codegen_template.contains("RandomNumberGenerator.new()"), true) and ok
 
 	# ── 3. Preview Table Rolls, run for real ──
-	DirAccess.make_dir_recursive_absolute(SCRATCH_DIR)
+	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
 
 	# 3a. A plain value->weight Dictionary where one entry cannot lose: exact percentages.
 	var forced: String = _run_preview(rolls, "{\"only\": 1.0, \"never\": 0.0}", "10", "7", "")
@@ -129,12 +129,12 @@ static func run() -> bool:
 	ok = _check("which is not the empty-table wording", missing_report.contains("no entry has a weight above zero"), false) and ok
 
 	# 3f. A save path writes the same report to disk.
-	var report_path: String = SCRATCH_DIR + "/report.txt"
+	var report_path: String = TEMP_DIR + "/report.txt"
 	var saved_source: String = _run_preview(rolls, "{\"only\": 1.0}", "4", "5", "\"%s\"" % report_path)
 	ok = _check("the report file is written", FileAccess.file_exists(report_path), true) and ok
 	ok = _check("the file holds the printed report", FileAccess.get_file_as_string(report_path), saved_source + "\n") and ok
 
-	_clear_scratch()
+	_clear_temp_dir()
 	return ok
 
 
@@ -152,7 +152,7 @@ static func _run_preview(descriptor: ACEDescriptor, table_expression: String, ro
 		# The ACE prints its report; the probe returns it too, so the assertions see the real text.
 		source.append("\t" + line)
 	source.append("\treturn \"\\n\".join(__tbl_out_1)")
-	var script_path: String = SCRATCH_DIR + "/probe_%d.gd" % _probe_index
+	var script_path: String = TEMP_DIR + "/probe_%d.gd" % _probe_index
 	var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
 	file.store_string("\n".join(source) + "\n")
 	file.close()
@@ -165,7 +165,7 @@ static func _run_preview(descriptor: ACEDescriptor, table_expression: String, ro
 ## A stand-in weighted-table resource: a script exposing the `entries` Array the shipped table
 ## resources export, so the ACE meets the real shape without depending on a generated pack.
 static func _table_resource_expression(label_key: String, rows: Array) -> String:
-	var script_path: String = SCRATCH_DIR + "/table_%s.gd" % label_key
+	var script_path: String = TEMP_DIR + "/table_%s.gd" % label_key
 	var source: PackedStringArray = PackedStringArray(["@tool", "extends Resource", "", "", "var entries: Array = ["])
 	for row: Array in rows:
 		source.append("\t{\"%s\": \"%s\", \"weight\": %s}," % [label_key, str(row[0]), str(row[1])])
@@ -202,13 +202,13 @@ static func _param_default(descriptor: ACEDescriptor, param_id: String) -> Strin
 	return "<missing>"
 
 
-static func _clear_scratch() -> void:
-	var dir: DirAccess = DirAccess.open(SCRATCH_DIR)
+static func _clear_temp_dir() -> void:
+	var dir: DirAccess = DirAccess.open(TEMP_DIR)
 	if dir == null:
 		return
 	for entry: String in dir.get_files():
-		DirAccess.remove_absolute(SCRATCH_DIR + "/" + entry)
-	DirAccess.remove_absolute(SCRATCH_DIR)
+		DirAccess.remove_absolute(TEMP_DIR + "/" + entry)
+	DirAccess.remove_absolute(TEMP_DIR)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

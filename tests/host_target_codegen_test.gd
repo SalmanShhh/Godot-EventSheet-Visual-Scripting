@@ -52,7 +52,7 @@ static func run() -> bool:
 	return ok
 
 
-## The host default is a per-compile scratch static, so a behaviour compile must not leave "host"
+## The host default is a per-compile temporary static, so a behaviour compile must not leave "host"
 ## standing for the NEXT caller. The lifter gates every function of an opened file by asking
 ## emit_function_block_text for its text and comparing it to the source bytes; a leaked "host" makes
 ## that text say `host.move_and_slide()` where the file says `move_and_slide()`, the gate refuses the

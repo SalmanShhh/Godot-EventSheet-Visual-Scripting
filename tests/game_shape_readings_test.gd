@@ -58,7 +58,7 @@ const MISSION_SOURCE: PackedStringArray = [
 	"mission_failed.emit()"
 ]
 
-const SCRATCH_DIR := "user://eventforge_game_shapes_test"
+const TEMP_DIR := "user://eventforge_game_shapes_test"
 
 
 static func run() -> bool:
@@ -334,8 +334,8 @@ static func _round_trip() -> bool:
 	ok = _check("the phase row emits the guarded threshold",
 		compiled.contains("\tif phase < 2 and hp <= max_hp * 0.6:"), true) and ok
 
-	DirAccess.make_dir_recursive_absolute(SCRATCH_DIR)
-	var compiled_path: String = SCRATCH_DIR + "/round_trip.gd"
+	DirAccess.make_dir_recursive_absolute(TEMP_DIR)
+	var compiled_path: String = TEMP_DIR + "/round_trip.gd"
 	var file: FileAccess = FileAccess.open(compiled_path, FileAccess.WRITE)
 	if file != null:
 		file.store_string(compiled)

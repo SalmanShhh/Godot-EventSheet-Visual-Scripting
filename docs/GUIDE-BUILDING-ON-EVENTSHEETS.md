@@ -238,7 +238,7 @@ EventSheets.register_doctor_check("my_pack.missing_tables", func(sheet_paths: Pa
 				"path": sheet_path, "message": "Uses my_pack but defines no drop table."}))
 ```
 
-A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` scratch files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
+A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` temporary files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
 
 Two corpora are worth knowing about. `EventSheets.project_scripts()` is every `.gd` outside `addons/` - the list to scan when the failure lives in emitted code, because `sheet_paths` finds only `.tres` sheets while `.gd` is the default format. And when a check is about a resource being **shared**:
 

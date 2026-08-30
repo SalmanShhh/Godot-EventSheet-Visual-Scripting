@@ -239,7 +239,7 @@ static func _grounded_checks() -> bool:
 	var reflect_source: Node = sine_script.new()
 	registry.refresh_from_sources([reflect_source], false)
 	# The owner: a renamed Sine, a second Sine under another name, a plain child, and a child
-	# whose script is NOT a provider (a scratch script with no global class name).
+	# whose script is NOT a provider (a throwaway script with no global class name).
 	var owner: Node2D = Node2D.new()
 	var wobble: Node = sine_script.new()
 	wobble.name = "Wobble"

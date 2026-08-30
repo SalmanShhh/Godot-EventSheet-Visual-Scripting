@@ -23,7 +23,7 @@ static func run() -> bool:
 
 	h.take_damage(30.0)
 	all_passed = _check("plain damage lowers HP", h.current_health_value(), 70.0) and all_passed
-	all_passed = _check("not dead after a scratch", h.is_dead(), false) and all_passed
+	all_passed = _check("not dead after a light hit", h.is_dead(), false) and all_passed
 
 	# A shield pool absorbs before real HP.
 	h.add_health_pool("shield", 50.0)

@@ -5527,13 +5527,12 @@ Name physics layer,物理レイヤーに名前を付ける
 "Entry id","エントリ ID"
 "Row it means","意味する行"
 "The entry this derives","これから導かれるエントリ"
-The scratch table,下書きテーブル
 Nothing drafted yet.,まだ下書きはありません。
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.",同梱の綴りより先に、このウィンドウ内だけで参照されます。res:// には何も書き込まれません。
-Forget the scratch table,下書きテーブルを破棄
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.",同梱の綴りより先に、このウィンドウ内だけで参照されます。ウィンドウを閉じると消え、ディスクには何も書き込まれません。
+Clear drafts,下書きを消去
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.",このウィンドウが保持する下書きを空にし、下書きが主張していた各行を元の扱いに戻します。
 "Check","確認"
-"Add to the scratch table","下書きテーブルに追加"
+"Add draft","下書きを追加"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",パス順で最初の %d 個のスクリプト（全 %d 個中）を読み取りました。以下の記録はこのプロジェクトの一部であり、全体ではありません。毎回同じスクリプトが読み取られます。
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","読み取った分の %d%% が行として描かれ、そのすべてに名前が付いています。ここにコードのまま残るものはありません。"
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","読み取った分の %d%% が行として描かれます - これは描画の問いです。名前の問いはその下にあります: %d 行は正直なコードのまま残ります。まだどの語彙もそれを名乗っていないからです。どちらも本当で、同じ数ではありません。"

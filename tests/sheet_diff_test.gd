@@ -2,7 +2,7 @@
 # core (identical, retune, pure insertion), and the summarize path over a REAL pack: opening
 # health.gd untouched diffs as identical; retuning one param names exactly the touched event (with a
 # live resource to jump to); saved_path_for resolves external sheets to their own .gd and unsaved
-# sheets to "". A save must never happen as a side effect - the diff compiles to a scratch path only.
+# sheets to "". A save must never happen as a side effect - the diff compiles to a temporary path only.
 @tool
 class_name SheetDiffTest
 extends RefCounted

@@ -29,7 +29,7 @@ means the rest.
 seconds rather than in minutes. Same rule: not a verdict.
 
 **One test, alone**, is `EVENTFORGE_TEST_ONLY=<name>` in the environment of the normal runner
-command (comma-separated for several). That replaces the scratch SceneTree script this file used to
+command (comma-separated for several). That replaces the throwaway SceneTree script this file used to
 recommend, and it is what the red-run report hands you to paste.
 
 **The warm daemon** is for the tight loop, where a Godot boot is most of what a test costs.
@@ -218,7 +218,7 @@ matchers, and they say so in a comment.
 
 ### The bench it is written on
 
-**Tools > Lift Workbench** is that loop in one window instead of in a scratch fixture, a test run and
+**Tools > Lift Workbench** is that loop in one window instead of in a throwaway fixture, a test run and
 a diff by hand. Paste hand-written GDScript into its buffer and it answers three questions as you
 type, all three through `EventSheetLiftReading` so it can never tell you something the corpus gate
 and the head bar's chip would not:
@@ -235,9 +235,9 @@ is first asked for.
 
 **Draft an example** takes an unclaimed line straight to the by-example form pre-filled with it: mark
 the spans, read the derived entry back (pattern, canonical spelling, sample values) or the refusal
-that says why, and add it to a scratch table the workbench keeps under `user://`. That table is asked
-FIRST on every refresh and marked "draft" while it claims anything, so a draft is never mistaken for
-a shipped spelling and nothing under `res://` is written. Moving a draft into a real family is a copy
+that says why, and add it to the drafts the open panel is holding. Those are asked FIRST on every
+refresh and marked "draft" while they claim anything, so a draft is never mistaken for a shipped
+spelling - and they last exactly as long as the panel does, because nothing is written anywhere. Moving a draft into a real family is a copy
 and paste of the entry the form shows - the form does the mechanical half, a person still decides the
 spelling is worth shipping.
 
@@ -307,7 +307,7 @@ the general reverse index while telling nobody anything about coverage.
     way passes for the wrong reason. Write a real file (`user://` is fine) and `load()` it.
 12. **Adding a file can turn an unrelated file red.** The dogfood gate samples forty files a day from
     a corpus of ~660 under `addons/` and `tools/`, seeded by the day, so growing OR SHRINKING the
-    corpus moves the sample - deleting your own scratch harnesses at the end of a slice is enough to
+    corpus moves the sample - deleting your own temporary harnesses at the end of a slice is enough to
     swap files in and out of it. Delete them before the run you intend to trust. The failure names
     the file and the seed; fix what it found, or write the cause down beside it in the gate's own
     known-list. Do not add an entry to make a red run green.
@@ -321,7 +321,7 @@ the general reverse index while telling nobody anything about coverage.
     enforces it), `git add` normalises the file back so `git status` goes quiet, and meanwhile every
     reader that matches a line exactly (`@tool`, the preload head) sees `@tool\r` and stops
     recognising it. Write files with explicit LF endings.
-15. **Per-compile scratch is shared process-wide.** Anything the compiler stores in a static must be
+15. **Per-compile working state is shared process-wide.** Anything the compiler stores in a static must be
     cleared by every public emission entry point, or a compile in one file changes what an unrelated
     file opens as, minutes later, with nothing naming the cause. `tests/compiler_state_leak_test.gd`
     sweeps for it; if you add a static, that test will tell you to classify it.
@@ -403,7 +403,7 @@ replace, fold special cases into data tables, and say in the commit what you rem
 
 25. **A default argument cannot tell "nothing was passed" from "the answer was empty".** Two Doctor
     readers took the pins their caller had already worked out `if not known_pins.is_empty()`, and
-    re-read the whole file from scratch otherwise - so every file with NO pins in it, which is
+    re-read the whole file from the beginning otherwise - so every file with NO pins in it, which is
     almost all of them, paid for the pin grammar three times over instead of none. It cost 46 of the
     audit's 85 seconds and nothing in either function looked wrong. When the empty answer is a real
     answer, the caller has to be the one that decides not to ask.

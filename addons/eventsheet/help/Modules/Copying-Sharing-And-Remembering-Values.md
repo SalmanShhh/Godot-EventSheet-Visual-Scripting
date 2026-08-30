@@ -51,7 +51,7 @@ plugin dependency at runtime.
 - **Clone Into is the LIVE-node twin of Spawn Scene.** Spawn Scene starts from a `.tscn` file on disk;
   Clone Into starts from a node already in the world. The shipped Duplicate Node is an expression whose
   own help tells you to add the clone yourself, so the everyday copy would otherwise cost three rows
-  and a scratch variable.
+  and a throwaway variable.
 - **Remember / Restore is keyed by NAME, in node metadata.** Exactly like the named cooldowns. A
   Remember in one row and a Restore in a completely different event agree with no declared variable
   between them and no member state.

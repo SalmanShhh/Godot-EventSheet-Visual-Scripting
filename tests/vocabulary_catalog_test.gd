@@ -8,12 +8,12 @@
 class_name VocabularyCatalogTest
 extends RefCounted
 
-const SCRATCH_PATH: String = "user://scratch_vocabulary_catalog.tres"
+const TEMP_PATH: String = "user://temp_vocabulary_catalog.tres"
 
 
 static func run() -> bool:
 	var ok: bool = true
-	EventSheetVocabularyCatalog.reset_for_tests(SCRATCH_PATH)
+	EventSheetVocabularyCatalog.reset_for_tests(TEMP_PATH)
 
 	ok = _check("the key shape is the provider::ace pair",
 		EventSheetVocabularyCatalog.key_for("Enemy", "method:take_damage"), "Enemy::method:take_damage") and ok
@@ -86,8 +86,8 @@ static func run() -> bool:
 	# The earlier version of this test also called reset_for_tests() here, which cleared a
 	# static cache no real user can reach - so it proved nothing about the documented undo,
 	# and the live session happily kept serving (and re-saving) the deleted overrides.
-	if ResourceLoader.exists(SCRATCH_PATH):
-		DirAccess.remove_absolute(SCRATCH_PATH)
+	if ResourceLoader.exists(TEMP_PATH):
+		DirAccess.remove_absolute(TEMP_PATH)
 	var after_ids: Array = []
 	var after_templates: Array = []
 	for definition: ACEDefinition in EventSheetVocabularyCatalog.apply(source):
@@ -107,12 +107,12 @@ static func run() -> bool:
 
 	# ── Persistence round-trip: an override survives a reload from disk ──
 	EventSheetVocabularyCatalog.set_override("Node", "method:add_to_group", {"display_name": "Persisted"})
-	EventSheetVocabularyCatalog.reset_for_tests(SCRATCH_PATH)  # forces a load from disk
+	EventSheetVocabularyCatalog.reset_for_tests(TEMP_PATH)  # forces a load from disk
 	ok = _check("an override survives a reload",
 		_find(EventSheetVocabularyCatalog.apply(source), "method:add_to_group").display_name, "Persisted") and ok
 	# Emptying the catalog removes the file rather than leaving an empty artifact.
 	EventSheetVocabularyCatalog.set_override("Node", "method:add_to_group", {"display_name": null})
-	ok = _check("an emptied catalog deletes its file", ResourceLoader.exists(SCRATCH_PATH), false) and ok
+	ok = _check("an emptied catalog deletes its file", ResourceLoader.exists(TEMP_PATH), false) and ok
 
 	EventSheetVocabularyCatalog.reset_for_tests()
 	return ok

@@ -19,7 +19,7 @@ extends RefCounted
 
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
 const FIXTURE_DIR := "user://ef_test_sheet_fixtures"
-const SCRATCH_COMPILE_PATH := "user://ef_test_sheet_compile.gd"
+const TEMP_COMPILE_PATH := "user://ef_test_sheet_compile.gd"
 
 
 static func run() -> bool:
@@ -418,9 +418,9 @@ static func _compile(sheet: EventSheetResource) -> String:
 	# compile() always WRITES its result somewhere - with no path given, to res://event_sheet_generated.gd
 	# at the project root. A test sheet written there would be a real, discoverable test sheet sitting in
 	# the project, which the runner would then find and run on every headless invocation. So the write is
-	# aimed at a scratch path and removed again.
-	var source: String = str(SheetCompiler.compile(sheet, SCRATCH_COMPILE_PATH).get("output", ""))
-	DirAccess.remove_absolute(SCRATCH_COMPILE_PATH)
+	# aimed at a temporary path and removed again.
+	var source: String = str(SheetCompiler.compile(sheet, TEMP_COMPILE_PATH).get("output", ""))
+	DirAccess.remove_absolute(TEMP_COMPILE_PATH)
 	return source
 
 

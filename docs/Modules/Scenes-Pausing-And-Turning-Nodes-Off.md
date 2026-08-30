@@ -69,7 +69,7 @@ family stops being confusing.
 | Name | What it does | Ships as |
 |------|--------------|----------|
 | Go To Layout | Switches the game to a different layout (a scene file) | `get_tree().change_scene_to_file({path})` |
-| Restart Layout | Restarts the current layout from scratch | `get_tree().reload_current_scene()` |
+| Restart Layout | Restarts the current layout from the beginning | `get_tree().reload_current_scene()` |
 | Pause The Game | Freezes the whole game | `get_tree().paused = true` |
 | Unpause | Lets the game run again | `get_tree().paused = false` |
 | Quit Game | Closes the game and exits to desktop | `get_tree().quit()` |

@@ -8,7 +8,7 @@ description: Generate an HTML mockup of 15+ code-pattern suggestions for EventSh
 Produce ONE self-contained HTML file mocking up pattern suggestions for the theme given in
 the arguments (e.g. "tool dev experience", "juice and game feel", "roguelike vocabulary").
 Default to 15-20 suggestions unless the user asks for a different count. Write the file to
-the session scratchpad (never into the repo) and send it to the user with SendUserFile
+the session's temporary folder (never into the repo) and send it to the user with SendUserFile
 (display: render). Build only after this file's rules are satisfied - the user picks from
 the mockup before anything is implemented.
 

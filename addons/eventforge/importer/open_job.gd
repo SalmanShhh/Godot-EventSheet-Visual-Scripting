@@ -12,7 +12,8 @@
 # THREAD SAFETY, in three parts:
 #   1. SheetCompiler holds a mutex over compile() and emit_function_block_text() - the lift's
 #      byte-verify recompiles from this thread while compile-on-save/Project Doctor may compile
-#      from the main one, and they share per-compile scratch statics plus a scratch output file.
+#      from the main one, and they share per-compile working-state statics plus a temporary
+#      output file.
 #   2. warm_registries() forces every lazily-built static the import path reads (the ACE descriptor
 #      cache, the reverse-template index, the block-kind registry, the codegen template regex) to
 #      be built on the MAIN thread first, so the worker only ever READS them.

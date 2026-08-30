@@ -5527,13 +5527,12 @@ Name physics layer,Назвать слой физики
 "Entry id","Идентификатор записи"
 "Row it means","Какую строку означает"
 "The entry this derives","Запись, которая отсюда выводится"
-The scratch table,Черновая таблица
 Nothing drafted yet.,Пока ничего не набросано.
-"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.",Их спрашивают раньше любого поставляемого написания и только в этом окне. Под res:// ничего не пишется.
-Forget the scratch table,Забыть черновую таблицу
+"These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.",Их спрашивают раньше любого поставляемого написания и только в этом окне. С закрытием окна они исчезают; на диск ничего не пишется.
+Clear drafts,Очистить черновики
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Очищает черновики этого окна, и каждая строка, которую они забирали, снова читается как раньше."
 "Check","Проверить"
-"Add to the scratch table","Добавить в черновую таблицу"
+"Add draft","Добавить черновик"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Прочитаны первые %d скрипт(ов) из %d, в порядке путей. Список ниже - выборка по этому проекту, а не весь проект: каждый раз читаются одни и те же скрипты."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% прочитанного рисуется строками, и у каждой из них есть имя. Здесь ничто не остаётся кодом."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% прочитанного рисуется строками - это вопрос отрисовки. Вопрос имён ниже: %d строк(и) остаются честным кодом, потому что ни один словарь их пока не называет. Оба утверждения верны, и это не одно и то же число."
