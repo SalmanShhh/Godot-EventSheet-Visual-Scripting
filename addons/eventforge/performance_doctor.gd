@@ -79,7 +79,7 @@ static func sweep() -> Dictionary:
 	var busy: PackedStringArray = PackedStringArray()
 	var handles_trouble: bool = false
 	for script_path: String in EventSheets.project_scripts():
-		var text: String = FileAccess.get_file_as_string(script_path)
+		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if text.contains(SheetCompiler.TROUBLE_SIGNAL):
 			handles_trouble = true
 		if _mentions(text, PER_FRAME_LINES) and _mentions(text, SHAPES):

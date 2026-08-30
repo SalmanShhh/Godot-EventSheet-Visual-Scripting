@@ -77,7 +77,7 @@ static func scenes_with_effects() -> PackedStringArray:
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
 		if scene_path.begins_with(PLUGIN_DIRECTORY):
 			continue
-		if not FileAccess.get_file_as_string(scene_path).contains(MATERIAL_WORD):
+		if not EventSheetProjectDoctor.source_of(scene_path).contains(MATERIAL_WORD):
 			continue
 		if not EventSheetSceneEffects.for_scene(scene_path).is_empty():
 			found.append(scene_path)
@@ -119,7 +119,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 ## is opened as a sheet in memory, measured and dropped - nothing is written, and a script that never
 ## reaches a shader costs one substring test.
 static func sheet_findings(script_path: String) -> Array[Dictionary]:
-	var source: String = FileAccess.get_file_as_string(script_path)
+	var source: String = EventSheetProjectDoctor.source_of(script_path)
 	var reaches: bool = false
 	for word: String in SHEET_WORDS:
 		reaches = reaches or source.contains(word)

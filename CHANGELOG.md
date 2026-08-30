@@ -191,6 +191,23 @@
 
 ### Fixed
 
+- **The whole audit runs in half the time, and says exactly the same thing.** Project Doctor had
+  crept from 48 to 74-83 seconds on this repository as three passes added checks to it, and the
+  budget the suite holds it to (65 seconds) is deliberately not raised - so the slow sections were
+  measured and fixed instead. Three faults, all of them the same fault: work that one reader did for
+  itself when the project already held the answer. "Which scenes carry this script" walked and read
+  EVERY scene in the project per script asked about, and four readers ask it twice each per opened
+  file - it now goes through the shared scene-script index, which is built from the same
+  `[ext_resource]` table the node walk resolves against, so the answer is the same set in the same
+  order (30.2s of file lifting became 16.3s). Thirty-odd checks and eight sections each read the
+  project's scripts off disk for themselves - they now share one read per file per audit, dropped
+  when the report is finished. And the pin notes ran a two-pass grammar read of every line of every
+  script to tell two thirds of them they had nothing, where one substring test says so. Measured on
+  one quiet machine, the audit alone in its own process, three runs each: **58.1s / 59.7s / 58.0s
+  before, 36.7s / 36.4s / 34.8s after** - and the report is byte-identical either way (207 findings,
+  0 errors, 68 warnings, 139 notes, in the same order). Under the suite, where the number the budget
+  reads is taken, the same audit measured 74-83 seconds before. The heaviest sections after the fix
+  are Lighting (9.0s), Multiplayer (5.1s), the hierarchy footguns (5.1s) and Effects (4.3s).
 - **The cap is a cap again, on a frame that spawns more than once.** **Spawn A Copy, The First Makes
   Room** read the crowd straight out of the group, and `queue_free()` leaves a member in its group
   until the end of the frame - so a second spawn in the same frame read the same crowd, freed the

@@ -120,7 +120,7 @@ static func project_sources() -> Dictionary:
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		if _is_someone_elses(script_path):
 			continue
-		var text: String = FileAccess.get_file_as_string(script_path)
+		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if not text.is_empty():
 			sources[script_path] = text
 	return sources
@@ -556,7 +556,7 @@ static func _indent_of(line: String) -> int:
 
 
 static func _read_text(path: String) -> String:
-	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else ""
+	return EventSheetProjectDoctor.source_of(path) if FileAccess.file_exists(path) else ""
 
 
 static func _finding(severity: String, check_id: String, path: String, message: String,

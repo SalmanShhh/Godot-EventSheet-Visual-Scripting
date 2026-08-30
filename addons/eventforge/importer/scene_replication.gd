@@ -112,9 +112,21 @@ static func clear_cache() -> void:
 
 
 ## Every scene whose nodes include one carrying this script, in project order.
+##
+## The candidate scenes come from the project's shared "which scenes load this script" index rather
+## than from a walk of every scene in the project. A node can only carry a script the scene lists in
+## its `[ext_resource]` table; that table is exactly what the index is built from, and exactly what
+## the node walk below resolves `script = ExtResource(...)` through - so the index can never leave
+## out a scene this answer would have contained. The two tests underneath it are the ones the walk
+## always applied, kept as they were so the answer is the same set in the same order.
+##
+## Four readers ask this once per opened file (the lights, the materials, the lighting facts and the
+## spawning sweep) and each of them asks it twice, so the walk it replaces was reading every scene of
+## the project eight times per file - about an eighth of a second on a project with sixty scenes,
+## paid per script, for a question that is a dictionary lookup away.
 static func scenes_using(script_path: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for scene_path: String in EventSheetSceneConnections.scene_paths():
+	for scene_path: String in EventSheetSceneConnections.scenes_using_script(script_path):
 		var text: String = FileAccess.get_file_as_string(scene_path)
 		if text.is_empty() or not text.contains(script_path):
 			continue

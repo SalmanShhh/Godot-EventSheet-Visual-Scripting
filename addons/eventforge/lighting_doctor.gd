@@ -76,7 +76,7 @@ static func lit_scenes() -> PackedStringArray:
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
 		if scene_path.begins_with(PLUGIN_DIRECTORY):
 			continue
-		var text: String = FileAccess.get_file_as_string(scene_path)
+		var text: String = EventSheetProjectDoctor.source_of(scene_path)
 		if not (text.contains(LIGHT_WORD) or text.contains(EventSheetSceneLightingFacts.DARKNESS_CLASS)
 				or text.contains(EventSheetSceneLightingFacts.ENVIRONMENT_CLASS)):
 			continue
@@ -131,7 +131,7 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	# The member every one of those rows reaches through. A substring test, deliberately loose: a
 	# script that never says the word cannot be one of these sheets, and a script that does is judged
 	# by the ROWS rather than by the word (EventSheetLightingFindings.reaches_the_environment).
-	var source: String = FileAccess.get_file_as_string(script_path)
+	var source: String = EventSheetProjectDoctor.source_of(script_path)
 	if not source.contains(EventForgeSceneLightingACEs.ENVIRONMENT_MEMBER):
 		return []
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)

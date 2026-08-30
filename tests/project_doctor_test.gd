@@ -35,6 +35,19 @@ extends RefCounted
 ## is deliberately left where it is: raising one to fit a number nobody has explained is how a budget
 ## stops meaning anything. What it is asking for is the audit measured on a quiet machine and the
 ## slow section found, not a bigger number.
+##
+## SO IT WAS MEASURED, 2026-08-30, section by section, and three sections were found: "which scenes
+## carry this script" read every scene in the project per script asked about (four readers ask it
+## twice each per opened file, so the file lift alone spent 30 of the 58 seconds there), thirty-odd
+## checks each read the project's scripts off disk for themselves rather than sharing one read, and
+## the pin notes ran a full grammar read of every line of every script to tell two thirds of them
+## they had nothing. Alone in its own process on that machine: 58.1, 59.7 and 58.0 seconds before,
+## 36.7, 36.4 and 34.8 after, with the report byte-identical - the same 207 findings in the same
+## order. In the serial tail, which is where the number below is actually taken, the same audit
+## measured 31.4 seconds against the 74-83 it had been. The budget stays 65: it is now comfortably
+## more than the doubling rule would ask of 36, which is the point - the sections that were slow are
+## the ones a regression would show up in first, and a budget with that much room left is one that
+## still fails before anybody stops reading it.
 const DOCTOR_BUDGET_MS: int = 65000
 
 

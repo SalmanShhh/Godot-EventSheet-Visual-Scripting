@@ -59,7 +59,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func networked_scripts() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheets.project_scripts():
-		for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+		for line: String in EventSheetProjectDoctor.source_of(script_path).split("\n"):
 			if EventForgeMultiplayerLift.is_networking_line(line):
 				found.append(script_path)
 				break

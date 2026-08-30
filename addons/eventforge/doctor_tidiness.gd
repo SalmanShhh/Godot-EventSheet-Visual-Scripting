@@ -456,13 +456,13 @@ static func check_declaration_reach(findings: Array[Dictionary]) -> void:
 	var sources: Dictionary = {}
 	var corpus_parts: PackedStringArray = PackedStringArray()
 	for script_path: String in script_paths:
-		var text: String = FileAccess.get_file_as_string(script_path)
+		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		sources[script_path] = text
 		corpus_parts.append(text)
 	var corpus: String = "\n".join(corpus_parts)
 	var scene_parts: PackedStringArray = PackedStringArray()
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
-		scene_parts.append(FileAccess.get_file_as_string(scene_path))
+		scene_parts.append(EventSheetProjectDoctor.source_of(scene_path))
 	var scenes_text: String = "\n".join(scene_parts)
 	for script_path: String in script_paths:
 		if script_path.begins_with("res://eventsheet_addons/"):

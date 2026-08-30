@@ -58,7 +58,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func stays_code(script_path: String) -> bool:
 	if script_path.strip_edges().is_empty():
 		return false
-	return _marked_in(FileAccess.get_file_as_string(script_path))
+	return _marked_in(EventSheetProjectDoctor.source_of(script_path))
 
 
 ## The same question asked of text already in hand, which is how the report asks it: it reads every
@@ -109,7 +109,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var kept_as_code: PackedStringArray = PackedStringArray()
 	var sized: Array[Dictionary] = []
 	for script_path: String in scripts:
-		var text: String = FileAccess.get_file_as_string(script_path)
+		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if _marked_in(text):
 			kept_as_code.append(script_path)
 			continue

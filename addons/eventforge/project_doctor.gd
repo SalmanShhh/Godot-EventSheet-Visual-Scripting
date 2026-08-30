@@ -31,6 +31,15 @@ static var _extension_checks: Array[Dictionary] = []
 static var _project_scripts_cache: PackedStringArray = PackedStringArray()
 static var _project_scripts_walked: bool = false
 
+## path -> that file's text, for the length of one audit - see `source_of`.
+static var _source_cache: Dictionary = {}
+
+## True only while `run()` is between its first check and its last. The sharing below is scoped to
+## that window rather than to the session: a check called on its own (which is how every check is
+## tested) may be handed a fixture that was just rewritten under it, and a read held from before the
+## write would answer with the file that is no longer there.
+static var _run_in_progress: bool = false
+
 
 ## Registers a project-health check. `check` receives (sheet_paths: PackedStringArray,
 ## findings: Array[Dictionary]) and appends findings shaped
@@ -55,6 +64,7 @@ static func run() -> Dictionary:
 	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
 	# audit see files that appeared since the last one.
 	clear_project_scripts()
+	_run_in_progress = true
 	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
@@ -144,6 +154,10 @@ static func run() -> Dictionary:
 		var extension_check: Callable = entry.get("run") as Callable
 		if extension_check.is_valid():
 			extension_check.call(sheet_paths, findings)
+	# The report is complete, so the texts the checks shared are dead weight - a dock that ran the
+	# audit once should not carry the project's source for the rest of the session.
+	_run_in_progress = false
+	_source_cache.clear()
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -187,7 +201,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "error", "compile", sheet_path,
 				"Sheet no longer compiles: %s" % str(result.get("errors")))
 			continue
-		if str(result.get("output", "")) != FileAccess.get_file_as_string(output_path):
+		if str(result.get("output", "")) != source_of(output_path):
 			_add(findings, "error", "stale-output", sheet_path,
 				"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
 	DirAccess.remove_absolute(SCRATCH_PATH)
@@ -265,7 +279,7 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 	# calls were O(sheets × scenes) file reads).
 	var scene_texts: Array[String] = []
 	for scene_path: String in _list_files_with_extension("tscn"):
-		scene_texts.append(FileAccess.get_file_as_string(scene_path))
+		scene_texts.append(source_of(scene_path))
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
@@ -296,7 +310,7 @@ static func check_required_fields(sheet_paths: PackedStringArray, findings: Arra
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue
-		var empty_required: PackedStringArray = required_empty_defaults(FileAccess.get_file_as_string(output_path))
+		var empty_required: PackedStringArray = required_empty_defaults(source_of(output_path))
 		if not empty_required.is_empty():
 			watched[output_path] = empty_required
 	if watched.is_empty():
@@ -305,7 +319,7 @@ static func check_required_fields(sheet_paths: PackedStringArray, findings: Arra
 		for container_path: String in _list_files_with_extension(container_ext):
 			if container_path.begins_with("res://demo/") or container_path.begins_with("res://eventsheet_addons/") or container_path.begins_with("res://addons/"):
 				continue
-			for missing: Dictionary in required_gaps_in_container(FileAccess.get_file_as_string(container_path), watched):
+			for missing: Dictionary in required_gaps_in_container(source_of(container_path), watched):
 				_add(findings, "warning", "required-field", container_path,
 					"%s leaves the required \"%s\" (%s) unset - assign it in the Inspector." % [container_path.get_file(), str(missing.get("property")), str(missing.get("script")).get_file()])
 
@@ -376,7 +390,7 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue  # the stale-output check owns the "not compiled yet" case
-		if FileAccess.get_file_as_string(output_path).contains("func save_state("):
+		if source_of(output_path).contains("func save_state("):
 			continue
 		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
 		_add(findings, "info", "save-support", sheet_path,
@@ -430,7 +444,7 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 static func check_save_key_symmetry(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var usage_by_path: Dictionary = {}
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		var usage: Dictionary = save_key_usage(source)
@@ -670,7 +684,7 @@ static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Arr
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue  # the stale-output check owns the "not compiled yet" case
-		var output: String = FileAccess.get_file_as_string(output_path)
+		var output: String = source_of(output_path)
 		if not output.contains("get_edited_scene_root("):
 			continue  # not touching the open scene - nothing to undo
 		var mutates: bool = false
@@ -716,7 +730,7 @@ static func check_sheet_edit_funnel(findings: Array[Dictionary]) -> void:
 			if file_name.get_extension() != "gd":
 				continue
 			var path: String = folder.path_join(file_name)
-			var source: String = FileAccess.get_file_as_string(path)
+			var source: String = source_of(path)
 			if source.is_empty():
 				continue
 			var write: String = sheet_edit_outside_funnel(source)
@@ -756,7 +770,7 @@ static func check_editor_tool_safety(sheet_paths: PackedStringArray, findings: A
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue  # the stale-output check owns the "not compiled yet" case
-		var output: String = FileAccess.get_file_as_string(output_path)
+		var output: String = source_of(output_path)
 		# 1. Reaching outside the layout the user has open. `get_tree()` in the editor process walks
 		# the EDITOR's own tree, not the scene being edited, which is almost never what was meant.
 		if output.contains("get_tree().get_nodes_in_group(") or output.contains("get_tree().call_group("):
@@ -806,7 +820,7 @@ static func check_background_thread_safety(sheet_paths: PackedStringArray, findi
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue  # the stale-output check owns the "not compiled yet" case
-		var output: String = FileAccess.get_file_as_string(output_path)
+		var output: String = source_of(output_path)
 		for function_name: String in _backgrounded_function_names(output):
 			if not _function_body_touches_tree(output, function_name):
 				continue
@@ -885,7 +899,7 @@ static func _ticks_without_editor_guard(output: String) -> bool:
 static func sheet_for_script(script_path: String) -> String:
 	if script_path.is_empty() or not FileAccess.file_exists(script_path):
 		return ""
-	var header: String = FileAccess.get_file_as_string(script_path).left(400)
+	var header: String = source_of(script_path).left(400)
 	var found: RegExMatch = RegEx.create_from_string("(?m)^# Source: (.+\\.tres)$").search(header)
 	if found != null and FileAccess.file_exists(found.get_string(1)):
 		return found.get_string(1)
@@ -894,7 +908,7 @@ static func sheet_for_script(script_path: String) -> String:
 		return sibling
 	# A behaviour/addon pack .gd IS its own sheet (no .tres companion) - it pairs to itself. EventForge
 	# sheets carry `## @ace_*` annotations (exposed ACEs / tags / triggers); hand-written scripts do not.
-	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(FileAccess.get_file_as_string(script_path)) != null:
+	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(source_of(script_path)) != null:
 		return script_path
 	return ""
 
@@ -904,7 +918,7 @@ static func sheet_for_script(script_path: String) -> String:
 static func scenes_attaching(script_path: String) -> PackedStringArray:
 	var matches: PackedStringArray = PackedStringArray()
 	for scene_path: String in _list_files_with_extension("tscn"):
-		if FileAccess.get_file_as_string(scene_path).contains(script_path):
+		if source_of(scene_path).contains(script_path):
 			matches.append(scene_path)
 	matches.sort()
 	return matches
@@ -1249,14 +1263,14 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 		corpus_parts.append(" ".join(sheet.uses_addons) + " " + " ".join(sheet.requires_behaviors)
 			+ " " + " ".join(sheet.ace_provider_scripts) + " " + " ".join(sheet.includes))
 	for scene_path: String in _list_files_with_extension("tscn"):
-		corpus_parts.append(FileAccess.get_file_as_string(scene_path))
+		corpus_parts.append(source_of(scene_path))
 	for property: Dictionary in ProjectSettings.get_property_list():
 		if str(property.get("name", "")).begins_with("autoload/"):
 			corpus_parts.append(str(ProjectSettings.get_setting(str(property.get("name")))))
 	var corpus: String = "\n".join(corpus_parts)
 	var class_regex: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	for script_path: String in pack_scripts:
-		var found: RegExMatch = class_regex.search(FileAccess.get_file_as_string(script_path))
+		var found: RegExMatch = class_regex.search(source_of(script_path))
 		if found == null:
 			continue
 		var pack_class: String = found.get_string(1)
@@ -1286,7 +1300,7 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 		corpus_parts.append(" ".join(sheet.uses_addons) + " " + " ".join(sheet.requires_behaviors)
 			+ " " + " ".join(sheet.ace_provider_scripts) + " " + " ".join(sheet.includes))
 	for scene_path: String in _list_files_with_extension("tscn"):
-		corpus_parts.append(FileAccess.get_file_as_string(scene_path))
+		corpus_parts.append(source_of(scene_path))
 	for property: Dictionary in ProjectSettings.get_property_list():
 		if str(property.get("name", "")).begins_with("autoload/"):
 			corpus_parts.append(str(ProjectSettings.get_setting(str(property.get("name")))))
@@ -1294,7 +1308,7 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 	var class_regex: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	var requires_regex: RegEx = RegEx.create_from_string("(?m)^## @ace_requires\\(([^)]*)\\)")
 	for script_path: String in pack_scripts:
-		var pack_source: String = FileAccess.get_file_as_string(script_path)
+		var pack_source: String = source_of(script_path)
 		var requires_match: RegExMatch = requires_regex.search(pack_source)
 		if requires_match == null:
 			continue
@@ -1491,7 +1505,7 @@ static func literal_type_mismatch(declared_type: String, value: String) -> Strin
 ## might belong to a Bullet arc instead, so this only asks the author to check.
 static func check_rotated_gravity_pathfinding(findings: Array[Dictionary]) -> void:
 	for scene_path: String in _list_files_with_extension("tscn"):
-		var scene_text: String = FileAccess.get_file_as_string(scene_path)
+		var scene_text: String = source_of(scene_path)
 		if scene_text.contains("gravity_angle") and scene_text.contains("platformer_pathfinding"):
 			_add(findings, "info", "rotated-gravity-pathfinding", scene_path,
 				"This scene sets a gravity_angle and uses Platformer Pathfinding, which plans with straight-down gravity - if the angle is on the movement pack, planned paths will be wrong.")
@@ -1573,7 +1587,7 @@ static func check_untranslated_project(sheet_paths: PackedStringArray, findings:
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue
-		var output_text: String = FileAccess.get_file_as_string(output_path)
+		var output_text: String = source_of(output_path)
 		if output_text.contains("tr(\"") or output_text.contains("tr_n(\"") or output_text.contains("TranslationServer.set_locale"):
 			_add(findings, "info", "l10n", sheet_path,
 				"This sheet translates text (tr / Set Language) but the project has no translations registered - generate a POT (Project Settings > Localization > POT Generation, add the compiled .gd), translate it, and add the catalog under Localization > Translations.")
@@ -1627,7 +1641,7 @@ static func check_unmarked_player_text(_sheet_paths: PackedStringArray, findings
 		# A pack is shipped vocabulary the project author did not write and cannot usefully edit.
 		if script_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		for marked: String in marked_translation_literals(source):
@@ -1675,7 +1689,7 @@ static func check_stale_translated_labels(_sheet_paths: PackedStringArray, findi
 	for script_path: String in _project_scripts():
 		if script_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		var stale: PackedStringArray = stale_translated_text_functions(source)
@@ -2066,7 +2080,7 @@ static func _function_list(names: PackedStringArray) -> String:
 ## Info tier: an imported project is a work in progress, not a broken one.
 static func check_imported_rows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if not source.contains(EventSheetForeignImporter.TALLY_PREFIX):
 			continue
 		var pending: int = 0
@@ -2084,7 +2098,7 @@ static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 	var path: String = EventSheetVocabularyDoc.doc_path()
 	if not FileAccess.file_exists(path):
 		return
-	if FileAccess.get_file_as_string(path) != EventSheetVocabularyDoc.generate():
+	if source_of(path) != EventSheetVocabularyDoc.generate():
 		_add(findings, "info", "vocabulary-doc", path,
 			"Vocabulary doc is stale - regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
 
@@ -2363,7 +2377,7 @@ static func check_orphaned_provider_calls(sheet_paths: PackedStringArray, findin
 	if providers.is_empty():
 		return
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		for orphan: Dictionary in orphaned_calls_in_source(source, providers):
@@ -2397,7 +2411,7 @@ const SHEET_DECLARED_TRIGGER_SIGNALS: Array[String] = [
 
 static func check_sheet_signal_declarations(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		for signal_name: String in unconnected_trigger_signals(source):
@@ -2527,7 +2541,7 @@ static func _script_member_names(script: GDScript) -> Dictionary:
 ## the choice, so the finding and the window that fixes it say the same thing.
 static func check_unresolved_conflicts(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if not EventSheetConflictRegions.has_conflicts(source):
 			continue
 		_add(findings, "error", "merge-conflict", script_path,
@@ -2558,7 +2572,7 @@ static func check_shared_sheet_includes(findings: Array[Dictionary]) -> void:
 	var shared_by_class: Dictionary = {}
 	var sources: Dictionary = {}
 	for script_path: String in scripts:
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		sources[script_path] = source
 		if not EventSheetSharedSheets.is_shared_sheet(source):
 			continue
@@ -2680,7 +2694,7 @@ static func skill_tree_cycle(start: String, requires: Dictionary) -> bool:
 static func _skill_tree_sources() -> String:
 	var joined: PackedStringArray = PackedStringArray()
 	for script_path: String in _project_scripts():
-		joined.append(FileAccess.get_file_as_string(script_path))
+		joined.append(source_of(script_path))
 	return "\n".join(joined)
 
 
@@ -2689,7 +2703,7 @@ static func _skill_tree_sources() -> String:
 ## because loading every `.tres` in a project to find out would be slow and would report a stale
 ## reference in an unrelated asset as though the Doctor had gone looking for trouble.
 static func _is_skill_tree_text(path: String) -> bool:
-	var text: String = FileAccess.get_file_as_string(path)
+	var text: String = source_of(path)
 	return text.contains("\nskills = ") and text.contains("\ntree_name = ") \
 		and text.contains("\nstarting_points = ")
 
@@ -2741,10 +2755,39 @@ static func _project_scripts() -> PackedStringArray:
 
 
 ## Forgets the walk above, so the next ask lists the directories again. Called at the top of a run
-## and from the editor's filesystem hook.
+## and from the editor's filesystem hook. The texts those files hold go with it, for the same reason
+## and under the same contract.
 static func clear_project_scripts() -> void:
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
+	_source_cache.clear()
+
+
+## One file's text, read once per audit and handed to every check that asks for it.
+##
+## Around thirty checks and eight sections walk the project's scripts, and most of them begin by
+## asking the same question of the same file - "does this source say anything about my subject" -
+## so the same megabytes were being read off disk thirty times for one report. This is the same rule
+## the script listing above follows and the same rule the scene parse follows: one read, many
+## readers. A run drops it first (below), so an audit still sees a file edited since the last one,
+## and drops it again when the report is finished so the texts are not held between runs.
+##
+## Missing files answer "" exactly as a direct read does, so a caller's own emptiness test is
+## unchanged.
+##
+## Two things are never held. A read taken OUTSIDE a run is not shared at all, because a check asked
+## on its own is usually being asked about a fixture that is rewritten between the asks. And a
+## `user://` path is a scratch file - a fixture, the verification recompile's own output - written
+## and re-read inside one process, where a held read would answer with the file that is no longer
+## there. The corpus every check walks is res:// throughout, so nothing the sharing is for is left
+## out of it.
+static func source_of(path: String) -> String:
+	if _source_cache.has(path):
+		return _source_cache[path]
+	var text: String = FileAccess.get_file_as_string(path)
+	if _run_in_progress and path.begins_with("res://"):
+		_source_cache[path] = text
+	return text
 
 
 static func _walk_project_scripts() -> PackedStringArray:
@@ -2788,7 +2831,7 @@ static func _walk_project_scripts() -> PackedStringArray:
 ## row to reach for instead.
 static func check_blocking_waits(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		var blocking: PackedStringArray = blocking_wait_calls(source)
@@ -2831,7 +2874,7 @@ static func blocking_wait_calls(source: String) -> PackedStringArray:
 static func check_animation_method_tracks(findings: Array[Dictionary]) -> void:
 	var defined: Dictionary = {}
 	for script_path: String in _list_files_with_extension("gd"):
-		for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+		for line: String in source_of(script_path).split("\n"):
 			var stripped: String = line.strip_edges()
 			if not (stripped.begins_with("func ") or stripped.begins_with("static func ")):
 				continue
@@ -2840,7 +2883,7 @@ static func check_animation_method_tracks(findings: Array[Dictionary]) -> void:
 			if opening > 0:
 				defined[head.substr(0, opening).strip_edges()] = true
 	for source_path: String in _animation_bearing_files():
-		var text: String = FileAccess.get_file_as_string(source_path)
+		var text: String = source_of(source_path)
 		var reported: Dictionary = {}
 		for track: Dictionary in EventSheetAnimationTrackFacts.tracks_in(text):
 			var method: String = str(track.get("method", ""))
@@ -3266,7 +3309,7 @@ static func _node_name_of(text: String) -> String:
 ## gate, and a note about somebody else's shipped addon is not the reader's to act on.
 static func check_menu_ids(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if not source.contains("add_item("):
 			continue
 		for note: Dictionary in menu_id_notes(source.split("\n")):
@@ -3281,7 +3324,7 @@ static func check_menu_ids(findings: Array[Dictionary]) -> void:
 static func check_game_modes(findings: Array[Dictionary]) -> void:
 	var importer := GDScriptImporter.new()
 	for script_path: String in EventSheetModeFacts.autoload_scripts():
-		if not FileAccess.get_file_as_string(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
+		if not source_of(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
 			continue
 		var sheet: EventSheetResource = importer.import_external(script_path)
 		if sheet == null:
@@ -3318,6 +3361,27 @@ static func menu_id_notes(lines: PackedStringArray) -> Array[Dictionary]:
 	return notes
 
 
+## The words a file has to say SOMEWHERE before any pin spelling can be in it. Every arithmetic pin
+## is an assignment whose left side is the object's own place, angle or size - `position`,
+## `global_position`, `transform.origin`, `rotation`, `rotation_degrees`, `scale` and the single-axis
+## forms of those - and every pack pin is one of the `.pin_…(` verbs below. So a file holding none of
+## these five fragments has no pin in it, whatever else it says.
+##
+## A whole-file substring test, and the walk it stands in front of is a two-pass grammar read of every
+## line: on this repository two thirds of the project's scripts never mention any of them, and each
+## was paying for the full read to be told it had nothing. Deliberately LOOSE - a file that merely
+## mentions "position" still gets the real walk - because the cheap test may only ever say "certainly
+## nothing here", never "certainly something".
+const _PIN_WORD_MARKS: PackedStringArray = ["position", "origin", "rotation", "scale", ".pin_"]
+
+
+static func _could_hold_a_pin(source: String) -> bool:
+	for mark: String in _PIN_WORD_MARKS:
+		if source.contains(mark):
+			return true
+	return false
+
+
 ## The verbs the Pin behavior packs are started with - the pack half of "this object rides that
 ## one". The arithmetic half is the shape reader's answer, so the two together are every spelling a
 ## pin has.
@@ -3332,6 +3396,8 @@ const _PIN_VERBS: PackedStringArray = [
 ## on every machine. Pure and static, so a test pins the answer without a project to walk.
 static func pinned_anchors(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
+	if not _could_hold_a_pin(source):
+		return found
 	var text: String = _without_comment_lines(source)
 	# The shape reader already owns the grammar of a hand-written pin, and its summary already
 	# applies every gate the ROWS apply - so asking it is what keeps the Doctor, the head bar and
@@ -3454,7 +3520,7 @@ static func _is_plain_name(text: String) -> bool:
 
 static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		for loop_variable: String in reparenting_children_loops(source):
@@ -3579,7 +3645,7 @@ static func _declared_name_of_class(line: String, classes: Array) -> String:
 ## The two facing notes, over the project's own scripts.
 static func check_facing_follows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = FileAccess.get_file_as_string(script_path)
+		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
 		for ray_name: String in rays_not_following_facing(source):
