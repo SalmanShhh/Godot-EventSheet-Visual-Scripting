@@ -38,18 +38,18 @@
   outside one of the four edges in world coordinates. Each is plain GDScript and works in any field
   that takes a position, not only in a spawn row.
 
-### Removing, without leaving ghosts
+### Destroying, without leaving ghosts
 
-- **Three removal verbs, all of them `queue_free`, each saying WHEN.** **Remove Now** writes the
+- **Three destroy verbs, all of them `queue_free`, each saying WHEN.** **Destroy Now** writes the
   plain call and teaches the thing people get wrong about it: Godot deletes the node at the END of
   the frame, not on this line, so the rows after it in the same event still run and the node is
-  still there while they do. **Remove After Seconds** hangs the free off a scene-tree timer, which
-  never blocks and is safe if something else removed the node first - Godot drops the connection
-  along with the object, and the timer fires at nothing. **Fade Out Then Remove** walks `modulate:a`
-  down with a tween, awaits it, and then removes; the event waits for the fade, so everything after
+  still there while they do. **Destroy After Seconds** hangs the free off a scene-tree timer, which
+  never blocks and is safe if something else destroyed the node first - Godot drops the connection
+  along with the object, and the timer fires at nothing. **Fade Out Then Destroy** walks `modulate:a`
+  down with a tween, awaits it, and then destroys; the event waits for the fade, so everything after
   it runs once the fade is done. Nothing new is invented for any of them: the emitted code is the
   same code somebody would write by hand.
-- **The guard is written where it is needed, and shown where it is written.** A removal row whose
+- **The guard is written where it is needed, and shown where it is written.** A destroy row whose
   object is a name that outlives the line that set it - a variable typed as a node - compiles inside
   `if is_instance_valid(…):`, which is Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
   guard line is echoed at the end of the row in the script editor's own colours, exactly as a
@@ -59,14 +59,22 @@
   question written - which is also what lets a file guarded by hand open and save back byte for
   byte. `self` and node paths are never guarded, and no row outside these three is touched.
 - **Is Still Here** asks `is_instance_valid` in the sheet's own words, beside the shipped **Object
-  Still Exists** row that writes the same line. A node that wants to hear about its OWN removal
-  still uses the shipped **On Exit Tree** trigger; that is a lifecycle handler, not a removal verb,
+  Still Exists** row that writes the same line. A node that wants to hear about its OWN destruction
+  still uses the shipped **On Exit Tree** trigger; that is a lifecycle handler, not a destroy verb,
   and it stays where it is.
 - **The two chains people write by hand open as these rows.**
   `get_tree().create_timer(2.0).timeout.connect(queue_free)` and the one-line tween-then-free
-  spelling are recognised as Remove After Seconds and Fade Out Then Remove, each carrying the
+  spelling are recognised as Destroy After Seconds and Fade Out Then Destroy, each carrying the
   author's own spelling so the file saves back unchanged. A tween that fades one node and frees a
   different one is somebody else's line and keeps the reading it already had.
+- **These rows say DESTROY, not remove.** The three verbs and the crowd trigger were authored as
+  Remove Now, Remove After Seconds, Fade Out Then Remove and On The Last One Removed, and they read
+  as Destroy Now, Destroy After Seconds, Fade Out Then Destroy and On The Last One Destroyed - the
+  word the shipped **On Created** / **On Destroyed** triggers already use, so a sheet says one thing
+  for the act and one thing for hearing about it. The `ace_id`s moved with the names, which is only
+  possible because none of them has been in a release; the emitted code, the templates and every
+  hand-written spelling that lifts into these rows are byte-for-byte what they were. **Is Still
+  Here** keeps its name.
 
 ### Crowds, counted by the tree itself
 
@@ -84,7 +92,7 @@
 - **The cap is on the row, and so is the policy.** "At most twelve alive" is two different games
   depending on what happens at twelve, so there is a row per answer and each says which it is in its
   own sentence rather than hiding behind a setting. **Spawn A Copy, The First Makes Room** reads the
-  crowd once, removes members from the front until the new one fits and then spawns, so the new copy
+  crowd once, destroys members from the front until the new one fits and then spawns, so the new copy
   always appears - what a bullet, a footstep or a skid mark wants; `maxi({cap}, 1)` is what makes
   `pop_front()` always safe, whatever number was typed. Both cap rows read the members that are
   STAYING: `queue_free()` leaves a node in its group until the end of the frame, so a read that took
@@ -94,7 +102,7 @@
   spawn from a real one.
 - **How Many Alive** is the group's own size, `get_tree().get_node_count_in_group(…)`, as an
   expression that goes in any field: a comparison, a HUD label, a difficulty curve.
-- **On The Last One Removed runs once per emptying, with no tick and no memory.** It is the scene
+- **On The Last One Destroyed runs once per emptying, with no tick and no memory.** It is the scene
   tree's own `node_removed` signal, and the question that narrows it to one crowd is an ORDINARY
   CONDITION ROW added underneath it when the trigger is picked - visible, editable, deletable, and a
   plain `if` on disk rather than a wrapper the compiler writes behind the row. The question reads
@@ -127,17 +135,17 @@
 	line becomes `call_deferred("add_child", …)` in place, and a Spawn A Copy row is swapped for
 	Spawn A Copy Safely, which takes the same parameters. The status line shows the line before and
 	the line after, and the change is one undo step.
-  - **A reference that may already be gone.** A node kept in a variable that this sheet also removes
+  - **A reference that may already be gone.** A node kept in a variable that this sheet also destroys
 	somewhere, reached into by a row that never asks. "Guard it" adds an Is Still Here condition to
 	the event - an ordinary row you can see, edit and delete, and a plain `if` on disk. The three
-	removal rows are never noted, because the compiler already writes their guard.
+	destroy rows are never noted, because the compiler already writes their guard.
   - **A scene that spawns itself.** Reported as an error, by reachability rather than by matching
 	text: only a spawn of this sheet's own scene that is reached unconditionally when a copy is
     created. A spawn of the same scene under a condition is a game, not a loop. It carries no repair,
     because the answer is a decision about the game.
-  - **Freed, and still booked.** A removal, and a later row in the same event that hangs a timer or a
-    tween on the very node it removed. "Move the removal last" puts it after everything that reads
-    it, and the note names removing after a delay as the other way.
+  - **Freed, and still booked.** A destroy, and a later row in the same event that hangs a timer or a
+    tween on the very node it destroyed. "Move the destroy last" puts it after everything that reads
+    it, and the note names destroying after a delay as the other way.
 - Each check is pinned twice - on a sheet that has the bug and on the sheet beside it that does not -
   so neither a check that only fires nor one that never does can pass. Run over this repository's own
   showcases and packs with no ceiling on it, the four report five things and all five are real:
@@ -155,7 +163,7 @@
 ### Spawning, documented
 
 - **Spawning Copies Of Scenes gained its other halves, and its worked examples now draw themselves.**
-  The spawn and the safe spawn, both removal chains people write by hand, the guard on a stored
+  The spawn and the safe spawn, both destroy chains people write by hand, the guard on a stored
   reference, the capped crowd and the crowd that announces its own end are compiled-shape examples
   hung from lifecycle handlers, so each one is a live figure in the reader's own theme with an Insert
   button rather than a picture of rows. Three subjects the page did not cover are on it: **many kinds
@@ -165,15 +173,15 @@
   to route and did not still reads as a plain scene, in the same list); and **the same sentences over
   the network**, which is the shipped `MultiplayerSpawner` family - Spawn A Scene, Despawn, On
   Spawned, On Despawned - and never a second spawning vocabulary. Which one to reach for is decided
-  by who has to see the copy, and Remove Now is named as the row not to mix into either.
+  by who has to see the copy, and Destroy Now is named as the row not to mix into either.
 - **The concept map answers what a reader arriving from another event-sheet editor searches for.**
   Create object, create object at a place, destroy, wait-or-fade-then-destroy, object count and on
   destroyed are six rows now rather than one line reading `Queue Free`, each naming the sentence, the
   code it ships as, and the thing about it that surprises people - the end-of-frame deletion, the
   persistent flag on a group, the policy living on the capped row.
-- **The reading list says what spawning and removing code opens as.** Your own name for the copy kept
+- **The reading list says what spawning and destroying code opens as.** Your own name for the copy kept
   through the three rows an instantiate becomes, the deferred add still saying it defers, the crowd
-  join and the count read as themselves, both removal one-liners as one row each (the fade only when
+  join and the count read as themselves, both destroy one-liners as one row each (the fade only when
   all three mentions name the same object, and never when its object is left implicit), and a guard
   written by hand staying the guard the sheet asked for, byte for byte.
 - **Front-page figures re-measured off this tree**: 1,755 native ACEs and 68 triggers, summed module
@@ -194,7 +202,7 @@
   crowd makes room" rather than "the oldest goes first", which was tree order wearing the word
   "oldest": under one parent that spawns by adding children they are the same member, and after a
   `move_child` or across two parents they are not. **How Many Alive** is deliberately still the
-  group's own size, and says so: a member removed this frame counts until the end of it. The
+  group's own size, and says so: a member destroyed this frame counts until the end of it. The
   make-room row is now RUN as well as read in the suite - three spawns in one frame against a
   stand-in tree that behaves the way Godot's does about `queue_free` - because a pin on the emitted
   text cannot see this class of bug at all.
@@ -202,9 +210,9 @@
 - **A crowd member that moved house no longer reads as the crowd emptying.** `node_removed` fires
   for ANY exit from the scene tree, and `Node.reparent()` is one of them: for the instant the signal
   is emitted the moved node is out of the tree, still in its groups and the only member the group
-  lists - so **On The Last One Removed** announced the wave cleared, opened the door and paid the
+  lists - so **On The Last One Destroyed** announced the wave cleared, opened the door and paid the
   reward while the enemy was alive under another parent. Its gate asks `is_queued_for_deletion()` as
-  well now, which is true for every removal this language writes (all three removal rows are a
+  well now, which is true for every destroy this language writes (all three destroy rows are a
   `queue_free`) and false for a move. The trade is stated on the row rather than hidden: a member
   taken out of the world without a `queue_free` of its own - its whole branch freed at once - is not
   seen by this trigger, and the shipped **On Group Emptied** condition is the row for that.
@@ -221,7 +229,7 @@
   too: a Path2D with no points gives the path's own place AND prints `No points in Curve2D.` on every
   evaluation, which the page had presented as a quiet degradation.
 
-- **The removal guard dropped the half of its rule that could not compile.** It also fired on a copy
+- **The destroy guard dropped the half of its rule that could not compile.** It also fired on a copy
   a spawn row named in a DIFFERENT event, and that name is a local: scoped to the handler it was
   written in, and under a condition to that `if`. Compiled and loaded, the emitted file answered
   `Identifier "boss" not declared in the current scope` - the guard line could not see the name any
@@ -232,11 +240,11 @@
   stand-down when the sheet already asked, and the byte-for-byte round trip of a hand-written guard
   are untouched, and the suite now LOADS the emitted script rather than only reading it.
 
-- **A removal inside a match case is guarded like the one beside it.** The structured switch row has
+- **A destroy inside a match case is guarded like the one beside it.** The structured switch row has
   its own emission site, and it had never been taught the rule - so one sheet, one event and one
   stored node reference compiled to `held.queue_free()` inside the case and
   `if is_instance_valid(held): held.queue_free()` one row above it, in the same file. The guarded arm
-  was the branch a state machine actually puts its removals in. Both sites ask the same function now,
+  was the branch a state machine actually puts its destroys in. Both sites ask the same function now,
   which is what "stated once and applied nowhere else" was supposed to mean; a timeline step, which
   compiles through the same helper, is covered by the same change.
 
