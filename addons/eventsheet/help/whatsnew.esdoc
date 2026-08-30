@@ -65,6 +65,37 @@ What changed in the build you have installed (v0.17.0), in the words the release
   shown on a buffer, the number the gate pins on a file, and the number a reader sees on the Include
   bar cannot drift apart.
 
+### The verbatim ledger: what the lines nothing claims look like
+
+- **A stays-code line has a SHAPE now.** The same statement with the author's own words taken out -
+  identifiers, numbers, strings and node paths blanked, keywords and punctuation kept - so
+  `pop.chain().tween_callback(queue_free)` reads as `name.name().name(name)` and
+  `enum State {CLOSED, OPENING, OPEN, LOCKED}` as `enum name{name,name,name,name}`. Spacing is not
+  part of a shape, so a project that writes `x = 1` and one that writes `x=1` land in one group
+  rather than two, and the name atom is the lifter's own - the suite holds the character test and the
+  recogniser grammar's identifier pattern against each other so neither can widen alone. It is not a
+  new analysis pass: it rides the reading that already happens, one character scan per line that the
+  reading already handed back as code.
+- **Project Doctor > Reading.** The one section that reports nothing wrong. It groups the project's
+  stays-code lines by the shape they share, ranks them commonest first, and opens each group's own
+  lines as doors into the files they are in - which is where a curated table would pay next, said as
+  a ledger rather than as a hunch. The head number is the project's reads-as percentage through the
+  same shared reader the head bar's chip and the corpus pins use, and it is said APART from the count
+  underneath it on purpose: the percentage answers the DRAWING question (how much of the file the
+  canvas shows as rows), the count answers the NAMING question (how many lines no vocabulary claims),
+  and a page printing only the first would publish a figure that is true and misleading at once.
+- **The one-off tail is counted, never expanded.** Lines whose shape nothing else in the project
+  repeats get one entry saying how many there are and nothing more. A line said once is nobody's
+  table, and it is meant to stay code - general purpose includes the right to just be code, and
+  listing two hundred of those would bury the eleven shapes that matter. The band scale law does the
+  rest: the commonest shapes are named, each opens three of its lines, and everything past that is a
+  count.
+- **The same census, headless, over any folder.**
+  `tools/reading_shape_census.gd` walks a directory (the showcases by default), runs the same reader,
+  and prints the ranked shapes as plain text with a sample line under each - the input for deciding
+  where the next curated table goes. Byte-stable across runs: the walk is sorted and the ranking
+  breaks ties on the shape's own text, never on the order a filesystem handed the files back.
+
 ### Collisions, written down
 
 - **A guide for what touches what.** It leads with the decision the rest of the subject hangs off -
