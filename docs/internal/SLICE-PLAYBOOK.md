@@ -120,7 +120,7 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | Dialog chrome | `titled_card`, `panel_section`, `form_row`, `form_box`, `margined`, `code_noted_option`, `autocomplete_combo` |
 | The line a row compiles to | `EventSheetCodeEcho` / `EventSheets.row_code_line(row)` - the emitter's own string, never a re-implementation |
 | A field that completes as you type | `EventSheetCompletionPopup.attach(field, field_kind, sheet_provider)` - one popup, one keyboard model (Tab/Enter accepts, Escape keeps what was typed). The names come from `EventSheets.completions_for(sheet, field_kind, prefix)`, and `field_kind` is the parameter's own hint |
-| To recognise a hand-written spelling | A TABLE ENTRY in `addons/eventforge/importer/lift_table.gd`, not a new matcher (section 5) |
+| To recognise a hand-written spelling | A TABLE ENTRY run by `addons/eventforge/importer/lift_table.gd`, not a new matcher (section 5). Derive it from the marked-up line with `EventForgeLiftExample.entry`, and spell any span you do write by hand with `EventForgeLiftGrammar` |
 | A picture of a UI change | A module under `tools/previews/`, rendered by `tools/render_previews.gd` in one boot |
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |
 | A non-ACE row kind | The Custom Block API (`registration/block_kind.gd`), see the block guide |
@@ -174,6 +174,39 @@ The stored spelling is the matched line with each value spliced out for its slot
 them back is the exact inverse: everything outside a param capture (a receiver prefix, an `&` before
 a quoted name, the author's own spacing) rides along verbatim. Keep values OUT of the pattern's
 scenery and the byte gate takes care of itself.
+
+**Do not write the regex by hand.** The value spans repeat across every family, and they are one
+vocabulary in `lift_grammar.gd` (`EventForgeLiftGrammar`): `receiver` (the optional `$Torch.` in
+front, matching as a capture and re-emitting as `{target.}`), `quoted_name` (a name in either
+quoting, where the `&` is scenery), `quoted_literal` (the whole literal as the value), `word`,
+`argument` (one argument of a call) and `expression` (the wide one - never two in a pattern). The
+separator between arguments is `SEPARATOR`, which matches the spacing rather than demanding it, and
+`escaped_run` turns a run of the author's own text into a pattern that means itself.
+
+**Better still, hand over the LINE.** `EventForgeLiftExample.entry(id, ace_id, example)` derives the
+whole entry from the line as a person writes it with the value spans marked - the anchored pattern,
+the named captures, the shape, the samples, and a blank default for every span that may be left
+unwritten:
+
+```gdscript
+EventForgeLiftExample.entry("remove_after_timer", "DestroyAfterSeconds",
+	"get_tree().create_timer([[seconds|argument: 2.0]]).timeout.connect("
+	+ "[[object|receiver: $Enemy]].queue_free)",
+	{"guard": Callable(Family, "_is_a_node")})
+```
+
+A span is `[[name: text]]`, or `[[name|fragment: text]]` to say which fragment it is; unnamed, it is
+an `expression`. The `text` is what a real line would have there and doubles as the sample the
+harness generates its fixture from. A receiver span is written without its dot, and the dot after it
+is taken into the fragment. Two spellings are two examples - a choice inside one example is the one
+thing this cannot check, so it refuses rather than guesses, and every refusal comes back as an entry
+carrying the sentence that says why (`EventForgeLiftTable.REFUSAL_KEY`), which the validator turns
+into a failing suite naming your entry.
+
+Every entry, hand-written or derived, is asked the same five questions by `validate()`: the pattern
+anchors to the whole statement, every group in it is named or non-capturing, every slot the shape
+spells is backed by a capture, every param is answered by the shape or given a default, and the
+entry's fixture line is its own rather than one an earlier entry in the family already claims.
 
 What does not belong in a table: a spelling that is several statements only meaning something
 together, or one that has to read the scene to know what it is looking at. Those stay hand-written

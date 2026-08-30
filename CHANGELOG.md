@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### One grammar for reading somebody else's code
+
+- **The capture spans are a vocabulary now, not a copied regex.** Opening a hand-written script as a
+  sheet means recognising the spellings people used, and every recogniser table in the plugin kept
+  re-spelling the same handful of spans: a receiver that may or may not be written, a message name in
+  either of the two quotings Godot accepts, a whole quoted literal, one argument of a call, the
+  expression that runs to the end of the line, and one bare identifier. Those six are one shared
+  grammar, each pinned on a table of what it accepts and what it refuses, and each carrying both of
+  its halves - the pattern it matches AND the slot it re-emits as - so a span cannot be widened
+  without its shape following. The messaging family, whose spellings are the best-tested in the set,
+  is migrated onto it as the proof: same bytes, same rows, one place that says what a name is.
+- **A recogniser can be written as the line itself.** Hand over the line as a person writes it with
+  the value spans marked - `create_timer([[seconds|argument: 2.0]]).timeout.connect(...)` - and the
+  whole table entry is derived: the pattern anchored at both ends with everything outside a mark
+  escaped literally, the captures named after the marks, the canonical spelling with slots where the
+  marks were, and the sample values the test harness generates its fixture line from. Two spellings
+  are two examples, never one example with a choice in it. And it never guesses: a span with no name,
+  a name used twice, a fragment word that does not exist, text that is not the fragment it claims to
+  be, two spans wide enough to swallow each other - each comes back as a refusal carrying the
+  sentence that says why, and a table that asked for something impossible fails the suite naming
+  itself instead of shipping a spelling that never matches.
+- **Five questions asked of every entry, old and new.** Does the pattern anchor to the whole
+  statement, is every group in it named, is every value the canonical spelling shows backed by a
+  capture, is every value the row shows answered by the spelling or given a default, and is the
+  entry's own fixture line its own rather than one an earlier entry already claims. A malformed entry
+  fails the suite by name, with the sentence that says which of the five it got wrong.
+- **Two families that were being tested by nobody now are.** The landing-check spellings and the
+  filtered-overlap questions kept their entries under a name the harness does not scan for, so eight
+  entries were shipping without the generated fixture and the byte round-trip every other entry gets.
+  They are found now, and they pass.
+
 ### Collisions, written down
 
 - **A guide for what touches what.** It leads with the decision the rest of the subject hangs off -
