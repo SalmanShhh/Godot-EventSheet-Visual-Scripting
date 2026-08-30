@@ -49,6 +49,13 @@ static func match_condition(line: String) -> Dictionary:
 	return EventForgeLiftTable.match_line(condition_entries(), text)
 
 
+## Every entry, for the harness and the validator. This family's spellings are all conditions, so it
+## is the same list under the name the scan looks for - an entry that exists in one place and is
+## tested from another is the one way an entry gets shipped untested.
+static func lift_entries() -> Array[Dictionary]:
+	return condition_entries()
+
+
 ## The two spellings, built once for the life of the session: these run on every statement of every
 ## opened file, and the table compiles each pattern once.
 static func condition_entries() -> Array[Dictionary]:
