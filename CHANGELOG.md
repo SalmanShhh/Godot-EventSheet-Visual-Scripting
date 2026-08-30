@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### The sheet goes quiet about what is wrong
+
+- **Every finding now speaks from two places, and neither is inside the sheet.** The networking,
+  lighting, effects, spawning and performance findings used to hang a note row under the event they
+  were about, so a sheet with three things worth saying grew three rows nobody wrote. All five
+  families now do what the collision findings already did: the affected row wears the quiet amber
+  state - a faint warning tint over the row and a thin inset just inside its edge - and that is the
+  whole of the sheet's signal. The words and the finding's one door live in the Doctor's triage
+  inbox and in the help strip under the row once it is selected, and the strip's button runs the
+  very dock operation the inbox chip runs. Anchors are unchanged: a value's finding sits on the line
+  that declares it and a message's on its function head, in the same amber. The optimiser's receipt
+  ("did that fix work") still reads under its row while the costs lens is on, because a receipt is
+  an answer somebody asked for, not a complaint.
+- **The Doctor's Collision Layers section reaches the rows.** Its two notes - a layer the project
+  does not name, and a number that is not a layer at all - were filed against whole script files.
+  The same wording, with the same gates, is now also asked of the lines each sheet row emits, so the
+  one row that says the number wears the amber state and its strip says the section's own sentence.
+  No door on these: naming a layer is a Project Settings decision, and the strip does not pretend
+  otherwise.
+
 ### One grammar for reading somebody else's code
 
 - **The capture spans are a vocabulary now, not a copied regex.** Opening a hand-written script as a
