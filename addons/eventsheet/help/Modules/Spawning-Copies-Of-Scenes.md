@@ -29,15 +29,15 @@ text and are unchanged. They are still the answer when the path is built at runt
 for the scene the sheet already declares.
 
 Four more rows take a copy back out of the world again, because the other half of spawning is
-removing, and the mistakes live there:
+destroying, and the mistakes live there:
 
-- **Remove Now** - `queue_free()`, said plainly, with the end-of-frame timing on the row.
-- **Remove After Seconds** - a scene-tree timer with the free hung off it.
-- **Fade Out Then Remove** - a tween, a wait, and the removal after it.
+- **Destroy Now** - `queue_free()`, said plainly, with the end-of-frame timing on the row.
+- **Destroy After Seconds** - a scene-tree timer with the free hung off it.
+- **Fade Out Then Destroy** - a tween, a wait, and the destroy after it.
 - **Is Still Here** - the question, for a name the sheet held on to.
 
-A node that wants to hear about its OWN removal uses the shipped **On Exit Tree** trigger, which
-fires as it leaves the tree. That is a lifecycle handler rather than a removal verb, so it stays
+A node that wants to hear about its OWN destruction uses the shipped **On Exit Tree** trigger, which
+fires as it leaves the tree. That is a lifecycle handler rather than a destroy verb, so it stays
 where it is.
 
 Six more say the copies in the plural, because a game that spawns one thing soon spawns twenty:
@@ -47,14 +47,14 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 - **Spawn A Copy, The First Makes Room** and **Spawn A Copy Unless The Crowd Is Full** - the cap,
   with what happens at the cap written into the row's own sentence.
 - **How Many Alive** - the group's size, in any field that takes a number.
-- **On The Last One Removed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
+- **On The Last One Destroyed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
   and the question it puts in the sheet underneath itself.
 
 ## Table of Contents
 
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
-3. [Removing what you spawned](#removing-what-you-spawned)
+3. [Destroying what you spawned](#destroying-what-you-spawned)
 4. [The crowd](#the-crowd)
 5. [Many kinds from one row - the kinds table](#many-kinds-from-one-row---the-kinds-table)
 6. [Reusing copies instead of making them - routing through a pool](#reusing-copies-instead-of-making-them---routing-through-a-pool)
@@ -152,9 +152,9 @@ func _on_body_entered(body: Node2D) -> void:
 	self.call_deferred("add_child", new_spark)
 ```
 
-## Removing what you spawned
+## Destroying what you spawned
 
-Removing a node in Godot is `queue_free()`. The three removal rows are that call with the wait each
+Destroying a node in Godot is `queue_free()`. The three destroy rows are that call with the wait each
 one does written out beside it, so the only thing you ever have to decide is WHEN.
 
 ```
@@ -164,21 +164,21 @@ get_tree().create_timer(2.0).timeout.connect(enemy.queue_free)  # in two seconds
 
 **"Now" means the end of this frame, not this line.** `queue_free()` marks the node and Godot
 deletes it when the frame finishes. The rows after it in the same event still run, and the node is
-still there while they do. That is not a quirk to work around - it is why a sheet can remove a thing
+still there while they do. That is not a quirk to work around - it is why a sheet can destroy a thing
 and then read its position on the very next row without crashing.
 
 **The timer row is safe if the thing is already gone.** Godot drops a signal connection along with
-the object at the far end of it, so something else removing the node first takes the pending free
+the object at the far end of it, so something else destroying the node first takes the pending free
 with it and the timer fires at nothing.
 
 **The fade row waits, so the event waits.** It walks `modulate:a` down to nothing with a tween,
-awaits the tween, and then removes. Because that wait is a real gap in game time, the row asks
-whether the object is still there before it removes it, and the line that asks is part of the row's
+awaits the tween, and then destroys. Because that wait is a real gap in game time, the row asks
+whether the object is still there before it destroys it, and the line that asks is part of the row's
 own code rather than something added quietly.
 
 **The freed object is still there for the rest of the line's own frame.** That is the one lesson
-worth reading twice, because it is the opposite of what "remove now" sounds like. A row after the
-removal that reads the object still works. A row after it that expects the object to be gone does
+worth reading twice, because it is the opposite of what "destroy now" sounds like. A row after the
+destroy that reads the object still works. A row after it that expects the object to be gone does
 not, and no error says so.
 
 <!-- caption: A bullet that cleans itself up: the free is hung off a scene-tree timer, so nothing blocks and nothing counts down -->
@@ -191,9 +191,9 @@ func _ready() -> void:
 ```
 
 The fade spelling people write by hand is one statement too, and it opens as the Fade Out Then
-Remove row with the author's own object kept in it.
+Destroy row with the author's own object kept in it.
 
-<!-- caption: The fade-then-remove one-liner: the tween walks the alpha down and the free is hung off its finish -->
+<!-- caption: The fade-then-destroy one-liner: the tween walks the alpha down and the free is hung off its finish -->
 ```gdscript
 extends Node2D
 
@@ -208,7 +208,7 @@ func _on_died() -> void:
 
 A name that outlives the line that set it can name nothing at all by the time a later row says it.
 There is exactly one of those in a sheet: a **variable typed as a node**, which survives from frame
-to frame with nothing about this event having put it there. When a removal row's object is one, the
+to frame with nothing about this event having put it there. When a destroy row's object is one, the
 compiler writes the check Godot's own answer calls for:
 
 ```
@@ -225,7 +225,7 @@ would rather not have it.
 condition on the event and the compiler writes nothing extra - your question is the one that gets
 written, once. That is also what makes a file guarded by hand open and save back byte for byte.
 
-<!-- caption: A stored node removed from a later event: the guard is a line in the file, not a wrapper around the row -->
+<!-- caption: A stored node destroyed from a later event: the guard is a line in the file, not a wrapper around the row -->
 ```gdscript
 extends Node2D
 
@@ -238,10 +238,10 @@ func _on_timeout() -> void:
 ```
 
 **A copy named in another event is not guarded either, and the reason is scope.** The name a spawn
-row gives a copy is a local variable in the handler that row compiled into. A removal row in a
+row gives a copy is a local variable in the handler that row compiled into. A destroy row in a
 different event saying that name does not compile at all - Godot answers `Identifier "boss" not
 declared in the current scope` - and wrapping it in a question that cannot see the name either would
-only add a second line that does not compile, echoed on the row as protection. Keep the removal in
+only add a second line that does not compile, echoed on the row as protection. Keep the destroy in
 the event that made the copy, or hold the copy in a variable typed as a node, which is the case the
 guard is for.
 
@@ -277,7 +277,7 @@ the group as it leaves the tree.
 "At most twelve alive" is two different games depending on what happens at twelve, so there is a row
 per answer and each says which it is in its own sentence.
 
-**Spawn A Copy, The First Makes Room** removes members to make room and then spawns, so the new copy
+**Spawn A Copy, The First Makes Room** destroys members to make room and then spawns, so the new copy
 always appears:
 
 ```
@@ -288,7 +288,7 @@ var new_mark = Mark.instantiate()
 ```
 
 The crowd is read once into a local, because the row needs both the size and the members it is about
-to remove. `maxi(cap, 1)` is what makes `pop_front()` always safe: the loop cannot run on an empty
+to destroy. `maxi(cap, 1)` is what makes `pop_front()` always safe: the loop cannot run on an empty
 crowd, whatever number you typed.
 
 **The read skips the members that are already leaving, and that is the whole of why the cap holds.**
@@ -300,7 +300,7 @@ what the row says and a different member makes room each time. It is a `while` r
 for the same reason: whatever the crowd was when the line was reached, it fits the cap when the line
 has run.
 
-The members removed are taken from the front of the crowd, which is the order Godot lists a group
+The members destroyed are taken from the front of the crowd, which is the order Godot lists a group
 in. Under a parent that spawns by adding children that is the earliest one still alive; after a
 `move_child`, or with copies spread over two parents, it is the tree's order rather than the spawn's.
 This is what a bullet, a footstep or a skid mark wants.
@@ -340,7 +340,7 @@ func _physics_process(delta: float) -> void:
 **How Many Alive** is the group's own size, `get_tree().get_node_count_in_group("enemies")`. It is an
 expression, so it goes in any field: a comparison, a HUD label, a difficulty curve.
 
-**On The Last One Removed** runs the moment a crowd's last member leaves the world, once per
+**On The Last One Destroyed** runs the moment a crowd's last member leaves the world, once per
 emptying. It is the scene tree's own node-removed signal, and the question that narrows it to this
 crowd is a **condition row you can see**:
 
@@ -362,7 +362,7 @@ groups at that moment**, which is why "the crowd is down to just the one that is
 for any exit from the tree, and `Node.reparent()` is one: for the instant the signal is emitted the
 moved node is out of the tree, still in its groups, and the only member the group lists. Without
 `is_queued_for_deletion()` the event would open the door and pay the reward while the enemy was
-alive under another parent. It is true for every removal this language writes - all three removal
+alive under another parent. It is true for every destroy this language writes - all three destroy
 rows are a `queue_free` - and false for a move. A member taken out of the world some other way, such
 as its whole branch being freed at once, is not seen by this trigger; On Group Emptied below is the
 row for that.
@@ -436,7 +436,7 @@ not of learning a second way to spawn:
 
 - The **Spawn** expression hands out a ready copy - reusing a free one, or making a new one when the
   pool has none - so it goes in the field a Make A Copy row would have filled.
-- The **Despawn** action hands the copy back instead of freeing it, so it replaces the Remove Now
+- The **Despawn** action hands the copy back instead of freeing it, so it replaces the Destroy Now
   row. Everything between the two is unchanged: the same property rows, the same crowd row, the same
   placement expression.
 
@@ -455,7 +455,7 @@ way to find the one you missed.
 
 Two things do not change when you pool, and both are the point:
 
-- **A pooled copy is still a node in a group.** How Many Alive, On The Last One Removed and every
+- **A pooled copy is still a node in a group.** How Many Alive, On The Last One Destroyed and every
   crowd row keep working, because they ask the tree rather than the pool.
 - **A despawned copy is not a freed copy.** It is hidden with its processing off, so `_ready` does
   not run again and anything the copy remembered is still there. Reset what a fresh copy would have
@@ -491,9 +491,9 @@ Which one to reach for is decided by who has to see the copy, and nothing else:
   somebody. Spawn A Scene, run on the host, with the scene in that spawner's own list.
 
 The rest of this page still applies to both. A networked copy is an ordinary node once it lands, so
-it can join a crowd, be counted by How Many Alive, and be the last one whose removal opens the door.
-The one row not to mix in is Remove Now on a copy the spawner owns: **Despawn** is the removal that
-travels, and freeing the copy on one peer alone leaves the others holding it.
+it can join a crowd, be counted by How Many Alive, and be the last one whose destruction opens the
+door. The one row not to mix in is Destroy Now on a copy the spawner owns: **Despawn** is the
+removal that travels, and freeing the copy on one peer alone leaves the others holding it.
 
 ## What the sheet says it spawns
 
@@ -546,9 +546,9 @@ The status line shows the line before and the line after, and the whole thing is
 
 **A reference that may already be gone.** A node kept in a variable outlives the frame that put it
 there, and Godot's answer is `is_instance_valid`. The note appears on a stored node this sheet also
-removes somewhere - the sheet's own word that the reference can really be dangling - and only where
+destroys somewhere - the sheet's own word that the reference can really be dangling - and only where
 nothing above the row has already asked. "Guard it" adds an Is Still Here condition to the event: an
-ordinary condition row you can see, edit and delete, and a plain `if` on disk. The three removal
+ordinary condition row you can see, edit and delete, and a plain `if` on disk. The three destroy
 rows are never noted, because the compiler already writes the guard for them.
 
 **A scene that spawns itself.** A scene whose own sheet spawns that same scene when a copy is
@@ -557,10 +557,10 @@ than an error, so there is no line to point at afterwards. It is reported as an 
 repair, because the answer is a decision about the game. A spawn of the same scene under a condition
 - a boss that splits when it is hit - is a game, and is never reported.
 
-**Freed, and still booked.** A row that removes a node and a later row in the same event that hangs a
-timer or a tween on it are in the wrong order: the removal is marked at once, and the wait is then
-booked against something on its way out. "Move the removal last" puts it after everything that reads
-it; removing after a delay instead is the other way, and the note says so.
+**Freed, and still booked.** A row that destroys a node and a later row in the same event that hangs
+a timer or a tween on it are in the wrong order: the destroy is marked at once, and the wait is then
+booked against something on its way out. "Move the destroy last" puts it after everything that reads
+it; destroying after a delay instead is the other way, and the note says so.
 
 ## Reference tables
 
@@ -573,15 +573,15 @@ it; removing after a delay instead is the other way, and the note says so.
 | Random Place Along Path | Gives a random point along a Path2D's curve. | `{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
 | Random Place Inside Shape | Gives a random point inside a collision shape. | `{shape}.to_global(…)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
-| Remove Now | Removes the object at the end of this frame. | `{object}.queue_free()` |
-| Remove After Seconds | Removes the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
-| Fade Out Then Remove | Fades the object out, waits, then removes it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
-| Is Still Here | True while the object has not been removed. | `is_instance_valid({object})` |
+| Destroy Now | Destroys the object at the end of this frame. | `{object}.queue_free()` |
+| Destroy After Seconds | Destroys the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
+| Fade Out Then Destroy | Fades the object out, waits, then destroys it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
+| Is Still Here | True while the object has not been destroyed. | `is_instance_valid({object})` |
 | Spawn A Copy Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy, The First Makes Room | Makes room by removing members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
+| Spawn A Copy, The First Makes Room | Makes room by destroying members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
 | Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
-| On The Last One Removed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
+| On The Last One Destroyed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
 | Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 
 ## Use cases
@@ -645,28 +645,28 @@ the spawner is - a muzzle flash, a shield, a shadow that belongs on the spot.
 **17. A trail of copies.** Spawn a fading mark every few frames at `global_position`, under a Marks
 layer node so the trail is easy to clear later.
 
-**18. A bullet that cleans itself up.** One Remove After Seconds row on `self` in the bullet's own
+**18. A bullet that cleans itself up.** One Destroy After Seconds row on `self` in the bullet's own
 On Ready event. No lifetime counter, no per-frame check, and nothing left behind if it hits first.
 
-**19. A corpse that fades.** Fade Out Then Remove on `self` in the death event, over half a second.
+**19. A corpse that fades.** Fade Out Then Destroy on `self` in the death event, over half a second.
 The event waits for the fade, so anything after it runs once the body is gone.
 
-**20. Removing a copy from a later event.** Spawn the boss in one event and store nothing; say its
-name in a Remove Now row in another and the guard appears on the row, because that name has had a
+**20. Destroying a copy from a later event.** Spawn the boss in one event and store nothing; say its
+name in a Destroy Now row in another and the guard appears on the row, because that name has had a
 frame to stop meaning anything.
 
 **21. Clearing a stored reference.** A sheet variable typed `Node2D` holding the current target: a
-Remove Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
+Destroy Now row on it compiles inside the guard, and a Set Variable row to `null` beside it keeps the
 variable honest afterwards.
 
 **22. A wave you can hear finish.** Spawn the wave with Spawn A Copy Into The Crowd, then one On The
-Last One Removed event on the same crowd opens the door, pays the reward and starts the next wave.
+Last One Destroyed event on the same crowd opens the door, pays the reward and starts the next wave.
 Nothing counts the enemies down; the trigger is the last one leaving.
 
 **23. A skid-mark trail that never grows.** Spawn A Copy, The First Makes Room with a cap of 20 into
-a `marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
+a `marks` crowd. The twenty-first mark destroys the first, so the trail is always the last twenty and
 the tree never fills - including on a frame that lays down several marks at once, because the row
-skips the marks already on their way out rather than removing one of them twice.
+skips the marks already on their way out rather than destroying one of them twice.
 
 **24. A spawner that respects a limit.** Spawn A Copy Unless The Crowd Is Full with a cap of 12. A
 timer that fires every second simply does nothing while twelve are alive, and starts again when one
@@ -679,7 +679,7 @@ event the rest of the HUD uses. It reads the group, so it can never disagree wit
 spawn a tougher kind while the crowd is thin.
 
 **27. A crate you can clear.** Tag every breakable into a `crates` crowd as it spawns, and let On The
-Last One Removed on that crowd drop the key.
+Last One Destroyed on that crowd drop the key.
 
 ### Other use cases
 
@@ -725,9 +725,9 @@ Last One Removed on that crowd drop the key.
 - **Spawning every tick fills the tree fast.** Put a cooldown, a counter or a Once At A Time condition
   above the row - a spawn is cheap, ten thousand of them are not.
 - **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody
-  freed; a Remove Now row on the copy's own death trigger is usually the whole answer.
-- **A removed node is still there for the rest of the frame.** `queue_free()` queues; it does not
-  delete. A row after the removal that reads the object still works, and a check that expects it to
+  freed; a Destroy Now row on the copy's own death trigger is usually the whole answer.
+- **A destroyed node is still there for the rest of the frame.** `queue_free()` queues; it does not
+  delete. A row after the destroy that reads the object still works, and a check that expects it to
   be gone in the same frame does not.
 - **Freeing the same node twice is SILENT.** A second `queue_free()` on one node in one frame prints
   nothing at all - no error, no warning - and the node simply dies once. (That is `queue_free`; a
@@ -737,7 +737,7 @@ Last One Removed on that crowd drop the key.
   that answer `is_queued_for_deletion()`, or let the guard do it by naming a stored reference rather
   than a path.
 - **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
-  you want the event to carry straight on, use Remove After Seconds instead.
+  you want the event to carry straight on, use Destroy After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
   CanvasItem. A plain Node has no transparency to walk.
 - **A crowd is a plain Godot group.** Anything else in the project that uses groups sees the same
@@ -753,21 +753,22 @@ Last One Removed on that crowd drop the key.
   adding children that is the earliest one alive. Reparent members yourself, or spread them over two
   parents, and the order is the tree's, not the spawn's.
 - **The cap rows ignore members already on their way out; How Many Alive does not.** A member is in
-  its group until the end of the frame it was removed in, so the count can read one higher than the
+  its group until the end of the frame it was destroyed in, so the count can read one higher than the
   cap for the rest of that frame. That is queue_free, not a miscount - and it is exactly why the cap
   rows skip those members instead of counting or freeing them a second time.
 - **The skipped spawn leaves the name holding nothing.** Rows after Spawn A Copy Unless The Crowd Is
   Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
-- **On The Last One Removed never fires for a crowd that was already empty.** It answers a member
-  leaving, so a crowd nothing ever joined has no last member to remove.
+- **On The Last One Destroyed never fires for a crowd that was already empty.** It answers a member
+  leaving, so a crowd nothing ever joined has no last member to destroy.
 - **Moving the last member to another parent is not the crowd emptying.** `Node.reparent()` leaves
   the tree, so the signal fires, but the member is alive - the gate asks whether it is really being
-  removed as well. The other side of that: a member taken out without a `queue_free` of its own, such
-  as its whole branch being freed at once, is not seen by this trigger. Use On Group Emptied there.
+  destroyed as well. The other side of that: a member taken out without a `queue_free` of its own,
+  such as its whole branch being freed at once, is not seen by this trigger. Use On Group Emptied
+  there.
 - **Do not delete the gate condition under that trigger unless you mean it.** Without it the event
   runs for every node removed anywhere in the game.
 - **A guard you did not ask for is telling you something.** It appears only on a name that can
-  already be gone. If you would rather not see it, keep the removal in the event that made the copy,
+  already be gone. If you would rather not see it, keep the destroy in the event that made the copy,
   or ask Is Still Here yourself.
 - **A kinds table is one row's worth of choice, not a place to hide setup.** If a kind needs its own
   rows after the spawn, give it its own event. A dictionary that has grown a branch inside it has
@@ -778,7 +779,7 @@ Last One Removed on that crowd drop the key.
 - **A despawned copy remembers everything.** Pooling replaces the free, not the reset: health,
   alpha, velocity and any timer the copy was running are exactly as it left them. Set what a fresh
   copy would have had on the rows straight after the pool's Spawn.
-- **Do not free a pooled copy.** Remove Now on a node that came out of a pool takes it out of the
+- **Do not free a pooled copy.** Destroy Now on a node that came out of a pool takes it out of the
   pool's own accounting, and the pool then hands out a freed node. Despawn is its removal.
-- **Do not Remove Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
+- **Do not Destroy Now a copy a MultiplayerSpawner made.** It goes on this peer and stays on every
   other one. Despawn is the removal that travels.

@@ -1021,17 +1021,17 @@ to the function it names, the same jump the Outline panel makes.
   band a picked row would have.
 
 - **The two removal chains people write by hand are one row each.**
-  `get_tree().create_timer(2.0).timeout.connect(queue_free)` reads `Remove After Seconds`, in both
+  `get_tree().create_timer(2.0).timeout.connect(queue_free)` reads `Destroy After Seconds`, in both
   spellings - the bare one on a node removing itself, and `connect($Enemy.queue_free)` on a node
   removing another. `$Ghost.create_tween().tween_property($Ghost, "modulate:a", 0.0,
-  0.5).finished.connect($Ghost.queue_free)` reads `Fade Out Then Remove`, and only when all three
+  0.5).finished.connect($Ghost.queue_free)` reads `Fade Out Then Destroy`, and only when all three
   mentions name the same object: a tween started on one node that fades a second and frees a third is
   somebody else's line and keeps the reading it had. A fade whose object is left implicit stays the
   plain statement it was, because the row could not reproduce that spelling byte for byte. `0` and
   `0.0` are both matched as the fade's target and each saves back as itself.
 
 - **A guard you wrote by hand stays your guard.** `if is_instance_valid(boss): boss.queue_free()`
-  opens as a Remove Now row inside the question you asked, and saves back byte for byte - the
+  opens as a Destroy Now row inside the question you asked, and saves back byte for byte - the
   compiler writes nothing extra, because the sheet has already asked. That is the same rule read from
   the other side: a removal whose object is a variable typed as a node compiles inside
   `is_instance_valid`, and the row echoes the exact line the file holds at its right edge. `self`,
