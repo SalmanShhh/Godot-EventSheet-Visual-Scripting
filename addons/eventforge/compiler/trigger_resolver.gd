@@ -8,6 +8,11 @@
 class_name TriggerResolver
 extends RefCounted
 
+## The four group-filtered touch triggers, read through the one file every reader of them shares.
+## Loaded by path rather than by class name so this resolver stays usable before the editor's class
+## cache has seen the new script.
+const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
+
 
 ## The trigger id a TOP-LEVEL event actually compiles as. A blank event - no trigger picked - means
 ## in an event sheet exactly what it looks like: it runs every tick, so it compiles as the every-tick
@@ -55,6 +60,18 @@ static func get_trigger_key(event: EventRow) -> String:
 		# that single function for every notification, and two same-named functions do not parse.
 		# Which notification an event wants rides on its own id and becomes a case inside the handler.
 		trigger_id = "OnNotification"
+	if CollisionFilters.is_filtered(trigger_id):
+		# Two filters on the same signal are two FUNCTIONS, not two halves of one: each opens with
+		# its own early return, and a single function cannot hold two of those. The group is
+		# therefore part of the key, exactly as an animation event's name is.
+		#
+		# The SIGNAL replaces the id in the key, not the id itself: "On collision with" and "On
+		# overlap with" are one engine signal read from the blocking and the noticing side, so two
+		# such rows on one node and one group are two halves of ONE handler. Keying them apart would
+		# ask for the same function name twice, which does not parse.
+		return "%s::%s::%s::%s" % [provider_id,
+			str((CollisionFilters.FILTERED_TRIGGERS[trigger_id] as Dictionary)["stem"]),
+			event.trigger_source_path, CollisionFilters.group_of(event)]
 	return "%s::%s::%s" % [provider_id, trigger_id, event.trigger_source_path]
 
 
@@ -321,6 +338,17 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_body_exited" % source_token, "body: Node", "body_exited", source_path)
 		"OnAreaExited":
 			return _signal_backed("_on%s_area_exited" % source_token, "area: Area2D", "area_exited", source_path)
+		"OnCollisionWithGroup", "OnCollisionWithGroup3D", "OnOverlapWithGroup", "OnOverlapWithGroup3D", \
+				"OnStoppedCollidingWithGroup", "OnStoppedCollidingWithGroup3D", \
+				"OnOverlapEndedWithGroup", "OnOverlapEndedWithGroup3D":
+			# The same two engine signals the bare triggers above use. What makes these filtered is not
+			# the connection but the FIRST LINE of the handler - an early return the compiler writes
+			# from the group on the row - so the group rides in the handler's name, and two filters on
+			# one signal end up in two functions instead of one that cannot say both.
+			var filter: Dictionary = CollisionFilters.FILTERED_TRIGGERS[effective_trigger_id(event)]
+			return _signal_backed("_on%s_%s%s" % [source_token, str(filter["stem"]),
+				CollisionFilters.handler_suffix(CollisionFilters.group_of(event))],
+				"body: Node", str(filter["signal"]), source_path)
 		"OnTimeout":
 			return _signal_backed("_on%s_timeout" % source_token, "", "timeout", source_path)
 		"OnAnimationFinished":

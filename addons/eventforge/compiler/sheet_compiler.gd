@@ -19,6 +19,10 @@
 class_name SheetCompiler
 extends RefCounted
 
+## The four group-filtered touch triggers. Loaded by path rather than by class name so the
+## compiler stays usable before the editor's class cache has seen the script.
+const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
+
 const VERSION: String = "0.17.0"
 
 ## The name of the shared aimed-floor helper the cursor and floor expressions call. One
@@ -1075,13 +1079,18 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		lines.append("func %s() -> %s:" % [function_name, returns])
 	else:
 		lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
+	# The filter's own line, first in the handler: an early return for anything not in the group.
+	# Kept verbatim from the source on this path, which is what lets an opened handler come back
+	# byte-for-byte with the author's own spelling of it.
+	var handler_body_start: int = lines.size()
+	for guard_line: String in CollisionFilters.guard_lines(events[0] as EventRow, args):
+		lines.append(guard_line)
 	if _emit_notification_match(events, lines, source_map, result["warnings"]):
 		return
 	if _emit_menu_match(events, lines, source_map, result["warnings"]):
 		return
 	if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
 		return
-	var handler_body_start: int = lines.size()
 	_emit_event_body(events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, handler_body_start):
 		lines.append("\tpass")
@@ -1885,6 +1894,13 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			lines.append("func %s(%s) -> %s:" % [function_name, args, returns])
 		var had_body: bool = false
 		var handler_body_start: int = lines.size()
+		# The filter's own line, first in the handler: an early return for anything that is not in
+		# the group this event named. It is emitted as visible code because it IS the code - the
+		# line a reader would have written, the line the row's echo shows, and the line an opened
+		# file is recognised back by. Nothing is emitted for an unfiltered trigger.
+		for guard_line: String in CollisionFilters.guard_lines(events[0] as EventRow, args):
+			lines.append(guard_line)
+			had_body = true
 		if function_name == "_ready" and _live_values_receiver_pending:
 			# Edit-back channel: the Live Values window's edits arrive as
 			# "eventsheets:set_value" messages (debug sessions only; one receiver per
