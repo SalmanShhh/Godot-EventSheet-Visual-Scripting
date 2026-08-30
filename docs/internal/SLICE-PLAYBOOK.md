@@ -121,6 +121,8 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | The line a row compiles to | `EventSheetCodeEcho` / `EventSheets.row_code_line(row)` - the emitter's own string, never a re-implementation |
 | A field that completes as you type | `EventSheetCompletionPopup.attach(field, field_kind, sheet_provider)` - one popup, one keyboard model (Tab/Enter accepts, Escape keeps what was typed). The names come from `EventSheets.completions_for(sheet, field_kind, prefix)`, and `field_kind` is the parameter's own hint |
 | To recognise a hand-written spelling | A TABLE ENTRY run by `addons/eventforge/importer/lift_table.gd`, not a new matcher (section 5). Derive it from the marked-up line with `EventForgeLiftExample.entry`, and spell any span you do write by hand with `EventForgeLiftGrammar` |
+| To try a spelling before writing it | **Tools > Lift Workbench** - paste the line, see what claims it, what it opens as and what it saves back as, and draft an entry from it (section 5) |
+| Whole real files to measure a reading on | `tests/corpus/`, pinned by `corpus_test.gd` as three numbers per file (section 5) |
 | A picture of a UI change | A module under `tools/previews/`, rendered by `tools/render_previews.gd` in one boot |
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |
 | A non-ACE row kind | The Custom Block API (`registration/block_kind.gd`), see the block guide |
@@ -211,6 +213,58 @@ entry's fixture line is its own rather than one an earlier entry in the family a
 What does not belong in a table: a spelling that is several statements only meaning something
 together, or one that has to read the scene to know what it is looking at. Those stay hand-written
 matchers, and they say so in a comment.
+
+### The bench it is written on
+
+**Tools > Lift Workbench** is that loop in one window instead of in a scratch fixture, a test run and
+a diff by hand. Paste hand-written GDScript into its buffer and it answers three questions as you
+type, all three through `EventSheetLiftReading` so it can never tell you something the corpus gate
+and the head bar's chip would not:
+
+| The question | What it shows |
+|---|---|
+| What claims each line | The lift family and entry id that recognised it, the plainer name of the row it otherwise arrived as, or "stays code" - drawn differently on purpose, because a named entry and a general reading are not the same claim |
+| What it opens as | The real rows, drawn by the real viewport, read-only. Not a mock-up of the canvas: the canvas |
+| What it saves back as | The re-emission, byte for byte. Green when the buffer comes back unchanged, red with the exact two lines when it does not, because a trailing space is the whole bug and "they differ" is not a bug report |
+
+The buffer is the whole scope - it imports and compiles what is in the box and never the project -
+and the refresh is debounced, so the window costs nothing to leave open and nothing at all until it
+is first asked for.
+
+**Draft an example** takes an unclaimed line straight to the by-example form pre-filled with it: mark
+the spans, read the derived entry back (pattern, canonical spelling, sample values) or the refusal
+that says why, and add it to a scratch table the workbench keeps under `user://`. That table is asked
+FIRST on every refresh and marked "draft" while it claims anything, so a draft is never mistaken for
+a shipped spelling and nothing under `res://` is written. Moving a draft into a real family is a copy
+and paste of the entry the form shows - the form does the mechanical half, a person still decides the
+spelling is worth shipping.
+
+### A pack teaches its own spellings
+
+A pack ships verbs, and whoever used it before they used the sheet wrote those verbs by hand. `##
+@ace_lift_example("…")` above a verb is the same by-example form, authored in the pack rather than in
+the importer: the line as a person writes it with the spans marked, one example per spelling. The
+author's own line is baked onto the lifted row as its template, so their file saves back byte for
+byte, and the entries pass the SAME generated gate the built-in tables do at pack-build time -
+`audited=… drifted=0` prints `spellings=… problems=0` beside it. Shadowing a built-in spelling is an
+error naming both; two packs answering to one line is a Doctor note, with the pack first in folder
+order claiming it.
+
+### The corpus is where coverage becomes a diff
+
+`tests/corpus/` holds whole scripts a real Godot developer would plausibly have written - nobody's
+source, in the shapes tutorials and engine docs spell them. `corpus_test.gd` opens and saves every one
+byte-identically and pins each file's reading as three NUMBERS: the share that reads as rows, the
+lines a lift entry claims BY NAME, and the lines that stay honest code.
+
+**The rule for adding to it: a new family adds the file that motivated it** - the real code that made
+somebody write the recogniser, not a line distilled out of it. Pins move UP, and the commit that moves
+one states the delta ("network_lobby: entry lines 5 -> 8, the three join spellings"). A pin that moves
+DOWN is a regression until the commit message says otherwise. Moving a pin means editing the test,
+which is the point: a coverage change arrives as a deliberate diff with the delta stated instead of a
+floor quietly absorbing it. The leftover residue - lines that arrived as rows without an entry naming
+them - is PRINTED rather than pinned, because pinning it would fail the gate on cosmetic renames in
+the general reverse index while telling nobody anything about coverage.
 
 ---
 
