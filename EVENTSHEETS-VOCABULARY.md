@@ -3201,6 +3201,23 @@ Collision vocabulary (the "Helper ACEs for collisions").
 - **Floor Normal (3D)** - Fires with the slope direction of the floor a 3D body is standing on, handy for slope-aware movement.
 - **Overlapping Bodies (3D)** (`target: String`) - Fires with the list of physics bodies currently inside this 3D Area.
 
+### Collision Filter (`res://addons/eventforge/registration/modules/collision_filter_aces.gd`)
+the filtered collision sentences.
+
+#### Triggers
+- **On Collision With Group** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
+- **On Stopped Colliding With Group** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
+- **On Collision With Group (3D)** (`group: String, body: Node`) - Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.
+- **On Stopped Colliding With Group (3D)** (`group: String, body: Node`) - Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.
+- **On Overlap With Group** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
+- **On Overlap Ended With Group** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
+- **On Overlap With Group (3D)** (`group: String, body: Node`) - Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.
+- **On Overlap Ended With Group (3D)** (`group: String, body: Node`) - Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.
+
+#### Conditions
+- **Is Touching Group** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
+- **Is Touching Group (3D)** (`group: String, target: String`) - True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.
+
 ### Comparison (`res://addons/eventforge/registration/modules/comparison_aces.gd`)
 comparing values of every kind
 

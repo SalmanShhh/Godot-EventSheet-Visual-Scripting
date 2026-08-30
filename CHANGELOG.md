@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### The touch, with a filter on it
+
+- **On collision with `<Group>` / On stopped colliding with `<Group>`, and their Area twins.** The
+  bare touch triggers say THAT something arrived; a game nearly always wants to know that the player
+  arrived, or a bullet, or a pickup. The group is now the row's own **With** field, picked from the
+  project's node groups - a parameter, never a clause. What is emitted is the line the author would
+  have written: the handler's FIRST statement is a visible `is_in_group` early return, and what did
+  arrive rides on into the rows underneath as the trigger's payload. Two groups on one signal become
+  two handlers, each opening with its own guard. Filed twice on purpose - a body BLOCKS what it hits
+  and reads as a collision, an area only NOTICES and reads as an overlap - with 3D twins for both.
+- **is touching `<Group>`.** The standing question beside the two arrivals, for when what matters is
+  the state now rather than the moment it changed. A plain condition, so the sheet's own NOT reads it
+  the other way without a second row existing.
+- **The dialog says which kind of node this is.** While the With field has focus, the help strip
+  teaches the one thing its author has to know: an area notices what arrives and lets it through, a
+  body stops it and only reports the hit while Contact Monitor is on. The sentence is read off the
+  node class the row is filed under, so it is about the node in front of the reader.
+- **A hand-written guard-first handler opens as that row.** `body_entered` wired to a handler whose
+  first statement is the group early return reads back as **On collision with `<Group>`**, filter and
+  all, and the file is written back byte-for-byte - in the author's own spelling, whether they wrote
+  the guard on two lines or one. An `if` that asks for more than the group is deliberately not
+  claimed. Both hand-written spellings of the standing question open as **is touching `<Group>`** the
+  same way.
+- **Every trigger row now shows its payload.** A signal-backed trigger picked from the list draws the
+  same chips a lifted handler's row draws, read off the signature the compiler is going to emit, so a
+  reader sees what the event hands them without opening the code.
+
 ### Who sees whom
 
 - **A collisions band at the top of a sheet whose node collides.** "sees Enemies, Walls · seen by
