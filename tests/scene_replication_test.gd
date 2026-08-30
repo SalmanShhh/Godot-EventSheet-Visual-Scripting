@@ -189,9 +189,13 @@ extends CharacterBody2D")
 	var bands: Array[Dictionary] = EventSheetHeadBands.bands(facts)
 	for band: Dictionary in bands:
 		kinds.append(str(band.get("kind", "")))
+	# The collisions band is here because this fixture's Player really is a CharacterBody2D: a node
+	# that collides wears what it sees and what sees it, which is a fact of the same scene the
+	# replication bands are read from.
 	var ok: bool = _check("the scene's bands sit after the file's own, in reading order", kinds,
 		PackedStringArray([EventSheetHeadBands.BAND_NAME, EventSheetHeadBands.BAND_EXTENDS,
-			EventSheetHeadBands.BAND_SYNC, EventSheetHeadBands.BAND_SPAWNED]))
+			EventSheetHeadBands.BAND_SYNC, EventSheetHeadBands.BAND_SPAWNED,
+			EventSheetHeadBands.BAND_COLLISIONS]))
 	var sync_band: Dictionary = _band(bands, EventSheetHeadBands.BAND_SYNC)
 	ok = _check("the keeps-in-step band says the whole reading", str(sync_band.get("value", "")),
 		"PlayerSync · position, hp always · stamina on change · nickname at spawn · every 0.05 s · seen by everyone") and ok

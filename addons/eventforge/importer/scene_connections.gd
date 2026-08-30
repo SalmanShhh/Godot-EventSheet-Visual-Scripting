@@ -191,13 +191,18 @@ static func _connections_of(scene_path: String, text: String, script_path: Strin
 
 
 ## Every node of one scene, in the order the scene file writes them (which is tree order), as
-## [{name, path, type, script_path, properties}]. The scene view is built from this, and so is the
-## scoped connection read below - both need to know which node carries which script.
+## [{name, path, type, script_path, groups, properties}]. The scene view is built from this, and so
+## is the scoped connection read below - both need to know which node carries which script.
 ##
 ## `properties` is every `key = value` line under the node's header, values kept as the raw text the
 ## file holds (`NodePath("..")`, `PackedStringArray("res://a.tscn")`, `0.05`). A reader that wants a
 ## scene fact - which node a synchronizer keeps in step, which scenes a spawner can make - reads it
 ## from here instead of walking the file a second time.
+##
+## `groups` is the node's persistent groups, off the same header line. It rides here rather than in a
+## reader of its own because "which nodes are in this group" is asked across the whole project (a
+## group-filtered trigger has to know what its group is made of), and a second walk of every scene
+## for one header attribute would be a second parse of the file this cache exists to pay for once.
 ##
 ## HELD, and handed back by reference. Every caller reads it and none of them writes to it, so one
 ## parse serves them all for as long as the file is unchanged; treat what comes back as read-only.
@@ -238,6 +243,7 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 				"path": node_path,
 				"type": attribute(line, "type"),
 				"script_path": "",
+				"groups": string_array_attribute(line, "groups"),
 				"properties": {}
 			}
 			nodes.append(current)
@@ -418,6 +424,31 @@ static func attribute(line: String, key: String) -> String:
 	start += marker.length()
 	var end: int = line.find("\"", start)
 	return line.substr(start, end - start) if end > start else ""
+
+
+## `key=["a", "b"]` out of a .tscn header line - how the editor writes persistent groups. The older
+## `key=PackedStringArray("a", "b")` spelling reads the same, so a scene saved by an earlier Godot
+## still answers. Empty when the key is absent or holds nothing. Public for the same reason
+## `attribute` is: this module is the project's ONE reader of scene text.
+static func string_array_attribute(line: String, key: String) -> PackedStringArray:
+	var marker: String = "%s=" % key
+	var start: int = line.find(marker)
+	if start < 0:
+		return PackedStringArray()
+	var bracket: int = line.find("[", start)
+	var parenthesis: int = line.find("(", start)
+	var opening: int = bracket if (bracket >= 0 and (parenthesis < 0 or bracket < parenthesis)) else parenthesis
+	if opening < 0:
+		return PackedStringArray()
+	var closing: int = line.find("]" if opening == bracket else ")", opening)
+	if closing < opening:
+		return PackedStringArray()
+	var values: PackedStringArray = PackedStringArray()
+	for piece: String in line.substr(opening + 1, closing - opening - 1).split(","):
+		var bare: String = piece.strip_edges().trim_prefix("\"").trim_suffix("\"")
+		if not bare.is_empty():
+			values.append(bare)
+	return values
 
 
 ## Every .tscn in the project, found once per session - the input set for any question that has to

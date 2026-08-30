@@ -36,6 +36,7 @@ const BAND_ENVIRONMENT: String = "environment"
 const BAND_EFFECT: String = "effect"
 const BAND_ANIMATIONS: String = "animations"
 const BAND_TRANSFORM: String = "transform"
+const BAND_COLLISIONS: String = "collisions"
 const BAND_MODES: String = "modes"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
@@ -54,6 +55,7 @@ const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_SPAWNS,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
+	BAND_COLLISIONS,
 	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
@@ -71,6 +73,7 @@ const SCENE_BANDS: Dictionary = {
 	BAND_EFFECT: "effect",
 	BAND_ANIMATIONS: "animations",
 	BAND_TRANSFORM: "transform",
+	BAND_COLLISIONS: "collisions",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -92,6 +95,7 @@ const LEADERS: Dictionary = {
 	BAND_EFFECT: "effect",
 	BAND_ANIMATIONS: "animations",
 	BAND_TRANSFORM: "transform",
+	BAND_COLLISIONS: "collisions",
 	BAND_MODES: "modes",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
@@ -284,7 +288,8 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 ## replication appears in a project that has none.
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	var facts: Dictionary = {"synchronizers": [], "spawned_by": [], "spawns": [],
-		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [], "transform": []}
+		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [],
+		"transform": [], "collisions": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
@@ -314,6 +319,11 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	# body mirrored by a negative scale, a node scaled unevenly and turned. A scene with nothing
 	# scaled grows none of them.
 	facts["transform"] = EventSheetSceneTransformFacts.bands(source_path)
+	# And who it can TOUCH: the layers this object's mask covers, the layers of everything whose mask
+	# covers one of its own, and - for an Area - whether the switch that reports touches is even on.
+	# All three live in the `.tscn` and none of them is visible from the row that depends on them,
+	# which is why a sheet whose node collides wears them at the top of it.
+	facts["collisions"] = EventSheetSceneCollisionFacts.bands(source_path)
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries
@@ -387,7 +397,7 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("browse the scene")
 		BAND_LIT_BY, BAND_SHADOWS:
 			return EventSheetL10n.translate("select the light")
-		BAND_ENVIRONMENT, BAND_EFFECT:
+		BAND_ENVIRONMENT, BAND_EFFECT, BAND_COLLISIONS:
 			return EventSheetL10n.translate("select the node")
 		BAND_MODES:
 			return EventSheetL10n.translate("Edit modes…")
