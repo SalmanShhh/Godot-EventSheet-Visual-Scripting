@@ -3713,6 +3713,19 @@ static func static_local_declaration(local_var: LocalVariable) -> String:
 ## re-emits, so a hand-written variant that differs fails the byte-gate and stays a verbatim block.
 static func _append_property_accessors(local_var: LocalVariable, declaration_line: String) -> String:
 	var out: PackedStringArray = PackedStringArray([declaration_line + ":"])
+	# The NAMED spelling (`set = _set_health,` / `get = _get_health`) is the whole property when it is
+	# used: the functions live elsewhere in the file as ordinary functions, and this is only the
+	# declaration pointing at them. The comma belongs to the FIRST of the two lines and only when a
+	# second follows, which is Godot's own grammar and the one place this shape can go wrong.
+	if local_var.has_named_accessors():
+		var named: PackedStringArray = PackedStringArray()
+		if not local_var.setter_name.strip_edges().is_empty():
+			named.append("\tset = %s" % local_var.setter_name.strip_edges())
+		if not local_var.getter_name.strip_edges().is_empty():
+			named.append("\tget = %s" % local_var.getter_name.strip_edges())
+		for index: int in range(named.size()):
+			out.append(named[index] + ("," if index < named.size() - 1 else ""))
+		return "\n".join(out)
 	if not local_var.setter_body.strip_edges().is_empty():
 		var param: String = local_var.setter_param.strip_edges() if not local_var.setter_param.strip_edges().is_empty() else "value"
 		out.append("\tset(%s):" % param)

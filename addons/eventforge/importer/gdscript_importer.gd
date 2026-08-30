@@ -342,6 +342,8 @@ func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
 	lifted.setter_body = str(accessors.get("setter_body", ""))
 	lifted.getter_body = str(accessors.get("getter_body", ""))
 	lifted.setter_param = str(accessors.get("setter_param", "value"))
+	lifted.setter_name = str(accessors.get("setter_name", ""))
+	lifted.getter_name = str(accessors.get("getter_name", ""))
 	# Byte-gate: the re-emitted property (declaration + accessors) must reproduce the collected block exactly.
 	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
 		return {}
@@ -349,9 +351,14 @@ func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
 
 
 ## Parses a property's accessor block (header line + indented body) into {setter_body, getter_body,
-## setter_param}. Recognizes the canonical `\tset(<param>):` and `\tget:` headers with `\t\t`-indented
-## bodies. Returns {} for any shape the emitter would not reproduce (so the byte-gate stays authoritative).
+## setter_param} - or, for the other spelling, {setter_name, getter_name}. Recognizes the canonical
+## `\tset(<param>):` and `\tget:` headers with `\t\t`-indented bodies, and the named form
+## `\tset = <function>,` / `\tget = <function>` that points at functions written elsewhere in the file.
+## Returns {} for any shape the emitter would not reproduce (so the byte-gate stays authoritative).
 func _parse_property_accessors(block: PackedStringArray) -> Dictionary:
+	var named: Dictionary = _parse_named_accessors(block)
+	if not named.is_empty():
+		return named
 	var setter_lines: PackedStringArray = PackedStringArray()
 	var getter_lines: PackedStringArray = PackedStringArray()
 	var setter_param: String = "value"
@@ -384,6 +391,48 @@ func _parse_property_accessors(block: PackedStringArray) -> Dictionary:
 		"getter_body": "\n".join(getter_lines),
 		"setter_param": setter_param,
 	}
+
+
+## The NAMED spelling of a property, or {} when the block is not written that way:
+##
+##     var health: int = 100:
+##         set = _set_health,
+##         get = _get_health
+##
+## It is asked FIRST because the two forms cannot be mixed and this one is decided by its very first
+## line - `\tset = ` can be nothing else. The functions themselves are ordinary functions further down
+## the file and are lifted as such; all this reads is which two the declaration points at.
+##
+## Strict about the comma, because Godot's grammar is: it separates the two and only appears when
+## both are there. Any other punctuation, any order but setter-then-getter, or anything past the two
+## lines, is a shape the emitter would not write back, so the block stays verbatim and nothing is lost.
+func _parse_named_accessors(block: PackedStringArray) -> Dictionary:
+	# One accessor line, or two with a comma between them, and nothing else.
+	if block.size() < 2 or block.size() > 3:
+		return {}
+	if not (block[1].begins_with("\tset = ") or block[1].begins_with("\tget = ")):
+		return {}
+	var name_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
+	var names: Dictionary = {"setter_name": "", "getter_name": ""}
+	for index: int in range(1, block.size()):
+		var line: String = block[index]
+		# The comma separates the two lines, so every line but the last has one and the last has none.
+		var last: bool = index == block.size() - 1
+		if line.ends_with(",") != (not last):
+			return {}
+		if not last:
+			line = line.substr(0, line.length() - 1)
+		var key: String = "setter_name" if line.begins_with("\tset = ") else "getter_name"
+		if not (line.begins_with("\tset = ") or line.begins_with("\tget = ")):
+			return {}
+		# Setter then getter, once each - the order the emitter writes and the only one it can put back.
+		if not str(names[key]).is_empty() or (key == "setter_name" and not str(names["getter_name"]).is_empty()):
+			return {}
+		var named: String = line.substr(7)
+		if name_regex.search(named) == null:
+			return {}
+		names[key] = named
+	return names
 
 
 ## Lifts a top-level variable declaration to an ordered tree-variable row, but ONLY when the

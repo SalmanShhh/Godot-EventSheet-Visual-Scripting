@@ -52,6 +52,21 @@ extends Resource
 ## The setter's parameter name (`set(value):`). Hand-written code may use any name; keeping it
 ## preserves the byte round-trip.
 @export var setter_param: String = "value"
+## The OTHER spelling of a property, and the one older Godot code is written in: instead of an inline
+## block, the declaration names a FUNCTION that already exists elsewhere in the file.
+##
+##     var health: int = 100:
+##         set = _set_health,
+##         get = _get_health
+##
+## Both mean exactly what the inline blocks mean, and Godot accepts either - so a variable carries
+## either the bodies above or these two names, never both, and emission writes back whichever
+## spelling the file had. A file that used this form used to lose its declaration to a code block
+## (the two accessor lines are not statements, so nothing could lift the `var` line above them).
+@export var setter_name: String = ""
+## The getter's named function, the other half of the spelling above. Either may be empty - a
+## property can name a setter, a getter, or both.
+@export var getter_name: String = ""
 ## Event-sheet-style "Combo": allowed values for a String variable. When exported, compiles to
 ## @export_enum so the Inspector shows a dropdown; the value picker uses it too.
 @export var options: PackedStringArray = PackedStringArray()
@@ -74,6 +89,18 @@ static func static_local_member(local_name: String) -> String:
 	return "_%s" % local_name.strip_edges()
 
 
-## True when this variable is a PROPERTY (a setter and/or getter body is set).
+## True when this variable is a PROPERTY - under either spelling: an inline accessor body, or the
+## name of a function that does the job. One question, asked by the emitter and by the row builder
+## alike, so neither can be told about one spelling and not the other.
 func has_property_accessors() -> bool:
+	return has_accessor_bodies() or has_named_accessors()
+
+
+## True when the property is written as INLINE BLOCKS (`set(value):` and/or `get:`).
+func has_accessor_bodies() -> bool:
 	return not setter_body.strip_edges().is_empty() or not getter_body.strip_edges().is_empty()
+
+
+## True when the property NAMES the functions that do the job (`set = _set_health`).
+func has_named_accessors() -> bool:
+	return not setter_name.strip_edges().is_empty() or not getter_name.strip_edges().is_empty()
