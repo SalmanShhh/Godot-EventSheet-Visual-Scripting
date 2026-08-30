@@ -54,9 +54,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
   it runs once the fade is done. Nothing new is invented for any of them: the emitted code is the
   same code somebody would write by hand.
 - **The guard is written where it is needed, and shown where it is written.** A removal row whose
-  object is a name that outlives the line that set it - a variable typed as a node, or a copy a
-  spawn row minted in a DIFFERENT event - compiles inside `if is_instance_valid(…):`, which is
-  Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
+  object is a name that outlives the line that set it - a variable typed as a node - compiles inside
+  `if is_instance_valid(…):`, which is Godot's own answer to a reference that may already be gone. It is never a hidden wrapper: the
   guard line is echoed at the end of the row in the script editor's own colours, exactly as a
   variable row echoes its declaration, so the sheet shows the line the file holds and you can see
   which name asked for it. It stands down entirely when the sheet already asked - an **Is Still
@@ -88,10 +87,12 @@ What changed in the build you have installed (v0.17.0), in the words the release
   zero with nothing else failing anywhere.
 - **The cap is on the row, and so is the policy.** \"At most twelve alive\" is two different games
   depending on what happens at twelve, so there is a row per answer and each says which it is in its
-  own sentence rather than hiding behind a setting. **Spawn A Copy, Oldest Goes First** reads the
-  crowd once, removes the member Godot lists first to make room and then spawns, so the new copy
+  own sentence rather than hiding behind a setting. **Spawn A Copy, The First Makes Room** reads the
+  crowd once, removes members from the front until the new one fits and then spawns, so the new copy
   always appears - what a bullet, a footstep or a skid mark wants; `maxi({cap}, 1)` is what makes
-  the index always safe, whatever number was typed. **Spawn A Copy Unless The Crowd Is Full** does
+  `pop_front()` always safe, whatever number was typed. Both cap rows read the members that are
+  STAYING: `queue_free()` leaves a node in its group until the end of the frame, so a read that took
+  them all would count ghosts and would hand the same ghost to the next spawn of the same frame. **Spawn A Copy Unless The Crowd Is Full** does
   nothing at all when the crowd is full - what an enemy wave wants - and declares the name BEFORE
   its branch, so the rows after it can still say it and an **Is Still Here** row can tell a skipped
   spawn from a real one.
@@ -101,9 +102,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
   tree's own `node_removed` signal, and the question that narrows it to one crowd is an ORDINARY
   CONDITION ROW added underneath it when the trigger is picked - visible, editable, deletable, and a
   plain `if` on disk rather than a wrapper the compiler writes behind the row. The question reads
-  `node.is_in_group(\"enemies\") and get_tree().get_nodes_in_group(\"enemies\") == [node]`, because a
-  leaving node is still listed in its groups at that moment: a crowd down to just the one that is
-  going is exactly a crowd that was about to be empty. The shipped **On Group Emptied** condition is
+  `node.is_in_group(\"enemies\") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group(\"enemies\") == [node]`,
+  because a leaving node is still listed in its groups at that moment: a crowd down to just the one
+  that is going, and really going, is exactly a crowd that was about to be empty. The shipped **On Group Emptied** condition is
   untouched and stays the answer when you would rather the check rode a per-frame trigger.
 
 ### What a sheet spawns, and the four crashes found before the game runs
@@ -149,9 +150,9 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **The project sweep is SAMPLED, and says so.** Reading a script's rows means opening it as a sheet,
   which costs about half a second, so the section pre-reads the text per FUNCTION - the two words a
   rule needs inside one body, not merely somewhere in the file - ranks what survives by how much its
-  own text says it could earn, and opens the strongest few under a count and a wall clock, the way
-  the Interop section already does. Its summary line says how many candidates there were AND how many
-  were read, so a sampled run reads as a partial one rather than as a clean bill of health. The notes
+  own text says it could earn, and opens the strongest few under a COUNT. Its summary line says how
+  many candidates there were AND how many were read, so a sampled run reads as a partial one rather
+  than as a clean bill of health. The notes
   on a sheet's own rows are never sampled: they are derived from that one sheet whenever the canvas
   rebuilds, so the sheet in front of a reader is always fully checked.
 
@@ -183,6 +184,106 @@ What changed in the build you have installed (v0.17.0), in the words the release
   by module over the 78 vocabulary modules rather than read off an aggregate registry. The pack count
   did not move and is the folder's own in every place it appears: 112, of which 93 have a guide of
   their own and 19 are companion data assets documented inside a partner's guide.
+
+### Fixed
+
+- **The cap is a cap again, on a frame that spawns more than once.** **Spawn A Copy, The First Makes
+  Room** read the crowd straight out of the group, and `queue_free()` leaves a member in its group
+  until the end of the frame - so a second spawn in the same frame read the same crowd, freed the
+  SAME member again and added one. Under a cap of twelve, three spawns in one frame left fourteen
+  alive and the next such frame sixteen: a shotgun blast, a particle burst and a wave spawned in a
+  loop are exactly the shapes a capped crowd is for. Both cap rows now read the members that are
+  staying, and the make-room row frees until the new copy fits rather than exactly once, so the
+  sentence is true the moment the line has run. The row's ending changed with it - \"the first in the
+  crowd makes room\" rather than \"the oldest goes first\", which was tree order wearing the word
+  \"oldest\": under one parent that spawns by adding children they are the same member, and after a
+  `move_child` or across two parents they are not. **How Many Alive** is deliberately still the
+  group's own size, and says so: a member removed this frame counts until the end of it. The
+  make-room row is now RUN as well as read in the suite - three spawns in one frame against a
+  stand-in tree that behaves the way Godot's does about `queue_free` - because a pin on the emitted
+  text cannot see this class of bug at all.
+
+- **A crowd member that moved house no longer reads as the crowd emptying.** `node_removed` fires
+  for ANY exit from the scene tree, and `Node.reparent()` is one of them: for the instant the signal
+  is emitted the moved node is out of the tree, still in its groups and the only member the group
+  lists - so **On The Last One Removed** announced the wave cleared, opened the door and paid the
+  reward while the enemy was alive under another parent. Its gate asks `is_queued_for_deletion()` as
+  well now, which is true for every removal this language writes (all three removal rows are a
+  `queue_free`) and false for a move. The trade is stated on the row rather than hidden: a member
+  taken out of the world without a `queue_free` of its own - its whole branch freed at once - is not
+  seen by this trigger, and the shipped **On Group Emptied** condition is the row for that.
+
+- **The two random placements answer in the world's frame.** **Random Place Along Path** and
+  **Random Place Inside Shape** added a LOCAL point to `global_position`, which is only right while
+  nothing above the node is rotated or scaled. Measured under a parent at (500, 500) turned a quarter
+  turn and scaled twice: the path row answered (550, 500) where the point on the curve really was
+  (500, 600), and the shape row put a rectangle's corner at (550, 510) where it really was
+  (480, 600). Rotation alone was enough, so a spawn zone turned to face down a corridor scattered
+  inside an upright box of the same size rather than inside the one drawn. Both go through
+  `to_global` now, which is the one-token spelling of the transform that was missing; the sampling
+  itself was always even and always one step, and still is. The empty-curve case is stated properly
+  too: a Path2D with no points gives the path's own place AND prints `No points in Curve2D.` on every
+  evaluation, which the page had presented as a quiet degradation.
+
+- **The removal guard dropped the half of its rule that could not compile.** It also fired on a copy
+  a spawn row named in a DIFFERENT event, and that name is a local: scoped to the handler it was
+  written in, and under a condition to that `if`. Compiled and loaded, the emitted file answered
+  `Identifier \"boss\" not declared in the current scope` - the guard line could not see the name any
+  more than the row could - and in the single shape where it did parse, two unconditioned events in
+  one handler, it was a check between two lines of the same run that could only ever be true. So
+  every reachable case was a broken file or a no-op, echoed on the row as protection. The rule is now
+  the one situation it was always right about: a variable typed as a node. The row's own echo, the
+  stand-down when the sheet already asked, and the byte-for-byte round trip of a hand-written guard
+  are untouched, and the suite now LOADS the emitted script rather than only reading it.
+
+- **A removal inside a match case is guarded like the one beside it.** The structured switch row has
+  its own emission site, and it had never been taught the rule - so one sheet, one event and one
+  stored node reference compiled to `held.queue_free()` inside the case and
+  `if is_instance_valid(held): held.queue_free()` one row above it, in the same file. The guarded arm
+  was the branch a state machine actually puts its removals in. Both sites ask the same function now,
+  which is what \"stated once and applied nowhere else\" was supposed to mean; a timeline step, which
+  compiles through the same helper, is covered by the same change.
+
+- **The guard's walk reads a published verb's rows too.** It read `sheet.events` only, so a question
+  asked by an event INSIDE a verb was recorded nowhere and the compiler wrapped a second
+  `if is_instance_valid(…)` around the author's own one - in the same sheet where a top-level event
+  got exactly one. The findings walk and the completion walk had always read `sheet.functions`; three
+  walkers over one sheet disagreeing about where its names live is the shape of a bug nobody can
+  reproduce. Only the asked-already map grows there, and deliberately: a node-typed local declared
+  inside a verb is set and used in the same call, so a guard on it could only ever be true.
+
+- **\"Guard it\" is about the name it was clicked for.** The repair deduped on the row KIND, so it
+  refused whenever the event already held ANY Is Still Here condition, whatever object that one asked
+  about - and it never looked for the shipped Object Still Exists spelling at all. Two stored names
+  reached into by rows of one event each earn their own finding, so fixing the first made the second
+  button do nothing while saying, truthfully but about something else, that the event had already
+  asked. It asks the compiler's own rule now, which reads both spellings and counts a negated
+  question as not asked, and the status line names the name.
+
+- **The Spawning sweep's ceiling is a count, not a clock.** It also stopped on a wall-clock budget,
+  which made the section the one part of this work whose output depended on how fast the machine
+  reading it was: the same project, audited on a laptop and on a build server, could file different
+  findings. The count bounds the same thing the clock was there to bound - how many scripts get
+  opened - and it is the same everywhere, so two audits of an unchanged project now read the same on
+  any machine. Ranking by strongest evidence, which is what makes a cut fall on the weakest
+  candidates, is unchanged. (The Interop and Performance sections still keep their own clocks; those
+  predate this work.)
+
+- **The Doctor's Spawning section has a positive pin.** `report` had only ever been asked for an
+  EMPTY corpus and for a plugin-folder path, both of which answer with nothing - so the shape it
+  files held by nothing at all: the severity it passes through, the check id it maps a kind to, the
+  path it points at, the file name in front of the sentence, the subject, and the summary line
+  itself. A real script on disk now earns a real finding in the suite, and every one of those is
+  pinned as a value.
+
+- **Two troubleshooting lines in the spawning guide were wrong.** \"Do not free the same node twice.
+  The second call errors.\" is true of `free()` and not of `queue_free()`: a second `queue_free()` on
+  one node in one frame prints nothing at all and the node dies once, which is precisely why a cap
+  that freed the same member repeatedly left no trace in any log. And \"Random Place Along Path needs
+  a baked curve\" understated its own case - an empty curve does give the path's own position, and it
+  also prints `No points in Curve2D.` on every evaluation, which on a per-frame spawner is a flooded
+  log rather than a quiet degradation. Both are measured against a running engine now, and both say
+  what it actually does.
 
 ### Removed
 

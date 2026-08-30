@@ -1033,10 +1033,10 @@ to the function it names, the same jump the Outline panel makes.
 - **A guard you wrote by hand stays your guard.** `if is_instance_valid(boss): boss.queue_free()`
   opens as a Remove Now row inside the question you asked, and saves back byte for byte - the
   compiler writes nothing extra, because the sheet has already asked. That is the same rule read from
-  the other side: a removal whose object is a variable typed as a node, or a copy a spawn row minted
-  in a DIFFERENT event, compiles inside `is_instance_valid`, and the row echoes the exact line the
-  file holds at its right edge. `self` and node paths are never guarded, and no row outside the three
-  removal rows is touched.
+  the other side: a removal whose object is a variable typed as a node compiles inside
+  `is_instance_valid`, and the row echoes the exact line the file holds at its right edge. `self`,
+  node paths and a copy a spawn row named in another event are never guarded, and no row outside the
+  three removal rows is touched.
 
   ![A sprite, UI, sound and game-feel script opened as a sheet](images/reading-sprite-sound-juice.png)
 

@@ -44,8 +44,8 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 
 - **Spawn A Copy Into The Crowd** - the same spawn, with the copy joined to a group named after the
   scene.
-- **Spawn A Copy, Oldest Goes First** and **Spawn A Copy Unless The Crowd Is Full** - the cap, with
-  what happens at the cap written into the row's own sentence.
+- **Spawn A Copy, The First Makes Room** and **Spawn A Copy Unless The Crowd Is Full** - the cap,
+  with what happens at the cap written into the row's own sentence.
 - **How Many Alive** - the group's size, in any field that takes a number.
 - **On The Last One Removed** and **Crowd Is Down To This One** - the trigger for a crowd emptying,
   and the question it puts in the sheet underneath itself.
@@ -109,6 +109,11 @@ Six more say the copies in the plural, because a game that spawns one thing soon
   circle from its own radius, evenly, in one step. There is no rejection sampling and no retry loop,
   so the line costs the same every time it runs. Any other shape gives its own centre instead of a
   guess.
+- **The two sampling words answer in the world's frame.** A curve is drawn in its Path2D's own space
+  and a shape is measured in its CollisionShape2D's, so both hand the point back through `to_global`
+  rather than adding it to `global_position`. Adding is only right while nothing above the node is
+  rotated or scaled - and a spawn zone turned to face down a corridor is the commonest thing in a
+  level there is.
 - **Nothing here needs the plugin at runtime.** Every row compiles to `instantiate()`, `add_child`,
   `call_deferred`, `randf()` and arithmetic. Uninstall the editor and the game still builds.
 
@@ -202,9 +207,9 @@ func _on_died() -> void:
 ### The guard, and why you can see it
 
 A name that outlives the line that set it can name nothing at all by the time a later row says it.
-There are exactly two of those in a sheet: a **variable typed as a node** (it survives from frame to
-frame) and a **copy a spawn row minted in a different event**. When a removal row's object is one of
-those, the compiler writes the check Godot's own answer calls for:
+There is exactly one of those in a sheet: a **variable typed as a node**, which survives from frame
+to frame with nothing about this event having put it there. When a removal row's object is one, the
+compiler writes the check Godot's own answer calls for:
 
 ```
 if is_instance_valid(boss):
@@ -231,6 +236,14 @@ func _on_timeout() -> void:
 	if is_instance_valid(target):
 		target.queue_free()
 ```
+
+**A copy named in another event is not guarded either, and the reason is scope.** The name a spawn
+row gives a copy is a local variable in the handler that row compiled into. A removal row in a
+different event saying that name does not compile at all - Godot answers `Identifier "boss" not
+declared in the current scope` - and wrapping it in a question that cannot see the name either would
+only add a second line that does not compile, echoed on the row as protection. Keep the removal in
+the event that made the copy, or hold the copy in a variable typed as a node, which is the case the
+guard is for.
 
 **Nothing else is guarded.** `self` cannot dangle, a `$Path` re-resolves every time it is read, and
 every row outside these three is left exactly as it was. Emitted code does not change under your
@@ -264,21 +277,33 @@ the group as it leaves the tree.
 "At most twelve alive" is two different games depending on what happens at twelve, so there is a row
 per answer and each says which it is in its own sentence.
 
-**Spawn A Copy, Oldest Goes First** removes a member to make room and then spawns, so the new copy
+**Spawn A Copy, The First Makes Room** removes members to make room and then spawns, so the new copy
 always appears:
 
 ```
-var crowd_new_mark = get_tree().get_nodes_in_group("marks")
-if crowd_new_mark.size() >= maxi(20, 1):
-	crowd_new_mark[0].queue_free()
+var crowd_new_mark = get_tree().get_nodes_in_group("marks").filter(func(member: Variant) -> bool: return not member.is_queued_for_deletion())
+while crowd_new_mark.size() >= maxi(20, 1):
+	crowd_new_mark.pop_front().queue_free()
 var new_mark = Mark.instantiate()
 ```
 
-The crowd is read once into a local, because the row needs both the size and the member it is about
-to remove. `maxi(cap, 1)` is what makes `[0]` always safe: the branch cannot run on an empty crowd,
-whatever number you typed. The one removed is the member Godot lists first, which under a parent
-that spawns by adding children is the earliest one still alive. This is what a bullet, a footstep or
-a skid mark wants.
+The crowd is read once into a local, because the row needs both the size and the members it is about
+to remove. `maxi(cap, 1)` is what makes `pop_front()` always safe: the loop cannot run on an empty
+crowd, whatever number you typed.
+
+**The read skips the members that are already leaving, and that is the whole of why the cap holds.**
+`queue_free()` marks a node and leaves it in the tree - and therefore in its group - until the end of
+the frame. A row that read the group straight would hand the same member to every spawn of that
+frame: three spawns under a cap of twenty would free the same one three times and add three, leaving
+twenty-two alive, and the next such frame twenty-four. Skipping the leavers means the count means
+what the row says and a different member makes room each time. It is a `while` rather than an `if`
+for the same reason: whatever the crowd was when the line was reached, it fits the cap when the line
+has run.
+
+The members removed are taken from the front of the crowd, which is the order Godot lists a group
+in. Under a parent that spawns by adding children that is the earliest one still alive; after a
+`move_child`, or with copies spread over two parents, it is the tree's order rather than the spawn's.
+This is what a bullet, a footstep or a skid mark wants.
 
 **Spawn A Copy Unless The Crowd Is Full** does nothing at all when the crowd is full:
 
@@ -324,7 +349,7 @@ func _ready() -> void:
 	get_tree().node_removed.connect(_on_node_removed)
 
 func _on_node_removed(node: Node) -> void:
-	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+	if node.is_in_group("enemies") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group("enemies") == [node]:
 		...
 ```
 
@@ -332,6 +357,15 @@ Picking the trigger adds that condition underneath it, filled in with the crowd 
 ordinary row: editable, deletable, and a plain `if` on disk. **A leaving node is still listed in its
 groups at that moment**, which is why "the crowd is down to just the one that is going" is exactly
 "this was the last one".
+
+**The middle question is what tells leaving the world from changing parents.** `node_removed` fires
+for any exit from the tree, and `Node.reparent()` is one: for the instant the signal is emitted the
+moved node is out of the tree, still in its groups, and the only member the group lists. Without
+`is_queued_for_deletion()` the event would open the door and pay the reward while the enemy was
+alive under another parent. It is true for every removal this language writes - all three removal
+rows are a `queue_free` - and false for a move. A member taken out of the world some other way, such
+as its whole branch being freed at once, is not seen by this trigger; On Group Emptied below is the
+row for that.
 
 The shipped **On Group Emptied** condition asks the same question a different way - on a per-frame
 trigger, by remembering last tick's count. It is unchanged and still the answer when you want the
@@ -347,7 +381,7 @@ func _ready() -> void:
 
 
 func _on_node_removed(node: Node) -> void:
-	if node.is_in_group("enemies") and get_tree().get_nodes_in_group("enemies") == [node]:
+	if node.is_in_group("enemies") and node.is_queued_for_deletion() and get_tree().get_nodes_in_group("enemies") == [node]:
 		open_door()
 ```
 
@@ -499,7 +533,9 @@ time the canvas rebuilds. The Doctor's project-wide section is a SAMPLE, because
 rows means opening it as a sheet and that costs about half a second each. It pre-reads the text,
 ranks the candidates by how much their own text says they could earn, and opens the strongest few -
 and its summary line says how many candidates there were and how many were read, so a sampled run
-never reads as a clean bill of health.
+never reads as a clean bill of health. **How many is a count, not a stopwatch**: the same project
+audited on a laptop and on a build server reports the same findings, because a report that changes
+without the project changing is not one you can act on.
 
 **A node added while physics is busy.** Godot refuses to add a child while the physics server is
 flushing its queries, which is most of what a collision callback is, and the error names a line
@@ -534,19 +570,19 @@ it; removing after a delay instead is the other way, and the note says so.
 | Spawn A Copy Safely | The same spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
 | Make A Copy | Makes a copy and names it, without adding it to the tree. | `var {name} = {scene}.instantiate()` |
 | Place Of | Gives a node's own place in the world. | `{node}.global_position` |
-| Random Place Along Path | Gives a random point along a Path2D's curve. | `({path}.global_position + {path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
-| Random Place Inside Shape | Gives a random point inside a collision shape. | `({shape}.global_position + …)` |
+| Random Place Along Path | Gives a random point along a Path2D's curve. | `{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
+| Random Place Inside Shape | Gives a random point inside a collision shape. | `{shape}.to_global(…)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
 | Remove Now | Removes the object at the end of this frame. | `{object}.queue_free()` |
 | Remove After Seconds | Removes the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
 | Fade Out Then Remove | Fades the object out, waits, then removes it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
 | Is Still Here | True while the object has not been removed. | `is_instance_valid({object})` |
 | Spawn A Copy Into The Crowd | The spawn, with the copy joined to a group named after the scene. | `var {name} = {scene}.instantiate()`, `{name}.add_to_group({crowd}, true)`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
-| Spawn A Copy, Oldest Goes First | Makes room by removing the first member, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd})`, `if crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}[0].queue_free()`, … |
-| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var {name}: Node = null`, `if get_tree().get_node_count_in_group({crowd}) < {cap}:`, … |
+| Spawn A Copy, The First Makes Room | Makes room by removing members from the front, then spawns. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `while crowd_{name}.size() >= maxi({cap}, 1):`, `crowd_{name}.pop_front().queue_free()`, … |
+| Spawn A Copy Unless The Crowd Is Full | Spawns only while there is room, and skips otherwise. | `var crowd_{name} = get_tree().get_nodes_in_group({crowd}).filter(…)`, `var {name}: Node = null`, `if crowd_{name}.size() < {cap}:`, … |
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
 | On The Last One Removed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
-| Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
+| Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
 
 ## Use cases
 
@@ -627,9 +663,10 @@ variable honest afterwards.
 Last One Removed event on the same crowd opens the door, pays the reward and starts the next wave.
 Nothing counts the enemies down; the trigger is the last one leaving.
 
-**23. A skid-mark trail that never grows.** Spawn A Copy, Oldest Goes First with a cap of 20 into a
-`marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
-the tree never fills.
+**23. A skid-mark trail that never grows.** Spawn A Copy, The First Makes Room with a cap of 20 into
+a `marks` crowd. The twenty-first mark removes the first, so the trail is always the last twenty and
+the tree never fills - including on a frame that lays down several marks at once, because the row
+skips the marks already on their way out rather than removing one of them twice.
 
 **24. A spawner that respects a limit.** Spawn A Copy Unless The Crowd Is Full with a cap of 12. A
 timer that fires every second simply does nothing while twelve are alive, and starts again when one
@@ -678,8 +715,13 @@ Last One Removed on that crowd drop the key.
 - **A shape that is not a rectangle or a circle gives its centre.** That is deliberate rather than a
   bug: scattering evenly inside an arbitrary polygon is a loop, not an expression. Use a rectangle or
   a circle for the zone, or write the loop yourself.
-- **Random Place Along Path needs a baked curve.** A Path2D with an empty curve has no length, and
-  the row gives the path's own position. Draw the curve first.
+- **Random Place Along Path needs a baked curve.** A Path2D with an empty curve has no length, so
+  the row gives the path's own position - and Godot prints `No points in Curve2D.` every single time
+  the line is evaluated, which on a per-frame spawner is a flooded log rather than a quiet
+  degradation. Draw the curve first.
+- **A rotated spawn zone stays rotated.** Both sampling words go through `to_global`, so the point
+  comes out inside the shape you actually drew and along the curve where it actually runs, whatever
+  the node or its parents are turned or scaled to.
 - **Spawning every tick fills the tree fast.** Put a cooldown, a counter or a Once At A Time condition
   above the row - a spawn is cheap, ten thousand of them are not.
 - **Free what you spawn.** Nothing here tracks copies. A wave that never ends is a wave nobody
@@ -687,8 +729,13 @@ Last One Removed on that crowd drop the key.
 - **A removed node is still there for the rest of the frame.** `queue_free()` queues; it does not
   delete. A row after the removal that reads the object still works, and a check that expects it to
   be gone in the same frame does not.
-- **Do not free the same node twice.** The second call errors. Ask Is Still Here first, or let the
-  guard do it by naming a stored reference rather than a path.
+- **Freeing the same node twice is SILENT.** A second `queue_free()` on one node in one frame prints
+  nothing at all - no error, no warning - and the node simply dies once. (That is `queue_free`; a
+  second `free()` is the one that errors.) So a loop that picks a member, frees it and picks again
+  from the same list will happily free the same one over and over with nothing in the log to say so,
+  which is exactly how a cap stops capping. Ask Is Still Here before reaching in, skip the members
+  that answer `is_queued_for_deletion()`, or let the guard do it by naming a stored reference rather
+  than a path.
 - **The fade row makes the event wait.** Everything after it in that event runs after the fade. If
   you want the event to carry straight on, use Remove After Seconds instead.
 - **The fade needs something with `modulate`.** It walks `modulate:a`, so the object has to be a
@@ -700,14 +747,23 @@ Last One Removed on that crowd drop the key.
   `add_to_group`. Editing that out looks harmless and breaks every count the day the branch is packed
   into a scene file.
 - **The cap rows are two rows, not one row with a setting.** If a spawn keeps vanishing, you picked
-  the skip row; if an old one keeps vanishing, you picked the oldest-first row. The sentence on the
-  row says which.
-- **"Oldest" means the member Godot lists first.** Under a parent that spawns by adding children that
-  is the earliest one alive. Reparent members yourself and the order is the tree's, not the spawn's.
+  the skip row; if an old one keeps vanishing, you picked the make-room row. The sentence on the row
+  says which.
+- **"The first in the crowd" means the member Godot lists first.** Under a parent that spawns by
+  adding children that is the earliest one alive. Reparent members yourself, or spread them over two
+  parents, and the order is the tree's, not the spawn's.
+- **The cap rows ignore members already on their way out; How Many Alive does not.** A member is in
+  its group until the end of the frame it was removed in, so the count can read one higher than the
+  cap for the rest of that frame. That is queue_free, not a miscount - and it is exactly why the cap
+  rows skip those members instead of counting or freeing them a second time.
 - **The skipped spawn leaves the name holding nothing.** Rows after Spawn A Copy Unless The Crowd Is
   Full run either way, so ask Is Still Here before touching the name if the crowd can be full.
 - **On The Last One Removed never fires for a crowd that was already empty.** It answers a member
   leaving, so a crowd nothing ever joined has no last member to remove.
+- **Moving the last member to another parent is not the crowd emptying.** `Node.reparent()` leaves
+  the tree, so the signal fires, but the member is alive - the gate asks whether it is really being
+  removed as well. The other side of that: a member taken out without a `queue_free` of its own, such
+  as its whole branch being freed at once, is not seen by this trigger. Use On Group Emptied there.
 - **Do not delete the gate condition under that trigger unless you mean it.** Without it the event
   runs for every node removed anywhere in the game.
 - **A guard you did not ask for is telling you something.** It appears only on a name that can

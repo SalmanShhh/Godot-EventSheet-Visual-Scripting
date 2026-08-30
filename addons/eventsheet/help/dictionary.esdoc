@@ -466,6 +466,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `is_pressed` | [Any Input Received](ace:Core/AnyInputReceived) | Accessibility | Vocabulary |
 | `is_processing` | [Node Is Processing Per Frame](ace:Core/NodeIsProcessing) | Nodes: Activation | Vocabulary |
 | `is_processing_input` | [Node Is Handling Input](ace:Core/NodeIsProcessingInput) | Nodes: Activation | Vocabulary |
+| `is_queued_for_deletion` | [Crowd Is Down To This One](ace:Core/CrowdIsDownToThisOne) | Crowd | Vocabulary |
 | `is_server` | [Is Host](ace:Core/IsHost) | Multiplayer | Vocabulary |
 | `is_stopped` | [Is Timer Stopped](ace:Core/IsTimerStopped) | General Conditions | Vocabulary |
 | `is_touchscreen_available` | [Touchscreen Available](ace:Core/IsTouchscreen) | Touch | Vocabulary |
@@ -802,6 +803,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `timeout` | [Wait](ace:Core/Wait) | Time | Vocabulary |
 | `title` | [Set Window Title](ace:Core/SetWindowTitle) | Utility: Window | Vocabulary |
 | `to_float` | [Text To Float](ace:Core/StringToFloat) | Variables: String | Vocabulary |
+| `to_global` | [Random Place Along Path](ace:Core/PlaceAlongPath) | Spawn | Vocabulary |
 | `to_int` | [Text To Int](ace:Core/StringToInt) | Variables: String | Vocabulary |
 | `to_local` | [Is Behind](ace:Core/IsBehindObject3D) | 3D: See | Vocabulary |
 | `to_lower` | [Text Equals (ignore case)](ace:Core/TextEqualsIgnoreCase) | Compare: Text | Vocabulary |
