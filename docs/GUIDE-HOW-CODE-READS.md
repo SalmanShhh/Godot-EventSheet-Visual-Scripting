@@ -118,7 +118,7 @@ same file see the same rows.
 is a ledger: what the lines nothing claims actually look like, so that deciding where the next
 curated table would pay is a matter of reading rather than of guessing.
 
-![The Project Doctor's Reading section as rows of Section, Where and Finding: a head line reading 100% of what was read draws as rows with the naming question below it, a Reading shape line saying four lines are the same shape name.name().name(name), three Reading line doors naming coin.gd, crate.gd and door.gd with the statement each holds, one saying how many more lines of that shape there are, and a Reading tail counting the shapes nothing else repeats](images/doctor-reading-page.png)
+![The Project Doctor's Reading section as rows of Section, Where and Finding: a head line reading 100% of what was read draws as rows with the naming question below it, a Reading shape line saying four lines are the same shape name.chain().tween_callback(name), three Reading line doors naming coin.gd, crate.gd and door.gd with the statement each holds, one saying how many more lines of that shape there are, and a Reading tail counting the shapes nothing else repeats](images/doctor-reading-page.png)
 
 **Two numbers, said apart on purpose.** The head number is the project's reads-as percentage: the
 *drawing* question, how much of a file the canvas shows as rows rather than as a wall of code. On

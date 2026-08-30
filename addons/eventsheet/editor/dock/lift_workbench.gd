@@ -285,7 +285,7 @@ func _open_draft_form() -> void:
 	_draft_result.clear()
 	_draft_result.add_text(EventSheetL10n.translate("Mark each value span as [[name: text]], then check it."))
 	_fill_drafts_list()
-	_draft_window.popup_centered(Vector2i(720, 520))
+	_draft_window.popup_centered(Vector2i(780, 700))
 
 
 ## An id suggested from the line's own words - the identifiers in it, joined, lowercased. A

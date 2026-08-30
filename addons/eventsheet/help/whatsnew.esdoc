@@ -70,7 +70,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 - **The input handler asks the event now.** `if event.is_action_pressed(\"jump\"):` inside `_input` or
   `_unhandled_input` used to open as *Expression Is True* - the honest catch-all, and the plainest
-  thing a sheet could say about the commonest input shape there is. It reads as *\"jump\" was pressed*,
+  thing a sheet could say about the commonest input shape there is. It reads as *this event is \"jump\" going down*,
   beside three more: the press widened to include a held key's repeats, the release, and the question
   of which action an event belongs to at all. Both of Godot's quotings answer to the same row, because
   the `&` is a spelling rather than a value and rides back out untouched, and the action names come
@@ -637,6 +637,98 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ### Fixed
 
+- **One malformed pack spelling no longer claims every line in the project.** A refused lift entry
+  carries the sentence saying why instead of a pattern, and the empty string is a pattern that
+  matches every line ever written - so a single bad `@ace_lift_example` in any installed pack turned
+  every statement in every opened file into a row under an id no registry has heard of. The table
+  engine now skips an entry that has no table on it, which is where the check belongs: a pack's
+  spellings are read off disk at run time, with no validator between them and the match.
+- **A pack's spelling claims a node, not every object in the language.** Every by-example receiver
+  span silently compiled to the widest set the capture grammar has - the one that also matches a bare
+  variable - so a pack teaching `start_flickering` claimed the verb by NAME ALONE on any receiver at
+  all, `audio_manager.start_flickering(0.5)` and a bare self-call included. That is the one thing the
+  grammar's own rule forbids without a second way to be sure, and an annotation has nowhere to write
+  one. Examples now say which width they mean: `node` takes `$Path`, `%Unique` and
+  `get_node(\"Path\")`, and is what the shipped spellings take; a pack asking for the wide `receiver`
+  is refused by name, at the same gate every other bad example fails. A bare-variable call keeps the
+  generic reading it always had, which is the floor and is honest.
+- **A pack-taught claim shows as the entry it is.** The reader that says which vocabulary claimed
+  which line - the workbench's per-line claim, the Doctor's Reading page, the corpus tally - walked
+  only the recogniser families inside the plugin, so a line a PACK claimed fell through to the
+  plainer general reading and the entry count under-reported by the same amount. A pack spelling is a
+  lift-table entry, with a file and an id a developer can go and open, and it is now asked in the
+  same order the lifter asks it: after the built-in families, before the general reading.
+- **A member a parameter shadows is answered for by nobody.** The declared-type map holds a file's
+  SCRIPT-LEVEL declarations and carries no function scope, so a member called `body` beside
+  `func _on_body_entered(body):` - the commonest handler shape in Godot - answered for the parameter
+  too, and every row inside that handler was read against a class the parameter is not: the object
+  column showed it, the hover described it. A name the file uses both ways is now in none of the
+  declaration maps, so those rows keep the plainer view they already had. The bytes never moved
+  either way, which is why no gate could see it.
+- **The muted word beside a derived row is always the class.** Two lenses wanted that slot, and the
+  wrong one was winning: for a receiver declared as a class the project itself wrote, the
+  declaration lens moved the class into the object column and left the VARIABLE NAME muted - which is
+  exactly what a curated row looks like - so on those rows the one mark that tells the two layers
+  apart said the opposite of what it means. A derived row's muted word is now the class the verb was
+  read off, on both the raw-statement and the picked-row path, and is left off only where the object
+  column is already saying that class. The guide's own \"telling them apart at a glance\" table was
+  wrong in both directions and now says what is really there.
+- **A getter is an expression under both of Godot's property spellings.** A property that NAMES its
+  accessors (`get = _get_health`) read its getter as a trigger row - *On health read* - while a
+  property that writes its getter inline two lines further down the same file read it as the
+  expression block it is. One idea, two grammatical categories, in one opened file; the corpus's own
+  `player_stats.gd` holds both spellings side by side. The named getter now reads with the same
+  expression header the inline one does, with the function that gives the value on the right.
+- **The Doctor's capped walk says what it read, not what it will read next.** Its sentence invited a
+  reader to open the Doctor again \"after the rest have been read\", and there is no cursor and nothing
+  remembered between runs - so the same first twelve scripts in path order were read every time, and
+  in a real project the alphabetically-first folder was the only thing the Reading page would ever
+  see. The page now says what is true: these are the first few in path order, and the ledger is a
+  sample of the project rather than the whole of it. The branch is exercised by the suite, on a
+  folder bigger than the cap.
+- **The ledger keeps the verb, which is the word a curated table is keyed on.** Blanking every
+  identifier merged `queue_free()` with `hide()` and `_spawn_wave()` into one bucket called
+  `name()`, and `velocity.y += JUMP_VELOCITY` with `health.x += MAX_ARMOUR` - so the ranking that
+  says where the next curated table would pay put the bucket spanning the most unrelated verbs at
+  the top by construction, and the count driving it was the misleading number. A name being called
+  and a name after a dot are kept; the receiver in front of the dot, the arguments and the value
+  being assigned still go, because those are the halves that vary.
+- **The inside of a text block is not a statement.** A multi-line literal's continuation lines were
+  shaped as though they were code, and on a real project they dominated the ledger: a template's
+  `task: %s` came out as a name followed by a unique-name node path, which is a printf placeholder
+  read as a scene path. The walk now carries one piece of state across the file, so a line that
+  begins inside an open literal is given no shape at all, exactly as a comment is, and is counted
+  with them.
+- **The corpus now measures the ledger it is cited as evidence for.** Its six files yielded zero
+  repeated shapes and two stays-code lines between them, so the census ranking, the band-scale
+  truncation, the one-off tail and the notes counter - the whole mechanism the Doctor's Reading page
+  and the census tool are built on - had no whole-file coverage, and a regression in any of them
+  would not have moved a single pin. A seventh file joins it (two multi-line text templates and the
+  labels they fill, which is where the lines nothing claims actually live), and the ledger over the
+  whole corpus is pinned as values: the ranked shape and its count, the tail, and the lines that hold
+  no statement to shape.
+- **A handler's question says so on the row, not only in the picker.** The new Input Event sentences
+  were one word of tense away from the polled Input rows that mean a genuinely different thing -
+  *\"jump\" was pressed* against *\"jump\" just pressed* - and the defence for that was the picker's
+  section heading, which does not exist on a sheet row. Every sentence in the family now opens with
+  *this event is* (*this event is \"jump\" going down*, *coming up*, *going down, or repeating*), which
+  no polled row says: one asks the event a handler was handed, the other asks the Input singleton how
+  things stand right now. Display words only - the ace_ids and the code they write are untouched.
+- **A gate can now see the derived layer working.** The dogfood gate's headline metric is a regex
+  over a row's TEXT, and a derived reading changes a row's words without touching its code - so
+  `_dock._refresh_after_edit()` scored as a wordless row whether or not the layer had named the
+  method, its parameters and its description, and the pass's central claim shipped with unit coverage
+  only. There is a whole-file measurement now: five NAMED files of the editor's own source (never a
+  rotating sample, so the number is the same on every machine) with a floor on how many generic calls
+  the derived layer names in each.
+- **The workbench's scratch table can be seen and emptied.** Drafts were append-only: written to
+  `user://`, asked before every shipped spelling on every refresh, and never listed or removable from
+  the window - so one over-wide draft claimed every line in the tool with no visible cause and no
+  recovery except hand-editing a file the window never names on screen. The draft form now lists what
+  the scratch table holds and carries the button that forgets the lot. And the over-wide draft itself
+  is refused: an example that is nothing but value spans (`[[x: foo]]`) is not a spelling of anything,
+  it is the whole language, so the example engine declines it by name like every other thing it
+  cannot answer.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `\"enemies\"`

@@ -5,9 +5,11 @@
 #   ABOVE, the reading as it stood. `set = _set_health,` and `get = _get_health` are not statements,
 #     so nothing could lift them - and because they sit UNDER the `var` line, the declaration went
 #     into the code block with them. Three lines of a variable, shown as code.
-#   BELOW, the same three lines today: the variable is a row, and under it one sub-row per accessor
-#     saying which function runs and when. The functions themselves are not copied here; they read as
-#     the functions they are, further down the sheet, where they were written.
+#   BELOW, the same three lines today: the variable is a row, and under it one sub-row per accessor -
+#     the setter as the TRIGGER it is (a value being written is an event) and the getter as the
+#     EXPRESSION it is (a function that gives a value back), which are the same two kinds of row the
+#     inline spelling reads as. The functions themselves are not copied here; they read as the
+#     functions they are, further down the sheet, where they were written.
 #
 # The file is untouched either way - this is a reading, and the bytes are gated elsewhere.
 @tool
@@ -49,7 +51,7 @@ static func build(host: Window) -> Control:
 		"Before: two lines that are not statements, taking the declaration down with them",
 		_sheet_view(_before_sheet(), 170.0)))
 	column.add_child(EventSheetPopupUI.titled_card(
-		"After: the variable is a row, and each accessor says which function runs and when",
+		"After: the setter is the trigger it is and the getter the expression it is, each naming its function",
 		_sheet_view(_after_sheet(), 420.0)))
 	var margined: MarginContainer = EventSheetPopupUI.margined(column)
 	margined.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

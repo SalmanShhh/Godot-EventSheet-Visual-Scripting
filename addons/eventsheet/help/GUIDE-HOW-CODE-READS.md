@@ -59,9 +59,15 @@ You should never have to hover a row to know which layer wrote it. Two marks do 
 | | The curated sentence | The derived row |
 |---|---|---|
 | The verb | The row's bold weight - a written sentence | The plainer call style, drawn a shade back |
-| Beside the object | Nothing. The words are not the class's | The class it was read off, muted: `Timer`, `Light2D` |
+| The muted word beside the object | A variable NAME, and only when the object column is showing a class in its place: `_registry` reads *ACE registry*, with *registry* muted | A CLASS, always the one the verb was read off: `Timer`, `Light2D` |
 | Where the words came from | A person, in a recogniser table or an ACE descriptor | The class reference, or the `##` lines in your own script |
 | What it promises | This is what this line MEANS | This is what this member IS |
+
+Most curated rows have nothing muted beside the object at all - the second mark only appears when
+the file declared its receiver as a class the project itself wrote, which is the one case where the
+class says more than the variable name does. So the question a reader asks of a muted word is not
+*is there one* but *which kind of word is it*: a name is the curated layer, a class is the derived
+one.
 
 ![Three plain GDScript calls - beat.set_one_shot(true), hp_bar.set_indeterminate(true), hp_bar.set_show_percentage(false) - shown above the same three lines opened as a sheet: one event holding three rows reading beat Timer - Set one shot to true, hp_bar ProgressBar - Set indeterminate to true, hp_bar ProgressBar - Set show percentage to false](images/derived-call-rows.png)
 
@@ -112,7 +118,7 @@ same file see the same rows.
 is a ledger: what the lines nothing claims actually look like, so that deciding where the next
 curated table would pay is a matter of reading rather than of guessing.
 
-![The Project Doctor's Reading section as rows of Section, Where and Finding: a head line reading 100% of what was read draws as rows with the naming question below it, a Reading shape line saying four lines are the same shape name.name().name(name), three Reading line doors naming coin.gd, crate.gd and door.gd with the statement each holds, one saying how many more lines of that shape there are, and a Reading tail counting the shapes nothing else repeats](images/doctor-reading-page.png)
+![The Project Doctor's Reading section as rows of Section, Where and Finding: a head line reading 100% of what was read draws as rows with the naming question below it, a Reading shape line saying four lines are the same shape name.chain().tween_callback(name), three Reading line doors naming coin.gd, crate.gd and door.gd with the statement each holds, one saying how many more lines of that shape there are, and a Reading tail counting the shapes nothing else repeats](images/doctor-reading-page.png)
 
 **Two numbers, said apart on purpose.** The head number is the project's reads-as percentage: the
 *drawing* question, how much of a file the canvas shows as rows rather than as a wall of code. On
@@ -200,7 +206,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 | Before | Now |
 |---|---|
-| *Expression Is True* over the whole condition | *"jump" was pressed*, from the **Input Event** section, beside *was pressed or is repeating*, *was released* and *the event is "jump"* |
+| *Expression Is True* over the whole condition | *this event is "jump" going down*, from the **Input Event** section, beside *going down, or repeating*, *coming up* and *this event is "jump"* |
 
 Both of Godot's quotings answer to the same row, because the `&` is a spelling rather than a value
 and rides back out untouched, and the action names come from the project's own Input Map. These are
@@ -218,7 +224,12 @@ var health: int = 100:
 
 | Before | Now |
 |---|---|
-| A verbatim script block. Those two lines are not statements, so nothing could lift them and they took the declaration above them down with them | The variable row it is, with an *On health set ▸ `_set_health`* sub-row saying which function runs and when |
+| A verbatim script block. Those two lines are not statements, so nothing could lift them and they took the declaration above them down with them | The variable row it is, with an *On health set ▸ `_set_health`* sub-row saying which function runs and when, and a *ƒ health expression ▸ `_get_health`* sub-row for the one that gives the value back |
+
+The two sub-rows are deliberately different KINDS of row, and they are the same kinds the inline
+spelling reads as: a `set` fires when the value is written, which is an event, and a `get` gives a
+value back, which is an expression. A file that writes one property each way therefore shows the same
+idea the same way twice.
 
 The accessor functions go on reading as the functions they are, where they were written, rather than
 being copied under the declaration twice. Any shape the emitter would not write back identically -
@@ -292,7 +303,7 @@ Two doors, and both of them move words rather than bytes.
 
 **If the lines are calls into a pack you ship**, teach the reader the spellings your verbs are
 written as. `## @ace_lift_example` above a verb takes the line the way a person writes it with the
-value spans marked - `[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])` -
+value spans marked - `[[target|node: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])` -
 and a hand-written file that calls your pack reads as your rows instead of as generic method calls.
 The line the author wrote is stored on the row, so saving writes their file back exactly; an example
 that cannot keep that promise fails the pack build by name rather than shipping. The full form, its
