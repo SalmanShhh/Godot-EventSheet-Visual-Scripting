@@ -1,0 +1,379 @@
+# Godot EventSheets - who sees whom, and the four silent failures underneath it.
+#
+# Collision is the one part of a game whose truth lives outside the script, so this pins both halves
+# and the seam between them:
+#
+#   the reader      what a `.tscn` really says - the layer, the mask, the monitoring switch, the
+#                   shape that is not there, the one-way shape that is turned over.
+#   the band        the head's collisions sentence, with the band scale law doing its work.
+#   the four rules  each one fires on the fixture that has the bug AND stays silent on a clean twin
+#                   that is the same sheet with the scene put right. Never crying wolf is half of
+#                   every check here, and it is the half that is easy to lose.
+#   the quiet law   a finding renders NOTHING in the sheet. The row wears the amber state; the words
+#                   are read in the Doctor's inbox and in the selected row's help strip. This is
+#                   pinned against the canvas's own source, because a note row added tomorrow would
+#                   pass every other test in this file.
+#   the doors       what the inbox offers per check, and the shape of a receipt.
+#
+# The layer names this needs are written, read and put back exactly as they were found, and every
+# project-wide question is asked of the fixture scenes alone - so the run leaves the project as it
+# started and says the same thing whatever else the repository grows.
+@tool
+class_name CollisionAwarenessTest
+extends RefCounted
+
+## The corpus every project-wide question here is asked of. Scoped on purpose: "which layers does
+## anything sit on" is a question about a whole project, and answering it over this repository would
+## make these sentences depend on every fixture and showcase anybody adds.
+const SCENES: PackedStringArray = [
+	"res://tests/fixtures/collision_scene_door.tscn",
+	"res://tests/fixtures/collision_scene_enemy.tscn",
+	"res://tests/fixtures/collision_scene_gate.tscn",
+	"res://tests/fixtures/collision_scene_hollow.tscn",
+	"res://tests/fixtures/collision_scene_hushed.tscn",
+	"res://tests/fixtures/collision_scene_ledge.tscn",
+	"res://tests/fixtures/collision_scene_platform.tscn",
+]
+
+const GATE := "res://tests/fixtures/collision_scene_gate.gd"
+const DOOR := "res://tests/fixtures/collision_scene_door.gd"
+const HUSHED := "res://tests/fixtures/collision_scene_hushed.gd"
+const HOLLOW := "res://tests/fixtures/collision_scene_hollow.gd"
+const PLATFORM := "res://tests/fixtures/collision_scene_platform.gd"
+const LEDGE := "res://tests/fixtures/collision_scene_ledge.gd"
+
+const CANVAS_SOURCE := "res://addons/eventsheet/editor/interaction/viewport_row_builder.gd"
+
+## The layer names this test works against, written for the length of the run.
+const LAYER_SETTINGS: Array = [
+	["layer_names/2d_physics/layer_1", "World"],
+	["layer_names/2d_physics/layer_2", "Doors"],
+	["layer_names/2d_physics/layer_3", "Enemies"],
+]
+
+
+static func run() -> bool:
+	var previous: Dictionary = _apply_layer_names()
+	EventSheetSceneCollisionFacts.clear_cache()
+	var ok: bool = _test_the_reader()
+	ok = _test_the_band() and ok
+	ok = _test_nothing_can_reach_it() and ok
+	ok = _test_monitoring_is_off() and ok
+	ok = _test_it_has_no_shape() and ok
+	ok = _test_the_one_way_faces_down() and ok
+	ok = _test_the_sheet_stays_quiet() and ok
+	ok = _test_the_doors() and ok
+	ok = _test_the_report() and ok
+	_restore(previous)
+	EventSheetSceneCollisionFacts.clear_cache()
+	return ok
+
+
+# -- the reader ----------------------------------------------------------------------------------
+
+
+static func _test_the_reader() -> bool:
+	var gate: Dictionary = _collidable("res://tests/fixtures/collision_scene_gate.tscn", "Gate")
+	var ok: bool = _check("a mask written in the file is read as itself",
+		int(gate.get("mask_bits", 0)), 2)
+	ok = _check("and so is the layer", int(gate.get("layer_bits", 0)), 2) and ok
+	ok = _check("an Area is known to be one", bool(gate.get("is_area", false)), true) and ok
+	ok = _check("a shape child is found", bool(gate.get("has_shape", false)), true) and ok
+	var enemy: Dictionary = _collidable("res://tests/fixtures/collision_scene_enemy.tscn", "Enemy")
+	ok = _check("a body's groups come off its header",
+		PackedStringArray(enemy.get("groups", PackedStringArray())),
+		PackedStringArray(["enemies"])) and ok
+	ok = _check("a property the file never wrote is the engine's default",
+		bool(enemy.get("monitoring", false)), true) and ok
+	var hollow: Dictionary = _collidable("res://tests/fixtures/collision_scene_hollow.tscn", "Hollow")
+	ok = _check("a node with no shape child says so", bool(hollow.get("has_shape", true)), false) and ok
+	var platform: Dictionary = _collidable("res://tests/fixtures/collision_scene_platform.tscn", "Platform")
+	var turned: Array = platform.get("one_way", [])
+	ok = _check("a one-way shape is found", turned.size(), 1) and ok
+	ok = _check("and its facing is read off its own rotation",
+		bool((turned[0] as Dictionary).get("faces_down", false)), true) and ok
+	var ledge: Dictionary = _collidable("res://tests/fixtures/collision_scene_ledge.tscn", "Ledge")
+	ok = _check("an upright one-way shape is not turned over",
+		bool(((ledge.get("one_way", []) as Array)[0] as Dictionary).get("faces_down", true)), false) and ok
+	# The bit arithmetic underneath all of it - Godot numbers layers from 1 and stores them from 0,
+	# which is the off-by-one every hand-written mask check gets wrong once.
+	ok = _check("layer 1 is the first bit", EventSheetSceneCollisionFacts.bit_of(1), 1) and ok
+	ok = _check("layer 3 is the third", EventSheetSceneCollisionFacts.bit_of(3), 4) and ok
+	ok = _check("and a number that is not a layer is no bit at all",
+		EventSheetSceneCollisionFacts.bit_of(33), 0) and ok
+	ok = _check("a mask says which layers it holds",
+		EventSheetSceneCollisionFacts.layer_numbers(6), PackedInt32Array([2, 3])) and ok
+	ok = _check("the census finds every layer in use",
+		EventSheetSceneCollisionFacts.occupied_bits(EventForgePhysicsLayers.DIMENSION_2D, SCENES), 6) and ok
+	ok = _check("and a group answers with the layers its members are on",
+		EventSheetSceneCollisionFacts.group_bits("\"enemies\"",
+			EventForgePhysicsLayers.DIMENSION_2D, SCENES), 4) and ok
+	ok = _check("a group is read the same however a row spells it",
+		EventSheetSceneCollisionFacts.group_word("&\"enemies\""), "enemies") and ok
+	return ok
+
+
+# -- the band ------------------------------------------------------------------------------------
+
+
+static func _test_the_band() -> bool:
+	var bands: Array[Dictionary] = EventSheetSceneCollisionFacts.bands(GATE, SCENES)
+	var ok: bool = _check("a sheet whose node collides grows one band", bands.size(), 1)
+	if not ok:
+		return false
+	ok = _check("the band says what it sees, who sees it, and whether it is listening",
+		str(bands[0].get("value", "")), "sees Doors · seen by Doors · monitoring on") and ok
+	ok = _check("and echoes the lines of the scene file it came from",
+		str(bands[0].get("echo", "")),
+		"collision_scene_gate.tscn: Area2D \"Gate\", collision_layer = 2, collision_mask = 2") and ok
+	ok = _check("with the node itself as the thing its control opens",
+		str(bands[0].get("reference", "")),
+		"res://tests/fixtures/collision_scene_gate.tscn|.") and ok
+	# An Area that is switched off wears the problem's colour, because it is the one state that is
+	# always a problem whatever the mask says.
+	var hushed: Array[Dictionary] = EventSheetSceneCollisionFacts.bands(HUSHED, SCENES)
+	ok = _check("an Area with monitoring off says so", str(hushed[0].get("value", "")),
+		"sees Enemies · seen by Doors · monitoring off") and ok
+	ok = _check("and the band wears the problem's colour",
+		bool(hushed[0].get("warning", false)), true) and ok
+	# THE BAND SCALE LAW: what fits is named, the rest is counted.
+	var two_d: String = EventForgePhysicsLayers.DIMENSION_2D
+	ok = _check("three layers are all named",
+		EventSheetSceneCollisionFacts.words_for_bits(1 | 2 | 4, two_d), "World, Doors, Enemies") and ok
+	ok = _check("a fourth is counted rather than listed",
+		EventSheetSceneCollisionFacts.words_for_bits(1 | 2 | 4 | 8, two_d),
+		"World, Doors, Enemies and 1 more") and ok
+	ok = _check("a finding names every one of them",
+		EventSheetSceneCollisionFacts.all_words_for_bits(1 | 2 | 4 | 8, two_d),
+		"World, Doors, Enemies, 4") and ok
+	ok = _check("and a mask with nothing in it says so",
+		EventSheetSceneCollisionFacts.words_for_bits(0, two_d), "nothing") and ok
+	# The head puts the band in the stack the file's own reading order gives it.
+	var built: Array[Dictionary] = EventSheetHeadBands.bands({"extends": "Area2D",
+		"collisions": [{"value": "sees Doors", "echo": "x", "reference": "a|b", "warning": false}]})
+	var found: Dictionary = {}
+	for band: Dictionary in built:
+		if str(band.get("kind", "")) == EventSheetHeadBands.BAND_COLLISIONS:
+			found = band
+	ok = _check("the head builds a collisions band from those facts",
+		str(found.get("leader", "")), "collisions") and ok
+	ok = _check("whose control opens the node it is about",
+		str(found.get("control", "")), "select the node") and ok
+	return ok
+
+
+# -- the four rules ------------------------------------------------------------------------------
+
+
+static func _test_nothing_can_reach_it() -> bool:
+	var found: Array[Dictionary] = _findings(GATE)
+	var ok: bool = _check("a trigger nothing can reach earns one finding",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_CANNOT_SEE]))
+	if found.is_empty():
+		return false
+	ok = _check("named by layer, and by the group the trigger filters on",
+		str(found[0].get("message", "")),
+		"Gate watches Doors, and the members of \"enemies\" sit on Enemies - so this trigger never fires.") and ok
+	ok = _check("the door offers the layer to start watching",
+		str(found[0].get("fix_label", "")), "Watch Enemies") and ok
+	ok = _check("and carries the layer number the write needs",
+		int(found[0].get("layer", 0)), 3) and ok
+	ok = _check("with the node the write lands on", str(found[0].get("node", "")), ".") and ok
+	# The clean twin: the same sheet, the same trigger, the same question, a mask that covers them.
+	ok = _check("and the same sheet over a mask that covers them says nothing",
+		_kinds(_findings(DOOR)), PackedStringArray()) and ok
+	return ok
+
+
+static func _test_monitoring_is_off() -> bool:
+	var found: Array[Dictionary] = _findings(HUSHED)
+	var ok: bool = _check("an Area switched off earns one finding",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_MONITORING_OFF]))
+	if found.is_empty():
+		return false
+	ok = _check("that says what the switch does",
+		str(found[0].get("message", "")),
+		"Hushed has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.") and ok
+	ok = _check("and offers the one click that answers it",
+		str(found[0].get("fix", "")), EventSheetCollisionFindings.FIX_MONITORING_ON) and ok
+	ok = _check("an Area that is listening says nothing",
+		_kinds(_findings(DOOR)), PackedStringArray()) and ok
+	return ok
+
+
+static func _test_it_has_no_shape() -> bool:
+	var found: Array[Dictionary] = _findings(HOLLOW)
+	var ok: bool = _check("a collision object with no shape earns one finding",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_NO_SHAPE]))
+	if found.is_empty():
+		return false
+	ok = _check("carrying the engine's own warning to the sheet that depends on it",
+		str(found[0].get("message", "")),
+		"Hollow has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.") and ok
+	ok = _check("with a door that shows the node rather than inventing a geometry",
+		str(found[0].get("fix", "")), EventSheetCollisionFindings.FIX_SHOW_IN_SCENE) and ok
+	ok = _check("a node that has a shape says nothing",
+		_kinds(_findings(DOOR)), PackedStringArray()) and ok
+	return ok
+
+
+static func _test_the_one_way_faces_down() -> bool:
+	var found: Array[Dictionary] = _findings(PLATFORM)
+	var ok: bool = _check("a one-way shape turned over earns one finding",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_ONE_WAY_FACING]))
+	if found.is_empty():
+		return false
+	ok = _check("advisory, because a shape can be turned on purpose",
+		str(found[0].get("severity", "")), "info") and ok
+	ok = _check("and it says which way round it is",
+		str(found[0].get("message", "")),
+		"Ledge is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.") and ok
+	ok = _check("the same sheet over an upright one-way shape says nothing",
+		_kinds(_findings(LEDGE)), PackedStringArray()) and ok
+	return ok
+
+
+# -- the quiet sheet law -------------------------------------------------------------------------
+
+
+static func _test_the_sheet_stays_quiet() -> bool:
+	# ONE import, because the two halves have to be about the same rows: a second import makes a
+	# second set of EventRow objects, and a finding anchored at one of them is not anchored at the
+	# other however identical the two sheets read.
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(GATE)
+	var found: Array[Dictionary] = EventSheetCollisionFindings.findings(sheet, GATE, SCENES)
+	var event_row: EventRow = _first_event(sheet)
+	var ok: bool = _check("the finding is anchored at the row it is about",
+		found[0].get("event") == event_row, true)
+	ok = _check("the row's help strip says it in full",
+		EventSheetCollisionFindings.strip_text(found, event_row),
+		str(found[0].get("message", ""))) and ok
+	ok = _check("and a row with nothing wrong has nothing to say",
+		EventSheetCollisionFindings.strip_text(found, null), "") and ok
+	# The half a message-level test cannot see: the canvas must put the sentence into the row's amber
+	# state and must NOT hang a note row off it. A note row added tomorrow would pass everything
+	# above, so the canvas's own source is what says which of the two it does.
+	var canvas: String = FileAccess.get_file_as_string(CANVAS_SOURCE)
+	ok = _check("the canvas sets the row's quiet amber state from these findings",
+		canvas.contains("row_data.attention_note = EventSheetCollisionFindings.strip_text("), true) and ok
+	# Every family that DOES hang a note row reaches its findings through `for_event`, which is what
+	# `_build_finding_note_rows` is handed. This family must never be read that way in the canvas:
+	# the amber state is the whole of what the sheet gets.
+	ok = _check("and never reaches them the way a note row is built",
+		canvas.contains("EventSheetCollisionFindings.for_event"), false) and ok
+	ok = _check("nor hangs one under the event",
+		canvas.contains("_build_finding_note_rows(\n\t\t\t\tEventSheetCollisionFindings"), false) and ok
+	return ok
+
+
+# -- the doors -----------------------------------------------------------------------------------
+
+
+static func _test_the_doors() -> bool:
+	var ok: bool = _check("the inbox offers the mask write",
+		_door_ids(EventSheetCollisionsDoctor.CHECK_CANNOT_SEE),
+		PackedStringArray(["watch_the_layer"]))
+	ok = _check("and the monitoring switch",
+		_door_ids(EventSheetCollisionsDoctor.CHECK_MONITORING),
+		PackedStringArray(["switch_monitoring_on"])) and ok
+	ok = _check("and, where there is nothing to write, the way to the node",
+		_door_ids(EventSheetCollisionsDoctor.CHECK_NO_SHAPE),
+		PackedStringArray(["show_the_node"])) and ok
+	ok = _check("the one-way advisory offers the same door",
+		_door_ids(EventSheetCollisionsDoctor.CHECK_ONE_WAY),
+		PackedStringArray(["show_the_node"])) and ok
+	# The receipt: two lines of the scene file, either side of an arrow, so the reader is shown the
+	# change rather than told a count.
+	ok = _check("a write leaves the two lines side by side",
+		EventSheetSceneCollisionFacts.receipt({"before": "collision_mask = 2", "after": "collision_mask = 6"}),
+		"collision_mask = 2 -> collision_mask = 6") and ok
+	# And outside the editor there is nothing to write into, which is said rather than silently done.
+	var refused: Dictionary = EventSheetSceneCollisionFacts.let_it_see(
+		"res://tests/fixtures/collision_scene_gate.tscn", ".", 3)
+	ok = _check("and a write with no editor behind it refuses and says why",
+		bool(refused.get("ok", true)), false) and ok
+	ok = _check("a layer Godot does not have is refused before anything is opened",
+		str(EventSheetSceneCollisionFacts.let_it_see("x", ".", 99).get("reason", "")),
+		"Godot has collision layers 1 to 32.") and ok
+	return ok
+
+
+# -- the report ----------------------------------------------------------------------------------
+
+
+static func _test_the_report() -> bool:
+	var scripts: PackedStringArray = PackedStringArray([GATE, DOOR, HUSHED, HOLLOW, PLATFORM, LEDGE])
+	var ok: bool = _check("only the scripts that wait on a touch are read",
+		EventSheetCollisionsDoctor.ranked(scripts),
+		PackedStringArray([DOOR, GATE, HOLLOW, HUSHED]))
+	var filed: Array[Dictionary] = EventSheetCollisionsDoctor.report(scripts, SCENES)
+	var checks: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in filed:
+		checks.append(str(finding.get("check", "")))
+	ok = _check("and the section files one line per finding under the summary", checks,
+		PackedStringArray([EventSheetCollisionsDoctor.CHECK_ID,
+			EventSheetCollisionsDoctor.CHECK_CANNOT_SEE,
+			EventSheetCollisionsDoctor.CHECK_NO_SHAPE,
+			EventSheetCollisionsDoctor.CHECK_MONITORING])) and ok
+	ok = _check("the summary counts what it read",
+		str(filed[0].get("message", "")),
+		"Collisions: 4 script(s) waiting on a touch, 4 read, 3 whose trigger cannot fire as the scene stands.") and ok
+	ok = _check("and a project whose scripts never wait on a touch hears nothing at all",
+		EventSheetCollisionsDoctor.report(PackedStringArray([PLATFORM, LEDGE]), SCENES).size(), 0) and ok
+	return ok
+
+
+# -- helpers -------------------------------------------------------------------------------------
+
+
+static func _findings(script_path: String) -> Array[Dictionary]:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(script_path)
+	return EventSheetCollisionFindings.findings(sheet, script_path, SCENES)
+
+
+static func _kinds(found: Array[Dictionary]) -> PackedStringArray:
+	var kinds: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in found:
+		kinds.append(str(finding.get("kind", "")))
+	return kinds
+
+
+static func _collidable(scene_path: String, node_name: String) -> Dictionary:
+	for collidable: Dictionary in EventSheetSceneCollisionFacts.collidables_of_scene(scene_path):
+		if str(collidable.get("name", "")) == node_name:
+			return collidable
+	return {}
+
+
+static func _door_ids(check_id: String) -> PackedStringArray:
+	var ids: PackedStringArray = PackedStringArray()
+	for offer: Dictionary in EventSheetQuickFixes.fixes_for({"check": check_id, "subject": "Gate"}):
+		ids.append(str(offer.get("id", "")))
+	return ids
+
+
+static func _first_event(sheet: EventSheetResource) -> EventRow:
+	for item: Variant in sheet.events:
+		if item is EventRow:
+			return item as EventRow
+	return null
+
+
+static func _apply_layer_names() -> Dictionary:
+	var previous: Dictionary = {}
+	for entry: Array in LAYER_SETTINGS:
+		previous[entry[0]] = ProjectSettings.get_setting(str(entry[0]), null)
+		ProjectSettings.set_setting(str(entry[0]), str(entry[1]))
+	return previous
+
+
+static func _restore(previous: Dictionary) -> void:
+	for key: Variant in previous:
+		ProjectSettings.set_setting(str(key), previous[key])
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		return true
+	print("[FAIL] %s\n  expected: %s\n  got:      %s" % [label, str(expected), str(actual)])
+	return false
