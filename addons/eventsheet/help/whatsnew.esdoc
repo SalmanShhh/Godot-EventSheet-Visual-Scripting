@@ -90,7 +90,15 @@ What changed in the build you have installed (v0.17.0), in the words the release
   same way.
 - **Every trigger row now shows its payload.** A signal-backed trigger picked from the list draws the
   same chips a lifted handler's row draws, read off the signature the compiler is going to emit, so a
-  reader sees what the event hands them without opening the code.
+  reader sees what the event hands them without opening the code. A slot the trigger's own sentence
+  fills is not payload and is left out of the chips: the group is the field you filled in, and the
+  row already says it.
+- **Two of these reading changes are sheet-wide, not collision work.** A parameterised trigger now
+  reads as its FILLED sentence rather than as its display name wherever it appears, and every picked
+  signal-backed trigger that records no argument list derives its chips from the compiler's own
+  signature. Both are needed by the rows above, and both change how sheets that have nothing to do
+  with collision read - which is why they are named here rather than left inside a section about
+  touching.
 
 ### Who sees whom
 
@@ -342,6 +350,82 @@ What changed in the build you have installed (v0.17.0), in the words the release
   their own and 19 are companion data assets documented inside a partner's guide.
 
 ### Fixed
+
+- **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
+  keyed on the raw group text the row holds while the handler under it was named through a
+  normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `\"enemies\"`
+  and `&\"enemies\"` emitted `func _on_body_entered_enemies` twice, connected it twice, and produced a
+  file Godot refuses to load. The key is made of the same suffix the name is now, and the digest
+  under an expression-named group is the whole hash rather than four digits of it, which was the same
+  failure one step less likely.
+- **A sheet that sets its own mask is no longer told nothing can reach it.** The dead-trigger check
+  read the layer numbers out of the `.tscn` and nothing else, so a sheet whose first action is
+  **Collide with Enemies** - the row this pass ships - was accused of watching the wrong layer. A
+  sheet that writes its own layer or mask is judged by its rows: the scene file is where a node
+  starts, not what it watches while the game runs.
+- **The four checks see every touch trigger, not the four bare ones.** The list of ids they watched
+  was hand-kept and went stale the moment the eight filtered and eight edge triggers shipped beside
+  it, so picking the family's flagship sentence turned the whole safety net off - no amber state, no
+  help strip, no Doctor line, on the sheets most likely to have the bug. The census is asked of the
+  vocabulary itself now, and the group is read from both places a sheet can say it: a question
+  underneath, or the trigger's own With field.
+- **A node placed as an instance is one the reader can see.** The layer census went by the `type=` on
+  a node header, and an instance site has none - the type, the groups, the shape and every property
+  it did not override live in the file it points at. That is the commonest layout a real project has,
+  so the census read an empty level and a gate whose mask was exactly right was told the enemies sit
+  somewhere else. The shared scene parse now carries the file an instance points at, and the reader
+  folds it in: the type and script from the base, the properties overridden at the site, the groups
+  as the union of both, and the shapes the copy brought with it.
+- **The named-layer picker hands back the expression it was given.** A layer can be a constant, a
+  variable or a call, and the lift and the sentence both preserved it - but opening that row's dialog
+  and pressing OK submitted layer 1, rewriting working code on the way out of a form that was only
+  opened. It comes back untouched until somebody picks a layer from the list.
+- **A one-way shape that still faces up is not reported as turned over.** The threshold was an eighth
+  of a turn, named as a quarter and documented as a half, and the rotation was never wrapped - so a
+  shape at fifty degrees read as facing down, and one written `rotation = 6.2` (five degrees short of
+  a full turn, upright) read as the most turned-over shape in the project.
+- **The floor gate leads its row, and the four edges of the edge are written down.** Applying an edge
+  trigger to an event that already asked something added no gate at all, and a gate behind another
+  question is one GDScript's `and` chain never reaches on the steps that question is false - which
+  leaves the memory a step behind and reports a landing that never happened. And the four real
+  behaviours of a memory of last step are now said in the module and in the guide: the first physics
+  step is a landing, a body spawned airborne is right to say nothing, a paused node's memory stops
+  where it was, and a flickering slope is a real leave-and-land pair with Floor Snap Length as the
+  engine's own answer to it.
+- **The one-way advisory is only said where a landing is expected.** Its gate admitted any sheet with
+  a single touch trigger, and then told a sheet with no landing question anywhere in it that its rows
+  were waiting for one. The landing question also joins the words that get a script opened by the
+  Doctor, since a moving platform connects no signal at all - without which that finding was filed
+  against a sheet nothing ever read.
+- **Doctor ▸ Collision Layers reads code, not talk about code.** It walked raw source text, so any
+  file that merely quotes a layer call earned a finding - a fixture constant, a doc string, a codegen
+  template, a line commented out while somebody thinks. Over this repository it accused the plugin's
+  own test. String literals and comments are blanked before the calls are looked for, and the audit
+  drops from 73 warnings to 70.
+- **A filtered trigger's With field is not an engine payload.** The group was baked into the
+  handler's argument list, so a picked \"On overlap with enemies\" row drew `group` as a payload chip
+  beside `body`, as though the signal had handed it over.
+- **A fresh audit drops the scene answers the last one derived.** The layer census, the members of a
+  group and which collidables a script sits on are held for the session while the scene parse under
+  them refreshes by file stamp; the editor's filesystem hook dropped them and the audit did not - and
+  outside the editor there is no filesystem signal at all.
+- **Every row a finding is about wears the amber state.** \"Every row waiting on one here is
+  unreachable\" was said over a stripe on the first row only. A finding carries the whole list of rows
+  it is about now while staying one finding, so the Doctor still files one line. And the no-shape
+  rule is only said to a sheet that is waiting on the node: filed against a sheet with no touch row
+  in it, it rendered nowhere and was reported by a section that would never have opened the file.
+- **The amber row's sentence is not said in the sheet as a hover.** The quiet sheet law names two
+  places the words live - the Doctor's inbox, and the help strip when the row is selected. The
+  tooltip was a third.
+- **The layer-naming door leaves the receipt every other door leaves.** It said \"Layer 4: 4 ▸
+  \"Lava\"\"; it now says the Project Settings line as it was and as it now is, over the setting that
+  was really written.
+- **A name that contains a floor word is not a name that says one.** `underground` contains \"ground\",
+  so `if underground and not was_grounded:` opened as **just landed** - a sentence about floors
+  asserted over code that means something else. Bytes were never at risk; the reading was.
+- **The Collisions summary points at a file even when nothing is wrong**, instead of filing against
+  an empty path and rendering with a gap where the file should be. And the row help strip takes its
+  warning colour from the theme in force rather than the one it was built under.
 
 - **The whole audit runs in half the time, and says exactly the same thing.** Project Doctor had
   crept from 48 to 74-83 seconds on this repository as three passes added checks to it, and the

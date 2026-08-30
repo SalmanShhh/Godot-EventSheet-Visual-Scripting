@@ -212,6 +212,33 @@ plate going down, the room waking up, the room going quiet.
 Picking any of the eight puts the ordinary condition underneath. Nothing is wrapped, and nothing is
 added by the compiler that is not a row you can see.
 
+### What the floor edges do at the edges
+
+Four things follow from *the floor answer is a memory of last step*, and they are true of the
+hand-written pattern exactly as they are of the row. None of them is a bug to be fixed; each one is
+worth knowing before you build a jump on it.
+
+- **The first physics step is a landing.** `is_on_floor()` is false until the body has moved once,
+  so a character standing on the ground when the level opens is "not on the floor" on step one and
+  "on the floor" on step two. That is a landing by the only definition there is. If the landing
+  spends a sound or a puff of dust, gate it on something that says the game has started.
+- **A body that starts in the air is right, and says nothing.** It was not on the floor and is not
+  on the floor, so no edge happened. The landing arrives on the step it really touches down.
+- **A paused node misses the edge.** `_physics_process` does not run while the node is paused, so
+  the memory stops where it was. Whatever happened to the feet during the pause is compared against
+  the footing from before it, on the first step after - which reports a landing if the body was in
+  the air when it paused and on the ground when it woke.
+- **A slope or a step can flicker.** `is_on_floor()` can go false for a single step as a character
+  crosses a seam or clips a corner, and every one of those is a real leave-and-land pair to this
+  row. If a landing is expensive, count the steps off the floor before you believe them, or use
+  Godot's **Floor Snap Length** on the body so the feet do not leave in the first place.
+
+**And the gate stays the row's first question.** It is put there when the trigger is applied. A
+sheet's conditions compile to the terms of one `and` chain, and GDScript stops reading that chain at
+the first false term - so a floor gate moved down behind another question is not asked on the steps
+that question is false, the memory falls behind, and the next step it goes true reports a landing
+that never happened.
+
 ## The deep verbs, and when to reach for them
 
 The rows above are the sentences. Underneath them sits the vocabulary that was always here, and it
@@ -305,6 +332,9 @@ inbox, and the help strip under the row once the row is selected.
   not from a per-frame event that never moves anything.
 - **Do not update the memory before the question.** If you hand-write the landing check, the update
   goes after the `if`. Before it, the comparison always agrees with the present and can never fire.
+- **And do not move the floor gate behind another question.** The chain short-circuits, so the
+  memory is not updated on the steps the question in front of it is false. See *What the floor edges
+  do at the edges* above, which also covers the first physics step, a pause, and a flickering slope.
 - **Adding a child inside a collision handler needs the deferred spelling.** Godot refuses while the
   physics server is flushing. **Spawn A Copy Safely** is the row that admits the deferral in its own
   sentence.
