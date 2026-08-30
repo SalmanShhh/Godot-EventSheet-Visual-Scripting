@@ -265,6 +265,13 @@
   candidates, is unchanged. (The Interop and Performance sections still keep their own clocks; those
   predate this work.)
 
+- **The Doctor's Spawning section has a positive pin.** `report` had only ever been asked for an
+  EMPTY corpus and for a plugin-folder path, both of which answer with nothing - so the shape it
+  files held by nothing at all: the severity it passes through, the check id it maps a kind to, the
+  path it points at, the file name in front of the sentence, the subject, and the summary line
+  itself. A real script on disk now earns a real finding in the suite, and every one of those is
+  pinned as a value.
+
 ### Removed
 
 - **Scratch sheets are gone, and this is a deliberate break of the frozen public API.** A scratch

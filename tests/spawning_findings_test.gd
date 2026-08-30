@@ -36,6 +36,7 @@ static func run() -> bool:
 	passed = _test_the_deferred_respelling() and passed
 	passed = _test_the_guard_repair_is_about_the_name() and passed
 	passed = _test_the_doctor_files_each_kind() and passed
+	passed = _test_the_doctor_files_a_real_finding() and passed
 	return passed
 
 
@@ -564,3 +565,56 @@ static func _check(label: String, got: Variant, expected: Variant) -> bool:
 		return true
 	print("[FAIL] spawning_findings_test: %s -> expected %s, got %s" % [label, expected, got])
 	return false
+
+
+## The Doctor's own summary and one filed finding, produced from a real script on disk rather than
+## reasoned about. `report` had only ever been asked for an EMPTY corpus and for a plugin-folder path,
+## both of which answer with nothing, so the shape it files - the severity it passes through, the
+## check id it maps a kind to, the path it points at, the file name it puts in front of the sentence,
+## the subject it carries and the summary line itself - was held by nothing at all.
+static func _test_the_doctor_files_a_real_finding() -> bool:
+	var path: String = "user://eventforge_spawning_doctor_fixture.gd"
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return _check("the fixture script can be written", false, true)
+	file.store_string(PHYSICS_SPAWN_SOURCE)
+	file = null
+	var filed: Array[Dictionary] = EventSheetSpawningDoctor.report(PackedStringArray([path]))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var passed: bool = _check("the section files a summary and the finding under it", filed.size(), 2)
+	if filed.size() != 2:
+		return false
+	# The summary counts candidates against scripts actually read, so a sampled run can never read as
+	# a clean bill of health - and it points at the first script worth opening.
+	passed = _check("the summary says what was found, what was read and what is wrong",
+		str(filed[0].get("message", "")),
+		"Spawning: 1 script(s) that add or remove nodes, 1 read, 1 with something that will go wrong at run time.") and passed
+	passed = _check("the summary is an info line under the section's own id",
+		"%s/%s" % [str(filed[0].get("severity", "")), str(filed[0].get("check", ""))],
+		"info/%s" % EventSheetSpawningDoctor.CHECK_ID) and passed
+	passed = _check("and points at the script worth opening", str(filed[0].get("path", "")), path) and passed
+	# And the finding itself, as the panel shows it: the family's own severity and wording, under the
+	# check id its kind maps to, with the file named in front of the sentence.
+	passed = _check("the finding keeps the family's severity",
+		str(filed[1].get("severity", "")), "warning") and passed
+	passed = _check("and is filed under the check its kind maps to",
+		str(filed[1].get("check", "")), EventSheetSpawningDoctor.CHECK_PHYSICS) and passed
+	passed = _check("and names the file in front of the sentence a reader acts on",
+		str(filed[1].get("message", "")),
+		"eventforge_spawning_doctor_fixture.gd This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.") and passed
+	passed = _check("and carries the name the row gave the copy",
+		str(filed[1].get("subject", "")), "foe") and passed
+	passed = _check("and the file a double-click would open", str(filed[1].get("path", "")), path) and passed
+	return passed
+
+
+## The fixture: a parenting inside the physics callback, which is the rule the pre-read admits on two
+## words in one function body and the rules then confirm by reading the rows.
+const PHYSICS_SPAWN_SOURCE: String = """extends Node2D
+
+
+func _physics_process(_delta: float) -> void:
+	var foe = load("res://enemy.tscn").instantiate()
+	add_child(foe)
+	foe.global_position = global_position
+"""
