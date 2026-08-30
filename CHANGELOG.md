@@ -146,9 +146,9 @@
 - **The project sweep is SAMPLED, and says so.** Reading a script's rows means opening it as a sheet,
   which costs about half a second, so the section pre-reads the text per FUNCTION - the two words a
   rule needs inside one body, not merely somewhere in the file - ranks what survives by how much its
-  own text says it could earn, and opens the strongest few under a count and a wall clock, the way
-  the Interop section already does. Its summary line says how many candidates there were AND how many
-  were read, so a sampled run reads as a partial one rather than as a clean bill of health. The notes
+  own text says it could earn, and opens the strongest few under a COUNT. Its summary line says how
+  many candidates there were AND how many were read, so a sampled run reads as a partial one rather
+  than as a clean bill of health. The notes
   on a sheet's own rows are never sampled: they are derived from that one sheet whenever the canvas
   rebuilds, so the sheet in front of a reader is always fully checked.
 
@@ -255,6 +255,15 @@
   button do nothing while saying, truthfully but about something else, that the event had already
   asked. It asks the compiler's own rule now, which reads both spellings and counts a negated
   question as not asked, and the status line names the name.
+
+- **The Spawning sweep's ceiling is a count, not a clock.** It also stopped on a wall-clock budget,
+  which made the section the one part of this work whose output depended on how fast the machine
+  reading it was: the same project, audited on a laptop and on a build server, could file different
+  findings. The count bounds the same thing the clock was there to bound - how many scripts get
+  opened - and it is the same everywhere, so two audits of an unchanged project now read the same on
+  any machine. Ranking by strongest evidence, which is what makes a cut fall on the weakest
+  candidates, is unchanged. (The Interop and Performance sections still keep their own clocks; those
+  predate this work.)
 
 ### Removed
 

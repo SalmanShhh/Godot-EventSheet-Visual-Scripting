@@ -533,7 +533,9 @@ time the canvas rebuilds. The Doctor's project-wide section is a SAMPLE, because
 rows means opening it as a sheet and that costs about half a second each. It pre-reads the text,
 ranks the candidates by how much their own text says they could earn, and opens the strongest few -
 and its summary line says how many candidates there were and how many were read, so a sampled run
-never reads as a clean bill of health.
+never reads as a clean bill of health. **How many is a count, not a stopwatch**: the same project
+audited on a laptop and on a build server reports the same findings, because a report that changes
+without the project changing is not one you can act on.
 
 **A node added while physics is busy.** Godot refuses to add a child while the physics server is
 flushing its queries, which is most of what a collision callback is, and the error names a line

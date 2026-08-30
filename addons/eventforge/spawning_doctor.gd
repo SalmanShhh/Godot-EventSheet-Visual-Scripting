@@ -69,17 +69,23 @@ const CREATED_WORD := "_ready"
 ## nothing: a body is the lines from one of these to the next.
 const FUNCTION_LEAD := "func "
 
-## And the ceilings that stand behind the pre-read, in the shape the Interop section already uses: a
-## count and a wall clock. With the per-function pre-read in front of them they are not reached in
-## this repository - they are the floor under a project shaped in a way nobody here has seen, so an
-## audit cannot be made unbounded by somebody else's code. A run that does reach one still counts
-## every candidate in its summary, so a capped run reads as a partial one rather than as a clean one.
+## And the ceiling that stands behind the pre-read: a COUNT, and nothing else. With the per-function
+## pre-read in front of it, it is not reached in this repository - it is the floor under a project
+## shaped in a way nobody here has seen, so an audit cannot be made unbounded by somebody else's code.
+## A run that does reach it still counts every candidate in its summary, so a capped run reads as a
+## partial one rather than as a clean one.
+##
+## NO WALL CLOCK. A ceiling measured in milliseconds makes the report depend on how fast the machine
+## reading it is: the same project, audited on a laptop and on a build server, would file different
+## findings, and a report that changes without the project changing is not a report anybody can act
+## on. The count is bounded by the same thing the clock was there to bound - how many scripts get
+## opened - and it is the same on every machine. The candidates are ranked strongest-evidence-first,
+## so the scripts a cut loses are the weakest ones rather than an arbitrary tail.
 ##
 ## Only this project-wide sweep is capped. The notes on a sheet's own rows are derived from that one
-## sheet whenever the canvas rebuilds, so the sheet in front of a reader is never one the ceilings
-## cut off.
+## sheet whenever the canvas rebuilds, so the sheet in front of a reader is never one the ceiling cut
+## off.
 const MEASURED_LIMIT: int = 12
-const MEASURE_BUDGET_MSEC: int = 3000
 
 
 ## Registers the section, replacing any previous registration - so a plugin reload, a second Doctor
@@ -107,12 +113,8 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	var worst_path: String = ""
 	var ordered: PackedStringArray = ranked(scripts)
 	spawning = ordered.size()
-	# Started AFTER the pre-read, not before it: the clock is a ceiling on OPENING scripts, and one
-	# that included the text scan would spend itself on the cheap half and leave nothing for the half
-	# it was put there to bound.
-	var deadline: int = Time.get_ticks_msec() + MEASURE_BUDGET_MSEC
 	for script_path: String in ordered:
-		if measured >= MEASURED_LIMIT or Time.get_ticks_msec() > deadline:
+		if measured >= MEASURED_LIMIT:
 			break
 		measured += 1
 		var found: Array[Dictionary] = sheet_findings(script_path)
