@@ -695,6 +695,14 @@
   read as a scene path. The walk now carries one piece of state across the file, so a line that
   begins inside an open literal is given no shape at all, exactly as a comment is, and is counted
   with them.
+- **The corpus now measures the ledger it is cited as evidence for.** Its six files yielded zero
+  repeated shapes and two stays-code lines between them, so the census ranking, the band-scale
+  truncation, the one-off tail and the notes counter - the whole mechanism the Doctor's Reading page
+  and the census tool are built on - had no whole-file coverage, and a regression in any of them
+  would not have moved a single pin. A seventh file joins it (two multi-line text templates and the
+  labels they fill, which is where the lines nothing claims actually live), and the ledger over the
+  whole corpus is pinned as values: the ranked shape and its count, the tail, and the lines that hold
+  no statement to shape.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

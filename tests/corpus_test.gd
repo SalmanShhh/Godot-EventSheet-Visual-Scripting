@@ -7,7 +7,7 @@
 # source: ordinary game code, in the shapes tutorials and engine docs spell them, written to be
 # opened rather than to be maintained.
 #
-# res://tests/corpus/ holds six of them today:
+# res://tests/corpus/ holds seven of them today:
 #   player_controller.gd   the first script every project has - a character body, input, a jump
 #   door_state_machine.gd  an enum and one match block, which is how hand-written FSMs are spelled
 #   network_lobby.gd       an autoload that hosts, joins and sends, in the engine's own spellings
@@ -16,6 +16,8 @@
 #                          and the engine's own pause notifications - the three shapes a menu is
 #   player_stats.gd        properties in both of Godot's spellings: two that name the functions that
 #                          guard them, one that writes its accessor inline
+#   mission_hud.gd         two multi-line text templates and the labels they fill - the file the
+#                          LEDGER is measured on, because it is the one with lines nothing claims
 #
 # WHAT IS PINNED, AND WHY IT IS PINNED AS VALUES:
 #
@@ -25,6 +27,12 @@
 #      lift-table entry claims by name, and how many stay honest code. Counts, not tolerances -
 #      moving one means editing this file, which is the point. A coverage change becomes a
 #      deliberate, visible diff instead of a floor quietly absorbing it.
+#   3. THE LEDGER over the whole corpus, as values. The Doctor's Reading page and
+#      tools/reading_shape_census.gd are both built on one census, and until a corpus file had
+#      repeated shapes in it that census had no whole-file coverage at all: the ranking, the one-off
+#      tail and the notes counter could all have gone wrong without moving a single pin. Now the
+#      ranked shape, its count, the tail and the notes are pinned as the numbers they are - and the
+#      notes number is the one that says the inside of a text block is not being shaped as code.
 #
 # THE RULE FOR ADDING TO IT: a new family adds the file that motivated it - the real code that made
 # somebody write the recogniser, not a line distilled out of it. Pins move UP, and the commit that
@@ -46,6 +54,7 @@ const CORPUS_DIR: String = "res://tests/corpus/"
 ## `entry` the lines a lift-table entry claims by name, `code` the lines that stay a script block.
 const PINS: Dictionary = {
 	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1},
+	"mission_hud.gd": {"percent": 100, "entry": 0, "code": 8},
 	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0},
 	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0},
 	"pickup_juice.gd": {"percent": 100, "entry": 0, "code": 1},
@@ -88,7 +97,38 @@ static func run() -> bool:
 			int(counts[EventSheetLiftReading.LAYER_ENTRY]), int(pins["entry"])) and all_passed
 		all_passed = _check("%s lines that stay code (pinned %d)" % [name, int(pins["code"])],
 			int(counts[EventSheetLiftReading.LAYER_CODE]), int(pins["code"])) and all_passed
-	return all_passed
+	return _test_the_ledger(files) and all_passed
+
+
+## The census over the WHOLE corpus, as values. Everything the Doctor's Reading page and the census
+## tool are built on runs here on real whole files rather than on a hand-built list of lines: which
+## shape is said more than once and how often, how many lines nothing else repeats, and how many hold
+## no statement to shape at all.
+##
+## The notes number is the load-bearing one. Six of them are the inside of the two text templates in
+## mission_hud.gd - prose, not statements - and a walk that shaped those as code would rank a printf
+## placeholder as a node path and move this pin.
+static func _test_the_ledger(files: PackedStringArray) -> bool:
+	var lines: Array = []
+	for path: String in files:
+		var reading: Dictionary = EventSheetLiftReading.read(FileAccess.get_file_as_string(path), path)
+		lines.append_array(EventSheetReadingShapes.stays_code_lines(reading, path))
+	var census: Dictionary = EventSheetReadingShapes.census(lines)
+	var ranked: PackedStringArray = PackedStringArray()
+	for entry: Variant in census.get("shapes", []) as Array:
+		ranked.append("%s x%d" % [str((entry as Dictionary).get("shape", "")),
+			int((entry as Dictionary).get("count", 0))])
+	print("[corpus] ledger: %s | one-offs=%d notes=%d" % [", ".join(ranked),
+		(census.get("one_offs", []) as Array).size(), int(census.get("notes", 0))])
+	var ok: bool = _check("the corpus ledger ranks the shape it repeats", ranked,
+		PackedStringArray(["const name:name=text x2"]))
+	ok = _check("and counts the shapes nothing else repeats",
+		(census.get("one_offs", []) as Array).size(), 2) and ok
+	ok = _check("and the lines that hold no statement to shape",
+		int(census.get("notes", 0)), 6) and ok
+	ok = _check("which is every stays-code line of the corpus, accounted for",
+		int(census.get("lines", 0)), 10) and ok
+	return ok
 
 
 ## Every .gd in the corpus folder, sorted.

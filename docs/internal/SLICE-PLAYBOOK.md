@@ -122,7 +122,7 @@ suite on a real user path (`tests/personal_paths_test.gd`).
 | A field that completes as you type | `EventSheetCompletionPopup.attach(field, field_kind, sheet_provider)` - one popup, one keyboard model (Tab/Enter accepts, Escape keeps what was typed). The names come from `EventSheets.completions_for(sheet, field_kind, prefix)`, and `field_kind` is the parameter's own hint |
 | To recognise a hand-written spelling | A TABLE ENTRY run by `addons/eventforge/importer/lift_table.gd`, not a new matcher (section 5). Derive it from the marked-up line with `EventForgeLiftExample.entry`, and spell any span you do write by hand with `EventForgeLiftGrammar` |
 | To try a spelling before writing it | **Tools > Lift Workbench** - paste the line, see what claims it, what it opens as and what it saves back as, and draft an entry from it (section 5) |
-| Whole real files to measure a reading on | `tests/corpus/`, pinned by `corpus_test.gd` as three numbers per file (section 5) |
+| Whole real files to measure a reading on | `tests/corpus/`, pinned by `corpus_test.gd` as three numbers per file plus the ledger over all of them (section 5) |
 | A picture of a UI change | A module under `tools/previews/`, rendered by `tools/render_previews.gd` in one boot |
 | A new behaviour or pack | A builder in `tools/pack_builders/` (auto-registered by glob), never a standalone addon |
 | A non-ACE row kind | The Custom Block API (`registration/block_kind.gd`), see the block guide |
@@ -257,7 +257,10 @@ order claiming it.
 `tests/corpus/` holds whole scripts a real Godot developer would plausibly have written - nobody's
 source, in the shapes tutorials and engine docs spell them. `corpus_test.gd` opens and saves every one
 byte-identically and pins each file's reading as three NUMBERS: the share that reads as rows, the
-lines a lift entry claims BY NAME, and the lines that stay honest code.
+lines a lift entry claims BY NAME, and the lines that stay honest code. It also pins the LEDGER over
+the whole corpus - the ranked shape and its count, the one-off tail and the lines that hold no
+statement to shape - so the census the Doctor's Reading page and the census tool are both built on has
+whole-file coverage rather than only a hand-built list of lines.
 
 **The rule for adding to it: a new family adds the file that motivated it** - the real code that made
 somebody write the recogniser, not a line distilled out of it. Pins move UP, and the commit that moves
