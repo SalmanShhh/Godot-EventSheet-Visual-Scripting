@@ -3971,6 +3971,18 @@ Input management vocabulary (define + rebind + read controls).
 - **Action Binding As Text** (`action: String`) - The action's first binding as readable text ("Space", "Left Mouse Button") or "unbound" - print it next to each row of a rebind screen.
 - **All Input Actions** - Every registered action name (an Array) - loop it to build a rebind screen instead of hand-listing rows.
 
+### Input Event (`res://addons/eventforge/registration/modules/input_event_aces.gd`)
+THE INPUT EVENT ITSELF: the questions a handler asks the event it was handed.
+
+#### Conditions
+- **Event Is Action Pressed** (`action: String`) - True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.
+- **Event Is Action Pressed Or Repeating** (`action: String`) - The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.
+- **Event Is Action Released** (`action: String`) - True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.
+- **Event Is The Action** (`action: String`) - True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.
+
+#### Expressions
+- **Event Action Strength** (`action: String`) - How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.
+
 ### Json (`res://addons/eventforge/registration/modules/json_aces.gd`)
 JSON (serialize, parse, validate, and save / load JSON files).
 
@@ -4321,6 +4333,15 @@ turning nodes on and off, and pausing them
 
 #### Expressions
 - **Node Process Mode** (`target: String`) - Returns a node's current process mode, as one of the Node.PROCESS_MODE_* values.
+
+### Notification (`res://addons/eventforge/registration/modules/notification_aces.gd`)
+THE FOUR NOTIFICATIONS A GAME ACTUALLY REACTS TO.
+
+#### Triggers
+- **On paused** - Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.
+- **On unpaused** - Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.
+- **On object freed** - Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.
+- **On close** - Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a "save first?" prompt.
 
 ### Options (`res://addons/eventforge/registration/modules/options_aces.gd`)
 Game Options vocabulary (the knobs an options menu changes).
