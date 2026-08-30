@@ -5415,7 +5415,7 @@ Layer Names,レイヤー名
 "Type the layer's name first, then Name it…",先にレイヤーの名前を入力してから、名前を付ける… を押してください。
 """%s"" is already layer %d.","""%s"" はすでにレイヤー %d です。"
 Layer %d could not be named.,レイヤー %d に名前を付けられませんでした。
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","レイヤー %d: %d ▸ ""%s""。元に戻すと番号に戻ります。"
+"%s. Undo puts the number back.","%s。元に戻すと番号に戻ります。"
 Name physics layer,物理レイヤーに名前を付ける
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.",%s は衝突レイヤー %d を指していますが、Godot のレイヤーは 1 から 32 までです。この呼び出しは何もしません。
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.",%s は衝突レイヤー %d についてですが、このプロジェクトはそのレイヤーに名前を付けていません。他の行が言葉で読めるのに、この行だけ数字で読めてしまいます。プロジェクト設定 ▸ レイヤー名で名前を付けるか、名前が変わったレイヤーに行を向けてください。

@@ -1461,8 +1461,10 @@ func _name_physics_layer(button: MenuButton, name_edit: LineEdit, dimension: Str
 		_say_under(heading, EventSheetL10n.translate("Layer %d could not be named.") % number)
 		return
 	name_edit.text = ""
-	_say_under(heading, EventSheetL10n.translate("Layer %d: %d ▸ \"%s\". Undo puts the number back.")
-		% [number, number, wanted])
+	# The receipt every door in this family says its write in: the line as it was, the line as it now
+	# is, and the setting that was really written named in both halves.
+	_say_under(heading, EventSheetL10n.translate("%s. Undo puts the number back.")
+		% EventForgePhysicsLayers.receipt(number, dimension, wanted))
 
 
 ## The write itself, undoable where there is an editor to undo it in.

@@ -147,6 +147,15 @@ static func name_layer(layer_number: int, dimension: String, layer_name: String)
 	return ProjectSettings.save() == OK
 
 
+## The receipt naming a layer leaves: the Project Settings line as it was, and as it now is. Not
+## translated, and deliberately - both sides are lines of `project.godot` and the arrow between them
+## is punctuation. The same shape every other door in this family says its write in, and it names the
+## setting that was really written rather than restating the layer's number twice.
+static func receipt(layer_number: int, dimension: String, layer_name: String) -> String:
+	var path: String = setting_path(layer_number, dimension)
+	return "%s = \"\" -> %s = \"%s\"" % [path, path, layer_name]
+
+
 ## Takes a name back off a layer - the undo half of the write above, so naming a layer from a row is
 ## one step a person can take back. Returns whether the file took it.
 static func unname_layer(layer_number: int, dimension: String) -> bool:

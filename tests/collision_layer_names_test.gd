@@ -302,6 +302,11 @@ static func _test_the_picker() -> bool:
 	ok = _check("a plain layer still comes back as its number",
 		dialog._extract_value(number_field), 2) and ok
 	ok = _check("read as the project's word for it", (number_field as MenuButton).text, "Enemies") and ok
+	# The naming door's receipt is the shape every other door in this family uses: the line as it was,
+	# the line as it now is, and the setting that was really written named in both halves.
+	ok = _check("the naming door's receipt is a line before and a line after",
+		EventForgePhysicsLayers.receipt(4, two_d, "Lava"),
+		"layer_names/2d_physics/layer_4 = \"\" -> layer_names/2d_physics/layer_4 = \"Lava\"") and ok
 	# The two rows own the controls; the dialog itself is reference-counted and goes with the scope.
 	written.free()
 	numbered.free()

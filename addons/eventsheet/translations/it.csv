@@ -5415,7 +5415,7 @@ Layer Names,Nomi livelli
 "Type the layer's name first, then Name it…","Digita prima il nome del livello, poi Assegna un nome…"
 """%s"" is already layer %d.","""%s"" è già il livello %d."
 Layer %d could not be named.,Non è stato possibile assegnare un nome al livello %d.
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Livello %d: %d ▸ ""%s"". Annulla rimette il numero."
+"%s. Undo puts the number back.","%s. Annulla rimette il numero."
 Name physics layer,Assegna un nome al livello fisico
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s si rivolge al livello di collisione %d, e Godot ha i livelli da 1 a 32: quella chiamata non fa nulla."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s riguarda il livello di collisione %d, che questo progetto non nomina: la riga si legge come il numero mentre ogni altra riga si legge come una parola. Assegnagli un nome in Impostazioni progetto ▸ Nomi livelli, oppure punta la riga al livello rinominato."

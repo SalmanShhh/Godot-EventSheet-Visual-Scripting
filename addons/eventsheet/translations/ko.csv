@@ -5415,7 +5415,7 @@ Layer Names,레이어 이름
 "Type the layer's name first, then Name it…",먼저 레이어 이름을 입력한 다음 이름 지정…을 누르세요.
 """%s"" is already layer %d.","""%s""은(는) 이미 레이어 %d입니다."
 Layer %d could not be named.,레이어 %d의 이름을 지정할 수 없습니다.
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","레이어 %d: %d ▸ ""%s"". 실행 취소하면 번호로 되돌아갑니다."
+"%s. Undo puts the number back.","%s. 실행 취소하면 번호로 되돌아갑니다."
 Name physics layer,물리 레이어 이름 지정
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s이(가) 충돌 레이어 %d을(를) 가리키지만, Godot의 레이어는 1부터 32까지입니다. 이 호출은 아무것도 하지 않습니다."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s은(는) 충돌 레이어 %d에 관한 것이지만, 이 프로젝트는 그 레이어에 이름을 붙이지 않았습니다. 다른 행은 단어로 읽히는데 이 행만 숫자로 읽힙니다. 프로젝트 설정 ▸ 레이어 이름에서 이름을 붙이거나, 이름이 바뀐 레이어로 행을 돌리세요."

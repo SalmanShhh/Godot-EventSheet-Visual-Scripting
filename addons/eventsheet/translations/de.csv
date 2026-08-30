@@ -5415,7 +5415,7 @@ Layer Names,Ebenennamen
 "Type the layer's name first, then Name it…","Tippe zuerst den Namen der Ebene ein, dann Benennen…"
 """%s"" is already layer %d.","""%s"" ist bereits Ebene %d."
 Layer %d could not be named.,Ebene %d konnte nicht benannt werden.
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Ebene %d: %d ▸ ""%s"". Rückgängig stellt die Zahl wieder her."
+"%s. Undo puts the number back.","%s. Rückgängig stellt die Zahl wieder her."
 Name physics layer,Physikebene benennen
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s spricht Kollisionsebene %d an, und Godot hat die Ebenen 1 bis 32 - dieser Aufruf tut nichts."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s handelt von Kollisionsebene %d, die dieses Projekt nicht benennt - die Zeile liest sich als Zahl, während jede andere Zeile sich als Wort liest. Benenne sie in Projekteinstellungen ▸ Ebenennamen, oder richte die Zeile auf die umbenannte Ebene."

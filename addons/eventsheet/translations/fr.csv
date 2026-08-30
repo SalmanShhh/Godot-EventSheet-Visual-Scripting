@@ -5415,7 +5415,7 @@ Layer Names,Noms des calques
 "Type the layer's name first, then Name it…","Saisissez d'abord le nom du calque, puis Le nommer…"
 """%s"" is already layer %d.","""%s"" est déjà le calque %d."
 Layer %d could not be named.,Le calque %d n'a pas pu être nommé.
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","Calque %d : %d ▸ ""%s"". Annuler rétablit le numéro."
+"%s. Undo puts the number back.","%s. Annuler rétablit le numéro."
 Name physics layer,Nommer le calque physique
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s s'adresse au calque de collision %d, or Godot possède les calques 1 à 32 - cet appel ne fait rien."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s concerne le calque de collision %d, que ce projet ne nomme pas - la ligne se lit comme le numéro alors que toutes les autres se lisent comme un mot. Nommez-le dans Paramètres du projet ▸ Noms des calques, ou pointez la ligne vers le calque renommé."

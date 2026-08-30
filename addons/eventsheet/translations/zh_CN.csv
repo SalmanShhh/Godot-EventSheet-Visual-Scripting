@@ -5415,7 +5415,7 @@ Layer Names,层名称
 "Type the layer's name first, then Name it…",请先输入层的名称，再点「命名…」。
 """%s"" is already layer %d.","""%s"" 已经是层 %d。"
 Layer %d could not be named.,无法为层 %d 命名。
-"Layer %d: %d ▸ ""%s"". Undo puts the number back.","层 %d：%d ▸ ""%s""。撤销会把数字放回去。"
+"%s. Undo puts the number back.","%s。撤销会把数字放回去。"
 Name physics layer,命名物理层
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.",%s 指向碰撞层 %d，而 Godot 只有 1 到 32 层 - 这次调用什么也不做。
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.",%s 说的是碰撞层 %d，而本项目没有给它命名 - 于是这一行读作数字，而其他每一行都读作一个词。请在项目设置 ▸ 层名称中给它命名，或把这一行指向那个被改名的层。
