@@ -12,6 +12,10 @@
 #   door_state_machine.gd  an enum and one match block, which is how hand-written FSMs are spelled
 #   network_lobby.gd       an autoload that hosts, joins and sends, in the engine's own spellings
 #   pickup_juice.gd        tweens, a particle burst and a camera shake - the pile of small touches
+#   pause_menu.gd          an input handler that asks the event, buttons wired with bound values,
+#                          and the engine's own pause notifications - the three shapes a menu is
+#   player_stats.gd        properties in both of Godot's spellings: two that name the functions that
+#                          guard them, one that writes its accessor inline
 #
 # WHAT IS PINNED, AND WHY IT IS PINNED AS VALUES:
 #
@@ -43,8 +47,10 @@ const CORPUS_DIR: String = "res://tests/corpus/"
 const PINS: Dictionary = {
 	"door_state_machine.gd": {"percent": 100, "entry": 0, "code": 1},
 	"network_lobby.gd": {"percent": 100, "entry": 5, "code": 0},
+	"pause_menu.gd": {"percent": 100, "entry": 4, "code": 0},
 	"pickup_juice.gd": {"percent": 100, "entry": 0, "code": 1},
-	"player_controller.gd": {"percent": 100, "entry": 0, "code": 0}
+	"player_controller.gd": {"percent": 100, "entry": 0, "code": 0},
+	"player_stats.gd": {"percent": 100, "entry": 0, "code": 0}
 }
 
 
