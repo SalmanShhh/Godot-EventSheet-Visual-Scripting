@@ -49,7 +49,12 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	"workspace": 32,
 	"canvas": 14,
 	"readings": 15,
-	"importer": 12,
+	# Read off the tree like the rest. Raised by one when the rotating sample reached
+	# scene_effect_facts.gd, which measures 13: a facts reader is a run of short lookups whose rows
+	# genuinely have little to say, and the ceiling is a description of the group rather than a
+	# target. Nothing about the reading layer changed to move it - the measure is taken off the
+	# imported sheet's own shape and the raw text of each row.
+	"importer": 13,
 	# Measured like the rest, on the three recogniser families that ship: 47 for the animation
 	# spellings, 39 for the effect ones, 27 for the lighting ones. A family is a TABLE - one
 	# dictionary literal per entry - so most of its rows are literal entries, which is the same

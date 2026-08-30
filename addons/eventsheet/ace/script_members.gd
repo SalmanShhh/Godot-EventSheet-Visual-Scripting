@@ -29,11 +29,14 @@ const _PRIVATE_PREFIX: String = "_"
 
 
 ## What one script declares: {"methods": Array[Dictionary], "signals": Array[Dictionary],
-## "base": String}. Each member is {"name", "args", "doc"} - the arguments exactly as the file writes
-## them, and the `##` block above the declaration joined into one line.
+## "properties": Array[Dictionary], "base": String}. Each member is {"name", "args", "doc"} - the
+## arguments exactly as the file writes them, and the `##` block above the declaration joined into
+## one line. A property's `args` is its DECLARED TYPE (`int`, `Color`, ""), which is the same slot
+## and the same question: what does this member take.
 static func of_script(script_path: String) -> Dictionary:
 	if script_path.strip_edges().is_empty() or not FileAccess.file_exists(script_path):
-		return {"methods": [] as Array[Dictionary], "signals": [] as Array[Dictionary], "base": ""}
+		return {"methods": [] as Array[Dictionary], "signals": [] as Array[Dictionary],
+			"properties": [] as Array[Dictionary], "base": ""}
 	var stamp: String = EventForgeFileStamp.of(script_path)
 	if _declared.has(stamp):
 		return _declared[stamp]
@@ -233,13 +236,24 @@ static func clear_cache() -> void:
 static func _read(script_path: String) -> Dictionary:
 	var methods: Array[Dictionary] = []
 	var signal_members: Array[Dictionary] = []
+	var properties: Array[Dictionary] = []
 	var base: String = ""
 	var doc_lines: PackedStringArray = PackedStringArray()
 	var method_head: RegEx = RegEx.create_from_string("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)")
 	var signal_head: RegEx = RegEx.create_from_string("^signal ([A-Za-z_][A-Za-z0-9_]*)(?:\\((.*)\\))?")
+	# A property declaration in any of the spellings a real file uses: a plain `var`, an `@onready`
+	# one, a `static var`, and the typed and untyped forms of each. The TYPE is captured where the
+	# file states one, because the type is what a reader of the row wants after the name.
+	var property_head: RegEx = RegEx.create_from_string(
+		"^(?:@[A-Za-z_][A-Za-z0-9_]*(?:\\([^)]*\\))?\\s+)*(?:static\\s+)?var ([A-Za-z_][A-Za-z0-9_]*)\\s*(?::\\s*([A-Za-z_][A-Za-z0-9_.]*(?:\\[[^\\]]*\\])?))?")
 	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
 		if line.begins_with("##"):
 			doc_lines.append(line.trim_prefix("##").strip_edges())
+			continue
+		# An annotation between the `##` block and the declaration it describes does NOT break the
+		# block - `@export` on its own line above a documented variable is the ordinary way an
+		# exported property is written, and Godot's own doc tool reads it the same way.
+		if line.begins_with("@") and not line.contains("var "):
 			continue
 		if line.begins_with("extends "):
 			base = line.trim_prefix("extends ").strip_edges()
@@ -251,8 +265,12 @@ static func _read(script_path: String) -> Dictionary:
 			found = signal_head.search(line)
 			if found != null and not found.get_string(1).begins_with(_PRIVATE_PREFIX):
 				signal_members.append(_member(found.get_string(1), found.get_string(2), doc_lines))
+			else:
+				found = property_head.search(line)
+				if found != null and not found.get_string(1).begins_with(_PRIVATE_PREFIX):
+					properties.append(_member(found.get_string(1), found.get_string(2), doc_lines))
 		doc_lines = PackedStringArray()
-	return {"methods": methods, "signals": signal_members, "base": base}
+	return {"methods": methods, "signals": signal_members, "properties": properties, "base": base}
 
 
 static func _member(name: String, args: String, doc_lines: PackedStringArray) -> Dictionary:

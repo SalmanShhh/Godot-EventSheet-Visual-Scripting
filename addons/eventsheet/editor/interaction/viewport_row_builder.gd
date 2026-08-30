@@ -13793,7 +13793,9 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	if not global_read.is_empty():
 		read_condition = condition.duplicate()
 		read_condition.params = read_params
-	var grammar: Dictionary = grammar_condition_sentence(read_condition)
+	# And on the left lane: a Compare Variable / Expression row whose question is one object's own
+	# property reads the same derived way the typed comparison does.
+	var grammar: Dictionary = _upgraded_by_derived_property(grammar_condition_sentence(read_condition), true)
 	if not grammar.is_empty():
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
@@ -14044,7 +14046,11 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	if not global_read.is_empty():
 		read_action = action.duplicate()
 		read_action.params = params_dict
-	var grammar: Dictionary = grammar_action_sentence(read_action)
+	# The same derived property reading the typed line gets, on the PICKED row: the importer files an
+	# ordinary `x.y = z` as a Set Property row through the statement catch-all, which is the lowest
+	# specificity claim there is and not a curated one - so a Set Property row is this layer's
+	# territory exactly as a Call Method row is the derived call layer's.
+	var grammar: Dictionary = _upgraded_by_derived_property(grammar_action_sentence(read_action), true)
 	if not grammar.is_empty():
 		# A picked row is an instance of a pattern exactly as a typed line is, and the registry must
 		# not care which way the row got onto the sheet. The row's code is generated only when there
@@ -14654,6 +14660,13 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	var object_label: String = ""
 	var sentence: Dictionary = statement_sentence(raw.code, sentence_context())
 	# ── lens hook ─────────────────────────────────────────────────────────────────────────────
+	# THE DERIVED PROPERTY LAYER. Nothing curated claimed this property write or this question, so
+	# the API is asked instead: where the sheet can know the receiver's class AND the class really
+	# has that property, the row wears the plainer derived tone, carries the class it was read off,
+	# and hovers with the property's own words. A reading no word map marked generic never reaches
+	# it, which is what keeps a curated sentence outranking this one.
+	sentence = _upgraded_by_derived_property(sentence, false)
+	# ── lens hook ─────────────────────────────────────────────────────────────────────────────
 	# A bare `breakpoint` reads as the mark it is: the row wears the gutter dot and says nothing.
 	if bool(sentence.get("breakpoint", false)):
 		_pending_grammar_breakpoint = true
@@ -14860,6 +14873,30 @@ func _derived_ace_meta() -> Dictionary:
 	return derived_meta(_pending_derived_ace)
 
 
+## A grammar reading with the DERIVED PROPERTY layer's answer applied, or the reading exactly as it
+## came. A reading the grammar did not mark generic is handed straight back untouched, which is where
+## "curated outranks derived" is actually enforced: a word map's sentence carries no mark, so this
+## never even asks about it.
+##
+## `picked_row` says which of the two pendings the answer is left on, because the two paths build
+## their spans in different places: a raw statement stamps its own span on the spot, and a picked
+## row's sentence is handed back up to `_make_span`.
+func _upgraded_by_derived_property(sentence: Dictionary, picked_row: bool) -> Dictionary:
+	if str(sentence.get("generic", "")).is_empty():
+		return sentence
+	var derived: Dictionary = EventSheetDerivedProperties.derived_reading(
+		sentence, sentence_context(), _reading_class_map(), _reading_autoloads())
+	if derived.is_empty():
+		return sentence
+	var upgraded: Dictionary = sentence.duplicate()
+	upgraded["segments"] = derived.get("segments", [])
+	if picked_row:
+		_pending_derived_ace = derived
+	else:
+		_pending_derived_call = derived
+	return upgraded
+
+
 ## One derived reading as the keys a span carries. Static + pure, so a test reads exactly what a
 ## hover and F1 will be handed, and the two paths that stamp it cannot drift apart.
 static func derived_meta(reading: Dictionary) -> Dictionary:
@@ -14869,6 +14906,9 @@ static func derived_meta(reading: Dictionary) -> Dictionary:
 		"derived_call": true,
 		"derived_class": str(reading.get("class", "")),
 		"derived_method": str(reading.get("method", "")),
+		# The property half of the same layer. Exactly one of these two is ever filled: a reading is
+		# a verb read off the API or a property read off it, never both.
+		"derived_property": str(reading.get("property", "")),
 		"derived_doc": EventSheetDerivedCalls.hover_text(reading),
 		"derived_doc_id": str(reading.get("doc_id", "")),
 	}
@@ -16701,7 +16741,10 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	# read off, which is the derived layer's own mark. Only the span carrying the sentence takes it,
 	# and the pending is cleared either way so it can never land on the next row.
 	if not _pending_derived_ace.is_empty():
-		if str(span.metadata.get("kind", "")) == "action" and not text.is_empty():
+		# Either lane: a derived VERB is always an action, and a derived PROPERTY is a Set row on the
+		# right or the same object's question on the left, so the condition lane takes it too.
+		var derived_lane: String = str(span.metadata.get("kind", ""))
+		if (derived_lane == "action" or derived_lane == "condition") and not text.is_empty():
 			span.metadata.merge(_derived_ace_meta(), true)
 			var read_class: String = str(_pending_derived_ace.get("class", "")).strip_edges()
 			if str(span.metadata.get("object_note", "")).is_empty() and not read_class.is_empty() \

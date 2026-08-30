@@ -673,6 +673,12 @@ static func condition(expression: String, context: Dictionary = {}) -> Dictionar
 	var countdown_test: Dictionary = _countdown_condition(text, context)
 	if not countdown_test.is_empty():
 		return countdown_test
+	# An object's own property, measured - the last reading there is for a comparison whose left-hand
+	# side names one. Ahead of the plain equality below, which would answer the same line with the
+	# whole expression under System and the object it is about nowhere on the row.
+	var property_compare: Dictionary = _property_comparison_condition(text, context)
+	if not property_compare.is_empty():
+		return property_compare
 	var comparison: Dictionary = _comparison_condition(text)
 	if not comparison.is_empty():
 		return comparison
@@ -2162,10 +2168,21 @@ static func _assignment_statement(text: String, context: Dictionary) -> Dictiona
 		var member_name: String = enum_value_words(object_name, target, str(split[1]), assigned, context)
 		if not member_name.is_empty():
 			shown_value = member_name
-	return _sentence(object_name, "Set {name} to {value}", {
+	# ── lens hook ────────────────────────────────────────────────────────────────────────────────
+	# THE GENERIC PROPERTY WRITE, and the last reading there is for an assignment: nothing curated
+	# claimed this line, so it reads as the Inspector reads - object, property, value. It says so on
+	# the way out, because a reader one layer up can then ask the API whether it KNOWS this property
+	# and upgrade the row where it does. A curated sentence never reaches here and is therefore never
+	# marked, which is the whole ordering: a written-by-a-person sentence outranks a read-off-the-API
+	# one, and landing a curated table later takes a row back off this path with the file untouched.
+	var written: Dictionary = _sentence(object_name, "Set {name} to {value}", {
 		"name": [str(split[1]), "name"],
 		"value": [shown_value, "value"]
 	})
+	written["generic"] = GENERIC_PROPERTY_SET
+	written["generic_target"] = target
+	written["generic_value"] = assigned
+	return written
 
 
 ## The assigned value with the target's own receiver taken off the front of it, when the value
@@ -4023,6 +4040,75 @@ static func _existence_condition(text: String) -> Dictionary:
 			return _sentence(subject, "does not exist", {})
 		return _sentence(subject, "exists", {})
 	return {}
+
+
+## The two words a reading marks itself with on the way out, for the layer above it. Neither changes
+## a word of what is drawn: they say only that NOTHING CURATED claimed this line, so the API is free
+## to be asked whether it knows the property - and, where it does, to say so in its own plainer
+## style. A curated sentence never reaches either mark, which is the whole ordering.
+const GENERIC_PROPERTY_SET := "property_set"
+const GENERIC_PROPERTY_COMPARE := "property_compare"
+
+
+## `$Torch.shadow_filter_smooth > 1.0` as the question it is: an object, one of its properties, and what that
+## property is measured against - which is the compared-variable rendering every sheet variable
+## already gets, generalised to an object's own property. Before it, such a line read as the whole
+## expression under System, with the object it is really about nowhere on the row.
+##
+## Gated on the sheet KNOWING the receiver's class, because an object whose class nothing can answer
+## for has no property this could be claiming: that line keeps the expression it always was.
+static func _property_comparison_condition(text: String, context: Dictionary) -> Dictionary:
+	for operator: String in [" >= ", " <= ", " != ", " == ", " > ", " < "]:
+		var at: int = top_level_index(text, operator)
+		if at < 0:
+			continue
+		var subject: String = text.substr(0, at).strip_edges()
+		var compared: String = text.substr(at + operator.length()).strip_edges()
+		if compared.is_empty() or not is_simple_target(subject):
+			return {}
+		# One comparison only, exactly as the plain equality reading beneath this one demands: a
+		# run of them was split into terms long before either reading saw a word of it.
+		if top_level_index(compared, operator) >= 0:
+			return {}
+		var split: PackedStringArray = owner_and_member(subject)
+		if split.is_empty():
+			return {}
+		var object_name: String = _receiver_object(split[0], context)
+		# The two ways a receiver's class is written down where this reading can see it: the object
+		# map every scene node is in, and the declaration of a typed local. Neither is a guess, and a
+		# receiver in neither of them keeps the expression the line always read as.
+		if object_class_of(object_name, context).strip_edges().is_empty() \
+				and str((context.get("variable_types", {}) as Dictionary).get(
+					split[0], "")).strip_edges().is_empty():
+			return {}
+		return {
+			"object": object_name,
+			"segments": [
+				{"text": _member_word(split[1]), "tone": "name"},
+				{"text": comparison_symbols(operator), "tone": "plain"},
+				{"text": expression_text(compared, context), "tone": "value"}
+			],
+			"generic": GENERIC_PROPERTY_COMPARE,
+			"generic_target": subject,
+			"generic_value": compared
+		}
+	return {}
+
+
+## An assignment or comparison target as ["<receiver>", "<property>"], or [] when the target is not
+## one object's one property: a bare name, whose owner is not written down anywhere and whose reading
+## the sheet's own variable rows already own, and a chain deeper than one member, whose head is a
+## property OF a property and therefore a receiver nothing here can name.
+static func owner_and_member(target: String) -> PackedStringArray:
+	var text: String = target.strip_edges()
+	var dot_at: int = text.rfind(".")
+	if dot_at <= 0:
+		return PackedStringArray()
+	var owner_text: String = text.substr(0, dot_at).strip_edges()
+	var member: String = text.substr(dot_at + 1).strip_edges()
+	if owner_text.is_empty() or not is_identifier(member):
+		return PackedStringArray()
+	return PackedStringArray([owner_text, member])
 
 
 ## `i == 1` as the event-sheet Compare verb: `i = 1`, and `hp != 3` as `hp ≠ 3`. GDScript doubles the sign

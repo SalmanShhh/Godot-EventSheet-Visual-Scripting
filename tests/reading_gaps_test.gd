@@ -201,9 +201,11 @@ static func _strictness() -> bool:
 	ok = _check("a path step that is not scaled by the frame time is not a speed",
 		_joined_segments(EventSheetSentence.statement("follow.progress += 4", _path_context())),
 		"follow ▸ Add 4 to progress") and ok
+	# Still a comparison and still not an arrival - and now said the way the sheet says every other
+	# question about an object's own property: the object in front, the property measured after it.
 	ok = _check("half a path is a comparison, not an arrival",
 		_joined_pieces(EventSheetSentence.condition_pieces("follow.progress_ratio >= 0.5",
-			_path_context())), "follow.progress_ratio ≥ 0.5") and ok
+			_path_context())), "follow ▸ progress_ratio ≥ 0.5") and ok
 	var words: Dictionary = _text_context()
 	words["pattern_variables"] = {}
 	ok = _check("a search on something no pattern was declared for keeps its call",

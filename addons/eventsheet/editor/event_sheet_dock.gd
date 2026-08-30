@@ -619,6 +619,9 @@ func _on_translations_maybe_changed() -> void:
 	# renamed, added or documented in a file nobody opened still has to reach the rows calling it,
 	# and the class-name to script map has to see a class declared since the editor started.
 	EventSheetDerivedCalls.clear_cache()
+	# And the property half of the same layer: an `@export` added, renamed or documented in a file
+	# nobody opened has to reach the rows writing it and the rows asking about it.
+	EventSheetDerivedProperties.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:
