@@ -6,7 +6,7 @@
 #      every count in the sheet silently answers zero. The flag is pinned as a literal line, because
 #      dropping it breaks nothing that any other test can see.
 #   2. THE CAP, AND THE POLICY. Two rows, two different files. The make-room row reads the crowd
-#      once and removes members before spawning; the skip row declares the name BEFORE its branch,
+#      once and destroys members before spawning; the skip row declares the name BEFORE its branch,
 #      so a following row can still say it. Both are pinned as their exact lines: swap the order in
 #      either and the game changes while the descriptors still look right. And the make-room row is
 #      RUN as well as read, because the way a cap stops capping - a member freed twice in one frame,

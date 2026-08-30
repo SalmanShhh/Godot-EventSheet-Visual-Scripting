@@ -58,9 +58,9 @@ const GUARD_CALL: String = "is_instance_valid"
 ## `create_timer(...).connect(<object>.queue_free)`, a `create_tween()` on it), and reaching into a
 ## freed object is the error this exists to stop.
 const GUARDED_ACE_IDS: Dictionary = {
-	"RemoveNow": "object",
-	"RemoveAfterSeconds": "object",
-	"FadeOutAndRemove": "object",
+	"DestroyNow": "object",
+	"DestroyAfterSeconds": "object",
+	"FadeOutAndDestroy": "object",
 }
 
 ## The rows that ASK the question, with the parameter that names what they ask about. An event

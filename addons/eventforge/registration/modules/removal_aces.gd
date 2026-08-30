@@ -1,6 +1,6 @@
-# EventForge module - Remove (taking a thing out of the world, without leaving a ghost behind)
+# EventForge module - Destroy (taking a thing out of the world, without leaving a ghost behind)
 #
-# There is no despawning system here and there is not going to be one. Removing a node in Godot is
+# There is no despawning system here and there is not going to be one. Destroying a node in Godot is
 # `queue_free()`, and every row in this module is that call said as a sentence, with the waiting each
 # one does written out in plain lines beside it.
 #
@@ -15,7 +15,7 @@
 #
 # "Now" is the one people misread, so the row says it: `queue_free()` marks the node and Godot
 # deletes it at the END of the frame. Rows after it in the same event still run, and the node is
-# still there while they do. That is not a quirk to hide - it is why a sheet can remove a thing and
+# still there while they do. That is not a quirk to hide - it is why a sheet can destroy a thing and
 # then read its position on the next line without crashing.
 #
 # THE GHOST. Everything that WAITS - a timer, a tween, an await - hands the line a name that may
@@ -27,7 +27,7 @@
 # happened in it.
 #
 # WHAT IS NOT HERE. On Destroyed is the shipped On Exit Tree trigger and stays there - a node hearing
-# about its own removal is a lifecycle handler, not a removal verb. Object Still Exists is the
+# about its own destruction is a lifecycle handler, not a destroy verb. Object Still Exists is the
 # shipped condition and stays there too; the question below is its sentence beside it, for a sheet
 # that reads in these words.
 #
@@ -40,7 +40,7 @@ extends RefCounted
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 ## The one category these rows group under in the picker.
-const CATEGORY: String = "Remove"
+const CATEGORY: String = "Destroy"
 
 ## The property a fade walks, and the value it walks it to. A sub-property path rather than a whole
 ## Color, so a sprite that is already tinted fades from ITS colour instead of snapping to white on
@@ -54,35 +54,35 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Now ────────────────────────────────────────────────────────────────────────────
 	# The plain call. The frozen Free Node row writes the same line and stays the reading of it;
 	# this is the authoring sentence, and the row the guard rule below knows how to protect.
-	descriptors.append(F.make_descriptor("Core", "RemoveNow", "Remove Now", ACEDescriptor.ACEType.ACTION,
+	descriptors.append(F.make_descriptor("Core", "DestroyNow", "Destroy Now", ACEDescriptor.ACEType.ACTION,
 		"{object}.queue_free()", "",
 		[_object_param()],
-		CATEGORY, "remove [i]{object}[/i] now")
-		.described("Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.")
+		CATEGORY, "destroy [i]{object}[/i] now")
+		.described("Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.")
 		.featured())
 
 	# ── In a while ─────────────────────────────────────────────────────────────────────
 	# A one-shot SceneTree timer with the node's own queue_free hung off it. Godot drops a signal
 	# connection when the object at the far end of it is freed, which is exactly why this spelling
-	# needs no bookkeeping: something else removing the thing first simply takes the connection with
+	# needs no bookkeeping: something else destroying the thing first simply takes the connection with
 	# it, and the timer fires into nothing.
-	descriptors.append(F.make_descriptor("Core", "RemoveAfterSeconds", "Remove After Seconds", ACEDescriptor.ACEType.ACTION,
+	descriptors.append(F.make_descriptor("Core", "DestroyAfterSeconds", "Destroy After Seconds", ACEDescriptor.ACEType.ACTION,
 		"get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)", "",
 		[_object_param(), _after_param()],
-		CATEGORY, "remove [i]{object}[/i] after {seconds}s")
-		.described("Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.")
+		CATEGORY, "destroy [i]{object}[/i] after {seconds}s")
+		.described("Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.")
 		.featured())
 
 	# ── Fade first ─────────────────────────────────────────────────────────────────────
-	# Tween, await, remove - and the guard in the template, because that await is a real gap. The
+	# Tween, await, destroy - and the guard in the template, because that await is a real gap. The
 	# row's own sentence says the wait, and its own lines say the check; nothing about the deferral
 	# is hidden behind the row.
-	descriptors.append(F.make_descriptor("Core", "FadeOutAndRemove", "Fade Out Then Remove", ACEDescriptor.ACEType.ACTION,
+	descriptors.append(F.make_descriptor("Core", "FadeOutAndDestroy", "Fade Out Then Destroy", ACEDescriptor.ACEType.ACTION,
 		"await {object}.create_tween().tween_property({object}, \"%s\", 0.0, {seconds}).finished\n" % FADE_PROPERTY\
 		+ "if is_instance_valid({object}):\n\t{object}.queue_free()", "",
 		[_object_param(), _over_param()],
-		CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then remove it")
-		.described("Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly."))
+		CATEGORY, "fade [i]{object}[/i] out over {seconds}s, then destroy it")
+		.described("Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly."))
 
 	# ── The question ───────────────────────────────────────────────────────────────────
 	# The sentence beside the frozen Object Still Exists. Same call, same answer; a sheet that reads
@@ -91,7 +91,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"is_instance_valid({object})", "",
 		[_object_param()],
 		CATEGORY, "[i]{object}[/i] is still here")
-		.described("True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves."))
+		.described("True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves."))
 
 	return descriptors
 
@@ -104,19 +104,19 @@ static func section_descriptions() -> Dictionary:
 	}
 
 
-## The thing being removed, or asked about. An expression on purpose: a sheet says the name a spawn
+## The thing being destroyed, or asked about. An expression on purpose: a sheet says the name a spawn
 ## row minted (`new_enemy`), a variable it stored a node in, or a node path. The default is `self`,
-## which is the commonest answer of all - a pickup removing itself on contact.
+## which is the commonest answer of all - a pickup destroying itself on contact.
 static func _object_param() -> ACEParam:
 	return F.make_param("object", "String", "self", "Object",
-		"The object to remove, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",
+		"The object to destroy, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",
 		"expression")
 
 
 ## How long the timer waits.
 static func _after_param() -> ACEParam:
 	return F.make_param("seconds", "String", "2.0", "After",
-		"How many seconds to wait before removing the object. The event carries on immediately; only the removal waits.",
+		"How many seconds to wait before destroying the object. The event carries on immediately; only the destroying waits.",
 		"expression")
 
 

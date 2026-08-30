@@ -5322,21 +5322,21 @@ random place off a screen edge (+{margin}),画面端の外側のランダムな�
 the new copy,新しいコピー
 Recognisers,認識テーブル
 the spellings a lift knows,読み取りが知っている書き方
-Remove,削除
-Remove Now,今すぐ削除
-Remove After Seconds,秒数後に削除
-Fade Out Then Remove,フェードアウトしてから削除
+Destroy,破棄
+Destroy Now,今すぐ破棄
+Destroy After Seconds,秒数後に破棄
+Fade Out Then Destroy,フェードアウトしてから破棄
 Is Still Here,まだ存在する
-"Removes the object from the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.",オブジェクトをゲームから削除します。Godot はこの行ではなく、このフレームの終わりに削除するため、同じイベント内の後続の行は実行され、その間オブジェクトはまだ存在します。拾ったアイテム、倒した敵、使い終わったエフェクトなど、ゲームが用済みにしたものに使います。
-"Removes the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else removes the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.",数秒後にオブジェクトを削除し、その間もイベントは先に進みます。待機はシーンツリーのタイマーなので、この行は何もブロックしません。ほかの何かが先にオブジェクトを削除しても安全です。Godot はオブジェクトと一緒にタイマーの接続も外すため、待機は何にも届かずに終わります。
-"Fades the object's transparency to nothing over a number of seconds and then removes it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before removing it, and the line that asks is written into the sheet rather than added quietly.",数秒かけてオブジェクトの透明度をゼロまで下げ、そのあと削除します。イベントはここで待つので、後続の行はフェードが終わってから実行されます。この待機はゲーム時間の本当の空白なので、削除の前にオブジェクトがまだあるかを尋ね、その行はシートに書かれます。こっそり追加されるものではありません。
-"True while the object has not been removed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN removal uses the On Exit Tree trigger instead, which fires as it leaves.",オブジェクトがまだ削除されていない間は真になります。シートがフレームをまたいで持ち続けたもの、つまり変数に入れたノードや、前のイベントのスポーン行が作ったコピーに触れる前に尋ねてください。自分自身の削除を知りたいノードは、代わりに On Exit Tree トリガーを使います。これは抜けるときに発火します。
-remove [i]{object}[/i] now,[i]{object}[/i] を今すぐ削除
-remove [i]{object}[/i] after {seconds}s,{seconds}秒後に [i]{object}[/i] を削除
-"fade [i]{object}[/i] out over {seconds}s, then remove it",[i]{object}[/i] を {seconds}秒かけてフェードアウトしてから削除
+"Destroys the object, taking it out of the game. Godot deletes it at the END of this frame, not on this line, so the rows after this one in the same event still run and the object is still there while they do. Use it for anything the game is finished with: a collected pickup, a defeated enemy, a spent effect.",オブジェクトをゲームから破棄します。Godot はこの行ではなく、このフレームの終わりに削除するため、同じイベント内の後続の行は実行され、その間オブジェクトはまだ存在します。拾ったアイテム、倒した敵、使い終わったエフェクトなど、ゲームが用済みにしたものに使います。
+"Destroys the object a number of seconds from now, and gets on with the event in the meantime. The wait is a scene-tree timer, so nothing about this line blocks. It is safe if something else destroys the object first: Godot drops the timer's connection along with the object, and the wait ends up firing at nothing at all.",数秒後にオブジェクトを破棄し、その間もイベントは先に進みます。待機はシーンツリーのタイマーなので、この行は何もブロックしません。ほかの何かが先にオブジェクトを破棄しても安全です。Godot はオブジェクトと一緒にタイマーの接続も外すため、待機は何にも届かずに終わります。
+"Fades the object's transparency to nothing over a number of seconds and then destroys it. The event WAITS here, so the rows after this one run once the fade has finished. Because that wait is a real gap in game time, the row asks whether the object is still there before destroying it, and the line that asks is written into the sheet rather than added quietly.",数秒かけてオブジェクトの透明度をゼロまで下げ、そのあと破棄します。イベントはここで待つので、後続の行はフェードが終わってから実行されます。この待機はゲーム時間の本当の空白なので、破棄の前にオブジェクトがまだあるかを尋ね、その行はシートに書かれます。こっそり追加されるものではありません。
+"True while the object has not been destroyed. Ask it before touching anything a sheet held on to across frames: a node stored in a variable, or a copy a spawn row made in an earlier event. A node that wants to hear about its OWN destruction uses the On Exit Tree trigger instead, which fires as it leaves.",オブジェクトがまだ破棄されていない間は真になります。シートがフレームをまたいで持ち続けたもの、つまり変数に入れたノードや、前のイベントのスポーン行が作ったコピーに触れる前に尋ねてください。自分自身の破棄を知りたいノードは、代わりに On Exit Tree トリガーを使います。これは抜けるときに発火します。
+destroy [i]{object}[/i] now,[i]{object}[/i] を今すぐ破棄
+destroy [i]{object}[/i] after {seconds}s,{seconds}秒後に [i]{object}[/i] を破棄
+"fade [i]{object}[/i] out over {seconds}s, then destroy it",[i]{object}[/i] を {seconds}秒かけてフェードアウトしてから破棄
 [i]{object}[/i] is still here,[i]{object}[/i] がまだ存在する
-"The object to remove, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",削除する対象を式で指定します。スポーン行がコピーに付けた名前、ノードを保持する変数、ノードパスのいずれかです。このノード自身なら self のままにします。
-How many seconds to wait before removing the object. The event carries on immediately; only the removal waits.,オブジェクトを削除するまで何秒待つか。イベントはすぐに進み、待つのは削除だけです。
+"The object to destroy, as an expression - the name a spawn row gave a copy, a variable holding a node, or a node path. Leave it as self for this node.",破棄する対象を式で指定します。スポーン行がコピーに付けた名前、ノードを保持する変数、ノードパスのいずれかです。このノード自身なら self のままにします。
+How many seconds to wait before destroying the object. The event carries on immediately; only the destroying waits.,オブジェクトを破棄するまで何秒待つか。イベントはすぐに進み、待つのは破棄だけです。
 "How many seconds the fade takes. The event waits for it, so the rows after this one run when the fade is done.",フェードにかける秒数。イベントはこれを待つので、後続の行はフェードが終わってから実行されます。
 "Taking a thing out of the world: right now, after a wait, or after a fade. Each row is a plain queue_free, and each says when the call happens.",ものを世界から取り除く方法。今すぐ、待ってから、あるいはフェードしてから。どの行もただの queue_free で、それぞれ呼び出しがいつ起きるかを述べます。
 "This name may already be gone, so the compiler writes this line above the row. Click to open it in the code panel.",この名前はすでに消えている可能性があるため、コンパイラはこの行を行の上に書きます。クリックするとコードパネルで開きます。
@@ -5346,7 +5346,7 @@ Crowd,群れ
 "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], into the crowd [b]{crowd}[/b]",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に、群れ [b]{crowd}[/b] へ生成
 "The group the copies belong to, named after the scene they are copies of. It is an ordinary Godot group, so anything else in the project that uses groups can see these too.",コピーが属するグループで、コピー元のシーンの名前が付きます。ごく普通の Godot のグループなので、グループを使うプロジェクト内の他のものからも見えます。
 "Spawn A Copy, The First Makes Room",コピーを生成し、先頭のものが場所を空ける
-"Spawns a copy into the crowd, and when the crowd is already full removes members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones removed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.",群れにコピーを生成し、群れがすでにいっぱいなら必要なだけ取り除いて場所を空けるので、数が上限を超えることはありません。同じイベントが 1 フレームに何度も生成しても同じです。取り除かれるのは群れの先頭からで、これは Godot がグループを並べる順です。子を追加して生成する親の下ではそれが今も生きている最も古いものですが、move_child のあとや親が二つある場合は、生成の順ではなくツリーの順になります。すでに出ていく途中の一体は飛ばされるので、同じものが二度解放されることはなく、新しいコピーは必ず現れます。弾や足あとが求めるのはこの動きです。
+"Spawns a copy into the crowd, and when the crowd is already full destroys members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones destroyed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.",群れにコピーを生成し、群れがすでにいっぱいなら必要なだけ破棄して場所を空けるので、数が上限を超えることはありません。同じイベントが 1 フレームに何度も生成しても同じです。破棄されるのは群れの先頭からで、これは Godot がグループを並べる順です。子を追加して生成する親の下ではそれが今も生きている最も古いものですが、move_child のあとや親が二つある場合は、生成の順ではなくツリーの順になります。すでに出ていく途中の一体は飛ばされるので、同じものが二度解放されることはなく、新しいコピーは必ず現れます。弾や足あとが求めるのはこの動きです。
 "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成、[b]{crowd}[/b] は最大 [b]{cap}[/b] 体まで - 群れの先頭が場所を空ける
 At Most,最大
 "How many of this crowd may be alive at once. What happens when that many already are is the rest of the row's sentence, not a setting.",この群れが同時に何体まで存在できるか。その数に達したときに何が起きるかは、行の文の残りの部分であって、設定ではありません。
@@ -5354,16 +5354,16 @@ Spawn A Copy Unless The Crowd Is Full,群れがいっぱいでなければコピ
 "Spawns a copy into the crowd only while there is room, and does nothing at all when the crowd is full - the answer an enemy wave wants, where a spawn that arrives by pushing another one out is worse than no spawn. A member already on its way out has stopped counting against the cap, so a spawn in the same frame something died in still happens. The name is still there for the rows below, holding nothing when the spawn was skipped, so an Is Still Here row can tell the two apart.",空きがあるあいだだけ群れにコピーを生成し、群れがいっぱいのときは何もしません。敵のウェーブが求めるのはこの答えで、他を押し出して現れる生成は、生成しないことより悪いからです。すでに出ていく途中の一体は上限に数えられないので、何かが死んだのと同じフレームでの生成もちゃんと行われます。名前は下の行のために残り、生成が飛ばされたときは何も入っていないので、「まだいる」の行で両者を見分けられます。
 "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - skip spawning when full",[b]{scene}[/b] のコピーを [b]{name}[/b] として {at} に、[i]{parent}[/i] の下に生成、[b]{crowd}[/b] は最大 [b]{cap}[/b] 体まで - いっぱいなら生成しない
 How Many Alive,何体生きているか
-"How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member removed this frame is still counted until the end of it, which is what queue_free means everywhere else too.",群れのうち今いくつ生きているか - そのグループの大きさです。誰かが代わりに数えているわけではありません。解放された一体はツリーを離れると同時にグループからも外れるので、この数が世界とずれることはありません。このフレームで取り除かれた一体はフレームの終わりまでは数に入ったままで、それは queue_free が他のどこでも意味することと同じです。
+"How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member destroyed this frame is still counted until the end of it, which is what queue_free means everywhere else too.",群れのうち今いくつ生きているか - そのグループの大きさです。誰かが代わりに数えているわけではありません。解放された一体はツリーを離れると同時にグループからも外れるので、この数が世界とずれることはありません。このフレームで破棄された一体はフレームの終わりまでは数に入ったままで、それは queue_free が他のどこでも意味することと同じです。
 [b]{crowd}[/b] alive,[b]{crowd}[/b] の生存数
-On The Last One Removed,最後の一体が消えたとき
-"Runs the moment the last member of a crowd is removed from the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count.",群れの最後の一体が世界から取り除かれた瞬間に、空になるたび一度だけ走ります。ウェーブを片づけた、最後の木箱を壊した、という場面です。シーンツリー自身の node-removed シグナルを聞き、下の問いを、見て編集できる条件として追加するので、行の外で起きることは何もありません。その問いは、その一体が本当に去るのかも確かめます。ノードを別の親へ移すこともツリーを離れることであり、それは群れが空になることではないからです。別のかたちで世界から出た一体 - 枝ごとまとめて解放された場合など - はここでは見えません。「グループが空になった」の条件は、フレームごとのトリガーの上で前のティックの数を覚えておくという別のやり方で、同じことを尋ねます。
-On the last of [b]{crowd}[/b] removed,[b]{crowd}[/b] の最後の一体が消えたとき
+On The Last One Destroyed,最後の一体が破棄されたとき
+"Runs the moment the last member of a crowd is destroyed, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count.",群れの最後の一体が世界から破棄された瞬間に、空になるたび一度だけ走ります。ウェーブを片づけた、最後の木箱を壊した、という場面です。シーンツリー自身の node-removed シグナルを聞き、下の問いを、見て編集できる条件として追加するので、行の外で起きることは何もありません。その問いは、その一体が本当に去るのかも確かめます。ノードを別の親へ移すこともツリーを離れることであり、それは群れが空になることではないからです。別のかたちで世界から出た一体 - 枝ごとまとめて解放された場合など - はここでは見えません。「グループが空になった」の条件は、フレームごとのトリガーの上で前のティックの数を覚えておくという別のやり方で、同じことを尋ねます。
+On the last of [b]{crowd}[/b] destroyed,[b]{crowd}[/b] の最後の一体が破棄されたとき
 Crowd Is Down To This One,群れに残るのはこの一体だけ
-"The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd, is really being removed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.",「最後の一体が消えたとき」の下に入る条件です。去ろうとしているノードがその群れに属し、別の親へ移されるのではなく本当に取り除かれるところで、群れに残る唯一の一体であるときに真になります。去るノードはその瞬間まだ自分のグループに載っているので、その一体だけの群れは、まさに空になろうとしている群れです。
-"[b]{crowd}[/b] is down to [i]{node}[/i], which is being removed",[b]{crowd}[/b] に残るのは、取り除かれようとしている [i]{node}[/i] だけ
+"The gate under On The Last One Destroyed: true when the node that is leaving belongs to the crowd, is really being destroyed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty.",「最後の一体が破棄されたとき」の下に入る条件です。去ろうとしているノードがその群れに属し、別の親へ移されるのではなく本当に破棄されるところで、群れに残る唯一の一体であるときに真になります。去るノードはその瞬間まだ自分のグループに載っているので、その一体だけの群れは、まさに空になろうとしている群れです。
+"[b]{crowd}[/b] is down to [i]{node}[/i], which is being destroyed",[b]{crowd}[/b] に残るのは、破棄されようとしている [i]{node}[/i] だけ
 Leaving,去るもの
-The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.,去ろうとしているノード - トリガーがこのイベントに渡したものです。「最後の一体が消えたとき」が代わりに入れてくれます。
+The node that is leaving - the one the trigger handed this event. On The Last One Destroyed fills this in for you.,去ろうとしているノード - トリガーがこのイベントに渡したものです。「最後の一体が破棄されたとき」が代わりに入れてくれます。
 "The copies a sheet spawned, held as a Godot group: joined on the way in, counted, capped with the policy said out loud, and answered when the last one goes.",シートが生成したコピーを Godot のグループとして保持します。入るときに参加し、数え、方針を口に出して上限を設け、最後の一体が去ったときに応えます。
 and %d more scene(s) spawned,他に %d 個のシーンを生成
 at most %s in %s,最大 %s、%s 内
@@ -5375,14 +5375,14 @@ browse the scene,シーンを表示
 "This adds a node to the tree while the physics server is busy, and Godot refuses it. Add it on the next idle moment instead.",物理サーバーが処理中にノードをツリーへ追加しており、Godot はこれを拒否します。次のアイドル時に追加してください。
 Add it on the next idle moment,次のアイドル時に追加
 Use the safe spawn row,安全な生成行を使う
-"%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.",%s はフレームをまたいで保持されており、すでに何かが取り除いた可能性があります。触れる前にまだ存在するか確かめてください。
+"%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.",%s はフレームをまたいで保持されており、すでに何かが破棄した可能性があります。触れる前にまだ存在するか確かめてください。
 Guard it,確認を入れる
 "This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.",これは自分がすでに動いているシーンを、コピーが作られるたびに、何の条件もなく生成します。コピーがまたコピーを作ります。
-"%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.",%s はこのイベントの上の行で取り除かれており、この行はそれに対して待ちを予約しています。取り除く行をこの行の下へ移すか、遅らせて取り除いてください。
-Move the removal last,取り除く行を最後へ
-"Spawning: %d script(s) that add or remove nodes, %d read, %d with something that will go wrong at run time.","生成: ノードを追加または削除するスクリプト %d 件、うち %d 件を読み、%d 件に実行時に破綻するものがあります。"
+"%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.",%s はこのイベントの上の行で破棄されており、この行はそれに対して待ちを予約しています。破棄する行をこの行の下へ移すか、遅らせて破棄してください。
+Move the destroy last,破棄する行を最後へ
+"Spawning: %d script(s) that add or destroy nodes, %d read, %d with something that will go wrong at run time.","生成: ノードを追加または破棄するスクリプト %d 件、うち %d 件を読み、%d 件に実行時に破綻するものがあります。"
 This row is already added on the next idle moment.,この行はすでに次のアイドル時に追加されます。
 Guard %s,%s に確認を入れる
 This event already asks whether %s is still here.,このイベントはすでに、%s がまだ存在するかを確かめています。
-The removal is already the last row of this event.,取り除く行はすでにこのイベントの最後の行です。
-"The removal runs last now, after everything that reads it.",取り除く行は、それを読むすべての行のあとで最後に実行されるようになりました。
+The destroy is already the last row of this event.,破棄する行はすでにこのイベントの最後の行です。
+"The destroy runs last now, after everything that reads it.",破棄する行は、それを読むすべての行のあとで最後に実行されるようになりました。

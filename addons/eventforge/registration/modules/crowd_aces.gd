@@ -42,7 +42,7 @@
 # instant the signal is emitted, the only member the group lists. Without a third question the
 # trigger announces the wave cleared, opens the door and pays the reward while the enemy is alive
 # under another parent. `is_queued_for_deletion()` is that question and is the only one Godot answers
-# from the node itself: it is true for every removal this language writes, all three of which are a
+# from the node itself: it is true for every destroy this language writes, all three of which are a
 # queue_free, and false for a move. A member taken out some other way - its whole branch freed at
 # once, or a bare free() - is not seen by this trigger, and the shipped On Group Emptied condition,
 # which compares this tick's count with last tick's, is the row for that.
@@ -65,7 +65,7 @@ const CATEGORY: String = "Crowd"
 ## The trigger that answers a crowd emptying, and the condition applying it adds underneath. Named
 ## here because the dock's apply step reads both to build the gate (ace_apply.gd), and a pair of
 ## loose strings in two files is how the two halves drift apart.
-const LAST_REMOVED_TRIGGER_ID: String = "OnLastOfCrowdRemoved"
+const LAST_REMOVED_TRIGGER_ID: String = "OnLastOfCrowdDestroyed"
 const LAST_REMOVED_GATE_ID: String = "CrowdIsDownToThisOne"
 
 ## The gate's template, kept beside the trigger for the same reason: the dock bakes this exact string
@@ -107,7 +107,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		+ "{parent}.add_child({name})\n{name}.global_position = {at}", "",
 		[_scene_param(), _name_param(), _crowd_param(), _cap_param(), _at_param(), _parent_param()],
 		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], at most [b]{cap}[/b] alive in [b]{crowd}[/b] - the first in the crowd makes room", "Node2D")
-		.described("Spawns a copy into the crowd, and when the crowd is already full removes members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones removed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.")
+		.described("Spawns a copy into the crowd, and when the crowd is already full destroys members to make room, so the count never climbs past the cap - not even when the same event spawns several times in one frame. The ones destroyed are taken from the front of the crowd, which is the order Godot lists a group in: under a parent that spawns by adding children that is the earliest one still alive, and after a move_child or a second parent it is the tree's order rather than the spawn's. Members already on their way out are skipped, so no member is ever freed twice and the new copy always appears - which is what a bullet or a footstep wants.")
 		.featured())
 	# The other policy, reading the crowd the same way so that "alive" means one thing in both rows.
 	# The name is declared BEFORE the branch on purpose: a following row can still say it either way,
@@ -133,24 +133,24 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"get_tree().get_node_count_in_group({crowd})", "",
 		[_crowd_param()],
 		CATEGORY, "[b]{crowd}[/b] alive")
-		.described("How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member removed this frame is still counted until the end of it, which is what queue_free means everywhere else too.")
+		.described("How many of a crowd are alive right now - the size of its group. Nothing counts them for you: a member that is freed leaves the group as it leaves the tree, so the number can never drift out of step with the world. A member destroyed this frame is still counted until the end of it, which is what queue_free means everywhere else too.")
 		.featured())
 
 	# ── When the last one goes ─────────────────────────────────────────────────────────
 	# The trigger, and the gate the dock adds underneath it. The trigger itself is the tree's own
 	# node_removed signal, which fires for every node anywhere; the gate is what narrows it to this
 	# crowd emptying, and it is a condition row rather than a hidden wrapper.
-	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_TRIGGER_ID, "On The Last One Removed", ACEDescriptor.ACEType.TRIGGER,
+	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_TRIGGER_ID, "On The Last One Destroyed", ACEDescriptor.ACEType.TRIGGER,
 		"", "", [_crowd_param()],
-		CATEGORY, "On the last of [b]{crowd}[/b] removed")
-		.described("Runs the moment the last member of a crowd is removed from the world, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count."))
+		CATEGORY, "On the last of [b]{crowd}[/b] destroyed")
+		.described("Runs the moment the last member of a crowd is destroyed, once per emptying - the wave being cleared, the last crate broken. It listens to the scene tree's own node-removed signal and adds the question below as a condition you can see and edit, so nothing about it happens off the row. That question also asks whether the member is really going, because moving a node to another parent leaves the tree too and is not the crowd emptying. A member taken out some other way - its whole branch freed at once - is not seen here; the On Group Emptied condition asks the same thing a different way, on a per-frame trigger, by remembering last tick's count."))
 	descriptors.append(F.make_descriptor("Core", LAST_REMOVED_GATE_ID, "Crowd Is Down To This One", ACEDescriptor.ACEType.CONDITION,
 		LAST_REMOVED_GATE_TEMPLATE, "",
 		[_crowd_param(), F.make_param(REMOVED_NODE_ARGUMENT, "String", REMOVED_NODE_ARGUMENT, "Leaving",
-			"The node that is leaving - the one the trigger handed this event. On The Last One Removed fills this in for you.",
+			"The node that is leaving - the one the trigger handed this event. On The Last One Destroyed fills this in for you.",
 			"expression")],
-		CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is being removed")
-		.described("The gate under On The Last One Removed: true when the node that is leaving belongs to the crowd, is really being removed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty."))
+		CATEGORY, "[b]{crowd}[/b] is down to [i]{node}[/i], which is being destroyed")
+		.described("The gate under On The Last One Destroyed: true when the node that is leaving belongs to the crowd, is really being destroyed rather than moved to another parent, and is the only member left in it. A leaving node is still listed in its groups at that moment, so a crowd of just that one is a crowd that is about to be empty."))
 
 	return descriptors
 

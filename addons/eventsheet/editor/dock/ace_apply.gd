@@ -28,7 +28,7 @@ extends RefCounted
 # calls to methods that live here (e.g. `_group_children_array`, `_find_resource_location`,
 # `_create_condition_from_definition`) stay bare helper calls.
 
-## The crowd vocabulary, for the gate condition On The Last One Removed carries. Loaded by PATH
+## The crowd vocabulary, for the gate condition On The Last One Destroyed carries. Loaded by PATH
 ## rather than named by class so the dock still builds before the editor's class cache has caught up
 ## with a newly added module, and read from rather than re-spelled so the trigger, the condition and
 ## the line they compile to can only ever be written in one place.
@@ -578,7 +578,7 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
-	# On The Last One Removed is the scene tree's node_removed signal, which fires for every node
+	# On The Last One Destroyed is the scene tree's node_removed signal, which fires for every node
 	# anywhere in the game - so which crowd the event is about, and the fact that this was its LAST
 	# member, are a condition under it, added here for the same reason the language gate is: visible
 	# in the sheet, editable, deletable, and a plain condition on disk. The crowd rides across from

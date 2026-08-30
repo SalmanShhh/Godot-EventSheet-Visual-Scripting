@@ -5792,7 +5792,7 @@ func _guard_the_reference(note_meta: Dictionary, subject: String) -> void:
 		"is_instance_valid(%s)" % name_text))
 
 
-## "Move the removal last". A row that removes a node and a later row in the same event that books a
+## "Move the destroy last". A row that destroys a node and a later row in the same event that books a
 ## timer or a tween against it are in the wrong order, and the order is the whole of the bug: the
 ## removal is marked at once and the booking is then made against something on its way out. This puts
 ## the removal at the end of the event, where everything else has already run.
@@ -5801,7 +5801,7 @@ func _move_the_removal_last(note_meta: Dictionary) -> void:
 	var slot: int = int(note_meta.get("variable_note_index", -1))
 	if _current_sheet == null or event_row == null or slot < 0:
 		return
-	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Move the removal last"),
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Move the destroy last"),
 			func() -> bool:
 				if slot >= event_row.actions.size() or slot == event_row.actions.size() - 1:
 					return false
@@ -5809,9 +5809,9 @@ func _move_the_removal_last(note_meta: Dictionary) -> void:
 				event_row.actions.remove_at(slot)
 				event_row.actions.append(moved)
 				return true):
-		_set_status(EventSheetL10n.translate("The removal is already the last row of this event."))
+		_set_status(EventSheetL10n.translate("The destroy is already the last row of this event."))
 		return
-	_set_status(EventSheetL10n.translate("The removal runs last now, after everything that reads it."))
+	_set_status(EventSheetL10n.translate("The destroy runs last now, after everything that reads it."))
 
 
 ## "Make the effect this node's own". The rows turn dials on a material file other nodes wear, so

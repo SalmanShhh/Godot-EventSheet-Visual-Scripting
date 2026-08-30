@@ -287,10 +287,10 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Overlap 3D": "Area3D",
 	"Platform": "Godot",
 	"Procedural": "FastNoiseLite",
-	# Nothing derives "Remove": it is not a class, and its rows carry no host node because they act
+	# Nothing derives "Destroy": it is not a class, and its rows carry no host node because they act
 	# on whatever the sheet names rather than on a kind of thing. The editor's own remove mark is
 	# what these rows are about, so it is the human choice here.
-	"Remove": "Remove",
+	"Destroy": "Remove",
 	"Rendering": "Environment",
 	"Run Context": "PlayScene",
 	# The game's own mode is not a class the engine has an icon for, so it borrows the one every

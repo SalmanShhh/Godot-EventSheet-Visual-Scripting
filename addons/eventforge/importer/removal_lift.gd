@@ -20,8 +20,8 @@
 # entry asks for the receiver to be written; a fade whose object is left implicit stays the plain
 # statement it already was, which is the honest outcome for a spelling the row cannot reproduce.
 #
-# THE AUTHORED SPELLING IS THE AWAIT. Fade Out Then Remove writes the tween, waits for it and then
-# removes - three lines, with the guard the wait needs written into them. The connect spelling above
+# THE AUTHORED SPELLING IS THE AWAIT. Fade Out Then Destroy writes the tween, waits for it and then
+# destroys - three lines, with the guard the wait needs written into them. The connect spelling above
 # is the one-line form people write by hand, and it lifts to the same row carrying its own template,
 # exactly as every other lifted spelling does.
 @tool
@@ -66,7 +66,7 @@ static func lift_entries() -> Array[Dictionary]:
 static func _timer_entry() -> Dictionary:
 	return {
 		"id": "remove_after_timer",
-		"ace_id": "RemoveAfterSeconds",
+		"ace_id": "DestroyAfterSeconds",
 		"pattern": "^get_tree\\(\\)\\.create_timer\\((?<seconds>[^)]+)\\)\\.timeout\\.connect\\(%squeue_free\\)$"\
 			% EventForgeLiftTable.receiver("object"),
 		"params": ["object", "seconds"],
@@ -84,7 +84,7 @@ static func _timer_entry() -> Dictionary:
 static func _fade_entry() -> Dictionary:
 	return {
 		"id": "fade_out_then_remove",
-		"ace_id": "FadeOutAndRemove",
+		"ace_id": "FadeOutAndDestroy",
 		"pattern": "^(?<object>%s)\\.create_tween\\(\\)\\.tween_property\\((?<faded>%s), %s, %s, (?<seconds>[^,)]+)\\)\\.finished\\.connect\\((?<freed>%s)\\.queue_free\\)$" % [
 			EventForgeLiftTable.NODE_REFERENCE, EventForgeLiftTable.NODE_REFERENCE,
 			FADE_PROPERTY, FADE_TARGET, EventForgeLiftTable.NODE_REFERENCE],

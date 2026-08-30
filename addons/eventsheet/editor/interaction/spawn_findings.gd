@@ -11,11 +11,11 @@
 #   the scene that spawns itself - a scene whose own sheet spawns that same scene, with nothing in
 #                                 the way. Two become four, four become eight, and the editor is
 #                                 fine with all of it.
-#   freed, and still booked      - a row that removes a node, and a later row in the SAME event that
-#                                 hangs a timer or a tween off the node it just removed.
+#   freed, and still booked      - a row that destroys a node, and a later row in the SAME event that
+#                                 hangs a timer or a tween off the node it just destroyed.
 #
 # NOTHING IS STORED. Every finding is derived from the rows, so a fixed sheet stops reporting with
-# nothing to clean up. A sheet that never spawns and never removes gets no findings at all - the
+# nothing to clean up. A sheet that never spawns and never destroys gets no findings at all - the
 # cheap word gate below is what keeps a project that does neither exactly as it was. The gate holds
 # the maybe-freed rule too, and deliberately: a node kept in a variable is a hazard in a sheet that
 # is in the business of putting things into the world and taking them out again, and a note under
@@ -77,7 +77,7 @@ const BOOKING_CALLS: PackedStringArray = [
 ]
 
 ## What a row writes when it takes a node OUT of the world, as the line spells it. `queue_free` is
-## the whole of it: Godot has one answer and every removal row in the language writes it.
+## the whole of it: Godot has one answer and every destroy row in the language writes it.
 const FREEING_CALL := "queue_free"
 
 ## The question that stands a maybe-freed reference down, in the two spellings that exist. The same
@@ -95,9 +95,9 @@ const GUARD_PARAM := "object"
 const CREATED_TRIGGER_ID := "OnReady"
 
 ## The rows that already carry their own guard, so a note about them would be a note about a line the
-## compiler is about to write anyway. The three removal verbs, which is exactly the set the removal
+## compiler is about to write anyway. The three destroy verbs, which is exactly the set the removal
 ## guard protects.
-const SELF_GUARDING_ACE_IDS: PackedStringArray = ["RemoveNow", "RemoveAfterSeconds", "FadeOutAndRemove"]
+const SELF_GUARDING_ACE_IDS: PackedStringArray = ["DestroyNow", "DestroyAfterSeconds", "FadeOutAndDestroy"]
 
 ## The words a sheet has to say before any of this is asked of it. A sheet that neither parents a
 ## node nor frees one cannot earn a single finding here, and a project full of them should not pay
@@ -255,7 +255,7 @@ static func _maybe_freed_reference(sheet: EventSheetResource, rows: Array[Dictio
 			seen[name_text] = true
 			found.append(_finding(KIND_MAYBE_FREED, "warning", context.get("event") as EventRow,
 				name_text,
-				EventSheetL10n.translate("%s is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.") % name_text,
+				EventSheetL10n.translate("%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.") % name_text,
 				FIX_GUARD_IT, EventSheetL10n.translate("Guard it"), context))
 
 
@@ -285,8 +285,8 @@ static func _spawns_itself(rows: Array[Dictionary], scene_path: String,
 		return
 
 
-## A row that removes a node, and a later row in the SAME event that books a timer or a tween against
-## the very node it removed. The removal lands at the end of the frame, so the booking is made
+## A row that destroys a node, and a later row in the SAME event that books a timer or a tween against
+## the very node it destroyed. The destroy lands at the end of the frame, so the booking is made
 ## against something that is on its way out - and the wait wakes up into nothing, or into an error.
 static func _freed_but_still_booked(rows: Array[Dictionary], found: Array[Dictionary]) -> void:
 	var freed_in_event: Dictionary = {}
@@ -300,8 +300,8 @@ static func _freed_but_still_booked(rows: Array[Dictionary], found: Array[Dictio
 			continue
 		var key: String = "%s|%s" % [str(event_row.event_uid), subject]
 		var books: bool = _books_something_later(lines)
-		# A row that books a wait AND frees at the end of it - "remove after two seconds", "fade out
-		# then remove" - is a BOOKING, not a removal. It is the row this rule is looking for on the
+		# A row that books a wait AND frees at the end of it - "destroy after two seconds", "fade out
+		# then destroy" - is a BOOKING, not a destroy. It is the row this rule is looking for on the
 		# far side of a removal, and reading it as the removal instead is what would make the rule
 		# miss the commonest spelling of the bug it is about.
 		if lines.contains(FREEING_CALL) and not books:
@@ -314,8 +314,8 @@ static func _freed_but_still_booked(rows: Array[Dictionary], found: Array[Dictio
 			continue
 		var removal: Dictionary = freed_in_event[key]
 		found.append(_finding(KIND_FREED_STILL_BOOKED, "warning", event_row, subject,
-			EventSheetL10n.translate("%s is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.") % subject,
-			FIX_REMOVE_LAST, EventSheetL10n.translate("Move the removal last"), removal))
+			EventSheetL10n.translate("%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.") % subject,
+			FIX_REMOVE_LAST, EventSheetL10n.translate("Move the destroy last"), removal))
 		freed_in_event.erase(key)
 
 

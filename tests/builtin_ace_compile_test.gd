@@ -75,7 +75,7 @@ const NOT_STANDALONE: Array[String] = [
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
 	"ConnectSignalUnique", "ConnectSignalOneShot",  # same user-supplied signal/callable as ConnectSignal
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
-	"CrowdIsDownToThisOne",  # reads `node` - the leaving node On The Last One Removed's handler receives
+	"CrowdIsDownToThisOne",  # reads `node` - the leaving node On The Last One Destroyed's handler receives
 	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
 	# The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin

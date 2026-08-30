@@ -1,4 +1,4 @@
-# Godot EventSheets - the gate under On The Last One Removed, as a row anyone can see (preview).
+# Godot EventSheets - the gate under On The Last One Destroyed, as a row anyone can see (preview).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The point of the picture is the SECOND line of the event. The trigger is the scene tree's own

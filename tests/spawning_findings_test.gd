@@ -213,15 +213,15 @@ static func _test_a_maybe_freed_reference() -> bool:
 		"scene": ENEMY, "name": "foe", "at": "global_position", "parent": "self"})]))
 	bad.events.append(_event("OnProcess", [_action("SetProperty",
 		{"target": "held_boss", "property": "\"visible\"", "value": "true"})]))
-	# And the sheet removes it somewhere, which is what says the reference can really be dangling -
+	# And the sheet destroys it somewhere, which is what says the reference can really be dangling -
 	# the rule asks for the sheet's own word on that rather than suspecting every held node.
-	bad.events.append(_event("OnAreaEntered", [_action("RemoveNow", {"object": "held_boss"})]))
+	bad.events.append(_event("OnAreaEntered", [_action("DestroyNow", {"object": "held_boss"})]))
 	var found: Array[Dictionary] = EventSheetSpawnFindings.findings(bad)
 	passed = _check("a stored node reached into without a guard is found",
 		_kinds(found), PackedStringArray([EventSheetSpawnFindings.KIND_MAYBE_FREED])) and passed
 	passed = _check("and says whose reference it is",
 		_message_of(found, EventSheetSpawnFindings.KIND_MAYBE_FREED),
-		"held_boss is kept between frames, and anything could have removed it by now. Ask whether it is still here before reaching into it.") and passed
+		"held_boss is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.") and passed
 	passed = _check("with the guard one click away",
 		_fix_of(found, EventSheetSpawnFindings.KIND_MAYBE_FREED),
 		EventSheetSpawnFindings.FIX_GUARD_IT) and passed
@@ -235,17 +235,17 @@ static func _test_a_maybe_freed_reference() -> bool:
 		{"target": "held_boss", "property": "\"visible\"", "value": "true"})])
 	guarded.conditions.append(_condition("IsStillHere", {"object": "held_boss"}))
 	asked.events.append(guarded)
-	asked.events.append(_event("OnAreaEntered", [_action("RemoveNow", {"object": "held_boss"})]))
+	asked.events.append(_event("OnAreaEntered", [_action("DestroyNow", {"object": "held_boss"})]))
 	passed = _check("a sheet that already asked is not asked again",
 		_kinds(EventSheetSpawnFindings.findings(asked)), PackedStringArray()) and passed
 
-	# Nor is a removal row, which the compiler's own guard already writes the question for.
+	# Nor is a destroy row, which the compiler's own guard already writes the question for.
 	var removing: EventSheetResource = _sheet()
 	removing.variables = bad.variables.duplicate(true)
 	removing.events.append(_event("OnReady", [_action("SpawnNewCopy", {
 		"scene": ENEMY, "name": "foe", "at": "global_position", "parent": "self"})]))
-	removing.events.append(_event("OnProcess", [_action("RemoveNow", {"object": "held_boss"})]))
-	passed = _check("a removal row carries its own guard and is left alone",
+	removing.events.append(_event("OnProcess", [_action("DestroyNow", {"object": "held_boss"})]))
+	passed = _check("a destroy row carries its own guard and is left alone",
 		_kinds(EventSheetSpawnFindings.findings(removing)), PackedStringArray()) and passed
 
 	# Nor is a value that cannot be a node at all.
@@ -312,31 +312,31 @@ static func _test_the_scene_that_spawns_itself() -> bool:
 
 static func _test_freed_but_still_booked() -> bool:
 	var passed: bool = true
-	# THE BUG: the removal is marked at once and the wait is then booked against something that is on
+	# THE BUG: the destroy is marked at once and the wait is then booked against something that is on
 	# its way out of the world.
 	var bad: EventSheetResource = _sheet()
 	bad.events.append(_event("OnReady", [
-		_action("RemoveNow", {"object": "$Enemy"}),
-		_action("RemoveAfterSeconds", {"object": "$Enemy", "seconds": "2.0"}),
+		_action("DestroyNow", {"object": "$Enemy"}),
+		_action("DestroyAfterSeconds", {"object": "$Enemy", "seconds": "2.0"}),
 	]))
 	# The subject is a node path here, so the rows are given a bare name the sheet minted instead.
 	var minted: EventSheetResource = _sheet()
 	minted.events.append(_event("OnReady", [
 		_action("SpawnNewCopy", {"scene": ENEMY, "name": "foe", "at": "global_position",
 			"parent": "self"}),
-		_action("RemoveNow", {"object": "foe"}),
-		_action("RemoveAfterSeconds", {"object": "foe", "seconds": "2.0"}),
+		_action("DestroyNow", {"object": "foe"}),
+		_action("DestroyAfterSeconds", {"object": "foe", "seconds": "2.0"}),
 	]))
 	var found: Array[Dictionary] = EventSheetSpawnFindings.findings(minted)
-	passed = _check("a wait booked against something removed above it is found",
+	passed = _check("a wait booked against something destroyed above it is found",
 		_kinds(found), PackedStringArray([EventSheetSpawnFindings.KIND_FREED_STILL_BOOKED])) and passed
 	passed = _check("and says the two ways out",
 		_message_of(found, EventSheetSpawnFindings.KIND_FREED_STILL_BOOKED),
-		"foe is removed earlier in this event, and this row books a wait against it. Move the removal below this row, or remove it after a delay instead.") and passed
+		"foe is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.") and passed
 	passed = _check("with the reorder one click away",
 		_fix_of(found, EventSheetSpawnFindings.KIND_FREED_STILL_BOOKED),
 		EventSheetSpawnFindings.FIX_REMOVE_LAST) and passed
-	passed = _check("pointing at the removal row rather than at the booking",
+	passed = _check("pointing at the destroy row rather than at the booking",
 		int(found[0].get("index", -1)), 1) and passed
 
 	# AND IT DOES NOT CRY WOLF. The same two rows in the other order are simply correct.
@@ -344,18 +344,18 @@ static func _test_freed_but_still_booked() -> bool:
 	ordered.events.append(_event("OnReady", [
 		_action("SpawnNewCopy", {"scene": ENEMY, "name": "foe", "at": "global_position",
 			"parent": "self"}),
-		_action("RemoveAfterSeconds", {"object": "foe", "seconds": "2.0"}),
-		_action("RemoveNow", {"object": "foe"}),
+		_action("DestroyAfterSeconds", {"object": "foe", "seconds": "2.0"}),
+		_action("DestroyNow", {"object": "foe"}),
 	]))
-	passed = _check("the wait booked before the removal is the order that works",
+	passed = _check("the wait booked before the destroy is the order that works",
 		_kinds(EventSheetSpawnFindings.findings(ordered)), PackedStringArray()) and passed
-	# And a booking against something ELSE has nothing to do with the removal above it.
+	# And a booking against something ELSE has nothing to do with the destroy above it.
 	var elsewhere: EventSheetResource = _sheet()
 	elsewhere.events.append(_event("OnReady", [
 		_action("SpawnNewCopy", {"scene": ENEMY, "name": "foe", "at": "global_position",
 			"parent": "self"}),
-		_action("RemoveNow", {"object": "foe"}),
-		_action("RemoveAfterSeconds", {"object": "$Other", "seconds": "2.0"}),
+		_action("DestroyNow", {"object": "foe"}),
+		_action("DestroyAfterSeconds", {"object": "$Other", "seconds": "2.0"}),
 	]))
 	passed = _check("a wait booked against something else is nobody's problem",
 		_kinds(EventSheetSpawnFindings.findings(elsewhere)), PackedStringArray()) and passed
@@ -588,7 +588,7 @@ static func _test_the_doctor_files_a_real_finding() -> bool:
 	# a clean bill of health - and it points at the first script worth opening.
 	passed = _check("the summary says what was found, what was read and what is wrong",
 		str(filed[0].get("message", "")),
-		"Spawning: 1 script(s) that add or remove nodes, 1 read, 1 with something that will go wrong at run time.") and passed
+		"Spawning: 1 script(s) that add or destroy nodes, 1 read, 1 with something that will go wrong at run time.") and passed
 	passed = _check("the summary is an info line under the section's own id",
 		"%s/%s" % [str(filed[0].get("severity", "")), str(filed[0].get("check", ""))],
 		"info/%s" % EventSheetSpawningDoctor.CHECK_ID) and passed

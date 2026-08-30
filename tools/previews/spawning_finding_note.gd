@@ -7,7 +7,7 @@
 #
 # Two of the four are shown together because they are the two a spawning sheet earns first: a node
 # parented inside a collision callback, which Godot refuses outright, and a wait booked against
-# something an earlier row in the same event removed.
+# something an earlier row in the same event destroyed.
 @tool
 extends RefCounted
 
@@ -47,7 +47,7 @@ static func _collision_event() -> EventRow:
 	return event
 
 
-## The order that does not work: the removal is marked at once, and the wait below it is then booked
+## The order that does not work: the destroy is marked at once, and the wait below it is then booked
 ## against something on its way out of the world.
 static func _booked_event() -> EventRow:
 	var event: EventRow = EventRow.new()
@@ -57,8 +57,8 @@ static func _booked_event() -> EventRow:
 	event.actions.append(_action("SpawnNewCopy", {
 		"scene": ENEMY, "name": "new_prize", "at": "global_position", "parent": "self",
 	}))
-	event.actions.append(_action("RemoveNow", {"object": "new_prize"}))
-	event.actions.append(_action("RemoveAfterSeconds", {"object": "new_prize", "seconds": "2.0"}))
+	event.actions.append(_action("DestroyNow", {"object": "new_prize"}))
+	event.actions.append(_action("DestroyAfterSeconds", {"object": "new_prize", "seconds": "2.0"}))
 	return event
 
 

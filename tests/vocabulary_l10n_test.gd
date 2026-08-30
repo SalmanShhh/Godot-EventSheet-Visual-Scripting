@@ -68,7 +68,7 @@ const NEW_MODULES: Array[String] = [
 	# The spawn sentence: the row that names a new copy, the deferred spelling beside it, and the
 	# four expressions that answer "where". One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/spawn_aces.gd",
-	# The other half of the same sentence: the three removal verbs and the question beside them. One
+	# The other half of the same sentence: the three destroy verbs and the question beside them. One
 	# module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/removal_aces.gd",
 	# The copies said in the plural: joining a group on the way in, the cap with its policy on the

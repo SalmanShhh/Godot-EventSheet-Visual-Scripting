@@ -265,7 +265,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnPhysicsPostTick":
 			# The physics-tick sibling: SceneTree.physics_frame, after every _physics_process this step.
 			return _signal_backed("_on_physics_post_tick", "", "physics_frame", "@tree")
-		"OnLastOfCrowdRemoved":
+		"OnLastOfCrowdDestroyed":
 			# The scene tree's own node_removed signal, which fires as ANY node leaves and hands the
 			# handler the node that is going. Which crowd an event is about is not part of the
 			# connection - it is the gate condition applying the trigger adds underneath, so every
