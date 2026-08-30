@@ -1366,15 +1366,24 @@ func _create_physics_layer_name_3d_field(key: String, default_value: Variant) ->
 ## the moment you notice the layer has no name is the moment you can give it one - written to
 ## Project Settings through the editor's own undo, with the before and after said back on the strip.
 ## The door disappears the instant the picked layer has a name, because then there is nothing to do.
+##
+## AND THE VALUE THE ROW ALREADY HAS IS NEVER THROWN AWAY. A layer can be an EXPRESSION - a constant,
+## a variable, a call that works one out - and both halves of the reading preserve it: the lift keeps
+## `set_collision_mask_value(wall_layer, true)` as `wall_layer`, and the row's sentence says
+## `wall_layer` back. So the field holds it too, shows it as itself, and hands it back untouched;
+## opening a row and pressing OK must not silently rewrite somebody's code to layer 1. Picking a
+## layer from the list is what replaces it, because that is somebody choosing.
 func _create_single_layer_field(key: String, default_value: Variant, dimension: String) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var default_text: String = str(default_value).strip_edges()
+	var written_as_expression: bool = not default_text.is_empty() and not default_text.is_valid_int()
 	var picked: int = default_text.to_int() if default_text.is_valid_int() else 1
 	var button: MenuButton = MenuButton.new()
 	button.flat = false
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.set_meta("physics_layer_number", picked)
+	button.set_meta("physics_layer_expression", default_text if written_as_expression else "")
 	button.set_meta("physics_layer_dimension", dimension)
 	var name_edit: LineEdit = LineEdit.new()
 	name_edit.custom_minimum_size = Vector2(EventSheetPalette.scaled(140), 0.0)
@@ -1384,7 +1393,10 @@ func _create_single_layer_field(key: String, default_value: Variant, dimension: 
 		"Give this layer a name in Project Settings ▸ Layer Names, so every row about it can say it.")
 	var refresh_door: Callable = func() -> void:
 		var number: int = int(button.get_meta("physics_layer_number"))
-		var unnamed: bool = EventForgePhysicsLayers.name_of(number, dimension).is_empty()
+		# An expression names no one layer, so there is no layer to name: the door is only offered
+		# once the row points at a number the write could land on.
+		var unnamed: bool = str(button.get_meta("physics_layer_expression", "")).is_empty() \
+			and EventForgePhysicsLayers.name_of(number, dimension).is_empty()
 		name_edit.placeholder_text = EventSheetL10n.translate("Name for layer %d") % number
 		name_edit.visible = unnamed
 		name_button.visible = unnamed
@@ -1392,6 +1404,7 @@ func _create_single_layer_field(key: String, default_value: Variant, dimension: 
 	button.get_popup().index_pressed.connect(func(index: int) -> void:
 		var number: int = button.get_popup().get_item_id(index)
 		button.set_meta("physics_layer_number", number)
+		button.set_meta("physics_layer_expression", "")
 		_fill_layer_menu(button, dimension, number)
 		button.text = EventForgePhysicsLayers.words_for(number, dimension)
 		refresh_door.call())
@@ -1401,7 +1414,8 @@ func _create_single_layer_field(key: String, default_value: Variant, dimension: 
 		button.text = EventForgePhysicsLayers.words_for(
 			int(button.get_meta("physics_layer_number")), dimension)
 		refresh_door.call())
-	button.text = EventForgePhysicsLayers.words_for(picked, dimension)
+	button.text = default_text if written_as_expression \
+		else EventForgePhysicsLayers.words_for(picked, dimension)
 	refresh_door.call()
 	row.add_child(button)
 	row.add_child(name_edit)
@@ -3116,8 +3130,14 @@ func _extract_value(field: Control) -> Variant:
 		return int(field.get_meta("physics_mask"))
 	# The named-layer picker holds ONE layer, and what the row carries is its number - the argument
 	# the engine's own per-layer calls take. The name is only ever the reading of that number.
+	#
+	# Unless the row was written with an EXPRESSION in that slot, which it may be: a constant, a
+	# variable, a call. It comes back exactly as it went in until somebody picks a layer from the
+	# list, because a form that quietly answers 1 for an expression it could not read would rewrite
+	# working code on the way out of a dialog that was only opened.
 	if field is MenuButton and field.has_meta("physics_layer_number"):
-		return int(field.get_meta("physics_layer_number"))
+		var written: String = str(field.get_meta("physics_layer_expression", "")).strip_edges()
+		return written if not written.is_empty() else int(field.get_meta("physics_layer_number"))
 	# An input-window prompt field: a tick, a label and (on the open row) a control, read back as the
 	# one line they stand for - so nothing above this has to know the prompt is code at all.
 	if field.has_meta("input_prompt_kind"):

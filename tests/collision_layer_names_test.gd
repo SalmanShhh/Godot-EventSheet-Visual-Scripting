@@ -54,6 +54,7 @@ static func run() -> bool:
 	ok = _test_the_rows() and ok
 	ok = _test_what_is_emitted() and ok
 	ok = _test_the_lift() and ok
+	ok = _test_the_picker() and ok
 	ok = _test_the_notes() and ok
 	_restore(previous)
 	return ok
@@ -281,6 +282,30 @@ static func _open(path: String, source: String) -> EventSheetResource:
 
 
 # ── the notes ────────────────────────────────────────────────────────────────────
+
+
+## THE FIELD ITSELF, and the one thing it must never do: throw away what the row already says. The
+## lift keeps `set_collision_mask_value(wall_layer, true)` as `wall_layer` and the sentence reads it
+## back as `wall_layer` - so a dialog that answered 1 for it would rewrite working code on the way
+## out of a form that was only opened, which is a round-trip break through the picker.
+static func _test_the_picker() -> bool:
+	var dialog: ACEParamsDialog = ACEParamsDialog.new()
+	var two_d: String = EventForgePhysicsLayers.DIMENSION_2D
+	var written: Control = dialog._create_single_layer_field("expression", "wall_layer", two_d)
+	var expression_field: Control = dialog._fields["expression"]
+	var ok: bool = _check("an expression comes back out of the field exactly as it went in",
+		dialog._extract_value(expression_field), "wall_layer")
+	ok = _check("and the field reads as that expression rather than as a layer nobody chose",
+		(expression_field as MenuButton).text, "wall_layer") and ok
+	var numbered: Control = dialog._create_single_layer_field("number", "2", two_d)
+	var number_field: Control = dialog._fields["number"]
+	ok = _check("a plain layer still comes back as its number",
+		dialog._extract_value(number_field), 2) and ok
+	ok = _check("read as the project's word for it", (number_field as MenuButton).text, "Enemies") and ok
+	# The two rows own the controls; the dialog itself is reference-counted and goes with the scope.
+	written.free()
+	numbered.free()
+	return ok
 
 
 static func _test_the_notes() -> bool:
