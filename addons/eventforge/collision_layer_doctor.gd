@@ -124,11 +124,52 @@ static func script_findings(script_path: String, source: String) -> Array[Dictio
 	return findings
 
 
+## The source with every string literal's contents and every comment blanked out, character for
+## character so nothing else shifts. A file that merely QUOTES a layer call - a test's fixture
+## constant, a doc string, a codegen template, a line commented out while somebody thinks - is
+## TALKING about one rather than making one, and a section that cannot tell the difference files a
+## finding against the plugin's own suite. The compiler draws this same line for the same reason.
+static func code_only(source: String) -> String:
+	var written: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	var length: int = source.length()
+	while index < length:
+		var character: String = source[index]
+		if character == "#":
+			while index < length and source[index] != "\n":
+				written.append(" ")
+				index += 1
+			continue
+		if character != "\"" and character != "'":
+			written.append(character)
+			index += 1
+			continue
+		# A quote opens a literal, of one of the two lengths GDScript writes: the plain one and the
+		# block one. Both are blanked to their own width, and the newlines inside a block are kept so
+		# the lines of the file stay the lines of the file.
+		var run: int = 3 if source.substr(index, 3) == character.repeat(3) else 1
+		written.append(" ".repeat(run))
+		index += run
+		while index < length:
+			if source[index] == "\\" and run == 1:
+				written.append("  ")
+				index += 2
+				continue
+			if source.substr(index, run) == character.repeat(run):
+				written.append(" ".repeat(run))
+				index += run
+				break
+			written.append("\n" if source[index] == "\n" else " ")
+			index += 1
+	return "".join(written)
+
+
 ## Every layer number the text addresses by a plain literal, lowest first. A call whose layer is an
 ## expression is left alone: the number it works out to is not knowable here, and a note about a
 ## layer nobody can point at would be a guess.
-static func layer_numbers(source: String) -> PackedInt32Array:
+static func layer_numbers(text: String) -> PackedInt32Array:
 	var found: Dictionary = {}
+	var source: String = code_only(text)
 	for call_text: String in LAYER_CALLS:
 		var cursor: int = 0
 		while true:

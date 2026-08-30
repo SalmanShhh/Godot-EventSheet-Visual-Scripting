@@ -337,6 +337,15 @@ static func _test_the_notes() -> bool:
 	ok = _check("a layer written as an expression is nobody's guess",
 		EventSheetCollisionLayerDoctor.layer_numbers(
 			"set_collision_mask_value(wall_layer, true)"), PackedInt32Array()) and ok
+	# A file that QUOTES a layer call is talking about one, not making one. Without this the section
+	# read every fixture constant and every doc string in the project - including the ones in this
+	# test - and filed a finding against the plugin's own suite.
+	ok = _check("a quoted call and a commented-out one are talk, not code",
+		EventSheetCollisionLayerDoctor.layer_numbers(
+			"const SAMPLE := \"set_collision_mask_value(40, true)\"\n"
+			+ "# set_collision_mask_value(41, true)\n"
+			+ "\tset_collision_mask_value(6, true)  # and set_collision_mask_value(42, true)\n"),
+		PackedInt32Array([6])) and ok
 	ok = _check("and a script that never mentions a layer is never read",
 		EventSheetCollisionLayerDoctor.says_enough("extends Node\n"), false) and ok
 	return ok
