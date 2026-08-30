@@ -6,6 +6,42 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### A pack can teach the reader the lines its verbs are written as
+
+- **`## @ace_lift_example` beside a verb, and somebody's hand-written file reads as your pack.** A
+  pack ships verbs, and whoever used it before they used the sheet wrote those verbs by hand: their
+  `_ready` says `flicker.start_flickering()`, and opening it read as the generic *call a method* row
+  every unclaimed call lands on. Honest, and the floor rather than the ceiling - the pack knows what
+  it would rather that line said. Now it can say so, as an EXAMPLE rather than as a pattern: the line
+  the way a person writes it, with the value spans marked (`[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])`),
+  which is the same by-example form the built-in tables are authored in. The Light Flicker pack ships
+  the first four: start and stop, each with its argument and without it, so all five spellings of
+  those two verbs - a node path, a `%unique` name, a `get_node(\"…\")`, a bare variable, with or without
+  the number - read as the pack's own rows.
+- **The words change and the bytes do not.** The line the author wrote is baked onto the lifted row as
+  its template, exactly as the built-in spelling families bake theirs, so saving writes their file
+  back byte for byte. That is what makes a table landing LATE safe: the same file opens, the same
+  file saves, and the rows in between read better. With no table installed at all it still opens - as
+  the generic call, which is pinned beside the upgraded reading so the floor stays visible.
+- **An entry that cannot keep the promise never ships.** Pack spellings pass the SAME auto-generated
+  gate the built-in tables do, at pack-build time: every entry generates its own fixture line, has to
+  be claimed by itself, and has to re-emit byte for byte (`audited=… drifted=0` now prints
+  `spellings=… problems=0` beside it). Shadowing a built-in spelling is an error naming both. Two
+  packs that answer to one line are a Project Doctor note rather than an error - the answer is well
+  defined, the pack first in folder order claims it, and the one that lost is told. An example above
+  no verb, on a condition rather than an action, or that cannot be built at all comes back as a
+  refusal carrying the sentence that says why.
+- **Where the structured reading stops is now pinned, on purpose.** Multi-line enums and inner classes
+  have read as structure for some time (an enum row that remembers its explicit values and its
+  trailing comma; a data-class or class block whose members read as the rows they would be at top
+  level). What was never written down is the other side of that gate: a comment among an enum's
+  members, an enum with no name, a class inside a class. Each stays honest code, and each is now
+  pinned as both the reading it gets and the file coming back byte for byte either way.
+- The editor's own rotating corpus gate reached a Manual page it had never measured
+  (`doc_editor_words.gd`, whose body is one dictionary literal of key to sentence), so the manual
+  group's wordless-row ceiling is 26 rather than 21 - the number read off the worst file in the
+  group, as every ceiling there is, with the file and the reason named beside it.
+
 ### Four hand-written idioms the sheet had no words for
 
 - **The input handler asks the event now.** `if event.is_action_pressed(\"jump\"):` inside `_input` or
