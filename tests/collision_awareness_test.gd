@@ -263,6 +263,15 @@ static func _test_nothing_can_reach_it() -> bool:
 		EventSheetCollisionFindings.writes_its_own_layers(
 			EventSheetCollisionFindings.all_lines(
 				GDScriptImporter.new().import_external(GATE))), false) and ok
+	# WRITES ONLY. A sheet that merely ASKS about its mask has changed nothing, and standing down for
+	# it would turn the check off on a sheet that still has the bug.
+	ok = _check("the four writes stand the rule down, and the question does not",
+		[EventSheetCollisionFindings.writes_its_own_layers("\tset_collision_mask_value(3, true)"),
+			EventSheetCollisionFindings.writes_its_own_layers("\tset_collision_layer_value(2, false)"),
+			EventSheetCollisionFindings.writes_its_own_layers("\tcollision_mask = 6"),
+			EventSheetCollisionFindings.writes_its_own_layers("\tcollision_layer |= 4"),
+			EventSheetCollisionFindings.writes_its_own_layers("\tif get_collision_mask_value(3):")],
+		[true, true, true, true, false]) and ok
 	return ok
 
 

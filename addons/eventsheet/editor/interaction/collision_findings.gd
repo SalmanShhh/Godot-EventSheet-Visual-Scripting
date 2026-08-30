@@ -92,16 +92,22 @@ const GROUP_FILTER_PARAM := "group"
 ## about landing hears nothing about the facing of anything.
 const LANDING_WORDS: PackedStringArray = ["is_on_floor", "__just_landed_", "__just_left_the_ground_"]
 
-## The two properties a sheet changes when it decides at RUN TIME what it collides with - the layer
-## it sits on and the mask it watches. Both bare names, because every spelling that writes them
-## contains one: `set_collision_mask_value(3, true)` (which is what the Collide With Layer row
-## emits), `set_collision_layer_value`, and the plain `collision_mask = 6` a hand-written line uses.
+## Every way a sheet CHANGES the layer it sits on or the mask it watches: the engine's per-layer
+## setters (which is what Collide With Layer and its three siblings emit), the whole-mask setters
+## under them, and the plain assignment a hand-written line uses, in its compound form too.
 ##
-## A sheet that writes either of them has told the truth about itself and the `.tscn` has not: the
+## A sheet that writes one of these has told the truth about itself and the `.tscn` has not: the
 ## numbers in the scene file are where the node STARTS, not what it watches while the game runs. So
 ## the dead-trigger rule stands down for that sheet rather than accusing the very rows this
 ## vocabulary teaches people to write.
-const LAYER_WRITE_WORDS: PackedStringArray = ["collision_mask", "collision_layer"]
+##
+## WRITES ONLY, which is why the bare property names are not enough. A sheet that merely ASKS - "is
+## set to collide with Enemies" compiles to `get_collision_mask_value(3)` - has changed nothing, and
+## standing down for it would turn the check off on a sheet that still has the bug.
+const LAYER_WRITE_WORDS: PackedStringArray = [
+	"set_collision_mask", "set_collision_layer",
+	"collision_mask =", "collision_layer =", "collision_mask |=", "collision_layer |=",
+]
 
 
 ## Every finding this sheet earns, in the order the rules run. `script_path` is what resolves the
