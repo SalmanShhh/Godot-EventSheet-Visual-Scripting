@@ -906,6 +906,60 @@ static func _signal_entry(definition: ACEDefinition, source: Dictionary, declare
 	return offered
 
 
+## Where the METHODS of the project's own scripts are offered: one folder per node of the open scene
+## that wears a script, and one per Autoload, holding that script's own declared methods.
+const METHODS_GROUP := "Methods in this project"
+
+
+## Every method the project's own scripts declare, as picker entries: one Call Method row per source
+## per method, with the target and the method name already answered and the arguments prefilled from
+## the declaration itself. The Call Method machinery, generalized - what used to be a typed string
+## somebody had to go and read the script to fill in is a first-class entry with the author's own
+## `##` line as its description.
+##
+## DECLARED methods only, and the same reason the signals shelf gives: what a Button or a Timer can
+## be told is already browsable under its own class, and one copy of each per node would be a picker
+## nobody could read. What no picker had was the `grant_xp(amount)` somebody wrote in 2022.
+##
+## These are DERIVED entries - read off the API rather than written by anybody - so they say so: the
+## shelf line carries the file they came out of, and the row a pick produces reads in the derived
+## style on the canvas. Pure + static (a sheet and a registry in, definitions out), so the shelves
+## are pinned headless.
+static func scene_method_definitions(sheet: EventSheetResource, registry: EventSheetACERegistry) -> Array[ACEDefinition]:
+	var out: Array[ACEDefinition] = []
+	if sheet == null or registry == null:
+		return out
+	var call_method: ACEDefinition = registry.find_definition("Core", "CallMethod")
+	if call_method == null:
+		return out
+	for source: Dictionary in EventSheetScriptMembers.call_sources(sheet):
+		var script_path: String = str(source["script_path"])
+		for declared: Dictionary in (EventSheetScriptMembers.of_script(script_path)["methods"] as Array[Dictionary]):
+			out.append(_method_entry(call_method, source, declared, script_path))
+	return out
+
+
+## One picker entry: the Call Method row with the target, the method and its arguments answered,
+## named the way the reading names the same call on the canvas and described with the script's own
+## `##` line above the declaration.
+static func _method_entry(definition: ACEDefinition, source: Dictionary, declared: Dictionary,
+		script_path: String) -> ACEDefinition:
+	# copy(), never duplicate(): an ACEDefinition's fields are plain vars, so duplicate() would hand
+	# back a blank definition that still looks valid.
+	var offered: ACEDefinition = definition.copy()
+	var method_name: String = str(declared["name"])
+	offered.display_name = EventSheetSentence.verb_words(method_name)
+	offered.description = EventSheetScriptMembers.detail_of(declared)
+	offered.metadata[SCENE_SHELF_META] = "%s   %s" % [str(source["label"]), script_path.get_file()]
+	offered.metadata[SCENE_GROUP_META] = METHODS_GROUP
+	offered.metadata[SCENE_PREFILL_META] = {
+		"target": str(source["expression"]),
+		"method": method_name,
+		"args": EventSheetScriptMembers.call_arguments(str(declared.get("args", ""))),
+	}
+	return offered
+
+
 ## One node's line on the shelf: its name, the class it is, and - for a light - whether it
 ## casts shadows. The facts that decide which row a reader wants and whether it will do anything.
 static func scene_node_shelf_label(node: Dictionary) -> String:
@@ -1669,6 +1723,14 @@ func _refresh_tree() -> void:
 	for signal_definition: ACEDefinition in scene_signal_definitions(_open_sheet(), _registry):
 		if not filtering or shelf_matches_query(signal_definition, query):
 			definitions.append(signal_definition)
+	# And the METHODS those same scripts declare, on the same shelves and for the same reason: "tell
+	# my own object to do the thing I wrote" is the other half of the question, and it was the half
+	# that had no entry at all - only a Call Method row with a typed string in it. Never in the
+	# signals-only door, where a method is not an answer to anything being asked.
+	if not signals_only:
+		for method_definition: ACEDefinition in scene_method_definitions(_open_sheet(), _registry):
+			if not filtering or shelf_matches_query(method_definition, query):
+				definitions.append(method_definition)
 	# Fixable preconditions never HIDE an entry any more: the behaviour-only host verbs off a plain
 	# sheet and the Editor object off a game sheet stay LISTED, greyed, with the one-line reason as
 	# the fix (see EventSheetPickerGates). The context is computed once here - the single chokepoint

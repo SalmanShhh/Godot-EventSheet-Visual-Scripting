@@ -14246,6 +14246,22 @@ static var _effect_ace_ids: Dictionary = {}
 # rather than spelling the keyword out in the action cell. Display only: the statement in the file is
 # untouched, and nothing about this reaches the view state a user's own breakpoints live in.
 var _pending_grammar_breakpoint: bool = false
+# Raised by _append_sentence_spans when the DERIVED layer claimed the statement it is reading, and
+# consumed by the span it is about to build. Held for exactly one statement: the reading is a
+# by-product of resolving the words, and carrying it on the span is what lets the hover show the
+# method's own sentence and F1 open the engine's page for it without either of them resolving the
+# call a second time.
+var _pending_derived_call: Dictionary = {}
+# The same fact for a row the IMPORTER filed as a Call Method - the shape most ordinary calls in a
+# real file arrive as. Its own pending because the two paths build their spans in different places:
+# a raw statement stamps its own span on the spot, and an ACE row's sentence is handed back up to
+# `_make_span`, which is where this one is read (and cleared) beside the grammar tones it belongs to.
+var _pending_derived_ace: Dictionary = {}
+## How far a derived verb sits back from a curated one, as a blend towards the theme's muted text.
+## Far enough that the two layers are distinguishable side by side in one glance, and near enough
+## that a whole file of derived rows is still comfortably readable - a derived reading is real, and
+## greying it out would say the opposite.
+const DERIVED_TONE_BLEND: float = 0.4
 # The condition lines an "or" divider is drawn above, filled during the span pass of the event
 # currently being built and consumed by the caller that holds its EventRowData.
 var _pending_or_lines: PackedInt32Array = PackedInt32Array()
@@ -14623,6 +14639,9 @@ func _claim_pending_patterns(row_data: EventRowData) -> void:
 ## row is the LEAD of such a run. The statement then reads with the word `table` / `list` where the
 ## literal sat and the entries as chips after it; every other caller passes {} and nothing changes.
 func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary, literal: Dictionary = {}) -> bool:
+	# Cleared on the way in, so a derived reading can never leak onto the NEXT statement through an
+	# exit that returned before the span carrying it was built.
+	_pending_derived_call = {}
 	# An edit handed to the mutation funnel is ONE undoable step: the row names the step, and the
 	# callback's own lines read as sub-events under it. Ahead of the sentence layer, which cannot see
 	# a statement written across several lines at all.
@@ -14685,12 +14704,26 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 			pieces = call_pieces
 		else:
 			# ── lens hook ─────────────────────────────────────────────────────────────────────
+			# THE DERIVED LAYER. Nothing curated claimed this line, so the API is asked instead:
+			# when the sheet can KNOW the receiver's class - `self`, an @onready node, a typed
+			# declaration, an Autoload, a class name - the method's own parameter names name the
+			# chips and the method's own words ride on the row. Read in the PLAINER call style,
+			# never the polished sentence's, so a reader always knows which layer they are looking
+			# at. A receiver nothing can answer for is not guessed at; it falls through.
+			var derived: Dictionary = EventSheetDerivedCalls.derived_pieces(
+				raw.code, sentence_context(), _reading_class_map(), _reading_autoloads())
+			# ── lens hook ─────────────────────────────────────────────────────────────────────
 			# Any other call reads Object ▸ Verb chips - the verb in words, the arguments named by
 			# the engine's own parameter names when the object's class is known, and no
 			# parentheses anywhere. Only a line that is not one call at all keeps the old form.
-			var generic: Dictionary = EventSheetViewportReadingRows.generic_call_pieces(
-				raw.code, sentence_context(), _reading_class_map())
-			if not generic.is_empty():
+			var generic: Dictionary = {} if not derived.is_empty() \
+				else EventSheetViewportReadingRows.generic_call_pieces(
+					raw.code, sentence_context(), _reading_class_map())
+			if not derived.is_empty():
+				object_label = str(derived.get("object", ""))
+				pieces = derived.get("pieces", []) as Array
+				_pending_derived_call = derived
+			elif not generic.is_empty():
 				object_label = str(generic.get("object", ""))
 				pieces = generic.get("pieces", []) as Array
 			else:
@@ -14727,6 +14760,16 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 	if not typed_object.is_empty():
 		object_label = str(typed_object.get("label", object_label))
 		object_note = str(typed_object.get("note", ""))
+	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
+	# The SECOND half of the derived layer's own look: the class the verb was read off, muted beside
+	# the object. It says where a derived reading came from in the same breath as saying whose row it
+	# is, which is what stops the plainer verb from reading as a row somebody forgot to finish. Never
+	# written over a note the declaration lens already put there - that one says the same thing about
+	# the same object, and saying it twice is noise.
+	if not _pending_derived_call.is_empty() and object_note.is_empty():
+		var derived_class: String = str(_pending_derived_call.get("class", "")).strip_edges()
+		if not derived_class.is_empty() and derived_class != object_label:
+			object_note = derived_class
 	# ── lens hook ──────────────────────────────────────────────────────────────────────────────
 	# Applied to the sentence layer's OUTPUT, never inside it: the sentence layer decides what a
 	# statement SAYS, this only decides how the names in it are SPELLED. Only "name" and "value"
@@ -14793,8 +14836,42 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"object_note": object_note,
 		"bbcode_segments": sentence_segments,
 		"object_icon": sentence_icon
-	}.merged(action_style_meta, false)))
+	}.merged(_derived_call_meta(), true).merged(action_style_meta, false)))
 	return true
+
+
+## What a DERIVED reading leaves on the span it just built, for the two surfaces that ask about it
+## later: the hover, which shows the method's own words above the line, and F1, which opens the
+## engine's page for the member. {} on every other row, so a curated sentence and an unclaimed line
+## carry nothing extra at all.
+##
+## Consumed here rather than read again from the reading: resolving the call a second time to answer
+## a hover would be the same work twice, on a file that may have thousands of statements in it.
+func _derived_call_meta() -> Dictionary:
+	if _pending_derived_call.is_empty():
+		return {}
+	var reading: Dictionary = _pending_derived_call
+	_pending_derived_call = {}
+	return derived_meta(reading)
+
+
+## The same for a Call Method ROW, off its own pending. `_make_span` clears it.
+func _derived_ace_meta() -> Dictionary:
+	return derived_meta(_pending_derived_ace)
+
+
+## One derived reading as the keys a span carries. Static + pure, so a test reads exactly what a
+## hover and F1 will be handed, and the two paths that stamp it cannot drift apart.
+static func derived_meta(reading: Dictionary) -> Dictionary:
+	if reading.is_empty():
+		return {}
+	return {
+		"derived_call": true,
+		"derived_class": str(reading.get("class", "")),
+		"derived_method": str(reading.get("method", "")),
+		"derived_doc": EventSheetDerivedCalls.hover_text(reading),
+		"derived_doc_id": str(reading.get("doc_id", "")),
+	}
 
 
 ## The statement split in two so the VALUE can wear its own picture: the sentence up to the value
@@ -14885,6 +14962,15 @@ func _sentence_tone_segments(pieces: Array, indent: int) -> Array[Dictionary]:
 			"muted":
 				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
+			EventSheetDerivedCalls.TONE_DERIVED:
+				# THE DERIVED VERB, and the one place the two reading layers are told apart on the
+				# canvas. A curated sentence's verb is the bold `name` above; this one is the same
+				# words read off the API instead of written by a person, so it reads in the plainer
+				# call style - unbolded, and a shade back towards the muted lead the object note
+				# beside it wears. The moment a curated table claims the line the bold form takes
+				# over, with the file untouched.
+				tone_color = _viewport._get_reading_style().primary_text_color.lerp(
+					_viewport._get_reading_style().muted_text_color, DERIVED_TONE_BLEND)
 		segments.append({"text": str(piece[0]), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 
@@ -15140,6 +15226,16 @@ const GRAMMAR_READ_ACE_IDS: PackedStringArray = [
 ## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
 ## when this row has no such twin. The point is symmetry: `Destroy`, `Signal On Jumped`, `Set hp to 0`
 ## must be one sentence, whether the row came out of the picker or out of the user's own .gd file.
+## A reading's [text, tone] pieces as the {text, tone} segments a grammar sentence hands back. The
+## two shapes say the same thing and both are read here; converting in one place keeps a caller from
+## quietly growing a third.
+static func _grammar_tone_segments(pieces: Array) -> Array:
+	var segments: Array = []
+	for piece: Variant in pieces:
+		segments.append({"text": str((piece as Array)[0]), "tone": str((piece as Array)[1])})
+	return segments
+
+
 func grammar_action_sentence(action: ACEAction) -> Dictionary:
 	if action == null or not (action.provider_id.is_empty() or action.provider_id == "Core"):
 		return {}
@@ -15231,14 +15327,26 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 			var settled: Dictionary = EventSheetSentence.statement(call_code, context)
 			if not settled.is_empty():
 				return settled
+			# ── lens hook ──────────────────────────────────────────────────────────────────────
+			# THE DERIVED LAYER, on the shape it matters most for. The importer files an ordinary
+			# call as this row through the statement catch-all - the lowest-specificity claim there
+			# is, and not a curated one - so a Call Method row IS the derived layer's territory:
+			# where the sheet can know the receiver's class, the chips take the method's own
+			# parameter names, the row carries the method's own words, and it reads in the plainer
+			# derived style. A settled sentence above it still wins outright, which is the whole
+			# ordering: curated first, derived second, the general reading last.
+			var derived_call: Dictionary = EventSheetDerivedCalls.derived_pieces(
+				call_code, context, _reading_class_map(), _reading_autoloads())
+			if not derived_call.is_empty():
+				_pending_derived_ace = derived_call
+				return {"object": str(derived_call.get("object", "")),
+					"segments": _grammar_tone_segments(derived_call.get("pieces", []) as Array)}
 			var generic_call: Dictionary = EventSheetViewportReadingRows.generic_call_pieces(
 				call_code, context, _reading_class_map())
 			if generic_call.is_empty():
 				return {}
-			var call_segments: Array = []
-			for piece: Variant in (generic_call.get("pieces", []) as Array):
-				call_segments.append({"text": str((piece as Array)[0]), "tone": str((piece as Array)[1])})
-			return {"object": str(generic_call.get("object", "")), "segments": call_segments}
+			return {"object": str(generic_call.get("object", "")),
+				"segments": _grammar_tone_segments(generic_call.get("pieces", []) as Array)}
 		# ── lens hook (groups as families) ────────────────────────────────────────────────────
 		# The picked group rows read the same words a typed `add_to_group(...)` /
 		# `get_tree().call_group(...)` now reads, so the family vocabulary is one sentence either way.
@@ -16006,6 +16114,12 @@ func grammar_bbcode_segments(pieces: Array) -> Array[Dictionary]:
 			"muted":
 				# A connective the sentence needs but the reader does not read ("then").
 				tone_color = _viewport._get_reading_style().muted_text_color
+			EventSheetDerivedCalls.TONE_DERIVED:
+				# The DERIVED verb, painted here exactly as the hand-written statement beside it
+				# paints its own: read off the API rather than written by a person, so it keeps the
+				# plainer call style instead of the curated sentence's bold name.
+				tone_color = _viewport._get_reading_style().primary_text_color.lerp(
+					_viewport._get_reading_style().muted_text_color, DERIVED_TONE_BLEND)
 		segments.append({"text": str(part.get("text", "")), "color": tone_color, "bold": tone_bold, "italic": false})
 	return segments
 
@@ -16582,6 +16696,18 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	# land on the next row.
 	if not _pending_object_note.is_empty() and not str(span.metadata.get("object_label", "")).is_empty():
 		span.metadata["object_note"] = _pending_object_note
+	# What a DERIVED reading of a Call Method row leaves behind: the words for the hover, the page
+	# for F1, and - where the object column has nothing muted beside it yet - the class the verb was
+	# read off, which is the derived layer's own mark. Only the span carrying the sentence takes it,
+	# and the pending is cleared either way so it can never land on the next row.
+	if not _pending_derived_ace.is_empty():
+		if str(span.metadata.get("kind", "")) == "action" and not text.is_empty():
+			span.metadata.merge(_derived_ace_meta(), true)
+			var read_class: String = str(_pending_derived_ace.get("class", "")).strip_edges()
+			if str(span.metadata.get("object_note", "")).is_empty() and not read_class.is_empty() \
+					and read_class != str(span.metadata.get("object_label", "")):
+				span.metadata["object_note"] = read_class
+		_pending_derived_ace = {}
 	_pending_object_note = ""
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}

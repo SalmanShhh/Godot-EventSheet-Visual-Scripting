@@ -122,6 +122,80 @@ static func signal_sources(sheet: EventSheetResource) -> Array[Dictionary]:
 	return sources
 
 
+## Every object of this project a row could CALL, each {"expression", "label", "script_path"}: the
+## same objects `signal_sources` lists, with the spelling a Call Method row's target field holds
+## rather than the one a trigger stores - `$Path/To/Node` for a node of the sheet's own scene, the
+## bare singleton name for an Autoload, and `self` for the script's own node.
+##
+## Two spellings for the same list rather than one, because they really are two different things: a
+## trigger stores WHERE to connect, and a call stores an expression that has to compile.
+static func call_sources(sheet: EventSheetResource) -> Array[Dictionary]:
+	var sources: Array[Dictionary] = []
+	if sheet == null:
+		return sources
+	for node: Dictionary in _scene_nodes(sheet):
+		var script_path: String = str(node.get("script_path", ""))
+		if script_path.is_empty():
+			continue
+		var path: String = str(node.get("path", ""))
+		sources.append({"expression": "self" if path == "." else "$%s" % path,
+			"label": str(node.get("name", "")), "script_path": script_path})
+	for entry: Variant in EventSheetProjectScanner.list_project_classes():
+		var named: Dictionary = entry as Dictionary
+		var autoload: String = str(named.get("autoload", ""))
+		if autoload.is_empty():
+			continue
+		sources.append({"expression": autoload, "label": autoload,
+			"script_path": str(named.get("path", ""))})
+	return sources
+
+
+## What a picker entry PREFILLS a call's arguments with, from the declaration exactly as the file
+## writes it: `func hit(amount: int = 1, hard: bool)` -> `1, false`. A parameter the author gave a
+## default gets that default, because it is the value they said was the ordinary one; a parameter
+## without one gets the empty value of its declared type, which is the only value that compiles
+## standing alone. An untyped parameter with no default has no honest answer and gets `null`.
+static func call_arguments(args: String) -> String:
+	var values: PackedStringArray = PackedStringArray()
+	for piece: String in EventSheetSentence.split_top_level(args, ","):
+		var text: String = piece.strip_edges()
+		if text.is_empty():
+			continue
+		var default_at: int = text.find("=")
+		if default_at > 0:
+			values.append(text.substr(default_at + 1).strip_edges())
+			continue
+		var type_at: int = text.find(":")
+		values.append(_empty_value(text.substr(type_at + 1).strip_edges() if type_at > 0 else ""))
+	return ", ".join(values)
+
+
+## The value a declared type starts at, spelled as the file would spell it. Anything this does not
+## know the shape of is `null`, which is the honest placeholder: it compiles, and it is visibly a
+## blank somebody has to fill in rather than a number that looks decided.
+static func _empty_value(type_text: String) -> String:
+	match type_text.strip_edges():
+		"int":
+			return "0"
+		"float":
+			return "0.0"
+		"bool":
+			return "false"
+		"String":
+			return "\"\""
+		"StringName":
+			return "&\"\""
+		"Vector2":
+			return "Vector2.ZERO"
+		"Vector3":
+			return "Vector3.ZERO"
+	if type_text.strip_edges().begins_with("Array"):
+		return "[]"
+	if type_text.strip_edges() == "Dictionary":
+		return "{}"
+	return "null"
+
+
 ## The detail line a picker or a completion entry shows for one member: its arguments, then its own
 ## description. "" for a member with neither, because an empty explanation is worse than none.
 ##

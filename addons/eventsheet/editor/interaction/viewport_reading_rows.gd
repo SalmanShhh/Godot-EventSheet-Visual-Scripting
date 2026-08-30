@@ -72,6 +72,11 @@ static func sentence_context_extras(sheet: EventSheetResource) -> Dictionary:
 		"percent_members": declared.get("percent_members", {}),
 		"object_classes": object_class_map(sheet),
 		"self_class": sheet.host_class.strip_edges(),
+		# The file this sheet IS, so a call on `self` can be answered from the file's own
+		# declarations - the methods somebody wrote here, with the `##` lines above them - rather
+		# than only from the engine class underneath it. "" for a sheet with no file behind it,
+		# which simply leaves those calls reading off the host class.
+		"self_script_path": str(sheet.external_source_path).strip_edges(),
 		# ──────────────────────────────────────────────────────────────────────────────────────
 		# Whether this file is the scene's OWN script, which decides whether its `_ready` reads as the
 		# layout starting or as one object being created. Cached here with the rest of the context

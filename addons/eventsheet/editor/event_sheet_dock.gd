@@ -615,6 +615,10 @@ func _on_translations_maybe_changed() -> void:
 	# script adds a key and the superseded one would sit there for the rest of the session: correct,
 	# and one entry per save of every script until the editor restarts.
 	EventSheetScriptMembers.clear_cache()
+	# And what a call the sheet DERIVED a row from was aimed at. Same reason, one layer up: a method
+	# renamed, added or documented in a file nobody opened still has to reach the rows calling it,
+	# and the class-name to script map has to see a class declared since the editor started.
+	EventSheetDerivedCalls.clear_cache()
 	if EventSheetL10n.reload_if_changed():
 		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 		if _viewport != null:

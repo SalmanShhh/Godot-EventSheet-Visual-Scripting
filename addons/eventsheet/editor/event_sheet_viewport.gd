@@ -3685,7 +3685,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 		if raw_row_data != null and raw_row_data.source_resource is EventRow:
 			var raw_source: Resource = _resolve_ace_resource(raw_row_data.source_resource, "action", int(metadata.get("ace_index", -1)))
 			if raw_source is RawCodeRow:
-				return (raw_source as RawCodeRow).code
+				# A DERIVED row's verb has words of its own - the engine's sentence for a built-in
+				# member, the `##` lines above a project script's own declaration - so the hover
+				# leads with them and keeps the code underneath, exactly where a reader of any
+				# other raw row already knows to find it. Nothing is resolved here: the reading
+				# left both on the span when it built it.
+				var derived_words: String = str(metadata.get("derived_doc", "")).strip_edges()
+				if derived_words.is_empty():
+					return (raw_source as RawCodeRow).code
+				return "%s\n\n%s" % [derived_words, (raw_source as RawCodeRow).code]
 	# An EXPORTED variable row hovers as a live mock of its Inspector (drawers, decor, grouping) -
 	# the payload stages here and _make_custom_tooltip swaps the sentinel for the preview card.
 	if kind == "variable":
@@ -3749,6 +3757,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 				if not create_lines.is_empty():
 					return sentence_prefix + "GDScript:\n%s%s" % ["\n".join(create_lines), made_text]
 			var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
+			# A row the DERIVED layer read has the method's own words, and they beat the generic
+			# "Call Method" description the catch-all row would otherwise show: that one says what
+			# the ROW KIND is, and this says what the verb on it actually does. Nothing is resolved
+			# here - the reading left the sentence on the span when it built it.
+			var derived_words: String = str(metadata.get("derived_doc", "")).strip_edges()
+			if not derived_words.is_empty():
+				return sentence_prefix + derived_words
 			# Show the plain-language DESCRIPTION of the ACE / function (what it does) on hover. Built-in
 			# ACEs get theirs from the generated map; custom ACEs + functions carry their own.
 			var description: String = ""

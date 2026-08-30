@@ -168,6 +168,13 @@ static func doc_id_for_definition(definition: ACEDefinition) -> String:
 static func doc_id_for_row(resource: Resource, metadata: Dictionary = {}) -> String:
 	if resource == null:
 		return ""
+	# A DERIVED row is a call the sheet read off the API rather than out of the vocabulary, so its
+	# page is the engine's own reference for that member - the door that already exists, opened with
+	# the id the reading left on the span. "" for a project script's method, which has no page: its
+	# words are the `##` lines above it, and those ride on the row's hover instead.
+	var derived_page: String = str(metadata.get("derived_doc_id", "")).strip_edges()
+	if not derived_page.is_empty():
+		return derived_page
 	if resource is ACEAction or resource is ACECondition:
 		return "%s%s/%s" % [SCHEME_ACE, str(resource.get("provider_id")), str(resource.get("ace_id"))]
 	var event_row: EventRow = resource as EventRow

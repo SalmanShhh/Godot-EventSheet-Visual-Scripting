@@ -33,6 +33,12 @@ const GROUPS_GLOSSARY_TERM := "group"
 ## The doc id F1 should open for the current selection. "" when the selection explains nothing,
 ## so a caller says so rather than opening a blank page.
 static func doc_id_for(sheet: EventSheetResource, resource: Resource, metadata: Dictionary = {}) -> String:
+	# A DERIVED row names a member, and the member is what a reader pressing F1 on it is asking
+	# about - so it answers ahead of the object column, which would send them to the class page a
+	# member page already leads back to. Every other row keeps the object-first routing below.
+	var derived_page: String = str(metadata.get("derived_doc_id", "")).strip_edges()
+	if not derived_page.is_empty():
+		return derived_page
 	var object_label: String = str(metadata.get("object_label", "")).strip_edges()
 	if not object_label.is_empty():
 		var object_id: String = doc_id_for_object(sheet, object_label)
