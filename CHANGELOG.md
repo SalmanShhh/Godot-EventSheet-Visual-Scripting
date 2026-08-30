@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Who sees whom
+
+- **A collisions band at the top of a sheet whose node collides.** "sees Enemies, Walls · seen by
+  Player · monitoring on" - the layers this object's mask covers, the layers of everything in the
+  project whose own mask covers one of its layers, and, for an Area, whether the switch that reports
+  touches is even on. All three are facts of the `.tscn` that nothing in the editor puts in front of
+  the person writing the row that depends on them. The band lists what fits and counts the rest, its
+  echo is the lines of the scene file it came from and nothing else, and its control selects the node
+  in the scene. A sheet whose node does not collide grows no band.
+- **The dead trigger, found before the game runs.** A sheet waits on **On body entered** and the
+  node's mask does not cover the layer the bodies it is waiting for actually sit on - so the trigger
+  is correct, the game starts, and nothing ever happens. For a trigger filtered by group, the layers
+  are the ones that group's members really sit on, read through the project's scene index; for a bare
+  trigger it is every layer anything at all sits on, which is weaker, and the sentence says so. The
+  finding names the layers, and its door writes the one mask bit through the editor's own undo with
+  the before and after said back.
+- **The three beside it.** An Area whose monitoring switch is off in a sheet that waits on its
+  touches (one click switches it on, same receipt, same undo); a collision object with no
+  CollisionShape child, carrying Godot's own configuration warning to the sheet that depends on it
+  with a way to the node in the scene; and a one-way collider turned over, so bodies fall through it
+  from above and are stopped from below, said as an advisory beside the rows that are waiting for the
+  landing it blocks.
+- **None of it renders in the sheet.** A row a finding is about wears a quiet amber stripe and
+  nothing else: no note row, no icon, no inline sentence, and nothing at all on a sheet with nothing
+  wrong. The words and the doors live in the two places a reader goes on purpose - the Doctor's
+  triage inbox, and the help strip under the row once the row is selected. A sheet is a place to read
+  what the game does rather than a place to be told off in.
+- **A new Doctor section, Collisions.** The four checks above as one section of the triage inbox,
+  registered through the same public seam a pack uses, with the same words the row's help strip says.
+  A project whose scripts never wait on a touch pays one substring test per script and hears nothing.
+
 ### Layers speak their names
 
 - **Five collision rows that say the layer's name instead of its number.** **Collide with `<Layer>`**

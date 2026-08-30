@@ -5423,3 +5423,20 @@ Name physics layer,物理レイヤーに名前を付ける
 "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",見張るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 2D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
+"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.","%s はシーンでモニタリングがオフになっているため、接触をまったく報告しません。ここで接触を待つ行はすべて到達不能です。"
+"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.","%s には形状がないため、何とも衝突できず、やり取りもできません。シーンでその下に CollisionShape か CollisionPolygon を追加してください。"
+"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s は片側のみで、上下逆に回転しています。そのため物体は上からすり抜け、下から止められます。ここの行は、それが妨げている着地を待っています。"
+"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s は %s を見張っていますが、このプロジェクトで衝突しうるものはすべて %s にあります。したがって、このトリガーには何も届きません。トリガーがグループを指定していないため、使用中のすべてのレイヤーを読み取っています。"
+"%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s は %s を見張っていますが、""%s"" のメンバーは %s にいます。したがって、このトリガーは決して発火しません。"
+"Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.","衝突: 接触を待っているスクリプト %d 件、読み取り %d 件、現在のシーンではトリガーが発火できないもの %d 件。"
+"Godot has collision layers 1 to 32.","Godot の衝突レイヤーは 1 から 32 までです。"
+"Open %s to change what it collides with.","何と衝突するかを変えるには %s を開いてください。"
+"Show me in the scene","シーンで表示"
+"Switch monitoring on","モニタリングをオンにする"
+"Watch collision layer %d","衝突レイヤー %d を見張る"
+"monitoring off","モニタリング オフ"
+"monitoring on","モニタリング オン"
+"seen by %s","%s から見える"
+"sees %s","%s を見る"
+"%s is selected in %s.","%s を %s で選択しました。"
+"%s is not in the project any more.","%s はもうプロジェクトにありません。"

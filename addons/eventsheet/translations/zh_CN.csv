@@ -5423,3 +5423,20 @@ Name physics layer,命名物理层
 "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",要关注的层，用本项目在项目设置 ▸ 层名称 ▸ 3D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",要位于的层，用本项目在项目设置 ▸ 层名称 ▸ 2D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",要位于的层，用本项目在项目设置 ▸ 层名称 ▸ 3D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
+"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.","%s 在场景中关闭了监测，因此完全不会报告任何接触 - 这里等待接触的每一行都无法到达。"
+"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.","%s 没有形状，因此无法与任何东西碰撞或交互。请在场景中于其下方添加 CollisionShape 或 CollisionPolygon。"
+"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s 是单向的且被翻转过来，因此物体会从上方穿过、从下方被挡住。这里的行正在等待它挡住的那次落地。"
+"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s 监视 %s，而本项目中所有能发生碰撞的东西都位于 %s - 因此没有任何东西能触及这个触发器。由于触发器未指定分组，这里读取的是所有在用的层。"
+"%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s 监视 %s，而 ""%s"" 的成员位于 %s - 因此这个触发器永远不会触发。"
+"Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.","碰撞：%d 个脚本在等待接触，已读取 %d 个，其中 %d 个的触发器在当前场景下无法触发。"
+"Godot has collision layers 1 to 32.","Godot 的碰撞层为 1 到 32。"
+"Open %s to change what it collides with.","打开 %s 以更改它与什么发生碰撞。"
+"Show me in the scene","在场景中显示"
+"Switch monitoring on","开启监测"
+"Watch collision layer %d","监视碰撞层 %d"
+"monitoring off","监测关闭"
+"monitoring on","监测开启"
+"seen by %s","被 %s 看到"
+"sees %s","看到 %s"
+"%s is selected in %s.","%s 已在 %s 中选中。"
+"%s is not in the project any more.","%s 已不在项目中。"
