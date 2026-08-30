@@ -682,6 +682,19 @@
   see. The page now says what is true: these are the first few in path order, and the ledger is a
   sample of the project rather than the whole of it. The branch is exercised by the suite, on a
   folder bigger than the cap.
+- **The ledger keeps the verb, which is the word a curated table is keyed on.** Blanking every
+  identifier merged `queue_free()` with `hide()` and `_spawn_wave()` into one bucket called
+  `name()`, and `velocity.y += JUMP_VELOCITY` with `health.x += MAX_ARMOUR` - so the ranking that
+  says where the next curated table would pay put the bucket spanning the most unrelated verbs at
+  the top by construction, and the count driving it was the misleading number. A name being called
+  and a name after a dot are kept; the receiver in front of the dot, the arguments and the value
+  being assigned still go, because those are the halves that vary.
+- **The inside of a text block is not a statement.** A multi-line literal's continuation lines were
+  shaped as though they were code, and on a real project they dominated the ledger: a template's
+  `task: %s` came out as a name followed by a unique-name node path, which is a printf placeholder
+  read as a scene path. The walk now carries one piece of state across the file, so a line that
+  begins inside an open literal is given no shape at all, exactly as a comment is, and is counted
+  with them.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

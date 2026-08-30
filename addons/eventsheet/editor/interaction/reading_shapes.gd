@@ -6,14 +6,22 @@
 # curated table should go needs is the SHAPE: the same statement said a hundred times across a
 # project is one table entry waiting to be written, and a statement said once is nobody's table.
 #
-# THE SHAPE IS THE STATEMENT WITH THE AUTHOR'S OWN WORDS TAKEN OUT. Identifiers, numbers, strings and
-# node paths are what makes one line different from the next; the punctuation and the language's own
-# keywords are what makes them the same kind of line. So:
+# THE SHAPE IS THE STATEMENT WITH THE AUTHOR'S OWN WORDS TAKEN OUT. The receivers, the numbers, the
+# strings and the node paths are what makes one line different from the next; the punctuation, the
+# language's own keywords and THE VERB are what makes them the same kind of line. So:
 #
-#     pop.chain().tween_callback(queue_free)        ->  name.name().name(name)
+#     pop.chain().tween_callback(queue_free)        ->  name.chain().tween_callback(name)
 #     enum State {CLOSED, OPENING, OPEN, LOCKED}    ->  enum name{name,name,name,name}
-#     velocity.y += JUMP_VELOCITY                   ->  name.name+=name
-#     if not is_on_floor():                         ->  if not name():
+#     velocity.y += JUMP_VELOCITY                   ->  name.y+=name
+#     if not is_on_floor():                         ->  if not is_on_floor():
+#
+# THE VERB STAYS BECAUSE THE VERB IS THE ANSWER. This page exists to say where the next curated table
+# would pay, and a curated table is keyed on the verb: `queue_free()` and `hide()` are two tables, not
+# one bucket of "a call with no arguments". Blanking the verb merged every unrelated verb in the
+# project into the shape said most often, so the ranking put the LEAST writable bucket at the top by
+# construction. A name being called (`f(`) and a name after a dot (`.energy`) are therefore kept; the
+# receiver in front of the dot, the arguments and the value being assigned still go, because those are
+# the halves that vary.
 #
 # WHY THIS IS NOT A NEW ANALYSIS PASS. It rides the reading that already happens: the expensive half
 # (import, compile, per-line claim) is EventSheetLiftReading, and this only ever looks at the text of
@@ -31,6 +39,8 @@
 #     and blanking them would merge `if name:` with `while name:` - two different kinds of line.
 #   - ANNOTATIONS. `@export`, `@rpc`. An annotation name comes from a fixed engine vocabulary, so it
 #     tells a reader which kind of line this is exactly the way a keyword does.
+#   - THE VERB AND THE MEMBER. `start_flickering(`, `.energy`. The word a curated table is keyed on,
+#     for the reason above.
 #   - PUNCTUATION AND OPERATORS, character by character. `+=` needs no table: it falls out of `+`
 #     followed by `=`.
 #
@@ -39,8 +49,9 @@
 # that spells `x=1` and a project that spells `x = 1` land in the same group instead of two, and the
 # shape of a line does not depend on how its author felt about spaces.
 #
-# COMMENTS ARE NOT SHAPES. A comment inside a run of code is a note, not a statement, so it shapes to
-# "" and is counted apart rather than being blanked into a shape nobody could act on.
+# COMMENTS ARE NOT SHAPES, AND NEITHER IS THE INSIDE OF A TEXT BLOCK. A comment inside a run of code
+# is a note rather than a statement, and the prose inside a multi-line literal is prose; both shape to
+# "" and are counted apart rather than being blanked into a shape nobody could act on.
 #
 # DETERMINISTIC ON EVERY MACHINE: a pure function of one line's characters, and a ranking that breaks
 # ties on the shape's own text rather than on the order files came back from a directory walk.
@@ -49,8 +60,8 @@ class_name EventSheetReadingShapes
 extends RefCounted
 
 ## The blanks. Lowercase words rather than symbols, because the shape is meant to be READ - in a
-## Doctor line, in a tool's output, in a commit message - and `name.name().name(name)` says what it
-## is where `#.#().#(#)` would have to be explained every time.
+## Doctor line, in a tool's output, in a commit message - and `name.tween_callback(name)` says what it
+## is where `#.tween_callback(#)` would have to be explained every time.
 const BLANK_NAME: String = "name"
 const BLANK_NUMBER: String = "number"
 const BLANK_TEXT: String = "text"
@@ -119,7 +130,8 @@ static func shape_of(statement: String) -> String:
 			while index < text.length() and _is_name_character(text[index]):
 				index += 1
 			var word: String = text.substr(name_start, index - name_start)
-			token = word if KEYWORDS.has(word) else BLANK_NAME
+			token = word if KEYWORDS.has(word) or _is_the_thing_a_table_is_keyed_on(text, name_start,
+				index) else BLANK_NAME
 			# A keyword is a word for spacing, but it is not a VALUE: `not %Unique` has to keep
 			# reading the `%` as a node.
 			token_is_value = not KEYWORDS.has(word)
@@ -140,16 +152,59 @@ static func shape_of(statement: String) -> String:
 
 ## Every stays-code line of ONE reading, as {"path", "number", "text", "shape"} in file order.
 ## `reading` is what EventSheetLiftReading.read handed back; nothing is re-read or re-parsed here.
+##
+## THE INSIDE OF A TEXT BLOCK IS NOT A STATEMENT. `shape_of` reads one line and cannot know that the
+## line before it opened a triple-quoted literal that has not closed yet - so the prose inside a
+## multi-line string was shaped as though it were code, and on a real project those lines outnumbered
+## the statements: `task: %s` inside a template came out as "a name, then a unique-name node path",
+## which is a printf placeholder read as a scene path. The walk is over every line of the reading in
+## FILE ORDER precisely so this one piece of state can be carried, and a line that begins inside an
+## open literal is given no shape at all, exactly as a comment is.
 static func stays_code_lines(reading: Dictionary, path: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
+	var open: String = ""
 	for entry: Variant in reading.get("lines", []) as Array:
 		var line: Dictionary = entry as Dictionary
+		var text: String = str(line.get("text", ""))
+		var began_inside: bool = not open.is_empty()
+		open = open_string_after(text, open)
 		if str(line.get("layer", "")) != EventSheetLiftReading.LAYER_CODE:
 			continue
-		var text: String = str(line.get("text", ""))
 		found.append({"path": path, "number": int(line.get("number", 0)), "text": text,
-			"shape": shape_of(text)})
+			"shape": "" if began_inside else shape_of(text)})
 	return found
+
+
+## The string delimiter this line leaves OPEN, or "" when it closes everything it opened. `open` is
+## what the line before it left open, so a caller walking a file in order carries the answer forward.
+##
+## Only the triple quotings can be left open. A single-quoted literal that is never closed ends at the
+## end of its own line, which is the honest answer and the same one `_string_end` gives: there is no
+## more of it on this line.
+static func open_string_after(text: String, open: String) -> String:
+	var index: int = 0
+	if not open.is_empty():
+		var reopened: int = text.find(open)
+		if reopened < 0:
+			return open
+		index = reopened + open.length()
+	while index < text.length():
+		var character: String = text[index]
+		# A `#` outside a literal starts a comment, and nothing after it can open one.
+		if character == "#":
+			return ""
+		if character != "\"" and character != "'":
+			index += 1
+			continue
+		var triple: String = character + character + character
+		if text.substr(index, 3) != triple:
+			index = _string_end(text, index)
+			continue
+		var closed: int = text.find(triple, index + 3)
+		if closed < 0:
+			return triple
+		index = closed + 3
+	return ""
 
 
 ## The ranked census over a flat list of stays-code lines:
@@ -163,9 +218,10 @@ static func stays_code_lines(reading: Dictionary, path: String) -> Array[Diction
 ## as lines so a caller can count them and name a few, and they are deliberately NOT ranked - a list
 ## of two hundred groups of one is noise wearing a ledger's clothes.
 ##
-## `notes` counts the stays-code lines that hold no statement (comments inside a run of code). They
-## are not shapes and they are not one-offs; they are said apart so the three numbers add up to the
-## line count a reader can check against the layer tally.
+## `notes` counts the stays-code lines that hold no statement at all - a comment inside a run of code,
+## or a line that is the inside of a multi-line text block. They are not shapes and they are not
+## one-offs; they are said apart so the three numbers add up to the line count a reader can check
+## against the layer tally.
 static func census(lines: Array) -> Dictionary:
 	var by_shape: Dictionary = {}
 	var order: PackedStringArray = PackedStringArray()
@@ -267,6 +323,21 @@ static func _number_end(text: String, start: int) -> int:
 			while index < text.length() and _is_digit(text[index]):
 				index += 1
 	return index
+
+
+## True when the name running from `start` to `end` is the VERB or the MEMBER of this statement -
+## the word a curated table would be keyed on, and therefore the word that decides which table this
+## line belongs to at all.
+##
+## Two positions, both read off the characters either side and nothing else. A name followed by `(`
+## is being CALLED, which is a verb. A name preceded by `.` is a MEMBER being read or written, which
+## is what a node-scoped row addresses. Everything else - the receiver in front of the dot, the
+## arguments, the value on the right of an `=` - is the author's own word and varies from line to
+## line, which is what makes the shape a shape.
+static func _is_the_thing_a_table_is_keyed_on(text: String, start: int, end: int) -> bool:
+	if start > 0 and text[start - 1] == ".":
+		return true
+	return end < text.length() and text[end] == "("
 
 
 ## The lifter's own idea of what may appear inside a name (EventForgeLiftGrammar.IDENTIFIER's tail),

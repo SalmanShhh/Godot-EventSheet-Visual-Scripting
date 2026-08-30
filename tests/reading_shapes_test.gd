@@ -13,8 +13,12 @@
 #   4. THE CORPUS'S TWO PINNED CODE LINES, by shape. tests/corpus_test.gd already pins that
 #      door_state_machine.gd and pickup_juice.gd have exactly one stays-code line each; this says
 #      what those lines LOOK like, which is the fact the ledger is built on.
-#   5. THE DOCTOR PAGE, over a staged pair of scripts: the head sentence carrying both numbers apart,
-#      the grouped shape with its lines as doors, and the one-off tail counted rather than expanded.
+#   5. THE INSIDE OF A TEXT BLOCK IS NOT A STATEMENT. A multi-line literal's continuation lines are
+#      prose, and `shape_of` reads one line at a time and cannot know that - so the state is carried
+#      across the walk, and a table of lines says which ones the walk considers open.
+#   6. THE DOCTOR PAGE, over a staged pair of scripts: the head sentence carrying both numbers apart,
+#      the grouped shape with its lines as doors, and the one-off tail counted rather than expanded -
+#      and, on a folder bigger than the cap, the sentence that says the page is a sample.
 #
 # SERIAL-CI HYGIENE. Reading files warms the lift-table family cache for the whole process, and CI
 # runs the suite serially in one process, so a later test would inherit it. This drops it on the way
@@ -27,6 +31,22 @@ extends RefCounted
 const STAGED_DIR: String = "user://reading_shapes_staged"
 const STAGED_A: String = STAGED_DIR + "/coin.gd"
 const STAGED_B: String = STAGED_DIR + "/spark.gd"
+
+## Where the capped-walk probe writes its folder of thirteen. Its own directory, removed when the
+## check is done, so the staged pair above is never one of the thirteen.
+const CAPPED_DIR: String = "user://reading_shapes_capped"
+
+## A multi-line literal, which is where the ledger used to read prose as code: the opening line IS a
+## statement, and the three under it are the inside of a text block.
+const TEXT_BLOCK: String = """extends Node
+
+
+func brief() -> void:
+	$Screen.text = \"\"\"CHEF PLANNER
+task: %s
+step: %s
+\"\"\"
+"""
 
 ## Two scripts that share one statement and disagree about everything else - the smallest project
 ## that has both a repeated shape and a one-off.
@@ -62,7 +82,7 @@ func finish() -> void:
 ## that there is exactly one; this pins what it is.
 const CORPUS_SHAPES: Dictionary = {
 	"res://tests/corpus/door_state_machine.gd": "enum name{name,name,name,name}",
-	"res://tests/corpus/pickup_juice.gd": "name.name().name(name)"
+	"res://tests/corpus/pickup_juice.gd": "name.chain().tween_callback(name)"
 }
 
 
@@ -71,7 +91,9 @@ static func run() -> bool:
 	ok = _test_the_name_atom_is_the_lifters() and ok
 	ok = _test_the_census() and ok
 	ok = _test_the_corpus_code_lines() and ok
+	ok = _test_a_text_block_is_not_a_statement() and ok
 	ok = _test_the_doctor_page() and ok
+	ok = _test_the_capped_walk() and ok
 	_tidy_up()
 	return ok
 
@@ -82,30 +104,41 @@ static func run() -> bool:
 static func _test_the_shape() -> bool:
 	var table: Dictionary = {
 		# The corpus's own two, which are the reason this exists.
-		"	pop.chain().tween_callback(queue_free)": "name.name().name(name)",
+		"	pop.chain().tween_callback(queue_free)": "name.chain().tween_callback(name)",
 		"enum State {CLOSED, OPENING, OPEN, LOCKED}": "enum name{name,name,name,name}",
+		# THE VERB AND THE MEMBER STAY, because they are what a curated table is keyed on: two calls
+		# with different verbs are two tables, not one bucket of "a call with one argument".
+		"	queue_free()": "queue_free()",
+		"	hide()": "hide()",
+		"	add_child(bullet)": "add_child(name)",
+		"	remove_child(bullet)": "remove_child(name)",
+		"	health.x += MAX_ARMOUR": "name.x+=name",
+		# The receiver in front of the dot is the half that varies, so it still goes: one table entry
+		# covers `torch.energy` and `lamp.energy` alike.
+		"	torch.energy = 1.2": "name.energy=number",
+		"	lamp.energy = 0.4": "name.energy=number",
 		# Keywords stay, names go: `if` and `while` are different kinds of line.
-		"	if not is_on_floor():": "if not name():",
+		"	if not is_on_floor():": "if not is_on_floor():",
 		"	while lives > 0:": "while name>number:",
 		# Spacing is not part of a shape - these two are the same statement.
-		"	velocity.y += JUMP_VELOCITY": "name.name+=name",
-		"velocity.y+=JUMP_VELOCITY": "name.name+=name",
+		"	velocity.y += JUMP_VELOCITY": "name.y+=name",
+		"velocity.y+=JUMP_VELOCITY": "name.y+=name",
 		# Literals of every kind blank to what kind they are, never to their value.
 		"	speed = 300.0": "name=number",
 		"	speed = 3e-4": "name=number",
 		"	mask = 0xFF": "name=number",
-		"	label.text = \"score\"": "name.name=text",
-		"	rpc(&\"hit\", 10)": "name(&text,number)",
+		"	label.text = \"score\"": "name.text=text",
+		"	rpc(&\"hit\", 10)": "rpc(&text,number)",
 		# A node path is one thing, however it is written, and `%` is only a node in unary position.
-		"	$Hero/FlashBehavior.flash(0.4)": "node.name(number)",
-		"	%Player.hurt()": "node.name()",
+		"	$Hero/FlashBehavior.flash(0.4)": "node.flash(number)",
+		"	%Player.hurt()": "node.hurt()",
 		"	var i: int = index % count": "var name:name=name%name",
-		"	$\"Big Door\".open()": "node.name()",
+		"	$\"Big Door\".open()": "node.open()",
 		# An annotation names which kind of line this is, exactly as a keyword does.
 		"@export var value: int = 1": "@export var name:name=number",
 		# A trailing comment is not part of the statement; a `#` inside a string is.
-		"	queue_free()  # bye": "name()",
-		"	print(\"# not a comment\")": "name(text)",
+		"	queue_free()  # bye": "queue_free()",
+		"	print(\"# not a comment\")": "print(text)",
 		# Nothing to shape.
 		"	# @group:juice": "",
 		"		": ""
@@ -136,7 +169,10 @@ static func _test_the_name_atom_is_the_lifters() -> bool:
 ## depends on a file, a walk or a compiler.
 static func _test_the_census() -> bool:
 	var lines: Array[Dictionary] = []
-	for entry: Array in [["a.gd", 1, "a.b()"], ["a.gd", 2, "c.d()"], ["b.gd", 3, "e.f()"],
+	# Three lines that share a shape (one verb, three receivers), two that share another, one said
+	# once, and a note. The three receivers differ on purpose: the receiver is the half that varies,
+	# so it is blanked, while the verb is what the shape is grouped BY.
+	for entry: Array in [["a.gd", 1, "a.hide()"], ["a.gd", 2, "c.hide()"], ["b.gd", 3, "e.hide()"],
 			["b.gd", 4, "x = 1"], ["b.gd", 5, "y = 2"], ["c.gd", 6, "solo(1, 2, 3)"],
 			["c.gd", 7, "# a note"]]:
 		lines.append({"path": str(entry[0]), "number": int(entry[1]), "text": str(entry[2]),
@@ -147,7 +183,7 @@ static func _test_the_census() -> bool:
 	ok = _check("the note holds no statement to shape", int(census.get("notes", 0)), 1) and ok
 	ok = _check("two shapes are said more than once", shapes.size(), 2) and ok
 	ok = _check("the commonest shape is first",
-		str((shapes[0] as Dictionary).get("shape", "")), "name.name()") and ok
+		str((shapes[0] as Dictionary).get("shape", "")), "name.hide()") and ok
 	ok = _check("and it carries all three of its lines",
 		int((shapes[0] as Dictionary).get("count", 0)), 3) and ok
 	ok = _check("the second shape is the pair",
@@ -164,7 +200,7 @@ static func _test_the_census() -> bool:
 	for entry: Variant in reversed_census.get("shapes", []) as Array:
 		reversed_shapes.append(str((entry as Dictionary).get("shape", "")))
 	ok = _check("the ranking does not depend on the order the lines arrived in", reversed_shapes,
-		PackedStringArray(["name.name()", "name=number"])) and ok
+		PackedStringArray(["name.hide()", "name=number"])) and ok
 	return ok
 
 
@@ -206,7 +242,7 @@ static func _test_the_doctor_page() -> bool:
 		str(findings[0].get("message", "")),
 		"100% of what was read draws as rows - that is the drawing question. The naming question is below it: 4 line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.") and ok
 	ok = _check("the shape is named with its count", str(findings[1].get("message", "")),
-		"3 line(s) are the same shape: name.name().name(name)") and ok
+		"3 line(s) are the same shape: name.chain().tween_callback(name)") and ok
 	ok = _check("a door opens the file the line is in", str(findings[3].get("path", "")),
 		STAGED_A) and ok
 	ok = _check("the door quotes the line the way the file spells it",
@@ -227,6 +263,73 @@ static func _test_the_doctor_page() -> bool:
 
 ## Drops what this test warmed, and takes the staged scripts with it. CI runs the suite serially in
 ## one process: a family cache left standing here is a cache the next test inherits.
+## The inside of a multi-line literal is prose, not a statement. Pinned as the STATE the walk carries
+## line by line, because that is the whole mechanism: `shape_of` sees one line and cannot know that
+## the line above it opened a text block that has not closed. Without it a template's `task: %s` came
+## out as "a name, then a unique-name node path" - a printf placeholder read as a scene path - and on
+## a real project those lines outnumbered the statements around them.
+static func _test_a_text_block_is_not_a_statement() -> bool:
+	var ok: bool = true
+	# [line, what was open before it, what it leaves open].
+	for row: Array in [
+		["\t$Screen.text = \"\"\"CHEF PLANNER", "", "\"\"\""],
+		["task: %s", "\"\"\"", "\"\"\""],
+		["\"\"\"", "\"\"\"", ""],
+		["\tqueue_free()", "", ""],
+		# A block opened and closed on one line leaves nothing open.
+		["\tvar note: String = \"\"\"one line\"\"\"", "", ""],
+		# A `#` outside a literal starts a comment, so a quote in it opens nothing.
+		["\tqueue_free()  # \"\"\" not a block", "", ""],
+		# A single-quoted literal ends at the end of its line whatever the author meant.
+		["\tvar broken: String = \"unclosed", "", ""],
+	]:
+		ok = _check("after \"%s\" the walk has %s open" % [str(row[0]).strip_edges(),
+			"nothing" if str(row[2]).is_empty() else str(row[2])],
+			EventSheetReadingShapes.open_string_after(str(row[0]), str(row[1])), str(row[2])) and ok
+	# And the shape that follows from it: the opening line is a statement and is shaped; the prose
+	# under it has no shape at all, so the census counts it as a note rather than ranking it.
+	var reading: Dictionary = EventSheetLiftReading.read(TEXT_BLOCK, "user://reading_shapes_block.gd")
+	var shapes: PackedStringArray = PackedStringArray()
+	for line: Dictionary in EventSheetReadingShapes.stays_code_lines(reading, "block.gd"):
+		shapes.append(str(line.get("shape", "")))
+	return _check("the block's opening line is shaped and its prose is not",
+		shapes, PackedStringArray(["node.text=text", "", "", ""])) and ok
+
+
+## The capped walk, on a folder bigger than the cap. The branch exists because reading a script is
+## cheap and not free, and its sentence has to be true: there is no cursor and nothing is remembered,
+## so the same scripts are read every run and the page is a SAMPLE. A sentence inviting a reader to
+## open the Doctor again for the rest would be a promise this cannot keep.
+static func _test_the_capped_walk() -> bool:
+	DirAccess.make_dir_recursive_absolute(CAPPED_DIR)
+	var paths: PackedStringArray = PackedStringArray()
+	for index: int in range(EventSheetReadingDoctor.SCRIPTS_READ_LIMIT + 1):
+		var path: String = "%s/probe_%02d.gd" % [CAPPED_DIR, index]
+		_write(path, SOURCE_B)
+		paths.append(path)
+	var first: Array[Dictionary] = EventSheetReadingDoctor.report(paths)
+	var capped: String = ""
+	for finding: Dictionary in first:
+		if str(finding.get("subject", "")) == "capped":
+			capped = str(finding.get("message", ""))
+	var ok: bool = _check("the capped walk says what it read, in path order", capped,
+		"Read the first 12 script(s) of 13, in path order. The ledger below is a sample of this"\
+		+ " project, not the whole of it - the same scripts are read every time.")
+	# The claim inside that sentence, made good: a second run reads the same twelve and says the same
+	# thing, which is why it must not promise the rest.
+	var second: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in EventSheetReadingDoctor.report(paths):
+		second.append(str(finding.get("message", "")))
+	var again: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in first:
+		again.append(str(finding.get("message", "")))
+	ok = _check("and a second run is the same page, not the next twelve", second, again) and ok
+	for path: String in paths:
+		DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(CAPPED_DIR)
+	return ok
+
+
 static func _tidy_up() -> void:
 	DirAccess.remove_absolute(STAGED_A)
 	DirAccess.remove_absolute(STAGED_B)
