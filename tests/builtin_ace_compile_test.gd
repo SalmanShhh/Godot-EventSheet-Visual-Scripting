@@ -70,6 +70,11 @@ const NOT_STANDALONE: Array[String] = [
 	"FrameRunningLong", "FrameRecovered",  # call sheet-synthesized helpers over their own run counters
 	"RenderingIsOnScreen",  # calls a sheet-synthesized helper over its own notifier-node slot
 	"OnGroupEmptied", "OnGroupFirstMember",  # call sheet-synthesized helpers over their own previous-count slots
+	# The two floor edges, in both dimensions: each calls a sheet-synthesized helper over its own
+	# was-on-the-floor slot. Their whole point is the memory beside them, so a harness that builds no
+	# companion state cannot test them honestly - collision_edge_test compiles each one together with
+	# the member the compiler declares for it, in the character-body host it is filed under.
+	"JustLanded", "JustLeftTheGround", "JustLanded3D", "JustLeftTheGround3D",
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal

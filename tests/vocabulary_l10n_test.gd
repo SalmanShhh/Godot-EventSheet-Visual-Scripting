@@ -77,6 +77,9 @@ const NEW_MODULES: Array[String] = [
 	# The touch said with a filter on it: the four group-filtered triggers and the standing
 	# question beside them. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/collision_filter_aces.gd",
+	# The step a standing state changed: the two floor edges, the two overlap edges, and the four
+	# gates that go under them. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/collision_edge_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -310,7 +313,8 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 ## a floor on a PERCENTAGE would not notice a new sentence added to a covered module - which is the
 ## regression that actually happens. This is that gate.
 const FULLY_KEYED_MODULES: Array[String] = [
-	"clipboard_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd", "cursor_canvas_aces.gd",
+	"clipboard_aces.gd", "collision_edge_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd",
+	"cursor_canvas_aces.gd",
 	"editor_author_aces.gd", "facing_aces.gd",
 	"game_mechanics_aces.gd", "game_state_aces.gd", "light_node_aces.gd", "lighting_aces.gd",
 	"math_words_aces.gd", "multiplayer_aces.gd", "resource_aces.gd", "scene_lighting_aces.gd",
