@@ -112,6 +112,22 @@ static func _draft_pins() -> bool:
 		refused.has(EventForgeLiftTable.REFUSAL_KEY), true) and all_passed
 	all_passed = _check("...and claims nothing",
 		EventSheetLiftReading.table_claim("shake_camera(3.0)", [refused]).is_empty(), true) and all_passed
+	# AN EXAMPLE THAT IS ALL VALUE SPAN is the dangerous one, because it builds: `[[x: foo]]` derives
+	# `^(?<x>.+)$`, which is not a spelling of anything - it is the whole language - and a draft that
+	# wide claims every line in the window with nothing on screen to say why.
+	all_passed = _check("an example with no text of its own is refused, and says why",
+		EventForgeLiftExample.refusal("[[x: foo]]"),
+		"the example is all value span and no text of its own, so it would match every line - write"		+ " the line the way a person writes it, with only the values marked") and all_passed
+	all_passed = _check("...even when the span names a fragment",
+		EventForgeLiftExample.refusal("[[x|word: foo]]").is_empty(), false) and all_passed
+	# And the way OUT of a scratch table that claims too much: the window lists what it holds and
+	# empties it, rather than a file it never names on screen being hand-edited.
+	var bench: EventSheetLiftWorkbench = EventSheetLiftWorkbench.new()
+	bench.forget_drafts()
+	all_passed = _check("an emptied scratch table holds nothing",
+		bench.drafts_summary(), PackedStringArray()) and all_passed
+	all_passed = _check("...and claims nothing on a buffer",
+		bench.draft_entries(), []) and all_passed
 	return all_passed
 
 

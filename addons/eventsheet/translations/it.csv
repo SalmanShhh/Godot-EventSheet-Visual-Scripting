@@ -5527,6 +5527,11 @@ Name physics layer,Assegna un nome al livello fisico
 "Entry id","ID della voce"
 "Row it means","Riga che significa"
 "The entry this derives","La voce che ne deriva"
+The scratch table,La tabella di appunti
+Nothing drafted yet.,Ancora nessuna bozza.
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Vengono interrogate prima di ogni grafia inclusa, solo in questa finestra. Sotto res:// non viene scritto nulla."
+Forget the scratch table,Dimentica la tabella di appunti
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Svuota le bozze conservate da questa finestra, così ogni riga che rivendicavano torna a ciò che la rivendicava prima."
 "Check","Verifica"
 "Add to the scratch table","Aggiungi alla tabella di lavoro"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Letti i primi %d script su %d, in ordine di percorso. Il registro qui sotto è un campione di questo progetto, non tutto: ogni volta vengono letti gli stessi script."

@@ -5527,6 +5527,11 @@ Name physics layer,Nommer le calque physique
 "Entry id","Identifiant d'entrée"
 "Row it means","Ligne qu'elle signifie"
 "The entry this derives","L'entrée ainsi dérivée"
+The scratch table,La table de brouillon
+Nothing drafted yet.,Rien de brouillonné pour l'instant.
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Elles sont consultées avant toute graphie livrée, dans cette fenêtre uniquement. Rien n'est écrit sous res://."
+Forget the scratch table,Oublier la table de brouillon
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Vide les brouillons que cette fenêtre conserve, si bien que chaque ligne qu'ils revendiquaient redevient ce qu'elle était."
 "Check","Vérifier"
 "Add to the scratch table","Ajouter à la table de brouillon"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Les %d premiers script(s) sur %d ont été lus, dans l’ordre des chemins. Le registre ci-dessous est un échantillon de ce projet, pas son ensemble - ce sont les mêmes scripts qui sont lus à chaque fois."

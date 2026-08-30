@@ -5527,6 +5527,11 @@ Name physics layer,Назвать слой физики
 "Entry id","Идентификатор записи"
 "Row it means","Какую строку означает"
 "The entry this derives","Запись, которая отсюда выводится"
+The scratch table,Черновая таблица
+Nothing drafted yet.,Пока ничего не набросано.
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.",Их спрашивают раньше любого поставляемого написания и только в этом окне. Под res:// ничего не пишется.
+Forget the scratch table,Забыть черновую таблицу
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Очищает черновики этого окна, и каждая строка, которую они забирали, снова читается как раньше."
 "Check","Проверить"
 "Add to the scratch table","Добавить в черновую таблицу"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Прочитаны первые %d скрипт(ов) из %d, в порядке путей. Список ниже - выборка по этому проекту, а не весь проект: каждый раз читаются одни и те же скрипты."

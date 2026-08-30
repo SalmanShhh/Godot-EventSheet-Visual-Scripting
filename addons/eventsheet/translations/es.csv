@@ -5527,6 +5527,11 @@ Name physics layer,Nombrar capa de física
 "Entry id","Id. de entrada"
 "Row it means","Fila que significa"
 "The entry this derives","La entrada que esto deriva"
+The scratch table,La tabla de borradores
+Nothing drafted yet.,Todavía no hay borradores.
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.","Se consultan antes que cualquier grafía incluida, solo en esta ventana. No se escribe nada bajo res://."
+Forget the scratch table,Olvidar la tabla de borradores
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Vacía los borradores que guarda esta ventana, de modo que cada línea que reclamaban vuelve a lo que la reclamaba antes."
 "Check","Comprobar"
 "Add to the scratch table","Añadir a la tabla de borrador"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Se leyeron los primeros %d de %d script(s), en orden de ruta. El registro de abajo es una muestra de este proyecto, no su totalidad: cada vez se leen los mismos scripts."

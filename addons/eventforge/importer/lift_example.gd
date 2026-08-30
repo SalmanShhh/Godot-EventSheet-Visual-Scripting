@@ -37,9 +37,11 @@
 # IT NEVER GUESSES. Every question this cannot answer mechanically is a REFUSAL carrying the sentence
 # that says why: a span with no name, a name used twice, a fragment word that does not exist, text
 # that is not the fragment it claims to be, two spans wide enough to swallow each other, two spans
-# with nothing between them, a receiver with no dot after it. The refusal comes back as an entry
-# carrying the reason (see EventForgeLiftTable.REFUSAL_KEY), so a table that asked for something
-# impossible fails the suite naming itself rather than shipping a spelling that never matches.
+# with nothing between them, a receiver with no dot after it, an example that is nothing but value
+# spans (which is not a spelling of anything - it is the whole language). The refusal comes back as
+# an entry carrying the reason (see EventForgeLiftTable.REFUSAL_KEY), so a table that asked for
+# something impossible fails the suite naming itself rather than shipping a spelling that never
+# matches.
 @tool
 class_name EventForgeLiftExample
 extends RefCounted
@@ -128,6 +130,7 @@ static func _build(example: String) -> Dictionary:
 		return {REFUSED: "the example is empty"}
 	var pattern: String = ""
 	var shape: String = ""
+	var literal: String = ""
 	var params: PackedStringArray = PackedStringArray()
 	var slots: Dictionary = {}
 	var defaults: Dictionary = {}
@@ -140,12 +143,14 @@ static func _build(example: String) -> Dictionary:
 		if open < 0:
 			pattern += G.escaped_run(example.substr(index))
 			shape += example.substr(index)
+			literal += example.substr(index)
 			break
 		var run: String = example.substr(index, open - index)
 		if run.is_empty() and after_a_span:
 			return {REFUSED: "two spans meet with nothing between them to tell them apart"}
 		pattern += G.escaped_run(run)
 		shape += run
+		literal += run
 		var close: int = example.find(CLOSE, open + OPEN.length())
 		if close < 0:
 			return {REFUSED: "a span is never closed: %s" % example.substr(open)}
@@ -177,6 +182,12 @@ static func _build(example: String) -> Dictionary:
 		if G.fragment_is_optional(fragment):
 			defaults[name] = ""
 		after_a_span = true
+	# AN EXAMPLE OF NOTHING BUT VALUE SPANS MATCHES EVERY LINE. `[[x: foo]]` derives the pattern
+	# `^(?<x>.+)$`, which is not a spelling of anything - it is the whole language. A table entry that
+	# wide claims every statement in every opened file and hands each one back under an id nothing can
+	# render, so it is refused here rather than being left for a caller to notice.
+	if literal.strip_edges().is_empty():
+		return {REFUSED: "the example is all value span and no text of its own, so it would match"			+ " every line - write the line the way a person writes it, with only the values marked"}
 	return {"pattern": pattern, "shape": shape, "params": params, "slots": slots,
 		"defaults": defaults, WIDE: wide}
 

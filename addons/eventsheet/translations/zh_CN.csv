@@ -5527,6 +5527,11 @@ Name physics layer,命名物理层
 "Entry id","条目 ID"
 "Row it means","它代表的行"
 "The entry this derives","由此推导出的条目"
+The scratch table,草稿表
+Nothing drafted yet.,尚无草稿。
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.",仅在此窗口中，先于任何随附的写法被询问。不会向 res:// 写入任何内容。
+Forget the scratch table,清空草稿表
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.",清空此窗口保存的草稿，使它们所认领的每一行回到此前的读法。
 "Check","检查"
 "Add to the scratch table","加入草稿表"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",已按路径顺序读取前 %d 个脚本（共 %d 个）。下面的清单只是本项目的一个样本，并非全部 - 每次读取的都是同样的脚本。

@@ -75,6 +75,7 @@ static func measure(sheet: EventSheetResource) -> Dictionary:
 ## point. Nothing else in the repo can observe this layer working on a whole file.
 const CALL_ACE_ID: String = "CallMethod"
 
+
 static func derived_measure(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {"derived": 0, "statements": 0, "percent": 0}

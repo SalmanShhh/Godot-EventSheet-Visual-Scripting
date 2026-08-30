@@ -5527,6 +5527,11 @@ Name physics layer,物理レイヤーに名前を付ける
 "Entry id","エントリ ID"
 "Row it means","意味する行"
 "The entry this derives","これから導かれるエントリ"
+The scratch table,下書きテーブル
+Nothing drafted yet.,まだ下書きはありません。
+"These are asked before every shipped spelling, in this window only. Nothing under res:// is written.",同梱の綴りより先に、このウィンドウ内だけで参照されます。res:// には何も書き込まれません。
+Forget the scratch table,下書きテーブルを破棄
+"Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.",このウィンドウが保持する下書きを空にし、下書きが主張していた各行を元の扱いに戻します。
 "Check","確認"
 "Add to the scratch table","下書きテーブルに追加"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",パス順で最初の %d 個のスクリプト（全 %d 個中）を読み取りました。以下の記録はこのプロジェクトの一部であり、全体ではありません。毎回同じスクリプトが読み取られます。

@@ -20,6 +20,12 @@ extends RefCounted
 #                    red with the exact two lines when it does not - because a trailing space is the
 #                    whole bug and "they differ" is not a bug report.
 #
+# THE SCRATCH TABLE IS VISIBLE AND CAN BE EMPTIED. A draft is asked before every shipped spelling,
+# so one over-wide draft claims lines all over the window - and a table nobody can see is a table
+# whose claims have no visible cause. The draft form lists what it holds and carries the button that
+# forgets the lot, which is the whole recovery path, in the window rather than in a file it never
+# names on screen.
+#
 # THE BUFFER IS THE WHOLE SCOPE. The refresh is debounced rather than per keystroke, and it imports
 # and compiles exactly what is in the box - never the project. That is what keeps a developer tool
 # free to be open all day.
@@ -71,6 +77,7 @@ var _draft_example: CodeEdit = null
 var _draft_id: LineEdit = null
 var _draft_ace: LineEdit = null
 var _draft_result: RichTextLabel = null
+var _drafts_list: RichTextLabel = null
 var _drafts: Array = []
 
 
@@ -104,6 +111,43 @@ func refresh() -> void:
 ## answers come from - so a test can pin exactly what a developer would be shown.
 func reading_for(source: String) -> Dictionary:
 	return EventSheetLiftReading.read(source, "", draft_entries())
+
+
+## What the scratch table holds right now, one line per draft - the ids and the examples, in the
+## order they were added. A draft is asked FIRST on every refresh, so a table nobody can see is a
+## table whose claims have no visible cause: a line reading as somebody's draft from three sessions
+## ago, with nothing in the window to say which draft or how to be rid of it. Said here, beside the
+## button that empties it.
+func drafts_summary() -> PackedStringArray:
+	var said: PackedStringArray = PackedStringArray()
+	for draft: Variant in _drafts:
+		var row: Dictionary = draft
+		said.append("%s - %s" % [str(row.get("id", "")), str(row.get("example", ""))])
+	return said
+
+
+## Empties the scratch table, on disk and in the window, and re-reads the buffer so every line it was
+## claiming goes back to whatever claimed it before. The one way out of a draft that claims too much,
+## and the reason it does not mean hand-editing a file the window never names.
+func forget_drafts() -> void:
+	_drafts = []
+	_save_drafts()
+	EventSheetLiftReading.clear_cache()
+	_fill_drafts_list()
+	refresh()
+
+
+func _fill_drafts_list() -> void:
+	if _drafts_list == null:
+		return
+	_drafts_list.clear()
+	var said: PackedStringArray = drafts_summary()
+	if said.is_empty():
+		_drafts_list.add_text(EventSheetL10n.translate("Nothing drafted yet."))
+		return
+	for line: String in said:
+		_drafts_list.add_text(line)
+		_drafts_list.newline()
 
 
 ## The scratch table as lift-table entries. A draft that cannot be derived comes back carrying its
@@ -240,7 +284,8 @@ func _open_draft_form() -> void:
 	_draft_ace.text = ""
 	_draft_result.clear()
 	_draft_result.add_text(EventSheetL10n.translate("Mark each value span as [[name: text]], then check it."))
-	_draft_window.popup_centered(Vector2i(720, 380))
+	_fill_drafts_list()
+	_draft_window.popup_centered(Vector2i(720, 520))
 
 
 ## An id suggested from the line's own words - the identifiers in it, joined, lowercased. A
@@ -290,6 +335,7 @@ func _append_draft() -> void:
 		"example": _draft_example.text})
 	_save_drafts()
 	EventSheetLiftReading.clear_cache()
+	_fill_drafts_list()
 	refresh()
 
 
@@ -442,8 +488,23 @@ func _build_draft_window() -> void:
 	_draft_result.selection_enabled = true
 	body.add_child(EventSheetPopupUI.titled_card(
 		EventSheetL10n.translate("The entry this derives"), _draft_result))
+	_drafts_list = RichTextLabel.new()
+	_drafts_list.custom_minimum_size = Vector2(0.0, 72.0)
+	_drafts_list.selection_enabled = true
+	body.add_child(EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("The scratch table"), _drafts_list))
+	body.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate("These are asked before every shipped spelling, in this window only. Nothing under res:// is written.")))
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
+	buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var forget: Button = Button.new()
+	forget.text = EventSheetL10n.translate("Forget the scratch table")
+	forget.tooltip_text = EventSheetL10n.translate("Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.")
+	forget.pressed.connect(forget_drafts)
+	buttons.add_child(forget)
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	buttons.add_child(spacer)
 	var check: Button = Button.new()
 	check.text = EventSheetL10n.translate("Check")
 	check.pressed.connect(func() -> void: _check_draft())

@@ -717,6 +717,14 @@
   only. There is a whole-file measurement now: five NAMED files of the editor's own source (never a
   rotating sample, so the number is the same on every machine) with a floor on how many generic calls
   the derived layer names in each.
+- **The workbench's scratch table can be seen and emptied.** Drafts were append-only: written to
+  `user://`, asked before every shipped spelling on every refresh, and never listed or removable from
+  the window - so one over-wide draft claimed every line in the tool with no visible cause and no
+  recovery except hand-editing a file the window never names on screen. The draft form now lists what
+  the scratch table holds and carries the button that forgets the lot. And the over-wide draft itself
+  is refused: an example that is nothing but value spans (`[[x: foo]]`) is not a spelling of anything,
+  it is the whole language, so the example engine declines it by name like every other thing it
+  cannot answer.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`
