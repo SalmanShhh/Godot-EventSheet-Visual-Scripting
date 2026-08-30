@@ -236,7 +236,8 @@ static func is_touch_row(definition: ACEDefinition) -> bool:
 	if definition == null:
 		return false
 	var category: String = str(definition.category)
-	return category == COLLISIONS_CATEGORY 		or category.begins_with(COLLISIONS_CATEGORY + CATEGORY_PAGE_SEPARATOR)
+	return category == COLLISIONS_CATEGORY \
+		or category.begins_with(COLLISIONS_CATEGORY + CATEGORY_PAGE_SEPARATOR)
 
 
 ## True for the two verbs only a behavior sheet's prelude can host. The picker's own
