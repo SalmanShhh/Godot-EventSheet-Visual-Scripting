@@ -33,6 +33,7 @@ const SCENES: PackedStringArray = [
 	"res://tests/fixtures/collision_scene_hushed.tscn",
 	"res://tests/fixtures/collision_scene_ledge.tscn",
 	"res://tests/fixtures/collision_scene_platform.tscn",
+	"res://tests/fixtures/collision_scene_switcher.tscn",
 ]
 
 const GATE := "res://tests/fixtures/collision_scene_gate.gd"
@@ -41,6 +42,7 @@ const HUSHED := "res://tests/fixtures/collision_scene_hushed.gd"
 const HOLLOW := "res://tests/fixtures/collision_scene_hollow.gd"
 const PLATFORM := "res://tests/fixtures/collision_scene_platform.gd"
 const LEDGE := "res://tests/fixtures/collision_scene_ledge.gd"
+const SWITCHER := "res://tests/fixtures/collision_scene_switcher.gd"
 
 const CANVAS_SOURCE := "res://addons/eventsheet/editor/interaction/viewport_row_builder.gd"
 
@@ -182,6 +184,21 @@ static func _test_nothing_can_reach_it() -> bool:
 	# The clean twin: the same sheet, the same trigger, the same question, a mask that covers them.
 	ok = _check("and the same sheet over a mask that covers them says nothing",
 		_kinds(_findings(DOOR)), PackedStringArray()) and ok
+	# THE OTHER CLEAN TWIN, and the one that is not about the scene at all: the gate's own scene,
+	# watching the gate's own wrong layer, with a sheet that puts the mask right itself. A check
+	# that accuses this is a check accusing the very rows this vocabulary teaches, so the rule
+	# stands down for a sheet that writes its own layer or mask - the `.tscn` is then where the node
+	# starts rather than what it watches.
+	ok = _check("a sheet that sets its own mask is never told nothing can reach it",
+		_kinds(_findings(SWITCHER)), PackedStringArray()) and ok
+	ok = _check("and the rows are what says so, read once for the whole sheet",
+		EventSheetCollisionFindings.writes_its_own_layers(
+			EventSheetCollisionFindings.all_lines(
+				GDScriptImporter.new().import_external(SWITCHER))), true) and ok
+	ok = _check("while a sheet that never mentions them is judged by the scene",
+		EventSheetCollisionFindings.writes_its_own_layers(
+			EventSheetCollisionFindings.all_lines(
+				GDScriptImporter.new().import_external(GATE))), false) and ok
 	return ok
 
 

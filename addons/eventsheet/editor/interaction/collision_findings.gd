@@ -72,6 +72,17 @@ const GROUP_FILTER_PARAM := "group"
 ## one-way shape is a sheet waiting for a landing that cannot happen.
 const LANDING_CALL := "is_on_floor"
 
+## The two properties a sheet changes when it decides at RUN TIME what it collides with - the layer
+## it sits on and the mask it watches. Both bare names, because every spelling that writes them
+## contains one: `set_collision_mask_value(3, true)` (which is what the Collide With Layer row
+## emits), `set_collision_layer_value`, and the plain `collision_mask = 6` a hand-written line uses.
+##
+## A sheet that writes either of them has told the truth about itself and the `.tscn` has not: the
+## numbers in the scene file are where the node STARTS, not what it watches while the game runs. So
+## the dead-trigger rule stands down for that sheet rather than accusing the very rows this
+## vocabulary teaches people to write.
+const LAYER_WRITE_WORDS: PackedStringArray = ["collision_mask", "collision_layer"]
+
 
 ## Every finding this sheet earns, in the order the rules run. `script_path` is what resolves the
 ## sheet's own node in the scene that runs it - a sheet nobody passed one for never earns a finding
@@ -87,8 +98,10 @@ static func findings(sheet: EventSheetResource, script_path: String = "",
 		return found
 	var events: Array[Dictionary] = touch_events(sheet)
 	var lines: String = all_lines(sheet)
+	var sets_its_own_layers: bool = writes_its_own_layers(lines)
 	for collidable: Dictionary in own:
-		_nothing_can_reach_it(collidable, events, scenes, found)
+		if not sets_its_own_layers:
+			_nothing_can_reach_it(collidable, events, scenes, found)
 		_monitoring_is_off(collidable, events, found)
 		_it_has_no_shape(collidable, events, found)
 		_the_one_way_faces_down(collidable, events, lines, found)
@@ -142,6 +155,17 @@ static func all_lines(sheet: EventSheetResource) -> String:
 		if event_function != null:
 			_collect_lines(event_function.events, written)
 	return "\n".join(written)
+
+
+## True when the sheet's own rows change the layer it sits on or the mask it watches. The scene file
+## is then the STARTING position rather than the answer, and no rule here may say what this node can
+## reach - a sheet whose first action is "Collide with Enemies" is right, and telling it that nothing
+## can reach its trigger is the check crying wolf at the code the vocabulary taught.
+static func writes_its_own_layers(lines: String) -> bool:
+	for word: String in LAYER_WRITE_WORDS:
+		if lines.contains(word):
+			return true
+	return false
 
 
 # -- The four rules ------------------------------------------------------------------------------
