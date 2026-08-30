@@ -169,8 +169,14 @@ static func reads_as_now(name: String) -> bool:
 	return _names_the_floor(bare) and not reads_as_before(name)
 
 
+## True when a name is MADE OF one of the floor words, rather than merely containing one. Matched on
+## the parts of the name, because a substring test claims words that are not there: `underground`
+## contains "ground", so `if underground and not was_grounded:` read as a landing and the sheet said
+## a sentence about floors over code that means nothing of the kind. Bytes were never at risk - the
+## entry keeps the author's own spelling - but a mis-read is still a sentence asserted about somebody
+## else's code, which is the one thing this family cannot afford to get wrong.
 static func _names_the_floor(bare: String) -> bool:
-	for word: String in NOW_WORDS:
-		if bare.contains(word):
+	for part: String in bare.split("_", false):
+		if NOW_WORDS.has(part):
 			return true
 	return false

@@ -313,8 +313,12 @@ static func _test_the_handwritten_landing_opens_as_the_row_it_is() -> bool:
 static func _test_a_landing_check_that_says_more_is_left_alone() -> bool:
 	var lift: GDScript = load("res://addons/eventforge/importer/collision_edge_lift.gd")
 	var passed: bool = true
+	# The last two are the two-variable form read on the WORDS, so the words have to be words: a name
+	# that merely contains one of them is a different name. `underground` is not the ground, and a
+	# sentence about landing asserted over it is a sentence about code that means something else.
 	for spelling: String in ["is_on_floor() and not was_on_floor and hp > 0",
-			"is_on_floor() and not dead", "attacking and not was_attacking"]:
+			"is_on_floor() and not dead", "attacking and not was_attacking",
+			"underground and not was_grounded", "on_floorboards and not was_on_floorboards"]:
 		passed = _check("`%s` is not claimed" % spelling,
 			(lift.call("match_whole_condition", spelling) as Dictionary).is_empty(), true) and passed
 	return passed
