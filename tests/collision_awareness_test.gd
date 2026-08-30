@@ -30,6 +30,7 @@ const SCENES: PackedStringArray = [
 	"res://tests/fixtures/collision_scene_enemy.tscn",
 	"res://tests/fixtures/collision_scene_gate.tscn",
 	"res://tests/fixtures/collision_scene_guarded.tscn",
+	"res://tests/fixtures/collision_scene_hatch.tscn",
 	"res://tests/fixtures/collision_scene_hollow.tscn",
 	"res://tests/fixtures/collision_scene_hushed.tscn",
 	"res://tests/fixtures/collision_scene_ledge.tscn",
@@ -45,6 +46,7 @@ const PLATFORM := "res://tests/fixtures/collision_scene_platform.gd"
 const LEDGE := "res://tests/fixtures/collision_scene_ledge.gd"
 const SWITCHER := "res://tests/fixtures/collision_scene_switcher.gd"
 const GUARDED := "res://tests/fixtures/collision_scene_guarded.gd"
+const HATCH := "res://tests/fixtures/collision_scene_hatch.gd"
 const LEVEL := "res://tests/fixtures/collision_scene_level.gd"
 
 ## The corpus for the instanced-level questions, kept apart from the one above ON PURPOSE: this
@@ -335,6 +337,17 @@ static func _test_the_one_way_faces_down() -> bool:
 		"Ledge is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.") and ok
 	ok = _check("the same sheet over an upright one-way shape says nothing",
 		_kinds(_findings(LEDGE)), PackedStringArray()) and ok
+	# AND THE GATE IS THE SENTENCE. Turning a one-way shape over is a choice somebody makes on
+	# purpose; the finding only means anything where the sheet is plainly waiting for the landing the
+	# shape blocks. A sheet with a touch trigger and no landing question anywhere in it was admitted
+	# and then told its rows were waiting for one.
+	ok = _check("a turned-over shape on a sheet that never asks about landing says nothing",
+		_kinds(_findings(HATCH)), PackedStringArray()) and ok
+	ok = _check("and the landing question is what admits it, however it is spelled",
+		[EventSheetCollisionFindings.asks_about_landing("\tif is_on_floor():"),
+			EventSheetCollisionFindings.asks_about_landing("\tif self.__just_landed_3():"),
+			EventSheetCollisionFindings.asks_about_landing("\tqueue_free()")],
+		[true, true, false]) and ok
 	return ok
 
 
@@ -408,9 +421,12 @@ static func _test_the_doors() -> bool:
 
 static func _test_the_report() -> bool:
 	var scripts: PackedStringArray = PackedStringArray([GATE, DOOR, HUSHED, HOLLOW, PLATFORM, LEDGE])
-	var ok: bool = _check("only the scripts that wait on a touch are read",
+	# A moving platform connects no signal at all - it is a physics loop asking about the floor - so
+	# the landing question is one of the words that gets a script opened. Without it the one-way
+	# finding was filed against a sheet nothing ever read, which is a finding nobody can reach.
+	var ok: bool = _check("the scripts that wait on a touch, and the ones that wait on a landing",
 		EventSheetCollisionsDoctor.ranked(scripts),
-		PackedStringArray([DOOR, GATE, HOLLOW, HUSHED]))
+		PackedStringArray([DOOR, GATE, HOLLOW, HUSHED, LEDGE, PLATFORM]))
 	var filed: Array[Dictionary] = EventSheetCollisionsDoctor.report(scripts, SCENES)
 	var checks: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in filed:
@@ -419,12 +435,14 @@ static func _test_the_report() -> bool:
 		PackedStringArray([EventSheetCollisionsDoctor.CHECK_ID,
 			EventSheetCollisionsDoctor.CHECK_CANNOT_SEE,
 			EventSheetCollisionsDoctor.CHECK_NO_SHAPE,
-			EventSheetCollisionsDoctor.CHECK_MONITORING])) and ok
+			EventSheetCollisionsDoctor.CHECK_MONITORING,
+			EventSheetCollisionsDoctor.CHECK_ONE_WAY])) and ok
 	ok = _check("the summary counts what it read",
 		str(filed[0].get("message", "")),
-		"Collisions: 4 script(s) waiting on a touch, 4 read, 3 whose trigger cannot fire as the scene stands.") and ok
-	ok = _check("and a project whose scripts never wait on a touch hears nothing at all",
-		EventSheetCollisionsDoctor.report(PackedStringArray([PLATFORM, LEDGE]), SCENES).size(), 0) and ok
+		"Collisions: 6 script(s) waiting on a touch, 6 read, 4 whose trigger cannot fire as the scene stands.") and ok
+	ok = _check("and a project whose scripts never ask about a touch hears nothing at all",
+		EventSheetCollisionsDoctor.report(
+			PackedStringArray(["res://tests/fixtures/lighting_hall_lamp.gd"]), SCENES).size(), 0) and ok
 	return ok
 
 

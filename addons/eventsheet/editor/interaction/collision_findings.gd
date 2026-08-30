@@ -74,10 +74,15 @@ const TouchTriggers := preload("res://addons/eventforge/registration/collision_f
 const GROUP_FILTER_ACE_IDS: PackedStringArray = ["IsInGroup"]
 const GROUP_FILTER_PARAM := "group"
 
-## The question a sheet asks when it expects something to LAND on a surface. What turns a one-way
-## platform's facing from a fact into a contradiction: a sheet asking it beside an upside-down
-## one-way shape is a sheet waiting for a landing that cannot happen.
-const LANDING_CALL := "is_on_floor"
+## The ways a sheet asks whether something LANDED on a surface: the engine's own standing question,
+## and the two calls the floor edge rows compile to. What turns a one-way platform's facing from a
+## fact into a contradiction is a sheet asking one of these beside an upside-down one-way shape - a
+## sheet waiting for a landing that cannot happen.
+##
+## A one-way shape turned over is not a fault on its own: a wall that only blocks from one side is
+## turned deliberately every day. So this is the whole gate on that rule, and a sheet that never asks
+## about landing hears nothing about the facing of anything.
+const LANDING_WORDS: PackedStringArray = ["is_on_floor", "__just_landed_", "__just_left_the_ground_"]
 
 ## The two properties a sheet changes when it decides at RUN TIME what it collides with - the layer
 ## it sits on and the mask it watches. Both bare names, because every spelling that writes them
@@ -168,6 +173,15 @@ static func all_lines(sheet: EventSheetResource) -> String:
 ## is then the STARTING position rather than the answer, and no rule here may say what this node can
 ## reach - a sheet whose first action is "Collide with Enemies" is right, and telling it that nothing
 ## can reach its trigger is the check crying wolf at the code the vocabulary taught.
+## True when the sheet asks, anywhere in it, whether something is standing on a floor. The one
+## question that makes a turned-over one-way shape a contradiction rather than a choice.
+static func asks_about_landing(lines: String) -> bool:
+	for word: String in LANDING_WORDS:
+		if lines.contains(word):
+			return true
+	return false
+
+
 static func writes_its_own_layers(lines: String) -> bool:
 	for word: String in LAYER_WRITE_WORDS:
 		if lines.contains(word):
@@ -263,7 +277,10 @@ static func _it_has_no_shape(collidable: Dictionary, events: Array[Dictionary],
 ## said at all when the sheet is plainly expecting the landing that cannot happen.
 static func _the_one_way_faces_down(collidable: Dictionary, events: Array[Dictionary],
 		lines: String, found: Array[Dictionary]) -> void:
-	if events.is_empty() and not lines.contains(LANDING_CALL):
+	# The gate is the sentence: this is only said where the sheet is plainly expecting the landing
+	# the shape blocks. Admitting any sheet with a touch trigger admitted sheets with no landing
+	# question anywhere in them, and then told them their rows were waiting for one.
+	if not asks_about_landing(lines):
 		return
 	var anchor: EventRow = _first_event(events)
 	for shape: Variant in collidable.get("one_way", []) as Array:

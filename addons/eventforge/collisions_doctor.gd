@@ -46,10 +46,15 @@ const PLUGIN_DIRECTORY := "res://addons/"
 
 ## The words a script's own TEXT has to say before it is opened. Reading the rows of a script means
 ## opening it as a sheet, which is the most expensive thing this section can do - so a script that
-## never connects a touch signal is never opened. These are the signal names themselves, which is
+## never asks about a touch is never opened. The first four are the signal names themselves, which is
 ## what a hand-written `connect` and a lifted trigger row both carry.
+##
+## And the landing question beside them, because the one-way rule is asked of a sheet that expects
+## something to LAND rather than of one waiting on a signal - a moving platform is written as a
+## physics loop and connects nothing at all. Left out, that rule's finding was filed against a sheet
+## nothing ever opened, which is a finding nobody can read.
 const TOUCH_WORDS: PackedStringArray = [
-	"body_entered", "body_exited", "area_entered", "area_exited",
+	"body_entered", "body_exited", "area_entered", "area_exited", "is_on_floor",
 ]
 
 ## And the ceiling behind the pre-read: a COUNT, and nothing else. No wall clock - a budget measured
