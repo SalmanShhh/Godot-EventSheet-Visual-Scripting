@@ -58,6 +58,7 @@ const LEVEL_SCENES: PackedStringArray = [
 ]
 
 const CANVAS_SOURCE := "res://addons/eventsheet/editor/interaction/viewport_row_builder.gd"
+const VIEWPORT_SOURCE := "res://addons/eventsheet/editor/event_sheet_viewport.gd"
 
 ## The layer names this test works against, written for the length of the run.
 const LAYER_SETTINGS: Array = [
@@ -393,6 +394,13 @@ static func _test_the_sheet_stays_quiet() -> bool:
 		canvas.contains("EventSheetCollisionFindings.for_event"), false) and ok
 	ok = _check("nor hangs one under the event",
 		canvas.contains("_build_finding_note_rows(\n\t\t\t\tEventSheetCollisionFindings"), false) and ok
+	# AND NOT AS A HOVER EITHER. The sheet's only signal is the amber state; the words are read in the
+	# Doctor's inbox and in the selected row's help strip. A tooltip is not a block or an icon, so it
+	# passes the letter of every check above - and it is still the whole sentence said inside the
+	# sheet, in a third place the rule does not name.
+	ok = _check("and the canvas never says the sentence as a hover",
+		FileAccess.get_file_as_string(VIEWPORT_SOURCE).contains("return hovered_error_row.attention_note"),
+		false) and ok
 	return ok
 
 

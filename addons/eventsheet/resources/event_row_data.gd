@@ -44,9 +44,11 @@ var debug_state: String = ""
 # marker on the row and shows in its tooltip (the "error → row" deep-link). "" = no error.
 var error_message: String = ""
 # The QUIET AMBER STATE. Set by the viewport when a finding is about this row and its words belong
-# somewhere else: an amber left stripe and a faint wash, with the sentence on the row's tooltip and
-# in the help strip once the row is selected. Nothing is drawn INSIDE the row - no note, no icon, no
-# inline text - so a sheet with nothing wrong looks exactly as it always did. "" = nothing wrong.
+# somewhere else: an amber left stripe and a faint wash, and that is the whole of the sheet's signal.
+# The SENTENCE is read in the Doctor's triage inbox and in the help strip once the row is selected -
+# not inside the sheet, and not in a tooltip either. Nothing is drawn INSIDE the row - no note, no
+# icon, no inline text - so a sheet with nothing wrong looks exactly as it always did. The text is
+# held here because the strip is built from it; "" = nothing wrong.
 var attention_note: String = ""
 # Live event trace: true while this event is in the latest streamed "fired" frame - a transient
 # highlight so you can watch which events fire in real time during a debug run.
