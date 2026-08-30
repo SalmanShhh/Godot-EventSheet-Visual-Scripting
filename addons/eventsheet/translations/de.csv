@@ -5540,3 +5540,26 @@ Name physics layer,Physikebene benennen
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d Zeile(n) in diesen Abschnitten sind Notizen statt Anweisungen und haben daher gar keine Form."
 On object freed,Bei Objektfreigabe
 On %s read,Wenn %s gelesen wird
+Event Is Action Pressed,Ereignis ist Aktion gedrückt
+"True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Wahr, wenn das Ereignis, das dieser Handler bekommen hat, das Herunterdrücken der genannten Aktion ist. Die Druck-Hälfte des Ereignisses, das der Handler gerade hält - keine Frage danach, wie es jetzt gerade steht; das beantwortet Ist Aktion gedrückt."
+Input Event,Eingabeereignis
+{action} was pressed,{action} wurde gedrückt
+"The action this event has to be, from the Input Map.","Die Aktion, die dieses Ereignis sein muss, aus der Eingabezuordnung."
+Event Is Action Pressed Or Repeating,Ereignis ist Aktion gedrückt oder Wiederholung
+"The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","Derselbe Druck, erweitert um die automatischen Wiederholungen einer gehaltenen Taste - was ein Menü braucht, das weiterläuft, solange der Stick gehalten wird, und was ein Sprung nicht braucht."
+{action} was pressed or is repeating,{action} wurde gedrückt oder wiederholt sich
+Event Is Action Released,Ereignis ist Aktion losgelassen
+"True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","Wahr, wenn das Ereignis, das dieser Handler bekommen hat, das Loslassen der genannten Aktion ist - für Aufladen-und-Loslassen-Angriffe und für das Loslassen einer gehaltenen Steuerung."
+{action} was released,{action} wurde losgelassen
+Event Is The Action,Ereignis ist die Aktion
+"True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.","Wahr, wenn das Ereignis überhaupt zur genannten Aktion gehört, in welche Richtung auch immer. Die Zeile, die man fragt, bevor man ausliest, wie stark gehalten wird - eine Stärke bedeutet erst etwas, wenn klar ist, von welcher Steuerung sie kommt."
+the event is {action},das Ereignis ist {action}
+Event Action Strength,Ereignis-Aktionsstärke
+"How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","Wie weit die Steuerung hinter diesem Ereignis gedrückt ist, von 0 bis 1 - ein Stick oder ein Trigger liefert den ganzen Bereich, eine Taste nur 0 oder 1."
+how hard {action} is held in this event,wie stark {action} in diesem Ereignis gehalten wird
+"The action to read out of this event, from the Input Map.","Die Aktion, die aus diesem Ereignis gelesen wird, aus der Eingabezuordnung."
+"Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.","Läuft, wenn das Spiel pausiert wird - `get_tree().paused` eingeschaltet - auf jedem Knoten, der nicht vom Pausieren ausgenommen ist. Der Moment, die Musik leiser zu drehen und das Menü zu zeigen, und die eine Stelle, an der ein pausiertes Spiel noch handeln kann."
+Notifications,Benachrichtigungen
+"Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.","Läuft, wenn das Spiel aus der Pause zurückkommt, auf denselben Knoten. Die andere Hälfte von Bei Pause, und die Stelle, an der Musik und Menü wieder werden, wie sie waren."
+"Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","Läuft als allerletztes, was diesem Objekt passiert, kurz bevor sein Speicher freigegeben wird. Anders als Bei Zerstörung, was das Verlassen des Baums ist und mehrfach passieren kann - dies passiert genau einmal, und danach folgt nichts mehr, also ist es die Stelle, an der ein anderswo gehaltener Verweis zurückgegeben wird."
+"Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","Läuft, wenn die spielende Person das Fenster schließt - das X, oder das System, das das Spiel zum Beenden auffordert. Das Spiel beendet sich beim Eintreffen NICHT von selbst, wenn das Projekt so eingestellt ist, dass es dies selbst behandelt - und genau das schafft Platz für die Nachfrage ""vorher speichern?""."

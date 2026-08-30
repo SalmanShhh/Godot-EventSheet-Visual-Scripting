@@ -5540,3 +5540,26 @@ Name physics layer,物理レイヤーに名前を付ける
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","それらの区間にある %d 行は文ではなくメモなので、形がまったくありません。"
 On object freed,オブジェクト解放時
 On %s read,%s が読み取られたとき
+Event Is Action Pressed,イベントがアクションの押下である
+"True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",このハンドラーに渡されたイベントが、指定したアクションが押された瞬間であれば真になります。ハンドラーが持っているイベントの押下側で、今どうなっているかを尋ねるものではありません。それはアクションが押されているが答えます。
+Input Event,入力イベント
+{action} was pressed,{action} が押された
+"The action this event has to be, from the Input Map.",このイベントが該当すべきアクション。入力マップから選びます。
+Event Is Action Pressed Or Repeating,イベントがアクションの押下またはリピートである
+"The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.",同じ押下に、キーを押し続けたときの自動リピートを含めたもの - スティックを倒し続ける間スクロールし続けるメニューに向き、ジャンプには向きません。
+{action} was pressed or is repeating,{action} が押された、またはリピート中
+Event Is Action Released,イベントがアクションの解放である
+"True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.",このハンドラーに渡されたイベントが、指定したアクションが離された瞬間であれば真になります。ためて放つ攻撃や、押し続けていた操作を離すときに使います。
+{action} was released,{action} が離された
+Event Is The Action,イベントがそのアクションである
+"True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.",向きに関係なく、そのイベントが指定したアクションのものであれば真になります。押し込みの強さを読む前に尋ねる行です。強さは、どの操作から来たか分かって初めて意味を持ちます。
+the event is {action},イベントが {action} である
+Event Action Strength,イベントのアクション強度
+"How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.",このイベントの元になった操作がどれだけ押し込まれているか、0 から 1 まで - スティックやトリガーは全範囲、キーは 0 か 1 になります。
+how hard {action} is held in this event,このイベントで {action} がどれだけ押し込まれているか
+"The action to read out of this event, from the Input Map.",このイベントから読み取るアクション。入力マップから選びます。
+"Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.",ゲームが一時停止したとき - `get_tree().paused` がオンになったとき - 一時停止の対象になっているすべてのノードで実行されます。音楽を絞ってメニューを出す瞬間であり、一時停止中のゲームがまだ動ける唯一の場所です。
+Notifications,通知
+"Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.",ゲームが一時停止から戻ったとき、同じノードで実行されます。一時停止したときのもう半分で、音楽とメニューを元に戻す場所です。
+"Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.",このオブジェクトに起きる最後の出来事として、メモリが解放される直前に実行されます。ノードがツリーから外れる「破棄されたとき」とは別物で、あちらは何度も起こり得ます - こちらはちょうど一度だけ起き、後には何も続きません。だから、どこかで持っている参照を返す場所になります。
+"Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.",プレイヤーがウィンドウを閉じたとき - 閉じるボタン、またはシステムから終了を求められたとき - に実行されます。プロジェクトがこれを自分で扱う設定なら、これが届いてもゲームは自分から終了しません。だから「先に保存しますか？」と尋ねる余地が生まれます。

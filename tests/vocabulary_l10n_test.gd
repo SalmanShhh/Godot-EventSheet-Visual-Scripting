@@ -80,6 +80,12 @@ const NEW_MODULES: Array[String] = [
 	# The step a standing state changed: the two floor edges, the two overlap edges, and the four
 	# gates that go under them. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/collision_edge_aces.gd",
+	# The questions a handler asks the ONE event it was handed, filed apart from the polled Input
+	# rows on purpose. One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/input_event_aces.gd",
+	# The four things the engine tells a node through its notification callback. One module,
+	# shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/notification_aces.gd",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
@@ -316,7 +322,8 @@ const FULLY_KEYED_MODULES: Array[String] = [
 	"clipboard_aces.gd", "collision_edge_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd",
 	"cursor_canvas_aces.gd",
 	"editor_author_aces.gd", "facing_aces.gd",
-	"game_mechanics_aces.gd", "game_state_aces.gd", "light_node_aces.gd", "lighting_aces.gd",
+	"game_mechanics_aces.gd", "game_state_aces.gd", "input_event_aces.gd", "light_node_aces.gd",
+	"lighting_aces.gd", "notification_aces.gd",
 	"math_words_aces.gd", "multiplayer_aces.gd", "resource_aces.gd", "scene_lighting_aces.gd",
 	"removal_aces.gd", "spatial_aces.gd", "space_words_aces.gd", "spatial_words_aces.gd",
 	"table_aces.gd", "spawn_aces.gd", "text_extract_aces.gd", "text_format_aces.gd"

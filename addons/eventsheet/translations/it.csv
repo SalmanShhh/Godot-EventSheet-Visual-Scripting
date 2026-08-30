@@ -5540,3 +5540,26 @@ Name physics layer,Assegna un nome al livello fisico
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d riga/righe dentro quei tratti sono note e non istruzioni, quindi non hanno alcuna forma."
 On object freed,Alla liberazione dell'oggetto
 On %s read,Quando %s viene letto
+Event Is Action Pressed,L'evento è azione premuta
+"True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vero quando l'evento passato a questo gestore è l'azione indicata mentre viene premuta. La metà di pressione dell'evento che il gestore ha in mano - non una domanda su come stanno le cose adesso, a cui risponde invece Azione premuta."
+Input Event,Evento di input
+{action} was pressed,{action} è stata premuta
+"The action this event has to be, from the Input Map.","L'azione che questo evento deve essere, dalla mappa di input."
+Event Is Action Pressed Or Repeating,L'evento è azione premuta o ripetuta
+"The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","La stessa pressione, allargata alle ripetizioni automatiche di un tasto tenuto premuto - ciò che serve a un menu che scorre mentre tieni la levetta, e non a un salto."
+{action} was pressed or is repeating,{action} è stata premuta o si sta ripetendo
+Event Is Action Released,L'evento è azione rilasciata
+"True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","Vero quando l'evento passato a questo gestore è l'azione indicata che viene rilasciata, per le mosse da caricare e rilasciare e per lasciare un comando tenuto premuto."
+{action} was released,{action} è stata rilasciata
+Event Is The Action,L'evento è l'azione
+"True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.","Vero quando l'evento appartiene all'azione indicata, in qualunque direzione stia andando. La riga da chiedere prima di leggere quanto è premuta, perché un'intensità ha senso solo quando sai da quale comando arriva."
+the event is {action},l'evento è {action}
+Event Action Strength,Intensità dell'azione dell'evento
+"How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","Quanto è premuto il comando dietro questo evento, da 0 a 1 - una levetta o un grilletto dà l'intera gamma, un tasto dà 0 o 1."
+how hard {action} is held in this event,quanto è tenuta premuta {action} in questo evento
+"The action to read out of this event, from the Input Map.","L'azione da leggere da questo evento, dalla mappa di input."
+"Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.","Viene eseguito quando il gioco va in pausa - `get_tree().paused` attivato - su ogni nodo non esentato dalla pausa. Il momento di abbassare la musica e mostrare il menu, e l'unico punto in cui un gioco in pausa può ancora agire."
+Notifications,Notifiche
+"Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.","Viene eseguito quando il gioco esce dalla pausa, sugli stessi nodi. L'altra metà di In pausa, e il punto in cui musica e menu tornano come erano."
+"Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","Viene eseguito come ultimissima cosa che accade a questo oggetto, poco prima che la sua memoria se ne vada. Diverso da Alla distruzione, che è il nodo che lascia l'albero e può accadere più volte - questo accade esattamente una volta e non segue nulla, quindi è il punto in cui un riferimento tenuto altrove viene restituito."
+"Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","Viene eseguito quando chi gioca chiude la finestra - la X, o il sistema che chiede al gioco di uscire. Il gioco NON esce da solo quando questo arriva se il progetto è impostato per gestirlo, ed è proprio questo a lasciare spazio a una domanda ""salvare prima?""."

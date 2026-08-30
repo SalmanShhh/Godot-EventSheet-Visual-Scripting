@@ -5540,3 +5540,26 @@ Name physics layer,Nommer le calque physique
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d ligne(s) dans ces passages sont des notes et non des instructions, elles n'ont donc aucune forme."
 On object freed,À la libération de l'objet
 On %s read,Quand %s est lu
+Event Is Action Pressed,L'événement est une action pressée
+"True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vrai lorsque l'événement remis à ce gestionnaire est l'action nommée qui descend. La moitié appui de l'événement que le gestionnaire tient - pas une question sur l'état actuel, ce à quoi répond Action pressée."
+Input Event,Événement d'entrée
+{action} was pressed,{action} a été pressée
+"The action this event has to be, from the Input Map.","L'action que cet événement doit être, depuis la carte des entrées."
+Event Is Action Pressed Or Repeating,L'événement est une action pressée ou répétée
+"The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.","Le même appui, élargi aux répétitions automatiques d'une touche maintenue - ce que veut un menu qui défile tant que le stick est maintenu, et ce qu'un saut ne veut pas."
+{action} was pressed or is repeating,{action} a été pressée ou se répète
+Event Is Action Released,L'événement est une action relâchée
+"True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.","Vrai lorsque l'événement remis à ce gestionnaire est l'action nommée qui remonte, pour les attaques chargées puis relâchées et pour lâcher une commande maintenue."
+{action} was released,{action} a été relâchée
+Event Is The Action,L'événement est l'action
+"True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.","Vrai lorsque l'événement appartient à l'action nommée, quel que soit son sens. La ligne à poser avant de lire l'intensité, car une intensité n'a de sens qu'une fois qu'on sait de quelle commande elle vient."
+the event is {action},l'événement est {action}
+Event Action Strength,Intensité de l'action de l'événement
+"How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.","À quel point la commande derrière cet événement est enfoncée, de 0 à 1 - un stick ou une gâchette donne toute la plage, une touche donne 0 ou 1."
+how hard {action} is held in this event,à quel point {action} est maintenue dans cet événement
+"The action to read out of this event, from the Input Map.","L'action à lire dans cet événement, depuis la carte des entrées."
+"Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.","S'exécute quand le jeu est mis en pause - `get_tree().paused` activé - sur chaque nœud qui n'est pas exempté de la pause. Le moment de baisser la musique et d'afficher le menu, et le seul endroit où un jeu en pause peut encore agir."
+Notifications,Notifications
+"Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.","S'exécute quand le jeu sort de la pause, sur les mêmes nœuds. L'autre moitié de À la pause, et l'endroit où la musique et le menu redeviennent ce qu'ils étaient."
+"Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","S'exécute en tout dernier pour cet objet, juste avant que sa mémoire ne parte. Différent de À la destruction, qui est le nœud quittant l'arbre et peut arriver plusieurs fois - ceci arrive exactement une fois et rien ne suit, c'est donc là qu'une référence détenue ailleurs est rendue."
+"Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","S'exécute quand la joueuse ou le joueur ferme la fenêtre - la croix, ou le système qui demande au jeu de quitter. Le jeu ne quitte PAS de lui-même à l'arrivée de cet événement si le projet est réglé pour le gérer, et c'est ce qui laisse la place à une question ""sauvegarder d'abord ?""."

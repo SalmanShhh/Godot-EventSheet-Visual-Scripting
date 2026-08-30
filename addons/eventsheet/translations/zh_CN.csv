@@ -5540,3 +5540,26 @@ Name physics layer,命名物理层
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","这些片段中的 %d 行是注记而非语句，因此完全没有形状。"
 On object freed,对象释放时
 On %s read,当 %s 被读取时
+Event Is Action Pressed,事件是动作按下
+"True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",当这个处理函数收到的事件是指定动作被按下时为真。这是处理函数手上那个事件的按下一半，而不是在问此刻的状态 - 那是「动作被按下」回答的问题。
+Input Event,输入事件
+{action} was pressed,{action} 被按下
+"The action this event has to be, from the Input Map.",此事件必须对应的动作，取自输入映射。
+Event Is Action Pressed Or Repeating,事件是动作按下或重复
+"The same press, widened to include the auto-repeats a held key sends - what a menu that scrolls while you hold the stick wants, and what a jump does not.",同样的按下，但包含按住按键时发出的自动重复 - 适合按住摇杆时持续滚动的菜单，不适合跳跃。
+{action} was pressed or is repeating,{action} 被按下或正在重复
+Event Is Action Released,事件是动作松开
+"True when the event this handler was handed is the named action coming back up, for charge-and-release moves and for letting go of a held control.",当这个处理函数收到的事件是指定动作被松开时为真，用于蓄力后释放的招式，以及松开一直按住的操作。
+{action} was released,{action} 被松开
+Event Is The Action,事件属于该动作
+"True when the event belongs to the named action at all, whichever way it is going. The row to ask before reading how hard it is held, since a strength is only meaningful once you know which control it came from.",无论方向如何，只要该事件属于指定动作就为真。在读取按压力度之前先问这一行，因为只有知道力度来自哪个控制，力度才有意义。
+the event is {action},事件是 {action}
+Event Action Strength,事件动作强度
+"How far the control behind this event is pushed, from 0 to 1 - a stick or a trigger reads the whole range, a key reads 0 or 1.",该事件背后的控制被推到什么程度，从 0 到 1 - 摇杆或扳机给出整个范围，按键只给 0 或 1。
+how hard {action} is held in this event,在此事件中 {action} 被按住的力度
+"The action to read out of this event, from the Input Map.",要从此事件中读取的动作，取自输入映射。
+"Runs when the game is paused - `get_tree().paused` turned on - on every node that is not exempt from pausing. The moment to dim the music and put the menu up, and the one place a paused game can still act.",当游戏暂停时 - `get_tree().paused` 打开时 - 在每个未免除暂停的节点上运行。这是调低音乐、弹出菜单的时刻，也是暂停中的游戏仍能行动的唯一地方。
+Notifications,通知
+"Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.",当游戏从暂停恢复时，在同样的节点上运行。它是暂停事件的另一半，也是音乐和菜单恢复原状的地方。
+"Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.",作为这个对象身上发生的最后一件事运行，就在它的内存消失之前。它不同于被销毁时 - 那是节点离开场景树，可能发生多次 - 这件事恰好发生一次，之后什么也不会有，所以这里正是把别处持有的句柄交还回去的地方。
+"Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.",当玩家关闭窗口时运行 - 点击关闭按钮，或系统要求游戏退出。如果项目设置为自行处理，收到这条通知时游戏不会自己退出，这正是为「要先保存吗？」这样的询问留下的余地。
