@@ -26,6 +26,10 @@ extends RefCounted
 ## here, so the lifter never waits on the editor's class cache.
 const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
 
+## The eight EDGE triggers and their gates, read through the one file every reader of them shares.
+## By path, so the importer never waits on the editor class cache.
+const CollisionEdges := preload("res://addons/eventforge/registration/collision_edges.gd")
+
 ## The families that recognise a spelling by what it MEANS rather than by its shape, asked in this
 ## order before the general reverse index. Each answers `match_line(line)` with the row that spelling
 ## is, or {} when it does not claim it - so adding a family here is adding one line, and a family
@@ -38,6 +42,7 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/removal_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_layer_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_filter_lift.gd"),
+	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
 ]
 
 ## The families that also recognise a CONDITION term - the same list, filtered by the second static
@@ -49,6 +54,12 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 const ACTION_SPELLING_METHOD: String = "match_line"
 
 const CONDITION_SPELLING_METHOD: String = "match_condition"
+
+## The static a family declares when a WHOLE `if` expression is one row to it rather than a term of
+## one. An edge question ("on the floor now, and not last step") is two terms to the splitter and one
+## sentence to a reader, and the two terms separately mean nothing - so a family may claim the whole
+## expression, and is asked before it is split.
+const WHOLE_CONDITION_SPELLING_METHOD: String = "match_whole_condition"
 
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
 ## `_ready` connection map - see _parse_connections/_lift_function).
@@ -1940,6 +1951,8 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	for event: Variant in events:
 		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
 			return {"ok": false}
+	if trigger_id == "OnPhysicsProcess":
+		_read_floor_edges_back(events)
 	if not filter_group.is_empty():
 		for event: Variant in events:
 			(event as EventRow).trigger_params[CollisionFilters.GROUP_PARAM] = filter_group
@@ -2825,6 +2838,17 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 	# and-first order lifted the mixed form as `a AND (b or c)`: the bytes round-tripped,
 	# but the reconstructed structure was semantically wrong, so editing a condition in
 	# the reopened sheet emitted different runtime behavior than the source expressed.
+	# A family may claim the WHOLE expression rather than a term of it. Asked before the split, so a
+	# claim wins over the halves it is made of; when nobody claims it, nothing about the split changes.
+	var whole: Dictionary = _matched_whole_condition_spelling(expression)
+	if not whole.is_empty():
+		var whole_condition: ACECondition = ACECondition.new()
+		whole_condition.provider_id = str(whole.get("provider", ""))
+		whole_condition.ace_id = CollisionEdges.for_class(str(whole.get("ace_id", "")), _lift_host_class)
+		whole_condition.params = whole.get("params", {})
+		whole_condition.codegen_template = str(whole.get("template", ""))
+		event.conditions.append(whole_condition)
+		return true
 	var terms: PackedStringArray = _split_top_level(expression, " or ")
 	if terms.size() > 1:
 		event.condition_mode = EventRow.ConditionMode.OR
@@ -2860,6 +2884,42 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 ## The row one condition TERM means to a family that knows what such a term is about, or {} when no
 ## family claims it. The same seam the action path has, and asked first for the same reason: a family
 ## reads the file it is lifting and the general index reads only the shape of the line.
+## An event of the physics step whose ONE question is a floor edge is not a physics event that
+## happens to ask about landing - it IS the landing event, and reads better as one. So its trigger is
+## re-attributed to the edge trigger that gate belongs under, exactly as a picked row would carry it.
+##
+## Nothing about the file changes: an edge trigger compiles into the physics handler it is a moment
+## of, and the gate stays the visible condition it already was, so the same three lines come back.
+## Only an event whose SOLE condition is the gate is claimed - a landing check with something else
+## and-ed onto it is a physics event with two questions, which is what it looks like and what it is.
+static func _read_floor_edges_back(events: Array) -> void:
+	for entry: Variant in events:
+		if not (entry is EventRow):
+			continue
+		var event: EventRow = entry as EventRow
+		if event.conditions.size() != 1 or not (event.conditions[0] is ACECondition):
+			continue
+		var gate: ACECondition = event.conditions[0] as ACECondition
+		var edge_trigger: String = CollisionEdges.trigger_for_gate(gate.ace_id)
+		if edge_trigger.is_empty():
+			continue
+		event.trigger_id = edge_trigger
+		event.trigger_provider_id = gate.provider_id
+
+
+## The row a WHOLE `if` expression means to a family that reads such expressions, or {} when none
+## claims it. Separate from the term seam above because the question is a different one: not "what
+## does this half say" but "do these halves only mean something together".
+static func _matched_whole_condition_spelling(expression: String) -> Dictionary:
+	for family: GDScript in SPELLING_FAMILIES:
+		if not family.has_method(WHOLE_CONDITION_SPELLING_METHOD):
+			continue
+		var spelled: Dictionary = family.call(WHOLE_CONDITION_SPELLING_METHOD, expression)
+		if not spelled.is_empty():
+			return spelled
+	return {}
+
+
 static func _matched_condition_spelling(term: String) -> Dictionary:
 	for family: GDScript in SPELLING_FAMILIES:
 		if not family.has_method(CONDITION_SPELLING_METHOD):
