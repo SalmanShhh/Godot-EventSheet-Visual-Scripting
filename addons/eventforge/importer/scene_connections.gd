@@ -242,6 +242,7 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 				"name": node_name,
 				"path": node_path,
 				"type": attribute(line, "type"),
+				"instance_path": instance_path_in(line, resource_paths),
 				"script_path": "",
 				"groups": string_array_attribute(line, "groups"),
 				"properties": {}
@@ -411,6 +412,23 @@ static func sub_resources_in(lines: PackedStringArray) -> Dictionary:
 		(current["properties"] as Dictionary)[line.substr(0, assignment).strip_edges()] = \
 			line.substr(assignment + 3).strip_edges()
 	return resources
+
+
+## The scene an INSTANCE node header points at, as its `res://` path, and "" for an ordinary node.
+## A scene made of other scenes writes its children as
+## `[node name="Enemy" parent="." instance=ExtResource("1_enemy")]` - with NO `type=` on the line at
+## all, because the type, the groups and every property the instance did not override live in the
+## file it points at. So a reader that only looks at `type` is blind to the commonest scene layout
+## there is, and this is the thread back to where the rest of the node is written. `resource_paths`
+## is the caller's own `ext_resource` table, so no second read of the file is needed.
+static func instance_path_in(line: String, resource_paths: Dictionary) -> String:
+	var marker: String = "instance=ExtResource(\""
+	var start: int = line.find(marker)
+	if start < 0:
+		return ""
+	start += marker.length()
+	var end: int = line.find("\"", start)
+	return str(resource_paths.get(line.substr(start, end - start), "")) if end > start else ""
 
 
 ## `key="value"` out of a .tscn header line, "" when the key is absent. Public because this module

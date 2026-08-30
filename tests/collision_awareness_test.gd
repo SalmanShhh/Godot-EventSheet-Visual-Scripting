@@ -45,6 +45,15 @@ const PLATFORM := "res://tests/fixtures/collision_scene_platform.gd"
 const LEDGE := "res://tests/fixtures/collision_scene_ledge.gd"
 const SWITCHER := "res://tests/fixtures/collision_scene_switcher.gd"
 const GUARDED := "res://tests/fixtures/collision_scene_guarded.gd"
+const LEVEL := "res://tests/fixtures/collision_scene_level.gd"
+
+## The corpus for the instanced-level questions, kept apart from the one above ON PURPOSE: this
+## fixture puts a body on a layer none of the others use, and folding it into the shared corpus would
+## move every census sentence pinned there for a reason that has nothing to do with it.
+const LEVEL_SCENES: PackedStringArray = [
+	"res://tests/fixtures/collision_scene_enemy.tscn",
+	"res://tests/fixtures/collision_scene_level.tscn",
+]
 
 const CANVAS_SOURCE := "res://addons/eventsheet/editor/interaction/viewport_row_builder.gd"
 
@@ -60,6 +69,7 @@ static func run() -> bool:
 	var previous: Dictionary = _apply_layer_names()
 	EventSheetSceneCollisionFacts.clear_cache()
 	var ok: bool = _test_the_reader()
+	ok = _test_a_scene_made_of_scenes() and ok
 	ok = _test_the_band() and ok
 	ok = _test_nothing_can_reach_it() and ok
 	ok = _test_the_filtered_sentence_is_watched_too() and ok
@@ -115,6 +125,43 @@ static func _test_the_reader() -> bool:
 			EventForgePhysicsLayers.DIMENSION_2D, SCENES), 4) and ok
 	ok = _check("a group is read the same however a row spells it",
 		EventSheetSceneCollisionFacts.group_word("&\"enemies\""), "enemies") and ok
+	return ok
+
+
+## THE COMMONEST LAYOUT THERE IS: a level made of scenes. An instance site writes no `type=` on its
+## header - the type, the groups, the shape and every property it did not override live in the file
+## it points at - so a reader that goes by `type` alone sees an empty level, and a gate whose mask is
+## exactly right is told the enemies sit somewhere else.
+static func _test_a_scene_made_of_scenes() -> bool:
+	var found: Array[Dictionary] = EventSheetSceneCollisionFacts.collidables_of_scene(
+		"res://tests/fixtures/collision_scene_level.tscn")
+	var names: PackedStringArray = PackedStringArray()
+	for collidable: Dictionary in found:
+		names.append(str(collidable.get("name", "")))
+	var ok: bool = _check("an instanced body is a collidable of the scene that placed it",
+		names, PackedStringArray(["Level", "Enemy"]))
+	if found.size() < 2:
+		return false
+	var enemy: Dictionary = found[1]
+	ok = _check("wearing the class the file it came from gives it",
+		str(enemy.get("type", "")), "CharacterBody2D") and ok
+	ok = _check("on the layer the INSTANCE overrides, because that is the copy that is really there",
+		int(enemy.get("layer_bits", 0)), 8) and ok
+	ok = _check("in the groups it was born in", PackedStringArray(enemy.get("groups", PackedStringArray())),
+		PackedStringArray(["enemies"])) and ok
+	ok = _check("and with the shape it brought with it, rather than none at all",
+		bool(enemy.get("has_shape", false)), true) and ok
+	ok = _check("so the group census counts both copies",
+		EventSheetSceneCollisionFacts.group_bits("\"enemies\"",
+			EventForgePhysicsLayers.DIMENSION_2D, LEVEL_SCENES), 12) and ok
+	ok = _check("and the layer census sees the level is not empty",
+		EventSheetSceneCollisionFacts.occupied_bits(
+			EventForgePhysicsLayers.DIMENSION_2D, LEVEL_SCENES), 14) and ok
+	# The whole point of the reading: a mask that is right is not accused.
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(LEVEL)
+	ok = _check("a trigger watching the layer its instanced enemies really sit on says nothing",
+		_kinds(EventSheetCollisionFindings.findings(sheet, LEVEL, LEVEL_SCENES)),
+		PackedStringArray()) and ok
 	return ok
 
 

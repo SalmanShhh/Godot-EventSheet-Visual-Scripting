@@ -107,12 +107,63 @@ static func collidables_of_scene(scene_path: String) -> Array[Dictionary]:
 		return found
 	var nodes: Array = EventSheetSceneConnections.nodes_of_scene(scene_path)
 	for entry: Variant in nodes:
-		var node: Dictionary = entry
-		var node_type: String = str(node.get("type", ""))
-		if not is_collision_class(node_type):
+		var node: Dictionary = resolved(entry)
+		if not is_collision_class(str(node.get("type", ""))):
 			continue
 		found.append(_collidable(scene_path, node, nodes))
 	return found
+
+
+## How far an instance chain is followed. A scene of scenes of scenes is ordinary; a scene that
+## somehow points at itself is not, and a walk with no floor under it would never come back.
+const INSTANCE_DEPTH: int = 8
+
+
+## One node with the file it was INSTANCED from folded into it - the type it really is, the
+## properties it did not override, the groups it was born in, the script it carries.
+##
+## This is the commonest layout a Godot project has: a level made of scenes. The `[node]` header of
+## an instance site carries no `type=` at all, so a reader that goes by `type` alone sees nothing
+## there - the enemy sitting in the level is invisible, the layer census misses it, and a gate whose
+## mask is right is told that nothing it watches exists. An ordinary node comes back untouched, so
+## every reader below asks this once and stops thinking about it.
+##
+## The instance SITE wins over the file it points at, because that is what Godot does when it loads
+## the scene: an overridden `collision_layer` in the level is the layer this copy sits on. Groups are
+## the exception and are the union of both, since a scene adds groups to an instance rather than
+## replacing the ones the instance was born with.
+static func resolved(node: Dictionary, depth: int = 0) -> Dictionary:
+	var instance_path: String = str(node.get("instance_path", ""))
+	if instance_path.is_empty() or not str(node.get("type", "")).strip_edges().is_empty():
+		return node
+	if depth >= INSTANCE_DEPTH:
+		return node
+	var base: Dictionary = _root_of_scene(instance_path, depth + 1)
+	if base.is_empty():
+		return node
+	var merged: Dictionary = node.duplicate()
+	merged["type"] = str(base.get("type", ""))
+	var properties: Dictionary = (base.get("properties", {}) as Dictionary).duplicate()
+	properties.merge(node.get("properties", {}) as Dictionary, true)
+	merged["properties"] = properties
+	var groups: PackedStringArray = PackedStringArray(base.get("groups", PackedStringArray()))
+	for group_name: String in PackedStringArray(node.get("groups", PackedStringArray())):
+		if not groups.has(group_name):
+			groups.append(group_name)
+	merged["groups"] = groups
+	if str(node.get("script_path", "")).is_empty():
+		merged["script_path"] = str(base.get("script_path", ""))
+	return merged
+
+
+## The ROOT node of one scene, itself resolved - because a scene's own root can be an instance of
+## another scene, which is how an inherited scene is written.
+static func _root_of_scene(scene_path: String, depth: int) -> Dictionary:
+	for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
+		var node: Dictionary = entry
+		if str(node.get("path", "")) == ".":
+			return resolved(node, depth)
+	return {}
 
 
 ## True when a scene's node type is a collision object. ClassDB answers where it can, and the name's
@@ -150,6 +201,11 @@ static func _collidable(scene_path: String, node: Dictionary, nodes: Array) -> D
 	var node_path: String = str(node.get("path", "."))
 	var node_type: String = str(node.get("type", ""))
 	var shapes: Array[Dictionary] = _shapes_under(node_path, nodes)
+	# An instanced node's shapes are written in the file it came from, not in the one that placed it -
+	# so a level made of scenes would otherwise read as a level of collision objects with no extent at
+	# all, and every one of them would earn the no-shape finding. The site's own extra children (a
+	# level can add a shape to a copy) come first, because that is the order the file writes them.
+	shapes.append_array(_instanced_shapes(str(node.get("instance_path", "")), 0))
 	return {
 		"scene_path": scene_path,
 		"name": str(node.get("name", "")),
@@ -185,6 +241,24 @@ static func _shapes_under(node_path: String, nodes: Array) -> Array[Dictionary]:
 			continue
 		found.append(child)
 	return found
+
+
+## The shapes an INSTANCED node brings with it: the ones written under the root of the scene it came
+## from, and the ones that scene's own root brought with it in turn. "" for an ordinary node, which
+## is where almost every call ends.
+static func _instanced_shapes(instance_path: String, depth: int) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if instance_path.is_empty() or depth >= INSTANCE_DEPTH:
+		return found
+	var nodes: Array = EventSheetSceneConnections.nodes_of_scene(instance_path)
+	found.append_array(_shapes_under(".", nodes))
+	var root: Dictionary = {}
+	for entry: Variant in nodes:
+		var node: Dictionary = entry
+		if str(node.get("path", "")) == ".":
+			root = node
+			break
+	return found + _instanced_shapes(str(root.get("instance_path", "")), depth + 1)
 
 
 ## The one-way shapes of a set, each with the way it faces. `faces_down` is the shape turned further
@@ -236,7 +310,7 @@ static func for_script(script_path: String) -> Array[Dictionary]:
 	var scene_path: String = EventSheetSceneLightingFacts.attached_scene(path)
 	if not scene_path.is_empty():
 		for node: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
-			var entry: Dictionary = node
+			var entry: Dictionary = resolved(node)
 			if str(entry.get("script_path", "")) != path or not is_collision_class(str(entry.get("type", ""))):
 				continue
 			found.append(_collidable(scene_path, entry,
