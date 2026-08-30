@@ -55,6 +55,11 @@ const FIELD_MARKER := "marker_reference"
 const FIELD_CLASS := "class_name"
 const FIELD_ENUM_VALUE := "enum_value"
 const FIELD_FILE := "file"
+## A PATH, in either of the two places a game has: the project's own files under `res://` and the
+## player's folder under `user://`. The `res://` half is the same walk the file kinds above make; the
+## `user://` half is what really exists in that folder at edit time, which is the only honest answer
+## about a place the game writes to while it runs.
+const FIELD_PATH := "file_path"
 
 ## The hints that ARE a file field, and the resource type each one means. A hint that already says
 ## which type it takes should not have to say it twice at the call site.
@@ -68,7 +73,7 @@ const FILE_HINTS: Dictionary = {
 ## The kinds whose answer is about the PROJECT rather than about the sheet asking. Held once for
 ## every sheet, because ten open tabs asking for the Input Map is one Input Map.
 const PROJECT_SCOPED: Array[String] = [FIELD_GROUP, FIELD_INPUT_ACTION, FIELD_NODE, FIELD_CLASS,
-	FIELD_FILE, "scene_path", "spawn_scene", "audio_path", "resource_path"]
+	FIELD_FILE, FIELD_PATH, "scene_path", "spawn_scene", "audio_path", "resource_path"]
 
 ## The separator between the halves of a detail line. One character, so a detail reads as one line
 ## rather than as two facts jammed together.
@@ -230,6 +235,8 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _enum_entries(sheet, argument)
 		FIELD_FILE:
 			return _file_entries(argument)
+		FIELD_PATH:
+			return _path_entries()
 	return []
 
 
@@ -512,6 +519,54 @@ static func _file_entries(resource_type: String) -> Array[Dictionary]:
 			continue
 		entries.append({"text": "\"%s\"" % path, "detail": path.get_base_dir(), "kind": KIND_FILE})
 	return entries
+
+
+## A path field's candidates: BOTH places a game has, `user://` first.
+##
+## The `user://` half is read off the folder as it stands at edit time, which is the honest answer
+## about a place the GAME writes to while it runs - the file a reader is completing towards is
+## usually one their own last test run wrote. It is a list of what is there, never a list of what is
+## allowed: any path may still be typed, and one this list has never seen is not wrong.
+##
+## `user://` leads because it is where a path in this vocabulary almost always belongs - res:// is
+## read-only the moment the game is exported - and because the res:// half is the long one.
+static func _path_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for path: String in _user_files():
+		entries.append({"text": "\"%s\"" % path, "detail": "%s %s %s" % [path.get_base_dir(),
+			SEPARATOR, EventSheetL10n.translate("the player's folder")], "kind": KIND_FILE})
+	for path: String in _project_files():
+		entries.append({"text": "\"%s\"" % path, "detail": "%s %s %s" % [path.get_base_dir(),
+			SEPARATOR, EventSheetL10n.translate("the game's own files, read-only once exported")],
+			"kind": KIND_FILE})
+	return entries
+
+
+## Every file under `user://` as it stands right now, folders walked in SORTED order so two asks of
+## an unchanged folder answer identically (the engine's directory walk is filesystem order, which
+## differs between platforms). Capped by the same ceiling the project walk uses: a reader picking a
+## save slot is not helped by the four-thousandth log line.
+static func _user_files() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var pending: Array[String] = ["user://"]
+	while not pending.is_empty() and found.size() < FILE_LIMIT:
+		var directory: String = pending.pop_front()
+		var handle: DirAccess = DirAccess.open(directory)
+		if handle == null:
+			continue
+		var sub_directories: PackedStringArray = handle.get_directories()
+		sub_directories.sort()
+		for sub_directory: String in sub_directories:
+			if sub_directory.begins_with("."):
+				continue
+			pending.append(directory.path_join(sub_directory))
+		var file_names: PackedStringArray = handle.get_files()
+		file_names.sort()
+		for file_name: String in file_names:
+			found.append(directory.path_join(file_name))
+			if found.size() >= FILE_LIMIT:
+				break
+	return found
 
 
 ## Every file under `res://` outside `addons/` and outside dot-folders (the engine's own caches

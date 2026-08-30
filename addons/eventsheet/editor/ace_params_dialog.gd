@@ -395,6 +395,8 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	_attach_option_notes(key, param_dict, row, _option_notes_for(param_dict))
 	if hint == "input_action" or (hint == "group_reference" and not EventSheetGroupFacts.reads_sheet_groups(_definition_template(), key)):
 		_attach_typed_choice_note(key, row, hint)
+	if hint == "file_path":
+		_attach_place_lead(key, row)
 	_watch_field(key, label)
 
 ## Build a typed input widget for one parameter entry. The value-extraction node is
@@ -431,6 +433,11 @@ func _ensure_hint_factories() -> void:
 			# Three fields that take any GDScript exactly as an expression param does, and are
 			# spelled apart from it only so the help strip has something to describe them BY: what a
 			# port is, which addresses reach which machines, what a player costs the host.
+			# A path takes any GDScript exactly as an expression param does - `"user://save.dat"`
+			# today, `"user://slot_%d.dat" % slot` tomorrow - so it IS the expression field. It is
+			# spelled apart only so the muted lead below and the help strip have something to
+			# describe it by: which of a game's two places the path is in.
+			"file_path": _create_expression_field,
 			"net_address": _create_expression_field,
 			"net_port": _create_expression_field,
 			"max_players": _create_expression_field,
@@ -3949,6 +3956,54 @@ func _attach_typed_choice_note(key: String, row: HBoxContainer, hint: String) ->
 	field.text_changed.connect(refresh)
 	_choice_captions.append(refresh)
 	refresh.call()
+
+
+## The muted lead beside a PATH field: which of a game's two places this path is in, and what that
+## place allows. Live, because the answer changes with the first few characters typed - and blank for
+## a path whose place cannot be read, which is every path a game builds while it runs.
+##
+## Its own function rather than a third branch of the typed-choice note above, because a path field
+## is a CODE BOX (it takes an expression), and a CodeEdit reports its changes through a signal that
+## carries nothing while a LineEdit's carries the text.
+func _attach_place_lead(key: String, row: HBoxContainer) -> void:
+	var field: Control = _fields.get(key) as Control
+	if field == null:
+		return
+	var caption: Label = _muted_label()
+	# UNDER the box, not beside it. A place lead is a whole sentence, and a sentence sharing one row
+	# with the field squeezes the field down to a sliver - the box a reader is meant to be typing a
+	# path into. Every other note in this dialog is short enough to sit alongside; this one is not.
+	var holder: Control = _row_child_holding(row, field)
+	if holder == null:
+		row.add_child(caption)
+	else:
+		var stack: VBoxContainer = VBoxContainer.new()
+		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var at: int = holder.get_index()
+		row.remove_child(holder)
+		row.add_child(stack)
+		row.move_child(stack, at)
+		stack.add_child(holder)
+		stack.add_child(caption)
+	var refresh: Callable = func() -> void:
+		caption.text = EventSheetParamFieldFactory.file_place_note(str(field.get("text")))
+	if field is TextEdit:
+		(field as TextEdit).text_changed.connect(refresh)
+	elif field is LineEdit:
+		(field as LineEdit).text_changed.connect(func(_text: String) -> void: refresh.call())
+	_choice_captions.append(func(_ignored: Variant = null) -> void: refresh.call())
+	refresh.call()
+
+
+## The direct child of a parameter row that holds this field - the field itself when it was added
+## bare, or the container it was wrapped in (an expression field is a box, an ƒx button and a
+## magnifier). Null when the field is not under this row at all, which is the caller's cue to leave
+## the layout alone rather than to guess at it.
+func _row_child_holding(row: HBoxContainer, field: Control) -> Control:
+	var walker: Node = field
+	while walker != null and walker.get_parent() != row:
+		walker = walker.get_parent()
+	return walker as Control
 
 
 ## The second lines a parameter's choices carry, from whichever source the hint names. A

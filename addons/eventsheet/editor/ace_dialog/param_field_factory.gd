@@ -143,6 +143,11 @@ const HINT_PARAGRAPHS: Dictionary = {
 	# ports are free, why 127.0.0.1 only reaches this machine, what a player costs the host, and which
 	# peer kind a browser can open. They live here rather than in the descriptors so a pack that ships
 	# a hosting row of its own gets the same words for free.
+	# A path field takes any GDScript exactly as an expression one does, and is spelled apart from it
+	# so this paragraph has something to attach to: which of a game's two places a path is in, what
+	# each of them allows, and where user:// really is on the machine the game is played on. The two
+	# facts a path field otherwise sends somebody to a search engine for.
+	"file_path": "A path in one of the two places a game has. user:// is the player's folder - writable, one per player, and it survives the game being updated, which is why saves, settings and logs belong there. res:// is the game's own files, packed into the build and READ-ONLY once exported: writing there works while you are in the editor and fails on every machine you send the game to. On disk user:// is %APPDATA%\\Godot\\app_userdata\\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS and ~/.local/share/godot/app_userdata/<project> on Linux; the Open The Player's Data Folder action opens it while the game runs.",
 	"net_address": "Play as host + client puts both instances on this machine, which is what 127.0.0.1 is for. Across the internet the host has to forward its port on the router, or both sides go through a relay. A field or a variable works here as well as a literal - the player usually types it.",
 	"net_port": "7000 to 65535 are free for games; anything below 1024 needs admin rights on most systems. Over the internet the host forwards this one port on its router, which is the step people miss.",
 	"peer_kind": "How the game talks over the network, and both sides have to pick the same one. ENet is Godot's own default; a browser export can only open WebSocket; WebRTC goes browser to browser through a signalling server you run.",
@@ -186,6 +191,7 @@ const HINT_TYPE_PHRASES: Dictionary = {
 	"physics_layer_name_2d": "a named layer",
 	"physics_layer_name_3d": "a named layer",
 	"quality_preset": "a quality preset",
+	"file_path": "a path",
 }
 
 ## The phrase for a parameter that leans on its declared GDScript type instead of a hint.
@@ -279,6 +285,15 @@ static func input_action_note(action_value: String) -> String:
 	if bindings.is_empty():
 		return EventSheetL10n.translate("not bound to anything yet")
 	return " - ".join(bindings)
+
+
+## The PLACE a path is in, as the muted lead beside the field: user:// and what it allows, res:// and
+## what it forbids, an absolute path and why it only exists here. Live, because the answer changes
+## with the first few characters in the box - and "" for a path whose place cannot be read, which is
+## every path built at run time. A field that guessed a place would be worse than one that says
+## nothing: the whole value of this line is that it is never wrong.
+static func file_place_note(path_value: String) -> String:
+	return EventForgeFilePlaces.lead_for_path(path_value)
 
 
 ## How many nodes of the open scene are in a group, as the line under its name. A group nothing is in
