@@ -669,6 +669,12 @@
   read off, on both the raw-statement and the picked-row path, and is left off only where the object
   column is already saying that class. The guide's own "telling them apart at a glance" table was
   wrong in both directions and now says what is really there.
+- **A getter is an expression under both of Godot's property spellings.** A property that NAMES its
+  accessors (`get = _get_health`) read its getter as a trigger row - *On health read* - while a
+  property that writes its getter inline two lines further down the same file read it as the
+  expression block it is. One idea, two grammatical categories, in one opened file; the corpus's own
+  `player_stats.gd` holds both spellings side by side. The named getter now reads with the same
+  expression header the inline one does, with the function that gives the value on the right.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

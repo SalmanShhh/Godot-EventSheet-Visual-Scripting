@@ -814,7 +814,10 @@ pivot turns.
   ```
 
   That reads as the variable row it is, with an **On health set ▸ `_set_health`** sub-row under it
-  saying which function runs and when. The named functions go on reading as the functions they are,
+  saying which function runs and when, and an **ƒ health  expression ▸ `_get_health`** sub-row for the
+  one that gives the value back - the same two kinds of row the inline spelling reads as, because a
+  `set` is an event and a `get` is an expression whichever way the file writes them. The named
+  functions go on reading as the functions they are,
   where they were written, rather than being copied under the declaration twice. Before, those two
   lines were not statements, so nothing could lift them and they took the declaration above them into
   a verbatim block. Every shape the emitter would not write back the same way - the other order, a

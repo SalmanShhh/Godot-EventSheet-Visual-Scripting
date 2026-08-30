@@ -75,6 +75,37 @@ static func run() -> bool:
 			_lane_text(prop_row.children[1].children[0], "action"), "Set return value to health") and ok
 		ok = _check("an accessor row is inert (source null)", prop_row.children[0].source_resource == null, true) and ok
 
+	# ── The NAMED spelling reads in the SAME two categories as the inline one ──
+	# A file may write its properties either way, and `player_stats.gd` in the corpus writes both, so
+	# a getter that reads as a trigger under one spelling and an expression under the other would show
+	# a reader the same idea in two grammatical categories in one opened file. A `set` fires when the
+	# value is written, which is an event; a `get` gives a value back, which is an expression.
+	var named_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node\n\nvar health: int = 100:\n\tset = _set_health,\n\tget = _get_health\n\n\n"
+		+ "func _set_health(value: int) -> void:\n\thealth = value\n\n\n"
+		+ "func _get_health() -> int:\n\treturn health\n")
+	var named_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	named_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	named_dock.setup(named_sheet)
+	var named_row: EventRowData = null
+	for entry: Dictionary in (named_dock._active_view() as EventSheetViewport).get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and str(row_data.row_uid).begins_with("variable_tree_") \
+				and not row_data.children.is_empty():
+			named_row = row_data
+	ok = _check("a named property renders its two accessors", named_row != null
+		and named_row.children.size() == 2, true) and ok
+	if named_row != null and named_row.children.size() == 2:
+		ok = _check("the named setter is the trigger it is",
+			_span_text(named_row.children[0], "trigger"), "On health set") and ok
+		ok = _check("the named getter is the expression it is, not a second trigger",
+			_span_text(named_row.children[1], "trigger"), "<none>") and ok
+		ok = _check("and reads with the property's name, exactly as the inline getter does",
+			_span_text(named_row.children[1], "property_getter"), "health") and ok
+		ok = _check("with the function that gives the value in the right lane",
+			_lane_text(named_row.children[1], "action"), "_get_health") and ok
+	named_dock.free()
+
 	# ── The head's Instance variables folder shows the SAME accessor events ──
 	# A script whose head groups its variables renders them by another path, and a reader who opens
 	# the folder to find out what `hp` IS must find its On hp set there too.

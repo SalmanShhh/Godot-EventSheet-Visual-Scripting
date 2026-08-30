@@ -5885,6 +5885,13 @@ func _attach_property_accessors(row_data: EventRowData, variable: LocalVariable,
 ## same trigger row an inline `set(value):` reads as, with the function's name where its body would
 ## have been.
 ##
+## AND THE GETTER IS AN EXPRESSION, not a trigger - the same word the inline spelling two functions
+## below already reads it as. A `set` block fires when the value is written, which is exactly an
+## event; a `get` block is a function that gives a value back, which is an expression, and the
+## grammar says an expression answers inside a value slot rather than being an event. Naming one
+## spelling of that a trigger and the other an expression would show a reader the same idea in two
+## grammatical categories in one opened file, since a file may write its properties either way.
+##
 ## Nothing is inlined here on purpose. The function is written somewhere else in the file, it reads as
 ## itself where it was written, and copying its rows under the declaration would show the same code
 ## twice and leave a reader wondering which of the two they are allowed to edit.
@@ -5897,17 +5904,63 @@ func _build_named_accessor_rows(variable: LocalVariable, indent: int,
 	var object_name: String = _script_object_name()
 	if object_name.strip_edges().is_empty():
 		object_name = EventSheetSentence.OBJECT_SYSTEM
-	var accessors: Array = [
-		["set", variable.setter_name.strip_edges(), EventSheetL10n.translate("On %s set")],
-		["get", variable.getter_name.strip_edges(), EventSheetL10n.translate("On %s read")]
-	]
-	for accessor: Array in accessors:
-		var function_name: String = str(accessor[1])
-		if function_name.is_empty():
-			continue
-		rows.append(_build_named_accessor_row(variable, object_name, str(accessor[0]),
-			function_name, str(accessor[2]), indent, uid_base))
+	if not variable.setter_name.strip_edges().is_empty():
+		rows.append(_build_named_accessor_row(variable, object_name, "set",
+			variable.setter_name.strip_edges(), EventSheetL10n.translate("On %s set"), indent,
+			uid_base))
+	if not variable.getter_name.strip_edges().is_empty():
+		rows.append(_build_named_getter_row(variable, object_name,
+			variable.getter_name.strip_edges(), indent, uid_base))
 	return rows
+
+
+## The named getter's row: the SAME expression header the inline spelling reads with - the ƒ scope
+## badge, the property's name and the muted word `expression` - with the function that gives the value
+## on the right, where the inline spelling shows its body instead.
+func _build_named_getter_row(variable: LocalVariable, object_name: String, function_name: String,
+		indent: int, uid_base: String) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = indent
+	row.row_type = EventRowData.RowType.EVENT
+	row.row_uid = "property_named_get_%s" % uid_base
+	row.line_count = 1
+	var badge_colors: Array = _define_role_colors("expression")
+	row.spans.append(_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+		"editable": false,
+		"badge": true,
+		"badge_style": "scope",
+		"badge_bg": badge_colors[0],
+		"badge_fg": badge_colors[1],
+		"lane": "condition",
+		"line_index": 0
+	}))
+	row.spans.append(_make_span(variable.name.replace("_", " "), SemanticSpan.SpanType.OBJECT, {
+		"editable": false,
+		"kind": "property_getter",
+		"lane": "condition",
+		"line_index": 0,
+		"chip": true,
+		"object_label": object_name,
+		"text_color": _define_role_name_color("expression")
+	}))
+	row.spans.append(_make_span(EventSheetL10n.translate("expression"), SemanticSpan.SpanType.COMMENT, {
+		"editable": false,
+		"lane": "condition",
+		"line_index": 0,
+		"natural_width": true,
+		"text_color": _viewport._get_reading_style().muted_text_color
+	}))
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	row.spans.append(_make_span(function_name, SemanticSpan.SpanType.ACTION, {
+		"lane": "action",
+		"kind": "property_accessor_function",
+		"ace_index": 0,
+		"editable": false,
+		"hoverable": false,
+		"line_index": 0,
+		"object_label": object_name
+	}.merged(action_style, true)))
+	return row
 
 
 ## One named accessor's row: the trigger badge, the sentence, and the function it calls on a chip.

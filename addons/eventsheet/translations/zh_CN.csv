@@ -5539,7 +5539,6 @@ Name physics layer,命名物理层
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行的形状在这里没有别的内容重复。只作计数而不逐条列出：只说过一次的行不属于任何表格，它本就该留作代码。"
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","这些片段中的 %d 行是注记而非语句，因此完全没有形状。"
 On object freed,对象释放时
-On %s read,当 %s 被读取时
 Event Is Action Pressed,事件是动作按下
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.",当这个处理函数收到的事件是指定动作被按下时为真。这是处理函数手上那个事件的按下一半，而不是在问此刻的状态 - 那是「动作被按下」回答的问题。
 Input Event,输入事件

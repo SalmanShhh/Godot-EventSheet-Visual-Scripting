@@ -5539,7 +5539,6 @@ Name physics layer,Physikebene benennen
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d Zeile(n) haben Formen, die sonst nichts hier wiederholt. Gezählt statt aufgelistet: eine einmal gesagte Zeile ist niemandes Tabelle und soll Code bleiben."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d Zeile(n) in diesen Abschnitten sind Notizen statt Anweisungen und haben daher gar keine Form."
 On object freed,Bei Objektfreigabe
-On %s read,Wenn %s gelesen wird
 Event Is Action Pressed,Ereignis ist Aktion gedrückt
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Wahr, wenn das Ereignis, das dieser Handler bekommen hat, das Herunterdrücken der genannten Aktion ist. Die Druck-Hälfte des Ereignisses, das der Handler gerade hält - keine Frage danach, wie es jetzt gerade steht; das beantwortet Ist Aktion gedrückt."
 Input Event,Eingabeereignis

@@ -5539,7 +5539,6 @@ Name physics layer,Nommer le calque physique
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d ligne(s) ont des formes que rien d'autre ici ne répète. Comptées plutôt que listées : une ligne dite une seule fois n'est la table de personne, et elle a vocation à rester du code."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d ligne(s) dans ces passages sont des notes et non des instructions, elles n'ont donc aucune forme."
 On object freed,À la libération de l'objet
-On %s read,Quand %s est lu
 Event Is Action Pressed,L'événement est une action pressée
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vrai lorsque l'événement remis à ce gestionnaire est l'action nommée qui descend. La moitié appui de l'événement que le gestionnaire tient - pas une question sur l'état actuel, ce à quoi répond Action pressée."
 Input Event,Événement d'entrée

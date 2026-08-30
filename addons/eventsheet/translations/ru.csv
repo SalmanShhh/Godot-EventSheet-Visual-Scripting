@@ -5539,7 +5539,6 @@ Name physics layer,Назвать слой физики
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d строк(и) имеют формы, которые здесь больше ничто не повторяет. Их считают, а не перечисляют: строка, сказанная один раз, ничья таблица, и ей положено остаться кодом."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d строк(и) внутри этих отрезков - заметки, а не инструкции, поэтому формы у них нет вовсе."
 On object freed,При освобождении объекта
-On %s read,При чтении %s
 Event Is Action Pressed,Событие - нажатие действия
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Истина, когда событие, переданное этому обработчику, - нажатие названного действия. Это половина события, которую держит обработчик, а не вопрос о том, как дела обстоят сейчас: на него отвечает Действие нажато."
 Input Event,Событие ввода

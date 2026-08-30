@@ -224,7 +224,12 @@ var health: int = 100:
 
 | Before | Now |
 |---|---|
-| A verbatim script block. Those two lines are not statements, so nothing could lift them and they took the declaration above them down with them | The variable row it is, with an *On health set ▸ `_set_health`* sub-row saying which function runs and when |
+| A verbatim script block. Those two lines are not statements, so nothing could lift them and they took the declaration above them down with them | The variable row it is, with an *On health set ▸ `_set_health`* sub-row saying which function runs and when, and a *ƒ health expression ▸ `_get_health`* sub-row for the one that gives the value back |
+
+The two sub-rows are deliberately different KINDS of row, and they are the same kinds the inline
+spelling reads as: a `set` fires when the value is written, which is an event, and a `get` gives a
+value back, which is an expression. A file that writes one property each way therefore shows the same
+idea the same way twice.
 
 The accessor functions go on reading as the functions they are, where they were written, rather than
 being copied under the declaration twice. Any shape the emitter would not write back identically -

@@ -5539,7 +5539,6 @@ Name physics layer,Assegna un nome al livello fisico
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d riga/righe hanno forme che nient'altro qui ripete. Contate anziché elencate: una riga detta una volta sola non è la tabella di nessuno, ed è giusto che resti codice."
 "%d line(s) inside those runs are notes rather than statements, so they have no shape at all.","%d riga/righe dentro quei tratti sono note e non istruzioni, quindi non hanno alcuna forma."
 On object freed,Alla liberazione dell'oggetto
-On %s read,Quando %s viene letto
 Event Is Action Pressed,L'evento è azione premuta
 "True when the event this handler was handed is the named action going down. The press half of the event the handler is holding - not a question about how things stand now, which is what Is Action Pressed answers.","Vero quando l'evento passato a questo gestore è l'azione indicata mentre viene premuta. La metà di pressione dell'evento che il gestore ha in mano - non una domanda su come stanno le cose adesso, a cui risponde invece Azione premuta."
 Input Event,Evento di input
