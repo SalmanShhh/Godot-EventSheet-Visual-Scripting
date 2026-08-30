@@ -219,7 +219,7 @@ static func _read_method(class_text: String, script_path: String, method: String
 			var member: Dictionary = entry
 			if str(member.get("name", "")) != method:
 				continue
-			return {"params": _parameter_names(str(member.get("args", ""))),
+			return {"params": parameter_names(str(member.get("args", ""))),
 				"doc": str(member.get("doc", "")), "credit": "", "doc_id": ""}
 		# The class the FILE extends answers for everything it did not declare itself, so a
 		# `queue_free()` on a project script still reads as the engine's own verb.
@@ -240,8 +240,10 @@ static func _read_method(class_text: String, script_path: String, method: String
 
 
 ## `amount: int = 1, source: Node` -> ["amount", "source"]. The declaration exactly as the file
-## writes it, split at the commas that are not inside a default value's own brackets.
-static func _parameter_names(args: String) -> PackedStringArray:
+## writes it, split at the commas that are not inside a default value's own brackets. Public because
+## the declaration map asks it the same question of a handler's own arguments, and two readings of
+## what a parameter list is would be two ideas of which names a function shadows.
+static func parameter_names(args: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	for piece: String in EventSheetSentence.split_top_level(args, ","):
 		var text: String = piece.strip_edges()

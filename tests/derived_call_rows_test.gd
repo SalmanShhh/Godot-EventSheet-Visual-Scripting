@@ -82,7 +82,42 @@ static func run() -> bool:
 	ok = _test_the_docs_ride() and ok
 	ok = _test_the_pickers_derived_section() and ok
 	ok = _test_the_row_is_the_line() and ok
+	ok = _test_a_shadowed_member_is_nobodys() and ok
 	_tidy_up()
+	return ok
+
+
+## The one thing the declared-type map cannot see: SCOPE. Its entries are the file's script-level
+## declarations, and `func _on_body_entered(body):` against a member called `body` is the commonest
+## handler shape in Godot - so without this the parameter would be read as the member's class and
+## every row inside the handler would be named against a class the parameter is not. There is no
+## scope in the map to tell them apart, so a name the file uses BOTH ways is answered for by nobody
+## and the rows keep the plainer view they already had.
+static func _test_a_shadowed_member_is_nobodys() -> bool:
+	var source: String = "\n".join(PackedStringArray([
+		"extends Node2D",
+		"",
+		"var body: CharacterBody2D = null",
+		"@onready var beat: Timer = $Beat",
+		"",
+		"func _on_area_entered(body: Node2D) -> void:",
+		"\tbody.rotate(0.5)",
+		""
+	]))
+	var sheet: EventSheetResource = EventSheets.open_gd_as_sheet(source)
+	var declared: Dictionary = EventSheetViewportReadingRows.declared_type_map(sheet)
+	var ok: bool = _check("a handler's own parameter names are known to the map",
+		EventSheetViewportReadingRows.parameter_names_in(sheet).has("body"), true)
+	ok = _check("so a member a parameter shadows is answered for by nobody",
+		(declared.get("types", {}) as Dictionary).has("body"), false) and ok
+	ok = _check("while the member nothing shadows still answers",
+		str((declared.get("types", {}) as Dictionary).get("beat", "")), "Timer") and ok
+	# And the reading that rests on it: the shadowed receiver is not claimed as the member's class.
+	var context: Dictionary = {"self_class": "Node2D", "self_script_path": "",
+		"variable_types": declared.get("types", {})}
+	ok = _check("and the derived reading declines the shadowed receiver",
+		EventSheetDerivedCalls.receiver_facts("body", context, {}, {}), {}) and ok
+	ok = _check("with the bytes untouched either way", EventSheets.round_trips(source), true) and ok
 	return ok
 
 

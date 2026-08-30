@@ -654,6 +654,13 @@
   plainer general reading and the entry count under-reported by the same amount. A pack spelling is a
   lift-table entry, with a file and an id a developer can go and open, and it is now asked in the
   same order the lifter asks it: after the built-in families, before the general reading.
+- **A member a parameter shadows is answered for by nobody.** The declared-type map holds a file's
+  SCRIPT-LEVEL declarations and carries no function scope, so a member called `body` beside
+  `func _on_body_entered(body):` - the commonest handler shape in Godot - answered for the parameter
+  too, and every row inside that handler was read against a class the parameter is not: the object
+  column showed it, the hover described it. A name the file uses both ways is now in none of the
+  declaration maps, so those rows keep the plainer view they already had. The bytes never moved
+  either way, which is why no gate could see it.
 - **Two spellings of one group are one handler, not one name twice.** A filtered touch event was
   keyed on the raw group text the row holds while the handler under it was named through a
   normalisation that strips `&` and the quotes - so two rows on one Area2D filtered on `"enemies"`

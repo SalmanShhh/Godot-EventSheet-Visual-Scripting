@@ -1612,6 +1612,13 @@ static func is_scene_root_script(sheet: EventSheetResource) -> bool:
 ##
 ## Nothing is guessed: a variable with no declared type appears in none of them, and the readings
 ## that depend on these fall back to the plain words they already had.
+##
+## A SHADOWED NAME IS IN NONE OF THEM EITHER. These are the file's SCRIPT-LEVEL declarations, and
+## they carry no function scope - so a member called `body` beside the commonest handler shape in
+## Godot (`func _on_body_entered(body):`) would answer for the parameter as well, and every row
+## inside that handler would be read against a class the parameter is not. There is no scope here to
+## tell the two apart, so a name the file uses BOTH ways is answered for by nobody: the rows keep the
+## plainer view they already had, which is the refusal every reading built on this map rests on.
 static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 	var types: Dictionary = {}
 	var enum_types: Dictionary = {}
@@ -1619,9 +1626,12 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 	if sheet == null:
 		return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
 	var enum_names: Dictionary = (enum_member_map(sheet).get("names", {}) as Dictionary)
+	var shadowed: Dictionary = parameter_names_in(sheet)
 	for entry: Variant in sheet.events:
 		var variable: LocalVariable = entry as LocalVariable
 		if variable == null or variable.name.strip_edges().is_empty():
+			continue
+		if shadowed.has(variable.name.strip_edges()):
 			continue
 		var declared_type: String = variable.type_name.strip_edges()
 		if not declared_type.is_empty() and declared_type != "Variant":
@@ -1631,6 +1641,47 @@ static func declared_type_map(sheet: EventSheetResource) -> Dictionary:
 		if _is_fraction_range(variable.export_hint):
 			percent_members[variable.name] = true
 	return {"types": types, "enum_types": enum_types, "percent_members": percent_members}
+
+
+## Every name a function or a handler in this sheet takes as a PARAMETER, as a set. The one thing the
+## script-level declaration map has to know about, because a parameter of the same name is what makes
+## a member's declared type the wrong answer inside that function's body. Walked over the whole tree -
+## a handler's own arguments, a declared function's parameters - because a shadow anywhere in the file
+## is a shadow the flat map cannot see around.
+static func parameter_names_in(sheet: EventSheetResource) -> Dictionary:
+	var found: Dictionary = {}
+	if sheet == null:
+		return found
+	_collect_parameter_names(sheet.events, found)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			_collect_function_parameter_names(entry as EventFunction, found)
+	return found
+
+
+static func _collect_parameter_names(items: Array, found: Dictionary) -> void:
+	for item: Variant in items:
+		if item is EventRow:
+			var event: EventRow = item as EventRow
+			for name: String in EventSheetDerivedCalls.parameter_names(event.trigger_args):
+				found[name] = true
+			_collect_parameter_names(event.sub_events, found)
+		elif item is EventGroup:
+			_collect_parameter_names((item as EventGroup).events, found)
+		elif item is EventFunction:
+			_collect_function_parameter_names(item as EventFunction, found)
+
+
+static func _collect_function_parameter_names(function: EventFunction, found: Dictionary) -> void:
+	for parameter: Variant in function.params:
+		if parameter is ACEParam:
+			var name: String = str((parameter as ACEParam).id).strip_edges()
+			if not name.is_empty():
+				found[name] = true
+	for parameter: Variant in function.parameters:
+		for name: String in EventSheetDerivedCalls.parameter_names(str(parameter)):
+			found[name] = true
+	_collect_parameter_names(function.events, found)
 
 
 ## The variables this sheet DECLARES as a point on another object - a Marker2D, a Bone2D, the
