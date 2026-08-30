@@ -378,6 +378,11 @@ func build_ui() -> void:
 	_dock._row_help_label = Label.new()
 	_dock._row_help_label.name = "EventSheetRowHelp"
 	_dock._row_help_label.clip_text = true
+	# The sentence must have room to be read: a clipped label with no share of the strip collapses
+	# to nothing, and the strip then shows a door with no words. Twice the status message's share,
+	# because when both speak the finding is the longer and the more important of the two.
+	_dock._row_help_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dock._row_help_label.size_flags_stretch_ratio = 2.0
 	_dock._row_help_label.visible = false
 	status_strip.add_child(_dock._row_help_label)
 	_dock._row_help_button = Button.new()

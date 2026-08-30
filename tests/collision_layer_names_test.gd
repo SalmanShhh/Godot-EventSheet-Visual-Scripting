@@ -9,6 +9,8 @@
 #   the lift     the same call, written by hand, opens as the same sentence - in the right dimension.
 #   the notes    a number the project cannot name is a note in the Doctor, and only when the project
 #                names other layers.
+#   the rows'    the same two notes, anchored at the sheet rows whose emitted lines say the number -
+#   own state    the quiet amber state on the canvas, with no note row and no door.
 #
 # The project settings this test needs are written, read and put back exactly as they were found, so
 # it can run beside anything and leave the project as it started.
@@ -56,6 +58,7 @@ static func run() -> bool:
 	ok = _test_the_lift() and ok
 	ok = _test_the_picker() and ok
 	ok = _test_the_notes() and ok
+	ok = _test_the_rows_wear_the_state() and ok
 	_restore(previous)
 	return ok
 
@@ -354,6 +357,77 @@ static func _test_the_notes() -> bool:
 	ok = _check("and a script that never mentions a layer is never read",
 		EventSheetCollisionLayerDoctor.says_enough("extends Node\n"), false) and ok
 	return ok
+
+
+# ── the rows' own state ──────────────────────────────────────────────────────────
+
+
+## The row-state half: the same two notes, anchored at the rows of a SHEET rather than filed against
+## a script - what the canvas stamps into the quiet amber state and the help strip reads back once
+## the row is selected. No door: naming a layer is a Project Settings decision and re-pointing a row
+## is a re-pick, so the strip shows the sentence alone.
+static func _test_the_rows_wear_the_state() -> bool:
+	var sheet := EventSheetResource.new()
+	sheet.external_source_path = "user://layer_state_sheet.gd"
+	var unnamed_row: EventRow = _raw_event("set_collision_mask_value(6, true)")
+	var out_of_range_row: EventRow = _raw_event("set_collision_mask_value(40, true)")
+	var spoken_row: EventRow = _raw_event("set_collision_mask_value(wall_layer, true)")
+	sheet.events.append(unnamed_row)
+	sheet.events.append(out_of_range_row)
+	sheet.events.append(spoken_row)
+	var found: Array[Dictionary] = EventSheetLayerFindings.findings(sheet,
+		str(sheet.external_source_path))
+	var ok: bool = _check("the two notes are anchored at the two rows that say the numbers",
+		found.size(), 2)
+	if found.size() != 2:
+		return false
+	ok = _check("each at ITS row and not the other",
+		[is_same(found[0].get("event"), unnamed_row), is_same(found[1].get("event"), out_of_range_row)],
+		[true, true]) and ok
+	ok = _check("filed under the very ids the Doctor files",
+		[str(found[0].get("kind", "")), str(found[1].get("kind", ""))],
+		[EventSheetLayerFindings.KIND_UNNAMED, EventSheetLayerFindings.KIND_NOT_A_LAYER] as Array) and ok
+	ok = _check("in the section's own words, led by the sheet's file",
+		str(found[0].get("message", "")),
+		"layer_state_sheet.gd is about collision layer 6, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.") and ok
+	ok = _check("offering no door",
+		[str(found[0].get("fix", "")), str(found[0].get("fix_label", ""))], ["", ""] as Array) and ok
+	ok = _check("a row whose layer is an expression is nobody's guess",
+		EventSheetLayerFindings.for_event(found, spoken_row), [] as Array[Dictionary]) and ok
+	# The canvas half: the two rows wear the quiet amber state, the third stays clean, and nothing
+	# else appears in the sheet - the words wait in the stamp for the help strip.
+	ok = _check("the two rows wear the quiet amber state and the third stays clean",
+		_canvas_notes(sheet), [[true, 1], [true, 1], [false, 0]] as Array) and ok
+	return ok
+
+
+static func _raw_event(code: String) -> EventRow:
+	var raw := RawCodeRow.new()
+	raw.code = code
+	var event_row := EventRow.new()
+	event_row.trigger_provider_id = "Core"
+	event_row.trigger_id = "OnReady"
+	event_row.actions.append(raw)
+	return event_row
+
+
+## Each root event row's amber state as the canvas built it: whether the stamp is worn, and how many
+## findings wait in it for the strip.
+static func _canvas_notes(sheet: EventSheetResource) -> Array:
+	sheet.read_only = true
+	var style := EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	sheet.editor_style = style
+	var viewport := EventSheetViewport.new()
+	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_sheet(sheet)
+	viewport.set_reading_mode(true)
+	var notes: Array = []
+	for row_data: EventRowData in viewport._root_rows:
+		if row_data.row_type == EventRowData.RowType.EVENT:
+			notes.append([not row_data.attention_note.is_empty(), row_data.attention_findings.size()])
+	viewport.free()
+	return notes
 
 
 # ── the project settings this test writes, and puts back ────────────────────────

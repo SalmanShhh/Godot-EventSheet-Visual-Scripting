@@ -394,15 +394,14 @@ static func _test_the_sheet_stays_quiet() -> bool:
 	# state and must NOT hang a note row off it. A note row added tomorrow would pass everything
 	# above, so the canvas's own source is what says which of the two it does.
 	var canvas: String = FileAccess.get_file_as_string(CANVAS_SOURCE)
-	ok = _check("the canvas sets the row's quiet amber state from these findings",
-		canvas.contains("row_data.attention_note = EventSheetCollisionFindings.strip_text("), true) and ok
-	# Every family that DOES hang a note row reaches its findings through `for_event`, which is what
-	# `_build_finding_note_rows` is handed. This family must never be read that way in the canvas:
-	# the amber state is the whole of what the sheet gets.
-	ok = _check("and never reaches them the way a note row is built",
-		canvas.contains("EventSheetCollisionFindings.for_event"), false) and ok
-	ok = _check("nor hangs one under the event",
-		canvas.contains("_build_finding_note_rows(\n\t\t\t\tEventSheetCollisionFindings"), false) and ok
+	ok = _check("the canvas stamps the row's quiet amber state from the joined findings",
+		canvas.contains("_stamp_attention(row_data, _findings_about(event_row))"), true) and ok
+	ok = _check("and this family is one of the families the join reads",
+		canvas.contains("EventSheetCollisionFindings.for_event"), true) and ok
+	# No family hangs a note row any more: the machinery that built one for a finding is gone from
+	# the canvas, which is the strongest pin there is - a note row added tomorrow needs it back.
+	ok = _check("and nothing in the canvas builds a finding note row",
+		canvas.contains("_build_finding_note_rows"), false) and ok
 	# AND NOT AS A HOVER EITHER. The sheet's only signal is the amber state; the words are read in the
 	# Doctor's inbox and in the selected row's help strip. A tooltip is not a block or an icon, so it
 	# passes the letter of every check above - and it is still the whole sentence said inside the

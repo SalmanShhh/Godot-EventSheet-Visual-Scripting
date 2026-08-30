@@ -101,18 +101,19 @@ const REGION_CLOSER_HEIGHT_RATIO: float = 0.55
 ## The COLOUR is what separates a line that cannot work from one that only misbehaves.
 const NOTE_MARK := "⚠"
 
-## The families of finding the canvas hangs under a row (the networking mistakes, the lighting ones,
-## the dial a shader no longer declares). Names for the per-sweep cache below, never shown to anybody.
+## The families of finding the canvas reads about a row (the networking mistakes, the lighting ones,
+## the dial a shader no longer declares). Names for the per-sweep cache below and the tag each
+## stamped finding carries, never shown to anybody. EVERY family lives under the quiet sheet law: a
+## finding puts its row into the quiet amber state and stops - no note row, no icon, no inline
+## sentence - and the words live in the Doctor's inbox and in the help strip under the selected row,
+## because a sheet is a place to read what the game does rather than a place to be told off in.
 const FINDINGS_MULTIPLAYER := "multiplayer"
 const FINDINGS_LIGHTING := "lighting"
 const FINDINGS_EFFECTS := "effects"
 const FINDINGS_PERFORMANCE := "performance"
 const FINDINGS_SPAWNING := "spawning"
-## The collisions family is in this list but is NOT one of the families above it: it hangs no note
-## row at all. A collision finding puts its row into the quiet amber state and stops - the words live
-## in the Doctor's inbox and in the help strip under the selected row, because a sheet is a place to
-## read what the game does rather than a place to be told off in.
 const FINDINGS_COLLISIONS := "collisions"
+const FINDINGS_LAYERS := "layers"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -923,7 +924,8 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 		var note_row: EventRowData = _build_verb_note_row(event_function, define_role_for(event_function), indent)
 		if note_row != null:
 			rows.append(note_row)
-	rows.append(_build_define_function_row(event_function, indent))
+	var head_row: EventRowData = _build_define_function_row(event_function, indent)
+	rows.append(head_row)
 	# An `@rpc` carrying an option Godot does not take cannot be read into words, so the row
 	# shows the annotation itself and this note says which option stopped it. Amber, never red: the
 	# file compiles, and it is only the message that will not travel.
@@ -935,12 +937,12 @@ func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[
 			"message_note", message_note,
 			_viewport._get_reading_style().lift_note_badge_foreground_color, {}, {}))
 	# A message anyone may send that writes a value every peer keeps in step, without ever
-	# asking who sent it. It is about the MESSAGE, so it sits under its head.
-	rows.append_array(_build_finding_note_rows(
+	# asking who sent it. It is about the MESSAGE, so the amber state sits on its head - the quiet
+	# sheet law, at a function anchor: no note row, the words in the inbox and the strip.
+	_stamp_attention(head_row, _tagged(FINDINGS_MULTIPLAYER,
 		EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
 			EventSheetMultiplayerFindings.ANCHOR_FUNCTION,
-			event_function.function_name.strip_edges()),
-		"verb_%s" % event_function.function_name.strip_edges(), indent))
+			event_function.function_name.strip_edges())))
 	return rows
 
 
@@ -6399,12 +6401,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	row_data.debug_state = str(_viewport._debug_rows.get(row_data.row_uid, ""))
 	row_data.disabled = not event_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	# THE QUIET SHEET LAW, in one line: a collision finding about this row sets the amber state and
-	# writes nothing into the sheet. No note row is built for this family on purpose - the sentence is
-	# read in the Doctor's inbox and in the help strip once the row is selected, and a sheet with
-	# nothing wrong grows nothing at all.
-	row_data.attention_note = EventSheetCollisionFindings.strip_text(
-		_sheet_findings(FINDINGS_COLLISIONS), event_row)
+	# THE QUIET SHEET LAW, in one line: a finding about this row - any family's - sets the amber
+	# state and writes nothing into the sheet. No note row is built for a finding on purpose - the
+	# sentence is read in the Doctor's inbox and in the help strip once the row is selected, and a
+	# sheet with nothing wrong grows nothing at all.
+	_stamp_attention(row_data, _findings_about(event_row))
 	# Event-row spans are the expensive part of building a sheet, so they are built
 	# lazily via _ensure_event_spans() only when a row is laid out/hit-tested. The
 	# line count (which drives row height/metrics) is computed cheaply up front so
@@ -6417,35 +6418,10 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# above the sub-events, which is where the reader is already looking.
 	for note_row: EventRowData in _build_variable_note_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
-	# And the networking mistakes about THIS event: a Send row naming a function that is not a
-	# message, and a row that moves a synced object on every peer.
-	for note_row: EventRowData in _build_finding_note_rows(
-			EventSheetMultiplayerFindings.for_event(_sheet_findings(FINDINGS_MULTIPLAYER), event_row),
-			row_data.row_uid, indent + 1):
-		row_data.children.append(note_row)
-	# And the lighting ones: an environment row aimed at a scene with no WorldEnvironment, and a
-	# row writing an environment file other scenes load, which is the one with a single step to take.
-	for note_row: EventRowData in _build_finding_note_rows(
-			EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row),
-			row_data.row_uid, indent + 1):
-		row_data.children.append(note_row)
-	# And the effect one: a row naming a dial the node's own shader does not declare, which Godot
-	# accepts and acts on in no way at all. One click re-picks the declared name it was nearly.
-	for note_row: EventRowData in _build_finding_note_rows(
-			EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row),
-			row_data.row_uid, indent + 1):
-		row_data.children.append(note_row)
-	# And the four spawning ones: a node parented while physics is flushing, a reference that may
-	# already be freed, a scene that spawns itself on creation, and a wait booked against something an
-	# earlier row in the same event removed.
-	for note_row: EventRowData in _build_finding_note_rows(
-			EventSheetSpawnFindings.for_event(_sheet_findings(FINDINGS_SPAWNING), event_row),
-			row_data.row_uid, indent + 1):
-		row_data.children.append(note_row)
-	# And what this row spends every frame, with the receipt of any fix already applied to it. Both
-	# hang here ONLY while the costs lens is on: a sheet nobody asked about performance grows no
-	# notes about it, which is the same rule the gutter chips live under.
-	for note_row: EventRowData in _build_performance_note_rows(event_row, row_data.row_uid, indent + 1):
+	# The receipt of an optimiser fix already applied to this row, ONLY while the costs lens is on:
+	# a reader who just changed something wants the answer to "did that work" where they changed it.
+	# A receipt is a note, not a finding - the findings themselves are in the amber stamp above.
+	for note_row: EventRowData in _build_receipt_note_rows(event_row, row_data.row_uid, indent + 1):
 		row_data.children.append(note_row)
 	# A `var` line inside the body declares a local of this event, so it reads at the top of the
 	# event beside the ones the sheet itself owns, in file order among them.
@@ -8675,12 +8651,12 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 			current_group = group_name
 		var landing: Array[EventRowData] = rows if group_name.is_empty() else group_members
 		landing.append(row)
-		# "changed on the host, seen nowhere" is about the VALUE, so it hangs under the line
-		# that declares it rather than under whichever event happened to change it.
-		landing.append_array(_build_finding_note_rows(
+		# "changed on the host, seen nowhere" is about the VALUE, so the amber state sits on the
+		# line that declares it rather than on whichever event happened to change it - the quiet
+		# sheet law, at a variable anchor: no note row, the words in the inbox and the strip.
+		_stamp_attention(row, _tagged(FINDINGS_MULTIPLAYER,
 			EventSheetMultiplayerFindings.for_subject(_sheet_findings(FINDINGS_MULTIPLAYER),
-				EventSheetMultiplayerFindings.ANCHOR_VARIABLE, str(var_name)),
-			row.row_uid, 0))
+				EventSheetMultiplayerFindings.ANCHOR_VARIABLE, str(var_name))))
 	_flush_variable_group(rows, sheet, current_group, group_members, group_runs)
 	return rows
 
@@ -8982,47 +8958,67 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# file sits on, and the reader that answers that is the one the head's bands read.
 				_sheet_findings_cache[family] = EventSheetCollisionFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_LAYERS:
+				# The Doctor's Collision Layers section, asked of each row's own emitted lines
+				# rather than of the project's files - same wording, same gates, per row.
+				_sheet_findings_cache[family] = EventSheetLayerFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]
 
 
-## A finding said UNDER the row it is about - the Send row's event, the variable's own
-## declaration, the message's function head, the event that writes a shared environment - through the
-## very note row an unknown variable already uses, so there is one note look and one fix click in the
-## sheet rather than three.
-##
-## Amber, never red: every one of these compiles and runs, and only the other player (or the next
-## room) sees the consequence.
-func _build_finding_note_rows(found: Array[Dictionary], uid: String, indent: int) -> Array[EventRowData]:
-	var rows: Array[EventRowData] = []
+## Every family's findings about one event row, joined once - what the quiet amber state and the
+## selected row's help strip both read, so the stripe, the strip and the Doctor's inbox line are the
+## same finding under three roofs. Performance speaks only while the costs lens is on, which is the
+## same rule its gutter chips live under: a sheet nobody asked about performance stays quiet.
+func _findings_about(event_row: EventRow) -> Array[Dictionary]:
+	var about: Array[Dictionary] = []
+	about.append_array(_tagged(FINDINGS_MULTIPLAYER,
+		EventSheetMultiplayerFindings.for_event(_sheet_findings(FINDINGS_MULTIPLAYER), event_row)))
+	about.append_array(_tagged(FINDINGS_LIGHTING,
+		EventSheetLightingFindings.for_event(_sheet_findings(FINDINGS_LIGHTING), event_row)))
+	about.append_array(_tagged(FINDINGS_EFFECTS,
+		EventSheetEffectFindings.for_event(_sheet_findings(FINDINGS_EFFECTS), event_row)))
+	about.append_array(_tagged(FINDINGS_SPAWNING,
+		EventSheetSpawnFindings.for_event(_sheet_findings(FINDINGS_SPAWNING), event_row)))
+	if _viewport != null and bool(_viewport.get("show_costs")):
+		about.append_array(_tagged(FINDINGS_PERFORMANCE,
+			EventSheetPerformanceFindings.for_event(_sheet_findings(FINDINGS_PERFORMANCE), event_row)))
+	about.append_array(_tagged(FINDINGS_COLLISIONS,
+		EventSheetCollisionFindings.for_event(_sheet_findings(FINDINGS_COLLISIONS), event_row)))
+	about.append_array(_tagged(FINDINGS_LAYERS,
+		EventSheetLayerFindings.for_event(_sheet_findings(FINDINGS_LAYERS), event_row)))
+	return about
+
+
+## The findings as the row will carry them: copies, each tagged with the family that said it, so the
+## strip's one door knows which family's fix path to knock on. Copies rather than the cached dicts
+## because the tag is the canvas's own note, not part of any family's finding shape.
+func _tagged(family: String, found: Array[Dictionary]) -> Array[Dictionary]:
+	var tagged: Array[Dictionary] = []
 	for finding: Dictionary in found:
-		rows.append(_build_variable_note_row(
-			uid, indent, str(finding.get("message", "")), str(finding.get("fix_label", "")),
-			{
-				"variable_note_name": str(finding.get("subject", "")),
-				"variable_note_fix": str(finding.get("fix", "")),
-				"variable_note_event": finding.get("event"),
-				# The row the fix will rewrite, named by its LANE and SLOT rather than held: the fix
-				# runs through the undo funnel, and the funnel replaces resources as it commits. A
-				# finding whose repair is a whole new row leaves these at their empty answers.
-				"variable_note_to": str(finding.get("to", "")),
-				"variable_note_lane": str(finding.get("lane", "")),
-				"variable_note_index": int(finding.get("index", -1)),
-				# And WHICH parameter of that row holds the name, because the same mistake can be
-				# made in two rows that spell it differently - a picked dial row keeps the name
-				# bare, the frozen free-string row keeps it quoted.
-				"variable_note_param": str(finding.get("param", ""))
-			}, false))
-	return rows
+		var carried: Dictionary = finding.duplicate()
+		carried["family"] = family
+		tagged.append(carried)
+	return tagged
 
 
-## What this row spends, said under it: the optimiser's findings about it, and - once a fix has been
-## applied - the receipt saying what that fix actually did. Both only while the costs lens is on.
-##
-## The receipt comes FIRST: a reader who just changed something wants the answer to "did that work"
-## before they are offered anything else to change.
-func _build_performance_note_rows(event_row: EventRow, uid: String, indent: int) -> Array[EventRowData]:
+## The quiet amber state, stamped. The note text is every finding's sentence joined the way the
+## sheet joins facts elsewhere - the strip under the selected row reads it back verbatim.
+func _stamp_attention(row_data: EventRowData, found: Array[Dictionary]) -> void:
+	row_data.attention_findings = found
+	var said: PackedStringArray = PackedStringArray()
+	for finding: Dictionary in found:
+		said.append(str(finding.get("message", "")))
+	row_data.attention_note = " · ".join(said)
+
+
+## The receipt of an optimiser fix already applied to this row, said under it - only while the costs
+## lens is on. A receipt is the answer to "did that work", which is the one sentence a reader who
+## just changed something is owed WHERE they changed it; the optimiser's FINDINGS, like every other
+## family's, never hang a row and live in the amber state and the help strip instead.
+func _build_receipt_note_rows(event_row: EventRow, uid: String, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	if event_row == null or _viewport == null or not bool(_viewport.get("show_costs")):
 		return rows
@@ -9034,9 +9030,6 @@ func _build_performance_note_rows(event_row: EventRow, uid: String, indent: int)
 			EventSheetL10n.translate("Put it back") if EventSheetOptimiserReceipts.disappointed(sheet_path, event_row.event_uid) else "",
 			{"variable_note_fix": FIX_PUT_BACK, "variable_note_event": event_row,
 				"variable_note_name": ""}, false))
-	rows.append_array(_build_finding_note_rows(
-		EventSheetPerformanceFindings.for_event(_sheet_findings(FINDINGS_PERFORMANCE), event_row),
-		uid, indent))
 	return rows
 
 
@@ -13137,6 +13130,7 @@ func _build_event_slice_row(row: EventRowData, slice_from: int, slice_to: int,
 	slice_row.language_block = row.language_block
 	slice_row.error_message = row.error_message
 	slice_row.attention_note = row.attention_note
+	slice_row.attention_findings = row.attention_findings
 	slice_row.ternary_view = true
 	slice_row.ternary_anchor_uid = row.row_uid
 	slice_row.action_slice_from = slice_from
