@@ -29,6 +29,7 @@ const SCENES: PackedStringArray = [
 	"res://tests/fixtures/collision_scene_door.tscn",
 	"res://tests/fixtures/collision_scene_enemy.tscn",
 	"res://tests/fixtures/collision_scene_gate.tscn",
+	"res://tests/fixtures/collision_scene_guarded.tscn",
 	"res://tests/fixtures/collision_scene_hollow.tscn",
 	"res://tests/fixtures/collision_scene_hushed.tscn",
 	"res://tests/fixtures/collision_scene_ledge.tscn",
@@ -43,6 +44,7 @@ const HOLLOW := "res://tests/fixtures/collision_scene_hollow.gd"
 const PLATFORM := "res://tests/fixtures/collision_scene_platform.gd"
 const LEDGE := "res://tests/fixtures/collision_scene_ledge.gd"
 const SWITCHER := "res://tests/fixtures/collision_scene_switcher.gd"
+const GUARDED := "res://tests/fixtures/collision_scene_guarded.gd"
 
 const CANVAS_SOURCE := "res://addons/eventsheet/editor/interaction/viewport_row_builder.gd"
 
@@ -60,6 +62,7 @@ static func run() -> bool:
 	var ok: bool = _test_the_reader()
 	ok = _test_the_band() and ok
 	ok = _test_nothing_can_reach_it() and ok
+	ok = _test_the_filtered_sentence_is_watched_too() and ok
 	ok = _test_monitoring_is_off() and ok
 	ok = _test_it_has_no_shape() and ok
 	ok = _test_the_one_way_faces_down() and ok
@@ -199,6 +202,33 @@ static func _test_nothing_can_reach_it() -> bool:
 		EventSheetCollisionFindings.writes_its_own_layers(
 			EventSheetCollisionFindings.all_lines(
 				GDScriptImporter.new().import_external(GATE))), false) and ok
+	return ok
+
+
+## THE SAME BUG, WRITTEN THE WAY THE PICKER OFFERS IT. The gate says its filter as a group question
+## under a bare trigger; this sheet says it in the trigger's own With field, which is the flagship
+## sentence of the whole family. Both are the same wrong mask over the same enemies, so both must
+## earn the same finding - a safety net that switches off when the reader picks the newer row is
+## worse than no net at all, because it is silent on exactly the sheets most likely to have the bug.
+static func _test_the_filtered_sentence_is_watched_too() -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(GUARDED)
+	var events: Array[Dictionary] = EventSheetCollisionFindings.touch_events(sheet)
+	var ok: bool = _check("a filtered trigger is a touch trigger", events.size(), 1)
+	if events.is_empty():
+		return false
+	ok = _check("read as the filtered id the picker files it under",
+		str(events[0].get("trigger", "")), "OnOverlapWithGroup") and ok
+	ok = _check("with the group read off the trigger's own field",
+		PackedStringArray(events[0].get("groups", PackedStringArray())),
+		PackedStringArray(["\"enemies\""])) and ok
+	var found: Array[Dictionary] = EventSheetCollisionFindings.findings(sheet, GUARDED, SCENES)
+	ok = _check("so the same wrong mask earns the same finding",
+		_kinds(found), PackedStringArray([EventSheetCollisionFindings.KIND_CANNOT_SEE])) and ok
+	if found.is_empty():
+		return false
+	ok = _check("measured against the layers the group really sits on, not against every layer in use",
+		str(found[0].get("message", "")),
+		"Guarded watches Doors, and the members of \"enemies\" sit on Enemies - so this trigger never fires.") and ok
 	return ok
 
 

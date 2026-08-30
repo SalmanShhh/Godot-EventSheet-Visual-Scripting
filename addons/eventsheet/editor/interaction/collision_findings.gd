@@ -54,16 +54,23 @@ const FIX_SHOW_IN_SCENE := "show_in_scene"
 const ANCHOR_EVENT := "event"
 const ANCHOR_SHEET := "sheet"
 
-## The triggers that wait on a touch. All four hang off an Area's own signals, which is what makes
-## the mask, the layer and the monitoring switch the three things that decide whether they ever fire.
-const TOUCH_TRIGGER_IDS: PackedStringArray = [
-	"OnBodyEntered", "OnBodyExited", "OnAreaEntered", "OnAreaExited",
-]
+## WHICH TRIGGERS WAIT ON A TOUCH is asked of the vocabulary itself rather than listed here. A list
+## is a copy, and a copy of this one went stale the moment the filtered and edge triggers shipped:
+## the four bare ids were all it held, so writing the flagship sentence ("On overlap with enemies")
+## instead of a bare trigger plus a group question switched every rule in this file off - no amber
+## state, no help strip, no line in the Doctor, on the sheet most likely to have the bug.
+##
+## EventForgeCollisionFilters is where the census lives, because "is this row about a touch" is a
+## question about MEANING and that file is the one place the meaning of these ids is written down.
+## A trigger added to that vocabulary tomorrow is watched by these rules the day it ships.
+const TouchTriggers := preload("res://addons/eventforge/registration/collision_filters.gd")
 
 ## The condition that filters a touch trigger by group, and the parameter holding the group's name.
 ## This is the ONE table in the file, and it is here because a group filter is a row somebody chose:
 ## the rule cannot derive which condition means "only the enemies" from the emitted line, since the
-## line it compiles to is a plain `is_in_group` that any row could have written.
+## line it compiles to is a plain `is_in_group` that any row could have written. The filtered
+## triggers' own With field is read beside it - same question, asked on the trigger instead of under
+## it - which is why both readings meet in _groups_filtered_by rather than in two rules.
 const GROUP_FILTER_ACE_IDS: PackedStringArray = ["IsInGroup"]
 const GROUP_FILTER_PARAM := "group"
 
@@ -291,7 +298,7 @@ static func _walk(items: Array, into: Array[Dictionary], trigger_id: String = ""
 		for group_name: String in _groups_filtered_by(event_row):
 			if not filtered.has(group_name):
 				filtered.append(group_name)
-		if TOUCH_TRIGGER_IDS.has(reached_by):
+		if TouchTriggers.is_touch_trigger(reached_by):
 			into.append({"event": event_row, "trigger": reached_by, "groups": filtered})
 		_walk(event_row.sub_events, into, reached_by, filtered)
 
@@ -302,9 +309,16 @@ static func _first_event(events: Array[Dictionary]) -> EventRow:
 	return null if events.is_empty() else events[0].get("event") as EventRow
 
 
-## The groups one event's conditions filter its trigger by, in row order.
+## The groups one event filters its trigger by, in row order - from BOTH places a sheet can say it.
+## A bare trigger says it in a group question underneath; a filtered trigger says it in its own With
+## field, and that is the sentence the picker offers first. Read from one only, the flagship row
+## measures against every layer in the project instead of against the layers its group really sits
+## on, which is the weaker reading and the wrong one.
 static func _groups_filtered_by(event_row: EventRow) -> PackedStringArray:
 	var groups: PackedStringArray = PackedStringArray()
+	var on_the_trigger: String = TouchTriggers.group_of(event_row)
+	if not on_the_trigger.is_empty():
+		groups.append(on_the_trigger)
 	for entry: Variant in event_row.conditions:
 		var condition: Resource = entry as Resource
 		if condition == null or not GROUP_FILTER_ACE_IDS.has(str(condition.get("ace_id"))):

@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/collision_scene_guarded.gd" id="1_guarded"]
+
+[node name="Guarded" type="Area2D"]
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("1_guarded")
+
+[node name="Mouth" type="CollisionShape2D" parent="."]
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
