@@ -167,6 +167,60 @@ static func validate(entries: Array) -> PackedStringArray:
 	return problems
 
 
+## The line an entry writes for itself: its own canonical shape filled with its own sample values,
+## through the real emitter. This is the fixture every entry is tested against, and it is generated
+## rather than written down precisely so that an entry cannot exist untested.
+static func fixture_line(entry: Dictionary) -> String:
+	return ActionCodegen._apply_template(str(entry.get("shape", "")),
+		entry.get("slots", {}) as Dictionary)
+
+
+## The round trip, as sentences - empty when every entry keeps its promise. Each entry generates its
+## own fixture line, the whole table is asked what that line means, and the row that comes back is
+## emitted again: the id, the row, the values, the stored spelling and finally the BYTES have to be
+## the ones it started from. `validate` asks whether a table is well formed; this asks whether it
+## works, which is the question a pack's shipped spellings have to answer before they ship
+## (EventForgePackSpellings) and the one tests/lift_table_test.gd asks of every built-in family.
+static func round_trip_problems(entries: Array) -> PackedStringArray:
+	var problems: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		if not (entry is Dictionary):
+			continue
+		var table_entry: Dictionary = entry
+		if table_entry.has(REFUSAL_KEY):
+			continue  # a refusal is already a problem, said by validate; it has no shape to test
+		var id: String = str(table_entry.get("id", ""))
+		var line: String = fixture_line(table_entry)
+		var hit: Dictionary = match_line(entries, line)
+		if str(hit.get("entry_id", "")) != id:
+			var claimant: String = str(hit.get("entry_id", ""))
+			problems.append("%s: its own spelling (%s) is claimed by %s"\
+				% [id, line, claimant if not claimant.is_empty() else "nothing"])
+			continue
+		if str(hit.get("ace_id", "")) != str(table_entry.get("ace_id", "")):
+			problems.append("%s: claims its line as %s, not %s"\
+				% [id, str(hit.get("ace_id", "")), str(table_entry.get("ace_id", ""))])
+		if hit.get("params", {}) != expected_params(table_entry):
+			problems.append("%s: reads %s off its line, not %s"\
+				% [id, str(hit.get("params", {})), str(expected_params(table_entry))])
+		var re_emitted: String = emit_row(str(hit.get("template", "")), hit.get("params", {}),
+			str(hit.get("provider", DEFAULT_PROVIDER)), str(hit.get("ace_id", "")))
+		if re_emitted != line:
+			problems.append("%s: re-emits %s, not %s" % [id, re_emitted, line])
+	return problems
+
+
+## One matched row's line, through the compiler's own emitter rather than a copy of the substitution -
+## a re-emission the table wrote with its own `replace()` would agree with itself and prove nothing.
+static func emit_row(template: String, params: Dictionary, provider: String, ace_id: String) -> String:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = provider
+	action.ace_id = ace_id
+	action.codegen_template = template
+	action.params = params.duplicate()
+	return ActionCodegen.generate_action(action)
+
+
 ## The parameter names an entry pulls out of a line: its captures, plus any value the ROW carries
 ## that the LINE does not say (`args` is empty in `rpc("ping")`, and the row still has the field).
 static func param_names(entry: Dictionary) -> PackedStringArray:
@@ -347,8 +401,7 @@ static func shape_slot_names(shape: String) -> PackedStringArray:
 ## looking at a regex; said here it names both entries and the line they are fighting over.
 static func _validate_fixture_line(entry: Dictionary, id: String, seen: Dictionary) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
-	var line: String = ActionCodegen._apply_template(str(entry.get("shape", "")),
-		entry.get("slots", {}) as Dictionary)
+	var line: String = fixture_line(entry)
 	if seen.has(line):
 		problems.append("%s: its fixture line is already %s's" % [id, str(seen[line])])
 		return problems

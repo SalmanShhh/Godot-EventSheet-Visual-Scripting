@@ -37,7 +37,11 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_requires": true,
 	"@ace_version": true,
 	"@ace_author": true,
-	"@ace_help": true
+	"@ace_help": true,
+	# A spelling this verb is written as by hand, as a marked example. Read by the importer
+	# (EventForgePackSpellings) rather than by the generator - it changes how an opened file READS,
+	# never what a row emits - so it is known here to keep it out of the typo warning.
+	"@ace_lift_example": true
 }
 
 

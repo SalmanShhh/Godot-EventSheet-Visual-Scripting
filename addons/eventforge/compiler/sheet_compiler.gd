@@ -2731,6 +2731,11 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	# description so the block round-trips in a stable order.
 	if not event_function.display_template.strip_edges().is_empty():
 		lines.append("## @ace_display_template(\"%s\")" % event_function.display_template.strip_edges())
+	# The spellings this verb is written as by hand, in the order the author wrote them - right after
+	# the sentence, because both are about how the verb READS rather than what it emits.
+	for lift_example: String in event_function.lift_examples:
+		if not lift_example.strip_edges().is_empty():
+			lines.append("## @ace_lift_example(\"%s\")" % lift_example.strip_edges())
 	# Param dropdowns and widget hints ship as one-line annotations the provider scanner
 	# reads back - without these the picker loses the combos a builder declared.
 	for annotated_param in event_function.params:

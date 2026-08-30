@@ -51,10 +51,20 @@ static func _test_families_are_found() -> bool:
 
 static func _test_tables_are_sound() -> bool:
 	var ok: bool = true
-	for path: String in EventForgeLiftTable.families().keys():
+	for path: String in _all_tables().keys():
 		ok = _check("%s is a sound table" % path.get_file(),
-			EventForgeLiftTable.validate(EventForgeLiftTable.families()[path]), PackedStringArray()) and ok
+			EventForgeLiftTable.validate(_all_tables()[path]), PackedStringArray()) and ok
 	return ok
+
+
+## Every table the engine matches against: the built-in families in the importer folder, and the
+## spellings the installed PACKS teach (EventForgePackSpellings). A pack's entries are ordinary lift
+## entries, so they are held to the ordinary gate here rather than to one of their own - which is what
+## "an entry cannot exist untested" has to mean for a table that ships from outside this folder.
+static func _all_tables() -> Dictionary:
+	var tables: Dictionary = EventForgeLiftTable.families()
+	tables.merge(EventForgePackSpellings.tables(), true)
+	return tables
 
 
 ## The generated corpus. Every line printed here is one this harness invented from the table itself,
@@ -62,11 +72,11 @@ static func _test_tables_are_sound() -> bool:
 static func _test_generated_fixtures() -> bool:
 	var ok: bool = true
 	var probed: int = 0
-	for path: String in EventForgeLiftTable.families().keys():
+	for path: String in _all_tables().keys():
 		var script: GDScript = EventForgeLiftTable.family_script(path)
 		if script != null and script.has_method(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD):
 			script.call(EventForgeLiftTable.FIXTURE_CONTEXT_METHOD)
-		var entries: Array = EventForgeLiftTable.families()[path]
+		var entries: Array = _all_tables()[path]
 		for entry: Dictionary in entries:
 			ok = _test_one_entry(entries, entry) and ok
 			probed += 1

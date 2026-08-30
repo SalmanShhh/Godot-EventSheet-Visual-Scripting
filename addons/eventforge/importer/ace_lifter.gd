@@ -1420,7 +1420,7 @@ static func _is_connected_handler(header: String, connections: Dictionary) -> bo
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
 static func _parse_annotations(code: String) -> Dictionary:
-	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "param_options": {}, "param_hints": {}}
+	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "lift_examples": PackedStringArray(), "param_options": {}, "param_hints": {}}
 	var recognized: bool = false
 	var doc_lines: PackedStringArray = PackedStringArray()
 	for line: String in code.split("\n"):
@@ -1444,6 +1444,14 @@ static func _parse_annotations(code: String) -> Dictionary:
 			fields["description"] = text.substr(21, text.length() - 23)
 		elif text.begins_with("## @ace_display_template(\"") and text.ends_with("\")"):
 			fields["display_template"] = text.substr(26, text.length() - 28)
+		elif text.begins_with("## @ace_lift_example(\"") and text.ends_with("\")"):
+			# A spelling the verb is written as by hand. Kept verbatim in written order: the importer
+			# reads these to recognise somebody else's file, and the emitter writes them back. Read
+			# out and put back rather than appended in place - a PackedStringArray is a VALUE, so a
+			# cast of the dictionary entry appends to a copy and loses every example.
+			var examples: PackedStringArray = fields["lift_examples"]
+			examples.append(text.substr(22, text.length() - 24))
+			fields["lift_examples"] = examples
 		elif text.begins_with("## @ace_param_options(") and text.ends_with(")"):
 			# `@ace_param_options(mode add, multiply, override)` -> dropdown options; carried
 			# onto the lifted param so emission ships them (they used to be dropped here,
@@ -1557,6 +1565,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.ace_category = str(annotations.get("category", ""))
 	event_function.description = str(annotations.get("description", ""))
 	event_function.display_template = str(annotations.get("display_template", ""))
+	event_function.lift_examples = annotations.get("lift_examples", PackedStringArray())
 	event_function.featured = bool(annotations.get("featured", false))
 	# The source's call template: `<prefix>name({a}, {b})` keeps just the prefix (renames and
 	# parameter edits still track); any other shape is kept verbatim.
@@ -3092,6 +3101,17 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 		_flush_raw(event, pending_raw, blank_box)
 		event.actions.append(_matched_spelling_action(spelled, blank_box))
 		return
+	# Then the spellings the installed PACKS teach (EventForgePackSpellings). A pack knows the lines
+	# its own verbs are written as by hand, and saying so upgrades those rows from the generic reading
+	# they land on ("call start_flickering on flicker") to the pack's own sentence - without moving a
+	# byte, because the matched line is baked onto the row exactly as the built-in families bake
+	# theirs. Asked AFTER the built-in families (a pack may not shadow one; the pack gate says so) and
+	# BEFORE the general index, which is the generic reading a pack spelling exists to improve on.
+	var taught: Dictionary = EventForgePackSpellings.match_line(line)
+	if not taught.is_empty():
+		_flush_raw(event, pending_raw, blank_box)
+		event.actions.append(_matched_spelling_action(taught, blank_box))
+		return
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
 		# No ACE claims it - defer to the raw block. Any pending blank rides along and lands on that
@@ -3114,7 +3134,10 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 ## field, already serialized, already the way an addon ACE carries its own template.
 static func _matched_spelling_action(matched: Dictionary, blank_box: Array) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
-	action.provider_id = "Core"
+	# The provider the matcher named. Every built-in family is Core (the table engine's default), so
+	# this reads the same for them as the literal it replaced; a PACK's spelling names the pack, which
+	# is what makes the lifted row that pack's verb rather than an unattributed one.
+	action.provider_id = str(matched.get("provider", "Core"))
 	action.ace_id = str(matched.get("ace_id", ""))
 	action.params = matched.get("params", {})
 	action.codegen_template = str(matched.get("template", ""))

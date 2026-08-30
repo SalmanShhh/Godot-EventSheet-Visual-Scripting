@@ -120,6 +120,7 @@ static func run() -> Dictionary:
 	check_hierarchy_footguns(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	check_pack_reading(findings)
+	check_pack_spellings(findings)
 	check_disabled_pack_usage(sheet_paths, findings)
 	check_family_group_agreement(findings)
 	check_imported_rows(sheet_paths, findings)
@@ -2311,6 +2312,23 @@ static func check_pack_reading(findings: Array[Dictionary]) -> void:
 			"%s reads %d%% - %d thing(s) do not read as sentences. First: %s" % [
 				str(pack.get("name", "")), int(result.get("percent", 0)), failures.size(), first])
 		findings[findings.size() - 1]["subject"] = str(pack.get("dir", ""))
+
+
+## The spellings the installed packs teach the reader, where two of them answer to one line.
+##
+## A pack may say which hand-written lines its verbs are written as (`## @ace_lift_example`), so an
+## opened file that used the pack before the sheet existed reads as the pack's own sentences instead
+## of as the generic "call a method" row. Two packs can reasonably claim one line - a spelling is not
+## owned by anybody - and the answer is well defined: the pack that comes first in folder order takes
+## it. Well defined is not the same as expected, so the pack that lost is told here, by name, with the
+## rule stated. Shadowing a BUILT-IN spelling is a different matter and is refused at pack-build time
+## (tools/audit_addons.gd); those problems are surfaced here too, because a project can install a pack
+## that never went through that gate.
+static func check_pack_spellings(findings: Array[Dictionary]) -> void:
+	for problem: String in EventForgePackSpellings.problems():
+		_add(findings, "warning", "pack-spelling", EventForgePackSpellings.PACK_DIR, problem)
+	for advisory: String in EventForgePackSpellings.advisories():
+		_add(findings, "info", "pack-spelling", EventForgePackSpellings.PACK_DIR, advisory)
 
 
 ## A sheet still using a pack that was switched off in the Addon manager. Its actions have left

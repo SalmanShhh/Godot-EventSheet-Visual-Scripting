@@ -120,6 +120,8 @@ func _apply_light(brightness: float, reach_scale: float) -> void:
 ## @ace_name("Start Flickering")
 ## @ace_description("Starts the flicker, either now or after a delay. The delay is what a row uses when a torch should catch a moment after the thing that lit it.")
 ## @ace_display_template("Start flickering after [b]{after_seconds}[/b] s")
+## @ace_lift_example("[[target|receiver: $LightFlickerBehavior]].start_flickering([[after_seconds|argument: 0.5]])")
+## @ace_lift_example("[[target|receiver: $LightFlickerBehavior]].start_flickering()")
 ## @ace_icon("res://eventsheet_addons/light_flicker/icon.svg")
 ## @ace_codegen_template("$LightFlickerBehavior.start_flickering({after_seconds})")
 func start_flickering(after_seconds: float = 0.0) -> void:
@@ -132,6 +134,8 @@ func start_flickering(after_seconds: float = 0.0) -> void:
 ## @ace_name("Stop Flickering")
 ## @ace_description("Stops the flicker and leaves the light at one steady brightness - the number the row names, so a torch that goes out settles dark and one that is merely calmed settles lit. A flame that was flickering its reach puts that back to whatever the scene was authored with, rather than leaving the radius of the frame it stopped on.")
 ## @ace_display_template("Stop flickering and settle at [b]{settle_at}[/b]")
+## @ace_lift_example("[[target|receiver: $LightFlickerBehavior]].stop_flickering([[settle_at|argument: 1.0]])")
+## @ace_lift_example("[[target|receiver: $LightFlickerBehavior]].stop_flickering()")
 ## @ace_icon("res://eventsheet_addons/light_flicker/icon.svg")
 ## @ace_codegen_template("$LightFlickerBehavior.stop_flickering({settle_at})")
 func stop_flickering(settle_at: float = 1.0) -> void:

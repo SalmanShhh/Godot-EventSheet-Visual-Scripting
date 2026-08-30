@@ -54,6 +54,12 @@ extends Resource
 ## Featured verbs lead their picker section starred + bold (the pack's heroes). Emitted as
 ## `## @ace_featured` and lifted back, so it round-trips.
 @export var featured: bool = false
+## The lines this verb is written as BY HAND, as marked examples (the value spans wrapped in
+## `[[name|fragment: text]]`), one per entry. A file somebody wrote before the sheet existed reads its
+## calls as the generic "call a method" row; a spelling here upgrades those rows to this verb without
+## moving a byte of their file. Emitted as `## @ace_lift_example("...")` and lifted back, so it
+## round-trips; read by the importer, never by the emitter, so it can only change WORDS.
+@export var lift_examples: PackedStringArray = PackedStringArray()
 @export var params: Array[ACEParam] = []
 @export var parameters: Array[String] = [] # Backwards-compatible alias.
 @export var return_type: int = TYPE_NIL

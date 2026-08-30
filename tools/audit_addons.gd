@@ -36,9 +36,22 @@ func _init() -> void:
 	if FileAccess.file_exists(verify_path):
 		DirAccess.remove_absolute(verify_path)
 	print("audited=%d drifted=%d" % [audited, drifted])
+	# The spellings the packs TEACH the reader (`## @ace_lift_example`) are held to the same promise
+	# their verbs are: every entry generates its own fixture line, is claimed by itself, and re-emits
+	# byte for byte - and no pack may shadow a built-in spelling. An entry that cannot do that never
+	# ships, so this is an error here rather than a surprise in somebody's opened file.
+	var spelling_problems: PackedStringArray = EventForgePackSpellings.problems()
+	for problem: String in spelling_problems:
+		print("SPELLING: %s" % problem)
+	# A near-collision is not an error - two packs may both know a line, and the first in folder
+	# order claims it. Printed so the pack that loses hears about it here too, not only in the Doctor.
+	for advisory: String in EventForgePackSpellings.advisories():
+		print("SPELLING NOTE: %s" % advisory)
+	print("spellings=%d problems=%d" % [EventForgePackSpellings.entries().size(),
+		spelling_problems.size()])
 	# A red gate must FAIL the invocation: anything checking only the exit code (CI, shell
 	# chains) used to see success even when packs drifted or failed to parse.
-	quit(1 if drifted > 0 or failed > 0 else 0)
+	quit(1 if drifted > 0 or failed > 0 or not spelling_problems.is_empty() else 0)
 
 
 ## One pack script's round-trip + parse verdict. The .gd is both the sheet and the runtime
