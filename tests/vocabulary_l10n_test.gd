@@ -99,6 +99,8 @@ const USER_CONTENT_DOOR_IDS: Array[String] = [
 	# The name a player typed made safe, the path that is still free, and the door back to their
 	# own file browser. Added to the same shipped module.
 	"SafeFileName", "FreeFilePath", "ShowInFileManager",
+	# The guarded read, the write that makes its folder, and the door onto the player's own folder.
+	"ReadTextFileOr", "WriteTextFileInFolder", "OpenUserDataFolder",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the

@@ -5683,3 +5683,20 @@ show {path} in the file manager,{path}을(를) 파일 관리자에서 보기
 "%s loads a file that came from outside the game - dropped on the window, chosen by the player, or found in a watched or unpacked folder. First: %s.","%s이(가) 게임 바깥에서 온 파일을 불러옵니다 - 창에 놓인 것, 플레이어가 고른 것, 또는 감시 중이거나 압축을 푼 폴더에서 찾은 것입니다. 첫 번째: %s."
 "A scene or a resource file can name a script, and loading one runs that script with everything this game can reach - the player's files, their network, their machine. The file was written by whoever made it, and that is not this project.","장면이나 리소스 파일은 스크립트를 지목할 수 있고, 그것을 불러오면 그 스크립트가 이 게임이 닿을 수 있는 모든 것 - 플레이어의 파일, 네트워크, 컴퓨터 - 을 가지고 실행됩니다. 그 파일은 그것을 만든 사람이 쓴 것이며, 그것은 이 프로젝트가 아닙니다."
 "Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.","대신 '데이터'로 읽으면 파일은 행동을 함께 가져올 수 없습니다. 그림이면 파일에서 이미지, 텍스트면 텍스트 파일 읽기(또는 대체 값), 행과 열이면 파일에서 테이블입니다. 이 게임이 플레이어가 쓴 코드를 실행할 작정이라면, 그들이 읽을 수 있는 곳에 그렇게 밝히세요 - 그것은 사고가 아니라 결정입니다."
+Read Text File (or a fallback),텍스트 파일 읽기(또는 대체 값)
+"Reads a whole file as text, using the fallback you name when the file is not there. The guard is written into the line and shown on the row, so nothing happens that the code does not say.","파일 전체를 텍스트로 읽고, 파일이 없으면 지정한 대체 값을 씁니다. 방어는 코드 줄 안에 쓰이고 행에도 보이므로, 코드가 말하지 않은 일은 일어나지 않습니다."
+"text of file {path}, or {fallback}","파일 {path}의 텍스트, 또는 {fallback}"
+File to read in full as a String. Prefer user:// - res:// is read-only once the game is exported.,String으로 통째 읽을 파일. user://를 권합니다 - res://는 게임을 내보내면 읽기 전용입니다.
+"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, exactly as Read Text File does.",그 경로에 파일이 없을 때 이 식이 되는 값. 비워 두면 텍스트 파일 읽기와 똑같이 그냥 읽습니다.
+Write Text File (in a folder),텍스트 파일 쓰기(폴더 안에)
+"Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back.","폴더 안의 파일에 텍스트를 저장하며, 원하면 가는 길의 폴더도 만듭니다. 폴더를 만드는 줄은 쓰기 위에 나오고 행에도 보입니다. 뒤에서 몰래 하는 일은 없습니다."
+write {text} to file {path} - {folder},{text}를 파일 {path}에 쓰기 - {folder}
+"File to write, inside one or more folders. OVERWRITES any existing file. Prefer user:// - res:// is read-only once the game is exported.",쓸 파일. 폴더 하나 이상 안에 있습니다. 이미 있는 파일은 덮어씁니다. user://를 권합니다 - res://는 게임을 내보내면 읽기 전용입니다.
+Text content to store.,저장할 텍스트 내용.
+"Whether to create the folders in that path before writing. Godot does not make them on the way to opening a file, so a write into a folder that is not there fails.","쓰기 전에 그 경로의 폴더를 만들지 여부. Godot은 파일을 여는 길에 폴더를 만들지 않으므로, 없는 폴더에 쓰면 실패합니다."
+Make the folder first,폴더를 먼저 만들기
+The folder is already there,폴더는 이미 있음
+Open The Player's Data Folder,플레이어의 데이터 폴더 열기
+Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.,플레이어 자신의 데이터 폴더를 그 데스크톱의 파일 브라우저에서 엽니다 - user://가 그 기기에서 가리키는 실제 폴더입니다.
+open the player's data folder {path},플레이어의 데이터 폴더 {path} 열기
+"Folder to open, inside user://. The path is turned into a real one on the player's machine before it is handed to the desktop.",여는 폴더. user:// 안에 있습니다. 경로는 데스크톱에 넘겨지기 전에 플레이어 기기의 실제 경로로 바뀝니다.
