@@ -54,7 +54,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `always_on_top` | [Set Always On Top](ace:Core/WindowSetAlwaysOnTop) | Game Window | Vocabulary |
 | `ambient_light_energy` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
 | `amount` | [Amount](ace:Core/GetParticleAmount) | Particles | Vocabulary |
-| `and` | [Any Input Received](ace:Core/AnyInputReceived) | Accessibility | Vocabulary |
+| `and` | [Is In State For Over](ace:Core/InStateForOver) | Object State | Vocabulary |
 | `angle` | [Vector Angle](ace:Core/VectorAngle) | Variables: Vector | Vocabulary |
 | `angle_difference` | [Angle Difference](ace:Core/AngleDifference) | Math & Random | Vocabulary |
 | `angle_to` | [Slope Steeper Than](ace:Core/SlopeSteeperThan) | Canvas | Vocabulary |

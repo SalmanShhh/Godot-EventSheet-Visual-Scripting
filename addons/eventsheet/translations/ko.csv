@@ -5703,3 +5703,19 @@ open the player's data folder {path},플레이어의 데이터 폴더 {path} 열
 "This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",이것은 줄에 쓰인 경로에서 읽습니다. 조각을 이어 붙여 만든 경로나 변수에 담긴 경로에 대해서는 이 검사가 말할 수 있는 것이 없습니다 - 조용한 보고는 증명이 아닙니다.
 "This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.","이것은 한 파일 안의 이름만 따라갑니다 - 이 객체에 저장된 경로, 목록에서 꺼낸 경로, 이 파일이 지켜보거나 푸는 폴더 아래에 쓰이는 경로입니다. 파일을 넘나들거나 호출 너머로는 따라가지 않으므로, 아무 말이 없는 파일이 안전하다고 판정된 파일은 아닙니다."
 and %d more watched folder(s),그리고 %d개의 감시 폴더가 더
+"%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.","%s은(는) 선언되어 있지만 어떤 행도 도달할 수 없습니다. 그곳으로 가는 것이 없고, 오브젝트도 거기서 시작하지 않습니다."
+"A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.","어떤 행이 %s 상태를 가리키지만 이 오브젝트는 그것을 선언하지 않습니다. 머리글의 상태에 추가하거나, 행을 이 오브젝트 자신의 상태로 향하게 하세요."
+Name at least one state.,상태를 최소 하나 지정하세요.
+Declare states,상태 선언
+Declare states…,상태 선언…
+%d state(s) declared - rows can now say which one this object is in.,상태를 %d개 선언했습니다. 이제 행은 이 오브젝트가 어떤 상태인지 말할 수 있습니다.
+states,상태
+the %s state,%s 상태
+"True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.","이 오브젝트가 지정한 상태에 있는 동안 참입니다. 상태는 시트 머리글의 상태 밴드에서 한 번만 선언하며, 이 행은 그중 하나를 고릅니다."
+"True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.","이 오브젝트가 지정한 상태에 그 초 수보다 오래 머무르는 동안 참입니다. '~ 상태이다'의 시간 버전입니다. 시계는 상태가 바뀔 때마다 다시 시작하므로, 1초 뒤에 끝나는 비틀거림은 이 행 하나로 충분합니다."
+"True while the state this object was in BEFORE the current one is the given state. Answers ""what did we come from"" - the chase that began from patrolling is a different chase from the one that began from being staggered.",이 오브젝트가 현재 상태 '이전'에 있던 상태가 지정한 상태인 동안 참입니다. '어디에서 왔는가'에 답합니다. 순찰에서 시작된 추격과 비틀거림에서 시작된 추격은 다릅니다.
+"Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.",이 오브젝트를 다른 상태로 옮기고 그것을 알립니다. 이전 상태의 '나갈 때'와 새 상태의 '들어올 때'가 그 순서로 실행됩니다. 이미 있는 상태로 가면 아무것도 바뀌지 않고 알리지도 않습니다.
+"Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts.","이 오브젝트가 지정한 상태에 들어가는 순간 실행됩니다. '나갈 때'가 항상 먼저 발동하므로, 떠나는 상태가 정리를 마친 뒤에 새 상태가 시작됩니다."
+"Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.","이 오브젝트가 지정한 상태를 떠나는 순간, 들어가는 상태에 응답하는 어떤 것보다 먼저 실행됩니다. 그 상태가 켠 것을 여기서 되돌립니다. 울린 경보, 빨갛게 만든 셰이더."
+"Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.","이 오브젝트가 선언한 상태 중 하나. 선언은 시트 머리글의 '상태 선언' 대화상자에서 하며, 이 목록은 거기서 쓴 그대로입니다."
+How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,이것이 참이 되려면 오브젝트가 그 상태에 이미 얼마나 머물러 있어야 하는지. 시계는 상태가 바뀔 때마다 다시 시작합니다.

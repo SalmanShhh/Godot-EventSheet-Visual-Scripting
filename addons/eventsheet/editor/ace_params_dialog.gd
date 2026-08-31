@@ -411,6 +411,7 @@ func _ensure_hint_factories() -> void:
 			"input_action": _create_input_action_field,
 			"group_reference": _create_group_reference_field,
 			"mode_reference": _create_mode_reference_field,
+			"state_reference": _create_state_reference_field,
 			"scene_node": _create_scene_node_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
@@ -993,6 +994,20 @@ func _create_mode_reference_field(key: String, default_value: Variant) -> Contro
 		func(member_value: String) -> String:
 			var word: String = EventSheetModeFacts.word_for(member_value)
 			return "" if word.is_empty() else EventSheetL10n.translate("the %s mode") % word)
+
+
+## THIS OBJECT's declared states (hint "state_reference"): the same field one level down, filled from
+## the sheet's own State enum rather than from the project's. A state this object does not declare is
+## still typeable - a state may be about to be declared, and a row naming one nobody has is exactly
+## what the Doctor says out loud rather than what the field forbids.
+func _create_state_reference_field(key: String, default_value: Variant) -> Control:
+	var suggestions: Array = []
+	for member: String in EventSheetStateFacts.bare_members(_lint_sheet()):
+		suggestions.append(member)
+	return _create_autocomplete_field(key, suggestions, default_value,
+		func(member_value: String) -> String:
+			var word: String = EventSheetStateFacts.word_for(member_value)
+			return "" if word.is_empty() else EventSheetL10n.translate("the %s state") % word)
 
 
 ## The codegen template of the ACE being edited, or "" when the dialog has no definition.

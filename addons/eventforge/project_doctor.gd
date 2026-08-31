@@ -127,6 +127,7 @@ static func run() -> Dictionary:
 	check_task_notes(findings)
 	check_menu_ids(findings)
 	check_game_modes(findings)
+	check_object_states(findings)
 	check_animation_method_tracks(findings)
 	check_plugin_reading_health(findings)
 	check_facing_follows(sheet_paths, findings)
@@ -3377,6 +3378,28 @@ static func check_game_modes(findings: Array[Dictionary]) -> void:
 		if sheet == null:
 			continue
 		for finding: Dictionary in EventSheetModeFacts.findings(sheet):
+			_add(findings, str(finding.get("severity", "info")), str(finding.get("kind", "")),
+				script_path, str(finding.get("message", "")))
+			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))
+
+
+## The two things that go wrong with ONE OBJECT's states: one no row can reach, and one a row names
+## that this object does not declare.
+##
+## Asked of the project's own scripts rather than of `sheet_paths`, and the reason matters: the sheet
+## list holds `.tres` sheets only, while `.gd` is the default sheet format, so a check built on it
+## would skip almost every real object while looking like it worked. The script index is the ONE
+## cached walk every other script-reading check here shares, and the `enum State` test is a string
+## match over text that walk already holds - so an object that declares no states costs nothing.
+static func check_object_states(findings: Array[Dictionary]) -> void:
+	var importer := GDScriptImporter.new()
+	for script_path: String in _project_scripts():
+		if not source_of(script_path).contains("enum %s" % EventSheetStateFacts.ENUM_NAME):
+			continue
+		var sheet: EventSheetResource = importer.import_external(script_path)
+		if sheet == null:
+			continue
+		for finding: Dictionary in EventSheetStateFacts.findings(sheet):
 			_add(findings, str(finding.get("severity", "info")), str(finding.get("kind", "")),
 				script_path, str(finding.get("message", "")))
 			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))

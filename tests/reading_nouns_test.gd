@@ -23,9 +23,9 @@ const SOURCE_PATH := "user://eventforge_reading_nouns.gd"
 const SOURCE: String = """class_name ReadingNounsPlayer
 extends CharacterBody2D
 
-enum State { PATROL, CHASE }
+enum Weather { CALM, STORM }
 
-var state: int = State.PATROL
+var weather: int = Weather.CALM
 var dir: Vector2 = Vector2.ZERO
 var reading: float = 0.0
 var items: Array = []
@@ -38,7 +38,7 @@ var hp: int = 3
 @onready var score: Label = get_node_or_null("HUD/Score")
 
 func _ready() -> void:
-	state = State.CHASE
+	weather = Weather.STORM
 	dir = Vector2.UP
 	modulate = Color.RED
 	reading = PI / 2
@@ -83,7 +83,7 @@ func _physics_process(_delta: float) -> void:
 ## Every reading the opened file must contain, one per shape this parcel claims.
 static var EXPECTED_READINGS: PackedStringArray = PackedStringArray([
 	# Constants have no namespace, and the ones with a symbol wear it
-	"System ▸ Set state to CHASE",
+	"System ▸ Set weather to STORM",
 	"System ▸ Set dir to up",
 	"System ▸ Set reading to π / 2",
 	# The sprite / audio / visibility verbs, by the object's own class

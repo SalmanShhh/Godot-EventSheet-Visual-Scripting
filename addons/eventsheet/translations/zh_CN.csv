@@ -5703,3 +5703,19 @@ open the player's data folder {path},打开玩家的数据文件夹 {path}
 "This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",这是从行中写出的路径读出的：由片段拼接而成的路径，或存放在变量里的路径，这项检查无话可说 - 没有报告并不等于没有问题。
 "This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.",这只在一个文件内跟踪名字 - 存放在这个对象上的路径、从列表中取出的路径，或写入这个文件所监视或解压的文件夹下的路径。它不会跨文件、也不会穿过一次调用继续跟踪，所以它没有提到的文件并不是它认可过的文件。
 and %d more watched folder(s),还有 %d 个受监视的文件夹
+"%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s 已声明，但没有任何行能到达它：没有任何行前往它，对象也不从它开始。
+"A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",有一行指向状态 %s，而这个对象并未声明它。请把它加入表头的状态列表，或让该行指向这个对象自己的状态。
+Name at least one state.,请至少指定一个状态。
+Declare states,声明状态
+Declare states…,声明状态…
+%d state(s) declared - rows can now say which one this object is in.,已声明 %d 个状态 - 各行现在可以说明这个对象处于哪一个状态。
+states,状态
+the %s state,%s 状态
+"True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.",当这个对象处于指定状态时为真。状态在本表头的状态条中声明一次，这一行从中选择其一。
+"True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.",当这个对象处于指定状态的时间超过这么多秒时为真 - 这是「处于」的计时版本。每次状态改变时计时都会重新开始，所以一秒后结束的踉跄就只是这一行。
+"True while the state this object was in BEFORE the current one is the given state. Answers ""what did we come from"" - the chase that began from patrolling is a different chase from the one that began from being staggered.",当这个对象在当前状态「之前」所处的状态是指定状态时为真。回答「我们从哪里来」- 从巡逻开始的追击和从踉跄开始的追击并不一样。
+"Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.",把这个对象移入另一个状态并宣告：旧状态的「离开时」与新状态的「进入时」都会运行，且按此顺序。前往它已经处于的状态则什么都不改变，也什么都不宣告。
+"Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts.",在这个对象进入指定状态的那一刻运行。「离开时」总是先触发，顺序固定，所以被离开的状态会先收拾干净，新状态才开始。
+"Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",在这个对象离开指定状态的那一刻运行，早于任何回应它所进入状态的内容。在这里把该状态开启的东西收回来：拉响的警报、变红的着色器。
+"Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",这个对象已声明的状态之一。它们在表头的「声明状态」对话框中声明，这个列表正是它写下的内容。
+How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,对象必须已经处于该状态多久，这一条才为真。每次状态改变时计时都会重新开始。

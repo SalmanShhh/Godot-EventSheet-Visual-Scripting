@@ -39,6 +39,9 @@ const BAND_TRANSFORM: String = "transform"
 const BAND_COLLISIONS: String = "collisions"
 const BAND_FILES: String = "files"
 const BAND_MODES: String = "modes"
+## The states of ONE OBJECT - the same fact as the modes band, one level down: the game has a mode
+## and each object has a state, and both are an enum plus a variable this file declares.
+const BAND_STATES: String = "states"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
 const BAND_ATTACH: String = "attach"
@@ -57,7 +60,7 @@ const ORDER: PackedStringArray = [
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_SPAWNS,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
 	BAND_COLLISIONS, BAND_FILES,
-	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
+	BAND_MODES, BAND_STATES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
 ## The bands that come from the SCENE rather than from the file, and the key each
@@ -100,6 +103,7 @@ const LEADERS: Dictionary = {
 	BAND_COLLISIONS: "collisions",
 	BAND_FILES: "files",
 	BAND_MODES: "modes",
+	BAND_STATES: "states",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
 	BAND_ATTACH: "attach",
@@ -186,6 +190,10 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	# that does not think in modes.
 	head["modes"] = EventSheetModeFacts.band_reading(sheet)
 	head["modes_echo"] = EventSheetModeFacts.band_echo(sheet)
+	# And this OBJECT's own states, when this sheet is the one that declares them - the same fact one
+	# level down, read the same way, from the sheet's own declarations.
+	head["states"] = EventSheetStateFacts.band_reading(sheet)
+	head["states_echo"] = EventSheetStateFacts.band_echo(sheet)
 	return head
 
 
@@ -368,6 +376,12 @@ static func addable(head_facts: Dictionary) -> PackedStringArray:
 	if str(head_facts.get("modes", "")).strip_edges().is_empty() \
 			and not str(head_facts.get("autoload", "")).strip_edges().is_empty():
 		offers.append(BAND_MODES)
+	# States are the mirror offer, one level down: an OBJECT's own machine, so they are offered on
+	# every sheet that is not the game's spine. A sheet that IS an autoload is the game, and what a
+	# game has is modes.
+	if str(head_facts.get("states", "")).strip_edges().is_empty() \
+			and str(head_facts.get("autoload", "")).strip_edges().is_empty():
+		offers.append(BAND_STATES)
 	return offers
 
 
@@ -383,6 +397,8 @@ static func add_label(kind: String) -> String:
 			return "@tool"
 		BAND_MODES:
 			return EventSheetL10n.translate("modes")
+		BAND_STATES:
+			return EventSheetL10n.translate("states")
 	return kind
 
 
@@ -408,6 +424,8 @@ static func control_label(kind: String) -> String:
 			return EventSheetL10n.translate("select the node")
 		BAND_MODES:
 			return EventSheetL10n.translate("Edit modes…")
+		BAND_STATES:
+			return EventSheetL10n.translate("Declare states…")
 	return ""
 
 
@@ -458,6 +476,14 @@ static func _band(kind: String, head_facts: Dictionary) -> Dictionary:
 			if listed.is_empty():
 				return {}
 			return _make(kind, listed, str(head_facts.get("modes_echo", "")))
+		BAND_STATES:
+			# One fact again, one level down: what the states of this object ARE, including the one it
+			# starts in. THIS BAND IS THE DIAGRAM - there is no graph, no wires and no canvas of boxes
+			# anywhere in this feature, because a state is a variable and a variable reads as a line.
+			var states: String = str(head_facts.get("states", "")).strip_edges()
+			if states.is_empty():
+				return {}
+			return _make(kind, states, str(head_facts.get("states_echo", "")))
 		BAND_REMEMBER:
 			var remembered: PackedStringArray = head_facts.get("remembered", PackedStringArray())
 			if remembered.is_empty():

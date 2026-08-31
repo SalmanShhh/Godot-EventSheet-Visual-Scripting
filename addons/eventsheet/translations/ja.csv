@@ -5703,3 +5703,19 @@ open the player's data folder {path},プレイヤーのデータフォルダー 
 "This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",これは行に書かれたパスから読み取られます。断片から組み立てたパスや変数に入れたパスについては、このチェックは何も言えません。報告がないことは証明ではありません。
 "This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.",これは一つのファイルの中の名前だけをたどります - このオブジェクトに保持されたパス、リストから取り出したパス、このファイルが監視または展開するフォルダーの下に書かれたパスです。ファイルをまたいだり呼び出しの先までは追いません。何も言われないファイルは、安全と判断されたファイルではありません。
 and %d more watched folder(s),さらに %d 個の監視フォルダー
+"%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s は宣言されていますが、どの行からも到達できません。そこへ行くものがなく、オブジェクトもそこから始まりません。
+"A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",ある行が状態 %s を指していますが、このオブジェクトはそれを宣言していません。見出しの状態に追加するか、行をこのオブジェクト自身の状態に向けてください。
+Name at least one state.,状態を少なくとも 1 つ指定してください。
+Declare states,状態を宣言
+Declare states…,状態を宣言…
+%d state(s) declared - rows can now say which one this object is in.,状態を %d 個宣言しました。行はこのオブジェクトがどの状態にあるかを言えるようになりました。
+states,状態
+the %s state,%s 状態
+"True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.",このオブジェクトが指定した状態にある間、真になります。状態はシート見出しの状態バンドで一度だけ宣言し、この行はその中から一つを選びます。
+"True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.",このオブジェクトが指定した状態に、その秒数より長くとどまっている間、真になります。「〜にいる」の時間版です。時計は状態が変わるたびに始まり直すので、1 秒で終わるよろめきはこの行だけで書けます。
+"True while the state this object was in BEFORE the current one is the given state. Answers ""what did we come from"" - the chase that began from patrolling is a different chase from the one that began from being staggered.",このオブジェクトが現在の状態の「前」にいた状態が、指定した状態である間、真になります。「どこから来たか」に答えます。巡回から始まった追跡と、よろめきから始まった追跡は別物です。
+"Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.",このオブジェクトを別の状態へ移し、それを知らせます。元の状態の「出るとき」と、新しい状態の「入るとき」が、その順に走ります。すでにいる状態へ移っても何も変わらず、何も知らされません。
+"Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts.",このオブジェクトが指定した状態に入った瞬間に走ります。「出るとき」が必ず先に発火するので、去る状態の後始末が終わってから新しい状態が始まります。
+"Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",このオブジェクトが指定した状態を出た瞬間に、入る状態に応えるものより先に走ります。その状態が入れたものをここで戻します。鳴らした警報、赤くしたシェーダー。
+"Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",このオブジェクトが宣言した状態のどれか。宣言はシート見出しの「状態を宣言」ダイアログで行い、この一覧はそこで書かれたものそのものです。
+How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,これが真になるために、オブジェクトがその状態にすでにどれだけとどまっている必要があるか。時計は状態が変わるたびに始まり直します。

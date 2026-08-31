@@ -59,6 +59,10 @@ static func get_trigger_key(event: EventRow) -> String:
 		# name is part of the key. Two rows sharing a name are one function, which is what lets a
 		# single "hit" key drive several things.
 		return "%s::%s::%s" % [provider_id, trigger_id, animation_event_name_of(event)]
+	if trigger_id == STATE_ENTERING_TRIGGER_ID or trigger_id == STATE_LEAVING_TRIGGER_ID:
+		# One object's own state, for exactly the reason the game's mode below shares a handler: the
+		# object raises one signal for a change, and two same-named functions do not parse.
+		trigger_id = "OnStateChanged"
 	if trigger_id == MODE_ENTERING_TRIGGER_ID or trigger_id == MODE_LEAVING_TRIGGER_ID:
 		# Entering and leaving are ONE handler: the engine raises one signal for a change, and two
 		# same-named functions do not parse. Which mode each row is about, and which side of the
@@ -163,6 +167,11 @@ static func menu_handler_name(menu_variable: String) -> String:
 ## one key; the mode each row names rides in its trigger params, as the menu's item does.
 const MODE_ENTERING_TRIGGER_ID: String = "OnEnteringMode"
 const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
+
+## And the two that answer a change of ONE OBJECT's own state. Same shape one level down: they share
+## a handler and therefore a key, and the state each row names rides in its trigger params.
+const STATE_ENTERING_TRIGGER_ID: String = "OnEnteringState"
+const STATE_LEAVING_TRIGGER_ID: String = "OnLeavingState"
 
 
 ## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
@@ -296,6 +305,14 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# Go to / Push rows emit it, so both halves of the question - what we left and what we
 			# are entering - arrive as the handler's arguments.
 			return _signal_backed("_on_mode_changed", "from_mode: int, to_mode: int", "mode_changed", "")
+		STATE_ENTERING_TRIGGER_ID, STATE_LEAVING_TRIGGER_ID:
+			# This object's own state changed. Signal-backed on the sheet itself, exactly like the
+			# game's mode above: the Declare states dialog writes `signal state_changed(from_state:
+			# int, to_state: int)` and the `state` variable's own setter emits it, so both halves of
+			# the question - what we left and what we are entering - arrive as the handler's
+			# arguments and a hand-written assignment announces itself too.
+			return _signal_backed("_on_state_changed", "from_state: int, to_state: int",
+				"state_changed", "")
 		"OnSomethingWentWrong":
 			# A script error, anywhere in the running game. Signal-backed on the sheet itself the same
 			# way the test start is: the compiler declares `signal something_went_wrong(report)` and

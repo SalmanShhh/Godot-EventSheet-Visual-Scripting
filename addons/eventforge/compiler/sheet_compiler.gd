@@ -1092,6 +1092,8 @@ static func _emit_anchored_trigger_function(events: Array, lines: PackedStringAr
 		return
 	if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
 		return
+	if _emit_state_change_body(events, lines, source_map, result["warnings"]):
+		return
 	_emit_event_body(events, lines, source_map, 1, result["warnings"])
 	if not _has_statement(lines, handler_body_start):
 		lines.append("\tpass")
@@ -1158,30 +1160,49 @@ static func _emit_notification_match(events: Array, lines: PackedStringArray, so
 ## filled and nobody discovers that by bug.
 static func _emit_mode_change_body(events: Array, lines: PackedStringArray, source_map: Array,
 		warnings: Array) -> bool:
+	return _emit_change_body(events, lines, source_map, warnings, MODE_LEAVING_TRIGGER_ID,
+		MODE_ENTERING_TRIGGER_ID, "Mode", "mode", "from_mode", "to_mode")
+
+
+## The same handler for ONE OBJECT's own state - the enum a sheet's states band declares. The game's
+## mode and an object's state are the same machine one level apart, so they are the same emission
+## with different declarations named; writing it twice would be two chances to disagree about the
+## order leaving and entering run in, which is the part authors depend on.
+static func _emit_state_change_body(events: Array, lines: PackedStringArray, source_map: Array,
+		warnings: Array) -> bool:
+	return _emit_change_body(events, lines, source_map, warnings, STATE_LEAVING_TRIGGER_ID,
+		STATE_ENTERING_TRIGGER_ID, "State", "state", "from_state", "to_state")
+
+
+## The body both of them are: every leaving row first, then every entering row, each under the test
+## that says which member of `enum_name` it is about. `param` is the trigger parameter naming that
+## member, and `from_argument` / `to_argument` are the handler's own two arguments.
+static func _emit_change_body(events: Array, lines: PackedStringArray, source_map: Array,
+		warnings: Array, leaving_id: String, entering_id: String, enum_name: String, param: String,
+		from_argument: String, to_argument: String) -> bool:
 	var leaving: Array = []
 	var entering: Array = []
 	for event_entry: Variant in events:
 		var event_row: EventRow = event_entry as EventRow
 		if event_row == null:
 			return false
-		match event_row.trigger_id:
-			MODE_LEAVING_TRIGGER_ID:
-				leaving.append(event_row)
-			MODE_ENTERING_TRIGGER_ID:
-				entering.append(event_row)
-			_:
-				return false
+		if event_row.trigger_id == leaving_id:
+			leaving.append(event_row)
+		elif event_row.trigger_id == entering_id:
+			entering.append(event_row)
+		else:
+			return false
 	if leaving.is_empty() and entering.is_empty():
 		return false
 	var wrote: bool = false
-	for pass_entry: Array in [[leaving, "from_mode"], [entering, "to_mode"]]:
+	for pass_entry: Array in [[leaving, from_argument], [entering, to_argument]]:
 		for event_entry: Variant in pass_entry[0] as Array:
 			var event_row: EventRow = event_entry as EventRow
-			var member: String = str(event_row.trigger_params.get("mode", "")).strip_edges()
+			var member: String = str(event_row.trigger_params.get(param, "")).strip_edges()
 			if member.is_empty():
-				warnings.append("A mode trigger names no mode - the row was skipped.")
+				warnings.append("A %s trigger names no %s - the row was skipped." % [param, param])
 				continue
-			lines.append("\tif %s == Mode.%s:" % [str(pass_entry[1]), member])
+			lines.append("\tif %s == %s.%s:" % [str(pass_entry[1]), enum_name, member])
 			var body_start: int = lines.size()
 			_emit_event_body([event_row], lines, source_map, 2, warnings)
 			if not _has_statement(lines, body_start):
@@ -1193,6 +1214,11 @@ static func _emit_mode_change_body(events: Array, lines: PackedStringArray, sour
 ## The two triggers that answer a change of mode. They share one handler, so they share one key.
 const MODE_ENTERING_TRIGGER_ID: String = "OnEnteringMode"
 const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
+
+## And the two that answer a change of one object's own state, for the same reason and in the same
+## order: leaving before entering, always.
+const STATE_ENTERING_TRIGGER_ID: String = "OnEnteringState"
+const STATE_LEAVING_TRIGGER_ID: String = "OnLeavingState"
 
 
 ## The lifter's per-anchor gate for a lifecycle handler: exactly what the slot above would emit for
@@ -1966,6 +1992,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if _emit_menu_match(events, lines, source_map, result["warnings"]):
 			continue
 		if _emit_mode_change_body(events, lines, source_map, result["warnings"]):
+			had_body = true
+			continue
+		if _emit_state_change_body(events, lines, source_map, result["warnings"]):
 			had_body = true
 			continue
 		if split_events.is_empty():

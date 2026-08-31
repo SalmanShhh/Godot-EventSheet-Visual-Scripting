@@ -142,6 +142,11 @@ const NOT_STANDALONE: Array[String] = [
 	# above; their round trip is gated by game_state_test, which compiles a sheet that really
 	# declares them, opens the result and recompiles it byte for byte.
 	"GoToMode", "InMode", "PushMode", "GoBackMode",
+	# And the object-state rows name the declarations the Declare states dialog writes onto an
+	# object's sheet - the State enum, the `state` variable, `previous_state` and
+	# `state_entered_msec`. Same reason, and their round trip is gated by object_state_test, which
+	# compiles a sheet that really declares them, opens the result and recompiles it byte for byte.
+	"GoToState", "InState", "InStateForOver", "WasInState",
 ]
 
 

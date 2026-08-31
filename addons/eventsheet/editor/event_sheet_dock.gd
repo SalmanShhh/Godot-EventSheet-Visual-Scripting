@@ -3599,6 +3599,20 @@ func open_modes_dialog() -> void:
 	_modes_dialog.open()
 
 
+## The Declare states dialog, built the first time the states band is clicked and kept afterwards.
+var _states_dialog: EventSheetStatesDialog = null
+
+
+## The head's states band ▸ Declare states…: this object's own states, declared once, as ordinary
+## rows. The same dialog family as Edit modes above, one level down - the game has a mode, and each
+## object has a state.
+func open_states_dialog() -> void:
+	if _states_dialog == null:
+		_states_dialog = EventSheetStatesDialog.new()
+		_states_dialog.init(self)
+	_states_dialog.open()
+
+
 ## The finding one note row is about, found again by asking the sheet. The note carries WHERE it was
 ## (the event, the lane, the slot) rather than the finding itself, because the funnel replaces
 ## resources as it commits and a held finding would be about rows that no longer exist.

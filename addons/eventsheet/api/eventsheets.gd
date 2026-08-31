@@ -1962,6 +1962,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	# the pause flag and the mouse, so its vocabulary reads beside them rather than on a page of its
 	# own that a reader looking for "how do I pause during a cutscene" would never open.
 	"game_state": "Scenes-Pausing-And-Turning-Nodes-Off",
+	# And ONE OBJECT's own state reads under variables, because that is exactly what it is: an
+	# enum plus a variable compared in conditions and set in actions. A page of its own would
+	# suggest a state is a new kind of thing, which is the one idea this vocabulary is against.
+	"object_state": "Setting-And-Changing-Variables",
 	"system": "Timers-Waiting-And-Cooldowns",
 	"table": "Reading-Spreadsheets-And-Data-Assets",
 	"testing": "Testing-Your-Game",

@@ -42,6 +42,9 @@ const FIELD_SIGNAL := "signal_reference"
 const FIELD_METHOD := "method_reference"
 const FIELD_GROUP := "group_reference"
 const FIELD_MODE := "mode_reference"
+## And ONE OBJECT's own declared states, read off the sheet being edited rather than off the
+## project: an enemy's states are the enemy's, and a list mixing two objects' would be a guess.
+const FIELD_STATE := "state_reference"
 const FIELD_INPUT_ACTION := "input_action"
 const FIELD_NODE := "scene_node"
 const FIELD_SHADER_DIAL := "shader_dial"
@@ -219,6 +222,8 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _group_entries()
 		FIELD_MODE:
 			return _mode_entries(sheet)
+		FIELD_STATE:
+			return _state_entries(sheet)
 		FIELD_INPUT_ACTION:
 			return _input_action_entries()
 		FIELD_NODE:
@@ -344,6 +349,20 @@ static func _mode_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 		entries.append({
 			"text": EventSheetModeFacts.member_for(word),
 			"detail": word,
+			"kind": KIND_ENUM,
+		})
+	return entries
+
+
+## This object's declared states, as the enum members a row stores, with the word each one reads as.
+## Read from the sheet being edited - the same answer the parameter dialog's dropdown offers, through
+## the one seam.
+static func _state_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for member: String in EventSheetStateFacts.bare_members(sheet):
+		entries.append({
+			"text": member,
+			"detail": EventSheetStateFacts.word_for(member),
 			"kind": KIND_ENUM,
 		})
 	return entries

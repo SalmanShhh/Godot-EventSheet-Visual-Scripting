@@ -138,11 +138,14 @@ static func _test_add_offers() -> bool:
 	var bare: Dictionary = EventSheetHeadBands.facts(_sheet("res://player.gd"),
 		"class_name Player\nextends CharacterBody2D")
 	ok = _check("+ add offers only the lines this sheet could have and does not",
-		EventSheetHeadBands.add_row_text(bare), "+ add: icon · @tool · description") and ok
+		EventSheetHeadBands.add_row_text(bare), "+ add: icon · @tool · description · states") and ok
 	var full: Dictionary = EventSheetHeadBands.facts(_sheet("res://player.gd"),
 		"@tool\nclass_name Player\nextends CharacterBody2D\n@icon(\"res://i.svg\")\n## Says it all.")
-	ok = _check("a sheet with every line has nothing to add",
-		EventSheetHeadBands.add_row_text(full), "") and ok
+	# States stay on the offer even for a sheet with every LINE it could have: they are not a line
+	# of scaffolding, they are declarations, and the offer is the only way to reach the dialog that
+	# writes them. A sheet that declares them already drops it.
+	ok = _check("a sheet with every line still offers the declarations it has not made",
+		EventSheetHeadBands.add_row_text(full), "+ add: states") and ok
 	var autoload_sheet: EventSheetResource = _sheet("res://game.gd")
 	autoload_sheet.autoload_mode = true
 	autoload_sheet.autoload_name = "Game"

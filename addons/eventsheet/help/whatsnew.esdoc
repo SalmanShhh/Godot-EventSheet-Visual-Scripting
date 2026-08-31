@@ -6,6 +6,44 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### An object's states are a variable, declared once
+
+- **Declare states, on the sheet head.** The states band's **Declare states…** asks the two questions
+  a state machine really has - what the states are called, and which one the object starts in - and
+  writes ORDINARY declarations: `enum State { PATROL, CHASE, STAGGER }`, the `state` variable with the
+  setter that announces a change, `previous_state`, `state_entered_msec`, and
+  `signal state_changed(from_state: int, to_state: int)`. Nothing is stored anywhere else, so an
+  object whose author typed those lines by hand already has this feature, and uninstalling the plugin
+  takes none of it away. One declaration is one machine; a second machine on the same object is
+  simply a second declared state variable.
+- **The band is the diagram.** The head reads `states: Patrol · Chase · Stagger, starts in Patrol`,
+  derived from the declaration and echoing the enum line the compiler writes. There is no graph view,
+  no wires drawn over rows and no canvas of boxes anywhere in this feature - a state is the variable
+  pattern every event sheet already builds, so it reads as a line.
+- **Five ordinary rows on the object.** **Is in `<state>`** (`state == State.X`), **Is in `<state>`
+  for over `<seconds>`s** (the timed variant, off the clock the setter restarts), **Was in
+  `<state>`** (`previous_state == State.X`), **Go to `<state>`** (`state = State.X`, one plain
+  assignment that announces itself through the variable's own setter), and the two triggers **On
+  entering `<state>`** / **On leaving `<state>`**. Leaving fires FIRST, always, and both descriptions
+  say so. Every state is picked from a dropdown filled by the object's own declarations, so a typo
+  cannot be written.
+- **One handler for the moment.** The two triggers share `_on_state_changed(from_state, to_state)`
+  wired to `state_changed`, with every leaving row emitted before every entering one - the same
+  emitter the game's mode change uses, now shared between them rather than written twice.
+- **Two Doctor findings.** A declared state no row can reach (nothing goes to it and the object does
+  not start in it), and a row naming a state this object never declared - which the dropdown will not
+  write, so it is what hand-written code, or a state borrowed from another object's family, looks
+  like when it is read back.
+- **It opens both ways.** A file this plugin compiled opens as those rows and re-emits byte for byte,
+  and an object somebody wrote by hand - `enum State`, `var state`, `if state == State.PATROL` - opens
+  with its states read and its rows lifted.
+- **How it relates to what already shipped.** This is the Game State family (`enum Mode`, In mode X,
+  Go to mode X) one level down: same declarations, same announcing setter, same trigger order, and
+  the spelling rule that turns a member into a word is shared rather than copied. The State Machine
+  behaviour pack is untouched and keeps working; the difference is that its state is a String a typo
+  can spell wrong and this one is an enum member a dropdown fills in. Groups stay plain organisation:
+  naming a group after a state is a convention, never a semantics.
+
 ### A path says which place it is in
 
 - **Every path field states its place.** Under each path box in the Files vocabulary sits a muted

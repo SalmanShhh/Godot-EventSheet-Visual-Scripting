@@ -4383,6 +4383,21 @@ THE FOUR NOTIFICATIONS A GAME ACTUALLY REACTS TO.
 - **On object freed** - Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.
 - **On close** - Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a "save first?" prompt.
 
+### Object State (`res://addons/eventforge/registration/modules/object_state_aces.gd`)
+one object's own state: asking about it, going to it, and answering a change.
+
+#### Triggers
+- **On Entering State** (`state: String`) - Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts.
+- **On Leaving State** (`state: String`) - Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.
+
+#### Conditions
+- **Is In State** (`state: String`) - True while this object is in the given state. The states are declared once, on the states band of this sheet's head, and this row picks one of them.
+- **Is In State For Over** (`state: String, seconds: float`) - True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.
+- **Was In State** (`state: String`) - True while the state this object was in BEFORE the current one is the given state. Answers "what did we come from" - the chase that began from patrolling is a different chase from the one that began from being staggered.
+
+#### Actions
+- **Go To State** (`state: String`) - Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.
+
 ### Options (`res://addons/eventforge/registration/modules/options_aces.gd`)
 Game Options vocabulary (the knobs an options menu changes).
 

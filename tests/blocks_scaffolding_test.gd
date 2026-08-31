@@ -68,7 +68,7 @@ extends Node
 	all_passed = _check("no band folds, and none has children to fold",
 		_any_band_folds(rows), false) and all_passed
 	all_passed = _check("the head offers the lines this sheet has not got",
-		_add_row_text(rows), "+ add: icon · @tool · description") and all_passed
+		_add_row_text(rows), "+ add: icon · @tool · description · states") and all_passed
 	all_passed = _check("a band owns no resource - selection, drag and delete skip it",
 		_bands_are_inert(rows), true) and all_passed
 	all_passed = _check("the logic row is NOT swallowed by the head",

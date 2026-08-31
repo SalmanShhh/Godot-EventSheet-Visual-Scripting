@@ -304,6 +304,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	# The game's own mode is not a class the engine has an icon for, so it borrows the one every
 	# state machine in the editor wears: the graph node a state IS.
 	"Game State": "GraphNode",
+	# And an OBJECT's own state is the same idea one level down, so it wears the same mark: a reader
+	# who learned the icon on the game's mode reads it again on an enemy's state without being told.
+	"Object State": "GraphNode",
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",
