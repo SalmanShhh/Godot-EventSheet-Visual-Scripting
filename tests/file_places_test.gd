@@ -263,7 +263,11 @@ const CLEAN_ABSOLUTE := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_
 const BUG_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"res://runs.zip\") == OK:\n\t\tpacker.close()\n"
 const CLEAN_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"user://runs.zip\") == OK:\n\t\tpacker.close()\n"
 const CLEAN_RES_UNPACK := "func _ready() -> void:\n\tvar reader := ZIPReader.new()\n\tif reader.open(\"res://runs.zip\") == OK:\n\t\treader.close()\n"
+const CLEAN_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"user://save.dat\"))  # was \"C:/temp/x.txt\"\n"
+const BUG_COMMENTED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"C:/temp/x.txt\"))  # the old place\n"
+const BUG_ESCAPED := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"a \\\" b\" + \"/c/d.txt\"))\n"
 const BUG_UNGUARDED := "func _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://save.dat\")\n"
+const BUG_WRONG_GUARD := "func _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://save.dat\") if FileAccess.file_exists(\"user://settings.json\") else \"\"\n"
 const CLEAN_GUARDED := "func _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://save.dat\") if FileAccess.file_exists(\"user://save.dat\") else \"\"\n"
 
 
@@ -311,6 +315,21 @@ static func _test_doctor_checks() -> bool:
 		str(absolute[0]["message"]).contains("names a folder on one computer"), true) and passed
 	passed = _check("the same read under user:// is silent",
 		EventSheetFilesDoctor.absolute_path_findings({"res://ok.gd": CLEAN_ABSOLUTE}).size(), 0) and passed
+	# A CHECK READS WHAT THE CALL WAS HANDED, not every quoted string on the line. A comment about a
+	# path the code no longer uses is a note somebody left themselves, and a warning on it is a
+	# warning nobody can act on: there is nothing on that line to fix.
+	passed = _check("a path in a trailing comment is not a path the code reaches",
+		EventSheetFilesDoctor.absolute_path_findings({"res://ok.gd": CLEAN_COMMENTED}).size(),
+		0) and passed
+	passed = _check("but the same path in the call is still reported",
+		EventSheetFilesDoctor.absolute_path_findings({"res://trap.gd": BUG_COMMENTED}).size(),
+		1) and passed
+	# An escaped quote does not close a literal. A scan that thinks it does pairs every quote after it
+	# with the wrong partner, and reads the rest of the line inside out - here that hid the path
+	# entirely.
+	passed = _check("a string holding an escaped quote is read as one string",
+		EventSheetFilesDoctor.absolute_path_findings({"res://trap.gd": BUG_ESCAPED}).size(),
+		1) and passed
 
 	var unguarded: Array[Dictionary] = EventSheetFilesDoctor.unguarded_read_findings(
 		{"res://trap.gd": BUG_UNGUARDED})
@@ -322,6 +341,12 @@ static func _test_doctor_checks() -> bool:
 		str(unguarded[0]["message"]).contains("Read Text File (or a fallback)"), true) and passed
 	passed = _check("the guarded spelling is silent - including the one the fix writes",
 		EventSheetFilesDoctor.unguarded_read_findings({"res://ok.gd": CLEAN_GUARDED}).size(), 0) and passed
+	# A GUARD IS A GUARD OVER THE PATH IT NAMES. A line asking about one file and reading another is
+	# the unguarded read it looks like, and the check used to fall silent on the word file_exists
+	# wherever it appeared.
+	passed = _check("a guard naming a different file guards nothing",
+		EventSheetFilesDoctor.unguarded_read_findings({"res://trap.gd": BUG_WRONG_GUARD}).size(),
+		1) and passed
 	# Every one of the three offers exactly one chip, and it is the one that answers it.
 	for pair: Array in [[EventSheetFilesDoctor.CHECK_RES_WRITE, "write_under_user"],
 			[EventSheetFilesDoctor.CHECK_ABSOLUTE_PATH, "path_under_user"],

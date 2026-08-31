@@ -124,6 +124,7 @@ static func res_write_findings(sources: Dictionary) -> Array[Dictionary]:
 			script_path.get_file(), lines[0]]
 		message += _and_more(lines)
 		message += " " + EventSheetL10n.translate("A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.")
+		message += " " + _read_off_the_literal()
 		findings.append(_finding("warning", CHECK_RES_WRITE, script_path, message, lines[0]))
 	return findings
 
@@ -199,7 +200,6 @@ static func _opens_for_writing(arguments: String) -> bool:
 	return arguments.contains("FileAccess.WRITE") or arguments.contains("FileAccess.READ_WRITE")
 
 
-
 # ── A folder on one computer ─────────────────────────────────────────────────────────────────
 
 
@@ -214,6 +214,7 @@ static func absolute_path_findings(sources: Dictionary) -> Array[Dictionary]:
 			script_path.get_file(), lines[0]]
 		message += _and_more(lines)
 		message += " " + EventSheetL10n.translate("A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.")
+		message += " " + _read_off_the_literal()
 		findings.append(_finding("warning", CHECK_ABSOLUTE_PATH, script_path, message, lines[0]))
 	return findings
 
@@ -223,23 +224,45 @@ static func absolute_path_findings(sources: Dictionary) -> Array[Dictionary]:
 static func absolute_path_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for line: String in _statements_of(source):
-		if not _touches_a_file(line):
-			continue
-		for literal: String in _quoted_literals(line):
+		for literal: String in _file_call_literals(line):
 			if EventForgeFilePlaces.is_absolute_os_path(literal):
 				found.append(line)
 				break
 	return found
 
 
-## True when a line reaches the filesystem at all. Absolute-looking text is everywhere in a game (a
-## node path, a URL, a regular expression), so the question is asked of file lines only.
-static func _touches_a_file(line: String) -> bool:
-	if line.contains("FileAccess.") or line.contains("DirAccess."):
-		return true
-	if line.contains("ProjectSettings.globalize_path(") or line.contains("OS.shell_open("):
-		return true
-	return line.contains("OS.shell_show_in_file_manager(")
+## The classes whose every method reaches the filesystem, and the three lone calls that do. Absolute
+## looking text is everywhere in a game - a node path, a URL, a regular expression - so the question
+## is only ever asked of what a file call was actually HANDED.
+const FILE_CLASSES: PackedStringArray = ["FileAccess.", "DirAccess."]
+const FILE_CALLS: PackedStringArray = [
+	"ProjectSettings.globalize_path(", "OS.shell_open(", "OS.shell_show_in_file_manager(",
+]
+
+
+## The quoted literals one line hands to a file call, in the order they appear - never every quoted
+## string ON the line. A trailing comment sits on the same line and is an argument to nothing, so
+## `FileAccess.open(path, FileAccess.READ)  # was "C:/temp/x.txt"` is a line about a path the code
+## does not use, and reading it as one was a warning nobody could act on.
+static func _file_call_literals(line: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for class_mark: String in FILE_CLASSES:
+		var at: int = line.find(class_mark)
+		while at >= 0:
+			var from: int = at + class_mark.length()
+			var open_at: int = line.find("(", from)
+			# Only when the bracket really belongs to THIS call: `FileAccess.open(` is a call and
+			# `FileAccess.WRITE` is a constant whose line may hold somebody else's brackets.
+			if open_at >= 0 and _is_identifier(line.substr(from, open_at - from)):
+				found.append_array(_quoted_literals(_arguments_after(line, open_at + 1)))
+			at = line.find(class_mark, from)
+	for call_text: String in FILE_CALLS:
+		var call_at: int = line.find(call_text)
+		while call_at >= 0:
+			found.append_array(_quoted_literals(
+				_arguments_after(line, call_at + call_text.length())))
+			call_at = line.find(call_text, call_at + call_text.length())
+	return found
 
 
 
@@ -259,6 +282,7 @@ static func unguarded_read_findings(sources: Dictionary) -> Array[Dictionary]:
 			script_path.get_file(), lines[0]]
 		message += _and_more(lines)
 		message += " " + EventSheetL10n.translate("Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.")
+		message += " " + _read_off_the_literal()
 		findings.append(_finding("info", CHECK_UNGUARDED_READ, script_path, message, lines[0]))
 	return findings
 
@@ -270,14 +294,30 @@ static func unguarded_read_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for line: String in _statements_of(source):
 		var at: int = line.find(EventForgeFilePlaces.READ_CALL)
-		if at < 0 or line.contains(EventForgeFilePlaces.EXISTS_CALL):
+		if at < 0:
 			continue
 		var arguments: String = _arguments_after(line, at + EventForgeFilePlaces.READ_CALL.length())
+		if _guarded_paths(line).has(arguments.strip_edges()):
+			continue
 		for literal: String in _quoted_literals(arguments):
 			if EventForgeFilePlaces.place_of("\"%s\"" % literal) == EventForgeFilePlaces.PLACE_USER:
 				found.append(line)
 				break
 	return found
+
+
+## The path expressions one line asks `file_exists` about, exactly as they are written. A guard is
+## only a guard over the path it NAMES: a line asking about one file and reading another is the
+## unguarded read it looks like, and reporting it is the whole point of the check.
+static func _guarded_paths(line: String) -> PackedStringArray:
+	var asked: PackedStringArray = PackedStringArray()
+	var at: int = line.find(EventForgeFilePlaces.EXISTS_CALL)
+	while at >= 0:
+		asked.append(_arguments_after(line,
+			at + EventForgeFilePlaces.EXISTS_CALL.length()).strip_edges())
+		at = line.find(EventForgeFilePlaces.EXISTS_CALL,
+			at + EventForgeFilePlaces.EXISTS_CALL.length())
+	return asked
 
 
 
@@ -540,6 +580,11 @@ static func _arguments_after(line: String, from: int) -> String:
 ## The double-quoted strings in one piece of text, in order, without their quotes. Single quotes are
 ## deliberately left out: every path this plugin emits is double-quoted, and a lone apostrophe inside
 ## an ordinary sentence would otherwise open a string that never closes.
+##
+## AN ESCAPED QUOTE DOES NOT CLOSE A STRING. `"a \" b"` is one literal and not two halves of two, so
+## the scan counts the backslashes in front of a quote and honours an odd number of them - otherwise
+## a string carrying one is split in the wrong place and every literal after it on the line is read
+## inside out.
 static func _quoted_literals(text: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var index: int = 0
@@ -547,12 +592,55 @@ static func _quoted_literals(text: String) -> PackedStringArray:
 		if text[index] != "\"":
 			index += 1
 			continue
-		var close_at: int = text.find("\"", index + 1)
+		var close_at: int = _closing_quote(text, index + 1)
 		if close_at < 0:
 			break
 		found.append(text.substr(index + 1, close_at - index - 1))
 		index = close_at + 1
 	return found
+
+
+## Where the double quote that CLOSES a literal opened before `from` is, or -1 when the text runs out
+## first.
+static func _closing_quote(text: String, from: int) -> int:
+	var index: int = from
+	while index < text.length():
+		if text[index] == "\"" and not _is_escaped(text, index):
+			return index
+		index += 1
+	return -1
+
+
+## True when a piece of text is one plain method name and nothing else.
+static func _is_identifier(text: String) -> bool:
+	if text.is_empty():
+		return false
+	for index: int in range(text.length()):
+		var glyph: String = text[index]
+		if glyph == "_" or glyph.is_valid_int() or glyph.to_lower() != glyph.to_upper():
+			continue
+		return false
+	return true
+
+
+## True when the character at `index` is preceded by an odd number of backslashes, which is what an
+## escaped one is.
+static func _is_escaped(text: String, index: int) -> bool:
+	var slashes: int = 0
+	var back: int = index - 1
+	while back >= 0 and text[back] == "\\":
+		slashes += 1
+		back -= 1
+	return slashes % 2 == 1
+
+
+## What these three checks CANNOT see, said in the finding rather than only in a comment. Every one of
+## them reads the PATH LITERAL a call was handed, so a path built out of pieces (`"user://" + name`
+## is caught; `base + name` is not) or held in a variable is one they have nothing to say about. A
+## check that overstates its reach is worse than no check, because a quiet report then reads as a
+## clean project.
+static func _read_off_the_literal() -> String:
+	return EventSheetL10n.translate("This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.")
 
 
 ## The tail a finding grows when more than one line in the same file says the same thing.

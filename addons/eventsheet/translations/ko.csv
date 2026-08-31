@@ -5700,3 +5700,4 @@ Open The Player's Data Folder,플레이어의 데이터 폴더 열기
 Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.,플레이어 자신의 데이터 폴더를 그 데스크톱의 파일 브라우저에서 엽니다 - user://가 그 기기에서 가리키는 실제 폴더입니다.
 open the player's data folder {path},플레이어의 데이터 폴더 {path} 열기
 "Folder to open, inside user://. The path is turned into a real one on the player's machine before it is handed to the desktop.",여는 폴더. user:// 안에 있습니다. 경로는 데스크톱에 넘겨지기 전에 플레이어 기기의 실제 경로로 바뀝니다.
+"This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",이것은 줄에 쓰인 경로에서 읽습니다. 조각을 이어 붙여 만든 경로나 변수에 담긴 경로에 대해서는 이 검사가 말할 수 있는 것이 없습니다 - 조용한 보고는 증명이 아닙니다.

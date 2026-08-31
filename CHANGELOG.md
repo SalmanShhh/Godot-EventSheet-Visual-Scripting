@@ -255,6 +255,17 @@ These are the places the two disagreed.
   band at the top of the same sheet called that row *written*. It is followed by the name the packer
   is bound to, so a reader's identical `open(` stays silent - reading an archive out of `res://` is
   what `res://` is for.
+- **Three smaller misreadings in the same checks.** The absolute-path check read every quoted string
+  on a statement rather than the ones a file call was handed, so a trailing comment naming an old
+  path raised a warning about a path the code does not use. The literal scan did not honour a
+  backslash-escaped quote, so one string carrying one pushed every literal after it out of step. And
+  the unguarded-read check fell silent on the WORDS `file_exists` wherever they appeared, so a line
+  guarding one file and reading another read as guarded. Each is pinned on a fixture.
+- **Every one of those checks now says what it cannot see.** All three read the path literal a call
+  was handed, so a path built out of pieces or held in a variable is one they have nothing to say
+  about. That was true from the start and stated only in a source comment; it is in the finding and
+  in the guide's Doctor chapter now, because a quiet report that reads as a clean project is the one
+  way an honest check misleads.
 
 ### Every call on a known class is a row
 

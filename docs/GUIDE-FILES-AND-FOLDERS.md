@@ -74,6 +74,14 @@ scripts as well as its sheets:
 Each fix shows what it would change before it changes it, as before-and-after pairs of the row's own
 value, and lands as one undo.
 
+**What those checks can and cannot see, because a check that overstates its reach is worse than no
+check.** All three read the path literal a call was actually handed. `FileAccess.open("res://" +
+name, FileAccess.WRITE)` is caught, because the literal is there in the line; the same write with
+`var base = "res://"` on the line above it is not, because by then the path is a name. A path held in
+a variable or built out of pieces is one they have nothing to say about, and each finding says so:
+a quiet report is not a proof that a project is clean. The `load()` check below reaches further - it
+follows names within one file - and states its own limits in the same way.
+
 ## The guard you can see
 
 Reads are forgiving and writes are not, and both of those facts are things you can *see* in the

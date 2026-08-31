@@ -5700,3 +5700,4 @@ Open The Player's Data Folder,打开玩家的数据文件夹
 Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.,在玩家桌面的文件浏览器中打开玩家自己的数据文件夹 - 也就是 user:// 在那台机器上代表的真实文件夹。
 open the player's data folder {path},打开玩家的数据文件夹 {path}
 "Folder to open, inside user://. The path is turned into a real one on the player's machine before it is handed to the desktop.",要打开的文件夹，位于 user:// 中。路径会先转换成玩家机器上的真实路径，再交给桌面。
+"This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",这是从行中写出的路径读出的：由片段拼接而成的路径，或存放在变量里的路径，这项检查无话可说 - 没有报告并不等于没有问题。
