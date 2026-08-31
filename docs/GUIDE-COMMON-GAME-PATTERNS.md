@@ -76,12 +76,12 @@ declarations, five rows and no new kind of thing:
   needs no bookkeeping variable.
 - **Is in `<state>` for over `<seconds>`s** is the timed question as ONE row, off the clock that
   setter restarts.
-- **On entering `<state>`** / **On leaving `<state>`** answer the moment itself. Leaving fires first,
-  always.
+- **On entering `<state>`** / **On leaving `<state>`** answer the moment itself. For one change,
+  leaving fires first.
 
-Each state is picked from a dropdown filled by that object's own declarations, so a typo cannot be
-written, and a group named after a state is a convention that carries no semantics - every row inside
-it still asks *Is in* for itself. The whole story, including what a hand-written machine opens as and
+Each state is offered from that object's own declarations as you type, so a state is picked rather
+than remembered, and a group named after a state is a convention that carries no semantics - every
+row inside it still asks *Is in* for itself. The whole story, including what a hand-written machine opens as and
 what the trail says while the game runs, is in
 [States: What One Object Is Doing Right Now](GUIDE-STATES.md).
 
@@ -96,8 +96,8 @@ behavior pack and the machine lives in a child node holding a String state:
 - **previous_state** always holds where you came from.
 
 The difference between the two is where the machine lives and what a state is: the pack puts it in a
-child node with a string a typo can spell wrong, and the declared states put it in the object's own
-script as an enum member a dropdown fills in. New work belongs on the declared states; nothing built
+child node with a string that is whatever was typed, and the declared states put it in the object's
+own script as an enum member the field offers and the Doctor checks. New work belongs on the declared states; nothing built
 on the pack has to move.
 
 The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,

@@ -78,7 +78,7 @@ func _build() -> void:
 	_help_strip = EventSheetPopupUI.help_strip()
 	form.add_child(_help_strip)
 	_help_strip.follow(_states_edit, "States",
-		"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state picks from this list - which is why a typo cannot reach the game.")
+		"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.")
 	_help_strip.follow(_starts_option, "Starts in",
 		"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.")
 

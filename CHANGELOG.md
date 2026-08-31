@@ -21,15 +21,15 @@
   `<state>`** (`previous_state == State.X`), **Go to `<state>`** (`state = State.X`, one plain
   assignment that announces itself through the variable's own setter), and the two triggers **On
   entering `<state>`** / **On leaving `<state>`**. For one change, leaving fires first, and both
-  descriptions say so. Every state is picked from a dropdown filled by the object's own declarations,
-  so a state is chosen rather than spelled.
+  descriptions say so. Every state is offered from the object's own declarations as you type, so a
+  state is picked rather than remembered.
 - **One handler for the moment.** The two triggers share `_on_state_changed(from_state, to_state)`
   wired to `state_changed`, with every leaving row emitted before every entering one - the same
   emitter the game's mode change uses, now shared between them rather than written twice.
 - **Two Doctor findings.** A declared state no row can reach (nothing goes to it and the object does
-  not start in it), and a row naming a state this object never declared - which the dropdown will not
-  write, so it is what hand-written code, or a state borrowed from another object's family, looks
-  like when it is read back.
+  not start in it), and a row naming a state this object never declared - the field offers the
+  declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed
+  from another object's family, and a name typed a moment before it was declared.
 - **It opens both ways.** A file this plugin compiled opens as those rows and re-emits byte for byte,
   and an object somebody wrote by hand - `enum State`, `var state`, `if state == State.PATROL` - opens
   with its states read and its rows lifted.
@@ -55,9 +55,9 @@
 - **How it relates to what already shipped.** This is the Game State family (`enum Mode`, In mode X,
   Go to mode X) one level down: same declarations, same announcing setter, same trigger order, and
   the spelling rule that turns a member into a word is shared rather than copied. The State Machine
-  behaviour pack is untouched and keeps working; the difference is that its state is a String a typo
-  can spell wrong and this one is an enum member a dropdown fills in. Groups stay plain organisation:
-  naming a group after a state is a convention, never a semantics.
+  behaviour pack is untouched and keeps working; the difference is that its state is a String that is
+  whatever was typed and this one is an enum member the field offers and the Doctor checks. Groups
+  stay plain organisation: naming a group after a state is a convention, never a semantics.
 
 ### Play mode makes the sheet the debugger
 
@@ -205,7 +205,8 @@
   On entering.
 - **The sibling pages say the same thing once.** The patterns guide's state-machine section now leads
   with the declared states and keeps the State Machine pack as the older answer, with the one-sentence
-  difference between them (a String a typo can misspell against an enum member a dropdown fills in);
+  difference between them (a String that is whatever was typed against an enum member the field offers
+  and the Doctor checks);
   the sheet-head guide gains the **states** band row and the rule about where it is offered; and the
   Setting And Changing Variables module guide gains the Object State reference table, which is where
   the module's own guide mapping already pointed.
@@ -258,6 +259,12 @@
   those lines through the same `state = State.X` rule the arm's own **Go to Chase** reading uses, in
   both spellings of a match (the verbatim text an opened file arrives as, and the structured cases an
   author edits it into). Arm PATTERNS are still not a way in: asking has never reached anything.
+- **"A typo cannot be written" is gone from the five places that said it.** The state field is a
+  free-text autocomplete BY DESIGN - a state may be about to be declared, and a field that refused
+  would make writing the row first impossible - so the guarantee was never true and the Doctor
+  finding's own explanation of why it exists said the opposite of the code. Every one of them now
+  says what happens: the declared states are OFFERED as you type, a state is picked rather than
+  remembered, and a row left naming one nobody declares is what the Doctor says out loud.
 
 ### A path says which place it is in
 

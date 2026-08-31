@@ -417,9 +417,10 @@ const KIND_STATE_NOT_DECLARED := "a-state-this-object-does-not-declare"
 ##
 ##   nothing reaches it   a state is declared, no Go to names it, and it is not the one the object
 ##                        starts in. Written, and unreachable.
-##   not declared here    a row names a state this object's enum does not have. The dropdown refuses
-##                        to write one, so this is what hand-written code (or a state copied from
-##                        another object's family) looks like when it is read back.
+##   not declared here    a row names a state this object's enum does not have. The field OFFERS the
+##                        declared ones and does not forbid the rest - a state may be about to be
+##                        declared - so this is the check that catches hand-written code, a state
+##                        copied from another object's family, and a name typed a moment too early.
 ##
 ## Empty for a sheet that declares no states, which is every sheet of an object that has none.
 static func findings(sheet: EventSheetResource) -> Array[Dictionary]:

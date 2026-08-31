@@ -41,7 +41,8 @@
 # - one level up, same declarations, same setter idea, same trigger order. And the State Machine
 # behaviour pack in `eventsheet_addons/state_machine/` is the older answer to the same question: a
 # child node holding a String state. It is frozen and keeps working; the difference is that a string
-# can be misspelled and an enum member picked from a dropdown cannot, so new work belongs here.
+# is whatever was typed and an enum member is one of a declared few, offered by the field and checked
+# by the Doctor, so new work belongs here.
 @tool
 class_name EventForgeObjectStateACEs
 extends RefCounted
@@ -52,8 +53,13 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 ## Game State because an object's state and the game's mode are two different machines.
 const CAT: String = "Object State"
 
-## The hint that makes a field a list of THIS object's declared states rather than free text. A typo
-## cannot be written through it, which is the point of declaring the states once.
+## The hint that makes a field OFFER this object's declared states as you type, which is the point of
+## declaring them once: the answer is picked rather than remembered.
+##
+## It offers, it does not forbid. A state this object does not declare yet is still typeable, because
+## one may be about to be declared and a field that refused would make declaring them in the other
+## order impossible. A row naming a state nobody declares is therefore something the Doctor SAYS -
+## "a state this object does not declare" - rather than something the field prevents.
 const STATE_HINT: String = "state_reference"
 
 

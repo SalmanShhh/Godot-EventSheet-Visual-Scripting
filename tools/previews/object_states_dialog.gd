@@ -28,7 +28,7 @@ static func build(host: Window) -> Control:
 	fields.add_child(EventSheetPopupUI.form_row("Starts in", starts))
 
 	var strip: EventSheetPopupUI.HelpStrip = EventSheetPopupUI.help_strip()
-	var note: String = "The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state picks from this list - which is why a typo cannot reach the game."
+	var note: String = "The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out."
 	strip.follow(states, "States", note)
 	strip.describe("States", note)
 	strip.set_reading(EventSheetStatesDialog.reads_as(DECLARED, STARTS_IN),

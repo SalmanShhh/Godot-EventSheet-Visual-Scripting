@@ -123,9 +123,9 @@ that typed those by hand is already using these.
 | On Entering State | Runs the moment this object enters that state | one handler off `state_changed`, under `if to_state == State.{state}:` |
 | On Leaving State | Runs the moment it leaves one, before anything answering the state it is entering | the same handler, under `if from_state == State.{state}:` |
 
-Each state is picked from a dropdown filled by that object's own declarations, so a typo cannot be
-written, and a group named after a state is a convention with no semantics - the rows inside it each
-ask *Is in* for themselves. This is the game's own mode vocabulary one level down, and the machine a
+Each state is offered from that object's own declarations as you type, so a state is picked rather
+than remembered, and a group named after a state is a convention with no semantics - the rows inside
+it each ask *Is in* for themselves. This is the game's own mode vocabulary one level down, and the machine a
 Godot tutorial writes by hand - an `enum`, a `var state` and a `match state:` - opens as these rows
 and saves back byte for byte. [States: What One Object Is Doing Right Now](../GUIDE-STATES.md) is the
 whole story, including the trail the Debugger shows while the game runs.

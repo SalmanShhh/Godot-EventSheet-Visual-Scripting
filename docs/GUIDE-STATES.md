@@ -95,8 +95,12 @@ learn, because a machine was never a thing here.
 
 ## The four rows
 
-Every state a row names is picked from a dropdown filled by **this object's own declarations**, so a
-typo cannot be written. They live in the picker under **Object State**.
+Every state a row names is offered from **this object's own declarations** as you type, so a state is
+picked rather than remembered. The field offers, it does not forbid: a name this object does not
+declare yet is still typeable, because you may be about to declare it and a field that refused would
+make writing the row first impossible. A row left naming a state nobody declares is what the Doctor
+says out loud - see [What the Doctor knows](#what-the-doctor-knows-about-states). They live in the
+picker under **Object State**.
 
 | Row | Reads as | Ships as |
 | --- | --- | --- |
@@ -414,7 +418,7 @@ kind of bug to find by playing:
 | Finding | What it means |
 | --- | --- |
 | **A state nothing reaches** | The state is declared, no **Go to** names it, and it is not the one the object starts in. It is written, and unreachable |
-| **A state this object does not declare** | A row names a state this object's enum does not have. The dropdown refuses to write one, so this is what hand-written code - or a state borrowed from another object's family - looks like when it is read back |
+| **A state this object does not declare** | A row names a state this object's enum does not have. The field offers the declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed from another object's family, and a name typed a moment before it was declared |
 
 Both are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is the
 default sheet format: a check built on the sheet list would skip almost every real object while
