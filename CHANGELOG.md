@@ -338,6 +338,11 @@
   both field labels and both help paragraphs shipped English-only while the vocabulary around them
   was translated, so the dialog read half in the reader's language. All of it is in `TEMPLATE.csv`
   and the eight bundled translations now.
+- **What the states Doctor deliberately does not say is written down.** An *On entering* row is not a
+  way INTO a state (it answers a change somebody else made), which is where this reader differs from
+  the modes reader beside it; and there is no "no way out of a state" finding yet, where the game's
+  modes have one. Both are stated, in the guide and in the reader's own comments, instead of being
+  left for anyone to discover by comparing the two families.
 
 ### A path says which place it is in
 

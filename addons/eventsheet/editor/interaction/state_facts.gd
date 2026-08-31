@@ -175,8 +175,16 @@ static func named_states(sheet: EventSheetResource) -> PackedStringArray:
 	return named
 
 
-## The states rows can move the object INTO - the ones a Go to names. Nothing else can put an object
-## into a state, which is what makes this the reachability answer.
+## The states rows can move the object INTO - the ones a Go to names, plus the ones a `match state:`
+## arm assigns in its own body. Nothing else can put an object into a state, which is what makes this
+## the reachability answer.
+##
+## A TRIGGER IS NOT A WAY IN, and this is where the states reader deliberately differs from the modes
+## one beside it: On entering ANSWERS a change somebody else made, so a state that only ever has an
+## On entering row under it is still a state nothing reaches. The modes reader counts its entering
+## trigger as a way in and is the more lenient of the two; tightening it would raise findings in
+## projects that have none today, so the two are left saying what each says and the difference is
+## written down here rather than left for a reader to discover by comparing them.
 static func entered_states(sheet: EventSheetResource) -> PackedStringArray:
 	var entered: PackedStringArray = PackedStringArray()
 	if sheet != null:

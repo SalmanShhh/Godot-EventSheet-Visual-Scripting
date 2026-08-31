@@ -440,9 +440,19 @@ is the one shape nothing else in the editor sees:
 | **A state this object does not declare** | A row names a state this object's enum does not have. The field offers the declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed from another object's family, and a name typed a moment before it was declared |
 | **A row that names no state at all** | An *Is in* or *Go to* was dropped and its state cell left empty. That row compiles to `state == State.`, which is not GDScript, so this is the one state finding that stops the file building rather than making it behave oddly |
 
-Both are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is the
-default sheet format: a check built on the sheet list would skip almost every real object while
+All three are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is
+the default sheet format: a check built on the sheet list would skip almost every real object while
 looking like it worked.
+
+Two things the states Doctor deliberately does not say, both of which the game's modes one level up
+does say something about:
+
+- **An On entering row is not a way IN.** It answers a change somebody else made, so a state with
+  nothing but an *On entering* under it is still a state nothing reaches, and it is reported.
+- **There is no "no way out of a state" finding yet.** A game stuck in a mode is a softlock the
+  modes Doctor names; an enemy stuck in Stagger forever is exactly as real and is not named yet. Use
+  the trail while the game runs - a state it enters and never leaves shows as one line and then
+  silence.
 
 ## How this fits with the game's modes, and with the State Machine pack
 
