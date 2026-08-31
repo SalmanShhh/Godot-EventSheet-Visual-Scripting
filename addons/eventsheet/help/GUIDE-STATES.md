@@ -58,7 +58,7 @@ States are declared once, on the **states** band of the sheet head - the same pl
 are declared one level up. A sheet that has none offers **states** in the `+ add` row under the head
 stack; a sheet that has them shows them and opens the same dialog when you click it.
 
-![An enemy's sheet head with a states band reading Patrol, Chase, Stagger, starts in Patrol, and under it four events using the states vocabulary: Is in PATROL with Go to CHASE beside it, the timed question Is in STAGGER for over 1.0s, and the two triggers that answer the moment of a change](images/object-states.png)
+![An enemy's sheet head with a states band reading Patrol · Chase · Stagger - starts in Patrol, and under it four events using the states vocabulary: Is in PATROL with Go to CHASE beside it, the timed question Is in STAGGER for over 1.0s, and the two triggers that answer the moment of a change](images/object-states.png)
 
 **Declare states…** asks the two questions a state machine really has, and no third one:
 
@@ -70,7 +70,7 @@ stack; a sheet that has them shows them and opens the same dialog when you click
 ![The Declare states dialog: a States field holding Patrol, Chase, Stagger, a Starts in dropdown showing Patrol, and a help strip at the foot saying what the sheet will read as and the enum and variable lines it will write](images/object-states-dialog.png)
 
 The strip at the foot of the dialog shows both halves of the answer as you type: what the head will
-read as (`Patrol · Chase · Stagger, starts in Patrol`) and the code it stands for
+read as (`Patrol · Chase · Stagger - starts in Patrol`) and the code it stands for
 (`enum State { PATROL, CHASE, STAGGER } · var state: State = State.PATROL`).
 
 Pressing OK writes **five ordinary declarations** onto the sheet, as rows:
@@ -78,7 +78,9 @@ Pressing OK writes **five ordinary declarations** onto the sheet, as rows:
 - `enum State { PATROL, CHASE, STAGGER }` - the states themselves.
 - `var state: State = State.PATROL`, with the setter that announces a change.
 - `var previous_state: State = State.PATROL` - what we came from.
-- `var state_entered_msec: int = 0` - when this state began.
+- `var state_entered_msec: int = Time.get_ticks_msec()` - when this state began. The initialiser runs
+  when the object is built, so the state it opens in has been held since the object existed, not
+  since the game started.
 - `signal state_changed(from_state: int, to_state: int)` - the announcement.
 
 The announcement lives in the **state variable's own setter**, which is where Godot puts "and tell
@@ -93,8 +95,12 @@ learn, because a machine was never a thing here.
 
 ## The four rows
 
-Every state a row names is picked from a dropdown filled by **this object's own declarations**, so a
-typo cannot be written. They live in the picker under **Object State**.
+Every state a row names is offered from **this object's own declarations** as you type, so a state is
+picked rather than remembered. The field offers, it does not forbid: a name this object does not
+declare yet is still typeable, because you may be about to declare it and a field that refused would
+make writing the row first impossible. A row left naming a state nobody declares is what the Doctor
+says out loud - see [What the Doctor knows](#what-the-doctor-knows-about-states). They live in the
+picker under **Object State**.
 
 | Row | Reads as | Ships as |
 | --- | --- | --- |
@@ -124,23 +130,52 @@ starts, raise it again after. Two triggers answer that moment:
 - **On entering `<state>`** runs the moment this object enters that state.
 - **On leaving `<state>`** runs the moment it leaves that state.
 
-**Leaving fires first, always.** The room is emptied before the next one is filled, so whatever a
-state switched on can be put back before anything answering the new state starts. Both rows are
-answers to the same one signal, and they compile into one `_on_state_changed(from_state, to_state)`
-handler with every leaving arm written above every entering arm - which is the order they run in, so
-the file reads the way it behaves.
+**For one change, leaving fires first.** The room is emptied before the next one is filled, so
+whatever a state switched on can be put back before anything answering the new state starts. Both
+rows are answers to the same one signal, and they compile into one
+`_on_state_changed(from_state, to_state)` handler with every leaving arm written above every entering
+arm - which is the order they run in, so the file reads the way it behaves.
 
 Going to the state the object is already in **changes nothing and announces nothing**: neither
 trigger fires. A signal that fired when nothing changed would be a signal every handler had to guard
 itself against.
+
+**A Go to inside one of these rows is a second change, and it happens straight away.** The setter
+announces as it assigns - that is the whole reason *Go to* is one plain line - so a *Go to Stagger*
+written under **On entering Chase** runs the whole of the Chase-to-Stagger change (its *On leaving
+Chase*, then its *On entering Stagger*) before the rest of the *On entering Chase* rows resume. Those
+remaining rows then run while the object is already in Stagger. Written out, the order is:
+
+```
+On leaving Patrol      the first change begins
+On entering Chase      … and its rows run, one of which says Go to Stagger
+  On leaving Chase       the second change runs to the end, here and now
+  On entering Stagger
+On entering Chase      the rest of the first row's rows, with the object already in Stagger
+```
+
+This is not a quirk of the plugin: it is what the same lines written by hand do, because a setter
+that emits is a setter that emits. It is only worth knowing when you chain changes from inside a
+change. The way to write that so it reads the way it runs is the ordinary one - make the second
+change its own event, under **Is in Chase** and whatever else has to be true - and then each change
+finishes before the next begins.
 
 ## The timed question
 
 **Is in STAGGER for over 2s** is the timed half of *Is in*, and it is one row rather than two,
 because "how long have we been here" is one question. It reads the clock the setter restarts, so:
 
+- The clock **starts when the object is built**, because that is when the state it opens in began.
+  An enemy spawned a minute into a run and standing in Patrol has been in Patrol for as long as it
+  has existed, not for as long as the game has been running.
 - The clock **restarts on every change of state**. A stagger that ends after a second and starts
   again is a fresh two seconds, not a continuation.
+- The clock is `Time.get_ticks_msec()`, which is **wall time and does not stop when the tree is
+  paused**. Going to the game's **Paused** mode freezes the objects, but every timed row keeps
+  counting through the pause and answers the moment play resumes, and the band's `current: Stagger ·
+  3.2 s` keeps rising over a frozen game. If a state's timer has to stop with the game, count it in a
+  variable you add to under a **Not in mode Paused** condition, which is the ordinary shape and the
+  one that says out loud which clock it is on.
 - Going to the state you are already in restarts it too, which is the one thing a re-entry does. That
   is also what the trail says out loud when it happens - see
   [The trail](#the-trail-what-the-machine-just-did).
@@ -182,7 +217,7 @@ enum State { PATROL, CHASE, STAGGER }
 
 signal state_changed(from_state: int, to_state: int)
 
-var state_entered_msec: int = 0
+var state_entered_msec: int = Time.get_ticks_msec()
 var previous_state: State = State.PATROL
 var state: State = State.PATROL:
 	set(value):
@@ -260,7 +295,7 @@ The other shapes that open as states rows:
 | What the file says | What the sheet reads |
 | --- | --- |
 | `enum State { PATROL, CHASE, STAGGER }` | the states on the head: `Patrol · Chase · Stagger` |
-| `var state: State = State.PATROL` | ...`, starts in Patrol` |
+| `var state: State = State.PATROL` | ...` - starts in Patrol` |
 | `state = State.CHASE`, and `self.state = State.CHASE` | **Go to Chase** |
 | `if state == State.PATROL:`, and `self.state == …` | **Is in Patrol** |
 | `if previous_state == State.CHASE:` | **Was in Chase** |
@@ -280,6 +315,11 @@ them your file keeps its own bytes:
   a time, like everything else here. Each file gets what it can say for itself.
 - **A state that is a String rather than an enum** is the older State Machine behaviour pack's shape.
   It keeps that pack's own reading, and it is untouched.
+- **A timed question with a third term in it** - `state == State.STAGGER and (Time.get_ticks_msec() -
+  state_entered_msec) / 1000.0 > 2.0 and hp > 0` - is not the timed row: the timed row is exactly the
+  two halves of "how long have we been here", and a line that asks something else as well is read as
+  the several questions it is. The seconds field takes an expression, so a wait may be
+  `stagger_time * 2`, but it stops where the expression does.
 
 In all of those the door stays open: declare the states on the head and point the rows at them when
 you are ready. Nothing forces the move, and nothing about your file changes until you make it.
@@ -290,9 +330,9 @@ Once the states are on the head, the sheet is also where you watch them. Run the
 open and three things happen, all of them inside the sheet - there is no overlay on the running
 game's viewport and no window in front of it:
 
-![An enemy's sheet while the game runs: the states band reads Patrol, Chase, Stagger, starts in Patrol with current: Chase, 3.2 s after it, the row Is in STAGGER for over 6s shows 3.2 of 6 beside it, and the event that just fired is lit along its left edge](images/state-play-mode.png)
+![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, and the row Is in STAGGER for over 6s shows 3.2 of 6 beside it](images/state-play-mode.png)
 
-- **The band carries the state the game is actually in.** `Patrol · Chase · Stagger, starts in Patrol`
+- **The band carries the state the game is actually in.** `Patrol · Chase · Stagger - starts in Patrol`
   gains `current: Chase · 3.2 s` after it - after it, not instead of it, so the band still reads as
   the declaration it stands for. The state arrives as its NAME, not as a number you would have to
   count out.
@@ -350,10 +390,21 @@ Three things it will not claim:
   two messages the game was already sending - the Live Values frame and, with **Event Trace** armed,
   the tally of rows that fired. Nothing new goes over the wire. With the trace off a line says what
   happened and claims no cause, and if two rows could both have done it, it names neither.
-- **Each moment is the game's own report clock**, so it is accurate to a quarter of a second and to
-  nothing finer. Two changes inside one frame cannot be put in order by it, and it does not pretend.
+- **Each moment is counted off the game's report frames**, so it is accurate to a quarter of a second
+  and to nothing finer. Nothing in the message carries a time, so the stamp is the editor's own count
+  of frames received times the cadence: two changes inside one frame cannot be put in order by it,
+  and a message the engine drops shifts every stamp after it earlier. It does not pretend otherwise.
+- **It describes ONE running object.** The game reports its `state` once per running copy and the
+  message does not say which node sent it, so a scene holding two enemies - or an enemy and a door -
+  sends both under that one name and the trail interleaves them: a Patrol beside a Chase reads as a
+  move between the two. Watch one stateful object at a time, and read a busy scene's trail as the
+  interleaving it is. (The band above the rows has the same boundary, for the same reason.)
 - **With two games running**, each line says which window it is and names no row at all: the
   fired-events message says which rows fired, not which window they fired in.
+- **A line's door belongs to the sheet it was read in.** The row that caused a change is looked up in
+  whatever sheet is in front when the frame arrives, so switching tabs mid-run leaves the earlier
+  lines their sentences and takes away their double-click, rather than pointing you at a row of an
+  object they were never about.
 
 The trail belongs to the run. It is emptied when a new run starts, exactly where the Event Trace's
 hit counts and timings are, and stopping the game leaves it standing - which is when it gets read.
@@ -371,23 +422,37 @@ Two doors, both of them things you were already using:
 - **A noun in a note is a door.** A comment beside an event that says "Patrol is where it starts"
   underlines `Patrol` with a hairline, and one click goes to that declaration. Only names the project
   can prove qualify: a word spelled like a state that is not one stays plain prose, with no mark and
-  no hover. The comment itself is never rewritten - a door is something a reader is shown, and the
-  line the compiler emits is the line it always was.
+  no hover, and a name of three letters or fewer is left alone whatever it is called - `Run`, `Hit`
+  and `Die` are as much ordinary English as they are state names. The comment itself is never
+  rewritten - a door is something a reader is shown, and the line the compiler emits is the line it
+  always was.
 
 ## What the Doctor knows about states
 
-**Tools ▸ Project Doctor** finds the two things that go wrong with an object's states. Neither is an
-error - the object compiles and runs - and both present as "nothing happened", which is the worst
-kind of bug to find by playing:
+**Tools ▸ Project Doctor** finds the three things that go wrong with an object's states. The first
+two are not errors - the object compiles and runs - and both present as "nothing happened", which is
+the worst kind of bug to find by playing. The third does not compile at all, and is here because it
+is the one shape nothing else in the editor sees:
 
 | Finding | What it means |
 | --- | --- |
 | **A state nothing reaches** | The state is declared, no **Go to** names it, and it is not the one the object starts in. It is written, and unreachable |
-| **A state this object does not declare** | A row names a state this object's enum does not have. The dropdown refuses to write one, so this is what hand-written code - or a state borrowed from another object's family - looks like when it is read back |
+| **A state this object does not declare** | A row names a state this object's enum does not have. The field offers the declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed from another object's family, and a name typed a moment before it was declared |
+| **A row that names no state at all** | An *Is in* or *Go to* was dropped and its state cell left empty. That row compiles to `state == State.`, which is not GDScript, so this is the one state finding that stops the file building rather than making it behave oddly |
 
-Both are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is the
-default sheet format: a check built on the sheet list would skip almost every real object while
+All three are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is
+the default sheet format: a check built on the sheet list would skip almost every real object while
 looking like it worked.
+
+Two things the states Doctor deliberately does not say, both of which the game's modes one level up
+does say something about:
+
+- **An On entering row is not a way IN.** It answers a change somebody else made, so a state with
+  nothing but an *On entering* under it is still a state nothing reaches, and it is reported.
+- **There is no "no way out of a state" finding yet.** A game stuck in a mode is a softlock the
+  modes Doctor names; an enemy stuck in Stagger forever is exactly as real and is not named yet. Use
+  the trail while the game runs - a state it enters and never leaves shows as one line and then
+  silence.
 
 ## How this fits with the game's modes, and with the State Machine pack
 

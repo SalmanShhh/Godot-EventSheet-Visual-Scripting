@@ -16,7 +16,7 @@ What changed in the build you have installed (v0.17.0), in the words the release
   object whose author typed those lines by hand already has this feature, and uninstalling the plugin
   takes none of it away. One declaration is one machine; a second machine on the same object is
   simply a second declared state variable.
-- **The band is the diagram.** The head reads `states: Patrol · Chase · Stagger, starts in Patrol`,
+- **The band is the diagram.** The head reads `states: Patrol · Chase · Stagger - starts in Patrol`,
   derived from the declaration and echoing the enum line the compiler writes. There is no graph view,
   no wires drawn over rows and no canvas of boxes anywhere in this feature - a state is the variable
   pattern every event sheet already builds, so it reads as a line.
@@ -24,16 +24,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   for over `<seconds>`s** (the timed variant, off the clock the setter restarts), **Was in
   `<state>`** (`previous_state == State.X`), **Go to `<state>`** (`state = State.X`, one plain
   assignment that announces itself through the variable's own setter), and the two triggers **On
-  entering `<state>`** / **On leaving `<state>`**. Leaving fires FIRST, always, and both descriptions
-  say so. Every state is picked from a dropdown filled by the object's own declarations, so a typo
-  cannot be written.
+  entering `<state>`** / **On leaving `<state>`**. For one change, leaving fires first, and both
+  descriptions say so. Every state is offered from the object's own declarations as you type, so a
+  state is picked rather than remembered.
 - **One handler for the moment.** The two triggers share `_on_state_changed(from_state, to_state)`
   wired to `state_changed`, with every leaving row emitted before every entering one - the same
   emitter the game's mode change uses, now shared between them rather than written twice.
 - **Two Doctor findings.** A declared state no row can reach (nothing goes to it and the object does
-  not start in it), and a row naming a state this object never declared - which the dropdown will not
-  write, so it is what hand-written code, or a state borrowed from another object's family, looks
-  like when it is read back.
+  not start in it), and a row naming a state this object never declared - the field offers the
+  declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed
+  from another object's family, and a name typed a moment before it was declared.
 - **It opens both ways.** A file this plugin compiled opens as those rows and re-emits byte for byte,
   and an object somebody wrote by hand - `enum State`, `var state`, `if state == State.PATROL` - opens
   with its states read and its rows lifted.
@@ -59,14 +59,14 @@ What changed in the build you have installed (v0.17.0), in the words the release
 - **How it relates to what already shipped.** This is the Game State family (`enum Mode`, In mode X,
   Go to mode X) one level down: same declarations, same announcing setter, same trigger order, and
   the spelling rule that turns a member into a word is shared rather than copied. The State Machine
-  behaviour pack is untouched and keeps working; the difference is that its state is a String a typo
-  can spell wrong and this one is an enum member a dropdown fills in. Groups stay plain organisation:
-  naming a group after a state is a convention, never a semantics.
+  behaviour pack is untouched and keeps working; the difference is that its state is a String that is
+  whatever was typed and this one is an enum member the field offers and the Doctor checks. Groups
+  stay plain organisation: naming a group after a state is a convention, never a semantics.
 
 ### Play mode makes the sheet the debugger
 
 - **The states band carries the state the game is actually in.** Run the game with the sheet open and
-  `Patrol · Chase · Stagger, starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not
+  `Patrol · Chase · Stagger - starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not
   instead of it, so the band still reads as the declaration it stands for. With two copies of the
   game running, each reading says which window it is describing.
 - **A timed row shows its progress where the question is asked.** `Is in Stagger for over 6s` gains
@@ -209,7 +209,8 @@ What changed in the build you have installed (v0.17.0), in the words the release
   On entering.
 - **The sibling pages say the same thing once.** The patterns guide's state-machine section now leads
   with the declared states and keeps the State Machine pack as the older answer, with the one-sentence
-  difference between them (a String a typo can misspell against an enum member a dropdown fills in);
+  difference between them (a String that is whatever was typed against an enum member the field offers
+  and the Doctor checks);
   the sheet-head guide gains the **states** band row and the rule about where it is offered; and the
   Setting And Changing Variables module guide gains the Object State reference table, which is where
   the module's own guide mapping already pointed.
@@ -226,6 +227,126 @@ What changed in the build you have installed (v0.17.0), in the words the release
   count is unchanged at **113 behavior packs, 94 of them with a guide**, the other 19 companion data
   assets and loaders.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
+
+### Fixed in the states pass
+
+- **A change started from inside a change is stated, and pinned by running it.** The `state` setter
+  announces as it assigns, so a **Go to** written under **On entering** is a second change that
+  happens immediately: its own leaving-then-entering rows run to the end, and only then do the first
+  row's remaining rows resume - by which time the object is somewhere else. The four places that said
+  \"leaving fires first, always\" with no qualifier now say what actually happens, the guide draws the
+  order out, and `object_state_test` BUILDS the emitted machine, loads it and moves it, so the order
+  is pinned by observation rather than by a claim about emitted text.
+- **The hold clock starts at the object's birth.** `state_entered_msec` was declared as `0` and only
+  ever written by the setter, so until the first change the timed question was comparing against the
+  whole RUN: an enemy spawned a minute in and standing in Patrol answered **Is in Patrol for over 2s**
+  true on its first frame, and the band read `current: Patrol · 60.0 s` for an object one frame old.
+  Declare states now writes `var state_entered_msec: int = Time.get_ticks_msec()`, which is still an
+  ordinary declaration and still one the setter keeps true, and the suite instantiates the emitted
+  object to pin that its starting hold is nothing at all.
+- **Which clock the timed row is on, said out loud.** `Time.get_ticks_msec()` is wall time and does
+  not stop when the tree is paused, so a game in its **Paused** mode goes on counting every object's
+  hold and the timed rows answer the instant play resumes. The guide and the parameter's own comment
+  say so, and name the ordinary shape for a timer that has to stop with the game.
+- **A live frame names an enum member by its VALUE, not by its position.** The streamed `state` and
+  `mode` were read as `State.keys()[state]`, which is only right while every member takes the default
+  value: an enum that names one - `enum State { PATROL, CHASE, STAGGER = 7 }`, ordinary hand-written
+  GDScript and exactly the shape this family exists to welcome - streamed the wrong member or ran off
+  the end of the key list four times a second in the player. All three entries now ask
+  `find_key`, and `state_play_mode_test` lifts the compiler's own frame line out of the compiled file
+  and RUNS it against a member that names its value, which is a class of defect a byte pin cannot
+  see.
+- **A `match` arm's Go to reaches the state, and the Doctor now knows it.** *A state nothing reaches*
+  fired on the tutorial FSM this whole family exists to welcome: a transition written inside a
+  `match state:` arm is part of that arm's verbatim body and never becomes an ACE row, so the
+  reachability walk could not see it and called a plainly reachable state unreachable. It now reads
+  those lines through the same `state = State.X` rule the arm's own **Go to Chase** reading uses, in
+  both spellings of a match (the verbatim text an opened file arrives as, and the structured cases an
+  author edits it into). Arm PATTERNS are still not a way in: asking has never reached anything.
+- **\"A typo cannot be written\" is gone from the five places that said it.** The state field is a
+  free-text autocomplete BY DESIGN - a state may be about to be declared, and a field that refused
+  would make writing the row first impossible - so the guarantee was never true and the Doctor
+  finding's own explanation of why it exists said the opposite of the code. Every one of them now
+  says what happens: the declared states are OFFERED as you type, a state is picked rather than
+  remembered, and a row left naming one nobody declares is what the Doctor says out loud.
+- **The one state row that does not compile is now seen.** An *Is in* or *Go to* dropped and left
+  with its state cell empty substitutes to `state == State.`, which is not GDScript - and nothing
+  caught it: the field allows an unnamed state on purpose, and every walk here drops an empty member
+  by construction, so the Doctor could not report it either. **A row that names no state at all** is
+  the third state finding, counted rather than named because naming nothing is precisely what is
+  wrong with the row. The trigger path was already guarded in the emitter; this is the condition and
+  action path.
+- **The states Doctor check reads the sheet once.** `findings()` was calling `names(sheet)[index]`
+  inside its own per-state loop, so a twenty-state object on a fifteen-hundred-row sheet paid twenty
+  full walks of the document for one pass. The enum is read once and the members carried down.
+- **The timed lift stops at the end of the wait.** Its tail is greedy on purpose - a wait may be
+  `stagger_time * 2` - and the claim is asked of the whole `if` before the condition splitter, so a
+  line carrying a third term was swallowed whole: `... > 2.0 and hp > 0` became ONE row reading
+  **Is in Stagger for over 2.0 and hp > 0s**, and an `or` became a single AND-condition where the
+  file said OR. The bytes round-tripped either way, which is why nothing caught it, and the emitted
+  boolean structure would have changed wholesale the moment anybody edited that cell. A compound
+  expression is now left to the splitter, which reads it as the several questions it is.
+- **The trail says what it cannot know.** The live-values channel carries one unqualified `state` per
+  running copy of the game and never says which node sent it, so a scene with two stateful objects
+  sends both under that one name and the trail interleaves them - a Patrol beside a Chase reading as
+  a move between the two. The tab's own hint and the guide now state that boundary, since it is not
+  one the store can detect. The moment is also said honestly: it is the editor's count of frames
+  received times the cadence, not a clock the game sent, so a dropped message shifts every stamp
+  after it.
+- **A trail line's door belongs to the sheet it was read in.** A line's cause is looked up in
+  whatever sheet is in front when the frame arrives, and switching tabs mid-run silently re-pointed
+  every earlier line at rows of an object it was never about. Each line now carries the sheet it was
+  read in, and the tab offers the double-click only while that sheet is still the one in front.
+- **The trail's sort is a strict weak ordering.** `all_entries()` compared moments with
+  `is_equal_approx`, which is not transitive, so the sort was free to produce a different interleave
+  for the same ring - against the file's own claim that two copies of a game interleave the same way
+  twice. A moment is a frame count times a constant, so it is compared exactly.
+- **\"Read the held lists, never look\" survives more than eight open tabs.** The completion pool cache
+  held 24 lists and one ask asks three kinds per open sheet, so a ninth tab - with the comment-door
+  table's five more keys already in there - evicted and REBUILT a pool on every keystroke, which is
+  exactly the regression the ask budget exists to catch. The cap now holds a reader with far more
+  tabs than anyone works with, and the budget's shelf sits well past the boundary instead of exactly
+  on it, so the pin can see the thing it is for. The three budget pins also drop the project-wide
+  caches they warm on the way OUT, not only on the way in, which is the serial-CI rule.
+- **Both silent answer doors now say what they could not reach.** The ask field's own rule is that
+  nothing there silently does nothing, and two of the four doors did: a declaration whose sheet would
+  not open answered with no message at all, and a finding threw away the result of revealing its row
+  - which is exactly the stale-finding case, since the list is the LAST audit's, so a finding the
+  reader had already fixed opened the sheet and then did nothing. Both say where they got to, and the
+  second says why.
+- **One assembly for a band's reading, called rather than copied - and now translated.** The two
+  bands said the same sentence in two spellings (`Patrol · Chase - starts in Patrol` against
+  `Patrol · Chase, starts in Patrol`), which is exactly what the states reader's own header promises
+  can never happen; and both dialogs re-implemented the join, so the live preview promised all eight
+  of eight names while the head it was previewing would show six and a count. There is one assembly
+  now, both bands and both dialogs call it, and \"starts in\" is a key in all nine language files
+  instead of shipping English on both bands.
+- **The timed row's live progress stays on the canvas, and an inverted row shows none.** `3.2 of 6`
+  was drawn straight after the cell with no measurement and no clamp, unlike the `now` chip ten lines
+  above it, so a long cell in a narrow dock put it past the right edge - and with no horizontal
+  scroll on a sheet, past the edge means gone rather than scrollable. It is now measured and clamped
+  the same way. Separately, an inverted **Not Is in X for over 6s** is true UNTIL the hold passes, so
+  a bar counting up to it read as progress towards the opposite of what the row does; it now shows
+  nothing, the same answer a computed wait gets.
+- **A three-letter state name no longer turns prose into a door.** The door table's own rule is that
+  \"a sentence that merely reads like a name is left alone\", and at a three-letter threshold `Run`,
+  `Hit`, `Die`, `Won`, `Fly` and `End` - ordinary state names and ordinary English both - underlined
+  the words in \"Run the game before shipping\" and \"Hit points go here\". The floor is four, and the
+  door-table pins now declare two such states so the case is measured rather than assumed.
+- **The vocabulary reference says how the three state families relate.** Object State, Game State and
+  the State Machine pack sat in the generated reference as unrelated entries with no mention of each
+  other, which is one of the two places a reader actually meets all three at once. Each module's own
+  summary line now points at the other, so the cross-reference is DERIVED from the module rather than
+  hand-maintained beside it.
+- **The Declare states dialog's own chrome is keyed.** Its title, its OK button, the placeholder,
+  both field labels and both help paragraphs shipped English-only while the vocabulary around them
+  was translated, so the dialog read half in the reader's language. All of it is in `TEMPLATE.csv`
+  and the eight bundled translations now.
+- **What the states Doctor deliberately does not say is written down.** An *On entering* row is not a
+  way INTO a state (it answers a change somebody else made), which is where this reader differs from
+  the modes reader beside it; and there is no \"no way out of a state\" finding yet, where the game's
+  modes have one. Both are stated, in the guide and in the reader's own comments, instead of being
+  left for anyone to discover by comparing the two families.
 
 ### A path says which place it is in
 

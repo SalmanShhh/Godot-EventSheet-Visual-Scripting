@@ -146,7 +146,9 @@ Two boundaries, both said out loud rather than guessed at:
   the same query - and that one really does read every sheet.
 - **Findings are the last audit's, and typing never starts one.** Run **Tools ▸ Project Doctor**
   once and its findings are searchable from the field for the rest of the session. With no run
-  behind it there is simply no Findings group.
+  behind it there is simply no Findings group. A finding you have since fixed still lists, so opening
+  one lands you on its sheet and says the row it named is not there any more, with the reason - the
+  door always tells you where it got to.
 
 Nothing is indexed for any of this. Every answer is a read of a list the editor already holds - the
 same per-sheet lists that fill the completion popups, the same collection the Find window matches
