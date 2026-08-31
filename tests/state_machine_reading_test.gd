@@ -81,8 +81,13 @@ static func run() -> bool:
 	ok = _check("the friendly name still shows", row_data.spans[1].text, "On State Changed") and ok
 
 	# 4. A lifted `match` on a state-shaped subject reads in the same grammar: case rows carry
-	# the ◆ badge and "State: <leaf>" text; other matches (and the `_` default) keep their
-	# pattern text untouched.
+	# the ◆ badge; other matches (and the `_` default) keep their pattern text untouched.
+	#
+	# TWO READINGS, AND WHICH IS WHICH. A subject that is THIS OBJECT's own `state` variable is the
+	# machine the sheet's own states band declares, so its arms read as the rows that vocabulary
+	# already has - "Is in Patrol", not a second spelling of the same idea. Every OTHER state-shaped
+	# subject (a machine held on another node, the behaviour pack's String state) keeps the older
+	# "State: <leaf>" reading, because nothing about those says which enum a leaf belongs to.
 	ok = _check("state subject detected", builder._is_state_shaped_subject("state"), true) and ok
 	ok = _check("dotted state subject detected", builder._is_state_shaped_subject("machine.current_state"), true) and ok
 	ok = _check("non-state subject passes through", builder._is_state_shaped_subject("damage_type"), false) and ok
@@ -101,7 +106,13 @@ static func run() -> bool:
 	var case_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("one case row built", case_rows.size(), 1) and ok
 	ok = _check("case row leads with the state badge", case_rows[0].spans[0].text, "◆") and ok
-	ok = _check("case row reads State: leaf", case_rows[0].spans[1].text, "State: PATROL") and ok
+	ok = _check("the object's own machine reads as its Is in row",
+		case_rows[0].spans[1].text, "Is in Patrol") and ok
+	# ...and somebody else's machine keeps the leaf reading, for want of anything better to say.
+	lifted_match.match_expression = "machine.current_state"
+	var foreign_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("another object's machine reads State: leaf",
+		foreign_rows[0].spans[1].text, "State: PATROL") and ok
 	# A match on an ORDINARY value is not a state machine at all, and an event sheet has no switch:
 	# it reads as the if / else-if chain an event-sheet user knows, so the first case states the test.
 	lifted_match.match_expression = "damage_type"
@@ -122,7 +133,16 @@ static func run() -> bool:
 	ok = _check("the guard leads with the ƒ badge", transition.spans[0].text, "ƒ") and ok
 	ok = _check("the ƒ is a badge span, not text", bool((transition.spans[0].metadata as Dictionary).get("badge", false)), true) and ok
 	ok = _check("the guard humanizes in the condition cell", transition.spans[1].text, "Can See Player") and ok
-	ok = _check("the effect reads as a sentence in the action cell", transition.spans[2].text, "Set state to State.CHASE") and ok
+	# The effect of a guard inside the OBJECT'S OWN machine is a transition, and reads as the row that
+	# writes it. The same guard under somebody else's machine keeps the plain assignment sentence,
+	# because there the leaf names no enum this sheet declares.
+	ok = _check("the transition reads as the Go to row it means",
+		transition.spans[2].text, "Go to Chase") and ok
+	lifted_match.match_expression = "machine.current_state"
+	var foreign_guarded: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("and elsewhere it reads as a sentence in the action cell",
+		foreign_guarded[0].children[0].spans[2].text, "Set state to State.CHASE") and ok
+	lifted_match.match_expression = "state"
 	spot.code = "if not can_see_player():
 	state = State.PATROL"
 	var negated_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)

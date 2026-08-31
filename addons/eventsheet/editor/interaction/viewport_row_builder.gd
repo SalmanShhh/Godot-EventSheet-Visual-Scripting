@@ -6769,6 +6769,10 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
 		# from the code's own names rather than any pack. Other matches keep their pattern text.
 		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
+		# ...and the narrower question inside that one: is the subject THIS OBJECT's own state
+		# variable, the enum the states band declares. That machine has rows of its own, so its arms
+		# read as those rows rather than as pattern text.
+		var own_state_match: bool = EventSheetStateFacts.is_state_subject(match_row.match_expression)
 		# An event sheet has no switch. A reader of one knows if / else-if / else, so a
 		# match on an ORDINARY value reads as that chain: the first case as its test, every later case as
 		# an Else carrying its own test, `_` as a plain Else. Only shapes that MEAN "one of these values"
@@ -6814,7 +6818,13 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 						if not combo.is_empty() \
 								and case_line.strip_edges() == "%s.clear()" % str(combo.get("list", "")):
 							continue
-						body.append(_friendly_statement_text(case_line, not combo.is_empty()))
+						# Inside an arm of the object's own machine, `state = State.CHASE` is the Go
+						# to row - the same step it is anywhere else, and the only place it cannot
+						# BE that row, because an arm's body is kept verbatim so the match re-emits
+						# to the byte. So it is at least READ as the row it means.
+						var stepped: String = "" if not own_state_match else EventSheetStateFacts.statement_reading(case_line)
+						body.append(stepped if not stepped.is_empty() \
+							else _friendly_statement_text(case_line, not combo.is_empty()))
 				elif case_item is ACEAction:
 					body.append(_format_action_descriptor(case_item as ACEAction))
 				elif case_item is CommentRow:
@@ -6826,7 +6836,16 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				body = PackedStringArray([" "])
 			var pattern_text: String = str(match_case.pattern).strip_edges()
 			var case_label: String = pattern_text
-			if state_shaped and pattern_text != "_":
+			# THE OBJECT'S OWN STATES, said the way its rows say them. `match state:` with
+			# `State.PATROL:` arms is the machine a hand-written object is written as and the one the
+			# states band declares, so its arms read "Is in Patrol" - the Is In State row's own
+			# sentence, fetched from that row rather than spelled again here. Every other
+			# state-shaped subject (a String state, another object's machine) keeps the older
+			# "State: <leaf>" reading it has always had.
+			var own_state_arm: String = "" if not own_state_match else EventSheetStateFacts.arm_reading(pattern_text)
+			if not own_state_arm.is_empty():
+				case_label = own_state_arm
+			elif state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
 			var chain_spans: Array[SemanticSpan] = []
 			if not menu.is_empty():
@@ -8576,13 +8595,18 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 	if guard.is_empty():
 		return null
 	var inner: PackedStringArray = PackedStringArray()
+	# A guard INSIDE an arm of the object's own machine ends in a transition more often than not, so
+	# the same Go to reading the arm's plain lines get applies here. Asked of the match's own subject,
+	# because that is the only thing that says which machine these lines are about.
+	var own_state: bool = EventSheetStateFacts.is_state_subject(match_row.match_expression)
 	for line_index: int in range(1, case_lines.size()):
 		if not case_lines[line_index].begins_with("\t"):
 			return null
 		var inner_line: String = case_lines[line_index].substr(1)
 		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
 			return null
-		inner.append(_friendly_statement_text(inner_line))
+		var stepped: String = "" if not own_state else EventSheetStateFacts.statement_reading(inner_line)
+		inner.append(stepped if not stepped.is_empty() else _friendly_statement_text(inner_line))
 	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row, _guard_is_negated(guard))
 	child.language_block = true
 	# A computed-check guard wears the ƒ SVG badge in the icon column - the reader learns at a

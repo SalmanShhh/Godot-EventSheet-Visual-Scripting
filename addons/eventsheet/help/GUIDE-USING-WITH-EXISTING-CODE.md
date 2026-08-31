@@ -23,7 +23,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift) - what an opened file
    [reads like](#what-an-opened-file-reads-like---event-sheet-grammar-not-annotated-code), its
    [objects](#the-objects-of-an-opened-file---what-they-are-and-where-you-find-them), a whole
-   [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is)
+   [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is),
+   [a hand-written state machine](#a-hand-written-state-machine-read-as-the-objects-states)
    and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
    [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
 7b. [Living in a Big Project: the Minimap, the Sheet Map and the History List](#7b-living-in-a-big-project-the-minimap-the-sheet-map-and-the-history-list)
@@ -2180,6 +2181,51 @@ None of this is a guess. Each reading rests on a fact the file *states* - the lo
 system clock - and with the fact absent every line keeps the ordinary reading it has today. Each event
 holding one of these shapes also records it in the pattern registry with the exact source lines as its
 evidence, which is what the ⟡ chip, its hover and **Adopt behavior** read.
+
+### A hand-written state machine, read as the object's states
+
+An enemy that is patrolling, or chasing, or staggered is written in Godot as an enum and a variable.
+That is exactly what the sheet's own states are, so a machine written by hand and a machine declared
+through **Declare states…** are the same file - and an object somebody wrote long before this plugin
+existed opens with its states already read.
+
+**The shapes that open as state rows.** These are the canonical ones - the ones the compiler itself
+writes, which is why they meet in the middle:
+
+| What the file says | What the sheet reads |
+| --- | --- |
+| `enum State { PATROL, CHASE, STAGGER }` | the states on the head: `Patrol · Chase · Stagger` |
+| `var state: State = State.PATROL` | ...`, starts in Patrol` |
+| `state = State.CHASE` (and `self.state = …`) | **Go to Chase** |
+| `if state == State.PATROL:` (and `self.state == …`) | **Is in Patrol** |
+| `if previous_state == State.CHASE:` | **Was in Chase** |
+| `if state == State.STAGGER and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > 2.0:` | **Is in Stagger for over 2s** - one row, not two |
+| `match state:` with `State.PATROL:` arms | one row per arm, reading **Is in Patrol** |
+| `func _on_state_changed(from_state, to_state):` with `if from_state == State.X:` arms | **On leaving X** / **On entering X** |
+
+A `state = State.CHASE` *inside* a `match` arm reads as **Go to Chase** too. It stays part of the
+arm's text rather than becoming a row of its own, because an arm's body is kept verbatim - that is
+what lets the whole `match` be written back exactly as you wrote it.
+
+**The limits, stated plainly.** These are not failures; they are the honest answer, and in every one
+of them your file keeps its own bytes:
+
+- **A `match` arm that binds a name** (`var pending:`) or destructures is doing something **Is in**
+  cannot say. That arm keeps its pattern text.
+- **A change handler that runs entering before leaving** is not the shape the compiler writes. It
+  keeps the plain signal-handler rows it already had, because adopting it would silently reorder your
+  code.
+- **A machine reached through your own helper** (`_enter(State.OPEN)`) is a call to your function,
+  and reads as that call. Naming the function's `state = next` line a Go to would be a guess.
+- **A machine woven through several files** - the enum here, the variable there, the transitions in a
+  third - is read one file at a time, like everything else. Each file gets what it can say for
+  itself.
+- **A state that is a String rather than an enum** is the older **State Machine** behavior pack's
+  shape. It keeps that pack's own reading and is untouched.
+
+In every one of those cases the **Adopt** door is still open: declare the states on the head, and
+point the rows at them when you are ready. Nothing forces the move, and nothing about your file
+changes until you make it.
 
 ### Beginner spellings and the reading layer
 

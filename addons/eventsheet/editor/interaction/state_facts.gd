@@ -210,6 +210,55 @@ static func _note(into: PackedStringArray, member: String) -> void:
 		into.append(bare)
 
 
+# -- Reading a hand-written machine in the rows' own words ---------------------------------------
+## The prefix a member of this object's enum is written with, spelled out of the enum's own name so
+## renaming one could never leave the other behind.
+const MEMBER_PREFIX: String = ENUM_NAME + "."
+
+
+## What one of this family's rows SAYS about a state - "Is in Patrol", "Go to Chase" - taken from
+## that row's own display text rather than spelled a second time here. One spelling for the reading
+## of an authored row and the reading of the hand-written line that means the same thing, so a
+## `match state:` arm and the Is in row above it can never say one idea two ways. "" when the id
+## names no row of this vocabulary.
+static func row_reading(ace_id: String, member: String) -> String:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
+	if descriptor == null:
+		return ""
+	return EventSheetL10n.translate(descriptor.get_display_text().strip_edges()) \
+		.replace("{%s}" % STATE_PARAM, word_for(member))
+
+
+## The Is in reading of a `match state:` ARM - "State.PATROL:" is "Is in Patrol". "" for an arm this
+## vocabulary has nothing to say about (the catch-all `_`, a pattern that is not a member of the
+## enum), which is the honest answer: such an arm keeps its own pattern text.
+static func arm_reading(pattern: String) -> String:
+	var text: String = pattern.strip_edges()
+	if not text.begins_with(MEMBER_PREFIX):
+		return ""
+	var member: String = text.substr(MEMBER_PREFIX.length()).strip_edges()
+	return "" if member.is_empty() or member.contains(".") else row_reading("InState", member)
+
+
+## The Go to reading of one line INSIDE such an arm - `state = State.CHASE` is "Go to Chase". The
+## same line outside a match is claimed by the lifter and arrives as a real row; inside one it is
+## part of the arm's verbatim body, so this is the only place it can be read at all. "" for every
+## other line, which then reads however it already read.
+static func statement_reading(line: String) -> String:
+	var text: String = line.strip_edges()
+	var assignment: String = "%s = %s" % [STATE_VARIABLE, MEMBER_PREFIX]
+	if not text.begins_with(assignment):
+		return ""
+	var member: String = text.substr(assignment.length()).strip_edges()
+	return "" if member.is_empty() or not member.is_valid_identifier() else row_reading("GoToState", member)
+
+
+## True when a `match` subject is THIS object's own state variable - the canonical `match state:` a
+## hand-written machine opens with, and the only subject these readings are true of.
+static func is_state_subject(match_expression: String) -> bool:
+	return match_expression.strip_edges() == STATE_VARIABLE
+
+
 # -- The two things that go wrong with an object's states ----------------------------------------
 ## The finding ids. Frozen: the Doctor's lines and the tests address one by these.
 const KIND_STATE_UNREACHABLE := "a-state-nothing-reaches"

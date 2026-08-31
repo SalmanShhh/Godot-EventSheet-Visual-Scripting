@@ -33,6 +33,25 @@
 - **It opens both ways.** A file this plugin compiled opens as those rows and re-emits byte for byte,
   and an object somebody wrote by hand - `enum State`, `var state`, `if state == State.PATROL` - opens
   with its states read and its rows lifted.
+- **Authored, saved, reopened - and unmoved.** The two shapes that used to come back as something
+  else now come back as themselves. The timed question is claimed WHOLE (`state == State.STAGGER and
+  (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > 2.0` is one row, not "Is in Stagger" plus a
+  wall of arithmetic), and a `_on_state_changed` whose arms run in the order the compiler writes them
+  - every `from_state` arm before every `to_state` arm - is adopted back into the On leaving / On
+  entering rows that wrote it. A sheet authored with the whole vocabulary, saved, closed and reopened
+  is now row-for-row the sheet it was.
+- **A `match state:` reads as the states.** The arms of the shape a tutorial writes - `match state:`
+  with `State.PATROL:` arms - read as **Is in Patrol**, **Is in Chase**, **Is in Stagger**: the Is In
+  State row's own words, taken from that row rather than spelled a second time, so an opened machine
+  and an authored one cannot say one idea two ways. A `state = State.CHASE` inside an arm reads as
+  **Go to Chase**. The arm's body is kept verbatim, which is what lets the match re-emit to the byte.
+- **`self.state` is the same step.** `self.state = State.CHASE` and `self.state == State.PATROL` lift
+  to Go to and Is in, with the author's own spelling ridden back out untouched.
+- **And what stays code, stays code, precisely.** A machine whose arms bind a name, whose
+  `_on_state_changed` runs entering before leaving, or that reaches its states through a helper the
+  file wrote itself, is somebody else's design: it keeps the ordinary reading it already had and not
+  one byte of it moves. Three hand-written machines - the `match` shape, the announcing-setter shape,
+  and one deliberately non-canonical one - are fixtures in the suite, byte-gated on every run.
 - **How it relates to what already shipped.** This is the Game State family (`enum Mode`, In mode X,
   Go to mode X) one level down: same declarations, same announcing setter, same trigger order, and
   the spelling rule that turns a member into a word is shared rather than copied. The State Machine

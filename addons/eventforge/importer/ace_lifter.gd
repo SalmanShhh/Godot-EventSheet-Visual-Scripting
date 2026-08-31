@@ -44,6 +44,7 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/collision_filter_lift.gd"),
 	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
 	preload("res://addons/eventforge/importer/input_event_lift.gd"),
+	preload("res://addons/eventforge/importer/state_lift.gd"),
 ]
 
 ## The families that also recognise a CONDITION term - the same list, filtered by the second static
@@ -755,6 +756,13 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	# approximate grouping) rather than falling back to a verbatim block; the runtime-bearing code
 	# still has to match exactly. When a sheet has no groups this strips nothing (identity compare).
 	if _strip_group_markers(output) == _strip_group_markers(source):
+		# The whole file reproduces. One reading is still owed: a lifted `_on_state_changed` is a run
+		# of signal-handler rows comparing the handler's own arguments, which is the mechanism rather
+		# than the meaning - so the arms of a CANONICAL one are adopted as the two rows that wrote
+		# them, On leaving and On entering. Byte-gated in the same breath, and put straight back when
+		# the gate refuses: an adoption that moved a byte is not an adoption, and the file that was
+		# already reproducing must go on doing so.
+		_adopt_state_change_triggers(sheet, source)
 		return true
 	if OS.get_environment("EVENTFORGE_LIFT_DEBUG") == "1":
 		var src_lines: PackedStringArray = source.split("\n")
@@ -771,6 +779,23 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 		print("[lift-debug] src=", src_lines.size(), " out=", out_lines.size(), " lines")
 	_revert_lift(sheet, backup, functions_backup, boundary, boundary_code, peeled_rows)
 	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## The one reading that is taken AFTER the file has already proved it reproduces: the arms of a
+## canonical `_on_state_changed` become On leaving / On entering rows. Nothing is attempted for a
+## sheet that has no such handler (the check is a walk of the top-level rows, so the ordinary file
+## pays a scan and no compile), and what is attempted is compiled once and put back unless the bytes
+## are the ones the file arrived with.
+static func _adopt_state_change_triggers(sheet: EventSheetResource, source: String) -> void:
+	var adopted: Array[Dictionary] = EventForgeStateLift.adopt_change_handler(sheet)
+	if adopted.is_empty():
+		return
+	var saved_path: String = sheet.external_source_path
+	sheet.external_source_path = "user://eventforge_lift_verify.gd"
+	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
+	sheet.external_source_path = saved_path
+	if _strip_group_markers(output) != _strip_group_markers(source):
+		EventForgeStateLift.restore(adopted)
 
 
 ## Puts the sheet back exactly as the import left it. The events backup is SHALLOW, so the two rows
