@@ -1559,6 +1559,48 @@ As An Image**. A sheet-authored options screen and a hand-written one are the sa
 
 ![An opened script's window rows: Window Set size to 1280 x 720, Set title, Set vsync on, then System Set max FPS and Set anti-aliasing, and a screenshot function below](images/window-render-reading.png)
 
+#### Files, folders, and the doors content comes in through
+
+A project that reads and writes files is full of static calls on three engine classes, and they read
+as the rows that write them:
+
+| the GDScript | reads as |
+| --- | --- |
+| `FileAccess.file_exists("user://save.dat")` | `file "user://save.dat" exists` |
+| `FileAccess.get_file_as_string(path)` | `text of file path` |
+| `FileAccess.get_file_as_string(p) if FileAccess.file_exists(p) else "{}"` | `text of file p, or "{}"` - the guard is the row's second slot |
+| `FileAccess.open(p, FileAccess.WRITE)` and a guarded `store_string` | `write text to file p` |
+| `DirAccess.make_dir_recursive_absolute(p)` | `make directory p` |
+| `DirAccess.get_files_at(p)` | `files in p` |
+| `JSON.stringify(value, "\t")` | `pretty JSON of value` |
+| `String.validate_filename()`, guarded with a fallback | `safe file name of name, or "untitled"` |
+| `OS.shell_show_in_file_manager(ProjectSettings.globalize_path(p))` | `show p in the file manager` |
+
+Every one of those is a single-statement spelling, so it opens as the row and the row writes it back
+exactly as you wrote it. The path parameters carry the place lead, so an opened file's rows say
+`user://` or `res://` under the field without anything being rewritten.
+
+**The window's own signals are connect sources now.** A hand-written
+`get_window().files_dropped.connect(_on_files_dropped)` in `_ready`, with its handler below, opens as
+the **On Files Dropped** event with the paths riding in as a chip - and `close_requested` off the
+same window opens as **On Window Close Requested**, which gives that shipped trigger a spelling it
+can be opened back from. The table is keyed on the *source* rather than on the bare signal name for a
+reason worth knowing: `close_requested` is a name every dialog in every project has, and a table
+keyed on the signal alone would relabel all of them.
+
+**An answer function opens from its header alone.** The Ask rows and the unpack loop call their
+answers by name rather than connecting them, so there is no connect line to read them off:
+`func _on_file_chosen(path: String) -> void:` opens as **On A File Chosen**, and
+`_on_ask_cancelled`, `_on_unpack_progress`, `_on_unpack_refused` and `_on_unpack_finished` open as
+theirs, the way a lifecycle callback does. One guard on that: a file that *also* wired one of those
+names to a signal keeps its handler, because the connect line has to go on pointing at something.
+
+**The multi-line loops stay code, and that is the honest answer.** The archive rows, the engine's own
+CSV read and the CSV write all emit several lines, and the reverse index claims single-line spellings
+only. So a file that already holds one of those loops opens with it as a verbatim block, with the
+adopt door beside it - and the promise that matters is gated: opening such a file and saving it
+untouched reproduces its bytes, with the three unpack answers opening as their own events around it.
+
 #### The reading lenses - names you can turn on and off
 
 - **Reading lenses.** In Reading mode (a read-only preview, or the Simple pill's Reading lens) names read

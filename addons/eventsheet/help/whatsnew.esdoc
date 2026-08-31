@@ -6,42 +6,103 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Safe names, the path that is still free, and the line between a file and a program
+### A path says which place it is in
 
-- **Safe File Name** answers with a name a file system will actually take, over the engine's own
-  `String.validate_filename`: the characters it refuses become underscores, the ends are trimmed. It
-  is an EXPRESSION, so it sits in the path slot of the write that was already there rather than
-  becoming a second way to save a file. The second slot is the **familiar default argument** - a name
-  that comes out empty (a blank box, or spaces) answers with it, so a player who typed nothing gets a
-  file instead of an error. The guarded form wears its own brackets, because a bare `a if b else c`
-  spliced between two `+` signs binds the whole join into the branches, and that is a wrong path
-  rather than a parse error.
-- **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
-  does not erase the first. The rule is the one every desktop uses and **it is spelled out in the
-  emitted line**: `shot.png`, then `shot_1.png`, then `shot_2.png`, up to the number in the slot. The
-  path expression is read **once** and the numbers are only tried when the path you wanted is taken.
-  A path with no extension gets no stray dot, and a run that fills every number answers the path you
-  asked for - which the row's own help says out loud, because that next write overwrites.
-- **Show In The File Manager** opens the player's own file browser with the file selected, over
-  `OS.shell_show_in_file_manager`. **Desktop only**, said on the row: a web or mobile build does
-  nothing at all, so say on screen where the file went as well.
-- **The Doctor now draws the trust boundary nothing else in the engine draws.** A path that came in
-  through one of the game's own doors - dropped on the window, chosen by the player, found in a
-  watched folder, written out of an unpacked archive - handed to `load()` or `ResourceLoader.load()`
-  is reported. That line works, which is exactly why nothing else mentions it: a scene or a resource
-  file can name a **script**, so loading one runs its author's code with everything this game can
-  reach. The finding says that in plain words and offers the three data-shaped doors - **Image From
-  File** for a picture, **Read Text File (or a fallback)** for text, **Table From File** for rows and
-  columns - because data cannot carry behaviour. It is a **warning and not an error**: a game whose
-  mods are code is a decision, and the decision is yours. What is not a decision is making it without
-  knowing.
-- **It reads text, so hand-written code gets the same finding.** The trace follows NAMES inside one
-  file: a parameter of a door's own handler, anything assigned from one, anything a `for` walks out
-  of one, and any path written under a folder that file watches or unpacks into. It keeps one set of
-  names per file rather than per function, which finds the very common shape where one handler stores
-  the path on the object and another loads it. It does **not** follow a path across files or through
-  a call into another body - so a quiet file is not a proof, and the check says so rather than
-  implying otherwise.
+- **Every path field states its place.** Under each path box in the Files vocabulary sits a muted
+  line naming where that path really is: `user://` - the player's folder, writable, one per player,
+  and it survives the game being updated - or `res://`, the game's own files, read-only the moment
+  the game is exported. A path built while the game runs still says which place it begins in, and a
+  path whose place cannot be read says nothing at all rather than guessing. The Parameters strip adds
+  what each place allows and where `user://` really is on Windows, macOS and Linux.
+- **Completion for the player's folder.** A path field now completes against BOTH places: what is in
+  `user://` at the time you are typing, then the project's own files. `user://` leads, because that
+  is where a path in this vocabulary almost always belongs.
+- **Open The Player's Data Folder.** One action that opens the real folder `user://` stands for, on
+  the player's own machine, while the game runs - `OS.shell_open` over the globalized path.
+- **The Doctor's Files section, with three one-click fixes.** A write aimed at a `res://` path is the
+  export trap: it works in the editor and fails in every exported build, silently, because `res://`
+  is a packed archive once the game is built. An absolute path (`D:/games/...`, `/home/...`) names a
+  folder on one computer and on no other. And a read of a `user://` file that does not say what to
+  use when the file is missing meets a first run with no save, no settings and no log. Each fix shows
+  what the value read as and what it reads as now, and lands as one undo step.
+- **The visible guard.** **Read Text File (or a fallback)** takes what to use when the file is not
+  there as its SECOND PARAMETER - the familiar default argument, not a clause bolted onto the
+  sentence - and compiles to the `file_exists` check written into the line, which the row echoes.
+  Leave that parameter blank and it compiles to the plain read, unchanged. The frozen Read Text File
+  beside it is untouched.
+- **The folder is made where you can see it.** **Write Text File (in a folder)** carries the stated
+  choice \"make the folder first\", which emits the `make_dir_recursive_absolute` line above the write
+  and shows it on the row. Godot does not create folders on the way to opening a file, and a folder
+  appearing out of nowhere would be the kind of magic this plugin does not do.
+- **What a project already wrote still opens.** The plain read, the `open` / `get_as_text` pair, the
+  hand-written `file_exists` ternary with its own fallback, and a `make_dir_recursive_absolute`
+  prelude above a write all open as rows and save back byte-identically.
+- Game saves are still the Save System's territory - slots, formats, backups - and the guide says
+  where the line between the two is.
+
+### Tables read by the engine itself, and the files band
+
+- **Table Of File** reads a `.csv` with **Godot's own CSV reader** - `FileAccess.get_csv_line`, one
+  line at a time, no new parser - so its quoting is whatever the engine does with a quote rather than
+  whatever this plugin decided. It is an ordinary expression: put it in a Set action and you have the
+  rows. Its **First line** parameter is a stated choice with two answers - *the first line names the
+  columns*, which gives one record per row (`row[\"price\"]`), and *every line is a row*, which is what
+  a headerless export needs and what the shipped Table From File cannot say.
+- **Write Table To File** is its inverse, through `store_csv_line`. A cell holding the separator or a
+  quote is quoted the way the engine quotes it, so a file read by one and written by the other comes
+  back byte for byte - which the suite asserts on the file's actual bytes, not on the values. When a
+  header line is written, the columns come from the FIRST record's own field order: the only order
+  the sheet ever stated.
+- **For Each Line In File** walks a text file line by line in the loop lane, the line riding as
+  `line`. The file is read once and the loop then walks text in memory, so nothing stays open behind
+  it; blank lines are skipped and Windows and old-Mac endings are both handled.
+- The shipped **Table From File**, **Table From Text**, **Column Of Table** and **Row Where** are
+  untouched: a shipped `ace_id` and its template are a compatibility promise, so the engine-reader
+  pair sits beside them, and the guide says which to pick and why.
+- **The files band.** The head of a sheet now says what that sheet touches on disk: every path its own
+  rows hold, exactly as the row holds it - place and all - with one word for what it does to it,
+  **written**, **read**, or **read and written** when the same file is both. A row that stops and asks
+  the player for a file says so once, however many rows do it. The band is derived rather than listed:
+  path fields are found by the hint every path field carries, and each row is classified by the engine
+  calls its own emitted line makes, so a path field a behaviour pack ships is on the band the day the
+  pack ships. It obeys the band scale law - four paths named, the rest counted - and is joined from
+  rows already in memory when the sheet opens, never scanned for.
+- Game saves remain the Save System's territory; the guide states the line between the two rather
+  than restating its verbs.
+
+### The two doors user content comes in through
+
+- **On Files Dropped** is the window's own `files_dropped` signal as an event: the sheet connects it
+  in `_ready` on `get_window()`, exactly as a hand-written project already writes it, and the paths
+  ride into the event as a chip. It is **desktop only** - Windows, macOS and Linux raise it and a web
+  or mobile build never does - and the row itself says so, not a doc nobody opened.
+- **Ask For A File To Open** and **Ask Where To Save** open the platform's own file chooser where
+  the platform has one, through `DisplayServer.file_dialog_show`. Where it has none, the filesystem
+  access `FileDialog` fallback is emitted as a **visible `else`** - both spellings are in the code a
+  reader can see, because a row that quietly picked one of two very different windows would be a row
+  nobody could debug.
+- **The answer is an event, never a return value.** A chooser is a separate window and the player
+  answers it long after the row ran, so both Ask rows end in **On A File Chosen** (the path riding as
+  a chip) or **On The Ask Cancelled**, and the emitted line calls those two events' functions by
+  name. A sheet that asks needs both events; the guide says so and the row's own description says so.
+- **Image From File** and **Sound From File** read content from outside the project, each with the
+  **fallback in the second slot** - the familiar default argument, not a clause grafted onto the
+  sentence. Leave it blank and the plain load is emitted, unchanged. The image reader is
+  `Image.load_from_file` into an `ImageTexture`; the sound reader names one engine reader per format
+  the engine decodes at runtime and picks by extension, which is exactly three: `.mp3`, `.ogg` and
+  `.wav`. **No import pipeline is involved and none is wanted** - a loaded image is a texture in a
+  variable, and it lives only as long as something holds it.
+- **The lift half.** A hand-written `get_window().files_dropped.connect(_on_files_dropped)` and its
+  handler open as the drop event, and the two answer functions open as their own events, all
+  re-emitting the file byte for byte. `get_window()` is now a connect source the reading knows, which
+  also gives the shipped **On Window Close Requested** a spelling it can be opened back from.
+- **The files band hears the new ask.** A row that opens the platform's chooser is found by the call
+  its emitted line makes rather than by an id, so it joins the band beside the `FileDialog` rows that
+  were already on it.
+- The shipped **Open File Chooser** verb and the twelve frozen file verbs are untouched: these sit
+  beside them. Game saves remain the Save System's territory - the guide states the line rather than
+  restating its verbs. **User content is data, never code**: nothing here loads a script, a scene or
+  a resource, and nothing here evaluates what it read.
 
 ### The honest watcher, and one file that is many files
 
@@ -85,103 +146,80 @@ What changed in the build you have installed (v0.17.0), in the words the release
   Game saves remain the Save System's territory. **User content is data, never code**: an archive
   entry is read as bytes and stored as bytes, and nothing here loads, parses or runs what came out.
 
-### The two doors user content comes in through
+### Safe names, the path that is still free, and the line between a file and a program
 
-- **On Files Dropped** is the window's own `files_dropped` signal as an event: the sheet connects it
-  in `_ready` on `get_window()`, exactly as a hand-written project already writes it, and the paths
-  ride into the event as a chip. It is **desktop only** - Windows, macOS and Linux raise it and a web
-  or mobile build never does - and the row itself says so, not a doc nobody opened.
-- **Ask For A File To Open** and **Ask Where To Save** open the platform's own file chooser where
-  the platform has one, through `DisplayServer.file_dialog_show`. Where it has none, the filesystem
-  access `FileDialog` fallback is emitted as a **visible `else`** - both spellings are in the code a
-  reader can see, because a row that quietly picked one of two very different windows would be a row
-  nobody could debug.
-- **The answer is an event, never a return value.** A chooser is a separate window and the player
-  answers it long after the row ran, so both Ask rows end in **On A File Chosen** (the path riding as
-  a chip) or **On The Ask Cancelled**, and the emitted line calls those two events' functions by
-  name. A sheet that asks needs both events; the guide says so and the row's own description says so.
-- **Image From File** and **Sound From File** read content from outside the project, each with the
-  **fallback in the second slot** - the familiar default argument, not a clause grafted onto the
-  sentence. Leave it blank and the plain load is emitted, unchanged. The image reader is
-  `Image.load_from_file` into an `ImageTexture`; the sound reader names one engine reader per format
-  the engine decodes at runtime and picks by extension, which is exactly three: `.mp3`, `.ogg` and
-  `.wav`. **No import pipeline is involved and none is wanted** - a loaded image is a texture in a
-  variable, and it lives only as long as something holds it.
-- **The lift half.** A hand-written `get_window().files_dropped.connect(_on_files_dropped)` and its
-  handler open as the drop event, and the two answer functions open as their own events, all
-  re-emitting the file byte for byte. `get_window()` is now a connect source the reading knows, which
-  also gives the shipped **On Window Close Requested** a spelling it can be opened back from.
-- **The files band hears the new ask.** A row that opens the platform's chooser is found by the call
-  its emitted line makes rather than by an id, so it joins the band beside the `FileDialog` rows that
-  were already on it.
-- The shipped **Open File Chooser** verb and the twelve frozen file verbs are untouched: these sit
-  beside them. Game saves remain the Save System's territory - the guide states the line rather than
-  restating its verbs. **User content is data, never code**: nothing here loads a script, a scene or
-  a resource, and nothing here evaluates what it read.
+- **Safe File Name** answers with a name a file system will actually take, over the engine's own
+  `String.validate_filename`: the characters it refuses become underscores, the ends are trimmed. It
+  is an EXPRESSION, so it sits in the path slot of the write that was already there rather than
+  becoming a second way to save a file. The second slot is the **familiar default argument** - a name
+  that comes out empty (a blank box, or spaces) answers with it, so a player who typed nothing gets a
+  file instead of an error. The guarded form wears its own brackets, because a bare `a if b else c`
+  spliced between two `+` signs binds the whole join into the branches, and that is a wrong path
+  rather than a parse error.
+- **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
+  does not erase the first. The rule is the one every desktop uses and **it is spelled out in the
+  emitted line**: `shot.png`, then `shot_1.png`, then `shot_2.png`, up to the number in the slot. The
+  path expression is read **once** and the numbers are only tried when the path you wanted is taken.
+  A path with no extension gets no stray dot, and a run that fills every number answers the path you
+  asked for - which the row's own help says out loud, because that next write overwrites.
+- **Show In The File Manager** opens the player's own file browser with the file selected, over
+  `OS.shell_show_in_file_manager`. **Desktop only**, said on the row: a web or mobile build does
+  nothing at all, so say on screen where the file went as well.
+- **The Doctor now draws the trust boundary nothing else in the engine draws.** A path that came in
+  through one of the game's own doors - dropped on the window, chosen by the player, found in a
+  watched folder, written out of an unpacked archive - handed to `load()` or `ResourceLoader.load()`
+  is reported. That line works, which is exactly why nothing else mentions it: a scene or a resource
+  file can name a **script**, so loading one runs its author's code with everything this game can
+  reach. The finding says that in plain words and offers the three data-shaped doors - **Image From
+  File** for a picture, **Read Text File (or a fallback)** for text, **Table From File** for rows and
+  columns - because data cannot carry behaviour. It is a **warning and not an error**: a game whose
+  mods are code is a decision, and the decision is yours. What is not a decision is making it without
+  knowing.
+- **It reads text, so hand-written code gets the same finding.** The trace follows NAMES inside one
+  file: a parameter of a door's own handler, anything assigned from one, anything a `for` walks out
+  of one, and any path written under a folder that file watches or unpacks into. It keeps one set of
+  names per file rather than per function, which finds the very common shape where one handler stores
+  the path on the object and another loads it. It does **not** follow a path across files or through
+  a call into another body - so a quiet file is not a proof, and the check says so rather than
+  implying otherwise.
 
-### Tables read by the engine itself, and the files band
+### Files, documented
 
-- **Table Of File** reads a `.csv` with **Godot's own CSV reader** - `FileAccess.get_csv_line`, one
-  line at a time, no new parser - so its quoting is whatever the engine does with a quote rather than
-  whatever this plugin decided. It is an ordinary expression: put it in a Set action and you have the
-  rows. Its **First line** parameter is a stated choice with two answers - *the first line names the
-  columns*, which gives one record per row (`row[\"price\"]`), and *every line is a row*, which is what
-  a headerless export needs and what the shipped Table From File cannot say.
-- **Write Table To File** is its inverse, through `store_csv_line`. A cell holding the separator or a
-  quote is quoted the way the engine quotes it, so a file read by one and written by the other comes
-  back byte for byte - which the suite asserts on the file's actual bytes, not on the values. When a
-  header line is written, the columns come from the FIRST record's own field order: the only order
-  the sheet ever stated.
-- **For Each Line In File** walks a text file line by line in the loop lane, the line riding as
-  `line`. The file is read once and the loop then walks text in memory, so nothing stays open behind
-  it; blank lines are skipped and Windows and old-Mac endings are both handled.
-- The shipped **Table From File**, **Table From Text**, **Column Of Table** and **Row Where** are
-  untouched: a shipped `ace_id` and its template are a compatibility promise, so the engine-reader
-  pair sits beside them, and the guide says which to pick and why.
-- **The files band.** The head of a sheet now says what that sheet touches on disk: every path its own
-  rows hold, exactly as the row holds it - place and all - with one word for what it does to it,
-  **written**, **read**, or **read and written** when the same file is both. A row that stops and asks
-  the player for a file says so once, however many rows do it. The band is derived rather than listed:
-  path fields are found by the hint every path field carries, and each row is classified by the engine
-  calls its own emitted line makes, so a path field a behaviour pack ships is on the band the day the
-  pack ships. It obeys the band scale law - four paths named, the rest counted - and is joined from
-  rows already in memory when the sheet opens, never scanned for.
-- Game saves remain the Save System's territory; the guide states the line between the two rather
-  than restating its verbs.
-
-### A path says which place it is in
-
-- **Every path field states its place.** Under each path box in the Files vocabulary sits a muted
-  line naming where that path really is: `user://` - the player's folder, writable, one per player,
-  and it survives the game being updated - or `res://`, the game's own files, read-only the moment
-  the game is exported. A path built while the game runs still says which place it begins in, and a
-  path whose place cannot be read says nothing at all rather than guessing. The Parameters strip adds
-  what each place allows and where `user://` really is on Windows, macOS and Linux.
-- **Completion for the player's folder.** A path field now completes against BOTH places: what is in
-  `user://` at the time you are typing, then the project's own files. `user://` leads, because that
-  is where a path in this vocabulary almost always belongs.
-- **Open The Player's Data Folder.** One action that opens the real folder `user://` stands for, on
-  the player's own machine, while the game runs - `OS.shell_open` over the globalized path.
-- **The Doctor's Files section, with three one-click fixes.** A write aimed at a `res://` path is the
-  export trap: it works in the editor and fails in every exported build, silently, because `res://`
-  is a packed archive once the game is built. An absolute path (`D:/games/...`, `/home/...`) names a
-  folder on one computer and on no other. And a read of a `user://` file that does not say what to
-  use when the file is missing meets a first run with no save, no settings and no log. Each fix shows
-  what the value read as and what it reads as now, and lands as one undo step.
-- **The visible guard.** **Read Text File (or a fallback)** takes what to use when the file is not
-  there as its SECOND PARAMETER - the familiar default argument, not a clause bolted onto the
-  sentence - and compiles to the `file_exists` check written into the line, which the row echoes.
-  Leave that parameter blank and it compiles to the plain read, unchanged. The frozen Read Text File
-  beside it is untouched.
-- **The folder is made where you can see it.** **Write Text File (in a folder)** carries the stated
-  choice \"make the folder first\", which emits the `make_dir_recursive_absolute` line above the write
-  and shows it on the row. Godot does not create folders on the way to opening a file, and a folder
-  appearing out of nowhere would be the kind of magic this plugin does not do.
-- **What a project already wrote still opens.** The plain read, the `open` / `get_as_text` pair, the
-  hand-written `file_exists` ternary with its own fallback, and a `make_dir_recursive_absolute`
-  prelude above a write all open as rows and save back byte-identically.
-- Game saves are still the Save System's territory - slots, formats, backups - and the guide says
-  where the line between the two is.
+- **A guide for the whole story: [Files and Folders](docs/GUIDE-FILES-AND-FOLDERS.md).** The two
+  places and why the export trap survives testing, where `user://` really is on each platform, the
+  guard written into the emitted line rather than performed behind it, the two CSV readers and which
+  question each one answers, the drop and the ask with the reason an ask ends in an event, the
+  watcher that calls itself a poll, the unpack guard, the name a player typed, and the mods chapter.
+  Every worked example is a whole little script hung from a lifecycle handler, so the reader sees the
+  compiled shape and the page draws it as a figure.
+- **The mod rule is stated positively.** A mod format is DATA THE GAME INTERPRETS, and the worked
+  example is a kinds table: the file lists entries with a `kind` your game knows, and your sheet
+  answers each kind with rows you wrote. What `load()` does instead is said plainly beside it - a
+  scene or a resource can name a script - so the Doctor's warning reads as the boundary it is rather
+  than as a scolding. The three data-shaped doors are named as the alternatives they are.
+- **The line between this and the save pack is one sentence, in both directions**: the save system is
+  for state your game produced, these rows are for content that arrives from outside it. The guide
+  says it once and never restates the save pack's verbs.
+- **The Folder Watcher guide reaches the house standard** - a table of contents, seven core concepts
+  (a poll not a subscription, two readings and one difference, the baseline, running or stopped with
+  nothing between, the filter applied first, whole paths out of triggers against bare names out of
+  expressions, and an interval as a promise about the worst case), the ACE reference split per kind
+  with each verb's own description, the Self section, and the sixteen worked cases it already had.
+- **The concept map gains six rows and the existing-code reading list gains a section.** The map
+  answers project files and the two places, the chooser and desktop drag-and-drop, a `.csv` of game
+  data, watching a folder, one `.zip` of content, and mod support. The reading list answers the other
+  direction: the table of file spellings and the rows they open as, the window as a connect source,
+  the answer function that opens from its header alone, and the multi-line loops that stay verbatim
+  blocks with the adopt door - said out loud rather than left to be discovered.
+- **The numbers, re-measured off this tree.** The front page said 1,800 verbs across 82 modules and
+  88 triggers; measured module by module today it is **1,821 verbs across 82 modules, 94 of them
+  triggers, 2,900 parameters between them, and zero blank descriptions and zero blank parameter
+  descriptions**. The reads-itself census re-run over the whole corpus of `addons/` and `tools/`:
+  **847 files, 845 at zero script blocks, 9 block lines, 251,221 lines and 184,147 rows, 89% of
+  those rows in the sheet's own words** - the block lines did not move and neither did the share.
+  The pack count moves by exactly the watcher: **113 behavior packs, 94 of them with a guide**, the
+  other 19 companion data assets and loaders. Assertions **20,040 across 704 test files**, counted off the runner's own total rather than from a grep.
+- Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### Every call on a known class is a row
 
