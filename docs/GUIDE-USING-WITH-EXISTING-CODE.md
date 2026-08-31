@@ -1366,6 +1366,33 @@ to the function it names, the same jump the Outline panel makes.
   offer only appears when there is something to do: not for the scene root, not for a node this scene
   does not own, and not for a node already marked.
 
+- **The three statements that put a menu over the game are one row.** `var menu =
+  load("res://pause_menu.tscn").instantiate()`, then `menu.name = "PauseMenu"`, then
+  `get_tree().root.add_child(menu)` is **Add Layout On Top**, in the `=`/`load` and the
+  `:=`/`preload` spelling alike, with your own spelling baked onto the row so the file saves back
+  byte for byte. The guarded removal beside it - `get_node_or_null` on the root, an `if`, a
+  `queue_free` - is **Remove Layout On Top**, and the same lookup asked as a question is **Layout Is
+  On Top**. Two neighbouring shapes are deliberately *not* claimed and read exactly as they always
+  did: the bare `add_child(load(…).instantiate())` one-liner stays **Spawn Scene Instance**, and the
+  same three statements ending in a plain `add_child` on *this* node stay the code they are, because
+  adding a copy under yourself is a different thing to do than adding one under the tree root.
+
+- **The owner walk in front of a pack is one row, and the pack without it is not.** A local for the
+  branch, a `find_children("*", "", true, false)` loop giving every ownerless node that branch as its
+  owner, a `PackedScene`, `pack` and `ResourceSaver.save` reads as **Save Branch As Scene File**,
+  whether you wrote the plain tail or the tail that pushes both failures as errors. The same pack and
+  the same write with **no walk in front of them** is left as the code it is, on purpose: it is a
+  different program - it saves a scene holding one node, reports OK twice and loads back empty - and
+  reading it as the row that fixes that would be the sheet claiming a bug was a feature.
+
+- **A `node_added` connect with an `is_in_group` first line is a trigger with a condition under it.**
+  `get_tree().node_added.connect(_on_node_joined_group)` in `_ready`, and a handler whose first
+  statement is `if node.is_in_group("minimap"):`, reads as **On Node Joins Group** with the shipped
+  **Is In Group** condition as an ordinary row underneath - the guard stays a row you can edit or
+  delete, and it stays a plain `if` on disk. `node_removed` reads as **On Node Leaves Group** the same
+  way. Every other `get_tree()` connect is left alone, the crowd's own `node_removed` handler
+  included: that one asks two further questions in its gate and keeps its own handler name.
+
 - **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
   💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
   one step. Before this the comment rode into whichever value the lift put the end of the line in, so
@@ -2475,10 +2502,38 @@ Three smaller surfaces come with it and are worth knowing on day one:
 
 ![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
 
-### Tool code: the four shapes an editor is written in
+### Tool code: the five shapes an editor is written in
 
 A project that builds editor tooling is written in shapes a game script never has, and the sheet
-reads all four of them by SHAPE - there is no list of file names anywhere.
+reads all five of them by SHAPE - there is no list of file names anywhere.
+
+**An edit made through the editor's own undo manager is one row, and the bracket around it is not a
+row at all.** This is the shape a tool that changes somebody's open scene has to be written in, and
+it is never one statement: a `create_action`, a local holding
+`EditorInterface.get_editor_undo_redo()`, a do half, an undo half, and for the two that move a node a
+reference so the step can put the same node back, then a `commit_action`.
+
+```gdscript
+EditorInterface.get_editor_undo_redo().create_action("On Editor Run")
+var undo := EditorInterface.get_editor_undo_redo()
+undo.add_do_property($Sign, &"text", "Open")
+undo.add_undo_property($Sign, &"text", $Sign.text)
+EditorInterface.get_editor_undo_redo().commit_action()
+```
+
+The three do/undo runs read as **Set Property (Undoable)**, **Add Node (Undoable)** and **Remove Node
+(Undoable)**. The `create_action` and `commit_action` around them read as **nothing**, and that is
+the interesting part: the compiler writes that bracket itself around the undoable rows of one event -
+the one-gesture rule - so handing it back as rows would put two rows on the sheet that the sheet
+never had, and the next save would write the bracket twice. It is recognised and consumed instead,
+and it reappears because the compiler writes it again. That is only safe while the bracket the file
+carries is the bracket the compiler would write, so the match checks the action's NAME as well as its
+shape: **a tool whose author named their own action keeps it, verbatim, exactly as they wrote it.**
+
+The local names are matched rather than lifted, too. The manager local, the node local and the parent
+local are each named two to four times, and all of those namings have to agree for the run to be this
+row at all - so they are checked and spliced back into the emitted line verbatim rather than becoming
+parameters, and a lifted row carries your own words for them. The file re-emits byte for byte.
 
 **A helper with a back-reference is a behavior of the thing it helps.** A `RefCounted` whose
 constructor only stores the object it was handed, and whose methods reach back through it, adds its

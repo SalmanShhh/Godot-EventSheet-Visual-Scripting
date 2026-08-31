@@ -6,130 +6,51 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### A second picture of the world you are already in
+### The %name is a word the sheet speaks
 
-- **Second View, a new pack, shipping as the `SecondView` autoload.** A view is a SubViewport
-  SHARING the running world plus a camera of its own that follows a node you name. Point it at the
-  player and show it in a corner panel and that is a minimap; point it at a corridor and show it on a
-  wall screen and that is a security monitor; point it at a face and that is a portrait. Four rows
-  and one expression is the whole vocabulary: **Make A View**, **Show View In**, **Set View Zoom**,
-  **Stop View**, and **View Texture Of** for the places a frame cannot reach - a material's albedo, a
-  shader parameter, a theme icon.
-- **The node you follow decides which kind of view you get.** A Node2D gets a Camera2D on the running
-  2D world; a Node3D gets a Camera3D looking straight down at it on the running 3D world. You never
-  pick, because the node already said it, and a node that is neither warns by name and builds nothing
-  rather than half a view. Zoom means the same thing in both: below 1 shows more of the world, above 1
-  shows less - in 3D it divides the camera's height, so the direction never flips on you.
-- **The three traps are solved inside the pack, once.** A SubViewport outside a container is never
-  \"visible\" and the default update mode only draws what is visible, which is why a hand-built second
-  view is so often a blank texture - this one always renders. The picture is taken only once the
-  viewport is really in the tree, and is marked not-local-to-scene before it is handed out, so the
-  handle stays bound to the viewport it came from wherever the frame lives. And Stop View takes the
-  picture back OFF every frame before it frees the viewport, so a panel is left blank rather than
-  holding the texture of something that no longer exists.
-- **The frame sizes the render.** A view shown in a 200x120 TextureRect renders 200 by 120 pixels
-  instead of being stretched out of a square, and follows that panel when the window resizes. So there
-  is no size row to learn: the frame you already placed is the answer.
-- **Parks its own tick.** A view whose followed node was destroyed stops being redrawn and keeps its
-  last picture, rather than going black on its own; when every view has lost its node the autoload
-  hands the frame back entirely. Stop View is the row that actually removes the plumbing.
-- **Three refusals, stated in the guide rather than answered with rows.** No split-screen verbs, because
-  two views in two frames IS split screen and the guide shows it in two sentences. No per-view culling
-  masks in v1, because the camera a view builds is an ordinary Camera2D / Camera3D and the
-  visibility-layer rows already decide what it may draw. And no drawing: painting shapes onto a texture
-  stays the Drawing Canvas pack's job, whose shared runtime owns that SubViewport. The two other
-  neighbours are named too - Named Scenes addresses WHICH scene you travel to, and Render Scene To
-  Image is the one-shot editor cousin that photographs a scene file.
-- **Everything it builds stays ordinary Godot, and the guide says where it lives:** a SubViewport named
-  `View_<the name>` parented to the autoload with an ordinary camera inside it. Aim it, mask it or hang
-  another pack off it exactly as you would any other camera.
+- **The picker's `%names` section.** The object step of the Add picker opens with the scene-unique
+  nodes of the scene this file runs in, listed first, each beside the class the `.tscn` says it is.
+  Picking `%HealthBar` makes it the row's object: the picker scopes to that class's own vocabulary
+  rather than to a bare Node's, and the row that lands is written on the node by name. Nothing is
+  registered and no second list of node names exists - the mark lives in the scene file, which is the
+  only authority. Naming a whole scene is a different job and stays the Named Scenes pack's.
+- **A statement on a `%Name` reads as a row on that object.** A `%HealthBar.value = 80` written by
+  hand used to be the one receiver shape the derived reading could not place, because nothing told it
+  what class the sigil meant. The scene does, so the line now reads with the class's own words and
+  icon, and a row picked on a `%name` emits that same `%Name.member()` line back, byte for byte. A
+  `%name` the scene cannot resolve degrades to honest code and is never given a guessed type.
+- **Make %HealthBar unique, from the field you are in.** A node dragged out of the Scene dock lands
+  as `$UI/Bars/HealthBar`, which breaks the moment somebody moves it. The parameter's help strip now
+  offers a one-click door that ticks the node's own *Access as Unique Name* and rewrites the field as
+  `%HealthBar`. It is a scene edit through the editor's own undo, never a sheet edit, so Ctrl+Z in
+  the scene puts it back; the Pick Node dialog's *Make %unique* button is now the same door. It
+  refuses the scene root, a node this scene does not own, and a node already marked.
+- **Nothing new to check.** The Doctor's shipped `%token` validation already reports a name no scene
+  carries, so these rows add no finding of their own: a stale name is the quiet amber row state and
+  the Doctor's triage inbox, and the sheet itself stays silent.
 
-### The undoable tool touch, and three small dignities
+### A layout on top of the game
 
-- **Set Property (Undoable), Add Node (Undoable), Remove Node (Undoable).** The three changes a tool
-  makes to the scene somebody has open, made as steps the editor can take back. They compile to plain
-  `EditorInterface.get_editor_undo_redo()` - the engine's own manager, no plugin anywhere in the
-  emitted file - and they sit on the Undo history page beside the Undo History expression that
-  already named it. The two reach the history two different ways on purpose: that expression is
-  `get_undo_redo()`, an EditorPlugin method, so it needs an Editor plugin sheet; these three work in
-  the plain Tool sheet an author writes first.
-- **ONE EVENT IS ONE GESTURE, and that is the whole point.** The compiler opens the action before the
-  first undoable row of an event and commits it after the last, naming it after the event's own
-  trigger, so a reader's single Ctrl+Z takes back everything that event did rather than one property
-  at a time. There is nothing to pick for it and nothing to remember. It also cannot nest: the
-  bracket opens and closes inside one block with nothing held between fires, so an event firing again
-  next frame opens a fresh action over a closed one - a tool on a per-frame trigger leaves one entry
-  in the history per fire, never a growing pile of half-open ones.
-- **Outside the editor they refuse, at compile time, in the trigger's own words.** The undo history
-  belongs to the editor and a running game has none, so on a game sheet the rows are left out and the
-  compile says which trigger they were under and what to do about it. The picker already keeps the
-  Editor Tools pages off a game sheet; this is the same answer for a row that got there by being
-  pasted, given before the game runs rather than as a surprise while it does.
-- **An opened tool reads them back as rows.** The create/commit bracket with its do/undo pairs lifts
-  to the three rows and re-emits byte for byte, and the bracket itself comes back as nothing at all,
-  because it is the compiler's and not a row - handing it back would put two rows on the sheet that
-  the sheet never had. A bracket whose action somebody named themselves is left exactly as they wrote
-  it, verbatim.
-- **A tool that changes the open scene the plain way is a quiet amber row and a line in the Doctor's
-  new Tool edits section.** Nothing is drawn in the sheet: the words live in the triage inbox and in
-  the help strip under the selected row, with a one-click door that respells the row as its undoable
-  twin - the same values under the same names, so nothing can be lost, and one Ctrl+Z. The rule fires
-  only in a Tool sheet that reaches for the scene the editor has open; an ordinary `@tool` node script
-  setting its own properties is simply correct and never hears from it.
-- **Set Scene Owner.** The write half of the read-only Get Scene Owner: which scene a node belongs to,
-  which is what decides whether it is written out when that scene is packed. Save Branch As Scene File
-  is the wholesale cousin that walks a whole branch; this is that assignment for the one node you mean.
-- **Duplicate Node (choosing).** The copy with its three questions asked out loud as checkboxes -
-  signals, groups, scripts - emitting Godot's own duplicate flags by name rather than as the number
-  they add up to. Plain Duplicate Node stays exactly as it was: the engine default, all three on.
-- **Reparent To (choosing).** The move with the one question it always raises asked on the row:
-  keeping its place, or snapping to it. The words are Add Child (existing node)'s own words, so one
-  choice reads one way whether the row names the child or is the child, and the answer is written
-  into the file instead of left off. Plain Reparent To stays frozen beside it.
-
-### Saving what the player built, behind the trust line
-
-- **Save Branch As Scene File.** A branch of the running game, written out as a `.tscn` - the row a
-  level editor, a base builder or a ship yard is missing. The OWNER WALK is the row: `PackedScene.pack`
-  writes out the root plus every node that root owns, and a node added while the game runs is owned
-  by nothing at all, so a plain pack-and-save saves a scene holding one node, returns OK twice and
-  loads back empty with nothing anywhere reporting it. The walk asks for the children nothing owns
-  and gives an owner only to those, so a node belonging to an instanced scene keeps its own and saves
-  as that instance rather than as a copy of its insides. It is emitted into your script where it can
-  be read, exactly as the archive loops beside it are. Both failures answer out loud: a pack that
-  refuses and a write that cannot land each say so through the debugger instead of leaving no file
-  and no word. The path field carries the files pass's `file_path` hint, so the place lead sits under
-  the box and `user://` completes as you type; the write is registered as a write, so the export trap
-  and its one-click fix reach it like any other.
-- **Editor Tools ▸ Save Node As Scene stays exactly where it was, and the two are named side by
-  side.** That row packs the node you are EDITING, from a Tool sheet, where the Scene dock has
-  already set every owner; this one runs in the GAME, where nothing has an owner until somebody sets
-  one. Same call, different world, and each row's description names the other.
-- **Scene File Is Data-Only.** The question worth asking before anything builds a scene the game did
-  not ship with. It reads the file's own resource table as TEXT and instantiates nothing, so asking
-  is safe on a file from anywhere: false for a script written inside the scene, false for one it
-  points at from anywhere but `res://`, false for a file it cannot read - because an unreadable file
-  is not a file that has been cleared. It reads the ONE file you name, and says so on the row: a
-  scene that file points at is a separate file with a table of its own.
-- **A scene built unasked is a quiet amber row and a line in the Doctor's Files section.** A row that
-  builds a scene whose path is written in the line and is not under `res://`, with no data-only
-  question over that same file anywhere around it, earns the amber state and nothing else in the
-  sheet - the words live in the triage inbox and in the help strip under the selected row. It is a
-  WARNING and not an error: a game whose mods are scenes with scripts in them is a decision some
-  projects make deliberately, and what is not a decision is making it without knowing. The finding
-  says what it cannot see - a path built out of pieces or held in a variable, and the scenes the file
-  it named points at - so a quiet report is never read as a proof.
-- **Its door is the question itself.** One click writes the shipped Scene File Is Data-Only row into
-  the event, over the very file the row builds, in FRONT of whatever it already asks - an ordinary
-  condition row afterwards, visible, editable, deletable, a plain `if` on disk, and one Ctrl+Z. The
-  same gesture is on the row's help strip and on the inbox chip, with the before-and-after receipt on
-  the status line either way. A question asked by a parent event stands over the rows beneath it,
-  which is what the emitted `if` inside an `if` really does.
-- **The owner walk lifts, and a bare pack-and-save deliberately does not.** The walk plus pack plus
-  save reads back as one row, in the hand-written tail and in the one the row itself writes, with the
-  author's own words for the three locals baked on so the file saves back byte for byte. The same
-  pack and the same write with no walk in front of them is a different program, and is left exactly
-  as it was.
+- **Add Layout On Top, Remove Layout On Top, Layout Is On Top.** Three rows on the Game side, filed
+  under Scene with the rest of the layout vocabulary, for the layout that goes OVER the running game
+  rather than instead of it: a pause menu, an inventory, a dialogue box. The add loads the layout,
+  gives the copy the name you type, and adds it under the tree root - under the root rather than
+  under this node, because that is what lets the menu outlive a change of layout beneath it, and it
+  is the same reason the Scene Flow pack parents its fade overlay there. The removal finds the name
+  under the root, guards the answer with `get_node_or_null` and frees it, so a name nothing is under
+  quietly does nothing; the condition is the same lookup asked as a question. Go To Layout still
+  REPLACES, Spawn Scene Instance still adds its bare `add_child(load(…).instantiate())` copy under
+  the node that spawned it, and naming a layout by a short word instead of a path is still the Named
+  Scenes pack's job - the name here is the node's own name under the root, not a second registry.
+- **The pause lesson, at the moment of need.** A layout added over a paused game is paused with it
+  unless its own root node's Process Mode says otherwise. The parameters dialog says exactly that on
+  the help strip while the Layout field has focus, and names Pause The Game as the row it pairs with.
+  Nothing is written into anybody's scene: the row emits the three lines it names and no more.
+- **The three lines people already wrote read back as the row.** `var menu = load(…).instantiate()`,
+  `menu.name = \"PauseMenu\"`, `get_tree().root.add_child(menu)` opens as one Add Layout On Top row,
+  in the `=`/`load` and the `:=`/`preload` spelling alike, with the author's own spelling baked on so
+  the file saves back byte for byte. The bare one-liner keeps reading as Spawn Scene Instance, and
+  the same three statements ending in a plain `add_child` are deliberately not claimed.
 
 ### The spawn sentence, said in three dimensions
 
@@ -181,51 +102,180 @@ What changed in the build you have installed (v0.17.0), in the words the release
   the crowd trigger's own `node_removed` handler included, which asks two further questions this one
   does not and keeps its own handler name.
 
-### A layout on top of the game
+### Saving what the player built, behind the trust line
 
-- **Add Layout On Top, Remove Layout On Top, Layout Is On Top.** Three rows on the Game side, filed
-  under Scene with the rest of the layout vocabulary, for the layout that goes OVER the running game
-  rather than instead of it: a pause menu, an inventory, a dialogue box. The add loads the layout,
-  gives the copy the name you type, and adds it under the tree root - under the root rather than
-  under this node, because that is what lets the menu outlive a change of layout beneath it, and it
-  is the same reason the Scene Flow pack parents its fade overlay there. The removal finds the name
-  under the root, guards the answer with `get_node_or_null` and frees it, so a name nothing is under
-  quietly does nothing; the condition is the same lookup asked as a question. Go To Layout still
-  REPLACES, Spawn Scene Instance still adds its bare `add_child(load(…).instantiate())` copy under
-  the node that spawned it, and naming a layout by a short word instead of a path is still the Named
-  Scenes pack's job - the name here is the node's own name under the root, not a second registry.
-- **The pause lesson, at the moment of need.** A layout added over a paused game is paused with it
-  unless its own root node's Process Mode says otherwise. The parameters dialog says exactly that on
-  the help strip while the Layout field has focus, and names Pause The Game as the row it pairs with.
-  Nothing is written into anybody's scene: the row emits the three lines it names and no more.
-- **The three lines people already wrote read back as the row.** `var menu = load(…).instantiate()`,
-  `menu.name = \"PauseMenu\"`, `get_tree().root.add_child(menu)` opens as one Add Layout On Top row,
-  in the `=`/`load` and the `:=`/`preload` spelling alike, with the author's own spelling baked on so
-  the file saves back byte for byte. The bare one-liner keeps reading as Spawn Scene Instance, and
-  the same three statements ending in a plain `add_child` are deliberately not claimed.
+- **Save Branch As Scene File.** A branch of the running game, written out as a `.tscn` - the row a
+  level editor, a base builder or a ship yard is missing. The OWNER WALK is the row: `PackedScene.pack`
+  writes out the root plus every node that root owns, and a node added while the game runs is owned
+  by nothing at all, so a plain pack-and-save saves a scene holding one node, returns OK twice and
+  loads back empty with nothing anywhere reporting it. The walk asks for the children nothing owns
+  and gives an owner only to those, so a node belonging to an instanced scene keeps its own and saves
+  as that instance rather than as a copy of its insides. It is emitted into your script where it can
+  be read, exactly as the archive loops beside it are. Both failures answer out loud: a pack that
+  refuses and a write that cannot land each say so through the debugger instead of leaving no file
+  and no word. The path field carries the files pass's `file_path` hint, so the place lead sits under
+  the box and `user://` completes as you type; the write is registered as a write, so the export trap
+  and its one-click fix reach it like any other.
+- **Editor Tools ▸ Save Node As Scene stays exactly where it was, and the two are named side by
+  side.** That row packs the node you are EDITING, from a Tool sheet, where the Scene dock has
+  already set every owner; this one runs in the GAME, where nothing has an owner until somebody sets
+  one. Same call, different world, and each row's description names the other.
+- **Scene File Is Data-Only.** The question worth asking before anything builds a scene the game did
+  not ship with. It reads the file's own resource table as TEXT and instantiates nothing, so asking
+  is safe on a file from anywhere: false for a script written inside the scene, false for one it
+  points at from anywhere but `res://`, false for a file it cannot read - because an unreadable file
+  is not a file that has been cleared. It reads the ONE file you name, and says so on the row: a
+  scene that file points at is a separate file with a table of its own.
+- **A scene built unasked is a quiet amber row and a line in the Doctor's Files section.** A row that
+  builds a scene whose path is written in the line and is not under `res://`, with no data-only
+  question over that same file anywhere around it, earns the amber state and nothing else in the
+  sheet - the words live in the triage inbox and in the help strip under the selected row. It is a
+  WARNING and not an error: a game whose mods are scenes with scripts in them is a decision some
+  projects make deliberately, and what is not a decision is making it without knowing. The finding
+  says what it cannot see - a path built out of pieces or held in a variable, and the scenes the file
+  it named points at - so a quiet report is never read as a proof.
+- **Its door is the question itself.** One click writes the shipped Scene File Is Data-Only row into
+  the event, over the very file the row builds, in FRONT of whatever it already asks - an ordinary
+  condition row afterwards, visible, editable, deletable, a plain `if` on disk, and one Ctrl+Z. The
+  same gesture is on the row's help strip and on the inbox chip, with the before-and-after receipt on
+  the status line either way. A question asked by a parent event stands over the rows beneath it,
+  which is what the emitted `if` inside an `if` really does.
+- **The owner walk lifts, and a bare pack-and-save deliberately does not.** The walk plus pack plus
+  save reads back as one row, in the hand-written tail and in the one the row itself writes, with the
+  author's own words for the three locals baked on so the file saves back byte for byte. The same
+  pack and the same write with no walk in front of them is a different program, and is left exactly
+  as it was.
 
-### The %name is a word the sheet speaks
+### The undoable tool touch, and three small dignities
 
-- **The picker's `%names` section.** The object step of the Add picker opens with the scene-unique
-  nodes of the scene this file runs in, listed first, each beside the class the `.tscn` says it is.
-  Picking `%HealthBar` makes it the row's object: the picker scopes to that class's own vocabulary
-  rather than to a bare Node's, and the row that lands is written on the node by name. Nothing is
-  registered and no second list of node names exists - the mark lives in the scene file, which is the
-  only authority. Naming a whole scene is a different job and stays the Named Scenes pack's.
-- **A statement on a `%Name` reads as a row on that object.** A `%HealthBar.value = 80` written by
-  hand used to be the one receiver shape the derived reading could not place, because nothing told it
-  what class the sigil meant. The scene does, so the line now reads with the class's own words and
-  icon, and a row picked on a `%name` emits that same `%Name.member()` line back, byte for byte. A
-  `%name` the scene cannot resolve degrades to honest code and is never given a guessed type.
-- **Make %HealthBar unique, from the field you are in.** A node dragged out of the Scene dock lands
-  as `$UI/Bars/HealthBar`, which breaks the moment somebody moves it. The parameter's help strip now
-  offers a one-click door that ticks the node's own *Access as Unique Name* and rewrites the field as
-  `%HealthBar`. It is a scene edit through the editor's own undo, never a sheet edit, so Ctrl+Z in
-  the scene puts it back; the Pick Node dialog's *Make %unique* button is now the same door. It
-  refuses the scene root, a node this scene does not own, and a node already marked.
-- **Nothing new to check.** The Doctor's shipped `%token` validation already reports a name no scene
-  carries, so these rows add no finding of their own: a stale name is the quiet amber row state and
-  the Doctor's triage inbox, and the sheet itself stays silent.
+- **Set Property (Undoable), Add Node (Undoable), Remove Node (Undoable).** The three changes a tool
+  makes to the scene somebody has open, made as steps the editor can take back. They compile to plain
+  `EditorInterface.get_editor_undo_redo()` - the engine's own manager, no plugin anywhere in the
+  emitted file - and they sit on the Undo history page beside the Undo History expression that
+  already named it. The two reach the history two different ways on purpose: that expression is
+  `get_undo_redo()`, an EditorPlugin method, so it needs an Editor plugin sheet; these three work in
+  the plain Tool sheet an author writes first.
+- **ONE EVENT IS ONE GESTURE, and that is the whole point.** The compiler opens the action before the
+  first undoable row of an event and commits it after the last, naming it after the event's own
+  trigger, so a reader's single Ctrl+Z takes back everything that event did rather than one property
+  at a time. There is nothing to pick for it and nothing to remember. It also cannot nest: the
+  bracket opens and closes inside one block with nothing held between fires, so an event firing again
+  next frame opens a fresh action over a closed one - a tool on a per-frame trigger leaves one entry
+  in the history per fire, never a growing pile of half-open ones.
+- **Outside the editor they refuse, at compile time, in the trigger's own words.** The undo history
+  belongs to the editor and a running game has none, so on a game sheet the rows are left out and the
+  compile says which trigger they were under and what to do about it. The picker already keeps the
+  Editor Tools pages off a game sheet; this is the same answer for a row that got there by being
+  pasted, given before the game runs rather than as a surprise while it does.
+- **An opened tool reads them back as rows.** The create/commit bracket with its do/undo pairs lifts
+  to the three rows and re-emits byte for byte, and the bracket itself comes back as nothing at all,
+  because it is the compiler's and not a row - handing it back would put two rows on the sheet that
+  the sheet never had. A bracket whose action somebody named themselves is left exactly as they wrote
+  it, verbatim.
+- **A tool that changes the open scene the plain way is a quiet amber row and a line in the Doctor's
+  new Tool edits section.** Nothing is drawn in the sheet: the words live in the triage inbox and in
+  the help strip under the selected row, with a one-click door that respells the row as its undoable
+  twin - the same values under the same names, so nothing can be lost, and one Ctrl+Z. The rule fires
+  only in a Tool sheet that reaches for the scene the editor has open; an ordinary `@tool` node script
+  setting its own properties is simply correct and never hears from it.
+- **Set Scene Owner.** The write half of the read-only Get Scene Owner: which scene a node belongs to,
+  which is what decides whether it is written out when that scene is packed. Save Branch As Scene File
+  is the wholesale cousin that walks a whole branch; this is that assignment for the one node you mean.
+- **Duplicate Node (choosing).** The copy with its three questions asked out loud as checkboxes -
+  signals, groups, scripts - emitting Godot's own duplicate flags by name rather than as the number
+  they add up to. Plain Duplicate Node stays exactly as it was: the engine default, all three on.
+- **Reparent To (choosing).** The move with the one question it always raises asked on the row:
+  keeping its place, or snapping to it. The words are Add Child (existing node)'s own words, so one
+  choice reads one way whether the row names the child or is the child, and the answer is written
+  into the file instead of left off. Plain Reparent To stays frozen beside it.
+
+### A second picture of the world you are already in
+
+- **Second View, a new pack, shipping as the `SecondView` autoload.** A view is a SubViewport
+  SHARING the running world plus a camera of its own that follows a node you name. Point it at the
+  player and show it in a corner panel and that is a minimap; point it at a corridor and show it on a
+  wall screen and that is a security monitor; point it at a face and that is a portrait. Four rows
+  and one expression is the whole vocabulary: **Make A View**, **Show View In**, **Set View Zoom**,
+  **Stop View**, and **View Texture Of** for the places a frame cannot reach - a material's albedo, a
+  shader parameter, a theme icon.
+- **The node you follow decides which kind of view you get.** A Node2D gets a Camera2D on the running
+  2D world; a Node3D gets a Camera3D looking straight down at it on the running 3D world. You never
+  pick, because the node already said it, and a node that is neither warns by name and builds nothing
+  rather than half a view. Zoom means the same thing in both: below 1 shows more of the world, above 1
+  shows less - in 3D it divides the camera's height, so the direction never flips on you.
+- **The three traps are solved inside the pack, once.** A SubViewport outside a container is never
+  \"visible\" and the default update mode only draws what is visible, which is why a hand-built second
+  view is so often a blank texture - this one always renders. The picture is taken only once the
+  viewport is really in the tree, and is marked not-local-to-scene before it is handed out, so the
+  handle stays bound to the viewport it came from wherever the frame lives. And Stop View takes the
+  picture back OFF every frame before it frees the viewport, so a panel is left blank rather than
+  holding the texture of something that no longer exists.
+- **The frame sizes the render.** A view shown in a 200x120 TextureRect renders 200 by 120 pixels
+  instead of being stretched out of a square, and follows that panel when the window resizes. So there
+  is no size row to learn: the frame you already placed is the answer.
+- **Parks its own tick.** A view whose followed node was destroyed stops being redrawn and keeps its
+  last picture, rather than going black on its own; when every view has lost its node the autoload
+  hands the frame back entirely. Stop View is the row that actually removes the plumbing.
+- **Three refusals, stated in the guide rather than answered with rows.** No split-screen verbs, because
+  two views in two frames IS split screen and the guide shows it in two sentences. No per-view culling
+  masks in v1, because the camera a view builds is an ordinary Camera2D / Camera3D and the
+  visibility-layer rows already decide what it may draw. And no drawing: painting shapes onto a texture
+  stays the Drawing Canvas pack's job, whose shared runtime owns that SubViewport. The two other
+  neighbours are named too - Named Scenes addresses WHICH scene you travel to, and Render Scene To
+  Image is the one-shot editor cousin that photographs a scene file.
+- **Everything it builds stays ordinary Godot, and the guide says where it lives:** a SubViewport named
+  `View_<the name>` parented to the autoload with an ordinary camera inside it. Aim it, mask it or hang
+  another pack off it exactly as you would any other camera.
+
+### Scenes, documented
+
+- **A guide for the whole story: [Scenes: Travelling To Them, Layering Them, and Saving What The
+  Player Built](docs/GUIDE-SCENES.md).** It opens on the one distinction the rest of the page rests
+  on - a scene is a place the player travels to AND a file holding a branch of nodes, and the
+  vocabulary keeps the two apart in its words: **Layout** for the place, **Scene** for the file. Then
+  the `%name` habit and why a path breaks; a layout put on top with the process-mode table it depends
+  on; the four words for where in three dimensions; the arrival triggers finishing the observer story
+  Connect Group Signal starts; the player-built level with the owner walk and the trust line it comes
+  back through; the undoable tool touch with the one-gesture rule; the three dignities; and the
+  Second View pack. Every worked example is a whole little script hung from its own header, so the
+  page draws them as figures a reader can insert.
+- **The observer story is told as one story, in tense.** Connect Group Signal wires the members a
+  group has RIGHT NOW - that is the present tense and its stated limit. On Node Joins Group is the
+  future tense. The guide says it once, in those words, and states the two neighbours it is not: the
+  aggregate pair (On Group Emptied / On Group Gains First Member) answers the group as a whole a
+  frame later, and On The Last One Destroyed is the same signal narrowed to one moment with two
+  further questions in its gate.
+- **The trust line is written as the turn it is.** The player-built-scenes walkthrough runs forward
+  into the owner walk and then turns: a `.tscn` is a table of resources, a resource may be a SCRIPT,
+  and your own build and a file copied off a forum land in the same folder under the same name. Scene
+  File Is Data-Only reads that table as text and builds nothing. The door back to the files pass's
+  data-never-code rule is one sentence, not a link.
+- **The quiet sheet law is stated on the page it applies to.** Nothing on that page renders a warning
+  inside the sheet: a row with something to say about it goes quietly amber and no further, and the
+  words and the fix doors live in the Doctor's inbox and in the help strip under the selected row.
+- **The concept map gains seven rows and the existing-code reading list gains four entries.** The map
+  answers the Layout / Scene split, a menu over the layout, referring to one instance without a path
+  that breaks, saving what a player built, a minimap, creating an object at a place in 3D, and On
+  created for anything joining a family. The reading list answers the other direction: the three
+  statements that put a menu over the game as one row (and the two neighbouring shapes deliberately
+  not claimed), the owner walk in front of a pack as one row and the pack WITHOUT it left as the code
+  it is, a `node_added` connect with an `is_in_group` first line as a trigger with a visible condition
+  under it, and - the prominent one - the editor's undo bracket, which is read and CONSUMED rather
+  than lifted, because the compiler writes it again. A tool whose author named their own action keeps
+  it verbatim.
+- **Zero blanks, measured rather than asserted.** Every verb the picker offers has a real description
+  and every parameter of every one of them has its own: **1,846 verbs across 84 modules, 98 of them
+  triggers, 2,943 parameters between them, and zero blank descriptions and zero blank parameter
+  descriptions.** The front page said 1,827 verbs across 83 modules and 96 triggers, which was the
+  tree before this pass.
+- **The rest of the numbers, re-measured off this tree.** The reads-itself census re-run over the
+  whole of `addons/` and `tools/`: **886 files, 884 at zero script blocks, 9 block lines, 258,850
+  lines and 189,540 rows, 89% of those rows in the sheet's own words** - the block lines did not move
+  and neither did the share. Packs: **114, 95 of them with a guide of their own**, the other 19
+  companion data assets and loaders documented inside their partner's guide. Guides: **95 addon
+  guides and 44 module guides over 84 module files.** Assertions **20,412 across 717 test files**,
+  counted off the runner's own total rather than from a grep.
+- Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### An object's states are a variable, declared once
 
