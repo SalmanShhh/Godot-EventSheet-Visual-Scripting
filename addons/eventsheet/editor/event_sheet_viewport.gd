@@ -1977,8 +1977,15 @@ func _draw() -> void:
 			continue
 		var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
 		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
-		var row_rect: Rect2 = layout.get("rect", Rect2())
+		# The laid-out band of THIS row. Read under the name the layout builder writes it as: a
+		# mistaken key here fails silently as an empty rect at the top of the canvas, which is
+		# where every chip, wash and grip dot below then lands.
+		var row_rect: Rect2 = layout.get("row_rect", Rect2())
 		_live_values_helper.draw_chip(row_data, row_rect.position.y, row_rect.size.y, font, font_size)
+		# And the timed state row's progress, right after the cell that asks for it. Same draw pass,
+		# same transience: it exists while a frame is in hand and nowhere else.
+		_live_values_helper.draw_state_progress(row_data, row_rect.position.y, row_rect.size.y,
+			font, font_size)
 		# Drag-handle affordance: grip dots on the hovered row's left edge so reordering is
 		# discoverable without being told. They brighten when the pointer is in the whole-event drag
 		# zone (the empty lane band, not on an ACE cell) - the cue that "grab here to move the event".
