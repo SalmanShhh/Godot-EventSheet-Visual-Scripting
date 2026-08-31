@@ -99,6 +99,53 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | On Group Emptied | True on the single tick a watched **Group**'s last member leaves or dies. | `__group_emptied_{uid}({group})` |
 | On Group Gains First Member | True on the single tick a watched **Group** goes from empty to holding something. | `__group_first_{uid}({group})` |
 
+### Run Context - the tree announcing a node joining or leaving a group
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On Node Joins Group | Runs the moment a node belonging to a **Group** enters the world. | `get_tree().node_added.connect(_on_node_joined_group)`, with an Is In Group condition under the trigger |
+| On Node Leaves Group | Runs the moment a node belonging to a **Group** leaves the world. | `get_tree().node_removed.connect(_on_node_left_group)`, with the same condition under it |
+
+These two are the per-MEMBER answer, where On Group Emptied and On Group Gains First Member above
+are the aggregate one. Those two compare this tick's count with last tick's on a per-frame trigger
+and say "the wave is over" or "combat started"; these two say WHICH node, at the moment it happens.
+
+The group is a parameter on the trigger, and picking the trigger puts the shipped **Is In Group**
+condition in the sheet with that group already filled in - so the filter is a row you can see, edit
+and delete, and a plain `if` on disk:
+
+```
+func _on_node_joined_group(node: Node) -> void:
+	if node.is_in_group("minimap"):
+		add_marker_for(node)
+```
+
+![A minimap kept in step: a join adds a marker and wires the node, a departure removes it](../images/scenes-group-arrivals.png)
+
+Three things are worth knowing before you reach for them, and none of them is hidden:
+
+- **The check runs for every node entering or leaving the world**, not only for members of the group
+  named. At the scale a game moves nodes around at - a spawn, a pickup, a room's worth of props -
+  that is one group lookup and nothing worth measuring. Inside a particle storm, an emitter adding
+  hundreds of nodes a frame, it is the wrong tool.
+- **Groups written in a scene file are set before the node enters the tree**, so the guard sees them.
+  A group a script adds AFTER `add_child` is not there yet when the join is announced, and that node
+  is simply not matched; the next node to join is. Add the group before the node enters the tree, or
+  on the row that spawns it, and the two agree.
+- **Any group is a stated choice**, not a blank. Choosing it leaves the guard off entirely, so the
+  event answers every node entering or leaving the world - the firehose a debug overlay or an editor
+  tool wants.
+
+**On Node Joins Group is also how Connect Group Signal stops being current-members-only.** That row
+wires a listener to every member a group has right now, which is its stated limit. Hear the join,
+wire the one node that just arrived, and a group that grows all game long stays wired without
+re-running the loop.
+
+**It is not On The Last One Destroyed.** That trigger is the same `node_removed` signal narrowed to
+the one moment a crowd empties, and it asks two further questions in its own gate: whether the node
+is really being destroyed rather than reparented, and whether it was the last one. On Node Leaves
+Group fires for every departure, a move to another parent included.
+
 ### Run Context - once per THING, and the two rate limits
 
 Trigger Once is per ROW instance and Only Once Ever is per machine forever. These sit in between: the

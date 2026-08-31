@@ -89,6 +89,9 @@ const NEW_MODULES: Array[String] = [
 	# One object's own state, which is the game-mode module one level down: the same six roles owed
 	# for the same reason. One module, shipped whole, so the whole of it is owed.
 	"res://addons/eventforge/registration/modules/object_state_aces.gd",
+	# The tree announcing a node joining or leaving a group: two triggers and the group they watch.
+	# One module, shipped whole, so the whole of it is owed.
+	"res://addons/eventforge/registration/modules/group_arrival_aces.gd",
 ]
 
 ## The two doors content from outside the project comes in through. Added to the shipped Files
@@ -344,7 +347,7 @@ static func _add(text: String, seen: Dictionary, strings: PackedStringArray) -> 
 const FULLY_KEYED_MODULES: Array[String] = [
 	"clipboard_aces.gd", "collision_edge_aces.gd", "collision_filter_aces.gd", "crowd_aces.gd",
 	"cursor_canvas_aces.gd",
-	"editor_author_aces.gd", "facing_aces.gd",
+	"editor_author_aces.gd", "facing_aces.gd", "group_arrival_aces.gd",
 	"game_mechanics_aces.gd", "game_state_aces.gd", "input_event_aces.gd", "light_node_aces.gd",
 	"lighting_aces.gd", "notification_aces.gd",
 	"math_words_aces.gd", "multiplayer_aces.gd", "object_state_aces.gd", "resource_aces.gd",

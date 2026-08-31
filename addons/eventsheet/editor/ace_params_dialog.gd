@@ -30,6 +30,11 @@ const ADD_ANOTHER_ACTION := "add_another"
 const LAYOUT_ON_TOP_ACE_ID := "AddLayoutOnTop"
 const LAYOUT_ON_TOP_PARAM := "path"
 
+## The two group-arrival triggers, for the Any group choice their Group field offers and the two
+## facts their help strip states. Preloaded BY PATH so this dialog does not wait on the editor class
+## cache having been regenerated for a newly added module.
+const GROUP_ARRIVAL_ACES := preload("res://addons/eventforge/registration/modules/group_arrival_aces.gd")
+
 ## Session memory of the last-applied values per ace id, so re-adding the same ACE
 ## prefills what you used last time instead of the bare descriptor default (Tier-1
 ## tedium cut: the values you type repeatedly stop being re-typed). Static = shared
@@ -984,8 +989,18 @@ func _create_group_reference_field(key: String, default_value: Variant) -> Contr
 	var scene_root: Node = animation_scene_root_override
 	if scene_root == null and Engine.is_editor_hint():
 		scene_root = EditorInterface.get_edited_scene_root()
-	return _create_autocomplete_field(key, group_choices(scene_root), default_value,
+	# The two arrival triggers, and only those, offer the FIREHOSE as a stated choice: an empty group
+	# name means the event answers every node entering or leaving the world. Offered here rather than
+	# on the parameter, because a group field on any other row - Add To Group, Call Group - would read
+	# that choice as nonsense, and a list is only useful while everything in it is a real answer.
+	var choices: Array = group_choices(scene_root)
+	if _definition != null and GROUP_ARRIVAL_ACES.is_arrival_trigger(_definition.id):
+		choices.push_front(GROUP_ARRIVAL_ACES.ANY_GROUP)
+	return _create_autocomplete_field(key, choices, default_value,
 		func(group_value: String) -> String:
+			if GROUP_ARRIVAL_ACES.is_any_group(group_value) and _definition != null \
+					and GROUP_ARRIVAL_ACES.is_arrival_trigger(_definition.id):
+				return EventSheetL10n.translate(GROUP_ARRIVAL_ACES.ANY_GROUP_NOTE)
 			return EventSheetParamFieldFactory.node_group_note(group_value, scene_root))
 
 
@@ -3701,6 +3716,11 @@ func _describe_field(key: String) -> void:
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 				"%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), layout_note])
 			return
+		var arrival_note: String = _group_arrival_note(key)
+		if not arrival_note.is_empty():
+			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
+				"%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), arrival_note])
+			return
 		var scene_note: Dictionary = _scene_verb_note(key, param)
 		if not scene_note.is_empty():
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
@@ -3741,6 +3761,28 @@ func _layout_on_top_note(key: String) -> String:
 	if _definition == null or _definition.id != LAYOUT_ON_TOP_ACE_ID or key != LAYOUT_ON_TOP_PARAM:
 		return ""
 	return EventSheetL10n.translate("A layout added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.")
+
+
+## The two facts On Node Joins Group and On Node Leaves Group owe their author, said while the Group
+## field they are about still has focus, or "" for every other field of every other row.
+##
+## THE COST: the guard runs for EVERY node entering or leaving the world, not only for members of the
+## group named. At the scale a game moves nodes around at that is nothing; inside a particle storm it
+## is the wrong tool, and the author should learn that here rather than from a profiler later.
+##
+## THE TIMING: a group written into a scene file is already set when the node enters the tree, so the
+## guard sees it. A group a script adds AFTER add_child is not there yet when the join is announced,
+## and that node is simply not matched - which is the one surprise this trigger has, so it is stated
+## rather than left to be discovered.
+##
+## SAID, NOT DONE. Nothing here changes anybody's groups or edits a scene: the trigger connects the
+## signal it names and no more.
+func _group_arrival_note(key: String) -> String:
+	if _definition == null or key != GROUP_ARRIVAL_ACES.GROUP_PARAM:
+		return ""
+	if not GROUP_ARRIVAL_ACES.is_arrival_trigger(_definition.id):
+		return ""
+	return EventSheetL10n.translate("The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.")
 
 
 ## The one line this row's own node class teaches: an area DETECTS, a character body is DRIVEN, a

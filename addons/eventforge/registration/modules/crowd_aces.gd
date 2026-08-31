@@ -47,6 +47,12 @@
 # once, or a bare free() - is not seen by this trigger, and the shipped On Group Emptied condition,
 # which compares this tick's count with last tick's, is the row for that.
 #
+# AND IT IS NOT THE PLAIN ARRIVAL TRIGGER EITHER. On Node Leaves Group rides the same node_removed
+# signal and asks ONE question - is this node in that group - so it fires for every departure, a
+# reparent included, and says WHICH node. This trigger narrows the same signal to the single moment a
+# crowd empties, which is why its gate asks the two further questions above. Different handlers,
+# different questions, one signal.
+#
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant); this file
 # only changes where the descriptors are AUTHORED.
 @tool

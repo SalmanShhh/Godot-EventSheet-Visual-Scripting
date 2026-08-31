@@ -173,6 +173,13 @@ const MODE_LEAVING_TRIGGER_ID: String = "OnLeavingMode"
 const STATE_ENTERING_TRIGGER_ID: String = "OnEnteringState"
 const STATE_LEAVING_TRIGGER_ID: String = "OnLeavingState"
 
+## The two triggers that answer a node joining or leaving a group. Unlike the pairs above they do
+## NOT share a handler: they ride two different scene-tree signals, so each has its own function.
+## Spelled here rather than reached for through the module, because the resolver is on the compiler's
+## boot path and naming a registration module from it would drag the whole vocabulary in.
+const GROUP_JOINS_TRIGGER_ID: String = "OnNodeJoinsGroup"
+const GROUP_LEAVES_TRIGGER_ID: String = "OnNodeLeavesGroup"
+
 
 ## Trigger ids of the form "OnNotification:<NAME>" - one per engine notification constant a sheet
 ## reacts to (NAME is the constant without its `NOTIFICATION_` prefix stripped: the id carries the
@@ -334,6 +341,18 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# crowd on the sheet shares this one handler and each says its own question in the sheet.
 			# Connected on get_tree() (the "@tree" global source), not self.
 			return _signal_backed("_on_node_removed", "node: Node", "node_removed", "@tree")
+		GROUP_JOINS_TRIGGER_ID:
+			# The tree's own node_added, which fires as ANY node enters the world and hands the
+			# handler the node that arrived. Which group the event is about is not part of the
+			# connection - it is the Is In Group condition applying the trigger adds underneath, so
+			# every group on the sheet shares this one handler and each says its own question in the
+			# sheet. Connected on get_tree() (the "@tree" global source), not self.
+			return _signal_backed("_on_node_joined_group", "node: Node", "node_added", "@tree")
+		GROUP_LEAVES_TRIGGER_ID:
+			# The departure half, on the tree's node_removed. Its own handler name rather than the
+			# crowd trigger's `_on_node_removed`, because the two answer different questions off the
+			# same signal and a shared function would put one event's body under the other's gate.
+			return _signal_backed("_on_node_left_group", "node: Node", "node_removed", "@tree")
 		"OnLocaleChanged":
 			# The translation-changed NOTIFICATION (the engine has no signal for it):
 			# compiles to the _notification virtual; applying the trigger auto-adds the

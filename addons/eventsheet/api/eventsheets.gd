@@ -2045,6 +2045,10 @@ const MODULE_GUIDE_OVERRIDES := {
 	# And the plural is the third half of it: a crowd is only ever the copies a spawn row made, so
 	# the cap, the count and the emptying read beside the row that put them there.
 	"crowd": "Spawning-Copies-Of-Scenes",
+	# The two arrival triggers read with the rest of "when does this row run", beside the aggregate
+	# group conditions they are the per-member answer to - not on the spawning page, because a node
+	# joining a group did not have to be spawned by anybody to get there.
+	"group_arrival": "Triggers-Signals-And-When-Rows-Run",
 	# Batch thirteen's two new picker sections. The world's look is the graphics guide's
 	# subject (the same guide the camera and light rows land on); UI standing in the world is the 3D
 	# guide's, because everything about it is a 3D node.

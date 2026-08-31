@@ -652,6 +652,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `radius` | [Make Sphere Mesh](ace:Core/SetSphereMesh) | Mesh | Vocabulary |
 | `randf` | [Chance](ace:Core/Chance) | Math & Random | Vocabulary |
 | `randf_range` | [Random](ace:Core/RandomRange) | Math & Random | Vocabulary |
+| `randfn` | [Random Place Inside Sphere](ace:Core/PlaceInsideSphere3D) | Spawn | Vocabulary |
 | `randi` | [Random Point On Screen Edge](ace:Core/RandomPointOnScreenEdge) | Math & Random | Vocabulary |
 | `randi_range` | [Random Integer](ace:Core/RandomInt) | Math & Random | Vocabulary |
 | `randomize` | [Randomize Seed](ace:Core/RandomizeSeed) | Math & Random | Vocabulary |
@@ -769,7 +770,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `set_value` | [Save Setting](ace:Core/SaveSetting) | Utility: Settings | Vocabulary |
 | `set_visibility_for` | [Show To Player](ace:Core/ShowToPlayer) | Multiplayer | Vocabulary |
 | `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
-| `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
+| `shape` | [Random Place Inside Box](ace:Core/PlaceInsideBox3D) | Spawn | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
 | `shell_show_in_file_manager` | [Show In The File Manager](ace:Core/ShowInFileManager) | Files | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |

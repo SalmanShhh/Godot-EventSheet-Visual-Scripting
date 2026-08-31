@@ -33,6 +33,7 @@ extends RefCounted
 ## with a newly added module, and read from rather than re-spelled so the trigger, the condition and
 ## the line they compile to can only ever be written in one place.
 const CROWD_ACES := preload("res://addons/eventforge/registration/modules/crowd_aces.gd")
+const GROUP_ARRIVAL_ACES := preload("res://addons/eventforge/registration/modules/group_arrival_aces.gd")
 
 ## The eight EDGE triggers and the gate each one puts under itself, read through the one file every
 ## reader of them shares.
@@ -607,6 +608,28 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 			CROWD_ACES.REMOVED_NODE_ARGUMENT: CROWD_ACES.REMOVED_NODE_ARGUMENT
 		}
 		event_row.conditions.append(crowd_gate)
+	# On Node Joins Group / On Node Leaves Group are the scene tree's own node-added and node-removed
+	# signals, which fire for every node anywhere in the game - so WHICH group the event is about is a
+	# condition under it, added here for the same reason the crowd gate is: visible in the sheet,
+	# editable, deletable, and a plain `if` on disk. The condition is the SHIPPED Is In Group row, not
+	# a new one: `{target}.is_in_group({group})` is a question this vocabulary already had, and the
+	# group rides across from the trigger's own field rather than being asked for twice.
+	#
+	# AND THE FIREHOSE GETS NO GATE. A trigger set to Any group means every node entering or leaving
+	# the world, which is a body with nothing in front of it - so nothing is added, and the event says
+	# exactly what it does.
+	if GROUP_ARRIVAL_ACES.is_arrival_trigger(definition.id) and event_row.conditions.is_empty():
+		var watched_group: String = str(event_row.trigger_params.get(GROUP_ARRIVAL_ACES.GROUP_PARAM, ""))
+		if not GROUP_ARRIVAL_ACES.is_any_group(watched_group):
+			var arrival_gate: ACECondition = ACECondition.new()
+			arrival_gate.provider_id = "Core"
+			arrival_gate.ace_id = GROUP_ARRIVAL_ACES.GATE_ACE_ID
+			arrival_gate.codegen_template = GROUP_ARRIVAL_ACES.GATE_TEMPLATE
+			arrival_gate.params = {
+				"target": GROUP_ARRIVAL_ACES.ARRIVING_NODE_ARGUMENT,
+				GROUP_ARRIVAL_ACES.GROUP_PARAM: watched_group
+			}
+			event_row.conditions.append(arrival_gate)
 	# An EDGE trigger is a moment of a callback something else already owns - landing is a moment of
 	# the physics step, a first overlap a moment of the arrival signal - so the trigger says which
 	# callback the event lives in and the gate under it says which moment it answers. Added here for

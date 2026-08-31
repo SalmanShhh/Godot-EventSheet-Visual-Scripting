@@ -207,6 +207,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Group population edges: one member remembers last tick's count, so the helper can answer "did
 	# this group just empty / just fill?" - the wave director's two triggers. The -1 start means a group
 	# that is already empty on the first tick does NOT count as having just emptied.
+	#
+	# THESE TWO ANSWER THE GROUP AS A WHOLE, which is what separates them from the arrival triggers
+	# (On Node Joins Group / On Node Leaves Group). Those ride the tree's own node_added/node_removed
+	# signals and say WHICH node, at the moment it happens; these compare a count with last tick's on a
+	# per-frame trigger and say "the wave is over" or "combat started". Aggregate here, member there.
 	descriptors.append(F.make_descriptor("Core", "OnGroupEmptied", "On Group Emptied", ACEDescriptor.ACEType.CONDITION, "__group_emptied_{uid}({group})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to watch.", "group_reference")], "Run Context", "on group {group} emptied")
 		.described("True on the single tick a watched group's last member leaves or dies - the wave director's trigger, without counting nodes by hand. A group that is already empty at startup never fires it. Needs a per-frame trigger.")
 		.stateful("var __gcount_{uid}: int = -1\n\nfunc __group_emptied_{uid}(group_name: String) -> bool:\n\tvar count: int = get_tree().get_nodes_in_group(group_name).size()\n\tvar previous: int = __gcount_{uid}\n\t__gcount_{uid} = count\n\treturn previous > 0 and count == 0"))

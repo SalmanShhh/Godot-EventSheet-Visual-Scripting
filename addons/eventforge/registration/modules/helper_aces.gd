@@ -133,7 +133,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# every current member of a group at once, holding no direct reference to (and no tree path to) any
 	# emitter - the fix for "react to any enemy dying" without one Connect Signal per enemy. The is_connected
 	# guard makes re-runs idempotent (never stacks duplicate handlers). Pairs with the call_group broadcast.
-	# Connects only CURRENT members; nodes that join the group later are wired by re-running it or on spawn.
+	# Connects only CURRENT members; nodes that join the group later are wired by re-running it or on spawn -
+	# or, since the arrival triggers shipped, by On Node Joins Group, which hands over the one node that
+	# just arrived so a group growing all game long stays wired without the loop being run again.
 	descriptors.append(F.make_descriptor("Core", "ConnectGroupSignal", "Connect Group Signal", ACEDescriptor.ACEType.ACTION, "for __emitter_{uid}: Node in get_tree().get_nodes_in_group({group}):\n\tif not __emitter_{uid}.{signal}.is_connected({callable}):\n\t\t__emitter_{uid}.{signal}.connect({callable})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Every current member of this group is wired - no per-node reference.", "group_reference"), F.make_param("signal", "String", "died", "Signal", "Signal name (a bare identifier, e.g. died) the members emit.", "signal_reference"), F.make_param("callable", "String", "_on_group_signal", "Callable", "Method/Callable to run when any member fires it.", "expression")], CAT, "connect {group}.{signal} -> {callable}")
 		.described("Listens to a signal on every current member of a group at once, with no reference to any of them.")
 		.featured())

@@ -6,6 +6,56 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The spawn sentence, said in three dimensions
+
+- **Spawn A Copy (3D) and Spawn A Copy Safely (3D).** The 2D pair with a Node3D host: the same three
+  statements in the same order - instance, parent, place - and the deferred twin still setting the
+  place BEFORE it hands the copy over, because a copy that is not in a tree yet has nothing for a
+  global position to be global to. The At field offers Vector3 starters rather than Vector2 ones, and
+  nothing else about the sentence changes with the dimension.
+- **Four answers to \"where\", in three dimensions.** *Place Of (3D)* reads a Marker3D's own place.
+  *Random Place Inside Box* scatters evenly through a box in one step - a CollisionShape3D holding a
+  BoxShape3D, or a CSGBox3D somebody blocked the room out with - measured in the box's own space and
+  handed back through `to_global`, so a rotated box scatters inside the box that was drawn. *Random
+  Place Inside Sphere* pulls its radius back by the CUBE root of the roll, which is the 2D disc's
+  square-root correction one dimension up: the volume inside a radius grows as its cube, so anything
+  less bunches every spawn toward the middle. *Random Place Around (3D)* is a ring on the ground
+  plane at a radius you name. Each is one expression, usable in any field that takes a Vector3, and
+  each round-trips byte for byte the way its 2D twin does.
+- **There is deliberately no 3D Random Place Off Screen Edge, and the reason is written down.** In 2D
+  a screen edge is a rectangle in the plane the game is played in, which is why that row can be one
+  honest expression. In 3D \"just off screen\" is a question about a camera's frustum - which camera,
+  how far along its forward axis, at what depth - and every one-line answer is a guess that looks
+  right until the camera moves. Nothing is proposed in its place: a wave arriving from off camera is
+  spawned at a Marker3D or inside a box the level designer drew.
+- **Place Of (3D) writes the line Place Of already writes**, because `global_position` is the node's
+  own word in both dimensions. The 3D row exists so the 3D page offers it; the reading of that line
+  stays the 2D row's, so an opened file never has two rows arguing over one spelling.
+
+### The tree announcing arrivals
+
+- **On Node Joins Group and On Node Leaves Group.** Two triggers on the scene tree's own `node_added`
+  and `node_removed` signals, wired once in `_ready` like every other lifted trigger, with the node
+  that arrived or left as the payload chip. The moment for a minimap marker to go on, a list entry to
+  come off, a connection to be made or dropped.
+- **The filter is a row you can see.** Picking either trigger puts the SHIPPED *Is In Group*
+  condition in the sheet with the group already filled in - not a new row re-saying a question the
+  vocabulary already had, and not a wrapper the compiler adds behind the row. It compiles to a plain
+  `if node.is_in_group(\"minimap\"):` inside the handler, and deleting it is allowed. *Any group* is a
+  stated choice in the Group picker: choosing it adds no gate at all, which is the firehose a debug
+  overlay or an editor tool wants.
+- **The cost and the timing are stated, not hidden.** The parameters dialog says on the help strip,
+  while the Group field has focus, that the check runs for every node entering or leaving the world -
+  nothing at the scale a game spawns things at, and the wrong tool inside a particle storm - and that
+  a group set in the scene file is already there when the node arrives while a group a script adds
+  after `add_child` is announced by the next node to join, not by that one.
+- **The hand-written shape reads back as the trigger, filter and all.** A
+  `get_tree().node_added.connect(_on_node_joined_group)` with an `is_in_group` guard at the top of
+  its handler opens as the trigger with its condition row, and the file saves back byte for byte.
+  Every other `get_tree()` connect is deliberately not claimed and reads exactly as it did before -
+  the crowd trigger's own `node_removed` handler included, which asks two further questions this one
+  does not and keeps its own handler name.
+
 ### A layout on top of the game
 
 - **Add Layout On Top, Remove Layout On Top, Layout Is On Top.** Three rows on the Game side, filed

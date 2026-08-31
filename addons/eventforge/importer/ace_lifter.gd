@@ -1683,6 +1683,19 @@ const WINDOW_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
 	"get_window()": {"files_dropped": "OnFilesDropped", "close_requested": "OnCloseRequested"}
 }
 
+## The scene tree itself, as a connect line spells it.
+const TREE_CONNECT_SOURCE: String = "get_tree()"
+
+## The two tree signals this reading has words for, keyed by the HANDLER NAME rather than by the
+## signal. `node_removed` is wired by two different rows - the crowd trigger, which asks two further
+## questions in its gate, and On Node Leaves Group, which asks one - so the signal alone cannot say
+## which reading a handler is, and the function's own name can. Every other `get_tree()` connect is
+## refused outright (see _parse_connect_line) and keeps reading exactly as it did before.
+const TREE_HANDLER_TRIGGERS: Dictionary = {
+	"_on_node_joined_group": {"signal": "node_added", "trigger": "OnNodeJoinsGroup"},
+	"_on_node_left_group": {"signal": "node_removed", "trigger": "OnNodeLeavesGroup"}
+}
+
 ## The answers a row calls BY NAME, by the exact header each compiles to: the two endings of an Ask,
 ## and the three an unpack raises as it walks an archive. Plain functions rather than signal handlers
 ## - the emitted line calls them - so they lift from the header alone, the way a lifecycle callback
@@ -1709,7 +1722,7 @@ static func _parse_connect_line(line: String) -> Dictionary:
 	# rather than identifiers, so each is spelled out instead of allowed as a general `x.y()`
 	# alternative - widening the pattern to any call chain would start claiming connect lines in
 	# every project that this reading has no words for.
-	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_window\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
+	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_window\\(\\)|get_tree\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
 	# The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
 	# a handler wired with it is still exactly this shape - refusing the line only stranded the whole
 	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
@@ -1735,6 +1748,14 @@ static func _parse_connect_line(line: String) -> Dictionary:
 	if line_match == null:
 		return {}
 	var source: String = line_match.get_string(1)
+	# A connect on the SCENE TREE is claimed only for the two handlers this reading has words for.
+	# `get_tree()` carries a dozen signals a project may wire for reasons the sheet cannot say - the
+	# crowd trigger's own node_removed handler among them - and a parser that claimed all of them
+	# would pull every such handler into a reading that then failed the byte-verify and reverted the
+	# whole file to code. Narrow here rather than in the pattern, because only the handler's NAME
+	# separates the two readings of one signal.
+	if source == TREE_CONNECT_SOURCE and not TREE_HANDLER_TRIGGERS.has(line_match.get_string(3)):
+		return {}
 	if source.begins_with("get_node("):
 		source = source.trim_prefix("get_node(\"").trim_suffix("\")")
 	else:
@@ -2076,6 +2097,16 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# signal's does: `get_window()` is a call, not a node path, so a leftover source would
 			# have emission reach for get_node("get_window()").
 			trigger_id = str((WINDOW_SOURCE_SIGNAL_TRIGGERS[trigger_source] as Dictionary)[signal_name])
+			trigger_source = ""
+		elif trigger_source == TREE_CONNECT_SOURCE \
+				and str((TREE_HANDLER_TRIGGERS.get(header_match.get_string(1), {}) as Dictionary).get("signal", "")) == signal_name:
+			# A group arrival, off the scene tree itself. The source moves to the global "@tree" token
+			# the resolver knows how to write back, exactly as an editor or window signal's does -
+			# `get_tree()` is a call, not a node path, so a leftover source would have emission reach
+			# for get_node("get_tree()"). The group the event filters on is NOT read here: it is the
+			# ordinary Is In Group condition at the top of the body, and the reverse index lifts it as
+			# the row it is, which is what makes the filter editable rather than baked into a trigger.
+			trigger_id = str((TREE_HANDLER_TRIGGERS[header_match.get_string(1)] as Dictionary).get("trigger", ""))
 			trigger_source = ""
 		elif trigger_source == EventForgeMultiplayerLift.CONNECT_SOURCE \
 				and EventForgeMultiplayerLift.SIGNAL_TRIGGERS.has(signal_name):
@@ -3553,6 +3584,13 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 	# way in into ONE sentence, and it keeps the author's own name for the copy in it. The row is an
 	# authoring word here; the reading stays the one that opens the line.
 	"MakeNewCopy",
+	# Place Of (3D), for a reason of the same kind: `{node}.global_position` is the line its 2D twin
+	# already speaks for, character for character - global_position is the node's own word in both
+	# dimensions. Two rows with one template would split every such line between them by registry
+	# order alone, so the row that shipped first keeps the reading and this one is an authoring word.
+	# Nothing is lost by it: the sentence the file gets is the same sentence either way, and the
+	# emitted bytes are identical.
+	"PlaceAtNode3D",
 	# The two destroy sentences that stand BESIDE a frozen row writing the identical line: Destroy Now
 	# writes `{object}.queue_free()`, which is Free Node's own template, and Is Still Here writes
 	# `is_instance_valid({object})`, which is Object Still Exists's. Two rows with one template would
