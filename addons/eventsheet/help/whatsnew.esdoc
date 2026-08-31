@@ -6,6 +6,48 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The honest watcher, and one file that is many files
+
+- **Folder Watcher** is a new behavior pack that notices a file in one folder appearing, changing or
+  going away, raising **On A File Appeared / Changed / Removed** with the whole path. Godot has no
+  file-change notification at run time on any platform it ships for, so the pack does the only honest
+  thing and **polls**: it reads the folder on the interval you name and compares the reading with the
+  one before it, by file name and by modified time. **A poll calls itself a poll** - the row says
+  `Watch folder \"user://mods\" every 2.0 s`, and so does the band.
+- **It costs what it says.** One look is one `DirAccess.get_files_at` plus one modified-time question
+  per file that passes the name filter; between looks it costs nothing, and **Stop Watching** parks
+  the per-frame tick with `set_process(false)`, the fleet convention, so a stopped watcher is a node
+  the engine no longer visits. The directory walk is sorted, so two machines raise the same events in
+  the same order. The first look is the **baseline** and raises nothing: a folder that already holds
+  two hundred files is not two hundred things that just happened.
+- **Pack Folder Into Zip** and **Unpack Zip Into Folder** sit beside the twelve frozen file verbs,
+  over the engine's own `ZIPPacker` and `ZIPReader`. Both loops are emitted into your script, where
+  they can be read. The pack walks the files directly in one folder, not its subfolders, and the row
+  says so rather than surprising the first person whose folder had a directory in it.
+- **The unpack guard is the feature, and it is visible in the emitted code.** An archive entry names
+  its own path, and one spelled `../../autoexec.cfg` resolves outside the folder the player pointed
+  at - which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path
+  is compared against the target folder before a single byte is written (both sides globalized and
+  simplified, the folder keeping its trailing slash so `user://mods` cannot accept
+  `user://mods_of_mine`), and an entry that climbs out closes the archive, stops the whole unpack and
+  raises **On Unpack Refused** with the entry and the reason on it.
+- **A huge archive meets a progress bar, not a frozen game.** **On Unpack Progress** reports the
+  entries and the bytes that have landed, once per entry; **On Unpack Finished** ends a run that
+  reached the last entry. Like the Ask rows, the emitted loop calls all three answers **by name**, so
+  a sheet that unpacks needs an event for each or the script does not compile.
+- **The band grew a watch reading.** A folder read once and a folder read every two seconds for the
+  rest of the session are not the same thing to say about a sheet, so a row that starts a watch reads
+  as `watching user://mods every 2.0 s` - the interval included, because that is the half a path
+  cannot say. A verbatim block sitting inside an event's lane is now read for file facts too, the way
+  one between events already was.
+- **The loops open again.** Both archive templates span lines, which the reverse index does not
+  claim, so an opened file keeps them as verbatim blocks with the adopt door - and the promise that
+  matters is gated: opening such a file and saving it untouched reproduces its bytes, with the three
+  answer functions opening as their own events.
+- The shipped `file_aces` verbs, the `json_aces` family and **Open File Chooser** are untouched.
+  Game saves remain the Save System's territory. **User content is data, never code**: an archive
+  entry is read as bytes and stored as bytes, and nothing here loads, parses or runs what came out.
+
 ### The two doors user content comes in through
 
 - **On Files Dropped** is the window's own `files_dropped` signal as an event: the sheet connects it

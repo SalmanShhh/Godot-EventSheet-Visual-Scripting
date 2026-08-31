@@ -93,6 +93,9 @@ const NEW_MODULES: Array[String] = [
 const USER_CONTENT_DOOR_IDS: Array[String] = [
 	"OnFilesDropped", "AskForAFileToOpen", "AskWhereToSave", "OnFileChosen", "OnAskCancelled",
 	"LoadImageFile", "LoadSoundFile",
+	# The two archive verbs and the three events an unpack raises, added to the same shipped module.
+	"PackFolderIntoZip", "UnpackZipIntoFolder", "OnUnpackProgress", "OnUnpackRefused",
+	"OnUnpackFinished",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the

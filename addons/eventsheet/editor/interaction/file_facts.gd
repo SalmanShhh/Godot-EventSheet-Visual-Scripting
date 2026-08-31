@@ -22,6 +22,10 @@
 # FileDialog, and a row whose emitted line opens the PLATFORM'S own chooser. Either is a row that
 # stops and asks the player, whatever it is called.
 #
+# A WATCH IS ITS OWN READING. A folder read once and a folder read every two seconds for the rest of
+# the session are not the same thing to say about a sheet, so a row that starts a watch reads as
+# "watching <folder> every N s" - the interval included, because that is the half a path cannot say.
+#
 # THE BAND SCALE LAW. A band lists what the sheet USES and counts the rest. Four paths get four
 # bands; twelve get four and one band saying how many more, because a head longer than the sheet is
 # not a head.
@@ -44,6 +48,17 @@ const CHOOSER_CLASS: String = "FileDialog"
 
 ## The call a verb makes when it opens the PLATFORM'S own chooser rather than building a node for it.
 const CHOOSER_CALL: String = "DisplayServer.file_dialog_show("
+
+## The call a row makes when it starts WATCHING a folder - the Folder Watcher pack's own verb, whose
+## name is a shipped public id exactly as an ace_id is. A watch is not a read that happened once: it
+## is a directory read every few seconds for as long as the game runs, which is the one thing about a
+## sheet worth knowing before opening the row that started it. Matched on the CALL, the same way the
+## platform chooser above is, so a row that compiles to this line is on the band whatever it is named.
+const WATCH_CALL: String = "watch_folder("
+
+## The two values pulled out of that call - the folder, then the seconds between looks. Read off the
+## row's own emitted line rather than off parameter ids, so the band and the code cannot drift.
+const WATCH_PATTERN: String = "watch_folder\\(\\s*(?<folder>.*?)\\s*,\\s*(?<seconds>[^,()]*?)\\s*\\)"
 
 ## How many paths the band names before it starts counting.
 const SHOWN_LIMIT: int = 4
@@ -70,7 +85,8 @@ const TOUCH_BOTH: String = "read and written"
 
 
 ## The band's readings, in first-mention order: one entry per path this sheet touches, then one
-## counting the paths it touches that the band did not name, then the ask if the sheet has one.
+## counting the paths it touches that the band did not name, then every folder it WATCHES, then the
+## ask if the sheet has one.
 ## Empty for a sheet that touches no file, which is what keeps the head of every other sheet exactly
 ## as it was.
 ##
@@ -91,6 +107,13 @@ static func bands(sheet: EventSheetResource) -> Array[Dictionary]:
 		readings.append({
 			"value": EventSheetL10n.translate("and %d more path(s)") % counted,
 			"echo": "", "reference": "",
+		})
+	for watch: Dictionary in watched_folders(sheet):
+		readings.append({
+			"value": EventSheetL10n.translate("watching %s every %s s") % [
+				str(watch.get("folder", "")), str(watch.get("seconds", ""))],
+			"echo": str(watch.get("echo", "")),
+			"reference": "",
 		})
 	var asked: Dictionary = asks_the_player(sheet)
 	if not asked.is_empty():
@@ -189,6 +212,43 @@ static func asks_the_player(sheet: EventSheetResource) -> Dictionary:
 	return found[0] if not found.is_empty() else {}
 
 
+## Every folder this sheet WATCHES, first mention first, each as {"folder", "seconds", "echo"}. A
+## watch is the one file fact a path alone cannot tell you: the same folder read once and read every
+## two seconds forever are different things to do to somebody's disk, so the interval is part of the
+## reading rather than a detail inside the row.
+##
+## The same folder started twice at the same interval is one fact; started at two different intervals
+## it is two, because those really are two different things the sheet does.
+static func watched_folders(sheet: EventSheetResource) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if sheet == null:
+		return found
+	var rows: Array[Dictionary] = []
+	_walk_rows(sheet.events, rows)
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_walk_rows(event_function.events, rows)
+	var seen: Dictionary = {}
+	var matcher: RegEx = RegEx.create_from_string(WATCH_PATTERN)
+	for row: Dictionary in rows:
+		var text: String = str(row.get("text", ""))
+		if not text.contains(WATCH_CALL):
+			continue
+		for hit: RegExMatch in matcher.search_all(text):
+			var reading: Dictionary = {
+				"folder": bare(hit.get_string("folder")),
+				"seconds": hit.get_string("seconds").strip_edges(),
+				"echo": hit.get_string().strip_edges(),
+			}
+			var key: String = "%s|%s" % [reading["folder"], reading["seconds"]]
+			if seen.has(key):
+				continue
+			seen[key] = true
+			found.append(reading)
+	return found
+
+
 ## A path field's value without the quotes it is held in - the band says the path, not the literal,
 ## because the literal is what the echo is for. A path built out of an expression has no quotes to
 ## strip and rides through as the expression it is.
@@ -236,6 +296,14 @@ static func _walk_rows(items: Array, found: Array[Dictionary]) -> void:
 			continue
 		for lane: Array in [event_row.conditions, event_row.actions]:
 			for entry: Variant in lane:
+				# A verbatim block can sit IN a lane as well as between events - a hand-written
+				# FileAccess call under a trigger is a file this sheet touches exactly as one at the
+				# top of it is, and it carries no descriptor to be read through.
+				if entry is RawCodeRow:
+					var lane_code: String = (entry as RawCodeRow).code
+					found.append({"text": lane_code, "echo": _first_line_of(lane_code),
+						"paths": PackedStringArray()})
+					continue
 				var read: Dictionary = _row_reading(entry as Resource)
 				if not read.is_empty():
 					found.append(read)

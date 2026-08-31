@@ -146,6 +146,60 @@ portrait, a custom track, a level file somebody sent them.
 **User content is data, never code.** Nothing here loads a script, a scene or a resource, and nothing
 here evaluates what it read. A dropped file is bytes and a path.
 
+### Files: Archives
+
+One file that is many files. **Pack Folder Into Zip** writes the files in one folder into a `.zip`
+using the engine's own `ZIPPacker`; **Unpack Zip Into Folder** reads one back with `ZIPReader`. Both
+loops are emitted into your script, where you can read them.
+
+An unpack is the one row here that handles a path somebody else chose. **An archive entry names its
+own path**, and an entry spelled `../../autoexec.cfg` resolves outside the folder the player pointed
+at - which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path is
+compared against the target folder before a single byte is written, the comparison is in the emitted
+code, and an entry that climbs out stops the whole unpack and raises **On Unpack Refused** with the
+reason in it.
+
+Like the Ask rows, the emitted loop calls its three answers **by name**, so a sheet that unpacks needs
+an event for each of them or the script does not compile.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Pack Folder Into Zip | Writes the files directly in one folder into a `.zip` | `var __packer := ZIPPacker.new()`, `if __packer.open({archive}) == OK:`, then `start_file` / `write_file(FileAccess.get_file_as_bytes(…))` / `close_file` per file |
+| Unpack Zip Into Folder | Reads a `.zip` and writes its entries into a folder, guarded | `var __reader := ZIPReader.new()`, the folder made first, then per entry the guard `if not ProjectSettings.globalize_path(__into).simplify_path().begins_with(__root):` before `FileAccess.open(…, FileAccess.WRITE)` |
+| On Unpack Progress | Runs once per entry as an unpack writes it | `func _on_unpack_progress(entries: int, bytes: int) -> void:` |
+| On Unpack Refused | Runs when the guard stopped an unpack, with the entry and the reason | `func _on_unpack_refused(entry: String, reason: String) -> void:` |
+| On Unpack Finished | Runs when an unpack reached the last entry with nothing refused | `func _on_unpack_finished(entries: int, bytes: int) -> void:` |
+
+![Four events in a sheet called ModInstaller, under a head whose files bands read user://pack.zip - read and written and user://mods - read and written with the ZIPReader line echoed beside each: On Created with System Unpack "user://pack.zip" into folder "user://mods", then On Unpack Progress setting Bar value to entries, On Unpack Refused setting Label text to "Refused: " and reason, and On Unpack Finished setting Label text to "Installed " and entries](../images/archive-unpack.png)
+
+### Watching a folder
+
+Godot raises **no file-change notification at run time** on any platform it ships for. There is
+nothing to subscribe to, so the **Folder Watcher** behavior pack does the only honest thing: it
+*looks*, on an interval you set, and compares what it saw with what it saw last time - by file name
+and by modified time.
+
+Attach it to a node, then start it from a row. The row says the interval out loud, and so does the
+band at the top of the sheet: `watching user://mods every 2.0 s`.
+
+Its words, in the shapes they take:
+
+- **Watch Folder** (action) starts looking at a folder every so many seconds. The first look is the
+  baseline and raises nothing.
+- **Stop Watching** (action) stops looking, and parks the per-frame tick so the node costs nothing.
+- **Look Now** (action) takes one look immediately, without waiting for the interval.
+- **Is Watching** (condition) is true between Watch Folder and Stop Watching.
+- **Watched File Count** and **Watched File Names** (expressions) read back what the last look found,
+  after the name filter.
+- **On A File Appeared**, **On A File Changed** and **On A File Removed** are the three events one
+  look can raise, each handing back the whole path.
+
+![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Created with FolderWatcher Watch folder "user://mods" 2, and a second On Created with FolderWatcher Stop watching](../images/folder-watcher.png)
+
+**One look costs one directory read**, plus one modified-time question per file that passes the name
+filter. Between looks it costs nothing, and a stopped watcher costs nothing at all - the tick is
+parked with `set_process(false)`, so the engine stops visiting the node.
+
 ## Use cases
 
 **1. The whole save system, in two rows.** Save JSON File and Load JSON File collapse the write and
@@ -389,6 +443,59 @@ On a file chosen path
   -> Write Text File  path, To JSON Text (pretty)(level)
 ```
 
+**25. Installing a mod the player downloaded.** The unpack reports itself, so the progress bar moves
+and a hostile archive is refused out loud rather than quietly writing somewhere it should not.
+
+```
+On install pressed
+  -> Unpack Zip Into Folder  "user://incoming/pack.zip", "user://mods"
+
+On unpack progress entries bytes
+  -> set ProgressBar value = entries
+
+On unpack refused entry reason
+  -> set StatusLabel text = "Refused " + entry + ": " + reason
+
+On unpack finished entries bytes
+  -> set StatusLabel text = str(entries) + " files installed."
+```
+
+**26. Bundling a run's replay files to send.** One folder in, one file out, with Ask Where To Save
+collecting the destination first.
+
+```
+On share replay pressed
+  -> Ask Where To Save  PackedStringArray(["*.zip;Replay bundle"])
+
+On a file chosen path
+  -> Pack Folder Into Zip  "user://replays", path
+```
+
+**27. A mods folder that reloads itself while the game runs.** The watcher polls, so the interval is
+your choice and it is on the row. Two seconds is generous for a folder a person edits by hand.
+
+```
+On ready
+  -> Watch Folder  "user://mods", 2.0
+
+On a file appeared path
+  -> Load Mod  path
+
+On a file changed path
+  -> Reload Mod  path
+
+On a file removed path
+  -> Unload Mod  path
+```
+
+**28. Stop watching when nobody is looking.** A watcher is only worth its directory read while the
+screen that cares about it is open.
+
+```
+On mods screen closed
+  -> Stop Watching
+```
+
 ### Other use cases
 
 **Crash breadcrumbs.** Append one line per major event to `user://log.txt` and ask players to attach the file to a bug report, so a hard-to-reproduce fault arrives with its own history.
@@ -455,6 +562,27 @@ On a file chosen path
   per format it checks - so put a variable in that field rather than a call with a side effect.
 - **A loaded image or sound is not a project resource.** It is not imported, it has no `.import`
   file, and it lives only as long as a variable, a node property or a sheet variable holds it.
+- **An unpack needs all three answer events.** The emitted loop calls `_on_unpack_progress`,
+  `_on_unpack_refused` and `_on_unpack_finished` by name, and those three functions are what
+  On Unpack Progress / Refused / Finished compile to. Without them the script does not compile.
+- **A refused unpack stops where it stopped.** The entries written before the bad one stay written.
+  That is deliberate - the sheet is told which entry stopped it, and clearing up is a decision, not
+  something a row should make on your behalf.
+- **Pack Folder Into Zip is not recursive.** It walks the files directly in that one folder. A whole
+  tree needs your own walk with List Subdirectories.
+- **A packed archive stores bare file names**, so unpacking one lays its files flat in the target
+  folder. That is what makes the round trip in these rows exact.
+- **The Folder Watcher is a poll, not a subscription.** Godot has no runtime file watcher, so a
+  change is noticed on the next look and no sooner. An interval of 2 seconds means "within two
+  seconds", never "immediately".
+- **The first look raises nothing.** Watch Folder records what is already there as its baseline. A
+  folder that already holds two hundred files is not two hundred things that just happened.
+- **A modified time is stamped to the nearest second.** A file written twice inside one second looks
+  unchanged to the watcher, which is a real limit of the filesystem rather than of these rows.
+- **A program that writes a file in several goes can raise On A File Changed more than once** for
+  what a person would call one save. Debounce in your own row if that matters.
+- **A watcher under `res://` will never see anything change.** `res://` is packed into the export and
+  read-only there, so watch `user://` instead.
 - **In an exported project, a converted `res://` text resource is stored with a trailing `.remap`.**
   Listing a `res://` data folder in an export will show names ending `.tres.remap` rather than
   `.tres`, which is a trap when you build a list from file names. The folder rows in the

@@ -350,6 +350,16 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_on_file_chosen", "path: String")
 		"OnAskCancelled":
 			return _lifecycle("_on_ask_cancelled", "")
+		"OnUnpackProgress":
+			# The three answers an unpack raises, on the same seam as the two above and for the same
+			# reason: the emitted ZIPReader loop calls them BY NAME as it goes, so there is nothing
+			# to connect and nothing to await. A sheet with an unpack row and none of these does not
+			# parse, which is the plainest way a missing answer can announce itself.
+			return _lifecycle("_on_unpack_progress", "entries: int, bytes: int")
+		"OnUnpackRefused":
+			return _lifecycle("_on_unpack_refused", "entry: String, reason: String")
+		"OnUnpackFinished":
+			return _lifecycle("_on_unpack_finished", "entries: int, bytes: int")
 		"OnPlayerJoined":
 			# The seven things the connection itself says - five off MultiplayerAPI's own signals and
 			# the two SceneMultiplayer adds for the handshake, all on the same property. They

@@ -15,6 +15,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__just_left_the_ground_` | [Just Left The Ground](ace:Core/JustLeftTheGround) | Collisions | Vocabulary |
 | `_on_ask_cancelled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `_on_file_chosen` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
+| `_on_unpack_finished` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
+| `_on_unpack_progress` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
+| `_on_unpack_refused` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
@@ -115,6 +118,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `clipboard_has_image` | [Clipboard Has Image](ace:Core/ClipboardHasImage) | Utility: Window | Vocabulary |
 | `clipboard_set` | [Copy To Clipboard](ace:Core/SetClipboard) | Utility: Window | Vocabulary |
 | `close` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
+| `close_file` | [Pack Folder Into Zip](ace:Core/PackFolderIntoZip) | Files: Archives | Vocabulary |
 | `collide_with_areas` | [RayCast Detects Areas (2D)](ace:Core/RayCast2DSetHitAreas) | Raycast 2D | Vocabulary |
 | `collide_with_bodies` | [RayCast Detects Bodies (2D)](ace:Core/RayCast2DSetHitBodies) | Raycast 2D | Vocabulary |
 | `collider` | [Explode At](ace:Core/ExplodeAt) | Weapons 3D | Vocabulary |
@@ -288,6 +292,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
 | `get_file_as_string` | [Read Text File](ace:Core/ReadTextFile) | Files | Vocabulary |
 | `get_file_system_dock` | [Show In Project Bar](ace:Core/ShowInProjectBar) | Editor Tools: Panels & menus | Vocabulary |
+| `get_files` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `get_files_at` | [List Files](ace:Core/ListFiles) | Files: Directories | Vocabulary |
 | `get_first_node_in_group` | [Get First Node In Group](ace:Core/GetFirstNodeInGroup) | Groups | Vocabulary |
 | `get_floor_normal` | [Floor Normal](ace:Core/GetFloorNormal) | Collisions | Vocabulary |
@@ -651,6 +656,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `randomize` | [Randomize Seed](ace:Core/RandomizeSeed) | Math & Random | Vocabulary |
 | `range` | [Cells In Rectangle](ace:Core/CellsInRectangle) | Math & Random | Vocabulary |
 | `ratio` | [Value Ratio](ace:Core/GetRangeRatio) | UI | Vocabulary |
+| `read_file` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `rect` | [Draw Rect](ace:Core/DrawRect) | Drawing | Vocabulary |
 | `reduce` | [Reduce](ace:Core/ArrayReduce) | Variables: Array | Vocabulary |
 | `refuse_new_connections` | [Stop Accepting Players](ace:Core/StopAcceptingPlayers) | Multiplayer | Vocabulary |
@@ -768,6 +774,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
 | `signf` | [Keep Upright](ace:Core/KeepUpright) | Facing | Vocabulary |
 | `signi` | [Compare Result](ace:Core/CompareResult) | Compare: Numbers | Vocabulary |
+| `simplify_path` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `sin` | [Sine](ace:Core/SinValue) | Helpers | Vocabulary |
 | `size` | [Switch To Next Weapon](ace:Core/SwitchToNextWeapon) | Weapons 3D | Vocabulary |
 | `sky_rotation` | [Set Sky Rotation](ace:Core/SetSkyRotation) | Environment | Vocabulary |
@@ -794,6 +801,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ssao_enabled` | [Set Ambient Occlusion On/Off](ace:Core/SetAmbientOcclusion) | Environment | Vocabulary |
 | `stamp` | [Draw Stamp](ace:Core/DrawStamp) | Drawing | Vocabulary |
 | `start` | [Start Timer](ace:Core/StartTimer) | General Actions | Vocabulary |
+| `start_file` | [Pack Folder Into Zip](ace:Core/PackFolderIntoZip) | Files: Archives | Vocabulary |
 | `start_joy_vibration` | [Vibrate Gamepad For](ace:Core/GamepadVibrateFor) | Gamepad | Vocabulary |
 | `start_ribbon` | [Start Ribbon](ace:Core/DrawStartRibbon) | Drawing | Vocabulary |
 | `stiffness` | [Set Spring Stiffness](ace:Core/SetDampedSpringStiffness) | Joints | Vocabulary |
@@ -801,6 +809,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `stop_joy_vibration` | [Stop Gamepad Vibration](ace:Core/VibrationStopJoy) | Vibration | Vocabulary |
 | `stop_playing_scene` | [Stop Playing](ace:Core/StopPlayingScene) | Editor Tools | Vocabulary |
 | `stop_ribbon` | [Stop Ribbon](ace:Core/DrawStopRibbon) | Drawing | Vocabulary |
+| `store_buffer` | [Unpack Zip Into Folder](ace:Core/UnpackZipIntoFolder) | Files: Archives | Vocabulary |
 | `store_csv_line` | [Write Table To File](ace:Core/WriteFileTable) | Files: Tables | Vocabulary |
 | `store_line` | [Save Trail To CSV](ace:Core/SaveTrailCsv) | Debug | Vocabulary |
 | `store_string` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
@@ -883,6 +892,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `window_set_vsync_mode` | [Set VSync Enabled](ace:Core/WindowSetVSync) | Game Window | Vocabulary |
 | `wrapf` | [Wrap Around](ace:Core/WrapAround) | Math & Random | Vocabulary |
 | `wrapi` | [Wrap (int)](ace:Core/WrapIntValue) | Helpers | Vocabulary |
+| `write_file` | [Pack Folder Into Zip](ace:Core/PackFolderIntoZip) | Files: Archives | Vocabulary |
 | `x` | [Face Direction Of Movement](ace:Core/FaceDirectionOfMovement) | Facing | Vocabulary |
 | `y` | [Is Jumping](ace:Core/IsJumping) | Collisions | Vocabulary |
 | `year` | [Date: Year](ace:Core/DateYear) | Time | Vocabulary |

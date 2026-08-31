@@ -5633,3 +5633,35 @@ Notifications,Уведомления
 "sound of file {path}, or {fallback}","звук файла {path}, иначе {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Звук для чтения. Во время выполнения декодируются РОВНО ТРИ формата, и строка проверяет эти три по расширению: .mp3, .ogg (Ogg Vorbis) и .wav. Лучше передать сюда переменную - путь читается по разу на каждый проверяемый формат."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","Чем становится выражение, когда по этому пути файла нет или его расширение не одно из трёх. Оставьте пустым, чтобы читать файл напрямую, без охраны вокруг."
+Pack Folder Into Zip,Упаковать папку в zip
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.","Записывает файлы одной папки в архив .zip с помощью собственного упаковщика движка. Цикл выводится в ваш скрипт, поэтому видно, какие именно файлы он обходит - те, что лежат прямо в этой папке, а не внутри её подпапок."
+Files: Archives,Файлы: архивы
+pack folder {folder} into {archive},упаковать папку {folder} в {archive}
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.","Папка, файлы которой попадут в архив. Именно те, что лежат прямо в ней, а не содержимое её подпапок."
+Into archive,В архив
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,"Записываемый файл .zip. ПЕРЕЗАПИСЫВАЕТ архив, уже лежащий по этому пути. Предпочитайте user:// - res:// после экспорта доступен только для чтения."
+Unpack Zip Into Folder,Распаковать zip в папку
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.","Читает архив .zip и записывает его записи в папку. Путь каждой записи сверяется с этой папкой ДО того, как что-либо будет записано, и запись, указывающая наружу, останавливает распаковку и вызывает При отказе в распаковке - zip сделан кем-то другим, и его записи сами задают свои пути. Ход работы сообщается через При ходе распаковки и завершается на При завершении распаковки; оба вызываются выведенным циклом по имени."
+unpack {archive} into folder {folder},распаковать {archive} в папку {folder}
+Archive,Архив
+The .zip file to read. Nothing is written when it cannot be opened.,"Читаемый файл .zip. Если его не удаётся открыть, ничего не записывается."
+Into folder,В папку
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.","Папка, в которую записывается каждая запись; создаётся заранее, если её нет. НИ ОДНА запись не должна оказаться вне её - выведенная защита останавливает распаковку на такой записи."
+On Unpack Progress,При ходе распаковки
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.","Выполняется по одному разу на каждую записанную запись, пока распаковка ещё идёт. Здесь двигается индикатор выполнения, чтобы при большом архиве было видно работающую игру, а не замерзшее окно."
+On unpack progress {entries} {bytes},При ходе распаковки {entries} {bytes}
+Entries,Записи
+"How many entries have been written so far, counting the one that just landed.","Сколько записей записано к этому моменту, включая только что появившуюся."
+How many bytes have been written so far.,Сколько байтов записано к этому моменту.
+On Unpack Refused,При отказе в распаковке
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.","Выполняется, когда защита остановила распаковку: запись разрешилась в путь вне папки назначения. После этого ничего больше не записывается. Скажите об этом на экране - отклонённый архив либо повреждён, либо враждебен, и решить это может только играющий."
+On unpack refused {entry} {reason},При отказе в распаковке {entry} {reason}
+Entry,Запись
+"The entry the guard stopped on, spelled exactly as the archive spells it.","Запись, на которой остановилась защита, записанная ровно так, как её пишет архив."
+"Why it was refused, in words worth showing the player.","Почему отказано - словами, которые не стыдно показать играющему."
+On Unpack Finished,При завершении распаковки
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.","Выполняется, когда распаковка дошла до последней записи и ничего не было отклонено. Файлы уже на диске, так что здесь начинается всё, что их ждало."
+On unpack finished {entries} {bytes},При завершении распаковки {entries} {bytes}
+How many entries were written in total.,Сколько записей записано всего.
+How many bytes were written in total.,Сколько байтов записано всего.
+watching %s every %s s,следит за %s каждые %s с

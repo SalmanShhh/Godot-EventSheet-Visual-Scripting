@@ -5633,3 +5633,35 @@ Notifications,通知
 "sound of file {path}, or {fallback}","文件 {path} 的声音，否则 {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","要读取的声音。运行时能解码的格式恰好只有三种，这一行按扩展名逐一检查：.mp3、.ogg (Ogg Vorbis) 和 .wav。这里最好放一个变量 - 每检查一种格式，路径就会被读一次。"
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","当那个路径上没有文件，或它的扩展名不属于这三种时，这个表达式读作什么。留空则原样读取文件，不加任何守卫。"
+Pack Folder Into Zip,将文件夹打包为 Zip
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.",使用引擎自带的打包器把一个文件夹里的文件写入 .zip 归档。循环会写进你的脚本，所以你能确切看到它遍历了哪些文件 - 是该文件夹里直接放着的文件，不是子文件夹里的。
+Files: Archives,文件：归档
+pack folder {folder} into {archive},将文件夹 {folder} 打包为 {archive}
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.",文件将被放入归档的文件夹。只包括直接放在其中的文件，不含子文件夹的内容。
+Into archive,写入归档
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,要写入的 .zip 文件。会覆盖该路径上已有的归档。建议用 user:// - 游戏导出后 res:// 是只读的。
+Unpack Zip Into Folder,将 Zip 解包到文件夹
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.",读取 .zip 归档并把其中的条目写入一个文件夹。在写入任何内容之前，每个条目的路径都会与该文件夹核对；指向外部的条目会中止解包并触发「解包被拒绝时」 - zip 是别人做的内容，条目的路径由它自己决定。过程中通过「解包进行时」报告，并以「解包完成时」结束，二者都由生成的循环按名字调用。
+unpack {archive} into folder {folder},将 {archive} 解包到文件夹 {folder}
+Archive,归档
+The .zip file to read. Nothing is written when it cannot be opened.,要读取的 .zip 文件。若打不开则不会写入任何内容。
+Into folder,解包到文件夹
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.",每个条目写入的目标文件夹，不存在时会先创建。任何条目都不得落在它之外 - 生成的守卫会在有条目试图越界时中止解包。
+On Unpack Progress,解包进行时
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.",解包仍在进行时，每写入一个条目就执行一次。进度条在这里推进，让解包大归档的玩家看到游戏在工作，而不是一个卡住的窗口。
+On unpack progress {entries} {bytes},解包进行时 {entries} {bytes}
+Entries,条目数
+"How many entries have been written so far, counting the one that just landed.",到目前为止已写入的条目数，包括刚落地的这一个。
+How many bytes have been written so far.,到目前为止已写入的字节数。
+On Unpack Refused,解包被拒绝时
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.",当守卫中止了解包时执行：某个条目解析到了目标文件夹之外的路径。此后不再写入任何内容。请在画面上说明 - 被拒绝的归档要么是坏的，要么是恶意的，只有玩家能判断是哪一种。
+On unpack refused {entry} {reason},解包被拒绝时 {entry} {reason}
+Entry,条目
+"The entry the guard stopped on, spelled exactly as the archive spells it.",守卫停下时所在的条目，与归档中的写法完全一致。
+"Why it was refused, in words worth showing the player.",被拒绝的原因，用可以直接展示给玩家的说法。
+On Unpack Finished,解包完成时
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.",当解包在没有任何拒绝的情况下走到最后一个条目时执行。文件此时已在磁盘上，等待它们的事情从这里开始。
+On unpack finished {entries} {bytes},解包完成时 {entries} {bytes}
+How many entries were written in total.,总共写入了多少条目。
+How many bytes were written in total.,总共写入了多少字节。
+watching %s every %s s,每 %s 秒查看 %s

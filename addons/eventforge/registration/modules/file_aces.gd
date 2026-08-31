@@ -5,7 +5,7 @@
 # compiles to the exact native FileAccess / DirAccess call. Reads use the static, null-safe accessors
 # (FileAccess.get_file_as_string / DirAccess.get_files_at - they return "" / [] on error rather than
 # crashing); writes guard the FileAccess handle so a bad path can't null-deref. Grouped under
-# Files / Files: Directories.
+# Files / Files: Directories / Files: Archives.
 #
 # EVERY PATH FIELD SAYS ITS PLACE. The path parameters carry the `file_path` hint, which takes any
 # GDScript expression exactly as an ordinary expression field does and is spelled apart from it only
@@ -73,7 +73,117 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine."))
 
 	descriptors.append_array(_content_from_outside())
+	descriptors.append_array(_archives())
 	return descriptors
+
+
+## ────────────────────────────────────────────────────────────────────────────────────────────────
+## ONE FILE THAT IS MANY FILES - the two archive verbs, and the three events an unpack raises.
+##
+## A mod folder, a screenshot batch, a level pack somebody sent: all of them are one .zip somewhere,
+## and a project without these two rows drops to GDScript to open one. Both compile to the engine's
+## own ZIPPacker / ZIPReader loop, written out where it can be read, and nothing else is involved -
+## no import step, no virtual filesystem, no archive object living on between rows.
+##
+##   pack     the files in ONE folder, written into an archive. Not its subfolders - a recursive
+##            walk is a different loop with a different failure, and a row that quietly did one
+##            would surprise the first person whose folder had a `.import` directory in it.
+##   unpack   every entry of the archive, written into a folder, WITH THE GUARD BELOW.
+##
+## THE GUARD IS THE POINT, AND IT IS IN THE CODE. A zip is user content, and an archive entry is a
+## PATH the archive itself chose. An entry spelled `../../autoexec.cfg` resolves outside the folder
+## the player pointed at, which is how an unpack becomes a write anywhere on their disk. So every
+## entry's resolved path is compared against the target folder before a single byte is written, and
+## one that climbs out stops the whole unpack and raises On Unpack Refused with the reason in it.
+## The comparison is emitted into the sheet's own file: a guard nobody can read is a guard nobody
+## can trust.
+##
+## THE THREE EVENTS. An archive can hold ten thousand entries, so the loop reports as it goes -
+## On Unpack Progress once per entry, with what has landed so far, which is what a progress bar is
+## made of. On Unpack Finished ends a run that reached the last entry; On Unpack Refused ends one
+## the guard stopped. Like the Ask rows above, the emitted loop calls all three BY NAME, so a sheet
+## that unpacks needs an event for each - a sheet missing one does not compile, and says which.
+##
+## USER CONTENT IS DATA, NEVER CODE. An entry is read as bytes and stored as bytes. Nothing here
+## loads, parses or runs what came out of the archive.
+static func _archives() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "PackFolderIntoZip", "Pack Folder Into Zip", ACEDescriptor.ACEType.ACTION, _pack_template(), "", [
+		F.make_param("folder", "String", "\"user://runs\"", "Folder", "The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.", "file_path"),
+		F.make_param("archive", "String", "\"user://runs.zip\"", "Into archive", "The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.", "file_path")
+	], "Files: Archives", "pack folder {folder} into {archive}")
+		.described("Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.").featured())
+	descriptors.append(F.make_descriptor("Core", "UnpackZipIntoFolder", "Unpack Zip Into Folder", ACEDescriptor.ACEType.ACTION, _unpack_template(), "", [
+		F.make_param("archive", "String", "\"user://runs.zip\"", "Archive", "The .zip file to read. Nothing is written when it cannot be opened.", "file_path"),
+		F.make_param("folder", "String", "\"user://unpacked\"", "Into folder", "The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.", "file_path")
+	], "Files: Archives", "unpack {archive} into folder {folder}")
+		.described("Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.").featured())
+	descriptors.append(F.make_descriptor("Core", "OnUnpackProgress", "On Unpack Progress", ACEDescriptor.ACEType.TRIGGER, "", "", [
+		F.make_param("entries", "int", "", "Entries", "How many entries have been written so far, counting the one that just landed."),
+		F.make_param("bytes", "int", "", "Bytes", "How many bytes have been written so far.")
+	], "Files: Archives", "On unpack progress {entries} {bytes}")
+		.described("Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window."))
+	descriptors.append(F.make_descriptor("Core", "OnUnpackRefused", "On Unpack Refused", ACEDescriptor.ACEType.TRIGGER, "", "", [
+		F.make_param("entry", "String", "", "Entry", "The entry the guard stopped on, spelled exactly as the archive spells it."),
+		F.make_param("reason", "String", "", "Reason", "Why it was refused, in words worth showing the player.")
+	], "Files: Archives", "On unpack refused {entry} {reason}")
+		.described("Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which."))
+	descriptors.append(F.make_descriptor("Core", "OnUnpackFinished", "On Unpack Finished", ACEDescriptor.ACEType.TRIGGER, "", "", [
+		F.make_param("entries", "int", "", "Entries", "How many entries were written in total."),
+		F.make_param("bytes", "int", "", "Bytes", "How many bytes were written in total.")
+	], "Files: Archives", "On unpack finished {entries} {bytes}")
+		.described("Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts."))
+	return descriptors
+
+
+## The pack loop: the engine's own packer, one file at a time, with the handle guarded exactly as
+## every other write in this module guards it.
+static func _pack_template() -> String:
+	return "var __packer_{uid} := ZIPPacker.new()\n" \
+		+ "if __packer_{uid}.open({archive}) == OK:\n" \
+		+ "\tfor __entry_{uid}: String in DirAccess.get_files_at({folder}):\n" \
+		+ "\t\t__packer_{uid}.start_file(__entry_{uid})\n" \
+		+ "\t\t__packer_{uid}.write_file(FileAccess.get_file_as_bytes({folder}.path_join(__entry_{uid})))\n" \
+		+ "\t\t__packer_{uid}.close_file()\n" \
+		+ "\t__packer_{uid}.close()"
+
+
+## The unpack loop, guard and all.
+##
+## THE COMPARISON IS MADE ON REAL PATHS. `res://` and `user://` are Godot's own places and a `..`
+## inside one of them means nothing until it is a real path, so both sides are globalized and
+## simplified before they are compared - that is what turns `mods/../../autoexec.cfg` into the path
+## it would really have written to. The folder keeps a trailing slash so a target of `user://mods`
+## does not accept an entry landing in `user://mods_of_mine`.
+##
+## AN ENTRY THAT IS A FOLDER carries no bytes and is skipped: the folders that matter are the ones
+## the files need, and those are made on the way in by the line above each write.
+static func _unpack_template() -> String:
+	return "var __reader_{uid} := ZIPReader.new()\n" \
+		+ "if __reader_{uid}.open({archive}) == OK:\n" \
+		+ "\tDirAccess.make_dir_recursive_absolute({folder})\n" \
+		+ "\tvar __root_{uid} := ProjectSettings.globalize_path({folder}).simplify_path().trim_suffix(\"/\") + \"/\"\n" \
+		+ "\tvar __written_{uid} := 0\n" \
+		+ "\tvar __bytes_{uid} := 0\n" \
+		+ "\tfor __entry_{uid}: String in __reader_{uid}.get_files():\n" \
+		+ "\t\tif __entry_{uid}.ends_with(\"/\"):\n" \
+		+ "\t\t\tcontinue\n" \
+		+ "\t\tvar __into_{uid} := {folder}.path_join(__entry_{uid})\n" \
+		+ "\t\tif not ProjectSettings.globalize_path(__into_{uid}).simplify_path().begins_with(__root_{uid}):\n" \
+		+ "\t\t\t__reader_{uid}.close()\n" \
+		+ "\t\t\t_on_unpack_refused(__entry_{uid}, \"it points outside the folder it is being unpacked into\")\n" \
+		+ "\t\t\treturn\n" \
+		+ "\t\tvar __data_{uid} := __reader_{uid}.read_file(__entry_{uid})\n" \
+		+ "\t\tDirAccess.make_dir_recursive_absolute(__into_{uid}.get_base_dir())\n" \
+		+ "\t\tvar __file_{uid} := FileAccess.open(__into_{uid}, FileAccess.WRITE)\n" \
+		+ "\t\tif __file_{uid}:\n" \
+		+ "\t\t\t__file_{uid}.store_buffer(__data_{uid})\n" \
+		+ "\t\t\t__file_{uid}.close()\n" \
+		+ "\t\t__written_{uid} += 1\n" \
+		+ "\t\t__bytes_{uid} += __data_{uid}.size()\n" \
+		+ "\t\t_on_unpack_progress(__written_{uid}, __bytes_{uid})\n" \
+		+ "\t__reader_{uid}.close()\n" \
+		+ "\t_on_unpack_finished(__written_{uid}, __bytes_{uid})"
 
 
 ## ────────────────────────────────────────────────────────────────────────────────────────────────

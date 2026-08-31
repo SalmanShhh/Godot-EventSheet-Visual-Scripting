@@ -5633,3 +5633,35 @@ Notifications,Benachrichtigungen
 "sound of file {path}, or {fallback}","Klang der Datei {path}, sonst {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Der zu lesende Klang. GENAU DREI Formate lassen sich zur Laufzeit dekodieren, und die Zeile prüft diese drei anhand der Endung: .mp3, .ogg (Ogg Vorbis) und .wav. Nimm hier lieber eine Variable - der Pfad wird je geprüftem Format einmal gelesen."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","Wofür der Ausdruck steht, wenn es unter diesem Pfad keine Datei gibt oder ihre Endung keine der drei ist. Leer lassen, um die Datei schlicht zu lesen, ohne Absicherung darum."
+Pack Folder Into Zip,Ordner in Zip packen
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.","Schreibt die Dateien eines Ordners mit dem engine-eigenen Packer in ein .zip-Archiv. Die Schleife steht in deinem Skript, du siehst also genau, welche Dateien sie durchläuft - die direkt in diesem Ordner, nicht die in seinen Unterordnern."
+Files: Archives,Dateien: Archive
+pack folder {folder} into {archive},Ordner {folder} in {archive} packen
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.","Der Ordner, dessen Dateien ins Archiv wandern. Die Dateien direkt darin, nicht der Inhalt seiner Unterordner."
+Into archive,In Archiv
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,"Die zu schreibende .zip-Datei. ÜBERSCHREIBT ein Archiv, das dort schon liegt. Nimm user:// - res:// ist nach dem Export schreibgeschützt."
+Unpack Zip Into Folder,Zip in Ordner entpacken
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.","Liest ein .zip-Archiv und schreibt seine Einträge in einen Ordner. Der Pfad jedes Eintrags wird gegen diesen Ordner geprüft, BEVOR irgendetwas geschrieben wird; ein Eintrag, der hinausführt, bricht das Entpacken ab und löst Beim abgelehnten Entpacken aus - ein Zip ist Inhalt von jemand anderem, und seine Einträge benennen ihre Pfade selbst. Der Lauf meldet sich über Beim Entpackfortschritt und endet bei Beim fertigen Entpacken; beide ruft die erzeugte Schleife namentlich auf."
+unpack {archive} into folder {folder},{archive} in Ordner {folder} entpacken
+Archive,Archiv
+The .zip file to read. Nothing is written when it cannot be opened.,"Die zu lesende .zip-Datei. Lässt sie sich nicht öffnen, wird nichts geschrieben."
+Into folder,In Ordner
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.","Der Ordner, unter dem jeder Eintrag landet; er wird zuerst angelegt, falls er fehlt. KEIN Eintrag darf außerhalb landen - die erzeugte Absicherung bricht bei einem solchen Eintrag ab."
+On Unpack Progress,Beim Entpackfortschritt
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.","Läuft einmal pro Eintrag, den ein Entpacken schreibt, während es noch läuft. Hier bewegt sich ein Fortschrittsbalken, damit beim Entpacken eines großen Archivs ein arbeitendes Spiel statt eines eingefrorenen Fensters zu sehen ist."
+On unpack progress {entries} {bytes},Beim Entpackfortschritt {entries} {bytes}
+Entries,Einträge
+"How many entries have been written so far, counting the one that just landed.","Wie viele Einträge bisher geschrieben wurden, den gerade gelandeten mitgezählt."
+How many bytes have been written so far.,Wie viele Bytes bisher geschrieben wurden.
+On Unpack Refused,Beim abgelehnten Entpacken
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.","Läuft, wenn die Absicherung ein Entpacken gestoppt hat: Ein Eintrag löste sich zu einem Pfad außerhalb des Zielordners auf. Danach wird nichts mehr geschrieben. Sag es auf dem Bildschirm - ein abgelehntes Archiv ist entweder kaputt oder bösartig, und nur die spielende Person kann entscheiden, was davon."
+On unpack refused {entry} {reason},Beim abgelehnten Entpacken {entry} {reason}
+Entry,Eintrag
+"The entry the guard stopped on, spelled exactly as the archive spells it.","Der Eintrag, an dem die Absicherung gestoppt hat, genau so geschrieben wie im Archiv."
+"Why it was refused, in words worth showing the player.","Warum es abgelehnt wurde, in Worten, die man der spielenden Person zeigen kann."
+On Unpack Finished,Beim fertigen Entpacken
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.","Läuft, wenn ein Entpacken den letzten Eintrag erreicht hat, ohne dass etwas abgelehnt wurde. Die Dateien liegen jetzt auf der Platte, hier startet also alles, was auf sie gewartet hat."
+On unpack finished {entries} {bytes},Beim fertigen Entpacken {entries} {bytes}
+How many entries were written in total.,Wie viele Einträge insgesamt geschrieben wurden.
+How many bytes were written in total.,Wie viele Bytes insgesamt geschrieben wurden.
+watching %s every %s s,beobachtet %s alle %s s

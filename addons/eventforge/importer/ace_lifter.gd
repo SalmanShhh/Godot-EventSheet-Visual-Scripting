@@ -1645,14 +1645,18 @@ const WINDOW_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
 	"get_window()": {"files_dropped": "OnFilesDropped", "close_requested": "OnCloseRequested"}
 }
 
-## The two answers to an Ask row, by the exact header each compiles to. Plain functions rather than
-## signal handlers - the emitted Ask line calls them by name - so they lift from the header alone,
-## the way a lifecycle callback does. Claimed only when the file did NOT also wire that name to a
-## signal: a project that connected its own `_on_file_chosen` somewhere owns the name, and its
-## connect line has to keep the handler it points at or the line would vanish from the file.
+## The answers a row calls BY NAME, by the exact header each compiles to: the two endings of an Ask,
+## and the three an unpack raises as it walks an archive. Plain functions rather than signal handlers
+## - the emitted line calls them - so they lift from the header alone, the way a lifecycle callback
+## does. Claimed only when the file did NOT also wire that name to a signal: a project that connected
+## its own `_on_file_chosen` somewhere owns the name, and its connect line has to keep the handler it
+## points at or the line would vanish from the file.
 const ASK_ANSWER_TRIGGERS: Dictionary = {
 	"func _on_file_chosen(path: String) -> void:": "OnFileChosen",
-	"func _on_ask_cancelled() -> void:": "OnAskCancelled"
+	"func _on_ask_cancelled() -> void:": "OnAskCancelled",
+	"func _on_unpack_progress(entries: int, bytes: int) -> void:": "OnUnpackProgress",
+	"func _on_unpack_refused(entry: String, reason: String) -> void:": "OnUnpackRefused",
+	"func _on_unpack_finished(entries: int, bytes: int) -> void:": "OnUnpackFinished"
 }
 
 

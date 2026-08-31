@@ -5633,3 +5633,35 @@ Notifications,Notifiche
 "sound of file {path}, or {fallback}","suono del file {path}, oppure {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Il suono da leggere. ESATTAMENTE TRE formati si decodificano a runtime e la riga controlla quei tre dall'estensione: .mp3, .ogg (Ogg Vorbis) e .wav. Qui è meglio una variabile - il percorso viene letto una volta per ogni formato controllato."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","Quanto vale l'espressione quando a quel percorso non c'è alcun file, o quando la sua estensione non è nessuna delle tre. Lascialo vuoto per leggere il file in modo semplice, senza protezione attorno."
+Pack Folder Into Zip,Comprimi cartella in zip
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.","Scrive i file di una cartella in un archivio .zip usando il compressore del motore. Il ciclo viene emesso nel tuo script, quindi vedi esattamente quali file percorre - quelli direttamente in quella cartella, non quelli nelle sue sottocartelle."
+Files: Archives,File: archivi
+pack folder {folder} into {archive},comprimi la cartella {folder} in {archive}
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.","La cartella i cui file finiscono nell'archivio. Quelli direttamente al suo interno, non il contenuto delle sue sottocartelle."
+Into archive,Nell'archivio
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,Il file .zip da scrivere. SOVRASCRIVE qualsiasi archivio già presente in quel percorso. Preferisci user:// - res:// è di sola lettura una volta esportato il gioco.
+Unpack Zip Into Folder,Estrai zip in cartella
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.","Legge un archivio .zip e scrive le sue voci in una cartella. Il percorso di ogni voce viene confrontato con quella cartella PRIMA di scrivere qualsiasi cosa, e una voce che punta fuori interrompe l'estrazione e solleva All'estrazione rifiutata - uno zip è contenuto fatto da qualcun altro, e le sue voci nominano da sole i propri percorsi. L'esecuzione si segnala con All'avanzamento dell'estrazione e termina con All'estrazione conclusa, entrambi chiamati per nome dal ciclo emesso."
+unpack {archive} into folder {folder},estrai {archive} nella cartella {folder}
+Archive,Archivio
+The .zip file to read. Nothing is written when it cannot be opened.,Il file .zip da leggere. Se non si riesce ad aprirlo non viene scritto nulla.
+Into folder,Nella cartella
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.","La cartella sotto cui viene scritta ogni voce, creata prima se non c'è. NESSUNA voce può finire fuori - la protezione emessa interrompe l'estrazione su una che ci prova."
+On Unpack Progress,All'avanzamento dell'estrazione
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.","Viene eseguito una volta per ogni voce scritta mentre l'estrazione è ancora in corso. Qui si muove una barra di avanzamento, così chi estrae un archivio grande vede il gioco che lavora invece di una finestra bloccata."
+On unpack progress {entries} {bytes},All'avanzamento dell'estrazione {entries} {bytes}
+Entries,Voci
+"How many entries have been written so far, counting the one that just landed.","Quante voci sono state scritte finora, contando quella appena arrivata."
+How many bytes have been written so far.,Quanti byte sono stati scritti finora.
+On Unpack Refused,All'estrazione rifiutata
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.","Viene eseguito quando la protezione ha fermato un'estrazione: una voce si risolveva in un percorso fuori dalla cartella di destinazione. Dopo di questo non viene scritto altro. Dillo a schermo - un archivio rifiutato è rotto oppure ostile, e solo chi gioca può decidere quale dei due."
+On unpack refused {entry} {reason},All'estrazione rifiutata {entry} {reason}
+Entry,Voce
+"The entry the guard stopped on, spelled exactly as the archive spells it.","La voce su cui la protezione si è fermata, scritta esattamente come la scrive l'archivio."
+"Why it was refused, in words worth showing the player.","Perché è stata rifiutata, con parole che vale la pena mostrare a chi gioca."
+On Unpack Finished,All'estrazione conclusa
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.","Viene eseguito quando un'estrazione ha raggiunto l'ultima voce senza rifiutare nulla. I file ora sono su disco, quindi qui parte tutto ciò che li stava aspettando."
+On unpack finished {entries} {bytes},All'estrazione conclusa {entries} {bytes}
+How many entries were written in total.,Quante voci sono state scritte in totale.
+How many bytes were written in total.,Quanti byte sono stati scritti in totale.
+watching %s every %s s,sorveglia %s ogni %s s

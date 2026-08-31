@@ -154,6 +154,7 @@ Attach to a node to move it.
 - [Timer](Timer.md) - named countdowns and repeating timers with triggers.
 - [Time Slicer](Time-Slicer.md) - spread heavy work across frames to avoid hitches.
 - [Run In Background](Run-In-Background.md) - keep logic running while the window is unfocused.
+- [Folder Watcher](Folder-Watcher.md) - notice a file in one folder appearing, changing or going away. Godot has no runtime file watcher, so this POLLS on the interval you name and says so on the row.
 
 ## Building your own
 

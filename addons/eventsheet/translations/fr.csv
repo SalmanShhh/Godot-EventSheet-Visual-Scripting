@@ -5633,3 +5633,35 @@ Notifications,Notifications
 "sound of file {path}, or {fallback}","son du fichier {path}, sinon {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Le son à lire. EXACTEMENT TROIS formats se décodent à l'exécution, et la ligne vérifie ces trois-là par l'extension : .mp3, .ogg (Ogg Vorbis) et .wav. Préférez une variable ici - le chemin est lu une fois par format vérifié."
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","Ce que vaut l'expression quand aucun fichier n'est à ce chemin, ou quand son extension n'est aucune des trois. Laissez vide pour lire le fichier simplement, sans garde autour."
+Pack Folder Into Zip,Compresser le dossier dans un zip
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.","Écrit les fichiers d'un dossier dans une archive .zip avec le compresseur du moteur. La boucle est émise dans ton script, tu vois donc exactement quels fichiers elle parcourt - ceux directement dans ce dossier, pas ceux de ses sous-dossiers."
+Files: Archives,Fichiers : archives
+pack folder {folder} into {archive},compresser le dossier {folder} dans {archive}
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.","Le dossier dont les fichiers vont dans l'archive. Ceux qui s'y trouvent directement, pas le contenu de ses sous-dossiers."
+Into archive,Dans l'archive
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,Le fichier .zip à écrire. ÉCRASE toute archive déjà présente à ce chemin. Préfère user:// - res:// est en lecture seule une fois le jeu exporté.
+Unpack Zip Into Folder,Décompresser le zip dans un dossier
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.","Lit une archive .zip et écrit ses entrées dans un dossier. Le chemin de chaque entrée est vérifié contre ce dossier AVANT toute écriture, et une entrée qui pointe en dehors arrête la décompression et déclenche À la décompression refusée - un zip est du contenu fait par quelqu'un d'autre, et ses entrées nomment elles-mêmes leurs chemins. L'exécution se signale via À la progression de la décompression et se termine par À la décompression terminée, que la boucle émise appelle par leur nom."
+unpack {archive} into folder {folder},décompresser {archive} dans le dossier {folder}
+Archive,Archive
+The .zip file to read. Nothing is written when it cannot be opened.,"Le fichier .zip à lire. Si on ne peut pas l'ouvrir, rien n'est écrit."
+Into folder,Dans le dossier
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.","Le dossier sous lequel chaque entrée est écrite, créé d'abord s'il n'existe pas. AUCUNE entrée ne peut atterrir en dehors - la protection émise arrête la décompression sur celle qui essaie."
+On Unpack Progress,À la progression de la décompression
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.","S'exécute une fois par entrée écrite pendant que la décompression tourne encore. C'est là qu'une barre de progression avance, pour qu'une grosse archive donne à voir un jeu qui travaille plutôt qu'une fenêtre figée."
+On unpack progress {entries} {bytes},À la progression de la décompression {entries} {bytes}
+Entries,Entrées
+"How many entries have been written so far, counting the one that just landed.","Combien d'entrées ont été écrites jusqu'ici, celle qui vient d'arriver comprise."
+How many bytes have been written so far.,Combien d'octets ont été écrits jusqu'ici.
+On Unpack Refused,À la décompression refusée
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.","S'exécute quand la protection a arrêté une décompression : une entrée se résolvait vers un chemin hors du dossier de destination. Plus rien n'est écrit ensuite. Dis-le à l'écran - une archive refusée est cassée ou hostile, et seule la personne qui joue peut trancher."
+On unpack refused {entry} {reason},À la décompression refusée {entry} {reason}
+Entry,Entrée
+"The entry the guard stopped on, spelled exactly as the archive spells it.","L'entrée sur laquelle la protection s'est arrêtée, écrite exactement comme l'archive l'écrit."
+"Why it was refused, in words worth showing the player.","Pourquoi c'est refusé, dans des mots qui valent la peine d'être montrés à la personne qui joue."
+On Unpack Finished,À la décompression terminée
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.","S'exécute quand une décompression a atteint la dernière entrée sans rien refuser. Les fichiers sont sur le disque, c'est donc ici que démarre ce qui les attendait."
+On unpack finished {entries} {bytes},À la décompression terminée {entries} {bytes}
+How many entries were written in total.,Combien d'entrées ont été écrites au total.
+How many bytes were written in total.,Combien d'octets ont été écrits au total.
+watching %s every %s s,surveille %s toutes les %s s

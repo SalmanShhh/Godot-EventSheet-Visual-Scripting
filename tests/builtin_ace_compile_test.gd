@@ -90,6 +90,13 @@ const NOT_STANDALONE: Array[String] = [
 	# are exercised by user_content_doors_test, which compiles each Ask row together with the two
 	# answer events and parses the whole emitted script.
 	"AskForAFileToOpen", "AskWhereToSave",
+	# The unpack loop is the same shape for the same reason: it calls `_on_unpack_progress`,
+	# `_on_unpack_refused` and `_on_unpack_finished` by name as it walks the archive, and those three
+	# functions are what the sheet's own answer events compile to. This harness builds one empty host
+	# with no events in it. The template is exercised by watcher_and_archives_test, which compiles the
+	# three answer events, runs the emitted loop against a real archive, and parses a whole file
+	# holding the loop and its three answers together.
+	"UnpackZipIntoFolder",
 	# The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
 	# host and nowhere else, and this harness deliberately builds one host class (Node) rather than a
 	# per-ACE menagerie. Their templates are exercised by editor_object_reading_test, which opens a real

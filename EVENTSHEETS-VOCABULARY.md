@@ -686,6 +686,26 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Flash** (`seconds: float`) - Blinks the host for the given number of seconds.
 - **Stop Flash** - Stops flashing and restores visibility.
 
+### FolderWatcher (`res://eventsheet_addons/folder_watcher/folder_watcher_behavior.gd`)
+@ace_tags(files, tools) @ace_category("Folder Watcher") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On A File Appeared** (`path: String`)
+- **On A File Changed** (`path: String`)
+- **On A File Removed** (`path: String`)
+
+#### Conditions
+- **Is Watching** - True while a watch is running - that is, between Watch Folder and Stop Watching.
+
+#### Actions
+- **Watch Folder** (`folder: String, every_seconds: float`) - Starts watching a folder, looking every so many seconds. This is a POLL: the folder is read on that interval and compared with the reading before it, because Godot raises no file-change notification of its own at run time. The first look is the baseline and raises nothing - a folder that already holds files is not a folder where things just happened.
+- **Stop Watching** - Stops looking. The per-frame tick is parked, so a stopped watcher is a node the engine no longer visits at all, and nothing is read from disk until it is started again.
+- **Look Now** - Takes one look immediately, without waiting for the interval, and raises whatever the difference means. Use it after your own game has written into the folder, when waiting a second or two for the next look would just be a pause nobody asked for.
+
+#### Expressions
+- **Watched File Count** - How many files the last look found, after the name filter. Zero before the first look.
+- **Watched File Names** - The file names the last look found, after the name filter, in sorted order. Names, not whole paths - join one onto the folder to read it.
+
 ### FollowBehavior (`res://eventsheet_addons/follow/follow_behavior.gd`)
 @ace_category("Follow") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -3772,6 +3792,9 @@ File management (read / write / JSON, plus directory + file operations).
 - **On Files Dropped** (`files: PackedStringArray`) - Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.
 - **On A File Chosen** (`path: String`) - Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.
 - **On The Ask Cancelled** - Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.
+- **On Unpack Progress** (`entries: int, bytes: int`) - Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.
+- **On Unpack Refused** (`entry: String, reason: String`) - Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.
+- **On Unpack Finished** (`entries: int, bytes: int`) - Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.
 
 #### Conditions
 - **File Exists** (`path: String`) - True when a file exists at that path, so you can check before reading or writing it.
@@ -3789,6 +3812,8 @@ File management (read / write / JSON, plus directory + file operations).
 - **Open The Player's Data Folder** (`path: String`) - Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.
 - **Ask For A File To Open** (`filters: PackedStringArray`) - Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.
 - **Ask Where To Save** (`filters: PackedStringArray`) - Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.
+- **Pack Folder Into Zip** (`folder: String, archive: String`) - Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.
+- **Unpack Zip Into Folder** (`archive: String, folder: String`) - Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.
 
 #### Expressions
 - **Read Text File** (`path: String`) - Returns the whole file's contents as text (empty if it's missing or unreadable).

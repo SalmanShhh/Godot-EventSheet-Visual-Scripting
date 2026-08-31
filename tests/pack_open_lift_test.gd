@@ -69,7 +69,8 @@ static func run() -> bool:
 	# Lighting: Light Flicker, Light Pulse and Day/Night Cycle (+3). Recomputed as base + deltas.
 	# Effects: Hit Flash, Dissolve, Outline, Grayscale, Wave and Screen FX (+6). Same recomputation.
 	# Rendering: the Quality Preset data asset (+1). Same recomputation.
-	all_passed = _check("the fleet was scanned (112 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1) and all_passed
+	# Files: the Folder Watcher (+1). Same recomputation.
+	all_passed = _check("the fleet was scanned (113 packs)", packs, 93 + 2 + 1 + 1 + 1 + 2 + 2 + 3 + 6 + 1 + 1) and all_passed
 	all_passed = _check("fleet-wide verb lift is at least 1264 of the declared verbs (measured floor)", lifted_verbs >= 1264, true) and all_passed
 	# Batch 13: +3 Advanced Random pity verbs (kits 1) and +19 Touch Gestures verbs (kits 2)
 	# on the 1283 base: 1283 + 3 + 19 = 1305. Recomputed as base + both deltas at merge.
@@ -96,10 +97,12 @@ static func run() -> bool:
 	# Input Map's own actions, the two binding words, the unbound list and its question, the two
 	# conflict readings, whether a row is listening, listen, the three answers, cancel, the two
 	# resets, save, load, and the page built from the Input Map.
+	# files: +6 Folder Watcher verbs (watch a folder, stop, look now, whether it is watching, and the
+	# two readings of the last look - how many files and which names).
 	# Recomputed as base + every delta at merge.
 	all_passed = _check("fleet-wide declared verbs count", total_verbs,
 		1283 + 3 + 19 + 2 + 4 + 38 + 26 + 3 + 32 + 34 + 7 + 1 + 21 + 22 + 4 + 3 + 3 + 6
-		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30) and all_passed
+		+ 3 + 4 + 4 + 4 + 4 + 7 + 7 + 30 + 6) and all_passed
 	# The file that started it: the FPS Controller must open with every one of its verbs.
 	var fps: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
 	var fps_exposed: int = 0

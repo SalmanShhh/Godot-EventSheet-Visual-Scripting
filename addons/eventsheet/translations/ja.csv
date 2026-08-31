@@ -5633,3 +5633,35 @@ Notifications,通知
 "sound of file {path}, or {fallback}","ファイル {path} の音、なければ {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","読み込む音。実行時にデコードできるのはちょうど 3 つの形式で、この行は拡張子でその 3 つを見分けます: .mp3、.ogg (Ogg Vorbis)、.wav。ここには変数を渡すのが無難です。パスは調べる形式ごとに 1 回ずつ読まれます。"
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","そのパスにファイルがないとき、または拡張子が 3 つのどれでもないとき、この式が何になるか。空のままにすると、守りを付けずにそのまま読み込みます。"
+Pack Folder Into Zip,フォルダーをZipにまとめる
+"Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.",エンジン自身のパッカーを使って、1つのフォルダー内のファイルを .zip アーカイブに書き出します。ループはスクリプトに出力されるので、どのファイルをたどるかがそのまま見えます - そのフォルダー直下のファイルであり、サブフォルダーの中身ではありません。
+Files: Archives,ファイル: アーカイブ
+pack folder {folder} into {archive},フォルダー {folder} を {archive} にまとめる
+"The folder whose files go into the archive. The files directly in it, not the contents of its subfolders.",ファイルをアーカイブに入れる対象のフォルダー。直下のファイルだけで、サブフォルダーの中身は含みません。
+Into archive,アーカイブ先
+The .zip file to write. OVERWRITES any archive already at that path. Prefer user:// - res:// is read-only once the game is exported.,書き出す .zip ファイル。そのパスに既にある書庫は上書きされます。user:// を推奨します - res:// は書き出し後は読み取り専用です。
+Unpack Zip Into Folder,Zipをフォルダーに展開する
+"Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.",.zip アーカイブを読み、その項目をフォルダーに書き出します。書き込みの前に、すべての項目のパスがそのフォルダー内に収まるか確認され、外を指す項目は展開を止めて「展開が拒否されたとき」を発生させます - zip は他人が作った中身であり、項目は自分でパスを名乗ります。進行中は「展開が進んだとき」で報告し、「展開が終わったとき」で終わります。どちらも出力されたループが名前で呼び出します。
+unpack {archive} into folder {folder},{archive} をフォルダー {folder} に展開する
+Archive,アーカイブ
+The .zip file to read. Nothing is written when it cannot be opened.,読み込む .zip ファイル。開けなかった場合は何も書き出されません。
+Into folder,フォルダー先
+"The folder every entry is written under, created first if it is not there. NO entry may land outside it - the emitted guard stops the unpack on one that tries.",すべての項目を書き出す先のフォルダー。無ければ先に作られます。どの項目もその外に出てはいけません - 出力されたガードが、外に出ようとする項目で展開を止めます。
+On Unpack Progress,展開が進んだとき
+"Runs once per entry an unpack writes, while it is still running. This is where a progress bar moves, so a player unpacking a large archive sees the game working rather than a frozen window.",展開の実行中、書き出された項目ごとに1回走ります。ここで進捗バーを動かせば、大きな書庫を展開している人にも、固まった画面ではなく動いているゲームが見えます。
+On unpack progress {entries} {bytes},展開が進んだとき {entries} {bytes}
+Entries,項目数
+"How many entries have been written so far, counting the one that just landed.",これまでに書き出された項目の数。今届いたものも含みます。
+How many bytes have been written so far.,これまでに書き出されたバイト数。
+On Unpack Refused,展開が拒否されたとき
+"Runs when the guard stopped an unpack: an entry resolved to a path outside the folder it was being written into. Nothing more is written after this. Say so on screen - a refused archive is a broken or a hostile one, and the player is the only one who can decide which.",ガードが展開を止めたときに走ります。ある項目が、書き出し先フォルダーの外を指すパスに解決されたということです。これ以降は何も書き出されません。画面に出しましょう - 拒否された書庫は壊れているか悪意があるかのどちらかで、それを決められるのは遊んでいる人だけです。
+On unpack refused {entry} {reason},展開が拒否されたとき {entry} {reason}
+Entry,項目
+"The entry the guard stopped on, spelled exactly as the archive spells it.",ガードが止まった項目。書庫が綴っているとおりの表記です。
+"Why it was refused, in words worth showing the player.",拒否された理由。遊んでいる人にそのまま見せられる言葉です。
+On Unpack Finished,展開が終わったとき
+"Runs when an unpack reached the last entry with nothing refused. The files are on disk by now, so this is where whatever was waiting for them starts.",何も拒否されずに最後の項目まで展開が届いたときに走ります。ファイルはもうディスクにあるので、それを待っていたものはここから始めます。
+On unpack finished {entries} {bytes},展開が終わったとき {entries} {bytes}
+How many entries were written in total.,書き出された項目の総数。
+How many bytes were written in total.,書き出されたバイトの総数。
+watching %s every %s s,%s を %s 秒ごとに見張る
