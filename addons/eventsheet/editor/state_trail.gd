@@ -24,15 +24,32 @@
 #                        only thing that puts that clock back is `state_entered_msec` being set
 #                        again, so the object was put into the state it was already in.
 #
-# WHY THE MOMENT IS THE REPORT CLOCK. Every reading here is stamped at the game's own report cadence
-# - one frame every 0.25 s - so a moment is accurate to a quarter of a second and to nothing finer.
-# That is stated on the tab rather than implied, because a stamp that looked exact would be a stamp
-# somebody trusted to order two things inside one frame, which it cannot do.
+# WHY THE MOMENT IS A COUNT OF FRAMES. Nothing in the values message carries a time, so a moment
+# here is the editor's own count of the frames this copy of the game has reported, multiplied by the
+# cadence it reports them at - one every 0.25 s. That is accurate to a quarter of a second and to
+# nothing finer, and a message the engine drops or coalesces shifts every stamp after it earlier
+# without the trail being able to tell. Both halves of that are said on the tab rather than implied,
+# because a stamp that looked exact would be a stamp somebody trusted to order two things inside one
+# frame, which it cannot do.
 #
 # ONE RING PER MACHINE, and a machine is one running copy of the game: keyed exactly the way the live
 # value chips are keyed ("" for a lone run, the feature tag for each window when a run is two games).
 # Bounded, because a trail is the RECENT past - an unbounded one is a log file, and a log file is the
 # thing this feature exists so nobody has to read.
+#
+# AND WHAT THE KEY CANNOT SAY: the values channel carries one unqualified `state` per running copy of
+# the game, with no node and no script attached to it. So a game whose scene holds two enemies, or
+# one enemy and one door, sends both under that one name and the last one written in a frame is the
+# one this ring sees. The trail therefore describes ONE running object; with several stateful objects
+# alive at once it interleaves them, and a Patrol beside a Chase reads as a move between them. That
+# boundary is stated on the tab and in the guide, because it is not one the store can detect - the
+# message simply does not say who sent it.
+#
+# THE DOORS BELONG TO THE SHEET THEY WERE READ FROM. A line's cause is found in whatever sheet was in
+# front when the frame arrived, so each entry carries that sheet's own name and the tab offers the
+# door only while that sheet is still the one in front. Switching tabs mid-run therefore drops the
+# doors on the lines that were read against the other document rather than silently re-pointing them
+# at rows of an object they were never about.
 #
 # THE RUN OWNS IT. The ring is emptied when a new debug session opens, exactly where the trace hit
 # counts and timings are emptied, because those three are one tally of one run. Stopping the game
@@ -56,6 +73,10 @@ const RESTART_MARGIN: float = 0.05
 ## The pattern kinds, frozen: the tab and the tests address one by these.
 const PATTERN_RE_ENTERED: String = "the-hold-restarted"
 const PATTERN_TWICE_IN_A_FRAME: String = "twice-in-one-frame"
+
+## Where the caller says its row index came FROM - the sheet that was in front when this frame
+## arrived. Carried on the index the caller hands in, and stamped onto every line written from it.
+const HOME_KEY: String = "home"
 
 ## instance -> Array[Dictionary], oldest first.
 static var _rings: Dictionary = {}
@@ -167,6 +188,9 @@ static func note_frame(values: Dictionary, instance: String = "", rows: Dictiona
 		"from": was,
 		"to": member,
 		"re_entered": re_entered,
+		# The sheet this line's cause was looked up in. Held so the tab can tell a door it may still
+		# offer from one that was read against a document the reader has since navigated away from.
+		"home": str(rows.get(HOME_KEY, "")),
 	}
 	entry.merge(_standing_door(member, rows))
 	var ring: Array = _rings.get(instance, [])
@@ -249,12 +273,18 @@ static func entries(instance: String = "") -> Array:
 
 ## Every machine's trail as one list, in reading order: by the moment first, and by the window's own
 ## tag second, so two copies of a game interleave the same way twice.
+##
+## Compared EXACTLY, not approximately. A moment here is a frame count times a constant, so two
+## moments are either the same number or a whole cadence apart and there is nothing to be tolerant
+## about - and an approximate comparison is not transitive, which makes the comparator not a strict
+## weak ordering and lets the sort produce a different interleave for the same ring. "Two copies of a
+## game interleave the same way twice" is the claim, so the comparator has to be able to keep it.
 static func all_entries() -> Array:
 	var out: Array = []
 	for instance: Variant in _rings:
 		out.append_array(_rings[instance] as Array)
 	out.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
-		if not is_equal_approx(float(left["at"]), float(right["at"])):
+		if float(left["at"]) != float(right["at"]):
 			return float(left["at"]) < float(right["at"])
 		return str(left["instance"]) < str(right["instance"]))
 	return out

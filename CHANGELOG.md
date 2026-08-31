@@ -282,6 +282,21 @@
   file said OR. The bytes round-tripped either way, which is why nothing caught it, and the emitted
   boolean structure would have changed wholesale the moment anybody edited that cell. A compound
   expression is now left to the splitter, which reads it as the several questions it is.
+- **The trail says what it cannot know.** The live-values channel carries one unqualified `state` per
+  running copy of the game and never says which node sent it, so a scene with two stateful objects
+  sends both under that one name and the trail interleaves them - a Patrol beside a Chase reading as
+  a move between the two. The tab's own hint and the guide now state that boundary, since it is not
+  one the store can detect. The moment is also said honestly: it is the editor's count of frames
+  received times the cadence, not a clock the game sent, so a dropped message shifts every stamp
+  after it.
+- **A trail line's door belongs to the sheet it was read in.** A line's cause is looked up in
+  whatever sheet is in front when the frame arrives, and switching tabs mid-run silently re-pointed
+  every earlier line at rows of an object it was never about. Each line now carries the sheet it was
+  read in, and the tab offers the double-click only while that sheet is still the one in front.
+- **The trail's sort is a strict weak ordering.** `all_entries()` compared moments with
+  `is_equal_approx`, which is not transitive, so the sort was free to produce a different interleave
+  for the same ring - against the file's own claim that two copies of a game interleave the same way
+  twice. A moment is a frame count times a constant, so it is compared exactly.
 
 ### A path says which place it is in
 

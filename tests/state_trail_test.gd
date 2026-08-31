@@ -59,8 +59,53 @@ static func run() -> bool:
 	ok = _test_two_copies_never_mix() and ok
 	ok = _test_the_index_reads_the_sheet() and ok
 	ok = _test_it_reads_down_and_draws_nothing() and ok
+	ok = _test_a_door_belongs_to_the_sheet_it_was_read_in() and ok
 	EventSheetStateTrail.clear()
 	return ok
+
+
+# -- A door belongs to the sheet it was read in ---------------------------------------------------
+## The live-values message carries one unqualified `state` and says nothing about which node sent it,
+## so a line's cause is whatever the sheet IN FRONT said when the frame arrived. Switching tabs
+## mid-run used to leave every earlier line pointing at rows of the newly-fronted document - an
+## object those lines were never about. Each line now carries the sheet it was read in, and the tab
+## offers the double-click only while that sheet is still the one in front.
+static func _test_a_door_belongs_to_the_sheet_it_was_read_in() -> bool:
+	EventSheetStateTrail.clear()
+	var rows: Dictionary = EventSheetStateFacts.trail_rows(_authored_sheet())
+	rows[EventSheetStateTrail.HOME_KEY] = "res://sentry.gd"
+	_frame("PATROL", 0.0, rows)
+	_frame("CHASE", 0.0, rows)
+	var line: Dictionary = _last()
+	var ok: bool = _check("a line remembers the sheet its cause was found in",
+		str(line.get(EventSheetStateTrail.HOME_KEY, "")), "res://sentry.gd")
+	ok = _check("and it did find one there",
+		str(line.get("cause_uid", "")).is_empty(), false) and ok
+	var body: Dictionary = EventSheetDebuggerWindow.build_trail_body()
+	EventSheetDebuggerWindow.fill_trail(body["sentences"], body["patterns"],
+		EventSheetStateTrail.all_entries(), rows, true, "", "res://sentry.gd")
+	ok = _check("the tab offers that door while its own sheet is in front",
+		_first_door(body["sentences"]), str(line.get("cause_uid", ""))) and ok
+	# The reader switches to another object's sheet. The sentence stands; the door does not.
+	EventSheetDebuggerWindow.fill_trail(body["sentences"], body["patterns"],
+		EventSheetStateTrail.all_entries(), rows, true, "", "res://door.gd")
+	ok = _check("and takes it away rather than re-pointing it at another object's rows",
+		_first_door(body["sentences"]), "") and ok
+	ok = _check("the sentence itself is untouched either way",
+		_first_sentence(body["sentences"]).contains("Chase"), true) and ok
+	(body["root"] as Node).free()
+	EventSheetStateTrail.clear()
+	return ok
+
+
+static func _first_door(sentences: Tree) -> String:
+	var first: TreeItem = sentences.get_root().get_first_child()
+	return "" if first == null else str(first.get_metadata(0))
+
+
+static func _first_sentence(sentences: Tree) -> String:
+	var first: TreeItem = sentences.get_root().get_first_child()
+	return "" if first == null else first.get_text(0)
 
 
 # -- The frame ruler ------------------------------------------------------------------------------

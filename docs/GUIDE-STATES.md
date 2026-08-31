@@ -390,10 +390,21 @@ Three things it will not claim:
   two messages the game was already sending - the Live Values frame and, with **Event Trace** armed,
   the tally of rows that fired. Nothing new goes over the wire. With the trace off a line says what
   happened and claims no cause, and if two rows could both have done it, it names neither.
-- **Each moment is the game's own report clock**, so it is accurate to a quarter of a second and to
-  nothing finer. Two changes inside one frame cannot be put in order by it, and it does not pretend.
+- **Each moment is counted off the game's report frames**, so it is accurate to a quarter of a second
+  and to nothing finer. Nothing in the message carries a time, so the stamp is the editor's own count
+  of frames received times the cadence: two changes inside one frame cannot be put in order by it,
+  and a message the engine drops shifts every stamp after it earlier. It does not pretend otherwise.
+- **It describes ONE running object.** The game reports its `state` once per running copy and the
+  message does not say which node sent it, so a scene holding two enemies - or an enemy and a door -
+  sends both under that one name and the trail interleaves them: a Patrol beside a Chase reads as a
+  move between the two. Watch one stateful object at a time, and read a busy scene's trail as the
+  interleaving it is. (The band above the rows has the same boundary, for the same reason.)
 - **With two games running**, each line says which window it is and names no row at all: the
   fired-events message says which rows fired, not which window they fired in.
+- **A line's door belongs to the sheet it was read in.** The row that caused a change is looked up in
+  whatever sheet is in front when the frame arrives, so switching tabs mid-run leaves the earlier
+  lines their sentences and takes away their double-click, rather than pointing you at a row of an
+  object they were never about.
 
 The trail belongs to the run. It is emptied when a new run starts, exactly where the Event Trace's
 hit counts and timings are, and stopping the game leaves it standing - which is when it gets read.

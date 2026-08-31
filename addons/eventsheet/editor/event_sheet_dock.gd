@@ -3213,6 +3213,11 @@ var _last_fired_uids: PackedStringArray = PackedStringArray()
 ## because a committed edit replaces the resources with snapshot duplicates - so a run streaming four
 ## frames a second does not re-read the document four times a second, and an edit mid-run is picked
 ## up on the very next frame.
+##
+## The index also says WHICH SHEET it is of. The live-values message carries no node and no script,
+## so a cause found here is a cause found in whatever document happened to be in front; carrying the
+## name means a line keeps its door only while that document still is, instead of a tab switch
+## mid-run silently re-pointing every earlier line at another object's rows.
 var _state_trail_rows: Dictionary = {}
 var _state_trail_rows_for: EventSheetResource = null
 
@@ -3221,6 +3226,7 @@ func _state_trail_index() -> Dictionary:
 	if _state_trail_rows_for != _current_sheet:
 		_state_trail_rows_for = _current_sheet
 		_state_trail_rows = EventSheetStateFacts.trail_rows(_current_sheet)
+		_state_trail_rows[EventSheetStateTrail.HOME_KEY] = _current_sheet_path
 	return _state_trail_rows
 
 ## Whether this run's once-only rescue offers were already considered (reset with the hit counts,

@@ -41,7 +41,7 @@ const EMPTY_STATES := {
 
 ## The Trail tab's two hints. Constants because the preview harness photographs the tab and must
 ## show the words the tab really carries, not a second copy of them.
-const TRAIL_HINT: String = "What this object's state machine has done, oldest first - it reads down, like the sheet. Double-click a line to go to the row it names. Each moment is the game's own report clock, so it is accurate to a quarter of a second."
+const TRAIL_HINT: String = "What this object's state machine has done, oldest first - it reads down, like the sheet. Double-click a line to go to the row it names. Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here."
 const TRAIL_PATTERNS_HINT: String = "Read from the trail above and from nothing else."
 
 ## What the patterns list says when the trail raised none - which is the ordinary case, and worth
@@ -435,8 +435,12 @@ func _build_trail_tab() -> Control:
 ## `standing` is what the band is reading right now, which is the difference between a machine that
 ## has stayed put and a machine nobody watched: a run reporting Chase and never leaving it is not an
 ## empty table, and an empty table is what it would otherwise look like.
+##
+## `home` is the sheet in front right now. A line's cause was found in whatever sheet was in front
+## when its frame arrived, so a line read against another document keeps its sentence and loses its
+## door rather than pointing a reader at a row of an object it was never about.
 static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dictionary,
-		has_run: bool, standing: String) -> void:
+		has_run: bool, standing: String, home: String = "") -> void:
 	sentences.clear()
 	patterns.clear()
 	var root: TreeItem = sentences.create_item()
@@ -455,7 +459,9 @@ static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dicti
 	for entry: Variant in ring:
 		var line: TreeItem = sentences.create_item(root)
 		line.set_text(0, EventSheetStateTrail.sentence(entry as Dictionary))
-		line.set_metadata(0, str((entry as Dictionary).get("cause_uid", "")))
+		var read_in: String = str((entry as Dictionary).get(EventSheetStateTrail.HOME_KEY, ""))
+		line.set_metadata(0, "" if read_in != home \
+			else str((entry as Dictionary).get("cause_uid", "")))
 	var patterns_root: TreeItem = patterns.create_item()
 	var notes: Array[Dictionary] = EventSheetStateTrail.notes_for(ring, rows)
 	if notes.is_empty():
@@ -478,7 +484,8 @@ func _refresh_trail() -> void:
 		return
 	fill_trail(trail_tree, trail_patterns_tree, EventSheetStateTrail.all_entries(),
 		EventSheetStateFacts.trail_rows(_dock._current_sheet if _dock != null else null),
-		EventSheetStateTrail.has_run(), EventSheetStateWatch.band_reading())
+		EventSheetStateTrail.has_run(), EventSheetStateWatch.band_reading(),
+		str(_dock._current_sheet_path) if _dock != null else "")
 
 
 func _jump_to_trail_row() -> void:
