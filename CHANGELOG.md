@@ -334,6 +334,10 @@
   other, which is one of the two places a reader actually meets all three at once. Each module's own
   summary line now points at the other, so the cross-reference is DERIVED from the module rather than
   hand-maintained beside it.
+- **The Declare states dialog's own chrome is keyed.** Its title, its OK button, the placeholder,
+  both field labels and both help paragraphs shipped English-only while the vocabulary around them
+  was translated, so the dialog read half in the reader's language. All of it is in `TEMPLATE.csv`
+  and the eight bundled translations now.
 
 ### A path says which place it is in
 

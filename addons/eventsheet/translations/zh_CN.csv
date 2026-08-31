@@ -5734,6 +5734,10 @@ re-entered %s,重新进入 %s
 This happened %d times in this run.,本次运行中这种情况发生了 %d 次。
 Row,行
 States,状态
+"OK","确定"
+"Patrol · Chase · Stagger","巡逻 · 追击 · 踉跄"
+"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","这一个对象可以处于的状态，用什么分隔都行。它们会成为一个枚举，每一个指明状态的行在输入时都会得到这份列表 - 状态是选出来的，不是记出来的，而指了一个不在这里的名字的行，由 Doctor 说出来。"
+"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","对象一开始所处的状态，也就是状态变量声明时的值。它也是唯一一个不需要任何行前往的状态。"
 Error,错误
 Warning,警告
 this sheet,此事件表

@@ -58,8 +58,10 @@ func _build() -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "States"
-	_dialog.ok_button_text = "OK"
+	# EVERY WORD IN HERE IS KEYED, chrome included. A dialog whose fields are translated and whose
+	# title, button and help paragraphs are not is the one that reads half in the reader's language.
+	_dialog.title = EventSheetL10n.translate("States")
+	_dialog.ok_button_text = EventSheetL10n.translate("OK")
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
 	_dock.add_child(_dialog)
@@ -67,20 +69,20 @@ func _build() -> void:
 	_dialog.add_child(EventSheetPopupUI.margined(form))
 
 	_states_edit = LineEdit.new()
-	_states_edit.placeholder_text = "Patrol · Chase · Stagger"
+	_states_edit.placeholder_text = EventSheetL10n.translate("Patrol · Chase · Stagger")
 	_states_edit.text_changed.connect(func(_text: String) -> void: _refill(words_of(_states_edit.text), _starts_in()))
-	form.add_child(EventSheetPopupUI.form_row("States", _states_edit))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("States"), _states_edit))
 
 	_starts_option = OptionButton.new()
 	_starts_option.item_selected.connect(func(_index: int) -> void: _show_reading())
-	form.add_child(EventSheetPopupUI.form_row("Starts in", _starts_option))
+	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Starts in"), _starts_option))
 
 	_help_strip = EventSheetPopupUI.help_strip()
 	form.add_child(_help_strip)
-	_help_strip.follow(_states_edit, "States",
-		"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.")
-	_help_strip.follow(_starts_option, "Starts in",
-		"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.")
+	_help_strip.follow(_states_edit, EventSheetL10n.translate("States"),
+		EventSheetL10n.translate("The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out."))
+	_help_strip.follow(_starts_option, EventSheetL10n.translate("Starts in"),
+		EventSheetL10n.translate("The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it."))
 
 
 ## Refills the starts-in list from whatever the States field says right now, keeping the answer if it
