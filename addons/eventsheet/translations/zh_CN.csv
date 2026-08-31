@@ -5767,3 +5767,9 @@ Was in {state},先前处于状态 {state}
 Go to {state},切换到状态 {state}
 On entering {state},进入 {state} 时
 On leaving {state},离开 {state} 时
+%names in this scene,本场景中的 %names
+the nodes this scene marked scene-unique,本场景标记为场景唯一的节点
+Browse what %s can do. Rows you add here are written on it by name.,浏览 %s 能做什么。在这里添加的行会按名称写在它上面。
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,此行作用的节点。它以你选择的 %name 打开；清空则作用于本节点。
+"Mark ""%s"" as scene-unique","将 ""%s"" 标记为场景唯一"
+Make %s unique,让 %s 唯一

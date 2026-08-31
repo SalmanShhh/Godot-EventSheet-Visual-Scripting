@@ -5767,3 +5767,9 @@ Was in {state},直前の状態が {state}
 Go to {state},状態 {state} へ移行
 On entering {state},{state} に入ったとき
 On leaving {state},{state} を出たとき
+%names in this scene,このシーンの %names
+the nodes this scene marked scene-unique,このシーンがシーン内一意として指定したノード
+Browse what %s can do. Rows you add here are written on it by name.,%s にできることを見ます。ここで追加した行は、その名前で書かれます。
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,この行が作用するノードです。選んだ %name で開きます。空にするとこのノードに作用します。
+"Mark ""%s"" as scene-unique","""%s"" をシーン内一意として指定"
+Make %s unique,%s を一意にする

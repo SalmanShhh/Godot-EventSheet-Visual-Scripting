@@ -5767,3 +5767,9 @@ Was in {state},이전 상태가 {state}
 Go to {state},{state} 상태로 전환
 On entering {state},{state} 진입할 때
 On leaving {state},{state} 벗어날 때
+%names in this scene,이 씬의 %names
+the nodes this scene marked scene-unique,이 씬이 씬 고유로 표시한 노드
+Browse what %s can do. Rows you add here are written on it by name.,%s(이)가 할 수 있는 일을 살펴봅니다. 여기서 추가한 행은 그 이름으로 작성됩니다.
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,이 행이 작용하는 노드입니다. 선택한 %name으로 열립니다. 비우면 이 노드에 작용합니다.
+"Mark ""%s"" as scene-unique","""%s""을(를) 씬 고유로 표시"
+Make %s unique,%s을(를) 고유하게 만들기

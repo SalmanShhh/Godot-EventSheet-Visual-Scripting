@@ -5767,3 +5767,9 @@ Was in {state},Estaba en estado {state}
 Go to {state},Ir a estado {state}
 On entering {state},Al entrar en {state}
 On leaving {state},Al salir de {state}
+%names in this scene,%names en esta escena
+the nodes this scene marked scene-unique,los nodos que esta escena marcó como únicos de escena
+Browse what %s can do. Rows you add here are written on it by name.,Explora lo que %s puede hacer. Las filas que añadas aquí se escriben sobre él por su nombre.
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,El nodo sobre el que actúa esta fila. Se abre con el %name que elegiste; bórralo para actuar sobre este nodo.
+"Mark ""%s"" as scene-unique","Marcar ""%s"" como único de escena"
+Make %s unique,Hacer %s único

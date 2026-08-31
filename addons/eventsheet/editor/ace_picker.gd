@@ -63,6 +63,11 @@ const SPATIAL_PAGE_PREFIX := "3D: "
 ## Marks an object-page entry as "one of the open script's own functions - insert a call to it"
 ## rather than a scope target. The rest of the string is the GDScript function name.
 const FUNCTION_PREFIX := "function:"
+
+## Marks an object-page entry as one of the SCENE'S OWN scene-unique nodes - the `%HealthBar` Godot
+## itself hands out. The rest of the string is `<name>|<class>`, which is everything the scope needs:
+## the spelling the row will address the node by, and the class whose vocabulary it may take.
+const UNIQUE_PREFIX := "unique:"
 ## Where a Functions entry stashes the function it targets, so the single commit path can pre-fill
 ## the Call Function parameters instead of needing a second dispatch table.
 const FUNCTION_META_KEY := "eventsheet_function_name"
@@ -348,6 +353,11 @@ var _objects_tree: Tree = null
 var _objects_back: Button = null
 var _body_holder: Control = null
 var _object_filter_provider: String = ""
+## The scene-unique node the object step picked, as {"name", "class"}, or {} when the scope is an
+## ordinary object card. It is kept beside the provider scope rather than folded into it because it
+## answers a second question the provider cannot: WHICH node of that class every scoped row is aimed
+## at, which is what the picked entry's `%Name` becomes on the row.
+var _unique_scope: Dictionary = {}
 var _tree: Tree = null
 var _info_label: RichTextLabel = null
 var _info_panel: PanelContainer = null
@@ -433,6 +443,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 		# fast path stays fast, cards are for browsing.
 		if _objects_page != null and _objects_page.visible and not _text.strip_edges().is_empty():
 			_object_filter_provider = ""
+			_unique_scope = {}
 			_show_classic(false)
 		_refresh_tree()
 		_select_first_match())
@@ -488,6 +499,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_objects_back.focus_mode = Control.FOCUS_NONE
 	_objects_back.pressed.connect(func() -> void:
 		_object_filter_provider = ""
+		_unique_scope = {}
 		_show_objects_page())
 	content.add_child(_objects_back)
 	body_holder.custom_minimum_size = Vector2(0.0, 340.0)
@@ -1029,6 +1041,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	# never per keystroke: the answer reads the autoloads' scripts off disk.
 	_variable_catalog.clear()
 	_object_filter_provider = ""
+	_unique_scope = {}
 	# "Add condition on Player" opens the picker ALREADY on Player: the object step of the
 	# two-step pick is answered, so the dialog opens at the verbs for that object rather than at the
 	# object cards the caller has just chosen from.
@@ -1459,11 +1472,113 @@ func _add_function_item(parent_item: TreeItem, entry: Dictionary, muted: bool) -
 		item.set_icon_max_width(0, 16)
 
 
+## The `%names` page section: every scene-unique node of the scene this sheet runs in, as objects to
+## pick. Godot's own mark is what makes them nameable - `%HealthBar` addresses that node wherever
+## somebody moves it to - and until now the sheet could only reach one by typing the sigil into a
+## field. Listed FIRST, because a node somebody deliberately marked is the object they meant.
+##
+## The scene text also says what CLASS each one is, which is what lets a picked `%HealthBar` offer a
+## ProgressBar's vocabulary rather than a bare Node's. A node the scene cannot type (an instanced
+## child whose class the text does not spell) is simply not listed rather than offered as a Node.
+##
+## Pure + static (a sheet in, plain Dictionaries out), so the section is pinned headless.
+## Shape: {"title", "note", "entries": [{"name", "class", "reference", "label", "metadata"}]}
+static func unique_names_page_content(sheet: EventSheetResource) -> Dictionary:
+	if sheet == null:
+		return {}
+	var entries: Array[Dictionary] = []
+	for node: Dictionary in EventSheetSceneUniqueNames.for_script(str(sheet.external_source_path).strip_edges()):
+		var node_class: String = str(node["class"]).strip_edges()
+		if node_class.is_empty():
+			continue
+		entries.append({
+			"name": str(node["name"]),
+			"class": node_class,
+			"reference": str(node["reference"]),
+			"label": "%s   %s" % [str(node["reference"]), node_class],
+			"metadata": "%s%s|%s" % [UNIQUE_PREFIX, str(node["name"]), node_class],
+		})
+	if entries.is_empty():
+		return {}
+	return {
+		"title": EventSheetL10n.translate("%names in this scene"),
+		"note": EventSheetL10n.translate("the nodes this scene marked scene-unique"),
+		"entries": entries,
+	}
+
+
+## The section drawn, one selectable row per marked node. The Godot class icon comes off the class
+## the scene said, so the row looks like the node does in the scene tree.
+func _populate_unique_name_cards(root: TreeItem) -> void:
+	var content: Dictionary = unique_names_page_content(_open_sheet())
+	if content.is_empty():
+		return
+	var header: TreeItem = _objects_tree.create_item(root)
+	header.set_text(0, "%s   %s" % [str(content.get("title", "")), str(content.get("note", ""))])
+	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_selectable(0, false)
+	for value: Variant in content.get("entries", []):
+		var entry: Dictionary = value
+		var item: TreeItem = _objects_tree.create_item(header)
+		item.set_text(0, str(entry.get("label", "")))
+		item.set_tooltip_text(0, EventSheetL10n.translate(
+			"Browse what %s can do. Rows you add here are written on it by name.") % str(entry.get("reference", "")))
+		item.set_metadata(0, str(entry.get("metadata", "")))
+		var node_icon: Texture2D = editor_icon(str(entry.get("class", "")))
+		if node_icon != null:
+			item.set_icon(0, node_icon)
+			item.set_icon_max_width(0, 16)
+
+
+## The vocabulary one picked `%name` offers: its class's own members, reflected exactly as a project
+## class card reflects them, with the node it is aimed at already answered. Each entry is a COPY -
+## reflected definitions are cached and shared for the session, and one row's node must never be
+## stamped onto the definition every other row reads.
+##
+## The "On node" parameter is the shipped node-scoped one, so the row a pick produces is the ordinary
+## `{target.}member()` row with its target filled in, and emits `%HealthBar.member()` back.
+static func unique_node_definitions(node_name: String, node_class: String) -> Array[ACEDefinition]:
+	var offered: Array[ACEDefinition] = []
+	if node_name.strip_edges().is_empty() or node_class.strip_edges().is_empty():
+		return offered
+	var reference: String = EventSheetSceneUniqueNames.SIGIL + node_name.strip_edges()
+	for definition: ACEDefinition in EventSheetClassDBSource.definitions_for_class(node_class):
+		var entry: ACEDefinition = definition.copy()
+		var template: String = str(entry.metadata.get("codegen_template", ""))
+		# Only a retargetable row can be aimed at a node. Anything else is left exactly as the class
+		# offers it rather than being given a target it would ignore.
+		if not template.contains("{target.}"):
+			continue
+		entry.parameters = entry.parameters.duplicate(true)
+		entry.parameters.append({
+			"id": "target",
+			"display_name": EventSheetL10n.translate("On node"),
+			"description": EventSheetL10n.translate(
+				"The node this row acts on. It opens on the %name you picked; clear it to act on this node instead."),
+			"type": TYPE_STRING,
+			"default_value": reference,
+			"hint": "expression",
+			"options": [],
+			"autocomplete": [],
+		})
+		entry.metadata[SCENE_TARGET_META] = reference
+		offered.append(entry)
+	return offered
+
+
+## The reflected vocabulary for the picked `%name`, or [] when no `%name` is scoped.
+func _unique_scope_definitions() -> Array[ACEDefinition]:
+	if _unique_scope.is_empty():
+		return []
+	return unique_node_definitions(str(_unique_scope.get("name", "")), str(_unique_scope.get("class", "")))
+
+
 func _populate_object_cards() -> void:
 	if _objects_tree == null or _registry == null:
 		return
 	_objects_tree.clear()
 	var root: TreeItem = _objects_tree.create_item()
+	_populate_unique_name_cards(root)
 	_populate_function_cards(root)
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
 	# System is one selectable row at the top (colored like a node-type header, it IS the
@@ -1604,6 +1719,20 @@ func _on_object_tree_selected() -> void:
 	if chosen.begins_with(FUNCTION_PREFIX):
 		_commit_function_call(chosen.trim_prefix(FUNCTION_PREFIX))
 		return
+	# A `%name` entry scopes to the CLASS the scene said the node is, and remembers the node itself so
+	# every row picked under it is written on that node by name.
+	if chosen.begins_with(UNIQUE_PREFIX):
+		var parts: PackedStringArray = chosen.trim_prefix(UNIQUE_PREFIX).split("|")
+		if parts.size() == 2:
+			_unique_scope = {"name": parts[0], "class": parts[1]}
+			_object_filter_provider = parts[1]
+			_objects_back.text = "◂ %s · %s" % [EventSheetL10n.translate("All objects"), selected.get_text(0)]
+			_show_classic(true)
+			_refresh_tree()
+			_select_first_match()
+			_search.grab_focus()
+		return
+	_unique_scope = {}
 	_object_filter_provider = str(selected.get_metadata(0))
 	_objects_back.text = "◂ All objects · %s" % selected.get_text(0)
 	_show_classic(true)
@@ -1760,6 +1889,12 @@ func _refresh_tree() -> void:
 		for project_definition: ACEDefinition in _project_definitions_for(_object_filter_provider):
 			if not _contains_definition(definitions, project_definition):
 				definitions.append(project_definition)
+		# A scoped `%name` offers its class's members with the node already answered. They come from
+		# the same reflection a project card uses, so an engine class the registry has no curated
+		# vocabulary for still has verbs to scope to.
+		for unique_definition: ACEDefinition in _unique_scope_definitions():
+			if not _contains_definition(definitions, unique_definition):
+				definitions.append(unique_definition)
 		var provider_scoped: Array[ACEDefinition] = []
 		for scoped_candidate: ACEDefinition in definitions:
 			if str(scoped_candidate.provider_id) == _object_filter_provider:

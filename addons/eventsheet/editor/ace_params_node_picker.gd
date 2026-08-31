@@ -370,29 +370,20 @@ func _on_node_picker_custom_action(action: StringName) -> void:
 ## Marks the picked node scene-unique (undoable) and hands back %Name - so ANY deep node, not just
 ## pre-marked ones, becomes a flat path-free handle in one click, without leaving the sheet for the scene
 ## editor. No-op outside the editor or for a non-uniqueable selection.
+##
+## The mark itself is EventSheetUniqueNameDoor's: the same door the parameter fields offer for a node
+## dragged out of the Scene dock, so both ways in write the same scene edit into the same undo.
 func _make_picked_node_unique() -> void:
 	if not Engine.is_editor_hint():
 		return
 	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
 	if selected == null:
 		return
-	var scene_root: Node = EditorInterface.get_edited_scene_root()
 	var relative: String = str(selected.get_metadata(0)) if selected.get_metadata(0) != null else ""
-	if not _node_is_uniqueable(scene_root, relative):
+	var reference: String = EventSheetUniqueNameDoor.mark(EditorInterface.get_edited_scene_root(), relative)
+	if reference.is_empty():
 		return
-	var node: Node = scene_root.get_node_or_null(NodePath(relative))
-	if node == null:
-		return
-	var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
-	if undo != null:
-		undo.create_action("Mark \"%s\" as scene-unique" % node.name)
-		undo.add_do_property(node, "unique_name_in_owner", true)
-		undo.add_undo_property(node, "unique_name_in_owner", false)
-		undo.commit_action()
-	else:
-		node.unique_name_in_owner = true
 	var field: Variant = _host._fields.get(_node_picker_target_key)
-	var reference: String = "%" + str(node.name)
 	if field is TextEdit:
 		(field as TextEdit).insert_text_at_caret(reference)
 		_host._validate_expression_field(field)
@@ -401,10 +392,7 @@ func _make_picked_node_unique() -> void:
 	_node_picker_window.hide()
 
 
-## True when the node at relative_path can be made scene-unique: it exists, isn't the scene root or a
-## cross-scene entry, is owned by this scene, and isn't already unique. Pure → unit-testable.
+## True when the node at relative_path can be made scene-unique. Kept as this picker's own spelling of
+## the question so the button's enabled state and the door's own refusal are one answer.
 static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
-	if scene_root == null or relative_path.is_empty() or relative_path == "." or relative_path.begins_with("scene::"):
-		return false
-	var node: Node = scene_root.get_node_or_null(NodePath(relative_path))
-	return node != null and node != scene_root and node.owner == scene_root and not node.unique_name_in_owner
+	return EventSheetUniqueNameDoor.can_mark(scene_root, relative_path)

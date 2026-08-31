@@ -3694,10 +3694,11 @@ func _describe_field(key: String) -> void:
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 				str(scene_note.get("body", "")), str(scene_note.get("level", "")))
 			return
-		# Nothing is wrong, but there may still be a plainer way to read what was typed.
+		# Nothing is wrong, but there may still be a plainer way to read what was typed - and, for a
+		# node reached by path, a shorter way to say WHICH node.
 		_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 			EventSheetParamFieldFactory.strip_body(param, _row_owner),
-			EventSheetPopupUI.HelpStrip.TONE_NORMAL, reading_offers())
+			EventSheetPopupUI.HelpStrip.TONE_NORMAL, reading_offers() + _unique_name_offers(key))
 		return
 	_help_strip.show_note(str(note.get("heading", "")), str(note.get("body", "")),
 		str(note.get("level", "")), _fix_offers(key, note))
@@ -3817,6 +3818,46 @@ func _confirm_as(definition: ACEDefinition, values: Dictionary) -> void:
 	_context.clear()
 	_close()
 	params_confirmed.emit(definition, values, context)
+
+
+## The courtesy a node reached BY PATH is offered: "Make %HealthBar unique". A node dragged out of the
+## Scene dock, or picked without the mark, lands in the field as `$UI/Bars/HealthBar` - a reference
+## that breaks the moment somebody moves it. One click gives the node Godot's own scene-unique mark
+## and rewrites the field as `%HealthBar`, which survives the move.
+##
+## It is a SCENE edit, applied through the editor's own undo (EventSheetUniqueNameDoor), never through
+## the sheet's - so Ctrl+Z in the scene puts the checkbox back. [] whenever there is nothing to offer:
+## a value that is not a path reference, a node already marked, the scene root, a node this scene does
+## not own, or no open scene at all.
+func _unique_name_offers(key: String) -> Array:
+	if not Engine.is_editor_hint():
+		return []
+	var field: Variant = _fields.get(key, null)
+	if not is_instance_valid(field):
+		return []
+	var text: String = str((field as TextEdit).text) if field is TextEdit \
+		else (str((field as LineEdit).text) if field is LineEdit else "")
+	var path: String = EventSheetUniqueNameDoor.path_in_reference(text)
+	if path.is_empty():
+		return []
+	var scene_root: Node = EditorInterface.get_edited_scene_root()
+	if not EventSheetUniqueNameDoor.can_mark(scene_root, path):
+		return []
+	return [{
+		"text": EventSheetUniqueNameDoor.offer_text(EventSheetUniqueNameDoor.node_name_of_path(path)),
+		"pressed": func() -> void: _mark_field_node_unique(key, path),
+	}]
+
+
+## The door pressed: the scene edit happens, and only then does the field become the `%name`. A mark
+## that did not land writes nothing, so the field never claims a handle the scene does not have.
+func _mark_field_node_unique(key: String, relative_path: String) -> void:
+	var reference: String = EventSheetUniqueNameDoor.mark(
+		EditorInterface.get_edited_scene_root(), relative_path)
+	if reference.is_empty():
+		return
+	_write_field(key, reference)
+	_describe_field(key)
 
 
 ## The one-click answers a note offers, wired to this dialog's own fields.

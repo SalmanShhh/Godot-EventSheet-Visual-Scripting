@@ -245,6 +245,11 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 				"instance_path": instance_path_in(line, resource_paths),
 				"script_path": "",
 				"groups": string_array_attribute(line, "groups"),
+				# The scene-unique mark - `%HealthBar` - which the editor writes as a BARE flag on the
+				# node's own header rather than as one of the property lines under it. Read here
+				# because this is the project's one reader of scene text, and because every family
+				# that wants to know whether a node has a name of its own asks the same question.
+				"unique": flag_attribute(line, "unique_name_in_owner"),
 				"properties": {}
 			}
 			nodes.append(current)
@@ -442,6 +447,14 @@ static func attribute(line: String, key: String) -> String:
 	start += marker.length()
 	var end: int = line.find("\"", start)
 	return line.substr(start, end - start) if end > start else ""
+
+
+## `key=true` out of a .tscn header line - the BARE spelling the editor uses for a node's own flags,
+## with no quotes around the value. `unique_name_in_owner` is written this way, so the quoted reader
+## above walks straight past it. Public for the same reason `attribute` is: this module is the
+## project's ONE reader of scene text.
+static func flag_attribute(line: String, key: String) -> bool:
+	return line.contains("%s=true" % key)
 
 
 ## `key=["a", "b"]` out of a .tscn header line - how the editor writes persistent groups. The older

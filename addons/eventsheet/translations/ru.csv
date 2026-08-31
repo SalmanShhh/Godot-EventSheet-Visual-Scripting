@@ -5767,3 +5767,9 @@ Was in {state},Был в состоянии {state}
 Go to {state},Перейти в состояние {state}
 On entering {state},При входе в {state}
 On leaving {state},При выходе из {state}
+%names in this scene,%names в этой сцене
+the nodes this scene marked scene-unique,"узлы, отмеченные этой сценой как уникальные в сцене"
+Browse what %s can do. Rows you add here are written on it by name.,"Посмотрите, что умеет %s. Строки, добавленные здесь, пишутся на него по имени."
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,"Узел, на который действует эта строка. Она открывается на выбранном %name; очистите поле, чтобы действовать на этот узел."
+"Mark ""%s"" as scene-unique","Отметить ""%s"" как уникальный в сцене"
+Make %s unique,Сделать %s уникальным

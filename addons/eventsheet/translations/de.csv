@@ -5767,3 +5767,9 @@ Was in {state},War im Zustand {state}
 Go to {state},In Zustand {state} wechseln
 On entering {state},Beim Betreten von {state}
 On leaving {state},Beim Verlassen von {state}
+%names in this scene,%names in dieser Szene
+the nodes this scene marked scene-unique,"die Knoten, die diese Szene als szenenweit eindeutig markiert hat"
+Browse what %s can do. Rows you add here are written on it by name.,"Sieh dir an, was %s kann. Zeilen, die du hier hinzufügst, werden namentlich darauf geschrieben."
+The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,"Der Knoten, auf den diese Zeile wirkt. Sie öffnet mit dem gewählten %name; leere das Feld, um stattdessen auf diesen Knoten zu wirken."
+"Mark ""%s"" as scene-unique","""%s"" als szenenweit eindeutig markieren"
+Make %s unique,%s eindeutig machen

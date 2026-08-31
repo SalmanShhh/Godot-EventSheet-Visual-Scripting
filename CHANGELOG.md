@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### The %name is a word the sheet speaks
+
+- **The picker's `%names` section.** The object step of the Add picker opens with the scene-unique
+  nodes of the scene this file runs in, listed first, each beside the class the `.tscn` says it is.
+  Picking `%HealthBar` makes it the row's object: the picker scopes to that class's own vocabulary
+  rather than to a bare Node's, and the row that lands is written on the node by name. Nothing is
+  registered and no second list of node names exists - the mark lives in the scene file, which is the
+  only authority. Naming a whole scene is a different job and stays the Named Scenes pack's.
+- **A statement on a `%Name` reads as a row on that object.** A `%HealthBar.value = 80` written by
+  hand used to be the one receiver shape the derived reading could not place, because nothing told it
+  what class the sigil meant. The scene does, so the line now reads with the class's own words and
+  icon, and a row picked on a `%name` emits that same `%Name.member()` line back, byte for byte. A
+  `%name` the scene cannot resolve degrades to honest code and is never given a guessed type.
+- **Make %HealthBar unique, from the field you are in.** A node dragged out of the Scene dock lands
+  as `$UI/Bars/HealthBar`, which breaks the moment somebody moves it. The parameter's help strip now
+  offers a one-click door that ticks the node's own *Access as Unique Name* and rewrites the field as
+  `%HealthBar`. It is a scene edit through the editor's own undo, never a sheet edit, so Ctrl+Z in
+  the scene puts it back; the Pick Node dialog's *Make %unique* button is now the same door. It
+  refuses the scene root, a node this scene does not own, and a node already marked.
+- **Nothing new to check.** The Doctor's shipped `%token` validation already reports a name no scene
+  carries, so these rows add no finding of their own: a stale name is the quiet amber row state and
+  the Doctor's triage inbox, and the sheet itself stays silent.
+
 ### An object's states are a variable, declared once
 
 - **Declare states, on the sheet head.** The states band's **Declare states…** asks the two questions

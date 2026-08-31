@@ -2310,15 +2310,27 @@ static func _one_less(bound: String) -> String:
 ## The object-label to class-name map recovered from a sheet, so any row naming one of
 ## these objects can draw its Godot class icon.
 ##
-## Three sources, cheapest first, and nothing else: the pack's declared host class; every
+## Four sources, cheapest first, and nothing else: the pack's declared host class; every
 ## @onready node variable's declared type (both under its own name and under the node path it
-## reads, so `hp_bar` and `%HpBar` both resolve); nothing is instantiated and no scene is opened,
-## because this runs on every span rebuild. A node reference with no declared type simply gets no
-## icon, which is the honest answer - a guessed icon is worse than none.
+## reads, so `hp_bar` and `%HpBar` both resolve); and the SCENE'S OWN scene-unique nodes, read off
+## the `.tscn` text through the project's one node walk. Nothing is instantiated and no scene is
+## opened, because this runs on every span rebuild. A node reference nothing can answer for simply
+## gets no entry, which is the honest answer - a guessed class is worse than none.
+##
+## The `%Name` half is what turns a statement written on a scene-unique node into a row on that
+## object: the derived call and property layers ask their receiver's class of this map, and until the
+## scene was read the one shape they could not answer for was the sigil Godot itself hands out.
+##
+## NOTHING NEW TO CHECK COMES OF IT. The Doctor's shipped `%token` validation already reports a name
+## no scene carries; a name this map cannot resolve is simply missing here, the row keeps its plain
+## reading, and the sheet says nothing about it beyond the quiet row state it already wears.
 static func object_class_map(sheet: EventSheetResource) -> Dictionary:
 	var map: Dictionary = {}
 	if sheet == null:
 		return map
+	# The scene's marks go in FIRST, so a declaration written in the file below still wins: what
+	# somebody typed about their own node is more specific than what the scene text can say.
+	map.merge(EventSheetSceneUniqueNames.classes_for_script(str(sheet.external_source_path).strip_edges()))
 	var host_class: String = sheet.host_class.strip_edges()
 	if not host_class.is_empty() and host_class != "Node":
 		map[HOST_LABEL] = host_class

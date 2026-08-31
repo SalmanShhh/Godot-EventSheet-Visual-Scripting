@@ -244,6 +244,9 @@ static func _node_entry(node: Dictionary, node_class: String, reference: String,
 		"class": node_class,
 		"reference": reference,
 		"scene_path": scene_path,
+		# Whether the node carries Godot's own scene-unique mark, so the family that reads `%names`
+		# off these entries does not have to open the scene text a second time.
+		"unique": bool(node.get("unique", false)),
 		"properties": node.get("properties", {})
 	}
 

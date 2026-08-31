@@ -1328,6 +1328,32 @@ to the function it names, the same jump the Outline panel makes.
 
   ![A script of vector, colour, data-type and scene-tree lines opened as a sheet](images/reading-vectors-patterns-notes.png)
 
+- **A `%Name` is an object, not a piece of typing.** Ticking *Access as Unique Name* in Godot's Scene
+  dock is the engine's own way of saying "this one node, wherever I move it to". The sheet now speaks
+  that word both ways. The object step of the Add picker opens with a **%names** section listing the
+  marked nodes of the scene this file runs in, first, each with the class the `.tscn` says it is - so
+  picking `%HealthBar` scopes the picker to a ProgressBar's vocabulary rather than a bare Node's, and
+  every row you add under it is written on that node by name (`%HealthBar.value = 80`). Read the
+  other way, a line somebody already wrote on a `%Name` reads as a row on that object, with its
+  class's own words and its icon, instead of as an anonymous call. Nothing is registered anywhere and
+  no second list of names exists: the mark lives in the scene file, and a name the scene stops
+  carrying simply stops resolving - the row falls back to plain code, and the Doctor's existing
+  `%token` check is the one place that says so. Naming a whole *scene* rather than a node is a
+  different job, and the Named Scenes pack owns it.
+
+  ![The Add picker's %names section, listing the scene's two marked nodes with their classes](images/unique-names-picker-section.png)
+
+  ![Four hand-written lines on two %name nodes, and the one event they read as](images/unique-name-rows.png)
+
+- **A node reached by path can be given the mark from where you are.** Drag a node out of the Scene
+  dock into a parameter field and it lands as `$UI/Bars/HealthBar` - correct until somebody moves it.
+  The field's help strip then offers **Make %HealthBar unique**: one click ticks the node's own
+  *Access as Unique Name* and rewrites the field as `%HealthBar`. It is a scene edit, not a sheet
+  edit, so it lands in the editor's undo history beside every other scene change and Ctrl+Z in the
+  scene puts the checkbox back. The Pick Node dialog's *Make %unique* button is the same door. The
+  offer only appears when there is something to do: not for the scene root, not for a node this scene
+  does not own, and not for a node already marked.
+
 - **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
   💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
   one step. Before this the comment rode into whichever value the lift put the end of the line in, so
