@@ -235,6 +235,13 @@ These are the places the two disagreed.
   it silently abandoned every later row of the same event. The guard now records the entry and leaves
   the loop; the archive closes once, and the line after the loop raises whichever of the two events
   the run earned.
+- **The guarded read wears its own brackets.** **Read Text File (or a fallback)**, **Image From File**
+  and the Doctor's respelling fix all emitted a BARE `a if b else c`, while Safe File Name and Sound
+  From File beside them wrapped theirs. An expression answers inside somebody else's sentence, and a
+  bare ternary spliced between two operators binds them into its branches: dropped into one side of a
+  Compare Values row, the guarded read quietly BECAME the file's text instead of a comparison of it.
+  Wrong answer, not a parse error, so nothing would ever have said so. All three are bracketed now,
+  and the suite runs a guarded read inside a comparison to prove it.
 
 ### Every call on a known class is a row
 

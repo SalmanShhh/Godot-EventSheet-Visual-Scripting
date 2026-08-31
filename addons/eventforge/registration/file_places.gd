@@ -217,12 +217,18 @@ static func requote(original_expression: String, new_literal: String) -> String:
 ## An empty fallback is not a fallback: it is a read with none asked for, and it emits the plain call.
 ## That is what makes the second parameter a default argument rather than a clause on the sentence -
 ## leaving it blank leaves the sentence exactly as it was.
+##
+## THE GUARDED FORM WEARS ITS OWN BRACKETS. A read answers inside a parameter slot - beside a `+`, on
+## one side of a `==`, in the middle of somebody's own sentence - and a bare `a if b else c` spliced
+## between two operators binds them INTO the branches: `read if exists else "" == "x"` is the file's
+## text, not a comparison. That is a wrong answer rather than a parse error, so nothing would ever
+## have said so. The plain read needs no brackets and gets none: it is one call.
 static func guarded_read(path_expression: String, fallback_expression: String) -> String:
 	var path: String = path_expression.strip_edges()
 	var fallback: String = fallback_expression.strip_edges()
 	if fallback.is_empty():
 		return "FileAccess.get_file_as_string(%s)" % path
-	return "FileAccess.get_file_as_string(%s) if FileAccess.file_exists(%s) else %s" % [
+	return "(FileAccess.get_file_as_string(%s) if FileAccess.file_exists(%s) else %s)" % [
 		path, path, fallback]
 
 

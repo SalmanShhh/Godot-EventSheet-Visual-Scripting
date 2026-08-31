@@ -65,7 +65,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	#   its folder            with folders in it fails until somebody makes them. The choice is
 	#                         stated on the row and the prelude is in the echo.
 	#   the folder door       where user:// really is, opened on the player's own machine.
-	descriptors.append(F.make_descriptor("Core", "ReadTextFileOr", "Read Text File (or a fallback)", ACEDescriptor.ACEType.EXPRESSION, "FileAccess.get_file_as_string({path}){?fallback} if FileAccess.file_exists({path}) else {fallback}{/fallback}", "", [F.make_param("path", "String", "\"user://save.dat\"", "Path", "File to read in full as a String. Prefer user:// - res:// is read-only once the game is exported.", "file_path"), F.make_param("fallback", "String", "\"\"", "If missing", "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, exactly as Read Text File does.", "expression")], "Files", "text of file {path}, or {fallback}")
+	descriptors.append(F.make_descriptor("Core", "ReadTextFileOr", "Read Text File (or a fallback)", ACEDescriptor.ACEType.EXPRESSION, "{?fallback}({/fallback}FileAccess.get_file_as_string({path}){?fallback} if FileAccess.file_exists({path}) else {fallback}){/fallback}", "", [F.make_param("path", "String", "\"user://save.dat\"", "Path", "File to read in full as a String. Prefer user:// - res:// is read-only once the game is exported.", "file_path"), F.make_param("fallback", "String", "\"\"", "If missing", "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, exactly as Read Text File does.", "expression")], "Files", "text of file {path}, or {fallback}")
 		.described("Reads a whole file as text, using the fallback you name when the file is not there. The guard is written into the line and shown on the row, so nothing happens that the code does not say."))
 	descriptors.append(F.make_descriptor("Core", "WriteTextFileInFolder", "Write Text File (in a folder)", ACEDescriptor.ACEType.ACTION, "{?folder=make its folder first}DirAccess.make_dir_recursive_absolute({path}.get_base_dir())\n{/folder}var __file_{uid} = FileAccess.open({path}, FileAccess.WRITE)\nif __file_{uid}:\n\t__file_{uid}.store_string({text})\n\t__file_{uid}.close()", "", [F.make_param("path", "String", "\"user://runs/latest.txt\"", "Path", "File to write, inside one or more folders. OVERWRITES any existing file. Prefer user:// - res:// is read-only once the game is exported.", "file_path"), F.make_param("text", "String", "\"\"", "Text", "Text content to store.", "expression"), F.make_param("folder", "String", "make its folder first", "Folder", "Whether to create the folders in that path before writing. Godot does not make them on the way to opening a file, so a write into a folder that is not there fails.", "", [{"key": "make its folder first", "label": "Make the folder first"}, {"key": "its folder is already there", "label": "The folder is already there"}])], "Files", "write {text} to file {path} - {folder}")
 		.described("Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back."))
@@ -294,7 +294,9 @@ static func _unpack_template() -> String:
 ##   the loaders      Image.load_from_file / the three AudioStream readers, each with the FAMILIAR
 ##                    DEFAULT ARGUMENT as its second slot. No import pipeline is involved and none
 ##                    is wanted: a loaded image is a texture in a variable, and a loaded sound is an
-##                    AudioStream in one.
+##                    AudioStream in one. The guarded form WEARS ITS OWN BRACKETS, exactly as the safe
+##                    name's does: an expression answers inside somebody else's sentence, and a bare
+##                    `a if b else c` between two operators binds them into its branches.
 ##
 ## WHAT THIS IS NOT. It is not a save system - the game's own state belongs to the save_system pack's
 ## verbs, which write to user:// with no chooser in sight. These rows are for content the player
@@ -341,7 +343,7 @@ static func _content_from_outside() -> Array[ACEDescriptor]:
 		.described("Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here."))
 
 	# ── The loaders: content from outside the project, with the fallback in the second slot ───────
-	descriptors.append(F.make_descriptor("Core", "LoadImageFile", "Image From File", ACEDescriptor.ACEType.EXPRESSION, "ImageTexture.create_from_image(Image.load_from_file({path})){?fallback} if FileAccess.file_exists({path}) else {fallback}{/fallback}", "", [
+	descriptors.append(F.make_descriptor("Core", "LoadImageFile", "Image From File", ACEDescriptor.ACEType.EXPRESSION, "{?fallback}({/fallback}ImageTexture.create_from_image(Image.load_from_file({path})){?fallback} if FileAccess.file_exists({path}) else {fallback}){/fallback}", "", [
 		F.make_param("path", "String", "\"user://portrait.png\"", "Path", "The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.", "file_path"),
 		F.make_param("fallback", "String", "null", "If missing", "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.", "expression")
 	], "Files", "image of file {path}, or {fallback}")

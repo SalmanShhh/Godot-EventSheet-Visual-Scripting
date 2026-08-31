@@ -127,7 +127,7 @@ chosen** event writes a call to a function that is not there. Add both events wh
 | Ask Where To Save | Opens the player's own save chooser so they can name a file and a folder | The same branch, with `FILE_DIALOG_MODE_SAVE_FILE` / `FILE_MODE_SAVE_FILE` |
 | On A File Chosen | Runs when the player answered an Ask row by picking a file | `func _on_file_chosen(path: String) -> void:` |
 | On The Ask Cancelled | Runs when the player closed an Ask row's chooser without picking anything | `func _on_ask_cancelled() -> void:` |
-| Image From File | A picture from outside the project, as a texture | `ImageTexture.create_from_image(Image.load_from_file({path}))`, with ` if FileAccess.file_exists({path}) else {fallback}` when the fallback slot is filled |
+| Image From File | A picture from outside the project, as a texture | `ImageTexture.create_from_image(Image.load_from_file({path}))`, wrapped as `(… if FileAccess.file_exists({path}) else {fallback})` when the fallback slot is filled |
 | Sound From File | A sound from outside the project, as an audio stream | `AudioStreamMP3.load_from_file({path})` / `AudioStreamOggVorbis…` / `AudioStreamWAV…`, chosen by extension, with the same optional `file_exists` guard |
 
 ![One event in a sheet called AvatarPicker: a green arrow trigger badge, the object Node, a files payload chip, and one action, System Set avatar to ImageTexture.create_from_image(Image.load_from_file(files' item 0))](../images/user-content-drop.png)

@@ -89,12 +89,15 @@ extends Node
 
 
 func _ready() -> void:
-	var settings: String = FileAccess.get_file_as_string("user://settings.json") if FileAccess.file_exists("user://settings.json") else "{}"
+	var settings: String = (FileAccess.get_file_as_string("user://settings.json") if FileAccess.file_exists("user://settings.json") else "{}")
 	print(settings)
 ```
 
 Leave that second slot blank and the plain read is emitted, unchanged. Nothing happens that the line
-does not say.
+does not say. The guarded form wears its own brackets, because an expression answers inside somebody
+else's sentence: dropped into one side of a comparison, a bare `a if b else c` would bind the
+comparison into its own branches and the row would quietly be the file's text rather than a test of
+it.
 
 The write half has the same shape. Godot will not create a folder on the way to opening a file, so a
 write to `user://runs/latest.txt` does nothing at all until something makes `user://runs`.

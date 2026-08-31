@@ -127,9 +127,12 @@ static func _test_visible_guard() -> bool:
 		str(by_id["ReadTextFile"].codegen_template),
 		"FileAccess.get_file_as_string({path})") and passed
 	# The one spelling of the guard, and the two shapes it collapses to.
-	passed = _check("a named fallback emits the file_exists ternary",
+	# THE GUARDED FORM WEARS ITS OWN BRACKETS. A read answers inside a parameter slot, so a bare
+	# `a if b else c` spliced between two operators would bind them into its branches - a wrong
+	# answer rather than a parse error, which is why it is pinned here character for character.
+	passed = _check("a named fallback emits the file_exists ternary, in brackets",
 		P.guarded_read("\"user://save.dat\"", "\"none\""),
-		"FileAccess.get_file_as_string(\"user://save.dat\") if FileAccess.file_exists(\"user://save.dat\") else \"none\"") and passed
+		"(FileAccess.get_file_as_string(\"user://save.dat\") if FileAccess.file_exists(\"user://save.dat\") else \"none\")") and passed
 	passed = _check("no fallback emits the plain read",
 		P.guarded_read("\"user://save.dat\"", ""),
 		"FileAccess.get_file_as_string(\"user://save.dat\")") and passed
@@ -147,6 +150,20 @@ static func _test_visible_guard() -> bool:
 		{"path": "\"%s/nothing.txt\"" % TEST_DIR, "fallback": "\"the fallback\""}))
 	passed = _check("the guarded read really answers the fallback for a missing file",
 		read_back, "the fallback") and passed
+	# AND IT ANSWERS INSIDE SOMEBODY ELSE'S SENTENCE. An expression is dropped into a parameter slot,
+	# and Compare Values is `{a} {op} {b}` - so an unbracketed ternary would bind the comparison into
+	# its own branches and the row would quietly BE the file's text instead of a comparison. The file
+	# here EXISTS, which is the case where the two spellings answer differently.
+	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	var present: FileAccess = FileAccess.open("%s/present.txt" % TEST_DIR, FileAccess.WRITE)
+	if present != null:
+		present.store_string("here")
+		present.close()
+	var compared: Variant = _run_expression("%s == \"here\"" % _emit(template,
+		{"path": "\"%s/present.txt\"" % TEST_DIR, "fallback": "\"the fallback\""}))
+	passed = _check("and a guarded read dropped into a comparison IS a comparison",
+		compared, true) and passed
+	DirAccess.remove_absolute("%s/present.txt" % TEST_DIR)
 	return passed
 
 
