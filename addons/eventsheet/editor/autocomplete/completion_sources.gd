@@ -904,6 +904,22 @@ static func invalidate(sheet: EventSheetResource) -> void:
 			_cache_order.erase(key)
 
 
+## Drops what was built for a kind whose answer is a folder the GAME writes to while it runs, and
+## does nothing for every other kind. `user://` is not the project: the filesystem ping that drops
+## the project-scoped lists never fires for it, and the file a reader is completing towards is
+## usually one their own last test run wrote - so a list held for the session would answer with the
+## folder as it was two runs ago while its own comment claimed it was reading the folder as it
+## stands. Called when a field STARTS completing, which is once per dialog rather than once per
+## keystroke: the walk stays off the typing path, and each ask sees the folder it is about.
+static func forget_live_folders(field_kind: String = FIELD_PATH) -> void:
+	if field_kind.get_slice(":", 0) != FIELD_PATH:
+		return
+	for key: String in _cache.keys():
+		if key.get_slice("|", 1) == FIELD_PATH:
+			_cache.erase(key)
+			_cache_order.erase(key)
+
+
 ## Drops everything. The editor's filesystem ping calls this, because a scene saved, an action
 ## added in Project Settings or a shader edited changes answers no sheet edit can account for.
 ## Tests call it between fixtures, for the same reason every other reader here exposes one.

@@ -64,6 +64,11 @@ var _accepting: bool = false
 ## in context (the dock's current sheet, usually); it is asked per keystroke because the sheet the
 ## funnel hands back after an edit is a different object from the one before it.
 static func attach(line_edit: LineEdit, field_kind: String, sheet_provider: Callable) -> EventSheetCompletionPopup:
+	# A field that completes towards a folder the GAME writes to is asked here, at the moment it
+	# starts completing - once per dialog, never once per keystroke. Nothing in the editor watches
+	# `user://`, so a list held for the session would keep answering with the folder as it was two
+	# test runs ago.
+	EventSheetCompletions.forget_live_folders(field_kind)
 	var popup: EventSheetCompletionPopup = attach_entries(line_edit,
 		func(typed: String) -> Array[Dictionary]:
 			var sheet: EventSheetResource = null

@@ -299,6 +299,12 @@ These are the places the two disagreed.
   kept a slower clock than the number on the row. At most one interval is carried now, so a long
   stall does not turn into a directory read every frame either. The page also says two things it did
   not: what happens when the folder itself goes, and that the name filter is case-sensitive.
+- **Path completion sees the folder as it is now.** The `user://` half of the list was filed with the
+  project-scoped lists, which are dropped when the `res://` filesystem changes - and nothing in the
+  editor watches `user://`, so the list kept answering with the folder as it was at the first ask for
+  the rest of the session, while its own comment claimed it read the folder as it stands. It is
+  dropped when a field starts completing: once per dialog, never once per keystroke, so the walk
+  stays off the typing path.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and

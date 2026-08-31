@@ -36,6 +36,7 @@ static func run() -> bool:
 	passed = _test_places() and passed
 	passed = _test_tables_cover_the_vocabulary() and passed
 	passed = _test_leads() and passed
+	passed = _test_path_completion_is_fresh() and passed
 	passed = _test_visible_guard() and passed
 	passed = _test_folder_prelude() and passed
 	passed = _test_doctor_checks() and passed
@@ -169,6 +170,47 @@ static func _test_leads() -> bool:
 	passed = _check("the strip says where user:// really is on Linux",
 		P.where_user_lives().contains("~/.local/share/godot"), true) and passed
 	return passed
+
+
+# ── 2b. The list of a folder the game writes to ──────────────────────────────────────────────
+
+
+## A PATH FIELD COMPLETES AGAINST user://, WHICH THE GAME REWRITES WHILE YOU WORK. The list was
+## filed with the project-scoped ones, which are dropped when res:// changes - and nothing in the
+## editor watches user://, so the list kept answering with the folder as it was at the first ask for
+## the rest of the session, while its own comment said it read the folder as it stands right now.
+## It is dropped when a field STARTS completing instead: once per dialog, never once per keystroke.
+static func _test_path_completion_is_fresh() -> bool:
+	var passed: bool = true
+	EventSheetCompletions.clear_cache()
+	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	var written_later: String = "%s/written_by_a_test_run.txt" % TEST_DIR
+	DirAccess.remove_absolute(written_later)
+	var asked: String = "\"%s" % written_later
+	passed = _check("a file nobody has written yet is not offered",
+		_completes(asked), false) and passed
+	var handle: FileAccess = FileAccess.open(written_later, FileAccess.WRITE)
+	if handle != null:
+		handle.store_string("the run wrote this")
+		handle.close()
+	passed = _check("the list held for the session does not know about it yet",
+		_completes(asked), false) and passed
+	EventSheetCompletions.forget_live_folders()
+	passed = _check("and the next field to start completing is offered the file that is there now",
+		_completes(asked), true) and passed
+	DirAccess.remove_absolute(written_later)
+	# Cold state out, cold state in: the serial run shares one process with every other test.
+	EventSheetCompletions.clear_cache()
+	return passed
+
+
+## True when a path field offers something beginning with this text.
+static func _completes(typed: String) -> bool:
+	for entry: Dictionary in EventSheetCompletions.for_field(null,
+			EventSheetCompletions.FIELD_PATH, typed):
+		if str(entry.get("text", "")).begins_with(typed):
+			return true
+	return false
 
 
 # ── 3. The visible guard ─────────────────────────────────────────────────────────────────────
