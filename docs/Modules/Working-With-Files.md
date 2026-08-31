@@ -558,7 +558,17 @@ On mods screen closed
 - **A dropped or chosen path is a real path on that machine**, not a `res://` or `user://` one. Copy
   the file under `user://` if the game should still have it next time it starts.
 - **Sound From File decodes exactly three formats:** `.mp3`, `.ogg` (Ogg Vorbis) and `.wav`. Anything
-  else reads as the fallback. This is the engine's own runtime limit, not a choice these rows made.
+  else reads as the fallback, because the line asks about the third extension too rather than letting
+  a fourth one fall into the WAV reader. This is the engine's own runtime limit, not a choice these
+  rows made.
+- **A file that is THERE but unreadable is not a missing file.** The guard on all three loaders is
+  `file_exists`, so a truncated `.png` or a `.ogg` that is really something else reaches its reader,
+  and the reader answers with null and an engine message rather than with your fallback. Check the
+  answer before using it when the file came from outside the game.
+- **Safe File Name does not know the reserved device names.** `con`, `prn`, `aux`, `nul` and `com1`
+  survive it, because `String.validate_filename` does not treat them specially, and Windows will not
+  take a file called any of them. Adding a prefix or suffix of your own - `save_` in front of the
+  player's name - is the reliable answer, and it is one row.
 - **The loaders read the path more than once.** The guard reads it, and the sound chain reads it once
   per format it checks - so put a variable in that field rather than a call with a side effect.
 - **A loaded image or sound is not a project resource.** It is not imported, it has no `.import`

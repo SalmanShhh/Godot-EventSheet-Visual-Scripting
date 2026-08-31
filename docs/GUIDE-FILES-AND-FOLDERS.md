@@ -325,9 +325,12 @@ A player names a screenshot, a save slot, a level. What they type is not a file 
 
 **Safe File Name** answers with one a file system will actually take, over the engine's own
 `String.validate_filename`: the characters it refuses become underscores and the ends are trimmed.
-It is an **expression**, so it goes in the path slot of the write that was already there rather than
-becoming a second way to save a file. Its second slot is the familiar default argument: a name that
-comes out empty answers with it, so a player who typed nothing gets a file instead of an error.
+Leading dots come off as well, because `..` is the one thing a player can type that a file system
+accepts and that is not a name at all - joined onto `user://saves` it is `user://`, the folder above
+the one the row meant. It is an **expression**, so it goes in the path slot of the write that was
+already there rather than becoming a second way to save a file. Its second slot is the familiar
+default argument: a name that comes out empty - blank, spaces, or only dots - answers with it, so a
+player who typed nothing gets a file instead of an error.
 
 **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
 does not erase the first. The rule is the one every desktop uses and it is spelled out in the emitted
@@ -342,7 +345,7 @@ extends Node
 
 func _ready() -> void:
 	var typed: String = "save 3/8?"
-	var file = FileAccess.open("user://saves/" + (typed.validate_filename() if not typed.validate_filename().is_empty() else "untitled") + ".json", FileAccess.WRITE)
+	var file = FileAccess.open("user://saves/" + (typed.validate_filename().lstrip(".") if not typed.validate_filename().lstrip(".").is_empty() else "untitled") + ".json", FileAccess.WRITE)
 	if file:
 		file.store_string("{}")
 		file.close()

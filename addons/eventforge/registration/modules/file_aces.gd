@@ -124,9 +124,16 @@ static func _names_and_doors() -> Array[ACEDescriptor]:
 ## to be joined onto a folder and an extension, and a bare `a if b else c` spliced between two `+`
 ## signs binds the whole concatenation into the branches - which is a wrong path, not a parse error,
 ## so nothing would ever have said so.
+##
+## AND THE LEADING DOTS COME OFF, because `..` is the one thing a player can type that a file system
+## accepts and that is not a NAME at all: `validate_filename` leaves it exactly as it is, and
+## `"user://saves".path_join("..")` is `user://`, which is the folder above the one the row meant.
+## Stripping the dots off the front turns it into nothing, and nothing is what the fallback is for.
+## A name that only BEGINS with a dot loses the dot and keeps the rest, which is the same answer.
 static func _safe_name_template() -> String:
-	return "{?fallback}({/fallback}{name}.validate_filename()" \
-		+ "{?fallback} if not {name}.validate_filename().is_empty() else {fallback}){/fallback}"
+	return "{?fallback}({/fallback}{name}.validate_filename().lstrip(\".\")" \
+		+ "{?fallback} if not {name}.validate_filename().lstrip(\".\").is_empty()" \
+		+ " else {fallback}){/fallback}"
 
 
 ## The free path's line.
@@ -395,12 +402,19 @@ static func _ask_template(title: String, mode: String) -> String:
 ## The sound loader's line: one reader per format the engine decodes at runtime, chosen by extension.
 ## ONE line rather than a lambda called on the spot, deliberately - an expression that spans lines is
 ## fine inside an action and a parse error inside a condition, and this one is meant to be usable in
-## both. The conditional chain binds to the right, so each reader answers for its own extension and
-## the last one is the else.
+## both. The conditional chain binds to the right, so each reader answers for its own extension.
+##
+## THE THIRD EXTENSION IS ASKED FOR TOO, whenever a fallback is named. The row's own help says the
+## fallback answers "when its extension is none of the three", and it did not: a `.flac` fell off the
+## end of the chain into the WAV reader, which answered with null and an engine error on the console.
+## So the guarded form ends at the fallback rather than at a reader, and the promise on the row is the
+## one the line keeps. The unguarded form is unchanged - nothing to fall back TO is exactly what
+## leaving the slot blank asks for.
 static func _sound_template() -> String:
 	var extension: String = "{path}.get_extension().to_lower()"
 	return "{?fallback}({/fallback}" \
 		+ "AudioStreamMP3.load_from_file({path}) if %s == \"mp3\" else " % extension \
 		+ "AudioStreamOggVorbis.load_from_file({path}) if %s == \"ogg\" else " % extension \
 		+ "AudioStreamWAV.load_from_file({path})" \
-		+ "{?fallback}) if FileAccess.file_exists({path}) else {fallback}{/fallback}"
+		+ "{?fallback} if %s == \"wav\" else {fallback}) " % extension \
+		+ "if FileAccess.file_exists({path}) else {fallback}{/fallback}"

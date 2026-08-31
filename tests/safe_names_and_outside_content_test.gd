@@ -44,8 +44,9 @@ static func _vocabulary() -> bool:
 		safe.ace_type, ACEDescriptor.ACEType.EXPRESSION) and ok
 	ok = _check("the safe name is the engine's own validate_filename, in its own brackets",
 		str(safe.codegen_template),
-		"{?fallback}({/fallback}{name}.validate_filename()"
-		+ "{?fallback} if not {name}.validate_filename().is_empty() else {fallback}){/fallback}") and ok
+		"{?fallback}({/fallback}{name}.validate_filename().lstrip(\".\")"
+		+ "{?fallback} if not {name}.validate_filename().lstrip(\".\").is_empty()"
+		+ " else {fallback}){/fallback}") and ok
 	ok = _check("the safe name's fallback is the second slot",
 		(safe.params[1] as ACEParam).id, "fallback") and ok
 
@@ -128,6 +129,19 @@ static func _runs_on_disk() -> bool:
 		.replace("{name}", "\"   \"").replace("{fallback}", "\"untitled\"")
 	ok = _check("a name that is nothing once it is safe answers the fallback",
 		_answer(blank_name), "untitled") and ok
+	# `..` IS THE ONE NAME THAT IS A PATH. The engine's own validate_filename takes it unchanged, and
+	# the documented next step is joining the answer onto a folder - where `"user://saves"` joined
+	# with ".." is `user://`, the folder ABOVE the one the row meant.
+	var climbing: String = str(by_id["SafeFileName"].codegen_template)\
+		.replace("{?fallback}", "").replace("{/fallback}", "")\
+		.replace("{name}", "\"..\"").replace("{fallback}", "\"untitled\"")
+	ok = _check("a name that is only dots is not a name, and answers the fallback",
+		_answer(climbing), "untitled") and ok
+	var hidden: String = str(by_id["SafeFileName"].codegen_template)\
+		.replace("{?fallback}", "").replace("{/fallback}", "")\
+		.replace("{name}", "\".hidden\"").replace("{fallback}", "\"untitled\"")
+	ok = _check("and a name that merely begins with one keeps the rest of itself",
+		_answer(hidden), "hidden") and ok
 	var untaken: String = str(by_id["FreeFilePath"].codegen_template)\
 		.replace("{path}", "\"%s/never_written.txt\"" % TEST_DIR).replace("{at_most}", "9")
 	ok = _check("a path with nothing at it is answered back unchanged",

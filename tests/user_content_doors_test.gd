@@ -197,6 +197,19 @@ static func _run_loaders() -> bool:
 	ok = _check("a .wav from outside the project reads as an audio stream", track is AudioStreamWAV, true) and ok
 	var no_track: Variant = _value(_emitted("LoadSoundFile", {"path": "\"user://user_content_no_such.ogg\"", "fallback": "null"}))
 	ok = _check("a sound that is not there reads as the fallback", no_track, null) and ok
+	# THE PROMISE ON THE ROW: the fallback answers "when its extension is none of the three". A file
+	# that EXISTS with a fourth extension used to fall off the end of the chain into the WAV reader,
+	# which answered with null and an engine error nobody asked for.
+	var wrong_extension: String = PROBE_WAV.get_basename() + ".flac"
+	var carried: FileAccess = FileAccess.open(wrong_extension, FileAccess.WRITE)
+	if carried != null:
+		carried.store_string("not a sound this engine decodes")
+		carried.close()
+	var undecodable: Variant = _value(_emitted("LoadSoundFile", {"path": _quote(wrong_extension),
+		"fallback": "\"fell back\""}))
+	ok = _check("a file whose extension is none of the three reads as the fallback",
+		undecodable, "fell back") and ok
+	DirAccess.remove_absolute(wrong_extension)
 	# The chain names one reader per format, so each extension has to reach its own.
 	var sound_template: String = str(_by_id()["LoadSoundFile"].codegen_template)
 	for reader: String in ["AudioStreamMP3.load_from_file", "AudioStreamOggVorbis.load_from_file",

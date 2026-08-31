@@ -277,6 +277,18 @@ These are the places the two disagreed.
   verbatim blocks for the paths in them and finds the ask by the line it opens. And both band walks
   read a function's `events` only, while a function lifted out of a hand-written file keeps its rows
   in `rows` - exactly the shape this plugin is for.
+- **Safe File Name neutralises `..`.** It is the one thing a player can type that a file system
+  accepts and that is not a name at all: `String.validate_filename` leaves it exactly as it is, and
+  the documented next step is joining the answer onto a folder, where `"user://saves"` joined with
+  `..` is `user://` - the folder above the one the row meant. Leading dots come off, so `..` answers
+  with the fallback and `.hidden` answers `hidden`. The Windows reserved device names (`con`, `nul`,
+  `com1`) still survive it, which the module page now says out loud along with the fix.
+- **Sound From File keeps the promise printed on it.** Its fallback said it answered "when its
+  extension is none of the three", and it did not: a `.flac` that existed fell off the end of the
+  reader chain into `AudioStreamWAV.load_from_file`, which answered null with an engine error on the
+  console. The guarded form now asks about the third extension too and ends at the fallback. A file
+  that is THERE but unreadable still reaches its reader and answers null - true of all three loaders,
+  and now stated in the module page rather than nowhere.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and
