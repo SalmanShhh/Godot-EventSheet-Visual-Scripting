@@ -149,7 +149,15 @@ const FUZZY_FLOOR: int = 3
 ## How many built lists are held at once. A key is one sheet and one kind, and the undo funnel
 ## replaces the sheet resource on every edit, so old keys retire naturally - the cap is what stops
 ## a long session from holding every one of them.
-const CACHE_LIMIT: int = 24
+##
+## COUNTED, NOT GUESSED, because the promise this cap has to keep is "a keystroke reads the held
+## lists and never goes looking". One ask asks three kinds per open sheet, the comment-door table
+## asks five more, and a row dialog asks one per field it draws - so a reader with a dozen tabs open
+## is already past two dozen keys, and a cap set there would rebuild a pool on EVERY keystroke, which
+## is precisely the regression the ask budget exists to catch. This holds a reader who works with far
+## more tabs than anyone does; the lists themselves are small, and a sheet that closes retires its
+## own keys the moment the resource behind them is replaced.
+const CACHE_LIMIT: int = 120
 
 ## How many project files the file source will hold. A file list is the one source that grows with
 ## the project rather than with the sheet, and a reader picking a texture is not helped by the

@@ -119,9 +119,14 @@ const ASK_BUDGET_MS: float = 16.0
 
 ## The shelf the ask is measured against: more sheets open at once than anyone works with, and the
 ## one in front bigger than the fixture's own 2,000-line script lifts to, so the number is a ceiling
-## rather than a typical case. The names of all eight are ranked; the ROWS of the front one are, and
-## that is the boundary this budget is really pinning.
-const ASK_SHEETS: int = 8
+## rather than a typical case. The names of all of them are ranked; the ROWS of the front one are,
+## and that is the boundary this budget is really pinning.
+##
+## DELIBERATELY PAST THE POOL CAP'S OLD VALUE. An ask asks three kinds per open sheet, so a pin set
+## at exactly the number of keys the cache holds could never catch the one regression it exists for:
+## a shelf one sheet larger evicts and REBUILDS a pool per keystroke instead of filtering a held one,
+## and the pin would have been sitting on the boundary rather than beyond it.
+const ASK_SHEETS: int = 14
 const ASK_ROWS_PER_SHEET: int = 1500
 
 ## One keystroke measured once is noise; this many, divided, is a number.
@@ -345,9 +350,14 @@ static func _pin_an_ask() -> bool:
 		EventSheetCompletions.FIELD_ASK_ROW).size()
 	var passed: bool = _check("the sheet in front really holds thousands of findable strings (%d)"
 		% front_rows, front_rows >= ASK_ROWS_PER_SHEET * 2, true)
-	return _check("an ask answers inside a frame (%.3f ms, budget %.1f)" % [
+	passed = _check("an ask answers inside a frame (%.3f ms, budget %.1f)" % [
 		per_keystroke_ms, ASK_BUDGET_MS],
 		per_keystroke_ms <= ASK_BUDGET_MS, true) and passed
+	# Emptied on the way OUT as well as on the way in. CI runs the whole suite serially in one
+	# process, and the pools above are keyed by the instance id of sheets that go out of scope the
+	# moment this returns - a later test handed a recycled id would read a pool built here.
+	EventSheetCompletions.clear_cache()
+	return passed
 
 
 ## One sheet of the ask shelf: states, names, and enough rows saying the word being typed that the
@@ -376,7 +386,8 @@ static func _ask_sheet(index: int) -> EventSheetResource:
 static func _ask_findings() -> Array:
 	var findings: Array = []
 	for index in 100:
-		findings.append({"check": "state-unreachable", "path": "res://ask_%02d.gd" % (index % 8),
+		findings.append({"check": "state-unreachable",
+			"path": "res://ask_%02d.gd" % (index % ASK_SHEETS),
 			"subject": "HEALING", "severity": "warning",
 			"message": "Nothing ever goes to Healing in actor %d." % index})
 	return findings
@@ -426,6 +437,11 @@ static func _pin_scene_facts(project: Dictionary) -> bool:
 		is_same(lights, lights_again), true) and passed
 	passed = _check("the material wearers of a scene are held and handed out by reference",
 		is_same(wearers, wearers_again), true) and passed
+	# Dropped on the way out for the same reason it is dropped on the way in: a project-wide cache
+	# warmed by a fabricated corpus must not still be standing when the next test of a serial run
+	# asks the same question.
+	EventSheetSceneLights.clear_cache()
+	EventSheetSceneEffects.clear_cache()
 	return passed
 
 
@@ -451,9 +467,12 @@ static func _pin_the_shader_corpus(project: Dictionary) -> bool:
 	passed = _check("%d shaders parse from cold under %d ms (took %.1f ms)" % [
 		shaders.size(), SHADER_CORPUS_BUDGET_MS, cold_ms],
 		cold_ms <= float(SHADER_CORPUS_BUDGET_MS), true) and passed
-	return _check("%d shaders answer again under %d ms (took %.1f ms)" % [
+	passed = _check("%d shaders answer again under %d ms (took %.1f ms)" % [
 		shaders.size(), SHADER_CORPUS_WARM_BUDGET_MS, warm_ms],
 		warm_ms <= float(SHADER_CORPUS_WARM_BUDGET_MS), true) and passed
+	# And emptied again, so a fabricated corpus is not still warm under the next test of a serial run.
+	EventForgeShaderUniforms.clear_cache()
+	return passed
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

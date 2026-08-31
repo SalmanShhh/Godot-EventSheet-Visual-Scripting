@@ -297,6 +297,13 @@
   `is_equal_approx`, which is not transitive, so the sort was free to produce a different interleave
   for the same ring - against the file's own claim that two copies of a game interleave the same way
   twice. A moment is a frame count times a constant, so it is compared exactly.
+- **"Read the held lists, never look" survives more than eight open tabs.** The completion pool cache
+  held 24 lists and one ask asks three kinds per open sheet, so a ninth tab - with the comment-door
+  table's five more keys already in there - evicted and REBUILT a pool on every keystroke, which is
+  exactly the regression the ask budget exists to catch. The cap now holds a reader with far more
+  tabs than anyone works with, and the budget's shelf sits well past the boundary instead of exactly
+  on it, so the pin can see the thing it is for. The three budget pins also drop the project-wide
+  caches they warm on the way OUT, not only on the way in, which is the serial-CI rule.
 
 ### A path says which place it is in
 
