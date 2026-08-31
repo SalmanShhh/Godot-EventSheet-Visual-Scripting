@@ -40,8 +40,10 @@ class_name EventSheetFileFacts
 extends RefCounted
 
 ## The parameter hint every path field carries. One hint, so a pack's path field is found exactly as
-## a builtin one is.
-const PATH_HINT: String = "file_path"
+## a builtin one is - and the SAME one the Doctor's fixes derive their path parameters from, spelled
+## once in EventForgeFilePlaces so the band and the fix can never disagree about which field is a
+## path.
+const PATH_HINT: String = EventForgeFilePlaces.PATH_HINT
 
 ## The class a verb is declared on when the verb's whole job is to ask the player for a file.
 const CHOOSER_CLASS: String = "FileDialog"

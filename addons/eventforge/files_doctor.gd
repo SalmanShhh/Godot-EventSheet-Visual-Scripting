@@ -132,11 +132,48 @@ static func res_write_findings(sources: Dictionary) -> Array[Dictionary]:
 ## A READ of res:// is never here: reading the game's own files is what res:// is for.
 static func res_write_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	for line: String in _statements_of(source):
-		for literal: String in _write_path_literals(line):
+	var statements: PackedStringArray = _statements_of(source)
+	var packers: PackedStringArray = _packer_names(statements)
+	for line: String in statements:
+		var literals: PackedStringArray = _write_path_literals(line)
+		literals.append_array(_packer_open_literals(line, packers))
+		for literal: String in literals:
 			if EventForgeFilePlaces.place_of("\"%s\"" % literal) == EventForgeFilePlaces.PLACE_RES:
 				found.append(line)
 				break
+	return found
+
+
+## The names this source binds to a `ZIPPacker`, in the order they are bound. An archive is written
+## through a NAME - `var zip := ZIPPacker.new()` on one line, `zip.open(path)` on another - so the
+## write is followed by the name, which is also what keeps a ZIPReader's identical `open(` out of the
+## answer. Only a plain `<name> = ZIPPacker.new()` is followed; a packer held in an array or a field
+## is one this check has nothing to say about, exactly as a built path is.
+static func _packer_names(statements: PackedStringArray) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for line: String in statements:
+		if not line.contains(EventForgeFilePlaces.PACKER_CLASS):
+			continue
+		var equals_at: int = line.find("=")
+		if equals_at < 0 or equals_at > line.find(EventForgeFilePlaces.PACKER_CLASS):
+			continue
+		var left: String = line.substr(0, equals_at).strip_edges().trim_suffix(":")
+		left = left.trim_prefix("var ").split(":")[0].strip_edges()
+		if not left.is_empty() and not left.contains(" ") and not names.has(left):
+			names.append(left)
+	return names
+
+
+## The path literals one line hands to a packer's `open`, which is the line that WRITES the archive.
+static func _packer_open_literals(line: String, packers: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for packer_name: String in packers:
+		var mark: String = packer_name + EventForgeFilePlaces.OPEN_CALL
+		var at: int = line.find(mark)
+		while at >= 0:
+			for literal: String in _quoted_literals(_arguments_after(line, at + mark.length())):
+				found.append(literal)
+			at = line.find(mark, at + mark.length())
 	return found
 
 
@@ -389,7 +426,8 @@ static func _walk_value_rows(rows: Array, visitor: Callable) -> void:
 
 ## The new value one path parameter would take under the res://-write rule, or "" for one this rule
 ## leaves alone. Write-shaped parameters only: reading res:// is correct and is never rewritten.
-static func _res_write_rewrite(ace_id: String, param_id: String, value: String) -> String:
+static func _res_write_rewrite(_provider_id: String, ace_id: String, param_id: String,
+		value: String) -> String:
 	if not EventForgeFilePlaces.write_params_of(ace_id).has(param_id):
 		return ""
 	var literal: String = EventForgeFilePlaces.literal_of(value)
@@ -401,8 +439,9 @@ static func _res_write_rewrite(ace_id: String, param_id: String, value: String) 
 
 ## The new value one path parameter would take under the absolute-path rule. EVERY path parameter,
 ## write-shaped or not: a drive letter in a read is as unshippable as one in a write.
-static func _absolute_path_rewrite(ace_id: String, param_id: String, value: String) -> String:
-	if not EventForgeFilePlaces.path_params_of(ace_id).has(param_id):
+static func _absolute_path_rewrite(provider_id: String, ace_id: String, param_id: String,
+		value: String) -> String:
+	if not EventForgeFilePlaces.path_params_of(ace_id, provider_id).has(param_id):
 		return ""
 	var literal: String = EventForgeFilePlaces.literal_of(value)
 	if literal.is_empty() or not EventForgeFilePlaces.is_absolute_os_path(literal):
@@ -415,7 +454,7 @@ static func _absolute_path_rewrite(ace_id: String, param_id: String, value: Stri
 static func _receipt(sheet: EventSheetResource, rule: Callable) -> Array[Dictionary]:
 	var receipt: Array[Dictionary] = []
 	_walk(sheet, func(action: ACEAction, param_id: String, value: String) -> bool:
-		var rewritten: String = str(rule.call(action.ace_id, param_id, value))
+		var rewritten: String = str(rule.call(str(action.provider_id), action.ace_id, param_id, value))
 		if rewritten.is_empty():
 			return false
 		receipt.append({"before": value, "after": rewritten})
@@ -427,7 +466,7 @@ static func _receipt(sheet: EventSheetResource, rule: Callable) -> Array[Diction
 static func _rewrite(sheet: EventSheetResource, rule: Callable) -> int:
 	var changed: Array[int] = [0]
 	_walk(sheet, func(action: ACEAction, param_id: String, value: String) -> bool:
-		var rewritten: String = str(rule.call(action.ace_id, param_id, value))
+		var rewritten: String = str(rule.call(str(action.provider_id), action.ace_id, param_id, value))
 		if rewritten.is_empty():
 			return false
 		(action.params as Dictionary)[param_id] = rewritten
@@ -461,7 +500,8 @@ static func _walk_rows(rows: Array, visitor: Callable) -> void:
 				if not (action is ACEAction):
 					continue
 				var typed: ACEAction = action
-				for param_id: String in EventForgeFilePlaces.path_params_of(typed.ace_id):
+				for param_id: String in EventForgeFilePlaces.path_params_of(typed.ace_id,
+						str(typed.provider_id)):
 					visitor.call(typed, param_id, str((typed.params as Dictionary).get(param_id, "")))
 			_walk_rows(event.sub_events, visitor)
 

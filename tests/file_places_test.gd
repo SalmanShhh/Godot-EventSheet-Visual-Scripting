@@ -34,6 +34,7 @@ const TEST_DIR := "user://__fileplaces_test"
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_places() and passed
+	passed = _test_tables_cover_the_vocabulary() and passed
 	passed = _test_leads() and passed
 	passed = _test_visible_guard() and passed
 	passed = _test_folder_prelude() and passed
@@ -85,6 +86,61 @@ static func _test_places() -> bool:
 		P.has_folders("\"user://runs/latest.txt\""), true) and passed
 	passed = _check("a path at the root of user:// has no folders",
 		P.has_folders("\"user://save.dat\""), false) and passed
+	return passed
+
+
+# ── 1b. The tables answer for the whole vocabulary, not for the half that was written first ──
+
+
+## THE FIX TABLES MUST NOT DRIFT FROM THE VOCABULARY, which is exactly what they did: nine path
+## fields shipped in the same pass that wrote both halves, and every one of them was invisible to
+## both one-click fixes - including two WRITES, so a row aimed at res:// raised the export-trap
+## warning and the chip beside it then answered that there was nothing to fix.
+##
+## Both halves are gated against the vocabulary itself rather than against a list:
+##   - every `file_path`-hinted parameter of every registered verb is one `path_params_of` names,
+##     because that answer is DERIVED from the hint;
+##   - every verb whose emitted template makes a WRITE call and carries a path field is in
+##     WRITE_SHAPED, which stays hand-kept because no hint can say whether a row reads or overwrites.
+static func _test_tables_cover_the_vocabulary() -> bool:
+	var passed: bool = true
+	var unreachable: PackedStringArray = PackedStringArray()
+	var unclassified: PackedStringArray = PackedStringArray()
+	for descriptor: ACEDescriptor in ACERegistry.get_builtin_descriptors():
+		var hinted: PackedStringArray = PackedStringArray()
+		for entry: Variant in descriptor.params:
+			var param: ACEParam = entry as ACEParam
+			if param != null and str(param.hint) == P.PATH_HINT:
+				hinted.append(str(param.id))
+		if hinted.is_empty():
+			continue
+		var named: PackedStringArray = P.path_params_of(str(descriptor.ace_id),
+			str(descriptor.provider_id))
+		for param_id: String in hinted:
+			if not named.has(param_id):
+				unreachable.append("%s.%s" % [descriptor.ace_id, param_id])
+		if EventSheetFileFacts.touch_of(str(descriptor.codegen_template)) in [
+				EventSheetFileFacts.TOUCH_WRITTEN, EventSheetFileFacts.TOUCH_BOTH]:
+			if P.write_params_of(str(descriptor.ace_id)).is_empty():
+				unclassified.append(str(descriptor.ace_id))
+	unreachable.sort()
+	unclassified.sort()
+	passed = _check("every path field of every verb is one the fixes can reach",
+		unreachable, PackedStringArray()) and passed
+	passed = _check("and every verb that writes one says which parameter it writes",
+		unclassified, PackedStringArray()) and passed
+	# The three the pass shipped without telling the tables about them.
+	passed = _check("packing writes the archive it names",
+		P.write_params_of("PackFolderIntoZip"), PackedStringArray(["archive"])) and passed
+	passed = _check("unpacking writes the folder it lands in",
+		P.write_params_of("UnpackZipIntoFolder"), PackedStringArray(["folder"])) and passed
+	passed = _check("writing a table writes its file",
+		P.write_params_of("WriteFileTable"), PackedStringArray(["path"])) and passed
+	# Derived, so a verb this file has never named answers anyway.
+	passed = _check("the loader's path is found by its hint alone",
+		P.path_params_of("LoadImageFile"), PackedStringArray(["path"])) and passed
+	passed = _check("and a verb no registry knows falls back to the written-down table",
+		P.path_params_of("CopyFile", "NoSuchProvider"), PackedStringArray(["from", "to"])) and passed
 	return passed
 
 
@@ -204,6 +260,9 @@ const CLEAN_RES_WRITE := "func _ready() -> void:\n\tvar file = FileAccess.open(\
 const CLEAN_RES_READ := "func _ready() -> void:\n\tvar file = FileAccess.open(\"res://level.dat\", FileAccess.READ)\n\tprint(file.get_as_text())\n"
 const BUG_ABSOLUTE := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"D:/games/save.dat\"))\n"
 const CLEAN_ABSOLUTE := "func _ready() -> void:\n\tprint(FileAccess.get_file_as_string(\"user://save.dat\"))\n"
+const BUG_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"res://runs.zip\") == OK:\n\t\tpacker.close()\n"
+const CLEAN_RES_ARCHIVE := "func _ready() -> void:\n\tvar packer := ZIPPacker.new()\n\tif packer.open(\"user://runs.zip\") == OK:\n\t\tpacker.close()\n"
+const CLEAN_RES_UNPACK := "func _ready() -> void:\n\tvar reader := ZIPReader.new()\n\tif reader.open(\"res://runs.zip\") == OK:\n\t\treader.close()\n"
 const BUG_UNGUARDED := "func _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://save.dat\")\n"
 const CLEAN_GUARDED := "func _ready() -> void:\n\tvar text = FileAccess.get_file_as_string(\"user://save.dat\") if FileAccess.file_exists(\"user://save.dat\") else \"\"\n"
 
@@ -226,6 +285,21 @@ static func _test_doctor_checks() -> bool:
 	# it would be a check people switch off.
 	passed = _check("a READ of res:// is silent",
 		EventSheetFilesDoctor.res_write_findings({"res://ok.gd": CLEAN_RES_READ}).size(), 0) and passed
+	# AN ARCHIVE IS A WRITE TOO. The files band already reads a packing row as written, so a check
+	# that could not see one would be a second reading of the same row - and the archive is the one
+	# file a project is most likely to aim at res:// by habit.
+	var packed: Array[Dictionary] = EventSheetFilesDoctor.res_write_findings(
+		{"res://trap.gd": BUG_RES_ARCHIVE})
+	passed = _check("an archive written to res:// is the same warning", _severities(packed),
+		PackedStringArray(["warning"])) and passed
+	passed = _check("naming the line that opens the packer", str(packed[0]["subject"]),
+		"if packer.open(\"res://runs.zip\") == OK:") and passed
+	passed = _check("the same archive under user:// is silent",
+		EventSheetFilesDoctor.res_write_findings({"res://ok.gd": CLEAN_RES_ARCHIVE}).size(), 0) and passed
+	# A READER'S `open` is the identical call and must stay silent: reading an archive out of res://
+	# is what res:// is for.
+	passed = _check("and reading an archive out of res:// is silent",
+		EventSheetFilesDoctor.res_write_findings({"res://ok.gd": CLEAN_RES_UNPACK}).size(), 0) and passed
 
 	var absolute: Array[Dictionary] = EventSheetFilesDoctor.absolute_path_findings(
 		{"res://trap.gd": BUG_ABSOLUTE})
@@ -300,6 +374,21 @@ static func _test_fixes() -> bool:
 		EventSheetFilesDoctor.rewrite_res_writes(sheet), 0) and passed
 	passed = _check("the respelling has nothing left to do",
 		EventSheetFilesDoctor.respell_guarded_reads(sheet), 0) and passed
+	# THE VERBS THE PASS SHIPPED AFTER THE TABLE WAS WRITTEN. A Write Table To File aimed at res://
+	# raised the warning and the chip beside it then answered that there was nothing to fix, because
+	# the fix table had never heard of the verb.
+	var late: EventSheetResource = _sheet_with([
+		_action("WriteFileTable", {"path": "\"res://scores.csv\"", "table": "rows"}),
+		_action("PackFolderIntoZip", {"folder": "\"user://runs\"", "archive": "\"res://runs.zip\""}),
+		_action("UnpackZipIntoFolder", {"archive": "\"user://mods.zip\"", "folder": "\"res://mods\""}),
+	])
+	passed = _check("the receipt names all three of the late writes",
+		EventSheetFilesDoctor.res_write_receipt(late),
+		[{"before": "\"res://scores.csv\"", "after": "\"user://scores.csv\""},
+			{"before": "\"res://runs.zip\"", "after": "\"user://runs.zip\""},
+			{"before": "\"res://mods\"", "after": "\"user://mods\""}]) and passed
+	passed = _check("and the fix moves all three", EventSheetFilesDoctor.rewrite_res_writes(late),
+		3) and passed
 	# A read of res:// is correct, so the export-trap fix must never touch one.
 	var reader: EventSheetResource = _sheet_with([_action("ReadTextFile", {"path": "\"res://level.dat\""})])
 	passed = _check("the export-trap fix leaves a res:// READ alone",

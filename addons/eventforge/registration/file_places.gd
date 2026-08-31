@@ -41,6 +41,11 @@ const RES_SCHEME := "res://"
 ## The verbs that WRITE, with the parameters that carry the path each one writes to. A write aimed at
 ## res:// is the export trap; a read aimed at res:// is exactly right and is never reported. Frozen
 ## alongside the ace_ids themselves: a fix addresses a row through this table.
+## WHICH VERBS WRITE IS THE ONE THING NO HINT CAN SAY. A path field says it is a path; nothing about
+## it says whether the row reads it or overwrites it, and the two answers are the whole difference
+## between the export trap and a perfectly correct row. So this stays a written-down table, and the
+## suite gates it against what the templates actually compile to: a verb whose emitted line makes a
+## write call and carries a path field must be in here.
 const WRITE_SHAPED: Dictionary = {
 	"WriteTextFile": ["path"],
 	"AppendTextFile": ["path"],
@@ -50,11 +55,23 @@ const WRITE_SHAPED: Dictionary = {
 	"CopyFile": ["to"],
 	"MakeDir": ["path"],
 	"RemoveDir": ["path"],
+	# The engine's own CSV writer, and the two archive verbs. A pack writes into the folder it
+	# unpacks into and reads the archive it unpacks; a pack row writes the archive and reads the
+	# folder, which is why each names exactly one of its two paths here.
+	"WriteFileTable": ["path"],
+	"PackFolderIntoZip": ["archive"],
+	"UnpackZipIntoFolder": ["folder"],
 }
 
-## Every file verb's path parameters, write-shaped or not. The absolute-path check reads this one:
-## an absolute path is wrong in a read as well as in a write, because the folder it names is on
-## exactly one computer.
+## The hint every path field carries. The ONE mark a path field is known by - the field lead, the
+## files band and the walk below all ask this and nothing else.
+const PATH_HINT := "file_path"
+
+## The path parameters of the verbs this file must know about even with no registry to ask: the
+## OVERRIDE list, not the answer. `path_params_of` derives its answer from the verb's own descriptor
+## by the hint above, so a path field a pack ships is seen the day the pack ships and a verb added
+## tomorrow needs no entry here; this table is what answers when the registry has nothing (a check
+## run over text alone, a fixture built with no descriptors loaded).
 const PATH_PARAMS: Dictionary = {
 	"FileExists": ["path"],
 	"ReadTextFile": ["path"],
@@ -83,6 +100,16 @@ const WRITE_CALLS: PackedStringArray = [
 	"FileAccess.open(", "DirAccess.remove_absolute(", "DirAccess.rename_absolute(",
 	"DirAccess.copy_absolute(", "DirAccess.make_dir_recursive_absolute(",
 ]
+
+## The archive writer, and the call that names the file it writes. An archive written to res:// is
+## the export trap said one more way - and the files band already reads a packing row as WRITTEN off
+## this very class, so a check that could not see it would be a second reading of the same row.
+##
+## A PACKER IS A NAME FIRST AND A WRITE SECOND: `var zip := ZIPPacker.new()` on one line and
+## `zip.open(path)` on another, whatever the name is. So it is followed by the name rather than
+## matched as one call text, which is also what keeps a ZIPReader's identical `open(` out of it.
+const PACKER_CLASS := "ZIPPacker.new("
+const OPEN_CALL := ".open("
 
 ## The call a plain read is spelled with, and the question that guards one.
 const READ_CALL := "FileAccess.get_file_as_string("
@@ -260,7 +287,22 @@ static func writes(ace_id: String) -> bool:
 
 ## The parameters of one verb that carry a path, in declaration order. Empty for a verb that has
 ## none, which is how a caller walks every row of a sheet without a table of its own.
-static func path_params_of(ace_id: String) -> PackedStringArray:
+##
+## DERIVED FROM THE VERB ITSELF, by the same `file_path` hint the field lead and the files band read.
+## A hand-kept list of every path field in the vocabulary is a list that drifts from the vocabulary -
+## it did, in the very pass that wrote both halves, and nine path fields including two writes went
+## unreachable by the Doctor's fixes while looking like they worked. The table above answers only
+## when the registry has nothing to say about this id.
+static func path_params_of(ace_id: String, provider_id: String = "Core") -> PackedStringArray:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+	if descriptor != null:
+		var found: PackedStringArray = PackedStringArray()
+		for entry: Variant in descriptor.params:
+			var param: ACEParam = entry as ACEParam
+			if param != null and str(param.hint) == PATH_HINT:
+				found.append(str(param.id))
+		if not found.is_empty():
+			return found
 	return PackedStringArray(PATH_PARAMS.get(ace_id, []))
 
 

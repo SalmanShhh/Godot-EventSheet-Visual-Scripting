@@ -242,6 +242,19 @@ These are the places the two disagreed.
   Compare Values row, the guarded read quietly BECAME the file's text instead of a comparison of it.
   Wrong answer, not a parse error, so nothing would ever have said so. All three are bracketed now,
   and the suite runs a guarded read inside a comparison to prove it.
+- **The Doctor's fixes read the vocabulary rather than a list of it.** The table naming each verb's
+  path fields was hand-kept, and it had already drifted from the verbs shipped beside it: nine path
+  fields - both loaders, both archive verbs, the engine's CSV pair and the line loop - were invisible
+  to both one-click fixes, so a **Write Table To File** aimed at `res://` raised the export-trap
+  warning and the chip beside it then answered that there was nothing to fix. Path fields are now
+  DERIVED from the same `file_path` hint the files band reads, spelled once for both. Which verbs
+  WRITE stays a written-down table, because no hint can say that - and the suite now fails when a
+  verb whose emitted line makes a write call is missing from it.
+- **An archive written to `res://` is the export trap too.** The sweep never learned `ZIPPacker`, so
+  a **Pack Folder Into Zip** aimed at `res://runs.zip` produced no finding at all while the files
+  band at the top of the same sheet called that row *written*. It is followed by the name the packer
+  is bound to, so a reader's identical `open(` stays silent - reading an archive out of `res://` is
+  what `res://` is for.
 
 ### Every call on a known class is a row
 
