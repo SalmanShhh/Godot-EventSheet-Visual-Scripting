@@ -243,6 +243,14 @@
   not stop when the tree is paused, so a game in its **Paused** mode goes on counting every object's
   hold and the timed rows answer the instant play resumes. The guide and the parameter's own comment
   say so, and name the ordinary shape for a timer that has to stop with the game.
+- **A live frame names an enum member by its VALUE, not by its position.** The streamed `state` and
+  `mode` were read as `State.keys()[state]`, which is only right while every member takes the default
+  value: an enum that names one - `enum State { PATROL, CHASE, STAGGER = 7 }`, ordinary hand-written
+  GDScript and exactly the shape this family exists to welcome - streamed the wrong member or ran off
+  the end of the key list four times a second in the player. All three entries now ask
+  `find_key`, and `state_play_mode_test` lifts the compiler's own frame line out of the compiled file
+  and RUNS it against a member that names its value, which is a class of defect a byte pin cannot
+  see.
 
 ### A path says which place it is in
 

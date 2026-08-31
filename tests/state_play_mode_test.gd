@@ -26,7 +26,9 @@ const STARTS_IN: String = "Patrol"
 
 ## What the running game adds to its values frame when the object has states. Pinned as BYTES,
 ## because "the editor reads what the compiler writes" is exactly the pair of halves that drifts.
-const STATE_ENTRY: String = "\"state\", State.keys()[state]"
+## Asked BY VALUE rather than by position: an enum member may name its own value, and a key list
+## indexed by one would be reading a different member or running off the end.
+const STATE_ENTRY: String = "\"state\", State.find_key(state)"
 const SECONDS_ENTRY: String = "\"state_seconds\", (Time.get_ticks_msec() - state_entered_msec) / 1000.0"
 
 ## The debugger messages a compiled sheet is allowed to send. Frozen: this feature adds none, which
@@ -65,7 +67,71 @@ static func run() -> bool:
 	ok = _test_the_progress_is_read_off_the_row() and ok
 	ok = _test_nothing_is_drawn_over_the_game() and ok
 	ok = _test_the_band_row_is_found_by_its_own_metadata() and ok
+	ok = _test_an_enum_that_names_its_own_values() and ok
 	EventSheetStateWatch.clear()
+	return ok
+
+
+# -- An enum member that names its own value ----------------------------------------------------
+## `enum State { PATROL, CHASE, STAGGER = 7 }` is ordinary hand-written GDScript, and the whole pitch
+## of this family is that an object which wrote its states by hand already has the feature. A frame
+## that read the key list BY POSITION answered the wrong member for such an enum, or ran off the end
+## of the list four times a second in the player - and a byte pin over the shipped shape could not
+## see it, because the bytes were consistent and only the meaning was wrong.
+##
+## So this RUNS the emitted expression: the compiler's own `__live_frame` line is lifted out of the
+## compiled file verbatim and evaluated against an object whose state is 7. Nothing is re-spelled
+## here, which is what makes the pin about the compiler rather than about this test.
+static func _test_an_enum_that_names_its_own_values() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	sheet.emit_live_values = true
+	var declared: EnumRow = EnumRow.new()
+	declared.enum_name = EventSheetStateFacts.ENUM_NAME
+	declared.members = PackedStringArray(["PATROL", "CHASE", "STAGGER = 7"])
+	sheet.events.append(declared)
+	var state_var: LocalVariable = LocalVariable.new()
+	state_var.name = EventSheetStateFacts.STATE_VARIABLE
+	state_var.type_name = EventSheetStateFacts.ENUM_NAME
+	state_var.default_value = "State.PATROL"
+	state_var.expression_default = true
+	sheet.events.append(state_var)
+	var since: LocalVariable = LocalVariable.new()
+	since.name = EventSheetStateFacts.SINCE_VARIABLE
+	since.type_name = "int"
+	since.default_value = EventSheetStateFacts.SINCE_INITIAL
+	since.expression_default = true
+	sheet.events.append(since)
+	var emitted: String = _emit(sheet)
+	var frame_line: String = ""
+	for line: String in emitted.split("\n"):
+		if line.strip_edges().begins_with("var __live_frame: Array = ["):
+			frame_line = line.strip_edges()
+			break
+	var ok: bool = _check("the compiled object builds a values frame", frame_line.is_empty(), false)
+	if frame_line.is_empty():
+		return false
+	var probe: PackedStringArray = PackedStringArray([
+		"extends RefCounted",
+		"enum %s { %s }" % [EventSheetStateFacts.ENUM_NAME, ", ".join(declared.members)],
+		"var %s: %s = %s.STAGGER" % [EventSheetStateFacts.STATE_VARIABLE,
+			EventSheetStateFacts.ENUM_NAME, EventSheetStateFacts.ENUM_NAME],
+		"var %s: int = %s" % [EventSheetStateFacts.SINCE_VARIABLE,
+			EventSheetStateFacts.SINCE_INITIAL],
+		"func frame() -> Array:",
+		"\t%s" % frame_line,
+		"\treturn __live_frame",
+		"",
+	])
+	var script: GDScript = GDScript.new()
+	script.source_code = "\n".join(probe)
+	ok = _check("and that frame is a script that runs", script.reload(), OK) and ok
+	if script.reload() != OK:
+		return false
+	var frame: Array = (script.new() as Object).call("frame")
+	var at: int = frame.find(EventSheetStateWatch.STATE_KEY)
+	ok = _check("a member that names its own value still streams as its own name",
+		"" if at < 0 or at + 1 >= frame.size() else str(frame[at + 1]), "STAGGER") and ok
 	return ok
 
 
@@ -85,7 +151,7 @@ static func _test_the_stream_is_the_one_that_shipped() -> bool:
 		_message_names(emitted), PackedStringArray(["eventsheets:live_values"])) and ok
 	# The editor reads exactly the names the compiler writes. Two halves, one pin.
 	ok = _check("the editor reads the state under the name the game sends it",
-		emitted.contains("\"%s\", State.keys()" % EventSheetStateWatch.STATE_KEY), true) and ok
+		emitted.contains("\"%s\", State.find_key" % EventSheetStateWatch.STATE_KEY), true) and ok
 	ok = _check("and the seconds under theirs",
 		emitted.contains("\"%s\", (Time.get_ticks_msec()" % EventSheetStateWatch.SECONDS_KEY), true) and ok
 	# And the seconds are not a number invented for a readout: they are the left-hand side of the

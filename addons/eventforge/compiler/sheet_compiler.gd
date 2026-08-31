@@ -465,16 +465,21 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		# is in is not a knob a designer turns - so it is not in the list above. It is also the first
 		# value anybody watching a running game wants, so a sheet that declares modes streams it and
 		# its stack, as the NAMES rather than as the numbers a reader would have to count out.
+		# BY VALUE, NEVER BY POSITION. `Mode.keys()[mode]` reads the enum's key list as though a
+		# member's value were its index, which is only true while every member takes the default. An
+		# enum that names one (`STAGGER = 7`) is ordinary hand-written GDScript and the feature
+		# supports it everywhere else, so an index would stream out of bounds four times a second in
+		# the player. `find_key` asks the question that was meant: which member holds this value.
 		if _declares_modes(all_events):
-			payload_parts.append("\"mode\", Mode.keys()[mode]")
-			payload_parts.append("\"mode_stack\", mode_stack.map(func(__m: int) -> String: return Mode.keys()[__m])")
+			payload_parts.append("\"mode\", Mode.find_key(mode)")
+			payload_parts.append("\"mode_stack\", mode_stack.map(func(__m: int) -> String: return str(Mode.find_key(__m)))")
 		# And an OBJECT's own state, the same fact one level down and streamed the same way: the
 		# state as its NAME rather than as a number a reader would have to count out, and how long it
 		# has held. The second entry is deliberately not a number invented for a readout - it is the
 		# left-hand side of the line Is in X for over Ns compiles to, character for character, so the
 		# editor's progress beside that row is the very quantity the row compares.
 		if _declares_states(all_events):
-			payload_parts.append("\"state\", State.keys()[state]")
+			payload_parts.append("\"state\", State.find_key(state)")
 			payload_parts.append("\"state_seconds\", (Time.get_ticks_msec() - state_entered_msec) / 1000.0")
 		if payload_parts.is_empty():
 			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream - add some or turn the toggle off.")
