@@ -37,6 +37,7 @@ const BAND_EFFECT: String = "effect"
 const BAND_ANIMATIONS: String = "animations"
 const BAND_TRANSFORM: String = "transform"
 const BAND_COLLISIONS: String = "collisions"
+const BAND_FILES: String = "files"
 const BAND_MODES: String = "modes"
 const BAND_REMEMBER: String = "remember"
 const BAND_INCLUDE: String = "include"
@@ -55,7 +56,7 @@ const ORDER: PackedStringArray = [
 	BAND_NAME, BAND_EXTENDS, BAND_ICON, BAND_TOOL, BAND_DESCRIPTION,
 	BAND_AUTOLOAD, BAND_HOST, BAND_SYNC, BAND_SPAWNED, BAND_SPAWNS,
 	BAND_LIT_BY, BAND_SHADOWS, BAND_ENVIRONMENT, BAND_EFFECT, BAND_ANIMATIONS, BAND_TRANSFORM,
-	BAND_COLLISIONS,
+	BAND_COLLISIONS, BAND_FILES,
 	BAND_MODES, BAND_REMEMBER, BAND_INCLUDE, BAND_ATTACH,
 ]
 
@@ -74,6 +75,7 @@ const SCENE_BANDS: Dictionary = {
 	BAND_ANIMATIONS: "animations",
 	BAND_TRANSFORM: "transform",
 	BAND_COLLISIONS: "collisions",
+	BAND_FILES: "files",
 }
 
 ## The leader word each band opens with - the keyword of the line it stands for. The name band has
@@ -96,6 +98,7 @@ const LEADERS: Dictionary = {
 	BAND_ANIMATIONS: "animations",
 	BAND_TRANSFORM: "transform",
 	BAND_COLLISIONS: "collisions",
+	BAND_FILES: "files",
 	BAND_MODES: "modes",
 	BAND_REMEMBER: "remember",
 	BAND_INCLUDE: "include",
@@ -289,7 +292,7 @@ static func _scene_bands(kind: String, head_facts: Dictionary) -> Array[Dictiona
 static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	var facts: Dictionary = {"synchronizers": [], "spawned_by": [], "spawns": [],
 		"lit_by": [], "shadow_facts": [], "environment": [], "effect": [], "animations": [],
-		"transform": [], "collisions": []}
+		"transform": [], "collisions": [], "files": []}
 	if sheet == null:
 		return facts
 	var source_path: String = str(sheet.external_source_path)
@@ -324,6 +327,10 @@ static func scene_facts(sheet: EventSheetResource) -> Dictionary:
 	# All three live in the `.tscn` and none of them is visible from the row that depends on them,
 	# which is why a sheet whose node collides wears them at the top of it.
 	facts["collisions"] = EventSheetSceneCollisionFacts.bands(source_path)
+	# And what it touches ON DISK: the paths its own rows write, the paths they read, and whether it
+	# stops to ask the player for one. Read off the rows already in memory - nothing here opens a
+	# file to find out what a file row says.
+	facts["files"] = EventSheetFileFacts.bands(sheet)
 	var scene: Dictionary = EventSheetSceneReplication.for_script(str(sheet.external_source_path))
 	for entries: Variant in EventSheetSceneReplication.by_synchronizer(scene.get("synced", [])).values():
 		var group: Array = entries

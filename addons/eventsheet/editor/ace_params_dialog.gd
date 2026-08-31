@@ -3540,6 +3540,11 @@ static func row_code_line(definition: ACEDefinition, values: Dictionary) -> Stri
 	var template: String = str(definition.metadata.get("codegen_template", ""))
 	if template.strip_edges().is_empty():
 		return ""
+	# A STATED CHOICE picks a SHAPE, not a value, so the choice is collapsed before the values are
+	# dropped in - exactly as the compiler does it. Without this the echo showed the template's own
+	# `{?key=word}` marks, which is the one thing an echo must never do: it would be reading out a
+	# line the file will not hold.
+	template = ActionCodegen.collapse_optional_segments(template, values)
 	for key: Variant in values.keys():
 		template = template.replace("{%s}" % str(key), str(values[key]))
 	return template

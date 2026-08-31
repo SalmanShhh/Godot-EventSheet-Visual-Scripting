@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Tables read by the engine itself, and the files band
+
+- **Table Of File** reads a `.csv` with **Godot's own CSV reader** - `FileAccess.get_csv_line`, one
+  line at a time, no new parser - so its quoting is whatever the engine does with a quote rather than
+  whatever this plugin decided. It is an ordinary expression: put it in a Set action and you have the
+  rows. Its **First line** parameter is a stated choice with two answers - *the first line names the
+  columns*, which gives one record per row (`row["price"]`), and *every line is a row*, which is what
+  a headerless export needs and what the shipped Table From File cannot say.
+- **Write Table To File** is its inverse, through `store_csv_line`. A cell holding the separator or a
+  quote is quoted the way the engine quotes it, so a file read by one and written by the other comes
+  back byte for byte - which the suite asserts on the file's actual bytes, not on the values. When a
+  header line is written, the columns come from the FIRST record's own field order: the only order
+  the sheet ever stated.
+- **For Each Line In File** walks a text file line by line in the loop lane, the line riding as
+  `line`. The file is read once and the loop then walks text in memory, so nothing stays open behind
+  it; blank lines are skipped and Windows and old-Mac endings are both handled.
+- The shipped **Table From File**, **Table From Text**, **Column Of Table** and **Row Where** are
+  untouched: a shipped `ace_id` and its template are a compatibility promise, so the engine-reader
+  pair sits beside them, and the guide says which to pick and why.
+- **The files band.** The head of a sheet now says what that sheet touches on disk: every path its own
+  rows hold, exactly as the row holds it - place and all - with one word for what it does to it,
+  **written**, **read**, or **read and written** when the same file is both. A row that stops and asks
+  the player for a file says so once, however many rows do it. The band is derived rather than listed:
+  path fields are found by the hint every path field carries, and each row is classified by the engine
+  calls its own emitted line makes, so a path field a behaviour pack ships is on the band the day the
+  pack ships. It obeys the band scale law - four paths named, the rest counted - and is joined from
+  rows already in memory when the sheet opens, never scanned for.
+- Game saves remain the Save System's territory; the guide states the line between the two rather
+  than restating its verbs.
+
 ### A path says which place it is in
 
 - **Every path field states its place.** Under each path box in the Files vocabulary sits a muted

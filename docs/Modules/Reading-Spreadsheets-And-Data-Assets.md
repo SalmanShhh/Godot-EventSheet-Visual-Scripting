@@ -6,6 +6,8 @@ rows?" - plus the expressions that tell you why a load went wrong.
 The first pipeline is **a designer edits a spreadsheet**. **Table From File** reads a `.csv` whose
 first line is the column names and hands back one record per row, every field reachable as
 `row["price"]`. **Column Of Table** and **Row Where** read one column or one record back out.
+**Table Of File** is the same job handed to Godot's own CSV reader, and **Write Table To File** is its
+inverse, so a table read here and written back comes out byte for byte the way it went in.
 
 The second is **a folder of `.tres` IS my content**. **Resources In Folder** loads every data asset in
 a directory as a list, **Resource In Folder** fetches one by file name, and **For Each Resource In
@@ -22,9 +24,10 @@ dependency-free GDScript.
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [The CSV parse policy](#the-csv-parse-policy)
-4. [Reference tables](#reference-tables)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [Two readers, and which to pick](#two-readers-and-which-to-pick)
+5. [Reference tables](#reference-tables)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -87,6 +90,46 @@ The Separator parameter offers **Comma**, **Semicolon** and **Tab** - deliberate
 because those three are what a spreadsheet export actually writes and the policy above is proven
 against them.
 
+## Two readers, and which to pick
+
+There are two ways to turn a `.csv` into rows, and they differ in exactly one thing: **who does the
+quoting**.
+
+- **Table From File** parses the file itself, in one expression, under the policy above. Everything
+  in that list is a promise this plugin makes and its tests hold it to.
+- **Table Of File** calls `FileAccess.get_csv_line` - **Godot's own CSV reader** - one line at a time.
+  Its quoting is therefore whatever the engine does with a quote, not what this plugin decided: a cell
+  in `"double quotes"` may hold the separator, and a doubled `""` inside one is a single quote
+  character. If the engine's behaviour ever differs from the policy above in a corner you care about,
+  this verb is the one that follows the engine.
+
+Two more differences worth knowing before you choose:
+
+- **Table Of File asks whether the first line names the columns at all.** Its **First line** parameter
+  has two answers: *the first line names the columns* gives one record per row (`row["price"]`), and
+  *every line is a row* gives a plain list of cells per line, which is what a headerless export needs.
+  Table From File always treats the first line as the header, so a headerless file loses its first
+  line to it.
+- **Table Of File is several statements**, because the engine's reader needs a loop and a loop is not
+  an expression. It compiles to a lambda called on the spot, so put it in a **Set** action - a
+  condition is joined into one `if` line and cannot hold several. Table From File is one expression
+  and fits anywhere.
+
+**Write Table To File** is Table Of File's inverse, through `store_csv_line`. A cell holding the
+separator or a quote is quoted the way the engine quotes it, which is what makes the pair round-trip:
+read a file with Table Of File, write it back with Write Table To File, and the bytes match. Its
+**First line** parameter decides whether a header line is written, and when it is, the columns come
+from the FIRST record's own field order - the only order your sheet ever stated.
+
+Both of them are separate verbs rather than options on the shipped ones, because a shipped
+`ace_id` and its template are a compatibility promise: existing sheets keep compiling to exactly what
+they compiled to before.
+
+![The Table Of File parameters dialog: a File box holding "res://data/items.csv" with the muted lead res:// - the game's own files: READ-ONLY once exported under it, a Separator picker reading Comma, and a First line picker reading The first line names the columns; below, the IN CODE strip showing the whole emitted read - FileAccess.open, a while over get_csv_line, and the record it builds per row](images/engine-table-read.png)
+
+**Game saves are still the Save System's territory.** Slots, formats and backups live there; these
+verbs are for content a designer edits and for data a game writes out for a human to read.
+
 ## Reference tables
 
 Ships as is the template the row compiles to. The table and folder templates are long single
@@ -102,11 +145,13 @@ character for character below.
 | Table From Text | The same parse over text you already hold instead of a file on disk | The same fold over `{text}` |
 | Column Of Table | One whole column as a list, in row order | `{table}.map(func(__record): return __record.get({column}, ""))` |
 | Row Where | The FIRST record whose column holds this value, empty record when nothing matches | `{table}.reduce(...)` returning the first match, `{}` otherwise |
+| Table Of File | Reads a `.csv` with Godot's own CSV reader; the First line parameter says whether that line names the columns | A lambda called on the spot: `FileAccess.open({path}, FileAccess.READ)` then `get_csv_line({separator})` in a `while` |
+| Write Table To File | Writes rows back out with Godot's own CSV writer, optionally with a header line | `FileAccess.open({path}, FileAccess.WRITE)` guarded, then `store_csv_line(..., {separator})` per entry |
 | Explain Table Problem | The first cell that should be a number and is not, said out loud | A lambda over `{records}` and `{columns}` returning `"row %d, column \"%s\": \"%s\" is not a number"` or `""` |
 
 ### Loops
 
-These three are CONDITIONS that land in the event's loop lane, so the event's actions run once per
+These four are CONDITIONS that land in the event's loop lane, so the event's actions run once per
 item and the loop index, frame-spreading and round-trip all come from the pick machinery.
 
 | Name | What it does | Ships as |

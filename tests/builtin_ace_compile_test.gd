@@ -262,7 +262,14 @@ static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
 		ACEDescriptor.ACEType.CONDITION:
 			body_lines = ["if (%s):" % line, "\tpass"]
 		ACEDescriptor.ACEType.EXPRESSION:
-			body_lines = ["var __e = (%s)" % line, "__sink(__e)"]
+			# An expression can be MULTI-LINE: an expression field holds one expression, and one
+			# expression can be a lambda called on the spot (the engine's CSV reader needs a loop, and
+			# a loop is not an expression). Each of its lines takes the body indent, exactly as the
+			# compiler gives it - indenting only the first would fail a template that is perfectly
+			# good in a real sheet.
+			for statement: String in ("var __e = (%s)" % line).split("\n"):
+				body_lines.append(statement)
+			body_lines.append("__sink(__e)")
 		_:
 			for stmt: String in line.split("\n"):    # ACTION - may be multi-statement
 				body_lines.append(stmt)

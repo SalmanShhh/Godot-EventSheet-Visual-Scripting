@@ -589,6 +589,7 @@ opens with, in reading order. Nothing folds. One fact, one control and one code 
 | include | the included sheets, by file name | (no line - an include is merged at compile time) | `open` |
 | keeps in step | `PlayerSync · position, hp always · nickname at spawn · every 0.05 s · seen by everyone` | (no line of the script - the `.tscn`'s `MultiplayerSynchronizer`) | `Replication panel…` |
 | spawned by | `Spawner in level.tscn · from spawn_player()` | (no line of the script - the `.tscn`'s `MultiplayerSpawner`) | `select the spawner` |
+| files | `user://save.dat - written`, `res://data/items.csv - read`, `asks the player to pick a file` | the row's own first line, e.g. `var __file = FileAccess.open("user://save.dat", FileAccess.WRITE)` | (none - the row itself is the control) |
 
 Under the stack sits a muted **+ add** row offering only the lines this sheet could have and does
 not: `+ add: icon · @tool · description`. Never autoload and never host - those come from choosing a
@@ -609,6 +610,23 @@ Three details the head is careful about:
   preview is not given a second kind of head: it gets these bands, and the Include bar under them
   carries only what no band states - that it is an addon pack, its version, the class it behaves on,
   how much of it read as events, which file it is. Nothing on the head is said twice.
+
+**What this sheet touches on disk.** A path is the one parameter whose consequences are invisible
+from the row it sits in: a write aimed at `res://` works in the editor and fails in every exported
+build, and a read of a file nobody has written yet is a silent empty string. So every path the
+sheet's own rows hold is said once at the top - the path exactly as the row holds it, with its place
+still on the front, and one word for what the sheet does to it: **written**, **read**, or **read and
+written** when the same file is both. A row that stops and asks the player for a file adds one more
+band saying so, once, however many rows do it.
+
+The band is **derived, not listed**: path fields are found by the hint every path field carries, and
+each row is read as a write or a read by the engine calls its own emitted line makes. A path field a
+behaviour pack ships is therefore on the band the day the pack ships. And it obeys the band scale
+law - four paths are named and the rest are counted (`and 2 more path(s)`), because a head longer
+than the sheet is not a head. Nothing is scanned for it: the rows are already in memory when the
+sheet opens.
+
+![The head of a sheet called ScoreBoard, one band per line: class_name ScoreBoard, extends Node with a change link, the ## description, then four files bands - res://data/items.csv - read beside the table-read line it came from, user://scores.csv - written beside its FileAccess.open call, user://run.log - read, and asks the player to pick a file beside FileDialog.popup_centered() - with a muted + add: icon @tool row under them](images/files-band.png)
 
 **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
 band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each

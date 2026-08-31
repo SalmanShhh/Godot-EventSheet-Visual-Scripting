@@ -173,6 +173,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `ends_with` | [Text Ends With](ace:Core/StringEndsWith) | Variables: String | Vocabulary |
 | `energy` | [Set Brightness](ace:Core/LightSetBrightness) | Lighting | Vocabulary |
 | `environment` | [Set Ambient Light](ace:Core/SetAmbientLight) | Lighting | Vocabulary |
+| `eof_reached` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `erase` | [Delete Key](ace:Core/DictDeleteKey) | Variables: Dictionary | Vocabulary |
 | `erase_action` | [Remove Input Action](ace:Core/InputRemoveAction) | Input | Vocabulary |
 | `erase_cell` | [Erase Tile](ace:Core/TileMapEraseCell) | Tilemap | Vocabulary |
@@ -257,6 +258,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_connected_joypads` | [Has Gamepads](ace:Core/GamepadHasAny) | Gamepad | Vocabulary |
 | `get_connection_status` | [Is Connected](ace:Core/IsConnected) | Multiplayer | Vocabulary |
 | `get_country_name` | [Country Name](ace:Core/CountryName) | Translation | Vocabulary |
+| `get_csv_line` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `get_current_node` | [Current State Is](ace:Core/AnimationStateIs) | Animation | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
 | `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
@@ -537,7 +539,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `mesh` | [Clear Mesh](ace:Core/ClearMesh) | Mesh | Vocabulary |
 | `min` | [Min](ace:Core/MinValue) | Helpers | Vocabulary |
 | `minf` | [Fill Meter](ace:Core/FillMeter) | Meters | Vocabulary |
-| `mini` | min( , ) | System | Expressions |
+| `mini` | [Table Of File](ace:Core/FileTable) | Files: Tables | Vocabulary |
 | `minute` | [Date: Minute](ace:Core/DateMinute) | Time | Vocabulary |
 | `mode` | [Go Fullscreen](ace:Core/WindowGoFullscreen) | Game Window | Vocabulary |
 | `modulate` | [Set Color Tint](ace:Core/SetModulate) | General Actions | Vocabulary |
@@ -789,6 +791,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `stop_joy_vibration` | [Stop Gamepad Vibration](ace:Core/VibrationStopJoy) | Vibration | Vocabulary |
 | `stop_playing_scene` | [Stop Playing](ace:Core/StopPlayingScene) | Editor Tools | Vocabulary |
 | `stop_ribbon` | [Stop Ribbon](ace:Core/DrawStopRibbon) | Drawing | Vocabulary |
+| `store_csv_line` | [Write Table To File](ace:Core/WriteFileTable) | Files: Tables | Vocabulary |
 | `store_line` | [Save Trail To CSV](ace:Core/SaveTrailCsv) | Debug | Vocabulary |
 | `store_string` | [Write Text File](ace:Core/WriteTextFile) | Files | Vocabulary |
 | `str` | [Retries Exhausted](ace:Core/RetriesExhausted) | Loops | Vocabulary |
