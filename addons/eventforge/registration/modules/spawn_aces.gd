@@ -27,6 +27,22 @@
 # screen edge. They compose - any of them can go in any field that takes a position - and none of
 # them needs this module to be installed to keep working, because each is plain GDScript.
 #
+# THE SAME SENTENCE IN THREE DIMENSIONS. A 3D game spawns for exactly the same reasons and in
+# exactly the same order, so the twins below are the 2D pair with a Node3D host and Vector3 answers
+# to "where" - not a second spawning idea. Where the emitted line is identical in both dimensions
+# (`{node}.global_position` is a Vector2 on a Node2D and a Vector3 on a Node3D) the twin exists so
+# that the picker offers it on a 3D host at all, and it is kept OUT of the reverse index so the two
+# rows never split one spelling between them; the 2D row shipped first and keeps the reading, and
+# the bytes are the same sentence either way.
+#
+# AND ONE THING IS DELIBERATELY MISSING: there is no 3D Random Place Off Screen Edge. In 2D a screen
+# edge is a rectangle in the same plane the game is played in, which is why that row can be one
+# honest expression. In 3D "just off screen" is a question about a camera's frustum - which camera,
+# how far along its forward axis, and at what depth the answer is even meant to sit - and every
+# one-line answer to it is a guess that looks right until the camera moves. Nothing is proposed in
+# its place: a wave that must arrive from off-camera is spawned at a Marker3D or inside a box the
+# level designer drew, which is what Place Of and Random Place Inside Box already say.
+#
 # AND EVERY ONE OF THEM ANSWERS IN THE WORLD'S FRAME. A curve is drawn in its Path2D's own space and
 # a shape is measured in its CollisionShape2D's, so the two that sample a local point hand it back
 # through `to_global` rather than adding it to `global_position`. Adding is right only while nothing
@@ -54,6 +70,14 @@ const PLACEMENT_STARTERS: Array[String] = [
 	"global_position",
 	"$SpawnPoint.global_position",
 	"Vector2(0, 0)",
+]
+
+## The same list for a Node3D host. Kept beside its 2D twin rather than derived from it, because the
+## third entry is the only one that differs and a derived list would have to know that.
+const PLACEMENT_STARTERS_3D: Array[String] = [
+	"global_position",
+	"$SpawnPoint.global_position",
+	"Vector3(0, 0, 0)",
 ]
 
 
@@ -125,6 +149,66 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		CATEGORY, "random place off a screen edge (+{margin})", "Node2D")
 		.described("Gives a random point just outside one of the four screen edges, in world coordinates - where a wave arrives from. The edge is picked fresh each time the line runs, and the margin keeps the copy out of sight until it moves in."))
 
+	# ── The same sentence, in three dimensions ─────────────────────────────────────────
+	# Same three statements, same order, same reasons: instance, parent, place - and the deferred
+	# twin still places BEFORE it parents, because a copy that is not in a tree yet has nothing for a
+	# global position to be global to. The only differences are the host the picker files them under
+	# and the shape of the value the At field holds.
+	descriptors.append(F.make_descriptor("Core", "SpawnNewCopy3D", "Spawn A Copy (3D)", ACEDescriptor.ACEType.ACTION,
+		"var {name} = {scene}.instantiate()\n{parent}.add_child({name})\n{name}.global_position = {at}", "",
+		[_scene_param(), _name_param(), _at_param_3d(), _parent_param()],
+		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i]", "Node3D")
+		.described("Makes one copy of a scene, adds it under a parent and puts it where you say, in three dimensions. The copy gets the name you choose, and every following row in this event can say that name - it is a real variable in the emitted code, not a lookup. Leave At as global_position to spawn where this node is, and Under as self to keep the copy under this one.")
+		.featured())
+	descriptors.append(F.make_descriptor("Core", "SpawnNewCopyDeferred3D", "Spawn A Copy Safely (3D)", ACEDescriptor.ACEType.ACTION,
+		"var {name} = {scene}.instantiate()\n{name}.position = {at}\n{parent}.call_deferred(\"add_child\", {name})", "",
+		[_scene_param(), _name_param(), _at_param_3d(), _parent_param()],
+		CATEGORY, "Spawn a copy of [b]{scene}[/b] as [b]{name}[/b] at {at}, under [i]{parent}[/i], added on the next idle moment", "Node3D")
+		.described("The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: Godot refuses to add a child while the physics server is busy, and this row waits for it to finish rather than erroring. The place is set before the copy is added, so it is a place relative to the parent rather than a world position."))
+
+	# ── Where it lands, in three dimensions ────────────────────────────────────────────
+	# The 3D answers to "where". Each is one expression a reader can check, each usable in any field
+	# that takes a position, and none of them needs this module installed to keep working.
+	descriptors.append(F.make_descriptor("Core", "PlaceAtNode3D", "Place Of (3D)", ACEDescriptor.ACEType.EXPRESSION,
+		"{node}.global_position", "",
+		[F.make_param("node", "String", "self", "Node", "The node to read the place of - a Marker3D you dropped in the scene, a spawn point, the player.", "scene_node")],
+		CATEGORY, "place of [i]{node}[/i]", "Node3D")
+		.described("Gives a node's own place in the world, as a Vector3. Drop a Marker3D where things should appear and this reads it, so moving the marker moves the spawn without touching the sheet. It writes the same line its 2D twin writes, because global_position is the node's own word in both dimensions - this row exists so the 3D page offers it, and the reading of that line stays the 2D row's."))
+	# HOW THE BOX IS SAMPLED, said plainly: the box's own measurements in one step - no rejection
+	# sampling and no retry loop, so the line costs the same every time it runs. A box is measured in
+	# its own space and handed back through to_global, for the same reason its 2D twin is: adding a
+	# local point to a global one is right only while nothing above the node is rotated or scaled.
+	#
+	# AND IT READS TWO KINDS OF BOX, because a level is drawn with both: the CollisionShape3D holding
+	# a BoxShape3D that marks an Area3D spawn zone, and the CSGBox3D somebody blocked the room out
+	# with. The casts are what let one expression ask which it is - a node reached by path is a plain
+	# Node until something says otherwise, and GDScript will not read `size` off one that has not.
+	descriptors.append(F.make_descriptor("Core", "PlaceInsideBox3D", "Random Place Inside Box", ACEDescriptor.ACEType.EXPRESSION,
+		"({box} as Node3D).to_global(Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5)"\
+		+ " * ((({box} as CollisionShape3D).shape as BoxShape3D).size"\
+		+ " if {box} is CollisionShape3D else ({box} as CSGBox3D).size))", "",
+		[F.make_param("box", "String", "$SpawnBox", "Box", "The box to scatter inside - a CollisionShape3D holding a BoxShape3D (the one on the Area3D marking the spawn zone), or a CSGBox3D you blocked the space out with.", "scene_node")],
+		CATEGORY, "random place inside [i]{box}[/i]", "Node3D")
+		.described("Gives a random point inside a box - the Area3D you drew around a spawn zone, or a CSG box you blocked the space out with. The box is measured directly and scattered through evenly in one step, with no rejection sampling and no retries. The measurement is in the box's own space and is handed back through to_global, so a rotated or scaled box scatters inside the box you drew rather than inside an upright one of the same size."))
+	# THE CORRECTION, one dimension up. The 2D disc takes the SQUARE root of the roll so points do
+	# not bunch up in the middle; a solid ball needs the CUBE root for the same reason and by the same
+	# argument - the volume inside a radius grows as its cube, so the radius has to be pulled back by
+	# the cube root for the scatter to be even. The direction is three normal draws normalised, which
+	# is the one spelling that is evenly spread over a sphere without an angle-by-angle construction
+	# (picking two angles at random bunches points at the poles).
+	descriptors.append(F.make_descriptor("Core", "PlaceInsideSphere3D", "Random Place Inside Sphere", ACEDescriptor.ACEType.EXPRESSION,
+		"({ball} as Node3D).to_global(Vector3(randfn(0.0, 1.0), randfn(0.0, 1.0), randfn(0.0, 1.0)).normalized()"\
+		+ " * (({ball} as CollisionShape3D).shape as SphereShape3D).radius * pow(randf(), 1.0 / 3.0))", "",
+		[F.make_param("ball", "String", "$SpawnBall", "Sphere", "The sphere to scatter inside - a CollisionShape3D holding a SphereShape3D.", "scene_node")],
+		CATEGORY, "random place inside [i]{ball}[/i]", "Node3D")
+		.described("Gives a random point inside a sphere, spread evenly through it rather than bunched in the middle: the radius is pulled back by the cube root of the roll, which is what an even scatter through a volume needs - the same correction the 2D disc makes with a square root, one dimension up. The point is measured in the sphere's own space and handed back through to_global."))
+	descriptors.append(F.make_descriptor("Core", "PlaceAroundNode3D", "Random Place Around (3D)", ACEDescriptor.ACEType.EXPRESSION,
+		"{node}.global_position + Vector3.FORWARD.rotated(Vector3.UP, randf() * TAU) * {radius}", "",
+		[F.make_param("node", "String", "self", "Around", "The node to spawn around - the player, a totem, a spawner. Its own place is the centre of the ring.", "scene_node"),
+		F.make_param("radius", "String", "5.0", "Radius", "How far out from that node the point sits, in metres. Every point is exactly this far out - it is a ring, not a filled circle.", "expression")],
+		CATEGORY, "random place [b]{radius}[/b] around [i]{node}[/i]", "Node3D")
+		.described("Gives a random point on a ring around a node, at the height that node is standing at - an enemy arriving from any direction, a pickup dropped nearby. The ring lies on the ground plane, so the point is level with the node rather than above or below it; add to its Y yourself when you want it dropped in from above."))
+
 	return descriptors
 
 
@@ -151,6 +235,14 @@ static func _at_param() -> ACEParam:
 	return F.make_param("at", "String", "global_position", "At",
 		"Where the copy lands, as a position. Leave it as global_position to spawn where this node is.",
 		"expression", [], PLACEMENT_STARTERS)
+
+
+## Where a 3D copy lands. The same field with the same reasoning as its 2D twin, offering the 3D
+## starters - the only thing about a spawn that changes with the dimension is the shape of "where".
+static func _at_param_3d() -> ACEParam:
+	return F.make_param("at", "String", "global_position", "At",
+		"Where the copy lands, as a position in three dimensions. Leave it as global_position to spawn where this node is.",
+		"expression", [], PLACEMENT_STARTERS_3D)
 
 
 ## The node the copy is added under. Stated on the row even when it is this one, because a copy that

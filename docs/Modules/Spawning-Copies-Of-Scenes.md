@@ -55,15 +55,16 @@ Six more say the copies in the plural, because a game that spawns one thing soon
 1. [Where this shines](#where-this-shines)
 2. [Core concepts](#core-concepts)
 3. [Destroying what you spawned](#destroying-what-you-spawned)
-4. [The crowd](#the-crowd)
-5. [Many kinds from one row - the kinds table](#many-kinds-from-one-row---the-kinds-table)
-6. [Reusing copies instead of making them - routing through a pool](#reusing-copies-instead-of-making-them---routing-through-a-pool)
-7. [The same sentences over the network](#the-same-sentences-over-the-network)
-8. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
-9. [The four things that go wrong](#the-four-things-that-go-wrong)
-10. [Reference tables](#reference-tables)
-11. [Use cases](#use-cases)
-12. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [The same sentence in three dimensions](#the-same-sentence-in-three-dimensions)
+5. [The crowd](#the-crowd)
+6. [Many kinds from one row - the kinds table](#many-kinds-from-one-row---the-kinds-table)
+7. [Reusing copies instead of making them - routing through a pool](#reusing-copies-instead-of-making-them---routing-through-a-pool)
+8. [The same sentences over the network](#the-same-sentences-over-the-network)
+9. [What the sheet says it spawns](#what-the-sheet-says-it-spawns)
+10. [The four things that go wrong](#the-four-things-that-go-wrong)
+11. [Reference tables](#reference-tables)
+12. [Use cases](#use-cases)
+13. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Where this shines
 
@@ -248,6 +249,50 @@ guard is for.
 **Nothing else is guarded.** `self` cannot dangle, a `$Path` re-resolves every time it is read, and
 every row outside these three is left exactly as it was. Emitted code does not change under your
 feet.
+
+## The same sentence in three dimensions
+
+A 3D game spawns for exactly the same reasons and in exactly the same order, so the 3D rows are the
+2D pair with a Node3D host and Vector3 answers to "where". They are not a second spawning idea, and
+there is nothing new to learn about them:
+
+- **Spawn A Copy (3D)** - instance, parent, place, in that order.
+- **Spawn A Copy Safely (3D)** - the same spawn added on the next idle moment, placing before it
+  parents for the same reason its 2D twin does.
+- **Place Of (3D)**, **Random Place Inside Box**, **Random Place Inside Sphere**, **Random Place
+  Around (3D)** - one expression each, usable in any field that takes a Vector3.
+
+```
+var new_enemy = Enemy.instantiate()
+$Enemies.add_child(new_enemy)
+new_enemy.global_position = ($SpawnBox as Node3D).to_global(Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * ((($SpawnBox as CollisionShape3D).shape as BoxShape3D).size if $SpawnBox is CollisionShape3D else ($SpawnBox as CSGBox3D).size))
+```
+
+- **The box reads two kinds of box.** A CollisionShape3D holding a BoxShape3D - the one on the Area3D
+  you drew around a spawn zone - and a CSGBox3D you blocked the space out with. The casts in the
+  emitted line are what let one expression ask which it is: a node reached by path is a plain Node
+  until something says otherwise, and GDScript will not read `size` off one that has not.
+- **The sphere corrects by the CUBE root, not the square root.** The 2D disc pulls its radius back by
+  a square root so points do not bunch up in the middle. A solid ball needs the cube root for the
+  same reason and by the same argument: the volume inside a radius grows as its cube. The direction
+  is three normal draws normalised, which is the one spelling that is evenly spread over a sphere -
+  picking two angles at random bunches points at the poles.
+- **Random Place Around (3D) is a ring, not a disc.** Every point is exactly the radius out, on the
+  ground plane, level with the node it is around. Add to the Y yourself when you want the copy
+  dropped in from above.
+- **Place Of (3D) writes the same line Place Of does.** `global_position` is the node's own word in
+  both dimensions. The 3D row exists so the 3D page offers it; the reading of that line stays the 2D
+  row's, so an opened file never has two rows arguing over one spelling.
+
+![A wave spawned inside a box, and a flanker on a ring around the player](../images/scenes-spawn-3d.png)
+
+**There is no 3D Random Place Off Screen Edge, on purpose.** In 2D a screen edge is a rectangle in
+the same plane the game is played in, which is why that row can be one honest expression. In 3D
+"just off screen" is a question about a camera's frustum - which camera, how far along its forward
+axis, and at what depth the answer is even meant to sit - and every one-line answer to it is a guess
+that looks right until the camera moves. Nothing is offered in its place: a wave that must arrive
+from off camera is spawned at a Marker3D or inside a box the level designer drew, which is what
+Place Of (3D) and Random Place Inside Box already say.
 
 ## The crowd
 
@@ -573,6 +618,12 @@ it; destroying after a delay instead is the other way, and the note says so.
 | Random Place Along Path | Gives a random point along a Path2D's curve. | `{path}.to_global({path}.curve.sample_baked(randf() * {path}.curve.get_baked_length()))` |
 | Random Place Inside Shape | Gives a random point inside a collision shape. | `{shape}.to_global(…)` |
 | Random Place Off Screen Edge | Gives a random point just outside a screen edge. | `(get_viewport().get_canvas_transform().affine_inverse() * …)` |
+| Spawn A Copy (3D) | The same three statements, on a Node3D host. | `var {name} = {scene}.instantiate()`, `{parent}.add_child({name})`, `{name}.global_position = {at}` |
+| Spawn A Copy Safely (3D) | The same 3D spawn, added on the next idle moment. | `var {name} = {scene}.instantiate()`, `{name}.position = {at}`, `{parent}.call_deferred("add_child", {name})` |
+| Place Of (3D) | Gives a node's own place in the world, as a Vector3. | `{node}.global_position` |
+| Random Place Inside Box | Gives a random point inside a BoxShape3D or a CSG box. | `({box} as Node3D).to_global(…)` |
+| Random Place Inside Sphere | Gives a random point spread evenly through a sphere. | `({ball} as Node3D).to_global(… * pow(randf(), 1.0 / 3.0))` |
+| Random Place Around (3D) | Gives a random point on a ring around a node. | `{node}.global_position + Vector3.FORWARD.rotated(Vector3.UP, randf() * TAU) * {radius}` |
 | Destroy Now | Destroys the object at the end of this frame. | `{object}.queue_free()` |
 | Destroy After Seconds | Destroys the object after a wait, without blocking. | `get_tree().create_timer({seconds}).timeout.connect({object}.queue_free)` |
 | Fade Out Then Destroy | Fades the object out, waits, then destroys it. | `await {object}.create_tween().tween_property({object}, "modulate:a", 0.0, {seconds}).finished`, `if is_instance_valid({object}):`, `{object}.queue_free()` |
@@ -583,6 +634,8 @@ it; destroying after a delay instead is the other way, and the note says so.
 | How Many Alive | How many of a crowd are alive right now. | `get_tree().get_node_count_in_group({crowd})` |
 | On The Last One Destroyed | Runs when a crowd's last member leaves, once per emptying. | `get_tree().node_removed.connect(_on_node_removed)` |
 | Crowd Is Down To This One | The gate under that trigger. | `{node}.is_in_group({crowd}) and {node}.is_queued_for_deletion() and get_tree().get_nodes_in_group({crowd}) == [{node}]` |
+| On Node Joins Group | Runs as a node belonging to a group enters the world. | `get_tree().node_added.connect(_on_node_joined_group)` |
+| On Node Leaves Group | Runs as a node belonging to a group leaves the world. | `get_tree().node_removed.connect(_on_node_left_group)` |
 
 ## Use cases
 
