@@ -137,18 +137,13 @@ static func member_for(word: String) -> String:
 ## The band's reading: the states this object has and the one it starts in, in one line, because that
 ## is one fact - what the states of this object ARE. Empty for a sheet that declares none.
 ##
-## The same scale law the modes band obeys, from the same constant: a band is a place to look, not a
-## list of everything, so an object with twenty states says the first few and how many more.
+## The same scale law the modes band obeys, and now the same ASSEMBLY: a band is a place to look, not
+## a list of everything, so an object with twenty states says the first few and how many more. Copied
+## rather than called, this line drifted into a second spelling of one sentence - the modes band said
+## "- starts in" and this said ", starts in" - which is precisely what the file header promises can
+## never happen here.
 static func band_reading(sheet: EventSheetResource) -> String:
-	var said: PackedStringArray = names(sheet)
-	if said.is_empty():
-		return ""
-	var opening: String = starts_in(sheet)
-	var shown: PackedStringArray = said.slice(0, EventSheetModeFacts.BAND_NAMES_SHOWN)
-	var listed: String = " · ".join(shown)
-	if said.size() > shown.size():
-		listed += " · " + EventSheetL10n.translate("%d more") % (said.size() - shown.size())
-	return listed if opening.is_empty() else "%s, starts in %s" % [listed, opening]
+	return EventSheetModeFacts.band_line(names(sheet), starts_in(sheet))
 
 
 ## The line of the file that band stands for: the enum, in the emitter's OWN words rather than in a

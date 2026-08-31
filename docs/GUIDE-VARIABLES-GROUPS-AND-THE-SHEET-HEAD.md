@@ -590,7 +590,7 @@ opens with, in reading order. Nothing folds. One fact, one control and one code 
 | keeps in step | `PlayerSync · position, hp always · nickname at spawn · every 0.05 s · seen by everyone` | (no line of the script - the `.tscn`'s `MultiplayerSynchronizer`) | `Replication panel…` |
 | spawned by | `Spawner in level.tscn · from spawn_player()` | (no line of the script - the `.tscn`'s `MultiplayerSpawner`) | `select the spawner` |
 | files | `user://save.dat - written`, `res://data/items.csv - read`, `asks the player to pick a file` | the row's own first line, e.g. `var __file = FileAccess.open("user://save.dat", FileAccess.WRITE)` | (none - the row itself is the control) |
-| states | `Patrol · Chase · Stagger, starts in Patrol` - this object's own states, and while the game runs `current: Chase · 3.2 s` after them | `enum State { PATROL, CHASE, STAGGER }` | `Declare states…` |
+| states | `Patrol · Chase · Stagger - starts in Patrol` - this object's own states, and while the game runs `current: Chase · 3.2 s` after them | `enum State { PATROL, CHASE, STAGGER }` | `Declare states…` |
 
 Under the stack sits a muted **+ add** row offering only the lines this sheet could have and does
 not: `+ add: icon · @tool · description · states`. Never autoload and never host - those come from

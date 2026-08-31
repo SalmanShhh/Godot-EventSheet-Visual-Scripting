@@ -2120,6 +2120,7 @@ not in %s,%s에 없음
 %d triggers,트리거 %d개
 %d used,사용 중 %d개
 %d more,그 외 %d개
+"%s - starts in %s","%s - %s 에서 시작"
 "Sort by reading order, by count or by name.","읽는 순서, 개수, 이름순으로 정렬합니다."
 Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.

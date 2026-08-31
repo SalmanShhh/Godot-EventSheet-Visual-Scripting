@@ -196,15 +196,27 @@ const BAND_NAMES_SHOWN: int = 6
 ## The band's reading: the modes this sheet declares and the one it starts in, in one line, because
 ## that is one fact - what the modes of this game ARE. Empty for a sheet that declares none.
 static func band_reading(sheet: EventSheetResource) -> String:
-	var said: PackedStringArray = names(sheet)
+	return band_line(names(sheet), starts_in(sheet))
+
+
+## THE ONE ASSEMBLY OF A BAND'S READING, for both bands and both of their dialogs: the names as far
+## as the scale law allows, the count of the rest, and the one it starts in.
+##
+## Called rather than copied, and this is the reason why. Written out four times, the four copies
+## diverged in exactly the way copies do: one band said "- starts in" and the other said ", starts
+## in", and both dialogs promised a reading with EVERY name in it while the head they were previewing
+## showed six and a count. A reader met two spellings of one idea and a live preview of a line that
+## would never be drawn. There is one spelling here, translated, and the dialogs preview the head by
+## asking the head's own rule.
+static func band_line(said: PackedStringArray, opening: String) -> String:
 	if said.is_empty():
 		return ""
-	var opening: String = starts_in(sheet)
 	var shown: PackedStringArray = said.slice(0, BAND_NAMES_SHOWN)
 	var listed: String = " · ".join(shown)
 	if said.size() > shown.size():
 		listed += " · " + EventSheetL10n.translate("%d more") % (said.size() - shown.size())
-	return listed if opening.is_empty() else "%s - starts in %s" % [listed, opening]
+	return listed if opening.is_empty() \
+		else EventSheetL10n.translate("%s - starts in %s") % [listed, opening]
 
 
 ## The line of the file that band stands for: the enum, in the emitter's OWN words rather than in a

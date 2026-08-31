@@ -54,7 +54,7 @@ static func _run_reader() -> bool:
 		EventSheetStateFacts.starts_in(sheet), "Patrol") and all_passed
 	all_passed = _check("the band is one fact: the states, and the one it starts in",
 		EventSheetStateFacts.band_reading(sheet),
-		"Patrol · Chase · Stagger, starts in Patrol") and all_passed
+		"Patrol · Chase · Stagger - starts in Patrol") and all_passed
 	all_passed = _check("and it echoes the line the compiler writes",
 		EventSheetStateFacts.band_echo(sheet),
 		"enum State { PATROL, CHASE, STAGGER }") and all_passed
@@ -184,7 +184,17 @@ static func _run_dialog() -> bool:
 		"enum State { PATROL, GAVE_UP } · var state: State = State.PATROL") and all_passed
 	all_passed = _check("as well as what the head will read as",
 		EventSheetStatesDialog.reads_as(PackedStringArray(["Patrol", "Chase"]), "Chase"),
-		"Patrol · Chase, starts in Chase") and all_passed
+		"Patrol · Chase - starts in Chase") and all_passed
+	# ONE ASSEMBLY, so the strip cannot promise a line the head will not draw. Eight states are six
+	# and a count on the band, and the preview says the same - it used to list all eight.
+	var eight: PackedStringArray = PackedStringArray(["One", "Two", "Three", "Four", "Five", "Six",
+		"Seven", "Eight"])
+	all_passed = _check("the preview obeys the band's own scale law",
+		EventSheetStatesDialog.reads_as(eight, "One"),
+		"One · Two · Three · Four · Five · Six · 2 more - starts in One") and all_passed
+	all_passed = _check("and says it in the ONE spelling both bands share",
+		EventSheetStatesDialog.reads_as(eight, "One"),
+		EventSheetModesDialog.reads_as(eight, "One")) and all_passed
 
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"

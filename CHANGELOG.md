@@ -12,7 +12,7 @@
   object whose author typed those lines by hand already has this feature, and uninstalling the plugin
   takes none of it away. One declaration is one machine; a second machine on the same object is
   simply a second declared state variable.
-- **The band is the diagram.** The head reads `states: Patrol · Chase · Stagger, starts in Patrol`,
+- **The band is the diagram.** The head reads `states: Patrol · Chase · Stagger - starts in Patrol`,
   derived from the declaration and echoing the enum line the compiler writes. There is no graph view,
   no wires drawn over rows and no canvas of boxes anywhere in this feature - a state is the variable
   pattern every event sheet already builds, so it reads as a line.
@@ -62,7 +62,7 @@
 ### Play mode makes the sheet the debugger
 
 - **The states band carries the state the game is actually in.** Run the game with the sheet open and
-  `Patrol · Chase · Stagger, starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not
+  `Patrol · Chase · Stagger - starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not
   instead of it, so the band still reads as the declaration it stands for. With two copies of the
   game running, each reading says which window it is describing.
 - **A timed row shows its progress where the question is asked.** `Is in Stagger for over 6s` gains
@@ -310,6 +310,13 @@
   - which is exactly the stale-finding case, since the list is the LAST audit's, so a finding the
   reader had already fixed opened the sheet and then did nothing. Both say where they got to, and the
   second says why.
+- **One assembly for a band's reading, called rather than copied - and now translated.** The two
+  bands said the same sentence in two spellings (`Patrol · Chase - starts in Patrol` against
+  `Patrol · Chase, starts in Patrol`), which is exactly what the states reader's own header promises
+  can never happen; and both dialogs re-implemented the join, so the live preview promised all eight
+  of eight names while the head it was previewing would show six and a count. There is one assembly
+  now, both bands and both dialogs call it, and "starts in" is a key in all nine language files
+  instead of shipping English on both bands.
 
 ### A path says which place it is in
 

@@ -70,7 +70,7 @@ stack; a sheet that has them shows them and opens the same dialog when you click
 ![The Declare states dialog: a States field holding Patrol, Chase, Stagger, a Starts in dropdown showing Patrol, and a help strip at the foot saying what the sheet will read as and the enum and variable lines it will write](images/object-states-dialog.png)
 
 The strip at the foot of the dialog shows both halves of the answer as you type: what the head will
-read as (`Patrol · Chase · Stagger, starts in Patrol`) and the code it stands for
+read as (`Patrol · Chase · Stagger - starts in Patrol`) and the code it stands for
 (`enum State { PATROL, CHASE, STAGGER } · var state: State = State.PATROL`).
 
 Pressing OK writes **five ordinary declarations** onto the sheet, as rows:
@@ -295,7 +295,7 @@ The other shapes that open as states rows:
 | What the file says | What the sheet reads |
 | --- | --- |
 | `enum State { PATROL, CHASE, STAGGER }` | the states on the head: `Patrol · Chase · Stagger` |
-| `var state: State = State.PATROL` | ...`, starts in Patrol` |
+| `var state: State = State.PATROL` | ...` - starts in Patrol` |
 | `state = State.CHASE`, and `self.state = State.CHASE` | **Go to Chase** |
 | `if state == State.PATROL:`, and `self.state == …` | **Is in Patrol** |
 | `if previous_state == State.CHASE:` | **Was in Chase** |
@@ -332,7 +332,7 @@ game's viewport and no window in front of it:
 
 ![An enemy's sheet while the game runs: the states band reads Patrol, Chase, Stagger, starts in Patrol with current: Chase, 3.2 s after it, the row Is in STAGGER for over 6s shows 3.2 of 6 beside it, and the event that just fired is lit along its left edge](images/state-play-mode.png)
 
-- **The band carries the state the game is actually in.** `Patrol · Chase · Stagger, starts in Patrol`
+- **The band carries the state the game is actually in.** `Patrol · Chase · Stagger - starts in Patrol`
   gains `current: Chase · 3.2 s` after it - after it, not instead of it, so the band still reads as
   the declaration it stands for. The state arrives as its NAME, not as a number you would have to
   count out.

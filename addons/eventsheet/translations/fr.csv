@@ -2120,6 +2120,7 @@ not in %s,absent de %s
 %d triggers,%d déclencheurs
 %d used,%d utilisés
 %d more,%d de plus
+"%s - starts in %s","%s - commence dans %s"
 "Sort by reading order, by count or by name.","Trier par ordre de lecture, par nombre ou par nom."
 Nothing in this sheet names an object yet.,Rien dans cette feuille ne nomme encore d'objet.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Ce script n'est encore sur aucune scène - déposez-le sur un nœud dans le dock Scène et ses objets apparaîtront ici.

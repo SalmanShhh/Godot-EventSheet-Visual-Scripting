@@ -170,12 +170,12 @@ static func words_of(text: String) -> PackedStringArray:
 	return EventSheetModesDialog.words_of(text)
 
 
-## The reading line: what this sheet's head will say once OK is pressed.
+## The reading line: what this sheet's head will say once OK is pressed - asked of the BAND's own
+## assembly, so the preview and the head cannot promise two different lines. Joining every name here
+## made the strip promise all eight of eight states while the band it was previewing would show six
+## and a count, which is a receipt for something that does not happen.
 static func reads_as(declared: PackedStringArray, starts_in: String) -> String:
-	if declared.is_empty():
-		return ""
-	var listed: String = " · ".join(declared)
-	return listed if starts_in.is_empty() else "%s, starts in %s" % [listed, starts_in]
+	return EventSheetModeFacts.band_line(declared, starts_in)
 
 
 ## And the code line: the enum and the variable, which is what the band echoes.

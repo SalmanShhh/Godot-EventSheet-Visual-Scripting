@@ -2120,6 +2120,7 @@ not in %s,nicht in %s
 %d triggers,%d Auslöser
 %d used,%d verwendet
 %d more,%d weitere
+"%s - starts in %s","%s - startet in %s"
 "Sort by reading order, by count or by name.","Nach Lesereihenfolge, Anzahl oder Name sortieren."
 Nothing in this sheet names an object yet.,Noch nennt nichts in diesem Blatt ein Objekt.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Dieses Skript liegt noch auf keiner Szene - ziehen Sie es im Szenen-Dock auf einen Node, dann erscheinen seine Objekte hier."
