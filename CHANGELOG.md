@@ -265,6 +265,16 @@
   finding's own explanation of why it exists said the opposite of the code. Every one of them now
   says what happens: the declared states are OFFERED as you type, a state is picked rather than
   remembered, and a row left naming one nobody declares is what the Doctor says out loud.
+- **The one state row that does not compile is now seen.** An *Is in* or *Go to* dropped and left
+  with its state cell empty substitutes to `state == State.`, which is not GDScript - and nothing
+  caught it: the field allows an unnamed state on purpose, and every walk here drops an empty member
+  by construction, so the Doctor could not report it either. **A row that names no state at all** is
+  the third state finding, counted rather than named because naming nothing is precisely what is
+  wrong with the row. The trigger path was already guarded in the emitter; this is the condition and
+  action path.
+- **The states Doctor check reads the sheet once.** `findings()` was calling `names(sheet)[index]`
+  inside its own per-state loop, so a twenty-state object on a fifteen-hundred-row sheet paid twenty
+  full walks of the document for one pass. The enum is read once and the members carried down.
 
 ### A path says which place it is in
 

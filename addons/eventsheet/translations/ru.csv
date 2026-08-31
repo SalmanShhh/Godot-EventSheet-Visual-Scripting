@@ -5705,6 +5705,7 @@ open the player's data folder {path},открыть папку данных иг
 and %d more watched folder(s),и ещё %d наблюдаемых папок
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.","%s объявлено, и ни одна строка не может его достичь: туда ничто не переходит, и объект не начинает в нём."
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.","Строка называет состояние %s, а этот объект его не объявляет. Добавьте его в состояния в заголовке или укажите строке одно из собственных состояний объекта."
+"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","%d строк(и) здесь не называют ни одного состояния. Пустая ячейка состояния компилируется в `state == State.`, а это не GDScript, так что укажите в каждой одно из состояний этого объекта."
 Name at least one state.,Назовите хотя бы одно состояние.
 Declare states,Объявить состояния
 Declare states…,Объявить состояния…

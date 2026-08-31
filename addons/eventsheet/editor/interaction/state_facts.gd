@@ -405,15 +405,50 @@ static func is_state_subject(match_expression: String) -> bool:
 	return match_expression.strip_edges() == STATE_VARIABLE
 
 
-# -- The two things that go wrong with an object's states ----------------------------------------
+# -- The three things that go wrong with an object's states --------------------------------------
 ## The finding ids. Frozen: the Doctor's lines and the tests address one by these.
 const KIND_STATE_UNREACHABLE := "a-state-nothing-reaches"
 const KIND_STATE_NOT_DECLARED := "a-state-this-object-does-not-declare"
+const KIND_STATE_ROW_UNFILLED := "a-state-row-that-names-no-state"
 
 
-## Both state mistakes, found by reading the sheet that declares them. Neither is an error - the
-## object compiles and runs - and both present as "nothing happened", which is the worst kind of bug
-## to find by playing.
+## How many rows of this vocabulary have been dropped and left with their state cell EMPTY. The
+## parameter's default names no state on purpose - a row must say which - so an untouched Is in or
+## Go to substitutes to `state == State.` / `state = State.`, which is not GDScript and takes the
+## whole file down at import. The trigger path is already guarded in the emitter; this is how the
+## condition and action path is seen, and it has to be counted rather than named because the thing
+## that is wrong with the row is precisely that it names nothing.
+static func unfilled_rows(sheet: EventSheetResource) -> int:
+	var found: int = 0
+	if sheet != null:
+		found = _count_unfilled(sheet.events)
+	return found
+
+
+static func _count_unfilled(items: Array) -> int:
+	var found: int = 0
+	for item: Variant in items:
+		if item is EventGroup:
+			found += _count_unfilled(EventSheetGroupFacts.children(item as EventGroup))
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row == null:
+			continue
+		for is_action: bool in [false, true]:
+			for ace: Variant in (event_row.actions if is_action else event_row.conditions):
+				if not (ace is Resource) or not STATE_ACE_IDS.has(str((ace as Resource).get("ace_id"))):
+					continue
+				var params: Variant = (ace as Resource).get("params")
+				if not (params is Dictionary) \
+						or str((params as Dictionary).get(STATE_PARAM, "")).strip_edges().is_empty():
+					found += 1
+		found += _count_unfilled(event_row.sub_events)
+	return found
+
+
+## The three state mistakes, found by reading the sheet that declares them. Two of them present as
+## "nothing happened", which is the worst kind of bug to find by playing; the third does not compile
+## at all, and is here because it is the one shape nothing else in the editor sees.
 ##
 ##   nothing reaches it   a state is declared, no Go to names it, and it is not the one the object
 ##                        starts in. Written, and unreachable.
@@ -421,23 +456,33 @@ const KIND_STATE_NOT_DECLARED := "a-state-this-object-does-not-declare"
 ##                        declared ones and does not forbid the rest - a state may be about to be
 ##                        declared - so this is the check that catches hand-written code, a state
 ##                        copied from another object's family, and a name typed a moment too early.
+##   names no state       a row of this vocabulary was dropped and its state cell left empty. That
+##                        one substitutes to `state == State.`, which does not parse, so unlike the
+##                        other two it is not "nothing happened" but "nothing compiles".
+##
+## ONE WALK PER QUESTION. The enum is read once here and the members carried down rather than
+## re-derived per declared state: on a fifteen-hundred-row sheet a twenty-state object used to pay
+## twenty full walks of the document for one Doctor pass.
 ##
 ## Empty for a sheet that declares no states, which is every sheet of an object that has none.
 static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
-	if not declares_states(sheet):
+	var row: EnumRow = enum_row(sheet)
+	if row == null or row.members.is_empty():
 		return found
-	var declared: PackedStringArray = bare_members(sheet)
+	var declared: PackedStringArray = PackedStringArray()
+	var said: PackedStringArray = PackedStringArray()
+	for member: String in row.members:
+		declared.append(member.split("=")[0].strip_edges())
+		said.append(word_for(member))
 	var entered: PackedStringArray = entered_states(sheet)
 	var opening: String = member_for(starts_in(sheet))
 	for index: int in range(declared.size()):
-		var member: String = declared[index]
-		var word: String = names(sheet)[index]
-		if member == opening or entered.has(member):
+		if declared[index] == opening or entered.has(declared[index]):
 			continue
 		found.append({
-			"kind": KIND_STATE_UNREACHABLE, "severity": "warning", "subject": word,
-			"message": EventSheetL10n.translate("%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.") % word,
+			"kind": KIND_STATE_UNREACHABLE, "severity": "warning", "subject": said[index],
+			"message": EventSheetL10n.translate("%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.") % said[index],
 		})
 	for member: String in named_states(sheet):
 		if declared.has(member):
@@ -445,5 +490,11 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 		found.append({
 			"kind": KIND_STATE_NOT_DECLARED, "severity": "warning", "subject": word_for(member),
 			"message": EventSheetL10n.translate("A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.") % word_for(member),
+		})
+	var unfilled: int = unfilled_rows(sheet)
+	if unfilled > 0:
+		found.append({
+			"kind": KIND_STATE_ROW_UNFILLED, "severity": "warning", "subject": ENUM_NAME,
+			"message": EventSheetL10n.translate("%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.") % unfilled,
 		})
 	return found

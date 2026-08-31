@@ -5705,6 +5705,7 @@ open the player's data folder {path},打开玩家的数据文件夹 {path}
 and %d more watched folder(s),还有 %d 个受监视的文件夹
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s 已声明，但没有任何行能到达它：没有任何行前往它，对象也不从它开始。
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",有一行指向状态 %s，而这个对象并未声明它。请把它加入表头的状态列表，或让该行指向这个对象自己的状态。
+"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","这里有 %d 行没有指明任何状态。空的状态格会编译成 `state == State.`，那不是 GDScript，请把每一行指向这个对象的某个状态。"
 Name at least one state.,请至少指定一个状态。
 Declare states,声明状态
 Declare states…,声明状态…

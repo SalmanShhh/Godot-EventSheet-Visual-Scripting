@@ -5705,6 +5705,7 @@ open the player's data folder {path},ouvrir le dossier de données du joueur {pa
 and %d more watched folder(s),et %d dossier(s) surveillé(s) de plus
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.","%s est déclaré et aucune ligne ne peut l'atteindre : rien n'y va, et l'objet n'y démarre pas."
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.","Une ligne nomme l'état %s et cet objet ne le déclare pas. Ajoute-le aux états de l'en-tête, ou pointe la ligne vers l'un des états propres à cet objet."
+"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","%d ligne(s) ici ne nomment aucun état. Une cellule d'état vide se compile en `state == State.`, ce qui n'est pas du GDScript : pointez chacune vers un des états de cet objet."
 Name at least one state.,Nomme au moins un état.
 Declare states,Déclarer les états
 Declare states…,Déclarer les états…

@@ -3383,18 +3383,18 @@ static func check_game_modes(findings: Array[Dictionary]) -> void:
 			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))
 
 
-## The two things that go wrong with ONE OBJECT's states: one no row can reach, and one a row names
-## that this object does not declare.
+## The three things that go wrong with ONE OBJECT's states: one no row can reach, one a row names
+## that this object does not declare, and a row that names none at all.
 ##
 ## Asked of the project's own scripts rather than of `sheet_paths`, and the reason matters: the sheet
 ## list holds `.tres` sheets only, while `.gd` is the default sheet format, so a check built on it
 ## would skip almost every real object while looking like it worked. The script index is the ONE
-## cached walk every other script-reading check here shares, and the `enum State` test is a string
-## match over text that walk already holds - so an object that declares no states costs nothing.
+## cached walk every other script-reading check here shares, and the gate below is a match over text
+## that walk already holds - so an object that declares no states costs nothing.
 static func check_object_states(findings: Array[Dictionary]) -> void:
 	var importer := GDScriptImporter.new()
 	for script_path: String in _project_scripts():
-		if not source_of(script_path).contains("enum %s" % EventSheetStateFacts.ENUM_NAME):
+		if not _declares_state_enum(source_of(script_path)):
 			continue
 		var sheet: EventSheetResource = importer.import_external(script_path)
 		if sheet == null:
@@ -3403,6 +3403,21 @@ static func check_object_states(findings: Array[Dictionary]) -> void:
 			_add(findings, str(finding.get("severity", "info")), str(finding.get("kind", "")),
 				script_path, str(finding.get("message", "")))
 			(findings[findings.size() - 1] as Dictionary)["subject"] = str(finding.get("subject", ""))
+
+
+## True when this source really DECLARES the state enum, rather than merely containing those letters.
+## A plain `contains("enum State")` also matched `enum StateKind`, `enum Stateful` and the phrase
+## inside any comment or string - and every false positive costs a whole GDScript import of the file,
+## which is the expensive half of this check. The declaration is a line of its own opening a brace,
+## so that is what is asked for.
+static var _state_enum_pattern: RegEx = null
+
+
+static func _declares_state_enum(source: String) -> bool:
+	if _state_enum_pattern == null:
+		_state_enum_pattern = RegEx.create_from_string(
+			"(?m)^[ \\t]*enum[ \\t]+%s[ \\t]*\\{" % EventSheetStateFacts.ENUM_NAME)
+	return _state_enum_pattern.search(source) != null
 
 
 ## The menu notes one file's lines are worth, as {check, message, subject} in file order. Pure and

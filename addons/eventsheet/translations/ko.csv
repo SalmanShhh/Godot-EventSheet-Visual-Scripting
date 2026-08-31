@@ -5705,6 +5705,7 @@ open the player's data folder {path},플레이어의 데이터 폴더 {path} 열
 and %d more watched folder(s),그리고 %d개의 감시 폴더가 더
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.","%s은(는) 선언되어 있지만 어떤 행도 도달할 수 없습니다. 그곳으로 가는 것이 없고, 오브젝트도 거기서 시작하지 않습니다."
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.","어떤 행이 %s 상태를 가리키지만 이 오브젝트는 그것을 선언하지 않습니다. 머리글의 상태에 추가하거나, 행을 이 오브젝트 자신의 상태로 향하게 하세요."
+"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","여기 %d개 행이 아무 상태도 지정하지 않았습니다. 빈 상태 칸은 `state == State.` 로 컴파일되며 이는 GDScript가 아닙니다. 각 행을 이 오브젝트의 상태 중 하나로 가리켜 주세요."
 Name at least one state.,상태를 최소 하나 지정하세요.
 Declare states,상태 선언
 Declare states…,상태 선언…

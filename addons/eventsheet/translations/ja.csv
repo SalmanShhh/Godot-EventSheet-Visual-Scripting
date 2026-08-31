@@ -5705,6 +5705,7 @@ open the player's data folder {path},プレイヤーのデータフォルダー 
 and %d more watched folder(s),さらに %d 個の監視フォルダー
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s は宣言されていますが、どの行からも到達できません。そこへ行くものがなく、オブジェクトもそこから始まりません。
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",ある行が状態 %s を指していますが、このオブジェクトはそれを宣言していません。見出しの状態に追加するか、行をこのオブジェクト自身の状態に向けてください。
+"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","ここにある %d 行が状態を何も指していません。空の状態セルは `state == State.` にコンパイルされ、これは GDScript ではありません。それぞれをこのオブジェクトの状態のどれかに向けてください。"
 Name at least one state.,状態を少なくとも 1 つ指定してください。
 Declare states,状態を宣言
 Declare states…,状態を宣言…

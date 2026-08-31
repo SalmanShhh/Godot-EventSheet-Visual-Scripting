@@ -411,14 +411,16 @@ Two doors, both of them things you were already using:
 
 ## What the Doctor knows about states
 
-**Tools ▸ Project Doctor** finds the two things that go wrong with an object's states. Neither is an
-error - the object compiles and runs - and both present as "nothing happened", which is the worst
-kind of bug to find by playing:
+**Tools ▸ Project Doctor** finds the three things that go wrong with an object's states. The first
+two are not errors - the object compiles and runs - and both present as "nothing happened", which is
+the worst kind of bug to find by playing. The third does not compile at all, and is here because it
+is the one shape nothing else in the editor sees:
 
 | Finding | What it means |
 | --- | --- |
 | **A state nothing reaches** | The state is declared, no **Go to** names it, and it is not the one the object starts in. It is written, and unreachable |
 | **A state this object does not declare** | A row names a state this object's enum does not have. The field offers the declared ones and does not forbid the rest, so this catches hand-written code, a state borrowed from another object's family, and a name typed a moment before it was declared |
+| **A row that names no state at all** | An *Is in* or *Go to* was dropped and its state cell left empty. That row compiles to `state == State.`, which is not GDScript, so this is the one state finding that stops the file building rather than making it behave oddly |
 
 Both are asked of the project's own scripts rather than of its `.tres` sheets, because `.gd` is the
 default sheet format: a check built on the sheet list would skip almost every real object while
