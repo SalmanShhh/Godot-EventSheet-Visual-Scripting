@@ -422,8 +422,10 @@ Two doors, both of them things you were already using:
 - **A noun in a note is a door.** A comment beside an event that says "Patrol is where it starts"
   underlines `Patrol` with a hairline, and one click goes to that declaration. Only names the project
   can prove qualify: a word spelled like a state that is not one stays plain prose, with no mark and
-  no hover. The comment itself is never rewritten - a door is something a reader is shown, and the
-  line the compiler emits is the line it always was.
+  no hover, and a name of three letters or fewer is left alone whatever it is called - `Run`, `Hit`
+  and `Die` are as much ordinary English as they are state names. The comment itself is never
+  rewritten - a door is something a reader is shown, and the line the compiler emits is the line it
+  always was.
 
 ## What the Doctor knows about states
 

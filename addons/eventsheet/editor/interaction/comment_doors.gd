@@ -40,10 +40,18 @@ const KIND_STATE := EventSheetCompletions.KIND_STATE
 const KIND_MODE := EventSheetCompletions.KIND_MODE
 const KIND_SHEET := EventSheetCompletions.KIND_FILE
 
-## The shortest name that may become a door. Two letters are inside far too much ordinary prose for
+## The shortest name that may become a door. A short word is inside far too much ordinary prose for
 ## a match on one to be evidence of anything; a `$X` node reference is exempt because its sigil is
 ## already the evidence.
-const MIN_NAME_LENGTH: int = 3
+##
+## FOUR, NOT THREE, and the reason is the rule this file states about itself: "a sentence that merely
+## reads like a name is left alone". Run, Hit, Die, Won, Fly and End are perfectly ordinary state
+## names AND perfectly ordinary English, so at three letters "Run the game before shipping" and "Hit
+## points go here" both grew an underline under a word that was plain prose. A threshold cannot tell
+## prose from a name and this one does not pretend to - it only stops the shortest words, which are
+## the ones where a match is almost never evidence. A four-letter state name a project also uses as
+## an ordinary word is still claimed, and the door is inert and the comment untouched either way.
+const MIN_NAME_LENGTH: int = 4
 
 ## The files a name may open AS A SHEET. Both are formats the workspace opens; anything else in the
 ## project is a file this vocabulary has no door for.

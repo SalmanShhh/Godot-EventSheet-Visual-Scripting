@@ -27,15 +27,19 @@ static func run() -> bool:
 	return ok
 
 
-## An object with three states, a mode, a published function, and a scene holding one plain node and
+## An object with five states, a mode, a published function, and a scene holding one plain node and
 ## one uniquely named one - one of everything a door can be.
+##
+## Two of the states are DELIBERATELY three letters and perfectly ordinary English: Run and Hit are
+## as much a state name as Patrol is, and a threshold that let them through underlined the words in
+## "Run the game before shipping" and "Hit points go here" as though they were references.
 static func _sheet() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.custom_class_name = "Enemy"
 	sheet.host_class = "CharacterBody2D"
 	var states: EnumRow = EnumRow.new()
 	states.enum_name = EventSheetStateFacts.ENUM_NAME
-	states.members = PackedStringArray(["PATROL", "CHASE", "GAVE_UP"])
+	states.members = PackedStringArray(["PATROL", "CHASE", "GAVE_UP", "RUN", "HIT"])
 	sheet.events.append(states)
 	var published: EventFunction = EventFunction.new()
 	published.function_name = "begin_chase"
@@ -117,6 +121,10 @@ static func _test_prose_that_proves_nothing_stays_prose() -> bool:
 		"only 50% of the time, and $ is not a node": PackedStringArray(),
 		# Two letters are inside too much ordinary English to be evidence of anything.
 		"go up a bit": PackedStringArray(),
+		# And so are three. Run, Hit, Die, Won, Fly and End are ordinary state names AND ordinary
+		# words, so a threshold at three underlined prose in every note that used one of them.
+		"Run the game before shipping": PackedStringArray(),
+		"Hit points go here": PackedStringArray(),
 	}, func(line: String) -> Variant: return _read(line, table))
 	EventSheetCompletions.scene_root_override = null
 	scene_root.free()

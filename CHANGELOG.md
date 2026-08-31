@@ -324,6 +324,11 @@
   the same way. Separately, an inverted **Not Is in X for over 6s** is true UNTIL the hold passes, so
   a bar counting up to it read as progress towards the opposite of what the row does; it now shows
   nothing, the same answer a computed wait gets.
+- **A three-letter state name no longer turns prose into a door.** The door table's own rule is that
+  "a sentence that merely reads like a name is left alone", and at a three-letter threshold `Run`,
+  `Hit`, `Die`, `Won`, `Fly` and `End` - ordinary state names and ordinary English both - underlined
+  the words in "Run the game before shipping" and "Hit points go here". The floor is four, and the
+  door-table pins now declare two such states so the case is measured rather than assumed.
 
 ### A path says which place it is in
 
