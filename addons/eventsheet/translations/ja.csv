@@ -5820,3 +5820,9 @@ On Node Leaves Group,ノードがグループから抜けたとき
 On a node leaving {group},ノードが {group} から抜けたとき
 Any group - every node entering or leaving the world,すべてのグループ - ワールドに入る・出るすべてのノード
 "The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.",この判定はワールドに入る・出るすべてのノードで走ります。ゲームが物を出す規模では無視できますが、パーティクルの嵐の中では誤った道具です。シーンファイルで設定したグループはノードが到着した時点で既にあります。スクリプトが add_child のあとで追加したグループは、そのノードではなく次に加わるノードで知らされます。
+"%s builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT - so building one runs its author's code with everything this game can reach: the player's files, their network, their machine. First: %s.",%s はゲームに同梱されていないファイルからシーンを組み立てています。シーンファイルはスクリプトを指名できるため、組み立てるとその作者のコードが、このゲームが届く範囲すべて - プレイヤーのファイル、ネットワーク、マシン - とともに実行されます。最初: %s。
+"Scene File Is Data-Only asks about that same file first: it reads the file's own resource table as text and builds nothing, so a scene carrying code answers false before anything runs.",「シーンファイルはデータのみ」が同じファイルについて先に尋ねます。ファイル自身のリソース表をテキストとして読み、何も組み立てないので、コードを含むシーンは何かが走る前に偽と答えます。
+"This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about - and it is about THAT file, not about the scenes that file points at.",これは行に書かれたパスから読み取られます。断片から組み立てたパスや変数に入ったパスについて、この検査は何も言えません。そして対象はそのファイル自身であり、そのファイルが指す先のシーンではありません。
+Ask whether it is data first,まずデータかどうか尋ねる
+Ask whether %s is data,%s がデータか尋ねる
+This event already asks whether %s is data.,このイベントは既に %s がデータかを尋ねています。

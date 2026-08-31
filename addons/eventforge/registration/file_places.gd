@@ -61,6 +61,10 @@ const WRITE_SHAPED: Dictionary = {
 	"WriteFileTable": ["path"],
 	"PackFolderIntoZip": ["archive"],
 	"UnpackZipIntoFolder": ["folder"],
+	# Saving a branch of the running game as a scene file is a write like any other, and the export
+	# trap catches it exactly the way it catches a text file: a level the player built, written to
+	# res://, is written in the editor and silently nowhere in the exported build.
+	"SaveBranchAsSceneFile": ["path"],
 }
 
 ## The hint every path field carries. The ONE mark a path field is known by - the field lead, the
@@ -99,6 +103,10 @@ const PATH_PARAMS: Dictionary = {
 const WRITE_CALLS: PackedStringArray = [
 	"FileAccess.open(", "DirAccess.remove_absolute(", "DirAccess.rename_absolute(",
 	"DirAccess.copy_absolute(", "DirAccess.make_dir_recursive_absolute(",
+	# The engine's own resource writer. A packed scene or a `.tres` written to res:// is the export
+	# trap said one more way - it lands in the project folder in the editor and nowhere at all in the
+	# exported build - and Save Branch As Scene File is spelled with exactly this call.
+	"ResourceSaver.save(",
 ]
 
 ## The archive writer, and the call that names the file it writes. An archive written to res:// is

@@ -127,6 +127,13 @@ const OFFERED := {
 	"files-unguarded-read": [
 		{"id": "respell_guarded_read", "label": "Say what to use when it is missing"},
 	],
+	# The fourth path chip, and the only one of them that is about trust rather than about a place: a
+	# scene file can name a script, so the answer is a QUESTION asked first rather than a path
+	# rewritten. It writes the shipped Scene File Is Data-Only row into the events that build a scene
+	# nobody asked about, which is the same gesture the row's own help strip offers.
+	"files-untrusted-scene-load": [
+		{"id": "ask_whether_it_is_data", "label": "Ask whether it is data first"},
+	],
 	# A short catalog is a JOB, not a sentence: the chip writes the missing keys out as a
 	# ready-to-fill translation file rather than listing forty of them in a report line.
 	"ship-translation-coverage": [
@@ -295,7 +302,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return {"ok": true, "message": "Put the rows that use %s under Pin ▸ Is Pinned, or under a condition asking whether it is still there - a pin whose anchor is gone reads a place off nothing." % subject}
 		"guard_debug_rows":
 			return _guard_debug_rows(str(finding.get("path", "")), dock)
-		"write_under_user", "path_under_user", "respell_guarded_read":
+		"write_under_user", "path_under_user", "respell_guarded_read", "ask_whether_it_is_data":
 			return _rewrite_paths(fix_id, str(finding.get("path", "")), dock)
 		"export_missing_keys":
 			return _export_missing_keys()
@@ -355,8 +362,8 @@ static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
 
 
 ## What each path fix is called when it is described, what it reads on a sheet, and what it writes.
-## One table rather than three near-identical functions: the three differ only in which rule they
-## run and in the sentence they say, and a fourth path rule should be a row here.
+## One table rather than four near-identical functions: they differ only in which rule they run and
+## in the sentence they say, and a fifth path rule should be a row here.
 static func path_fixes() -> Dictionary:
 	return {
 		"write_under_user": {
@@ -376,6 +383,16 @@ static func path_fixes() -> Dictionary:
 			"read": Callable(EventSheetFilesDoctor, "guarded_read_receipt"),
 			"write": Callable(EventSheetFilesDoctor, "respell_guarded_reads"),
 			"nothing": "No unguarded user:// reads in the rows of %s - the read is written by hand, so respell it where it is typed.",
+		},
+		# The fourth rule is not a rewrite of a value: it ADDS a question in front of the ones an
+		# event already asks. It rides the same table anyway, because what the table is really about
+		# is the three steps every one of these takes - read the sheet, show what would change, write
+		# it in one undo step - and those are the same whichever end of the row the change lands on.
+		"ask_whether_it_is_data": {
+			"title": "Ask whether it is data first",
+			"read": Callable(EventSheetSceneTrustFindings, "receipt"),
+			"write": Callable(EventSheetSceneTrustFindings, "guard_scene_loads"),
+			"nothing": "No unasked scene builds in the rows of %s - the load is written by hand, so ask about it where it is typed.",
 		},
 	}
 

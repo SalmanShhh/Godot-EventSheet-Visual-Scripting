@@ -5809,6 +5809,9 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetSpawnFindings.FIX_REMOVE_LAST:
 			_move_the_removal_last(note_meta)
 			return true
+		EventSheetSceneTrustFindings.FIX_ASK_FIRST:
+			_ask_whether_the_scene_is_data(note_meta, subject)
+			return true
 		EventSheetEffectFindings.FIX_PICK_DIAL:
 			_repick_effect_dial(note_meta)
 			return true
@@ -5904,6 +5907,31 @@ func _guard_the_reference(note_meta: Dictionary, subject: String) -> void:
 		return
 	_set_status(EventSheetSpawnFindings.respell_receipt(name_text,
 		"is_instance_valid(%s)" % name_text))
+
+
+## "Ask whether it is data first". A scene file is a table that may name a SCRIPT, so building one
+## that did not come with the game runs its author's code with everything this game can reach. This
+## puts the shipped Scene File Is Data-Only question into the event as an ORDINARY condition row,
+## over the very file the row builds - visible, editable, deletable, a plain `if` on disk - rather
+## than as a wrapper the compiler adds behind the row, which is the same rule the still-here guard
+## beside it states about itself.
+##
+## RECEIPT FIRST: the status line says the file and the question now asked about it, and the whole
+## thing is one undo step through the funnel every other mutation takes.
+func _ask_whether_the_scene_is_data(note_meta: Dictionary, subject: String) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var path_expression: String = subject.strip_edges()
+	if _current_sheet == null or event_row == null or path_expression.is_empty():
+		return
+	if not _perform_undoable_sheet_edit(
+			EventSheetL10n.translate("Ask whether %s is data") % path_expression,
+			func() -> bool:
+				return EventSheetSceneTrustFindings.ask_first({
+					"event": event_row, "subject": path_expression})):
+		_set_status(EventSheetL10n.translate("This event already asks whether %s is data.") % path_expression)
+		return
+	_set_status(EventSheetSpawnFindings.respell_receipt(path_expression,
+		"%s(%s)" % [EventForgeSceneTrust.HELPER_NAME, path_expression]))
 
 
 ## "Move the destroy last". A row that destroys a node and a later row in the same event that books a

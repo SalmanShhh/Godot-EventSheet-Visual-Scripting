@@ -5820,3 +5820,9 @@ On Node Leaves Group,노드가 그룹에서 나갈 때
 On a node leaving {group},노드가 {group} 에서 나갈 때
 Any group - every node entering or leaving the world,모든 그룹 - 월드에 들어오고 나가는 모든 노드
 "The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.","이 검사는 월드에 들어오고 나가는 모든 노드마다 돕니다. 게임이 물건을 만드는 규모에서는 아무것도 아니지만, 파티클 폭풍 속에서는 잘못된 도구입니다. 장면 파일에 넣은 그룹은 노드가 도착할 때 이미 있습니다. 스크립트가 add_child 뒤에 넣은 그룹은 그 노드가 아니라 다음에 들어오는 노드가 알려 줍니다."
+"%s builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT - so building one runs its author's code with everything this game can reach: the player's files, their network, their machine. First: %s.",%s 은(는) 게임이 함께 배포하지 않은 파일에서 씬을 만듭니다. 씬 파일은 스크립트를 지정할 수 있으므로 만드는 순간 그 작성자의 코드가 이 게임이 닿는 모든 것 - 플레이어의 파일, 네트워크, 기기 - 과 함께 실행됩니다. 처음: %s.
+"Scene File Is Data-Only asks about that same file first: it reads the file's own resource table as text and builds nothing, so a scene carrying code answers false before anything runs.",씬 파일이 데이터뿐인지가 바로 그 파일을 먼저 묻습니다. 파일의 리소스 표를 텍스트로 읽고 아무것도 만들지 않으므로 코드를 담은 씬은 무엇이 실행되기 전에 거짓으로 답합니다.
+"This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about - and it is about THAT file, not about the scenes that file points at.",이것은 줄에 쓰인 경로에서 읽습니다. 조각으로 만든 경로나 변수에 담긴 경로에 대해서는 이 검사가 할 말이 없습니다. 그리고 그 파일 자체에 대한 것이지 그 파일이 가리키는 씬들에 대한 것이 아닙니다.
+Ask whether it is data first,먼저 데이터인지 묻기
+Ask whether %s is data,%s 이(가) 데이터인지 묻기
+This event already asks whether %s is data.,이 이벤트는 이미 %s 이(가) 데이터인지 묻고 있습니다.

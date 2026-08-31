@@ -1,0 +1,555 @@
+# Godot EventSheets - saving what the player built, and the trust line that comes back with it.
+#
+# Two rows are under test and they are one story. A branch of the running game can be written out as
+# a scene file - which is how a level editor, a base builder or a ship yard keeps what somebody made
+# - and a scene file is the one format in the Files vocabulary that can carry BEHAVIOUR, because its
+# resource table may name a script. So the writer ships with the question worth asking before
+# anything reads one back, and with a Doctor check that notices when nobody asked.
+#
+# What is pinned here, in the order the failures actually happen:
+#   1. THE VOCABULARY. Ids, category, hints, templates, and that every row and every parameter
+#      carries real help - values, never counts. The editor-side twin is named in the writer's own
+#      description, because two rows doing one job in two worlds have to say so.
+#   2. THE OWNER WALK, which is the whole reason the writer is a row. The emitted lines are pinned,
+#      and the write is registered as a write so the export trap and its one-click fix can see it.
+#   3. THE QUESTION REALLY ANSWERS. The function the condition compiles to is run against real scene
+#      files written for this test: one that is only data, one naming a script beside itself, one
+#      carrying a script inside it, one naming the project's own script, and one that is not there.
+#   4. THE HELPER LANDS ONCE. The compiler writes the definition into the file the first time any row
+#      asks, skips it when the file already has it, and never moves a line above it.
+#   5. THE LIFT, in both tails, with the boundary in the other direction: a bare pack-and-save with
+#      no walk in front of it is a different program and is left as the code it is.
+#   6. THE DOCTOR'S READING, pure over text: flagged unasked, quiet when asked, quiet about res://,
+#      quiet about a path it cannot read.
+#   7. THE QUIET AMBER STATE AND ITS DOOR. The finding hangs on the event, the door writes the
+#      shipped question in front of the questions already there, and the finding then goes away.
+@tool
+class_name SceneTrustTest
+extends RefCounted
+
+const FIXTURE_DIR: String = "res://tests/fixtures/"
+const FIXTURE: String = "scene_save_branch.gd"
+
+## Every ace_id this pass adds. Checked against the WHOLE registry, because an id is a compatibility
+## promise the moment it ships and two descriptors answering to one id is a silent coin toss over
+## which template a row compiles through.
+const NEW_ACE_IDS: Array[String] = ["SaveBranchAsSceneFile", "SceneFileIsDataOnly"]
+
+## Where the scene files this test writes and reads go. Under user://, which is the place a test may
+## write, and cleaned up at the end of the run that made them.
+const TEST_DIR: String = "user://_scene_trust_test"
+
+
+static func run() -> bool:
+	var ok: bool = true
+	ok = _test_descriptors() and ok
+	ok = _test_the_owner_walk() and ok
+	ok = _test_the_question_answers() and ok
+	ok = _test_the_helper_lands_once() and ok
+	ok = _test_the_lift() and ok
+	ok = _test_the_doctors_reading() and ok
+	ok = _test_the_row_state_and_its_door() and ok
+	_clean_up()
+	return ok
+
+
+# ── 1. the vocabulary ───────────────────────────────────────────────────────────
+
+
+static func _test_descriptors() -> bool:
+	var ok: bool = true
+	var counts: Dictionary = {}
+	var missing_help: PackedStringArray = PackedStringArray()
+	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+		if not NEW_ACE_IDS.has(descriptor.ace_id):
+			continue
+		counts[descriptor.ace_id] = int(counts.get(descriptor.ace_id, 0)) + 1
+		if descriptor.description.strip_edges().is_empty():
+			missing_help.append(descriptor.ace_id)
+		for param: ACEParam in descriptor.params:
+			if str(param.description).strip_edges().is_empty():
+				missing_help.append("%s.%s" % [descriptor.ace_id, param.id])
+	var absent: PackedStringArray = PackedStringArray()
+	var duplicated: PackedStringArray = PackedStringArray()
+	for ace_id: String in NEW_ACE_IDS:
+		var seen: int = int(counts.get(ace_id, 0))
+		if seen == 0:
+			absent.append(ace_id)
+		elif seen > 1:
+			duplicated.append(ace_id)
+	ok = _check("every new id is registered", absent, PackedStringArray()) and ok
+	ok = _check("no new id collides with an existing one", duplicated, PackedStringArray()) and ok
+	ok = _check("every new row and parameter carries real help", missing_help,
+		PackedStringArray()) and ok
+
+	var writer: ACEDescriptor = ACERegistry.find_descriptor("Core", "SaveBranchAsSceneFile")
+	ok = _check("the writer is an action", writer.ace_type, ACEDescriptor.ACEType.ACTION) and ok
+	ok = _check("filed on the Files page with the rest of the file vocabulary",
+		writer.category, "Files") and ok
+	ok = _check("and reads as a sentence", writer.get_display_text(),
+		"save branch {branch} as scene file {path}") and ok
+	ok = _check("its Save To field says its place under the box",
+		writer.params[1].hint, EventForgeFilePlaces.PATH_HINT) and ok
+	ok = _check("its branch defaults to the node the sheet is on",
+		writer.params[0].default_value, "self") and ok
+	ok = _check("and its file defaults to the player's own folder",
+		EventForgeFilePlaces.place_of(writer.params[1].default_value),
+		EventForgeFilePlaces.PLACE_USER) and ok
+	# The editor-side twin, named in the writer's own words. Two rows do this one job, in two worlds,
+	# and a reader who found one of them has to be told the other exists.
+	ok = _check("the editor-side twin is named where the reader meets the game-side one",
+		writer.description.contains("Save Node As Scene"), true) and ok
+	ok = _check("and the editor-side twin is still exactly what it was",
+		ACERegistry.find_descriptor("Core", "SaveNodeAsScene").codegen_template,
+		"var __scene_{uid} = PackedScene.new()\n__scene_{uid}.pack({node})\nResourceSaver.save(__scene_{uid}, {path})") and ok
+
+	var question: ACEDescriptor = ACERegistry.find_descriptor("Core", "SceneFileIsDataOnly")
+	ok = _check("the question is a condition", question.ace_type,
+		ACEDescriptor.ACEType.CONDITION) and ok
+	ok = _check("it compiles to the one call every reader recognises the guard by",
+		question.codegen_template, "%s({path})" % EventForgeSceneTrust.HELPER_NAME) and ok
+	ok = _check("and reads as a sentence", question.get_display_text(),
+		"scene file {path} is data-only") and ok
+	ok = _check("its file field says its place under the box too",
+		question.params[0].hint, EventForgeFilePlaces.PATH_HINT) and ok
+	ok = _check("the row the door writes is the row that ships",
+		EventForgeSceneTrust.GUARD_ACE_ID, question.ace_id) and ok
+	ok = _check("and the door fills the field that row really has",
+		question.params[0].id, EventForgeSceneTrust.GUARD_PARAM) and ok
+	return ok
+
+
+# ── 2. the owner walk ───────────────────────────────────────────────────────────
+
+
+static func _test_the_owner_walk() -> bool:
+	var writer: ACEDescriptor = ACERegistry.find_descriptor("Core", "SaveBranchAsSceneFile")
+	var ok: bool = _check("the walk, the pack and the write, in that order and no other",
+		writer.codegen_template,
+		"var __branch_{uid}: Node = {branch}\n"
+		+ "for __part_{uid}: Node in __branch_{uid}.find_children(\"*\", \"\", true, false):\n"
+		+ "\tif __part_{uid}.owner == null:\n"
+		+ "\t\t__part_{uid}.owner = __branch_{uid}\n"
+		+ "var __scene_{uid} := PackedScene.new()\n"
+		+ "var __packed_{uid} := __scene_{uid}.pack(__branch_{uid})\n"
+		+ "if __packed_{uid} != OK:\n"
+		+ "\tpush_error(\"Save Branch As Scene File: %s could not be packed (error %d).\" % [__branch_{uid}.name, __packed_{uid}])\n"
+		+ "elif ResourceSaver.save(__scene_{uid}, {path}) != OK:\n"
+		+ "\tpush_error(\"Save Branch As Scene File: nothing was written to %s.\" % {path})")
+	# The walk asks for the children that are NOT already owned, and gives an owner only to those
+	# that have none: a node belonging to an instanced scene keeps its own, which is what makes that
+	# instance save as an instance instead of as a copy of its insides.
+	ok = _check("the walk reaches the nodes nothing owns",
+		writer.codegen_template.contains("find_children(\"*\", \"\", true, false)"), true) and ok
+	ok = _check("and only gives an owner to a node that has none",
+		writer.codegen_template.contains(".owner == null"), true) and ok
+	# A scene save IS a write, so the export trap and its one-click fix can both reach the row.
+	ok = _check("the writer says which of its fields it writes to",
+		EventForgeFilePlaces.write_params_of("SaveBranchAsSceneFile"),
+		PackedStringArray(["path"])) and ok
+	ok = _check("and a scene written to res:// is the export trap like any other write",
+		EventSheetFilesDoctor.res_write_lines(
+			"func _ready() -> void:\n\tResourceSaver.save(scene, \"res://built.tscn\")\n").size(),
+		1) and ok
+	# The question is a READ and is never reported as a write - the whole point of the write table.
+	ok = _check("the question writes nothing",
+		EventForgeFilePlaces.writes("SceneFileIsDataOnly"), false) and ok
+	return ok
+
+
+# ── 3. the question really answers ──────────────────────────────────────────────
+
+
+## The scene files this test writes, each one a real `.tscn` a project could have on disk.
+const DATA_ONLY_SCENE: String = "[gd_scene format=3]\n\n[node name=\"Level\" type=\"Node2D\"]\n"
+const OUTSIDE_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"user://_scene_trust_test/mod.gd\" id=\"1_a\"]\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
+const PROJECT_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" uid=\"uid://abc\" path=\"res://player.gd\" id=\"1_a\"]\n\n[node name=\"Player\" type=\"Node2D\"]\nscript = ExtResource(\"1_a\")\n"
+const EMBEDDED_SCRIPT_SCENE: String = "[gd_scene load_steps=2 format=3]\n\n[sub_resource type=\"GDScript\" id=\"1_a\"]\nscript/source = \"extends Node2D\"\n\n[node name=\"Level\" type=\"Node2D\"]\nscript = SubResource(\"1_a\")\n"
+const NOT_A_SCENE: String = "just some text nobody wrote as a scene\n"
+
+
+static func _test_the_question_answers() -> bool:
+	var asking: Object = _the_question_as_a_running_function()
+	if asking == null:
+		print("[FAIL] scene_trust_test: the emitted question does not parse")
+		return false
+	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	var ok: bool = _check("a scene that is only data answers true",
+		asking.call(EventForgeSceneTrust.HELPER_NAME, _written("data_only.tscn", DATA_ONLY_SCENE)),
+		true)
+	ok = _check("a scene naming a script beside itself in the player's folder answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("outside_script.tscn", OUTSIDE_SCRIPT_SCENE)), false) and ok
+	ok = _check("a scene carrying a script inside it answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("embedded_script.tscn", EMBEDDED_SCRIPT_SCENE)), false) and ok
+	ok = _check("a scene naming this project's own script answers true",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("project_script.tscn", PROJECT_SCRIPT_SCENE)), true) and ok
+	ok = _check("a file that is not a scene at all answers false",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			_written("not_a_scene.tscn", NOT_A_SCENE)), false) and ok
+	ok = _check("and a file that is not there answers false - unreadable is not cleared",
+		asking.call(EventForgeSceneTrust.HELPER_NAME,
+			"%s/nothing_here.tscn" % TEST_DIR), false) and ok
+	return ok
+
+
+# ── 4. the helper lands once ────────────────────────────────────────────────────
+
+
+static func _test_the_helper_lands_once() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	event.conditions.append(_authored_condition("SceneFileIsDataOnly",
+		{"path": "\"user://built_level.tscn\""}))
+	event.actions.append(_authored_action("SaveBranchAsSceneFile",
+		{"branch": "self", "path": "\"user://built_level.tscn\""}, "a1"))
+	sheet.events.append(event)
+	# A second event asking the same question, so the count below is a count of definitions rather
+	# than of rows: two askers must still leave one function.
+	var again: EventRow = EventRow.new()
+	again.trigger_provider_id = "Core"
+	again.trigger_id = "OnProcess"
+	again.conditions.append(_authored_condition("SceneFileIsDataOnly",
+		{"path": "\"user://built_ship.tscn\""}))
+	sheet.events.append(again)
+	sheet.external_source_path = "user://_scene_trust_authored.gd"
+	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	var ok: bool = _check("the question compiles to the call it names",
+		output.contains("if %s(\"user://built_level.tscn\"):" % EventForgeSceneTrust.HELPER_NAME),
+		true)
+	ok = _check("the walk the row writes is really in the file",
+		output.contains("for __part_a1: Node in __branch_a1.find_children(\"*\", \"\", true, false):"),
+		true) and ok
+	ok = _check("and it is the ownerless children it gives an owner to",
+		output.contains("if __part_a1.owner == null:") and output.contains("__part_a1.owner = __branch_a1"),
+		true) and ok
+	ok = _check("the definition lands exactly once however many rows ask",
+		_times(output, EventForgeSceneTrust.helper_head()), 1) and ok
+	ok = _check("and the whole file parses inside the host it is for",
+		_parses("extends Node\n%s" % output), true) and ok
+	# Reopening an emitted file and saving it again must not add a second definition: the one that is
+	# already there reads back as an ordinary function and is re-emitted where it sits.
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external_source(
+		output, true, "user://_scene_trust_authored.gd")
+	reopened.external_source_path = "user://_scene_trust_authored.gd"
+	var again_out: String = str(SheetCompiler.compile(
+		reopened, reopened.external_source_path).get("output", ""))
+	ok = _check("a file that already defines it gains no second copy",
+		_times(again_out, EventForgeSceneTrust.helper_head()), 1) and ok
+	ok = _check("and a sheet that never asks gains no definition at all",
+		_times(_compiled_without_the_question(), EventForgeSceneTrust.helper_head()), 0) and ok
+	return ok
+
+
+# ── 5. the lift ─────────────────────────────────────────────────────────────────
+
+
+static func _test_the_lift() -> bool:
+	var sheet: EventSheetResource = _open(FIXTURE)
+	var ok: bool = true
+	var plain: ACEAction = _function_action(sheet, "save_the_level", 0)
+	ok = _check("the hand-written walk, pack and save read as one row", _row_of(plain),
+		"SaveBranchAsSceneFile") and ok
+	ok = _check("with the branch and the file the file wrote", _params_of(plain),
+		{"branch": "$Level", "path": "\"user://built_level.tscn\""}) and ok
+	ok = _check("and the author's own words for the three locals baked on", _template_of(plain),
+		"var branch := {branch}\n"
+		+ "for part: Node in branch.find_children(\"*\", \"\", true, false):\n"
+		+ "\tif part.owner == null:\n"
+		+ "\t\tpart.owner = branch\n"
+		+ "var scene := PackedScene.new()\n"
+		+ "scene.pack(branch)\n"
+		+ "ResourceSaver.save(scene, {path})") and ok
+
+	var answered: ACEAction = _function_action(sheet, "save_the_ship", 0)
+	ok = _check("the tail the row itself writes is the same row", _row_of(answered),
+		"SaveBranchAsSceneFile") and ok
+	ok = _check("with its own values", _params_of(answered),
+		{"branch": "$Ship", "path": "\"user://built_ship.tscn\""}) and ok
+	ok = _check("and both failure answers riding back out in the template",
+		_template_of(answered).contains("elif ResourceSaver.save(__scene_s1, {path}) != OK:"),
+		true) and ok
+
+	# THE BOUNDARY. A pack and a save with no walk in front of them saves a scene holding one node -
+	# a different program - so it keeps the reading it had.
+	ok = _check("a bare pack-and-save is not claimed",
+		_function_row_ids(sheet, "pack_it_only").has("SaveBranchAsSceneFile"), false) and ok
+
+	sheet.external_source_path = "user://_scene_save_roundtrip.gd"
+	var output: String = str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+	ok = _check("%s comes back byte for byte" % FIXTURE, output, _source(FIXTURE)) and ok
+	return ok
+
+
+# ── 6. the Doctor's reading ─────────────────────────────────────────────────────
+
+
+const UNASKED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar __layout_a1 = load(\"user://mods/level.tscn\").instantiate()\n\tget_tree().root.add_child(__layout_a1)\n"
+const ASKED: String = "extends Node\n\n\nfunc _ready() -> void:\n\tif __eventsheets_scene_is_data_only(\"user://mods/level.tscn\"):\n\t\tvar __layout_a1 = load(\"user://mods/level.tscn\").instantiate()\n\t\tget_tree().root.add_child(__layout_a1)\n"
+const ASKED_ABOUT_ANOTHER: String = "extends Node\n\n\nfunc _ready() -> void:\n\tif __eventsheets_scene_is_data_only(\"user://mods/other.tscn\"):\n\t\tvar __layout_a1 = load(\"user://mods/level.tscn\").instantiate()\n\t\tget_tree().root.add_child(__layout_a1)\n"
+const SHIPPED_SCENE: String = "extends Node\n\n\nfunc _ready() -> void:\n\tget_tree().change_scene_to_file(\"res://levels/one.tscn\")\n"
+const BUILT_PATH: String = "extends Node\n\n\nfunc _ready() -> void:\n\tadd_child(load(chosen_path).instantiate())\n"
+const NOT_A_SCENE_FILE: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvar table = load(\"user://mods/loot.tres\")\n"
+
+
+static func _test_the_doctors_reading() -> bool:
+	var ok: bool = _check("a scene built from the player's folder with nobody asking is reported",
+		EventSheetFilesDoctor.untrusted_scene_lines(UNASKED),
+		PackedStringArray(["var __layout_a1 = load(\"user://mods/level.tscn\").instantiate()"]))
+	ok = _check("the same build under the question is quiet",
+		EventSheetFilesDoctor.untrusted_scene_lines(ASKED).size(), 0) and ok
+	ok = _check("but a question about a DIFFERENT file guards nothing",
+		EventSheetFilesDoctor.untrusted_scene_lines(ASKED_ABOUT_ANOTHER).size(), 1) and ok
+	ok = _check("a scene the game shipped with is nobody's business",
+		EventSheetFilesDoctor.untrusted_scene_lines(SHIPPED_SCENE).size(), 0) and ok
+	ok = _check("a path built out of pieces is one this check says nothing about",
+		EventSheetFilesDoctor.untrusted_scene_lines(BUILT_PATH).size(), 0) and ok
+	ok = _check("and a file that is not a scene is a different question",
+		EventSheetFilesDoctor.untrusted_scene_lines(NOT_A_SCENE_FILE).size(), 0) and ok
+
+	var filed: Array[Dictionary] = EventSheetFilesDoctor.untrusted_scene_findings(
+		{"res://mods.gd": UNASKED})
+	ok = _check("it is filed under its own id", filed.size() == 1
+		and str(filed[0].get("check", "")) == EventSheetFilesDoctor.CHECK_UNTRUSTED_SCENE, true) and ok
+	ok = _check("as a warning rather than an error - a game whose mods are code is a decision",
+		str(filed[0].get("severity", "")), "warning") and ok
+	ok = _check("naming the file the door will ask about",
+		str(filed[0].get("subject", "")), "\"user://mods/level.tscn\"") and ok
+	ok = _check("and saying what it cannot see, so silence is never read as an all-clear",
+		str(filed[0].get("message", "")).contains("built out of pieces"), true) and ok
+	# The sibling check in the same section is about a different half of the same story and must not
+	# have started saying this one's sentence.
+	ok = _check("the outside-content check beside it stays quiet about a literal nobody dropped",
+		EventForgeOutsidePaths.loading_outside_lines(UNASKED).size(), 0) and ok
+	return ok
+
+
+# ── 7. the quiet amber state, and its door ──────────────────────────────────────
+
+
+static func _test_the_row_state_and_its_door() -> bool:
+	var sheet: EventSheetResource = _sheet_that_builds_a_mod()
+	var event: EventRow = sheet.events[0]
+	var found: Array[Dictionary] = EventSheetSceneTrustFindings.findings(sheet, "res://mods.gd")
+	var ok: bool = _check("the sheet earns exactly one note", found.size(), 1)
+	if not ok:
+		return false
+	ok = _check("filed under the id the Doctor files it under",
+		str(found[0].get("kind", "")), EventSheetFilesDoctor.CHECK_UNTRUSTED_SCENE) and ok
+	ok = _check("anchored at the event that builds it",
+		EventSheetSceneTrustFindings.for_event(found, event).size(), 1) and ok
+	ok = _check("naming the file, which is what the door needs",
+		str(found[0].get("subject", "")), "\"user://mods/level.tscn\"") and ok
+	ok = _check("and offering the question as its one door",
+		str(found[0].get("fix", "")), EventSheetSceneTrustFindings.FIX_ASK_FIRST) and ok
+	ok = _check("the receipt says the file and the question that would be asked about it",
+		EventSheetSceneTrustFindings.receipt(sheet),
+		[{"before": "\"user://mods/level.tscn\"",
+			"after": "%s(\"user://mods/level.tscn\")" % EventForgeSceneTrust.HELPER_NAME}]) and ok
+
+	var written: int = EventSheetSceneTrustFindings.guard_scene_loads(sheet)
+	ok = _check("the door writes one question", written, 1) and ok
+	ok = _check("as an ordinary condition row, in front of the ones already there",
+		[str((event.conditions[0] as Resource).get("ace_id")),
+			str((event.conditions[1] as Resource).get("ace_id"))],
+		[EventForgeSceneTrust.GUARD_ACE_ID, "IsPaused"]) and ok
+	ok = _check("over the very file the row builds",
+		((event.conditions[0] as Resource).get("params") as Dictionary),
+		{EventForgeSceneTrust.GUARD_PARAM: "\"user://mods/level.tscn\""}) and ok
+	ok = _check("and the note is gone, because the sheet really did change",
+		EventSheetSceneTrustFindings.findings(sheet, "res://mods.gd").size(), 0) and ok
+	ok = _check("asking twice writes nothing the second time",
+		EventSheetSceneTrustFindings.guard_scene_loads(sheet), 0) and ok
+
+	# A question asked by a PARENT event stands over the rows beneath it - which is what the emitted
+	# `if` inside an `if` really does, and what the Doctor's own walk out through the blocks reads.
+	var nested: EventSheetResource = _sheet_that_asks_above_and_builds_below()
+	ok = _check("a question on the event above guards the sub-event under it",
+		EventSheetSceneTrustFindings.findings(nested, "res://mods.gd").size(), 0) and ok
+	return ok
+
+
+## A sheet with one event that builds a scene out of the player's folder, with an unrelated question
+## already on it - so the door's insert is measured against a lane that is not empty.
+static func _sheet_that_builds_a_mod() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	event.conditions.append(_authored_condition("IsPaused", {}))
+	event.actions.append(_authored_action("AddLayoutOnTop",
+		{"path": "\"user://mods/level.tscn\"", "layout_name": "\"Mod\""}, "a1"))
+	sheet.events.append(event)
+	return sheet
+
+
+## The same build, one level down, under an event that already asks about that same file.
+static func _sheet_that_asks_above_and_builds_below() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var outer: EventRow = EventRow.new()
+	outer.trigger_provider_id = "Core"
+	outer.trigger_id = "OnReady"
+	outer.conditions.append(_authored_condition("SceneFileIsDataOnly",
+		{"path": "\"user://mods/level.tscn\""}))
+	var inner: EventRow = EventRow.new()
+	inner.actions.append(_authored_action("AddLayoutOnTop",
+		{"path": "\"user://mods/level.tscn\"", "layout_name": "\"Mod\""}, "b2"))
+	outer.sub_events.append(inner)
+	sheet.events.append(outer)
+	return sheet
+
+
+# ── helpers ─────────────────────────────────────────────────────────────────────
+
+
+## The question the condition compiles to, as a real function this test can call. Built from the ONE
+## definition the compiler writes, so what runs here is what runs in somebody's game.
+static func _the_question_as_a_running_function() -> Object:
+	var lines: PackedStringArray = PackedStringArray(["extends RefCounted", "",
+		EventForgeSceneTrust.helper_head()])
+	for line: String in EventForgeSceneTrust.helper_body():
+		lines.append(str(line))
+	var script := GDScript.new()
+	script.source_code = "\n".join(lines) + "\n"
+	return null if script.reload() != OK else script.new()
+
+
+## One scene file on disk, written for this test, and the path it landed at.
+static func _written(file_name: String, text: String) -> String:
+	DirAccess.make_dir_recursive_absolute(TEST_DIR)
+	var path: String = "%s/%s" % [TEST_DIR, file_name]
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file != null:
+		file.store_string(text)
+		file.close()
+	return path
+
+
+static func _clean_up() -> void:
+	if not DirAccess.dir_exists_absolute(TEST_DIR):
+		return
+	for file_name: String in DirAccess.get_files_at(TEST_DIR):
+		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, file_name])
+	DirAccess.remove_absolute(TEST_DIR)
+
+
+## A sheet that asks nothing, compiled - the proof that a project which never asks the question
+## gains nothing at all.
+static func _compiled_without_the_question() -> String:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	event.actions.append(_authored_action("SaveBranchAsSceneFile",
+		{"branch": "self", "path": "\"user://built_level.tscn\""}, "c3"))
+	sheet.events.append(event)
+	sheet.external_source_path = "user://_scene_trust_quiet.gd"
+	return str(SheetCompiler.compile(sheet, sheet.external_source_path).get("output", ""))
+
+
+static func _times(text: String, needle: String) -> int:
+	var seen: int = 0
+	var at: int = text.find(needle)
+	while at >= 0:
+		seen += 1
+		at = text.find(needle, at + needle.length())
+	return seen
+
+
+static func _parses(source: String) -> bool:
+	var script := GDScript.new()
+	script.source_code = source
+	return script.reload() == OK
+
+
+static func _source(file_name: String) -> String:
+	return FileAccess.get_file_as_string(FIXTURE_DIR + file_name)
+
+
+static func _open(file_name: String) -> EventSheetResource:
+	var path: String = FIXTURE_DIR + file_name
+	return GDScriptImporter.new().import_external_source(_source(file_name), true, path)
+
+
+## A row the SHEET authored. `uid` bakes the per-row id of a template that declares locals, which is
+## what the dock does at apply time and what nothing downstream does for it.
+static func _authored_action(ace_id: String, params: Dictionary, uid: String) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	action.codegen_template = ACERegistry.find_descriptor(
+		"Core", ace_id).codegen_template.replace("{uid}", uid)
+	return action
+
+
+static func _authored_condition(ace_id: String, params: Dictionary) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = ace_id
+	condition.params = params
+	return condition
+
+
+static func _function_of(sheet: EventSheetResource, function_name: String) -> EventFunction:
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == function_name:
+			return entry as EventFunction
+	return null
+
+
+## The nth ACE action of a lifted function's body, counting across its rows in order.
+static func _function_action(sheet: EventSheetResource, function_name: String,
+		index: int) -> ACEAction:
+	var found: Array[ACEAction] = []
+	var event_function: EventFunction = _function_of(sheet, function_name)
+	if event_function != null:
+		for row: Variant in event_function.events:
+			if row is EventRow:
+				for action: Variant in (row as EventRow).actions:
+					if action is ACEAction:
+						found.append(action as ACEAction)
+	return found[index] if index < found.size() else null
+
+
+static func _function_row_ids(sheet: EventSheetResource,
+		function_name: String) -> PackedStringArray:
+	var ids: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	while true:
+		var action: ACEAction = _function_action(sheet, function_name, index)
+		if action == null:
+			break
+		ids.append(action.ace_id)
+		index += 1
+	return ids
+
+
+static func _row_of(action: ACEAction) -> String:
+	return action.ace_id if action != null else "(no row)"
+
+
+static func _params_of(action: ACEAction) -> Dictionary:
+	return action.params if action != null else {}
+
+
+static func _template_of(action: ACEAction) -> String:
+	return action.codegen_template if action != null else "(no row)"
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] scene_trust_test: %s" % label)
+		return true
+	print("[FAIL] scene_trust_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false

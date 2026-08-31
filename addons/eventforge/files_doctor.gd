@@ -1,5 +1,5 @@
 # Godot EventSheets - the Doctor's Files section: three path mistakes the editor never mentions, and
-# one trust boundary nothing else in the engine draws.
+# two readings of the one trust boundary nothing else in the engine draws.
 #
 # The first three are the same shape of bug. The line is correct GDScript, it runs, and the editor is
 # silent - and then it behaves differently, or not at all, on the machine the game is sent to.
@@ -26,7 +26,7 @@
 #                              that is what the sheet meant - and its door is a respelling: the same
 #                              read with the fallback said out loud.
 #
-# The fourth is not a bug at all, which is exactly why nothing reports it:
+# The last two are not bugs at all, which is exactly why nothing reports them:
 #
 #   A LOAD OF OUTSIDE CONTENT   A path that came in through one of the game's own doors - a drop on
 #                               the window, the player's file chooser, a watched folder, an unpacked
@@ -37,6 +37,15 @@
 #                               file read as DATA - as an image, as text, as a table - and data
 #                               cannot carry behaviour. Which reading was meant is the reader's call,
 #                               so this one names the line and offers three doors rather than a fix.
+#
+#   A SCENE BUILT UNASKED       The same boundary, read the other way round: a line that builds a
+#                               SCENE file whose path is written in the line and is not under
+#                               `res://` - the player's folder, or a folder on one computer - with no
+#                               Scene File Is Data-Only question over that same file anywhere around
+#                               it. A `.tscn` is a table that may name a script, so this is a
+#                               stranger's code running as this game. The file is named and the
+#                               question is one row, so unlike the check above this one has a door:
+#                               the question, asked first.
 #
 # EVERY CHECK IS A PURE FUNCTION OVER TEXT, and the gathering is separate, so the tests pin the exact
 # words a reader meets rather than a count. The corpus is EMITTED SCRIPTS rather than sheets, for the
@@ -60,6 +69,7 @@ const CHECK_RES_WRITE := "files-write-to-res"
 const CHECK_ABSOLUTE_PATH := "files-absolute-path"
 const CHECK_UNGUARDED_READ := "files-unguarded-read"
 const CHECK_LOADS_OUTSIDE := "files-loads-outside-content"
+const CHECK_UNTRUSTED_SCENE := "files-untrusted-scene-load"
 
 ## Folders whose scripts are not this project's to answer for: the plugin itself, the shipped packs,
 ## the suite and the tools. The same list the Ship It section keeps, for the same reason.
@@ -92,6 +102,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(absolute_path_findings(sources))
 	out.append_array(unguarded_read_findings(sources))
 	out.append_array(loads_outside_findings(sources))
+	out.append_array(untrusted_scene_findings(sources))
 	return out
 
 
@@ -350,6 +361,124 @@ static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
 		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
 	return findings
 
+
+
+# ── A scene built from a file this project cannot vouch for ──────────────────────────────────
+#
+# The fifth check, and the SECOND one in this section that is about trust rather than about a path
+# that will not work. It sits beside the outside-content check above and deliberately answers a
+# different half of the same story:
+#
+#   the check above  follows a path that came in through one of the game's own DOORS - a drop, a
+#                    chooser, a watched folder, an unpacked archive - wherever it ends up. It cannot
+#                    see a path written into the line, and it offers no fix, because which of three
+#                    data-shaped readings the file was meant to have is the reader's call.
+#   this one         reads the PLACE off the path in the line, and only ever speaks about a SCENE
+#                    file - the one format whose resource table can name a script and which nothing
+#                    but a scene loader would be handed. Because the file is named and the question
+#                    is one row, this one HAS a fix: the data-only question, asked first.
+#
+# So a line neither can see is a line neither claims, and a line both can see earns two findings that
+# say two different true things about it. Nothing here re-says the other's sentence.
+#
+# THE GUARD IS READ OFF THE CALL, not off a list of row ids: the data-only question compiles to one
+# named function, so a sheet that picked the row and a person who typed the call are both guarded.
+# And a guard only counts over the file it NAMES, which is the same rule the unguarded-read check
+# states about its own question - a line asking about one scene and building another is the
+# unguarded build it looks like.
+
+
+## One finding per script that builds a scene from a path this project cannot vouch for without
+## asking the data-only question over that same path first.
+static func untrusted_scene_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var source: String = str(sources[script_path])
+		var lines: PackedStringArray = untrusted_scene_lines(source)
+		if lines.is_empty():
+			continue
+		findings.append(_finding("warning", CHECK_UNTRUSTED_SCENE, script_path,
+			untrusted_scene_message(script_path.get_file(), lines[0], lines.size()),
+			untrusted_scene_subject(source)))
+	return findings
+
+
+## The words, in one place, so the Doctor's line and the sentence the sheet's own help strip shows
+## under the selected row are the same finding said once. `named` is how many lines in this file say
+## it, which is what the "more like it" tail counts.
+static func untrusted_scene_message(label: String, line: String, named: int) -> String:
+	var message: String = EventSheetL10n.translate("%s builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT - so building one runs its author's code with everything this game can reach: the player's files, their network, their machine. First: %s.") % [
+		label, line]
+	if named > NAMED_LIMIT:
+		message += " " + EventSheetL10n.translate("%d more like it in this file.") % (named - NAMED_LIMIT)
+	message += " " + EventSheetL10n.translate("Scene File Is Data-Only asks about that same file first: it reads the file's own resource table as text and builds nothing, so a scene carrying code answers false before anything runs.")
+	message += " " + EventSheetL10n.translate("This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about - and it is about THAT file, not about the scenes that file points at.")
+	return message
+
+
+## The lines of this source that build a scene from a path whose place is not `res://`, with no
+## data-only question over that same path anywhere in the blocks around them. Trimmed, in the order
+## they appear.
+static func untrusted_scene_lines(source: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if not EventForgeSceneTrust.says_enough(source):
+		return found
+	var lines: PackedStringArray = source.split("\n")
+	for index: int in range(lines.size()):
+		var line: String = lines[index].strip_edges()
+		if line.is_empty() or line.begins_with("#"):
+			continue
+		var untrusted: PackedStringArray = EventForgeSceneTrust.untrusted_scene_paths(line)
+		if untrusted.is_empty():
+			continue
+		var asked: PackedStringArray = _scene_paths_asked_about(lines, index)
+		for path_expression: String in untrusted:
+			if not asked.has(path_expression):
+				found.append(line)
+				break
+	return found
+
+
+## The first path this source builds unasked, which is what the finding is filed under and what the
+## one-click door names. "" for a source that has none.
+static func untrusted_scene_subject(source: String) -> String:
+	var lines: PackedStringArray = untrusted_scene_lines(source)
+	if lines.is_empty():
+		return ""
+	var untrusted: PackedStringArray = EventForgeSceneTrust.untrusted_scene_paths(lines[0])
+	return "" if untrusted.is_empty() else untrusted[0]
+
+
+## The scene files every block AROUND this line asks the data-only question about, plus the ones the
+## line asks itself. The walk goes outwards by indentation - the enclosing `if`, then whatever
+## encloses that - because an event compiles to an `if` and a sub-event to an `if` inside it, so a
+## question asked by an event stands over every row under it.
+static func _scene_paths_asked_about(lines: PackedStringArray, index: int) -> PackedStringArray:
+	var asked: PackedStringArray = EventForgeSceneTrust.guarded_paths(lines[index])
+	var indent: int = _indent_of(lines[index])
+	var above: int = index - 1
+	while above >= 0 and indent > 0:
+		var line: String = lines[above]
+		above -= 1
+		if line.strip_edges().is_empty():
+			continue
+		var outer: int = _indent_of(line)
+		if outer >= indent:
+			continue
+		indent = outer
+		for path_expression: String in EventForgeSceneTrust.guarded_paths(line):
+			if not asked.has(path_expression):
+				asked.append(path_expression)
+	return asked
+
+
+## How many tabs one line begins with. Tabs, because every line this plugin emits is indented with
+## them and the style gate says the same of every line it accepts.
+static func _indent_of(line: String) -> int:
+	var tabs: int = 0
+	while tabs < line.length() and line[tabs] == "\t":
+		tabs += 1
+	return tabs
 
 
 # ── The receipts, and the rows a fix would change ────────────────────────────────────────────

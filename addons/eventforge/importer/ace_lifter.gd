@@ -55,6 +55,7 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 const RUN_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/multiplayer_lift.gd"),
 	preload("res://addons/eventforge/importer/layout_on_top_lift.gd"),
+	preload("res://addons/eventforge/importer/scene_save_lift.gd"),
 ]
 
 ## The static a run family declares.

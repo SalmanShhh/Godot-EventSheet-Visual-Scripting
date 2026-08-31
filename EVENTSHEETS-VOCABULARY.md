@@ -3802,6 +3802,7 @@ File management (read / write / JSON, plus directory + file operations).
 #### Conditions
 - **File Exists** (`path: String`) - True when a file exists at that path, so you can check before reading or writing it.
 - **Directory Exists** (`path: String`) - True when a folder exists at that path, useful before creating or listing it.
+- **Scene File Is Data-Only** (`path: String`) - True when a scene file names no code: no script written inside it, and no script it points at from anywhere but res://. It reads the file's own resource table as text and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. It reads the ONE file you name: a scene that file points at is a separate file with a table of its own.
 
 #### Actions
 - **Write Text File** (`path: String, text: String`) - Saves text to a file, overwriting anything already there (great for save data).
@@ -3818,6 +3819,7 @@ File management (read / write / JSON, plus directory + file operations).
 - **Pack Folder Into Zip** (`folder: String, archive: String`) - Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.
 - **Unpack Zip Into Folder** (`archive: String, folder: String`) - Reads a .zip archive and writes its entries into a folder. Every entry's path is checked against that folder BEFORE anything is written, and an entry that points outside it stops the unpack and raises On Unpack Refused - a zip is content somebody else made, and its entries name their own paths. The run reports itself through On Unpack Progress, and ends at On Unpack Finished, both of which the emitted loop calls by name.
 - **Show In The File Manager** (`path: String`) - Opens the player's own file browser with that file selected, so they can see what the game just wrote. DESKTOP ONLY: Windows, macOS and Linux open a window, and a web or mobile build does nothing at all - so say on screen where the file went as well.
+- **Save Branch As Scene File** (`branch: Node, path: String`) - Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and gives every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.
 
 #### Expressions
 - **Read Text File** (`path: String`) - Returns the whole file's contents as text (empty if it's missing or unreadable).

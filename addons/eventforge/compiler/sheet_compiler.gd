@@ -23,6 +23,11 @@ extends RefCounted
 ## compiler stays usable before the editor's class cache has seen the script.
 const CollisionFilters := preload("res://addons/eventforge/registration/collision_filters.gd")
 
+## The one reading of the trust line a scene file draws - the name of the function Scene File Is
+## Data-Only compiles to, and the definition written in beside it. Loaded by path for the same reason
+## the filters are: the compiler runs before the editor's class cache has seen anything.
+const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
+
 const VERSION: String = "0.17.0"
 
 ## The name of the shared aimed-floor helper the cursor and floor expressions call. One
@@ -771,6 +776,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
+	_append_scene_trust_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -966,6 +972,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_insert_missing_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	_append_aimed_cursor_helper(lines)
+	_append_scene_trust_helper(lines)
 	_append_remembered_persistence(lines, sheet, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -4302,6 +4309,19 @@ static func _append_aimed_cursor_helper(lines: PackedStringArray) -> void:
 		["	if map == null:",
 		"		return Vector2i.ZERO",
 		"	return map.local_to_map(map.get_local_mouse_position())"])
+
+
+## The one function Scene File Is Data-Only asks, written into the file the first time any row asks
+## it. Every rule the aimed-floor helper above states holds here word for word: appended last so no
+## source-map line moves, skipped outright when the file already defines it (which is what makes
+## reopening an emitted file and saving it again byte-identical), and a mere mention of the name
+## inside a string literal never counts as a call.
+##
+## The question itself lives beside the row that asks it, so the condition's template, this
+## definition and the Doctor's reading of a guarded line can only ever be one spelling.
+static func _append_scene_trust_helper(lines: PackedStringArray) -> void:
+	_append_shared_helper(lines, SceneTrust.HELPER_NAME, SceneTrust.helper_head(),
+		SceneTrust.helper_body())
 
 
 ## One shared helper's definition, appended when the file calls it and does not already define it.

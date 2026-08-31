@@ -19,6 +19,11 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
+## The one reading of the trust line a scene file draws. Loaded by path rather than by class name so
+## the vocabulary stays usable before the editor's class cache has seen the script - the same rule
+## the compiler follows for the tables it shares.
+const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -75,6 +80,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(_content_from_outside())
 	descriptors.append_array(_archives())
 	descriptors.append_array(_names_and_doors())
+	descriptors.append_array(_scene_files())
 	return descriptors
 
 
@@ -424,3 +430,68 @@ static func _sound_template() -> String:
 		+ "AudioStreamWAV.load_from_file({path})" \
 		+ "{?fallback} if %s == \"wav\" else {fallback}) " % extension \
 		+ "if FileAccess.file_exists({path}) else {fallback}{/fallback}"
+
+
+## ────────────────────────────────────────────────────────────────────────────────────────────────
+## SCENE FILES: what the player built, written down - and the question to ask before reading one back.
+##
+## A scene file is the one file format in this list that can carry BEHAVIOUR. A `.tscn` is a table of
+## resources, and a resource may be a script, so building one runs its author's code with everything
+## this game can reach. That single fact is what makes these two rows a pair rather than two rows:
+## one writes a scene file out of the running game, and the other is the question worth asking before
+## anything reads one back in.
+##
+##   the writer   Save Branch As Scene File. The OWNER WALK is the row: Godot packs the children a
+##                branch root OWNS, and a node added while the game runs has no owner at all, so a
+##                plain pack writes an empty scene and reports nothing. The walk is emitted into the
+##                script where it can be read, exactly as the archive loop beside it is.
+##   the question Scene File Is Data-Only. It reads the file's own resource table as TEXT and builds
+##                nothing, so asking is safe on a file this game did not write.
+##
+## THE EDITOR HAS ITS OWN TWIN, and the two are deliberately separate rows. Editor Tools ▸ Save Node
+## As Scene packs the node you are EDITING, from a Tool sheet, with the editor's own owners already
+## set by the Scene dock; this one runs in the GAME, where nothing has an owner until somebody sets
+## one. Same call, different world, and a row that pretended to be both would be wrong in one of them.
+##
+## WHAT THIS IS NOT. It is not the save system - the game's own state belongs to the Save System
+## pack's verbs. A scene file is the shape for something the player ASSEMBLED out of nodes: a level,
+## a room, a ship, a base. And it is not the named-scenes registry either: naming a scene by a short
+## word instead of a path is that pack's job, and nothing here keeps a second list.
+static func _scene_files() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "SaveBranchAsSceneFile", "Save Branch As Scene File", ACEDescriptor.ACEType.ACTION, _save_branch_template(), "", [
+		F.make_param("branch", "Node", "self", "Branch", "The node whose whole branch is written out. It becomes the root of the scene file, and every node under it that has no owner yet is given this node as its owner - which is what puts them in the file at all. A node that already belongs to another scene keeps that owner and is left out, so a branch full of instanced scenes saves as the branch plus those instances, not as a copy of their insides.", "expression"),
+		F.make_param("path", "String", "\"user://built_level.tscn\"", "Save To", "Where to write the scene file. Prefer user:// - res:// is the game's own files and is read-only once the game is exported, so a level the player built cannot be saved there.", "file_path")
+	], "Files", "save branch {branch} as scene file {path}")
+		.described("Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and gives every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.").featured())
+	descriptors.append(F.make_descriptor("Core", "SceneFileIsDataOnly", "Scene File Is Data-Only", ACEDescriptor.ACEType.CONDITION, "%s({path})" % SceneTrust.HELPER_NAME, "", [
+		F.make_param("path", "String", "\"user://built_level.tscn\"", "Scene File", "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.", "file_path")
+	], "Files", "scene file {path} is data-only")
+		.described("True when a scene file names no code: no script written inside it, and no script it points at from anywhere but res://. It reads the file's own resource table as text and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. It reads the ONE file you name: a scene that file points at is a separate file with a table of its own.").featured())
+	return descriptors
+
+
+## The save row's emitted lines. The owner walk, the pack, and the write, each of which can be read.
+##
+## THE WALK IS FIRST AND IT IS THE POINT. `PackedScene.pack` writes out the root plus every node the
+## ROOT OWNS, and a node added while the game runs is owned by nothing at all - so a branch the player
+## built packs as a scene holding one node, saves perfectly, and loads back empty. Nothing reports
+## that: pack() returns OK, ResourceSaver.save() returns OK, and the file is simply not what anybody
+## meant. The walk asks for the children NOT already owned (`find_children` with its owned flag off),
+## and gives an owner only to those that have none - a node that belongs to an instanced scene keeps
+## its own owner, which is what makes that instance save as an instance instead of as a copy.
+##
+## BOTH FAILURES ARE ANSWERED. `pack` refuses a node that is not in a tree; a write can fail on a
+## folder that is not there, a full disk or a read-only path. Either one leaves no file and, without
+## these two lines, no word about it anywhere.
+static func _save_branch_template() -> String:
+	return "var __branch_{uid}: Node = {branch}\n" \
+		+ "for __part_{uid}: Node in __branch_{uid}.find_children(\"*\", \"\", true, false):\n" \
+		+ "\tif __part_{uid}.owner == null:\n" \
+		+ "\t\t__part_{uid}.owner = __branch_{uid}\n" \
+		+ "var __scene_{uid} := PackedScene.new()\n" \
+		+ "var __packed_{uid} := __scene_{uid}.pack(__branch_{uid})\n" \
+		+ "if __packed_{uid} != OK:\n" \
+		+ "\tpush_error(\"Save Branch As Scene File: %s could not be packed (error %d).\" % [__branch_{uid}.name, __packed_{uid}])\n" \
+		+ "elif ResourceSaver.save(__scene_{uid}, {path}) != OK:\n" \
+		+ "\tpush_error(\"Save Branch As Scene File: nothing was written to %s.\" % {path})"

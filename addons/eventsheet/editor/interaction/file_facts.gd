@@ -70,6 +70,10 @@ const SHOWN_LIMIT: int = 4
 const WRITING_CALLS: Array[String] = [
 	"FileAccess.WRITE", "FileAccess.READ_WRITE", ".store_", "make_dir",
 	"remove_absolute", "rename_absolute", "copy_absolute", "ZIPPacker",
+	# The engine's own resource writer, which is how a scene or a `.tres` reaches disk. Without it a
+	# row that saves a branch of the running game as a scene file touched a path the band could not
+	# see, which is the one thing the band exists to show.
+	"ResourceSaver.save(",
 ]
 
 ## The engine calls that only LOOK. `rename_absolute` and `copy_absolute` appear in both lists

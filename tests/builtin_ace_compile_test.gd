@@ -147,6 +147,13 @@ const NOT_STANDALONE: Array[String] = [
 	# `state_entered_msec`. Same reason, and their round trip is gated by object_state_test, which
 	# compiles a sheet that really declares them, opens the result and recompiles it byte for byte.
 	"GoToState", "InState", "InStateForOver", "WasInState",
+	# Scene File Is Data-Only calls ONE sheet-synthesized helper - the text reading of a scene file's
+	# resource table, which the compiler writes into the file the first time any row asks the
+	# question - so it does not compile in a class this harness wraps by hand, exactly like the
+	# aimed-cursor words above. Its template and the helper itself are gated by
+	# scene_trust_test, which compiles it through the real compiler, runs the emitted
+	# function against real scene files, and pins that the helper lands exactly once per file.
+	"SceneFileIsDataOnly",
 ]
 
 

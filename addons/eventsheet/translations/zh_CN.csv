@@ -5820,3 +5820,9 @@ On Node Leaves Group,当节点离开分组时
 On a node leaving {group},当节点离开 {group} 时
 Any group - every node entering or leaving the world,任意分组 - 每一个进入或离开世界的节点
 "The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.",这个判断会对每一个进入或离开世界的节点执行 - 在游戏生成物件的量级上不算什么，但在粒子风暴里就是错的工具。写在场景文件里的分组在节点进入时就已经在了；脚本在 add_child 之后加的分组，要由下一个加入的节点来通报，而不是这一个。
+"%s builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT - so building one runs its author's code with everything this game can reach: the player's files, their network, their machine. First: %s.",%s 从游戏未随附的文件构建场景，而场景文件可以指定脚本 - 构建它就会以这个游戏能触及的一切运行其作者的代码：玩家的文件、他们的网络、他们的机器。首先：%s。
+"Scene File Is Data-Only asks about that same file first: it reads the file's own resource table as text and builds nothing, so a scene carrying code answers false before anything runs.",「场景文件仅为数据」会先询问同一个文件：它把文件自身的资源表当作文本读取，不构建任何东西，因此带有代码的场景在任何东西运行之前就答假。
+"This is read off the path written in the line - one built out of pieces, or held in a variable, is a path this check has nothing to say about - and it is about THAT file, not about the scenes that file points at.",这是从行中写下的路径读出来的 - 由片段拼出的路径，或存放在变量里的路径，这项检查无话可说 - 而且它说的是那个文件本身，而不是该文件指向的场景。
+Ask whether it is data first,先问它是不是数据
+Ask whether %s is data,询问 %s 是不是数据
+This event already asks whether %s is data.,此事件已经在询问 %s 是不是数据。
