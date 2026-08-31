@@ -1,4 +1,4 @@
-# EventForge module - one object's own state: asking about it, going to it, and answering a change.
+# EventForge module - one object's own state: asking about it, going to it, and answering a change. The same machine one level up is Game State (the game's own Mode enum, In mode X, Go to mode X); the older answer to the same question is the State Machine behaviour pack, which puts a String state in a child node and is frozen.
 #
 # An enemy is patrolling, or chasing, or staggered. That is a VARIABLE - the pattern every event
 # sheet already builds and every Godot project writes as an enum - so these rows are that enum's

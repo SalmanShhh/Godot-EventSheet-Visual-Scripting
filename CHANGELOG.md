@@ -329,6 +329,11 @@
   `Hit`, `Die`, `Won`, `Fly` and `End` - ordinary state names and ordinary English both - underlined
   the words in "Run the game before shipping" and "Hit points go here". The floor is four, and the
   door-table pins now declare two such states so the case is measured rather than assumed.
+- **The vocabulary reference says how the three state families relate.** Object State, Game State and
+  the State Machine pack sat in the generated reference as unrelated entries with no mention of each
+  other, which is one of the two places a reader actually meets all three at once. Each module's own
+  summary line now points at the other, so the cross-reference is DERIVED from the module rather than
+  hand-maintained beside it.
 
 ### A path says which place it is in
 

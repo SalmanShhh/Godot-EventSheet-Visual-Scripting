@@ -3885,7 +3885,7 @@ the game shapes every project writes by hand
 - **Mission Time Left** (`var_name: String`) - Gives the time left as text a player can read - "2:41" - ready to drop into a HUD label.
 
 ### Game State (`res://addons/eventforge/registration/modules/game_state_aces.gd`)
-the game's own mode: going to one, asking about one, and coming back.
+the game's own mode: going to one, asking about one, and coming back. The same machine one level down, for ONE object rather than the whole game, is Object State (that object's own State enum, Is in X, Go to X).
 
 #### Triggers
 - **On Entering Mode** (`mode: String`) - Runs the moment the game enters this mode. On leaving fires FIRST, always in that order, so the room is emptied before the next one is filled.
@@ -4384,10 +4384,10 @@ THE FOUR NOTIFICATIONS A GAME ACTUALLY REACTS TO.
 - **On close** - Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a "save first?" prompt.
 
 ### Object State (`res://addons/eventforge/registration/modules/object_state_aces.gd`)
-one object's own state: asking about it, going to it, and answering a change.
+one object's own state: asking about it, going to it, and answering a change. The same machine one level up is Game State (the game's own Mode enum, In mode X, Go to mode X); the older answer to the same question is the State Machine behaviour pack, which puts a String state in a child node and is frozen.
 
 #### Triggers
-- **On Entering State** (`state: String`) - Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts.
+- **On Entering State** (`state: String`) - Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.
 - **On Leaving State** (`state: String`) - Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.
 
 #### Conditions

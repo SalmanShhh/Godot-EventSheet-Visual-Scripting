@@ -1,4 +1,4 @@
-# EventForge module - the game's own mode: going to one, asking about one, and coming back.
+# EventForge module - the game's own mode: going to one, asking about one, and coming back. The same machine one level down, for ONE object rather than the whole game, is Object State (that object's own State enum, Is in X, Go to X).
 #
 # A game has a mode - Playing, Paused, Cutscene, Menu - and almost every project grows one as an
 # enum plus a hundred ifs. The ifs are the part that breaks: one gets forgotten, movement runs
