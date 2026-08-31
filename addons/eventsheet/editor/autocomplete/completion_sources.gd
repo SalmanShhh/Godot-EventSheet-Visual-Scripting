@@ -63,6 +63,16 @@ const FIELD_FILE := "file"
 ## `user://` half is what really exists in that folder at edit time, which is the only honest answer
 ## about a place the game writes to while it runs.
 const FIELD_PATH := "file_path"
+## The two kinds the Quick Add field ASKS with, rather than completes with. They are field kinds
+## because that is where a list that must be built once and only filtered afterwards belongs: the
+## cache, its two invalidations and the filtering contract are already here, and the alternative was
+## a second index of the sheet that would have gone stale on its own schedule.
+##
+## `ask_row` is everything one sheet can be FOUND by, read through the project Find's own collection
+## so the answers and the Find window can never disagree. `ask_symbol` is everything one sheet
+## DECLARES by name - its states, its functions, its signals, its tree variables.
+const FIELD_ASK_ROW := "ask_row"
+const FIELD_ASK_SYMBOL := "ask_symbol"
 
 ## The hints that ARE a file field, and the resource type each one means. A hint that already says
 ## which type it takes should not have to say it twice at the call site.
@@ -98,6 +108,12 @@ const KIND_ANIMATION := "animation"
 const KIND_MARKER := "marker"
 const KIND_ENUM := "enum"
 const KIND_BUILTIN := "builtin"
+## What the Quick Add field's answers can BE. Ids like the rest, never display strings: an answer
+## says its kind in the reader's own language through the ask, and pins itself in tests through this.
+const KIND_ROW := "row"
+const KIND_STATE := "state"
+const KIND_MODE := "mode"
+const KIND_FINDING := "finding"
 
 ## The CodeEdit completion icon one kind wears, for the two fields that are real code boxes and
 ## keep the engine's own popup (the expression box and the Script block). One table, so a name
@@ -165,6 +181,18 @@ static func for_field(sheet: EventSheetResource, field_kind: String, prefix: Str
 	if kind == FIELD_EXPRESSION:
 		return rank(_expression_pool(sheet, prefix), trailing_word(prefix))
 	return rank(_pool(sheet, kind), prefix)
+
+
+## The built list for one kind, UNRANKED - for a reader that has to rank it against lists of other
+## kinds and cannot use the per-kind cap to do it. The cache is the point: the list is built once and
+## handed back, so joining six kinds on a keystroke costs six lookups rather than six builds.
+##
+## READ-ONLY. This is the seam's own array rather than a copy of it, because copying every candidate
+## on every keypress is precisely the cost this seam exists not to have. Anything that changes what
+## it holds changes what every field of that kind offers for the rest of the session.
+static func candidates(sheet: EventSheetResource, field_kind: String) -> Array[Dictionary]:
+	var kind: String = field_kind.strip_edges()
+	return _pool(sheet, kind) if not kind.is_empty() else [] as Array[Dictionary]
 
 
 ## The field kind ONE PARAMETER is: its hint, and - for the parameters that carry none - its id,
@@ -242,6 +270,10 @@ static func _build(sheet: EventSheetResource, kind: String) -> Array[Dictionary]
 			return _file_entries(argument)
 		FIELD_PATH:
 			return _path_entries()
+		FIELD_ASK_ROW:
+			return _ask_row_entries(sheet)
+		FIELD_ASK_SYMBOL:
+			return _ask_symbol_entries(sheet)
 	return []
 
 
@@ -365,6 +397,60 @@ static func _state_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			"detail": EventSheetStateFacts.word_for(member),
 			"kind": KIND_ENUM,
 		})
+	return entries
+
+
+## Everything one sheet can be FOUND by, as answers: one entry per findable string, carrying the
+## event it lives in so an answer is a door rather than a report. Read through the project Find's own
+## collection, which is the point - the field that answers and the window that finds are looking at
+## the same sheet through the same eyes.
+##
+## The pool is built once per sheet and only filtered afterwards, like every other kind here, and the
+## undo funnel hands back a new sheet object on every edit, so an edited sheet is re-read rather than
+## remembered. Identical strings in the same event are said once: a sheet with forty rows setting
+## `"true"` is not forty answers.
+static func _ask_row_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	for found: Dictionary in EventSheetProjectFind.findable(sheet):
+		var text: String = str(found.get("text", "")).replace("\n", " ").strip_edges()
+		if text.is_empty():
+			continue
+		var uid: String = str(found.get("uid", ""))
+		var identity: String = "%s|%s" % [uid, text]
+		if seen.has(identity):
+			continue
+		seen[identity] = true
+		entries.append({"text": text, "detail": "", "kind": KIND_ROW, "uid": uid,
+			"lower": text.to_lower()})
+	return entries
+
+
+## Everything one sheet DECLARES by name: its states first, because a state is the name a reader
+## reaches for while the machine is on their mind, then the functions, signals and tree variables the
+## Command Palette's `@` mode already collects - through that same collection, so the two lists of
+## what a sheet is called cannot drift apart.
+##
+## A state's answer is the WORD ("Gave Up"), not the enum member (`GAVE_UP`): the word is what the
+## band, the dropdown and the row all say, and it is therefore what a reader types. `symbol` carries
+## the member underneath for whoever has to go back to the declaration.
+##
+## Nothing here holds a Resource. The door is resolved against the LIVE sheet when it is opened - an
+## edit replaces every row object in the sheet, and a list holding the old ones would take a reader
+## to a row that no longer exists.
+static func _ask_symbol_entries(sheet: EventSheetResource) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	if sheet == null:
+		return entries
+	for member: String in EventSheetStateFacts.bare_members(sheet):
+		var word: String = EventSheetStateFacts.word_for(member)
+		entries.append({"text": word, "detail": "", "kind": KIND_STATE, "symbol": member,
+			"lower": word.to_lower()})
+	for entry: Variant in EventSheetCommandPalette.collect_symbols(sheet):
+		var symbol: Dictionary = entry
+		var name: String = str(symbol.get("name", ""))
+		entries.append({"text": name, "detail": "", "kind": str(symbol.get("kind", KIND_VARIABLE)),
+			"symbol": name, "lower": name.to_lower()})
 	return entries
 
 
@@ -877,10 +963,22 @@ static func rank(entries: Array[Dictionary], needle: String) -> Array[Dictionary
 
 ## One entry's relevance, 0 for no match at all. An empty query matches everything equally, so a
 ## field opened with nothing typed shows its list in the order the source built it.
-static func score_of(entry: Dictionary, query: String) -> int:
+##
+## An entry may carry `lower` - its own text, already lowered and unquoted - and a source whose list
+## is long enough for it to matter should. Lowering a string ALLOCATES one, and a rank that lowers
+## every candidate on every keypress pays that allocation per entry per keystroke; a source that
+## lowers once when it builds pays it per entry per session. Nothing is required to carry it and
+## nothing reads differently for having it.
+##
+## `allow_fuzzy` is the letters-in-order tier, and a caller ranking PROSE turns it off: a subsequence
+## match is a good guess about a name and a coin toss about a sentence, and testing it costs a walk
+## of the whole sentence for an answer nobody wanted.
+static func score_of(entry: Dictionary, query: String, allow_fuzzy: bool = true) -> int:
 	if query.is_empty():
 		return 1
-	var text: String = str(entry.get("text", "")).to_lower().trim_prefix("\"").trim_suffix("\"")
+	var text: String = entry.get("lower", "")
+	if text.is_empty():
+		text = str(entry.get("text", "")).to_lower().trim_prefix("\"").trim_suffix("\"")
 	var score: int = 0
 	if text == query:
 		score = 1000
@@ -892,7 +990,7 @@ static func score_of(entry: Dictionary, query: String) -> int:
 		score = 250
 	elif str(entry.get("detail", "")).to_lower().contains(query):
 		score = 100
-	elif query.length() >= FUZZY_FLOOR and ACEPickerDialog.fuzzy_match(query, text):
+	elif allow_fuzzy and query.length() >= FUZZY_FLOOR and ACEPickerDialog.fuzzy_match(query, text):
 		score = 50
 	if score > 0:
 		score -= mini(text.length(), 99)
@@ -903,10 +1001,24 @@ static func score_of(entry: Dictionary, query: String) -> int:
 ## which a plain prefix test would miss and a substring test would rank no higher than a match in
 ## the middle of a word. Underscores and dots count as gaps, because a reader reading
 ## `set_shader_parameter` sees three words there whatever the character between them is.
+##
+## SCANNED rather than split. The obvious spelling of this - replace the gaps with spaces, split, and
+## test each word - allocates two whole strings and an array of every word in the text, EVERY TIME it
+## is asked. That is invisible while a rank is over forty names and is most of the cost once one is
+## over thousands of sentences, which is what the Quick Add field's answers rank. A word begins where
+## the text begins or just after a gap, so finding the prefix and looking at the character in front
+## of it is the same question asked without building anything.
 static func word_starts_with(text: String, prefix: String) -> bool:
-	for word: String in text.replace("_", " ").replace(".", " ").split(" ", false):
-		if word.begins_with(prefix):
+	if prefix.is_empty():
+		return false
+	var at: int = text.find(prefix)
+	while at >= 0:
+		if at == 0:
 			return true
+		var before: int = text.unicode_at(at - 1)
+		if before == 32 or before == 95 or before == 46:  # space, underscore, dot
+			return true
+		at = text.find(prefix, at + 1)
 	return false
 
 

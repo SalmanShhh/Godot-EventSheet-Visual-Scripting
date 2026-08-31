@@ -421,6 +421,9 @@ func _init() -> void:
 	_add_rows.init(self)
 	_extract_ops.init(self)
 	_picker_gate_fixes.init(self)
+	# The quick-add field's answers. Wired here with the other init-only helpers so a test can ask
+	# what a query answers on a fresh .new() editor, before any toolbar has been built.
+	_ask_field.init(self)
 	# The public extension API (addons/eventsheet/api/eventsheets.gd) fronts this dock;
 	# the region fold commands register through it as living proof the extension point
 	# works - delete these four lines and only extensions lose their entries.
@@ -4929,10 +4932,14 @@ func _apply_editor_native_defaults() -> void:
 			apply_theme_style(derived)
 
 
-# ── Quick-add bar ("type to insert") - bodies in EventSheetAuthorActions (dock/author_actions.gd).
+# ── Quick-add bar ("type to insert", and to ASK) - bodies in EventSheetAuthorActions
+# (dock/author_actions.gd) and EventSheetAskField (dock/ask_field.gd).
 # The WIDGET stays declared here (menu_bar.gd builds it and assigns it back; its text_submitted
-# closure calls the _quick_add delegate below). The match+apply brain delegates to _author_actions.
+# closure calls the _quick_add delegate below). The match+apply brain delegates to _author_actions;
+# what the same typing ANSWERS - the states, rows, names, modes and findings it matches - is
+# _ask_field's, and rides the same field on the shipped completion popup.
 var _quick_add_edit: LineEdit = null
+var _ask_field: EventSheetAskField = EventSheetAskField.new()
 
 
 func _quick_match(query: String) -> Dictionary:  # intellisense_test

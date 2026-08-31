@@ -593,14 +593,20 @@ func build(root: Node) -> void:
 	_toolbar.add_child(_theme_picker)
 	_dock._populate_theme_picker()
 	var _quick_add_edit: LineEdit = LineEdit.new()
-	_quick_add_edit.placeholder_text = "Quick add…  (e.g. every tick, heal 5)"
-	_quick_add_edit.tooltip_text = "Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter."
-	_quick_add_edit.custom_minimum_size = Vector2(190.0, 0.0)
+	_quick_add_edit.placeholder_text = "Quick add or find…  (e.g. heal 5, or Chase)"
+	_quick_add_edit.tooltip_text = "Type a row and press Enter to add it, exactly as before - or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed. Down arrow to reach them, Enter to go there."
+	# Wider now that it answers as well as adds: the answers say what kind they are and where they
+	# live, and a label cut in half is a label nobody reads.
+	_quick_add_edit.custom_minimum_size = Vector2(240.0, 0.0)
 	_dock._quick_add_edit = _quick_add_edit
 	_quick_add_edit.text_submitted.connect(func(text: String) -> void:
 		if _dock._quick_add(text):
 			_quick_add_edit.clear()
 	)
+	# And the answers, riding the same field on the shipped completion popup. The add line is the
+	# first entry in that list and runs this very same call, so Enter on an untouched list still
+	# adds the row - the popup swallows the key, and the add happens on the other side of it.
+	_dock._ask_field.attach(_quick_add_edit)
 	_toolbar.add_child(_quick_add_edit)
 	# Every menu on the strip remembers this file too, so "where is this menu made" is the same
 	# gesture as "where is this button made". One sweep rather than a mark beside each `MenuButton`,

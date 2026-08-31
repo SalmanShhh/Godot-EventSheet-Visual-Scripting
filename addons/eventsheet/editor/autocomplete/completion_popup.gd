@@ -110,18 +110,41 @@ func refresh(typed: String) -> void:
 	if _accepting:
 		return
 	entries = _ask(typed)
-	index = 0
-	if entries.is_empty():
+	index = _first_choosable()
+	if entries.is_empty() or index < 0:
 		close()
 		return
 	_show()
 
 
-## Moves the highlight, wrapping at both ends so Up from the first entry reaches the last.
+## True when this entry is a HEADING - a line that says what the entries under it are, and is not
+## one of them. A list long enough to need grouping needs the group said somewhere, and a heading
+## that could be chosen would be a door to nothing.
+static func is_heading(entry: Dictionary) -> bool:
+	return bool(entry.get("heading", false))
+
+
+## The first entry a reader can actually choose, or -1 when there is none. A list that is all
+## headings is a list with nothing in it.
+func _first_choosable() -> int:
+	for at: int in range(entries.size()):
+		if not is_heading(entries[at]):
+			return at
+	return -1
+
+
+## Moves the highlight, wrapping at both ends so Up from the first entry reaches the last, and
+## stepping OVER headings in whichever direction it is travelling.
 func move(delta: int) -> void:
-	if entries.is_empty():
+	if entries.is_empty() or delta == 0:
 		return
-	index = wrapi(index + delta, 0, entries.size())
+	var step: int = 1 if delta > 0 else -1
+	var at: int = index
+	for _attempt: int in range(entries.size()):
+		at = wrapi(at + step, 0, entries.size())
+		if not is_heading(entries[at]):
+			index = at
+			break
 	if _list != null and index < _list.item_count:
 		_list.select(index)
 		_list.ensure_current_is_visible()
@@ -142,9 +165,20 @@ func accepted_text(current: String) -> String:
 
 ## Accepts the highlight into the field, leaving the caret at the end of what it inserted. Returns
 ## false when there was nothing to accept, so a caller can let the key do its ordinary job.
+##
+## An entry may carry an `open` Callable instead of being text to insert, and then accepting it RUNS
+## that rather than writing anything into the field. It is the same list, the same highlight and the
+## same Enter: a field that answers as well as completes needs one keyboard model, not two.
 func accept() -> bool:
-	if field == null or entries.is_empty():
+	if field == null or entries.is_empty() or index < 0 or index >= entries.size():
 		return false
+	if is_heading(entries[index]):
+		return false
+	var door: Variant = entries[index].get("open")
+	if door is Callable and (door as Callable).is_valid():
+		close()
+		(door as Callable).call()
+		return true
 	var accepted: String = accepted_text(field.text)
 	close()
 	_accepting = true
@@ -239,8 +273,14 @@ func _show() -> void:
 	for entry: Dictionary in entries:
 		# An entry may carry the editor's own icon for what it names (a class, a file kind); one
 		# that does not is drawn as text, which is every entry the seam itself builds.
-		_list.add_item(item_text(entry), entry.get("icon") as Texture2D)
-	_list.select(index)
+		var at: int = _list.add_item(item_text(entry), entry.get("icon") as Texture2D)
+		# A heading is a place-marker in the list, not an entry of it: it cannot be selected, cannot
+		# be clicked, and the highlight steps over it.
+		if is_heading(entry):
+			_list.set_item_selectable(at, false)
+			_list.set_item_disabled(at, true)
+	if index >= 0 and index < _list.item_count:
+		_list.select(index)
 	var size: Vector2i = Vector2i(maxi(MIN_WIDTH, int(field.size.x)),
 		mini(entries.size(), VISIBLE_ROWS) * ROW_HEIGHT + 28)
 	_window.popup(Rect2i(Vector2i(field.get_screen_position() + Vector2(0.0, field.size.y)), size))

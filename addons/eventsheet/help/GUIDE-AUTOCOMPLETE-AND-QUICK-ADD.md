@@ -18,6 +18,7 @@ Two features, one seam:
 - [What completes where](#what-completes-where)
 - [Typing inside a row](#typing-inside-a-row)
 - [Quick add: type the sentence, get the row](#quick-add-type-the-sentence-get-the-row)
+- [The same field answers, as well as adds](#the-same-field-answers-as-well-as-adds)
 - [Code boxes keep Godot's own completion](#code-boxes-keep-godots-own-completion)
 - [For pack authors: the completions seam](#for-pack-authors-the-completions-seam)
 - [Why it stays fast on a big project](#why-it-stays-fast-on-a-big-project)
@@ -102,6 +103,55 @@ The rules, so it never surprises you:
 Nothing about this is a second Add flow. It is the same picker, the same Enter, the same parameters
 dialog. It is only faster than the mouse.
 
+## The same field answers, as well as adds
+
+A name crossing your mind is not always a row you want to add. `chase` is as often *where is Chase*
+as it is *put a Chase row here* - and answering that used to mean remembering which window knows:
+the Command Palette for a function, Find in Project for a row, the Project Doctor for a finding, the
+sheet head for a state. So the **Quick add or find** field in the toolbar answers as well as adds.
+
+Type two characters or more and a list opens under it. Every line says **what kind of thing it is**
+and **where it lives**:
+
+![The Quick add or find field with "chase" typed: an Add row line first, then grouped answers -
+States, Variables, Functions, Rows and Findings - each labelled with its kind and the sheet it
+lives in](images/ask-field.png)
+
+- **Enter still adds the row.** The first line of the list is the sentence exactly as you typed it,
+  and it does what the field has always done. Nothing you already type has changed meaning.
+- **Down arrow reaches the answers**, and Enter on one goes there. **Escape** closes the list and
+  keeps what you typed. It is the same four keys as every other suggestion list in the plugin.
+- The answers are **grouped**, and the group holding the best answer leads. Type a state's name and
+  **States** is at the top; type a phrase out of a finding and **Findings** is. An exact name always
+  outranks the same word found inside a sentence.
+- A group shows a few and says how many it holds - **Rows - 4 of 9** - so a long list never buries
+  the group under it.
+
+What it can answer with:
+
+| Kind | Where it comes from | What Enter does |
+|---|---|---|
+| **State** | the states each open sheet declares on its head | opens that sheet and goes to the `State` declaration |
+| **Row** | the rows of the sheet you are reading | goes to the event, across tabs |
+| **Variable / Function / Signal** | what each open sheet declares by name | goes to the row that declares it |
+| **Mode** | the game's declared modes | opens the autoload that declares them |
+| **Finding** | what the **last Project Doctor run** reported | opens the sheet the finding is about |
+
+Two boundaries, both said out loud rather than guessed at:
+
+- **Rows are the rows of the sheet in front of you.** What a sheet *declares* is a handful of names
+  and is answered across every open tab; what a sheet *says* is every parameter of every row, and
+  ranking thousands of sentences per tab per keystroke is how a search stops being used. So the
+  **Rows** group ends in **Find "chase" in every sheet…**, which opens the Find in Project window on
+  the same query - and that one really does read every sheet.
+- **Findings are the last audit's, and typing never starts one.** Run **Tools ▸ Project Doctor**
+  once and its findings are searchable from the field for the rest of the session. With no run
+  behind it there is simply no Findings group.
+
+Nothing is indexed for any of this. Every answer is a read of a list the editor already holds - the
+same per-sheet lists that fill the completion popups, the same collection the Find window matches
+on, the same findings the Project bar badges with - joined when you ask and thrown away after.
+
 ## Code boxes keep Godot's own completion
 
 A **Script block** is a GDScript editor, and it stays one: it keeps the engine's completion popup,
@@ -163,6 +213,11 @@ sheet** (a variable added, a function renamed) only that sheet's lists go, and w
 changes** (a scene saved, an action added in Project Settings, a shader edited) all of them do. The
 answers about the project - the Input Map, the node groups, the class list, the file list - are held
 once and shared by every open tab, so ten tabs asking for the Input Map is one Input Map.
+
+The field that **answers** rides the same contract. What a sheet declares and what a sheet says are
+two more lists of exactly this kind, built once per sheet and dropped by exactly these two moments -
+which is why a keystroke can join six kinds of answer and still land inside a frame. The suite pins
+that with a budget, measured against a project far larger than this one.
 
 ## No walls: a greyed entry is a fix, and no result is ever empty
 

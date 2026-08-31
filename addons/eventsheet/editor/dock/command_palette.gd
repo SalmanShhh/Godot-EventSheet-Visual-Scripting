@@ -135,16 +135,18 @@ func _sheet_matches(query: String) -> Array:
 
 
 ## Every named symbol in a sheet - exposed functions (ƒ), signals (➜), and tree variables (@) - as
-## [{title, name, resource}]. `name` is the bare identifier (fuzzy-match target); `title` carries the
-## kind glyph; `resource` is what the palette reveals. Static + pure over the sheet → testable. Recurses
-## groups so a symbol inside a group is still findable.
+## [{title, name, kind, resource}]. `name` is the bare identifier (fuzzy-match target); `title` carries
+## the kind glyph; `kind` is the completion seam's own stable word for what it is, so a reader that
+## wants to say which sort of thing a symbol is does not have to read the glyph back out of the title;
+## `resource` is what the palette reveals. Static + pure over the sheet → testable. Recurses groups so
+## a symbol inside a group is still findable.
 static func collect_symbols(sheet: EventSheetResource) -> Array:
 	var symbols: Array = []
 	if sheet == null:
 		return symbols
 	for function_variant: Variant in sheet.functions:
 		if function_variant is EventFunction and not (function_variant as EventFunction).function_name.strip_edges().is_empty():
-			symbols.append({"title": "ƒ %s" % (function_variant as EventFunction).function_name, "name": (function_variant as EventFunction).function_name, "resource": function_variant})
+			symbols.append({"title": "ƒ %s" % (function_variant as EventFunction).function_name, "name": (function_variant as EventFunction).function_name, "kind": EventSheetCompletions.KIND_FUNCTION, "resource": function_variant})
 	_collect_symbol_rows(sheet.events, symbols)
 	return symbols
 
@@ -152,9 +154,9 @@ static func collect_symbols(sheet: EventSheetResource) -> Array:
 static func _collect_symbol_rows(rows: Array, symbols: Array) -> void:
 	for row: Variant in rows:
 		if row is SignalRow and not (row as SignalRow).signal_name.strip_edges().is_empty():
-			symbols.append({"title": "➜ %s" % (row as SignalRow).signal_name, "name": (row as SignalRow).signal_name, "resource": row})
+			symbols.append({"title": "➜ %s" % (row as SignalRow).signal_name, "name": (row as SignalRow).signal_name, "kind": EventSheetCompletions.KIND_SIGNAL, "resource": row})
 		elif row is LocalVariable and not (row as LocalVariable).name.strip_edges().is_empty():
-			symbols.append({"title": "@ %s" % (row as LocalVariable).name, "name": (row as LocalVariable).name, "resource": row})
+			symbols.append({"title": "@ %s" % (row as LocalVariable).name, "name": (row as LocalVariable).name, "kind": EventSheetCompletions.KIND_VARIABLE, "resource": row})
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			_collect_symbol_rows(group.events if not group.events.is_empty() else group.rows, symbols)

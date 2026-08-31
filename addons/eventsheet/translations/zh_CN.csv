@@ -5730,3 +5730,17 @@ re-entered %s,重新进入 %s
 %s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s 在同一帧内触发了 %d 次，而状态只变化了一次：已经身处 %s 时再前往它不会有任何效果。
 "%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.",%s 在同一帧内触发了 %d 次，而状态只变化了一次：已经身处 %s 时再前往它不会有任何效果，所以 %s 只运行了一次。
 This happened %d times in this run.,本次运行中这种情况发生了 %d 次。
+Row,行
+States,状态
+Error,错误
+Warning,警告
+this sheet,此事件表
+the game,游戏
+the project,项目
+Add row,添加行
+%s - %d of %d,%s - %d / %d
+"Find ""%s"" in every sheet…",在所有事件表中查找“%s”…
+"That row is in %s, which is not open.",该行位于 %s 中，但它没有打开。
+"%s is declared in %s - opened it, but the row it is on has moved.",%s 声明于 %s - 已打开，但它所在的行已经移动。
+%s is a mode of this sheet's own declaration.,%s 是此事件表自身声明的模式。
+"That finding is about %s, which is not a sheet - open it from the FileSystem dock.",该发现项关于 %s，它不是事件表 - 请从 FileSystem 面板打开。

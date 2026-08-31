@@ -5730,3 +5730,17 @@ re-entered %s,%s erneut betreten
 %s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,"%s wurde %d mal in einem Frame ausgelöst und der Zustand hat sich einmal geändert: zu %s zu wechseln, während man schon dort ist, bewirkt nichts."
 "%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.","%s wurde %d mal in einem Frame ausgelöst und der Zustand hat sich einmal geändert: zu %s zu wechseln, während man schon dort ist, bewirkt nichts, also lief %s genau einmal."
 This happened %d times in this run.,Das ist %d mal in diesem Durchlauf passiert.
+Row,Zeile
+States,Zustände
+Error,Fehler
+Warning,Warnung
+this sheet,dieses Blatt
+the game,das Spiel
+the project,das Projekt
+Add row,Zeile hinzufügen
+%s - %d of %d,%s - %d von %d
+"Find ""%s"" in every sheet…","„%s“ in allen Blättern suchen…"
+"That row is in %s, which is not open.","Diese Zeile liegt in %s, das nicht geöffnet ist."
+"%s is declared in %s - opened it, but the row it is on has moved.","%s ist in %s deklariert - geöffnet, aber die Zeile dazu hat sich verschoben."
+%s is a mode of this sheet's own declaration.,%s ist ein Modus aus der eigenen Deklaration dieses Blatts.
+"That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Dieser Befund betrifft %s, das kein Blatt ist - öffne es im FileSystem-Dock."

@@ -106,6 +106,24 @@ const SHADER_CORPUS_BUDGET_MS: int = 900
 ## second ask is FREE rather than that it is fast.
 const SHADER_CORPUS_WARM_BUDGET_MS: int = 5
 
+## ONE KEYSTROKE in the Quick Add field, ANSWERING rather than completing: six kinds joined across
+## every open sheet, each of them the size below. The completing budget above covers one list; this
+## covers the join, which is the thing that could quietly start scanning. Sub-frame is the design
+## target here for the same reason, and 16 ms is the frame.
+##
+## Measured 4.3, 4.3 and 6.2 ms over three runs, so the pin is the TARGET rather than the
+## measurement. Anything that goes and looks at the project instead of reading the held lists lands
+## orders of magnitude out, and so does a walk that builds a labelled answer per match rather than
+## per shown answer - that one measured 455 ms before it was written the other way round.
+const ASK_BUDGET_MS: float = 16.0
+
+## The shelf the ask is measured against: more sheets open at once than anyone works with, and the
+## one in front bigger than the fixture's own 2,000-line script lifts to, so the number is a ceiling
+## rather than a typical case. The names of all eight are ranked; the ROWS of the front one are, and
+## that is the boundary this budget is really pinning.
+const ASK_SHEETS: int = 8
+const ASK_ROWS_PER_SHEET: int = 1500
+
 ## One keystroke measured once is noise; this many, divided, is a number.
 const KEYSTROKE_SAMPLES: int = 20
 
@@ -134,6 +152,7 @@ static func run() -> bool:
 	passed = _pin_scene_facts(project) and passed
 	passed = _pin_the_shader_corpus(project) and passed
 	passed = _pin_a_keystroke() and passed
+	passed = _pin_an_ask() and passed
 	# One editor serves both the open budget and the picker budget. Building a second would measure
 	# the same vocabulary scan twice and cost the suite half a minute for nothing.
 	var editor: EventSheetEditor = EventSheetEditor.new()
@@ -299,6 +318,68 @@ static func _pin_a_keystroke() -> bool:
 	return _check("a keystroke answers inside a frame (%.3f ms, budget %.1f)" % [
 		per_keystroke_ms, KEYSTROKE_BUDGET_MS],
 		per_keystroke_ms <= KEYSTROKE_BUDGET_MS, true)
+
+
+## ONE KEYSTROKE in the Quick Add field, answering. The pools are built first, outside the clock,
+## for the same reason the completing pin builds its list first: a kind's candidates are built once
+## and only filtered afterwards, and what a keystroke costs is the filtering.
+##
+## The shelf is deliberately absurd - eight sheets of 1,500 findable strings each, plus a Doctor run
+## with a hundred findings in it - because the pin is a ceiling. What it catches is an ask that goes
+## looking rather than reading.
+static func _pin_an_ask() -> bool:
+	EventSheetCompletions.clear_cache()
+	var sheets: Array = []
+	for index in ASK_SHEETS:
+		sheets.append({"path": "res://ask_%02d.gd" % index, "sheet": _ask_sheet(index)})
+	var shelf: Dictionary = {"sheets": sheets, "findings": _ask_findings()}
+	for prefix: String in TYPED_PREFIXES:
+		EventSheetAskAnswers.answers(prefix, shelf)
+	var start_usec: int = Time.get_ticks_usec()
+	for repeat in KEYSTROKE_SAMPLES:
+		for prefix: String in TYPED_PREFIXES:
+			EventSheetAskAnswers.answers(prefix, shelf)
+	var per_keystroke_ms: float = float(Time.get_ticks_usec() - start_usec) / 1000.0 \
+		/ float(KEYSTROKE_SAMPLES * TYPED_PREFIXES.size())
+	var front_rows: int = EventSheetCompletions.candidates((sheets[0] as Dictionary)["sheet"],
+		EventSheetCompletions.FIELD_ASK_ROW).size()
+	var passed: bool = _check("the sheet in front really holds thousands of findable strings (%d)"
+		% front_rows, front_rows >= ASK_ROWS_PER_SHEET * 2, true)
+	return _check("an ask answers inside a frame (%.3f ms, budget %.1f)" % [
+		per_keystroke_ms, ASK_BUDGET_MS],
+		per_keystroke_ms <= ASK_BUDGET_MS, true) and passed
+
+
+## One sheet of the ask shelf: states, names, and enough rows saying the word being typed that the
+## filter is doing real work rather than rejecting everything on the first character.
+static func _ask_sheet(index: int) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.custom_class_name = "Actor%02d" % index
+	var states: EnumRow = EnumRow.new()
+	states.enum_name = EventSheetStateFacts.ENUM_NAME
+	states.members = PackedStringArray(["PATROL", "CHASE", "HEALING", "STAGGER"])
+	sheet.events.append(states)
+	for row_index in ASK_ROWS_PER_SHEET:
+		var event_row: EventRow = EventRow.new()
+		event_row.event_uid = "ask-%02d-%04d" % [index, row_index]
+		var action: ACEAction = ACEAction.new()
+		action.ace_id = "SetProperty"
+		action.params = {"target": "health_%04d" % row_index,
+			"value": "take health away from the enemy %d" % row_index}
+		event_row.actions.append(action)
+		sheet.events.append(event_row)
+	return sheet
+
+
+## A Doctor run of a size nobody wants: the ask reads what the last audit reported and never starts
+## one, so this is only ever a hundred more strings to filter.
+static func _ask_findings() -> Array:
+	var findings: Array = []
+	for index in 100:
+		findings.append({"check": "state-unreachable", "path": "res://ask_%02d.gd" % (index % 8),
+			"subject": "HEALING", "severity": "warning",
+			"message": "Nothing ever goes to Healing in actor %d." % index})
+	return findings
 
 
 ## A sheet with enough of its own vocabulary that filtering it is real work.

@@ -107,50 +107,75 @@ static func list_project_sheets() -> PackedStringArray:
 	return sheet_paths
 
 
-## Text matches in one sheet's editable surfaces: [{preview}] (same surfaces Replace
-## All covers, so find and replace can never disagree).
+## Every piece of text one sheet can be FOUND by, each with the event it lives in: [{text, uid}].
+## `uid` is the enclosing event's own `event_uid`, and "" for text that is not inside an event at all
+## (a loose comment, a group's own name and description, a script block between events) - which is
+## what a reader can be taken to, and what they cannot.
+##
+## ONE collection, because two readers ask it: the Find window below, and the Quick Add field's
+## answers. Two walks would be two opinions about what "this sheet says that" means, and the answer
+## list would then offer rows the Find window swears are not there.
+static func findable(sheet: EventSheetResource) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if sheet == null:
+		return found
+	_collect_findable_text(sheet.events, found)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			var event_function: EventFunction = function_entry as EventFunction
+			_collect_findable_text(event_function.events if not event_function.events.is_empty() else event_function.rows, found)
+	return found
+
+
+## Text matches in one sheet's editable surfaces: [{preview, uid}] (same surfaces Replace
+## All covers, so find and replace can never disagree). `uid` names the event the match lives in,
+## or "" when it lives outside one.
 static func find_in_sheet(sheet: EventSheetResource, needle: String) -> Array:
 	var matches: Array = []
 	if sheet == null or needle.is_empty():
 		return matches
-	var haystacks: Array = []
-	_collect_findable_text(sheet.events, haystacks)
-	for function_entry: Variant in sheet.functions:
-		if function_entry is EventFunction:
-			_collect_findable_text((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, haystacks)
 	var lowered: String = needle.to_lower()
-	for haystack: String in haystacks:
+	for entry: Dictionary in findable(sheet):
+		var haystack: String = str(entry.get("text", ""))
 		if haystack.to_lower().contains(lowered):
 			var at: int = haystack.to_lower().find(lowered)
-			matches.append({"preview": haystack.substr(maxi(at - 18, 0), needle.length() + 44).replace("\n", " ")})
+			matches.append({
+				"preview": haystack.substr(maxi(at - 18, 0), needle.length() + 44).replace("\n", " "),
+				"uid": str(entry.get("uid", "")),
+			})
 	return matches
 
 
-static func _collect_findable_text(rows: Array, into: Array) -> void:
+## One row list's findable text, appended as {text, uid}. `uid` is inherited by everything inside an
+## event, so a match in a condition's parameter names the event a reader can be taken to rather than
+## the parameter, which is not a place.
+static func _collect_findable_text(rows: Array, into: Array, uid: String = "") -> void:
 	for row: Variant in rows:
 		if row is CommentRow:
-			into.append((row as CommentRow).text)
+			into.append({"text": (row as CommentRow).text, "uid": uid})
 		elif row is RawCodeRow:
-			into.append((row as RawCodeRow).code)
+			into.append({"text": (row as RawCodeRow).code, "uid": uid})
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
-			into.append(group.group_name + " " + group.description)
-			_collect_findable_text(group.events if not group.events.is_empty() else group.rows, into)
+			into.append({"text": group.group_name + " " + group.description, "uid": uid})
+			_collect_findable_text(group.events if not group.events.is_empty() else group.rows, into, uid)
 		elif row is EventRow:
 			var event_row: EventRow = row as EventRow
+			var own_uid: String = event_row.event_uid
 			for ace: Variant in event_row.conditions + event_row.actions:
 				if ace is RawCodeRow:
-					into.append((ace as RawCodeRow).code)
+					into.append({"text": (ace as RawCodeRow).code, "uid": own_uid})
 				elif ace is Resource and ace.get("params") is Dictionary:
 					if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
-						into.append(str(ace.get("comment")))
+						into.append({"text": str(ace.get("comment")), "uid": own_uid})
 					for value: Variant in (ace.get("params") as Dictionary).values():
 						if value is String:
-							into.append(value)
+							into.append({"text": value, "uid": own_uid})
 			for pick: Variant in event_row.pick_filters:
 				if pick is PickFilter:
-					into.append((pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression)
-			_collect_findable_text(event_row.sub_events, into)
+					into.append({"text": (pick as PickFilter).collection_value + " " \
+						+ (pick as PickFilter).predicate_expression, "uid": own_uid})
+			_collect_findable_text(event_row.sub_events, into, own_uid)
 
 
 func _run_project_find() -> void:

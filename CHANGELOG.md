@@ -115,6 +115,44 @@
   emptied where the Event Trace's hit counts and timings are emptied, at the start of a new run.
   Stopping the game leaves it standing so it can be read, which is when it is read.
 
+### One search that knows what the sheet knows
+
+- **The Quick add field answers as well as adds.** Type two characters or more into the toolbar's
+  **Quick add or find** field and a list opens under it holding the states, rows, variables,
+  functions, signals, declared modes and Doctor findings that match - each one labelled with WHAT
+  KIND of thing it is and WHERE IT LIVES. Enter goes to the highlighted answer. A name crossing your
+  mind used to mean choosing between four windows first; now it is one field and one keystroke.
+- **Answering is additive, and Enter still adds.** The first line of the list is the sentence exactly
+  as typed and runs the very same add the field's Enter has always run, so nothing anybody already
+  types has changed meaning. Down arrow reaches the answers, Escape keeps what was typed - the same
+  four keys as every other suggestion list, on the shipped popup, in no new window.
+- **Grouped, and the best answer decides which group leads.** Answers of one kind stand together
+  under their own heading, and the group holding the best answer is on top - so a state's name puts
+  **States** first and a phrase out of a finding puts **Findings** first, without either having been
+  declared more important. An exact name always outranks the same word found inside a sentence, and a
+  group says how much of itself is shown (**Rows - 4 of 9**) rather than burying what follows.
+- **The Doctor's inbox becomes searchable.** A finding surfaces the moment its subject crosses
+  somebody's mind, said in the Doctor's own words with its severity and the file it is about, and
+  opening it lands where the Doctor's own page lands. Typing never starts an audit: the answers are
+  what the last run reported, and with no run behind them there is simply no Findings group.
+- **No new index and no second store.** Every answer is a read of something the editor already holds:
+  what a sheet declares and what a sheet says are two more per-sheet completion lists, built once and
+  dropped by the same two invalidations as every other one; the row matching goes through the Find
+  window's own collection, so the field and the window can never disagree about what a sheet says;
+  the findings are the ones the Project bar already badges with. The join happens when you ask and is
+  thrown away after.
+- **The edges are stated, not hidden.** Rows are the rows of the sheet in front of you - what a sheet
+  says is every parameter of every row, and ranking that per open tab per keystroke is how a search
+  stops being used - so the Rows group ends in **Find "…" in every sheet…**, which opens Find in
+  Project on the same query and does read every sheet. Every answer either arrives somewhere or says
+  on the status line what it could not reach, and none of them holds a row across an edit: an answer
+  carries a uid or a name and re-finds it in the live sheet when it is opened.
+- **It stays inside a frame.** A keystroke joining six kinds over eight open sheets, the one in front
+  holding three thousand findable strings, measures 4.3 ms against a 16 ms budget, and the suite pins
+  it against the huge-project fixture beside the completion budget. Two shipped things got faster on
+  the way: a rank no longer lowers every candidate's text on every keypress, and the word-boundary
+  test no longer builds two strings and an array to answer a yes-or-no question.
+
 ### A path says which place it is in
 
 - **Every path field states its place.** Under each path box in the Files vocabulary sits a muted

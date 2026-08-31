@@ -5730,3 +5730,17 @@ re-entered %s,%s 에 다시 진입
 %s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s 이 한 프레임에서 %d 번 발생했고 상태는 한 번만 바뀌었습니다: 이미 있는 %s 으로 이동해도 아무 일도 일어나지 않습니다.
 "%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.",%s 이 한 프레임에서 %d 번 발생했고 상태는 한 번만 바뀌었습니다: 이미 있는 %s 으로 이동해도 아무 일도 일어나지 않으므로 %s 은 한 번만 실행되었습니다.
 This happened %d times in this run.,이번 실행에서 %d 번 일어났습니다.
+Row,행
+States,상태
+Error,오류
+Warning,경고
+this sheet,이 시트
+the game,게임
+the project,프로젝트
+Add row,행 추가
+%s - %d of %d,%s - %d / %d
+"Find ""%s"" in every sheet…","모든 시트에서 ""%s"" 찾기…"
+"That row is in %s, which is not open.",그 행은 %s 에 있으며 열려 있지 않습니다.
+"%s is declared in %s - opened it, but the row it is on has moved.",%s 은(는) %s 에 선언되어 있습니다 - 열었지만 해당 행이 이동했습니다.
+%s is a mode of this sheet's own declaration.,%s 은(는) 이 시트 자체 선언의 모드입니다.
+"That finding is about %s, which is not a sheet - open it from the FileSystem dock.",이 발견 항목은 %s 에 대한 것이며 시트가 아닙니다 - FileSystem 독에서 여세요.
