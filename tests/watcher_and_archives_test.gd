@@ -351,6 +351,17 @@ static func _run_watcher_shape() -> bool:
 		pack.contains("if not _watching:\n\t\tset_process(false)\n\t\treturn"), true) and ok
 	ok = _check("the interval has a floor, so no answer means a read every frame",
 		pack.contains("maxf(look_every_seconds, 0.1)"), true) and ok
+	# The overshoot is CARRIED. A frame almost never lands exactly on the interval, and starting the
+	# count at zero each time adds a frame to every gap, so the looks drift against the clock the row
+	# named - and the band prints the row's number, not the one the watcher was keeping.
+	ok = _check("and its overshoot is carried, so the looks do not drift against the clock",
+		pack.contains("_since_last_look = minf(_since_last_look - interval, interval)"), true) and ok
+	# A folder that is not there answers [] exactly as an empty one does, so a look taken while a
+	# drive is unplugged would raise a removal for every file it held - and an appearance for every
+	# one of them when it came back.
+	ok = _check("a folder that is not there is not a folder that emptied",
+		pack.contains("if not DirAccess.dir_exists_absolute(watched_folder):\n\t\treturn"),
+		true) and ok
 	ok = _check("one directory read per look",
 		pack.count("DirAccess.get_files_at(watched_folder)"), 1) and ok
 	ok = _check("and the walk is sorted, so two machines raise the same events in the same order",
@@ -407,6 +418,20 @@ static func _run_watcher_runtime() -> bool:
 	raised.clear()
 	watcher.look_now()
 	ok = _check("a look that finds no difference raises nothing", raised.size(), 0) and ok
+
+	# THE FOLDER ITSELF GOES. A deleted, unmounted or unplugged folder answers with an empty list
+	# exactly as an empty one does, so a look taken then used to raise a removal for every file the
+	# folder held - and an appearance for every one of them the moment it came back.
+	raised.clear()
+	for entry: String in DirAccess.get_files_at(SOURCE_DIR):
+		DirAccess.remove_absolute(SOURCE_DIR.path_join(entry))
+	var remembered: int = int(watcher.watched_file_count())
+	DirAccess.remove_absolute(SOURCE_DIR)
+	watcher.look_now()
+	ok = _check("a folder that is gone raises nothing at all", raised.size(), 0) and ok
+	ok = _check("and the watcher still remembers what was in it",
+		int(watcher.watched_file_count()), remembered) and ok
+	_fresh_dir(SOURCE_DIR)
 
 	watcher.stop_watching()
 	ok = _check("stopping stops the watch", bool(watcher.is_watching()), false) and ok

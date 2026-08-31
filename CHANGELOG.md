@@ -289,6 +289,16 @@ These are the places the two disagreed.
   console. The guarded form now asks about the third extension too and ends at the fallback. A file
   that is THERE but unreadable still reaches its reader and answers null - true of all three loaders,
   and now stated in the module page rather than nowhere.
+- **The watcher no longer reports a missing folder as an empty one.** A deleted folder, an unmounted
+  share and an unplugged drive all answer with an empty list exactly as an empty folder does, so a
+  look taken then raised **On A File Removed** for every file the folder held - and **On A File
+  Appeared** for every one of them when it came back. The folder is asked whether it is still there
+  before anything is compared, and the last reading is kept.
+- **The watcher's interval stops drifting.** Each look restarted its count from zero, throwing away
+  the overshoot, so the real gap was the interval plus up to one frame every time and the watcher
+  kept a slower clock than the number on the row. At most one interval is carried now, so a long
+  stall does not turn into a directory read every frame either. The page also says two things it did
+  not: what happens when the folder itself goes, and that the name filter is case-sensitive.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and

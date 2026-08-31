@@ -57,9 +57,14 @@ func _process(delta: float) -> void:
 	# A zero or negative interval would be a directory read every single frame, which is never
 	# what anybody meant by an interval, so the shortest gap the watcher will honour is a tenth
 	# of a second.
-	if _since_last_look < maxf(look_every_seconds, 0.1):
+	var interval: float = maxf(look_every_seconds, 0.1)
+	if _since_last_look < interval:
 		return
-	_since_last_look = 0.0
+	# The overshoot is CARRIED rather than thrown away. A frame almost never lands exactly on
+	# the interval, and starting the count at zero each time adds a frame to every gap, so the
+	# looks drift against the clock the row named. At most one interval is carried: a long stall
+	# is a stall, not a reason to read the folder every frame until the arrears are paid.
+	_since_last_look = minf(_since_last_look - interval, interval)
 	_look()
 
 ## @ace_action
@@ -145,6 +150,13 @@ func _read_folder() -> Dictionary:
 
 ## @ace_hidden
 func _look() -> void:
+	# A FOLDER THAT IS NOT THERE IS NOT A FOLDER THAT EMPTIED. DirAccess answers with an
+	# empty list for a folder that was deleted, unmounted or is on a drive somebody unplugged,
+	# exactly as it does for one holding nothing - so a look taken then would raise On A File
+	# Removed for every file it held, and On A File Appeared for every one of them when it came
+	# back. Nothing is compared until the folder answers again.
+	if not DirAccess.dir_exists_absolute(watched_folder):
+		return
 	var found: Dictionary = _read_folder()
 	for entry: String in found:
 		if not _seen.has(entry):
