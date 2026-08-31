@@ -88,6 +88,13 @@ const NEW_MODULES: Array[String] = [
 	"res://addons/eventforge/registration/modules/notification_aces.gd",
 ]
 
+## The two doors content from outside the project comes in through. Added to the shipped Files
+## module rather than to a module of their own, so they are swept by id here rather than wholesale.
+const USER_CONTENT_DOOR_IDS: Array[String] = [
+	"OnFilesDropped", "AskForAFileToOpen", "AskWhereToSave", "OnFileChosen", "OnAskCancelled",
+	"LoadImageFile", "LoadSoundFile",
+]
+
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the
 ## test says what this wave owes rather than retro-failing on vocabulary that predates it.
 const EXTENDED_MODULES: Dictionary = {
@@ -142,6 +149,8 @@ const EXTENDED_MODULES: Dictionary = {
 		"AtMostEvery", "Poke", "ClearPoke", "HasBeenQuiet", "OnlyOncePerNode",
 		"OnlyOncePerName", "OnlyOnceThisSceneLoad", "ForgetOnceFor",
 	],
+	# The drop door, the ask door and the two loaders - see USER_CONTENT_DOOR_IDS above.
+	"res://addons/eventforge/registration/modules/file_aces.gd": USER_CONTENT_DOOR_IDS,
 	# The two rows that build a menu and answer the item that was chosen out of it.
 	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
 		"MenuAddItem", "OnMenuItemChosen",

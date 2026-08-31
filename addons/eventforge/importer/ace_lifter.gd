@@ -1636,6 +1636,25 @@ const EDITOR_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
 	"EditorInterface.get_editor_settings()": {"settings_changed": "OnPreferencesChanged"}
 }
 
+## The signals a project connects on the WINDOW ITSELF, keyed by the source for the same reason the
+## editor ones are: `close_requested` is a name any dialog in any project has, and a table keyed on
+## the bare signal would relabel every one of them. Off `get_window()` the two mean exactly what the
+## sheet's own two triggers mean, so a hand-written `get_window().files_dropped.connect(...)` opens
+## as the drop event rather than as a handler nobody can see the caller of.
+const WINDOW_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
+	"get_window()": {"files_dropped": "OnFilesDropped", "close_requested": "OnCloseRequested"}
+}
+
+## The two answers to an Ask row, by the exact header each compiles to. Plain functions rather than
+## signal handlers - the emitted Ask line calls them by name - so they lift from the header alone,
+## the way a lifecycle callback does. Claimed only when the file did NOT also wire that name to a
+## signal: a project that connected its own `_on_file_chosen` somewhere owns the name, and its
+## connect line has to keep the handler it points at or the line would vanish from the file.
+const ASK_ANSWER_TRIGGERS: Dictionary = {
+	"func _on_file_chosen(path: String) -> void:": "OnFileChosen",
+	"func _on_ask_cancelled() -> void:": "OnAskCancelled"
+}
+
 
 ## One `<something>.<signal>.connect(<handler>)` / `<something>.connect("<signal>", <handler>)` line
 ## -> {handler, signal, source, line}, or {} when the line is not a connect. Covers the shape
@@ -1644,10 +1663,11 @@ const EDITOR_SOURCE_SIGNAL_TRIGGERS: Dictionary = {
 ## reproduce the author's own spelling instead of the canonical one - the byte-verify is absolute,
 ## and rewriting a hand-written `$Hurtbox` connect as `get_node("Hurtbox")` would fail it.
 static func _parse_connect_line(line: String) -> Dictionary:
-	# The two editor objects a tool connects to are call chains, not identifiers, so they are
-	# spelled out rather than allowed as a general `x.y()` alternative - widening the pattern to any
-	# call chain would start claiming connect lines in every project that this reading has no words for.
-	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
+	# The two editor objects a tool connects to, and the window a game connects to, are call chains
+	# rather than identifiers, so each is spelled out instead of allowed as a general `x.y()`
+	# alternative - widening the pattern to any call chain would start claiming connect lines in
+	# every project that this reading has no words for.
+	var source_pattern: String = "(?:(EditorInterface\\.get_resource_filesystem\\(\\)|EditorInterface\\.get_editor_settings\\(\\)|get_window\\(\\)|get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
 	# The optional trailing CONNECT_* flags. Godot's own one-shot spelling is a second argument, and
 	# a handler wired with it is still exactly this shape - refusing the line only stranded the whole
 	# handler as a code block. The line rides along VERBATIM as before, so emission reproduces the
@@ -1822,7 +1842,11 @@ static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary)
 ## arrow). Both dispatch to the event lift; the loose form carries its source header as meta so
 ## emission reproduces it exactly.
 static func _is_lifecycle_header(header: String) -> bool:
-	return LIFECYCLE_TRIGGERS.has(header) or header == NOTIFICATION_HEADER or _loose_lifecycle_match(header) != null
+	# The two Ask answers stand with the lifecycle callbacks here for the same reason they do in
+	# _lift_function: nothing connects them, the emitted Ask line calls them by name, so the header
+	# is the only thing that says what they are.
+	return LIFECYCLE_TRIGGERS.has(header) or ASK_ANSWER_TRIGGERS.has(header) \
+		or header == NOTIFICATION_HEADER or _loose_lifecycle_match(header) != null
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
@@ -1927,8 +1951,17 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var loose_lifecycle: RegExMatch = null
 	if not LIFECYCLE_TRIGGERS.has(function_lines[0]):
 		loose_lifecycle = _loose_lifecycle_match(function_lines[0])
-	if LIFECYCLE_TRIGGERS.has(function_lines[0]) or loose_lifecycle != null:
-		if loose_lifecycle != null:
+	# An Ask row's answer is a named function nothing connects, so it lifts from its header - unless
+	# this file wired the same name to a signal, in which case that connect line owns the handler.
+	var ask_answer: String = ""
+	if ASK_ANSWER_TRIGGERS.has(function_lines[0]):
+		var answered: String = function_lines[0].trim_prefix("func ").split("(")[0]
+		if not connections.has(answered):
+			ask_answer = str(ASK_ANSWER_TRIGGERS[function_lines[0]])
+	if LIFECYCLE_TRIGGERS.has(function_lines[0]) or loose_lifecycle != null or not ask_answer.is_empty():
+		if not ask_answer.is_empty():
+			trigger_id = ask_answer
+		elif loose_lifecycle != null:
 			var loose_map: Dictionary = {
 				"_ready": "OnReady", "_process": "OnProcess", "_physics_process": "OnPhysicsProcess",
 				"_input": "OnInput", "_unhandled_input": "OnUnhandledInput",
@@ -1994,6 +2027,13 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			# node in the scene, so it is cleared here: the resolver knows where to reconnect it, and a
 			# leftover path would have emission reach for get_node("EditorInterface…").
 			trigger_id = str(editor_signals[signal_name])
+			trigger_source = ""
+		elif (WINDOW_SOURCE_SIGNAL_TRIGGERS.get(trigger_source, {}) as Dictionary).has(signal_name):
+			# A signal off the window itself - the drop, and the close request. The source moves to
+			# the global "@window" token the resolver knows how to write back, exactly as an editor
+			# signal's does: `get_window()` is a call, not a node path, so a leftover source would
+			# have emission reach for get_node("get_window()").
+			trigger_id = str((WINDOW_SOURCE_SIGNAL_TRIGGERS[trigger_source] as Dictionary)[signal_name])
 			trigger_source = ""
 		elif trigger_source == EventForgeMultiplayerLift.CONNECT_SOURCE \
 				and EventForgeMultiplayerLift.SIGNAL_TRIGGERS.has(signal_name):

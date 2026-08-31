@@ -18,8 +18,9 @@
 # both lists on purpose: they genuinely read one path and write another, and the honest reading of a
 # copy row is that its paths are read and written.
 #
-# THE ASK is found the same way: a row whose verb is declared on a FileDialog is a row that stops and
-# asks the player, whatever it is called.
+# THE ASK is found the same way, in the two shapes an ask can take: a row whose verb is declared on a
+# FileDialog, and a row whose emitted line opens the PLATFORM'S own chooser. Either is a row that
+# stops and asks the player, whatever it is called.
 #
 # THE BAND SCALE LAW. A band lists what the sheet USES and counts the rest. Four paths get four
 # bands; twelve get four and one band saying how many more, because a head longer than the sheet is
@@ -40,6 +41,9 @@ const PATH_HINT: String = "file_path"
 
 ## The class a verb is declared on when the verb's whole job is to ask the player for a file.
 const CHOOSER_CLASS: String = "FileDialog"
+
+## The call a verb makes when it opens the PLATFORM'S own chooser rather than building a node for it.
+const CHOOSER_CALL: String = "DisplayServer.file_dialog_show("
 
 ## How many paths the band names before it starts counting.
 const SHOWN_LIMIT: int = 4
@@ -289,11 +293,29 @@ static func _walk_chooser_rows(items: Array, found: Array[Dictionary]) -> void:
 					continue
 				var descriptor: ACEDescriptor = ACERegistry.find_descriptor(
 					str(ace.get("provider_id")), str(ace.get("ace_id")))
-				if descriptor == null or descriptor.node_type != CHOOSER_CLASS:
+				if descriptor == null:
 					continue
-				found.append({"ace_id": descriptor.ace_id,
-					"echo": "%s.%s" % [CHOOSER_CLASS, descriptor.codegen_template.split("\n")[0]]})
+				if descriptor.node_type == CHOOSER_CLASS:
+					found.append({"ace_id": descriptor.ace_id,
+						"echo": "%s.%s" % [CHOOSER_CLASS, descriptor.codegen_template.split("\n")[0]]})
+					continue
+				# A row that opens the PLATFORM'S own chooser is the same fact said another way, and
+				# it is declared on no node at all. Found by the call it makes rather than by an id,
+				# so a row added later is on the band the day it compiles to this line.
+				var opens: String = _chooser_call_line(str(descriptor.codegen_template))
+				if not opens.is_empty():
+					found.append({"ace_id": descriptor.ace_id, "echo": opens})
 		_walk_chooser_rows(event_row.sub_events, found)
+
+
+## The line of a template that opens the platform's own file chooser, trimmed of its indentation, or
+## "" when the template opens none. The echo shows THAT line rather than the template's first, which
+## on an Ask row is the branch that chooses between the two choosers.
+static func _chooser_call_line(template: String) -> String:
+	for line: String in template.split("\n"):
+		if line.contains(CHOOSER_CALL):
+			return line.strip_edges()
+	return ""
 
 
 ## True when a template makes any of these calls.

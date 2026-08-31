@@ -335,6 +335,21 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# The window's close button (X) / an app-quit request - for save-on-quit or a confirm dialog.
 			# Connected on the root window (the "@window" global source), not self.
 			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
+		"OnFilesDropped":
+			# The player dragged files from their desktop onto the game window. The window itself
+			# raises it, so it connects on the same "@window" global source the close request does -
+			# `get_window().files_dropped.connect(...)`, which is the line a hand-written project
+			# already writes. Desktop platforms only; a web or mobile build never raises it.
+			return _signal_backed("_on_files_dropped", "files: PackedStringArray", "files_dropped", "@window")
+		"OnFileChosen":
+			# The two answers to an Ask row. There is no signal to connect: a chooser is another
+			# window that answers minutes later, and the emitted Ask line routes both of its endings
+			# into these two functions BY NAME - the native callback through a small lambda beside
+			# it, the FileDialog fallback through its own two signals. So they compile to plain named
+			# functions, exactly as an animation's method-track hook does.
+			return _lifecycle("_on_file_chosen", "path: String")
+		"OnAskCancelled":
+			return _lifecycle("_on_ask_cancelled", "")
 		"OnPlayerJoined":
 			# The seven things the connection itself says - five off MultiplayerAPI's own signals and
 			# the two SceneMultiplayer adds for the handshake, all on the same property. They

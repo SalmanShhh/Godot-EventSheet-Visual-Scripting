@@ -83,6 +83,13 @@ const NOT_STANDALONE: Array[String] = [
 	"CrowdIsDownToThisOne",  # reads `node` - the leaving node On The Last One Destroyed's handler receives
 	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
+	# The two Ask rows call `_on_file_chosen` / `_on_ask_cancelled` by name, which is the whole
+	# point of them: a chooser answers minutes after the row ran, so the answer is a trigger and the
+	# emitted line routes into it. Those two functions are what the sheet's own answer events
+	# compile to, and this harness builds one empty host class with no events in it. Their templates
+	# are exercised by user_content_doors_test, which compiles each Ask row together with the two
+	# answer events and parses the whole emitted script.
+	"AskForAFileToOpen", "AskWhereToSave",
 	# The Editor object's plugin verbs are EditorPlugin METHODS - they compile in an EditorPlugin
 	# host and nowhere else, and this harness deliberately builds one host class (Node) rather than a
 	# per-ACE menagerie. Their templates are exercised by editor_object_reading_test, which opens a real
