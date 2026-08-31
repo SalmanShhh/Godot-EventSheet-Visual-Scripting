@@ -20,9 +20,9 @@
   for over `<seconds>`s** (the timed variant, off the clock the setter restarts), **Was in
   `<state>`** (`previous_state == State.X`), **Go to `<state>`** (`state = State.X`, one plain
   assignment that announces itself through the variable's own setter), and the two triggers **On
-  entering `<state>`** / **On leaving `<state>`**. Leaving fires FIRST, always, and both descriptions
-  say so. Every state is picked from a dropdown filled by the object's own declarations, so a typo
-  cannot be written.
+  entering `<state>`** / **On leaving `<state>`**. For one change, leaving fires first, and both
+  descriptions say so. Every state is picked from a dropdown filled by the object's own declarations,
+  so a state is chosen rather than spelled.
 - **One handler for the moment.** The two triggers share `_on_state_changed(from_state, to_state)`
   wired to `state_changed`, with every leaving row emitted before every entering one - the same
   emitter the game's mode change uses, now shared between them rather than written twice.
@@ -222,6 +222,16 @@
   count is unchanged at **113 behavior packs, 94 of them with a guide**, the other 19 companion data
   assets and loaders.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
+
+### Fixed in the states pass
+
+- **A change started from inside a change is stated, and pinned by running it.** The `state` setter
+  announces as it assigns, so a **Go to** written under **On entering** is a second change that
+  happens immediately: its own leaving-then-entering rows run to the end, and only then do the first
+  row's remaining rows resume - by which time the object is somewhere else. The four places that said
+  "leaving fires first, always" with no qualifier now say what actually happens, the guide draws the
+  order out, and `object_state_test` BUILDS the emitted machine, loads it and moves it, so the order
+  is pinned by observation rather than by a claim about emitted text.
 
 ### A path says which place it is in
 

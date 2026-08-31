@@ -124,15 +124,35 @@ starts, raise it again after. Two triggers answer that moment:
 - **On entering `<state>`** runs the moment this object enters that state.
 - **On leaving `<state>`** runs the moment it leaves that state.
 
-**Leaving fires first, always.** The room is emptied before the next one is filled, so whatever a
-state switched on can be put back before anything answering the new state starts. Both rows are
-answers to the same one signal, and they compile into one `_on_state_changed(from_state, to_state)`
-handler with every leaving arm written above every entering arm - which is the order they run in, so
-the file reads the way it behaves.
+**For one change, leaving fires first.** The room is emptied before the next one is filled, so
+whatever a state switched on can be put back before anything answering the new state starts. Both
+rows are answers to the same one signal, and they compile into one
+`_on_state_changed(from_state, to_state)` handler with every leaving arm written above every entering
+arm - which is the order they run in, so the file reads the way it behaves.
 
 Going to the state the object is already in **changes nothing and announces nothing**: neither
 trigger fires. A signal that fired when nothing changed would be a signal every handler had to guard
 itself against.
+
+**A Go to inside one of these rows is a second change, and it happens straight away.** The setter
+announces as it assigns - that is the whole reason *Go to* is one plain line - so a *Go to Stagger*
+written under **On entering Chase** runs the whole of the Chase-to-Stagger change (its *On leaving
+Chase*, then its *On entering Stagger*) before the rest of the *On entering Chase* rows resume. Those
+remaining rows then run while the object is already in Stagger. Written out, the order is:
+
+```
+On leaving Patrol      the first change begins
+On entering Chase      … and its rows run, one of which says Go to Stagger
+  On leaving Chase       the second change runs to the end, here and now
+  On entering Stagger
+On entering Chase      the rest of the first row's rows, with the object already in Stagger
+```
+
+This is not a quirk of the plugin: it is what the same lines written by hand do, because a setter
+that emits is a setter that emits. It is only worth knowing when you chain changes from inside a
+change. The way to write that so it reads the way it runs is the ordinary one - make the second
+change its own event, under **Is in Chase** and whatever else has to be true - and then each change
+finishes before the next begins.
 
 ## The timed question
 

@@ -10,7 +10,9 @@
 #   4. the round trip: a sheet with states compiles, opens and re-emits byte for byte - and a spine
 #      somebody wrote by hand opens as the rows,
 #   5. the dialog: what Declare states writes, and that writing twice changes nothing,
-#   6. the findings: a state no row can reach, and a row naming a state this object never declared.
+#   6. the findings: a state no row can reach, and a row naming a state this object never declared,
+#   7. the order a change inside a change actually runs in, pinned by RUNNING the emitted machine
+#      rather than by reading it - the one promise a static assertion cannot make.
 @tool
 class_name ObjectStateTest
 extends RefCounted
@@ -26,8 +28,9 @@ static func run() -> bool:
 	all_passed = _run_round_trip() and all_passed
 	all_passed = _run_dialog() and all_passed
 	all_passed = _run_findings() and all_passed
+	all_passed = _run_change_inside_a_change() and all_passed
 	if all_passed:
-		print("[PASS] object_state_test: the reader, the rows, the moment, the round trip, the dialog and the findings")
+		print("[PASS] object_state_test: the reader, the rows, the moment, the round trip, the dialog, the findings and the nested change")
 	return all_passed
 
 
@@ -241,6 +244,48 @@ static func _run_findings() -> bool:
 	# A sheet that declares no states says nothing at all, which is every object that has none.
 	all_passed = _check("and an object with no states grows no findings",
 		EventSheetStateFacts.findings(EventSheetResource.new()).size(), 0) and all_passed
+	return all_passed
+
+
+# ── 7. A change started from inside a change, RUN rather than read ────────────────────────
+## The setter announces as it assigns, so a Go to written under On entering is a second change that
+## happens immediately: its own rows run to the end, and only then do the first change's remaining
+## rows resume - by which time the object is somewhere else. That is what the same lines written by
+## hand do, and the descriptions and the guide say so; this pins the order by BUILDING the machine,
+## loading it and moving it, because no assertion about emitted text can see a runtime order.
+static func _run_change_inside_a_change() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = _states_sheet()
+	sheet.host_class = "Node"
+	sheet.events.append(_declared("trail", "Array", "[]"))
+	sheet.events.append(_row(EventSheetStateFacts.LEAVING_TRIGGER_ID, [],
+		[_action("trail.append(\"leaving Patrol\")")], {"state": "PATROL"}))
+	sheet.events.append(_row(EventSheetStateFacts.LEAVING_TRIGGER_ID, [],
+		[_action("trail.append(\"leaving Chase\")")], {"state": "CHASE"}))
+	# The row that chains: it says it entered Chase, goes somewhere else, and then says one more thing.
+	sheet.events.append(_row(EventSheetStateFacts.ENTERING_TRIGGER_ID, [],
+		[_action("trail.append(\"entering Chase\")"),
+			_action_ace("GoToState", {"state": "STAGGER"}),
+			_action("trail.append(\"still in the Chase row, now in \" + State.find_key(state))")],
+		{"state": "CHASE"}))
+	sheet.events.append(_row(EventSheetStateFacts.ENTERING_TRIGGER_ID, [],
+		[_action("trail.append(\"entering Stagger\")")], {"state": "STAGGER"}))
+	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	all_passed = _check("the machine compiles", _parses(built), true) and all_passed
+	_write(built)
+	var script: GDScript = ResourceLoader.load(OUT_PATH, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
+	var machine: Node = script.new()
+	machine._ready()
+	machine.state = 1  # State.CHASE
+	all_passed = _check("a Go to inside On entering runs its own change to the end first, and the rest of the row afterwards",
+		Array(machine.trail), [
+			"leaving Patrol",
+			"entering Chase",
+			"leaving Chase",
+			"entering Stagger",
+			"still in the Chase row, now in STAGGER",
+		]) and all_passed
+	machine.free()
 	return all_passed
 
 

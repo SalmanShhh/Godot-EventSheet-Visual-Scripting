@@ -21,8 +21,15 @@
 #
 # WHY `from_state, to_state` ON THE SIGNAL: the moment of a change is where the real work lives - drop
 # the guard as the stagger starts, raise it again after - and half of that question is what we just
-# LEFT. On leaving fires before On entering, always, because the room is emptied before the next one
-# is filled.
+# LEFT. For ONE change, On leaving fires before On entering, because the room is emptied before the
+# next one is filled.
+#
+# AND WHAT THAT DOES NOT SAY. The setter announces synchronously, so a Go to written INSIDE an On
+# entering or On leaving row is a SECOND change announced immediately: its own leaving-then-entering
+# rows run to the end, and only then do the first change's remaining rows resume - by which time the
+# object is somewhere else. That is what a plain setter does and what the same lines written by hand
+# do, so it is stated rather than papered over: a machine that chains a change from inside a change
+# should make the second one its own row, under a condition, in the ordinary way.
 #
 # THE DECLARATIONS THEY LEAN ON (the `State` enum, the `state` variable with its setter,
 # `previous_state`, `state_entered_msec` and `state_changed`) are ORDINARY rows the Declare states
@@ -74,7 +81,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "OnEnteringState", "On Entering State",
 		ACEDescriptor.ACEType.TRIGGER, "", "state_changed", [_state_param()],
 		CAT, "On entering {state}")
-		.described("Runs the moment this object enters the given state. On leaving fires FIRST, always in that order, so the state being left has finished tidying up before the new one starts."))
+		.described("Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left."))
 
 	descriptors.append(F.make_descriptor("Core", "OnLeavingState", "On Leaving State",
 		ACEDescriptor.ACEType.TRIGGER, "", "state_changed", [_state_param()],
