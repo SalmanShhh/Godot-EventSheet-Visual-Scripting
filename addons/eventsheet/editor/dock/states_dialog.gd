@@ -7,7 +7,7 @@
 #     signal state_changed(from_state: int, to_state: int)
 #     var state: State = State.PATROL      (with the setter that announces the change)
 #     var previous_state: State = State.PATROL
-#     var state_entered_msec: int = 0
+#     var state_entered_msec: int = Time.get_ticks_msec()
 #
 # Nothing is stored anywhere else, nothing is hidden, and everything it writes is a row a reader can
 # see, edit and delete. That is what makes the feature survive uninstalling the plugin, and what
@@ -154,7 +154,12 @@ static func write(sheet: EventSheetResource, declared: PackedStringArray, starts
 	# facts about a moment that has already passed, and nothing else in the file could recover them.
 	_ensure_variable(sheet, EventSheetStateFacts.PREVIOUS_VARIABLE,
 		EventSheetStateFacts.ENUM_NAME, opening)
-	_ensure_variable(sheet, EventSheetStateFacts.SINCE_VARIABLE, "int", "0")
+	# The clock STARTS AT BIRTH, not at zero: a variable initialiser runs when the object is built, so
+	# the state it opens in has been held since then. Written as `0`, the timed question would be
+	# comparing against the whole run instead, and an object spawned mid-game would answer "for over
+	# 2s" on its first frame.
+	_ensure_variable(sheet, EventSheetStateFacts.SINCE_VARIABLE, "int",
+		EventSheetStateFacts.SINCE_INITIAL)
 	return true
 
 

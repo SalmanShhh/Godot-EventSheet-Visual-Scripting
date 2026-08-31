@@ -38,7 +38,7 @@ enum State { PATROL, CHASE, STAGGER }
 
 signal state_changed(from_state: int, to_state: int)
 
-var state_entered_msec: int = 0
+var state_entered_msec: int = Time.get_ticks_msec()
 var previous_state: State = State.PATROL
 var state: State = State.PATROL:
 	set(value):

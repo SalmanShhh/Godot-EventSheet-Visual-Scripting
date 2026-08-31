@@ -232,6 +232,17 @@
   "leaving fires first, always" with no qualifier now say what actually happens, the guide draws the
   order out, and `object_state_test` BUILDS the emitted machine, loads it and moves it, so the order
   is pinned by observation rather than by a claim about emitted text.
+- **The hold clock starts at the object's birth.** `state_entered_msec` was declared as `0` and only
+  ever written by the setter, so until the first change the timed question was comparing against the
+  whole RUN: an enemy spawned a minute in and standing in Patrol answered **Is in Patrol for over 2s**
+  true on its first frame, and the band read `current: Patrol · 60.0 s` for an object one frame old.
+  Declare states now writes `var state_entered_msec: int = Time.get_ticks_msec()`, which is still an
+  ordinary declaration and still one the setter keeps true, and the suite instantiates the emitted
+  object to pin that its starting hold is nothing at all.
+- **Which clock the timed row is on, said out loud.** `Time.get_ticks_msec()` is wall time and does
+  not stop when the tree is paused, so a game in its **Paused** mode goes on counting every object's
+  hold and the timed rows answer the instant play resumes. The guide and the parameter's own comment
+  say so, and name the ordinary shape for a timer that has to stop with the game.
 
 ### A path says which place it is in
 

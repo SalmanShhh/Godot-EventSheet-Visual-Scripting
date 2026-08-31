@@ -12,7 +12,9 @@
 #   5. the dialog: what Declare states writes, and that writing twice changes nothing,
 #   6. the findings: a state no row can reach, and a row naming a state this object never declared,
 #   7. the order a change inside a change actually runs in, pinned by RUNNING the emitted machine
-#      rather than by reading it - the one promise a static assertion cannot make.
+#      rather than by reading it - the one promise a static assertion cannot make,
+#   8. and the hold clock of the state the object STARTS in, pinned the same way: a value at
+#      instantiation is not something a line of emitted text can be asked about.
 @tool
 class_name ObjectStateTest
 extends RefCounted
@@ -29,8 +31,9 @@ static func run() -> bool:
 	all_passed = _run_dialog() and all_passed
 	all_passed = _run_findings() and all_passed
 	all_passed = _run_change_inside_a_change() and all_passed
+	all_passed = _run_starting_hold() and all_passed
 	if all_passed:
-		print("[PASS] object_state_test: the reader, the rows, the moment, the round trip, the dialog, the findings and the nested change")
+		print("[PASS] object_state_test: the reader, the rows, the moment, the round trip, the dialog, the findings, the nested change and the starting hold")
 	return all_passed
 
 
@@ -289,6 +292,35 @@ static func _run_change_inside_a_change() -> bool:
 	return all_passed
 
 
+# ── 8. The hold clock starts at the object's birth ────────────────────────────────────────
+## The setter restarts the clock on a change, and nothing else writes it - so declared as `0` the
+## timed question would be comparing against the whole RUN, and an enemy spawned a minute in and
+## standing in the state it starts in would answer "for over 2s" on its very first frame. Declared
+## with the clock instead, the hold of the starting state begins where the object does. Pinned by
+## BUILDING the object, because the defect is a value at instantiation and not a line of text.
+static func _run_starting_hold() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node"
+	EventSheetStatesDialog.write(sheet, PackedStringArray(["Patrol", "Chase"]), "Patrol")
+	all_passed = _check("the dialog declares the clock as the clock, not as zero",
+		EventSheetStateFacts.variable_row(sheet, EventSheetStateFacts.SINCE_VARIABLE).default_value,
+		EventSheetStateFacts.SINCE_INITIAL) and all_passed
+	var built: String = str(SheetCompiler.compile(sheet, OUT_PATH).get("output", ""))
+	all_passed = _check("and the file says so",
+		built.contains("var state_entered_msec: int = Time.get_ticks_msec()"), true) and all_passed
+	_write(built)
+	var script: GDScript = ResourceLoader.load(OUT_PATH, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
+	var spawned: Node = script.new()
+	# The very question the timed row compiles to, asked of an object one instant old. The whole run
+	# is older than this object, which is the case the `0` initialiser answered wrongly.
+	var held: float = float(Time.get_ticks_msec() - spawned.state_entered_msec) / 1000.0
+	all_passed = _check("an object one instant old has held its starting state for no time at all",
+		held < 1.0, true) and all_passed
+	spawned.free()
+	return all_passed
+
+
 # ── The sheet these are asked of, and the small helpers ───────────────────────────────────
 ## A sheet that declares states the way the Declare states dialog writes them: the enum, the signal
 ## the change travels on, the variable it starts in with its announcing setter, and the two the
@@ -311,7 +343,8 @@ static func _states_sheet() -> EventSheetResource:
 	sheet.events.append(state_var)
 	sheet.events.append(_declared(EventSheetStateFacts.PREVIOUS_VARIABLE,
 		EventSheetStateFacts.ENUM_NAME, "State.PATROL"))
-	sheet.events.append(_declared(EventSheetStateFacts.SINCE_VARIABLE, "int", "0"))
+	sheet.events.append(_declared(EventSheetStateFacts.SINCE_VARIABLE, "int",
+		EventSheetStateFacts.SINCE_INITIAL))
 	sheet.variables["alarm_on"] = {"type": "bool", "default": false}
 	return sheet
 

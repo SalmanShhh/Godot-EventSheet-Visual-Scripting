@@ -78,7 +78,9 @@ Pressing OK writes **five ordinary declarations** onto the sheet, as rows:
 - `enum State { PATROL, CHASE, STAGGER }` - the states themselves.
 - `var state: State = State.PATROL`, with the setter that announces a change.
 - `var previous_state: State = State.PATROL` - what we came from.
-- `var state_entered_msec: int = 0` - when this state began.
+- `var state_entered_msec: int = Time.get_ticks_msec()` - when this state began. The initialiser runs
+  when the object is built, so the state it opens in has been held since the object existed, not
+  since the game started.
 - `signal state_changed(from_state: int, to_state: int)` - the announcement.
 
 The announcement lives in the **state variable's own setter**, which is where Godot puts "and tell
@@ -159,8 +161,17 @@ finishes before the next begins.
 **Is in STAGGER for over 2s** is the timed half of *Is in*, and it is one row rather than two,
 because "how long have we been here" is one question. It reads the clock the setter restarts, so:
 
+- The clock **starts when the object is built**, because that is when the state it opens in began.
+  An enemy spawned a minute into a run and standing in Patrol has been in Patrol for as long as it
+  has existed, not for as long as the game has been running.
 - The clock **restarts on every change of state**. A stagger that ends after a second and starts
   again is a fresh two seconds, not a continuation.
+- The clock is `Time.get_ticks_msec()`, which is **wall time and does not stop when the tree is
+  paused**. Going to the game's **Paused** mode freezes the objects, but every timed row keeps
+  counting through the pause and answers the moment play resumes, and the band's `current: Stagger ·
+  3.2 s` keeps rising over a frozen game. If a state's timer has to stop with the game, count it in a
+  variable you add to under a **Not in mode Paused** condition, which is the ordinary shape and the
+  one that says out loud which clock it is on.
 - Going to the state you are already in restarts it too, which is the one thing a re-entry does. That
   is also what the trail says out loud when it happens - see
   [The trail](#the-trail-what-the-machine-just-did).
@@ -202,7 +213,7 @@ enum State { PATROL, CHASE, STAGGER }
 
 signal state_changed(from_state: int, to_state: int)
 
-var state_entered_msec: int = 0
+var state_entered_msec: int = Time.get_ticks_msec()
 var previous_state: State = State.PATROL
 var state: State = State.PATROL:
 	set(value):

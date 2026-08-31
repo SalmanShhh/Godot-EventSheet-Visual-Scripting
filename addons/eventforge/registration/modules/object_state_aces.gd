@@ -103,6 +103,12 @@ static func _state_param() -> ACEParam:
 
 ## How long the timed condition waits. Seconds, because that is what a designer says out loud, and an
 ## expression is allowed here as everywhere else a number is.
+##
+## WHICH CLOCK: `Time.get_ticks_msec()`, which is wall time and keeps running while the scene tree is
+## paused. A game that goes to a Paused mode freezes its objects, and every timed row here goes on
+## counting through the pause and answers the instant play resumes. A state timer that has to stop
+## with the game is a variable the sheet adds to under a not-paused condition, which says out loud
+## which clock it is on.
 static func _seconds_param() -> ACEParam:
 	return F.make_param("seconds", "float", "1.0", "Seconds",
 		"How long the object must already have been in that state for this to be true. The clock starts again on every change of state.",

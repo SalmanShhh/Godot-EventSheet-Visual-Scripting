@@ -40,6 +40,13 @@ const PREVIOUS_VARIABLE: String = "previous_state"
 const SINCE_VARIABLE: String = "state_entered_msec"
 const CHANGED_SIGNAL: String = "state_changed"
 
+## What the clock is DECLARED as, and why it is not `0`. A variable initialiser runs when the object
+## is built, so this starts the hold at the object's own birth - which is when the state it starts in
+## began. Declared as `0` instead, the timed question would compare against the whole run: an enemy
+## spawned a minute in and standing in Patrol would answer "Is in Patrol for over 2s" true on its
+## very first frame, and the band would say it had held that state for a minute.
+const SINCE_INITIAL: String = "Time.get_ticks_msec()"
+
 ## The signal's parameters, as the compiler writes them. Two, for the same reason the game's mode
 ## signal carries two: what we just LEFT is half of every question asked at the moment of a change.
 const CHANGED_SIGNAL_PARAMS: PackedStringArray = ["from_state: int", "to_state: int"]
