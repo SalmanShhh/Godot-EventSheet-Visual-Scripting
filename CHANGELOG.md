@@ -317,6 +317,13 @@
   of eight names while the head it was previewing would show six and a count. There is one assembly
   now, both bands and both dialogs call it, and "starts in" is a key in all nine language files
   instead of shipping English on both bands.
+- **The timed row's live progress stays on the canvas, and an inverted row shows none.** `3.2 of 6`
+  was drawn straight after the cell with no measurement and no clamp, unlike the `now` chip ten lines
+  above it, so a long cell in a narrow dock put it past the right edge - and with no horizontal
+  scroll on a sheet, past the edge means gone rather than scrollable. It is now measured and clamped
+  the same way. Separately, an inverted **Not Is in X for over 6s** is true UNTIL the hold passes, so
+  a bar counting up to it read as progress towards the opposite of what the row does; it now shows
+  nothing, the same answer a computed wait gets.
 
 ### A path says which place it is in
 

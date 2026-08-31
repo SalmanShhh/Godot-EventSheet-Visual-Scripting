@@ -3756,7 +3756,10 @@ func _first_color_in_params(ace: Resource) -> Variant:
 ## Static, because it reads the condition and nothing else: the rule is then pinned headless rather
 ## than only exercised through a canvas.
 static func state_progress_metadata(condition: ACECondition) -> Dictionary:
-	if condition == null or condition.ace_id != "InStateForOver":
+	# An INVERTED row is not counting up to firing - it fires until the hold passes, and stops. "3.2
+	# of 6" beside it would read as progress towards the opposite of what happens, so an inverted row
+	# shows nothing, which is the same answer a computed wait gets and for the same reason.
+	if condition == null or condition.ace_id != "InStateForOver" or condition.negated:
 		return {}
 	var written: String = str(condition.params.get("seconds", "")).strip_edges()
 	if not written.is_valid_float():

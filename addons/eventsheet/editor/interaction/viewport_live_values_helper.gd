@@ -138,7 +138,14 @@ func draw_state_progress(row_data: EventRowData, row_top: float, row_height: flo
 			continue
 		var style: Variant = _viewport.get_event_style()
 		var chip_color: Color = style.value_highlight_color if style != null else EventSheetPalette.COLOR_VALUE
-		_viewport.draw_string(font, Vector2(span.rect.end.x + 8.0,
+		# Clamped to the canvas, exactly as the "now" chip above is. There is no horizontal scroll
+		# here, so a reading drawn past the right edge is not a reading a reader can go and find - it
+		# is one that silently is not there, and a long cell in a narrow dock is enough to do it.
+		var text_width: float = font.get_string_size(progress, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			font_size).x
+		var progress_x: float = minf(span.rect.end.x + 8.0,
+			_viewport._get_logical_canvas_width() - text_width - 24.0)
+		_viewport.draw_string(font, Vector2(progress_x,
 			row_top + row_height * 0.5 + font_size * 0.35), progress,
 			HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, chip_color)
 		return

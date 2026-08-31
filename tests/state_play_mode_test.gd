@@ -279,6 +279,18 @@ static func _test_the_progress_is_read_off_the_row() -> bool:
 	var untimed: ACECondition = _condition("InState", {"state": "STAGGER"})
 	ok = _check("and no other row carries a progress at all",
 		ViewportRowBuilder.state_progress_metadata(untimed), {}) and ok
+	# An INVERTED row is true UNTIL the hold passes, so a bar counting up to it would be progress
+	# towards the opposite of what the row does.
+	var inverted: ACECondition = _condition("InStateForOver", {"state": "STAGGER", "seconds": "6"})
+	inverted.negated = true
+	ok = _check("and an inverted timed row shows none either, rather than counting up to not firing",
+		ViewportRowBuilder.state_progress_metadata(inverted), {}) and ok
+	# The reading is CLAMPED to the canvas, exactly as the "now" chip is: there is no horizontal
+	# scroll on a sheet, so a reading past the right edge is not one a reader can go and find.
+	var drawn: String = FileAccess.get_file_as_string(
+		"res://addons/eventsheet/editor/interaction/viewport_live_values_helper.gd")
+	ok = _check("the progress is measured and clamped before it is drawn",
+		drawn.count("_get_logical_canvas_width()"), 2) and ok
 	return ok
 
 
