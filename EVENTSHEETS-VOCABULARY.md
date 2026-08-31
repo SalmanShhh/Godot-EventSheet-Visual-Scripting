@@ -1954,6 +1954,18 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Chromatic Pulse** (`strength: float = 0.6, seconds: float = 0.35`) - Pulls the colour channels apart and lets them snap back - the one-frame lens error that reads as impact.
 - **Clear Screen Effects** - Ends every effect at once and puts the screen back the way it was, which is the row a pause menu closing or a scene change wants.
 
+### SecondViewPackAddon (`res://eventsheet_addons/second_view/second_view_addon.gd`)
+@ace_tags(camera, viewport, minimap, ui) @ace_category("Second View") @ace_version(1.0.0)
+
+#### Actions
+- **Make A View** (`view_name: String, followed: Node, zoom: float`) - Builds a second view of the world you are already in, under a name every other row addresses it by. The view is a SubViewport sharing the running world with a camera of its own that follows the node you name - a Camera2D when that node is 2D, a Camera3D looking straight down at it when it is 3D. Zoom is how much of the world is in frame: below 1 shows more of it (a minimap), above 1 shows less of it (a magnifier). Making a view under a name that already exists replaces it, so a row that runs twice leaves one view rather than two cameras drawing the same picture.
+- **Show View In** (`view_name: String, frame: Node`) - Hands a view's live picture to the frame you want to see it in - a TextureRect on your HUD, or anything else that takes a texture (a Sprite2D, a Sprite3D on a screen standing in the world). One view can be shown in as many frames as you like, and a Control frame also sizes the render: a minimap in a 200 by 120 panel renders 200 by 120 pixels instead of being stretched out of a square, and follows that panel when the window resizes.
+- **Set View Zoom** (`view_name: String = "minimap", zoom: float = 0.25`) - Changes how much of the world one view has in frame, without rebuilding it. Below 1 pulls back and shows more (a minimap that zooms out as the level opens up), above 1 pushes in and shows less (a magnifier over the cursor, a portrait tightening on a face). Naming a view that does not exist warns and changes nothing.
+- **Stop View** (`view_name: String = "minimap"`) - Frees a view and everything it built - its SubViewport and the camera inside it - and takes its picture back off every frame it was shown in first, so a frame is left blank rather than holding the texture of a viewport that no longer exists. A view whose followed node was destroyed parks itself and costs nothing per frame, but it is still plumbing: this is the row that removes it. Stopping a view that is not there does nothing.
+
+#### Expressions
+- **View Texture Of** (`view_name: String = "minimap"`) - A view's live picture as a texture, for the places Show View In cannot reach: a material's albedo, a shader parameter, a theme icon. It is a live handle rather than a copy - whatever the view is looking at now is what it shows - and it answers with nothing for a name no view answers to.
+
 ### SineBehavior (`res://eventsheet_addons/sine/sine_behavior.gd`)
 @ace_category("Sine") @ace_expose_all(node) @ace_version(1.0.0)
 

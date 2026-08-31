@@ -48,6 +48,7 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
 - [Event Bus](Event-Bus.md) - a game-wide message board addressed by name: broadcast a channel with a payload, answer it with On Event anywhere, and Wait For Event with a give-up time.
 - [Named Scenes](Named-Scenes.md) - give each .tscn a short name so rows stop carrying res:// paths, carry a record into the next scene, and read back On Scene Ready / Current Scene Is.
+- [Second View](Second-View.md) - a second picture of the world you are already in: name a view, give it a node to follow, and show it in a frame. Minimaps, security monitors, portraits, rear-view mirrors and magnifiers are the same four rows.
 
 ## Incremental and idle
 

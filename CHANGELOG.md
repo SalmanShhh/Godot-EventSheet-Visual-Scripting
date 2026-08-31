@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### A second picture of the world you are already in
+
+- **Second View, a new pack, shipping as the `SecondView` autoload.** A view is a SubViewport
+  SHARING the running world plus a camera of its own that follows a node you name. Point it at the
+  player and show it in a corner panel and that is a minimap; point it at a corridor and show it on a
+  wall screen and that is a security monitor; point it at a face and that is a portrait. Four rows
+  and one expression is the whole vocabulary: **Make A View**, **Show View In**, **Set View Zoom**,
+  **Stop View**, and **View Texture Of** for the places a frame cannot reach - a material's albedo, a
+  shader parameter, a theme icon.
+- **The node you follow decides which kind of view you get.** A Node2D gets a Camera2D on the running
+  2D world; a Node3D gets a Camera3D looking straight down at it on the running 3D world. You never
+  pick, because the node already said it, and a node that is neither warns by name and builds nothing
+  rather than half a view. Zoom means the same thing in both: below 1 shows more of the world, above 1
+  shows less - in 3D it divides the camera's height, so the direction never flips on you.
+- **The three traps are solved inside the pack, once.** A SubViewport outside a container is never
+  "visible" and the default update mode only draws what is visible, which is why a hand-built second
+  view is so often a blank texture - this one always renders. The picture is taken only once the
+  viewport is really in the tree, and is marked not-local-to-scene before it is handed out, so the
+  handle stays bound to the viewport it came from wherever the frame lives. And Stop View takes the
+  picture back OFF every frame before it frees the viewport, so a panel is left blank rather than
+  holding the texture of something that no longer exists.
+- **The frame sizes the render.** A view shown in a 200x120 TextureRect renders 200 by 120 pixels
+  instead of being stretched out of a square, and follows that panel when the window resizes. So there
+  is no size row to learn: the frame you already placed is the answer.
+- **Parks its own tick.** A view whose followed node was destroyed stops being redrawn and keeps its
+  last picture, rather than going black on its own; when every view has lost its node the autoload
+  hands the frame back entirely. Stop View is the row that actually removes the plumbing.
+- **Three refusals, stated in the guide rather than answered with rows.** No split-screen verbs, because
+  two views in two frames IS split screen and the guide shows it in two sentences. No per-view culling
+  masks in v1, because the camera a view builds is an ordinary Camera2D / Camera3D and the
+  visibility-layer rows already decide what it may draw. And no drawing: painting shapes onto a texture
+  stays the Drawing Canvas pack's job, whose shared runtime owns that SubViewport. The two other
+  neighbours are named too - Named Scenes addresses WHICH scene you travel to, and Render Scene To
+  Image is the one-shot editor cousin that photographs a scene file.
+- **Everything it builds stays ordinary Godot, and the guide says where it lives:** a SubViewport named
+  `View_<the name>` parented to the autoload with an ordinary camera inside it. Aim it, mask it or hang
+  another pack off it exactly as you would any other camera.
+
 ### The undoable tool touch, and three small dignities
 
 - **Set Property (Undoable), Add Node (Undoable), Remove Node (Undoable).** The three changes a tool
