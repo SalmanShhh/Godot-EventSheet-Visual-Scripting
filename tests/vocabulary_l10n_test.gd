@@ -107,6 +107,10 @@ const USER_CONTENT_DOOR_IDS: Array[String] = [
 	"SafeFileName", "FreeFilePath", "ShowInFileManager",
 	# The guarded read, the write that makes its folder, and the door onto the player's own folder.
 	"ReadTextFileOr", "WriteTextFileInFolder", "OpenUserDataFolder",
+	# What the player built, written down, and the question asked before one is read back in. Added
+	# to the same shipped module as the doors above, so they are swept by id here for the same
+	# reason: the module predates the wave and only what the wave added is owed.
+	"SaveBranchAsSceneFile", "SceneFileIsDataOnly",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the

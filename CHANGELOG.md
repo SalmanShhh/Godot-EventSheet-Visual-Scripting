@@ -141,6 +141,11 @@
   author's own words for the three locals baked on so the file saves back byte for byte. The same
   pack and the same write with no walk in front of them is a different program, and is left exactly
   as it was.
+- **Both rows speak the eight bundled languages, and the ratchet holds them there.** The two verbs,
+  their descriptions, their display lines and every one of their parameters are keyed in all nine
+  translation files, and their ids are on the Files module's swept list - so the next wave that
+  touches them is told, in the language it forgot, rather than shipping the one English pair on an
+  otherwise translated page.
 
 ### The undoable tool touch, and three small dignities
 
