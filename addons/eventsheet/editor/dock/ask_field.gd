@@ -161,6 +161,8 @@ func _open_row(answer: Dictionary) -> void:
 ## it. Re-found in the LIVE sheet by name, never held.
 func _open_declaration(answer: Dictionary) -> void:
 	if not _open_home(answer):
+		_dock._set_status(EventSheetL10n.translate("%s is declared in %s, which would not open.")
+			% [str(answer.get("text", "")), str(answer.get("home", ""))], true)
 		return
 	var sheet: EventSheetResource = _dock._current_sheet
 	var wanted: Resource = null
@@ -195,6 +197,11 @@ func _open_mode(answer: Dictionary) -> void:
 ## A finding: the sheet the Doctor named, and the row inside it when the finding named one. The same
 ## ladder the Doctor's own page walks, so a finding opened from here and one opened from there arrive
 ## in the same place.
+##
+## THE LAST RUNG IS THE STALE ONE. This list holds the LAST AUDIT's findings, so a finding the reader
+## has since fixed still lists and the row it named is gone. Arriving at the sheet and then quietly
+## doing nothing is the one answer this ladder may not give, so the row not being there is said, with
+## the reason it is not there.
 func _open_finding(answer: Dictionary) -> void:
 	var path: String = str(answer.get("path", ""))
 	if path.is_empty() or not ResourceLoader.exists(path) \
@@ -205,8 +212,9 @@ func _open_finding(answer: Dictionary) -> void:
 	_dock._navigate.record_current()
 	_dock._navigate.open_or_focus(path)
 	var uid: String = str((answer.get("finding", {}) as Dictionary).get("uid", ""))
-	if not uid.is_empty():
-		_dock.reveal_event_row(uid)
+	if not uid.is_empty() and not _dock.reveal_event_row(uid):
+		_dock._set_status(EventSheetL10n.translate("Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.")
+			% path.get_file(), true)
 
 
 ## Opens (or focuses) the sheet an answer lives in, and says whether the dock is now showing it. An

@@ -5743,7 +5743,9 @@ Add row,Zeile hinzufügen
 "Find ""%s"" in every sheet…","„%s“ in allen Blättern suchen…"
 "That row is in %s, which is not open.","Diese Zeile liegt in %s, das nicht geöffnet ist."
 "%s is declared in %s - opened it, but the row it is on has moved.","%s ist in %s deklariert - geöffnet, aber die Zeile dazu hat sich verschoben."
+"%s is declared in %s, which would not open.","%s ist in %s deklariert, das sich nicht öffnen ließ."
 %s is a mode of this sheet's own declaration.,%s ist ein Modus aus der eigenen Deklaration dieses Blatts.
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s wurde geöffnet, aber die von diesem Befund genannte Zeile gibt es nicht mehr - dies ist die Liste der letzten Prüfung. Lass den Doctor noch einmal laufen."
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Dieser Befund betrifft %s, das kein Blatt ist - öffne es im FileSystem-Dock."
 %s is not in the scene that is open.,%s ist nicht in der geöffneten Szene.
 %s is no longer in the project.,%s ist nicht mehr im Projekt.

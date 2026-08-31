@@ -5743,7 +5743,9 @@ Add row,Aggiungi riga
 "Find ""%s"" in every sheet…",Cerca «%s» in tutti i fogli…
 "That row is in %s, which is not open.","Quella riga è in %s, che non è aperto."
 "%s is declared in %s - opened it, but the row it is on has moved.","%s è dichiarato in %s - aperto, ma la riga su cui si trovava si è spostata."
+"%s is declared in %s, which would not open.","%s è dichiarato in %s, che non si è aperto."
 %s is a mode of this sheet's own declaration.,%s è una modalità della dichiarazione di questo foglio stesso.
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s è stato aperto, ma la riga nominata da quel rilievo non c'è più: questa è la lista dell'ultimo controllo. Esegui di nuovo il Doctor."
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Questo rilievo riguarda %s, che non è un foglio - aprilo dal pannello FileSystem."
 %s is not in the scene that is open.,%s non è nella scena aperta.
 %s is no longer in the project.,%s non è più nel progetto.

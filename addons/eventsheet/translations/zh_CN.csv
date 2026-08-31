@@ -5743,7 +5743,9 @@ Add row,添加行
 "Find ""%s"" in every sheet…",在所有事件表中查找“%s”…
 "That row is in %s, which is not open.",该行位于 %s 中，但它没有打开。
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 声明于 %s - 已打开，但它所在的行已经移动。
+"%s is declared in %s, which would not open.","%s 声明在 %s 中，但该文件打不开。"
 %s is a mode of this sheet's own declaration.,%s 是此事件表自身声明的模式。
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","已打开 %s，但该条发现指名的行已经不在了 - 这是上一次体检的清单。请再跑一次 Doctor。"
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",该发现项关于 %s，它不是事件表 - 请从 FileSystem 面板打开。
 %s is not in the scene that is open.,%s 不在当前打开的场景中。
 %s is no longer in the project.,%s 已不在项目中。

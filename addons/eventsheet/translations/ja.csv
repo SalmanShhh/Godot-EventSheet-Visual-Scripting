@@ -5743,7 +5743,9 @@ Add row,行を追加
 "Find ""%s"" in every sheet…",すべてのシートで「%s」を検索…
 "That row is in %s, which is not open.",その行は %s にありますが、開かれていません。
 "%s is declared in %s - opened it, but the row it is on has moved.",%s は %s で宣言されています - 開きましたが、その行は移動しています。
+"%s is declared in %s, which would not open.","%s は %s で宣言されていますが、そのファイルを開けませんでした。"
 %s is a mode of this sheet's own declaration.,%s はこのシート自身の宣言によるモードです。
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s を開きましたが、その指摘が名指しした行はもうありません。これは前回の点検の一覧です。Doctor をもう一度実行してください。"
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",この指摘は %s についてですが、シートではありません - FileSystem ドックから開いてください。
 %s is not in the scene that is open.,%s は開いているシーンにありません。
 %s is no longer in the project.,%s はプロジェクトにもうありません。

@@ -304,6 +304,12 @@
   tabs than anyone works with, and the budget's shelf sits well past the boundary instead of exactly
   on it, so the pin can see the thing it is for. The three budget pins also drop the project-wide
   caches they warm on the way OUT, not only on the way in, which is the serial-CI rule.
+- **Both silent answer doors now say what they could not reach.** The ask field's own rule is that
+  nothing there silently does nothing, and two of the four doors did: a declaration whose sheet would
+  not open answered with no message at all, and a finding threw away the result of revealing its row
+  - which is exactly the stale-finding case, since the list is the LAST audit's, so a finding the
+  reader had already fixed opened the sheet and then did nothing. Both say where they got to, and the
+  second says why.
 
 ### A path says which place it is in
 

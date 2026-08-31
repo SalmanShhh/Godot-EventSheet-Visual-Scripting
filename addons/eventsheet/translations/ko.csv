@@ -5743,7 +5743,9 @@ Add row,행 추가
 "Find ""%s"" in every sheet…","모든 시트에서 ""%s"" 찾기…"
 "That row is in %s, which is not open.",그 행은 %s 에 있으며 열려 있지 않습니다.
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 은(는) %s 에 선언되어 있습니다 - 열었지만 해당 행이 이동했습니다.
+"%s is declared in %s, which would not open.","%s 은(는) %s 에 선언되어 있지만 그 파일을 열지 못했습니다."
 %s is a mode of this sheet's own declaration.,%s 은(는) 이 시트 자체 선언의 모드입니다.
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s 을(를) 열었지만 그 지적이 가리킨 행은 더 이상 없습니다. 이것은 지난 점검의 목록입니다. Doctor를 다시 실행하세요."
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",이 발견 항목은 %s 에 대한 것이며 시트가 아닙니다 - FileSystem 독에서 여세요.
 %s is not in the scene that is open.,%s 은(는) 열려 있는 씬에 없습니다.
 %s is no longer in the project.,%s 은(는) 더 이상 프로젝트에 없습니다.
