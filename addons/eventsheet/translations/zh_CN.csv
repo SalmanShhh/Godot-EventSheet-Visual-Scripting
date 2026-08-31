@@ -5746,3 +5746,16 @@ Add row,添加行
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",该发现项关于 %s，它不是事件表 - 请从 FileSystem 面板打开。
 %s is not in the scene that is open.,%s 不在当前打开的场景中。
 %s is no longer in the project.,%s 已不在项目中。
+Is In State,处于状态
+Is In State For Over,处于状态超过
+Was In State,先前处于状态
+Go To State,切换到状态
+On Entering State,进入状态时
+On Leaving State,离开状态时
+Object State,对象状态
+Is in {state},处于状态 {state}
+Is in {state} for over {seconds}s,处于状态 {state} 超过 {seconds} 秒
+Was in {state},先前处于状态 {state}
+Go to {state},切换到状态 {state}
+On entering {state},进入 {state} 时
+On leaving {state},离开 {state} 时

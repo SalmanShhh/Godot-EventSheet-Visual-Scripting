@@ -5746,3 +5746,16 @@ Add row,行を追加
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",この指摘は %s についてですが、シートではありません - FileSystem ドックから開いてください。
 %s is not in the scene that is open.,%s は開いているシーンにありません。
 %s is no longer in the project.,%s はプロジェクトにもうありません。
+Is In State,状態中
+Is In State For Over,状態が続いている時間が超過
+Was In State,直前の状態
+Go To State,状態へ移行
+On Entering State,状態に入ったとき
+On Leaving State,状態を出たとき
+Object State,オブジェクト状態
+Is in {state},状態 {state} 中
+Is in {state} for over {seconds}s,状態 {state} が {seconds} 秒を超えて継続
+Was in {state},直前の状態が {state}
+Go to {state},状態 {state} へ移行
+On entering {state},{state} に入ったとき
+On leaving {state},{state} を出たとき

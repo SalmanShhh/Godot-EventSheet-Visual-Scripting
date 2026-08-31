@@ -5746,3 +5746,16 @@ Add row,행 추가
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",이 발견 항목은 %s 에 대한 것이며 시트가 아닙니다 - FileSystem 독에서 여세요.
 %s is not in the scene that is open.,%s 은(는) 열려 있는 씬에 없습니다.
 %s is no longer in the project.,%s 은(는) 더 이상 프로젝트에 없습니다.
+Is In State,상태일 때
+Is In State For Over,상태 유지 시간 초과
+Was In State,이전 상태일 때
+Go To State,상태로 전환
+On Entering State,상태에 진입할 때
+On Leaving State,상태에서 벗어날 때
+Object State,오브젝트 상태
+Is in {state},{state} 상태일 때
+Is in {state} for over {seconds}s,{state} 상태를 {seconds}초 넘게 유지
+Was in {state},이전 상태가 {state}
+Go to {state},{state} 상태로 전환
+On entering {state},{state} 진입할 때
+On leaving {state},{state} 벗어날 때

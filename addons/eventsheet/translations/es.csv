@@ -5746,3 +5746,16 @@ Add row,Añadir fila
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Ese hallazgo trata de %s, que no es una hoja - ábrelo desde el panel FileSystem."
 %s is not in the scene that is open.,%s no está en la escena abierta.
 %s is no longer in the project.,%s ya no está en el proyecto.
+Is In State,En estado
+Is In State For Over,En estado durante más de
+Was In State,Estaba en estado
+Go To State,Ir a estado
+On Entering State,Al entrar en el estado
+On Leaving State,Al salir del estado
+Object State,Estado del objeto
+Is in {state},En estado {state}
+Is in {state} for over {seconds}s,En estado {state} durante más de {seconds} s
+Was in {state},Estaba en estado {state}
+Go to {state},Ir a estado {state}
+On entering {state},Al entrar en {state}
+On leaving {state},Al salir de {state}

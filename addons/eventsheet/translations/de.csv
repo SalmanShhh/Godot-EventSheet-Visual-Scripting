@@ -5746,3 +5746,16 @@ Add row,Zeile hinzufügen
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Dieser Befund betrifft %s, das kein Blatt ist - öffne es im FileSystem-Dock."
 %s is not in the scene that is open.,%s ist nicht in der geöffneten Szene.
 %s is no longer in the project.,%s ist nicht mehr im Projekt.
+Is In State,Im Zustand
+Is In State For Over,Im Zustand seit über
+Was In State,War im Zustand
+Go To State,In Zustand wechseln
+On Entering State,Beim Betreten des Zustands
+On Leaving State,Beim Verlassen des Zustands
+Object State,Objektzustand
+Is in {state},Im Zustand {state}
+Is in {state} for over {seconds}s,Im Zustand {state} seit über {seconds} s
+Was in {state},War im Zustand {state}
+Go to {state},In Zustand {state} wechseln
+On entering {state},Beim Betreten von {state}
+On leaving {state},Beim Verlassen von {state}

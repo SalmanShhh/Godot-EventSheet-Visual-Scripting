@@ -5746,3 +5746,16 @@ Add row,Добавить строку
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Это замечание о %s, который не является листом - откройте его в доке FileSystem."
 %s is not in the scene that is open.,%s нет в открытой сцене.
 %s is no longer in the project.,%s больше нет в проекте.
+Is In State,В состоянии
+Is In State For Over,В состоянии дольше
+Was In State,Был в состоянии
+Go To State,Перейти в состояние
+On Entering State,При входе в состояние
+On Leaving State,При выходе из состояния
+Object State,Состояние объекта
+Is in {state},В состоянии {state}
+Is in {state} for over {seconds}s,В состоянии {state} дольше {seconds} с
+Was in {state},Был в состоянии {state}
+Go to {state},Перейти в состояние {state}
+On entering {state},При входе в {state}
+On leaving {state},При выходе из {state}
