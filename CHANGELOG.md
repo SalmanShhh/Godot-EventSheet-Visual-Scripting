@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### A layout on top of the game
+
+- **Add Layout On Top, Remove Layout On Top, Layout Is On Top.** Three rows on the Game side, filed
+  under Scene with the rest of the layout vocabulary, for the layout that goes OVER the running game
+  rather than instead of it: a pause menu, an inventory, a dialogue box. The add loads the layout,
+  gives the copy the name you type, and adds it under the tree root - under the root rather than
+  under this node, because that is what lets the menu outlive a change of layout beneath it, and it
+  is the same reason the Scene Flow pack parents its fade overlay there. The removal finds the name
+  under the root, guards the answer with `get_node_or_null` and frees it, so a name nothing is under
+  quietly does nothing; the condition is the same lookup asked as a question. Go To Layout still
+  REPLACES, Spawn Scene Instance still adds its bare `add_child(load(…).instantiate())` copy under
+  the node that spawned it, and naming a layout by a short word instead of a path is still the Named
+  Scenes pack's job - the name here is the node's own name under the root, not a second registry.
+- **The pause lesson, at the moment of need.** A layout added over a paused game is paused with it
+  unless its own root node's Process Mode says otherwise. The parameters dialog says exactly that on
+  the help strip while the Layout field has focus, and names Pause The Game as the row it pairs with.
+  Nothing is written into anybody's scene: the row emits the three lines it names and no more.
+- **The three lines people already wrote read back as the row.** `var menu = load(…).instantiate()`,
+  `menu.name = "PauseMenu"`, `get_tree().root.add_child(menu)` opens as one Add Layout On Top row,
+  in the `=`/`load` and the `:=`/`preload` spelling alike, with the author's own spelling baked on so
+  the file saves back byte for byte. The bare one-liner keeps reading as Spawn Scene Instance, and
+  the same three statements ending in a plain `add_child` are deliberately not claimed.
+
 ### The %name is a word the sheet speaks
 
 - **The picker's `%names` section.** The object step of the Add picker opens with the scene-unique

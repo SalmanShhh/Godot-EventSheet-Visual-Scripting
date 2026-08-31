@@ -3,7 +3,8 @@
 Three jobs that look like one, and cause more confusion than any other corner of the builtin
 vocabulary:
 
-1. **Changing what is on screen** - Go To Layout, Restart Layout, Spawn Scene Instance, Quit Game.
+1. **Changing what is on screen** - Go To Layout, Restart Layout, Add Layout On Top, Spawn Scene
+   Instance, Quit Game.
 2. **Pausing the whole game** - Set Game Paused, and the per-node question of what "paused" means for
    each node.
 3. **Switching one node off** - which is a different question again, and has two honest answers
@@ -42,6 +43,14 @@ family stops being confusing.
 - **A spawn is a load plus an instantiate plus an add.** Spawn Scene Instance is the one-line form.
   Spawn Scene At also positions it. Spawn Scene (Full) also rotates it and optionally puts it in a
   group. All three add the copy as a child of the node the row runs on.
+- **A layout on top is not a spawn and not a scene change.** Add Layout On Top puts a pause menu, an
+  inventory or a dialogue box OVER the running game: it loads the layout, gives the copy the name you
+  type, and adds it under the tree root. Under the root rather than under this node, because that is
+  what lets the menu outlive a change of layout beneath it - the same reason the Scene Flow pack
+  parents its fade overlay there. Remove Layout On Top takes it off again by that name, and Layout Is
+  On Top asks whether it is still there. The three are the pair to Pause The Game, and the name is
+  the node's own name under the root, not a second registry - naming a layout by a short word instead
+  of a path is what the Named Scenes pack is for.
 - **Pausing the game is one flag.** Set Game Paused writes `get_tree().paused`. What that means for
   any given node is decided by that node's own process mode.
 - **The five process modes are the whole story.** Inherit follows the parent. Pausable stops when the
@@ -75,6 +84,9 @@ family stops being confusing.
 | Quit Game | Closes the game and exits to desktop | `get_tree().quit()` |
 | Handle Quit Myself | Stops the window's X from quitting instantly | `get_tree().set_auto_accept_quit({mode})` |
 | Spawn Scene Instance | Loads a scene file and adds an instance as a child | `add_child(load({path}).instantiate())` |
+| Add Layout On Top | Puts a layout over the running game under a name you choose | three lines: load and instance, name it, `get_tree().root.add_child(…)` |
+| Remove Layout On Top | Takes that layout back off by name (a name nothing is under does nothing) | a guarded `get_tree().root.get_node_or_null({layout_name})` and `queue_free()` |
+| Layout Is On Top | True while a layout added on top is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
 | Spawn Scene At | Loads a scene and drops a copy at a position | three lines, see below |
 | Spawn Scene (Full) | Spawn with position, rotation and an optional group | five lines, see below |
 | Spawn Scene As | Spawn under a NAME, with a record of values set on the way in and a chosen parent | eight lines, see below |
@@ -83,6 +95,11 @@ family stops being confusing.
 | On Scene Spawned | Runs when a Spawn Scene As row spawns something, handing you the name and the node | connects to the sheet's own `scene_spawned(spawn_name, node)` signal |
 | Set Game Paused | Pauses or resumes the whole game | `get_tree().paused = {paused}` |
 | Is Game Paused | True when the game is currently paused | `get_tree().paused` |
+
+The pause pair, and the GDScript it compiles to. One event puts the menu up and freezes the game;
+its twin, told apart only by the layout-on-top question, takes it down and lets the game run again.
+
+![The pause pair as two events - cancel pressed with no menu up adds the layout and pauses, cancel pressed with it up removes the layout and unpauses - above the plain GDScript both compile to](../images/layout-on-top-pause-pair.png)
 
 ### The game's own mode
 
@@ -174,6 +191,12 @@ if "" != "": __spawn_figure.add_to_group("")
 The Set Node Process Mode dropdown offers all five with plain-English labels: Inherit (follow the
 parent), Pausable (stops when the game pauses), When Paused (runs ONLY while paused), Always (ignores
 the game pause), Disabled (never runs).
+
+This is the table Add Layout On Top depends on. A pause menu added over a paused game is paused with
+it unless the menu layout's OWN root node is set to Always or When Paused - set that on the layout's
+root in the scene, or with Keep Node Running While Paused on the way in. The row does not write it
+for you: it emits the three lines it names and nothing else, and the parameters dialog says this on
+the help strip while the Layout field has focus, which is the moment it matters.
 
 ### One callback at a time
 

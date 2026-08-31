@@ -693,6 +693,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `reverse` | [Reverse Array](ace:Core/ArrayReverse) | Variables: Array | Vocabulary |
 | `right` | [Right](ace:Core/TextRight) | Text | Vocabulary |
 | `ring` | [Draw Ring](ace:Core/DrawRing) | Drawing | Vocabulary |
+| `root` | [Layout Is On Top](ace:Core/LayoutIsOnTop) | Scene | Vocabulary |
 | `rotate` | [Rotate (3D)](ace:Core/RotateNode3D) | General Actions | Vocabulary |
 | `rotate_toward` | [Rotate Toward (angle)](ace:Core/RotateTowardAngle) | Math & Random | Vocabulary |
 | `rotate_x` | [Rotate Up Or Down](ace:Core/RotatePitch3D) | 3D: Move & Turn | Vocabulary |

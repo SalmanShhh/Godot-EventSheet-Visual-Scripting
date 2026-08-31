@@ -2989,6 +2989,7 @@ Collections (rich variables)
 - **Retry Up To N Times** (`retry_name: String, times: String`) - Runs this event's actions over and over, up to a number of attempts, so a nested Stop Retrying can end it the moment the thing works. With no waiting inside it stays instant, which makes it the procedural-placement loop as much as the disk retry. Read the try number with Retry Attempt Number.
 - **Retries Exhausted** (`retry_name: String`) - True when the retry loop above ran out of tries without a Stop Retrying - the give-up branch. Put it in a sibling row directly beneath the retry loop, using the same name; a retry that has never run is not exhausted, so nothing fires before the loop does. Reading it clears the record, so the next run starts clean. When the retry WAITS between tries (Wait Before Next Try) the loop is still running while the rows beneath it are reached, so report that give-up with Report Failure on the last attempt and handle it in an On Failure Of event instead.
 - **Is Game Paused** - True when the game is currently paused.
+- **Layout Is On Top** (`layout_name: String`) - True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.
 - **Is Playing** (`target: String`) - True while the audio player is currently playing a sound.
 - **Is Animation Playing** (`target: String`) - True while the animated sprite is currently playing an animation.
 - **Has Arrived** (`target: String`) - True once the navigation agent has reached its target destination.
@@ -3038,6 +3039,8 @@ Collections (rich variables)
 - **Handle Quit Myself** (`mode: String`) - Stops the window's close button from quitting instantly, so On Close Requested can run first (save progress, pop a confirm dialog) and you quit explicitly with Quit Game. Choose "Allow" to restore Godot's default immediate quit.
 - **Set Game Paused** (`paused: String`) - Pauses or resumes the whole game by toggling the scene tree's pause state.
 - **Spawn Scene Instance** (`path: String`) - Loads a scene file and adds an instance of it as a child (spawning objects).
+- **Add Layout On Top** (`path: String, layout_name: String`) - Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again.
+- **Remove Layout On Top** (`layout_name: String`) - Takes a layout added by Add Layout On Top back off again. A name nothing is under quietly does nothing, so a close row is safe to run twice.
 - **Play Sound** (`from_position: String, target: String`) - Plays the sound on an audio player, optionally starting from a given second.
 - **Stop Sound** (`target: String`) - Stops the sound currently playing on an audio player.
 - **Set Volume (dB)** (`db: String, target: String`) - Sets an audio player's loudness in decibels (0 is full, -80 is silent).
