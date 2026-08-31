@@ -247,6 +247,32 @@ static func _run_findings() -> bool:
 	# A sheet that declares no states says nothing at all, which is every object that has none.
 	all_passed = _check("and an object with no states grows no findings",
 		EventSheetStateFacts.findings(EventSheetResource.new()).size(), 0) and all_passed
+
+	# THE TUTORIAL MACHINE. A `match state:` arm keeps its body verbatim, so the transition inside it
+	# is never an ACE row - and the reachability walk used to call the state that arm plainly goes to
+	# unreachable, on the very shape this whole family exists to welcome.
+	var tutorial: EventSheetResource = _states_sheet()
+	var arms: MatchRow = MatchRow.new()
+	arms.match_expression = EventSheetStateFacts.STATE_VARIABLE
+	arms.branches_text = "\n".join(PackedStringArray([
+		"State.PATROL:", "\tif _sees_player():", "\t\tstate = State.CHASE",
+		"State.CHASE:", "\tif not _sees_player():", "\t\tstate = State.PATROL",
+		"State.STAGGER:", "\tvelocity.x = 0.0",
+	]))
+	var holding: EventRow = _row("OnPhysicsProcess", [], [])
+	holding.actions.append(arms)
+	tutorial.events.append(holding)
+	all_passed = _check("a Go to inside a match arm reaches the state, exactly as a row does",
+		EventSheetStateFacts.entered_states(tutorial),
+		PackedStringArray(["CHASE", "PATROL"])) and all_passed
+	all_passed = _check("so only the arm nothing goes to is called unreachable",
+		_subjects(EventSheetStateFacts.findings(tutorial),
+			EventSheetStateFacts.KIND_STATE_UNREACHABLE),
+		PackedStringArray(["Stagger"])) and all_passed
+	# A match on something ELSE is not this object's machine, whatever its arms assign.
+	arms.match_expression = "phase"
+	all_passed = _check("and a match on another subject reaches nothing here",
+		EventSheetStateFacts.entered_states(tutorial), PackedStringArray()) and all_passed
 	return all_passed
 
 

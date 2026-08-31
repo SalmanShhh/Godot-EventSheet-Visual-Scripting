@@ -195,6 +195,13 @@ static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray
 		if item is EventGroup:
 			_walk(EventSheetGroupFacts.children(item as EventGroup), into, only, with_triggers)
 			continue
+		# A `match state:` row, wherever it sits. Its arms hold verbatim lines rather than ACE rows,
+		# and a Go to written in one of them reaches a state exactly as a row does. The arm PATTERNS
+		# are deliberately NOT read here: a pattern asks, and asking has never been a way in.
+		if item is MatchRow and only.has(GOING_ACE_IDS[0]):
+			for member: String in gone_to_in_match(item as MatchRow):
+				_note(into, member)
+			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
@@ -203,6 +210,10 @@ static func _walk(items: Array, into: PackedStringArray, only: PackedStringArray
 			_note(into, str(event_row.trigger_params.get(STATE_PARAM, "")))
 		for is_action: bool in [false, true]:
 			for ace: Variant in (event_row.actions if is_action else event_row.conditions):
+				if ace is MatchRow and only.has(GOING_ACE_IDS[0]):
+					for member: String in gone_to_in_match(ace as MatchRow):
+						_note(into, member)
+					continue
 				if not (ace is Resource) or not only.has(str((ace as Resource).get("ace_id"))):
 					continue
 				var params: Variant = (ace as Resource).get("params")
@@ -341,12 +352,51 @@ static func arm_reading(pattern: String) -> String:
 ## part of the arm's verbatim body, so this is the only place it can be read at all. "" for every
 ## other line, which then reads however it already read.
 static func statement_reading(line: String) -> String:
+	var member: String = member_gone_to(line)
+	return "" if member.is_empty() else row_reading("GoToState", member)
+
+
+## The member one hand-written line moves this object INTO - `state = State.CHASE` is CHASE, and ""
+## for every other line. ONE rule, called by the reading above and by the reachability walk below, so
+## the sentence a reader is shown on an arm's line and the fact the Doctor counts off that same line
+## can never be two different answers.
+static func member_gone_to(line: String) -> String:
 	var text: String = line.strip_edges()
 	var assignment: String = "%s = %s" % [STATE_VARIABLE, MEMBER_PREFIX]
 	if not text.begins_with(assignment):
 		return ""
 	var member: String = text.substr(assignment.length()).strip_edges()
-	return "" if member.is_empty() or not member.is_valid_identifier() else row_reading("GoToState", member)
+	return "" if member.is_empty() or not member.is_valid_identifier() else member
+
+
+## The states a `match state:` row reaches from INSIDE its arms, in encounter order.
+##
+## A transition written in an arm's body is part of that arm's VERBATIM text - it never becomes an
+## ACE row, which is exactly what lets the whole `match` be written back the way it was found - so
+## the ace-row walk cannot see it. Without this, the tutorial machine the whole feature exists to
+## welcome was told by the Doctor that the state its own patrol arm goes to was unreachable, which is
+## the one thing that finding must never say.
+##
+## Both spellings of a match are read: the verbatim `branches_text` an opened file arrives as, and
+## the structured `cases` an author edits it into, whose bodies hold ordinary Go to rows.
+static func gone_to_in_match(row: MatchRow) -> PackedStringArray:
+	var reached: PackedStringArray = PackedStringArray()
+	if row == null or not row.enabled or not is_state_subject(row.match_expression):
+		return reached
+	for line: String in row.branches_text.split("\n"):
+		_note(reached, member_gone_to(line))
+	for case_row: MatchCase in row.cases:
+		if case_row == null or not case_row.enabled:
+			continue
+		for item: Variant in case_row.events:
+			if item is RawCodeRow:
+				for line: String in (item as RawCodeRow).code.split("\n"):
+					_note(reached, member_gone_to(line))
+			elif item is Resource and str((item as Resource).get("ace_id")) == GOING_ACE_IDS[0]:
+				var params: Variant = (item as Resource).get("params")
+				if params is Dictionary:
+					_note(reached, str((params as Dictionary).get(STATE_PARAM, "")))
+	return reached
 
 
 ## True when a `match` subject is THIS object's own state variable - the canonical `match state:` a

@@ -251,6 +251,13 @@
   `find_key`, and `state_play_mode_test` lifts the compiler's own frame line out of the compiled file
   and RUNS it against a member that names its value, which is a class of defect a byte pin cannot
   see.
+- **A `match` arm's Go to reaches the state, and the Doctor now knows it.** *A state nothing reaches*
+  fired on the tutorial FSM this whole family exists to welcome: a transition written inside a
+  `match state:` arm is part of that arm's verbatim body and never becomes an ACE row, so the
+  reachability walk could not see it and called a plainly reachable state unreachable. It now reads
+  those lines through the same `state = State.X` rule the arm's own **Go to Chase** reading uses, in
+  both spellings of a match (the verbatim text an opened file arrives as, and the structured cases an
+  author edits it into). Arm PATTERNS are still not a way in: asking has never reached anything.
 
 ### A path says which place it is in
 
