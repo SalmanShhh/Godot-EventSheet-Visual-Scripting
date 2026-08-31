@@ -361,7 +361,21 @@ An editor tool that adds, removes, or reparents nodes in the open scene should r
 
 It is info-level on purpose: a throwaway script you re-run freely does not need undo. A tool teammates click does.
 
-**The pattern.** Undo registration is a paired do/undo recipe, so it lives in a GDScript block inside your On Editor Run event:
+**The three rows that do it for you.** The Editor object's **Undo history** page carries the three changes a tool actually makes, already paired:
+
+- **Set Property (Undoable)** - change one property of a node in the open scene. It reads the value still in place for the undo half, and names the property exactly as the plain Set Property row names it.
+- **Add Node (Undoable)** - add a node under a parent, with its owner set so it is saved with the scene, and a reference held so redo puts back the same node. The undoable twin of Add Node To Edited Scene.
+- **Remove Node (Undoable)** - take a node out, reading its parent while it still has one so the undo half knows where to put it back, and restoring its owner on the way.
+
+![A snap-the-props tool event: Set Property (Undoable), a plain print row between, and Add Node (Undoable) - with the GDScript underneath showing one create_action at the top, the do and undo pairs, and one commit_action at the bottom](images/undoable-tool-edits.png)
+
+**One event is one gesture.** You do not open or commit the action yourself. The compiler opens it before the first undoable row of an event and commits it after the last, naming it after that event's own trigger, so every undoable row of one event lands as ONE step and one Ctrl+Z takes the whole thing back. Ordinary rows standing between two undoable ones stay inside the gesture, where you put them. And because the bracket opens and closes inside one event body with nothing held between fires, a tool on a per-frame trigger leaves one clean entry per fire rather than a growing pile of half-open actions.
+
+These rows are editor-only. On a game sheet the picker does not offer them, and if one gets there by being pasted the compile leaves it out and says which trigger it was under - the editor's undo history is the editor's, and a running game has none.
+
+**A tool that changes the open scene the plain way wears the quiet amber state**, with the sentence in the Doctor's **Tool edits** section and in the help strip under the selected row, and a one-click **Make it undoable** door that swaps the row for its undoable twin - same values under the same names, one Ctrl+Z. The rule only asks it of a Tool sheet that reaches for the scene the editor has open: an ordinary `@tool` node script setting its own properties is simply correct.
+
+**The pattern, written out.** If you want the recipe by hand - a change none of the three rows covers - it is a paired do/undo run, and it lives in a GDScript block inside your On Editor Run event:
 
 ```gdscript
 var undo := EditorInterface.get_editor_undo_redo()

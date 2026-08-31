@@ -38,6 +38,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_control_to_bottom_panel` | [Add Bottom Panel](ace:Core/AddBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
 | `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools: Panels & menus | Vocabulary |
 | `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
+| `add_do_method` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
+| `add_do_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
+| `add_do_reference` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_exception` | [Ignore Node In RayCast (2D)](ace:Core/RayCast2DAddException) | Raycast 2D | Vocabulary |
 | `add_inspector_plugin` | [Add Properties Bar Add-on](ace:Core/AddEditorInspectorPlugin) | Editor Tools: Properties bar | Vocabulary |
 | `add_item` | [Add Item](ace:Core/MenuAddItem) | Editor Tools: Menus | Vocabulary |
@@ -47,6 +50,9 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_theme_font_size_override` | [Set Font Size](ace:Core/SetFontSize) | Text | Vocabulary |
 | `add_to_group` | [Add To Group](ace:Core/AddToGroup) | Groups | Vocabulary |
 | `add_tool_menu_item` | [Add Tools Menu Item](ace:Core/AddToolsMenuItem) | Editor Tools: Panels & menus | Vocabulary |
+| `add_undo_method` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
+| `add_undo_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
+| `add_undo_reference` | [Remove Node (Undoable)](ace:Core/RemoveNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_visibility_filter` | [Ask A Function Who May See It](ace:Core/AddVisibilityFilter) | Multiplayer | Vocabulary |
 | `affine_inverse` | [Screen Point To World](ace:Core/ScreenPointToWorld) | Math & Random | Vocabulary |
 | `alert` | [Alert](ace:Core/BrowserAlert) | Browser | Vocabulary |
@@ -286,6 +292,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_editor_scale` | [Editor Scale](ace:Core/EditorUiScale) | Editor Tools | Vocabulary |
 | `get_editor_settings` | [Editor Settings](ace:Core/EditorSettingsObject) | Editor Tools: Project & preferences | Vocabulary |
 | `get_editor_theme` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
+| `get_editor_undo_redo` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
 | `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_extension` | [Sound From File](ace:Core/LoadSoundFile) | Files | Vocabulary |

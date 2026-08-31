@@ -2,6 +2,49 @@
 
 ## [Unreleased]
 
+### The undoable tool touch, and three small dignities
+
+- **Set Property (Undoable), Add Node (Undoable), Remove Node (Undoable).** The three changes a tool
+  makes to the scene somebody has open, made as steps the editor can take back. They compile to plain
+  `EditorInterface.get_editor_undo_redo()` - the engine's own manager, no plugin anywhere in the
+  emitted file - and they sit on the Undo history page beside the Undo History expression that
+  already named it. The two reach the history two different ways on purpose: that expression is
+  `get_undo_redo()`, an EditorPlugin method, so it needs an Editor plugin sheet; these three work in
+  the plain Tool sheet an author writes first.
+- **ONE EVENT IS ONE GESTURE, and that is the whole point.** The compiler opens the action before the
+  first undoable row of an event and commits it after the last, naming it after the event's own
+  trigger, so a reader's single Ctrl+Z takes back everything that event did rather than one property
+  at a time. There is nothing to pick for it and nothing to remember. It also cannot nest: the
+  bracket opens and closes inside one block with nothing held between fires, so an event firing again
+  next frame opens a fresh action over a closed one - a tool on a per-frame trigger leaves one entry
+  in the history per fire, never a growing pile of half-open ones.
+- **Outside the editor they refuse, at compile time, in the trigger's own words.** The undo history
+  belongs to the editor and a running game has none, so on a game sheet the rows are left out and the
+  compile says which trigger they were under and what to do about it. The picker already keeps the
+  Editor Tools pages off a game sheet; this is the same answer for a row that got there by being
+  pasted, given before the game runs rather than as a surprise while it does.
+- **An opened tool reads them back as rows.** The create/commit bracket with its do/undo pairs lifts
+  to the three rows and re-emits byte for byte, and the bracket itself comes back as nothing at all,
+  because it is the compiler's and not a row - handing it back would put two rows on the sheet that
+  the sheet never had. A bracket whose action somebody named themselves is left exactly as they wrote
+  it, verbatim.
+- **A tool that changes the open scene the plain way is a quiet amber row and a line in the Doctor's
+  new Tool edits section.** Nothing is drawn in the sheet: the words live in the triage inbox and in
+  the help strip under the selected row, with a one-click door that respells the row as its undoable
+  twin - the same values under the same names, so nothing can be lost, and one Ctrl+Z. The rule fires
+  only in a Tool sheet that reaches for the scene the editor has open; an ordinary `@tool` node script
+  setting its own properties is simply correct and never hears from it.
+- **Set Scene Owner.** The write half of the read-only Get Scene Owner: which scene a node belongs to,
+  which is what decides whether it is written out when that scene is packed. Save Branch As Scene File
+  is the wholesale cousin that walks a whole branch; this is that assignment for the one node you mean.
+- **Duplicate Node (choosing).** The copy with its three questions asked out loud as checkboxes -
+  signals, groups, scripts - emitting Godot's own duplicate flags by name rather than as the number
+  they add up to. Plain Duplicate Node stays exactly as it was: the engine default, all three on.
+- **Reparent To (choosing).** The move with the one question it always raises asked on the row:
+  keeping its place, or snapping to it. The words are Add Child (existing node)'s own words, so one
+  choice reads one way whether the row names the child or is the child, and the answer is written
+  into the file instead of left off. Plain Reparent To stays frozen beside it.
+
 ### Saving what the player built, behind the trust line
 
 - **Save Branch As Scene File.** A branch of the running game, written out as a `.tscn` - the row a

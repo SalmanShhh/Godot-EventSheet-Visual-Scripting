@@ -650,6 +650,18 @@ That is the order this section is in.
 
   ![Three opened scripts stacked: one whose Include bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
 
+  **Three small lines that used to read as something else.** `x.owner = y` is not a property being
+  poked - it says which scene the node belongs to, which is what decides whether it is written out
+  when that scene is packed, so it reads as **Set Scene Owner** (the write half of the read-only Get
+  Scene Owner). `x.duplicate(<flags>)` reads as **Duplicate Node (choosing)** with the three boxes
+  the flags really are - signals, groups, scripts - while a bare `x.duplicate()` stays the frozen
+  **Duplicate Node** it always was. And `reparent(x, false)` reads as **Reparent To (choosing)**,
+  saying which of the two things the author meant about where the node ends up, while a bare
+  `reparent(x)` stays plain **Reparent To**. Each pair emits the same call; the difference is one
+  honest argument, written down rather than left off.
+
+  ![Three pairs of node rows: make Crate part of Level, a plain add child duplicate beside one naming Godot's own duplicate flags, and a bare reparent beside one that says snapping to it - with the GDScript they compile to underneath](images/node-dignities.png)
+
 **The Hierarchy pane** answers the same questions without opening a row. Click an object's name in
 any row and **Object properties** now carries a Hierarchy section: its **parent** (click to jump to
 that object) and its **children**, each with what it carries - its type, how many children of its
