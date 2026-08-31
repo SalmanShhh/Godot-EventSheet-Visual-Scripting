@@ -1,10 +1,10 @@
-# EventSheet - EventSheetDebuggerWindow: ONE debugger, four tabs.
+# EventSheet - EventSheetDebuggerWindow: ONE debugger, five tabs.
 #
 # Everything this window shows already shipped, and that is the point of it. Live Values, the Watch
 # box, the Event Trace and its hit counts, and F9 breakpoints were four separate panels and toggles
 # scattered across two menus, and a reader arriving from another event-sheet editor went looking
-# for one window with four tabs and found none. So: one window, the four names they expect, and
-# every tab a thin view over a seam that was already there.
+# for one window with tabs and found none. So: one window, the names they expect, and every tab a
+# thin view over a seam that was already there.
 #
 #   Inspect      every object type this sheet talks about, its running instances, and - for the one
 #                you pick - its instance variables (EDITABLE, straight into the running game) and
@@ -13,17 +13,21 @@
 #                window rather than keeping a second one that quietly disagrees with it
 #   Profile      per-event and per-function time from the Event Trace timings, busiest first, with
 #                each row's share of the run
+#   Trail        what this object's state machine has just done, as past-tense sentences in the
+#                sheet's own grammar, each one a door to the row it names
 #   Breakpoints  the F9 rows, with enable / disable / jump, and where the run is paused right now
 #
-# THE ONE RULE all four obey: nothing is drawn that no run has reported. An empty tab says what to
+# THE ONE RULE they all obey: nothing is drawn that no run has reported. An empty tab says what to
 # do to fill it ("run the game with Live Values on"), because a table of zeroes and a table of
 # "nothing has happened yet" look identical and only one of them is true.
 @tool
 class_name EventSheetDebuggerWindow
 extends RefCounted
 
-## The tabs, in the order they are shown. The words are the ones a reader arrives holding.
-const TAB_TITLES: Array[String] = ["Inspect", "Watch", "Profile", "Breakpoints"]
+## The tabs, in the order they are shown. The words are the ones a reader arrives holding. Trail
+## sits beside Profile because the two of them read the same run: one says what it cost, the other
+## says what it did.
+const TAB_TITLES: Array[String] = ["Inspect", "Watch", "Profile", "Trail", "Breakpoints"]
 
 ## What each tab says before a run has reported anything. Never a table of zeroes: "nothing has
 ## happened yet" and "everything is zero" look the same and only one of them is true.
@@ -31,8 +35,22 @@ const EMPTY_STATES := {
 	"Inspect": "No running game. Turn on Tools ▸ Live Values, then run - every object this sheet talks about appears here with its instances, and you can edit their values live.",
 	"Watch": "Watch any expression over the sheet's variables - health <= 0, score + lives - and see it flip while the game runs.",
 	"Profile": "No traced run yet. Turn on Tools ▸ Event Trace, then run - every event that fires is timed here, busiest first.",
+	"Trail": "No run has reported a state yet. Declare states on the sheet head, turn on Tools ▸ Live Values, then run - every change of state is written here as a sentence. Turn on Tools ▸ Event Trace as well and each one names the row that did it.",
 	"Breakpoints": "No breakpoints. Select a row and press F9 to pause the running game there; More ▸ Set Breakpoint Condition… pauses only when you say so.",
 }
+
+## The Trail tab's two hints. Constants because the preview harness photographs the tab and must
+## show the words the tab really carries, not a second copy of them.
+const TRAIL_HINT: String = "What this object's state machine has done, oldest first - it reads down, like the sheet. Double-click a line to go to the row it names. Each moment is the game's own report clock, so it is accurate to a quarter of a second."
+const TRAIL_PATTERNS_HINT: String = "Read from the trail above and from nothing else."
+
+## What the patterns list says when the trail raised none - which is the ordinary case, and worth
+## saying so it does not read as a panel that failed to load.
+const TRAIL_NO_PATTERNS: String = "Nothing to point at in this trail."
+
+## And what the list says for a run that HAS reported a state and never changed it. A machine that
+## stayed put and a machine nobody watched are two different answers, and only one of them is empty.
+const TRAIL_RESTING: String = "No change of state in this run yet."
 
 var _dock: Control = null
 var window: Window = null
@@ -43,6 +61,9 @@ var values_tree: Tree = null
 var watch_tree: Tree = null
 var watch_input: LineEdit = null
 var profile_tree: Tree = null
+## Trail: the sentences, and under them the patterns read out of those same sentences.
+var trail_tree: Tree = null
+var trail_patterns_tree: Tree = null
 var breakpoints_tree: Tree = null
 var paused_label: Label = null
 ## The object type the reader picked in the Inspect tab, or "" for "whatever this sheet is about".
@@ -84,6 +105,7 @@ func ensure_window() -> void:
 	tabs.add_child(_build_inspect_tab())
 	tabs.add_child(_build_watch_tab())
 	tabs.add_child(_build_profile_tab())
+	tabs.add_child(_build_trail_tab())
 	tabs.add_child(_build_breakpoints_tab())
 	for index: int in range(TAB_TITLES.size()):
 		tabs.set_tab_title(index, TAB_TITLES[index])
@@ -372,6 +394,105 @@ func _jump_to_profile_row() -> void:
 		_dock.reveal_paused_row(str(selected.get_metadata(0)))
 
 
+## ── Trail ─────────────────────────────────────────────────────────────────────────────────────
+## The state machine's own past, as sentences. Deliberately a LIST and nothing else: no timeline, no
+## scrubber, no replay and no picture. A state is a variable, so what it did is a list of sentences
+## about a variable, which is the shape every reader of this plugin already knows.
+## The tab's body, built without a window, a dock or a run behind it: the sentences, and under them
+## the patterns read out of those same sentences. Static so the preview harness photographs the tab
+## itself rather than a second drawing of it. Returns {root, sentences, patterns}.
+static func build_trail_body() -> Dictionary:
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	box.name = "Trail"
+	box.add_child(EventSheetPopupUI.hint_label(TRAIL_HINT))
+	var sentences: Tree = Tree.new()
+	sentences.hide_root = true
+	sentences.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sentences.custom_minimum_size = Vector2(0.0, 200.0)
+	box.add_child(sentences)
+	var patterns_box: VBoxContainer = EventSheetPopupUI.form_box()
+	patterns_box.add_child(EventSheetPopupUI.hint_label(TRAIL_PATTERNS_HINT))
+	var patterns: Tree = Tree.new()
+	patterns.hide_root = true
+	patterns.custom_minimum_size = Vector2(0.0, 128.0)
+	patterns_box.add_child(patterns)
+	box.add_child(EventSheetPopupUI.titled_card("What this trail shows", patterns_box))
+	return {"root": box, "sentences": sentences, "patterns": patterns}
+
+
+func _build_trail_tab() -> Control:
+	var body: Dictionary = build_trail_body()
+	trail_tree = body["sentences"]
+	trail_patterns_tree = body["patterns"]
+	trail_tree.item_activated.connect(_jump_to_trail_row)
+	trail_patterns_tree.item_activated.connect(_jump_to_trail_pattern)
+	return body["root"]
+
+
+## Fill the two trees from a ring and the sheet's own index. Static and handed everything it draws,
+## so the tab and the preview cannot show two different trails.
+##
+## `standing` is what the band is reading right now, which is the difference between a machine that
+## has stayed put and a machine nobody watched: a run reporting Chase and never leaving it is not an
+## empty table, and an empty table is what it would otherwise look like.
+static func fill_trail(sentences: Tree, patterns: Tree, ring: Array, rows: Dictionary,
+		has_run: bool, standing: String) -> void:
+	sentences.clear()
+	patterns.clear()
+	var root: TreeItem = sentences.create_item()
+	if not has_run:
+		var empty: TreeItem = sentences.create_item(root)
+		empty.set_text(0, EMPTY_STATES["Trail"])
+		empty.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+		empty.set_selectable(0, false)
+		patterns.create_item()
+		return
+	if ring.is_empty():
+		var resting: TreeItem = sentences.create_item(root)
+		resting.set_text(0, TRAIL_RESTING if standing.is_empty() \
+			else "%s · %s" % [TRAIL_RESTING, standing])
+		resting.set_selectable(0, false)
+	for entry: Variant in ring:
+		var line: TreeItem = sentences.create_item(root)
+		line.set_text(0, EventSheetStateTrail.sentence(entry as Dictionary))
+		line.set_metadata(0, str((entry as Dictionary).get("cause_uid", "")))
+	var patterns_root: TreeItem = patterns.create_item()
+	var notes: Array[Dictionary] = EventSheetStateTrail.notes_for(ring, rows)
+	if notes.is_empty():
+		var quiet: TreeItem = patterns.create_item(patterns_root)
+		quiet.set_text(0, TRAIL_NO_PATTERNS)
+		quiet.set_selectable(0, false)
+		return
+	for note: Dictionary in notes:
+		var item: TreeItem = patterns.create_item(patterns_root)
+		item.set_text(0, str(note.get("text", "")))
+		# A note is a SENTENCE, so it wraps rather than running off the right edge into an ellipsis -
+		# the half a truncated note loses is always the half that names the second row.
+		item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+		item.set_metadata(0, str(note.get("uid", "")))
+		item.set_custom_color(0, EventSheetActiveTheme.reading().debugger_accent_color)
+
+
+func _refresh_trail() -> void:
+	if trail_tree == null:
+		return
+	fill_trail(trail_tree, trail_patterns_tree, EventSheetStateTrail.all_entries(),
+		EventSheetStateFacts.trail_rows(_dock._current_sheet if _dock != null else null),
+		EventSheetStateTrail.has_run(), EventSheetStateWatch.band_reading())
+
+
+func _jump_to_trail_row() -> void:
+	var selected: TreeItem = trail_tree.get_selected()
+	if selected != null and _dock != null:
+		_dock.reveal_event_row(str(selected.get_metadata(0)))
+
+
+func _jump_to_trail_pattern() -> void:
+	var selected: TreeItem = trail_patterns_tree.get_selected()
+	if selected != null and _dock != null:
+		_dock.reveal_event_row(str(selected.get_metadata(0)))
+
+
 ## ── Breakpoints ───────────────────────────────────────────────────────────────────────────────
 func _build_breakpoints_tab() -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
@@ -510,4 +631,6 @@ func refresh() -> void:
 		2:
 			_refresh_profile()
 		3:
+			_refresh_trail()
+		4:
 			_refresh_breakpoints()

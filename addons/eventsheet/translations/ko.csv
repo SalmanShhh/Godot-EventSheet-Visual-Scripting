@@ -5722,3 +5722,11 @@ How long the object must already have been in that state for this to be true. Th
 current: %s · %s s,현재: %s · %s 초
 %s of %s,%s / %s
 "While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",게임이 실행되는 동안 이 밴드는 현재 상태와 그 상태가 유지된 시간을 보여줍니다 - 게임 자체의 보고에서 초당 %s회 갱신됩니다.
+went from %s to %s,%s 에서 %s 으로 이동
+re-entered %s,%s 에 다시 진입
+%s fired,%s 발생
+"Re-entering %s restarted its hold, so %s starts counting from 0 again.",%s 에 다시 진입하면서 머문 시간이 초기화되어 %s 이 다시 0부터 셉니다.
+"Re-entering %s restarted its hold, so %s starts counting from 0 again - and %s never ran, because the object never left.",%s 에 다시 진입하면서 머문 시간이 초기화되어 %s 이 다시 0부터 셉니다 - 객체가 한 번도 나가지 않았으므로 %s 은 실행되지 않았습니다.
+%s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s 이 한 프레임에서 %d 번 발생했고 상태는 한 번만 바뀌었습니다: 이미 있는 %s 으로 이동해도 아무 일도 일어나지 않습니다.
+"%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.",%s 이 한 프레임에서 %d 번 발생했고 상태는 한 번만 바뀌었습니다: 이미 있는 %s 으로 이동해도 아무 일도 일어나지 않으므로 %s 은 한 번만 실행되었습니다.
+This happened %d times in this run.,이번 실행에서 %d 번 일어났습니다.

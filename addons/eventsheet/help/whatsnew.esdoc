@@ -88,6 +88,37 @@ What changed in the build you have installed (v0.17.0), in the words the release
   when one arrives - nothing counts or extrapolates on an editor frame, so a number on the band is a
   number the game reported. The band says so on hover.
 
+### The trail: what the machine just did
+
+- **A list of sentences, in the sheet's own grammar.** The Debugger's new **Trail** tab says what an
+  object's state machine has been doing, in the past tense and oldest first: `1 s · On Hit fired -
+  went from Chase to Stagger`. It reads DOWN, the way the sheet reads. There is no timeline, no
+  scrubber, no replay and no picture of a machine anywhere in it - a state is a variable, so its
+  history is a list of sentences about a variable. Double-click a line to go to the row it names.
+- **Two deterministic pattern notes, read from the trail alone.** A **re-entry** - the object put
+  into the state it was already in - says that the hold went back to 0, names the timed row that is
+  now counting again, and names the **On leaving** row that never ran, because the object never left.
+  A row that fired **twice inside one game frame** says so, names it, and says that only the first of
+  those changed anything. A pattern that happened again is said once with how often, because \"this
+  happened 11 times in this run\" is the half that explains why a timed row never came true.
+- **Nothing new goes over the wire.** The whole feature is the editor's own reading of the two
+  messages the running game was already flushing: the Live Values frame that carries the state, and
+  the Event Trace's tally of rows that fired. The game is not asked for one extra byte, no message is
+  defined, and a run with the trace off still builds a trail - it simply cannot name the row that did
+  it, and then it does not pretend to.
+- **A row is named only about a fire the run reported.** Two rows that could both have gone to that
+  state, and both fired in the window? The line names neither. It still opens on the row that answers
+  the change, because a line a reader cannot follow is half a line - and the door and the name are
+  two separate questions on purpose.
+- **A stated clock.** Each moment is the game's own report cadence and nothing finer, so a trail line
+  is accurate to a quarter of a second and says so on the tab. Two changes inside one frame cannot be
+  ordered by it and it does not claim to. With two copies of the game running, each line says which
+  window it is describing and names no row, because the fired-events message says which rows fired
+  and not which window they fired in.
+- **It belongs to the Run.** The ring is bounded - a trail is the recent past, not a log - and it is
+  emptied where the Event Trace's hit counts and timings are emptied, at the start of a new run.
+  Stopping the game leaves it standing so it can be read, which is when it is read.
+
 ### A path says which place it is in
 
 - **Every path field states its place.** Under each path box in the Files vocabulary sits a muted

@@ -1,5 +1,5 @@
-# Godot EventSheets - the Debugger window (Inspect / Watch / Profile / Breakpoints).
-# One window over four seams that already shipped. Pins the parts that can be pinned without a
+# Godot EventSheets - the Debugger window (Inspect / Watch / Profile / Trail / Breakpoints).
+# One window over five seams that already shipped. Pins the parts that can be pinned without a
 # debug run: the tab names and their empty states, the Inspect tab's object rows over a census and
 # a streamed frame, the Profile numbers over a FIXTURE trace window (the self-time model, the frame
 # ruler, the unmeasurable last fire of a frame), and the Breakpoints rows and their sentences.
@@ -27,10 +27,10 @@ static func _flat(uid: String, number: int, breakpoint_on: bool,
 static func run() -> bool:
 	var ok: bool = true
 
-	# ── The four tabs, by name, and what each says before a run ──
-	ok = _check("the tabs are the four names a reader arrives with",
+	# ── The tabs, by name, and what each says before a run ──
+	ok = _check("the tabs are the names a reader arrives with",
 		",".join(EventSheetDebuggerWindow.TAB_TITLES),
-		"Inspect,Watch,Profile,Breakpoints") and ok
+		"Inspect,Watch,Profile,Trail,Breakpoints") and ok
 	var missing_states: PackedStringArray = PackedStringArray()
 	for title: String in EventSheetDebuggerWindow.TAB_TITLES:
 		if str(EventSheetDebuggerWindow.EMPTY_STATES.get(title, "")).is_empty():

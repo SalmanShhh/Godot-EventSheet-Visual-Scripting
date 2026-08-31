@@ -210,6 +210,83 @@ static func _note(into: PackedStringArray, member: String) -> void:
 		into.append(bare)
 
 
+# -- What the trail needs to know about this sheet -----------------------------------------------
+## The id of the timed question, named here because the trail is the one reader that needs it apart
+## from the other three.
+const TIMED_ACE_ID: String = "InStateForOver"
+## And its second parameter - how long the row is waiting for.
+const SECONDS_PARAM: String = "seconds"
+
+
+## ONE index over this sheet, for every reader of the state trail: which rows can move the object
+## into which state, and which rows are waiting on or answering each state. Built once per sheet and
+## handed to the trail, because the trail may not reach a sheet at all - it takes plain Dictionaries
+## and returns text, which is what makes "the debugger never edits the document" a property of the
+## code rather than a promise about it.
+##
+##     causes     [{uid, to, text}]        every event with a Go to, said as the trigger it hangs off
+##     timed      {member: {uid, text}}    the Is in X for over Ns row waiting on that state
+##     leaving    {member: {uid, text}}    the On leaving row for that state
+##     entering   {member: {uid, text}}    the On entering row for that state
+##
+## The three lookups keep the FIRST row found for a state, in reading order, so the index is the same
+## twice over the same sheet. Empty for a sheet that declares no states.
+static func trail_rows(sheet: EventSheetResource) -> Dictionary:
+	var index: Dictionary = {"causes": [], "timed": {}, "leaving": {}, "entering": {}}
+	if sheet != null and declares_states(sheet):
+		_walk_trail(sheet.events, index)
+	return index
+
+
+static func _walk_trail(items: Array, index: Dictionary) -> void:
+	for item: Variant in items:
+		if item is EventGroup:
+			_walk_trail(EventSheetGroupFacts.children(item as EventGroup), index)
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row == null:
+			continue
+		var trigger_state: String = str(event_row.trigger_params.get(STATE_PARAM, "")).strip_edges()
+		if not trigger_state.is_empty():
+			if event_row.trigger_id == LEAVING_TRIGGER_ID:
+				_file_row(index["leaving"], trigger_state, event_row.event_uid,
+					row_reading(LEAVING_TRIGGER_ID, trigger_state))
+			elif event_row.trigger_id == ENTERING_TRIGGER_ID:
+				_file_row(index["entering"], trigger_state, event_row.event_uid,
+					row_reading(ENTERING_TRIGGER_ID, trigger_state))
+		for ace: Variant in event_row.conditions:
+			var asked: Dictionary = _ace_params(ace, TIMED_ACE_ID)
+			var waiting: String = str(asked.get(STATE_PARAM, "")).strip_edges()
+			if not waiting.is_empty():
+				_file_row(index["timed"], waiting, event_row.event_uid, row_text(TIMED_ACE_ID, {
+					STATE_PARAM: waiting, SECONDS_PARAM: str(asked.get(SECONDS_PARAM, "")),
+				}))
+		for ace: Variant in event_row.actions:
+			var going: String = str(_ace_params(ace, GOING_ACE_IDS[0]).get(STATE_PARAM, "")).strip_edges()
+			if going.is_empty():
+				continue
+			(index["causes"] as Array).append({
+				"uid": event_row.event_uid,
+				"to": going,
+				"text": EventSheetArrangement.trigger_words(event_row),
+			})
+		_walk_trail(event_row.sub_events, index)
+
+
+## One row's parameters when it IS the asked-for vocabulary, {} otherwise.
+static func _ace_params(ace: Variant, wanted_id: String) -> Dictionary:
+	if not (ace is Resource) or str((ace as Resource).get("ace_id")) != wanted_id:
+		return {}
+	var params: Variant = (ace as Resource).get("params")
+	return params if params is Dictionary else {}
+
+
+## First row found for a state wins, so the index reads the same twice over the same sheet.
+static func _file_row(into: Dictionary, member: String, uid: String, text: String) -> void:
+	if not into.has(member):
+		into[member] = {"uid": uid, "text": text}
+
+
 # -- Reading a hand-written machine in the rows' own words ---------------------------------------
 ## The prefix a member of this object's enum is written with, spelled out of the enum's own name so
 ## renaming one could never leave the other behind.
@@ -222,11 +299,23 @@ const MEMBER_PREFIX: String = ENUM_NAME + "."
 ## `match state:` arm and the Is in row above it can never say one idea two ways. "" when the id
 ## names no row of this vocabulary.
 static func row_reading(ace_id: String, member: String) -> String:
+	return row_text(ace_id, {STATE_PARAM: member})
+
+
+## The same reading with EVERY parameter filled in from the row that carries them - which is what the
+## timed question needs, since "Is in Stagger for over 6s" is two answers and not one. The state
+## parameter goes through the plugin's one spelling rule and the rest are said as the row says them.
+## "" when the id names no row of this vocabulary.
+static func row_text(ace_id: String, params: Dictionary) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", ace_id)
 	if descriptor == null:
 		return ""
-	return EventSheetL10n.translate(descriptor.get_display_text().strip_edges()) \
-		.replace("{%s}" % STATE_PARAM, word_for(member))
+	var said: String = EventSheetL10n.translate(descriptor.get_display_text().strip_edges())
+	for key: Variant in params:
+		var name: String = str(key)
+		var value: String = str(params[key]).strip_edges()
+		said = said.replace("{%s}" % name, word_for(value) if name == STATE_PARAM else value)
+	return said
 
 
 ## The Is in reading of a `match state:` ARM - "State.PATROL:" is "Is in Patrol". "" for an arm this

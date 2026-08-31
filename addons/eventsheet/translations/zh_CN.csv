@@ -5722,3 +5722,11 @@ How long the object must already have been in that state for this to be true. Th
 current: %s · %s s,当前：%s · %s 秒
 %s of %s,%s / %s
 "While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",游戏运行时，此栏显示当前状态以及已保持的时长 - 依据游戏自身的报告，每秒刷新 %s 次。
+went from %s to %s,从 %s 转到 %s
+re-entered %s,重新进入 %s
+%s fired,%s 触发
+"Re-entering %s restarted its hold, so %s starts counting from 0 again.",重新进入 %s 重置了停留时间，因此 %s 又从 0 开始计数。
+"Re-entering %s restarted its hold, so %s starts counting from 0 again - and %s never ran, because the object never left.",重新进入 %s 重置了停留时间，因此 %s 又从 0 开始计数 - 而且对象从未离开，所以 %s 从未运行。
+%s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s 在同一帧内触发了 %d 次，而状态只变化了一次：已经身处 %s 时再前往它不会有任何效果。
+"%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.",%s 在同一帧内触发了 %d 次，而状态只变化了一次：已经身处 %s 时再前往它不会有任何效果，所以 %s 只运行了一次。
+This happened %d times in this run.,本次运行中这种情况发生了 %d 次。

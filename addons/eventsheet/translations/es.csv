@@ -5722,3 +5722,11 @@ How long the object must already have been in that state for this to be true. Th
 current: %s · %s s,actual: %s · %s s
 %s of %s,%s de %s
 "While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.","Mientras el juego se ejecuta, esta banda indica el estado actual y cuánto tiempo lleva en él - actualizada %s veces por segundo, desde el propio informe del juego."
+went from %s to %s,pasó de %s a %s
+re-entered %s,volvió a entrar en %s
+%s fired,%s se disparó
+"Re-entering %s restarted its hold, so %s starts counting from 0 again.","Volver a entrar en %s reinició su tiempo de permanencia, así que %s vuelve a contar desde 0."
+"Re-entering %s restarted its hold, so %s starts counting from 0 again - and %s never ran, because the object never left.","Volver a entrar en %s reinició su tiempo de permanencia, así que %s vuelve a contar desde 0 - y %s nunca se ejecutó, porque el objeto nunca salió."
+%s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s se disparó %d veces en un mismo fotograma y el estado cambió una sola vez: ir a %s estando ya en él no hace nada.
+"%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.","%s se disparó %d veces en un mismo fotograma y el estado cambió una sola vez: ir a %s estando ya en él no hace nada, así que %s se ejecutó una vez."
+This happened %d times in this run.,Esto ha ocurrido %d veces en esta ejecución.

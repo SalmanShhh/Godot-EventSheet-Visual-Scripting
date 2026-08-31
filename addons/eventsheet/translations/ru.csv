@@ -5722,3 +5722,11 @@ How long the object must already have been in that state for this to be true. Th
 current: %s · %s s,сейчас: %s · %s с
 %s of %s,%s из %s
 "While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.","Пока игра запущена, эта полоса показывает текущее состояние и как долго оно длится - обновляется %s раз в секунду по сообщению самой игры."
+went from %s to %s,перешёл из %s в %s
+re-entered %s,снова вошёл в %s
+%s fired,%s сработало
+"Re-entering %s restarted its hold, so %s starts counting from 0 again.","Повторный вход в %s сбросил время удержания, поэтому %s снова считает с 0."
+"Re-entering %s restarted its hold, so %s starts counting from 0 again - and %s never ran, because the object never left.","Повторный вход в %s сбросил время удержания, поэтому %s снова считает с 0 - и %s ни разу не выполнилось, потому что объект так и не вышел."
+%s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,"%s сработало %d раз в одном кадре, а состояние изменилось один раз: переход в %s, когда объект уже там, не делает ничего."
+"%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.","%s сработало %d раз в одном кадре, а состояние изменилось один раз: переход в %s, когда объект уже там, не делает ничего, поэтому %s выполнилось один раз."
+This happened %d times in this run.,Это произошло %d раз за этот запуск.

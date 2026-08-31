@@ -3183,6 +3183,12 @@ func open_debugger(tab: String = "") -> void:
 func update_event_times(window: Dictionary) -> void:
 	EventSheetTraceTimings.note_window(_last_fired_uids, window.get("stamps", PackedInt64Array()),
 		window.get("markers", PackedInt32Array()), int(window.get("flush", 0)))
+	# And the same window read for the OTHER question: which row went to the state the values frame of
+	# this very flush just reported. Fed here rather than beside the fires themselves because the
+	# frame ruler arrives with the times, and without it two fires in one frame cannot be told from
+	# two fires in two frames.
+	EventSheetStateTrail.note_fired(_last_fired_uids, window.get("markers", PackedInt32Array()),
+		_state_trail_index())
 	# The profiler finds you: the first stuttering window of a run offers Row Timings, once,
 	# on the quiet line (see EventSheetRescueTips - one offer per session, and a global switch).
 	if EventSheetTraceTimings.last_window_worst_usec() >= EventSheetTraceTimings.STUTTER_USEC:
@@ -3196,6 +3202,21 @@ func update_event_times(window: Dictionary) -> void:
 ## The uids of the last streamed trace window, held for exactly as long as it takes the timings
 ## message that belongs to them to arrive (the same flush sends both, fires first).
 var _last_fired_uids: PackedStringArray = PackedStringArray()
+
+## ONE index of what the open sheet says about its own states, for every reader of the trail. The
+## sheet is walked once and the answer kept until the sheet OBJECT changes - which every edit does,
+## because a committed edit replaces the resources with snapshot duplicates - so a run streaming four
+## frames a second does not re-read the document four times a second, and an edit mid-run is picked
+## up on the very next frame.
+var _state_trail_rows: Dictionary = {}
+var _state_trail_rows_for: EventSheetResource = null
+
+
+func _state_trail_index() -> Dictionary:
+	if _state_trail_rows_for != _current_sheet:
+		_state_trail_rows_for = _current_sheet
+		_state_trail_rows = EventSheetStateFacts.trail_rows(_current_sheet)
+	return _state_trail_rows
 
 ## Whether this run's once-only rescue offers were already considered (reset with the hit counts,
 ## so a new run gets its own moments).
@@ -3215,6 +3236,9 @@ func update_live_values(values: Dictionary, instance: String = "") -> void:
 	# forwards the frame to the panes, because forwarding it is what repaints them - so the band and
 	# the timed row's progress are drawn from the frame that just landed rather than the one before.
 	EventSheetStateWatch.note_frame(values, instance)
+	# …and what it just DID, out of the same frame. The trail may not reach a sheet at all, so what
+	# this sheet says about its own states is handed to it as a plain Dictionary.
+	EventSheetStateTrail.note_frame(values, instance, _state_trail_index())
 	_ensure_live_values_panel().update_values(values, instance)
 	if _debugger_window != null:
 		_debugger_window.update_values(values)
@@ -3224,21 +3248,31 @@ func update_live_values(values: Dictionary, instance: String = "") -> void:
 ## breakpoint - find that event across the open tabs (by its stable event_uid), switch to its tab
 ## if needed, and reveal the row, so the pause lands on the EVENT rather than on generated code.
 func reveal_paused_row(uid: String) -> void:
-	if uid.is_empty():
+	if not reveal_event_row(uid):
 		return
+	_paused_row_uid = uid
+	_set_status("⏸ Paused at this row (sheet breakpoint).")
+
+
+## Go to the event with this uid, across the open tabs, and say nothing about why. The door every
+## deep link into the sheet opens - the paused row above adds its own words on top, and a debugger
+## line that is not a pause (a trail sentence, a pattern note) must not borrow them. False when no
+## open tab holds that event, which the caller reads as "nothing to go to".
+func reveal_event_row(uid: String) -> bool:
+	if uid.is_empty():
+		return false
 	for tab_index: int in range(_open_tabs.size()):
 		var tab_sheet: EventSheetResource = _open_tabs[tab_index].get("sheet")
-		var paused_event: EventRow = _find_event_by_uid(tab_sheet.events if tab_sheet != null else [], uid)
-		if paused_event == null:
+		var found: EventRow = _find_event_by_uid(tab_sheet.events if tab_sheet != null else [], uid)
+		if found == null:
 			continue
 		if tab_index != _active_tab_index:
 			_activate_tab(tab_index)
 		var view: EventSheetViewport = _active_view()
 		if view != null:
-			view.reveal_resource(paused_event)
-		_paused_row_uid = uid
-		_set_status("⏸ Paused at this row (sheet breakpoint).")
-		return
+			view.reveal_resource(found)
+		return true
+	return false
 
 
 ## ── The runtime-error strip (a failure in the running game, re-said as the row said it) ────────

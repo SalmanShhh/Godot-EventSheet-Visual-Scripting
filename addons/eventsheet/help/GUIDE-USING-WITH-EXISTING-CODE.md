@@ -2258,6 +2258,56 @@ A wait that is an **expression** rather than a number (`Is in Stagger for over s
 no progress. The row is asking a question the editor cannot answer without running your expression,
 and an invented number would be worse than none.
 
+### The trail: what the machine just did
+
+The band says what the object **is**. The **Debugger ▸ Trail** tab says what it **did**, in the
+same grammar and in the past tense:
+
+```
+0.5 s · Every tick (draw) fired - went from Patrol to Chase
+1 s   · On Hit fired - went from Chase to Stagger
+1.5 s · On Hit fired - re-entered Stagger
+2 s   · On Hit fired - re-entered Stagger
+```
+
+It reads **down**, oldest first, the way the sheet reads. There is no timeline, no scrubber and no
+replay - a state is a variable, so its history is a list of sentences about a variable. Double-click
+a line to go to the row it names.
+
+![The Debugger's Trail tab after a staged run: four past-tense sentences, oldest first, and under them one pattern note saying that re-entering Stagger restarted its hold so Is in Stagger for over 6s starts counting from 0 again, and On leaving Stagger never ran](images/state-trail.png)
+
+**Under the sentences, what the trail shows.** Read from those same lines and from nothing else, so
+each note is something that happened rather than something guessed at, and each one names the rows it
+is about:
+
+| | |
+| --- | --- |
+| **The hold restarted** | The object was put into the state it was already in, so the clock went back to 0. `Is in Stagger for over 6s` starts counting again - and `On leaving Stagger` never ran, because the object never left. A row that never comes true is usually this |
+| **Twice in one frame** | The row that caused the change fired more than once inside a single game frame. Only the first of them changed anything: going to the state you are already in does nothing, which is the `state` variable's own setter |
+
+A pattern that happened again is said **once, with how often** - "This happened 11 times in this run"
+is the half that explains why the timed row never came true.
+
+**Where the words come from, and what is never claimed.** The trail is the editor's own reading of
+the two messages the running game was already sending: the **Live Values** frame that carries the
+state, and - when **Event Trace** is on as well - the tally of rows that fired. Nothing new goes over
+the wire and the game is not asked for one extra byte. So:
+
+- **A row is named only when the run reported it firing.** With the trace off, a line says what
+  happened and claims no cause. If two different rows could both have gone to that state and both
+  fired, the line names neither - it still opens on the row that answers the change, so you can
+  follow it.
+- **Each moment is the game's own report clock.** Frames arrive four times a second, so a moment is
+  accurate to a quarter of a second and to nothing finer. Two changes inside one frame cannot be put
+  in order by it, and it does not pretend to.
+- **With two copies of the game running**, each line says which window it is describing - and names
+  no row at all, because the fired-events message says which rows fired and not which window they
+  fired in.
+
+**It belongs to the Run.** The trail is emptied when a new run starts, exactly where the Event
+Trace's hit counts and timings are, because the three of them are one tally of one run. Stopping the
+game leaves the trail standing so you can read it, which is when it is read.
+
 ### Beginner spellings and the reading layer
 
 The lift does not require style-guide code. Beginner spellings round-trip byte-exactly too:

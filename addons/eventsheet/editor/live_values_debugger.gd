@@ -63,6 +63,12 @@ func _setup_session(session_id: int) -> void:
 	var timings: GDScript = load("res://addons/eventsheet/editor/trace_timings.gd")
 	if timings != null:
 		timings.reset()
+	# And the state trail is the third: what the machine DID this run, beside what it cost. Emptied
+	# HERE rather than when a game stops, so a finished run can still be read - which is when it is
+	# read - and the next Run is the thing that wipes it.
+	var trail: GDScript = load("res://addons/eventsheet/editor/state_trail.gd")
+	if trail != null:
+		trail.clear()
 	# Which copy of the game this is. Loaded BY PATH for the same reason the two stores above
 	# are: naming the class here would compile it into every editor start.
 	var instances: GDScript = load("res://addons/eventsheet/editor/dock/run_instances.gd")

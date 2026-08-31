@@ -5722,3 +5722,11 @@ How long the object must already have been in that state for this to be true. Th
 current: %s · %s s,現在: %s · %s 秒
 %s of %s,%s / %s
 "While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",ゲームの実行中、このバンドは現在の状態とその継続時間を表示します - ゲーム自身の報告から、1秒あたり%s回更新されます。
+went from %s to %s,%s から %s へ移行
+re-entered %s,%s に再入場
+%s fired,%s が発火
+"Re-entering %s restarted its hold, so %s starts counting from 0 again.",%s への再入場で保持時間がリセットされたため、%s は再び 0 から数え直します。
+"Re-entering %s restarted its hold, so %s starts counting from 0 again - and %s never ran, because the object never left.",%s への再入場で保持時間がリセットされたため、%s は再び 0 から数え直します - オブジェクトは一度も出ていないので、%s は実行されませんでした。
+%s fired %d times in one frame and the state changed once: going to %s while already there does nothing.,%s が 1 フレーム内で %d 回発火し、状態は 1 回だけ変わりました: すでにいる %s へ移動しても何も起きません。
+"%s fired %d times in one frame and the state changed once: going to %s while already there does nothing, so %s ran once.",%s が 1 フレーム内で %d 回発火し、状態は 1 回だけ変わりました: すでにいる %s へ移動しても何も起きないため、%s は 1 回だけ実行されました。
+This happened %d times in this run.,この実行中に %d 回起きています。
