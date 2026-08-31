@@ -315,6 +315,52 @@ static func _run_band() -> bool:
 	ok = _check("in the band's own words", str(asking_bands[0].get("value", "")),
 		EventSheetL10n.translate("asks the player to pick a file")) and ok
 
+	# A CHOOSER SOMEBODY WROTE BY HAND IS THE SAME FACT. The ask is found by the LINE it opens, and a
+	# verbatim block is a row of the file like any other - the band already reads one for its paths.
+	var hand_asking: EventSheetResource = EventSheetResource.new()
+	hand_asking.host_class = "Node"
+	var chooser_block: RawCodeRow = RawCodeRow.new()
+	chooser_block.code = "DisplayServer.file_dialog_show(\"Open\", \"\", \"\", false," \
+		+ " DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, PackedStringArray(), _answer)"
+	hand_asking.events.append(chooser_block)
+	var hand_asking_bands: Array[Dictionary] = EventSheetFileFacts.bands(hand_asking)
+	ok = _check("a hand-written chooser is a sheet that asks", hand_asking_bands.size(), 1) and ok
+	ok = _check("said in the same words", str(hand_asking_bands[0].get("value", "")),
+		EventSheetL10n.translate("asks the player to pick a file")) and ok
+
+	# THE SCALE LAW APPLIES TO WATCHES TOO. Ten watches would otherwise wear ten bands on top of the
+	# paths and the ask, and a head longer than the sheet is not a head.
+	var watching: EventSheetResource = EventSheetResource.new()
+	watching.host_class = "Node"
+	var watch_lines: PackedStringArray = PackedStringArray()
+	for index: int in 6:
+		watch_lines.append("$FolderWatcher.watch_folder(\"user://mods%d\", 2.0)" % index)
+	var watch_block: RawCodeRow = RawCodeRow.new()
+	watch_block.code = "\n".join(watch_lines)
+	watching.events.append(watch_block)
+	var watch_bands: Array[Dictionary] = EventSheetFileFacts.bands(watching)
+	ok = _check("four watches are named and the rest are counted", watch_bands.size(),
+		EventSheetFileFacts.SHOWN_LIMIT + 1) and ok
+	ok = _check("and the counting band says how many more",
+		str(watch_bands[EventSheetFileFacts.SHOWN_LIMIT].get("value", "")),
+		EventSheetL10n.translate("and %d more watched folder(s)") % 2) and ok
+
+	# A FUNCTION LIFTED OUT OF A HAND-WRITTEN FILE holds its rows in `rows`, not in `events`, which is
+	# exactly the shape this plugin is for. The Doctor's walk always read both; the band read one.
+	var lifted: EventSheetResource = EventSheetResource.new()
+	lifted.host_class = "Node"
+	var helper: EventFunction = EventFunction.new()
+	helper.function_name = "save_it"
+	var lifted_row: EventRow = EventRow.new()
+	lifted_row.actions.append(_action("WriteTextFile", {"path": "\"user://lifted.txt\"",
+		"text": "\"x\""}))
+	helper.rows.append(lifted_row)
+	lifted.functions.append(helper)
+	var lifted_bands: Array[Dictionary] = EventSheetFileFacts.bands(lifted)
+	ok = _check("a path in a lifted function is still on the band", lifted_bands.size(), 1) and ok
+	ok = _check("and read the same way", str(lifted_bands[0].get("value", "")),
+		"user://lifted.txt - written") and ok
+
 	# And the band sits in the head's reading order, after what the sheet's node collides with.
 	ok = _check("the files band is a band the head knows",
 		EventSheetHeadBands.SCENE_BANDS.has(EventSheetHeadBands.BAND_FILES), true) and ok

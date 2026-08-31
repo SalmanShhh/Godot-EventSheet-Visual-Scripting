@@ -110,12 +110,22 @@ static func bands(sheet: EventSheetResource) -> Array[Dictionary]:
 			"value": EventSheetL10n.translate("and %d more path(s)") % counted,
 			"echo": "", "reference": "",
 		})
-	for watch: Dictionary in watched_folders(sheet):
+	# THE SAME SCALE LAW THE PATHS OBEY. A sheet that starts ten watches would otherwise wear ten
+	# bands on top of four paths and the ask, and a head longer than the sheet is not a head.
+	var watches: Array[Dictionary] = watched_folders(sheet)
+	for index: int in range(mini(watches.size(), SHOWN_LIMIT)):
+		var watch: Dictionary = watches[index]
 		readings.append({
 			"value": EventSheetL10n.translate("watching %s every %s s") % [
 				str(watch.get("folder", "")), str(watch.get("seconds", ""))],
 			"echo": str(watch.get("echo", "")),
 			"reference": "",
+		})
+	var unwatched: int = watches.size() - SHOWN_LIMIT
+	if unwatched > 0:
+		readings.append({
+			"value": EventSheetL10n.translate("and %d more watched folder(s)") % unwatched,
+			"echo": "", "reference": "",
 		})
 	var asked: Dictionary = asks_the_player(sheet)
 	if not asked.is_empty():
@@ -148,7 +158,7 @@ static func touched_paths(sheet: EventSheetResource) -> Array[Dictionary]:
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null:
-			_walk_rows(event_function.events, rows)
+			_walk_rows(_function_rows(event_function), rows)
 	for row: Dictionary in rows:
 		var text: String = str(row.get("text", ""))
 		var touch: String = touch_of(text)
@@ -210,8 +220,15 @@ static func asks_the_player(sheet: EventSheetResource) -> Dictionary:
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null:
-			_walk_chooser_rows(event_function.events, found)
+			_walk_chooser_rows(_function_rows(event_function), found)
 	return found[0] if not found.is_empty() else {}
+
+
+## One function's rows. A function built by the editor holds `events`; one lifted out of a
+## hand-written file may hold `rows` instead, and the Doctor's own walk has always read both - a band
+## that read one of them would go quiet on exactly the files this plugin is for.
+static func _function_rows(event_function: EventFunction) -> Array:
+	return event_function.events if not event_function.events.is_empty() else event_function.rows
 
 
 ## Every folder this sheet WATCHES, first mention first, each as {"folder", "seconds", "echo"}. A
@@ -230,7 +247,7 @@ static func watched_folders(sheet: EventSheetResource) -> Array[Dictionary]:
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
 		if event_function != null:
-			_walk_rows(event_function.events, rows)
+			_walk_rows(_function_rows(event_function), rows)
 	var seen: Dictionary = {}
 	var matcher: RegEx = RegEx.create_from_string(WATCH_PATTERN)
 	for row: Dictionary in rows:
@@ -353,11 +370,21 @@ static func _walk_chooser_rows(items: Array, found: Array[Dictionary]) -> void:
 		if item is EventGroup:
 			_walk_chooser_rows((item as EventGroup).child_rows(), found)
 			continue
+		# A CHOOSER SOMEBODY WROTE BY HAND IS THE SAME FACT. The band already reads verbatim blocks
+		# for the paths in them, and the ask is found by the LINE it opens rather than by an id, so a
+		# hand-written `DisplayServer.file_dialog_show` is a row that stops and asks the player
+		# exactly as the verb is.
+		if item is RawCodeRow:
+			_record_chooser_code((item as RawCodeRow).code, found)
+			continue
 		var event_row: EventRow = item as EventRow
 		if event_row == null:
 			continue
 		for lane: Array in [event_row.conditions, event_row.actions]:
 			for entry: Variant in lane:
+				if entry is RawCodeRow:
+					_record_chooser_code((entry as RawCodeRow).code, found)
+					continue
 				var ace: Resource = entry as Resource
 				if ace == null:
 					continue
@@ -376,6 +403,14 @@ static func _walk_chooser_rows(items: Array, found: Array[Dictionary]) -> void:
 				if not opens.is_empty():
 					found.append({"ace_id": descriptor.ace_id, "echo": opens})
 		_walk_chooser_rows(event_row.sub_events, found)
+
+
+## One verbatim block's ask, if it holds one. Filed with no `ace_id`, because there is no verb here
+## to name - what the band says is that this sheet asks, and the echo is the line that does it.
+static func _record_chooser_code(code: String, found: Array[Dictionary]) -> void:
+	var opens: String = _chooser_call_line(code)
+	if not opens.is_empty():
+		found.append({"ace_id": "", "echo": opens})
 
 
 ## The line of a template that opens the platform's own file chooser, trimmed of its indentation, or

@@ -268,6 +268,15 @@ These are the places the two disagreed.
   `watch_folder(folder, 2.0)`) went unseen for the same kind of reason. Both are followed now, and
   the finding states its own reach: it reads names inside ONE file, and a file it says nothing about
   is not a file it has cleared.
+- **The files band obeys its own scale law about watches.** The band capped paths at four and then
+  appended one reading per watch with no cap at all, so a sheet starting ten watches wore ten bands
+  plus four paths plus the ask - a head longer than the sheet, which is the thing the law in the
+  file's own header forbids. Watches are capped now, with the same "and N more" line.
+- **Two walks the band was making narrower than the Doctor's.** A chooser somebody wrote by hand in a
+  verbatim block never read as *asks the player to pick a file*, though the band already reads
+  verbatim blocks for the paths in them and finds the ask by the line it opens. And both band walks
+  read a function's `events` only, while a function lifted out of a hand-written file keeps its rows
+  in `rows` - exactly the shape this plugin is for.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and
