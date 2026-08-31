@@ -468,6 +468,14 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		if _declares_modes(all_events):
 			payload_parts.append("\"mode\", Mode.keys()[mode]")
 			payload_parts.append("\"mode_stack\", mode_stack.map(func(__m: int) -> String: return Mode.keys()[__m])")
+		# And an OBJECT's own state, the same fact one level down and streamed the same way: the
+		# state as its NAME rather than as a number a reader would have to count out, and how long it
+		# has held. The second entry is deliberately not a number invented for a readout - it is the
+		# left-hand side of the line Is in X for over Ns compiles to, character for character, so the
+		# editor's progress beside that row is the very quantity the row compares.
+		if _declares_states(all_events):
+			payload_parts.append("\"state\", State.keys()[state]")
+			payload_parts.append("\"state_seconds\", (Time.get_ticks_msec() - state_entered_msec) / 1000.0")
 		if payload_parts.is_empty():
 			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream - add some or turn the toggle off.")
 		else:
@@ -3208,6 +3216,21 @@ static func _declares_modes(events: Array) -> bool:
 		elif entry is LocalVariable:
 			declared[(entry as LocalVariable).name.strip_edges()] = true
 	return has_enum and declared.has("mode") and declared.has("mode_stack")
+
+
+## True when this sheet declares an OBJECT's own states - the State enum plus the two members every
+## reading of them leans on: the variable itself, and the moment the current one began. Read the same
+## way the modes above are read, from the sheet's own declarations, so an object that hand-wrote
+## those lines streams its state for free and an object that has no states streams nothing.
+static func _declares_states(events: Array) -> bool:
+	var has_enum: bool = false
+	var declared: Dictionary = {}
+	for entry: Variant in events:
+		if entry is EnumRow and (entry as EnumRow).enum_name.strip_edges() == "State":
+			has_enum = (entry as EnumRow).enabled
+		elif entry is LocalVariable:
+			declared[(entry as LocalVariable).name.strip_edges()] = true
+	return has_enum and declared.has("state") and declared.has("state_entered_msec")
 
 
 ## True when any event of this sheet asks to hear about trouble. Walked once, before anything is

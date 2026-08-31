@@ -5719,3 +5719,6 @@ the %s state,%s 상태
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.","이 오브젝트가 지정한 상태를 떠나는 순간, 들어가는 상태에 응답하는 어떤 것보다 먼저 실행됩니다. 그 상태가 켠 것을 여기서 되돌립니다. 울린 경보, 빨갛게 만든 셰이더."
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.","이 오브젝트가 선언한 상태 중 하나. 선언은 시트 머리글의 '상태 선언' 대화상자에서 하며, 이 목록은 거기서 쓴 그대로입니다."
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,이것이 참이 되려면 오브젝트가 그 상태에 이미 얼마나 머물러 있어야 하는지. 시계는 상태가 바뀔 때마다 다시 시작합니다.
+current: %s · %s s,현재: %s · %s 초
+%s of %s,%s / %s
+"While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",게임이 실행되는 동안 이 밴드는 현재 상태와 그 상태가 유지된 시간을 보여줍니다 - 게임 자체의 보고에서 초당 %s회 갱신됩니다.

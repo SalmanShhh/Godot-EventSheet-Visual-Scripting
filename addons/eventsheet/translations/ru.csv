@@ -5719,3 +5719,6 @@ the %s state,состояние %s
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.","Выполняется в момент, когда объект покидает указанное состояние, раньше всего, что отвечает на состояние, в которое он входит. Здесь возвращают назад то, что состояние включило: поднятую тревогу, покрасневший шейдер."
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.","Одно из объявленных состояний этого объекта. Объявляются они в диалоге «Объявить состояния» в заголовке листа, и этот список - в точности то, что он записал."
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,"Сколько времени объект уже должен находиться в этом состоянии, чтобы это было истинно. Отсчёт начинается заново при каждой смене состояния."
+current: %s · %s s,сейчас: %s · %s с
+%s of %s,%s из %s
+"While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.","Пока игра запущена, эта полоса показывает текущее состояние и как долго оно длится - обновляется %s раз в секунду по сообщению самой игры."

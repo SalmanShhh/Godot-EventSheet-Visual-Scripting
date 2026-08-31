@@ -3146,6 +3146,10 @@ func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 ## Why didn't this fire? panel would keep answering from a stopped game's final frame - the case a
 ## reader is most likely to hit, since you stop the game and THEN ask why.
 func _on_debug_session_ended() -> void:
+	# The game is gone, so "current: Chase · 3.2 s" is gone with it: the band goes back to the states
+	# the file declares and nothing more, and the timed row goes back to reading exactly as it reads
+	# with nothing running. Stop the game and the sheet is the document it always was.
+	EventSheetStateWatch.clear()
 	_ensure_live_values_panel().clear_live_values()
 	if _debugger_window != null:
 		_debugger_window.clear_live_values()
@@ -3207,6 +3211,10 @@ func _ensure_live_values_window() -> void:
 
 
 func update_live_values(values: Dictionary, instance: String = "") -> void:
+	# What state the object is in, out of the frame that was arriving anyway. Noted BEFORE the panel
+	# forwards the frame to the panes, because forwarding it is what repaints them - so the band and
+	# the timed row's progress are drawn from the frame that just landed rather than the one before.
+	EventSheetStateWatch.note_frame(values, instance)
 	_ensure_live_values_panel().update_values(values, instance)
 	if _debugger_window != null:
 		_debugger_window.update_values(values)

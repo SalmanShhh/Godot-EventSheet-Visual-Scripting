@@ -723,6 +723,11 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 			# The name IS the rename control: F2 or a double-click renames the class everywhere.
 			value_meta["head_action"] = EventSheetHeadBands.BAND_NAME
 			value_meta["hover_note"] = EventSheetL10n.translate("F2 renames this class everywhere.")
+		if kind == EventSheetHeadBands.BAND_STATES:
+			# The band gains a live half while a game runs, so it says here how often that half is
+			# true. Stated on the band itself, because the number ticking in front of a reader is
+			# where "how fresh is this" gets asked.
+			value_meta["hover_note"] = EventSheetStateWatch.cadence_note()
 		if bool(band["editable"]) and description_source is RawCodeRow and not sheet.read_only:
 			# The `##` block edits in place, and the raw row it lives in travels in metadata so
 			# the write goes through the byte-gated lift rather than through a second store.
@@ -3740,6 +3745,23 @@ func _first_color_in_params(ace: Resource) -> Variant:
 			if parsed is Color:
 				return parsed
 	return null
+
+
+## The one extra fact the Is in X for over Ns cell carries: how long that row is waiting for, as a
+## plain number. While a game is running the editor draws the object's progress against it right
+## after the cell ("3.2 of 6"), so the number is read off the row ONCE here rather than parsed in the
+## draw loop. Empty for every other condition, and empty when the wait is an expression rather than a
+## number - a computed wait shows no progress instead of a progress the editor invented.
+##
+## Static, because it reads the condition and nothing else: the rule is then pinned headless rather
+## than only exercised through a canvas.
+static func state_progress_metadata(condition: ACECondition) -> Dictionary:
+	if condition == null or condition.ace_id != "InStateForOver":
+		return {}
+	var written: String = str(condition.params.get("seconds", "")).strip_edges()
+	if not written.is_valid_float():
+		return {}
+	return {ViewportLiveValuesHelper.STATE_PROGRESS_META: written.to_float()}
 
 
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
@@ -11191,7 +11213,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 						"object_label": condition_owner,
 						"object_icon": _object_icon_for(condition.provider_id, condition.ace_id),
 						"swatch_color": _first_color_in_params(condition)
-					}.merged(condition_style_meta, true)
+					}.merged(condition_style_meta, true).merged(
+						state_progress_metadata(condition), true)
 				)
 			)
 			condition_line_index += 1

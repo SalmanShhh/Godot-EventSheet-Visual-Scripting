@@ -5719,3 +5719,6 @@ the %s state,%s 状态
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",在这个对象离开指定状态的那一刻运行，早于任何回应它所进入状态的内容。在这里把该状态开启的东西收回来：拉响的警报、变红的着色器。
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",这个对象已声明的状态之一。它们在表头的「声明状态」对话框中声明，这个列表正是它写下的内容。
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,对象必须已经处于该状态多久，这一条才为真。每次状态改变时计时都会重新开始。
+current: %s · %s s,当前：%s · %s 秒
+%s of %s,%s / %s
+"While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",游戏运行时，此栏显示当前状态以及已保持的时长 - 依据游戏自身的报告，每秒刷新 %s 次。

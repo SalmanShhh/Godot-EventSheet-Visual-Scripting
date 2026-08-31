@@ -63,6 +63,31 @@ What changed in the build you have installed (v0.17.0), in the words the release
   can spell wrong and this one is an enum member a dropdown fills in. Groups stay plain organisation:
   naming a group after a state is a convention, never a semantics.
 
+### Play mode makes the sheet the debugger
+
+- **The states band carries the state the game is actually in.** Run the game with the sheet open and
+  `Patrol · Chase · Stagger, starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not
+  instead of it, so the band still reads as the declaration it stands for. With two copies of the
+  game running, each reading says which window it is describing.
+- **A timed row shows its progress where the question is asked.** `Is in Stagger for over 6s` gains
+  `3.2 of 6` right after the cell. The left-hand number is not a second clock kept by the editor: it
+  is the very quantity that row compares, streamed as the left-hand side of the line the row
+  compiles to. A wait written as an expression shows no progress rather than an invented one.
+- **On the stream that already shipped, and no other.** Both facts ride the Live Values frame the
+  running game was already flushing (`\"state\", State.keys()[state]` and the seconds beside it), under
+  the same rule the game's own mode follows one level up. This feature opens no channel, defines no
+  message and adds no protocol.
+- **Zero cost when nobody is watching.** A sheet compiled without the debug switch carries no
+  instrumentation at all - no timer, no message, no branch - and an object with no states adds
+  nothing to a frame even when the switch is on. Pinned as bytes on both sides.
+- **Strictly read-only, and nothing over your game.** Play mode never edits: stop the game and the
+  document is exactly what it was, to the byte. Every word of it renders in the sheet and the panels
+  that already exist - there is no overlay on the running game's viewport and no window in front of
+  it. Both are gates in the suite rather than promises in a paragraph.
+- **At a stated cadence.** The running game flushes a frame every 0.25 s and the band is written only
+  when one arrives - nothing counts or extrapolates on an editor frame, so a number on the band is a
+  number the game reported. The band says so on hover.
+
 ### A path says which place it is in
 
 - **Every path field states its place.** Under each path box in the Files vocabulary sits a muted

@@ -5719,3 +5719,6 @@ the %s state,%s 状態
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",このオブジェクトが指定した状態を出た瞬間に、入る状態に応えるものより先に走ります。その状態が入れたものをここで戻します。鳴らした警報、赤くしたシェーダー。
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",このオブジェクトが宣言した状態のどれか。宣言はシート見出しの「状態を宣言」ダイアログで行い、この一覧はそこで書かれたものそのものです。
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,これが真になるために、オブジェクトがその状態にすでにどれだけとどまっている必要があるか。時計は状態が変わるたびに始まり直します。
+current: %s · %s s,現在: %s · %s 秒
+%s of %s,%s / %s
+"While the game runs, this band says the state it is in and how long it has held - refreshed %s times a second, from the game's own report.",ゲームの実行中、このバンドは現在の状態とその継続時間を表示します - ゲーム自身の報告から、1秒あたり%s回更新されます。

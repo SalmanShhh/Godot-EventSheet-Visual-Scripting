@@ -24,7 +24,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
    [reads like](#what-an-opened-file-reads-like---event-sheet-grammar-not-annotated-code), its
    [objects](#the-objects-of-an-opened-file---what-they-are-and-where-you-find-them), a whole
    [scene](#a-whole-scene-read-in-one-place), [what stays code](#what-stays-code-still-reads-as-what-it-is),
-   [a hand-written state machine](#a-hand-written-state-machine-read-as-the-objects-states)
+   [a hand-written state machine](#a-hand-written-state-machine-read-as-the-objects-states),
+   [watching it run](#watching-the-machine-while-the-game-runs)
    and [beginner spellings](#beginner-spellings-and-the-reading-layer), plus
    [the Project bar](#the-project-bar---your-project-by-kind-not-by-folder)
 7b. [Living in a Big Project: the Minimap, the Sheet Map and the History List](#7b-living-in-a-big-project-the-minimap-the-sheet-map-and-the-history-list)
@@ -2226,6 +2227,36 @@ of them your file keeps its own bytes:
 In every one of those cases the **Adopt** door is still open: declare the states on the head, and
 point the rows at them when you are ready. Nothing forces the move, and nothing about your file
 changes until you make it.
+
+### Watching the machine while the game runs
+
+Once the states are on the head, the sheet is also where you watch them. Run the game with the sheet
+open and two things change, both of them inside the sheet:
+
+- **The states band carries the current state and how long it has held.** `Patrol · Chase · Stagger,
+  starts in Patrol` gains `current: Chase · 3.2 s` after it - after it, not instead of it, so the
+  band still reads as the declaration it stands for.
+- **A timed row shows its progress where the question is asked.** `Is in Stagger for over 6s` gains
+  `3.2 of 6` right after the cell. The left-hand number is the very quantity that row compares, not a
+  second clock kept by the editor.
+
+![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger, starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, the row Is in STAGGER for over 6s shows 3.2 of 6 beside it, and the event that just fired is lit along its left edge](images/state-play-mode.png)
+
+**Four things are worth knowing about it, because each one is a promise:**
+
+| | |
+| --- | --- |
+| **It reads, it never writes** | Play mode changes nothing. Stop the game and the sheet is the document it was, to the byte - the readings are drawn while a report is in hand and stored nowhere |
+| **It costs nothing when nobody is watching** | The two facts ride the values frame **Live Values** was already flushing. An object with no states adds nothing to it, and a sheet compiled without the debug switch carries no instrumentation at all - no timer, no message, no branch |
+| **Nothing is drawn over your game** | Every word of this renders in the sheet and the panels you already have. There is no overlay on the running game's viewport and no window in front of it |
+| **It ticks four times a second** | The running game flushes a frame every 0.25 s and the band is written only when one arrives. Nothing is extrapolated between frames: a number on the band is a number the game actually reported |
+
+With two copies of the game running (**Run Multiple Instances**), each reading says which window it
+is describing: `host · current: Chase · 3.2 s   client · current: Patrol · 0.5 s`.
+
+A wait that is an **expression** rather than a number (`Is in Stagger for over stagger_time s`) shows
+no progress. The row is asking a question the editor cannot answer without running your expression,
+and an invented number would be worse than none.
 
 ### Beginner spellings and the reading layer
 
