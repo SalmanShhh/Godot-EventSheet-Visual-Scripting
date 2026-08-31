@@ -6,31 +6,6 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### Nouns in a comment are doors
-
-- **A word a project index can prove becomes a door.** A note beside an event that says
-  \"%HealthBar drives this. Patrol is where it starts\" now underlines `%HealthBar` and `Patrol` with a
-  hairline, and one click goes there - the node selected in the Scene dock, the `enum State`
-  declaration revealed on its own row. Five kinds of name qualify: a `$Node` or `%Unique` reference,
-  a function this sheet publishes, a state this object declares, a mode the game declares, and the
-  file name of another sheet.
-- **Grounded, never guessed.** A name nothing matches stays plain prose - no mark, no message, no
-  hover. A word spelled exactly like a state that is not one (\"retreat\") is left alone, and a file
-  name two files answer to opens neither, because an ambiguous door is a guess. Both spellings of a
-  note get doors, `#` and `##`, and so does a comment written inside an event's action flow.
-- **The comment is untouched.** A door is something a reader is shown; the file knows nothing about
-  it. The `CommentRow`'s own text is never rewritten and the line the compiler emits is the same line
-  it always was - which is what the echo at the right edge of the row goes on showing.
-- **No new index, and no work while you read.** The five lists are the ones the completion popup
-  already builds and caches; this joins them into a name table once per sheet, and finds the doors of
-  a line when the comment row is BUILT. Nothing is scanned per frame, per hover or per keystroke: the
-  hit-test reads the rectangles the renderer stamped as it drew, the same way the colour swatch and
-  the object label already work. The table rebuilds itself when any list underneath it does, so there
-  is nothing extra to invalidate.
-- **Converged with the ask rather than beside it.** A state, a mode and a function door are handed to
-  the Quick Add field's own answer ladder, so a name opened from a comment and the same name opened
-  from the ask arrive in the same place, and say the same thing on the status line when they cannot.
-
 ### An object's states are a variable, declared once
 
 - **Declare states, on the sheet head.** The states band's **Declare states…** asks the two questions
@@ -181,6 +156,76 @@ What changed in the build you have installed (v0.17.0), in the words the release
   it against the huge-project fixture beside the completion budget. Two shipped things got faster on
   the way: a rank no longer lowers every candidate's text on every keypress, and the word-boundary
   test no longer builds two strings and an array to answer a yes-or-no question.
+
+### Nouns in a comment are doors
+
+- **A word a project index can prove becomes a door.** A note beside an event that says
+  \"%HealthBar drives this. Patrol is where it starts\" now underlines `%HealthBar` and `Patrol` with a
+  hairline, and one click goes there - the node selected in the Scene dock, the `enum State`
+  declaration revealed on its own row. Five kinds of name qualify: a `$Node` or `%Unique` reference,
+  a function this sheet publishes, a state this object declares, a mode the game declares, and the
+  file name of another sheet.
+- **Grounded, never guessed.** A name nothing matches stays plain prose - no mark, no message, no
+  hover. A word spelled exactly like a state that is not one (\"retreat\") is left alone, and a file
+  name two files answer to opens neither, because an ambiguous door is a guess. Both spellings of a
+  note get doors, `#` and `##`, and so does a comment written inside an event's action flow.
+- **The comment is untouched.** A door is something a reader is shown; the file knows nothing about
+  it. The `CommentRow`'s own text is never rewritten and the line the compiler emits is the same line
+  it always was - which is what the echo at the right edge of the row goes on showing.
+- **No new index, and no work while you read.** The five lists are the ones the completion popup
+  already builds and caches; this joins them into a name table once per sheet, and finds the doors of
+  a line when the comment row is BUILT. Nothing is scanned per frame, per hover or per keystroke: the
+  hit-test reads the rectangles the renderer stamped as it drew, the same way the colour swatch and
+  the object label already work. The table rebuilds itself when any list underneath it does, so there
+  is nothing extra to invalidate.
+- **Converged with the ask rather than beside it.** A state, a mode and a function door are handed to
+  the Quick Add field's own answer ladder, so a name opened from a comment and the same name opened
+  from the ask arrive in the same place, and say the same thing on the status line when they cannot.
+
+### States, documented
+
+- **A guide for the whole story: [States: What One Object Is Doing Right Now](docs/GUIDE-STATES.md).**
+  Why a state is a variable and what follows from that, declaring the states on the head and the five
+  ordinary declarations the dialog writes, the four rows and the two triggers, the timed question and
+  the clock the setter restarts, the compiled shape as the file it becomes, the hand-written `enum` +
+  `match` machine that opens as those rows, watching it run, the trail, the two doors that find a
+  state by name, and the two Doctor findings. Both worked examples are whole little scripts hung from
+  lifecycle handlers, so a reader sees the compiled shape and the page draws it as a figure.
+- **The group convention is stated AS a convention, in three places.** Naming a group after a state
+  is organisation and carries no semantics: the rows inside it each ask **Is in** for themselves, and
+  that condition is the only visible reason any of them run. The guide says why it is deliberately
+  not the mode band's *runs in* word one level up - a game has one mode, and a level has fifty
+  objects with a state each, so a group that quietly meant \"only while this object is chasing\" would
+  be a rule you could not see in the row obeying it.
+- **The reading a row really has, said rather than idealised.** A row shows the state as the enum
+  MEMBER it stores (`Is in PATROL`), and the band, the live readings, the trail and a lifted `match`
+  arm say it as a word (`Patrol`). The guide states the difference where a reader meets it instead of
+  showing one spelling and shipping the other.
+- **The concept map gains its row and the reading list gains six.** The map answers an object's own
+  state - the instance variable and the group-per-state a reader arrives holding - with the band, the
+  four rows and the convention. The GDScript word list answers the other direction, headed by the
+  match-FSM lift: `match state:`, `enum State` + `var state`, the assignment, the two comparisons,
+  the timed line claimed whole, and the change handler whose arm order is what makes it On leaving /
+  On entering.
+- **The sibling pages say the same thing once.** The patterns guide's state-machine section now leads
+  with the declared states and keeps the State Machine pack as the older answer, with the one-sentence
+  difference between them (a String a typo can misspell against an enum member a dropdown fills in);
+  the sheet-head guide gains the **states** band row and the rule about where it is offered; and the
+  Setting And Changing Variables module guide gains the Object State reference table, which is where
+  the module's own guide mapping already pointed.
+- **Nine languages, in lockstep.** The Object State vocabulary is fully keyed - the six display names,
+  the category, the six reads-as sentences and both parameter labels - in `TEMPLATE.csv` and all eight
+  translations, and the module joins the coverage ratchet, so a verb added to it later drops the
+  module out of the list and fails by name.
+- **The numbers, re-measured off this tree.** The front page said 1,821 verbs across 82 modules and
+  94 triggers; measured module by module today it is **1,827 verbs across 83 modules, 96 of them
+  triggers, with zero blank descriptions and zero blank parameter descriptions** over every parameter
+  of every one. The reads-itself census re-run over the whole corpus of `addons/` and `tools/`:
+  **863 files, 861 at zero script blocks, 9 block lines, 254,748 lines and 186,771 rows, 89% of those
+  rows in the sheet's own words** - the block lines did not move and neither did the share. The pack
+  count is unchanged at **113 behavior packs, 94 of them with a guide**, the other 19 companion data
+  assets and loaders.
+- Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### A path says which place it is in
 

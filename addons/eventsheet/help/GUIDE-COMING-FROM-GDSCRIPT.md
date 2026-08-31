@@ -28,6 +28,12 @@ as, and where to go to see the two side by side.
 | `await` | Wait for | System |
 | `await get_tree().create_timer(t).timeout` | Wait `t` seconds | System |
 | `match` | a chain of Else-if conditions, one case per sub-event | conditions |
+| `match state:` on this object's own state | one row per arm, each reading **Is in Patrol** - the enum + variable + `match` machine every tutorial writes opens as the states vocabulary, and a `state = State.CHASE` inside an arm reads **Go to Chase**. The arm's body stays verbatim, so the whole `match` saves back byte for byte | Object State |
+| `enum State { … }` + `var state: State` | the **states** band on the sheet head: `Patrol · Chase · Stagger, starts in Patrol` | the sheet head |
+| `state = State.CHASE` (and `self.state = …`) | Go to Chase | Object State |
+| `state == State.PATROL`, `previous_state == State.CHASE` | Is in Patrol, Was in Chase | Object State |
+| `state == State.X and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > 2.0` | Is in X for over 2s - one row, not a row plus a wall of arithmetic | Object State |
+| `func _on_state_changed(from_state, to_state)` | On leaving X / On entering X, leaving first - when the handler's `from_state` arms sit above its `to_state` arms, which is the order they run in | Object State |
 | `extends` | family / base class (the word follows View ▸ Familiar Words) | the Object bar |
 | `class_name` | the object's own name in the Object bar | the Object bar |
 | `@export var` | Instance variable · Inspector | Object properties |

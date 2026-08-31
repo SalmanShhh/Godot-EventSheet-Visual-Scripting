@@ -3,7 +3,8 @@
 A variable is where a game keeps what it knows: score, health, ammo, a name, a flag, a meter that
 fills while a button is held. This guide covers the builtin rows that hold and nudge a value - the
 plain arithmetic set, the eased and guarded forms, the fallbacks that make a loaded value safe to
-store, and the throwaway locals and constants that live for one event only.
+store, the throwaway locals and constants that live for one event only, and the one variable that
+says what an object is doing right now - its state.
 
 This vocabulary is builtin. Each row compiles to the exact GDScript line it names, so a sheet variable
 is a real member of the emitted script and a local really is a `var` inside the handler.
@@ -103,6 +104,31 @@ On the canvas these read as sentences, with the parameter values drawn in bold:
 | Set Local Constant | Creates a named constant used only within this event. | `const {name} = {value}` |
 | Set Local Constant (typed) | The same with a fixed **Type** (int, float, bool, String, Vector2, Vector3). | `const {name}: {const_type} = {value}` |
 | Set Local Constant (inferred) | The same, with the type inferred from the **Value**. | `const {name} := {value}` |
+
+### Object State - one variable that says what this object is doing
+
+An enemy that is patrolling, chasing or staggered is a variable like any other, so these six rows are
+that variable's vocabulary and nothing more: no new row kind, no group semantics, no diagram.
+Declare the states once - **Declare states…** on the states band of that object's sheet head - and
+the dialog writes five ordinary declarations (`enum State`, the `state` variable whose own setter
+announces the change, `previous_state`, `state_entered_msec` and `signal state_changed`). A project
+that typed those by hand is already using these.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Go To State | Moves this object into another state, and says so | `state = State.{state}` (the variable's own setter emits `state_changed`) |
+| Is In State | True while this object is in that state | `state == State.{state}` |
+| Is In State For Over | True while it has been in that state for longer than **Seconds** | `state == State.{state} and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > {seconds}` |
+| Was In State | True while the state it was in BEFORE this one is that state | `previous_state == State.{state}` |
+| On Entering State | Runs the moment this object enters that state | one handler off `state_changed`, under `if to_state == State.{state}:` |
+| On Leaving State | Runs the moment it leaves one, before anything answering the state it is entering | the same handler, under `if from_state == State.{state}:` |
+
+Each state is picked from a dropdown filled by that object's own declarations, so a typo cannot be
+written, and a group named after a state is a convention with no semantics - the rows inside it each
+ask *Is in* for themselves. This is the game's own mode vocabulary one level down, and the machine a
+Godot tutorial writes by hand - an `enum`, a `var state` and a `match state:` - opens as these rows
+and saves back byte for byte. [States: What One Object Is Doing Right Now](../GUIDE-STATES.md) is the
+whole story, including the trail the Debugger shows while the game runs.
 
 ## Use cases
 

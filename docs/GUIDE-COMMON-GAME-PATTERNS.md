@@ -65,8 +65,28 @@ Runs is for "the high score should survive closing the game" and nothing heavier
 
 ## A state machine you can read
 
-Attach the **State Machine** behavior pack and the pattern that usually needs an enum, a match
-statement, and transition bookkeeping becomes vocabulary:
+An enemy that is patrolling, chasing or staggered is a VARIABLE - the pattern you already build, and
+the one every Godot project writes as an enum - so that is what it is here. Declare the states once
+on the **states** band of the object's sheet head (**Declare states…**) and you get five ordinary
+declarations, five rows and no new kind of thing:
+
+- **Is in `<state>`** → `state == State.PATROL`, and **Go to `<state>`** → `state = State.CHASE`,
+  one plain assignment, because the announcement rides in the `state` variable's own setter.
+- **Was in `<state>`** → `previous_state == State.CHASE`, so "the chase that began from a stagger"
+  needs no bookkeeping variable.
+- **Is in `<state>` for over `<seconds>`s** is the timed question as ONE row, off the clock that
+  setter restarts.
+- **On entering `<state>`** / **On leaving `<state>`** answer the moment itself. Leaving fires first,
+  always.
+
+Each state is picked from a dropdown filled by that object's own declarations, so a typo cannot be
+written, and a group named after a state is a convention that carries no semantics - every row inside
+it still asks *Is in* for itself. The whole story, including what a hand-written machine opens as and
+what the trail says while the game runs, is in
+[States: What One Object Is Doing Right Now](GUIDE-STATES.md).
+
+The older answer to the same question still ships and still works. Attach the **State Machine**
+behavior pack and the machine lives in a child node holding a String state:
 
 - **Go to state** switches state (and only fires on a real change).
 - **Current state is** is the condition each behavior event sits behind.
@@ -74,6 +94,11 @@ statement, and transition bookkeeping becomes vocabulary:
 - **Time in state** tells how long the current state has been running: "flee for two seconds,
   then go back" is `Time in state > 2` then `Go to state previous_state`.
 - **previous_state** always holds where you came from.
+
+The difference between the two is where the machine lives and what a state is: the pack puts it in a
+child node with a string a typo can spell wrong, and the declared states put it in the object's own
+script as an enum member a dropdown fills in. New work belongs on the declared states; nothing built
+on the pack has to move.
 
 The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,
 each STATE as a sub-event under it (its condition reads as the ◆ `Current state is "patrol"` header,
@@ -86,14 +111,17 @@ is a `match` branch one tab in, each transition the `if` one tab deeper.
 ![A state machine as a consumer writes it: one tick event, states as sub-events, transitions nested deeper](images/code-patterns-state-machine.png)
 
 And the door swings both ways: a hand-written `enum` + `match` machine OPENS in this shape.
-The `match` lifts into structured cases (byte-exact, like every lift), and because the match
-subject is named `state`, the whole machine reads in plain words with zero conversion work:
+The `match` lifts into structured cases (byte-exact, like every lift), and the whole machine reads
+in plain words with zero conversion work:
 
 - The enum shows as the machine's identity bar ("State is one of PATROL, CHASE or FLEE" -
-  click it open for one row per value).
+  click it open for one row per value), and when the enum is this object's own `State`, the head
+  grows the states band with it.
 - The tick event's lane says **decides by state - 3 states below** instead of `match state:`.
-- Each case is a `◆ State:` row; its plain statements read as sentences and calls
-  (`Patrol Step ( delta )`).
+- Each case is a row of its own. A `match` on THIS object's own `state` reads in the declared-states
+  words - `Is in Patrol` - and a `state = State.CHASE` inside an arm reads `Go to Chase`; a `match`
+  on any other state-shaped subject reads as a `◆ State:` row. Either way the arm's plain statements
+  read as sentences and calls (`Patrol Step ( delta )`), and the arm's body stays verbatim.
 - Each transition is a NESTED CONDITION ROW - the guard in the condition cell, in plain words
   (`Can See Player`, `Not Can See Player`, `hp < 20`), the state change as its action
   (`Set state to State.CHASE`). A small ƒ badge marks a guard that is a computed check rather
