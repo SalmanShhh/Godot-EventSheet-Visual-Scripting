@@ -12,6 +12,17 @@ band at the top of the sheet reads `watching user://mods every 2.0 s`, because "
 quietly costs a directory read every frame is the kind of thing a project finds out about on
 somebody else's slow disk.
 
+## Table of Contents
+
+1. [Where this pack shines](#where-this-pack-shines)
+2. [Core concepts](#core-concepts)
+3. [Setup](#setup)
+4. [What one look costs](#what-one-look-costs)
+5. [ACE reference](#ace-reference)
+6. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+7. [Use cases](#use-cases)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
+
 ## Where this pack shines
 
 - **A mods folder.** The player drops a file in while the game is running and the game notices.
@@ -21,6 +32,31 @@ somebody else's slow disk.
   the screen to be reopened.
 - **A tool built with event sheets.** An import folder somebody else's program writes into is the
   one case where polling really is the only mechanism there is.
+
+## Core concepts
+
+- **A poll, not a subscription.** Nothing tells this pack that a file changed, because nothing in
+  Godot tells anybody. It reads the folder on an interval and compares the reading with the one
+  before it. A change is noticed on the next look and no sooner.
+- **Two readings, one difference.** A look records file name against modified time. A name in the
+  new reading that was not in the old one is **appeared**; a name in both with a newer time is
+  **changed**; a name in the old one that is gone is **removed**. That dictionary comparison is the
+  entire mechanism, and it is in the emitted script where you can read it.
+- **The first look is the baseline.** Starting a watch records what is already there and raises
+  nothing, so a folder that already holds two hundred files is not two hundred things that just
+  happened. To say what was already found, read **Watched File Count** or **Watched File Names**
+  after starting.
+- **Running or stopped, and nothing between.** **Watch Folder** starts a watch and **Stop Watching**
+  ends it. Stopped means the per-frame tick is parked with `set_process(false)`: the engine does not
+  visit the node at all, and nothing is noticed until it is started again.
+- **The filter comes first.** `only_names_like` is applied while the folder is being read, so a name
+  that does not match is never looked up, never counted and never raises anything.
+- **Whole paths out of triggers, bare names out of expressions.** Each trigger hands back the folder
+  and the file name joined, ready to read. **Watched File Names** hands back names on their own -
+  join the folder back on before opening one.
+- **Interval is a promise about the worst case.** Two seconds means "within two seconds", never
+  "immediately". The shortest gap honoured is a tenth of a second, because a zero would be a
+  directory read every frame.
 
 ## Setup
 
@@ -50,17 +86,34 @@ happened; the events start at the second look.
 
 ## ACE reference
 
-| Kind | Name | Parameters | Description |
-|---|---|---|---|
-| Action | Watch Folder | `folder`, `every_seconds` | Starts watching a folder, looking every so many seconds. The first look is the baseline and raises nothing. |
-| Action | Stop Watching | - | Stops looking, and parks the per-frame tick so the node costs nothing. |
-| Action | Look Now | - | Takes one look immediately, without waiting for the interval. |
-| Condition | Is Watching | - | True while a watch is running - between Watch Folder and Stop Watching. |
-| Expression | Watched File Count | - | How many files the last look found, after the name filter. |
-| Expression | Watched File Names | - | The file names the last look found, sorted. Names, not whole paths. |
-| Trigger | On A File Appeared | `path` | A file the look before did not find. |
-| Trigger | On A File Changed | `path` | A file whose modified time moved since the last look. |
-| Trigger | On A File Removed | `path` | A file the look before found and this one did not. |
+### Actions
+
+| Name | Parameters | Description |
+|---|---|---|
+| Watch Folder | `folder`, `every_seconds` | Starts watching a folder, looking every so many seconds. This is a poll: the folder is read on that interval and compared with the reading before it. The first look is the baseline and raises nothing. Safe to call again - it simply takes a new baseline. |
+| Stop Watching | - | Stops looking. The per-frame tick is parked, so a stopped watcher is a node the engine no longer visits and nothing is read from disk until it is started again. |
+| Look Now | - | Takes one look immediately, without waiting for the interval, and raises whatever the difference means. Use it straight after your own game has written into the folder. |
+
+### Conditions
+
+| Name | Parameters | Description |
+|---|---|---|
+| Is Watching | - | True while a watch is running - that is, between Watch Folder and Stop Watching. |
+
+### Expressions
+
+| Name | Parameters | Description |
+|---|---|---|
+| Watched File Count | - | How many files the last look found, after the name filter. Zero before the first look. |
+| Watched File Names | - | The file names the last look found, after the name filter, in sorted order. Names, not whole paths. |
+
+### Triggers
+
+| Name | Parameters | Description |
+|---|---|---|
+| On A File Appeared | `path` | Raised on the first look that finds a file the look before did not. |
+| On A File Changed | `path` | Raised when a file that was already there has a newer modified time than it had at the last look. |
+| On A File Removed | `path` | Raised on the first look that no longer finds a file the look before did. The path names what went; there is nothing left at it to read. |
 
 Every trigger hands back the **whole path**, folder and all, so a handler can read the file without
 rebuilding it.
@@ -72,7 +125,25 @@ rebuilding it.
 | `watched_folder` | `user://mods` | The folder to look in. Prefer `user://` - `res://` is read-only in an exported game, so nothing in it will ever change. |
 | `look_every_seconds` | `2.0` | Seconds between looks. The shortest gap honoured is a tenth of a second. |
 | `only_names_like` | `*` | Which file names count, as a pattern with `*` and `?` in it. Names that do not match raise nothing and are not looked up. |
-| `watch_on_ready` | `false` | Start watching as soon as the node is ready, using the two settings above. |
+| `watch_on_ready` | `false` | Start watching as soon as the node is ready, using the two settings above. Off by default, because a watcher is usually started at the moment the game actually cares. |
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self > Behaviours**
+lists this pack's knobs and value expressions as ready-to-insert chains once the behaviour is
+attached:
+
+- `$FolderWatcher.watched_folder` inserts the **Watched Folder** entry straight into any expression
+- `$FolderWatcher.look_every_seconds` inserts the **Look Every Seconds** entry
+- `$FolderWatcher.only_names_like` inserts the **Only Names Like** entry
+- `$FolderWatcher.watch_on_ready` inserts the **Watch On Ready** entry
+
+The `$FolderWatcher` token stays selected after insert, so retargeting to your child's actual name is
+one keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("FolderWatcher")`
+chains, which survive auto-named children. While **Live Values** streams from a running game, the
+group upgrades to *Behaviours (live - on your node)* and reads the running instance, which is the
+quickest way to see whether a watch is actually running and what its last look found.
 
 ## Use cases
 
