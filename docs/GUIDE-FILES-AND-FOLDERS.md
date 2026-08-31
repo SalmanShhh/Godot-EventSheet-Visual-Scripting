@@ -277,13 +277,18 @@ its own path, and one spelled `../../autoexec.cfg` resolves outside the folder t
 which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path is
 compared against the target folder before a single byte is written - both sides globalized and
 simplified, the folder keeping its trailing slash so `user://mods` cannot accept
-`user://mods_of_mine` - and an entry that climbs out closes the archive, stops the whole unpack and
-raises **On Unpack Refused** with the entry and the reason on it.
+`user://mods_of_mine` - and an entry that climbs out leaves the loop, closes the archive and raises
+**On Unpack Refused** with the entry and the reason on it. It leaves the loop rather than returning,
+so the rows after the unpack still run and the row still fits inside a sheet function that answers
+with a value.
 
 A huge archive meets a progress bar rather than a frozen game: **On Unpack Progress** reports the
 entries and bytes that have landed, once per entry, and **On Unpack Finished** ends a run that
-reached the last entry. Like the Ask rows, the emitted loop calls all three answers **by name**, so
-a sheet that unpacks needs an event for each:
+reached the last entry. Both numbers count writes that SUCCEEDED: an entry the machine would not
+write - a name the file system refuses, a folder it could not make, a disk that is full - moves
+neither the bar nor the totals, so a finish saying nine of ten entries is a finish saying one did not
+land. Like the Ask rows, the emitted loop calls all three answers **by name**, so a sheet that
+unpacks needs an event for each:
 
 ```gdscript
 extends Node

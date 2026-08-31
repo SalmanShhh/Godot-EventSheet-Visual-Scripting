@@ -156,8 +156,9 @@ An unpack is the one row here that handles a path somebody else chose. **An arch
 own path**, and an entry spelled `../../autoexec.cfg` resolves outside the folder the player pointed
 at - which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path is
 compared against the target folder before a single byte is written, the comparison is in the emitted
-code, and an entry that climbs out stops the whole unpack and raises **On Unpack Refused** with the
-reason in it.
+code, and an entry that climbs out leaves the loop and raises **On Unpack Refused** with the reason in
+it. It leaves the loop rather than returning, so the rows after the unpack still run and the row still
+fits inside a sheet function that answers with a value.
 
 Like the Ask rows, the emitted loop calls its three answers **by name**, so a sheet that unpacks needs
 an event for each of them or the script does not compile.
@@ -568,6 +569,10 @@ On mods screen closed
 - **A refused unpack stops where it stopped.** The entries written before the bad one stay written.
   That is deliberate - the sheet is told which entry stopped it, and clearing up is a decision, not
   something a row should make on your behalf.
+- **The unpack counts what LANDED, not what it tried.** An entry the machine would not write - a name
+  the file system refuses, a folder it could not make, a full disk - moves neither the progress bar
+  nor the totals On Unpack Finished carries. A finish saying nine entries after a ten-entry archive
+  is a finish saying one did not land.
 - **Pack Folder Into Zip is not recursive.** It walks the files directly in that one folder. A whole
   tree needs your own walk with List Subdirectories.
 - **A packed archive stores bare file names**, so unpacking one lays its files flat in the target

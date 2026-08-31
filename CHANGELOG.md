@@ -217,6 +217,25 @@
   other 19 companion data assets and loaders. Assertions **20,040 across 704 test files**, counted off the runner's own total rather than from a grep.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
+### The files pass, read back adversarially
+
+An independent review read every line the pass shipped against every sentence it wrote about itself.
+These are the places the two disagreed.
+
+#### Fixed
+
+- **The unpack counted entries it never wrote.** The entry count, the byte total and the progress
+  call sat OUTSIDE the `if __file:` guard, so an entry the machine refused to write - a name the file
+  system will not take, a folder it could not make, a full disk - still moved the progress bar and
+  still counted into **On Unpack Finished**, while the guide promised "the entries and bytes that
+  have landed". All three are inside the guard now: the numbers are what landed.
+- **The unpack's refusal no longer leaves by `return`.** Inside a sheet function that answers with a
+  value, that emitted `return` was a script Godot could not parse - and the compile reported no error
+  at all, because the emitted text is only read when the engine reads it. Inside an ordinary handler
+  it silently abandoned every later row of the same event. The guard now records the entry and leaves
+  the loop; the archive closes once, and the line after the loop raises whichever of the two events
+  the run earned.
+
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an

@@ -37,6 +37,8 @@ const SOURCE_DIR := WORK_DIR + "/source"
 const OUT_DIR := WORK_DIR + "/unpacked"
 const ARCHIVE := WORK_DIR + "/bundle.zip"
 const HOSTILE := WORK_DIR + "/hostile.zip"
+const BLOCKED := WORK_DIR + "/blocked.zip"
+const BLOCKED_DIR := OUT_DIR + "/taken"
 const PROBE_SCRIPT := "user://watcher_archives_probe.gd"
 
 
@@ -128,16 +130,24 @@ static func _run_emission() -> bool:
 	ok = _check("and every entry is checked against it before a byte is written",
 		unpack.contains("if not ProjectSettings.globalize_path(__into_4).simplify_path()"
 			+ ".begins_with(__root_4):"), true) and ok
-	ok = _check("the guard closes the archive before it stops",
-		unpack.contains("\t\t\t__reader_4.close()\n\t\t\t_on_unpack_refused("), true) and ok
-	ok = _check("and stops the whole unpack", unpack.contains("\t\t\treturn\n"), true) and ok
+	ok = _check("the guard records the entry and leaves the loop",
+		unpack.contains("\t\t\t__refused_4 = __entry_4\n\t\t\tbreak\n"), true) and ok
+	# A `return` here would be two bugs at once: a sheet function that answers with a value would
+	# not parse, and an ordinary handler would abandon every later row of the same event.
+	ok = _check("and it never leaves by returning", unpack.contains("\t\t\treturn\n"), false) and ok
+	ok = _check("the archive is closed once, whichever way the loop ended",
+		unpack.count("__reader_4.close()"), 1) and ok
 	ok = _check("the refusal carries the reason", unpack.contains(
-		"_on_unpack_refused(__entry_4, \"it points outside the folder it is being unpacked into\")"),
+		"_on_unpack_refused(__refused_4, \"it points outside the folder it is being unpacked into\")"),
 		true) and ok
-	ok = _check("progress is reported once per entry",
-		unpack.contains("_on_unpack_progress(__written_4, __bytes_4)"), true) and ok
-	ok = _check("and the run ends at the finished event",
-		unpack.contains("_on_unpack_finished(__written_4, __bytes_4)"), true) and ok
+	# THE COUNTS ARE WHAT LANDED: both increments and the progress call are inside the write guard,
+	# so an entry the machine refused to write moves neither the bar nor the totals.
+	ok = _check("the entry count is raised only by a write that succeeded",
+		unpack.contains("\t\t\t__file_4.close()\n\t\t\t__written_4 += 1\n\t\t\t__bytes_4"
+			+ " += __data_4.size()\n\t\t\t_on_unpack_progress(__written_4, __bytes_4)\n"), true) and ok
+	ok = _check("and the run ends at one of the two events, chosen after the loop",
+		unpack.contains("\tif __refused_4.is_empty():\n\t\t_on_unpack_finished(__written_4,"
+			+ " __bytes_4)\n\telse:\n"), true) and ok
 	ok = _check("an entry that is a folder carries no bytes and is skipped",
 		unpack.contains("if __entry_4.ends_with(\"/\"):"), true) and ok
 	ok = _check("no unsubstituted placeholder survives", unpack.contains("{"), false) and ok
@@ -166,6 +176,32 @@ static func _run_archive_runtime() -> bool:
 	ok = _check("and every byte", report[2][2], 11) and ok
 	ok = _check("the first progress report counts one entry", report[0][1], 1) and ok
 	ok = _check("nothing was refused", _kinds(report).has("refused"), false) and ok
+
+	# A WRITE THAT CANNOT SUCCEED. An entry whose name is already a FOLDER in the target cannot be
+	# opened for writing on any platform, so this is the portable way to watch the loop meet a write
+	# it cannot do. What is under test is the honesty of the numbers: the bar must not move and the
+	# finish must not count an entry that never landed.
+	_fresh_dir(OUT_DIR)
+	DirAccess.make_dir_recursive_absolute(BLOCKED_DIR)
+	var packer: ZIPPacker = ZIPPacker.new()
+	if packer.open(BLOCKED) != OK:
+		print("  [FAIL] watcher_and_archives_test: the blocked archive could not be written")
+		return false
+	for entry: Array in [["landed.txt", "here"], ["taken", "cannot land"]]:
+		packer.start_file(str(entry[0]))
+		packer.write_file(str(entry[1]).to_utf8_buffer())
+		packer.close_file()
+	packer.close()
+	var blocked: Array = _run_emitted("UnpackZipIntoFolder", {"archive": _quote(BLOCKED),
+		"folder": _quote(OUT_DIR), "uid": "1"})
+	ok = _check("the entry that could be written landed",
+		FileAccess.get_file_as_string(OUT_DIR + "/landed.txt"), "here") and ok
+	ok = _check("the bar moved once, for the one write that happened",
+		_kinds(blocked), ["progress", "finished"] as Array) and ok
+	ok = _check("and the finish counts the entry that landed and no other",
+		blocked[1][1], 1) and ok
+	ok = _check("its bytes too, and only its bytes", blocked[1][2], 4) and ok
+	DirAccess.remove_absolute(BLOCKED_DIR)
 	return ok
 
 
@@ -223,6 +259,43 @@ static func _run_handlers() -> bool:
 		compiled.contains("func _on_unpack_refused(entry: String, reason: String) -> void:"), true) and ok
 	ok = _check("and the finish",
 		compiled.contains("func _on_unpack_finished(entries: int, bytes: int) -> void:"), true) and ok
+	if FileAccess.file_exists(PROBE_SCRIPT):
+		DirAccess.remove_absolute(PROBE_SCRIPT)
+
+	# AND THE LOOP FITS IN A FUNCTION THAT ANSWERS WITH A VALUE. The refusal used to leave by
+	# `return`, which is a script that does not parse the moment the unpack sits inside a sheet
+	# function with a return type - and the compiler reported no error at all, because the emitted
+	# text is only checked when Godot reads it. So the whole file is parsed here.
+	var answering: EventSheetResource = EventSheetResource.new()
+	answering.host_class = "Node"
+	for trigger_id: String in ["OnUnpackProgress", "OnUnpackRefused", "OnUnpackFinished"]:
+		var answer: EventRow = EventRow.new()
+		answer.trigger_provider_id = "Core"
+		answer.trigger_id = trigger_id
+		var body: RawCodeRow = RawCodeRow.new()
+		body.code = "pass"
+		answer.actions.append(body)
+		answering.events.append(answer)
+	var installer: EventFunction = EventFunction.new()
+	installer.function_name = "install_pack"
+	installer.return_type = TYPE_BOOL
+	var unpacking: EventRow = EventRow.new()
+	# `{uid}` is baked onto the row when the dock applies it, never by the compiler, so a row built
+	# in memory bakes its own - otherwise the placeholder rides into the emitted script.
+	var unpack_action: ACEAction = _action("UnpackZipIntoFolder", {"archive": "\"user://mods.zip\"",
+		"folder": "\"user://mods\""})
+	unpack_action.codegen_template = str(_by_id()["UnpackZipIntoFolder"].codegen_template).replace(
+		"{uid}", "9")
+	unpacking.actions.append(unpack_action)
+	unpacking.actions.append(_action("ReturnValue", {"value": "true"}))
+	installer.events.append(unpacking)
+	answering.functions.append(installer)
+	var answering_output: String = str(SheetCompiler.compile(answering, PROBE_SCRIPT).get("output", ""))
+	ok = _check("the unpack sits in a function that answers with a value",
+		answering_output.contains("func install_pack() -> bool:"), true) and ok
+	var parsed: GDScript = GDScript.new()
+	parsed.source_code = answering_output
+	ok = _check("and the script Godot is handed actually parses", parsed.reload(), OK) and ok
 	if FileAccess.file_exists(PROBE_SCRIPT):
 		DirAccess.remove_absolute(PROBE_SCRIPT)
 	return ok
@@ -442,6 +515,7 @@ static func _write(path: String, text: String) -> void:
 
 
 static func _clean() -> void:
+	DirAccess.remove_absolute(BLOCKED_DIR)
 	for folder: String in [SOURCE_DIR, OUT_DIR, WORK_DIR]:
 		for entry: String in DirAccess.get_files_at(folder):
 			DirAccess.remove_absolute(folder.path_join(entry))

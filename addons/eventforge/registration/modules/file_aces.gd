@@ -235,6 +235,18 @@ static func _pack_template() -> String:
 ##
 ## AN ENTRY THAT IS A FOLDER carries no bytes and is skipped: the folders that matter are the ones
 ## the files need, and those are made on the way in by the line above each write.
+##
+## THE COUNTS ARE WHAT LANDED. Both increments and the progress call sit INSIDE the `if __file:`
+## guard, so an entry the machine refused to write - a name the file system will not take, a folder
+## that could not be made, a full disk, a read-only path - moves neither the progress bar nor the
+## totals On Unpack Finished is handed. A count of entries that were attempted is a count of nothing
+## anybody can act on.
+##
+## THE REFUSAL LEAVES BY THE SAME DOOR AS THE FINISH. The guard records the entry and BREAKS rather
+## than returning: a `return` inside a sheet function that answers with a value is a script that does
+## not parse, and inside an ordinary handler it silently abandons every later row of the same event
+## as well. So the loop ends once, the archive closes once, and the one line after it says which of
+## the two events this run earned.
 static func _unpack_template() -> String:
 	return "var __reader_{uid} := ZIPReader.new()\n" \
 		+ "if __reader_{uid}.open({archive}) == OK:\n" \
@@ -242,25 +254,28 @@ static func _unpack_template() -> String:
 		+ "\tvar __root_{uid} := ProjectSettings.globalize_path({folder}).simplify_path().trim_suffix(\"/\") + \"/\"\n" \
 		+ "\tvar __written_{uid} := 0\n" \
 		+ "\tvar __bytes_{uid} := 0\n" \
+		+ "\tvar __refused_{uid} := \"\"\n" \
 		+ "\tfor __entry_{uid}: String in __reader_{uid}.get_files():\n" \
 		+ "\t\tif __entry_{uid}.ends_with(\"/\"):\n" \
 		+ "\t\t\tcontinue\n" \
 		+ "\t\tvar __into_{uid} := {folder}.path_join(__entry_{uid})\n" \
 		+ "\t\tif not ProjectSettings.globalize_path(__into_{uid}).simplify_path().begins_with(__root_{uid}):\n" \
-		+ "\t\t\t__reader_{uid}.close()\n" \
-		+ "\t\t\t_on_unpack_refused(__entry_{uid}, \"it points outside the folder it is being unpacked into\")\n" \
-		+ "\t\t\treturn\n" \
+		+ "\t\t\t__refused_{uid} = __entry_{uid}\n" \
+		+ "\t\t\tbreak\n" \
 		+ "\t\tvar __data_{uid} := __reader_{uid}.read_file(__entry_{uid})\n" \
 		+ "\t\tDirAccess.make_dir_recursive_absolute(__into_{uid}.get_base_dir())\n" \
 		+ "\t\tvar __file_{uid} := FileAccess.open(__into_{uid}, FileAccess.WRITE)\n" \
 		+ "\t\tif __file_{uid}:\n" \
 		+ "\t\t\t__file_{uid}.store_buffer(__data_{uid})\n" \
 		+ "\t\t\t__file_{uid}.close()\n" \
-		+ "\t\t__written_{uid} += 1\n" \
-		+ "\t\t__bytes_{uid} += __data_{uid}.size()\n" \
-		+ "\t\t_on_unpack_progress(__written_{uid}, __bytes_{uid})\n" \
+		+ "\t\t\t__written_{uid} += 1\n" \
+		+ "\t\t\t__bytes_{uid} += __data_{uid}.size()\n" \
+		+ "\t\t\t_on_unpack_progress(__written_{uid}, __bytes_{uid})\n" \
 		+ "\t__reader_{uid}.close()\n" \
-		+ "\t_on_unpack_finished(__written_{uid}, __bytes_{uid})"
+		+ "\tif __refused_{uid}.is_empty():\n" \
+		+ "\t\t_on_unpack_finished(__written_{uid}, __bytes_{uid})\n" \
+		+ "\telse:\n" \
+		+ "\t\t_on_unpack_refused(__refused_{uid}, \"it points outside the folder it is being unpacked into\")"
 
 
 ## ────────────────────────────────────────────────────────────────────────────────────────────────
