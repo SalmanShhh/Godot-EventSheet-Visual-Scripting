@@ -119,7 +119,47 @@ static func condition_entries() -> Array[Dictionary]:
 			"^self\\.%s == %s\\.(?<state>%s)$" % [STATE_VARIABLE, ENUM_NAME, MEMBER],
 			["state"], {"state": "PATROL"}, "self.")
 	]
+	# THE WAIT IS ONE EXPRESSION, NOT THE REST OF THE LINE. The tail is greedy on purpose - a wait may
+	# be `stagger_time * 2` and a pattern that stopped at the first space would not claim it - but the
+	# claim is asked before the condition splitter, so without this a third term rides in with it:
+	# `... > 2.0 and hp > 0` became ONE row reading "Is in Stagger for over 2.0 and hp > 0s", and an
+	# `or` became a single AND-condition where the file said OR. The bytes still round-tripped, which
+	# is exactly why nothing caught it - until somebody edited that cell and the emitted boolean
+	# structure changed wholesale. A compound line is left to the splitter, which turns it back into
+	# the terms it is made of.
+	_conditions[0]["guard"] = func(captured: Dictionary) -> bool:
+		return not joins_another_term(str(captured.get("seconds", "")))
 	return _conditions
+
+
+## True when this expression is really an expression AND something else - it carries a top-level
+## `and` or `or`. Bracketed and quoted text is skipped, because `(a and b)` and `"and"` are one
+## value, and a wait may legitimately be either.
+static func joins_another_term(expression: String) -> bool:
+	var depth: int = 0
+	var quote: String = ""
+	var word: String = ""
+	var text: String = expression + " "
+	for index: int in range(text.length()):
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == quote and (index == 0 or text[index - 1] != "\\"):
+				quote = ""
+			continue
+		if character == "\"" or character == "'":
+			quote = character
+			continue
+		if character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		if character.is_valid_identifier() or character.is_valid_int():
+			word += character
+			continue
+		if depth == 0 and (word == "and" or word == "or"):
+			return true
+		word = ""
+	return false
 
 
 ## And the one verb: going to a state, written onto `self`.

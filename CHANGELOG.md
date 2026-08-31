@@ -275,6 +275,13 @@
 - **The states Doctor check reads the sheet once.** `findings()` was calling `names(sheet)[index]`
   inside its own per-state loop, so a twenty-state object on a fifteen-hundred-row sheet paid twenty
   full walks of the document for one pass. The enum is read once and the members carried down.
+- **The timed lift stops at the end of the wait.** Its tail is greedy on purpose - a wait may be
+  `stagger_time * 2` - and the claim is asked of the whole `if` before the condition splitter, so a
+  line carrying a third term was swallowed whole: `... > 2.0 and hp > 0` became ONE row reading
+  **Is in Stagger for over 2.0 and hp > 0s**, and an `or` became a single AND-condition where the
+  file said OR. The bytes round-tripped either way, which is why nothing caught it, and the emitted
+  boolean structure would have changed wholesale the moment anybody edited that cell. A compound
+  expression is now left to the splitter, which reads it as the several questions it is.
 
 ### A path says which place it is in
 

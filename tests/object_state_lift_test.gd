@@ -148,6 +148,60 @@ static func _test_the_hand_written_machines() -> bool:
 	var woven: EventSheetResource = GDScriptImporter.new().import_external(WOVEN)
 	ok = _check("a non-canonical machine claims no state trigger",
 		_triggers_of(woven.events), PackedStringArray(["OnProcess"])) and ok
+	ok = _test_a_compound_wait_is_not_one_row() and ok
+	return ok
+
+
+# ── A timed question with a THIRD term is not the timed row ─────────────────────────────────────
+## The timed claim is asked of the WHOLE `if`, before the condition splitter, because both halves
+## together are one row and separately they are two half-rows. Its tail is greedy on purpose - a wait
+## may be `stagger_time * 2` - so a line carrying a third term used to be swallowed whole: `... > 2.0
+## and hp > 0` became ONE row reading "Is in Stagger for over 2.0 and hp > 0s", and an `or` became a
+## single AND-condition where the file said OR. The bytes round-tripped either way, which is why only
+## a reading pin can see it; the moment a reader edited that cell the emitted boolean structure would
+## change wholesale.
+static func _test_a_compound_wait_is_not_one_row() -> bool:
+	var ok: bool = _check("a wait that is one expression is still the timed row",
+		EventForgeStateLift.joins_another_term("2.0"), false)
+	ok = _check("and so is a computed one, brackets and all",
+		EventForgeStateLift.joins_another_term("(stagger_time and_then) * 2"), false) and ok
+	ok = _check("a third term joined by and is not part of the wait",
+		EventForgeStateLift.joins_another_term("2.0 and hp > 0"), true) and ok
+	ok = _check("and neither is one joined by or",
+		EventForgeStateLift.joins_another_term("2.0 or dead"), true) and ok
+
+	var source: String = "\n".join(PackedStringArray([
+		"extends Node",
+		"",
+		"enum State { PATROL, STAGGER }",
+		"",
+		"var state: State = State.PATROL",
+		"var previous_state: State = State.PATROL",
+		"var state_entered_msec: int = Time.get_ticks_msec()",
+		"var hp: int = 3",
+		"",
+		"func _process(delta: float) -> void:",
+		"\tif state == State.STAGGER and (Time.get_ticks_msec() - state_entered_msec) / 1000.0 > 2.0 and hp > 0:",
+		"\t\tstate = State.PATROL",
+		"",
+	]))
+	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	# Three questions, not one: the state, the wait, and the third term the file really asks. What
+	# matters is that no row claims "2.0 and hp > 0" as a number of seconds.
+	var waits: PackedStringArray = PackedStringArray()
+	for item: Variant in opened.events:
+		var row: EventRow = item as EventRow
+		if row == null:
+			continue
+		for condition: ACECondition in row.conditions:
+			if condition.params.has("seconds"):
+				waits.append(str(condition.params["seconds"]))
+	ok = _check("no row claims a compound expression as its number of seconds",
+		waits, PackedStringArray()) and ok
+	opened.external_source_path = "user://object_state_compound.gd"
+	ok = _check("and the line rides back out exactly as it was written",
+		str(SheetCompiler.compile(opened, "user://object_state_compound.gd").get("output", "")),
+		source) and ok
 	return ok
 
 

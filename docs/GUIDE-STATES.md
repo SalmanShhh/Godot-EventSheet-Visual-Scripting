@@ -315,6 +315,11 @@ them your file keeps its own bytes:
   a time, like everything else here. Each file gets what it can say for itself.
 - **A state that is a String rather than an enum** is the older State Machine behaviour pack's shape.
   It keeps that pack's own reading, and it is untouched.
+- **A timed question with a third term in it** - `state == State.STAGGER and (Time.get_ticks_msec() -
+  state_entered_msec) / 1000.0 > 2.0 and hp > 0` - is not the timed row: the timed row is exactly the
+  two halves of "how long have we been here", and a line that asks something else as well is read as
+  the several questions it is. The seconds field takes an expression, so a wait may be
+  `stagger_time * 2`, but it stops where the expression does.
 
 In all of those the door stays open: declare the states on the head and point the rows at them when
 you are ready. Nothing forces the move, and nothing about your file changes until you make it.
