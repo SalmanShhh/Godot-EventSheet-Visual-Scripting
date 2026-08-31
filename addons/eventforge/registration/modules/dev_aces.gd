@@ -168,6 +168,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when a node exists at the given path under this one."))
 	descriptors.append(F.make_descriptor("Core", "GetOwner", "Get Scene Owner", ACEDescriptor.ACEType.EXPRESSION, "{target}.owner", "", [F.make_param("target", "String", "self", "Target", "Node whose scene owner to get.", "expression")], "Nodes", "[i]{target}[/i] owner")
 		.described("Returns the scene that this node was saved as part of."))
+	# The write half of the read-only row above it. Get Scene Owner answers which scene a node was
+	# saved as part of; this is how a node built while the game runs is given that answer, which is
+	# the one thing that decides whether it is written out when the branch it sits in is packed.
+	# Save Branch As Scene File is the wholesale cousin: it walks a whole branch setting the owner of
+	# every part that has none, because packing a branch of nodes made at run time is exactly the case
+	# where nothing has one. This row is that same assignment for the one node a reader means.
+	descriptors.append(F.make_descriptor("Core", "SetSceneOwner", "Set Scene Owner", ACEDescriptor.ACEType.ACTION, "{target}.owner = {root}", "", [F.make_param("target", "String", "self", "Target", "The node to give an owner to.", "expression"), F.make_param("root", "String", "get_tree().current_scene", "Owned By", "The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.", "expression")], "Nodes", "make [i]{target}[/i] part of [i]{root}[/i]")
+		.described("Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set."))
 	descriptors.append(F.make_descriptor("Core", "IsAncestorOf", "Is Ancestor Of", ACEDescriptor.ACEType.CONDITION, "{target}.is_ancestor_of({node})", "", [F.make_param("target", "String", "self", "Target", "Potential ancestor node.", "expression"), F.make_param("node", "String", "get_node(\"Child\")", "Node", "Node to test for descendancy.", "expression")], "Nodes", "[i]{target}[/i] is ancestor of [i]{node}[/i]")
 		.described("True when this node is somewhere above the other node in the tree."))
 

@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,"Любая группа - 
 Ask whether it is data first,"Сначала спросить, данные ли это"
 Ask whether %s is data,"Спросить, данные ли %s"
 This event already asks whether %s is data.,"Это событие уже спрашивает, данные ли %s."
+Set Property (Undoable),Задать свойство (с отменой)
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.","Меняет одно свойство узла открытой сцены как шаг отмены, поэтому Ctrl+Z возвращает прежнее значение. Прежнее значение читается в момент создания шага, поэтому до этой строки ничто другое не должно менять это свойство."
+Editor Tools: Undo history,Инструменты редактора: история отмен
+"set {property} of {target} to {value}, undoably","задать {property} у {target} значение {value}, с отменой"
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.","Узел, свойство которого меняется. Это должен быть узел открытой в редакторе сцены, иначе истории некуда возвращать изменение."
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.","Само имя свойства, без кавычек - position, visible, modulate - ровно так, как его пишет Задать свойство."
+Add Node (Undoable),Добавить узел (с отменой)
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.","Добавляет новый узел в открытую сцену как шаг отмены и задаёт ему владельца, чтобы он сохранялся вместе со сценой - отменяемый близнец Добавить узел в редактируемую сцену. Ctrl+Z убирает узел обратно, а шаг держит на него ссылку, поэтому повтор вернёт именно этот узел."
+"add {node} under {parent}, undoably","добавить {node} под {parent}, с отменой"
+"The node to add, for example Sprite2D.new().","Добавляемый узел, например Sprite2D.new()."
+"The node it goes under, in the scene the editor has open.","Узел, под который он попадёт, в открытой в редакторе сцене."
+Remove Node (Undoable),Убрать узел (с отменой)
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.","Убирает узел из открытой сцены как шаг отмены, поэтому Ctrl+Z возвращает его на место вместе с владельцем. Узел отсоединяется, а не освобождается - именно поэтому шаг может держать его, пока история не забудет этот шаг."
+"remove {node} from the scene, undoably","убрать {node} со сцены, с отменой"
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,"Узел, который убирается из открытой сцены. Свои дочерние узлы он сохраняет; его отпускает только родитель."
+Set Scene Owner,Задать владельца сцены
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.","Указывает, какой сцене принадлежит узел, а это решает, будет ли он записан при упаковке и сохранении этой сцены. У узла, созданного во время игры, владельца нет вовсе, поэтому ветка из таких узлов упакуется в пустую сцену, пока это не задано."
+make [i]{target}[/i] part of [i]{root}[/i],сделать [i]{target}[/i] частью [i]{root}[/i]
+The node to give an owner to.,"Узел, которому задаётся владелец."
+Owned By,Владелец
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.","Узел на вершине сцены, которой он принадлежит. Этот узел должен быть предком данного, иначе присваивание отклоняется."
+Duplicate Node (choosing),Дублировать узел (с выбором)
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.","Клонирует узел, позволяя выбрать, что из трёх обычно наследуемых копией пойдёт с ней: связи сигналов, группы и скрипты. Все три включены - это ровно то, что делает обычное Дублировать узел, поэтому берите эту строку, только когда ответ на один из вопросов - нет."
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )","дублировать [i]{target}[/i] ( сигналы [b]{signals}[/b], группы [b]{groups}[/b], скрипты [b]{scripts}[/b] )"
+Node to clone (add the clone with Add Child).,Узел для клонирования (добавьте копию через Добавить потомка).
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,"Копировать связи, которые оригинал устанавливает с другими узлами. Выключите для копии из пула, которая подключается сама."
+Groups,Группы
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,"Копировать группы, к которым принадлежит оригинал. Выключите, если копия пока не одна из них."
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,"Копировать скрипты на оригинале и его потомках. Выключите, если копия должна быть просто узлами."
+Reparent To (choosing),Сменить родителя на (с выбором)
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.","Переносит этот узел под нового родителя, указывая, что должно случиться с его местом: сохранить место оставит его ровно там, где он виден, а притянуть к родителю поставит его в точку нового родителя. Обычное Сменить родителя сохраняет место, не говоря об этом."
+Utility: Nodes,Утилиты: узлы
+"reparent to {new_parent}, {keep}","сменить родителя на {new_parent}, {keep}"
+New Parent,Новый родитель
+Node to become the new parent.,"Узел, который станет новым родителем."
+"Whether this node stays where it is in the world, or snaps to its new parent.","Останется ли этот узел там, где он в мире, или притянется к новому родителю."
+Make it undoable,Сделать отменяемым
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.","%s меняет открытую в редакторе сцену, минуя историю отмен редактора, поэтому Ctrl+Z проходит мимо неё прямо к тому, что человек делал раньше. Сначала: %s."
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.","%s делает то же изменение одним шагом, который редактор может отменить, и все отменяемые строки одного события разделяют этот единственный шаг."
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.","Это спрашивается только с листа-инструмента: лист, работающий в игре, ничью сцену не редактирует, и истории, из которой он мог бы выпасть, у него нет."
+This row already goes through the editor's undo history.,Эта строка уже проходит через историю отмен редактора.

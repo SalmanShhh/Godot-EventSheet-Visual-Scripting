@@ -27,6 +27,17 @@ const CAT_FILES := "Editor Tools: Files & folders"
 const CAT_PIPELINE := "Editor Tools: Import & export"
 const CAT_COMMAND := "Editor Tools: Command tool"
 
+## The page the three undoable edits are filed on. Spelled out rather than imported so this module
+## keeps its own list of pages, and spelled EXACTLY as editor_object_aces.gd spells it on purpose:
+## that file opened the page (with the Undo History expression on it) and wrote its blurb, the blurb
+## merge keeps the first answer registered for a name, and these three belong beside that expression
+## because they are what a reader does with it. The two files reach the history two different ways
+## for a reason worth saying out loud: Undo History compiles to `get_undo_redo()`, an EditorPlugin
+## method, so it only exists on an Editor plugin sheet; these three compile to
+## EditorInterface.get_editor_undo_redo(), which any tool script can reach, so they also work in the
+## Tool sheet an author writes first.
+const CAT_UNDO := "Editor Tools: Undo history"
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -64,6 +75,25 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Adds a new node to the edited scene AND sets its owner, so it is saved with the scene."))
 	descriptors.append(F.make_descriptor("Core", "SaveNodeAsScene", "Save Node As Scene", ACEDescriptor.ACEType.ACTION, "var __scene_{uid} = PackedScene.new()\n__scene_{uid}.pack({node})\nResourceSaver.save(__scene_{uid}, {path})", "", [F.make_param("node", "Node", "self", "Node", "The node (with its children) to turn into a scene.", "expression"), F.make_param("path", "String", "\"res://saved.tscn\"", "Path", "Where to save the .tscn.", "expression")], CAT_FILES, "save {node} as scene {path}")
 		.described("Packs a node and its children into a PackedScene and saves it as a .tscn file."))
+
+	# ── The three edits the editor can take back ──────────────────────────────────────────────────
+	# Add Node To Edited Scene above changes the open scene the direct way, which is right for a tool
+	# the author runs on their own project and wrong for one anybody else runs: the change lands, and
+	# the reader's Ctrl+Z walks past it into whatever they did before. These three make the same three
+	# changes through the editor's own undo manager instead, so one Ctrl+Z takes them back.
+	#
+	# NONE OF THEM DOES ANYTHING ON ITS OWN, and that is the engine's design rather than a limitation
+	# of these rows: adding a do/undo pair to the manager only describes the change, and committing
+	# the action is what performs it. The compiler writes that commit - one create_action before the
+	# first undoable row of an event and one commit_action after the last - so every undoable row of
+	# one event lands as ONE step in the history rather than as three. There is nothing to pick for
+	# it and nothing to remember: picking one of these rows is the whole gesture.
+	descriptors.append(F.make_descriptor("Core", "SetPropertyUndoable", "Set Property (Undoable)", ACEDescriptor.ACEType.ACTION, _set_property_undoable_template(), "", [F.make_param("target", "Node", "EditorInterface.get_edited_scene_root()", "On", "The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.", "expression"), F.make_param("property", "String", "name", "Property", "The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.", "property_reference"), F.make_param("value", "String", "\"Renamed\"", "To", "The value to set it to.", "expression")], CAT_UNDO, "set {property} of {target} to {value}, undoably")
+		.described("Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property."))
+	descriptors.append(F.make_descriptor("Core", "AddNodeUndoable", "Add Node (Undoable)", ACEDescriptor.ACEType.ACTION, _add_node_undoable_template(), "", [F.make_param("node", "Node", "Node2D.new()", "Node", "The node to add, for example Sprite2D.new().", "expression"), F.make_param("parent", "Node", "EditorInterface.get_edited_scene_root()", "Under", "The node it goes under, in the scene the editor has open.", "expression")], CAT_UNDO, "add {node} under {parent}, undoably")
+		.described("Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back."))
+	descriptors.append(F.make_descriptor("Core", "RemoveNodeUndoable", "Remove Node (Undoable)", ACEDescriptor.ACEType.ACTION, _remove_node_undoable_template(), "", [F.make_param("node", "Node", "EditorInterface.get_selection().get_selected_nodes().pop_front()", "Node", "The node to take out of the open scene. It keeps its own children; only its parent lets go of it.", "expression")], CAT_UNDO, "remove {node} from the scene, undoably")
+		.described("Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step."))
 
 	# ── Editor state (guards + queries a tool sheet reads) ──
 	descriptors.append(F.make_descriptor("Core", "IsInEditor", "Is In Editor", ACEDescriptor.ACEType.CONDITION, "Engine.is_editor_hint()", "", [], CAT, "running in the editor")
@@ -125,6 +155,54 @@ static func section_descriptions() -> Dictionary:
 		CAT_PIPELINE: "The two moments the editor calls a tool without being asked: just after assets are imported, and while a project export is starting.",
 		CAT_COMMAND: "A script the Godot binary runs headless from the command line: where it starts, the arguments it was handed, and the exit code it finishes with.",
 	}
+
+
+## Set Property (Undoable). The undo half reads the property's CURRENT value at the moment the step
+## is built, which is the only moment it is still the old one - reading it later would file the new
+## value as the thing to go back to. The property name rides in bare (`position`) exactly as the
+## plain Set Property row takes it, and is quoted into a StringName here because that is what the
+## manager's own method wants; that shared spelling is what lets the Doctor offer this row as a
+## respelling of a plain one without rewriting a single value.
+static func _set_property_undoable_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __undo_{uid} := EditorInterface.get_editor_undo_redo()",
+		"__undo_{uid}.add_do_property({target}, &\"{property}\", {value})",
+		"__undo_{uid}.add_undo_property({target}, &\"{property}\", {target}.{property})",
+	]))
+
+
+## Add Node (Undoable). The owner is set in the SAME step as the parenting, because a node added to
+## the edited scene without an owner is not saved with it - the trap Add Node To Edited Scene exists
+## to close, kept closed here. The reference is added because between the undo and a redo the node
+## belongs to nobody: without it the manager would let it be collected and the redo would put back
+## nothing.
+static func _add_node_undoable_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __node_{uid}: Node = {node}",
+		"var __undo_{uid} := EditorInterface.get_editor_undo_redo()",
+		"__undo_{uid}.add_do_method({parent}, \"add_child\", __node_{uid})",
+		"__undo_{uid}.add_do_method(__node_{uid}, \"set_owner\", EditorInterface.get_edited_scene_root())",
+		"__undo_{uid}.add_do_reference(__node_{uid})",
+		"__undo_{uid}.add_undo_method({parent}, \"remove_child\", __node_{uid})",
+	]))
+
+
+## Remove Node (Undoable). The parent is read into the step while the node still has one, so the undo
+## half knows where to put it back; asking for it inside the undo half would ask a node that has
+## already been detached. The owner is restored on the way back for the same reason it is set on the
+## way in - a node put back without one would not be saved with the scene. The reference is held by
+## the UNDO side here, which is the mirror of the row above it: after the do half runs, the detached
+## node belongs to nobody until the undo puts it back.
+static func _remove_node_undoable_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __node_{uid}: Node = {node}",
+		"var __parent_{uid}: Node = __node_{uid}.get_parent()",
+		"var __undo_{uid} := EditorInterface.get_editor_undo_redo()",
+		"__undo_{uid}.add_do_method(__parent_{uid}, \"remove_child\", __node_{uid})",
+		"__undo_{uid}.add_undo_method(__parent_{uid}, \"add_child\", __node_{uid})",
+		"__undo_{uid}.add_undo_method(__node_{uid}, \"set_owner\", EditorInterface.get_edited_scene_root())",
+		"__undo_{uid}.add_undo_reference(__node_{uid})",
+	]))
 
 
 ## Render Scene To Image. Honest degradation first: a headless run (the test suite, a CI export, any

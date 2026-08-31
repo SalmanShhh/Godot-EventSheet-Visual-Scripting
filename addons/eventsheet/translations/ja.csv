@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,すべてのグループ - 
 Ask whether it is data first,まずデータかどうか尋ねる
 Ask whether %s is data,%s がデータか尋ねる
 This event already asks whether %s is data.,このイベントは既に %s がデータかを尋ねています。
+Set Property (Undoable),プロパティを設定（取り消し可能）
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.",開いているシーンのノードのプロパティを取り消し可能なステップとして変更します。Ctrl+Z で元の値に戻ります。元の値はステップを組み立てた時点で読まれるため、この行は他の何かがそのプロパティを変える前に到達する必要があります。
+Editor Tools: Undo history,エディタツール: 取り消し履歴
+"set {property} of {target} to {value}, undoably",{target} の {property} を {value} に設定（取り消し可能）
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.",プロパティが変わるノード。エディタで開いているシーンのノードである必要があります。そうでないと履歴は変更を戻す先を持ちません。
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.",プロパティ名そのもの（position、visible、modulate など）。プロパティを設定と同じ書き方です。
+Add Node (Undoable),ノードを追加（取り消し可能）
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.",開いているシーンに新しいノードを取り消し可能なステップとして追加し、シーンと一緒に保存されるようオーナーも設定します（編集中のシーンにノードを追加の取り消し可能版）。Ctrl+Z で取り除かれ、ステップがそのノードの参照を保持するのでやり直しで同じノードが戻ります。
+"add {node} under {parent}, undoably",{node} を {parent} の下に追加（取り消し可能）
+"The node to add, for example Sprite2D.new().",追加するノード。たとえば Sprite2D.new()。
+"The node it goes under, in the scene the editor has open.",その下に入るノード。エディタで開いているシーンの中のノードです。
+Remove Node (Undoable),ノードを取り除く（取り消し可能）
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.",開いているシーンからノードを取り消し可能なステップとして取り除きます。Ctrl+Z でオーナーごと元の位置に戻ります。ノードは解放ではなく切り離されるため、履歴がそのステップを忘れるまでステップが保持できます。
+"remove {node} from the scene, undoably",{node} をシーンから取り除く（取り消し可能）
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,開いているシーンから取り除くノード。自分の子はそのまま保ち、手を離すのは親だけです。
+Set Scene Owner,シーンのオーナーを設定
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.",ノードがどのシーンに属するかを指定します。これがそのシーンをパックして保存するときに書き出されるかどうかを決めます。ゲーム実行中に作られたノードはオーナーを持たないため、これを設定するまでその枝は空のシーンとしてパックされます。
+make [i]{target}[/i] part of [i]{root}[/i],[i]{target}[/i] を [i]{root}[/i] の一部にする
+The node to give an owner to.,オーナーを与えるノード。
+Owned By,オーナー
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.",属するシーンの一番上のノード。そのノードはこのノードの祖先である必要があり、そうでなければ代入は拒否されます。
+Duplicate Node (choosing),ノードを複製（選んで）
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.",ノードを複製し、コピーが通常受け継ぐ三つのもの - シグナル接続、グループ、スクリプト - のどれを持って行くかを選びます。三つとも入りは素のノードを複製とまったく同じなので、どれかがいいえのときだけこちらを使ってください。
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )",[i]{target}[/i] を複製 ( シグナル [b]{signals}[/b]、グループ [b]{groups}[/b]、スクリプト [b]{scripts}[/b] )
+Node to clone (add the clone with Add Child).,複製するノード（コピーは子を追加で入れてください）。
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,元のノードが他のノードに張っている接続をコピーします。自分で配線するプール用のコピーではオフに。
+Groups,グループ
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,元のノードが属するグループをコピーします。コピーがまだその一員でないならオフに。
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,元のノードとその子に付いているスクリプトをコピーします。コピーを素のノードにしたいならオフに。
+Reparent To (choosing),親を付け替える（選んで）
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.",このノードを新しい親の下へ移し、その場所をどうするかを二択で言います。場所を保つなら見えているところにそのまま留まり、親に合わせるなら新しい親の位置に移ります。素の親を付け替えるは何も言わずに場所を保ちます。
+Utility: Nodes,ユーティリティ: ノード
+"reparent to {new_parent}, {keep}",{new_parent} に親を付け替える、{keep}
+New Parent,新しい親
+Node to become the new parent.,新しい親になるノード。
+"Whether this node stays where it is in the world, or snaps to its new parent.",このノードがワールド上の位置に留まるか、新しい親に合わせるか。
+Make it undoable,取り消し可能にする
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.",%s はエディタで開いているシーンを、エディタの取り消し履歴を通さずに変更します。そのため読み手の Ctrl+Z はそれを飛び越して、その前にしていた作業まで戻ってしまいます。まず: %s。
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.",%s は同じ変更をエディタが取り消せる一つのステップとして行い、ひとつのイベントの取り消し可能な行はすべてその一つのステップを共有します。
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",これはツールシートにだけ問われます。ゲームの中で走るシートは誰のシーンも編集しておらず、欠けるべき履歴も持ちません。
+This row already goes through the editor's undo history.,この行はすでにエディタの取り消し履歴を通っています。

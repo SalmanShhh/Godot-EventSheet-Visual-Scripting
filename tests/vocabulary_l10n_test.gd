@@ -134,6 +134,8 @@ const EXTENDED_MODULES: Dictionary = {
 		"MeasuredAverage", "MeasuredPeak", "LogMeasurements", "ClearMeasurements",
 		# The two edges of the budget: the frame it went long on, and the frame it came right on.
 		"FrameRunningLong", "FrameRecovered",
+		# The write half of the scene owner, beside the read-only row that predates it.
+		"SetSceneOwner",
 	],
 	# The wire's own words need no entry of their own: multiplayer_aces.gd is listed above as a
 	# WHOLLY new module, so every descriptor it grows is already swept.
@@ -148,11 +150,15 @@ const EXTENDED_MODULES: Dictionary = {
 		# The hierarchy wave: parenting, the two follow-flag escape hatches, and the child picks.
 		"RemoveChild", "HierarchyAddChild", "HierarchyRemoveFromParent", "SetIgnoreParentMovement",
 		"CopyPlaceTo", "StopCopyingPlace", "ForEachChildOf", "MoveChild", "QueueFreeNode",
+		# The copy with its three questions asked out loud, beside the frozen engine-default one.
+		"DuplicateNodeChoosing",
 	],
 	# The hierarchy wave's two triggers, the element-input trigger that shipped beside them, and the
 	# error trigger a shipped build fires.
 	"res://addons/eventforge/registration/modules/core_aces.gd": [
 		"OnControlInput", "OnChildEnteredTree", "OnChildExitingTree", "OnSomethingWentWrong",
+		# The reparent that says which of the two things should happen to where the node is.
+		"ReparentToChoosing",
 	],
 	# The data wave: watched data files and the data-folder validation verbs.
 	"res://addons/eventforge/registration/modules/resource_aces.gd": [
@@ -171,6 +177,10 @@ const EXTENDED_MODULES: Dictionary = {
 	# The two rows that build a menu and answer the item that was chosen out of it.
 	"res://addons/eventforge/registration/modules/editor_object_aces.gd": [
 		"MenuAddItem", "OnMenuItemChosen",
+	],
+	# The three edits a tool makes as steps the editor can take back.
+	"res://addons/eventforge/registration/modules/tooling_aces.gd": [
+		"SetPropertyUndoable", "AddNodeUndoable", "RemoveNodeUndoable",
 	],
 	# The combo wave: the slice of a clip a move may be cancelled in, the per-object
 	# freeze, and the two ways an animation tells the game when something happens.

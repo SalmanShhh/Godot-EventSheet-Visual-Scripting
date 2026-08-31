@@ -45,6 +45,10 @@ const SWEPT_STATICS: Array[String] = [
 	"_error_reporter_pending", "_group_slugs", "_live_values_payload",
 	"_live_values_receiver_pending", "_removal_guard_facts", "_row_group_path",
 	"_runtime_group_guards", "_runtime_group_members", "_throttle_process_emitted",
+	# Whether the compile is of a TOOL sheet. Working state like the rest: it is set from the sheet
+	# on every compile, and the two text-probe entry points set it from what they were handed rather
+	# than inheriting it, so a poisoned value cannot reach an emission.
+	"_tool_sheet_flag",
 	"_trouble_reporter_pending"
 ]
 

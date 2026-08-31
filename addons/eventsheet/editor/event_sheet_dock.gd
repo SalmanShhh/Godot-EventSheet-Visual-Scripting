@@ -5812,6 +5812,9 @@ func _apply_finding_note_fix(fix_kind: String, subject: String, note_meta: Dicti
 		EventSheetSceneTrustFindings.FIX_ASK_FIRST:
 			_ask_whether_the_scene_is_data(note_meta, subject)
 			return true
+		EventSheetUndoableFindings.FIX_MAKE_IT_UNDOABLE:
+			_make_the_edit_undoable(note_meta)
+			return true
 		EventSheetEffectFindings.FIX_PICK_DIAL:
 			_repick_effect_dial(note_meta)
 			return true
@@ -5865,6 +5868,34 @@ func _defer_the_add(note_meta: Dictionary) -> void:
 		_set_status(EventSheetL10n.translate("This row is already added on the next idle moment."))
 		return
 	_set_status(str(receipt["line"]))
+
+
+## "Make it undoable". A tool that changes the scene somebody has open owes them their Ctrl+Z, and
+## the answer is the undoable row standing beside the plain one: it takes the same parameters under
+## the same names, so the repair is a change of WHICH ROW IT IS and nothing else - no value is
+## rewritten, so nothing can be lost. The compiler writes the create/commit bracket around every
+## undoable row of the event, which is why one press here is the whole change and there is nothing
+## further to add.
+##
+## RECEIPT FIRST: the status line says the row before and the row after, and the whole thing is one
+## undo step through the funnel every other mutation takes. The row is found by its lane and slot
+## rather than held across that funnel, which replaces resources as it commits.
+func _make_the_edit_undoable(note_meta: Dictionary) -> void:
+	var event_row: EventRow = note_meta.get("variable_note_event", null) as EventRow
+	var slot: int = int(note_meta.get("variable_note_index", -1))
+	var twin: String = str(note_meta.get("variable_note_to", "")).strip_edges()
+	if _current_sheet == null or event_row == null or slot < 0 or twin.is_empty():
+		return
+	if slot >= event_row.actions.size():
+		return
+	var was: String = str((event_row.actions[slot] as Resource).get("ace_id"))
+	if not _perform_undoable_sheet_edit(EventSheetL10n.translate("Make it undoable"),
+			func() -> bool:
+				return EventSheetUndoableFindings.make_it_undoable({
+					"event": event_row, "index": slot, "to": twin})):
+		_set_status(EventSheetL10n.translate("This row already goes through the editor's undo history."))
+		return
+	_set_status(EventSheetSpawnFindings.respell_receipt(was, twin))
 
 
 ## The one line of a block that parents a node - what the receipt above shows on each side of the

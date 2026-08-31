@@ -56,6 +56,11 @@ const LAMBDA_CONNECT_ID_META: String = "__lambda_connect_id"
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
 
+# Whether this compile is of a TOOL sheet - a sheet that runs inside the editor. Read by exactly one
+# rule: the undoable edits write into the editor's undo history, which a running game does not have,
+# so on a game sheet they refuse here rather than compiling into a line that fails at run time.
+static var _tool_sheet_flag: bool = false
+
 # Live-values payload for the current compile (same single-threaded pattern as the
 # breakpoints flag - the trigger-section helper injects it into _process).
 static var _live_values_payload: String = ""
@@ -126,6 +131,7 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_behavior_host_default = ""
 	_emit_breakpoints_flag = sheet != null and sheet.emit_breakpoints
 	_emit_event_trace_flag = false
+	_tool_sheet_flag = sheet != null and sheet.tool_mode
 	_live_values_payload = ""
 	_live_values_receiver_pending = false
 	_error_reporter_pending = false
@@ -1255,9 +1261,15 @@ const STATE_LEAVING_TRIGGER_ID: String = "OnLeavingState"
 ## while flattening it. The anchored probe re-emits ONE handler with no groups around it, so a caller
 ## that took a group's guard off a row hands it back here; every other caller passes nothing and the
 ## emission is exactly what it always was.
-static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary = {}) -> String:
+## `tool_sheet` is the ONE thing about the whole sheet this probe cannot work out from the rows it is
+## handed, and it changes what they emit: the undoable edits refuse on a sheet that runs in the game,
+## so a probe that assumed a game sheet would emit a shorter body than the real compile and the
+## caller's byte gate would refuse a handler that reproduces perfectly well. Defaulted to false so
+## every existing caller reads exactly as it did.
+static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary = {}, tool_sheet: bool = false) -> String:
 	_compile_mutex.lock()
 	_reset_per_compile_state()
+	_tool_sheet_flag = tool_sheet
 	_runtime_group_guards = group_guards
 	var lines: PackedStringArray = PackedStringArray()
 	var discarded_result: Dictionary = {"warnings": [], "errors": []}
@@ -1270,6 +1282,10 @@ static func emit_anchored_trigger_text(events: Array, group_guards: Dictionary =
 static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
 	_compile_mutex.lock()
 	_reset_per_compile_state()
+	# The gate never emits breakpoints (which is why the reset above is handed nothing), but it does
+	# have to know whether this is a tool sheet: the undoable edits refuse on a game sheet, and a probe
+	# that guessed wrong would emit a shorter body than the real compile.
+	_tool_sheet_flag = sheet != null and sheet.tool_mode
 	var lines: PackedStringArray = PackedStringArray()
 	var discarded_result: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], discarded_result)
@@ -2072,7 +2088,8 @@ static func _emit_event_body(
 	source_map: Array = [],
 	depth: int = 1,
 	warnings: Array = [],
-	inherited_node_target: String = ""
+	inherited_node_target: String = "",
+	inherited_gesture: String = ""
 ) -> bool:
 	var had_body: bool = false
 	var indent: String = "\t".repeat(depth)
@@ -2259,12 +2276,38 @@ static func _emit_event_body(
 			had_body = true
 		var body_start_size: int = lines.size()
 
+		# THE ONE-GESTURE RULE. Every undoable row of this event shares ONE step in the editor's undo
+		# history: the action is opened before the first of them and committed after the last, so one
+		# Ctrl+Z takes back everything the event did rather than one property at a time. Committing is
+		# also what PERFORMS the change, which is why the bracket is written here and not inside each
+		# row's own template - three rows writing their own brackets would be three history entries and
+		# three presses of Ctrl+Z. The name is the event's own trigger, inherited by its sub-events so
+		# one gesture keeps one name however deep the rows that make it are.
+		#
+		# The bracket cannot nest: it opens and closes inside this block with nothing held between
+		# fires, so an event that fires again next frame opens a fresh action over a closed one.
+		var gesture_words: String = EventForgeUndoableEdits.gesture_name(event_row, inherited_gesture)
+		var gesture_span: Vector2i = EventForgeUndoableEdits.gesture_span(event_row.actions)
+		# The refusal, said in the trigger's words at COMPILE time rather than as a run-time surprise:
+		# the undo history belongs to the editor, and a sheet that runs in the game has none to add a
+		# step to. The picker already keeps these rows off a game sheet; this is the same answer for a
+		# row that got there by being pasted, and the rows are left out rather than emitted broken.
+		var gesture_refused: bool = gesture_span.x >= 0 and not _tool_sheet_flag
+		if gesture_refused:
+			warnings.append("%s: the undoable edits under it need a Tool sheet - the editor's undo history is the editor's, and a running game has none. They were left out; enable Tool in the Sheet Type dialog to run this sheet in the editor." % gesture_words)
+		var action_slot: int = -1
+
 		for action_item: Variant in event_row.actions:
+			action_slot += 1
+			if gesture_refused and EventForgeUndoableEdits.is_undoable(action_item):
+				continue
 			if action_item is ACEAction:
 				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
 				if action_line.is_empty():
 					continue
 				_emit_leading_body_blanks(action_item, lines)
+				if not gesture_refused and action_slot == gesture_span.x:
+					lines.append(body_indent + EventForgeUndoableEdits.create_line(gesture_words))
 				# THE REMOVAL GUARD, written where it is needed and shown where it is written: a row
 				# that reaches into an object which may already be gone - a variable holding a node
 				# across frames - compiles inside `if is_instance_valid(<it>):`. The rule lives in one
@@ -2285,6 +2328,8 @@ static func _emit_event_body(
 					if (action_item.is_awaited or action_item.await_call) and line_index == action_lines.size() - 1:
 						emitted_line = "await %s" % emitted_line
 					lines.append(statement_indent + emitted_line)
+				if not gesture_refused and action_slot == gesture_span.y:
+					lines.append(body_indent + EventForgeUndoableEdits.COMMIT_LINE)
 				had_body = true
 			elif action_item is RawCodeRow:
 				# In-flow GDScript block (inline scripting): emitted verbatim inside the
@@ -2377,7 +2422,7 @@ static func _emit_event_body(
 
 		# Sub-events run inside the parent's block (under its conditions).
 		if not event_row.sub_events.is_empty():
-			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings, effective_node_target) or had_body
+			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings, effective_node_target, gesture_words) or had_body
 
 		# The run-finished hook (Once At A Time's reset): emitted INSIDE the event's block,
 		# after actions and sub-events - in a coroutine body this line runs when the last

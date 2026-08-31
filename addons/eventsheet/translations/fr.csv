@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,N'importe quel groupe - cha
 Ask whether it is data first,Demander d'abord si ce sont des données
 Ask whether %s is data,Demander si %s est une donnée
 This event already asks whether %s is data.,Cet événement demande déjà si %s est une donnée.
+Set Property (Undoable),Définir une propriété (annulable)
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.","Modifie une propriété d'un nœud de la scène ouverte sous forme d'étape annulable, si bien que Ctrl+Z rétablit l'ancienne valeur. L'ancienne valeur est lue au moment où l'étape est construite, c'est pourquoi cette ligne doit être atteinte avant que quoi que ce soit d'autre ne modifie cette propriété."
+Editor Tools: Undo history,Outils de l'éditeur : historique d'annulation
+"set {property} of {target} to {value}, undoably","définir {property} de {target} sur {value}, de façon annulable"
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.","Le nœud dont la propriété change. Ce doit être un nœud de la scène ouverte dans l'éditeur, sinon l'historique n'a rien sur quoi rétablir la modification."
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.","Le nom de la propriété, écrit tel quel - position, visible, modulate - exactement comme l'écrit Définir une propriété."
+Add Node (Undoable),Ajouter un nœud (annulable)
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.","Ajoute un nouveau nœud à la scène ouverte sous forme d'étape annulable, avec son propriétaire défini pour qu'il soit enregistré avec la scène - le jumeau annulable de Ajouter un nœud à la scène éditée. Ctrl+Z le retire, et l'étape en conserve une référence pour que rétablir remette exactement ce nœud."
+"add {node} under {parent}, undoably","ajouter {node} sous {parent}, de façon annulable"
+"The node to add, for example Sprite2D.new().","Le nœud à ajouter, par exemple Sprite2D.new()."
+"The node it goes under, in the scene the editor has open.","Le nœud sous lequel il est placé, dans la scène ouverte dans l'éditeur."
+Remove Node (Undoable),Retirer un nœud (annulable)
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.","Retire un nœud de la scène ouverte sous forme d'étape annulable, si bien que Ctrl+Z le remet à sa place avec son propriétaire rétabli. Le nœud est détaché et non libéré, ce qui permet à l'étape de le conserver jusqu'à ce que l'historique oublie l'étape."
+"remove {node} from the scene, undoably","retirer {node} de la scène, de façon annulable"
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,Le nœud à sortir de la scène ouverte. Il garde ses propres enfants ; seul son parent le lâche.
+Set Scene Owner,Définir le propriétaire de scène
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.","Indique à quelle scène appartient un nœud, ce qui décide s'il est écrit lorsque cette scène est empaquetée et enregistrée. Un nœud créé pendant que le jeu tourne n'a aucun propriétaire, si bien qu'une branche entière s'empaquette en scène vide tant que ce n'est pas défini."
+make [i]{target}[/i] part of [i]{root}[/i],faire de [i]{target}[/i] une partie de [i]{root}[/i]
+The node to give an owner to.,Le nœud auquel donner un propriétaire.
+Owned By,Appartient à
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.","Le nœud au sommet de la scène à laquelle il appartient. Ce nœud doit être un ancêtre de celui-ci, sinon l'affectation est refusée."
+Duplicate Node (choosing),Dupliquer un nœud (au choix)
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.","Clone un nœud en choisissant lesquelles des trois choses qu'une copie hérite d'ordinaire l'accompagnent : ses connexions de signaux, ses groupes et ses scripts. Les trois activées, c'est exactement ce que fait Dupliquer un nœud tout court : ne prenez celle-ci que si la réponse à l'une d'elles est non."
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )","dupliquer [i]{target}[/i] ( signaux [b]{signals}[/b], groupes [b]{groups}[/b], scripts [b]{scripts}[/b] )"
+Node to clone (add the clone with Add Child).,Nœud à cloner (ajoutez le clone avec Ajouter un enfant).
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,Copie les connexions que l'original établit vers d'autres nœuds. À désactiver pour une copie de pool qui doit se câbler elle-même.
+Groups,Groupes
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,Copie les groupes auxquels appartient l'original. À désactiver quand la copie n'en fait pas encore partie.
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,Copie les scripts de l'original et de ses enfants. À désactiver quand la copie doit rester de simples nœuds.
+Reparent To (choosing),Rattacher à (au choix)
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.","Déplace ce nœud sous un nouveau parent en indiquant laquelle des deux choses doit arriver à sa position : garder sa place le laisse exactement là où on le voit, se caler dessus le place à l'endroit du nouveau parent. Rattacher à tout court garde sa place sans le dire."
+Utility: Nodes,Utilitaires : nœuds
+"reparent to {new_parent}, {keep}","rattacher à {new_parent}, {keep}"
+New Parent,Nouveau parent
+Node to become the new parent.,Nœud qui devient le nouveau parent.
+"Whether this node stays where it is in the world, or snaps to its new parent.","Si ce nœud reste là où il est dans le monde, ou se cale sur son nouveau parent."
+Make it undoable,Le rendre annulable
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.",%s modifie la scène ouverte dans l'éditeur sans passer par l'historique d'annulation de l'éditeur : le Ctrl+Z du lecteur passe droit dessus pour revenir à ce qu'il faisait avant. D'abord : %s.
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.","%s effectue le même changement en une étape que l'éditeur peut retirer, et toutes les lignes annulables d'un événement partagent cette même étape."
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",Cela n'est demandé qu'à une feuille Outil : une feuille qui tourne dans le jeu n'édite la scène de personne et n'a aucun historique dont elle pourrait être absente.
+This row already goes through the editor's undo history.,Cette ligne passe déjà par l'historique d'annulation de l'éditeur.

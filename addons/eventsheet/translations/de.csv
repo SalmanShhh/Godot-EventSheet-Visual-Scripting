@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,"Beliebige Gruppe - jeder K
 Ask whether it is data first,"Zuerst fragen, ob es Daten sind"
 Ask whether %s is data,"Fragen, ob %s Daten sind"
 This event already asks whether %s is data.,"Dieses Ereignis fragt bereits, ob %s Daten sind."
+Set Property (Undoable),Eigenschaft setzen (widerrufbar)
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.","Ändert eine Eigenschaft eines Knotens in der geöffneten Szene als Widerrufsschritt, sodass Strg+Z den alten Wert zurückholt. Der alte Wert wird beim Erstellen des Schritts gelesen - deshalb muss diese Zeile erreicht werden, bevor etwas anderes diese Eigenschaft ändert."
+Editor Tools: Undo history,Editor-Werkzeuge: Widerrufsverlauf
+"set {property} of {target} to {value}, undoably","{property} von {target} auf {value} setzen, widerrufbar"
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.","Der Knoten, dessen Eigenschaft sich ändert. Er muss ein Knoten der im Editor geöffneten Szene sein, sonst hat der Verlauf nichts, worauf er die Änderung zurücksetzen kann."
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.","Der bloße Name der Eigenschaft - position, visible, modulate - genau so, wie ihn Eigenschaft setzen schreibt."
+Add Node (Undoable),Knoten hinzufügen (widerrufbar)
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.","Fügt der geöffneten Szene einen neuen Knoten als Widerrufsschritt hinzu und setzt seinen Besitzer, damit er mit der Szene gespeichert wird - das widerrufbare Gegenstück zu Knoten zur bearbeiteten Szene hinzufügen. Strg+Z nimmt den Knoten wieder heraus, und der Schritt hält eine Referenz darauf, damit Wiederholen genau diesen Knoten zurückbringt."
+"add {node} under {parent}, undoably","{node} unter {parent} hinzufügen, widerrufbar"
+"The node to add, for example Sprite2D.new().","Der hinzuzufügende Knoten, zum Beispiel Sprite2D.new()."
+"The node it goes under, in the scene the editor has open.","Der Knoten, unter den er kommt, in der im Editor geöffneten Szene."
+Remove Node (Undoable),Knoten entfernen (widerrufbar)
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.","Nimmt einen Knoten als Widerrufsschritt aus der geöffneten Szene, sodass Strg+Z ihn samt Besitzer wieder an seinen Platz setzt. Der Knoten wird abgehängt, nicht freigegeben - nur so kann der Schritt ihn halten, bis der Verlauf den Schritt vergisst."
+"remove {node} from the scene, undoably","{node} aus der Szene entfernen, widerrufbar"
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,"Der Knoten, der aus der geöffneten Szene genommen wird. Seine eigenen Kinder behält er; nur sein Elternknoten lässt ihn los."
+Set Scene Owner,Szenenbesitzer setzen
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.","Sagt, zu welcher Szene ein Knoten gehört - davon hängt ab, ob er mitgeschrieben wird, wenn diese Szene gepackt und gespeichert wird. Ein zur Laufzeit gebauter Knoten hat gar keinen Besitzer, deshalb packt ein Ast aus solchen Knoten zu einer leeren Szene, solange das nicht gesetzt ist."
+make [i]{target}[/i] part of [i]{root}[/i],[i]{target}[/i] zu einem Teil von [i]{root}[/i] machen
+The node to give an owner to.,"Der Knoten, der einen Besitzer bekommt."
+Owned By,Besitzer
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.","Der Knoten an der Spitze der Szene, zu der er gehört. Dieser Knoten muss ein Vorfahre dieses Knotens sein, sonst wird die Zuweisung abgelehnt."
+Duplicate Node (choosing),Knoten duplizieren (mit Auswahl)
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.","Klont einen Knoten und wählt dabei, welche der drei Dinge, die eine Kopie sonst erbt, mitkommen: seine Signalverbindungen, seine Gruppen und seine Skripte. Alle drei an ist genau das, was das schlichte Knoten duplizieren tut - greif also nur dann hierher, wenn eine der Antworten Nein lautet."
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )","[i]{target}[/i] duplizieren ( Signale [b]{signals}[/b], Gruppen [b]{groups}[/b], Skripte [b]{scripts}[/b] )"
+Node to clone (add the clone with Add Child).,Zu klonender Knoten (die Kopie mit Kind hinzufügen einhängen).
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,"Die Verbindungen kopieren, die das Original zu anderen Knoten hat. Aus für eine Pool-Kopie, die sich selbst verdrahten soll."
+Groups,Gruppen
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,"Die Gruppen kopieren, zu denen das Original gehört. Aus, wenn die Kopie noch keine davon sein soll."
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,"Die Skripte auf dem Original und seinen Kindern kopieren. Aus, wenn die Kopie schlichte Knoten sein soll."
+Reparent To (choosing),Umhängen zu (mit Auswahl)
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.","Hängt diesen Knoten unter einen neuen Elternknoten und sagt dabei, was mit seinem Platz geschehen soll: Platz behalten lässt ihn genau dort, wo er aussieht; darauf einrasten setzt ihn an die Stelle des neuen Elternknotens. Das schlichte Umhängen zu behält den Platz, ohne es zu sagen."
+Utility: Nodes,Werkzeuge: Knoten
+"reparent to {new_parent}, {keep}","umhängen zu {new_parent}, {keep}"
+New Parent,Neuer Elternknoten
+Node to become the new parent.,"Knoten, der der neue Elternknoten wird."
+"Whether this node stays where it is in the world, or snaps to its new parent.","Ob dieser Knoten dort bleibt, wo er in der Welt ist, oder auf seinen neuen Elternknoten einrastet."
+Make it undoable,Widerrufbar machen
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.","%s ändert die im Editor geöffnete Szene, ohne durch den Widerrufsverlauf des Editors zu gehen - Strg+Z läuft daran vorbei in das, was der Leser vorher getan hat. Zuerst: %s."
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.","%s macht dieselbe Änderung als einen Schritt, den der Editor zurücknehmen kann, und alle widerrufbaren Zeilen eines Ereignisses teilen sich diesen einen Schritt."
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.","Das wird nur von einem Werkzeug-Blatt verlangt - ein Blatt, das im Spiel läuft, bearbeitet niemandes Szene und hat auch keinen Verlauf, in dem es fehlen könnte."
+This row already goes through the editor's undo history.,Diese Zeile geht bereits durch den Widerrufsverlauf des Editors.

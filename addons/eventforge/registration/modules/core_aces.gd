@@ -294,5 +294,28 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Nodes ──
 	descriptors.append(F.make_descriptor("Core", "ReparentNode", "Reparent To", ACEDescriptor.ACEType.ACTION, "reparent({new_parent})", "", [F.make_param("new_parent", "String", "get_tree().current_scene", "New Parent", "Node to become the new parent (keeps global transform).", "expression")], "Utility: Nodes", "reparent to {new_parent}")
 		.described("Moves this node under a new parent while keeping its on-screen position."))
+	# The same move with the question it always raises asked on the row instead of decided for you.
+	# Reparent To above says nothing about the answer and takes Godot's own default (the node keeps
+	# the place it has in the world), which is right for the shove-it-under-the-scene-root case it was
+	# written for and silently wrong for a weapon that should land in the hand it was holstered to.
+	# The words are Add Child (existing node)'s words on purpose - one choice, said one way, whether
+	# the row names the child or is the child - and the value it emits is Godot's own second argument
+	# to `reparent`, written out rather than left off, so a reader of the file can see which was meant.
+	descriptors.append(F.make_descriptor("Core", "ReparentToChoosing", "Reparent To (choosing)", ACEDescriptor.ACEType.ACTION, "reparent({new_parent}, {keep})", "", [F.make_param("new_parent", "String", "get_tree().current_scene", "New Parent", "Node to become the new parent.", "expression"), _reparent_keep_param()], "Utility: Nodes", "reparent to {new_parent}, {keep}")
+		.described("Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so."))
 
 	return descriptors
+
+
+## The one choice a reparent raises, as the dropdown Add Child (existing node) already words it. The
+## labels are that row's labels character for character, so the same question reads the same way and
+## the same translated string answers both. `display_option_labels` is what makes the row read
+## "reparent to X, keeping its place" while the emitted line still carries the `true` Godot's own
+## second argument wants; the key differs from the neighbouring row's blank-means-default spelling on
+## purpose, because a row that says which it meant should say it in the file too.
+static func _reparent_keep_param() -> ACEParam:
+	var parameter: ACEParam = F.make_param("keep", "String", "true", "Its place",
+		"Whether this node stays where it is in the world, or snaps to its new parent.", "",
+		[{"key": "true", "label": "keeping its place"}, {"key": "false", "label": "snapping to it"}])
+	parameter.display_option_labels = true
+	return parameter

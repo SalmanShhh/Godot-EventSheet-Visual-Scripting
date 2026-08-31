@@ -48,6 +48,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Renames a node at runtime, handy for tracking or finding it later."))
 	descriptors.append(F.make_descriptor("Core", "DuplicateNode", "Duplicate Node", ACEDescriptor.ACEType.EXPRESSION, "{target}.duplicate()", "", [F.make_param("target", "String", "self", "Target", "Node to clone (add the clone with Add Child).", "expression")], "Nodes", "duplicate [i]{target}[/i]")
 		.described("Clones a node so you can add the copy elsewhere, e.g. mass-spawning identical objects."))
+	# The copy with the three questions asked out loud. Duplicate Node above is Godot's own default -
+	# signals, groups and scripts all come along - and that default is right often enough that it
+	# stays exactly as it is. This one is for the times it is not: a pooled copy that must NOT inherit
+	# the original's connections, a template node cloned without its script. Each box is one of the
+	# engine's own duplicate flags, and the emitted line spells them by name rather than as the number
+	# they add up to, so the copy a reader asked for is legible in the file afterwards. A flag is turned
+	# on by MULTIPLYING it by its box rather than by a conditional, which matters for a reason that is
+	# not about the code at all: a conditional inside a parameter is read by the sheet as the branch it
+	# is and unfolds into if/else rows, so the row a reader dropped would stop looking like one row.
+	descriptors.append(F.make_descriptor("Core", "DuplicateNodeChoosing", "Duplicate Node (choosing)", ACEDescriptor.ACEType.EXPRESSION, "{target}.duplicate(Node.DUPLICATE_SIGNALS * int({signals}) | Node.DUPLICATE_GROUPS * int({groups}) | Node.DUPLICATE_SCRIPTS * int({scripts}))", "", [F.make_param("target", "String", "self", "Target", "Node to clone (add the clone with Add Child).", "expression"), F.make_param("signals", "bool", "true", "Signals", "Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.", ""), F.make_param("groups", "bool", "true", "Groups", "Copy the groups the original belongs to. Off when the copy is not one of them yet.", ""), F.make_param("scripts", "bool", "true", "Scripts", "Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.", "")], "Nodes", "duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )")
+		.described("Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no."))
 	descriptors.append(F.make_descriptor("Core", "GetNodeName", "Node Name", ACEDescriptor.ACEType.EXPRESSION, "{target}.name", "", [F.make_param("target", "String", "self", "Target", "Node to read the name of.", "expression")], "Nodes", "[i]{target}[/i] name")
 		.described("Returns the node's name as text, useful for labels or matching."))
 	descriptors.append(F.make_descriptor("Core", "GetNodePath", "Node Path", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_path()", "", [F.make_param("target", "String", "self", "Target", "Node to read its scene-tree path.", "expression")], "Nodes", "[i]{target}[/i] path")

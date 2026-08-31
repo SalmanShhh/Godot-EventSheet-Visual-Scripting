@@ -115,6 +115,7 @@ const FINDINGS_SPAWNING := "spawning"
 const FINDINGS_COLLISIONS := "collisions"
 const FINDINGS_LAYERS := "layers"
 const FINDINGS_SCENE_TRUST := "scene_trust"
+const FINDINGS_TOOL_EDITS := "tool_edits"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -9166,6 +9167,12 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# rather than of the project's files - same wording, same gates, per row.
 				_sheet_findings_cache[family] = EventSheetLayerFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_TOOL_EDITS:
+				# The Doctor's Tool edits section, asked of the rows of this one sheet rather than of
+				# the project's files - same wording, same gates, per event. It answers with nothing
+				# at all unless this is a tool sheet that works on the scene the editor has open.
+				_sheet_findings_cache[family] = EventSheetUndoableFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "")
 			FINDINGS_SCENE_TRUST:
 				# The Doctor's Files section, asked of the rows of this one sheet rather than of the
 				# project's files - same wording, same gates, per event. The file path is only the
@@ -9198,6 +9205,8 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 		EventSheetCollisionFindings.for_event(_sheet_findings(FINDINGS_COLLISIONS), event_row)))
 	about.append_array(_tagged(FINDINGS_LAYERS,
 		EventSheetLayerFindings.for_event(_sheet_findings(FINDINGS_LAYERS), event_row)))
+	about.append_array(_tagged(FINDINGS_TOOL_EDITS,
+		EventSheetUndoableFindings.for_event(_sheet_findings(FINDINGS_TOOL_EDITS), event_row)))
 	about.append_array(_tagged(FINDINGS_SCENE_TRUST,
 		EventSheetSceneTrustFindings.for_event(_sheet_findings(FINDINGS_SCENE_TRUST), event_row)))
 	return about

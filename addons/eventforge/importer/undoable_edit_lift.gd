@@ -1,0 +1,262 @@
+@tool
+class_name EventForgeUndoableEditLift
+extends RefCounted
+
+# EventForge - reading a tool's undoable edits back off the file.
+#
+# A change made through the editor's undo manager is never one statement. It is a local holding the
+# manager, a do half, an undo half, and for the two that move a node a reference so the step can put
+# the same node back:
+#
+#     EditorInterface.get_editor_undo_redo().create_action("On Editor Run")
+#     var undo := EditorInterface.get_editor_undo_redo()
+#     undo.add_do_property($Sign, &"text", "Open")
+#     undo.add_undo_property($Sign, &"text", $Sign.text)
+#     EditorInterface.get_editor_undo_redo().commit_action()
+#
+# WHY THIS IS A HAND-WRITTEN MATCHER AND NOT A TABLE ENTRY, the boundary the table's own header
+# draws: EventForgeLiftTable takes ONE statement - a pattern, the row it means, and the captures that
+# are values. Each of these three is a run of statements that only mean something together (a local
+# made on one line, called on the next three, and a do half that is only half a change without the
+# undo half beside it), which is exactly where a family stops being a pattern and becomes a matcher.
+# The scene-save run and the layout-on-top run beside it are entered on the same seam for the same
+# reason. The one-statement dignities of the same pass ARE table entries, in node_dignity_lift.gd.
+#
+# THE BRACKET IS NOT A ROW, which is the one thing that makes this family different from its
+# neighbours. create_action and commit_action are written by the COMPILER around the undoable rows of
+# one event - the one-gesture rule - so there is nothing for them to lift INTO: handing them back as
+# rows would put two rows on the sheet that the sheet did not have, and the next save would write the
+# bracket twice. They are recognised and consumed instead, and re-appear because the compiler writes
+# them again. That is only safe while the bracket the file carries is the bracket the compiler would
+# write, so bracket_span checks the NAME as well as the shape and refuses anything else - a tool whose
+# author named their own action keeps it, verbatim, exactly as they wrote it.
+#
+# THE LOCAL NAMES ARE NOT VALUES OF THE ROW. The manager local, the node local and the parent local
+# are each named two to four times, and all of those namings have to agree for the run to be this row
+# at all. They are matched, checked, and spliced back into the template verbatim rather than becoming
+# parameters - the same reasoning the scene-save run uses for the three names it holds - so a lifted
+# row carries the author's own words for them and re-emits the file byte for byte.
+
+## The one place the bracket's own spelling lives, by PATH rather than by class name - the importer
+## never waits on the editor's class cache, which is the rule every constant in this folder follows.
+const UndoableEdits := preload("res://addons/eventforge/undoable_edits.gd")
+
+## The rows these runs mean. Frozen with the descriptors they name.
+const SET_PROPERTY: String = "SetPropertyUndoable"
+const ADD_NODE: String = "AddNodeUndoable"
+const REMOVE_NODE: String = "RemoveNodeUndoable"
+
+## The fragment a run must contain in one of its opening statements before any pattern here is
+## compiled. A handful of substring tests that rule out every line in a project but these runs.
+const MARK: String = "EditorInterface.get_editor_undo_redo()"
+
+## How far into a run the manager local can be. Third line at the latest: the removal run reads the
+## node and then its parent before it asks for the history, which is one line deeper than the two
+## runs beside it.
+const MARK_WITHIN: int = 3
+
+## How many statements each run is.
+const RUN_SET_PROPERTY: int = 3
+const RUN_ADD_NODE: int = 6
+const RUN_REMOVE_NODE: int = 7
+
+## A GDScript name, as every pattern here spells one.
+const NAME: String = "[A-Za-z_][A-Za-z0-9_]*"
+
+## Compiled patterns, built once for the life of the session: this runs on every statement of every
+## opened file.
+static var _regexes: Dictionary = {}
+
+
+## The row a run of statements means, or {} when this family does not claim it. `lines` is the
+## function body as the lifter holds it, `index` the statement to try, `depth` its indentation.
+## Returns {ace_id, params, template, consumed}.
+##
+## The removal run is tried FIRST because it and the add run open with the same statement (a local
+## holding the node), and the removal is the more specific of the two: its second line asks the node
+## for its parent, which the add run has no use for.
+static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	if index + 1 >= lines.size():
+		return {}
+	var marked: bool = false
+	for step: int in MARK_WITHIN:
+		if index + step < lines.size() and lines[index + step].contains(MARK):
+			marked = true
+			break
+	if not marked:
+		return {}
+	var claimed: Dictionary = _match_remove(lines, index, depth)
+	if claimed.is_empty():
+		claimed = _match_add(lines, index, depth)
+	if claimed.is_empty():
+		claimed = _match_set_property(lines, index, depth)
+	return claimed
+
+
+## Where the gesture opened at `index` is committed, or -1 when this is not a bracket this plugin
+## wrote. `gesture` is the name the compiler WOULD write here, which the caller reads off the event's
+## own trigger - so a bracket carrying anybody else's name is left exactly as it is.
+##
+## The scan walks to the commit line at the same indentation, allowing ordinary statements between
+## the undoable runs (the compiler brackets from the first undoable row to the last, and a plain row
+## may stand between two of them). At least one run has to be claimed, because a bracket around
+## nothing this family recognises would be consumed here and never written again.
+static func bracket_span(lines: PackedStringArray, index: int, depth: int, gesture: String) -> int:
+	if _at(lines, index, depth) != UndoableEdits.create_line(gesture):
+		return -1
+	var indent: String = "\t".repeat(depth)
+	var claimed: int = 0
+	var scan: int = index + 1
+	while scan < lines.size():
+		var line: String = lines[scan]
+		if line.strip_edges().is_empty() or not line.begins_with(indent):
+			return -1
+		var text: String = _at(lines, scan, depth)
+		if text.is_empty():
+			scan += 1  # a line deeper than this block - part of a statement already being read
+			continue
+		if text == UndoableEdits.COMMIT_LINE:
+			return scan if claimed > 0 else -1
+		var run: Dictionary = match_run(lines, scan, depth)
+		if run.is_empty():
+			scan += 1
+			continue
+		claimed += 1
+		scan += int(run["consumed"])
+	return -1
+
+
+## Set Property (Undoable): the manager local, the do half, and the undo half that reads the value
+## still in place. The undo half is compared against the exact text those captures make rather than
+## matched again - the two halves have to name the same node and the same property for the run to be
+## this row, and comparing is how that is said without escaping a captured expression into a pattern.
+static func _match_set_property(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
+		_at(lines, index, depth))
+	if made == null:
+		return {}
+	var undo_local: String = made.get_string(2)
+	var did: RegExMatch = _regex("^%s\\.add_do_property\\((?<target>.+), &\"(?<property>%s)\", (?<value>.+)\\)$" % [
+		undo_local, NAME]).search(_at(lines, index + 1, depth))
+	if did == null:
+		return {}
+	var target: String = did.get_string("target")
+	var property: String = did.get_string("property")
+	if _at(lines, index + 2, depth) != "%s.add_undo_property(%s, &\"%s\", %s.%s)" % [
+			undo_local, target, property, target, property]:
+		return {}
+	return {
+		"ace_id": SET_PROPERTY,
+		"params": {"target": target, "property": property, "value": did.get_string("value")},
+		"template": "\n".join(PackedStringArray([
+			"%sEditorInterface.get_editor_undo_redo()" % made.get_string(1),
+			"%s.add_do_property({target}, &\"{property}\", {value})" % undo_local,
+			"%s.add_undo_property({target}, &\"{property}\", {target}.{property})" % undo_local,
+		])),
+		"consumed": RUN_SET_PROPERTY
+	}
+
+
+## Add Node (Undoable): the node local, the manager local, the three do halves (parent it, own it,
+## hold it) and the undo half that takes it back out again.
+static func _match_add(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var held: RegExMatch = _regex("^(var[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)(.+)$" % NAME).search(
+		_at(lines, index, depth))
+	if held == null:
+		return {}
+	var node_local: String = held.get_string(2)
+	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
+		_at(lines, index + 1, depth))
+	if made == null:
+		return {}
+	var undo_local: String = made.get_string(2)
+	var parented: RegExMatch = _regex("^%s\\.add_do_method\\((?<parent>.+), \"add_child\", %s\\)$" % [
+		undo_local, node_local]).search(_at(lines, index + 2, depth))
+	if parented == null:
+		return {}
+	var parent: String = parented.get_string("parent")
+	if _at(lines, index + 3, depth) != "%s.add_do_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [
+			undo_local, node_local]:
+		return {}
+	if _at(lines, index + 4, depth) != "%s.add_do_reference(%s)" % [undo_local, node_local]:
+		return {}
+	if _at(lines, index + 5, depth) != "%s.add_undo_method(%s, \"remove_child\", %s)" % [
+			undo_local, parent, node_local]:
+		return {}
+	return {
+		"ace_id": ADD_NODE,
+		"params": {"node": held.get_string(3), "parent": parent},
+		"template": "\n".join(PackedStringArray([
+			"%s{node}" % held.get_string(1),
+			"%sEditorInterface.get_editor_undo_redo()" % made.get_string(1),
+			"%s.add_do_method({parent}, \"add_child\", %s)" % [undo_local, node_local],
+			"%s.add_do_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [undo_local, node_local],
+			"%s.add_do_reference(%s)" % [undo_local, node_local],
+			"%s.add_undo_method({parent}, \"remove_child\", %s)" % [undo_local, node_local],
+		])),
+		"consumed": RUN_ADD_NODE
+	}
+
+
+## Remove Node (Undoable): the node local, the parent read while the node still has one, the manager
+## local, the do half that detaches it and the three undo halves that put it back, own it again and
+## hold on to it in the meantime.
+static func _match_remove(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
+	var held: RegExMatch = _regex("^(var[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)(.+)$" % NAME).search(
+		_at(lines, index, depth))
+	if held == null:
+		return {}
+	var node_local: String = held.get_string(2)
+	var parented: RegExMatch = _regex("^(var[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)%s\\.get_parent\\(\\)$" % [
+		NAME, node_local]).search(_at(lines, index + 1, depth))
+	if parented == null:
+		return {}
+	var parent_local: String = parented.get_string(2)
+	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
+		_at(lines, index + 2, depth))
+	if made == null:
+		return {}
+	var undo_local: String = made.get_string(2)
+	var expected: PackedStringArray = PackedStringArray([
+		"%s.add_do_method(%s, \"remove_child\", %s)" % [undo_local, parent_local, node_local],
+		"%s.add_undo_method(%s, \"add_child\", %s)" % [undo_local, parent_local, node_local],
+		"%s.add_undo_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [undo_local, node_local],
+		"%s.add_undo_reference(%s)" % [undo_local, node_local],
+	])
+	for step: int in expected.size():
+		if _at(lines, index + 3 + step, depth) != expected[step]:
+			return {}
+	var template: PackedStringArray = PackedStringArray([
+		"%s{node}" % held.get_string(1),
+		"%s%s.get_parent()" % [parented.get_string(1), node_local],
+		"%sEditorInterface.get_editor_undo_redo()" % made.get_string(1),
+	])
+	template.append_array(expected)
+	return {
+		"ace_id": REMOVE_NODE,
+		"params": {"node": held.get_string(3)},
+		"template": "\n".join(template),
+		"consumed": RUN_REMOVE_NODE
+	}
+
+
+## One line of the body at exactly `depth` tabs, or "" when the line is blank, absent, shallower, or
+## deeper than that. Every statement of every run here lives at exactly one indentation, so a line
+## that is not at it is not part of the run.
+static func _at(lines: PackedStringArray, index: int, depth: int) -> String:
+	if index < 0 or index >= lines.size():
+		return ""
+	var line: String = lines[index]
+	if not line.begins_with("\t".repeat(depth)):
+		return ""
+	var rest: String = line.substr(depth)
+	if rest.begins_with("\t") or rest.strip_edges().is_empty():
+		return ""
+	return rest
+
+
+## A pattern, compiled once and held.
+static func _regex(pattern: String) -> RegEx:
+	if not _regexes.has(pattern):
+		_regexes[pattern] = RegEx.create_from_string(pattern)
+	return _regexes[pattern]

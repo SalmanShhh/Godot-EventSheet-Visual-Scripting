@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,任意分组 - 每一个进
 Ask whether it is data first,先问它是不是数据
 Ask whether %s is data,询问 %s 是不是数据
 This event already asks whether %s is data.,此事件已经在询问 %s 是不是数据。
+Set Property (Undoable),设置属性（可撤销）
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.",把打开场景中某个节点的一个属性作为一次撤销步骤来修改，因此 Ctrl+Z 会恢复原值。原值在构建该步骤时读取，所以这一行必须在其它任何东西改动该属性之前执行。
+Editor Tools: Undo history,编辑器工具：撤销历史
+"set {property} of {target} to {value}, undoably",把 {target} 的 {property} 设为 {value}（可撤销）
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.",属性被修改的节点。它必须是编辑器中已打开场景里的节点，否则历史没有可回退的对象。
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.",属性本身的名字，直接写出 - position、visible、modulate - 与设置属性写法一致。
+Add Node (Undoable),添加节点（可撤销）
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.",把一个新节点作为一次撤销步骤加入打开的场景，并设置其所有者以便随场景一起保存 - 这是把节点加入编辑中的场景的可撤销孪生行。Ctrl+Z 会把节点取回，步骤保留了对它的引用，因此重做会放回同一个节点。
+"add {node} under {parent}, undoably",把 {node} 添加到 {parent} 下（可撤销）
+"The node to add, for example Sprite2D.new().",要添加的节点，例如 Sprite2D.new()。
+"The node it goes under, in the scene the editor has open.",它将放到其下的节点，位于编辑器打开的场景中。
+Remove Node (Undoable),移除节点（可撤销）
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.",把一个节点作为一次撤销步骤移出打开的场景，因此 Ctrl+Z 会连同所有者一起把它放回原处。节点是被分离而不是被释放，这正是步骤能一直持有它、直到历史忘记该步骤的原因。
+"remove {node} from the scene, undoably",把 {node} 从场景中移除（可撤销）
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,要从打开场景中取出的节点。它保留自己的子节点；放手的只是它的父节点。
+Set Scene Owner,设置场景所有者
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.",说明节点属于哪个场景，这决定了该场景被打包保存时它是否会被写出。游戏运行中创建的节点根本没有所有者，因此在设置之前，这样一整枝节点会被打包成空场景。
+make [i]{target}[/i] part of [i]{root}[/i],让 [i]{target}[/i] 成为 [i]{root}[/i] 的一部分
+The node to give an owner to.,要指定所有者的节点。
+Owned By,所有者
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.",它所属场景最顶端的节点。该节点必须是本节点的祖先，否则赋值会被拒绝。
+Duplicate Node (choosing),复制节点（可选）
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.",复制一个节点，并选择副本通常会继承的三样东西中哪些一起带走：信号连接、组和脚本。三项全开就等同于普通的复制节点，所以只有当其中一项答案为否时才用这一行。
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )",复制 [i]{target}[/i] ( 信号 [b]{signals}[/b]，组 [b]{groups}[/b]，脚本 [b]{scripts}[/b] )
+Node to clone (add the clone with Add Child).,要克隆的节点（用添加子节点把副本加进去）。
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,复制原节点连到其它节点的连接。若副本来自对象池并应自行接线，请关闭。
+Groups,组
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,复制原节点所属的组。若副本尚不属于其中，请关闭。
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,复制原节点及其子节点上的脚本。若副本应为纯节点，请关闭。
+Reparent To (choosing),改挂到（可选）
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.",把这个节点移到新的父节点之下，并说明它的位置该如何处理：保持原位会让它停在看得见的地方，贴到新父节点则把它放到新父节点自身的位置。普通的改挂到默认保持原位却不说明。
+Utility: Nodes,实用工具：节点
+"reparent to {new_parent}, {keep}",改挂到 {new_parent}，{keep}
+New Parent,新父节点
+Node to become the new parent.,将成为新父节点的节点。
+"Whether this node stays where it is in the world, or snaps to its new parent.",这个节点是留在它在世界中的位置，还是贴到新的父节点。
+Make it undoable,改为可撤销
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.",%s 修改了编辑器打开的场景，却没有经过编辑器的撤销历史，因此阅读者按 Ctrl+Z 会直接越过它，回到之前正在做的事情。首先：%s。
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.",%s 会把同样的修改作为编辑器可以收回的一个步骤来做，并且同一个事件里所有可撤销的行共享这一个步骤。
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",这只会对工具表提出：在游戏中运行的表并没有在编辑任何人的场景，也不存在它可能缺席的历史。
+This row already goes through the editor's undo history.,这一行已经走编辑器的撤销历史了。

@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,Cualquier grupo - cada nodo
 Ask whether it is data first,Preguntar primero si son datos
 Ask whether %s is data,Preguntar si %s son datos
 This event already asks whether %s is data.,Este evento ya pregunta si %s son datos.
+Set Property (Undoable),Establecer propiedad (deshacible)
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.","Cambia una propiedad de un nodo de la escena abierta como un paso deshacible, de modo que Ctrl+Z devuelve el valor anterior. El valor anterior se lee al construir el paso, por eso esta fila debe alcanzarse antes de que otra cosa cambie esa propiedad."
+Editor Tools: Undo history,Herramientas del editor: historial de deshacer
+"set {property} of {target} to {value}, undoably","establecer {property} de {target} en {value}, de forma deshacible"
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.","El nodo cuya propiedad cambia. Debe ser un nodo de la escena abierta en el editor; si no, el historial no tiene sobre qué revertir el cambio."
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.","El nombre propio de la propiedad, escrito sin comillas - position, visible, modulate - exactamente como lo escribe Establecer propiedad."
+Add Node (Undoable),Añadir nodo (deshacible)
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.","Añade un nodo nuevo a la escena abierta como un paso deshacible, con su propietario asignado para que se guarde con la escena: el gemelo deshacible de Añadir nodo a la escena editada. Ctrl+Z lo vuelve a sacar, y el paso guarda una referencia para que rehacer devuelva ese mismo nodo."
+"add {node} under {parent}, undoably","añadir {node} bajo {parent}, de forma deshacible"
+"The node to add, for example Sprite2D.new().","El nodo que se añade, por ejemplo Sprite2D.new()."
+"The node it goes under, in the scene the editor has open.","El nodo bajo el que se coloca, en la escena abierta en el editor."
+Remove Node (Undoable),Quitar nodo (deshacible)
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.","Saca un nodo de la escena abierta como un paso deshacible, de modo que Ctrl+Z lo devuelve a su sitio con su propietario restaurado. El nodo se desconecta en lugar de liberarse, que es lo que permite al paso conservarlo hasta que el historial lo olvide."
+"remove {node} from the scene, undoably","quitar {node} de la escena, de forma deshacible"
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,El nodo que se saca de la escena abierta. Conserva sus propios hijos; solo su padre lo suelta.
+Set Scene Owner,Establecer propietario de escena
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.","Dice a qué escena pertenece un nodo, que es lo que decide si se escribe cuando esa escena se empaqueta y se guarda. Un nodo creado mientras el juego corre no tiene propietario, así que una rama de ellos se empaqueta como una escena vacía hasta que esto se establece."
+make [i]{target}[/i] part of [i]{root}[/i],hacer que [i]{target}[/i] forme parte de [i]{root}[/i]
+The node to give an owner to.,El nodo al que se le da un propietario.
+Owned By,Propiedad de
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.","El nodo en la cima de la escena a la que pertenece. Ese nodo debe ser un ancestro de este, o la asignación se rechaza."
+Duplicate Node (choosing),Duplicar nodo (eligiendo)
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.","Clona un nodo eligiendo cuáles de las tres cosas que una copia suele heredar vienen con él: sus conexiones de señales, sus grupos y sus scripts. Las tres activadas es exactamente lo que hace Duplicar nodo a secas, así que usa esta solo cuando la respuesta a alguna sea no."
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )","duplicar [i]{target}[/i] ( señales [b]{signals}[/b], grupos [b]{groups}[/b], scripts [b]{scripts}[/b] )"
+Node to clone (add the clone with Add Child).,Nodo que se clona (añade el clon con Añadir hijo).
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,Copia las conexiones que el original hace a otros nodos. Desactívalo para una copia de pool que deba conectarse ella misma.
+Groups,Grupos
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,Copia los grupos a los que pertenece el original. Desactívalo cuando la copia todavía no sea uno de ellos.
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,Copia los scripts del original y de sus hijos. Desactívalo cuando la copia deba ser nodos sin más.
+Reparent To (choosing),Reasignar padre a (eligiendo)
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.",Mueve este nodo bajo un nuevo padre diciendo cuál de las dos cosas debe pasar con su sitio: mantener su sitio lo deja exactamente donde se ve; ajustarse a él lo coloca en el punto del nuevo padre. Reasignar padre a secas mantiene el sitio sin decirlo.
+Utility: Nodes,Utilidades: nodos
+"reparent to {new_parent}, {keep}","reasignar padre a {new_parent}, {keep}"
+New Parent,Nuevo padre
+Node to become the new parent.,Nodo que pasa a ser el nuevo padre.
+"Whether this node stays where it is in the world, or snaps to its new parent.",Si este nodo se queda donde está en el mundo o se ajusta a su nuevo padre.
+Make it undoable,Hacerlo deshacible
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.","%s cambia la escena abierta en el editor sin pasar por el historial de deshacer del editor, de modo que el Ctrl+Z de quien lo lea salta por encima y llega a lo que estuviera haciendo antes. Primero: %s."
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.","%s hace el mismo cambio como un paso que el editor puede retirar, y todas las filas deshacibles de un evento comparten ese único paso."
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",Esto solo se le pide a una hoja de herramienta: una hoja que corre en el juego no está editando la escena de nadie y no tiene historial del que faltar.
+This row already goes through the editor's undo history.,Esta fila ya pasa por el historial de deshacer del editor.

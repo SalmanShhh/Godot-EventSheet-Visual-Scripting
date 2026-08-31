@@ -45,6 +45,11 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/collision_edge_lift.gd"),
 	preload("res://addons/eventforge/importer/input_event_lift.gd"),
 	preload("res://addons/eventforge/importer/state_lift.gd"),
+	# The two node dignities whose spelling the general index would claim as the wrong row: the owner
+	# a node is written out as part of (a Set Property to the index) and a reparent that says which of
+	# the two things should happen to where the node is (a bare Reparent To to the index, with the
+	# answer swallowed into its one slot). Asked here, before the index, for exactly that reason.
+	preload("res://addons/eventforge/importer/node_dignity_lift.gd"),
 ]
 
 ## The families that claim a RUN of statements rather than a single line - two or three statements
@@ -56,7 +61,19 @@ const RUN_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/multiplayer_lift.gd"),
 	preload("res://addons/eventforge/importer/layout_on_top_lift.gd"),
 	preload("res://addons/eventforge/importer/scene_save_lift.gd"),
+	# The three edits a tool makes through the editor's undo history. Each is a local, a do half and
+	# an undo half that only mean a change together; the create_action/commit_action bracket around
+	# them is the COMPILER's, and is consumed rather than lifted - see _parse_body.
+	preload("res://addons/eventforge/importer/undoable_edit_lift.gd"),
 ]
+
+## The undoable family again, named on its own because the statement loop asks it a second question
+## the run seam has no shape for: where the gesture opened at this line is committed.
+const UndoableEditLift := preload("res://addons/eventforge/importer/undoable_edit_lift.gd")
+
+## The bracket's own spelling and the words a gesture is named after, by path like everything else
+## here, so the importer never waits on the editor's class cache.
+const UndoableEdits := preload("res://addons/eventforge/undoable_edits.gd")
 
 ## The static a run family declares.
 const RUN_SPELLING_METHOD: String = "match_run"
@@ -501,7 +518,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						if bool(lift.get("ok", false)) and not gate_exempt \
 								and not (lift.get("events", []) as Array).is_empty() \
 								and _strip_group_markers(SheetCompiler.emit_anchored_trigger_text(lift.get("events", []),
-									_group_guards_for(lift.get("events", [])))) != _strip_group_markers(row.code):
+									_group_guards_for(lift.get("events", [])), sheet.tool_mode)) != _strip_group_markers(row.code):
 							lift = {"ok": false}
 						if bool(lift.get("ok", false)):
 							saw_function = true
@@ -671,7 +688,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				# lifted EventRows follow it in the array, and the external compile path emits one
 				# function for them right there. Gated exactly like a mid-file function - the
 				# re-emitted handler text must equal this row's bytes, or it stays raw.
-				var handler_events: Array = _anchor_handler_events(mid_row, all_connections)
+				var handler_events: Array = _anchor_handler_events(mid_row, all_connections, sheet.tool_mode)
 				if handler_events.is_empty():
 					mid_index += 1
 					continue
@@ -1881,7 +1898,7 @@ static func _annotated_function_regex() -> RegEx:
 ## The EventRows a mid-file lifecycle/signal handler lifts to, or [] when it must stay raw. The
 ## gate: the compiler's in-place re-emission of those events has to reproduce this row's bytes
 ## exactly, so anchoring can never change a file.
-static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary) -> Array:
+static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary, tool_sheet: bool = false) -> Array:
 	var handler_lift: Dictionary = _lift_function(mid_row.code.split("\n"), connections, true)
 	if not bool(handler_lift.get("ok", false)):
 		return []
@@ -1891,7 +1908,7 @@ static func _anchor_handler_events(mid_row: RawCodeRow, connections: Dictionary)
 	for handler_event: Variant in handler_events:
 		if not (handler_event is EventRow):
 			return []
-	if SheetCompiler.emit_anchored_trigger_text(handler_events) != mid_row.code:
+	if SheetCompiler.emit_anchored_trigger_text(handler_events, {}, tool_sheet) != mid_row.code:
 		return []
 	return handler_events
 
@@ -2256,6 +2273,12 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	# rows instead of reverting the entire body to a verbatim wall. Boxed (single-element Array) so the
 	# count survives across _flush_raw / _consume_action_line, which append the resource it must land on.
 	var blank_box: Array = [0]
+	# Where the undo gesture opened at this depth is committed, or -1 while none is open. The
+	# create_action / commit_action pair around a tool's undoable rows is written by the COMPILER
+	# (one gesture per event), so it is consumed here rather than lifted into rows the sheet never
+	# had - and it is only consumed when the whole bracket is the one the compiler would write here,
+	# name included, so a tool whose author named their own action keeps it verbatim.
+	var undo_commit_line: int = -1
 	var index: int = start
 	while index < lines.size():
 		var line: String = lines[index]
@@ -2478,6 +2501,22 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
+			# The gesture bracket, consumed rather than lifted (see undo_commit_line above). The
+			# closing line is recognised by the position the opening line already worked out, so a
+			# bare commit_action somebody wrote on its own is never eaten.
+			if index == undo_commit_line:
+				undo_commit_line = -1
+				index += 1
+				chain_open = false
+				continue
+			if undo_commit_line < 0 and rest.begins_with(UndoableEdits.CREATE_PREFIX):
+				var commit_at: int = UndoableEditLift.bracket_span(lines, index, depth,
+					UndoableEdits.gesture_of_trigger("Core", scope_trigger))
+				if commit_at > index:
+					undo_commit_line = commit_at
+					index += 1
+					chain_open = false
+					continue
 			# A run that only means something as a group: the two or three lines that open a game,
 			# and the three that put a layout over the running one, are each ONE row, so they are
 			# claimed together before any single line is. The matched spelling rides back as the

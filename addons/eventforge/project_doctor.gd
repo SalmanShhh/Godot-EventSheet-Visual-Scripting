@@ -179,6 +179,11 @@ static func run() -> Dictionary:
 	# and it takes its head percentage through the same shared reader the head bar's chip and the
 	# corpus pins use, so the three can never quote different numbers for the same bytes.
 	EventSheetReadingDoctor.ensure_registered()
+	# The Tool edits section: the tools in this project that change the scene somebody has open, and
+	# whether they do it as a step the editor can take back. Same seam, same reason - and a corpus
+	# narrowed to tools that reach for the edited scene, so an ordinary @tool node script never
+	# appears in it.
+	EventSheetToolEditsDoctor.ensure_registered()
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
 	for entry: Dictionary in _extension_checks:
@@ -726,6 +731,14 @@ static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Arr
 		if not mutates:
 			continue
 		if output.contains("EditorUndoRedoManager") or output.contains("create_action("):
+			continue
+		# The Tool edits section says the same thing better about any file it can reach: per EVENT
+		# rather than per file, as a warning with a one-click respelling, and with the quiet amber
+		# state on the row the reader is looking at. This check is the older, file-level reading and
+		# stands down wherever that one speaks, so one file never earns two findings about one
+		# mistake. It still covers a compiled output that is not one of the project's own scripts -
+		# a `.tres` sheet whose output lives outside the swept tree - which is the only case left.
+		if EventSheets.project_scripts().has(output_path):
 			continue
 		_add(findings, "info", "editor-tool-undo", sheet_path,
 			"This editor tool changes the open scene (add/remove/reparent nodes) without registering undo, so Ctrl+Z can't take the change back. Wrap the edits in EditorInterface.get_editor_undo_redo() create_action/commit_action (ignore for one-off scripts you re-run freely).")

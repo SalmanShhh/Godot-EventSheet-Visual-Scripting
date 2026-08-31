@@ -5826,3 +5826,44 @@ Any group - every node entering or leaving the world,모든 그룹 - 월드에 �
 Ask whether it is data first,먼저 데이터인지 묻기
 Ask whether %s is data,%s 이(가) 데이터인지 묻기
 This event already asks whether %s is data.,이 이벤트는 이미 %s 이(가) 데이터인지 묻고 있습니다.
+Set Property (Undoable),속성 설정(되돌리기 가능)
+"Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.","열려 있는 씬의 노드 속성 하나를 되돌릴 수 있는 단계로 변경하므로 Ctrl+Z로 이전 값이 복원됩니다. 이전 값은 단계를 만들 때 읽으므로, 이 행은 다른 것이 그 속성을 바꾸기 전에 도달해야 합니다."
+Editor Tools: Undo history,에디터 도구: 되돌리기 기록
+"set {property} of {target} to {value}, undoably",{target} 의 {property} 를 {value} 로 설정(되돌리기 가능)
+"The node whose property changes. It has to be a node in the scene the editor has open, or the history has nothing to put the change back onto.","속성이 바뀌는 노드입니다. 에디터에서 열려 있는 씬의 노드여야 하며, 그렇지 않으면 기록이 변경을 되돌릴 대상이 없습니다."
+"The property's own name, written bare - position, visible, modulate - exactly as Set Property writes it.","속성 이름 그대로(position, visible, modulate 등). 속성 설정이 쓰는 방식과 같습니다."
+Add Node (Undoable),노드 추가(되돌리기 가능)
+"Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.","열려 있는 씬에 새 노드를 되돌릴 수 있는 단계로 추가하고, 씬과 함께 저장되도록 소유자도 설정합니다(편집 중인 씬에 노드 추가의 되돌리기 가능한 짝). Ctrl+Z로 다시 빠지며, 단계가 참조를 붙들고 있어 다시 실행하면 같은 노드가 돌아옵니다."
+"add {node} under {parent}, undoably",{node} 를 {parent} 아래에 추가(되돌리기 가능)
+"The node to add, for example Sprite2D.new().",추가할 노드입니다. 예: Sprite2D.new().
+"The node it goes under, in the scene the editor has open.",그 아래로 들어갈 노드입니다. 에디터에 열려 있는 씬 안의 노드입니다.
+Remove Node (Undoable),노드 제거(되돌리기 가능)
+"Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.","열려 있는 씬에서 노드를 되돌릴 수 있는 단계로 빼냅니다. Ctrl+Z를 누르면 소유자까지 복원되어 원래 자리로 돌아옵니다. 노드는 해제되지 않고 분리되므로, 기록이 그 단계를 잊을 때까지 단계가 붙들고 있을 수 있습니다."
+"remove {node} from the scene, undoably",{node} 를 씬에서 제거(되돌리기 가능)
+The node to take out of the open scene. It keeps its own children; only its parent lets go of it.,"열려 있는 씬에서 빼낼 노드입니다. 자기 자식들은 그대로 유지하며, 놓아주는 것은 부모뿐입니다."
+Set Scene Owner,씬 소유자 설정
+"Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.","노드가 어느 씬에 속하는지를 지정하며, 그 씬을 패킹해 저장할 때 함께 기록될지를 결정합니다. 게임이 도는 동안 만들어진 노드는 소유자가 아예 없으므로, 이것을 설정하기 전까지 그 가지는 빈 씬으로 패킹됩니다."
+make [i]{target}[/i] part of [i]{root}[/i],[i]{target}[/i] 를 [i]{root}[/i] 의 일부로 만들기
+The node to give an owner to.,소유자를 지정할 노드입니다.
+Owned By,소유자
+"The node at the top of the scene it belongs to. That node has to be an ancestor of this one, or the assignment is refused.","속한 씬의 최상위 노드입니다. 그 노드는 이 노드의 조상이어야 하며, 아니면 대입이 거부됩니다."
+Duplicate Node (choosing),노드 복제(선택해서)
+"Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.","노드를 복제하면서, 사본이 보통 물려받는 세 가지 - 시그널 연결, 그룹, 스크립트 - 중 무엇을 함께 가져갈지 고릅니다. 셋 다 켜면 평범한 노드 복제와 똑같으므로, 셋 중 하나가 아니오일 때만 이 행을 쓰세요."
+"duplicate [i]{target}[/i] ( signals [b]{signals}[/b], groups [b]{groups}[/b], scripts [b]{scripts}[/b] )","[i]{target}[/i] 복제 ( 시그널 [b]{signals}[/b], 그룹 [b]{groups}[/b], 스크립트 [b]{scripts}[/b] )"
+Node to clone (add the clone with Add Child).,복제할 노드입니다(사본은 자식 추가로 넣으세요).
+Copy the connections the original makes to other nodes. Off for a pooled copy that should wire itself up.,원본이 다른 노드로 맺어 둔 연결을 복사합니다. 스스로 연결할 풀 사본이라면 끄세요.
+Groups,그룹
+Copy the groups the original belongs to. Off when the copy is not one of them yet.,원본이 속한 그룹을 복사합니다. 사본이 아직 그중 하나가 아니라면 끄세요.
+Copy the scripts on the original and its children. Off when the copy is meant to be plain nodes.,원본과 그 자식에 붙은 스크립트를 복사합니다. 사본을 순수한 노드로 두려면 끄세요.
+Reparent To (choosing),부모 바꾸기(선택해서)
+"Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.","이 노드를 새 부모 아래로 옮기면서, 그 위치를 어떻게 할지 두 가지 중 하나를 말합니다. 자리를 지키면 보이는 그 자리에 그대로 남고, 새 부모에 붙이면 새 부모의 자리로 옮겨갑니다. 평범한 부모 바꾸기는 아무 말 없이 자리를 지킵니다."
+Utility: Nodes,유틸리티: 노드
+"reparent to {new_parent}, {keep}","{new_parent} 로 부모 바꾸기, {keep}"
+New Parent,새 부모
+Node to become the new parent.,새 부모가 될 노드입니다.
+"Whether this node stays where it is in the world, or snaps to its new parent.","이 노드가 월드에서 있던 자리에 머무를지, 새 부모에 맞춰 옮겨갈지."
+Make it undoable,되돌릴 수 있게 만들기
+"%s changes the scene the editor has open without going through the editor's undo history, so the reader's Ctrl+Z walks straight past it into whatever they were doing before. First: %s.","%s 은(는) 에디터의 되돌리기 기록을 거치지 않고 열려 있는 씬을 바꾸므로, 읽는 사람의 Ctrl+Z가 그것을 지나쳐 그 전에 하던 작업까지 되돌립니다. 먼저: %s."
+"%s makes the same change as one step the editor can take back, and every undoable row of one event shares that one step.","%s 은(는) 같은 변경을 에디터가 되돌릴 수 있는 한 단계로 수행하며, 한 이벤트의 되돌리기 가능한 행들은 모두 그 한 단계를 공유합니다."
+"This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.","이것은 도구 시트에만 묻습니다. 게임 안에서 도는 시트는 누구의 씬도 편집하지 않으며, 빠질 기록도 없습니다."
+This row already goes through the editor's undo history.,이 행은 이미 에디터의 되돌리기 기록을 거칩니다.

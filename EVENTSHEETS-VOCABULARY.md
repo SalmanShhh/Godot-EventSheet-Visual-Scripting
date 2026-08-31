@@ -3484,6 +3484,7 @@ Core vocabulary (the Phase-1 surface, fully migrated).
 - **Set Window Title** (`title: String`) - Changes the text shown in the game window's title bar.
 - **Copy To Clipboard** (`text: String`) - Copies text to the operating system clipboard for pasting elsewhere.
 - **Reparent To** (`new_parent: String`) - Moves this node under a new parent while keeping its on-screen position.
+- **Reparent To (choosing)** (`new_parent: String, keep: String`) - Moves this node under a new parent, saying which of the two things should happen to where it is: keeping its place leaves it exactly where it looks, snapping to it puts it at the new parent's own spot. Plain Reparent To keeps its place without saying so.
 
 #### Expressions
 - **Velocity X** - Returns the character's current horizontal speed in pixels per second.
@@ -3581,6 +3582,7 @@ Developer helper vocabulary (the everyday dev tools).
 - **Call Method On Group (with value)** (`group: String, method: String, args: String`) - Calls a method with a value on every member of a group at once - a decoupled broadcast that carries data.
 - **Set Metadata** (`target: String, name: String, value: String`) - Stores a custom named value on an object as hidden metadata.
 - **Remove Metadata** (`target: String, name: String`) - Deletes a stored metadata value from an object by its key.
+- **Set Scene Owner** (`target: String, root: String`) - Says which scene a node belongs to, which is what decides whether it is written out when that scene is packed and saved. A node built while the game runs has no owner at all, so a branch of them packs to an empty scene until this is set.
 
 #### Expressions
 - **Trail Values** (`trail: String`) - Returns the whole trail as an array, oldest first - feed it to a chart, a table, or an array action.
@@ -4337,6 +4339,7 @@ Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 
 #### Expressions
 - **Duplicate Node** (`target: String`) - Clones a node so you can add the copy elsewhere, e.g. mass-spawning identical objects.
+- **Duplicate Node (choosing)** (`target: String, signals: bool, groups: bool, scripts: bool`) - Clones a node, choosing which of the three things a copy usually inherits come with it: its signal connections, its groups and its scripts. All three on is exactly what plain Duplicate Node does, so reach for this one only when the answer to one of them is no.
 - **Node Name** (`target: String`) - Returns the node's name as text, useful for labels or matching.
 - **Node Path** (`target: String`) - Returns the node's full path in the scene tree as a reference.
 - **Index In Parent** (`target: String`) - Returns the node's position among its siblings as a number.
@@ -5132,6 +5135,9 @@ Editor Tools vocabulary (build @tool / EditorScript sheets by events).
 - **Make Sure Folder Exists** (`path: String`) - Creates a folder (and any missing parents) so a tool can write into it.
 - **Add Node To Edited Scene** (`node: Node, parent: Node`) - Adds a new node to the edited scene AND sets its owner, so it is saved with the scene.
 - **Save Node As Scene** (`node: Node, path: String`) - Packs a node and its children into a PackedScene and saves it as a .tscn file.
+- **Set Property (Undoable)** (`target: Node, property: String, value: String`) - Changes one property of a node in the open scene as an undo step, so Ctrl+Z puts the old value back. The old value is read when the step is built, which is why this row has to be reached before anything else changes that property.
+- **Add Node (Undoable)** (`node: Node, parent: Node`) - Adds a new node to the open scene as an undo step, with its owner set so it is saved with the scene - the undoable twin of Add Node To Edited Scene. Ctrl+Z takes the node back out, and the step keeps a reference to it so redo can put the same node back.
+- **Remove Node (Undoable)** (`node: Node`) - Takes a node out of the open scene as an undo step, so Ctrl+Z puts it back where it was with its owner restored. The node is detached rather than freed, which is what lets the step hold on to it until the history forgets the step.
 - **Render Scene To Image** (`scene_path: String, width: int, height: int, save_path: String`) - Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.
 - **Preview Table Rolls** (`table: String, rolls: int, seed: int, save_path: String`) - Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.
 - **Write Version Stamp** (`path: String, version: String`) - Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.
