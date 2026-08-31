@@ -261,6 +261,13 @@ These are the places the two disagreed.
   backslash-escaped quote, so one string carrying one pushed every literal after it out of step. And
   the unguarded-read check fell silent on the WORDS `file_exists` wherever they appeared, so a line
   guarding one file and reading another read as guarded. Each is pinned on a fixture.
+- **The outside-content trace follows the shape its own header names.** `self.chosen = path` in one
+  handler and `load(self.chosen)` in another - the store-it-on-the-object shape the trace exists for -
+  went unseen, because the rule that keeps somebody else's `config.path` out was reading `self` as
+  somebody else. A watched folder held in a name (`var folder = "user://mods"`, then
+  `watch_folder(folder, 2.0)`) went unseen for the same kind of reason. Both are followed now, and
+  the finding states its own reach: it reads names inside ONE file, and a file it says nothing about
+  is not a file it has cleared.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and

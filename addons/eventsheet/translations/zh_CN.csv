@@ -5701,3 +5701,4 @@ Opens the player's own data folder in their desktop file browser - the real fold
 open the player's data folder {path},打开玩家的数据文件夹 {path}
 "Folder to open, inside user://. The path is turned into a real one on the player's machine before it is handed to the desktop.",要打开的文件夹，位于 user:// 中。路径会先转换成玩家机器上的真实路径，再交给桌面。
 "This is read off the path written in the line: one built out of pieces, or held in a variable, is a path this check has nothing to say about - a quiet report is not a proof.",这是从行中写出的路径读出的：由片段拼接而成的路径，或存放在变量里的路径，这项检查无话可说 - 没有报告并不等于没有问题。
+"This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.",这只在一个文件内跟踪名字 - 存放在这个对象上的路径、从列表中取出的路径，或写入这个文件所监视或解压的文件夹下的路径。它不会跨文件、也不会穿过一次调用继续跟踪，所以它没有提到的文件并不是它认可过的文件。

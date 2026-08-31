@@ -244,6 +244,13 @@ static func _doctor_says_the_risk_and_the_doors() -> bool:
 		message.contains("runs that script with everything this game can reach"), true) and ok
 	for door: String in ["Image From File", "Read Text File (or a fallback)", "Table From File"]:
 		ok = _check("it offers the door: %s" % door, message.contains(door), true) and ok
+	# AND IT SAYS HOW FAR IT REACHED. A trace that names a line and says nothing about its limits
+	# leaves a reader believing a quiet file was cleared, which is the one way an honest check
+	# misleads. The reach was written in the source header and nowhere a reader could see it.
+	ok = _check("it says the trace reads one file only",
+		message.contains("follows names inside ONE file"), true) and ok
+	ok = _check("and that saying nothing is not clearing it",
+		message.contains("is not a file it has cleared"), true) and ok
 	return ok
 
 
@@ -263,6 +270,18 @@ static func _bug_fixtures() -> Dictionary:
 			+ "func _on_file_appeared(path: String) -> void:\n\tvar mod := load(path)\n\tprint(mod)\n",
 		"a file named under the watched folder, loaded": "extends Node\n\n\nfunc _ready() -> void:\n"
 			+ "\t$FolderWatcher.watch_folder(\"user://mods\", 2.0)\n\n\n"
+			+ "func apply() -> void:\n\tvar mod := load(\"user://mods/first.tscn\")\n\tprint(mod)\n",
+		# THE SHAPE THE TRACE'S OWN HEADER NAMES: one handler stores the path on this object and
+		# another loads it. Written as `self.chosen` it went unseen, because the dot rule that keeps
+		# SOMEBODY ELSE'S property out was reading `self` as somebody else.
+		"a chosen file, stored on self, loaded later":
+			"extends Node\n\nvar chosen: String = \"\"\n\n\n"
+			+ "func _on_file_chosen(path: String) -> void:\n\tself.chosen = path\n\n\n"
+			+ "func apply() -> void:\n\tvar skin := load(self.chosen)\n\tprint(skin)\n",
+		# And a watched folder HELD IN A NAME is the same watch as a literal one. The header claims
+		# folders this file watches are followed; a name is how half of them are written.
+		"a file under a watched folder held in a name": "extends Node\n\n\nfunc _ready() -> void:\n"
+			+ "\tvar folder := \"user://mods\"\n\t$FolderWatcher.watch_folder(folder, 2.0)\n\n\n"
 			+ "func apply() -> void:\n\tvar mod := load(\"user://mods/first.tscn\")\n\tprint(mod)\n",
 		"a file out of an unpacked archive, loaded": "extends Node\n\n\nfunc unpack() -> void:\n"
 			+ "\tvar __reader_a := ZIPReader.new()\n\tif __reader_a.open(\"user://pack.zip\") == OK:\n"

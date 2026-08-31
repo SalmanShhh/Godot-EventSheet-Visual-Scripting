@@ -407,10 +407,12 @@ three data-shaped doors instead.
 
 It is a **warning and not an error**. A game whose mods *are* code is a real decision that some
 projects make deliberately; what is not a decision is making it without knowing. The check reads
-names inside one file - a door's own handler parameter, anything assigned from one, anything a `for`
-walks out of one, any path written under a folder that file watches or unpacks into - and it does not
-follow a path across files or through a call into another body, so a quiet file is not a proof and
-the finding says so.
+names inside one file - a door's own handler parameter, anything assigned from one (written plainly
+or as `self.chosen`, which is the same name said two ways), anything a `for` walks out of one, any
+path written under a folder that file watches or unpacks into, whether that folder is a literal or a
+name the same file bound to one - and it does not follow a path across files, into an array element
+whose name it cannot see, or through a call into another body. So a quiet file is not a proof, and
+the finding itself says how far it reached rather than leaving silence to be read as an all-clear.
 
 ## Where the save system starts
 

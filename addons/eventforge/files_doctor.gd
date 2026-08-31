@@ -346,6 +346,7 @@ static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
 		message += _and_more(lines)
 		message += " " + EventSheetL10n.translate("A scene or a resource file can name a script, and loading one runs that script with everything this game can reach - the player's files, their network, their machine. The file was written by whoever made it, and that is not this project.")
 		message += " " + EventSheetL10n.translate("Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.")
+		message += " " + EventSheetL10n.translate("This follows names inside ONE file - a path stored on this object, walked out of a list, or written under a folder this file watches or unpacks into. It does not follow one across files or through a call, so a file it says nothing about is not a file it has cleared.")
 		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
 	return findings
 
