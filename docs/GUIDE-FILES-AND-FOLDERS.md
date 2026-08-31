@@ -417,6 +417,52 @@ name the same file bound to one - and it does not follow a path across files, in
 whose name it cannot see, or through a call into another body. So a quiet file is not a proof, and
 the finding itself says how far it reached rather than leaving silence to be read as an all-clear.
 
+### The one file a game writes that can carry code back in
+
+There is a case where the outside file is one your own game made. A level editor, a base builder, a
+ship yard: the player assembles nodes, and **Save Branch As Scene File** writes that branch out as a
+`.tscn` under `user://`.
+
+**The walk is the row.** `PackedScene.pack` writes out the root plus every node that root *owns*, and
+a node added while the game runs is owned by nothing. A plain pack-and-save therefore saves a scene
+holding one node, returns OK twice and loads back empty - and nothing reports it, because nothing
+failed. The row walks the branch first and gives every ownerless node under it the branch root as its
+owner. That walk is emitted into your script where you can read it. (The editor's own twin, **Editor
+Tools ▸ Save Node As Scene**, packs the node you are *editing* from a Tool sheet, where the Scene dock
+has already set the owners. Same job, other side of the line.)
+
+![The Save Branch As Scene File parameters dialog, reading save branch $Level as scene file "user://built_level.tscn" at the top. Two fields: Branch holding $Level, and Save To holding "user://built_level.tscn" with the muted place lead under the box reading user:// - the player's folder: writable, one per player, survives updates](images/scenes-save-place-lead.png)
+
+Then the file comes back - and here is the turn. A `.tscn` is a table of resources, and a resource may
+be a **script**. Your own build is safe; the same file, copied off a forum and dropped into the same
+folder, is not, and nothing about the path tells them apart. So **Scene File Is Data-Only** is the
+question to ask above the row that builds one:
+
+```
+On load pressed
++ Scene file "user://built_level.tscn" is data-only
+  -> Add Layout On Top  "user://built_level.tscn", "Built"
+```
+
+It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file
+from anywhere. It answers false for a scene carrying a script inside it, for one pointing at a script
+outside `res://`, and for a file it cannot read at all - an unreadable file is not a file that has
+been cleared. It reads the **one file you name**: a scene that file points at is a separate file with
+a table of its own.
+
+The Doctor's Files section reports a row that builds a scene from a path written in the line and not
+under `res://` with no such question anywhere around it. It is a **warning**, not an error, for the
+same reason the one above it is: a game whose mods *are* scenes with scripts is a decision some
+projects make. What is not a decision is making it without knowing. Its one-click answer is the
+question itself, written into the event in front of whatever it already asks - an ordinary condition
+row you can edit or delete afterwards.
+
+**Nothing of this appears in the sheet itself.** The row wears the quiet amber state and says not one
+word there; the sentence and the door live in the Doctor's inbox and in the help strip under the
+selected row, which is where you are already looking when you want them.
+
+![The Project Doctor inbox with one line under Warnings (1), marked new since you last looked. The check reads Files untrusted scene load, the file is mod_loader.gd, and the finding begins mod_loader.gd builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT. Below the list is one chip reading Fix: Ask whether it is data first](images/scenes-trust-inbox.png)
+
 ## Where the save system starts
 
 **None of this is the save system.** The game's own state - the slot, the run, the settings the
@@ -456,3 +502,8 @@ player gets at it.
 - **User content is data, never code.** Read a picture as a picture, text as text and a table as a
   table. Reach for `load()` on a player's file only if you have decided, on purpose, that your mods
   are programs.
+- **A packed scene saves what its root owns.** Nodes added while the game runs own nothing, so a
+  plain pack writes a scene holding one node and reports success. **Save Branch As Scene File** does
+  the owner walk first, in lines you can read.
+- **Ask before you build a scene you did not ship.** A `.tscn` can name a script. **Scene File Is
+  Data-Only** reads the file's table as text and answers before anything runs.

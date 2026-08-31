@@ -6,6 +6,50 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Saving what the player built, behind the trust line
+
+- **Save Branch As Scene File.** A branch of the running game, written out as a `.tscn` - the row a
+  level editor, a base builder or a ship yard is missing. The OWNER WALK is the row: `PackedScene.pack`
+  writes out the root plus every node that root owns, and a node added while the game runs is owned
+  by nothing at all, so a plain pack-and-save saves a scene holding one node, returns OK twice and
+  loads back empty with nothing anywhere reporting it. The walk asks for the children nothing owns
+  and gives an owner only to those, so a node belonging to an instanced scene keeps its own and saves
+  as that instance rather than as a copy of its insides. It is emitted into your script where it can
+  be read, exactly as the archive loops beside it are. Both failures answer out loud: a pack that
+  refuses and a write that cannot land each say so through the debugger instead of leaving no file
+  and no word. The path field carries the files pass's `file_path` hint, so the place lead sits under
+  the box and `user://` completes as you type; the write is registered as a write, so the export trap
+  and its one-click fix reach it like any other.
+- **Editor Tools ▸ Save Node As Scene stays exactly where it was, and the two are named side by
+  side.** That row packs the node you are EDITING, from a Tool sheet, where the Scene dock has
+  already set every owner; this one runs in the GAME, where nothing has an owner until somebody sets
+  one. Same call, different world, and each row's description names the other.
+- **Scene File Is Data-Only.** The question worth asking before anything builds a scene the game did
+  not ship with. It reads the file's own resource table as TEXT and instantiates nothing, so asking
+  is safe on a file from anywhere: false for a script written inside the scene, false for one it
+  points at from anywhere but `res://`, false for a file it cannot read - because an unreadable file
+  is not a file that has been cleared. It reads the ONE file you name, and says so on the row: a
+  scene that file points at is a separate file with a table of its own.
+- **A scene built unasked is a quiet amber row and a line in the Doctor's Files section.** A row that
+  builds a scene whose path is written in the line and is not under `res://`, with no data-only
+  question over that same file anywhere around it, earns the amber state and nothing else in the
+  sheet - the words live in the triage inbox and in the help strip under the selected row. It is a
+  WARNING and not an error: a game whose mods are scenes with scripts in them is a decision some
+  projects make deliberately, and what is not a decision is making it without knowing. The finding
+  says what it cannot see - a path built out of pieces or held in a variable, and the scenes the file
+  it named points at - so a quiet report is never read as a proof.
+- **Its door is the question itself.** One click writes the shipped Scene File Is Data-Only row into
+  the event, over the very file the row builds, in FRONT of whatever it already asks - an ordinary
+  condition row afterwards, visible, editable, deletable, a plain `if` on disk, and one Ctrl+Z. The
+  same gesture is on the row's help strip and on the inbox chip, with the before-and-after receipt on
+  the status line either way. A question asked by a parent event stands over the rows beneath it,
+  which is what the emitted `if` inside an `if` really does.
+- **The owner walk lifts, and a bare pack-and-save deliberately does not.** The walk plus pack plus
+  save reads back as one row, in the hand-written tail and in the one the row itself writes, with the
+  author's own words for the three locals baked on so the file saves back byte for byte. The same
+  pack and the same write with no walk in front of them is a different program, and is left exactly
+  as it was.
+
 ### The spawn sentence, said in three dimensions
 
 - **Spawn A Copy (3D) and Spawn A Copy Safely (3D).** The 2D pair with a Node3D host: the same three

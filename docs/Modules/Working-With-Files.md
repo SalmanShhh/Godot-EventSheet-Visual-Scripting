@@ -173,6 +173,44 @@ an event for each of them or the script does not compile.
 
 ![Four events in a sheet called ModInstaller, under a head whose files bands read user://pack.zip - read and written and user://mods - read and written with the ZIPReader line echoed beside each: On Created with System Unpack "user://pack.zip" into folder "user://mods", then On Unpack Progress setting Bar value to entries, On Unpack Refused setting Label text to "Refused: " and reason, and On Unpack Finished setting Label text to "Installed " and entries](../images/archive-unpack.png)
 
+### Files: scene files
+
+What the player *built* is not text and not a table: it is a branch of nodes. **Save Branch As Scene
+File** writes one out as a `.tscn`, so a level, a room, a ship or a base somebody assembled survives
+the game closing.
+
+**The owner walk is the whole row.** `PackedScene.pack` writes out the root plus every node that root
+**owns**, and a node added while the game runs is owned by nothing at all. So a plain pack-and-save
+saves a scene holding one node, returns OK twice, and loads back empty - a bug nothing reports,
+because nothing went wrong. The row walks the branch first and gives every ownerless node under it
+the branch root as its owner, and that walk is emitted into your script where you can read it. A node
+that already belongs to an instanced scene keeps its own owner and is saved as that instance rather
+than as a copy of its insides.
+
+Both failures are answered out loud: a pack can refuse a node that is not in a tree, and a write can
+fail on a folder that is not there, a full disk or a read-only path. Either one prints through the
+debugger rather than leaving no file and no word.
+
+**Editor Tools ▸ Save Node As Scene is the same job on the other side of the line.** That one packs
+the node you are *editing*, from a Tool sheet, where the Scene dock has already set every owner.
+This one runs in the game, where nothing has an owner until somebody sets one. Two rows, one job, two
+worlds - reach for the one whose world you are in.
+
+**And a scene file is the one file in this guide that can carry behaviour.** A `.tscn` is a table of
+resources, and a resource may be a *script*. Building one runs that script with everything your game
+can reach. That is exactly right for a scene you shipped and exactly wrong for one that arrived from
+somewhere else, so **Scene File Is Data-Only** is the question to ask first: it reads the file's own
+resource table as text, builds nothing, and answers false for a scene that carries a script inside it
+or points at one from anywhere but `res://`. It reads the one file you name - a scene that file points
+at is a separate file with a table of its own.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| Save Branch As Scene File | Writes a branch of the running game out as a `.tscn`, owner walk first | `for __part_{uid}: Node in __branch_{uid}.find_children("*", "", true, false):` giving every ownerless node an owner, then `PackedScene.new()`, `pack({branch})` and `ResourceSaver.save(…, {path})` with both failures pushed as errors |
+| Scene File Is Data-Only | True when a scene file names no code: nothing written inside it, nothing pointed at outside `res://` | one call to the reader the compiler writes into your file, which reads the `[ext_resource]` / `[sub_resource]` table as text |
+
+![Two events above the GDScript they compile to. The first is Keyboard On "save_level" pressed with System Save branch $Level as scene file "user://built_level.tscn"; the second is Keyboard On "load_level" pressed plus System scene file "user://built_level.tscn" is data-only, with System Add layout "user://built_level.tscn" on top as "Built". The code panel below shows the owner walk - a for over find_children with owned false, giving every node whose owner is null the branch as its owner - then PackedScene.new, pack, and ResourceSaver.save with both failures pushed as errors, and the load guarded by __eventsheets_scene_is_data_only](../images/scenes-save-branch.png)
+
 ### Watching a folder
 
 Godot raises **no file-change notification at run time** on any platform it ships for. There is
@@ -497,6 +535,19 @@ On mods screen closed
   -> Stop Watching
 ```
 
+**29. A level editor that keeps what the player built.** The walk is what makes the file hold more
+than its root, and the question is what makes loading one back safe when the file came from somebody
+else's machine.
+
+```
+On save pressed
+  -> Save Branch As Scene File  $Level, "user://built_level.tscn"
+
+On load pressed
++ Scene file "user://built_level.tscn" is data-only
+  -> Add Layout On Top  "user://built_level.tscn", "Built"
+```
+
 ### Other use cases
 
 **Crash breadcrumbs.** Append one line per major event to `user://log.txt` and ask players to attach the file to a bug report, so a hard-to-reproduce fault arrives with its own history.
@@ -513,6 +564,11 @@ On mods screen closed
 
 - **`res://` is read-only in an exported game.** Every write path here defaults to `user://` for that
   reason. A save that works in the editor and vanishes after export is nearly always this.
+- **A packed scene saves what its root OWNS.** Nodes added while the game runs own nothing, so a
+  plain pack writes a scene holding one node and says nothing about it. Save Branch As Scene File
+  does the owner walk first, and the walk is in your script where you can read it.
+- **A scene file can name a script.** Ask Scene File Is Data-Only before building one that did not
+  come with the game. The Doctor's Files section says so on any row that skips the question.
 - **A failed write is silent.** The write actions guard the file handle, so a bad path does nothing
   rather than crashing. If a file never appears, check the folder exists and the path starts with
   `user://`.
