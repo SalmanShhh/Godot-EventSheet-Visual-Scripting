@@ -32,6 +32,8 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
 - **Mod folders** - a directory the player drops files into, listed at startup.
 - **Importing** - paste a blob of JSON, validate it, then parse it.
 - **Migration** - read the old file, write the new one, delete the old.
+- **Custom avatars and soundtracks** - a picture or a track the player drops on the window, or picks
+  out of their own file chooser, loaded straight into a variable.
 
 ## Core concepts
 
@@ -106,6 +108,43 @@ never collide.
 | JSON Is Valid | True when the given text is valid JSON | `JSON.parse_string({text}) != null` |
 | Save JSON File | Serializes a value to pretty JSON and writes it to a file in one step | `var __json_{uid} = FileAccess.open({path}, FileAccess.WRITE)` then a guarded `store_string(JSON.stringify({value}, "\t"))` |
 | Load JSON File | Reads a JSON file and parses it straight into a variable | `{var_name} = JSON.parse_string(FileAccess.get_file_as_string({path}))` |
+
+### Files: content from outside the project
+
+Every row above works on a path the sheet already holds. These are the rows for a file the *player*
+names - one they drop on the window, one they pick out of their own system's chooser - and the two
+loaders that turn such a path into a picture or a sound.
+
+An ask has **no return value**, on purpose. A chooser is a separate window, and the player answers it
+whenever they are ready, which is long after the row ran. So the answer arrives as an event, and the
+emitted line calls that event's function by name: a sheet with an **Ask** row and no **On a file
+chosen** event writes a call to a function that is not there. Add both events when you add the ask.
+
+| Name | What it does | Ships as |
+|------|--------------|----------|
+| On Files Dropped | Runs when the player drags files onto the game window and lets go (desktop only) | `get_window().files_dropped.connect(_on_files_dropped)` in `_ready`, handler `_on_files_dropped(files: PackedStringArray)` |
+| Ask For A File To Open | Opens the player's own file chooser so they can pick a file to read | `if DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):` then `DisplayServer.file_dialog_show(…, DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, {filters}, …)`, `else:` a `FileDialog` with `ACCESS_FILESYSTEM` |
+| Ask Where To Save | Opens the player's own save chooser so they can name a file and a folder | The same branch, with `FILE_DIALOG_MODE_SAVE_FILE` / `FILE_MODE_SAVE_FILE` |
+| On A File Chosen | Runs when the player answered an Ask row by picking a file | `func _on_file_chosen(path: String) -> void:` |
+| On The Ask Cancelled | Runs when the player closed an Ask row's chooser without picking anything | `func _on_ask_cancelled() -> void:` |
+| Image From File | A picture from outside the project, as a texture | `ImageTexture.create_from_image(Image.load_from_file({path}))`, with ` if FileAccess.file_exists({path}) else {fallback}` when the fallback slot is filled |
+| Sound From File | A sound from outside the project, as an audio stream | `AudioStreamMP3.load_from_file({path})` / `AudioStreamOggVorbis…` / `AudioStreamWAV…`, chosen by extension, with the same optional `file_exists` guard |
+
+![One event in a sheet called AvatarPicker: a green arrow trigger badge, the object Node, a files payload chip, and one action, System Set avatar to ImageTexture.create_from_image(Image.load_from_file(files' item 0))](../images/user-content-drop.png)
+
+![Three events in the same sheet: ChooseButton On Pressed with the action System Ask for a file to open (PackedStringArray(["*.png;Images"])), then System On A File Chosen with System Set avatar to ImageTexture.create_from_image(Image.load_from_file(path)), then System On The Ask Cancelled with StatusLabel Set text to "Kept the old picture."](../images/user-content-ask.png)
+
+**No import pipeline is involved, and none is wanted.** A loaded image is a texture in a variable and
+a loaded sound is an audio stream in one: they live as long as something holds them and no longer,
+they are not `.import`ed, and they never become project resources. That is the honest shape for
+content the game did not ship with.
+
+**This is not the save system.** The game's own state belongs to the Save System pack's verbs, which
+write under `user://` with no chooser in sight. These rows are for content the *player* brings: a
+portrait, a custom track, a level file somebody sent them.
+
+**User content is data, never code.** Nothing here loads a script, a scene or a resource, and nothing
+here evaluates what it read. A dropped file is bytes and a path.
 
 ## Use cases
 
@@ -308,6 +347,48 @@ On credits opened
   -> set CreditsLabel text = Read Text File("res://credits.txt")
 ```
 
+**21. A custom avatar, dropped on the window.** On Files Dropped hands you every path at once, so the
+first one is the picture and Image From File is the whole read.
+
+```
+On files dropped files
+  -> set AvatarRect texture = Image From File(files[0], AvatarRect.texture)
+```
+
+**22. The same avatar, asked for instead of dropped.** The ask opens the player's own chooser, and the
+answer comes back as its own event - which is also where the picture is actually loaded.
+
+```
+On avatar button pressed
+  -> Ask For A File To Open  PackedStringArray(["*.png,*.jpg;Images"])
+
+On a file chosen path
+  -> set AvatarRect texture = Image From File(path, AvatarRect.texture)
+
+On the ask cancelled
+  -> set StatusLabel text = "Kept the old picture."
+```
+
+**23. A player-supplied soundtrack.** Sound From File reads the three formats the engine decodes at
+runtime, and the fallback keeps the shipped track playing when the file is not one of them.
+
+```
+On files dropped files
+  -> set MusicPlayer stream = Sound From File(files[0], MusicPlayer.stream)
+  -> Play Sound  MusicPlayer
+```
+
+**24. Exporting a level the player made.** Ask Where To Save collects a path and writes nothing; the
+write is the row after it, in the answer event, where the path exists.
+
+```
+On export pressed
+  -> Ask Where To Save  PackedStringArray(["*.json;Level file"])
+
+On a file chosen path
+  -> Write Text File  path, To JSON Text (pretty)(level)
+```
+
 ### Other use cases
 
 **Crash breadcrumbs.** Append one line per major event to `user://log.txt` and ask players to attach the file to a bug report, so a hard-to-reproduce fault arrives with its own history.
@@ -357,6 +438,23 @@ On credits opened
 - **List Files gives names, not paths.** Join the folder back on before opening one.
 - **List Files is not recursive.** It lists one folder. Walk subfolders yourself with
   List Subdirectories if you need a tree.
+- **On Files Dropped is desktop only.** Windows, macOS and Linux raise it; a web or mobile build never
+  does. Keep an Ask For A File To Open button beside it so the feature has a way in everywhere.
+- **An Ask row needs both answer events.** The emitted line calls `_on_file_chosen` and
+  `_on_ask_cancelled` by name, and those two functions are what On A File Chosen and On The Ask
+  Cancelled compile to. Without them the script does not compile.
+- **Both Ask rows end in the same two events.** If one sheet asks two different questions, remember
+  which one it asked - a variable set just before the ask is enough.
+- **Ask Where To Save writes nothing.** It collects a path. The write is a separate row in the answer
+  event, which is also the only place the path exists.
+- **A dropped or chosen path is a real path on that machine**, not a `res://` or `user://` one. Copy
+  the file under `user://` if the game should still have it next time it starts.
+- **Sound From File decodes exactly three formats:** `.mp3`, `.ogg` (Ogg Vorbis) and `.wav`. Anything
+  else reads as the fallback. This is the engine's own runtime limit, not a choice these rows made.
+- **The loaders read the path more than once.** The guard reads it, and the sound chain reads it once
+  per format it checks - so put a variable in that field rather than a call with a side effect.
+- **A loaded image or sound is not a project resource.** It is not imported, it has no `.import`
+  file, and it lives only as long as a variable, a node property or a sheet variable holds it.
 - **In an exported project, a converted `res://` text resource is stored with a trailing `.remap`.**
   Listing a `res://` data folder in an export will show names ending `.tres.remap` rather than
   `.tres`, which is a trap when you build a list from file names. The folder rows in the

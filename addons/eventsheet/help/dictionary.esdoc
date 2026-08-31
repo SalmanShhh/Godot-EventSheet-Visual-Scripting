@@ -13,9 +13,12 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `__eventsheets_tile_under` | [Tile Under Cursor](ace:Core/TileUnderCursor) | Mouse | Vocabulary |
 | `__just_landed_` | [Just Landed](ace:Core/JustLanded) | Collisions | Vocabulary |
 | `__just_left_the_ground_` | [Just Left The Ground](ace:Core/JustLeftTheGround) | Collisions | Vocabulary |
+| `_on_ask_cancelled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
+| `_on_file_chosen` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `abs` | [Absolute Value](ace:Core/AbsValue) | Helpers | Vocabulary |
 | `absf` | [Values Are Near](ace:Core/ValuesAreNear) | Compare: Numbers | Vocabulary |
 | `absi` | [Seeded Int](ace:Core/SeededInt) | Procedural | Vocabulary |
+| `access` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `acos` | [Random Direction (3D)](ace:Core/RandomDirection3D) | Math & Random | Vocabulary |
 | `action_add_event` | [Bind Control To](ace:Core/InputBindTo) | Keyboard | Vocabulary |
 | `action_erase_events` | [Clear The Bindings Of](ace:Core/InputClearBindings) | Keyboard | Vocabulary |
@@ -91,6 +94,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `call_group` | [Call Method On Group](ace:Core/CallGroup) | Groups | Vocabulary |
 | `can_process` | [Node Is Running](ace:Core/NodeIsActive) | Nodes: Activation | Vocabulary |
 | `cancel_request` | [Cancel Request](ace:Core/AjaxCancel) | AJAX | Vocabulary |
+| `canceled` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `capitalize` | [As Title Text](ace:Core/AsTitleText) | Text | Vocabulary |
 | `casecmp_to` | [Text Sorts Before](ace:Core/TextSortsBefore) | Compare: Text | Vocabulary |
 | `cast_motion` | [Cast Circle Motion Into (2D)](ace:Core/CastCircleMotion2D) | Raycast 2D | Vocabulary |
@@ -129,6 +133,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `count` | [Count Of](ace:Core/ArrayCount) | Variables: Array | Vocabulary |
 | `create` | [Cast Ray Into (2D)](ace:Core/CastRayInto2D) | Raycast 2D | Vocabulary |
 | `create_client` | [Join A Game](ace:Core/JoinGame) | Multiplayer | Vocabulary |
+| `create_from_image` | [Image From File](ace:Core/LoadImageFile) | Files | Vocabulary |
 | `create_from_string` | [Text Matches Regex](ace:Core/RegexMatches) | Text: RegEx | Vocabulary |
 | `create_server` | [Host A Game](ace:Core/HostGame) | Multiplayer | Vocabulary |
 | `create_timer` | [Wait](ace:Core/Wait) | Time | Vocabulary |
@@ -183,9 +188,13 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `exp` | [Exponential](ace:Core/MathExp) | Math & Random | Vocabulary |
 | `factor` | [Pinch Factor](ace:Core/TouchPinchFactor) | Touch | Vocabulary |
 | `fallbacks` | [Add Font Fallback](ace:Core/AddFontFallback) | UI | Vocabulary |
+| `file_dialog_show` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `file_exists` | [File Exists](ace:Core/FileExists) | Files | Vocabulary |
+| `file_mode` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
+| `file_selected` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `fill` | [Fill Array](ace:Core/ArrayFill) | Variables: Array | Vocabulary |
 | `filter` | [Filter](ace:Core/ArrayFilter) | Variables: Array | Vocabulary |
+| `filters` | [Ask For A File To Open](ace:Core/AskForAFileToOpen) | Files | Vocabulary |
 | `find` | [Index Of](ace:Core/ArrayFind) | Variables: Array | Vocabulary |
 | `find_child` | [Find Child (by name)](ace:Core/FindChild) | Nodes | Vocabulary |
 | `find_children` | [Find Children (by name)](ace:Core/FindChildrenByPattern) | Nodes: Picking | Vocabulary |
@@ -274,7 +283,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_editor_theme` | [Editor Icon](ace:Core/EditorIcon) | Editor Tools: Panels & menus | Vocabulary |
 | `get_error_line` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
 | `get_error_message` | [Explain JSON Problem](ace:Core/ExplainJsonProblem) | JSON | Vocabulary |
-| `get_extension` | [Localized File](ace:Core/LocalizedFile) | Translation | Vocabulary |
+| `get_extension` | [Sound From File](ace:Core/LoadSoundFile) | Files | Vocabulary |
 | `get_file` | [Data Folder Problems](ace:Core/DataFolderProblems) | Files | Vocabulary |
 | `get_file_as_bytes` | [File Size (bytes)](ace:Core/GetFileSize) | Files | Vocabulary |
 | `get_file_as_string` | [Read Text File](ace:Core/ReadTextFile) | Files | Vocabulary |
@@ -508,6 +517,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `linear_to_db` | [Set Volume (0 to 1)](ace:Core/AudioSetVolumeLevel) | Audio | Vocabulary |
 | `linear_velocity` | [Get Linear Velocity](ace:Core/GetLinearVelocity2D) | General Expressions | Vocabulary |
 | `load` | [Use Palette](ace:Core/UsePalette) | Accessibility | Vocabulary |
+| `load_from_file` | [Sound From File](ace:Core/LoadSoundFile) | Files | Vocabulary |
 | `load_from_project_settings` | [Reset All Bindings](ace:Core/InputResetBindings) | Keyboard | Vocabulary |
 | `load_threaded_get` | [Go To Loaded Layout](ace:Core/GoToLoadedLayout) | Scene | Vocabulary |
 | `load_threaded_get_status` | [Layout Has Finished Loading](ace:Core/LayoutFinishedLoading) | Scene | Vocabulary |

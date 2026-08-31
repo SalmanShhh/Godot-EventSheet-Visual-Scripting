@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The two doors user content comes in through
+
+- **On Files Dropped** is the window's own `files_dropped` signal as an event: the sheet connects it
+  in `_ready` on `get_window()`, exactly as a hand-written project already writes it, and the paths
+  ride into the event as a chip. It is **desktop only** - Windows, macOS and Linux raise it and a web
+  or mobile build never does - and the row itself says so, not a doc nobody opened.
+- **Ask For A File To Open** and **Ask Where To Save** open the platform's own file chooser where
+  the platform has one, through `DisplayServer.file_dialog_show`. Where it has none, the filesystem
+  access `FileDialog` fallback is emitted as a **visible `else`** - both spellings are in the code a
+  reader can see, because a row that quietly picked one of two very different windows would be a row
+  nobody could debug.
+- **The answer is an event, never a return value.** A chooser is a separate window and the player
+  answers it long after the row ran, so both Ask rows end in **On A File Chosen** (the path riding as
+  a chip) or **On The Ask Cancelled**, and the emitted line calls those two events' functions by
+  name. A sheet that asks needs both events; the guide says so and the row's own description says so.
+- **Image From File** and **Sound From File** read content from outside the project, each with the
+  **fallback in the second slot** - the familiar default argument, not a clause grafted onto the
+  sentence. Leave it blank and the plain load is emitted, unchanged. The image reader is
+  `Image.load_from_file` into an `ImageTexture`; the sound reader names one engine reader per format
+  the engine decodes at runtime and picks by extension, which is exactly three: `.mp3`, `.ogg` and
+  `.wav`. **No import pipeline is involved and none is wanted** - a loaded image is a texture in a
+  variable, and it lives only as long as something holds it.
+- **The lift half.** A hand-written `get_window().files_dropped.connect(_on_files_dropped)` and its
+  handler open as the drop event, and the two answer functions open as their own events, all
+  re-emitting the file byte for byte. `get_window()` is now a connect source the reading knows, which
+  also gives the shipped **On Window Close Requested** a spelling it can be opened back from.
+- **The files band hears the new ask.** A row that opens the platform's chooser is found by the call
+  its emitted line makes rather than by an id, so it joins the band beside the `FileDialog` rows that
+  were already on it.
+- The shipped **Open File Chooser** verb and the twelve frozen file verbs are untouched: these sit
+  beside them. Game saves remain the Save System's territory - the guide states the line rather than
+  restating its verbs. **User content is data, never code**: nothing here loads a script, a scene or
+  a resource, and nothing here evaluates what it read.
+
 ### Tables read by the engine itself, and the files band
 
 - **Table Of File** reads a `.csv` with **Godot's own CSV reader** - `FileAccess.get_csv_line`, one

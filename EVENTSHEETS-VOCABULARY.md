@@ -3768,6 +3768,11 @@ Facing: mirror and flip, on every host that can do it
 ### File (`res://addons/eventforge/registration/modules/file_aces.gd`)
 File management (read / write / JSON, plus directory + file operations).
 
+#### Triggers
+- **On Files Dropped** (`files: PackedStringArray`) - Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.
+- **On A File Chosen** (`path: String`) - Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.
+- **On The Ask Cancelled** - Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.
+
 #### Conditions
 - **File Exists** (`path: String`) - True when a file exists at that path, so you can check before reading or writing it.
 - **Directory Exists** (`path: String`) - True when a folder exists at that path, useful before creating or listing it.
@@ -3782,6 +3787,8 @@ File management (read / write / JSON, plus directory + file operations).
 - **Remove Directory** (`path: String`) - Deletes an empty folder (clear out its files first).
 - **Write Text File (in a folder)** (`path: String, text: String, folder: String`) - Saves text to a file inside a folder, optionally creating the folders on the way. The folder line is emitted above the write and shown in the row, never behind your back.
 - **Open The Player's Data Folder** (`path: String`) - Opens the player's own data folder in their desktop file browser - the real folder user:// stands for on that machine.
+- **Ask For A File To Open** (`filters: PackedStringArray`) - Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.
+- **Ask Where To Save** (`filters: PackedStringArray`) - Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.
 
 #### Expressions
 - **Read Text File** (`path: String`) - Returns the whole file's contents as text (empty if it's missing or unreadable).
@@ -3789,6 +3796,8 @@ File management (read / write / JSON, plus directory + file operations).
 - **List Files** (`path: String`) - Returns the list of file names inside a folder (empty if the folder is missing).
 - **List Subdirectories** (`path: String`) - Returns the list of subfolder names inside a folder.
 - **Read Text File (or a fallback)** (`path: String, fallback: String`) - Reads a whole file as text, using the fallback you name when the file is not there. The guard is written into the line and shown on the row, so nothing happens that the code does not say.
+- **Image From File** (`path: String, fallback: String`) - Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.
+- **Sound From File** (`path: String, fallback: String`) - Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.
 
 ### Game Accessibility (`res://addons/eventforge/registration/modules/game_accessibility_aces.gd`)
 Accessibility for the GAME: the options every project should be one row
@@ -4896,13 +4905,18 @@ Tables (a spreadsheet read as rows of records) plus the text/folder loops.
 #### Conditions
 - **For Each Line In Text** (`text: String`) - Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.
 - **For Each Part In Text** (`text: String, separator: String`) - Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so "sword; shield;; bow" is three parts. Read the current one as `part`.
+- **For Each Line In File** (`path: String`) - Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.
 - **For Each Resource In Folder** (`folder: String`) - Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the "a folder of items IS my item list" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.
+
+#### Actions
+- **Write Table To File** (`path: String, table: String, separator: String, headers: String`) - Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.
 
 #### Expressions
 - **Table From File** (`path: String, separator: String`) - Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row["price"]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.
 - **Table From Text** (`text: String, separator: String`) - The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.
 - **Column Of Table** (`table: String, column: String`) - Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.
 - **Row Where** (`table: String, column: String, value: String`) - Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item "sword". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.
+- **Table Of File** (`path: String, separator: String, headers: String`) - Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in "double quotes" may hold the separator, and a doubled "" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.
 
 ### Testing (`res://addons/eventforge/registration/modules/testing_aces.gd`)
 Testing vocabulary (a sheet that makes claims and reports pass/fail).
