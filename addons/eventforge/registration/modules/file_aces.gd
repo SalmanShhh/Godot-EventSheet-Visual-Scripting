@@ -334,13 +334,19 @@ static func _content_from_outside() -> Array[ACEDescriptor]:
 	# THE ANSWER IS A TRIGGER. `DisplayServer.file_dialog_show` returns an Error, not a path: the
 	# chooser is another window, and the player answers it long after this line has run. So the two
 	# ways it can end are the two events below, and the emitted code calls them by name.
+	#
+	# BOTH ARE FILED ON `Node`, exactly as On Files Dropped beside them is, because the fallback half
+	# of the branch calls `add_child` and `popup_centered` on the host: a sheet whose script is not a
+	# Node cannot run these rows, and a row offered where it cannot compile is a row that lies. The
+	# template is untouched by the filing - the cross-node "On node" target is only added to a
+	# template whose every line is a member operation, and this one leads with `if`.
 	descriptors.append(F.make_descriptor("Core", "AskForAFileToOpen", "Ask For A File To Open", ACEDescriptor.ACEType.ACTION, _ask_template("Open a file", "OPEN_FILE"), "", [
 		_filters_param("Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png,*.jpg;Images\".")
-	], "Files", "Ask for a file to open ({filters})")
+	], "Files", "Ask for a file to open ({filters})", "Node")
 		.described("Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.").featured())
 	descriptors.append(F.make_descriptor("Core", "AskWhereToSave", "Ask Where To Save", ACEDescriptor.ACEType.ACTION, _ask_template("Save a file", "SAVE_FILE"), "", [
 		_filters_param("Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - \"*.png;PNG image\".")
-	], "Files", "Ask where to save ({filters})")
+	], "Files", "Ask where to save ({filters})", "Node")
 		.described("Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing."))
 	descriptors.append(F.make_descriptor("Core", "OnFileChosen", "On A File Chosen", ACEDescriptor.ACEType.TRIGGER, "", "", [
 		F.make_param("path", "String", "", "Path", "The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.")

@@ -548,6 +548,9 @@ On mods screen closed
   List Subdirectories if you need a tree.
 - **On Files Dropped is desktop only.** Windows, macOS and Linux raise it; a web or mobile build never
   does. Keep an Ask For A File To Open button beside it so the feature has a way in everywhere.
+- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted else
+  branch builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
+  offered in sheets whose script is one. Nothing about the emitted line changes.
 - **An Ask row needs both answer events.** The emitted line calls `_on_file_chosen` and
   `_on_ask_cancelled` by name, and those two functions are what On A File Chosen and On The Ask
   Cancelled compile to. Without them the script does not compile.

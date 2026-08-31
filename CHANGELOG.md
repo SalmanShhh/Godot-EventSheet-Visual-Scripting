@@ -305,6 +305,11 @@ These are the places the two disagreed.
   the rest of the session, while its own comment claimed it read the folder as it stands. It is
   dropped when a field starts completing: once per dialog, never once per keystroke, so the walk
   stays off the typing path.
+- **Both Ask rows are filed where they compile.** The fallback half of their branch calls
+  `add_child` and `popup_centered` on the host, so a sheet whose script is not a Node cannot run
+  them - and they declared no node scope at all, unlike **On Files Dropped** beside them. They are
+  filed on `Node` now. Nothing they emit changes: the cross-node "On node" target is only added to a
+  template whose every line is a member operation, and theirs leads with `if`.
 - **Every one of those checks now says what it cannot see.** All three read the path literal a call
   was handed, so a path built out of pieces or held in a variable is one they have nothing to say
   about. That was true from the start and stated only in a source comment; it is in the finding and

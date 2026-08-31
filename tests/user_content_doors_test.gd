@@ -93,6 +93,19 @@ static func _run_registration() -> bool:
 		str(by_id["LoadImageFile"].display_text), "image of file {path}, or {fallback}") and ok
 	ok = _check("the sound loader names its fallback second",
 		str(by_id["LoadSoundFile"].display_text), "sound of file {path}, or {fallback}") and ok
+	# BOTH ASK ROWS ARE FILED WHERE THEY COMPILE. The fallback half of the branch calls add_child and
+	# popup_centered on the host, so a sheet whose script is not a Node cannot run them - and a row
+	# offered where it cannot compile is a row that lies. Filing them changes nothing they emit: the
+	# cross-node "On node" target is only added to a template whose every line is a member operation,
+	# and this one leads with `if`.
+	for ace_id: String in ["AskForAFileToOpen", "AskWhereToSave"]:
+		ok = _check("%s is filed on the host it needs" % ace_id,
+			str(_registered(ace_id).node_type), "Node") and ok
+		var params: PackedStringArray = PackedStringArray()
+		for entry: Variant in _registered(ace_id).params:
+			params.append(str((entry as ACEParam).id))
+		ok = _check("and gains no parameter by being filed there", params,
+			PackedStringArray(["filters"])) and ok
 	# The drop is desktop-only, and the row is where that is said - not a doc nobody opened.
 	ok = _check("the drop says it is desktop only on the row itself",
 		str(by_id["OnFilesDropped"].description).contains("DESKTOP ONLY"), true) and ok
@@ -355,6 +368,13 @@ static func _by_id() -> Dictionary:
 	for descriptor: ACEDescriptor in load(MODULE_PATH).get_descriptors():
 		by_id[descriptor.ace_id] = descriptor
 	return by_id
+
+
+## One descriptor as the REGISTRY hands it out, which is the copy the cross-node pass has already
+## been over - the module's own copy has not, so a "no extra parameter" pin read off it would pass
+## for the wrong reason.
+static func _registered(ace_id: String) -> ACEDescriptor:
+	return ACERegistry.find_descriptor("Core", ace_id)
 
 
 static func _param_default(by_id: Dictionary, ace_id: String, param_id: String) -> String:
