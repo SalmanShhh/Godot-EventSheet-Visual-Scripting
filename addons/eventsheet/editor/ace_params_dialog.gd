@@ -23,6 +23,13 @@ const NO_VARIABLES_PLACEHOLDER := "No variables available"
 const BACK_ACTION := "back"
 const ADD_ANOTHER_ACTION := "add_another"
 
+## The row that puts a layout over the running game, and the field of it that decides which layout
+## goes there. The one lesson that row's author has to know is about the PAUSE that usually comes
+## with it, and it is said on the strip while that field is open rather than written into the scene
+## for them - see _layout_on_top_note below.
+const LAYOUT_ON_TOP_ACE_ID := "AddLayoutOnTop"
+const LAYOUT_ON_TOP_PARAM := "path"
+
 ## Session memory of the last-applied values per ace id, so re-adding the same ACE
 ## prefills what you used last time instead of the bare descriptor default (Tier-1
 ## tedium cut: the values you type repeatedly stop being re-typed). Static = shared
@@ -3689,6 +3696,11 @@ func _describe_field(key: String) -> void:
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
 				"%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), touch_note])
 			return
+		var layout_note: String = _layout_on_top_note(key)
+		if not layout_note.is_empty():
+			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
+				"%s  %s" % [EventSheetParamFieldFactory.strip_body(param, _row_owner), layout_note])
+			return
 		var scene_note: Dictionary = _scene_verb_note(key, param)
 		if not scene_note.is_empty():
 			_help_strip.show_note(EventSheetParamFieldFactory.strip_heading(param),
@@ -3714,6 +3726,21 @@ func _touch_filter_note(key: String) -> String:
 	if not CollisionFilters.is_filtered(_definition.id):
 		return ""
 	return _node_kind_note()
+
+
+## The lesson Add Layout On Top's Layout field teaches, or "" for every other field of every other
+## row. A menu put over the running game is almost always put there by the same event that pauses
+## it, and a paused tree stops the menu too unless the menu's OWN root node says otherwise - so the
+## author meets that fact while the field deciding which layout goes on top still has focus, and
+## learns the row it pairs with in the same breath.
+##
+## SAID, NOT DONE. Nothing here writes a Process Mode into anybody's scene. The row emits the three
+## lines it names and no more, because a dialog that silently edited a `.tscn` on OK would be a
+## magic the author cannot see, undo, or reason about later.
+func _layout_on_top_note(key: String) -> String:
+	if _definition == null or _definition.id != LAYOUT_ON_TOP_ACE_ID or key != LAYOUT_ON_TOP_PARAM:
+		return ""
+	return EventSheetL10n.translate("A layout added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.")
 
 
 ## The one line this row's own node class teaches: an area DETECTS, a character body is DRIVEN, a

@@ -47,6 +47,19 @@ const SPELLING_FAMILIES: Array[GDScript] = [
 	preload("res://addons/eventforge/importer/state_lift.gd"),
 ]
 
+## The families that claim a RUN of statements rather than a single line - two or three statements
+## that only mean something together, which is where the table engine stops and a hand-written
+## matcher starts. Each answers `match_run(lines, index, depth)` with {ace_id, params, template,
+## consumed}, or {} when it does not claim the run, and they are asked in this order before any
+## single line of the run is looked at on its own. Adding a family here is adding one line.
+const RUN_FAMILIES: Array[GDScript] = [
+	preload("res://addons/eventforge/importer/multiplayer_lift.gd"),
+	preload("res://addons/eventforge/importer/layout_on_top_lift.gd"),
+]
+
+## The static a run family declares.
+const RUN_SPELLING_METHOD: String = "match_run"
+
 ## The families that also recognise a CONDITION term - the same list, filtered by the second static
 ## a family declares when its vocabulary has a question in it as well as verbs. Asked before the
 ## general reverse index for the same reason: the index reads a term by its shape alone and cannot
@@ -2433,15 +2446,20 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
-			# A networking run that only means something as a group: the two or three lines that
-			# open a game are ONE row, so they are claimed together before any single line is. The
-			# matched spelling rides back as the row's baked template, which is what re-emits the
-			# author's own bytes instead of the canonical three-line form.
-			var networked_run: Dictionary = EventForgeMultiplayerLift.match_run(lines, index, depth)
-			if not networked_run.is_empty():
+			# A run that only means something as a group: the two or three lines that open a game,
+			# and the three that put a layout over the running one, are each ONE row, so they are
+			# claimed together before any single line is. The matched spelling rides back as the
+			# row's baked template, which is what re-emits the author's own bytes instead of the
+			# canonical multi-line form.
+			var claimed_run: Dictionary = {}
+			for run_family: GDScript in RUN_FAMILIES:
+				claimed_run = run_family.call(RUN_SPELLING_METHOD, lines, index, depth)
+				if not claimed_run.is_empty():
+					break
+			if not claimed_run.is_empty():
 				_flush_raw(current, pending_raw, blank_box)
-				current.actions.append(_matched_spelling_action(networked_run, blank_box))
-				index += int(networked_run["consumed"])
+				current.actions.append(_matched_spelling_action(claimed_run, blank_box))
+				index += int(claimed_run["consumed"])
 				chain_open = false
 				continue
 			# A line that OPENS a multi-line collection literal takes the whole literal with it.

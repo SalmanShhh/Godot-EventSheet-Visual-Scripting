@@ -207,6 +207,27 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Loads a scene file and adds an instance of it as a child (spawning objects)."))
 	descriptors.append(F.make_descriptor("Core", "IsPaused", "Is Game Paused", ACEDescriptor.ACEType.CONDITION, "get_tree().paused", "", [], "Scene", "Game is paused")
 		.described("True when the game is currently paused."))
+	# A layout ON TOP of the game rather than instead of it: the pause menu, the inventory, the
+	# dialogue box. Three rows, and each one is deliberately NOT a re-saying of a row that already
+	# ships:
+	#   Go To Layout REPLACES what is running; these three leave it running underneath.
+	#   Spawn Scene Instance adds a copy under THIS node with a bare add_child, which is the reading
+	#     it has always had and keeps - a spawned enemy belongs to the layout it was spawned in and
+	#     dies with it. A menu must not, so these rows add under the tree root instead.
+	#   The scene-flow pack parents its fade overlay to that same root for that same survival reason:
+	#     anything that has to outlive the scene beneath it cannot be a child of the scene beneath it.
+	#   The named-scenes pack owns the idea of addressing a layout by a short name instead of a path;
+	#     nothing here keeps a second registry - the name below is the node's own name under the root,
+	#     which is what get_node_or_null then answers with.
+	#   Pause The Game is the row these pair with, and the params dialog says so at the moment of
+	#     need: a layout added over a paused game only runs if its own root node's Process Mode says
+	#     it may. Nothing here writes that mode for the author.
+	descriptors.append(F.make_descriptor("Core", "AddLayoutOnTop", "Add Layout On Top", ACEDescriptor.ACEType.ACTION, "var __layout_{uid} = load({path}).instantiate()\n__layout_{uid}.name = {layout_name}\nget_tree().root.add_child(__layout_{uid})", "", [F.make_param("path", "String", "\"res://pause_menu.tscn\"", "Layout", "Layout file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.", "scene_path"), F.make_param("layout_name", "String", "\"PauseMenu\"", "Named", "The name the copy is given under the tree root. Remove Layout On Top and Layout Is On Top find it by this name, so keep all three saying the same one.", "expression")], "Scene", "Add layout {path} on top as {layout_name}")
+		.described("Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again."))
+	descriptors.append(F.make_descriptor("Core", "RemoveLayoutOnTop", "Remove Layout On Top", ACEDescriptor.ACEType.ACTION, "var __layout_{uid}: Node = get_tree().root.get_node_or_null({layout_name})\nif __layout_{uid} != null:\n\t__layout_{uid}.queue_free()", "", [F.make_param("layout_name", "String", "\"PauseMenu\"", "Named", "The name Add Layout On Top gave the copy. A name nothing is under removes nothing.", "expression")], "Scene", "Remove layout {layout_name} from on top")
+		.described("Takes a layout added by Add Layout On Top back off again. A name nothing is under quietly does nothing, so a close row is safe to run twice."))
+	descriptors.append(F.make_descriptor("Core", "LayoutIsOnTop", "Layout Is On Top", ACEDescriptor.ACEType.CONDITION, "get_tree().root.get_node_or_null({layout_name}) != null", "", [F.make_param("layout_name", "String", "\"PauseMenu\"", "Named", "The name Add Layout On Top gave the copy.", "expression")], "Scene", "layout {layout_name} is on top")
+		.described("True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open."))
 	# Audio (AudioStreamPlayer / 2D / 3D share these members)
 	descriptors.append(F.make_descriptor("Core", "PlayAudio", "Play Sound", ACEDescriptor.ACEType.ACTION, "play({from_position})", "", [F.make_param("from_position", "String", "0.0", "From", "Start position in seconds.", "expression")], "General Actions", "Play sound", "AudioStreamPlayer")
 		.described("Plays the sound on an audio player, optionally starting from a given second."))

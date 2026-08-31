@@ -5773,3 +5773,18 @@ Browse what %s can do. Rows you add here are written on it by name.,"Sieh dir an
 The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,"Der Knoten, auf den diese Zeile wirkt. Sie öffnet mit dem gewählten %name; leere das Feld, um stattdessen auf diesen Knoten zu wirken."
 "Mark ""%s"" as scene-unique","""%s"" als szenenweit eindeutig markieren"
 Make %s unique,%s eindeutig machen
+Add Layout On Top,Layout darüberlegen
+Remove Layout On Top,Darübergelegtes Layout entfernen
+Layout Is On Top,Layout liegt darüber
+Layout,Layout
+Add layout {path} on top as {layout_name},Layout {path} als {layout_name} darüberlegen
+Remove layout {layout_name} from on top,Darübergelegtes Layout {layout_name} entfernen
+layout {layout_name} is on top,Layout {layout_name} liegt darüber
+"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again.","Legt ein Layout über das laufende Spiel, statt es zu ersetzen - ein Pausenmenü, ein Inventar, ein Dialogfenster. Die Kopie wird unter der Baumwurzel eingehängt und überlebt so einen Layout-Wechsel darunter; sie bekommt den Namen, den du vergibst, damit die beiden Zeilen darunter sie wiederfinden."
+"Takes a layout added by Add Layout On Top back off again. A name nothing is under quietly does nothing, so a close row is safe to run twice.","Nimmt ein mit Layout darüberlegen hinzugefügtes Layout wieder weg. Ein Name, unter dem nichts liegt, bewirkt still gar nichts - eine Schließen-Zeile darf also zweimal laufen."
+"True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","Wahr, solange ein mit Layout darüberlegen hinzugefügtes Layout noch da ist. Damit verhinderst du, dass ein Menü zweimal aufgeht, oder beantwortest dieselbe Taste anders, während eines offen ist."
+"Layout file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","Layout-Datei, die darübergelegt wird. Ihr Wurzelknoten behält seinen eigenen Verarbeitungsmodus, und der entscheidet, ob sie im pausierten Spiel läuft."
+"The name the copy is given under the tree root. Remove Layout On Top and Layout Is On Top find it by this name, so keep all three saying the same one.","Der Name, den die Kopie unter der Baumwurzel bekommt. Darübergelegtes Layout entfernen und Layout liegt darüber finden sie über diesen Namen - alle drei sollten denselben nennen."
+The name Add Layout On Top gave the copy. A name nothing is under removes nothing.,"Der Name, den Layout darüberlegen der Kopie gegeben hat. Ein Name, unter dem nichts liegt, entfernt nichts."
+The name Add Layout On Top gave the copy.,"Der Name, den Layout darüberlegen der Kopie gegeben hat."
+A layout added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,"Ein über ein pausiertes Spiel gelegtes Layout ist mitpausiert: setze den Verarbeitungsmodus seines Wurzelknotens auf Immer (oder Bei Pause), damit es während der Pause funktioniert. Das Spiel pausieren ist die Zeile, mit der diese zusammengehört."

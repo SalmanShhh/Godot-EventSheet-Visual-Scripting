@@ -5773,3 +5773,18 @@ Browse what %s can do. Rows you add here are written on it by name.,%s(이)가 �
 The node this row acts on. It opens on the %name you picked; clear it to act on this node instead.,이 행이 작용하는 노드입니다. 선택한 %name으로 열립니다. 비우면 이 노드에 작용합니다.
 "Mark ""%s"" as scene-unique","""%s""을(를) 씬 고유로 표시"
 Make %s unique,%s을(를) 고유하게 만들기
+Add Layout On Top,레이아웃을 위에 올리기
+Remove Layout On Top,위에 올린 레이아웃 제거
+Layout Is On Top,레이아웃이 위에 있다
+Layout,레이아웃
+Add layout {path} on top as {layout_name},레이아웃 {path} 을(를) {layout_name} (으)로 위에 올리기
+Remove layout {layout_name} from on top,위에 올린 레이아웃 {layout_name} 제거
+layout {layout_name} is on top,레이아웃 {layout_name} 이(가) 위에 있다
+"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again.","실행 중인 게임을 교체하지 않고 그 위에 레이아웃을 올립니다 - 일시정지 메뉴, 인벤토리, 대화 창 등. 사본은 트리 루트 아래에 추가되어 아래쪽 레이아웃이 바뀌어도 남으며, 지정한 이름이 붙어 아래 두 행이 다시 찾을 수 있습니다."
+"Takes a layout added by Add Layout On Top back off again. A name nothing is under quietly does nothing, so a close row is safe to run twice.",「레이아웃을 위에 올리기」로 추가한 레이아웃을 다시 떼어냅니다. 아무것도 없는 이름은 조용히 아무 일도 하지 않으므로 닫기 행을 두 번 실행해도 안전합니다.
+"True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.","「레이아웃을 위에 올리기」로 추가한 레이아웃이 아직 남아 있는 동안 참입니다. 메뉴가 두 번 열리는 것을 막거나, 열려 있는 동안 같은 키에 다르게 반응하도록 하는 데 씁니다."
+"Layout file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.","위에 올릴 레이아웃 파일. 루트 노드가 자체 처리 모드를 유지하며, 일시정지 중에도 동작할지는 그 설정이 결정합니다."
+"The name the copy is given under the tree root. Remove Layout On Top and Layout Is On Top find it by this name, so keep all three saying the same one.",트리 루트 아래에서 사본에 붙는 이름. 「위에 올린 레이아웃 제거」와 「레이아웃이 위에 있다」가 이 이름으로 찾으므로 세 행 모두 같은 이름을 쓰세요.
+The name Add Layout On Top gave the copy. A name nothing is under removes nothing.,「레이아웃을 위에 올리기」가 사본에 붙인 이름. 아무것도 없는 이름은 아무것도 제거하지 않습니다.
+The name Add Layout On Top gave the copy.,「레이아웃을 위에 올리기」가 사본에 붙인 이름.
+A layout added over a paused game is paused with it: set its own root node's Process Mode to Always (or When Paused) for it to work while paused. Pause The Game is the row this one pairs with.,일시정지된 게임 위에 올린 레이아웃도 함께 멈춥니다. 일시정지 중에도 동작시키려면 루트 노드의 처리 모드를 「항상」(또는 「일시정지 시」)으로 설정하세요. 짝이 되는 행은 「게임 일시정지」입니다.

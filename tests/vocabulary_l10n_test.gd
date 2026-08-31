@@ -119,6 +119,9 @@ const EXTENDED_MODULES: Dictionary = {
 		"WaitUntil", "WaitForAllOf", "WaitForAnyOf", "WaitSucceeded", "WaitTimedOut",
 		"FirstToFinish", "RetryUpTo", "RetryAttemptNumber", "StopRetrying", "RetriesExhausted",
 		"WaitBeforeNextTry",
+		# A layout put OVER the running game rather than instead of it: the add, the removal, and
+		# the question between them.
+		"AddLayoutOnTop", "RemoveLayoutOnTop", "LayoutIsOnTop",
 	],
 	# The flow/diagnostics wave: trails, measurements and the frame-budget conditions.
 	"res://addons/eventforge/registration/modules/dev_aces.gd": [
