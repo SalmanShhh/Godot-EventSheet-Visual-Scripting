@@ -533,6 +533,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `looking_at` | [Facing Along](ace:Core/FacingAlong3D) | 3D: Move & Turn | Vocabulary |
 | `loop` | [Set Looping](ace:Core/SetPathLooping) | Follow a Path | Vocabulary |
 | `lpad` | [Align Right](ace:Core/AlignRight) | Text | Vocabulary |
+| `lstrip` | [Safe File Name](ace:Core/SafeFileName) | Files | Vocabulary |
 | `make_current` | [Make Current](ace:Core/MakeCameraCurrent) | Camera | Vocabulary |
 | `make_dir_recursive_absolute` | [Make Directory](ace:Core/MakeDir) | Files: Directories | Vocabulary |
 | `map` | [Map](ace:Core/ArrayMap) | Variables: Array | Vocabulary |

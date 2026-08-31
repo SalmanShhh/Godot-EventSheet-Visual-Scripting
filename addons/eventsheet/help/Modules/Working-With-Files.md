@@ -127,7 +127,7 @@ chosen** event writes a call to a function that is not there. Add both events wh
 | Ask Where To Save | Opens the player's own save chooser so they can name a file and a folder | The same branch, with `FILE_DIALOG_MODE_SAVE_FILE` / `FILE_MODE_SAVE_FILE` |
 | On A File Chosen | Runs when the player answered an Ask row by picking a file | `func _on_file_chosen(path: String) -> void:` |
 | On The Ask Cancelled | Runs when the player closed an Ask row's chooser without picking anything | `func _on_ask_cancelled() -> void:` |
-| Image From File | A picture from outside the project, as a texture | `ImageTexture.create_from_image(Image.load_from_file({path}))`, with ` if FileAccess.file_exists({path}) else {fallback}` when the fallback slot is filled |
+| Image From File | A picture from outside the project, as a texture | `ImageTexture.create_from_image(Image.load_from_file({path}))`, wrapped as `(… if FileAccess.file_exists({path}) else {fallback})` when the fallback slot is filled |
 | Sound From File | A sound from outside the project, as an audio stream | `AudioStreamMP3.load_from_file({path})` / `AudioStreamOggVorbis…` / `AudioStreamWAV…`, chosen by extension, with the same optional `file_exists` guard |
 
 ![One event in a sheet called AvatarPicker: a green arrow trigger badge, the object Node, a files payload chip, and one action, System Set avatar to ImageTexture.create_from_image(Image.load_from_file(files' item 0))](../images/user-content-drop.png)
@@ -156,8 +156,9 @@ An unpack is the one row here that handles a path somebody else chose. **An arch
 own path**, and an entry spelled `../../autoexec.cfg` resolves outside the folder the player pointed
 at - which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path is
 compared against the target folder before a single byte is written, the comparison is in the emitted
-code, and an entry that climbs out stops the whole unpack and raises **On Unpack Refused** with the
-reason in it.
+code, and an entry that climbs out leaves the loop and raises **On Unpack Refused** with the reason in
+it. It leaves the loop rather than returning, so the rows after the unpack still run and the row still
+fits inside a sheet function that answers with a value.
 
 Like the Ask rows, the emitted loop calls its three answers **by name**, so a sheet that unpacks needs
 an event for each of them or the script does not compile.
@@ -547,6 +548,9 @@ On mods screen closed
   List Subdirectories if you need a tree.
 - **On Files Dropped is desktop only.** Windows, macOS and Linux raise it; a web or mobile build never
   does. Keep an Ask For A File To Open button beside it so the feature has a way in everywhere.
+- **Both Ask rows want a Node host.** When a platform has no chooser of its own the emitted else
+  branch builds a `FileDialog`, adds it as a child and pops it up, so the row is filed on `Node` and
+  offered in sheets whose script is one. Nothing about the emitted line changes.
 - **An Ask row needs both answer events.** The emitted line calls `_on_file_chosen` and
   `_on_ask_cancelled` by name, and those two functions are what On A File Chosen and On The Ask
   Cancelled compile to. Without them the script does not compile.
@@ -557,7 +561,17 @@ On mods screen closed
 - **A dropped or chosen path is a real path on that machine**, not a `res://` or `user://` one. Copy
   the file under `user://` if the game should still have it next time it starts.
 - **Sound From File decodes exactly three formats:** `.mp3`, `.ogg` (Ogg Vorbis) and `.wav`. Anything
-  else reads as the fallback. This is the engine's own runtime limit, not a choice these rows made.
+  else reads as the fallback, because the line asks about the third extension too rather than letting
+  a fourth one fall into the WAV reader. This is the engine's own runtime limit, not a choice these
+  rows made.
+- **A file that is THERE but unreadable is not a missing file.** The guard on all three loaders is
+  `file_exists`, so a truncated `.png` or a `.ogg` that is really something else reaches its reader,
+  and the reader answers with null and an engine message rather than with your fallback. Check the
+  answer before using it when the file came from outside the game.
+- **Safe File Name does not know the reserved device names.** `con`, `prn`, `aux`, `nul` and `com1`
+  survive it, because `String.validate_filename` does not treat them specially, and Windows will not
+  take a file called any of them. Adding a prefix or suffix of your own - `save_` in front of the
+  player's name - is the reliable answer, and it is one row.
 - **The loaders read the path more than once.** The guard reads it, and the sound chain reads it once
   per format it checks - so put a variable in that field rather than a call with a side effect.
 - **A loaded image or sound is not a project resource.** It is not imported, it has no `.import`
@@ -568,6 +582,10 @@ On mods screen closed
 - **A refused unpack stops where it stopped.** The entries written before the bad one stay written.
   That is deliberate - the sheet is told which entry stopped it, and clearing up is a decision, not
   something a row should make on your behalf.
+- **The unpack counts what LANDED, not what it tried.** An entry the machine would not write - a name
+  the file system refuses, a folder it could not make, a full disk - moves neither the progress bar
+  nor the totals On Unpack Finished carries. A finish saying nine entries after a ten-entry archive
+  is a finish saying one did not land.
 - **Pack Folder Into Zip is not recursive.** It walks the files directly in that one folder. A whole
   tree needs your own walk with List Subdirectories.
 - **A packed archive stores bare file names**, so unpacking one lays its files flat in the target

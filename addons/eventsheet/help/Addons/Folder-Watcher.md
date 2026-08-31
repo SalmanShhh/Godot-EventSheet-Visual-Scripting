@@ -311,3 +311,16 @@ On A File Removed path -> SlotMenu | Rebuild
   is off - not even a Look Now's worth. Start it again, or call Look Now yourself.
 - **The triggers hand back whole paths; the expressions hand back names.** Join the folder back on
   before opening a name from **Watched File Names**.
+- **A folder that is not there is not a folder that emptied.** A deleted folder, an unmounted share
+  and a USB stick somebody pulled all answer with an empty list, exactly as an empty folder does. The
+  watcher asks whether the folder still exists before it compares anything, so a folder that goes
+  away raises nothing at all and the last reading is kept - otherwise every file in it would be
+  reported removed, and every one of them reported appeared again when the folder came back. If you
+  want to know that the folder itself went, ask **Directory Exists** in a row of your own.
+- **The name filter is case-sensitive.** `*.json` does not match `SAVE.JSON`, because
+  `String.match` compares case. Watch for the case your own writer produces, or filter with `*` and
+  test the name yourself in the trigger's row.
+- **The interval is kept, not restarted.** A look does not begin its count again from zero; the
+  overshoot past the interval is carried into the next gap, so two seconds means a look about every
+  two seconds for as long as the game runs rather than two seconds plus a frame, then plus two
+  frames, and so on.

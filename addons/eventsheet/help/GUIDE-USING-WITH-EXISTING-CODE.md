@@ -1568,7 +1568,7 @@ as the rows that write them:
 | --- | --- |
 | `FileAccess.file_exists("user://save.dat")` | `file "user://save.dat" exists` |
 | `FileAccess.get_file_as_string(path)` | `text of file path` |
-| `FileAccess.get_file_as_string(p) if FileAccess.file_exists(p) else "{}"` | `text of file p, or "{}"` - the guard is the row's second slot |
+| `(FileAccess.get_file_as_string(p) if FileAccess.file_exists(p) else "{}")` | `text of file p, or "{}"` - the guard is the row's second slot |
 | `FileAccess.open(p, FileAccess.WRITE)` and a guarded `store_string` | `write text to file p` |
 | `DirAccess.make_dir_recursive_absolute(p)` | `make directory p` |
 | `DirAccess.get_files_at(p)` | `files in p` |

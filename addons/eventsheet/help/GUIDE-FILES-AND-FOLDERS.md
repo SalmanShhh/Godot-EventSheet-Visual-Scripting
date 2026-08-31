@@ -74,6 +74,14 @@ scripts as well as its sheets:
 Each fix shows what it would change before it changes it, as before-and-after pairs of the row's own
 value, and lands as one undo.
 
+**What those checks can and cannot see, because a check that overstates its reach is worse than no
+check.** All three read the path literal a call was actually handed. `FileAccess.open("res://" +
+name, FileAccess.WRITE)` is caught, because the literal is there in the line; the same write with
+`var base = "res://"` on the line above it is not, because by then the path is a name. A path held in
+a variable or built out of pieces is one they have nothing to say about, and each finding says so:
+a quiet report is not a proof that a project is clean. The `load()` check below reaches further - it
+follows names within one file - and states its own limits in the same way.
+
 ## The guard you can see
 
 Reads are forgiving and writes are not, and both of those facts are things you can *see* in the
@@ -89,12 +97,15 @@ extends Node
 
 
 func _ready() -> void:
-	var settings: String = FileAccess.get_file_as_string("user://settings.json") if FileAccess.file_exists("user://settings.json") else "{}"
+	var settings: String = (FileAccess.get_file_as_string("user://settings.json") if FileAccess.file_exists("user://settings.json") else "{}")
 	print(settings)
 ```
 
 Leave that second slot blank and the plain read is emitted, unchanged. Nothing happens that the line
-does not say.
+does not say. The guarded form wears its own brackets, because an expression answers inside somebody
+else's sentence: dropped into one side of a comparison, a bare `a if b else c` would bind the
+comparison into its own branches and the row would quietly be the file's text rather than a test of
+it.
 
 The write half has the same shape. Godot will not create a folder on the way to opening a file, so a
 write to `user://runs/latest.txt` does nothing at all until something makes `user://runs`.
@@ -277,13 +288,18 @@ its own path, and one spelled `../../autoexec.cfg` resolves outside the folder t
 which is how an unpack becomes a write anywhere on their disk. So every entry's resolved path is
 compared against the target folder before a single byte is written - both sides globalized and
 simplified, the folder keeping its trailing slash so `user://mods` cannot accept
-`user://mods_of_mine` - and an entry that climbs out closes the archive, stops the whole unpack and
-raises **On Unpack Refused** with the entry and the reason on it.
+`user://mods_of_mine` - and an entry that climbs out leaves the loop, closes the archive and raises
+**On Unpack Refused** with the entry and the reason on it. It leaves the loop rather than returning,
+so the rows after the unpack still run and the row still fits inside a sheet function that answers
+with a value.
 
 A huge archive meets a progress bar rather than a frozen game: **On Unpack Progress** reports the
 entries and bytes that have landed, once per entry, and **On Unpack Finished** ends a run that
-reached the last entry. Like the Ask rows, the emitted loop calls all three answers **by name**, so
-a sheet that unpacks needs an event for each:
+reached the last entry. Both numbers count writes that SUCCEEDED: an entry the machine would not
+write - a name the file system refuses, a folder it could not make, a disk that is full - moves
+neither the bar nor the totals, so a finish saying nine of ten entries is a finish saying one did not
+land. Like the Ask rows, the emitted loop calls all three answers **by name**, so a sheet that
+unpacks needs an event for each:
 
 ```gdscript
 extends Node
@@ -309,9 +325,12 @@ A player names a screenshot, a save slot, a level. What they type is not a file 
 
 **Safe File Name** answers with one a file system will actually take, over the engine's own
 `String.validate_filename`: the characters it refuses become underscores and the ends are trimmed.
-It is an **expression**, so it goes in the path slot of the write that was already there rather than
-becoming a second way to save a file. Its second slot is the familiar default argument: a name that
-comes out empty answers with it, so a player who typed nothing gets a file instead of an error.
+Leading dots come off as well, because `..` is the one thing a player can type that a file system
+accepts and that is not a name at all - joined onto `user://saves` it is `user://`, the folder above
+the one the row meant. It is an **expression**, so it goes in the path slot of the write that was
+already there rather than becoming a second way to save a file. Its second slot is the familiar
+default argument: a name that comes out empty - blank, spaces, or only dots - answers with it, so a
+player who typed nothing gets a file instead of an error.
 
 **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
 does not erase the first. The rule is the one every desktop uses and it is spelled out in the emitted
@@ -326,7 +345,7 @@ extends Node
 
 func _ready() -> void:
 	var typed: String = "save 3/8?"
-	var file = FileAccess.open("user://saves/" + (typed.validate_filename() if not typed.validate_filename().is_empty() else "untitled") + ".json", FileAccess.WRITE)
+	var file = FileAccess.open("user://saves/" + (typed.validate_filename().lstrip(".") if not typed.validate_filename().lstrip(".").is_empty() else "untitled") + ".json", FileAccess.WRITE)
 	if file:
 		file.store_string("{}")
 		file.close()
@@ -391,10 +410,12 @@ three data-shaped doors instead.
 
 It is a **warning and not an error**. A game whose mods *are* code is a real decision that some
 projects make deliberately; what is not a decision is making it without knowing. The check reads
-names inside one file - a door's own handler parameter, anything assigned from one, anything a `for`
-walks out of one, any path written under a folder that file watches or unpacks into - and it does not
-follow a path across files or through a call into another body, so a quiet file is not a proof and
-the finding says so.
+names inside one file - a door's own handler parameter, anything assigned from one (written plainly
+or as `self.chosen`, which is the same name said two ways), anything a `for` walks out of one, any
+path written under a folder that file watches or unpacks into, whether that folder is a literal or a
+name the same file bound to one - and it does not follow a path across files, into an array element
+whose name it cannot see, or through a call into another body. So a quiet file is not a proof, and
+the finding itself says how far it reached rather than leaving silence to be read as an all-clear.
 
 ## Where the save system starts
 

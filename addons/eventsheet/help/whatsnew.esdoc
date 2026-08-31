@@ -221,6 +221,105 @@ What changed in the build you have installed (v0.17.0), in the words the release
   other 19 companion data assets and loaders. Assertions **20,040 across 704 test files**, counted off the runner's own total rather than from a grep.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
+### The files pass, read back adversarially
+
+An independent review read every line the pass shipped against every sentence it wrote about itself.
+These are the places the two disagreed.
+
+#### Fixed
+
+- **The unpack counted entries it never wrote.** The entry count, the byte total and the progress
+  call sat OUTSIDE the `if __file:` guard, so an entry the machine refused to write - a name the file
+  system will not take, a folder it could not make, a full disk - still moved the progress bar and
+  still counted into **On Unpack Finished**, while the guide promised \"the entries and bytes that
+  have landed\". All three are inside the guard now: the numbers are what landed.
+- **The unpack's refusal no longer leaves by `return`.** Inside a sheet function that answers with a
+  value, that emitted `return` was a script Godot could not parse - and the compile reported no error
+  at all, because the emitted text is only read when the engine reads it. Inside an ordinary handler
+  it silently abandoned every later row of the same event. The guard now records the entry and leaves
+  the loop; the archive closes once, and the line after the loop raises whichever of the two events
+  the run earned.
+- **The guarded read wears its own brackets.** **Read Text File (or a fallback)**, **Image From File**
+  and the Doctor's respelling fix all emitted a BARE `a if b else c`, while Safe File Name and Sound
+  From File beside them wrapped theirs. An expression answers inside somebody else's sentence, and a
+  bare ternary spliced between two operators binds them into its branches: dropped into one side of a
+  Compare Values row, the guarded read quietly BECAME the file's text instead of a comparison of it.
+  Wrong answer, not a parse error, so nothing would ever have said so. All three are bracketed now,
+  and the suite runs a guarded read inside a comparison to prove it.
+- **The Doctor's fixes read the vocabulary rather than a list of it.** The table naming each verb's
+  path fields was hand-kept, and it had already drifted from the verbs shipped beside it: nine path
+  fields - both loaders, both archive verbs, the engine's CSV pair and the line loop - were invisible
+  to both one-click fixes, so a **Write Table To File** aimed at `res://` raised the export-trap
+  warning and the chip beside it then answered that there was nothing to fix. Path fields are now
+  DERIVED from the same `file_path` hint the files band reads, spelled once for both. Which verbs
+  WRITE stays a written-down table, because no hint can say that - and the suite now fails when a
+  verb whose emitted line makes a write call is missing from it.
+- **An archive written to `res://` is the export trap too.** The sweep never learned `ZIPPacker`, so
+  a **Pack Folder Into Zip** aimed at `res://runs.zip` produced no finding at all while the files
+  band at the top of the same sheet called that row *written*. It is followed by the name the packer
+  is bound to, so a reader's identical `open(` stays silent - reading an archive out of `res://` is
+  what `res://` is for.
+- **Three smaller misreadings in the same checks.** The absolute-path check read every quoted string
+  on a statement rather than the ones a file call was handed, so a trailing comment naming an old
+  path raised a warning about a path the code does not use. The literal scan did not honour a
+  backslash-escaped quote, so one string carrying one pushed every literal after it out of step. And
+  the unguarded-read check fell silent on the WORDS `file_exists` wherever they appeared, so a line
+  guarding one file and reading another read as guarded. Each is pinned on a fixture.
+- **The outside-content trace follows the shape its own header names.** `self.chosen = path` in one
+  handler and `load(self.chosen)` in another - the store-it-on-the-object shape the trace exists for -
+  went unseen, because the rule that keeps somebody else's `config.path` out was reading `self` as
+  somebody else. A watched folder held in a name (`var folder = \"user://mods\"`, then
+  `watch_folder(folder, 2.0)`) went unseen for the same kind of reason. Both are followed now, and
+  the finding states its own reach: it reads names inside ONE file, and a file it says nothing about
+  is not a file it has cleared.
+- **The files band obeys its own scale law about watches.** The band capped paths at four and then
+  appended one reading per watch with no cap at all, so a sheet starting ten watches wore ten bands
+  plus four paths plus the ask - a head longer than the sheet, which is the thing the law in the
+  file's own header forbids. Watches are capped now, with the same \"and N more\" line.
+- **Two walks the band was making narrower than the Doctor's.** A chooser somebody wrote by hand in a
+  verbatim block never read as *asks the player to pick a file*, though the band already reads
+  verbatim blocks for the paths in them and finds the ask by the line it opens. And both band walks
+  read a function's `events` only, while a function lifted out of a hand-written file keeps its rows
+  in `rows` - exactly the shape this plugin is for.
+- **Safe File Name neutralises `..`.** It is the one thing a player can type that a file system
+  accepts and that is not a name at all: `String.validate_filename` leaves it exactly as it is, and
+  the documented next step is joining the answer onto a folder, where `\"user://saves\"` joined with
+  `..` is `user://` - the folder above the one the row meant. Leading dots come off, so `..` answers
+  with the fallback and `.hidden` answers `hidden`. The Windows reserved device names (`con`, `nul`,
+  `com1`) still survive it, which the module page now says out loud along with the fix.
+- **Sound From File keeps the promise printed on it.** Its fallback said it answered \"when its
+  extension is none of the three\", and it did not: a `.flac` that existed fell off the end of the
+  reader chain into `AudioStreamWAV.load_from_file`, which answered null with an engine error on the
+  console. The guarded form now asks about the third extension too and ends at the fallback. A file
+  that is THERE but unreadable still reaches its reader and answers null - true of all three loaders,
+  and now stated in the module page rather than nowhere.
+- **The watcher no longer reports a missing folder as an empty one.** A deleted folder, an unmounted
+  share and an unplugged drive all answer with an empty list exactly as an empty folder does, so a
+  look taken then raised **On A File Removed** for every file the folder held - and **On A File
+  Appeared** for every one of them when it came back. The folder is asked whether it is still there
+  before anything is compared, and the last reading is kept.
+- **The watcher's interval stops drifting.** Each look restarted its count from zero, throwing away
+  the overshoot, so the real gap was the interval plus up to one frame every time and the watcher
+  kept a slower clock than the number on the row. At most one interval is carried now, so a long
+  stall does not turn into a directory read every frame either. The page also says two things it did
+  not: what happens when the folder itself goes, and that the name filter is case-sensitive.
+- **Path completion sees the folder as it is now.** The `user://` half of the list was filed with the
+  project-scoped lists, which are dropped when the `res://` filesystem changes - and nothing in the
+  editor watches `user://`, so the list kept answering with the folder as it was at the first ask for
+  the rest of the session, while its own comment claimed it read the folder as it stands. It is
+  dropped when a field starts completing: once per dialog, never once per keystroke, so the walk
+  stays off the typing path.
+- **Both Ask rows are filed where they compile.** The fallback half of their branch calls
+  `add_child` and `popup_centered` on the host, so a sheet whose script is not a Node cannot run
+  them - and they declared no node scope at all, unlike **On Files Dropped** beside them. They are
+  filed on `Node` now. Nothing they emit changes: the cross-node \"On node\" target is only added to a
+  template whose every line is a member operation, and theirs leads with `if`.
+- **Every one of those checks now says what it cannot see.** All three read the path literal a call
+  was handed, so a path built out of pieces or held in a variable is one they have nothing to say
+  about. That was true from the start and stated only in a source comment; it is in the finding and
+  in the guide's Doctor chapter now, because a quiet report that reads as a clean project is the one
+  way an honest check misleads.
+
 ### Every call on a known class is a row
 
 - **The API is vocabulary too.** A call whose receiver's class the sheet can KNOW now derives an
