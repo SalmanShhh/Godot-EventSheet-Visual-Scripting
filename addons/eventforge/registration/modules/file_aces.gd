@@ -74,7 +74,84 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	descriptors.append_array(_content_from_outside())
 	descriptors.append_array(_archives())
+	descriptors.append_array(_names_and_doors())
 	return descriptors
+
+
+## ────────────────────────────────────────────────────────────────────────────────────────────────
+## THE NAME THE PLAYER TYPED, THE PATH THAT IS STILL FREE, AND THE FOLDER SHOWN BACK TO THEM.
+##
+## Three small rows about the moment a game writes a file the player named. Two are EXPRESSIONS,
+## because each one ANSWERS a question inside a path slot rather than doing anything; the third is an
+## ACTION, because it does a deed on the desktop.
+##
+##   the safe name   the engine's own `String.validate_filename`, with the familiar default argument
+##                   in the second slot. A player types "save 3/8?" and the file system refuses it;
+##                   this answers "save 3_8_". A name that validates to nothing - blank, or spaces -
+##                   answers the fallback instead, which is why the fallback is there.
+##   the free path   the nearest path that is not taken yet, so a second screenshot does not erase
+##                   the first. The rule is the one every desktop uses and it is spelled out in the
+##                   line: `shot.png`, then `shot_1.png`, `shot_2.png`, up to the number in the slot.
+##   the door back   `OS.shell_show_in_file_manager`, which opens the player's file browser with the
+##                   file already selected. DESKTOP ONLY, said on the row.
+##
+## NEITHER EXPRESSION WRITES ANYTHING. Both answer with a String and nothing else: the write is the
+## next row, spelled with the verb it was always spelled with. That is what keeps this a parameter and
+## not a second way to save a file.
+static func _names_and_doors() -> Array[ACEDescriptor]:
+	var descriptors: Array[ACEDescriptor] = []
+	descriptors.append(F.make_descriptor("Core", "SafeFileName", "Safe File Name", ACEDescriptor.ACEType.EXPRESSION, _safe_name_template(), "", [
+		F.make_param("name", "String", "\"\"", "Name", "The name to make safe - usually one the player typed. Every character a file system will not take is replaced with an underscore, and the ends are trimmed. Prefer a variable here: the line reads this twice.", "expression"),
+		F.make_param("fallback", "String", "\"untitled\"", "If it is empty", "What to answer with when the name is nothing once it has been made safe - a blank box, or spaces. Leave it blank to answer with the empty name itself, exactly as the engine's own check does.", "expression")
+	], "Files", "safe file name of {name}, or {fallback}")
+		.described("Answers with a file name that a file system will actually accept, using the engine's own validate_filename: the characters it refuses become underscores. A name that comes out empty answers with the fallback you name, so a player who typed nothing still gets a file rather than an error.").featured())
+	descriptors.append(F.make_descriptor("Core", "FreeFilePath", "Free File Path", ACEDescriptor.ACEType.EXPRESSION, _free_path_template(), "", [
+		F.make_param("path", "String", "\"user://shot.png\"", "Path", "The path you would like. It is answered back unchanged when no file is there yet.", "file_path"),
+		F.make_param("at_most", "int", "99", "At most", "How many numbers to try before giving up. Every try is one file_exists question, and they are only asked when the path you wanted is already taken. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.", "expression")
+	], "Files", "free path near {path}, up to {at_most}")
+		.described("Answers with the nearest path that has no file at it yet. A path that is free is answered back unchanged; one that is taken gets a number before its extension - shot.png, then shot_1.png, then shot_2.png - and the first free one is the answer. This asks about FILES: a folder sitting at that path is not seen.").featured())
+	descriptors.append(F.make_descriptor("Core", "ShowInFileManager", "Show In The File Manager", ACEDescriptor.ACEType.ACTION, "OS.shell_show_in_file_manager(ProjectSettings.globalize_path({path}))", "", [
+		F.make_param("path", "String", "\"user://save.dat\"", "Path", "The file or folder to show. A user:// or res:// path is turned into a real one on the player's machine first, and a path that is already real is handed over as it is.", "file_path")
+	], "Files", "show {path} in the file manager")
+		.described("Opens the player's own file browser with that file selected, so they can see what the game just wrote. DESKTOP ONLY: Windows, macOS and Linux open a window, and a web or mobile build does nothing at all - so say on screen where the file went as well."))
+	return descriptors
+
+
+## The safe name's line. The fallback is the familiar default argument: leaving the slot blank emits
+## the bare `validate_filename()` call, which is the engine's own answer with nothing added to it.
+##
+## THE GUARDED FORM WEARS ITS OWN BRACKETS, exactly as the sound loader's does. A safe name is written
+## to be joined onto a folder and an extension, and a bare `a if b else c` spliced between two `+`
+## signs binds the whole concatenation into the branches - which is a wrong path, not a parse error,
+## so nothing would ever have said so.
+static func _safe_name_template() -> String:
+	return "{?fallback}({/fallback}{name}.validate_filename()" \
+		+ "{?fallback} if not {name}.validate_filename().is_empty() else {fallback}){/fallback}"
+
+
+## The free path's line.
+##
+## THE PATH IS READ ONCE. It arrives as whatever expression the slot holds - a variable, a join, a
+## Safe File Name of something the player typed - and every one of those may cost something to work
+## out, so the line binds it to a name first and asks all its questions of that name.
+##
+## THE NUMBERED SUFFIX IS SPELLED OUT, and it is spelled by JOINING rather than by formatting.
+## `get_basename()` is the path without its extension and `trim_prefix(get_basename())` is exactly
+## what that removed - ".png", or nothing at all for a path that had no extension - so the number
+## lands between them and a path with no extension gets no stray dot. Written as a join, the rule can
+## be read straight off the row; written as a format string it is three specifiers and a list, which
+## is the same answer nobody can check at a glance.
+##
+## THE LAST RESORT IS THE PATH ITSELF, appended after the free candidates so the answer is never
+## nothing. A caller who has genuinely filled every number is overwriting, and the row's own help says
+## so rather than the line failing somewhere else later.
+static func _free_path_template() -> String:
+	return "(func(__wanted: String) -> String: return __wanted if not FileAccess.file_exists(__wanted)" \
+		+ " else (range(1, {at_most} + 1).map(func(__number: int) -> String:" \
+		+ " return __wanted.get_basename() + \"_\" + str(__number)" \
+		+ " + __wanted.trim_prefix(__wanted.get_basename())).filter(" \
+		+ "func(__candidate: String) -> bool: return not FileAccess.file_exists(__candidate))" \
+		+ " + [__wanted]).front()).call({path})"
 
 
 ## ────────────────────────────────────────────────────────────────────────────────────────────────

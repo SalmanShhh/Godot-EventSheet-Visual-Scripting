@@ -96,6 +96,9 @@ const USER_CONTENT_DOOR_IDS: Array[String] = [
 	# The two archive verbs and the three events an unpack raises, added to the same shipped module.
 	"PackFolderIntoZip", "UnpackZipIntoFolder", "OnUnpackProgress", "OnUnpackRefused",
 	"OnUnpackFinished",
+	# The name a player typed made safe, the path that is still free, and the door back to their
+	# own file browser. Added to the same shipped module.
+	"SafeFileName", "FreeFilePath", "ShowInFileManager",
 ]
 
 ## Modules that already shipped and GAINED verbs in this wave: only the named ids are swept, so the

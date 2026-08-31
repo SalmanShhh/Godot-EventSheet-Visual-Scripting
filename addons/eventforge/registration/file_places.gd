@@ -72,6 +72,8 @@ const PATH_PARAMS: Dictionary = {
 	"ListFiles": ["path"],
 	"ListDirs": ["path"],
 	"OpenUserDataFolder": ["path"],
+	"FreeFilePath": ["path"],
+	"ShowInFileManager": ["path"],
 }
 
 ## The calls a WRITE is spelled with in emitted code, for the text sweep the Doctor runs over the

@@ -769,6 +769,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `shadow_enabled` | [Turn Shadows On](ace:Core/LightShadowsOn) | Lighting | Vocabulary |
 | `shape` | [Query Bodies In Circle (2D)](ace:Core/QueryBodiesInCircle2D) | Overlap 2D | Vocabulary |
 | `shell_open` | [Go To URL](ace:Core/GoToUrl) | Browser | Vocabulary |
+| `shell_show_in_file_manager` | [Show In The File Manager](ace:Core/ShowInFileManager) | Files | Vocabulary |
 | `show` | [Show](ace:Core/ShowNode) | General Actions | Vocabulary |
 | `shuffle` | [Shuffle Array](ace:Core/ArrayShuffle) | Variables: Array | Vocabulary |
 | `sign` | [Sign](ace:Core/SignValue) | Helpers | Vocabulary |
@@ -863,6 +864,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `unit_size` | [Set Loudness Falloff](ace:Core/AudioSetLoudnessFalloff) | Audio | Vocabulary |
 | `unproject_position` | [Project To Screen (3D)](ace:Core/ProjectToScreen3D) | Math & Random | Vocabulary |
 | `update_overlays` | [Redraw Viewport Overlays](ace:Core/UpdateViewportOverlays) | Editor Tools: Plugin lifecycle | Vocabulary |
+| `validate_filename` | [Safe File Name](ace:Core/SafeFileName) | Files | Vocabulary |
 | `value` | [Value](ace:Core/GetRangeValue) | UI | Vocabulary |
 | `values` | [Dictionary Values](ace:Core/DictValues) | Variables: Dictionary | Vocabulary |
 | `var` | [Write Text File (in a folder)](ace:Core/WriteTextFileInFolder) | Files | Vocabulary |

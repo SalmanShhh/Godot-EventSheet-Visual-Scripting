@@ -1,6 +1,7 @@
-# Godot EventSheets - the Doctor's Files section: the three path mistakes the editor never mentions.
+# Godot EventSheets - the Doctor's Files section: three path mistakes the editor never mentions, and
+# one trust boundary nothing else in the engine draws.
 #
-# All three are the same shape of bug. The line is correct GDScript, it runs, and the editor is
+# The first three are the same shape of bug. The line is correct GDScript, it runs, and the editor is
 # silent - and then it behaves differently, or not at all, on the machine the game is sent to.
 #
 #   A WRITE AIMED AT res://    THE EXPORT TRAP. `res://` is a folder while you are in the editor and
@@ -25,6 +26,18 @@
 #                              that is what the sheet meant - and its door is a respelling: the same
 #                              read with the fallback said out loud.
 #
+# The fourth is not a bug at all, which is exactly why nothing reports it:
+#
+#   A LOAD OF OUTSIDE CONTENT   A path that came in through one of the game's own doors - a drop on
+#                               the window, the player's file chooser, a watched folder, an unpacked
+#                               archive - handed to `load()` or `ResourceLoader.load()`. That line
+#                               works. It also builds whatever the file describes, and a scene or a
+#                               resource file may name a SCRIPT, so a file somebody else made can run
+#                               its author's code inside this game. The doors beside it are the same
+#                               file read as DATA - as an image, as text, as a table - and data
+#                               cannot carry behaviour. Which reading was meant is the reader's call,
+#                               so this one names the line and offers three doors rather than a fix.
+#
 # EVERY CHECK IS A PURE FUNCTION OVER TEXT, and the gathering is separate, so the tests pin the exact
 # words a reader meets rather than a count. The corpus is EMITTED SCRIPTS rather than sheets, for the
 # reason the release-build console check is: the line is in the file whoever typed it, and a check
@@ -46,6 +59,7 @@ const CHECK_ID := "files"
 const CHECK_RES_WRITE := "files-write-to-res"
 const CHECK_ABSOLUTE_PATH := "files-absolute-path"
 const CHECK_UNGUARDED_READ := "files-unguarded-read"
+const CHECK_LOADS_OUTSIDE := "files-loads-outside-content"
 
 ## Folders whose scripts are not this project's to answer for: the plugin itself, the shipped packs,
 ## the suite and the tools. The same list the Ship It section keeps, for the same reason.
@@ -77,6 +91,7 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	out.append_array(res_write_findings(sources))
 	out.append_array(absolute_path_findings(sources))
 	out.append_array(unguarded_read_findings(sources))
+	out.append_array(loads_outside_findings(sources))
 	return out
 
 
@@ -185,7 +200,9 @@ static func absolute_path_lines(source: String) -> PackedStringArray:
 static func _touches_a_file(line: String) -> bool:
 	if line.contains("FileAccess.") or line.contains("DirAccess."):
 		return true
-	return line.contains("ProjectSettings.globalize_path(") or line.contains("OS.shell_open(")
+	if line.contains("ProjectSettings.globalize_path(") or line.contains("OS.shell_open("):
+		return true
+	return line.contains("OS.shell_show_in_file_manager(")
 
 
 
@@ -224,6 +241,36 @@ static func unguarded_read_lines(source: String) -> PackedStringArray:
 				found.append(line)
 				break
 	return found
+
+
+
+# ── A file from outside the game, handed to the loader that can run code ─────────────────────
+
+
+## One finding per script that hands an outside path to `load()` or `ResourceLoader.load()`.
+##
+## THE ONLY CHECK IN THIS SECTION THAT IS ABOUT SAFETY rather than about a path that will not work.
+## The other three describe a game that breaks; this one describes a game that works exactly as
+## written and runs somebody else's code while doing it. It is a WARNING and not an error, because a
+## project may mean it: a game whose mods ARE code is a deliberate decision, and the decision is the
+## reader's. What is not a decision is making it without knowing, which is what this says out loud.
+##
+## THERE IS NO ONE-CLICK FIX and there should not be. The three doors below are three different
+## readings of the same file, and only the reader knows which one the file was ever meant to be.
+static func loads_outside_findings(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		var lines: PackedStringArray = EventForgeOutsidePaths.loading_outside_lines(
+			str(sources[script_path]))
+		if lines.is_empty():
+			continue
+		var message: String = EventSheetL10n.translate("%s loads a file that came from outside the game - dropped on the window, chosen by the player, or found in a watched or unpacked folder. First: %s.") % [
+			script_path.get_file(), lines[0]]
+		message += _and_more(lines)
+		message += " " + EventSheetL10n.translate("A scene or a resource file can name a script, and loading one runs that script with everything this game can reach - the player's files, their network, their machine. The file was written by whoever made it, and that is not this project.")
+		message += " " + EventSheetL10n.translate("Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.")
+		findings.append(_finding("warning", CHECK_LOADS_OUTSIDE, script_path, message, lines[0]))
+	return findings
 
 
 

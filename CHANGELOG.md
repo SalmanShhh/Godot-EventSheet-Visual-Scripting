@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Safe names, the path that is still free, and the line between a file and a program
+
+- **Safe File Name** answers with a name a file system will actually take, over the engine's own
+  `String.validate_filename`: the characters it refuses become underscores, the ends are trimmed. It
+  is an EXPRESSION, so it sits in the path slot of the write that was already there rather than
+  becoming a second way to save a file. The second slot is the **familiar default argument** - a name
+  that comes out empty (a blank box, or spaces) answers with it, so a player who typed nothing gets a
+  file instead of an error. The guarded form wears its own brackets, because a bare `a if b else c`
+  spliced between two `+` signs binds the whole join into the branches, and that is a wrong path
+  rather than a parse error.
+- **Free File Path** answers with the nearest path nothing is sitting at yet, so a second screenshot
+  does not erase the first. The rule is the one every desktop uses and **it is spelled out in the
+  emitted line**: `shot.png`, then `shot_1.png`, then `shot_2.png`, up to the number in the slot. The
+  path expression is read **once** and the numbers are only tried when the path you wanted is taken.
+  A path with no extension gets no stray dot, and a run that fills every number answers the path you
+  asked for - which the row's own help says out loud, because that next write overwrites.
+- **Show In The File Manager** opens the player's own file browser with the file selected, over
+  `OS.shell_show_in_file_manager`. **Desktop only**, said on the row: a web or mobile build does
+  nothing at all, so say on screen where the file went as well.
+- **The Doctor now draws the trust boundary nothing else in the engine draws.** A path that came in
+  through one of the game's own doors - dropped on the window, chosen by the player, found in a
+  watched folder, written out of an unpacked archive - handed to `load()` or `ResourceLoader.load()`
+  is reported. That line works, which is exactly why nothing else mentions it: a scene or a resource
+  file can name a **script**, so loading one runs its author's code with everything this game can
+  reach. The finding says that in plain words and offers the three data-shaped doors - **Image From
+  File** for a picture, **Read Text File (or a fallback)** for text, **Table From File** for rows and
+  columns - because data cannot carry behaviour. It is a **warning and not an error**: a game whose
+  mods are code is a decision, and the decision is yours. What is not a decision is making it without
+  knowing.
+- **It reads text, so hand-written code gets the same finding.** The trace follows NAMES inside one
+  file: a parameter of a door's own handler, anything assigned from one, anything a `for` walks out
+  of one, and any path written under a folder that file watches or unpacks into. It keeps one set of
+  names per file rather than per function, which finds the very common shape where one handler stores
+  the path on the object and another loads it. It does **not** follow a path across files or through
+  a call into another body - so a quiet file is not a proof, and the check says so rather than
+  implying otherwise.
+
 ### The honest watcher, and one file that is many files
 
 - **Folder Watcher** is a new behavior pack that notices a file in one folder appearing, changing or

@@ -5665,3 +5665,21 @@ On unpack finished {entries} {bytes},展開が終わったとき {entries} {byte
 How many entries were written in total.,書き出された項目の総数。
 How many bytes were written in total.,書き出されたバイトの総数。
 watching %s every %s s,%s を %s 秒ごとに見張る
+Safe File Name,安全なファイル名
+"Answers with a file name that a file system will actually accept, using the engine's own validate_filename: the characters it refuses become underscores. A name that comes out empty answers with the fallback you name, so a player who typed nothing still gets a file rather than an error.",ファイルシステムが実際に受け付けるファイル名を答えます。エンジン自身の validate_filename を使い、受け付けられない文字はアンダースコアになります。空になってしまった名前は、指定した代わりの値を答えるので、何も入力しなかったプレイヤーもエラーではなくファイルを得られます。
+"safe file name of {name}, or {fallback}",{name} の安全なファイル名、なければ {fallback}
+"The name to make safe - usually one the player typed. Every character a file system will not take is replaced with an underscore, and the ends are trimmed. Prefer a variable here: the line reads this twice.",安全にしたい名前 - たいていはプレイヤーが入力したものです。ファイルシステムが受け付けない文字はすべてアンダースコアに置き換えられ、前後は切り詰められます。ここは変数を使うのが得策です。この行はこれを2回読みます。
+If it is empty,空になったとき
+"What to answer with when the name is nothing once it has been made safe - a blank box, or spaces. Leave it blank to answer with the empty name itself, exactly as the engine's own check does.",安全にした結果、名前が何も残らなかったとき - 空欄、または空白だけのとき - に答える値です。空のままにすると、エンジン自身の検査とまったく同じく、空の名前そのものを答えます。
+Free File Path,空いているファイルパス
+"Answers with the nearest path that has no file at it yet. A path that is free is answered back unchanged; one that is taken gets a number before its extension - shot.png, then shot_1.png, then shot_2.png - and the first free one is the answer. This asks about FILES: a folder sitting at that path is not seen.",まだファイルが置かれていない、いちばん近いパスを答えます。空いているパスはそのまま返り、使われているパスは拡張子の前に番号が付きます - shot.png、次に shot_1.png、次に shot_2.png - そして最初に空いていたものが答えです。これは「ファイル」を尋ねます。そのパスにあるフォルダーは見えません。
+"free path near {path}, up to {at_most}",{path} の近くで空いているパス、最大 {at_most}
+The path you would like. It is answered back unchanged when no file is there yet.,使いたいパスです。そこにまだファイルがなければ、そのまま返ります。
+"How many numbers to try before giving up. Every try is one file_exists question, and they are only asked when the path you wanted is already taken. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.",あきらめるまでに試す番号の数です。1回の試行が1回の file_exists の問い合わせで、望んだパスがすでに使われているときにだけ行われます。すべて使われている場合の答えは要求したパスそのものなので、次の行は上書きします - 納得できる数を指定してください。
+Show In The File Manager,ファイルマネージャーで表示
+"Opens the player's own file browser with that file selected, so they can see what the game just wrote. DESKTOP ONLY: Windows, macOS and Linux open a window, and a web or mobile build does nothing at all - so say on screen where the file went as well.",そのファイルを選択した状態でプレイヤーのファイルブラウザーを開き、ゲームが今書いたものを見せます。デスクトップ専用: Windows、macOS、Linux はウィンドウを開きますが、ウェブやモバイルのビルドでは何も起きません - ファイルの行き先は画面にも表示してください。
+show {path} in the file manager,{path} をファイルマネージャーで表示
+"The file or folder to show. A user:// or res:// path is turned into a real one on the player's machine first, and a path that is already real is handed over as it is.",表示するファイルまたはフォルダーです。user:// や res:// のパスは先にプレイヤーの実際のパスへ変換され、すでに実際のパスであればそのまま渡されます。
+"%s loads a file that came from outside the game - dropped on the window, chosen by the player, or found in a watched or unpacked folder. First: %s.",%s はゲームの外から来たファイルを読み込みます - ウィンドウにドロップされたもの、プレイヤーが選んだもの、監視中または展開済みのフォルダーで見つかったものです。最初: %s。
+"A scene or a resource file can name a script, and loading one runs that script with everything this game can reach - the player's files, their network, their machine. The file was written by whoever made it, and that is not this project.",シーンやリソースのファイルはスクリプトを指名できます。読み込むと、そのスクリプトはこのゲームが届く範囲すべて - プレイヤーのファイル、ネットワーク、マシン - を持って動きます。そのファイルを書いたのはそれを作った誰かであって、このプロジェクトではありません。
+"Read it as DATA instead, and the file cannot bring behaviour with it: Image From File for a picture, Read Text File (or a fallback) for text, Table From File for rows and columns. If this game means to run code its players wrote, say so where they can read it - that is a decision, not an accident.",代わりに「データ」として読めば、ファイルは振る舞いを持ち込めません。画像ならファイルから画像、テキストならテキストファイルを読む（または代わりの値）、行と列ならファイルからテーブルです。このゲームがプレイヤーの書いたコードを動かすつもりなら、プレイヤーが読める場所にそう書いてください - それは事故ではなく決定です。
