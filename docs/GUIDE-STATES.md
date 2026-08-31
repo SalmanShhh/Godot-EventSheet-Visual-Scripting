@@ -58,7 +58,7 @@ States are declared once, on the **states** band of the sheet head - the same pl
 are declared one level up. A sheet that has none offers **states** in the `+ add` row under the head
 stack; a sheet that has them shows them and opens the same dialog when you click it.
 
-![An enemy's sheet head with a states band reading Patrol, Chase, Stagger, starts in Patrol, and under it four events using the states vocabulary: Is in PATROL with Go to CHASE beside it, the timed question Is in STAGGER for over 1.0s, and the two triggers that answer the moment of a change](images/object-states.png)
+![An enemy's sheet head with a states band reading Patrol · Chase · Stagger - starts in Patrol, and under it four events using the states vocabulary: Is in PATROL with Go to CHASE beside it, the timed question Is in STAGGER for over 1.0s, and the two triggers that answer the moment of a change](images/object-states.png)
 
 **Declare states…** asks the two questions a state machine really has, and no third one:
 
@@ -330,7 +330,7 @@ Once the states are on the head, the sheet is also where you watch them. Run the
 open and three things happen, all of them inside the sheet - there is no overlay on the running
 game's viewport and no window in front of it:
 
-![An enemy's sheet while the game runs: the states band reads Patrol, Chase, Stagger, starts in Patrol with current: Chase, 3.2 s after it, the row Is in STAGGER for over 6s shows 3.2 of 6 beside it, and the event that just fired is lit along its left edge](images/state-play-mode.png)
+![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, and the row Is in STAGGER for over 6s shows 3.2 of 6 beside it](images/state-play-mode.png)
 
 - **The band carries the state the game is actually in.** `Patrol · Chase · Stagger - starts in Patrol`
   gains `current: Chase · 3.2 s` after it - after it, not instead of it, so the band still reads as

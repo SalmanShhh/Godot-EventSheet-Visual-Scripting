@@ -2240,7 +2240,7 @@ open and two things change, both of them inside the sheet:
   `3.2 of 6` right after the cell. The left-hand number is the very quantity that row compares, not a
   second clock kept by the editor.
 
-![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, the row Is in STAGGER for over 6s shows 3.2 of 6 beside it, and the event that just fired is lit along its left edge](images/state-play-mode.png)
+![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, and the row Is in STAGGER for over 6s shows 3.2 of 6 beside it](images/state-play-mode.png)
 
 **Four things are worth knowing about it, because each one is a promise:**
 
