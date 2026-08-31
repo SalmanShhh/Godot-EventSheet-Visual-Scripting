@@ -40,7 +40,11 @@ static func run() -> bool:
 		"This sheet included \"Shared\". Import that sheet too, then add it under Sheet > Manage Includes.") and all_passed
 	all_passed = _check("nothing translatable was flagged", (report["flagged"] as Array).size(), 0) and all_passed
 
-	var compiled: Dictionary = SheetCompiler.compile(sheet, "", true)
+	# Named rather than left to the compiler's default: with no path, compile() writes
+	# res://event_sheet_generated.gd, which the runner sweeps after EVERY test - so under the parallel
+	# runner another shard's sweep lands between this write and its read, and the compile reports a
+	# failure nothing here caused. One file per process, exactly as _roundtrip below already does.
+	var compiled: Dictionary = SheetCompiler.compile(sheet, _own_output_path(), true)
 	all_passed = _check("the imported sheet compiles", compiled["success"], true) and all_passed
 	var output: String = str(compiled["output"])
 	all_passed = _check("the variable the rows name is declared", output.contains("var score: float = 0.0"), true) and all_passed
@@ -67,6 +71,12 @@ static func run() -> bool:
 
 
 ## The written .gd re-opens as a sheet and re-emits byte-identically: what the wizard saved is what
+## Where this test's compiles land: one file per process under user://, so two shards of the parallel
+## runner never write over, or sweep away, each other's output.
+static func _own_output_path() -> String:
+	return "user://foreign_import_output_%d.gd" % OS.get_process_id()
+
+
 ## the editor will keep saving.
 static func _roundtrip(sheet: EventSheetResource) -> bool:
 	var path: String = "user://foreign_import_roundtrip_%d.gd" % OS.get_process_id()
@@ -76,7 +86,7 @@ static func _roundtrip(sheet: EventSheetResource) -> bool:
 	var reopened: EventSheetResource = GDScriptImporter.new().import_external(path)
 	if reopened == null:
 		return _check("the written .gd re-opens as a sheet", "null", "a sheet")
-	var again: Dictionary = SheetCompiler.compile(reopened, "", true)
+	var again: Dictionary = SheetCompiler.compile(reopened, _own_output_path(), true)
 	var written: String = FileAccess.get_file_as_string(path)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	return _check("the written .gd re-opens and re-emits byte-identically", str(again["output"]) == written, true)
