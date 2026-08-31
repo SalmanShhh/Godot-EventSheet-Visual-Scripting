@@ -5744,3 +5744,5 @@ Add row,添加行
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 声明于 %s - 已打开，但它所在的行已经移动。
 %s is a mode of this sheet's own declaration.,%s 是此事件表自身声明的模式。
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",该发现项关于 %s，它不是事件表 - 请从 FileSystem 面板打开。
+%s is not in the scene that is open.,%s 不在当前打开的场景中。
+%s is no longer in the project.,%s 已不在项目中。

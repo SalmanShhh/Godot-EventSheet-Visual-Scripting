@@ -5744,3 +5744,5 @@ Add row,Añadir fila
 "%s is declared in %s - opened it, but the row it is on has moved.","%s se declara en %s - se abrió, pero la fila en la que estaba se ha movido."
 %s is a mode of this sheet's own declaration.,%s es un modo de la propia declaración de esta hoja.
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Ese hallazgo trata de %s, que no es una hoja - ábrelo desde el panel FileSystem."
+%s is not in the scene that is open.,%s no está en la escena abierta.
+%s is no longer in the project.,%s ya no está en el proyecto.

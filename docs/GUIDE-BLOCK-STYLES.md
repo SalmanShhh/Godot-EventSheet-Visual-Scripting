@@ -146,6 +146,32 @@ so the symbol teaches once.
 Comments are their own full-width rows (Reading Mode restyles body comments as italic intent
 captions).
 
+### Nouns in a comment are doors
+
+A word in a note becomes a **door** - underlined with a hairline, and clicked to go there - when the
+project's own indexes can prove it exists. Five kinds of name qualify:
+
+| What you wrote | What it opens |
+| --- | --- |
+| `$Sprite`, `%HealthBar` | that node, selected in the Scene dock |
+| a function this sheet publishes | that function's row |
+| a state this object declares (`PATROL`, or the word `Patrol`) | the `enum State` declaration |
+| a mode the game declares | the file that declares the Mode enum |
+| a sheet file name (`hud.gd`) | that sheet |
+
+A name nothing matches stays plain prose, with no mark and no message: a door is evidence, never a
+guess. Two files called the same thing means the name opens neither, and a word that merely looks
+like a state ("retreat", when nothing is called that) is left alone. The lists behind this are the
+same ones the completion popup offers - there is no separate scan, and nothing is looked up while
+you type or while you hover.
+
+Both spellings get doors, the `##` documentation note and the `#` private one, and so does a comment
+written inside an event's action flow. **The comment itself is untouched**: doors exist while you
+read the sheet in the editor and nowhere else, and the file still holds exactly the `#` or `##` line
+it always did - which is what the echo at the right edge of the row is showing.
+
+![A comment row with three doors and one plain word](images/comment-doors.png)
+
 A **region** is a `#region` / `#endregion` fence pair, and it reads as what it is in the script
 editor - a fold mark. The opening fence wears a dashed `#` badge, its name in bold, its description
 muted beside it, and the line the file really has echoed at the right edge (`#region Movement`).

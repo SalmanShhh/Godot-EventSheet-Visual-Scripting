@@ -278,6 +278,7 @@ func build_ui() -> void:
 	_dock._viewport.verb_properties_requested.connect(_dock.open_verb_properties)
 	_dock._viewport.object_properties_requested.connect(_dock.open_object_properties)
 	_dock._viewport.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
+	_dock._viewport.comment_door_requested.connect(_dock.open_comment_door)
 	_dock._viewport.code_echo_activated.connect(_dock._code_panel_glue.open_at_row)
 	_dock._viewport.sheet_head_action_requested.connect(_dock._head_actions.handle)
 	_dock._viewport.group_action_requested.connect(_dock._on_group_action_requested)

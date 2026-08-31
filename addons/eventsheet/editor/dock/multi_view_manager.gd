@@ -109,6 +109,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.verb_properties_requested.connect(_dock.open_verb_properties)
 	view.object_properties_requested.connect(_dock.open_object_properties)
 	view.hierarchy_flags_requested.connect(_dock.hierarchy_edit_row_flags)
+	view.comment_door_requested.connect(_dock.open_comment_door)
 	view.match_edit_requested.connect(_dock._open_match_dialog)
 	view.row_disable_toggle_requested.connect(_dock._toggle_selected_rows_enabled)
 	view.row_move_requested.connect(_dock._move_selected_row)

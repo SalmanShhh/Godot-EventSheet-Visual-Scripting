@@ -5744,3 +5744,5 @@ Add row,行を追加
 "%s is declared in %s - opened it, but the row it is on has moved.",%s は %s で宣言されています - 開きましたが、その行は移動しています。
 %s is a mode of this sheet's own declaration.,%s はこのシート自身の宣言によるモードです。
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",この指摘は %s についてですが、シートではありません - FileSystem ドックから開いてください。
+%s is not in the scene that is open.,%s は開いているシーンにありません。
+%s is no longer in the project.,%s はプロジェクトにもうありません。

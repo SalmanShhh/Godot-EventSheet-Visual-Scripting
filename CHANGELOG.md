@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Nouns in a comment are doors
+
+- **A word a project index can prove becomes a door.** A note beside an event that says
+  "%HealthBar drives this. Patrol is where it starts" now underlines `%HealthBar` and `Patrol` with a
+  hairline, and one click goes there - the node selected in the Scene dock, the `enum State`
+  declaration revealed on its own row. Five kinds of name qualify: a `$Node` or `%Unique` reference,
+  a function this sheet publishes, a state this object declares, a mode the game declares, and the
+  file name of another sheet.
+- **Grounded, never guessed.** A name nothing matches stays plain prose - no mark, no message, no
+  hover. A word spelled exactly like a state that is not one ("retreat") is left alone, and a file
+  name two files answer to opens neither, because an ambiguous door is a guess. Both spellings of a
+  note get doors, `#` and `##`, and so does a comment written inside an event's action flow.
+- **The comment is untouched.** A door is something a reader is shown; the file knows nothing about
+  it. The `CommentRow`'s own text is never rewritten and the line the compiler emits is the same line
+  it always was - which is what the echo at the right edge of the row goes on showing.
+- **No new index, and no work while you read.** The five lists are the ones the completion popup
+  already builds and caches; this joins them into a name table once per sheet, and finds the doors of
+  a line when the comment row is BUILT. Nothing is scanned per frame, per hover or per keystroke: the
+  hit-test reads the rectangles the renderer stamped as it drew, the same way the colour swatch and
+  the object label already work. The table rebuilds itself when any list underneath it does, so there
+  is nothing extra to invalidate.
+- **Converged with the ask rather than beside it.** A state, a mode and a function door are handed to
+  the Quick Add field's own answer ladder, so a name opened from a comment and the same name opened
+  from the ask arrive in the same place, and say the same thing on the status line when they cannot.
+
 ### An object's states are a variable, declared once
 
 - **Declare states, on the sheet head.** The states band's **Declare states…** asks the two questions

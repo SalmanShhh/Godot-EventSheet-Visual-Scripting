@@ -104,6 +104,18 @@ func _over_color_swatch(hit: Dictionary, local_position: Vector2) -> bool:
 	return swatch_rect is Rect2 and (swatch_rect as Rect2).has_point(local_position)
 
 
+## The comment door under the pointer, or {} when there is none. Reads the rectangles the RENDERER
+## stamped onto the span - it is the only thing that knows where a word inside a wrapped note
+## actually drew - so a hover and a click cost a walk of the handful of doors that line holds and
+## nothing is measured twice.
+static func door_at(metadata: Dictionary, local_position: Vector2) -> Dictionary:
+	for entry: Variant in (metadata.get("door_rects", []) as Array):
+		var stamped: Dictionary = entry
+		if stamped.get("rect") is Rect2 and (stamped["rect"] as Rect2).has_point(local_position):
+			return stamped.get("door", {}) as Dictionary
+	return {}
+
+
 ## True when the viewport is a documentation FIGURE. A figure is an illustration, not an editing
 ## surface: it takes no pointer input at all. MOUSE_FILTER_IGNORE already stops most of it, but
 ## the handlers below are also reachable through forwarded input, and two of them act BEFORE any
@@ -161,6 +173,11 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_MOVE
 	elif _over_color_swatch(hit, local_position):
 		# The colour swatch is clickable (opens the inline picker) - advertise it like a link.
+		_viewport.clear_divider_guide()
+		_viewport.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	elif hit.get("span_metadata", {}) is Dictionary \
+			and not door_at(hit.get("span_metadata", {}) as Dictionary, local_position).is_empty():
+		# A proven noun in a comment: the same hand the rest of the sheet's links wear.
 		_viewport.clear_divider_guide()
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	else:
@@ -262,6 +279,17 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			return
 		var row_data: EventRowData = _viewport._row_at(row_index)
 		var metadata: Dictionary = hit.get("span_metadata", {})
+		# A noun in a comment that the project's own indexes could prove is a DOOR, and one click
+		# goes to the thing it names. No modifier: the hairline under the word already offered the
+		# jump, and an affordance that does nothing on the gesture it advertises is worse than none.
+		# It is tested first because a door is a smaller target than everything below it - a word
+		# inside a note - and losing it to the cell it sits in would make it unclickable.
+		if not event.double_click:
+			var comment_door: Dictionary = door_at(metadata, local_position)
+			if not comment_door.is_empty():
+				_viewport.comment_door_requested.emit(comment_door)
+				_viewport.accept_event()
+				return
 		# Click the inline colour swatch -> open the colour picker directly (no params dialog). The
 		# renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
 		# it and the cell's ACE has a Color param, hand off to the dock's picker popup.

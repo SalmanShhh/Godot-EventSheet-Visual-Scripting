@@ -56,6 +56,13 @@ const REGION_DASH_LENGTH := 3.0
 const TUNE_MARK_DROP_RATIO := 0.22
 const TUNE_MARK_ALPHA := 0.9
 
+## The door under a proven noun in a comment: a solid hairline at the same drop as the tune mark,
+## in the comment's own ink. It is a rule rather than a colour change on purpose - a note is prose,
+## and re-tinting words inside a sentence would make the sentence harder to read than the doors are
+## worth.
+const DOOR_RULE_ALPHA := 0.85
+const DOOR_RULE_WIDTH := 1.0
+
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
 static var _icon_plate_style: StyleBoxFlat = null
@@ -1045,6 +1052,54 @@ func _draw_tune_marks(
 			Vector2(minf(from_x + run_width, limit), underline_y), mark_ink, 1.0, REGION_DASH_LENGTH)
 
 
+## The doors of a comment span: a hairline under every noun the project could prove, and the
+## rectangle each one landed in stamped back onto the span.
+##
+## The stamp is the point. The renderer is the only thing that knows where a word actually drew -
+## which visual line the wrap put it on, how far in it started - so it records that and the input
+## layer hit-tests against it, exactly as the colour swatch and the object label already do. Nothing
+## re-measures, so what is underlined and what is clickable cannot drift apart.
+func _draw_comment_doors(
+	control: Control,
+	span: SemanticSpan,
+	metadata: Dictionary,
+	text_origin: Vector2,
+	line_height: float,
+	breaks: PackedInt32Array,
+	max_width: float,
+	font: Font,
+	font_size: int,
+	ink: Color
+) -> void:
+	var doors: Array = metadata.get("doors", [])
+	if doors.is_empty():
+		return
+	var text: String = str(metadata.get("door_text", span.text))
+	var boxes: Array[Dictionary] = EventSheetCommentDoors.door_boxes(text, doors, breaks, font, font_size)
+	if boxes.is_empty():
+		return
+	var limit: float = text_origin.x + max_width
+	var rule_y: float = maxf(float(font_size) * TUNE_MARK_DROP_RATIO, 2.0)
+	var rule_ink: Color = Color(ink, ink.a * DOOR_RULE_ALPHA)
+	var stamped: Array = []
+	for box: Dictionary in boxes:
+		var from_x: float = text_origin.x + float(box["x"])
+		var width: float = minf(float(box["width"]), limit - from_x)
+		if width <= 0.0 or from_x >= limit:
+			continue
+		var baseline_y: float = text_origin.y + float(int(box["line"])) * line_height
+		control.draw_line(Vector2(from_x, baseline_y + rule_y),
+			Vector2(from_x + width, baseline_y + rule_y), rule_ink, DOOR_RULE_WIDTH)
+		# The clickable box is the whole line-height band the word sits in, not the glyphs: a
+		# pointer aimed at a word should not have to land between its ascender and its baseline.
+		stamped.append({
+			"door": box["door"],
+			"rect": Rect2(from_x, baseline_y - font.get_ascent(font_size),
+				width, maxf(line_height, font.get_height(font_size))),
+		})
+	span.metadata["door_rects"] = stamped
+
+
 func _draw_spans(
 	control: Control,
 	row_data: EventRowData,
@@ -1370,6 +1425,26 @@ func _draw_spans(
 			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
 				text_width, font, draw_font_size, color, emphasis_value_color,
 				reading.string_value_color, reading.boolean_value_color, reading.muted_text_color)
+		# The doors of a comment: a noun the project's own indexes could prove gets a hairline under
+		# it and a rectangle stamped back for the click. Measured against the very break points this
+		# span was just drawn with, so a door on a wrapped note underlines the line it is really on.
+		# The cell being EDITED has no doors - it is a text field for as long as it is being typed in.
+		if span_index != editing_span_index and not (metadata.get("doors", []) as Array).is_empty():
+			var door_line_h: float = float(metadata.get("comment_line_height", draw_font_size + 6))
+			var door_breaks := PackedInt32Array([0])
+			var door_baseline_y: float = baseline_y
+			var wrapped_baseline_y: float = span.rect.position.y + (door_line_h * ROW_VERTICAL_CENTER_RATIO) \
+				+ (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
+			if not bbcode_segments.is_empty():
+				var stamped_breaks: PackedInt32Array = metadata.get("segment_wrap_breaks", PackedInt32Array())
+				if stamped_breaks.size() > 1:
+					door_breaks = stamped_breaks
+					door_baseline_y = wrapped_baseline_y
+			elif bool(metadata.get("comment_wrap", false)):
+				door_breaks = ViewportRowMetrics.wrap_break_points(draw_text, text_width, font, draw_font_size)
+				door_baseline_y = wrapped_baseline_y
+			_draw_comment_doors(control, span, metadata, Vector2(text_x, door_baseline_y),
+				door_line_h, door_breaks, text_width, font, draw_font_size, color)
 		# The tune-me marks: on a row that arrived as a worked example, every literal in it is the
 		# EXAMPLE's value and the reader is meant to replace it. A dashed rule under each one says so
 		# without changing one character of what the row reads as.

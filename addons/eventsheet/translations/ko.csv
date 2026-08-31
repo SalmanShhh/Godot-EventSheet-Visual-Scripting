@@ -5744,3 +5744,5 @@ Add row,행 추가
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 은(는) %s 에 선언되어 있습니다 - 열었지만 해당 행이 이동했습니다.
 %s is a mode of this sheet's own declaration.,%s 은(는) 이 시트 자체 선언의 모드입니다.
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",이 발견 항목은 %s 에 대한 것이며 시트가 아닙니다 - FileSystem 독에서 여세요.
+%s is not in the scene that is open.,%s 은(는) 열려 있는 씬에 없습니다.
+%s is no longer in the project.,%s 은(는) 더 이상 프로젝트에 없습니다.

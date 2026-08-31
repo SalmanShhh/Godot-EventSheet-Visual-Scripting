@@ -5744,3 +5744,5 @@ Add row,Добавить строку
 "%s is declared in %s - opened it, but the row it is on has moved.","%s объявлен в %s - лист открыт, но строка, на которой он был, переместилась."
 %s is a mode of this sheet's own declaration.,%s - режим из собственного объявления этого листа.
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.","Это замечание о %s, который не является листом - откройте его в доке FileSystem."
+%s is not in the scene that is open.,%s нет в открытой сцене.
+%s is no longer in the project.,%s больше нет в проекте.

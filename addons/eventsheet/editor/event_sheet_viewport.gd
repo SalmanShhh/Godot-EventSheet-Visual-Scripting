@@ -110,6 +110,10 @@ signal object_properties_requested(object_label: String)
 ## The flags chip on an Add child row was clicked: the ticks it was written with travel in the
 ## payload, and the dock opens them as the tick dialog and writes the answer back.
 signal hierarchy_flags_requested(payload: Dictionary)
+## A door in a comment was clicked - a noun the project's own indexes could prove. The payload is the
+## door itself ({kind, target, text}); the dock owns where each kind leads, because arriving is
+## navigation and the viewport never navigates.
+signal comment_door_requested(door: Dictionary)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ - the dock toggles the selected rows' enabled state (undoable).

@@ -424,6 +424,8 @@ func _init() -> void:
 	# The quick-add field's answers. Wired here with the other init-only helpers so a test can ask
 	# what a query answers on a fresh .new() editor, before any toolbar has been built.
 	_ask_field.init(self)
+	# And where a door clicked in a comment leads - the same init-only shape, for the same reason.
+	_comment_door_open.init(self)
 	# The public extension API (addons/eventsheet/api/eventsheets.gd) fronts this dock;
 	# the region fold commands register through it as living proof the extension point
 	# works - delete these four lines and only extensions lose their entries.
@@ -4940,6 +4942,17 @@ func _apply_editor_native_defaults() -> void:
 # _ask_field's, and rides the same field on the shipped completion popup.
 var _quick_add_edit: LineEdit = null
 var _ask_field: EventSheetAskField = EventSheetAskField.new()
+
+## Where a door clicked in a comment row leads. Three of its five kinds are handed straight to
+## _ask_field above, so a name opened from a note and the same name opened from the ask arrive in
+## the same place.
+var _comment_door_open: EventSheetCommentDoorOpen = EventSheetCommentDoorOpen.new()
+
+
+## Where a door clicked in a comment leads. A thin delegate like every other one on this facade, so
+## the wiring reads as one call on the dock rather than as a reach through it.
+func open_comment_door(door: Dictionary) -> void:
+	_comment_door_open.open(door)
 
 
 func _quick_match(query: String) -> Dictionary:  # intellisense_test

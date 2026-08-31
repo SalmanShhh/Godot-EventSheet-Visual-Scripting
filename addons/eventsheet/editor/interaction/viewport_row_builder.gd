@@ -6511,6 +6511,7 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 			"badge_fg": event_style.comment_text_color,
 			"hover_note": EventSheetL10n.translate("Shows in the manual.")
 		}))
+	var door_table: Dictionary = EventSheetCommentDoors.table_for(_viewport._sheet)
 	for line_index in range(comment_lines.size()):
 		var line_metadata: Dictionary = {
 			"editable": true,
@@ -6520,8 +6521,13 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 		}
 		# BBCode-lite ([b]/[i]/[color=…]): segments shape the pixels; the RAW text stays
 		# the editing/serialization truth (no data loss on edit/copy).
+		var reading_line: String = comment_lines[line_index]
 		if EventSheetBBCodeLite.has_markup(comment_lines[line_index]):
 			line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], line_color)
+			# The doors are offsets into what is DRAWN, and a marked-up line draws its stripped text
+			# through the segment run - so that is the string they are found in.
+			reading_line = EventSheetBBCodeLite.strip(comment_lines[line_index])
+		_note_comment_doors(line_metadata, reading_line, door_table)
 		comment_spans.append(
 			_make_span(
 				comment_lines[line_index],
@@ -6545,6 +6551,19 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 		))
 	row_data.spans = comment_spans
 	return row_data
+
+
+## Stamps the doors of one comment line onto the span metadata it will be drawn from, and does
+## nothing at all for a line that names nothing the project can prove. `door_text` is the string the
+## offsets index - what the renderer DRAWS, which is the raw line for a plain note and the stripped
+## line for a marked-up one - so the underline and the click can never be measured against a
+## different string from the one on screen.
+func _note_comment_doors(line_metadata: Dictionary, drawn_text: String, door_table: Dictionary) -> void:
+	var doors: Array[Dictionary] = EventSheetCommentDoors.doors_in(drawn_text, door_table)
+	if doors.is_empty():
+		return
+	line_metadata["doors"] = doors
+	line_metadata["door_text"] = drawn_text
 
 
 func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
@@ -11778,12 +11797,21 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				# comment-styled cell per text line, sharing the ace_index.
 				var action_comment: CommentRow = action_resource as CommentRow
 				var action_comment_lines: PackedStringArray = action_comment.text.split("\n") if not action_comment.text.is_empty() else PackedStringArray(["Comment"])
+				# The OTHER kind of comment - the same CommentRow, read inside the event's action
+				# flow - gets the same doors. A note is a note wherever it is written.
+				var action_door_table: Dictionary = EventSheetCommentDoors.table_for(_viewport._sheet)
 				for comment_line_index in range(action_comment_lines.size()):
+					# Reading Mode drops the marker and draws the line italic, so what is DRAWN - and
+					# therefore what the door offsets index - is the bare line there and the
+					# "# "-prefixed one everywhere else.
+					var action_comment_drawn: String = action_comment_lines[comment_line_index] if _viewport.is_reading_mode() else "# " + action_comment_lines[comment_line_index]
+					var action_comment_doors: Dictionary = {}
+					_note_comment_doors(action_comment_doors, action_comment_drawn, action_door_table)
 					spans.append(
 						_make_span(
-						action_comment_lines[comment_line_index] if _viewport.is_reading_mode() else "# " + action_comment_lines[comment_line_index],
+						action_comment_drawn,
 							SemanticSpan.SpanType.COMMENT,
-							{
+							action_comment_doors.merged({
 								"lane": "action",
 								"kind": "action",
 								"ace_index": action_index,
@@ -11801,7 +11829,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							# Reading Mode: the note reads as an italic CAPTION - intent first, mechanics under
 							# it - and drops its # marker (the row is already visibly a comment). View state only.
 							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode() else []
-							}.merged(action_style_meta, false)
+							}.merged(action_style_meta, false))
 						)
 					)
 					action_line_index += 1
