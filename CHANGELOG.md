@@ -214,7 +214,7 @@
   **847 files, 845 at zero script blocks, 9 block lines, 251,221 lines and 184,147 rows, 89% of
   those rows in the sheet's own words** - the block lines did not move and neither did the share.
   The pack count moves by exactly the watcher: **113 behavior packs, 94 of them with a guide**, the
-  other 19 companion data assets and loaders. Assertions **20,040 across 704 test files**, counted off the runner's own total rather than from a grep.
+  other 19 companion data assets and loaders. Assertions **20,067 across 704 test files**, counted off the runner's own total rather than from a grep.
 - Vocabulary reference regenerated, and the help bundle re-baked last over this changelog.
 
 ### The files pass, read back adversarially
