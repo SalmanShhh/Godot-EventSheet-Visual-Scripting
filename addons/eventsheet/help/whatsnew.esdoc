@@ -156,6 +156,18 @@ What changed in the build you have installed (v0.17.0), in the words the release
   `user://`, loaded, instantiated and removed - which is what the live registry does for every
   installed pack, the difference being that this one has not been accepted yet. Stated in the dry
   run's own tooltip and in the guide rather than left for somebody to discover.
+- **The rename receipt lists the files it writes outside this sheet.** The button runs the undoable
+  rename here and then the includers pass, which rewrites and SAVES closed sheets - files outside the
+  one Ctrl+Z the status line promises, and files neither of the receipt's two cards named. They were
+  reported only afterwards, which is the same defect as an overcounting receipt with the sign
+  reversed. They get their own card, worked out by doing the rename on a throwaway copy through the
+  very function the button runs, and the summary says they are saved rather than undone.
+- **A renamed function is found in every lane and every field.** The section read Core::CallFunction
+  in the ACTION lane and nothing else, so a `bool` sheet function published as a CONDITION, a name
+  typed into an expression, and a name written in a Script block all went unreported - while the node
+  half beside it walked every surface of the event. Both lanes are read, and the text an event writes
+  is swept for a call to a name that went out of the file, once per name per event, matching whole
+  names only.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.

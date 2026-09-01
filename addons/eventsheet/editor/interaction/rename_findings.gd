@@ -44,6 +44,15 @@ const FIX_POINT_THE_ROWS := "point_the_rows_there"
 
 ## The verb a sheet calls its own functions with. A row of any other kind is not a call by this
 ## name and is none of this file's business.
+## The two lanes, spelled the way every other finding in this pass spells them - a finding carries
+## the lane it was found in so the door can address the row it is about.
+const LANE_CONDITION := "condition"
+const LANE_ACTION := "action"
+
+## What may sit in front of a name without the name being the one written there. Spelled out rather
+## than asked of a regex, because this runs over every parameter of every row of every sheet built.
+const IDENTIFIER_CHARACTERS: String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+
 const CALL_PROVIDER := "Core"
 const CALL_ACE := "CallFunction"
 const CALL_PARAM := "function_name"
@@ -207,19 +216,33 @@ static func _walk(items: Array, sheet: EventSheetResource, label: String,
 
 ## The findings ONE event earns: the calls in it that no longer resolve, then the node references in
 ## it whose node is gone. Both lanes, in reading order.
+##
+## A CALL IS A CALL WHEREVER IT IS WRITTEN. The picked Call function row is the common one and it is
+## read first, in BOTH lanes - a `bool` sheet function published as a condition is picked into the
+## condition lane and used to be invisible here. But a renamed function also breaks a name written
+## into an expression field, a trigger's parameter or a Script block, and those are text rather than
+## rows: they are swept afterwards, once per event per name, and only for a name the picked pass has
+## not already reported. The node half has always been thorough across every surface; the call half
+## is now the same shape, because "a rename broke every row that used the name, so pointing them
+## somewhere new is one gesture over all of them" is only true if every row is seen.
 static func _note_this_event(event_row: EventRow, label: String, declared: PackedStringArray,
 		witness: Dictionary, found: Array[Dictionary]) -> void:
+	for slot: int in event_row.conditions.size():
+		_note_a_call(event_row, event_row.conditions[slot] as Resource, slot, LANE_CONDITION, label,
+			declared, witness, found)
 	for slot: int in event_row.actions.size():
-		_note_a_call(event_row, event_row.actions[slot] as Resource, slot, label, declared,
-			witness, found)
+		_note_a_call(event_row, event_row.actions[slot] as Resource, slot, LANE_ACTION, label,
+			declared, witness, found)
+	_note_a_written_call(event_row, label, declared, witness, found)
 	_note_the_nodes(event_row, witness, found)
 
 
 ## One action, measured against the call rule. Everything it declines to report is declined for a
 ## named reason, because a section that reports a row nobody can act on is one its reader scrolls past.
-static func _note_a_call(event_row: EventRow, entry: Resource, slot: int, label: String,
-		declared: PackedStringArray, witness: Dictionary, found: Array[Dictionary]) -> void:
-	if not (entry is ACEAction):
+static func _note_a_call(event_row: EventRow, entry: Resource, slot: int, lane: String,
+		label: String, declared: PackedStringArray, witness: Dictionary,
+		found: Array[Dictionary]) -> void:
+	if not (entry is ACEAction or entry is ACECondition):
 		return
 	if str(entry.get("provider_id")).strip_edges() != CALL_PROVIDER \
 			or str(entry.get("ace_id")).strip_edges() != CALL_ACE:
@@ -246,8 +269,90 @@ static func _note_a_call(event_row: EventRow, entry: Resource, slot: int, label:
 		"fix_label": EventSheetL10n.translate("Point the rows at %s") % answer \
 			if not answer.is_empty() else "",
 		"second_fix": "", "second_fix_label": "",
-		"lane": "action", "index": slot, "path": label,
+		"lane": lane, "index": slot, "path": label,
 	})
+
+
+## THE OTHER HALF OF THE CALL RULE: a name that went out of this file and is still WRITTEN somewhere
+## in this event - an expression field, a trigger's parameter, a Script block. Those are text rather
+## than a picked row, so they carry no lane and no slot, and the door they get is the same one: point
+## the rows at the name the save proves it became.
+##
+## One finding per name per event, and never for a name a picked row above already reported: two
+## sentences about one broken call is a list its reader learns to scroll past.
+static func _note_a_written_call(event_row: EventRow, label: String, declared: PackedStringArray,
+		witness: Dictionary, found: Array[Dictionary]) -> void:
+	var names_gone: PackedStringArray = witness.get("names_gone", PackedStringArray())
+	if names_gone.is_empty():
+		return
+	var said: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in found:
+		if str(entry.get("kind", "")) == KIND_CALL_GONE and entry.get("event", null) == event_row:
+			said.append(str(entry.get("subject", "")))
+	for name: String in names_gone:
+		if said.has(name) or declared.has(name):
+			continue
+		if not _calls_by_name(_written_text_of(event_row), name):
+			continue
+		said.append(name)
+		var answer: String = EventSheetRenameEvidence.did_you_mean(names_gone,
+			witness.get("names_arrived", PackedStringArray()), name)
+		found.append({
+			"kind": KIND_CALL_GONE, "severity": "warning",
+			"anchor": ANCHOR_EVENT, "event": event_row,
+			"subject": name, "to": answer,
+			"message": call_gone_message(name, label, answer),
+			"fix": FIX_POINT_THE_ROWS if not answer.is_empty() else "",
+			"fix_label": EventSheetL10n.translate("Point the rows at %s") % answer \
+				if not answer.is_empty() else "",
+			"second_fix": "", "second_fix_label": "",
+			"lane": "", "index": -1, "path": label,
+		})
+
+
+## Every piece of TEXT one event writes that could hold a call: each parameter of the trigger and of
+## both lanes, and any verbatim code. Joined with newlines, because what is asked of it is only
+## whether a name appears in it as a call.
+static func _written_text_of(event_row: EventRow) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	if event_row.trigger != null:
+		_gather_text(event_row.trigger, parts)
+	for condition: Variant in event_row.conditions:
+		if condition is ACECondition:
+			_gather_text(condition as Resource, parts)
+		elif condition is RawCodeRow:
+			parts.append((condition as RawCodeRow).code)
+	for action: Variant in event_row.actions:
+		if action is ACEAction:
+			_gather_text(action as Resource, parts)
+		elif action is RawCodeRow:
+			parts.append((action as RawCodeRow).code)
+	return "\n".join(parts)
+
+
+static func _gather_text(entry: Resource, parts: PackedStringArray) -> void:
+	var params: Variant = entry.get("params")
+	if not (params is Dictionary):
+		return
+	for key: Variant in (params as Dictionary).keys():
+		var value: Variant = (params as Dictionary)[key]
+		if value is String:
+			parts.append(value as String)
+
+
+## True when this text CALLS that name: the name followed by an opening bracket, with no identifier
+## character in front of it. That last part is what keeps `on_hit` out of `_on_hit` and out of
+## `refresh_on_hit(` - a plain substring search would have reported both.
+static func _calls_by_name(text: String, name: String) -> bool:
+	if text.is_empty() or name.is_empty():
+		return false
+	var wanted: String = "%s(" % name
+	var at: int = text.find(wanted)
+	while at >= 0:
+		if at == 0 or not IDENTIFIER_CHARACTERS.contains(text[at - 1]):
+			return true
+		at = text.find(wanted, at + 1)
+	return false
 
 
 ## The node references one event holds, measured against the same rule against the SCENE's names.

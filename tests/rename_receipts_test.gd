@@ -34,6 +34,8 @@ static func run() -> bool:
 	ok = _test_the_rename_receipt() and ok
 	ok = _test_the_doctor_files_the_same_words() and ok
 	ok = _test_the_doctor_reads_the_gd_sheets_too() and ok
+	ok = _test_a_call_is_a_call_wherever_it_is_written() and ok
+	ok = _test_the_receipt_lists_the_files_it_writes() and ok
 	return ok
 
 
@@ -184,6 +186,91 @@ static func _test_the_finding_and_its_one_door() -> bool:
 			_witness_of_one_swap()).size(), 0) and ok
 	ok = _check("an empty witness is the ordinary case and earns nothing",
 		EventSheetRenameFindings.findings(sheet, "res://guard.gd", {}).size(), 0) and ok
+	return ok
+
+
+## A CALL IS A CALL WHEREVER IT IS WRITTEN. The picked Call function row in the ACTION lane was the
+## only shape this section could see, so a `bool` sheet function published as a CONDITION, a name
+## typed into an expression field, and a name written in a Script block all went unreported - and the
+## file header's promise ("a rename broke every row that used the name, so pointing them somewhere
+## new is one gesture over all of them") is only true if every row is seen. The node half was always
+## thorough across every surface; this is the call half brought to the same shape.
+static func _test_a_call_is_a_call_wherever_it_is_written() -> bool:
+	# The condition lane, which is where a bool sheet function published as a condition is picked.
+	var as_condition: EventSheetResource = _sheet_with(RawCodeRow.new())
+	var picked := ACECondition.new()
+	picked.provider_id = EventSheetRenameFindings.CALL_PROVIDER
+	picked.ace_id = EventSheetRenameFindings.CALL_ACE
+	picked.codegen_template = "{function_name}({args})"
+	picked.params = {"function_name": OLD_NAME, "args": ""}
+	(as_condition.events[0] as EventRow).conditions.append(picked)
+	var found: Array[Dictionary] = EventSheetRenameFindings.findings(as_condition, "res://guard.gd",
+		_witness_of_one_swap())
+	var ok: bool = _check("a call picked into the condition lane is a finding", found.size(), 1)
+	if found.size() == 1:
+		ok = _check("carrying the lane it was found in, so the door reaches the right row",
+			[str(found[0].get("lane", "")), int(found[0].get("index", -1))],
+			[EventSheetRenameFindings.LANE_CONDITION, 0]) and ok
+	# A name TYPED into a field rather than picked - an expression, a trigger's parameter.
+	var typed: EventSheetResource = _sheet_with(RawCodeRow.new())
+	var expression := ACEAction.new()
+	expression.provider_id = "Core"
+	expression.ace_id = "SetProperty"
+	expression.codegen_template = "modulate.a = {value}"
+	expression.params = {"value": "%s() * 0.5" % OLD_NAME}
+	(typed.events[0] as EventRow).actions.clear()
+	(typed.events[0] as EventRow).actions.append(expression)
+	var written: Array[Dictionary] = EventSheetRenameFindings.findings(typed, "res://guard.gd",
+		_witness_of_one_swap())
+	ok = _check("a name typed into a field is a finding too", written.size(), 1) and ok
+	if written.size() == 1:
+		ok = _check("with no lane and no slot, because it is text rather than a picked row",
+			[str(written[0].get("lane", "")), int(written[0].get("index", -1))], ["", -1]) and ok
+		ok = _check("and the same door as a picked one",
+			str(written[0].get("fix_label", "")), "Point the rows at %s" % NEW_NAME) and ok
+	# A Script block writes GDScript, and a call in it is as broken as one in a row.
+	var block := RawCodeRow.new()
+	block.code = "if alive:\n\t%s()" % OLD_NAME
+	ok = _check("a call in a Script block is a finding",
+		EventSheetRenameFindings.findings(_sheet_with(block), "res://guard.gd",
+			_witness_of_one_swap()).size(), 1) and ok
+	# AND THE NAME HAS TO BE THE ONE WRITTEN THERE. A substring search would have reported both of
+	# these, which is how a section earns the habit of being scrolled past.
+	var longer := RawCodeRow.new()
+	longer.code = "_%s()\n\trefresh_%s()" % [OLD_NAME, OLD_NAME]
+	ok = _check("a longer name that merely contains it is not a call to it",
+		EventSheetRenameFindings.findings(_sheet_with(longer), "res://guard.gd",
+			_witness_of_one_swap()).size(), 0) and ok
+	# One finding per name per event: the picked row and the text say one thing, not two.
+	var both: EventSheetResource = _sheet_calling(OLD_NAME)
+	var echo := RawCodeRow.new()
+	echo.code = "%s()" % OLD_NAME
+	(both.events[0] as EventRow).actions.append(echo)
+	ok = _check("a name said twice in one event is one finding",
+		EventSheetRenameFindings.findings(both, "res://guard.gd",
+			_witness_of_one_swap()).size(), 1) and ok
+	return ok
+
+
+## THE RECEIPT LISTS THE FILES IT WRITES. The button runs the undoable rename over this sheet and
+## then the includers pass, which rewrites and SAVES closed sheets - files outside the one Ctrl+Z the
+## status line promises, and files the two cards did not name. They were reported afterwards, which
+## is the same defect as a receipt that overcounts, with the sign reversed.
+static func _test_the_receipt_lists_the_files_it_writes() -> bool:
+	var lines: PackedStringArray = EventSheetRenameReceipt.includer_lines(
+		PackedStringArray(["res://menus/pause.tres", "res://hud/bars.tres"]))
+	var ok: bool = _check("each file is named rather than counted",
+		lines, PackedStringArray(["pause.tres", "bars.tres"]))
+	ok = _check("and nothing to write says nothing",
+		EventSheetRenameReceipt.includer_lines(PackedStringArray()), PackedStringArray()) and ok
+	# The sentence above the lists ends with the part that is NOT about undo.
+	ok = _check("the summary says what is saved outside this sheet's undo step",
+		EventSheetRenameReceipt.summary_text(4, [],
+			PackedStringArray(["res://menus/pause.tres", "res://hud/bars.tres"])),
+		"4 row(s) in this sheet, and nothing else in the project calls it by that name. 2 sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.") and ok
+	ok = _check("and a rename that writes nothing else says nothing else",
+		EventSheetRenameReceipt.summary_text(4, []),
+		"4 row(s) in this sheet, and nothing else in the project calls it by that name.") and ok
 	return ok
 
 

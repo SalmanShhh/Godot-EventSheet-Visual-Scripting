@@ -16,6 +16,13 @@
 # they are, and the receipt says which ones under their own heading rather than in a note afterwards.
 # A rename that claimed "6 rows in 3 sheets" and touched four would be worse than saying nothing.
 #
+# AND WHAT IT WILL WRITE OUTSIDE THIS SHEET, under its own heading too. A sheet that INCLUDES this
+# one is rewritten and SAVED by the shipped includers pass - a closed file, written to disk, outside
+# the one Ctrl+Z the status line promises. Those files used to be reported only afterwards, which is
+# the same defect as the counts above with the sign reversed: the receipt listed less than the button
+# touched. They are named before the button exists, and the sentence says they are saved rather than
+# undone.
+#
 # THE SECOND GESTURE IT DRAWS is the door under an outside rename: a row whose name was renamed out
 # from under it, and the file's own last save proving what the name became. Same receipt, same
 # funnel, same rule that what is shown is what lands - which is why it is this file and not a second
@@ -41,6 +48,12 @@ var _old_name: String = ""
 var _elsewhere: Array[Dictionary] = []
 ## The outside-rename door's finding, held only while its own confirm is open.
 var _finding: Dictionary = {}
+## The sheets that INCLUDE this one and say the name - the files the button will rewrite and save.
+## Re-read whenever the typed name changes, because a name nothing over there says is a file this
+## will not write.
+var _includers: PackedStringArray = PackedStringArray()
+var _includers_card: Control = null
+var _includers_list: ItemList = null
 
 
 func init(dock: Node) -> void:
@@ -151,18 +164,33 @@ static func elsewhere_lines(others: Array[Dictionary]) -> PackedStringArray:
 	return lines
 
 
-## The one sentence above both lists: who calls this name, and how much of it moves. It leads with
-## the files because that is the fact a reader is deciding on - "am I about to break enemy.gd".
-static func summary_text(here: int, others: Array[Dictionary]) -> String:
+## The list under "Also written, and saved" - one line per sheet that includes this one and says the
+## name. These are the files the button writes OUTSIDE this sheet's undo step, so they are named
+## rather than counted.
+static func includer_lines(includers: PackedStringArray) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for path: String in includers:
+		lines.append(path.get_file())
+	return lines
+
+
+## The one sentence above the lists: who calls this name, how much of it moves, and what is written
+## outside this sheet. It leads with the files because that is the fact a reader is deciding on -
+## "am I about to break enemy.gd" - and it ends with the part that is not about undo, because a
+## closed sheet this rewrites is saved to disk and Ctrl+Z here does not reach it.
+static func summary_text(here: int, others: Array[Dictionary],
+		includers: PackedStringArray = PackedStringArray()) -> String:
+	var written: String = "" if includers.is_empty() \
+		else EventSheetL10n.translate(" %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.") % includers.size()
 	if others.is_empty():
-		return EventSheetL10n.translate("%d row(s) in this sheet, and nothing else in the project calls it by that name.") % here
+		return EventSheetL10n.translate("%d row(s) in this sheet, and nothing else in the project calls it by that name.") % here + written
 	var names: PackedStringArray = PackedStringArray()
 	var rows: int = 0
 	for entry: Dictionary in others:
 		names.append(str(entry["path"]).get_file())
 		rows += int(entry["count"])
 	return EventSheetL10n.translate("Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.") % [
-		" · ".join(names), rows, others.size(), here]
+		" · ".join(names), rows, others.size(), here] + written
 
 
 ## THE EDIT. One undoable step over this sheet - the declaration and every row that says the name -
@@ -252,6 +280,11 @@ func _build_dialog() -> void:
 		EventSheetL10n.translate("Named and left exactly as they are - the index answers by name, so a file here may be calling something else"),
 		_elsewhere_list)
 	content.add_child(_elsewhere_card)
+	_includers_list = _list(60.0)
+	_includers_card = EventSheetPopupUI.titled_card(
+		EventSheetL10n.translate("Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them"),
+		_includers_list)
+	content.add_child(_includers_card)
 	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)
 	_dock.add_child(_dialog)
@@ -276,7 +309,18 @@ func _fill() -> void:
 		_elsewhere_list.set_item_tooltip(_elsewhere_list.item_count - 1, line)
 	# A card with nothing under it is a heading saying a project has callers it does not have.
 	_elsewhere_card.visible = _elsewhere_list.item_count > 0
-	_summary_label.text = summary_text(lines.size(), _elsewhere)
+	# Worked out per NAME rather than once: a name nothing over there says is a file this will not
+	# write, and a card listing it anyway would be a receipt for an edit that does not happen.
+	_includers = PackedStringArray() if _is_node_gesture() or new_name.is_empty() \
+			or str(_dock._current_sheet_path).is_empty() \
+		else _dock._rename.includers_of(_old_name, new_name,
+			EventSheetProjectFind.list_project_sheets())
+	_includers_list.clear()
+	for line: String in includer_lines(_includers):
+		_includers_list.add_item(line)
+		_includers_list.set_item_tooltip(_includers_list.item_count - 1, line)
+	_includers_card.visible = _includers_list.item_count > 0
+	_summary_label.text = summary_text(lines.size(), _elsewhere, _includers)
 	# A node reference is not an identifier, so the identifier rules are not the ones that decide it:
 	# what makes that gesture legal is the evidence behind it, which was decided before the door
 	# appeared. Only a typed rename is held to the sheet's own naming rules.

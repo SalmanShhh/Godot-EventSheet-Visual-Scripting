@@ -190,6 +190,32 @@ static func hand_written_callers_note(old_name: String, own_script: String) -> S
 			old_name, ", ".join(names)]
 
 
+## Every candidate sheet a rename WOULD rewrite and save: the ones whose `includes` lists the open
+## sheet and that say the name. Sorted, and the answer is worked out BY DOING IT on a throwaway copy
+## through the very function the button runs, so a receipt promising three files and a button writing
+## four cannot happen.
+##
+## It is the third thing the receipt has to list. The two cards say what moves in this sheet and what
+## is named and left alone; these are files that are neither - they are written, they are saved, and
+## they are outside the one Ctrl+Z the status line promises.
+func includers_of(old_name: String, new_name: String,
+		candidate_paths: PackedStringArray) -> PackedStringArray:
+	var listed: PackedStringArray = PackedStringArray()
+	if old_name.strip_edges().is_empty() or new_name.strip_edges().is_empty():
+		return listed
+	for sheet_path: String in candidate_paths:
+		if sheet_path == _dock._current_sheet_path or listed.has(sheet_path):
+			continue
+		var other: EventSheetResource = load(sheet_path) as EventSheetResource
+		if other == null or not other.includes.has(_dock._current_sheet_path):
+			continue
+		var trial: EventSheetResource = other.duplicate(true)
+		if trial != null and EventSheetRefactor.rename_symbol(trial, old_name, new_name) > 0:
+			listed.append(sheet_path)
+	listed.sort()
+	return listed
+
+
 ## Rewrites + saves every candidate sheet whose `includes` lists the open sheet (closed sheets save
 ## directly - the Replace-in-Project contract).
 func rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:
