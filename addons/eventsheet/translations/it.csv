@@ -5929,3 +5929,21 @@ Rename %s,Rinomina %s
 Point rows at %s,Punta righe a %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d riga/righe rinominate - un Ctrl+Z annulla tutto.
 Rename…,Rinomina…
+new in this version,nuovo in questa versione
+dropped by this version,rimosso da questa versione
+this version rewrites it,questa versione lo riscrive
+identical in both,identico in entrambi
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Questo pacchetto non conserva traccia di cio che e arrivato, quindi tutti i %d file sono elencati come tuoi e nulla viene preso senza il tuo assenso."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,%d file sono esattamente come sono arrivati e prendono la nuova versione. Non ne hai cambiato nessuno.
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d file sono esattamente come sono arrivati e prendono la nuova versione. %d li hai cambiati tu, ognuno con la sua risposta qui sotto."
+%s is not published by the new version - rows using it keep working from the file you have.,%s non e pubblicato dalla nuova versione - le righe che lo usano continuano con il file che hai.
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s ora punta a %s - le righe vecchie compilano uguale; la prova mostra cosa cambierebbe.
+%s is new in this version.,%s e nuovo in questa versione.
+Keep mine,Tieni la mia
+Take new,Prendi la nuova
+See the diff,Vedi la differenza
+These two files are identical.,Questi due file sono identici.
+Yours:,La tua:
+The new version:,La nuova versione:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d file hanno preso la nuova versione, %d sono stati rimossi, %d dei tuoi sono stati tenuti. %d sono finiti prima nell'anello dei backup."
+"This version publishes the same conditions, actions and expressions as the one you have.","Questa versione pubblica le stesse condizioni, azioni ed espressioni di quella che hai."

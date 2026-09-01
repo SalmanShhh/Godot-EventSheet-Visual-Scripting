@@ -88,8 +88,13 @@ static func _class_header(source: String) -> String:
 
 ## The pack's own script: <dir>/<dir>.gd when it exists (the scaffolder's shape), else the first
 ## .gd in the folder that declares a class_name, else the first .gd at all.
-static func main_script_for(pack_dir: String) -> String:
-	var folder: String = PACKS_ROOT.path_join(pack_dir)
+##
+## `root` is where the pack folder sits, and is the packs folder for every real question. It is a
+## parameter only so a caller holding a pack somewhere else - a version being compared before it is
+## taken, a fixture in a test - asks the SAME rule rather than writing a second one that agrees
+## with this until the day it does not.
+static func main_script_for(pack_dir: String, root: String = PACKS_ROOT) -> String:
+	var folder: String = root.path_join(pack_dir)
 	var preferred: String = folder.path_join("%s.gd" % pack_dir)
 	if FileAccess.file_exists(preferred):
 		return preferred

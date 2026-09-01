@@ -5929,3 +5929,21 @@ Rename %s,%s の名前を変更
 Point rows at %s,行を %s に向ける
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d 行の名前を変更しました - Ctrl+Z 一回ですべて元に戻ります。
 Rename…,名前を変更…
+new in this version,このバージョンで追加
+dropped by this version,このバージョンで削除
+this version rewrites it,このバージョンが書き換える
+identical in both,どちらも同一
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","このパックには届いた時点の記録がないため、%d 個のファイルはすべてあなたのものとして一覧され、あなたが選ばない限り何も取り込まれません。"
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d 個のファイルは届いたときのままで、新しいバージョンを取り込みます。あなたが変更したものはありません。"
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d 個のファイルは届いたときのままで、新しいバージョンを取り込みます。%d 個はあなたが変更したもので、それぞれ下で答えを選べます。"
+%s is not published by the new version - rows using it keep working from the file you have.,%s は新しいバージョンでは公開されません - これを使う行は手元のファイルのまま動き続けます。
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,"%s は現在 %s を指しています - 古い行は同じようにコンパイルされます。試行で何が変わるかを確認できます。"
+%s is new in this version.,%s はこのバージョンで新しく追加されました。
+Keep mine,自分のを残す
+Take new,新しいものを取り込む
+See the diff,差分を見る
+These two files are identical.,この 2 つのファイルは同一です。
+Yours:,あなたのもの:
+The new version:,新しいバージョン:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 個のファイルが新しいバージョンを取り込み、%d 個が削除され、あなたのもの %d 個が残されました。%d 個は先にバックアップリングへ入りました。"
+"This version publishes the same conditions, actions and expressions as the one you have.","このバージョンは、手元のものと同じ条件・アクション・式を公開します。"

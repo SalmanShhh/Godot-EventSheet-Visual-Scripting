@@ -5929,3 +5929,21 @@ Rename %s,Renombrar %s
 Point rows at %s,Apuntar filas a %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d fila(s) renombrada(s) - un Ctrl+Z lo deshace todo.
 Rename…,Renombrar…
+new in this version,nuevo en esta version
+dropped by this version,eliminado por esta version
+this version rewrites it,esta version lo reescribe
+identical in both,identico en ambos
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Este paquete no guarda registro de lo que llego, asi que los %d archivo(s) figuran como tuyos y no se toma nada salvo que lo digas."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,%d archivo(s) estan tal como llegaron y toman la nueva version. No cambiaste ninguno.
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d archivo(s) estan tal como llegaron y toman la nueva version. %d los cambiaste tu, cada uno con su propia respuesta abajo."
+%s is not published by the new version - rows using it keep working from the file you have.,%s no lo publica la nueva version - las filas que lo usan siguen funcionando con el archivo que tienes.
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s ahora apunta a %s - las filas antiguas compilan igual; la prueba muestra que cambiaria.
+%s is new in this version.,%s es nuevo en esta version.
+Keep mine,Conservar la mia
+Take new,Tomar la nueva
+See the diff,Ver la diferencia
+These two files are identical.,Estos dos archivos son identicos.
+Yours:,La tuya:
+The new version:,La nueva version:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d archivo(s) tomaron la nueva version, %d se eliminaron, %d de los tuyos se conservaron. %d fueron antes al anillo de copias."
+"This version publishes the same conditions, actions and expressions as the one you have.","Esta version publica las mismas condiciones, acciones y expresiones que la que tienes."

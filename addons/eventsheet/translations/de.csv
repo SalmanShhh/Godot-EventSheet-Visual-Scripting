@@ -5929,3 +5929,21 @@ Rename %s,%s umbenennen
 Point rows at %s,Zeilen auf %s richten
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d Zeile(n) umbenannt - ein Strg+Z nimmt alles zurueck.
 Rename…,Umbenennen…
+new in this version,neu in dieser Version
+dropped by this version,von dieser Version entfernt
+this version rewrites it,diese Version schreibt sie neu
+identical in both,in beiden identisch
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Dieses Paket fuehrt keine Aufzeichnung darueber, was angekommen ist, daher sind alle %d Datei(en) als deine aufgefuehrt und nichts wird uebernommen, solange du es nicht sagst."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d Datei(en) sind genau so, wie sie angekommen sind, und uebernehmen die neue Version. Du hast keine davon geaendert."
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d Datei(en) sind genau so, wie sie angekommen sind, und uebernehmen die neue Version. %d hast du geaendert, jede mit ihrer eigenen Antwort unten."
+%s is not published by the new version - rows using it keep working from the file you have.,"%s wird von der neuen Version nicht veroeffentlicht - Zeilen, die es verwenden, arbeiten mit der Datei weiter, die du hast."
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,"%s zeigt jetzt auf %s - alte Zeilen kompilieren unveraendert; der Probelauf zeigt, was sich aendern wuerde."
+%s is new in this version.,%s ist neu in dieser Version.
+Keep mine,Meine behalten
+Take new,Neue uebernehmen
+See the diff,Unterschied ansehen
+These two files are identical.,Diese beiden Dateien sind identisch.
+Yours:,Deine:
+The new version:,Die neue Version:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d Datei(en) haben die neue Version uebernommen, %d wurden entfernt, %d von deinen wurden behalten. %d gingen zuerst in den Sicherungsring."
+"This version publishes the same conditions, actions and expressions as the one you have.","Diese Version veroeffentlicht dieselben Bedingungen, Aktionen und Ausdruecke wie die, die du hast."

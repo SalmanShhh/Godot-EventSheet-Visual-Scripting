@@ -7717,7 +7717,10 @@ func open_addon_manager() -> void:
 		_addon_manager_dialog.configure(
 			func() -> void: _refresh_ace_registry(),
 			func(page_id: String) -> void: open_documentation(page_id),
-			func(script_path: String) -> void: EventSheets.open_sheet(script_path))
+			func(script_path: String) -> void: EventSheets.open_sheet(script_path),
+			# The pack update's vocabulary section says which verbs the new version forwards; this is
+			# the door beside it, and it is the SAME receipt the head band's counting line opens.
+			func() -> void: open_migrate_dialog())
 		add_child(_addon_manager_dialog)
 	_addon_manager_dialog.refresh()
 	_addon_manager_dialog.popup_centered(Vector2i(760, 500))

@@ -6,6 +6,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### A pack update is a proposal
+
+- **Attaching a pack writes down what arrived.** Importing a pack from a .zip now hashes every file
+  it lands into a small `pack_manifest.json` inside the pack's own folder. A pack is copied into the
+  project on purpose - it is the project's code once it is there - and that is exactly why, a year
+  later, nothing can tell which of its files somebody edited. The content hash can. No mtimes, no
+  second copy kept somewhere, no guessing: the moment a file arrives is the only moment its arrival
+  state is knowable, so that is when it is written down.
+- **Update… shows the tri-list before a byte moves.** Point it at the new version's .zip and it
+  reads, and says: **Untouched** - the files that still hash to what arrived, which take the new
+  version and are LISTED rather than swept, because \"we replaced eleven files you never opened\" is
+  something a reader gets to see beforehand; **Yours** - every file that differs, one answer each,
+  *Keep mine* (always the default), *Take new*, or *See the diff*; and **what this version retires
+  and adds**.
+- **A line-ending difference is a difference.** A file re-saved with the other platform's line
+  endings does not hash to what arrived, so it is Yours - the honest answer to \"did this change?\" is
+  the one the bytes give. The row says *only the line endings differ* beside it, so taking the new
+  version is one click and not a mystery.
+- **A pack with no record is not a pack with no changes.** The packs that ship inside the plugin were
+  never attached, and neither was a folder somebody assembled by hand. Those put every file under
+  Yours and default every one of them to *Keep mine* - \"we do not know\" and \"you changed nothing\" are
+  different sentences, and only one of them is true.
+- **The vocabulary line is a registry diff, not prose.** The new `tools/dump_registry.gd` prints
+  every verb the project publishes as one sorted, stable text - key, type, category, params,
+  successor, template, tab separated, no timestamps and no machine paths - and the update dialog
+  derives its retires-and-adds section by diffing the two versions' dumps. Nothing is read off a
+  release note or a version number. The same tool and the same format are what the descriptor
+  identity gate compares before and after a refactor.
+- **Retiring a verb is still a forwarding address, never a deleted template.** A verb the new version
+  retires keeps its id, its template and its place in the picker, and every row written on it
+  compiles to exactly the line it always did. The row that mentions it opens the migrate dry run, one
+  click away, rather than asking for anything.
+- **The old version goes to the backup ring first.** Every file the update is about to overwrite or
+  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands, so
+  an update is as reversible as any other edit. The ring now keeps a pack's guide, icon and tables
+  too, not only its scripts.
+- **Asking writes nothing.** Reading a new version, classifying every file and diffing both
+  vocabularies leaves the pack byte for byte as it was, and the copy of the incoming version that is
+  reflected to read its verbs lives under `user://` and is removed again either way.
+
 ### Renaming, with everything it touches listed before it touches any of it
 
 - **A function's own head row offers Rename…**, and the first thing it draws is not a text field with

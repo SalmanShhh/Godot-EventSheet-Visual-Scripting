@@ -5929,3 +5929,21 @@ Rename %s,重命名 %s
 Point rows at %s,将行指向 %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,已重命名 %d 行 - 一次 Ctrl+Z 即可全部撤销。
 Rename…,重命名…
+new in this version,此版本新增
+dropped by this version,此版本已移除
+this version rewrites it,此版本会重写它
+identical in both,两边完全相同
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","该扩展包没有到达时的记录，因此全部 %d 个文件都列为你的文件，除非你明确选择，否则不会取用任何内容。"
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d 个文件与到达时完全一致，将采用新版本。你没有改动过其中任何一个。"
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d 个文件与到达时完全一致，将采用新版本。%d 个是你改过的，下面每个都可单独选择。"
+%s is not published by the new version - rows using it keep working from the file you have.,%s 在新版本中不再发布 - 使用它的行仍按你现有的文件继续工作。
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s 现在指向 %s - 旧行仍编译成同样的结果；试运行会显示会有什么变化。
+%s is new in this version.,%s 是此版本新增的。
+Keep mine,保留我的
+Take new,采用新的
+See the diff,查看差异
+These two files are identical.,这两个文件完全相同。
+Yours:,你的：
+The new version:,新版本：
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 个文件采用了新版本，%d 个被移除，你的 %d 个被保留。%d 个先进入了备份环。"
+"This version publishes the same conditions, actions and expressions as the one you have.","该版本发布的条件、动作和表达式与你现有的版本相同。"

@@ -5929,3 +5929,21 @@ Rename %s,%s 이름 바꾸기
 Point rows at %s,행을 %s 로 향하게 함
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d 행의 이름을 바꿨습니다 - Ctrl+Z 한 번이면 모두 되돌아갑니다.
 Rename…,이름 바꾸기…
+new in this version,이 버전에서 새로 추가됨
+dropped by this version,이 버전에서 삭제됨
+this version rewrites it,이 버전이 다시 씁니다
+identical in both,양쪽이 동일함
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","이 팩에는 도착 당시의 기록이 없으므로 %d 개 파일이 모두 사용자의 것으로 표시되며, 직접 선택하지 않는 한 아무것도 가져오지 않습니다."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,%d 개 파일은 도착했을 때 그대로이며 새 버전을 가져옵니다. 변경한 파일은 없습니다.
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d 개 파일은 도착했을 때 그대로이며 새 버전을 가져옵니다. %d 개는 사용자가 바꾼 것이며, 아래에서 각각 답을 정합니다."
+%s is not published by the new version - rows using it keep working from the file you have.,%s 은(는) 새 버전에서 게시되지 않습니다 - 이를 쓰는 행은 지금 파일 그대로 계속 동작합니다.
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s 은(는) 이제 %s 을(를) 가리킵니다 - 예전 행은 그대로 컴파일됩니다. 시험 실행으로 무엇이 바뀔지 볼 수 있습니다.
+%s is new in this version.,%s 은(는) 이 버전에서 새로 추가되었습니다.
+Keep mine,내 것 유지
+Take new,새 것 가져오기
+See the diff,차이 보기
+These two files are identical.,이 두 파일은 동일합니다.
+Yours:,내 것:
+The new version:,새 버전:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 개 파일이 새 버전을 가져왔고, %d 개가 삭제되었으며, 사용자의 %d 개가 유지되었습니다. %d 개는 먼저 백업 링에 들어갔습니다."
+"This version publishes the same conditions, actions and expressions as the one you have.","이 버전은 지금 가진 것과 같은 조건, 액션, 식을 게시합니다."

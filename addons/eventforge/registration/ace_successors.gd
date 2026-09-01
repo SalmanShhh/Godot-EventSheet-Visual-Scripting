@@ -150,6 +150,10 @@ static func entry_of(source: Variant) -> Dictionary:
 		return {
 			"key": key_of(descriptor.provider_id, descriptor.ace_id),
 			"name": descriptor.get_list_name(),
+			# The shelf the picker files this verb under. Nothing here resolves anything with it - it
+			# rides along because the registry dump is written off this same reduction, and a second
+			# reflection pass purely to read one string is a second answer waiting to disagree.
+			"category": descriptor.category,
 			"template": descriptor.codegen_template,
 			# The reading a row applied on this verb would be baked under - slots and all, never a
 			# finished sentence. A rewrite carries it over so the migrated row goes on reading as a
@@ -193,6 +197,7 @@ static func entry_of(source: Variant) -> Dictionary:
 		return {
 			"key": key_of(definition.provider_id, definition.id),
 			"name": definition.display_name,
+			"category": definition.category,
 			"template": pack_template,
 			"display_template": str(definition.metadata.get("display_template", "")) \
 				if not str(definition.metadata.get("display_template", "")).strip_edges().is_empty() \

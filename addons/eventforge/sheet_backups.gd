@@ -28,9 +28,15 @@ static func backup_dir_for(sheet_path: String) -> String:
 	return "%s/%s" % [BACKUPS_ROOT, sanitized]
 
 
-## All backups of a sheet, newest first. Filenames are zero-padded sequence numbers
+## All backups of a file, newest first. Filenames are zero-padded sequence numbers
 ## ("0002.player.tres") so lexicographic order IS age order - timestamps would collide
 ## on same-second saves.
+##
+## The ring is keyed on the SEQUENCE PREFIX rather than on a list of sheet extensions, because a
+## pack update backs up everything it is about to overwrite - a guide, an icon, a translation table -
+## and an extension list silently wrote those into the ring and then never listed them again, so
+## nothing pruned them and nothing could restore them. Each file has its own ring folder, so a
+## sheet's list is unchanged by this.
 static func list_backups(sheet_path: String) -> PackedStringArray:
 	var dir_path: String = backup_dir_for(sheet_path)
 	var backups: PackedStringArray = PackedStringArray()
@@ -40,13 +46,24 @@ static func list_backups(sheet_path: String) -> PackedStringArray:
 	dir.list_dir_begin()
 	var entry: String = dir.get_next()
 	while not entry.is_empty():
-		if not dir.current_is_dir() and (entry.ends_with(".tres") or entry.ends_with(".res") or entry.ends_with(".gd")):
+		if not dir.current_is_dir() and _is_ring_entry(entry):
 			backups.append("%s/%s" % [dir_path, entry])
 		entry = dir.get_next()
 	dir.list_dir_end()
 	backups.sort()
 	backups.reverse()
 	return backups
+
+
+## True for a file this ring wrote: four digits, a dot, and the original file's whole name after it.
+## Anything else in the folder was not put there by `backup_sheet` and is left alone.
+static func _is_ring_entry(entry: String) -> bool:
+	if entry.length() < 6 or entry[4] != ".":
+		return false
+	for index: int in range(4):
+		if not entry[index].is_valid_int():
+			return false
+	return true
 
 
 ## Copies the sheet file's CURRENT bytes into the ring and prunes past backup_count.

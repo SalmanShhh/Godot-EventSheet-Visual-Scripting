@@ -5929,3 +5929,21 @@ Rename %s,Переименовать %s
 Point rows at %s,Направить строки на %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,Переименовано строк: %d - одно Ctrl+Z вернёт всё назад.
 Rename…,Переименовать…
+new in this version,новое в этой версии
+dropped by this version,удалено в этой версии
+this version rewrites it,эта версия перезаписывает его
+identical in both,одинаково в обоих
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Этот пакет не хранит записи о том, что пришло, поэтому все %d файл(ов) перечислены как ваши, и ничего не берётся без вашего решения."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,"%d файл(ов) в точности такие, какими пришли, и принимают новую версию. Ни один из них вы не меняли."
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d файл(ов) в точности такие, какими пришли, и принимают новую версию. %d вы меняли, для каждого ниже свой ответ."
+%s is not published by the new version - rows using it keep working from the file you have.,"%s не публикуется новой версией - строки, которые его используют, продолжают работать с имеющимся файлом."
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,"%s теперь указывает на %s - старые строки компилируются так же; пробный прогон покажет, что изменится."
+%s is new in this version.,%s появился в этой версии.
+Keep mine,Оставить моё
+Take new,Взять новое
+See the diff,Посмотреть различия
+These two files are identical.,Эти два файла одинаковы.
+Yours:,Ваш:
+The new version:,Новая версия:
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d файл(ов) приняли новую версию, %d удалены, %d ваших сохранены. %d сначала попали в кольцо резервных копий."
+"This version publishes the same conditions, actions and expressions as the one you have.","Эта версия публикует те же условия, действия и выражения, что и имеющаяся у вас."

@@ -5929,3 +5929,21 @@ Rename %s,Renommer %s
 Point rows at %s,Diriger des lignes vers %s
 %d row(s) renamed - one Ctrl+Z takes all of it back.,%d ligne(s) renommee(s) - un Ctrl+Z annule le tout.
 Rename…,Renommer…
+new in this version,nouveau dans cette version
+dropped by this version,retire par cette version
+this version rewrites it,cette version le reecrit
+identical in both,identique des deux cotes
+"This pack carries no record of what arrived, so all %d file(s) are listed as yours and nothing is taken unless you say so.","Ce pack ne garde aucune trace de ce qui est arrive, donc les %d fichier(s) sont listes comme les votres et rien n'est pris sans votre accord."
+%d file(s) are exactly as they arrived and take the new version. You changed none of them.,%d fichier(s) sont exactement tels qu'ils sont arrives et prennent la nouvelle version. Vous n'en avez modifie aucun.
+"%d file(s) are exactly as they arrived and take the new version. %d you changed, each with its own answer below.","%d fichier(s) sont exactement tels qu'ils sont arrives et prennent la nouvelle version. %d que vous avez modifies, chacun avec sa propre reponse ci-dessous."
+%s is not published by the new version - rows using it keep working from the file you have.,%s n'est pas publie par la nouvelle version - les lignes qui l'utilisent continuent avec le fichier que vous avez.
+%s now points at %s - old rows still compile the same; the dry run shows what would change.,%s pointe maintenant vers %s - les anciennes lignes compilent pareil ; l'essai montre ce qui changerait.
+%s is new in this version.,%s est nouveau dans cette version.
+Keep mine,Garder la mienne
+Take new,Prendre la nouvelle
+See the diff,Voir la difference
+These two files are identical.,Ces deux fichiers sont identiques.
+Yours:,La votre :
+The new version:,La nouvelle version :
+"%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d fichier(s) ont pris la nouvelle version, %d ont ete supprimes, %d des votres ont ete gardes. %d sont d'abord alles dans l'anneau de sauvegarde."
+"This version publishes the same conditions, actions and expressions as the one you have.","Cette version publie les memes conditions, actions et expressions que celle que vous avez."

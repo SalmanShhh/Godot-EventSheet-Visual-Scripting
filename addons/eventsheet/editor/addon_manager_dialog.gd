@@ -23,6 +23,11 @@ var _url_edit: LineEdit = null
 var _on_registry_changed: Callable = Callable()
 var _on_open_guide: Callable = Callable()
 var _on_open_sheet: Callable = Callable()
+var _on_dry_run: Callable = Callable()
+var _update_dialog: EventSheetPackUpdateDialog = null
+var _update_zip_dialog: FileDialog = null
+## The pack an Update… is being chosen for, held between the file dialog and the proposal.
+var _updating: String = ""
 
 
 func _init() -> void:
@@ -34,11 +39,15 @@ func _init() -> void:
 ## `on_registry_changed` is called whenever the installed set or the enabled set changes, so the
 ## dock can refresh the vocabulary - the picker is the place a reader sees the difference.
 ## `on_open_guide` takes a Manual page id; `on_open_sheet` takes a script path. Both are the
-## dock's, because the window itself knows nothing about the Manual or the tabs.
-func configure(on_registry_changed: Callable, on_open_guide: Callable, on_open_sheet: Callable) -> void:
+## dock's, because the window itself knows nothing about the Manual or the tabs. `on_dry_run` takes
+## nothing and opens the migrate receipt over the sheet in front of the reader - the door the pack
+## update's vocabulary section offers, defaulted so a caller written before it existed still resolves.
+func configure(on_registry_changed: Callable, on_open_guide: Callable, on_open_sheet: Callable,
+		on_dry_run: Callable = Callable()) -> void:
 	_on_registry_changed = on_registry_changed
 	_on_open_guide = on_open_guide
 	_on_open_sheet = on_open_sheet
+	_on_dry_run = on_dry_run
 
 
 func _build_body() -> Control:
@@ -146,7 +155,9 @@ func _add_row(grid: GridContainer, pack: Dictionary) -> void:
 	buttons.add_theme_constant_override("separation", 4)
 	buttons.add_child(_action_button("Guide", "Opens this pack's page in the Manual.",
 		func() -> void: _open_guide_for(pack_dir)))
-	buttons.add_child(_action_button("Update", "Asks this pack's published source whether a newer version is out.",
+	buttons.add_child(_action_button("Update…", "Reads a new version's .zip and shows what it would do to each file of this pack before anything moves.",
+		func() -> void: _on_update(pack)))
+	buttons.add_child(_action_button("Source", "Asks this pack's published source whether a newer version is out.",
 		func() -> void: _on_check_one(pack)))
 	buttons.add_child(_action_button("Publish…", "Opens the pack so Publish New Version can run the reading check and bump the version.",
 		func() -> void: _on_publish(pack)))
@@ -194,6 +205,51 @@ func _on_check_one(pack: Dictionary) -> void:
 	_set_status("%s publishes from %s - open it to compare with the version installed here (%s)." % [
 		str(pack.get("name", "")), source, str(pack.get("version", "unversioned"))])
 	OS.shell_open(source)
+
+
+## Update… - THE PROPOSAL, NEVER THE INSTALL. Reads a new version's .zip and hands it to the update
+## window, which lists every file it would touch (and every one it would leave) before the button
+## that takes it exists. Nothing is written on the way here.
+func _on_update(pack: Dictionary) -> void:
+	_updating = str(pack.get("dir", ""))
+	if _update_zip_dialog == null:
+		_update_zip_dialog = FileDialog.new()
+		_update_zip_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+		_update_zip_dialog.access = FileDialog.ACCESS_FILESYSTEM
+		_update_zip_dialog.filters = PackedStringArray(["*.zip ; Pack archive"])
+		_update_zip_dialog.title = "Choose the new version's .zip"
+		_update_zip_dialog.file_selected.connect(func(path: String) -> void: _set_status(propose_update(path)))
+		add_child(_update_zip_dialog)
+	_update_zip_dialog.popup_centered(Vector2i(680, 460))
+
+
+## Opens the update proposal for the pack an Update… was pressed on. Returns the status line, so the
+## refusals are pinnable without a window.
+func propose_update(zip_path: String) -> String:
+	if _updating.is_empty():
+		return "No pack chosen to update."
+	var folder: String = EventSheetPackManifest.folder_for(_updating)
+	var incoming: Dictionary = EventSheetPackUpdate.read_zip(zip_path, _updating)
+	if incoming.is_empty():
+		return "%s holds no files for %s - an archive that would write outside the pack's own folder is refused whole." % [
+			zip_path.get_file(), _updating]
+	if _update_dialog == null:
+		_update_dialog = EventSheetPackUpdateDialog.new()
+		_update_dialog.configure(func(said: String) -> void:
+				_set_status(said)
+				refresh()
+				if _on_registry_changed.is_valid():
+					_on_registry_changed.call(),
+			func() -> void:
+				if _on_dry_run.is_valid():
+					_on_dry_run.call()
+				hide())
+		add_child(_update_dialog)
+	if not _update_dialog.open_update(folder, incoming):
+		return "%s holds no files for %s." % [zip_path.get_file(), _updating]
+	_update_dialog.popup_centered(Vector2i(800, 600))
+	return "Reading %s against the copy of %s in this project - nothing has moved." % [
+		zip_path.get_file(), _updating]
 
 
 func _on_check_updates() -> void:
@@ -286,6 +342,7 @@ static func unpack(zip_path: String, target: String) -> String:
 			reader.close()
 			return "Refused %s: it writes to \"%s\", which is outside eventsheet_addons/." % [zip_path.get_file(), entry]
 	var written: int = 0
+	var landed: Dictionary = {}
 	for entry: String in entries:
 		if entry.ends_with("/"):
 			continue
@@ -297,9 +354,23 @@ static func unpack(zip_path: String, target: String) -> String:
 		file.store_buffer(reader.read_file(entry))
 		file.close()
 		written += 1
+		var top: String = entry.replace("\\", "/").get_slice("/", 0)
+		if top != entry:
+			landed[top] = true
 	reader.close()
-	return "Imported %s - %d file%s under eventsheet_addons/." % [
-		zip_path.get_file(), written, "" if written == 1 else "s"]
+	# THE ATTACH IS WHERE A PACK'S FILES ARE HASHED. A pack is copied into the project on purpose, so
+	# a year from now the only way to tell which of its files somebody edited is to have written down
+	# what arrived - and the moment it arrives is the only moment that is knowable. No mtimes, no
+	# guessing, no second copy kept somewhere: one manifest per pack, holding a content hash per file.
+	var stamped: int = 0
+	for pack_dir: Variant in landed.keys():
+		var folder: String = target.path_join(str(pack_dir))
+		if not EventSheetPackManifest.stamp(folder,
+				str(EventSheetPackCatalog.describe(str(pack_dir)).get("version", ""))).is_empty():
+			stamped += 1
+	return "Imported %s - %d file%s under eventsheet_addons/, %d pack%s hashed so a later update can tell your edits from theirs." % [
+		zip_path.get_file(), written, "" if written == 1 else "s",
+		stamped, "" if stamped == 1 else "s"]
 
 
 ## True when a zip entry may be written under the packs folder: a relative path with no `..` step

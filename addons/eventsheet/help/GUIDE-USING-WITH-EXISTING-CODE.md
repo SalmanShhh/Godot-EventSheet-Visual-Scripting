@@ -2035,12 +2035,23 @@ is instantiated to answer a question.
   Project Doctor checks the host the pack needs (a CharacterBody2D for the platformer pack).
 - **The installed packs are a list, not a folder.** **Tools ▸ Addon manager…** is a table over the
   pack registry: pack, its version (read from its own `@ace_version`), an **enabled** tick, and
-  **Guide / Update / Publish…** per row. Switching a pack off takes its conditions, actions and
-  expressions out of the picker on the next refresh - its files stay where they are and the
+  **Guide / Update… / Source / Publish…** per row. Switching a pack off takes its conditions, actions
+  and expressions out of the picker on the next refresh - its files stay where they are and the
   sheets using it still open, and the Doctor names any sheet that still does. Under the table:
   **Import from .zip…** and **Import from URL…** (an archive that would write outside
   `eventsheet_addons/` is refused whole, before anything lands), **Check for updates** (which asks
   every pack that names a published source with `## @ace_source(...)`), and the Asset Library door.
+- **A pack update is a proposal.** An import hashes every file it lands into the pack's own
+  `pack_manifest.json`, so **Update…** can tell your edits from theirs by content rather than by a
+  date. Point it at the new version's .zip and it lists, before a byte moves: the files still exactly
+  as they arrived (which take the new version - listed, not swept), the files you changed (one answer
+  each: *Keep mine*, the default, *Take new*, or *See the diff*), and what the new version retires and
+  adds, diffed out of the two versions' published vocabularies rather than read off a release note. A
+  retired verb keeps its id, its template and its place in the picker, so rows written on it compile
+  to the same line as ever - the dry run beside it shows what migrating them would change. Everything
+  the update overwrites or removes goes into the backup ring first. A pack with no record - one that
+  ships inside the plugin, or a folder assembled by hand - lists every file as yours and takes
+  nothing unless you say so.
 - **The words are yours.** **Settings ▸ Words** is every word the sheet lets you choose, on one
   page: an inheritance set, a scene, `_process`, an attached pack, a Godot group,
   Array/Dictionary, `queue_free`, and the reader. Each row shows the word it reads as with
