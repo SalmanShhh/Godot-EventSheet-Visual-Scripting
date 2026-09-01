@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Menus open where the mouse is.** The "New from template…" menu (and the Run Scene and batch-edit
+  menus, which carried the same fault unnoticed) positioned themselves with canvas coordinates, so
+  they appeared offset by the editor window's own position on screen - as far away as the screen's
+  bottom-left corner. All three now use the screen transform every other popup already used, and a
+  suite sweep keeps the canvas-coordinate form out of the editor for good.
+- **The toolbar's Preview button becomes Stop again.** Two strips carry the preview buttons (the
+  toolbar and Simple mode's Add toolbar) and each adoption overwrote the last, so only the strip
+  built last was ever relabelled while a game ran. The registry now keeps every adopter per button,
+  prunes freed ones, and relabels them all - pinned by a test that adopts twice and expects both.
+- **A fresh project no longer prints two ERROR lines at boot.** The Add-toolbar and Project-bar
+  visibility reads asked for their remembered choice with a null default, which Godot reports as an
+  error when the key has never been written. The reads now carry a no-choice sentinel; the
+  remembered-choice behavior is unchanged, and the same sweep pins the idiom.
+
 ### A verb that has moved says where it went
 
 - **The forwarding address, on the descriptor.** A superseded verb now carries where its newer
