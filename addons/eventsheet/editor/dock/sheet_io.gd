@@ -39,10 +39,9 @@ func _load_sheet_from_path(path: String) -> void:
 	# GDScript-backed sheets: any .gd opens losslessly (lifted rows + verbatim blocks); the
 	# file stays the single source of truth and Save compiles back to it.
 	if resolved_path.get_extension() == "gd":
-		# A file a merge left unresolved has no single reading to open: it holds two. The
-		# conflict view offers them side by side and picks per event; opening the file as a sheet
-		# would only show the marker lines as code.
-		if _open_conflict_view(resolved_path):
+		# A file a merge has not finished with is not GDScript, so it opens BLOCKED: read-only, no
+		# lift, no save, and the head banner names the marker lines. See _open_blocked_by_conflict.
+		if _open_blocked_by_conflict(resolved_path):
 			return
 		_begin_async_gd_open(resolved_path)
 		return
@@ -63,9 +62,52 @@ func _load_sheet_from_path(path: String) -> void:
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
 
-## The conflict view, built the first time a conflicted file is opened and kept afterwards. Loaded
-## by path so the editor's boot path never carries it. Returns true when the file really was
-## conflicted and the window took it.
+## THE CONFLICT GUARD, in front of every `.gd` open. Returns true when the file is blocked and this
+## took it, false for an ordinary file.
+##
+## A file still holding merge markers has no single reading: it holds two, badly spliced, and it is
+## not GDScript at all. Every operation this editor could offer over it is wrong - a lift would read
+## marker lines as code, and a save would write the sheet's reading of that back over somebody's
+## unfinished merge. So the file opens, because a reader asked for it and being shown nothing is
+## worse than being shown why, and it opens BLOCKED:
+##
+##   read-only, and unlike an ordinary `.gd` preview the lock cannot be cleared,
+##   with NO LIFT started at all, so nothing is derived from text that is not code,
+##   with Save refused in its own words,
+##   and with the head banner naming the marker lines and saying where this is resolved.
+##
+## THE GUARD IS TEXTUAL AND TOTAL - any marker line anywhere, not only a well-formed region - because
+## a half-resolved merge leaves markers that are not regions, and those were exactly the files that
+## used to open as ordinary sheets.
+##
+## The bytes are untouched by all of it: nothing here writes, and the block is what keeps every path
+## that could write off the file until a person has finished the merge in the tool they started it
+## in.
+func _open_blocked_by_conflict(path: String) -> bool:
+	var source: String = FileAccess.get_file_as_string(path)
+	var markers: PackedInt32Array = EventSheetConflictGuard.marker_line_numbers(source)
+	if markers.is_empty():
+		return false
+	var raw: EventSheetResource = GDScriptImporter.new().import_external(path, false)
+	if raw == null:
+		# Unreadable as anything at all: say the one true thing rather than opening an empty sheet.
+		_dock._set_status(EventSheetConflictGuard.banner_text(path.get_file(), markers), true)
+		return true
+	EventSheetConflictGuard.block(raw, markers)
+	_dock.setup(raw)
+	_dock._current_sheet_path = path
+	_dock._dirty = false
+	_dock._refresh_title_strip()
+	_dock._clear_undo_history()
+	_dock._external_mtime = FileAccess.get_modified_time(path)
+	_dock._refresh_preview_banner()
+	_dock._set_status(EventSheetConflictGuard.banner_text(path.get_file(), markers), true)
+	return true
+
+
+## The conflict view - the side-by-side reading of the well-formed regions, offered from the blocked
+## sheet's own banner rather than in place of opening the file. Built the first time it is asked for
+## and kept afterwards; loaded by path so the editor's boot path never carries it.
 var _conflict_view: RefCounted = null
 
 
@@ -440,6 +482,17 @@ func _on_save_requested() -> void:
 	if EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet):
 		_dock._set_status("%s is a reading of the whole scene - double-click an object bar to open that script and save there." %
 			EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file(), true)
+		return
+	# A file still holding merge markers refuses in its OWN words, and refuses first: the read-only
+	# message below points at an "Edit Events" button that a blocked sheet does not have, and telling
+	# somebody to press a button that is not there is worse than telling them nothing. Asked of the
+	# FILE rather than of the flag the open set, so the answer cannot go stale while the tab sits
+	# there and somebody finishes the merge in another window.
+	if _dock._current_sheet.blocked_by_conflict() \
+			or (not _dock._current_sheet.external_source_path.is_empty() \
+				and EventSheetConflictGuard.blocks_file(_dock._current_sheet.external_source_path)):
+		_dock._set_status(EventSheetConflictGuard.save_refusal(
+			_dock._current_sheet.external_source_path.get_file()), true)
 		return
 	if _dock._current_sheet.read_only:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()

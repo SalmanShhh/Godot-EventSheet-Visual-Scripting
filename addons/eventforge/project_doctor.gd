@@ -115,6 +115,12 @@ static func run() -> Dictionary:
 	check_sheet_signal_declarations(sheet_paths, findings)
 	check_pattern_smells(sheet_paths, findings)
 	check_unresolved_conflicts(findings)
+	# What a merge leaves behind once the markers are gone: two rows that mint the same baked local
+	# in one scope. Beside the conflict sweep because it is the same event seen a step later.
+	check_duplicate_local_tokens(findings)
+	# And the setting that makes such merges routine instead of rare. A note, and the last word on it
+	# is a line the reader commits themselves.
+	check_sheet_line_endings(findings)
 	check_shared_sheet_includes(findings)
 	check_blocking_waits(sheet_paths, findings)
 	check_hierarchy_footguns(sheet_paths, findings)
@@ -2609,13 +2615,63 @@ static func _script_member_names(script: GDScript) -> Dictionary:
 ## thing worse than finding it here is finding it when the game will not start. Read off the raw
 ## source (a conflicted file has no model to load) and worded exactly as the conflict view offers
 ## the choice, so the finding and the window that fixes it say the same thing.
+##
+## THE SWEEP IS THE SAME TOTAL GUARD THE OPEN PATH USES, which is the half that was missing: a merge
+## in trouble does not always leave a tidy region. A `>>>>>>>` left behind after the rest was
+## resolved by hand, an interrupted rebase's `|||||||` - neither is a region, both are files that do
+## not parse, and reading only well-formed regions answered "nothing to report" for every one of
+## them. A file with regions keeps the wording the resolution view offers; a file with markers and no
+## region gets the guard's own, because there is nothing there to pick between.
 static func check_unresolved_conflicts(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
 		var source: String = source_of(script_path)
-		if not EventSheetConflictRegions.has_conflicts(source):
+		if EventSheetConflictRegions.has_conflicts(source):
+			_add(findings, "error", "merge-conflict", script_path,
+				EventSheetConflictRegions.doctor_message(EventSheetConflictRegions.find(source), script_path.get_file()))
+			continue
+		if not EventSheetConflictGuard.blocks(source):
 			continue
 		_add(findings, "error", "merge-conflict", script_path,
-			EventSheetConflictRegions.doctor_message(EventSheetConflictRegions.find(source), script_path.get_file()))
+			EventSheetConflictGuard.doctor_message(script_path.get_file(),
+				EventSheetConflictGuard.marker_line_numbers(source)))
+
+
+## TWO ROWS DECLARING THE SAME BAKED LOCAL IN ONE SCOPE - the one thing that can go wrong with a
+## `{uid}` token, and the only way it can happen now that a fresh one is drawn against every token
+## the project already holds: two branches minted in parallel and a merge brought both in.
+##
+## Godot refuses such a file, loudly, the moment anything touches it. This says it plainly first,
+## names the token and the function it is doubled in, and offers the one-click re-mint - an ordinary
+## undoable sheet edit that renames ONE of the two and leaves everything else alone.
+##
+## An ERROR, because it is one: the file does not parse, so nothing that includes it runs.
+##
+## Read off the raw source rather than off a loaded sheet, for the same reason the conflict sweep is:
+## a file in this state cannot be loaded, and a check that had to load it would go quiet on exactly
+## the files it is for.
+static func check_duplicate_local_tokens(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		var source: String = source_of(script_path)
+		if not source.contains("__"):
+			continue
+		for entry: Dictionary in EventSheetLocalTokens.duplicates_in(source):
+			_add(findings, "error", EventSheetLocalTokens.CHECK_DUPLICATE_TOKEN, script_path,
+				EventSheetLocalTokens.duplicate_message(entry))
+			(findings[findings.size() - 1] as Dictionary)["subject"] = str(entry.get("token", ""))
+
+
+## HOW THIS CHECKOUT STORES ITS SHEETS - a note, never a warning, and the only check here that reads
+## something outside res://'s own files. Sheets are written with Unix endings on every platform, and
+## a git configured to rewrite them on checkout turns every save into a whole-file diff and every
+## merge into a conflict. The answer is one committed line, which the note shows.
+##
+## THIS PLUGIN NEVER WRITES GIT CONFIGURATION - not the config, not the attributes file. The note is
+## a sentence and a line to copy, and a person puts it in their own diff.
+static func check_sheet_line_endings(findings: Array[Dictionary]) -> void:
+	var note: String = EventSheetLineEndings.project_note()
+	if note.is_empty():
+		return
+	_add(findings, "info", EventSheetLineEndings.CHECK_ID, EventSheetLineEndings.ATTRIBUTES_FILE, note)
 
 
 ## PLUGIN READING HEALTH, and only in the editor's own repo. One note per role group of the

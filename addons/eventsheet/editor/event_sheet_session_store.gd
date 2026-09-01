@@ -65,8 +65,12 @@ func restore() -> void:
 			if FileAccess.file_exists(sheet_path):
 				_dock._load_sheet_from_path(sheet_path)
 				opened += 1
-				# Restore the prior "Edit Events" unlock so the sheet isn't re-locked on restart.
-				if sheet_path in editable_paths and _dock._current_sheet != null and _dock._current_sheet.read_only:
+				# Restore the prior "Edit Events" unlock so the sheet isn't re-locked on restart -
+				# but never over a file a merge left markers in. The block is a fact of the file as
+				# it is NOW, and an unlock remembered from before the merge must not reopen it.
+				if sheet_path in editable_paths and _dock._current_sheet != null \
+						and _dock._current_sheet.read_only \
+						and not _dock._current_sheet.blocked_by_conflict():
 					_dock._current_sheet.read_only = false
 					_dock._refresh_preview_banner()
 		if active >= 0 and active < paths.size():

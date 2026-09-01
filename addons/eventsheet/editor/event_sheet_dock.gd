@@ -617,6 +617,10 @@ func _on_translations_maybe_changed() -> void:
 	EventSheetSceneConnections.clear_cache()
 	# And the listing of the project's own scripts, which every health check walks.
 	EventSheetProjectDoctor.clear_project_scripts()
+	# And the tokens those scripts already hold, which the next `{uid}` mint draws against. A file
+	# that arrived from a pull holds tokens this session never minted, and a mint that answered from
+	# the listing taken before it would be drawing against a project that no longer exists.
+	EventSheetLocalTokens.clear_index()
 	# And what it says about EFFECTS: which node wears which material, which shader is at the end of
 	# that chain, and what dials the shader declares. All three are reads of files that just changed -
 	# a uniform renamed in the shader has to reach the rows naming it, and the project-wide "who else
@@ -1420,6 +1424,12 @@ func _load_sheet_from_path(path: String) -> void:
 	_sheet_io._load_sheet_from_path(path)
 
 
+## The side-by-side reading of a blocked file's conflicts, opened from its head banner. Returns false
+## when the file has no well-formed region to read.
+func _open_conflict_view(path: String) -> bool:
+	return _sheet_io._open_conflict_view(path)
+
+
 ## Opens a freshly-created .gd editable (not the read-only preview a casual Open gives). The plugin's
 ## "Create New > Event Sheet" glue calls this after writing + rescanning the new file.
 func open_new_sheet(path: String) -> void:
@@ -1703,7 +1713,7 @@ func _on_duplicate_requested() -> void:
 
 
 
-## A fresh 8-hex-digit token for a baked `{uid}` local. The previous random-only draw could repeat
+## A fresh 8-hex-digit token for a baked `{uid}` local. The original random-only draw could repeat
 ## within one event body (two ACEs → two identical locals → invalid GDScript); this tracks every
 ## token minted this session and re-draws on a clash, so two mints never collide. Full 32-bit (no
 ## top-bit mask) keeps the keyspace whole for cross-session distinctness, and the 8-hex width
@@ -1711,11 +1721,22 @@ func _on_duplicate_requested() -> void:
 static var _minted_uid_tokens: Dictionary = {}
 
 
+## THE DRAW ALSO CONSULTS THE PROJECT. A session-local set only knows what this editor minted since
+## it started, so a token drawn today could still land on one a row in another file baked last year.
+## The project index answers for those, and the result is worth more than the collision it avoids:
+## once a fresh token is unlike every token already on disk, a duplicate that DOES turn up cannot
+## have come from ordinary work. It came from two branches minting in parallel and a merge bringing
+## both in - which is a thing the Doctor names plainly, instead of a mystery a random draw failed to
+## prevent.
+##
+## The index is built once per session and is a listing of files, never a write. A token is recorded
+## in it the moment it is drawn, so the next draw excludes it even before anything is saved.
 static func _fresh_uid_token() -> String:
 	var token: String = "%08x" % randi()
-	while _minted_uid_tokens.has(token):
+	while _minted_uid_tokens.has(token) or EventSheetLocalTokens.is_taken(token):
 		token = "%08x" % randi()
 	_minted_uid_tokens[token] = true
+	EventSheetLocalTokens.remember(token)
 	return token
 
 
@@ -7627,6 +7648,14 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 
 func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> bool:
 	if _current_sheet == null or not operation.is_valid():
+		return false
+	# A file a merge has not finished with is blocked TOTALLY, and this is the funnel every edit in
+	# the editor comes through - so refusing here is what makes "no edits" true rather than merely
+	# likely. Nothing was lifted out of that file, so an edit here would be an edit to a reading of
+	# marker lines, and the sheet it produced would be nobody's work.
+	if _current_sheet.blocked_by_conflict():
+		_set_status(EventSheetConflictGuard.save_refusal(
+			_current_sheet.external_source_path.get_file()), true)
 		return false
 	# A .gd preview unlocks on the first real edit (this is the mutation funnel), so editing your
 	# own sheet never hits a "click Edit Events" wall. Saving keeps its own read-only guard, so a

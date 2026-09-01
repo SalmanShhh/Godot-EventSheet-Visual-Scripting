@@ -125,6 +125,23 @@ extends Resource
 ## when opening a .gd, so a casual look can never overwrite a hand-written script.
 @export var read_only: bool = false
 
+## The 1-based line numbers of the merge conflict markers the source file still holds, and empty for
+## every ordinary sheet. Non-empty means this sheet is a FILE-LEVEL BLOCKING STATE: the file is not
+## GDScript, nothing was lifted into rows, the read-only flag above cannot be cleared, and Save is
+## refused. It is what the head banner names.
+##
+## DELIBERATELY NOT EXPORTED. It is a fact about the FILE, read fresh every time the file is opened,
+## so storing it would be storing an answer that can go stale - and a `.tres` on disk must not gain a
+## field because a `.gd` somewhere else was mid-merge.
+var conflict_marker_lines: PackedInt32Array = PackedInt32Array()
+
+
+## True while this sheet is blocked by unfinished merge markers - the one question every write path
+## asks before it writes. A method rather than a bare read of the array, so the reason a sheet is
+## blocked can grow without every caller learning about it.
+func blocked_by_conflict() -> bool:
+	return not conflict_marker_lines.is_empty()
+
 
 ## The singleton name every other sheet writes to reach this one - `Game` in `Game.Score` - and "" when
 ## this sheet is not a project autoload. Two fields carry the fact (the kind, and the name the project

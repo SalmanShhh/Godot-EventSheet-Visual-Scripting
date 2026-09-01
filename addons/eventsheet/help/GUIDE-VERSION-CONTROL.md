@@ -17,7 +17,26 @@ By default an event sheet is a plain **`.gd`** file - it diffs and merges like a
 
 ## 1. LF and Byte-Stable Regeneration (Automatic)
 
-`.gitattributes` enforces LF, and the pack/showcase builders stamp **deterministic row UIDs**, so regenerating an unchanged sheet is byte-identical - no spurious diff churn, and every row has a *stable identity* that diff and merge can key on.
+Sheets are written with **Unix line endings on every platform** - that is Godot's own convention, and
+it is what byte-identical regeneration depends on. The pack and showcase builders stamp
+**deterministic row UIDs** on top of it, so regenerating an unchanged sheet reproduces it byte for
+byte: no spurious diff churn, and every row has a *stable identity* that diff and merge can key on.
+
+Git can quietly undo that. With `core.autocrlf=true` - what the Windows installer offers by default -
+git rewrites text files to CRLF as it writes them into your working tree, the next save takes those
+endings back out, and a one-row change arrives in review as a diff touching every line. Worse, two
+people whose git is configured differently produce different bytes from the same edit, so merge
+conflicts become routine instead of rare.
+
+The Project Doctor raises a **note** when nothing in `.gitattributes` pins how `.gd` files are
+stored, and shows the one line that settles it for every contributor on every platform:
+
+```
+*.gd text eol=lf
+```
+
+Commit that line and no machine's own setting matters any more. EventSheets never writes git
+configuration - not `.git/config`, not `.gitattributes` - so this is a line you put in your own diff.
 
 ---
 
@@ -62,12 +81,25 @@ Until the driver is configured, git just falls back to its default merge, so the
 
 Both sides are preserved in the merged sheet so nothing is lost - open it and keep the right one. Run the headless suite's `sheet_merge_test` for the exact behaviours that are guaranteed.
 
-### Resolving a conflict as events, not as marker lines
+### A file with markers in it opens read-only
 
 A `.gd` sheet merges like any source code, which means a genuine same-line conflict comes back the
-way every source conflict does - `<<<<<<<`, `=======`, `>>>>>>>`. Opening such a file in EventSheets
-does not try to read it as one sheet, because it is not one: it is two. Instead the **conflict view**
-opens, showing the conflicted region as **OURS** and **THEIRS** columns of events side by side.
+way every source conflict does - `<<<<<<<`, `=======`, `>>>>>>>`. A file in that state is not
+GDScript, so EventSheets does not try to read it as one sheet: **it opens read-only**, with nothing
+lifted into rows, Save off, and a banner at the head naming the exact lines the markers are on.
+
+![A .gd still holding merge markers, open read-only: the head banner names the marker lines and says the merge is finished in the tool it was started in, the file shows as verbatim Script blocks, and below it the Project Doctor's inbox row for two rows declaring the same baked local, with its one Re-mint chip](images/merge-guards.png)
+
+There is no "open anyway". Finishing a merge means choosing between two people's work with the whole
+history in view, and the tool that has that view is the one the merge was started in - the banner
+says so. The guard is **textual and total**: any marker line anywhere blocks the file, including the
+leftovers a half-finished resolution produces (a stray `>>>>>>>`, an interrupted rebase's
+`|||||||`), which are exactly the files that otherwise look fine until something saves over them.
+
+### Reading the two sides, as events rather than as marker lines
+
+**Show the conflicts** on that banner opens the **conflict view**, which shows each conflicted region
+as **OURS** and **THEIRS** columns of events side by side.
 
 ![A conflicted file open in the conflict view: the region heading names the two sides the merge wrote (HEAD against feature/jump), the event both sides left alone is greyed and marked "both the same", and the one event that differs carries its own Keep ours / Keep theirs / Keep both](images/conflict-view.png)
 
@@ -82,6 +114,28 @@ resolution is still a file you can come back to.
 
 The Project Doctor reports any file still holding markers as an **error**: it does not compile, and
 the worst moment to discover that is when the game will not start.
+
+### After the markers are gone: two rows declaring the same local
+
+Some verbs declare a local of their own - a peer, a spawned node, a timer accumulator - and the row
+bakes a short token into that name when you add it, so two copies of the same row never collide:
+`__peer_a3f81c02`. A fresh token is drawn against **every token the project's own scripts already
+hold**, not just the ones minted since the editor started, which means an ordinary day of work can
+never produce two the same.
+
+A merge can. Two branches mint in parallel, both rows come in, and the file now declares one name
+twice in one scope - which Godot refuses to parse, loudly, the moment anything touches it. The
+Project Doctor names it before that happens:
+
+> Two rows both declare `__peer_a3f81c02` in `_ready` (lines 7, 10). Godot refuses a file that
+> declares one name twice, so this will not run - it is two branches that minted the same token and a
+> merge that brought both in. Re-mint one of them and both rows go on working.
+
+The finding carries one chip, **Re-mint one of them**. The row that was already in the file keeps the
+name it had; the row the merge brought in gets a name of its own, across every baked field of that
+row at once. Both rows go on reading and compiling exactly as they did - the only thing that moves is
+eight hex digits in a name nobody types - and it is an ordinary edit in the sheet's own undo history,
+so Ctrl+Z puts it back.
 
 ---
 

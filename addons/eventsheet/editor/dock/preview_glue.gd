@@ -50,6 +50,20 @@ var _lift_report_window: Window = null
 var _lift_report_tree: Tree = null
 
 
+## The banner's two grounds. A read-only PREVIEW is calm blue: nothing is wrong, the file is simply
+## not unlocked yet. A file BLOCKED by an unfinished merge is a warning ground, because it is a state
+## rather than a mode - there is no button that opens it, and it must never look like one that merely
+## has not been pressed.
+const PREVIEW_BANNER_BACKGROUND := Color(0.16, 0.26, 0.40)
+const PREVIEW_BANNER_BORDER := Color(0.40, 0.62, 0.95)
+const CONFLICT_BANNER_BACKGROUND := Color(0.36, 0.18, 0.14)
+const CONFLICT_BANNER_BORDER := Color(0.92, 0.48, 0.34)
+
+## The blocked state's one button, kept by name because the refresh below shows and hides the
+## banner's buttons by their role rather than by their position in the row.
+var _conflict_button: Button = null
+
+
 ## Builds the read-only preview banner: a clear, plain-language strip with REAL buttons so a
 ## first-time user knows exactly what is happening and what to do next. Hidden by default.
 func build_preview_banner() -> PanelContainer:
@@ -57,8 +71,8 @@ func build_preview_banner() -> PanelContainer:
 	panel.name = "EventSheetPreviewBanner"
 	panel.visible = false
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.16, 0.26, 0.40)
-	style.border_color = Color(0.40, 0.62, 0.95)
+	style.bg_color = PREVIEW_BANNER_BACKGROUND
+	style.border_color = PREVIEW_BANNER_BORDER
 	style.set_border_width(SIDE_LEFT, 4)
 	style.set_content_margin_all(6.0)
 	panel.add_theme_stylebox_override("panel", style)
@@ -80,6 +94,16 @@ func build_preview_banner() -> PanelContainer:
 	script_button.tooltip_text = "Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab."
 	script_button.pressed.connect(_on_preview_open_in_script_editor)
 	row.add_child(script_button)
+	# The blocked state's own door, hidden for every ordinary preview. It is a way to LOOK at the two
+	# sides side by side rather than an unlock: the banner says the merge tool is where this is
+	# finished, and this window is the reading of what is in the way, not a second merge tool.
+	_conflict_button = Button.new()
+	_conflict_button.name = "EventSheetConflictButton"
+	_conflict_button.text = "Show the conflicts"
+	_conflict_button.tooltip_text = "Read the two sides of each conflict side by side. Finishing the merge still belongs in the tool you started it in."
+	_conflict_button.visible = false
+	_conflict_button.pressed.connect(_on_show_conflicts_requested)
+	row.add_child(_conflict_button)
 	return panel
 
 
@@ -92,12 +116,26 @@ func _refresh_preview_banner() -> void:
 	_dock._preview_banner.visible = is_preview
 	if not is_preview or _dock._preview_label == null:
 		return
+	# THE ONE SANCTIONED BANNER. Everything else this editor finds about a sheet is a finding, and a
+	# finding never says a word in the sheet - it sets the quiet amber row state and its words live in
+	# the help strip and the Doctor. A file a merge has not finished with is not a finding: it is a
+	# FILE-LEVEL BLOCKING STATE, the file is not GDScript, and a state may say so at the head.
+	if _dock._current_sheet.blocked_by_conflict():
+		_paint_blocked_banner()
+		return
+	_paint_banner_ground(PREVIEW_BANNER_BACKGROUND, PREVIEW_BANNER_BORDER)
+	if _conflict_button != null:
+		_conflict_button.visible = false
+	# Back to one trimmed line: an ordinary preview's banner is a note beside the work, and a
+	# wrapping one would push the sheet down the screen on every narrow dock.
+	_dock._preview_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_dock._preview_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	# A scene read as one sheet has no single file to write back to, so there is nothing to
 	# unlock: the banner says what this is and where editing happens instead. The buttons that offer
 	# a file go away with it.
 	var scene_view: bool = EventSheetSceneSheet.is_scene_sheet(_dock._current_sheet)
 	for button: Node in _dock._preview_banner.find_children("", "Button", true, false):
-		(button as Button).visible = not scene_view
+		(button as Button).visible = not scene_view and button != _conflict_button
 	if scene_view:
 		_dock._preview_label.text = "👁  Reading %s - every script this scene uses, in tree order. Double-click an object bar to open that script and edit it." % EventSheetSceneSheet.scene_path_of(_dock._current_sheet).get_file()
 		return
@@ -111,10 +149,62 @@ func _refresh_preview_banner() -> void:
 	_dock._preview_label.text = "👁  Viewing %s as a sheet - just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
 
 
+## The blocked banner: the marker lines named, the reason stated, and the merge tool pointed at. The
+## unlock button is not hidden as a courtesy - it is hidden because there is no unlock. The only
+## button left is the reading of what is in the way.
+func _paint_blocked_banner() -> void:
+	_paint_banner_ground(CONFLICT_BANNER_BACKGROUND, CONFLICT_BANNER_BORDER)
+	for button: Node in _dock._preview_banner.find_children("", "Button", true, false):
+		(button as Button).visible = button == _conflict_button
+	# The blocked sentence WRAPS rather than trailing off in an ellipsis. A preview banner may be
+	# trimmed because the reader can go on working without reading it; this one names the lines the
+	# file is blocked over and where the block is lifted, and a reader who cannot see the end of it
+	# is a reader who does not know what to do next.
+	_dock._preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dock._preview_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	var source_name: String = _dock._current_sheet.external_source_path.get_file()
+	if source_name.is_empty():
+		source_name = "This file"
+	_dock._preview_label.text = "⚠  " + EventSheetConflictGuard.banner_text(source_name,
+		_dock._current_sheet.conflict_marker_lines)
+	if _conflict_button != null:
+		# Only offered when there is something to read: a file whose markers are a leftover half of a
+		# region has no two sides to put side by side, and a button that opens an empty window is a
+		# worse answer than no button.
+		_conflict_button.visible = EventSheetConflictRegions.has_conflicts(
+			FileAccess.get_file_as_string(_dock._current_sheet.external_source_path))
+
+
+## Repaints the banner's ground. One place, so the two states cannot drift into looking alike.
+func _paint_banner_ground(background: Color, border: Color) -> void:
+	var style: StyleBox = _dock._preview_banner.get_theme_stylebox("panel")
+	var flat: StyleBoxFlat = style as StyleBoxFlat
+	if flat == null:
+		return
+	flat.bg_color = background
+	flat.border_color = border
+
+
+## "Show the conflicts": the two sides of each region, side by side, read-only until a person picks.
+## A door onto the file's own contents, and not an unlock - the sheet behind it stays blocked.
+func _on_show_conflicts_requested() -> void:
+	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
+		return
+	_dock._open_conflict_view(_dock._current_sheet.external_source_path)
+
+
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
+##
+## A BLOCKED FILE HAS NO UNLOCK. The button is not on its banner, but this is the funnel every other
+## unlock path in the editor comes through as well (the first intentional edit unlocks a preview), so
+## the refusal belongs here rather than on the button that is already gone.
 func _on_preview_edit_requested() -> void:
 	if _dock._current_sheet == null:
+		return
+	if _dock._current_sheet.blocked_by_conflict():
+		_dock._set_status(EventSheetConflictGuard.save_refusal(
+			_dock._current_sheet.external_source_path.get_file()), true)
 		return
 	_dock._current_sheet.read_only = false
 	_refresh_preview_banner()

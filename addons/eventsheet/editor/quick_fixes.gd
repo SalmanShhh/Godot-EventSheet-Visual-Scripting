@@ -179,6 +179,12 @@ const OFFERED := {
 	"migration-sheet": [
 		{"id": "apply_migrations", "label": "Apply per sheet…"},
 	],
+	# A merge that brought the same baked local in from two branches. One click, one token, one undo
+	# step: the row that was already there keeps the name it had and the row that arrived gets a name
+	# of its own, so the file parses again without anybody choosing between two people's work.
+	"duplicate-local-token": [
+		{"id": "remint_token", "label": "Re-mint one of them"},
+	],
 }
 
 ## Where a guide has to live for a chip to edit it: the packs of THIS project. A shipped guide under
@@ -334,7 +340,42 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		# A door, and only a door: it opens the sheet's own migrate receipt and stops there.
 		"apply_migrations":
 			return _open_migrate_dialog(str(finding.get("path", "")), dock)
+		"remint_token":
+			return _remint_token(subject, str(finding.get("path", "")), dock)
 	return {"ok": false, "message": "No fix named %s." % fix_id}
+
+
+## Re-mints ONE of two rows that a merge left declaring the same baked local. The row that was
+## already in the file keeps the name it had; the row that arrived from the other branch gets a name
+## of its own, drawn the way every token is drawn - against the project - so the repair cannot
+## introduce the next collision.
+##
+## AN ORDINARY UNDOABLE SHEET EDIT and nothing more: one step through the funnel, one line in the
+## History panel, Ctrl+Z puts it back. There is no merge in it and no choice being made on anybody's
+## behalf - both rows go on saying exactly what they said, and the only thing that moves is eight hex
+## digits in a name no reader ever types.
+##
+## IT ONLY EVER REACHES THE OPEN SHEET, for the reason every other chip here does: this section comes
+## off a sweep of the whole project, so the file a line names is usually not the one on screen.
+static func _remint_token(token: String, sheet_path: String, dock: Variant) -> Dictionary:
+	var elsewhere: String = "Open %s and press this again - the re-mint is an edit in that sheet's own undo history, so it happens where you can undo it." % sheet_path.get_file()
+	if token.is_empty() or dock == null or not dock.has_method("_perform_undoable_sheet_edit") \
+			or not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null:
+		return {"ok": false, "message": elsewhere}
+	var receipts: Array = []
+	var applied: bool = bool(dock.call("_perform_undoable_sheet_edit", "Re-mint duplicated local",
+		func() -> bool:
+			receipts.assign(EventSheetLocalTokens.remint(sheet, token,
+				Callable(EventSheetDock, "_fresh_uid_token")))
+			return not receipts.is_empty()))
+	if not applied or receipts.is_empty():
+		return {"ok": false, "message": "Nothing in the open sheet declares %s twice - the other copy may be in a different file, or it may already have been re-minted." % token}
+	var first: Dictionary = receipts[0]
+	return {"ok": true, "message": "%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back." % [
+		str(first.get("before", "")), str(first.get("after", ""))]}
 
 
 ## Opens the migrate receipt for the sheet in front of the reader, and NOTHING ELSE. Nothing in this

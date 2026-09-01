@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### The two quiet killers a merge leaves behind
+
+- **A fresh token is drawn against the whole project, not just this session.** A verb whose template
+  declares a local of its own bakes an eight-digit token into the name - `__peer_a3f81c02` - and the
+  draw now excludes every token the project's own scripts already hold, not only the ones this editor
+  minted since it started. Two rows applied a year apart in two files can no longer land on the same
+  name. The point is not the collision it avoids, which was already vanishingly unlikely: it is that
+  a duplicate which does turn up cannot have come from ordinary work, so the Doctor can say what it
+  actually is. The listing is built once per session, dropped whenever the filesystem moves, and
+  never written anywhere.
+- **After a merge, a doubled token is named plainly.** Two rows declaring the same local in one
+  scope is a file Godot refuses to parse, at the worst possible moment. The Doctor now reads it off
+  the text first and says it in a sentence - *Two rows both declare `__peer_a3f81c02` in `_ready`
+  (lines 7, 10)* - and offers one chip: **Re-mint one of them**. The row that was already in the file
+  keeps the name it had, the row the merge brought in gets a name of its own across all of its baked
+  fields at once, both rows go on reading exactly as they did, and Ctrl+Z puts it back. It is an
+  ordinary undoable sheet edit, in the sheet's own history, and nothing is ever rewritten from the
+  report.
+- **A file with merge markers in it opens read-only, and totally.** Any marker line anywhere - not
+  only a well-formed region - now blocks the file: it opens so you can see it, with nothing lifted
+  into rows, Save refused, the unlock gone, and the head banner naming the marker lines. That is the
+  one banner this editor puts at the head of a sheet, and it is there because this is a state rather
+  than a finding: the file is not GDScript, so there is nothing to be quiet about. Finishing the
+  merge belongs in the tool you started it in, and the banner says so; the side-by-side reading of
+  the two versions is still one button away. The half-resolved files - a leftover `>>>>>>>`, an
+  interrupted rebase's `|||||||` - are the ones this catches that nothing caught before, and they are
+  exactly the ones that used to open as ordinary sheets and offer to save over somebody's merge.
+- **A Doctor note when git would rewrite your sheets' line endings.** Sheets are written with Unix
+  endings on every platform, which is Godot's own convention and what the byte-exact round-trip
+  assumes. A checkout with `core.autocrlf=true` and no `.gitattributes` line quietly undoes that:
+  every save becomes a whole-file diff and every merge becomes a conflict. The note says which of the
+  two it is looking at and shows the one line to commit - `*.gd text eol=lf`. This plugin never
+  writes git configuration, so that line is one a person puts in their own diff.
+
 ### A pack update is a proposal
 
 - **Attaching a pack writes down what arrived.** Importing a pack from a .zip now hashes every file
