@@ -398,9 +398,10 @@ var _context_hit: Dictionary = {}
 ## per-project in editor metadata. Starts OFF here, but a project's FIRST run flips it on
 ## (welcome_window.show_if_first_run) - the toolbar pill makes Expert one visible click away.
 var _simple_mode: bool = false
-# The toolbar's Simple Mode pill + the surfaces it gates live: the Add Code button disappears and
-# the Add menu's code item disables while Simple Mode is on (set by menu_bar.gd at build).
-var _simple_mode_button: Button = null
+# The surface Simple Mode gates live: the Add menu's code item disables while Simple Mode is on
+# (set by menu_bar.gd at build). Simple Mode no longer touches the toolbar strip at all - the strip
+# rests by itself, and the audience flag reads and flips from View ▸ Simple Mode and the Welcome
+# window. The Add Code button is kept as a reference for anything that wants to address it by name.
 var _add_code_button: Button = null
 var _add_menu_popup: PopupMenu = null
 # Fades informational status messages to muted after a few seconds (errors never fade).
@@ -747,8 +748,11 @@ func pulse_control(control_label: String) -> bool:
 		return false
 	for child: Node in _toolbar.get_children():
 		var button: Button = child as Button
-		if button == null or button.text.strip_edges() != wanted:
+		if button == null or _toolbar_control_label(button) != wanted:
 			continue
+		# A resting strip keeps most of its buttons hidden, and pulsing a hidden button points at
+		# nothing - so the strip is expanded first, then the control is pulsed where it now is.
+		_menu_bar.reveal_control(button)
 		# Three slow breaths of the editor's accent over the button, then back to itself. A Tween
 		# rather than a Timer so it finishes cleanly if the reader closes the dock mid-pulse. Under
 		# Reduced Motion the button is simply left alone: the caller still gets its true, and the
@@ -761,6 +765,15 @@ func pulse_control(control_label: String) -> bool:
 		tween.tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.45)
 		return true
 	return false
+
+
+## The words a toolbar control stands for: what is written on its face, or - once an icon has taken
+## the words off the face - the label it was built with, which it keeps in its own meta.
+func _toolbar_control_label(button: Button) -> String:
+	var face: String = button.text.strip_edges()
+	if not face.is_empty():
+		return face
+	return str(button.get_meta(EventSheetMenuBar.LABEL_META_KEY, "")).strip_edges()
 
 
 ## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.
@@ -2468,8 +2481,6 @@ func set_simple_mode(enabled: bool) -> void:
 		var idx: int = _view_popup.get_item_index(11)
 		if idx >= 0:
 			_view_popup.set_item_checked(idx, enabled)
-	if _simple_mode_button != null:
-		_simple_mode_button.set_pressed_no_signal(enabled)
 	# Simple Mode doubles as the READING lens: body comments render as italic captions (intent
 	# first, mechanics under it) on every open view. View state only - toggling back restores
 	# the programmer look instantly and no row is touched.
@@ -2480,8 +2491,10 @@ func set_simple_mode(enabled: bool) -> void:
 	_set_status("Simple mode ON - advanced entries hidden." if enabled else "Expert mode - all entries shown.")
 
 
-## Applies Simple Mode to the always-visible surfaces it gates: the toolbar's deliberate
-## drop-to-code button hides, and the Add menu's code item disables with a pointer to the toggle.
+## Applies Simple Mode to the always-visible surfaces it gates: the Add menu's code item disables
+## with a pointer to the toggle, the Properties bar closes, and the project-level bars re-resolve.
+## Simple Mode does NOT touch the toolbar strip - the strip rests by itself, so hiding one of its
+## buttons for a beginner would only make two calm strips that disagree about what is on them.
 ## (The picker and the right-click menus apply their own gates when they open.)
 func _apply_simple_mode_gates() -> void:
 	# The Properties bar is an expert surface: a beginner's sheet is the sheet. View ▸ Properties
@@ -2495,8 +2508,6 @@ func _apply_simple_mode_gates() -> void:
 	# the reader's own choice of dial is theirs to keep.
 	if _simple_mode:
 		set_variable_row_view(EventSheetCodeEcho.VIEW_SENTENCE)
-	if _add_code_button != null:
-		_add_code_button.visible = not _simple_mode
 	if _add_menu_popup != null:
 		var code_index: int = _add_menu_popup.get_item_index(4)
 		if code_index >= 0:
@@ -7628,6 +7639,7 @@ func _on_undo_requested() -> void:
 		_set_status("Nothing to undo.", true)
 		return
 	_undo_redo_adapter.undo()
+	_menu_bar.refresh_history_buttons()
 
 
 func _on_redo_requested() -> void:
@@ -7635,6 +7647,7 @@ func _on_redo_requested() -> void:
 		_set_status("Nothing to redo.", true)
 		return
 	_undo_redo_adapter.redo()
+	_menu_bar.refresh_history_buttons()
 
 
 func _capture_sheet_snapshot() -> EventSheetResource:
@@ -7689,6 +7702,9 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	_undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
 	_undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
 	_undo_redo_adapter.commit_action()
+	# The toolbar's Undo/Redo icons follow the history, and this is the one place every edit passes
+	# through - so they are refreshed here rather than polled every frame.
+	_menu_bar.refresh_history_buttons()
 	# The same step, written into the History panel's log in the name the edit gave itself.
 	_ensure_history_panel().record(action_name, before, after, _selected_event_number())
 	return true
@@ -7705,6 +7721,7 @@ func _selected_event_number() -> int:
 
 func _clear_undo_history() -> void:
 	_undo_redo_adapter.clear_history()
+	_menu_bar.refresh_history_buttons()
 	_ensure_history_panel().clear()
 
 

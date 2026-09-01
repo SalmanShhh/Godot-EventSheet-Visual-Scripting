@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### The toolbar rests
+
+- **Seven controls, one row, never wrapping.** The strip fronted twenty-one interactive controls over
+  a hundred-odd commands, which is a menu bar wearing a toolbar's clothes: everything one click away
+  and nothing findable. At rest it is now one cascading Menu, the Save / Undo / Redo icons, the play
+  button, the Quick add field, and a chevron. Nothing was removed - every retired control keeps its
+  key, its home in the Menu, and the in-sheet door it already had.
+- **One Menu, four cascading submenus.** Sheet, Edit, View and Tools left the strip and became
+  submenus of a single Menu button. They are the very same menus: every item id, every handler and
+  every menu that rebuilds itself on open (Language, Arrange by, Saved Views, Workspaces, Export)
+  works exactly as before, because nothing was rebuilt - the menus were re-parented. The Manual and
+  What's new sit at the Menu's foot, and the Settings menu retired: its one item, Words…, moved into
+  Tools beside Keyboard Shortcuts.
+- **Undo and Redo are on the strip.** Two icon buttons over the dock's own undo funnel - the same
+  call Ctrl+Z, Ctrl+Shift+Z and Edit ▸ Undo have always made. They grey out with the history, the way
+  Godot's own toolbars do. Save joins them as an icon, and all three print their key from the one
+  shortcut table, so a rebind shows through with no edit anywhere.
+- **The chevron, and View ▸ Full toolbar.** One choice shown twice: the chevron expands the strip to
+  every button it has, in the order it always had them, and the View item mirrors it. The choice is
+  remembered per project. Rest is the default for every project, existing ones included.
+- **Simple Mode stopped touching the strip.** It no longer hides the Add Code button - the strip is
+  already calm, and two calm strips that disagree about what is on them help nobody. Every other
+  Simple Mode power is untouched: the picker denylist, the gated right-click menus, reading mode, the
+  beginner Add toolbar, the Properties-bar rule and the variable-rows view. Its pill left the strip;
+  the flag reads and flips from View ▸ Simple Mode and from the Welcome window.
+
 ### Fixed
 
 - **Menus open where the mouse is.** The "New from template…" menu (and the Run Scene and batch-edit

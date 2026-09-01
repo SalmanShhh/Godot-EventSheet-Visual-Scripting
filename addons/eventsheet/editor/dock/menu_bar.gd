@@ -17,6 +17,34 @@ var _dock: Control = null
 ## than derived, because a RefCounted helper has no script path to ask for at the point it matters.
 const THIS_FILE_PATH: String = "res://addons/eventsheet/editor/dock/menu_bar.gd"
 
+## Where the "show every button" choice is remembered, in the same editor-settings project
+## metadata section every other per-project editor choice uses. The default is REST, for every
+## project including one that already exists - nothing is migrated, because there was no
+## resting/expanded choice to migrate.
+const FULL_TOOLBAR_META_KEY: String = "eventsheets_full_toolbar"
+
+## The View menu's mirror of the chevron. A number the View menu has never used.
+const FULL_TOOLBAR_VIEW_ID: int = 9814
+
+## The controls the strip shows AT REST, in reading order: the one cascading Menu, the save/undo/redo
+## icons, the play button's slot, the Quick add field, and the chevron that expands the rest. Held as
+## node references rather than indices, because the strip's order is edited by every pass that
+## touches it and an index list goes stale silently.
+var _resting_controls: Array = []
+
+## The chevron itself, and the strip it expands.
+var _expander: Button = null
+var _toolbar_ref: HFlowContainer = null
+var _full_toolbar: bool = false
+
+## The two history icons, kept so their disabled state can follow the undo history the way Godot's
+## own toolbars do.
+var _undo_button: Button = null
+var _redo_button: Button = null
+
+## The View menu, kept so the chevron and the menu item stay one choice shown twice.
+var _view_popup_ref: PopupMenu = null
+
 
 func init(dock: Control) -> void:
 	_dock = dock
@@ -30,15 +58,30 @@ func build(root: Node) -> void:
 	_toolbar.name = "EventSheetToolbar"
 	_toolbar.add_theme_constant_override("h_separation", 4)
 	_dock._toolbar = _toolbar
+	_toolbar_ref = _toolbar
 	root.add_child(_toolbar)
 
-	# Sheet ▾ - file lifecycle + identity (low frequency, one menu).
-	var sheet_menu: MenuButton = MenuButton.new()
-	sheet_menu.name = "EventSheetSheetMenu"
-	sheet_menu.text = "Sheet"
-	sheet_menu.tooltip_text = "Create, open, save, and configure this event sheet."
-	sheet_menu.flat = false
-	var sheet_popup: PopupMenu = sheet_menu.get_popup()
+	# ── THE STRIP AT REST ──────────────────────────────────────────────────────────────────────
+	# One cascading Menu, three icons, the play button, Quick add, and a chevron. Every command the
+	# strip used to front is still here - it moved into the Menu, and the chevron brings the whole
+	# strip back. Nothing was removed: every retired control keeps its key and its in-sheet door.
+	#
+	# ☰ Menu ▾ - Sheet, Edit, View and Tools as cascading submenus of ONE button. The submenus are
+	# the very same PopupMenus those four MenuButtons used to open, re-parented here, so every item
+	# id, handler, dynamic submenu and shortcut is untouched.
+	var menu_button: MenuButton = MenuButton.new()
+	menu_button.name = "EventSheetMenu"
+	menu_button.text = "☰ Menu"
+	menu_button.tooltip_text = "Every command in the editor, in four groups: Sheet, Edit, View and Tools."
+	menu_button.flat = false
+	var menu_popup: PopupMenu = menu_button.get_popup()
+	_toolbar.add_child(menu_button)
+
+	# Sheet ▸ - file lifecycle + identity (low frequency, one menu).
+	var sheet_popup: PopupMenu = PopupMenu.new()
+	sheet_popup.name = "EventSheetSheetMenu"
+	menu_popup.add_child(sheet_popup)
+	menu_popup.add_submenu_node_item("Sheet", sheet_popup, 0)
 	sheet_popup.add_item("New…", 0)
 	sheet_popup.add_item("Open…", 1)
 	sheet_popup.add_item("Save", 2)
@@ -131,8 +174,30 @@ func build(root: Node) -> void:
 			16: _dock._save_sheet_as_text_requested()
 			19: _dock._shared_sheets.open_new_shared_sheet()
 	)
-	_toolbar.add_child(sheet_menu)
-	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
+	# ── THE ICON STRIP ─────────────────────────────────────────────────────────────────────────
+	# Save, Undo, Redo, as icon-only buttons wearing the editor's own icons. Every tooltip prints its
+	# key from the ONE shortcut table, so a rebound key shows its new binding here without an edit.
+	# Undo and Redo are new controls, not new powers: both gestures already existed on their keys and
+	# on the Edit menu, and both call the dock's undo funnel, exactly as those do.
+	var save_button: Button = _add_toolbar_button(_toolbar, "Save", _dock._on_save_requested,
+		_with_key("Save the sheet - compile-on-save keeps its generated script fresh.", "save"),
+		"Save", true)
+	save_button.name = "EventSheetSaveButton"
+	_undo_button = _add_toolbar_button(_toolbar, "Undo", _dock._on_undo_requested,
+		_with_key("Undo the last edit to this sheet.", "undo"), "Undo", true)
+	_undo_button.name = "EventSheetUndoButton"
+	_redo_button = _add_toolbar_button(_toolbar, "Redo", _dock._on_redo_requested,
+		_with_key("Redo the edit you just undid.", "redo"), "Redo", true)
+	_redo_button.name = "EventSheetRedoButton"
+	# ── THE PLAY BUTTON'S SLOT ─────────────────────────────────────────────────────────────────
+	# Godot has no split button, so the resting play control is a face Button beside a narrow
+	# MenuButton inside one PanelContainer - two adjacent controls reading as one. It is filled by
+	# the run-controls pass; the slot is created here, in its resting position, so the strip's order
+	# never has to be rearranged to make room for it. An empty container draws nothing.
+	var play_slot: HBoxContainer = HBoxContainer.new()
+	play_slot.name = "EventSheetPlaySlot"
+	play_slot.add_theme_constant_override("separation", 0)
+	_toolbar.add_child(play_slot)
 	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
 	# Testing a networked game needs two copies of it running. Godot can already do that; this
 	# button is the one that finds the setting for you and says in its tooltip how to take it back.
@@ -249,12 +314,11 @@ func build(root: Node) -> void:
 	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
 	_dock._add_menu_popup = add_popup
 	_toolbar.add_child(add_menu)
-	# Edit ▾ - clipboard + history (all on shortcuts too).
-	var edit_menu: MenuButton = MenuButton.new()
-	edit_menu.name = "EventSheetEditMenu"
-	edit_menu.text = "Edit"
-	edit_menu.flat = false
-	var edit_popup: PopupMenu = edit_menu.get_popup()
+	# Edit ▸ - clipboard + history (all on shortcuts too).
+	var edit_popup: PopupMenu = PopupMenu.new()
+	edit_popup.name = "EventSheetEditMenu"
+	menu_popup.add_child(edit_popup)
+	menu_popup.add_submenu_node_item("Edit", edit_popup, 1)
 	edit_popup.add_item("Copy", 0)
 	edit_popup.add_item("Paste", 1)
 	edit_popup.add_separator()
@@ -275,15 +339,13 @@ func build(root: Node) -> void:
 			5: _dock._find_references_requested()
 			6: _dock._open_ai_generate()
 	)
-	_toolbar.add_child(edit_menu)
-	# View ▾ - panels, multi-view, zoom and theming.
-	var view_menu: MenuButton = MenuButton.new()
-	view_menu.name = "EventSheetViewMenu"
-	view_menu.text = "View"
-	view_menu.tooltip_text = "Panels, multi-view panes, theme, live values, and zoom."
-	view_menu.flat = false
-	var view_popup: PopupMenu = view_menu.get_popup()
+	# View ▸ - panels, multi-view, zoom and theming.
+	var view_popup: PopupMenu = PopupMenu.new()
+	view_popup.name = "EventSheetViewMenu"
+	menu_popup.add_child(view_popup)
+	menu_popup.add_submenu_node_item("View", view_popup, 2)
 	_dock._view_popup = view_popup
+	_view_popup_ref = view_popup
 	view_popup.add_check_item("Simple Mode (beginner-friendly)", 11)
 	view_popup.set_item_checked(view_popup.get_item_index(11), _dock._simple_mode)
 	view_popup.add_separator()
@@ -467,13 +529,11 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
-	_toolbar.add_child(view_menu)
-	# Tools ▾ - debug + project workflow tools (the UX-audit consolidation).
-	var tools_menu: MenuButton = MenuButton.new()
-	tools_menu.text = "Tools"
-	tools_menu.tooltip_text = "Debug tools, validation, import, and project workflow."
-	tools_menu.flat = false
-	var tools_popup: PopupMenu = tools_menu.get_popup()
+	# Tools ▸ - debug + project workflow tools (the UX-audit consolidation).
+	var tools_popup: PopupMenu = PopupMenu.new()
+	tools_popup.name = "EventSheetToolsMenu"
+	menu_popup.add_child(tools_popup)
+	menu_popup.add_submenu_node_item("Tools", tools_popup, 3)
 	tools_popup.add_item("Debug Breakpoints (toggle)", 0)
 	tools_popup.add_item("Live Values (toggle)", 1)
 	tools_popup.add_item("Event Trace (live highlight)", 15)
@@ -506,6 +566,12 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Welcome…", 13)
 	tools_popup.add_item("Start the Tour…", 17)
 	tools_popup.add_item("Keyboard Shortcuts", 16)
+	# Words is the reader's own vocabulary choice, and it sits beside Keyboard Shortcuts because both
+	# are "how the editor answers to me". It is the whole of what the retired Settings menu carried;
+	# id 63 is the next number the Tools menu has never used, because an id belongs to its menu and a
+	# moved item cannot bring its old number into a menu that already spent it.
+	tools_popup.add_item("Words…", 63)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(63), "Every word the sheet lets you choose, on one page, with a live preview of an event in them.")
 	tools_popup.add_item("Manual…", 22)
 	tools_popup.add_item("Report an Issue…", 20)
 	tools_popup.id_pressed.connect(func(id: int) -> void:
@@ -537,6 +603,7 @@ func build(root: Node) -> void:
 			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
 			23: _dock.open_addon_manager()
+			63: _dock.open_words_settings()
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(24), "Every open sheet on one page - how big each is, how much of it is described, what the Doctor said about it - plus a search that reaches all of them and the page each sheet writes about itself.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(25), "The documentation chores in one window: rewrite the page each sheet writes about itself, check what the guides do not answer, export the Manual as a browsable site, write out a translator's missing keys. Nothing is published - drafts stay drafts.")
@@ -556,32 +623,20 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + script block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
-	_toolbar.add_child(tools_menu)
-	# Settings ▾ - the choices that are the reader's, not the project's. Words is the first: the
-	# whole vocabulary the sheet lets you choose, on one page.
-	var settings_menu: MenuButton = MenuButton.new()
-	settings_menu.text = "Settings"
-	settings_menu.tooltip_text = "Your own choices, stored with the editor settings rather than the project."
-	settings_menu.flat = false
-	var settings_popup: PopupMenu = settings_menu.get_popup()
-	settings_popup.add_item("Words…", 0)
-	settings_popup.set_item_tooltip(settings_popup.get_item_index(0), "Every word the sheet lets you choose, on one page, with a live preview of an event in them.")
-	settings_popup.id_pressed.connect(func(id: int) -> void:
+	# The Menu's foot: the two doors a reader looks for by name rather than by group. Both open the
+	# same Manual the Tools entry does - this is a second door onto one page, never a second page.
+	menu_popup.add_separator()
+	menu_popup.add_item("Manual…", 4)
+	menu_popup.add_item("What's new…", 5)
+	menu_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
-			0: _dock.open_words_settings()
+			4: _dock.open_documentation()
+			5: _dock.open_documentation("reference:whats-new")
 	)
-	_toolbar.add_child(settings_menu)
 	_add_toolbar_separator(_toolbar)
-	# Simple Mode as a persistent, visible pill (not only a buried View-menu check): the audience
-	# flag should be one glance to read and one click to flip.
-	var simple_button: Button = Button.new()
-	simple_button.text = "Simple Mode"
-	simple_button.toggle_mode = true
-	simple_button.set_pressed_no_signal(_dock._simple_mode)
-	simple_button.tooltip_text = "Beginner-friendly view: hides the advanced/code entries (script blocks, sub-conditions, pick filters, signals/enums). Everything still works when off."
-	simple_button.toggled.connect(func(on: bool) -> void: _dock.set_simple_mode(on))
-	_dock._simple_mode_button = simple_button
-	_toolbar.add_child(simple_button)
+	# Simple Mode is no longer a pill on the strip: the strip is already calm, so the audience flag
+	# reads and flips from View ▸ Simple Mode (id 11) and from the Welcome window, where a reader
+	# meets it first. Every one of its other powers is untouched.
 	# GDScript stays a one-click toggle (the pairing thesis: honest output, always
 	# one click away) next to the per-sheet theme picker.
 	_add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
@@ -593,6 +648,7 @@ func build(root: Node) -> void:
 	_toolbar.add_child(_theme_picker)
 	_dock._populate_theme_picker()
 	var _quick_add_edit: LineEdit = LineEdit.new()
+	_quick_add_edit.name = "EventSheetQuickAdd"
 	_quick_add_edit.placeholder_text = "Quick add or find…  (e.g. heal 5, or Chase)"
 	_quick_add_edit.tooltip_text = "Type a row and press Enter to add it, exactly as before - or read the answers underneath: the states, rows, variables, functions, signals, modes and Doctor findings that match what you typed. Down arrow to reach them, Enter to go there."
 	# Wider now that it answers as well as adds: the answers say what kind they are and where they
@@ -608,6 +664,18 @@ func build(root: Node) -> void:
 	# adds the row - the popup swallows the key, and the add happens on the other side of it.
 	_dock._ask_field.attach(_quick_add_edit)
 	_toolbar.add_child(_quick_add_edit)
+	# ── THE CHEVRON ────────────────────────────────────────────────────────────────────────────
+	# The whole strip, one click away, and back again. It is a plain Button carrying a glyph rather
+	# than an editor icon, so it reads the same on a build whose editor theme has no arrow to lend.
+	_expander = _add_toolbar_button(_toolbar, "»", _toggle_full_toolbar_from_chevron, "", "")
+	_expander.name = "EventSheetToolbarExpander"
+	# The resting seven, in reading order. The play slot is empty until the run-controls pass fills
+	# it, and an empty container simply draws nothing.
+	_resting_controls = [menu_button, save_button, _undo_button, _redo_button, play_slot,
+		_quick_add_edit, _expander]
+	_full_toolbar = _stored_full_toolbar()
+	_apply_toolbar_expansion()
+	refresh_history_buttons()
 	# Every menu on the strip remembers this file too, so "where is this menu made" is the same
 	# gesture as "where is this button made". One sweep rather than a mark beside each `MenuButton`,
 	# because a mark that has to be remembered at eleven call sites is a mark that goes stale.
@@ -883,6 +951,18 @@ func build(root: Node) -> void:
 	view_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9806:
 			_dock.open_debugger())
+	# ── View ▸ Full toolbar (appended block - keep together) ───────────────────────────────────
+	# The chevron's twin. The strip's resting/expanded state is ONE choice, so it is shown in two
+	# places and written in one - a reader who never notices the chevron still finds it by name, and
+	# a reader who uses the chevron sees this tick follow. Id 9814 is the next number the View menu
+	# has never used.
+	view_popup.add_check_item("Full toolbar", FULL_TOOLBAR_VIEW_ID)
+	view_popup.set_item_checked(view_popup.get_item_index(FULL_TOOLBAR_VIEW_ID), _full_toolbar)
+	view_popup.set_item_tooltip(view_popup.get_item_index(FULL_TOOLBAR_VIEW_ID),
+		"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.")
+	view_popup.id_pressed.connect(func(id: int) -> void:
+		if id == FULL_TOOLBAR_VIEW_ID:
+			set_full_toolbar(not _full_toolbar))
 
 
 ## The View menu's collapse sweeps, aimed at whichever view is active (split/detached panes
@@ -898,6 +978,120 @@ func _collapse_sweep(level: int) -> void:
 		view.collapse_all()
 	else:
 		view.expand_to_level(level)
+
+
+## A tooltip with its key printed after it, read from the ONE shortcut table. An action with no key
+## simply says what it does. Same shape the beginner toolbar's tooltips use, for the same reason: a
+## hand-typed key name is a key name that goes stale the first time somebody rebinds it.
+static func _with_key(text: String, action: String) -> String:
+	var what: String = EventSheetL10n.translate(text)
+	var binding: String = EventSheetShortcuts.binding_for(action)
+	return what if binding.is_empty() else "%s  (%s)" % [what, binding]
+
+
+## Whether the strip is showing every button it has.
+func full_toolbar() -> bool:
+	return _full_toolbar
+
+
+## Show (or rest) the whole strip, remember the choice for this project, and put the chevron and the
+## View menu's tick on the same answer.
+func set_full_toolbar(shown: bool) -> void:
+	_full_toolbar = shown
+	var settings: Object = _editor_settings()
+	if settings != null:
+		settings.call("set_project_metadata", "eventsheets", FULL_TOOLBAR_META_KEY, shown)
+	_apply_toolbar_expansion()
+	if _dock != null:
+		_dock._set_status("Full toolbar on - every button is on the strip." if shown
+			else "Toolbar rested. The chevron, or View ▸ Full toolbar, brings the rest back.")
+
+
+func _toggle_full_toolbar_from_chevron() -> void:
+	set_full_toolbar(not _full_toolbar)
+
+
+## The strip in whichever state it is in: at rest only the seven resting controls are visible, and
+## expanded everything is. Nothing is ever removed from the strip - a hidden button keeps its place,
+## its handler and its key, which is why the resting state costs no lookup anywhere else.
+func _apply_toolbar_expansion() -> void:
+	if _toolbar_ref == null:
+		return
+	for child: Node in _toolbar_ref.get_children():
+		var control: Control = child as Control
+		if control == null:
+			continue
+		control.visible = _full_toolbar or _resting_controls.has(control)
+	if _expander != null:
+		_expander.text = "«" if _full_toolbar else "»"
+		_expander.tooltip_text = ("Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add."
+			if _full_toolbar else "Show every button on the toolbar.")
+	if _view_popup_ref != null:
+		var index: int = _view_popup_ref.get_item_index(FULL_TOOLBAR_VIEW_ID)
+		if index >= 0:
+			_view_popup_ref.set_item_checked(index, _full_toolbar)
+
+
+## Undo and Redo grey out when there is nothing to undo or redo, the way Godot's own toolbars do.
+## Called from the dock's undo funnel - the one place every edit, undo, redo and history clear
+## passes through - so the two icons never claim a history the sheet does not have.
+func refresh_history_buttons() -> void:
+	if _dock == null:
+		return
+	if _undo_button != null:
+		_undo_button.disabled = not _dock._undo_redo_adapter.has_undo()
+	if _redo_button != null:
+		_redo_button.disabled = not _dock._undo_redo_adapter.has_redo()
+
+
+## Makes sure a control on the strip can actually be seen before something points at it: a tutorial
+## step that pulses "Add Action" while the strip rests would pulse a hidden button. Answers whether
+## the control belongs to this strip at all.
+func reveal_control(control: Control) -> bool:
+	if _toolbar_ref == null or control == null or control.get_parent() != _toolbar_ref:
+		return false
+	if not control.visible:
+		set_full_toolbar(true)
+	return true
+
+
+## The narrowest the RESTING strip can be drawn without wrapping: every resting control's own
+## minimum width plus the separations between them. HFlowContainer answers its combined minimum size
+## as the widest single child (it is allowed to wrap), so the resting row's width has to be added up
+## rather than asked for.
+func resting_minimum_width() -> float:
+	if _toolbar_ref == null:
+		return 0.0
+	var separation: int = _toolbar_ref.get_theme_constant("h_separation")
+	var total: float = 0.0
+	var counted: int = 0
+	for child: Node in _toolbar_ref.get_children():
+		var control: Control = child as Control
+		if control == null or not _resting_controls.has(control):
+			continue
+		total += control.get_combined_minimum_size().x
+		counted += 1
+	return total + float(separation) * float(maxi(counted - 1, 0))
+
+
+## The stored choice, read the way every other per-project editor choice here is read: a NON-null
+## sentinel default, because a missing key with a null default prints an editor ERROR on a fresh
+## project. Anything that is not a stored bool means "nobody chose", and nobody choosing means rest.
+func _stored_full_toolbar() -> bool:
+	var settings: Object = _editor_settings()
+	if settings == null:
+		return false
+	var stored: Variant = settings.call("get_project_metadata", "eventsheets", FULL_TOOLBAR_META_KEY, "")
+	return stored if stored is bool else false
+
+
+static func _editor_settings() -> Object:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_settings"):
+		return null
+	return editor_interface.call("get_editor_settings")
 
 
 ## The Run Tests… window, built the first time it is asked for and kept afterwards. Loaded by path
@@ -924,19 +1118,31 @@ func _open_run_tests() -> void:
 	_test_report_panel.open()
 
 
+## The words an icon-only button stands for, kept in its own meta so anything that addresses a
+## toolbar control by its label (a tutorial's pulse) still finds it once the words come off the face.
+const LABEL_META_KEY: String = "eventsheets_toolbar_label"
+
+
 ## Adds a one-click toolbar button wired to `callable`, with an optional editor icon.
 ## Returns the button so callers that need to gate/restyle it can keep a reference.
 ## (Moved verbatim from the dock; targets the toolbar passed in rather than a member.)
-func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "") -> Button:
+##
+## `icon_only` drops the words from the face and leaves the icon to carry it - and only when the icon
+## actually arrived. A headless run and an editor theme without that icon both keep the text, so a
+## button never becomes a blank rectangle nobody can name.
+func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "", icon_only: bool = false) -> Button:
 	var button: Button = Button.new()
 	button.text = text
 	button.tooltip_text = tooltip
+	button.set_meta(LABEL_META_KEY, text)
 	# Editor icons make the toolbar read as part of Godot (no-op headless / pre-1.0
 	# editor theme without the icon).
 	if not editor_icon.is_empty() and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		var editor_theme: Theme = EditorInterface.get_editor_theme()
 		if editor_theme != null and editor_theme.has_icon(editor_icon, "EditorIcons"):
 			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
+			if icon_only:
+				button.text = ""
 	button.pressed.connect(callable)
 	# The button remembers which of the editor's files made it, so Ctrl+Shift+Alt on it opens
 	# that file as a sheet at the row that names these words. Nothing is written outside the editor's

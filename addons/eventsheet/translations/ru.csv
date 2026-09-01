@@ -5980,3 +5980,13 @@ lines %s and %s%s,строки %s и %s%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Открывает квитанцию миграции для листа перед вами, отвечая против словаря, который оставит это обновление: каждая строка, которая была бы переписана, показана до того, как что-либо перепишется. Чтение глаголов версии запускает её скрипт, под user:// - ничего из неё не пишется под res://, пока вы её не примете."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d лист(ов), включающих этот, будут переписаны и СОХРАНЕНЫ, чего Ctrl+Z здесь не отменит."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Также записаны и сохранены - эти листы включают этот, поэтому Ctrl+Z здесь их не отменит"
+☰ Menu,☰ Меню
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Все команды редактора в четырёх группах: Лист, Правка, Вид и Инструменты."
+Save the sheet - compile-on-save keeps its generated script fresh.,Сохранить лист - компиляция при сохранении держит сгенерированный скрипт актуальным.
+Undo the last edit to this sheet.,Отменить последнее изменение этого листа.
+Redo the edit you just undid.,Вернуть только что отменённое изменение.
+What's new…,Что нового…
+Full toolbar,Полная панель
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Показать все кнопки панели. Выключено (по умолчанию) - панель остаётся как Меню, Сохранить, Отменить, Вернуть, кнопка запуска, Быстрое добавление и шеврон, а всё остальное - в одном клике внутри Меню. Запоминается для этого проекта."
+Show every button on the toolbar.,Показать все кнопки панели.
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Свернуть панель - Меню, Сохранить, Отменить, Вернуть, запуск и Быстрое добавление."

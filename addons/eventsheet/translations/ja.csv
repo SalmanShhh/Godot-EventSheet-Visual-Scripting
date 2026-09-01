@@ -5980,3 +5980,13 @@ lines %s and %s%s,%s および %s 行目%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.",目の前のシートの移行控えを、この更新が残す語彙に照らして開きます。書き換えられるすべての行が、何かが書き換えられる前に示されます。あるバージョンの動詞を読むことは、そのスクリプトを user:// の下で実行することです。取り込むまで res:// の下には何も書き込まれません。
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", このシートを取り込んでいる %d 枚のシートが書き換えられ、保存されます。ここでの Ctrl+Z では元に戻りません。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",あわせて書き込み、保存されるもの - これらのシートはこのシートを取り込んでいるため、ここでの Ctrl+Z では戻りません
+☰ Menu,☰ メニュー
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.",エディタのすべてのコマンドを 4 つのグループに。シート、編集、表示、ツール。
+Save the sheet - compile-on-save keeps its generated script fresh.,シートを保存 - 保存時コンパイルが生成スクリプトを最新に保ちます。
+Undo the last edit to this sheet.,このシートへの直前の編集を元に戻します。
+Redo the edit you just undid.,元に戻した編集をやり直します。
+What's new…,新しいこと…
+Full toolbar,ツールバーをすべて表示
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.",ツールバーのすべてのボタンを表示します。オフ（既定）のときはメニュー、保存、元に戻す、やり直す、再生ボタン、クイック追加、矢印だけが残り、他はメニューの中にあります。このプロジェクトごとに記憶されます。
+Show every button on the toolbar.,ツールバーのすべてのボタンを表示します。
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.",ツールバーを休めます - メニュー、保存、元に戻す、やり直す、再生、クイック追加。

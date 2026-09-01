@@ -5980,3 +5980,13 @@ lines %s and %s%s,Zeilen %s und %s%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Oeffnet den Migrationsbeleg fuer das Blatt vor dir, beantwortet gegen das Vokabular, das dieses Update hinterlassen wuerde: jede Zeile, die umgeschrieben wuerde, gezeigt bevor irgendetwas es wird. Die Verben einer Version zu lesen fuehrt ihr Skript aus, unter user:// - nichts davon wird unter res:// geschrieben, bevor du sie uebernimmst."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d Blatt/Blaetter, die dieses einbinden, werden umgeschrieben und GESPEICHERT, was ein Ctrl+Z hier nicht rueckgaengig macht."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Ebenfalls geschrieben und gespeichert - diese Blaetter binden dieses ein, ein Ctrl+Z hier macht sie also nicht rueckgaengig"
+☰ Menu,☰ Menü
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Jeder Befehl des Editors, in vier Gruppen: Blatt, Bearbeiten, Ansicht und Werkzeuge."
+Save the sheet - compile-on-save keeps its generated script fresh.,Das Blatt speichern - Kompilieren beim Speichern hält das erzeugte Skript aktuell.
+Undo the last edit to this sheet.,Die letzte Änderung an diesem Blatt rückgängig machen.
+Redo the edit you just undid.,Die soeben rückgängig gemachte Änderung wiederherstellen.
+What's new…,Was ist neu…
+Full toolbar,Vollständige Werkzeugleiste
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Alle Schaltflächen der Leiste zeigen. Aus - die Vorgabe - ruht die Leiste als Menü, Speichern, Rückgängig, Wiederholen, Abspielen, Schnell hinzufügen und Pfeil; alles andere ist einen Klick weit im Menü. Für dieses Projekt gemerkt."
+Show every button on the toolbar.,Alle Schaltflächen der Werkzeugleiste zeigen.
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Die Werkzeugleiste ruhen lassen - Menü, Speichern, Rückgängig, Wiederholen, Abspielen und Schnell hinzufügen."

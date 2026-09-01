@@ -351,6 +351,19 @@ i18n (Godot translations).
 
 ## 8. Habits That Transfer Directly
 
+- **The strip across the top is the shape you already know.** At rest it is one **☰ Menu**, then
+  Save, Undo and Redo as icons, then the play button, the Quick add field, and a chevron. Sheet,
+  Edit, View and Tools are inside the Menu as cascading submenus - the same menus with the same
+  entries, one hop in - and the Manual and What's new sit at its foot.
+
+  ![The editor strip at rest - Menu, Save, Undo, Redo, the play button, Quick add and the chevron - with the Menu open on its Sheet, Edit, View and Tools submenus](images/resting-toolbar-menu.png)
+
+  Press the chevron (or tick **View ▸ Full toolbar**) and every button the strip has comes back, in
+  the order it always had them: Run Scene, the preview buttons, Add Event / Condition / Action /
+  Code, the Add menu, the GDScript toggle and the theme picker. The choice is remembered for the
+  project, and nothing was taken away - a button you cannot see still answers to its key.
+
+  ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
 - **The Project bar is where you left it, under Godot's names or yours.** Turn it on with **View ▸
   Project bar** (it is already on if you are in Simple mode or started from a template) and the
   Object bar gains a *Project* tab listing the whole project by kind: Scenes, Scripts, Classes, Base

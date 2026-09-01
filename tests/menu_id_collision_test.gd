@@ -28,7 +28,7 @@ const MENU_FILES: Array[String] = [
 ## which is why the id is matched as "the last literal argument" rather than by position.
 const ADD_CALLS: Array[String] = [
 	"add_item", "add_check_item", "add_radio_check_item", "add_submenu_item",
-	"add_icon_item", "add_separator",
+	"add_submenu_node_item", "add_icon_item", "add_separator",
 ]
 
 
@@ -124,6 +124,14 @@ static func _parse_add(line: String) -> Dictionary:
 	var call := RegEx.new()
 	call.compile("(\\w+)\\.(add_\\w+)\\(\"([^\"]*)\"(?:,\\s*\"[^\"]*\")?,\\s*(-?\\d+)\\)")
 	var hit: RegExMatch = call.search(line)
+	if hit == null:
+		# `add_submenu_node_item("Label", <the popup itself>, id)` names the submenu NODE rather than
+		# its name, so the id is the third argument and the middle one is an identifier. The cascading
+		# Menu is built entirely from this call, and a gate that could not read it would report a
+		# clean menu no matter how many of its four submenus answered to the same number.
+		var node_call := RegEx.new()
+		node_call.compile("(\\w+)\\.(add_submenu_node_item)\\(\"([^\"]*)\",\\s*\\w+,\\s*(-?\\d+)\\)")
+		hit = node_call.search(line)
 	if hit == null:
 		return {}
 	if not ADD_CALLS.has(hit.get_string(2)):

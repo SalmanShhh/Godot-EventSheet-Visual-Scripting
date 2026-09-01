@@ -5980,3 +5980,13 @@ lines %s and %s%s,righe %s e %s%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Apre la ricevuta di migrazione del foglio davanti a te, risposta rispetto al vocabolario che questo aggiornamento lascerebbe: ogni riga che verrebbe riscritta, mostrata prima che lo sia qualcosa. Leggere i verbi di una versione esegue il suo script, sotto user:// - nulla di essa viene scritto sotto res:// finche non la accetti."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d foglio/fogli che includono questo vengono riscritti e SALVATI, cosa che un Ctrl+Z qui non annulla."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Anche scritti e salvati: questi fogli includono questo, quindi un Ctrl+Z qui non li annulla"
+☰ Menu,☰ Menu
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Tutti i comandi dell'editor, in quattro gruppi: Foglio, Modifica, Vista e Strumenti."
+Save the sheet - compile-on-save keeps its generated script fresh.,Salva il foglio - la compilazione al salvataggio mantiene aggiornato lo script generato.
+Undo the last edit to this sheet.,Annulla l'ultima modifica a questo foglio.
+Redo the edit you just undid.,Ripristina la modifica appena annullata.
+What's new…,Novità…
+Full toolbar,Barra strumenti completa
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Mostra tutti i pulsanti della barra. Disattivato - l'impostazione predefinita - la barra riposa su Menu, Salva, Annulla, Ripristina, il pulsante di riproduzione, Aggiunta rapida e il chevron, e tutto il resto è a un clic dentro il Menu. Ricordato per questo progetto."
+Show every button on the toolbar.,Mostra tutti i pulsanti della barra strumenti.
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Metti la barra a riposo - Menu, Salva, Annulla, Ripristina, riproduci e Aggiunta rapida."

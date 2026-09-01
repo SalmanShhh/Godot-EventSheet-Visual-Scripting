@@ -5980,3 +5980,13 @@ lines %s and %s%s,%s 및 %s번 줄%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","앞에 있는 시트의 이전 영수증을, 이 업데이트가 남길 어휘에 비추어 엽니다. 다시 쓰일 모든 행이 무엇이든 쓰이기 전에 표시됩니다. 어떤 버전의 동사를 읽는 것은 그 스크립트를 user:// 아래에서 실행하는 일입니다. 업데이트를 받아들이기 전까지 res:// 아래에는 아무것도 쓰지 않습니다."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", 이 시트를 포함하는 %d개의 시트가 다시 쓰이고 저장됩니다. 여기서의 Ctrl+Z 로는 되돌아가지 않습니다.
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",함께 쓰이고 저장되는 것 - 이 시트들은 이 시트를 포함하므로 여기서의 Ctrl+Z 로는 되돌아가지 않습니다
+☰ Menu,☰ 메뉴
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","에디터의 모든 명령을 네 그룹으로: 시트, 편집, 보기, 도구."
+Save the sheet - compile-on-save keeps its generated script fresh.,시트 저장 - 저장 시 컴파일이 생성된 스크립트를 최신으로 유지합니다.
+Undo the last edit to this sheet.,이 시트의 마지막 편집을 되돌립니다.
+Redo the edit you just undid.,방금 되돌린 편집을 다시 실행합니다.
+What's new…,새로운 점…
+Full toolbar,전체 도구 모음
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","도구 모음의 모든 버튼을 표시합니다. 꺼두면(기본값) 메뉴, 저장, 되돌리기, 다시 실행, 재생 버튼, 빠른 추가, 화살표만 남고 나머지는 메뉴 안에서 한 번의 클릭으로 열립니다. 이 프로젝트에 기억됩니다."
+Show every button on the toolbar.,도구 모음의 모든 버튼을 표시합니다.
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","도구 모음을 쉬게 합니다 - 메뉴, 저장, 되돌리기, 다시 실행, 재생, 빠른 추가."

@@ -1,0 +1,259 @@
+# EventSheets test - THE STRIP AT REST, AND EXPANDED.
+#
+# The editor's top strip used to front twenty-one interactive controls at once, which is a menu bar
+# wearing a toolbar's clothes: everything one click away, and nothing findable. It rests now. Seven
+# controls in one row that never wraps - one cascading Menu, the save/undo/redo icons, the play
+# button's slot, Quick add, and a chevron - with every other button one chevron away and every
+# retired menu one hop inside the Menu.
+#
+# NOTHING WAS REMOVED, and that is the half of this a test has to hold. The four MenuButtons that
+# left the strip are the very same PopupMenus, re-parented as cascading submenus, so every item id,
+# every handler and every dynamic submenu still answers. Settings' one item moved into Tools beside
+# Keyboard Shortcuts. Simple Mode kept all of its powers and gave up the one it had over the strip.
+#
+# Pinned by VALUE - the resting names in order, the counts inside the cascade, the measured resting
+# width - because a count of children says nothing about which children.
+@tool
+class_name RestingToolbarTest
+extends RefCounted
+
+
+## The narrowest canvas any layout test in this suite exercises (event_cell_wrap_test builds its
+## viewport at 520 wide). The resting row has to fit inside that, or "never wrapping" is a claim
+## rather than a property.
+const NARROWEST_TESTED_CANVAS: float = 520.0
+
+
+## An undo manager whose history this test can move by hand, so the two icons can be held against a
+## history that has something in it and one that does not, without building real edits.
+class HistoryStub:
+	extends RefCounted
+
+	var undo_available: bool = false
+	var redo_available: bool = false
+
+	func create_action(_name: String) -> void:
+		pass
+
+	func add_do_method(_target: Variant, _method: Variant, _arg: Variant = null) -> void:
+		pass
+
+	func add_undo_method(_target: Variant, _method: Variant, _arg: Variant = null) -> void:
+		pass
+
+	func commit_action() -> void:
+		pass
+
+	func clear_history() -> void:
+		undo_available = false
+		redo_available = false
+
+	func has_undo() -> bool:
+		return undo_available
+
+	func has_redo() -> bool:
+		return redo_available
+
+
+static func run() -> bool:
+	var ok: bool = true
+	ok = _test_the_resting_row() and ok
+	ok = _test_the_cascade() and ok
+	ok = _test_the_two_states() and ok
+	ok = _test_the_history_icons() and ok
+	ok = _test_keys_come_from_the_table() and ok
+	ok = _test_simple_mode_lets_the_strip_alone() and ok
+	return ok
+
+
+## THE SEVEN, in reading order. Named rather than counted: a strip that swapped Undo for something
+## else would keep any count you cared to write.
+static func _test_the_resting_row() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var resting: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if (child as Control).visible:
+			resting.append(str(child.name))
+	var ok: bool = _check("the strip rests as seven controls, in this order", resting,
+		PackedStringArray(["EventSheetMenu", "EventSheetSaveButton", "EventSheetUndoButton",
+			"EventSheetRedoButton", "EventSheetPlaySlot", "EventSheetQuickAdd",
+			"EventSheetToolbarExpander"]))
+	# The play button itself is built by the run-controls pass; what rests here is its slot, in its
+	# resting position, so the strip's order never has to be rearranged to make room for it.
+	ok = _check("the play button has a slot waiting for it",
+		editor._toolbar.find_child("EventSheetPlaySlot", true, false) is HBoxContainer, true) and ok
+	# The row has to FIT. Measured off the built strip rather than guessed, and held under the
+	# narrowest canvas this suite already draws a sheet into.
+	var width: float = editor._menu_bar.resting_minimum_width()
+	print("[resting_toolbar_test] resting strip minimum width: %.1f px" % width)
+	ok = _check("the resting row fits the narrowest canvas the suite tests",
+		width > 0.0 and width < NARROWEST_TESTED_CANVAS, true) and ok
+	editor.free()
+	return ok
+
+
+## THE CASCADE. One Menu, four submenus that are the same PopupMenus as before - which is what keeps
+## every id, handler and dynamic submenu inside them working untouched - and the two doors at its
+## foot. The four MenuButtons and the Settings MenuButton are gone from the strip.
+static func _test_the_cascade() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var menu: MenuButton = editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton
+	var ok: bool = _check("the strip carries one Menu button", menu != null, true)
+	if menu == null:
+		editor.free()
+		return false
+	var popup: PopupMenu = menu.get_popup()
+	var labels: PackedStringArray = PackedStringArray()
+	for index: int in popup.item_count:
+		labels.append(popup.get_item_text(index))
+	ok = _check("the Menu cascades the four groups, then the two doors", labels,
+		PackedStringArray(["Sheet", "Edit", "View", "Tools", "", "Manual…", "What's new…"])) and ok
+	# The submenus are the SAME menus, so their contents are pinned here as well as in the workflow
+	# test: a cascade that quietly rebuilt a menu would pass a "there are four submenus" check.
+	var counts: Dictionary = {}
+	for name: String in ["EventSheetSheetMenu", "EventSheetEditMenu", "EventSheetViewMenu",
+			"EventSheetToolsMenu"]:
+		var submenu: PopupMenu = popup.find_child(name, true, false) as PopupMenu
+		counts[name] = -1 if submenu == null else submenu.item_count
+	ok = _check("Sheet keeps its items", counts["EventSheetSheetMenu"], 27) and ok
+	ok = _check("Edit keeps its items", counts["EventSheetEditMenu"], 10) and ok
+	ok = _check("View keeps its items, plus Full toolbar", counts["EventSheetViewMenu"], 56) and ok
+	ok = _check("Tools keeps its items, plus Words…", counts["EventSheetToolsMenu"], 42) and ok
+	# Words… moved menus rather than leaving: it is on Tools now, beside Keyboard Shortcuts.
+	var tools: PopupMenu = popup.find_child("EventSheetToolsMenu", true, false) as PopupMenu
+	ok = _check("Words… is on Tools, at its own id",
+		tools.get_item_text(tools.get_item_index(63)), "Words…") and ok
+	ok = _check("and it sits beside Keyboard Shortcuts",
+		tools.get_item_index(63) - tools.get_item_index(16), 1) and ok
+	# Nothing named Settings is left on the strip, and no MenuButton but the Menu and Add.
+	var menu_buttons: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if child is MenuButton:
+			menu_buttons.append(str((child as MenuButton).text))
+	ok = _check("only the Menu and Add are MenuButtons on the strip", menu_buttons,
+		PackedStringArray(["☰ Menu", "Add"])) and ok
+	editor.free()
+	return ok
+
+
+## REST IS THE DEFAULT, for every project including one that already exists - there was no
+## resting/expanded choice before this, so there is nothing to migrate. The chevron and the View
+## item are one choice shown twice.
+static func _test_the_two_states() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var ok: bool = _check("a project that never chose rests", editor._menu_bar.full_toolbar(), false)
+	var expander: Button = editor._toolbar.find_child("EventSheetToolbarExpander", true, false) as Button
+	ok = _check("the chevron points outward at rest", expander.text, "»") and ok
+	var view_popup: PopupMenu = editor._view_popup
+	var full_index: int = view_popup.get_item_index(EventSheetMenuBar.FULL_TOOLBAR_VIEW_ID)
+	ok = _check("View names the same choice", view_popup.get_item_text(full_index), "Full toolbar") and ok
+	ok = _check("and it is unticked at rest", view_popup.is_item_checked(full_index), false) and ok
+	# Expanded: every child of the strip is on show, in the order it was always in.
+	editor._menu_bar.set_full_toolbar(true)
+	var hidden: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if not (child as Control).visible:
+			hidden.append(str(child.name))
+	ok = _check("expanded, the strip hides nothing", hidden, PackedStringArray()) and ok
+	ok = _check("the chevron turns around", expander.text, "«") and ok
+	ok = _check("and the View tick follows it", view_popup.is_item_checked(full_index), true) and ok
+	# The retired buttons are still buttons: hidden, never deleted, so their keys and handlers stand.
+	var labels: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if child is Button and not str((child as Button).text).is_empty():
+			labels.append(str((child as Button).text))
+	ok = _check("Add Code is still on the expanded strip", labels.has("Add Code"), true) and ok
+	ok = _check("so is Play as host + client, which a tutorial points at",
+		labels.has("Play as host + client"), true) and ok
+	editor._menu_bar.set_full_toolbar(false)
+	ok = _check("and the strip rests again", expander.text, "»") and ok
+	editor.free()
+	return ok
+
+
+## UNDO AND REDO ARE THE PASS'S ONE ADDITION - two icons over gestures that already existed on their
+## keys and on the Edit menu. They call the dock's funnel, and they grey out with the history.
+static func _test_the_history_icons() -> bool:
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(EventSheetResource.new())
+	var history: HistoryStub = HistoryStub.new()
+	editor.set_undo_redo_manager(history)
+	editor._menu_bar.refresh_history_buttons()
+	var undo_button: Button = editor._toolbar.find_child("EventSheetUndoButton", true, false) as Button
+	var redo_button: Button = editor._toolbar.find_child("EventSheetRedoButton", true, false) as Button
+	var ok: bool = _check("nothing to undo, so Undo is grey", undo_button.disabled, true)
+	ok = _check("nothing to redo, so Redo is grey", redo_button.disabled, true) and ok
+	history.undo_available = true
+	editor._menu_bar.refresh_history_buttons()
+	ok = _check("a history to undo lights Undo", undo_button.disabled, false) and ok
+	history.redo_available = true
+	editor._menu_bar.refresh_history_buttons()
+	ok = _check("and a redo lights Redo", redo_button.disabled, false) and ok
+	# The funnel: pressing the icon runs the same call the key and the Edit menu run, which is the
+	# whole reason this is one addition rather than a second undo.
+	editor._on_undo_requested()
+	ok = _check("the icon calls the dock's undo funnel",
+		undo_button.pressed.is_connected(editor._on_undo_requested), true) and ok
+	ok = _check("and Redo calls its own",
+		redo_button.pressed.is_connected(editor._on_redo_requested), true) and ok
+	editor.free()
+	return ok
+
+
+## Every key printed on the strip comes from the ONE shortcut table, so a rebind shows through
+## without an edit here. Pinned against the table itself rather than against typed-out key names.
+static func _test_keys_come_from_the_table() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var ok: bool = true
+	for entry: Array in [["EventSheetSaveButton", "save"], ["EventSheetUndoButton", "undo"],
+			["EventSheetRedoButton", "redo"]]:
+		var button: Button = editor._toolbar.find_child(str(entry[0]), true, false) as Button
+		var binding: String = EventSheetShortcuts.binding_for(str(entry[1]))
+		ok = _check("%s prints its key from the table" % str(entry[0]),
+			button.tooltip_text.ends_with("(%s)" % binding), true) and ok
+	editor.free()
+	return ok
+
+
+## SIMPLE MODE KEPT EVERYTHING BUT THE STRIP. It no longer hides the Add Code button, because the
+## strip is already calm; every other gate is exactly where it was.
+static func _test_simple_mode_lets_the_strip_alone() -> bool:
+	var editor: EventSheetEditor = _editor()
+	editor._menu_bar.set_full_toolbar(true)
+	var before: PackedStringArray = _visible_names(editor)
+	editor.set_simple_mode(true)
+	var ok: bool = _check("Simple Mode changes nothing on the strip", _visible_names(editor), before)
+	# The gates that stay: the Add menu's code item disables, and the Properties bar closes.
+	ok = _check("the Add menu's code item still disables in Simple Mode",
+		editor._add_menu_popup.is_item_disabled(editor._add_menu_popup.get_item_index(4)), true) and ok
+	editor.set_simple_mode(false)
+	ok = _check("and enables again outside it",
+		editor._add_menu_popup.is_item_disabled(editor._add_menu_popup.get_item_index(4)), false) and ok
+	ok = _check("Simple Mode's own View item is still where it was",
+		editor._view_popup.get_item_text(editor._view_popup.get_item_index(11)),
+		"Simple Mode (beginner-friendly)") and ok
+	editor.free()
+	return ok
+
+
+static func _visible_names(editor: EventSheetEditor) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for child: Node in editor._toolbar.get_children():
+		if (child as Control).visible:
+			names.append(str(child.name))
+	return names
+
+
+static func _editor() -> EventSheetEditor:
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(EventSheetResource.new())
+	editor.set_undo_redo_manager(HistoryStub.new())
+	return editor
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] resting_toolbar_test: %s" % label)
+		return true
+	print("[FAIL] resting_toolbar_test: %s - expected %s, got %s" % [label, str(expected), str(actual)])
+	return false

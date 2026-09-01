@@ -397,16 +397,24 @@ static func run() -> bool:
 	all_passed = _check("the toolbar wraps instead of clipping",
 		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
 	all_passed = _check("grouping leaves a short toolbar",
-		toolbar_editor._toolbar.get_child_count() <= 23, true) and all_passed  # +1: the Simple Mode pill, +1: the Settings menu (Words), +4: the Preview buttons and Run with profiler, +1: Play as host + client
-	var sheet_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetSheetMenu", true, false) as MenuButton
+		toolbar_editor._toolbar.get_child_count() <= 23, true) and all_passed  # -1: the Simple Mode pill left the strip, -1: the Settings menu retired into Tools, -4: Sheet/Edit/View/Tools became submenus of one Menu, +1: that Menu, +2: the Undo and Redo icons, +1: the play button's slot, +1: the chevron
+	# THE MENUS MOVED, THEY DID NOT CHANGE. Sheet, Edit, View and Tools are the very same PopupMenus
+	# they always were - re-parented under the one cascading Menu button, so they are now addressed
+	# as PopupMenu children of that button's popup rather than as MenuButtons on the strip. Every
+	# item id, handler and dynamic submenu inside them is untouched, which is exactly what the counts
+	# below still pin. Add stays a MenuButton on the strip (it is authoring, not chrome).
+	var menu_button: MenuButton = toolbar_editor._toolbar.find_child("EventSheetMenu", true, false) as MenuButton
+	all_passed = _check("the strip carries one cascading Menu", menu_button != null, true) and all_passed
+	var menu_popup: PopupMenu = menu_button.get_popup()
+	var sheet_menu: PopupMenu = menu_popup.find_child("EventSheetSheetMenu", true, false) as PopupMenu
 	var add_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
-	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
-	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
+	var edit_menu: PopupMenu = menu_popup.find_child("EventSheetEditMenu", true, false) as PopupMenu
+	var view_menu: PopupMenu = menu_popup.find_child("EventSheetViewMenu", true, false) as PopupMenu
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 27  # +1: Import event sheet…; +3: Health… + the Export and Workspaces submenus; +New shared sheet…, +Start page, +Preview entries (project UX 1), +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
+		sheet_menu != null and sheet_menu.item_count == 27  # +1: Import event sheet…; +3: Health… + the Export and Workspaces submenus; +New shared sheet…, +Start page, +Preview entries (project UX 1), +Save as Text…, +New Behaviour Addon…, +Teach a Verb, +Inspector Designer, +New Editor Tool…, +New Custom Resource…, +Publish New Version…, +separator +Name Raw Calls…
 		and add_menu != null and add_menu.get_popup().item_count == 15 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +the three event-shape commands +separator +Code action, then +separator + one item per registered Custom Block kind; +1: Global Variable… beside Instance Variable…; +2: separator + Pattern…; +1: the Declare submenu
-		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 55, true) and all_passed  # +1: Costs In The Sheet; +2: Follow Scene Selection + Debugger…; +3: the Arrange by and Saved Views submenus + Show Events in the Scene; +5: Ask…, separator, Reduced Motion, Speak This Row, Object Properties; +3: Minimap, Sheet Map…, History… (batch-10 UX 2); +1: Auto-apply while debugging; +2: Project bar + Add toolbar; +1: Patterns, +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3); +1: Variable rows
+		and edit_menu != null and edit_menu.item_count == 10
+		and view_menu != null and view_menu.item_count == 56, true) and all_passed  # +1: Full toolbar (the chevron's twin); +1: Costs In The Sheet; +2: Follow Scene Selection + Debugger…; +3: the Arrange by and Saved Views submenus + Show Events in the Scene; +5: Ask…, separator, Reduced Motion, Speak This Row, Object Properties; +3: Minimap, Sheet Map…, History… (batch-10 UX 2); +1: Auto-apply while debugging; +2: Project bar + Add toolbar; +1: Patterns, +1: Reset Zoom, +1: Properties Bar, +1: Open Sheets Panel, +1: Language submenu, +1: Preview In Language submenu (the GAME's locales), +1: Object Icons toggle, +1: Event Numbers toggle, +1: Outline, +1: Aligned Object Columns, +1: Compact Rows, +1: Row Hit Counts, +1: Humanized Names, +1: Familiar Words, +6: the collapse sweeps (separator + Collapse All + Expand All + Expand To Level 1/2/3); +1: Variable rows
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock
 	# keeps thin show_welcome / show_welcome_if_first_run delegates. Build via the helper directly.

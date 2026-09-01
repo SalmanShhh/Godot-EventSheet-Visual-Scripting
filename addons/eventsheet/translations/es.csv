@@ -5980,3 +5980,13 @@ lines %s and %s%s,lineas %s y %s%s
 "Opens the migrate receipt for the sheet in front of you, answered against the vocabulary this update would leave: every row that would be rewritten, shown before anything is. Reading a version's verbs runs its script, under user:// - nothing of it is written under res:// until you take it.","Abre el recibo de migracion de la hoja que tienes delante, respondido contra el vocabulario que dejaria esta actualizacion: todas las filas que se reescribirian, mostradas antes de que se reescriba nada. Leer los verbos de una version ejecuta su script, bajo user://; nada de ella se escribe bajo res:// hasta que la aceptes."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d hoja(s) que incluyen esta se reescriben y se GUARDAN, cosa que un Ctrl+Z aqui no deshace."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Tambien escritos y guardados: estas hojas incluyen esta, asi que un Ctrl+Z aqui no las deshace"
+☰ Menu,☰ Menú
+"Every command in the editor, in four groups: Sheet, Edit, View and Tools.","Todos los comandos del editor, en cuatro grupos: Hoja, Editar, Ver y Herramientas."
+Save the sheet - compile-on-save keeps its generated script fresh.,Guardar la hoja - compilar al guardar mantiene actualizado su script generado.
+Undo the last edit to this sheet.,Deshacer la última edición de esta hoja.
+Redo the edit you just undid.,Rehacer la edición que acabas de deshacer.
+What's new…,Novedades…
+Full toolbar,Barra de herramientas completa
+"Show every button the strip has. Off - the default - the strip rests as the Menu, Save, Undo, Redo, the play button, Quick add and the chevron, and everything else is one click away inside the Menu. Remembered for this project.","Mostrar todos los botones de la barra. Desactivado - lo predeterminado - la barra descansa como Menú, Guardar, Deshacer, Rehacer, el botón de reproducción, Añadir rápido y el chevrón, y todo lo demás está a un clic dentro del Menú. Se recuerda para este proyecto."
+Show every button on the toolbar.,Mostrar todos los botones de la barra de herramientas.
+"Rest the toolbar - Menu, Save, Undo, Redo, play and Quick add.","Dejar la barra en reposo - Menú, Guardar, Deshacer, Rehacer, reproducir y Añadir rápido."
