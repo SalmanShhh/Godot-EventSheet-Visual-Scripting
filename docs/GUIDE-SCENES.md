@@ -489,8 +489,12 @@ Drawing Canvas pack's job. This one is a live picture of the world you are alrea
   is what lets you save a room and then the level it is in without the second file coming back short.
 - **Ask before you build a scene you did not ship.** A `.tscn` can name a script. Scene File Is
   Data-Only reads the file's table as text and answers before anything runs.
-- **A group added after `add_child` is not there when the join is announced.** Add it before the node
-  enters the tree, or on the row that spawns it.
+- **A group joined in `_ready` is joined too late for On Node Joins Group.** `node_added` is emitted
+  before `_ready` runs, so that node is never matched by the trigger at all - not "matched later".
+  Join the group before the node enters the tree, or on the row that spawns it.
+- **Every member of a group leaves during teardown.** Freeing a branch, or quitting, announces a
+  departure for each one, so an On Node Leaves Group body runs against a tree that is being taken
+  apart. Write it so that is harmless.
 - **An editor tool that skips the undo manager costs your teammates their history.** One event is one
   gesture; there is nothing to open or commit yourself.
 - **Nothing on this page renders a warning inside the sheet.** A row with something to say about it

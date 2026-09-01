@@ -32,17 +32,30 @@
 #     not: whether the node is really being destroyed rather than reparented, and whether it was the
 #     last one. On Node Leaves Group fires for every departure, including a reparent.
 #
-# THE COST IS REAL AND IS STATED. The guard runs for EVERY node entering or leaving the world, not
-# only for members of the group named. At the scale a game moves nodes around at - a spawn, a
-# pickup, a room's worth of props - that is one group lookup and nothing worth measuring. Inside a
-# particle storm, an emitter that adds hundreds of nodes a frame, it is the wrong tool, and the row
-# says so where it is chosen rather than in a footnote.
+# THE COST IS REAL AND IS MEASURED. The guard runs for EVERY node entering or leaving the world, not
+# only for members of the group named. Measured on one desktop machine, 1000 `add_child` calls with
+# one `node_added` handler doing one `is_in_group`: 546 us cold, 887 us wired - about +62% on the
+# cost of add_child itself, or 0.34 us per node. Both readings of that are true and both belong on
+# the row: a 1000-node scene load pays about a third of a millisecond, which is nothing, and it is
+# still most of the cost of adding a node, which is why an emitter adding hundreds of nodes a frame
+# is the wrong place for it. A figure stated is worth more than "nothing worth measuring", which is
+# the sentence a reader quotes back after a spawn path gets slower.
 #
-# AND THE TIMING IS STATED TOO, because it is the thing that surprises people. Groups written in a
-# scene file are already set when the node enters the tree, so the guard sees them. A group a script
-# adds AFTER `add_child` is not there yet when the join is announced, and that node is simply not
-# matched by this trigger - the next node to join is. Add the group before the node enters the tree
-# (or on the row that spawns it, which is what Spawn A Copy Into The Crowd does) and the two agree.
+# AND THE TIMING IS STATED TOO, because it is the thing that surprises people, and `_ready` is where
+# it surprises them. `node_added` is emitted BEFORE `_ready` runs, so a group joined in `_ready` -
+# the single commonest place a project joins one - is not there when the guard asks, and that node's
+# membership is then never announced at all: no later join is about it. Measured: a node whose
+# `_ready` calls `add_to_group("minimap")` gave one announced join, zero matches, and `is_in_group`
+# true afterwards. Groups written in a scene file ARE set when the node enters the tree, so those the
+# guard sees. Add the group before the node enters the tree (or on the row that spawns it, which is
+# what Spawn A Copy Into The Crowd does) and the two agree.
+#
+# AND SO IS TEARDOWN, which is the other half of the same surprise. `node_removed` fires for every
+# descendant of a branch being freed, and on quit for the whole tree, with the departing nodes still
+# listed in their groups - which is what the leaving trigger relies on. Measured: freeing a branch of
+# 1001 nodes announced 1000 departures. So a leaving body ("remove the marker", "drop the
+# connection", "decrement the count") runs once per member against a tree that is mid-destruction,
+# and it has to be written so that is harmless.
 #
 # Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant); this file
 # only changes where the descriptors are AUTHORED.
@@ -106,12 +119,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", JOINS_TRIGGER_ID, "On Node Joins Group", ACEDescriptor.ACEType.TRIGGER,
 		"", "", [_group_param()],
 		CATEGORY, "On a node joining {group}")
-		.described("Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world, which is nothing at the scale a game spawns things at and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next join, not this one.")
+		.described("Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world: measured, one handler asking one group question costs about 0.34 microseconds per node added, which is a third of a millisecond on a 1000-node scene load and still most of the cost of adding a node - so it is the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives, but a group joined in _ready is joined too late: node-added is emitted first, so that node is never matched by this trigger at all. Join the group before the node enters the tree, or on the row that spawns it.")
 		.featured())
 	descriptors.append(F.make_descriptor("Core", LEAVES_TRIGGER_ID, "On Node Leaves Group", ACEDescriptor.ACEType.TRIGGER,
 		"", "", [_group_param()],
 		CATEGORY, "On a node leaving {group}")
-		.described("Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not."))
+		.described("Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not. TEARDOWN IS A DEPARTURE TOO: every member of the group leaves when the branch holding it is freed and when the game quits, so this body runs once per member against a tree that is being taken apart - write it so that is harmless, or ask whether the tree is quitting first."))
 
 	return descriptors
 

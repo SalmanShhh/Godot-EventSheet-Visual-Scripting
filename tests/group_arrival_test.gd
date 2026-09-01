@@ -11,8 +11,10 @@
 #      world, so nothing is added under it and the event says exactly what it does.
 #   4. THE LIFT. The connect-plus-is_in_group-guard shape somebody wrote by hand opens as the
 #      trigger, filter and all, and the file re-emits byte for byte.
-#   5. THE TWO HONEST FACTS. The cost (the guard runs for every node) and the timing (a group added
-#      after add_child is announced by the next join) are both stated on the row, not hidden.
+#   5. THE HONEST FACTS. The cost (the guard runs for every node, with the figure MEASURED rather
+#      than asserted), the timing (a group joined in _ready is joined too late, and that node is
+#      never matched at all) and teardown (every member leaves when a branch is freed or the game
+#      quits) are all stated on the rows, not hidden.
 #
 # Values are pinned, never counts.
 @tool
@@ -143,13 +145,25 @@ static func _test_the_cost_and_the_timing_are_stated() -> bool:
 	var joins: String = str(by_id.get("OnNodeJoinsGroup", ACEDescriptor.new()).description)
 	var passed: bool = _check("the cost is stated on the row",
 		joins.contains("every node entering the world"), true)
-	passed = _check("and so is the timing a group added after add_child has",
-		joins.contains("after add_child"), true) and passed
+	# MEASURED, not asserted. The repo standard is that a figure is taken off a machine rather than
+	# guessed, and "nothing worth measuring" is the sentence a reader quotes back after their spawn
+	# path gets slower - so the row carries the number instead.
+	passed = _check("and the cost carries its measured figure",
+		joins.contains("0.34 microseconds per node"), true) and passed
+	# THE TIMING, said where it actually bites. `node_added` is emitted BEFORE `_ready` runs, so a
+	# group joined there - the commonest place a project joins one - is never matched by this trigger
+	# at all. The old wording said "after add_child", which no reader maps onto _ready, and it also
+	# promised the next join would announce it, which is not true of that node.
+	passed = _check("and so is the timing, named at the place it bites",
+		joins.contains("_ready is joined too late"), true) and passed
 	# The departure row states the one thing that separates it from the crowd trigger: it fires for a
-	# move as well as a destroy, and does not pretend otherwise.
+	# move as well as a destroy, and does not pretend otherwise - and that teardown is a departure,
+	# which is what makes the body run once per member against a tree being taken apart.
 	var leaves: String = str(by_id.get("OnNodeLeavesGroup", ACEDescriptor.new()).description)
 	passed = _check("the departure row admits it fires on a reparent too",
 		leaves.contains("a move to another parent included"), true) and passed
+	passed = _check("and that every member leaves when the game is taken apart",
+		leaves.contains("TEARDOWN IS A DEPARTURE TOO"), true) and passed
 	return passed
 
 

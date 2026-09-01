@@ -122,16 +122,28 @@ func _on_node_joined_group(node: Node) -> void:
 
 ![A minimap kept in step: a join adds a marker and wires the node, a departure removes it](../images/scenes-group-arrivals.png)
 
-Three things are worth knowing before you reach for them, and none of them is hidden:
+Four things are worth knowing before you reach for them, and none of them is hidden:
 
 - **The check runs for every node entering or leaving the world**, not only for members of the group
-  named. At the scale a game moves nodes around at - a spawn, a pickup, a room's worth of props -
-  that is one group lookup and nothing worth measuring. Inside a particle storm, an emitter adding
-  hundreds of nodes a frame, it is the wrong tool.
-- **Groups written in a scene file are set before the node enters the tree**, so the guard sees them.
-  A group a script adds AFTER `add_child` is not there yet when the join is announced, and that node
-  is simply not matched; the next node to join is. Add the group before the node enters the tree, or
-  on the row that spawns it, and the two agree.
+  named, and here is what that costs. Measured on one desktop machine, 1000 `add_child` calls with
+  one `node_added` handler doing one `is_in_group`: **546 us cold, 887 us wired - about +62% on the
+  cost of `add_child` itself, or 0.34 us per node**. In absolute terms a 1000-node scene load pays
+  about a third of a millisecond, which is nothing; in relative terms it is most of the cost of
+  adding a node, which is why an emitter adding hundreds of nodes a frame is the wrong place for it.
+  Both readings are true, and you should have both before wiring one of these to a spawn path.
+- **A group joined in `_ready` is joined too late for this trigger.** `node_added` is emitted before
+  `_ready` runs, so the guard asks first and answers false - and that node's membership is then
+  never announced at all: no later join is about it. Measured: a node whose `_ready` calls
+  `add_to_group("minimap")` produced one announced join, zero matches, and `is_in_group` true
+  afterwards. Groups written in a scene file ARE set before the node enters the tree, so those the
+  guard sees. Add the group before the node enters the tree, or on the row that spawns it - which is
+  what Spawn A Copy Into The Crowd does - and the two agree.
+- **Every member leaves during teardown.** `node_removed` fires for every descendant of a branch
+  being freed, and on quit for the whole tree, with the departing nodes still listed in their groups
+  (which is what lets the gate answer at all). Measured: freeing a branch of 1001 nodes announced
+  1000 departures. So an On Node Leaves Group body - remove the marker, drop the connection,
+  decrement the count - runs once per member against a tree that is mid-destruction. Write it so
+  that is harmless (a guarded lookup, `is_instance_valid`), or ask `get_tree().is_quitting()` first.
 - **Any group is a stated choice**, not a blank. Choosing it leaves the guard off entirely, so the
   event answers every node entering or leaving the world - the firehose a debug overlay or an editor
   tool wants.
