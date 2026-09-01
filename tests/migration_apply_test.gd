@@ -40,6 +40,7 @@ static func run() -> bool:
 	ok = _test_the_round_trip_gate_refuses() and ok
 	ok = _test_the_receipt() and ok
 	ok = _test_apply_is_one_undo_step() and ok
+	ok = _test_the_button_applies_the_plan_it_drew() and ok
 	ok = _test_the_project_report() and ok
 	ok = _test_the_doors_are_the_only_doors() and ok
 	return ok
@@ -335,6 +336,49 @@ static func _test_apply_is_one_undo_step() -> bool:
 		[{"control": "\"jump\""}, {"control": "\"fire\""}]) and ok
 	ok = _check("and their readings unharmed",
 		str((back[0] as ACEAction).display_text), "Clear the bindings for {control}") and ok
+	dock.free()
+	return ok
+
+
+## WHAT LANDS IS WHAT WAS READ. The plan has to be rebuilt inside the funnel - no row reference may
+## cross a commit - but rebuilding is not the same as re-approving. A row added, pasted or edited
+## while the receipt was open makes the fresh plan a different plan, and applying it would rewrite a
+## row that never appeared in "What will be rewritten" while the status line reported the larger
+## count. The button compares the two receipts and, when they differ, writes NOTHING and draws the
+## window again.
+static func _test_the_button_applies_the_plan_it_drew() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sheet: EventSheetResource = _sheet([_row("ClearBinding", {"control": "\"jump\""})])
+	sheet.external_source_path = PROBE_PATH
+	dock.setup(sheet)
+	dock._migrate_dialog.open(_known())
+	var drawn: PackedStringArray = EventSheetMigrationPlan.receipt_of(
+		EventSheetMigrationPlan.plan(dock.get_current_sheet(), _known()))
+	var ok: bool = _check("the receipt drawn is one line for the one row", drawn.size(), 1)
+	# A second row arrives while the window is open - the exact thing a paste does.
+	var event_row: EventRow = dock.get_current_sheet().events[0] as EventRow
+	event_row.actions.append(_row("ClearBinding", {"control": "\"fire\""}))
+	dock._migrate_dialog.confirm()
+	var rows: Array = (dock.get_current_sheet().events[0] as EventRow).actions
+	ok = _check("nothing was rewritten - the sheet is not the sheet that was read",
+		[str((rows[0] as ACEAction).ace_id), str((rows[1] as ACEAction).ace_id)],
+		["ClearBinding", "ClearBinding"]) and ok
+	ok = _check("and the reader is told why they are reading it again",
+		str(dock._status_label.text).replace("⚠  ", ""),
+		"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.") and ok
+	# Read again, and the same button now applies exactly what the second reading showed.
+	dock._migrate_dialog.confirm()
+	var moved: Array = (dock.get_current_sheet().events[0] as EventRow).actions
+	ok = _check("reading it again is what makes the button work",
+		[str((moved[0] as ACEAction).ace_id), str((moved[1] as ACEAction).ace_id)],
+		["ActionEraseEvents", "ActionEraseEvents"]) and ok
+	# And the receipt itself is a reading, not a set of live rows: two plans of one sheet agree.
+	ok = _check("two readings of one sheet are the same receipt",
+		EventSheetMigrationPlan.receipt_of(EventSheetMigrationPlan.plan(
+			dock.get_current_sheet(), _known())),
+		EventSheetMigrationPlan.receipt_of(EventSheetMigrationPlan.plan(
+			dock.get_current_sheet(), _known()))) and ok
 	dock.free()
 	return ok
 

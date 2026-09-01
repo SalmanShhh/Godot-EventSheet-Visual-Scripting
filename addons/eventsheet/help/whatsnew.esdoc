@@ -44,6 +44,15 @@ What changed in the build you have installed (v0.17.0), in the words the release
   amber: it is not wrong. Selecting it puts one muted line - `newer spelling: Go To State` - on the
   help strip, with no door beside it.
 
+### Fixed
+
+- **Migrate applies the plan the receipt drew, or none at all.** The plan has to be rebuilt inside
+  the undo funnel - no row reference may cross a commit - but rebuilding is not re-approving: a row
+  pasted, edited or deleted while the window was open made the fresh plan a different plan, and it
+  was applied without ever appearing in *What will be rewritten*. The button now compares the two as
+  the receipts they draw and, when they differ, writes nothing, draws the window again on what the
+  sheet says now, and says why.
+
 ### Since 0.14, said once at the head
 
 - **One project-level record, and not a byte in any `.gd`.** `eventsheets/project/vocabulary_version`

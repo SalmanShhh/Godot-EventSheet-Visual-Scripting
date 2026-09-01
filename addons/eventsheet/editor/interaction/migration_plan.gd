@@ -178,6 +178,26 @@ static func _restore_identity(row: Resource, held: Dictionary) -> void:
 		row.set(str(field), held[field])
 
 
+## ONE PLAN AS THE RECEIPT IT DRAWS, so two plans can be compared without holding either of them.
+##
+## The dialog draws a plan and the button applies a plan built AGAIN a moment later - it has to, since
+## no row reference may cross the undo funnel - and the two are only the same plan if the sheet did
+## not move in between. A row pasted, edited or deleted while the window was open would otherwise be
+## rewritten without ever having appeared in "What will be rewritten". This is what the button
+## compares: every row of the plan, in order, as the facts a reader was shown plus the verdict that
+## was reached about it. Strings, so the comparison is between two readings rather than between two
+## sets of live resources.
+static func receipt_of(planned: Array[Dictionary]) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in planned:
+		lines.append("%d	%s	%s	%s	%s	%s	%s" % [
+			int(entry.get("ordinal", 0)), str(entry.get("from", "")), str(entry.get("to", "")),
+			str(entry.get("before", "")), str(entry.get("after", "")),
+			"asks" if bool(entry.get("asks", true)) else "moves", str(entry.get("why", "")),
+		])
+	return lines
+
+
 ## The rows of `planned` that would be rewritten - everything the Apply button acts on.
 static func migrating(planned: Array[Dictionary]) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

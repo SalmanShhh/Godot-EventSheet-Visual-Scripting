@@ -109,20 +109,46 @@ static func summary_text(planned: Array[Dictionary]) -> String:
 ## the sheet around the operation, and a plan built before the dialog opened holds references to rows
 ## the reader may have edited since. Building it here means what lands is proved against the sheet as
 ## it stands at the moment the button is pressed.
+##
+## AND IT HAS TO BE THE SAME PLAN. Rebuilding is necessary and not sufficient: a row pasted, edited or
+## deleted while this window was open makes the fresh plan a DIFFERENT plan, and applying it would
+## rewrite rows that never appeared in "What will be rewritten" while the status line reported the
+## larger count. So the two are compared as the receipts they draw, and a plan that has moved is not
+## applied at all - the window redraws on what the sheet says now, and the reader reads it again.
+## Nothing is rewritten that was not read first, which is the whole rule this pass is built on.
 func confirm() -> void:
 	if _dock == null or _dock._current_sheet == null:
 		return
+	var shown: PackedStringArray = EventSheetMigrationPlan.receipt_of(_planned)
 	var moved: Array[int] = [0]
+	var moved_on: Array[bool] = [false]
 	if not _dock._perform_undoable_sheet_edit(EventSheetL10n.translate("Migrate rows"),
 			func() -> bool:
-				moved[0] = EventSheetMigrationPlan.apply(
-					EventSheetMigrationPlan.plan(_dock._current_sheet, _vocabulary))
+				var now: Array[Dictionary] = EventSheetMigrationPlan.plan(_dock._current_sheet,
+					_vocabulary)
+				if EventSheetMigrationPlan.receipt_of(now) != shown:
+					moved_on[0] = true
+					return false
+				moved[0] = EventSheetMigrationPlan.apply(now)
 				return moved[0] > 0):
+		if moved_on[0]:
+			_redraw_on_what_the_sheet_says_now()
+			return
 		_dock._set_status(EventSheetL10n.translate(
 			"Nothing was rewritten - every row here is either already current or listed as one this cannot write."))
 		return
 	_dock._set_status(EventSheetL10n.translate("%d row(s) migrated - one Ctrl+Z takes all of it back.")
 		% moved[0])
+
+
+## What happens when the sheet moved under an open receipt: nothing is written, the window is drawn
+## again on the plan the sheet has now, and the reader is told why they are reading it twice.
+func _redraw_on_what_the_sheet_says_now() -> void:
+	_planned = EventSheetMigrationPlan.plan(_dock._current_sheet, _vocabulary)
+	_fill()
+	if _dock.is_inside_tree():
+		_dialog.popup_centered(Vector2i(760, 520))
+	_dock._set_status(EventSheetL10n.translate("This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now."), true)
 
 
 ## One half of one line of the receipt, falling back to the row's own verb id when it has no sentence
