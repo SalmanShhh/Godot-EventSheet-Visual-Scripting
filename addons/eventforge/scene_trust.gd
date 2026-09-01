@@ -152,12 +152,16 @@ static func _glyph_before(text: String, index: int) -> String:
 
 ## True when a condition offers an alternative rather than stating a requirement: an `or` written
 ## outside every bracket and every string literal on the line. An `or` INSIDE brackets belongs to a
-## term of the condition, and the question standing beside that term is still required.
+## term of the condition, and the question standing beside that term is still required. A trailing
+## COMMENT is not part of the condition at all, so the reading stops there - otherwise a guarded line
+## with the word "or" in the note beside it would be read as a guard that is not one.
 static func _holds_an_or(line: String) -> bool:
 	var depth: int = 0
 	var index: int = 0
 	while index < line.length():
 		var character: String = line[index]
+		if character == "#":
+			return false
 		if character == "\"":
 			var close_at: int = line.find("\"", index + 1)
 			index = line.length() if close_at < 0 else close_at + 1

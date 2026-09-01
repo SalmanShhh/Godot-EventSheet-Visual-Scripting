@@ -383,6 +383,10 @@ static func _test_the_doctors_reading() -> bool:
 	ok = _check("and travelling to a layout in the player's folder is a build like any other",
 		EventSheetFilesDoctor.untrusted_scene_lines(TRAVELLED_TO),
 		PackedStringArray(["get_tree().change_scene_to_file(\"user://mods/level.tscn\")"])) and ok
+	ok = _check("a note beside the question is not part of it",
+		EventForgeSceneTrust.guarded_paths(
+			"if __eventsheets_scene_is_data_only(\"user://a.tscn\"):  # or ask the player").size(),
+		1) and ok
 	ok = _check("a loader of somebody's own is not the engine's",
 		EventForgeSceneTrust.untrusted_scene_paths(
 			"var s = MyResourceLoader.load(\"user://mods/level.tscn\")").size(), 0) and ok
