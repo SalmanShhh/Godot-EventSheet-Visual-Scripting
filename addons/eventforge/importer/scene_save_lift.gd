@@ -60,6 +60,12 @@ const RUN_PLAIN: int = 7
 const PACK_FAILURE: String = "\tpush_error(\"Save Branch As Scene File: %s could not be packed (error %d).\" % [{branch_local}.name, {packed_local}])"
 const WRITE_FAILURE: String = "\tpush_error(\"Save Branch As Scene File: nothing was written to %s.\" % {path})"
 
+## A GDScript name, as every pattern here spells one. The locals a run names are CAPTURED and then
+## compared, never spliced into a pattern: a pattern carrying somebody's identifier would mint - and
+## hold, for the life of the session - one compiled RegEx per distinct local name any opened file
+## ever used, which is unbounded static state keyed by another project's words.
+const NAME: String = "[A-Za-z_][A-Za-z0-9_]*"
+
 ## Compiled patterns, built once for the life of the session: this runs on every statement of every
 ## opened file.
 static var _regexes: Dictionary = {}
@@ -86,9 +92,9 @@ static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dicti
 		_at(lines, index + 1, depth, 0))
 	var kept_local: String = "" if kept == null else kept.get_string(1)
 	var lent: int = 0 if kept == null else 1
-	var walked: RegExMatch = _regex("^for[ \\t]+([A-Za-z_][A-Za-z0-9_]*)(?:[ \\t]*:[ \\t]*Node)?[ \\t]+in[ \\t]+%s\\.find_children\\(\"\\*\", \"\", true, false\\):$" % branch_local).search(
+	var walked: RegExMatch = _regex("^for[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]+in[ \\t]+(%s)\\.find_children\\(\"\\*\", \"\", true, false\\):$" % [NAME, NAME]).search(
 		_at(lines, index + 1 + lent, depth, 0))
-	if walked == null:
+	if walked == null or walked.get_string(2) != branch_local:
 		return {}
 	var part_local: String = walked.get_string(1)
 	if _at(lines, index + 2 + lent, depth, 1) != "if %s.owner == null:" % part_local:
@@ -132,9 +138,9 @@ static func _given_back(lines: PackedStringArray, index: int, depth: int,
 		kept_local: String) -> Dictionary:
 	if kept_local.is_empty():
 		return {"consumed": 0, "lines": PackedStringArray()}
-	var loop: RegExMatch = _regex("^for[ \\t]+([A-Za-z_][A-Za-z0-9_]*)(?:[ \\t]*:[ \\t]*Node)?[ \\t]+in[ \\t]+%s:$" % kept_local).search(
-		_at(lines, index, depth, 0))
-	if loop == null:
+	var loop: RegExMatch = _regex("^for[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]+in[ \\t]+(%s):$" % [
+		NAME, NAME]).search(_at(lines, index, depth, 0))
+	if loop == null or loop.get_string(2) != kept_local:
 		return {}
 	if _at(lines, index + 1, depth, 1) != "%s.owner = null" % loop.get_string(1):
 		return {}
@@ -147,9 +153,10 @@ static func _given_back(lines: PackedStringArray, index: int, depth: int,
 ## run that reports something else of its own is not claimed.
 static func _with_answers(lines: PackedStringArray, index: int, depth: int, branch_local: String,
 		scene_local: String, kept_local: String) -> Dictionary:
-	var packed: RegExMatch = _regex("^var[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*:?=[ \\t]*%s\\.pack\\(%s\\)$" % [
-		scene_local, branch_local]).search(_at(lines, index + 5, depth, 0))
-	if packed == null:
+	var packed: RegExMatch = _regex("^var[ \\t]+(%s)[ \\t]*:?=[ \\t]*(%s)\\.pack\\((%s)\\)$" % [
+		NAME, NAME, NAME]).search(_at(lines, index + 5, depth, 0))
+	if packed == null or packed.get_string(2) != scene_local \
+			or packed.get_string(3) != branch_local:
 		return {}
 	var given: Dictionary = _given_back(lines, index + 6, depth, kept_local)
 	if given.is_empty():
@@ -160,11 +167,11 @@ static func _with_answers(lines: PackedStringArray, index: int, depth: int, bran
 		return {}
 	if "\t" + _at(lines, index + 7 + back, depth, 1) != _pack_failure(branch_local, packed_local):
 		return {}
-	var written: RegExMatch = _regex("^elif ResourceSaver\\.save\\(%s, (.+)\\) != OK:$" % scene_local).search(
+	var written: RegExMatch = _regex("^elif ResourceSaver\\.save\\((%s), (.+)\\) != OK:$" % NAME).search(
 		_at(lines, index + 8 + back, depth, 0))
-	if written == null:
+	if written == null or written.get_string(1) != scene_local:
 		return {}
-	var path: String = written.get_string(1).strip_edges()
+	var path: String = written.get_string(2).strip_edges()
 	if "\t" + _at(lines, index + 9 + back, depth, 1) != WRITE_FAILURE.replace("{path}", path):
 		return {}
 	var tail: PackedStringArray = PackedStringArray([_at(lines, index + 5, depth, 0)])
@@ -186,14 +193,14 @@ static func _plain(lines: PackedStringArray, index: int, depth: int, branch_loca
 	if given.is_empty():
 		return {}
 	var back: int = int(given["consumed"])
-	var written: RegExMatch = _regex("^ResourceSaver\\.save\\(%s, (.+)\\)$" % scene_local).search(
+	var written: RegExMatch = _regex("^ResourceSaver\\.save\\((%s), (.+)\\)$" % NAME).search(
 		_at(lines, index + 6 + back, depth, 0))
-	if written == null:
+	if written == null or written.get_string(1) != scene_local:
 		return {}
 	var tail: PackedStringArray = PackedStringArray([_at(lines, index + 5, depth, 0)])
 	tail.append_array(given["lines"] as PackedStringArray)
 	tail.append("ResourceSaver.save(%s, {path})" % scene_local)
-	return {"path": written.get_string(1).strip_edges(), "consumed": RUN_PLAIN + back,
+	return {"path": written.get_string(2).strip_edges(), "consumed": RUN_PLAIN + back,
 		"lines": tail}
 
 

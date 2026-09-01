@@ -61,14 +61,14 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# target. Nothing about the reading layer changed to move it - the measure is taken off the
 	# imported sheet's own shape and the raw text of each row.
 	#
-	# Raised again to 19 when the sample reached layout_on_top_lift.gd, which measures 18. That file
-	# is a HAND-WRITTEN RUN MATCHER - a chain of "does this line say exactly this, and does the next
-	# one" guards over compiled patterns - so its body is refusals and regex literals, which is the
-	# same shape as the `lift_entries` families beside it that already have a group of their own at
-	# 48. The two run matchers that shipped before it measure 12 and the one after it 6, so the
-	# ceiling still describes the group rather than excusing one file, and nothing about the reading
-	# layer changed to move it.
-	"importer": 19,
+	# It was raised to 19 for one file - the scenes pass's own layout_on_top_lift.gd, which measured
+	# 18 - and put back. A ratchet a pass moves for its file it just added is not a ratchet: the
+	# honest answer was to write that matcher so it measures like its neighbours, which is what
+	# happened (it hands one dictionary back rather than building a literal a row at a time, and its
+	# reasoning is prose above the code rather than lines inside a literal). Re-measured over the
+	# whole role afterwards: the worst importer file is scene_effect_facts.gd at 13, the three run
+	# matchers are 0, 0 and 6, and nothing else reaches 13.
+	"importer": 13,
 	# Measured like the rest, on the three recogniser families that ship: 47 for the animation
 	# spellings, 39 for the effect ones, 27 for the lighting ones. A family is a TABLE - one
 	# dictionary literal per entry - so most of its rows are literal entries, which is the same

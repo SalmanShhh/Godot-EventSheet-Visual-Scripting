@@ -112,8 +112,8 @@ static func _guarded_run(lines: PackedStringArray, index: int, depth: int) -> Di
 	var opener: String = _inside_at(lines, index + 2, depth)
 	if not opener.contains(MARK):
 		return {}
-	var made: RegExMatch = _regex("^(%s[ \\t]*=[ \\t]*\\((?:pre)?load)\\((.*)\\)( as PackedScene\\))\\.instantiate\\(\\)$" % holder).search(opener)
-	if made == null:
+	var made: RegExMatch = _regex("^((%s)[ \\t]*=[ \\t]*\\((?:pre)?load)\\((.*)\\)( as PackedScene\\))\\.instantiate\\(\\)$" % NAME).search(opener)
+	if made == null or made.get_string(2) != holder:
 		return {}
 	var named: RegExMatch = _regex(NAMED_PATTERN).search(_inside_at(lines, index + 3, depth))
 	if named == null or named.get_string(1) != holder:
@@ -125,10 +125,16 @@ static func _guarded_run(lines: PackedStringArray, index: int, depth: int) -> Di
 	var run: PackedStringArray = PackedStringArray([
 		"var %s: Node = get_tree().root.get_node_or_null({layout_name})" % holder,
 		"if %s == null:" % holder,
-		"\t%s({path})%s.instantiate()" % [made.get_string(1), made.get_string(3)],
+		"\t%s({path})%s.instantiate()" % [made.get_string(1), made.get_string(4)],
 		"\t%s.name = {layout_name}" % holder, "\t" + _added(holder)])
-	return _claim(made.get_string(2), named.get_string(2), run, GUARDED_LENGTH)
+	return _claim(made.get_string(3), named.get_string(2), run, GUARDED_LENGTH)
 
+
+## A GDScript name, as every pattern here spells one. The local a run names is CAPTURED and then
+## compared, never spliced into a pattern: a pattern carrying somebody's identifier would mint - and
+## hold, for the life of the session - one compiled RegEx per distinct local name any opened file
+## ever used, which is unbounded static state keyed by another project's words.
+const NAME: String = "[A-Za-z_][A-Za-z0-9_]*"
 
 ## The statement that names the copy, whichever spelling it is written in: the holder, then the name.
 const NAMED_PATTERN: String = "^([A-Za-z_][A-Za-z0-9_]*)\\.name = (.+)$"

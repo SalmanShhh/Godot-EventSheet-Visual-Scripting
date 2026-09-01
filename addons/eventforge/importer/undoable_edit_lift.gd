@@ -147,9 +147,9 @@ static func _match_set_property(lines: PackedStringArray, index: int, depth: int
 	if made == null:
 		return {}
 	var undo_local: String = made.get_string(2)
-	var did: RegExMatch = _regex("^%s\\.add_do_property\\((?<target>.+), &\"(?<property>%s)\", (?<value>.+)\\)$" % [
-		undo_local, NAME]).search(_at(lines, index + 1 + kept, depth))
-	if did == null:
+	var did: RegExMatch = _regex("^(?<undo>%s)\\.add_do_property\\((?<target>.+), &\"(?<property>%s)\", (?<value>.+)\\)$" % [
+		NAME, NAME]).search(_at(lines, index + 1 + kept, depth))
+	if did == null or did.get_string("undo") != undo_local:
 		return {}
 	# The receiver the two halves name: the local when the run reads one, and the target expression
 	# itself when it does not. When there is a local, the do half has to be written on THAT local -
@@ -188,9 +188,10 @@ static func _match_add(lines: PackedStringArray, index: int, depth: int) -> Dict
 	if made == null:
 		return {}
 	var undo_local: String = made.get_string(2)
-	var parented: RegExMatch = _regex("^%s\\.add_do_method\\((?<parent>.+), \"add_child\", %s\\)$" % [
-		undo_local, node_local]).search(_at(lines, index + 2, depth))
-	if parented == null:
+	var parented: RegExMatch = _regex("^(?<undo>%s)\\.add_do_method\\((?<parent>.+), \"add_child\", (?<node>%s)\\)$" % [
+		NAME, NAME]).search(_at(lines, index + 2, depth))
+	if parented == null or parented.get_string("undo") != undo_local \
+			or parented.get_string("node") != node_local:
 		return {}
 	var parent: String = parented.get_string("parent")
 	if _at(lines, index + 3, depth) != "%s.add_do_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [
@@ -225,15 +226,17 @@ static func _match_remove(lines: PackedStringArray, index: int, depth: int) -> D
 	if held == null:
 		return {}
 	var node_local: String = held.get_string(2)
-	var parented: RegExMatch = _regex("^(var[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)%s\\.get_parent\\(\\)$" % [
-		NAME, node_local]).search(_at(lines, index + 1, depth))
-	if parented == null:
+	var parented: RegExMatch = _regex("^(var[ \\t]+(%s)(?:[ \\t]*:[ \\t]*Node)?[ \\t]*:?=[ \\t]*)(%s)\\.get_parent\\(\\)$" % [
+		NAME, NAME]).search(_at(lines, index + 1, depth))
+	if parented == null or parented.get_string(3) != node_local:
 		return {}
 	var parent_local: String = parented.get_string(2)
 	# The place among its siblings, read on the way in. Optional for the same reason the property
 	# run's local is: the row writes it, and a tool written by hand may not have thought of it.
-	var placed: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:[ \\t]*int[ \\t]*=[ \\t]*)%s\\.get_index\\(\\)$" % [
-		NAME, node_local]).search(_at(lines, index + 2, depth))
+	var placed: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:[ \\t]*int[ \\t]*=[ \\t]*)(%s)\\.get_index\\(\\)$" % [
+		NAME, NAME]).search(_at(lines, index + 2, depth))
+	if placed != null and placed.get_string(3) != node_local:
+		placed = null
 	var kept: int = 0 if placed == null else 1
 	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
 		_at(lines, index + 2 + kept, depth))

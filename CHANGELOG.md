@@ -341,6 +341,15 @@ against Godot 4.7 before it was repaired.
   carries NO class: the picker leaves it out and a row written on it keeps its plain reading, which
   is the same honest degradation this reader already had for a name no scene marks. A name the
   scenes agree about is untouched.
+- **A ratchet the pass had moved for its own file is back where it was.** The importer group's
+  wordless-row ceiling went 13 -> 19 to admit `layout_on_top_lift.gd` at 18. The matcher is written
+  the way its neighbours are now - one dictionary handed back rather than a literal built a row at a
+  time, its reasoning in prose above the code rather than in lines inside a literal - and measures 0;
+  the ceiling is 13 again, which is the worst file in the role (`scene_effect_facts.gd`).
+- **Three lift files no longer hold a compiled RegEx per identifier they have ever seen.** Their
+  pattern caches were keyed by patterns that INTERPOLATED a user's local-variable name, so the cache
+  grew one entry per distinct name in every file anybody opened, for the life of the session. The
+  names are captured and compared now, so each file compiles a fixed set of patterns.
 - **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
   own method is how every project travels to a layout, and the call reading refused it for having a
   dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`

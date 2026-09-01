@@ -74,15 +74,13 @@ static func for_script(script_path: String) -> Array[Dictionary]:
 		if node_name.is_empty() or seen.has(node_name):
 			continue
 		seen[node_name] = true
+		# AND WHEN THE TWO SCENES DISAGREE ABOUT WHAT IT IS, nobody gets to answer: the class below
+		# comes from `_classes_by_name`, which answers "" for a name two scenes give two classes.
+		# Adopting the first scene's would offer a row written in one class's vocabulary for a sheet
+		# whose other scene cannot take it, and it would do that silently.
 		found.append({
 			"name": node_name,
 			"path": str(node.get("path", "")),
-			# AND WHEN THE TWO SCENES DISAGREE ABOUT WHAT IT IS, nobody gets to answer. Two scenes
-			# running one script may each mark a `%HealthBar` and mean a ProgressBar in one and a
-			# Label in the other; adopting the first scene's class would offer a row written in one
-			# class's vocabulary for a sheet whose other scene cannot take it, and it would do that
-			# silently. A name the scenes answer differently is listed with NO class, which every
-			# reader here already degrades on: the row keeps its plain code and its honest reading.
 			"class": str(classes.get(node_name, "")),
 			"reference": SIGIL + node_name,
 			"scene_path": str(node.get("scene_path", "")),
@@ -101,10 +99,8 @@ static func _classes_by_name(script_path: String) -> Dictionary:
 		if node_name.is_empty():
 			continue
 		var node_class: String = str(node.get("class", "")).strip_edges()
-		if not answers.has(node_name):
-			answers[node_name] = node_class
-		elif str(answers[node_name]) != node_class:
-			answers[node_name] = ""
+		var agreed: bool = not answers.has(node_name) or str(answers[node_name]) == node_class
+		answers[node_name] = node_class if agreed else ""
 	return answers
 
 
