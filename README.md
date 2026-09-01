@@ -41,7 +41,7 @@ func _on_body_entered(body: Node) -> void:
 		health += -10
 ```
 
-Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 920 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
+Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 918 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
@@ -109,7 +109,7 @@ The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask 
 
 **Performance, measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, and a 4,000-line script opens in **7.4 s**; eleven such budgets are tests.
 
-**The editor reads itself** - the plugin's own source opens as event sheets: **920 files, 918 of them at zero script blocks, and 89% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
+**The editor reads itself** - the plugin's own source opens as event sheets: **918 files, 916 of them at zero script blocks, and 89% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
 
 **Quality** - 20,791 assertions across 725 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
