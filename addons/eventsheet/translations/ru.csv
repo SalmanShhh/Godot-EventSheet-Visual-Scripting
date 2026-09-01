@@ -5912,3 +5912,20 @@ Migrate rows,Перенести строки
 Nothing was rewritten - every row here is either already current or listed as one this cannot write.,"Ничего не переписано - каждая строка здесь либо уже актуальна, либо перечислена как та, которую это не может написать."
 %d row(s) migrated - one Ctrl+Z takes all of it back.,%d строк(и) перенесено - одно Ctrl+Z возвращает всё назад.
 Migrate…,Перенести…
+%s is no longer declared in %s - it went out of the file in the same save that wrote it.,%s больше не объявлено в %s - имя ушло из файла в том же сохранении.
+"Nothing in that save says what it became, so nothing here will guess: type the name this row should call into its cell.","В этом сохранении нет указаний на то, чем оно стало, поэтому здесь ничего не угадывается: впишите в ячейку имя, которое должна вызывать эта строка."
+"That same save added %s, and nothing else - point the rows there, or leave them and type the name yourself.",В том же сохранении добавилось %s и больше ничего - направьте строки туда или оставьте их и впишите имя сами.
+%s is gone from %s.,%s исчез из %s.
+"That save added no node this one could have become, so nothing here will guess: pick the node this row means.","В том сохранении не появилось узла, которым этот мог бы стать, поэтому здесь ничего не угадывается: выберите узел, который имеет в виду эта строка."
+"That same save gained %s - point the rows there, or leave them and pick the node yourself.",В том же сохранении появилось %s - направьте строки туда или оставьте их и выберите узел сами.
+Point the rows at %s,Направить строки на %s
+%s - %d row(s),%s - строк: %d
+"%d row(s) in this sheet, and nothing else in the project calls it by that name.","Строк в этом листе: %d, и больше ничто в проекте не вызывает это под таким именем."
+Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.,"Вызывается из %s - строк: %d в других файлах: %d. Это перепишет строк в этом листе: %d, а те останутся ровно такими, как есть."
+Rename %s,Переименовать %s
+"""%s"" appears nowhere in this sheet.","""%s"" не встречается в этом листе."
+%d row(s) renamed - one Ctrl+Z takes all of it back.%s,Переименовано строк: %d - одно Ctrl+Z вернёт всё назад.%s
+ Also written: %s., Также записано: %s.
+Point rows at %s,Направить строки на %s
+%d row(s) renamed - one Ctrl+Z takes all of it back.,Переименовано строк: %d - одно Ctrl+Z вернёт всё назад.
+Rename…,Переименовать…

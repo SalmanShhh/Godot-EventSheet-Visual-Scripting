@@ -133,6 +133,12 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._function_dialog_glue._open_function_dialog_for(_dock._context_row.source_resource)
 			else:
 				_dock._set_status("Select a published function's row to edit it.", true)
+		_dock.ROW_MENU_RENAME_FUNCTION:
+			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
+				_dock.open_rename_receipt(
+					(_dock._context_row.source_resource as EventFunction).function_name)
+			else:
+				_dock._set_status("Select a function's row to rename it.", true)
 		_dock.ROW_MENU_MAKE_MESSAGE:
 			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
 				_dock._messages.open_message(_dock._context_row.source_resource)

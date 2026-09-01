@@ -5912,3 +5912,20 @@ Migrate rows,Migrar filas
 Nothing was rewritten - every row here is either already current or listed as one this cannot write.,No se reescribio nada - cada fila de aqui ya esta al dia o aparece como una que esto no puede escribir.
 %d row(s) migrated - one Ctrl+Z takes all of it back.,%d fila(s) migradas - un Ctrl+Z lo devuelve todo.
 Migrate…,Migrar…
+%s is no longer declared in %s - it went out of the file in the same save that wrote it.,%s ya no esta declarado en %s - salio del archivo en el mismo guardado que lo escribio.
+"Nothing in that save says what it became, so nothing here will guess: type the name this row should call into its cell.","Nada en ese guardado dice en que se convirtio, asi que aqui no se adivina: escribe en la celda el nombre que esta fila deberia llamar."
+"That same save added %s, and nothing else - point the rows there, or leave them and type the name yourself.","Ese mismo guardado anadio %s y nada mas - apunta las filas alli, o dejalas y escribe el nombre tu mismo."
+%s is gone from %s.,%s ya no esta en %s.
+"That save added no node this one could have become, so nothing here will guess: pick the node this row means.","Ese guardado no anadio ningun nodo en el que este pudiera haberse convertido, asi que aqui no se adivina: elige el nodo al que se refiere esta fila."
+"That same save gained %s - point the rows there, or leave them and pick the node yourself.","Ese mismo guardado gano %s - apunta las filas alli, o dejalas y elige el nodo tu mismo."
+Point the rows at %s,Apuntar las filas a %s
+%s - %d row(s),%s - %d fila(s)
+"%d row(s) in this sheet, and nothing else in the project calls it by that name.","%d fila(s) en esta hoja, y nada mas en el proyecto lo llama con ese nombre."
+Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.,Llamado por %s - %d fila(s) en %d otro(s) archivo(s). Esto reescribe las %d fila(s) de esta hoja y deja aquellas exactamente como estan.
+Rename %s,Renombrar %s
+"""%s"" appears nowhere in this sheet.","""%s"" no aparece en ninguna parte de esta hoja."
+%d row(s) renamed - one Ctrl+Z takes all of it back.%s,%d fila(s) renombrada(s) - un Ctrl+Z lo deshace todo.%s
+ Also written: %s., Tambien escrito: %s.
+Point rows at %s,Apuntar filas a %s
+%d row(s) renamed - one Ctrl+Z takes all of it back.,%d fila(s) renombrada(s) - un Ctrl+Z lo deshace todo.
+Rename…,Renombrar…

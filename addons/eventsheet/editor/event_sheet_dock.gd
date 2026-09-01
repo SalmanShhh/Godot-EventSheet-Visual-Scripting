@@ -105,6 +105,9 @@ const ROW_MENU_GROUP_RUNS_ON := 64
 ## "Make it a message…" on a function's own row: the annotation belongs to the function, so the
 ## gesture belongs to the row that declares it.
 const ROW_MENU_MAKE_MESSAGE := 65
+## "Rename…" on a function's own row: the name belongs to the function, so the gesture that changes
+## it - and the receipt listing every row and file that says it - belongs to the row that declares it.
+const ROW_MENU_RENAME_FUNCTION := 66
 const GROUP_RUNS_ON_EVERYONE := 70
 const GROUP_RUNS_ON_HOST := 71
 const GROUP_RUNS_ON_OWNER := 72
@@ -367,6 +370,7 @@ var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sh
 var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
 var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdoptDialog.new()  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
 var _keep_as_code_dialog: EventSheetKeepAsCodeDialog = EventSheetKeepAsCodeDialog.new()  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
+var _rename_receipt: EventSheetRenameReceipt = EventSheetRenameReceipt.new()  # Rename on a function's own row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
 var _migrate_dialog: EventSheetMigrateDialog = EventSheetMigrateDialog.new()  # the head band's migration count: the receipt for every row with a newer spelling, and the one place Apply exists (dock/migrate_dialog.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
@@ -489,6 +493,7 @@ func _init() -> void:
 	_variable_retype_dialog.init(self)
 	_pattern_adopt_dialog.init(self)
 	_keep_as_code_dialog.init(self)
+	_rename_receipt.init(self)
 	_migrate_dialog.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
@@ -7253,6 +7258,9 @@ func apply_selected_row_fix() -> void:
 	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
 		see_what_replaced_it(finding)
 		return
+	if str(finding.get("fix", "")) == EventSheetRenameFindings.FIX_POINT_THE_ROWS:
+		point_the_rows_there(finding)
+		return
 	# The row the fix will rewrite is named by its LANE and SLOT rather than held: the fix runs
 	# through the undo funnel, and the funnel replaces resources as it commits.
 	_apply_finding_note_fix(str(finding.get("fix", "")), str(finding.get("subject", "")), {
@@ -7282,6 +7290,24 @@ func apply_selected_row_second_fix() -> void:
 ## line it writes today beside the one it would write - and its button is the only Apply there is.
 func open_migrate_dialog() -> void:
 	_migrate_dialog.open()
+
+
+## RENAME, from a function's own row. The receipt comes first: every row of this sheet that says the
+## name, as the words it says now beside the words it would say, and every other file in the project
+## that calls it by that name, listed and marked as one this will not touch. The button behind that
+## receipt is the only place a rename happens.
+func open_rename_receipt(function_name: String) -> void:
+	_rename_receipt.open(function_name)
+
+
+## "Point the rows there". The door under a row whose name was renamed out from under it, and only
+## ever offered when the file's own last save proved what the name became - one name out, one name
+## in, one gesture. It opens the same receipt the typed rename draws, over a name nobody can edit
+## here: the answer is the file's, and a field would turn evidence back into a guess.
+func point_the_rows_there(finding: Dictionary) -> void:
+	if str(finding.get("to", "")).strip_edges().is_empty():
+		return
+	_rename_receipt.open_for_finding(finding)
 
 
 ## "See what replaced it". A door, not a fix: which verb stands where the old one did is the reader's

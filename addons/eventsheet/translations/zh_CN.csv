@@ -5912,3 +5912,20 @@ Migrate rows,迁移行
 Nothing was rewritten - every row here is either already current or listed as one this cannot write.,没有改写任何内容 - 这里的每一行要么已经是最新的，要么被列为这个无法写出的行。
 %d row(s) migrated - one Ctrl+Z takes all of it back.,已迁移 %d 行 - 一次 Ctrl+Z 全部撤回。
 Migrate…,迁移…
+%s is no longer declared in %s - it went out of the file in the same save that wrote it.,%s 已不在 %s 中声明 - 它在同一次保存中离开了该文件。
+"Nothing in that save says what it became, so nothing here will guess: type the name this row should call into its cell.",那次保存没有说明它变成了什么，所以这里不会猜测：请在单元格中输入这一行应当调用的名称。
+"That same save added %s, and nothing else - point the rows there, or leave them and type the name yourself.",同一次保存只新增了 %s - 可以把这些行指向它，或保持原样自行输入名称。
+%s is gone from %s.,%s 已从 %s 中消失。
+"That save added no node this one could have become, so nothing here will guess: pick the node this row means.",那次保存没有新增任何它可能变成的节点，所以这里不会猜测：请选择这一行所指的节点。
+"That same save gained %s - point the rows there, or leave them and pick the node yourself.",同一次保存新增了 %s - 可以把这些行指向它，或保持原样自行选择节点。
+Point the rows at %s,把这些行指向 %s
+%s - %d row(s),%s - %d 行
+"%d row(s) in this sheet, and nothing else in the project calls it by that name.",本表中有 %d 行，项目中没有其他地方以该名称调用它。
+Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.,由 %s 调用 - 另外 %d 个文件中的 %d 行。此操作会改写本表中的 %d 行，其余保持原样。
+Rename %s,重命名 %s
+"""%s"" appears nowhere in this sheet.","""%s"" 未出现在本表的任何位置。"
+%d row(s) renamed - one Ctrl+Z takes all of it back.%s,已重命名 %d 行 - 一次 Ctrl+Z 即可全部撤销。%s
+ Also written: %s., 同时写入：%s。
+Point rows at %s,将行指向 %s
+%d row(s) renamed - one Ctrl+Z takes all of it back.,已重命名 %d 行 - 一次 Ctrl+Z 即可全部撤销。
+Rename…,重命名…

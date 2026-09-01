@@ -170,6 +170,11 @@ static func run() -> Dictionary:
 	# longer has. Same seam, same reason - and the ONLY place those words appear, because the sheet
 	# itself stays quiet and puts such a row into the amber state and nothing else.
 	EventSheetMigrationDoctor.ensure_registered()
+	# The Renames section: the rows left pointing at a name that went out of its own file while this
+	# session was watching. Same seam, same reason, and the same quiet sheet behind it. It answers
+	# only for saves it saw, so a headless run reports its summary and no findings - which is the
+	# honest answer to a question whose evidence is a file changing under a running editor.
+	EventSheetRenameDoctor.ensure_registered()
 	# Ship It rides the same seam: whether the game can leave the building is a question about the
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.

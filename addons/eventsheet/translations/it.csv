@@ -5912,3 +5912,20 @@ Migrate rows,Migra le righe
 Nothing was rewritten - every row here is either already current or listed as one this cannot write.,Non e stato riscritto nulla - ogni riga qui e gia aggiornata oppure elencata come una che questo non puo scrivere.
 %d row(s) migrated - one Ctrl+Z takes all of it back.,%d riga/e migrate - un Ctrl+Z riporta tutto indietro.
 Migrate…,Migra…
+%s is no longer declared in %s - it went out of the file in the same save that wrote it.,%s non e piu dichiarato in %s - e uscito dal file nello stesso salvataggio che lo ha scritto.
+"Nothing in that save says what it became, so nothing here will guess: type the name this row should call into its cell.","Niente in quel salvataggio dice cosa sia diventato, quindi qui non si indovina: scrivi nella cella il nome che questa riga deve chiamare."
+"That same save added %s, and nothing else - point the rows there, or leave them and type the name yourself.","Quello stesso salvataggio ha aggiunto %s e nient'altro - punta le righe li, oppure lasciale e scrivi tu il nome."
+%s is gone from %s.,%s non e piu in %s.
+"That save added no node this one could have become, so nothing here will guess: pick the node this row means.","Quel salvataggio non ha aggiunto alcun nodo che questo potesse essere diventato, quindi qui non si indovina: scegli il nodo a cui si riferisce questa riga."
+"That same save gained %s - point the rows there, or leave them and pick the node yourself.","Quello stesso salvataggio ha guadagnato %s - punta le righe li, oppure lasciale e scegli tu il nodo."
+Point the rows at %s,Punta le righe a %s
+%s - %d row(s),%s - %d riga/righe
+"%d row(s) in this sheet, and nothing else in the project calls it by that name.","%d riga/righe in questo foglio, e nient'altro nel progetto lo chiama con quel nome."
+Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.,Chiamato da %s - %d riga/righe in %d altro/i file. Questo riscrive le %d riga/righe di questo foglio e lascia quelle esattamente come sono.
+Rename %s,Rinomina %s
+"""%s"" appears nowhere in this sheet.","""%s"" non compare da nessuna parte in questo foglio."
+%d row(s) renamed - one Ctrl+Z takes all of it back.%s,%d riga/righe rinominate - un Ctrl+Z annulla tutto.%s
+ Also written: %s., Scritti anche: %s.
+Point rows at %s,Punta righe a %s
+%d row(s) renamed - one Ctrl+Z takes all of it back.,%d riga/righe rinominate - un Ctrl+Z annulla tutto.
+Rename…,Rinomina…

@@ -324,6 +324,10 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
 		menu.add_item("Edit Function…", _dock.ROW_MENU_EDIT_FUNCTION)
 		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
+		# Renaming is not editing: it reaches every row that calls the name and every file in the
+		# project that does, so it gets its own item and its own receipt rather than a field inside
+		# the edit dialog that would move all of that on an OK nobody read.
+		menu.add_item("Rename…", _dock.ROW_MENU_RENAME_FUNCTION)
 		# What makes this function a message is an `@rpc` line above it, so the gesture that
 		# writes that line lives on the function's own row. The menu is built per right-click, so the
 		# item reads the live state: a function that already is one opens the same dialog to change it.

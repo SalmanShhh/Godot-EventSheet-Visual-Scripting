@@ -117,6 +117,7 @@ const FINDINGS_LAYERS := "layers"
 const FINDINGS_SCENE_TRUST := "scene_trust"
 const FINDINGS_TOOL_EDITS := "tool_edits"
 const FINDINGS_MIGRATION := "migration"
+const FINDINGS_RENAME := "rename"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -9203,6 +9204,17 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 						return _viewport != null \
 							and (_viewport._find_definition(provider_id, ace_id) != null
 								or ACERegistry.find_descriptor(provider_id, ace_id) != null))
+			FINDINGS_RENAME:
+				# The rows a rename made somewhere else left pointing at nothing. The witness is
+				# built from the sheet's own file and the scene that runs it, and it answers with
+				# nothing at all unless one of those two files was saved while this session watched -
+				# which is the whole evidence rule, asked once per sweep rather than per row.
+				var own_script: String = str(sheet.external_source_path) if sheet != null else ""
+				var scenes: PackedStringArray = EventSheetSceneConnections.scenes_using_script(
+					own_script) if not own_script.is_empty() else PackedStringArray()
+				_sheet_findings_cache[family] = EventSheetRenameFindings.findings(sheet, own_script,
+					EventSheetRenameEvidence.witness_for(own_script,
+						scenes[0] if scenes.size() > 0 else ""))
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]
@@ -9235,6 +9247,8 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 		EventSheetSceneTrustFindings.for_event(_sheet_findings(FINDINGS_SCENE_TRUST), event_row)))
 	about.append_array(_tagged(FINDINGS_MIGRATION,
 		EventSheetMigrationFindings.for_event(_sheet_findings(FINDINGS_MIGRATION), event_row)))
+	about.append_array(_tagged(FINDINGS_RENAME,
+		EventSheetRenameFindings.for_event(_sheet_findings(FINDINGS_RENAME), event_row)))
 	return about
 
 

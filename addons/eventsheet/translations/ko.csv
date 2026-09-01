@@ -5912,3 +5912,20 @@ Migrate rows,행 이전
 Nothing was rewritten - every row here is either already current or listed as one this cannot write.,아무것도 다시 쓰지 않았습니다 - 여기 행은 이미 최신이거나 이것이 쓸 수 없는 것으로 적혀 있습니다.
 %d row(s) migrated - one Ctrl+Z takes all of it back.,%d개 행을 옮겼습니다 - Ctrl+Z 한 번이면 모두 되돌아갑니다.
 Migrate…,이전…
+%s is no longer declared in %s - it went out of the file in the same save that wrote it.,%s 은(는) %s 에 더 이상 선언되어 있지 않습니다 - 같은 저장에서 파일 밖으로 나갔습니다.
+"Nothing in that save says what it became, so nothing here will guess: type the name this row should call into its cell.",그 저장에는 무엇이 되었는지에 대한 단서가 없으므로 여기서는 추측하지 않습니다. 이 행이 호출할 이름을 셀에 입력하세요.
+"That same save added %s, and nothing else - point the rows there, or leave them and type the name yourself.","같은 저장에서 %s 만 추가되었습니다. 행을 그곳으로 향하게 하거나, 그대로 두고 직접 이름을 입력하세요."
+%s is gone from %s.,%s 이(가) %s 에서 사라졌습니다.
+"That save added no node this one could have become, so nothing here will guess: pick the node this row means.",그 저장에서는 이것이 될 수 있었던 노드가 추가되지 않았으므로 추측하지 않습니다. 이 행이 가리키는 노드를 선택하세요.
+"That same save gained %s - point the rows there, or leave them and pick the node yourself.","같은 저장에서 %s 이(가) 생겼습니다. 행을 그곳으로 향하게 하거나, 그대로 두고 직접 노드를 선택하세요."
+Point the rows at %s,행을 %s 로 향하게 하기
+%s - %d row(s),%s - %d 행
+"%d row(s) in this sheet, and nothing else in the project calls it by that name.","이 시트의 %d 행뿐이며, 프로젝트의 다른 어디에서도 그 이름으로 호출하지 않습니다."
+Called by %s - %d row(s) in %d other file(s). This rewrites the %d row(s) in this sheet and leaves those exactly as they are.,%s 에서 호출합니다 - 다른 파일 %d 개의 %d 행. 이 작업은 이 시트의 %d 행을 고쳐 쓰고 나머지는 그대로 둡니다.
+Rename %s,%s 이름 바꾸기
+"""%s"" appears nowhere in this sheet.","""%s"" 은(는) 이 시트 어디에도 없습니다."
+%d row(s) renamed - one Ctrl+Z takes all of it back.%s,%d 행의 이름을 바꿨습니다 - Ctrl+Z 한 번이면 모두 되돌아갑니다.%s
+ Also written: %s., 함께 기록됨: %s.
+Point rows at %s,행을 %s 로 향하게 함
+%d row(s) renamed - one Ctrl+Z takes all of it back.,%d 행의 이름을 바꿨습니다 - Ctrl+Z 한 번이면 모두 되돌아갑니다.
+Rename…,이름 바꾸기…
