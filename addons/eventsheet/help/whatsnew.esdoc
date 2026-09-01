@@ -6,6 +6,40 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
+### Renaming, with everything it touches listed before it touches any of it
+
+- **A function's own head row offers Rename…**, and the first thing it draws is not a text field with
+  an OK button - it is the list. Every row of this sheet that says the name, twice over: the words it
+  says now beside the words it would say. The button behind that list is the only place a rename
+  happens, it goes through the sheet's own undo funnel, and one Ctrl+Z takes all of it back.
+- **Every other file that calls the name is named, counted and left exactly as it is** - `enemy.gd -
+  4 row(s)` - under a heading that says why: the callers index answers BY NAME, so a file listed
+  there may be calling a different function that happens to share the spelling, and the index cannot
+  tell. Being plainly approximate about who calls something costs a reader one glance; being quietly
+  wrong about it costs them a broken game. A rename claiming \"6 rows in 3 sheets\" and touching four
+  would be worse than saying nothing.
+- **A row whose name was renamed out from under it wears the quiet amber**, and nothing else - no
+  block, no icon, no inline sentence. The words live in the help strip under the selected row and in
+  the Doctor's new Renames section: which name went out of which file, and what arrived beside it.
+- **The \"did you mean\" is evidence, never a guess.** It is offered only when the file's own last save
+  shows the old name vanishing and one name arriving - one save, one file, one swap. A near name that
+  was already in the file before the save did not arrive and is never offered; a save that brought
+  several names is answered only when exactly one of them is a near spelling; two near spellings are
+  two answers, which is none. Anything weaker is a plainly amber row with the sentence, no door, and
+  a cell the reader types into.
+- **The same rule reads a scene.** A row reaching `$Torch` after the node became `WallTorch` says so
+  the same way - \"$Torch is gone from crypt.tscn. That same save gained $WallTorch\" - and the door
+  points every row of the sheet at the new reference in one undoable step, through the token-safe
+  replace that has always known `$Torch` is not `$TorchHolder`. A `%name` still stops this happening
+  in the first place: it survives every reparent, so only the node's own name can break it.
+- **It only ever knows what it watched.** The witness starts empty each session and files nothing on
+  first sight of a file, so a rename made while the editor was closed - a branch checkout, a pull - is
+  always the plain-amber case. That is the honest answer rather than a gap: the evidence for a rename
+  is a file's identity moving once with a name going out of it, and you have to have been there.
+- **Nothing here writes anything until a person presses something.** Watching the files, deriving the
+  findings and drawing every receipt are questions. Opening a sheet full of rows pointing at names
+  nobody answers to and saving it untouched reproduces the file byte for byte.
+
 ### Migrating a sheet onto the spelling the vocabulary uses today
 
 - **The head band's counting line is now a door.** A sheet whose head reads

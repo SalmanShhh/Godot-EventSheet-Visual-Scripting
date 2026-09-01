@@ -83,6 +83,24 @@ field. It is a scene edit, not a sheet edit, so it lands in the editor's own und
 in the scene puts the checkbox back. The offer appears only when there is something to do - never
 for the scene root, for a node this scene does not own, or for one already marked.
 
+**When somebody renames the node anyway.** A row reaching `$Torch` after the node became `WallTorch`
+wears the quiet amber state, and the sentence appears in the help strip under the selected row and
+in the Doctor's Renames section: *"$Torch is gone from crypt.tscn. That same save gained $WallTorch -
+point the rows there, or leave them and pick the node yourself."* Nothing appears in the sheet
+itself, and nothing moves until you press the button, which shows every row it would change first.
+
+That offer is **evidence, never a guess**. It is made only when that scene's own last save shows the
+old name going out and one name coming in - one save, one file, one swap. A near name that was in
+the scene before the save did not arrive; a save that brought several nodes is answered only if
+exactly one of them is a near spelling; a save that proved nothing leaves a plainly amber row with
+no door, and you pick the node yourself. A rename made while the editor was closed is always that
+plain case, because the evidence is a file changing under a running editor.
+
+**The `%` mark is what stops this happening in the first place.** A row written on `%HealthBar`
+survives every reparent, so the only rename that can break it is a rename of the node's own name -
+which is rarer, and one line of a receipt rather than a path's worth. The amber state above is the
+safety net for the paths you have not marked yet, not a reason to stop marking them.
+
 Naming a whole **scene** by a short word instead of a path is a different job, and the Named Scenes
 pack owns it. This is about one node inside one scene.
 

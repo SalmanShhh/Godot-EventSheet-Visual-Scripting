@@ -19,7 +19,9 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 3. [Call Your Existing Code from a Sheet](#3-call-your-existing-code-from-a-sheet)
 4. [React to a Signal Your Existing Code Emits](#4-react-to-a-signal-your-existing-code-emits)
 5. [Putting a Sheet on a Node - Two Modes](#5-putting-a-sheet-on-a-node---two-modes)
-6. [Call a Sheet from Your Existing Code](#6-call-a-sheet-from-your-existing-code)
+6. [Call a Sheet from Your Existing Code](#6-call-a-sheet-from-your-existing-code) - and
+   [renaming one of those functions](#renaming-one-of-those-functions-with-the-callers-listed-first),
+   or [surviving a rename that happened somewhere else](#when-the-rename-happened-somewhere-else)
 7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift) - what an opened file
    [reads like](#what-an-opened-file-reads-like---event-sheet-grammar-not-annotated-code), its
    [objects](#the-objects-of-an-opened-file---what-they-are-and-where-you-find-them), a whole
@@ -398,6 +400,42 @@ func _ready() -> void:
 
 A typed reference like this is the most robust way to call in. (Don't hand-edit the generated `.gd` - it's
 overwritten on recompile; the sheet is the source of truth.)
+
+### Renaming one of those functions, with the callers listed first
+
+Once other files call a function by name, renaming it is not editing it. So it is a separate item:
+right-click a function's own head row and choose **Rename…**, and the first thing you see is not a
+text field with an OK button, it is the list.
+
+- **What will be rewritten** - every row of this sheet that says the name, twice over: the words it
+  says now beside the words it would say.
+- **Named and left exactly as they are** - every other file in the project that calls it by that
+  name, with how many of its rows do. `enemy.gd - 4 row(s)`. Those are **not** touched, and the
+  heading says why: the callers index answers *by name*, so a file listed there may be calling a
+  different function that happens to share the spelling, and the index cannot tell. Being plainly
+  approximate about who calls something costs you one glance; being quietly wrong about it costs you
+  a broken game. A rename that claimed "6 rows in 3 sheets" and touched four would be worse than
+  saying nothing.
+
+The button behind that list is the only place the rename happens, it goes through the sheet's own
+undo funnel, and one Ctrl+Z takes all of it back.
+
+### When the rename happened somewhere else
+
+The other direction is the one that used to bite: somebody renames the function in the script
+editor, and the rows that called it are left pointing at a name nothing answers to. Such a row keeps
+its words and still compiles to the line it always compiled to - it wears the quiet amber state, and
+the sentence appears in the help strip under the selected row and in the Doctor's **Renames**
+section. Nothing appears in the sheet itself.
+
+The "did you mean" beside it is **evidence, never a guess**. It is offered only when the file's own
+last save shows the old name going out and one name coming in - one save, one file, one swap. A
+near name that was already in the file before the save did not arrive and is never offered; a save
+that brought several names is answered only if exactly one of them is a near spelling; a save that
+proved nothing leaves a plainly amber row with no door at all, and you type the name into the cell.
+And because the evidence is a file changing under a running editor, a rename made while the editor
+was closed - a branch checkout, a pull - is always the plain-amber case. That is the correct answer
+rather than a gap: the evidence genuinely is not there.
 
 ---
 
