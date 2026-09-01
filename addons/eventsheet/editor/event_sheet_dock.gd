@@ -191,10 +191,15 @@ var _status_label: Label = null
 ## The status bar's right half: "event 4 of 61 · line 38" for the selected row.
 var _row_address_label: Label = null
 ## THE SELECTED ROW'S HELP STRIP. A row in the quiet amber state says nothing in the sheet; this is
-## where its sentence and its one door are read, and only while that row is selected. Hidden the rest
+## where its sentence and its doors are read, and only while that row is selected. Hidden the rest
 ## of the time, which is nearly always - a button that can never do anything is worse than no button.
+##
+## Most findings offer ONE door. A row whose verb the vocabulary no longer has is the one that offers
+## two, because the two answers are genuinely different decisions - pick the verb that stands there
+## now, or hold the line exactly as written - and neither of them is the obvious one.
 var _row_help_label: Label = null
 var _row_help_button: Button = null
+var _row_help_button_second: Button = null
 ## The finding the door acts on, held only between the selection that showed it and the click that
 ## answers it.
 var _row_help_finding: Dictionary = {}
@@ -361,6 +366,7 @@ var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDia
 var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
 var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
 var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdoptDialog.new()  # row ▸ Adopt behavior…: preview-first swap of a hand-written pattern for the shipped one (dock/pattern_adopt_dialog.gd)
+var _keep_as_code_dialog: EventSheetKeepAsCodeDialog = EventSheetKeepAsCodeDialog.new()  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
 var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
@@ -481,6 +487,7 @@ func _init() -> void:
 	# suite drives them on a fresh .new() editor before _ready, so they are wired here with the rest.
 	_variable_retype_dialog.init(self)
 	_pattern_adopt_dialog.init(self)
+	_keep_as_code_dialog.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
 	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
@@ -7182,6 +7189,8 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 		return
 	_row_help_label.visible = false
 	_row_help_button.visible = false
+	if _row_help_button_second != null:
+		_row_help_button_second.visible = false
 	if row_data == null or _current_sheet == null:
 		return
 	# The findings were joined onto the row when the sheet was built - one join, read back here, so
@@ -7206,6 +7215,12 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	var label: String = str(_row_help_finding.get("fix_label", ""))
 	_row_help_button.text = label
 	_row_help_button.visible = not label.is_empty()
+	# The second door, when the finding has one. Only the gone-verb finding does, and it does because
+	# its two answers are different decisions rather than a fix and a way of declining one.
+	var second: String = str(_row_help_finding.get("second_fix_label", ""))
+	if _row_help_button_second != null:
+		_row_help_button_second.text = second
+		_row_help_button_second.visible = not second.is_empty()
 
 
 ## The muted half of the same strip: "newer spelling: Go to state", for a selected row whose verb has
@@ -7233,6 +7248,9 @@ func apply_selected_row_fix() -> void:
 	if str(finding.get("family", "")) == ViewportRowBuilder.FINDINGS_COLLISIONS:
 		apply_collision_fix(finding)
 		return
+	if str(finding.get("fix", "")) == EventSheetMigrationFindings.FIX_SEE_REPLACEMENT:
+		see_what_replaced_it(finding)
+		return
 	# The row the fix will rewrite is named by its LANE and SLOT rather than held: the fix runs
 	# through the undo funnel, and the funnel replaces resources as it commits.
 	_apply_finding_note_fix(str(finding.get("fix", "")), str(finding.get("subject", "")), {
@@ -7244,6 +7262,44 @@ func apply_selected_row_fix() -> void:
 		"variable_note_index": int(finding.get("index", -1)),
 		"variable_note_param": str(finding.get("param", ""))
 	})
+
+
+## The strip's SECOND door, which only the gone-verb finding has. It is a separate button rather than
+## a menu on the first, because the two answers are different decisions and a reader deciding between
+## them should be able to see both words at once.
+func apply_selected_row_second_fix() -> void:
+	var finding: Dictionary = _row_help_finding
+	if str(finding.get("second_fix", "")) != EventSheetMigrationFindings.FIX_KEEP_AS_CODE:
+		return
+	_keep_as_code_dialog.open(finding)
+
+
+## "See what replaced it". A door, not a fix: which verb stands where the old one did is the reader's
+## call, so this opens the ordinary picker over the row and stops there. Nothing is written, and the
+## picker's own Replace path makes whatever change follows - one writer for every re-pick in the
+## editor, rather than a second one that only migrations use.
+##
+## The picker opens AT the forwarding address when the vocabulary carries one, and on the words of
+## the old verb when it does not, so the list is already near the answer either way.
+func see_what_replaced_it(finding: Dictionary) -> void:
+	var event_row: EventRow = finding.get("event", null) as EventRow
+	var slot: int = int(finding.get("index", -1))
+	if event_row == null or slot < 0 or _ace_picker == null:
+		return
+	var lane: String = str(finding.get("lane", ""))
+	var context: Dictionary = {"selected_resource": event_row, "ace_index": slot}
+	# Asked here rather than during the sweep that made the finding: answering it reflects every
+	# installed pack, which is a fine price for a button somebody pressed and a terrible one for a
+	# walk that runs every time a sheet is drawn.
+	var replacement: String = EventSheetMigrationFindings.replacement_key_of(
+		str(finding.get("from", "")))
+	if replacement.is_empty():
+		context["search_seed"] = EventSheetMigrationFindings.near_names(
+			str(finding.get("subject", "")))
+	else:
+		context["preselect_ace_id"] = EventForgeSuccessors.split_key(replacement)[1]
+	_ace_picker.open("replace_condition" if lane == "condition" else "replace_action",
+		false, event_row, context)
 
 
 ## One collision finding's door, wherever it was clicked from - the row's help strip, or the chip in

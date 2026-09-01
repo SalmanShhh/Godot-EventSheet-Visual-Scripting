@@ -31,11 +31,14 @@ static func _test_the_record() -> bool:
 	# THE LAW, pinned: a headless run has not edited anything, so it writes nothing. Every test in
 	# this suite compiles sheets, and none of them may leave a project.godot behind.
 	ok = _check("a run with no editor writes no record", EventForgeVocabularyRecord.stamp(), false) and ok
-	ok = _check("the band facts carry the count and the recorded version",
+	ok = _check("the band facts carry the counts and the recorded version",
 		EventForgeVocabularyRecord.band_facts(3),
-		{"count": 3, "since": EventForgeVocabularyRecord.recorded()}) and ok
-	ok = _check("and a negative count is no count", EventForgeVocabularyRecord.band_facts(-2),
-		{"count": 0, "since": EventForgeVocabularyRecord.recorded()}) and ok
+		{"count": 3, "asking": 0, "since": EventForgeVocabularyRecord.recorded()}) and ok
+	ok = _check("including how many rows hold a verb the vocabulary no longer has at all",
+		EventForgeVocabularyRecord.band_facts(3, 2),
+		{"count": 3, "asking": 2, "since": EventForgeVocabularyRecord.recorded()}) and ok
+	ok = _check("and a negative count is no count", EventForgeVocabularyRecord.band_facts(-2, -1),
+		{"count": 0, "asking": 0, "since": EventForgeVocabularyRecord.recorded()}) and ok
 	return ok
 
 
@@ -57,6 +60,21 @@ static func _test_the_band_reading() -> bool:
 	# One counting line, and only one. The sentences and the doors belong elsewhere.
 	ok = _check("the band is one line",
 		EventForgeVocabularyRecord.band_reading({"count": 9, "since": "0.14.0"}).contains("\n"), false) and ok
+	# A row holding a verb the vocabulary no longer has is the only half anybody must act on, so it
+	# leads - and the version goes unsaid, because "how old are these words" is not the question
+	# somebody with a gone verb is asking.
+	ok = _check("a question leads, and the reassurance follows it",
+		EventForgeVocabularyRecord.band_reading({"count": 12, "asking": 2, "since": "0.14.0"}),
+		"2 rows ask you - 12 migrate cleanly") and ok
+	ok = _check("in the singular on both halves",
+		EventForgeVocabularyRecord.band_reading({"count": 1, "asking": 1, "since": ""}),
+		"1 row asks you - 1 migrates cleanly") and ok
+	ok = _check("and nothing to migrate cleanly leaves the question standing alone",
+		EventForgeVocabularyRecord.band_reading({"count": 0, "asking": 2, "since": "0.14.0"}),
+		"2 rows ask you") and ok
+	ok = _check("the two-count band is still one line",
+		EventForgeVocabularyRecord.band_reading({"count": 12, "asking": 2, "since": ""}).contains("\n"),
+		false) and ok
 	return ok
 
 
@@ -78,6 +96,15 @@ static func _test_the_band_seam() -> bool:
 	ok = _check("it reads after the sheet's own lines",
 		Array(EventSheetHeadBands.ORDER).find(EventSheetHeadBands.BAND_MIGRATION) \
 			> Array(EventSheetHeadBands.ORDER).find(EventSheetHeadBands.BAND_INCLUDE), true) and ok
+	# And still exactly one band when the sheet also holds rows whose verb is gone: two counts, one
+	# line, one band. A second band for the second count would be two things to read at the head.
+	facts["migration"] = {"count": 12, "asking": 2, "since": "0.14.0"}
+	var asking_bands: Array[Dictionary] = EventSheetHeadBands.bands(facts)
+	ok = _check("two counts still grow exactly one band",
+		_band_kinds(asking_bands).count(EventSheetHeadBands.BAND_MIGRATION), 1) and ok
+	ok = _check("whose words put the question first",
+		str(_band_of(asking_bands, EventSheetHeadBands.BAND_MIGRATION).get("value", "")),
+		"2 rows ask you - 12 migrate cleanly") and ok
 	return ok
 
 

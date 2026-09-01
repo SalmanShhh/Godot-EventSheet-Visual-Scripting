@@ -5884,3 +5884,19 @@ newer spelling: %s,écriture plus récente : %s
 %d rows have a newer spelling,%d lignes ont une écriture plus récente
 "1 row has a newer spelling, since %s","1 ligne a une écriture plus récente, depuis %s"
 "%d rows have a newer spelling, since %s","%d lignes ont une écriture plus récente, depuis %s"
+%s no longer has this verb.,%s n'a plus ce verbe.
+"The row still reads ""%s"" and still compiles to %s, because both were written onto it when it was added - what it has lost is the vocabulary that could edit or explain it.","La ligne se lit toujours ""%s"" et compile toujours vers %s, car les deux y ont ete inscrits au moment de son ajout - ce qu'elle a perdu, c'est le vocabulaire capable de la modifier ou de l'expliquer."
+"See what replaced it to pick the verb that stands there now, or keep it as code to hold the line exactly as it is.","Voyez ce qui l'a remplacee pour choisir le verbe qui se trouve la aujourd'hui, ou gardez-la comme code pour conserver la ligne exactement telle quelle."
+See what replaced it,Voir ce qui l'a remplacee
+Keep as code,Garder comme code
+Kept as code when the vocabulary stopped offering %s.,Gardee comme code quand le vocabulaire a cesse de proposer %s.
+1 row asks you,1 ligne vous interroge
+%d rows ask you,%d lignes vous interrogent
+1 migrates cleanly,1 migre sans probleme
+%d migrate cleanly,%d migrent sans probleme
+"This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is.",Cette ligne ne peut pas etre gardee comme code sans changer ce que le fichier compile ; elle a donc ete laissee exactement telle quelle.
+This row is already written as code.,Cette ligne est deja ecrite comme du code.
+Kept as written: %s,Gardee telle quelle : %s
+"This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Cette ligne conserve la ligne vers laquelle elle compile deja, ecrite comme du code. Rien d'autre ne change dans le fichier, et elle se relit comme une ligne choisie si le vocabulaire retrouve un jour le verbe."
+Leave a comment above it,Laisser un commentaire au-dessus
+As it will be written,Telle qu'elle sera ecrite

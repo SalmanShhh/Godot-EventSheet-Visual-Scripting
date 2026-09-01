@@ -57,11 +57,16 @@ static func stamp() -> bool:
 	return true
 
 
-## The head band's entry for one sheet: how many of its rows have a newer spelling, and the version
-## the record says they were written under. The COUNT is the caller's - it comes from the rows
-## themselves, which is what makes the band true in a project that has no record at all.
-static func band_facts(count: int) -> Dictionary:
-	return {"count": maxi(count, 0), "since": recorded()}
+## The head band's entry for one sheet: how many of its rows have a newer spelling, how many hold a
+## verb the vocabulary no longer has at all, and the version the record says they were written under.
+## Both COUNTS are the caller's - they come from the rows themselves, which is what makes the band
+## true in a project that has no record at all.
+##
+## The two are different questions and the band says so. A row with a newer spelling is a row nobody
+## has to touch; a row whose verb is gone is a row that will ask somebody a question the moment they
+## try to edit it. Counting them together would hide the second inside the first.
+static func band_facts(count: int, asking: int = 0) -> Dictionary:
+	return {"count": maxi(count, 0), "asking": maxi(asking, 0), "since": recorded()}
 
 
 ## The band's one line, or "" when nothing on this sheet has a newer spelling - which is every sheet
@@ -71,6 +76,22 @@ static func band_facts(count: int) -> Dictionary:
 ## row's help strip's, and the sheet itself stays exactly as it looks with nothing to migrate.
 static func band_reading(facts: Dictionary) -> String:
 	var count: int = int(facts.get("count", 0))
+	var asking: int = int(facts.get("asking", 0))
+	if asking > 0:
+		# THE QUESTION LEADS. A row holding a verb the vocabulary no longer has is the only half of
+		# this band anybody has to do something about, so it is said first and the rest is said as
+		# the reassurance it is. The version goes unsaid here on purpose: "since 0.14" answers "how
+		# old are these words", and that is not the question a reader with a gone verb is asking.
+		var asked: String = EventSheetL10n.translate("1 row asks you") if asking == 1 \
+			else EventSheetL10n.translate("%d rows ask you") % asking
+		# The two counts are over DISJOINT sets of rows: a verb that is gone is absent from the
+		# vocabulary, so nothing can carry a forwarding address for it. No subtraction, therefore -
+		# `count` is already only the rows that would migrate without asking anybody anything.
+		var clean: int = count
+		if clean <= 0:
+			return asked
+		return "%s - %s" % [asked, EventSheetL10n.translate("1 migrates cleanly") if clean == 1 \
+			else EventSheetL10n.translate("%d migrate cleanly") % clean]
 	if count <= 0:
 		return ""
 	var since: String = str(facts.get("since", "")).strip_edges()

@@ -5884,3 +5884,19 @@ newer spelling: %s,更新的写法：%s
 %d rows have a newer spelling,%d 行有更新的写法
 "1 row has a newer spelling, since %s",1 行有更新的写法，自 %s 起
 "%d rows have a newer spelling, since %s",%d 行有更新的写法，自 %s 起
+%s no longer has this verb.,%s 已不再提供这个动词。
+"The row still reads ""%s"" and still compiles to %s, because both were written onto it when it was added - what it has lost is the vocabulary that could edit or explain it.","这一行仍然读作""%s""，仍然编译为 %s，因为两者都在添加它时就写在了它身上 - 失去的只是能够编辑或解释它的词汇。"
+"See what replaced it to pick the verb that stands there now, or keep it as code to hold the line exactly as it is.",看看什么取代了它，选择如今站在那里的动词；或者把它保留为代码，让这一行保持原样。
+See what replaced it,看看什么取代了它
+Keep as code,保留为代码
+Kept as code when the vocabulary stopped offering %s.,在词汇不再提供 %s 时保留为代码。
+1 row asks you,1 行在问你
+%d rows ask you,%d 行在问你
+1 migrates cleanly,1 行可干净迁移
+%d migrate cleanly,%d 行可干净迁移
+"This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is.",这一行无法在不改变文件编译结果的情况下保留为代码，因此已让它保持原样。
+This row is already written as code.,这一行已经写成代码了。
+Kept as written: %s,按原样保留：%s
+"This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.",这一行把它本来就会编译成的那行代码原样写出来保留下来。文件里的其他内容都不变；如果词汇有朝一日重新拥有这个动词，它会再次读作一行选出来的行。
+Leave a comment above it,在上面留一条注释
+As it will be written,将被写成的样子

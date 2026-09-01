@@ -116,6 +116,7 @@ const FINDINGS_COLLISIONS := "collisions"
 const FINDINGS_LAYERS := "layers"
 const FINDINGS_SCENE_TRUST := "scene_trust"
 const FINDINGS_TOOL_EDITS := "tool_edits"
+const FINDINGS_MIGRATION := "migration"
 
 var _viewport: Control = null
 # The published verb whose body is being walked right now, or null at sheet level. Rows inside a
@@ -651,10 +652,13 @@ func build_head_band_rows(sheet: EventSheetResource, scaffold_rows: Array[EventR
 	# The half of the head that comes from the SCENE: what keeps this object in step, and which
 	# spawner can make it. Read, never stored, so a project with no scenes gains no bands at all.
 	head_facts.merge(EventSheetHeadBands.scene_facts(sheet), true)
-	# And the one fact the head reads out of the ROWS rather than out of the file or the scene: how
-	# many of them are written in a spelling the vocabulary has since replaced. Counted here, said as
-	# one line, and said NOWHERE else - the rows themselves stay exactly as they look.
-	head_facts["migration"] = EventForgeVocabularyRecord.band_facts(_rows_with_a_newer_spelling(sheet))
+	# And the two facts the head reads out of the ROWS rather than out of the file or the scene: how
+	# many of them are written in a spelling the vocabulary has since replaced, and how many hold a
+	# verb it no longer has at all. Counted here, said as one line, and said NOWHERE else - the rows
+	# themselves stay exactly as they look, wearing at most the quiet amber state.
+	head_facts["migration"] = EventForgeVocabularyRecord.band_facts(
+		_rows_with_a_newer_spelling(sheet),
+		EventSheetMigrationFindings.events_asking(_sheet_findings(FINDINGS_MIGRATION)))
 	for band: Dictionary in EventSheetHeadBands.bands(head_facts):
 		rows.append(_build_head_band_row(sheet, band, head_facts, description_source))
 	var add_text: String = EventSheetHeadBands.add_row_text(head_facts)
@@ -9188,6 +9192,17 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 				# label the sentence leads with.
 				_sheet_findings_cache[family] = EventSheetSceneTrustFindings.findings(sheet,
 					str(sheet.external_source_path) if sheet != null else "")
+			FINDINGS_MIGRATION:
+				# The rows whose verb the vocabulary no longer has. The corpus is the EDITOR'S OWN
+				# live registry rather than a reflected catalogue: it is the vocabulary this session
+				# is actually offering, it answers in constant time per row, and a sweep of a large
+				# sheet must never reflect a hundred packs to find out that nothing is missing.
+				_sheet_findings_cache[family] = EventSheetMigrationFindings.findings(sheet,
+					str(sheet.external_source_path) if sheet != null else "",
+					func(provider_id: String, ace_id: String) -> bool:
+						return _viewport != null \
+							and (_viewport._find_definition(provider_id, ace_id) != null
+								or ACERegistry.find_descriptor(provider_id, ace_id) != null))
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
 	return _sheet_findings_cache[family]
@@ -9218,6 +9233,8 @@ func _findings_about(event_row: EventRow) -> Array[Dictionary]:
 		EventSheetUndoableFindings.for_event(_sheet_findings(FINDINGS_TOOL_EDITS), event_row)))
 	about.append_array(_tagged(FINDINGS_SCENE_TRUST,
 		EventSheetSceneTrustFindings.for_event(_sheet_findings(FINDINGS_SCENE_TRUST), event_row)))
+	about.append_array(_tagged(FINDINGS_MIGRATION,
+		EventSheetMigrationFindings.for_event(_sheet_findings(FINDINGS_MIGRATION), event_row)))
 	return about
 
 
@@ -14179,6 +14196,13 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:
+		# THE LAST STORED READING FIRST. A row whose verb the installed vocabulary no longer has
+		# still says what it was written as, because the reading was baked onto the row when it was
+		# applied. Nothing else in the sheet marks it: the quiet amber state and the selected row's
+		# help strip carry that, and the row's own sentence stays exactly the sentence it was.
+		var stored: String = _stored_reading(condition, read_params)
+		if not stored.is_empty():
+			return stored
 		# Same registry-free reading the ACTION path gets: a reflected verb (method:<name>) must
 		# still read as words when the registry has no definition to offer right now. Without
 		# this a pack condition fell back to the raw id and the cell showed
@@ -14186,6 +14210,18 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		# lane a beginner reads first.
 		return _reflected_member_sentence(condition.ace_id, read_params)
 	return _format_display_translated(generated_definition, descriptor, read_params)
+
+
+## One row's stored reading, filled with its own values - what a row whose verb the installed
+## vocabulary no longer has says in the sheet. "" when the row has no stored reading, which is every
+## row applied before the reading was baked and every row whose verb is still here.
+##
+## The filling itself lives with the findings module that the whole state belongs to, so the sheet,
+## the receipt and the Doctor read one row's sentence exactly one way.
+func _stored_reading(ace: Resource, params_dict: Dictionary) -> String:
+	if ace == null:
+		return ""
+	return EventSheetMigrationFindings.reading_text(str(ace.get("display_text")), params_dict)
 
 
 ## A reflected `method:<name>` id as a readable sentence with the row's own values in call
@@ -14432,6 +14468,13 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var generated_definition: ACEDefinition = _viewport._find_definition(action.provider_id, action.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(action.provider_id, action.ace_id)
 	if generated_definition == null and descriptor == null:
+		# THE LAST STORED READING FIRST. A row whose verb the installed vocabulary no longer has
+		# still says what it was written as, because the reading was baked onto the row when it was
+		# applied. Nothing else in the sheet marks it: the quiet amber state and the selected row's
+		# help strip carry that, and the row's own sentence stays exactly the sentence it was.
+		var stored: String = _stored_reading(action, params_dict)
+		if not stored.is_empty():
+			return stored
 		# A reflected verb (method:<name>) must read as its sentence even when the registry has no
 		# definition to offer RIGHT NOW - reflected vocabulary is generated on demand, so a row can
 		# outlive any given registry build. Rows never need the registry to compile (their template

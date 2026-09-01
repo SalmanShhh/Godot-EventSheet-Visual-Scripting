@@ -5884,3 +5884,19 @@ newer spelling: %s,새로운 표현: %s
 %d rows have a newer spelling,%d개 행에 새로운 표현이 있습니다
 "1 row has a newer spelling, since %s","1개 행에 새로운 표현이 있습니다, %s 이후"
 "%d rows have a newer spelling, since %s","%d개 행에 새로운 표현이 있습니다, %s 이후"
+%s no longer has this verb.,%s 에 더 이상 이 동사가 없습니다.
+"The row still reads ""%s"" and still compiles to %s, because both were written onto it when it was added - what it has lost is the vocabulary that could edit or explain it.","행은 여전히 ""%s"" 로 읽히고 여전히 %s 로 컴파일됩니다. 둘 다 행을 추가할 때 함께 기록되었기 때문입니다. 잃어버린 것은 그것을 편집하거나 설명할 수 있는 어휘입니다."
+"See what replaced it to pick the verb that stands there now, or keep it as code to hold the line exactly as it is.","무엇이 대신 들어섰는지 보고 지금 그 자리에 있는 동사를 고르거나, 코드로 남겨 행을 지금 그대로 두세요."
+See what replaced it,무엇이 대신 들어섰는지 보기
+Keep as code,코드로 남기기
+Kept as code when the vocabulary stopped offering %s.,어휘가 %s 를 더 이상 제공하지 않게 되었을 때 코드로 남겼습니다.
+1 row asks you,1 개의 행이 묻고 있습니다
+%d rows ask you,%d 개의 행이 묻고 있습니다
+1 migrates cleanly,1 개는 깔끔하게 이전됩니다
+%d migrate cleanly,%d 개는 깔끔하게 이전됩니다
+"This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is.","이 행은 파일이 컴파일되는 결과를 바꾸지 않고는 코드로 남길 수 없어, 지금 그대로 두었습니다."
+This row is already written as code.,이 행은 이미 코드로 쓰여 있습니다.
+Kept as written: %s,쓰인 그대로 남겼습니다: %s
+"This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","이 행은 이미 컴파일되는 그 줄을 코드로 적어 그대로 지킵니다. 파일의 다른 부분은 바뀌지 않고, 어휘가 그 동사를 다시 갖게 되면 고른 행으로 다시 읽힙니다."
+Leave a comment above it,위에 주석 남기기
+As it will be written,이렇게 쓰입니다

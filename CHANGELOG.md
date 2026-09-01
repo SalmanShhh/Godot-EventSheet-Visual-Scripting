@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### A verb the vocabulary has lost, and the honest exit for it
+
+- **A row whose verb is gone keeps its last stored reading.** The display template a row was applied
+  under is now written onto the row beside its code template, so a sheet that outlives the pack it
+  was written against still says what it always said. Before this, a missing descriptor left the row
+  showing its raw id - `LightFlicker::FlickerLight` in the one lane a beginner reads first. Slots and
+  all, never a finished sentence, so the reading still follows the row when a value is edited.
+- **It still compiles, because the code was baked onto it too.** Nothing about such a row changes:
+  same id, same template, same values, same emitted line. Opening a sheet full of lost verbs and
+  saving it untouched reproduces the file byte for byte, and every question this feature asks -
+  the findings, the reading, the head band's count - is a question and writes nothing.
+- **In the sheet, the quiet amber and nothing else.** No block, no icon, no badge, no inline
+  sentence. The words live in the Doctor's new Migration section and in the help strip under the
+  selected row: "LightFlicker no longer has this verb", what the row still reads as, and what it
+  still compiles to.
+- **Two doors, because there are two honest answers.** *See what replaced it* opens the ordinary
+  picker over the row - at the forwarding address when the vocabulary carries one, on the words of
+  the old verb when it does not - and the reader chooses. *Keep as code* turns the row into the same
+  verbatim block every lift already falls back to.
+- **Keep as code shows the receipt first, and proves itself before it commits.** The dialog draws the
+  row as it reads now beside the block it becomes, offers a plain comment above the kept line ("The
+  old Flicker Light row, kept as written…") that one tick strikes out, and only then writes. The
+  sheet is compiled with the block in place before the edit lands - the code without the comment,
+  because the comment is a line the reader asked for - and if a single byte of it would move, the row
+  is left exactly as it is and the status line says so. One undo step; Ctrl+Z puts the picked row
+  back with its id, template and reading unharmed.
+- **The line comes from the compiler, not from a second emitter.** The kept line is produced by the
+  very call the compiler makes for that row, with the compiler's own arguments - the enclosing
+  "With node X:" scope and the behaviour host accessor carried down the walk. A row inside a scope
+  therefore keeps `$Enemy.flicker(0.4)` rather than a call on the wrong node.
+- **The block re-lifts by itself.** What is written is exactly the shape the lift tables read, so a
+  line kept as code today reads back as a picked row the day the vocabulary has the verb again.
+- **The head band counts both halves.** A sheet holding lost verbs now reads
+  `migration: 2 rows ask you - 12 migrate cleanly` - the question leads, the reassurance follows, and
+  the two counts are over different rows. A sheet with nothing lost keeps the line it already had.
+
 ### A verb that has moved says where it went
 
 - **The forwarding address, on the descriptor.** A superseded verb now carries where its newer

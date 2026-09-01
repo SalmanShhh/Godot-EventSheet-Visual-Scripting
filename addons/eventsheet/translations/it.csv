@@ -5884,3 +5884,19 @@ newer spelling: %s,dicitura più recente: %s
 %d rows have a newer spelling,%d righe hanno una dicitura più recente
 "1 row has a newer spelling, since %s","1 riga ha una dicitura più recente, da %s"
 "%d rows have a newer spelling, since %s","%d righe hanno una dicitura più recente, da %s"
+%s no longer has this verb.,%s non ha piu questo verbo.
+"The row still reads ""%s"" and still compiles to %s, because both were written onto it when it was added - what it has lost is the vocabulary that could edit or explain it.","La riga si legge ancora ""%s"" e compila ancora in %s, perche entrambe le cose le sono state scritte addosso quando e stata aggiunta - cio che ha perso e il vocabolario capace di modificarla o spiegarla."
+"See what replaced it to pick the verb that stands there now, or keep it as code to hold the line exactly as it is.","Guarda cosa l'ha sostituita per scegliere il verbo che oggi sta li, oppure tienila come codice per lasciare la riga esattamente com'e."
+See what replaced it,Guarda cosa l'ha sostituita
+Keep as code,Tieni come codice
+Kept as code when the vocabulary stopped offering %s.,Tenuta come codice quando il vocabolario ha smesso di offrire %s.
+1 row asks you,1 riga ti interroga
+%d rows ask you,%d righe ti interrogano
+1 migrates cleanly,1 migra senza problemi
+%d migrate cleanly,%d migrano senza problemi
+"This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is.","Questa riga non puo essere tenuta come codice senza cambiare cio in cui il file compila, quindi e stata lasciata esattamente com'e."
+This row is already written as code.,Questa riga e gia scritta come codice.
+Kept as written: %s,Tenuta com'era scritta: %s
+"This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Questa riga conserva la riga in cui gia compila, scritta come codice. Nient'altro nel file cambia, e torna a leggersi come una riga scelta se il vocabolario riavra il verbo."
+Leave a comment above it,Lascia un commento sopra
+As it will be written,Come verra scritta

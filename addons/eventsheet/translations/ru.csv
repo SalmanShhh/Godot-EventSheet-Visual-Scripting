@@ -5884,3 +5884,19 @@ newer spelling: %s,новое написание: %s
 %d rows have a newer spelling,%d строк имеют новое написание
 "1 row has a newer spelling, since %s","1 строка имеет новое написание, с %s"
 "%d rows have a newer spelling, since %s","%d строк имеют новое написание, с %s"
+%s no longer has this verb.,%s больше не содержит этот глагол.
+"The row still reads ""%s"" and still compiles to %s, because both were written onto it when it was added - what it has lost is the vocabulary that could edit or explain it.","Строка по-прежнему читается как ""%s"" и по-прежнему компилируется в %s, потому что и то и другое было записано в неё при добавлении - утрачен лишь словарь, способный её изменить или объяснить."
+"See what replaced it to pick the verb that stands there now, or keep it as code to hold the line exactly as it is.","Посмотрите, что пришло на смену, чтобы выбрать глагол, который стоит там сейчас, или оставьте её кодом, чтобы сохранить строку ровно такой, какая она есть."
+See what replaced it,"Посмотреть, что пришло на смену"
+Keep as code,Оставить кодом
+Kept as code when the vocabulary stopped offering %s.,"Оставлено кодом, когда словарь перестал предлагать %s."
+1 row asks you,1 строка вас спрашивает
+%d rows ask you,%d строк вас спрашивают
+1 migrates cleanly,1 переносится без вопросов
+%d migrate cleanly,%d переносятся без вопросов
+"This row cannot be kept as code without changing what the file compiles to, so it has been left exactly as it is.","Эту строку нельзя оставить кодом, не изменив того, во что компилируется файл, поэтому она оставлена ровно такой, какая была."
+This row is already written as code.,Эта строка уже написана кодом.
+Kept as written: %s,Оставлено как написано: %s
+"This row keeps the line it already compiles to, written out as code. Nothing else in the file changes, and it reads back as a picked row again if the vocabulary ever has the verb once more.","Эта строка сохраняет ту строку, в которую уже компилируется, выписанную кодом. Больше в файле ничего не меняется, и она снова прочитается как выбранная строка, если словарь когда-нибудь вернёт себе этот глагол."
+Leave a comment above it,Оставить комментарий сверху
+As it will be written,Как это будет записано

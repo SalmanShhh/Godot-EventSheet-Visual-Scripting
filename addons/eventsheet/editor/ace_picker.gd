@@ -1059,7 +1059,10 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 		_show_classic(false)
 	var title: String = _title_for_mode(mode, signals_only)
 	_window.title = title
-	_search.text = ""
+	# A caller may open the picker ALREADY SEARCHING - the words of a verb the vocabulary no longer
+	# has, so the list lands on the nearest things to it rather than on the whole vocabulary. It is
+	# only a search: the field is editable, clearing it shows everything, and nothing is preselected.
+	_search.text = str(_context.get("search_seed", "")).strip_edges()
 	_hint.text = _build_hint_text(mode, signals_only)
 	_selected_definition = null
 	if _add_button != null:

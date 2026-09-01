@@ -760,6 +760,9 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
 	condition.params = _resolve_definition_params(definition, params)
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	condition.codegen_template = _baked_template_for(definition)
+	# And the reading beside it, for the same reason: a row must still say what it was written as
+	# when the vocabulary it came from is no longer installed.
+	condition.display_text = baked_reading_for(definition)
 	# Stateful conditions (Every X Seconds…): bake a fresh uid into the member/prelude/
 	# on-true/template so every applied instance owns its own state.
 	var member_template: String = str(definition.metadata.get("member_template", ""))
@@ -783,6 +786,9 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	action.params = _resolve_definition_params(definition, params)
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	action.codegen_template = _baked_template_for(definition)
+	# And the reading beside it, for the same reason: a row must still say what it was written as
+	# when the vocabulary it came from is no longer installed.
+	action.display_text = baked_reading_for(definition)
 	# Multi-statement action templates declare locals - bake a fresh uid per instance.
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", _dock._fresh_uid_token())
@@ -801,6 +807,17 @@ func _baked_template_for(definition: ACEDefinition) -> String:
 	# The owned-instance synthesis lives ON the definition so the picker and expression
 	# previews show exactly what this bake produces.
 	return definition.instance_backed_template()
+
+
+## The reading baked onto an applied ACE: the definition's display TEMPLATE, slots and all, or its
+## display name when it has no template. Never the filled-in sentence - a stored sentence would stop
+## following the row the first time a parameter was edited, and the whole point of storing it is that
+## it stays true. Static and pure, so the canvas and the tests read it the same way.
+static func baked_reading_for(definition: ACEDefinition) -> String:
+	if definition == null:
+		return ""
+	var template: String = str(definition.metadata.get("display_template", "")).strip_edges()
+	return template if not template.is_empty() else definition.display_name
 
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:

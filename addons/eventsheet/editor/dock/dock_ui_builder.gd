@@ -392,6 +392,15 @@ func build_ui() -> void:
 	_dock._row_help_button.visible = false
 	_dock._row_help_button.pressed.connect(_dock.apply_selected_row_fix)
 	status_strip.add_child(_dock._row_help_button)
+	# The second door, for the one finding that has two genuinely different answers. It is the same
+	# button in every way except which of the finding's two doors it opens, so a strip that shows
+	# both reads as one offer with two answers rather than as two offers.
+	_dock._row_help_button_second = Button.new()
+	_dock._row_help_button_second.name = "EventSheetRowHelpSecond"
+	_dock._row_help_button_second.flat = true
+	_dock._row_help_button_second.visible = false
+	_dock._row_help_button_second.pressed.connect(_dock.apply_selected_row_second_fix)
+	status_strip.add_child(_dock._row_help_button_second)
 	# Live edit: the ⟳ offer sits between the message and the address, hidden unless a game is
 	# running and this sheet has an unapplied edit - a button that can never do anything is worse
 	# than no button.

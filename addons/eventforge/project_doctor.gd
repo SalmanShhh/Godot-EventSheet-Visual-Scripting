@@ -166,6 +166,10 @@ static func run() -> Dictionary:
 	# it asks EventSheetDocCoverage, which is also what the help-bundle builder asks, so the page and
 	# the build output can never say different things about the same guide.
 	EventSheetDocsDoctor.ensure_registered()
+	# The Migration section: the rows in this project holding a verb the installed vocabulary no
+	# longer has. Same seam, same reason - and the ONLY place those words appear, because the sheet
+	# itself stays quiet and puts such a row into the amber state and nothing else.
+	EventSheetMigrationDoctor.ensure_registered()
 	# Ship It rides the same seam: whether the game can leave the building is a question about the
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.
