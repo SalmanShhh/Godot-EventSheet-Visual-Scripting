@@ -153,7 +153,9 @@ func _stored_choice() -> Variant:
 	var settings: Object = _editor_settings()
 	if settings == null:
 		return null
-	var stored: Variant = settings.call("get_project_metadata", "eventsheets", _META_KEY, null)
+	# The default must not be null: a missing key with a null default prints an editor ERROR.
+	# "" is the no-choice sentinel; only a stored bool counts as an explicit choice.
+	var stored: Variant = settings.call("get_project_metadata", "eventsheets", _META_KEY, "")
 	return stored if stored is bool else null
 
 

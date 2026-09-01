@@ -3109,7 +3109,7 @@ func _open_batch_param_edit() -> void:
 		if id >= 0 and id < groups.size():
 			_open_batch_param_group(groups[id]))
 	add_child(_batch_edit_menu)
-	_batch_edit_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i.ONE))
+	_batch_edit_menu.popup(Rect2i(Vector2i(get_screen_transform() * get_local_mouse_position()), Vector2i.ONE))
 
 
 func _open_batch_param_group(group: Dictionary) -> void:

@@ -249,7 +249,7 @@ func _run_from_sheet() -> void:
 	for scene_path: String in scenes:
 		_run_scene_menu.add_item(scene_path.get_file())
 		_run_scene_menu.set_item_metadata(_run_scene_menu.item_count - 1, scene_path)
-	_run_scene_menu.popup(Rect2i(Vector2i(_dock.get_global_mouse_position()), Vector2i(0, 0)))
+	_run_scene_menu.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i(0, 0)))
 
 
 ## The script scenes actually attach for this sheet: GDScript-backed sheets ARE their

@@ -23,7 +23,7 @@ var _template_menu: PopupMenu = null
 
 func open_menu() -> void:
 	_build_template_menu_items()
-	_template_menu.popup(Rect2i(Vector2i(_dock.get_global_mouse_position()), Vector2i(0, 0)))
+	_template_menu.popup(Rect2i(Vector2i(_dock.get_screen_transform() * _dock.get_local_mouse_position()), Vector2i(0, 0)))
 
 ## Rebuilt on every open so project templates (res://eventsheet_templates/, ids 100+)
 ## appear the moment a .tres lands in the folder - same zero-config convention as
