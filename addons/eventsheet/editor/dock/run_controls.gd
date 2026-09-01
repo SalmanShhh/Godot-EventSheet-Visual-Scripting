@@ -40,9 +40,17 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Registers a button so the strip can relabel it when the game starts and stops.
+## Registers a button so the strip can relabel it when the game starts and stops. Two strips carry
+## these buttons (the toolbar, and Simple mode's Add toolbar), so each id keeps EVERY adopter - a
+## single slot per id let the second strip steal the first one's relabel, and the toolbar's Preview
+## button never became Stop. Freed buttons are pruned on the way in.
 func adopt(button_id: String, button: Button) -> void:
-	_buttons[button_id] = button
+	var adopters: Array = []
+	for known: Variant in _buttons.get(button_id, []):
+		if is_instance_valid(known) and known != button:
+			adopters.append(known)
+	adopters.append(button)
+	_buttons[button_id] = adopters
 
 
 ## The label a button wears right now: its resting name, or what it does while a game is running.
@@ -60,9 +68,9 @@ static func label_for(button_id: String, running: bool) -> String:
 func refresh() -> void:
 	var running: bool = is_playing()
 	for button_id: Variant in _buttons:
-		var button: Button = _buttons[button_id]
-		if button != null:
-			button.text = EventSheetL10n.translate(label_for(str(button_id), running))
+		for button: Variant in _buttons[button_id]:
+			if is_instance_valid(button):
+				(button as Button).text = EventSheetL10n.translate(label_for(str(button_id), running))
 
 
 func is_playing() -> bool:
