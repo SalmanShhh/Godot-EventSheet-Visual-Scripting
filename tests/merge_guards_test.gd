@@ -35,6 +35,7 @@ static func run() -> bool:
 	var ok: bool = _test_the_mint_consults_the_index()
 	ok = _test_the_duplicate_is_named() and ok
 	ok = _test_the_remint_is_one_token() and ok
+	ok = _test_the_remint_shows_its_receipt_first() and ok
 	ok = _test_a_marker_file_opens_blocked() and ok
 	ok = _test_the_bytes_survive() and ok
 	ok = _test_the_endings_note() and ok
@@ -159,6 +160,47 @@ static func _test_the_remint_is_one_token() -> bool:
 		EventSheetLocalTokens.CHECK_DUPLICATE_TOKEN, "duplicate-local-token") and ok
 	ok = _check("and the finding offers exactly one door",
 		_offered(finding), PackedStringArray(["remint_token|Re-mint one of them"])) and ok
+	return ok
+
+
+## THE CHIP IS A DOOR, NOT AN EDIT. Re-minting is a small repair, but it is still a repair, and every
+## other door in this pass draws before it acts. What is shown has to be what lands DOWN TO THE
+## DIGITS - a receipt promising one name while the button writes another would be a receipt about a
+## different edit - so the name is minted once, while the receipt is drawn, and replayed by the
+## button.
+static func _test_the_remint_shows_its_receipt_first() -> bool:
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(_sheet_with_two_rows_sharing_a_token())
+	var ok: bool = _check("the chip opens the receipt", dock.open_remint_receipt(DOUBLED_TOKEN), true)
+	# Drawn, and NOTHING has moved: the sheet still declares the token twice.
+	ok = _check("and drawing it changes nothing at all",
+		EventSheetLocalTokens.rows_carrying(dock.get_current_sheet(), DOUBLED_TOKEN).size(), 2) and ok
+	var drawn: PackedStringArray = EventSheetRemintReceipt.receipt_lines(dock._remint_receipt._drawn)
+	ok = _check("the receipt is one line for the one row it would rename", drawn.size(), 1) and ok
+	var promised: String = str(dock._remint_receipt._drawn[0].get("after", ""))
+	ok = _check("naming the name it declares now and the name it would declare",
+		drawn[0], "__peer_%s → %s (4 field(s) in this row)" % [DOUBLED_TOKEN, promised]) and ok
+	ok = _check("and the sentence above it says what is being repaired and what is not",
+		EventSheetRemintReceipt.summary_text(DOUBLED_TOKEN, dock._remint_receipt._drawn),
+		"Two rows in this sheet declare __%s, which is a file Godot will not parse. The 1 row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back." % DOUBLED_TOKEN) and ok
+	# THE BUTTON, and it writes the digits that were read.
+	dock._remint_receipt.confirm()
+	var second: ACECondition = (dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition
+	ok = _check("the button writes the very name the receipt promised",
+		second.member_declaration, "var %s := 0.0" % promised) and ok
+	ok = _check("and one Ctrl+Z puts it back", true, true) and ok
+	dock._undo_redo_adapter.undo()
+	var back: ACECondition = (dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition
+	ok = _check("with the name it had", back.member_declaration,
+		"var __peer_%s := 0.0" % DOUBLED_TOKEN) and ok
+	# And with nothing open the chip is still a door rather than an edit.
+	var answered: Dictionary = EventSheetQuickFixes.apply("remint_token",
+		{"check": EventSheetLocalTokens.CHECK_DUPLICATE_TOKEN, "subject": DOUBLED_TOKEN,
+			"path": "res://somewhere_else.gd"}, {"dock": dock})
+	ok = _check("a chip on a line about another file writes nothing",
+		answered["ok"], false) and ok
+	dock.free()
 	return ok
 
 

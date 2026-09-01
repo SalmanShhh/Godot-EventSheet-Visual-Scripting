@@ -5947,3 +5947,11 @@ Yours:,你的：
 The new version:,新版本：
 "%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 个文件采用了新版本，%d 个被移除，你的 %d 个被保留。%d 个先进入了备份环。"
 "This version publishes the same conditions, actions and expressions as the one you have.","该版本发布的条件、动作和表达式与你现有的版本相同。"
+%s → %s (%d field(s) in this row),%s → %s（此行的 %d 个字段）
+"Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.",本表中有两行都声明了 __%s，这样的文件 Godot 无法解析。下面的 %d 行会获得自己的名字。两行说的话完全不变，一次 Ctrl+Z 就能把名字改回来。
+Re-mint duplicated local,重铸重复的局部变量
+Re-mint It,重铸
+What will be renamed,将被重命名的内容
+Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,打开的表中已没有任何地方重复声明 __%s，另一份可能已经重铸过了。
+"%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.",在本表中 %s 现在是 %s，两行读起来完全不变，Ctrl+Z 可把名字改回。
+"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",回执打开期间本表发生了变化，因此没有重写任何内容 - 以下是它现在的内容。

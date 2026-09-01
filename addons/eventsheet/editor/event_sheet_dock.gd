@@ -372,6 +372,7 @@ var _pattern_adopt_dialog: EventSheetPatternAdoptDialog = EventSheetPatternAdopt
 var _keep_as_code_dialog: EventSheetKeepAsCodeDialog = EventSheetKeepAsCodeDialog.new()  # the gone-verb strip's second door: the row held as the verbatim block, receipt and byte gate first (dock/keep_as_code_dialog.gd)
 var _rename_receipt: EventSheetRenameReceipt = EventSheetRenameReceipt.new()  # Rename on a function's own row, and the outside-rename door: every row and file listed before anything moves (dock/rename_receipt.gd)
 var _migrate_dialog: EventSheetMigrateDialog = EventSheetMigrateDialog.new()  # the head band's migration count: the receipt for every row with a newer spelling, and the one place Apply exists (dock/migrate_dialog.gd)
+var _remint_receipt: EventSheetRemintReceipt = EventSheetRemintReceipt.new()  # the Doctor's Re-mint chip: the two names shown before either of them moves (dock/remint_receipt.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
 var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
@@ -495,6 +496,7 @@ func _init() -> void:
 	_keep_as_code_dialog.init(self)
 	_rename_receipt.init(self)
 	_migrate_dialog.init(self)
+	_remint_receipt.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
 	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
@@ -7311,6 +7313,15 @@ func apply_selected_row_second_fix() -> void:
 ## line it writes today beside the one it would write - and its button is the only Apply there is.
 func open_migrate_dialog() -> void:
 	_migrate_dialog.open()
+
+
+## The Doctor's Re-mint chip, pressed. Like every other door in this pass it opens a receipt rather
+## than making the edit: the two names are shown - the one the row declares now and the one it would
+## declare, digits and all - and the button behind them is the only place the rename happens. Returns
+## false when this sheet does not declare that token twice, so the chip can say where the gesture
+## lives instead of showing an empty window.
+func open_remint_receipt(token: String) -> bool:
+	return _remint_receipt.open(token)
 
 
 ## RENAME, from a function's own row. The receipt comes first: every row of this sheet that says the

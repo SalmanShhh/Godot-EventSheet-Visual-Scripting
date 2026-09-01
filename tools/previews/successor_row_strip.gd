@@ -1,10 +1,14 @@
 # Godot EventSheets - a row in the older spelling, and the one muted line that says so (preview module).
 #
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
-# The point of the picture is what is NOT in it. The first event uses the State Machine pack's Go to
-# state, which the object-state vocabulary has since superseded - and the row looks exactly like the
-# row under it, which uses nothing of the kind: no block, no icon, no badge, no amber, no inline
-# text. It still compiles to the same call it always did.
+# The point of the picture is what is NOT in it. The first event stands in for a row whose verb has
+# been superseded - and it looks exactly like the row under it, which uses nothing of the kind: no
+# block, no icon, no badge, no amber, no inline text. It still compiles to the same call it always
+# did.
+#
+# The hint is stamped on the row here rather than read out of the vocabulary, because the shipped
+# vocabulary carries no forwarding address today (the guide says why). The picture is about what the
+# SHEET does with one, which is nothing.
 #
 # The only place the sheet mentions it at all is the strip along the bottom, once the row is
 # selected, where it reads muted and offers no door: following a forwarding address is an edit
@@ -32,9 +36,11 @@ static func build(host: Window) -> Control:
 	# Select the older-spelling row, which is what makes the strip speak: the words are nowhere in
 	# the sheet, and there is nothing in the row that would have led a reader to look.
 	for row_data: EventRowData in dock._viewport._root_rows:
-		if not row_data.successor_hint.is_empty():
-			row_data.selected = true
-			dock._update_row_help_strip(row_data)
+		if row_data.successor_hint.is_empty():
+			row_data.successor_hint = "newer spelling: Go To State"
+		row_data.selected = true
+		dock._update_row_help_strip(row_data)
+		break
 	return dock
 
 

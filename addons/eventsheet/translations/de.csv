@@ -5947,3 +5947,11 @@ Yours:,Deine:
 The new version:,Die neue Version:
 "%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d Datei(en) haben die neue Version uebernommen, %d wurden entfernt, %d von deinen wurden behalten. %d gingen zuerst in den Sicherungsring."
 "This version publishes the same conditions, actions and expressions as the one you have.","Diese Version veroeffentlicht dieselben Bedingungen, Aktionen und Ausdruecke wie die, die du hast."
+%s → %s (%d field(s) in this row),%s → %s (%d Feld(er) in dieser Zeile)
+"Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.","Zwei Zeilen in diesem Blatt deklarieren __%s, und diese Datei liest Godot nicht ein. Die %d Zeile(n) unten bekommen einen eigenen Namen. Beide Zeilen sagen weiterhin genau dasselbe, und ein Ctrl+Z stellt den Namen wieder her."
+Re-mint duplicated local,Doppelte lokale Variable neu praegen
+Re-mint It,Neu praegen
+What will be renamed,Was umbenannt wird
+Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,Im geoeffneten Blatt deklariert nichts mehr __%s zweimal - die andere Kopie wurde vielleicht schon neu gepraegt.
+"%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","%s heisst in diesem Blatt jetzt %s - beide Zeilen lesen sich genau wie zuvor, und Ctrl+Z stellt den Namen wieder her."
+"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Dieses Blatt hat sich geaendert, waehrend der Beleg offen war, also wurde nichts umgeschrieben - hier steht, was es jetzt sagt."

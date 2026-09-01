@@ -48,6 +48,11 @@
   was applied without ever appearing in *What will be rewritten*. The button now compares the two as
   the receipts they draw and, when they differ, writes nothing, draws the window again on what the
   sheet says now, and says why.
+- **The Doctor's Re-mint chip shows its receipt first.** It used to make the edit on the click and
+  report it afterwards, which is a report rather than a receipt - and it was the one door in this
+  pass that did not draw before it acted. It now opens an ordinary dialog naming the row, the name
+  it declares now and the name it would declare, digits and all: the token is minted once while the
+  receipt is drawn and replayed by the button, so what is shown is what lands.
 
 ### Since 0.14, said once at the head
 

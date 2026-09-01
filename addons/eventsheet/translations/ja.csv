@@ -5947,3 +5947,11 @@ Yours:,あなたのもの:
 The new version:,新しいバージョン:
 "%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 個のファイルが新しいバージョンを取り込み、%d 個が削除され、あなたのもの %d 個が残されました。%d 個は先にバックアップリングへ入りました。"
 "This version publishes the same conditions, actions and expressions as the one you have.","このバージョンは、手元のものと同じ条件・アクション・式を公開します。"
+%s → %s (%d field(s) in this row),%s → %s (この行の %d 個のフィールド)
+"Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.",このシートの 2 行がどちらも __%s を宣言していて、これは Godot が解析できないファイルです。下の %d 行が独自の名前を受け取ります。どちらの行もまったく同じことを言い続け、Ctrl+Z 一回で名前は元に戻ります。
+Re-mint duplicated local,重複したローカルを打ち直す
+Re-mint It,打ち直す
+What will be renamed,名前が変わるもの
+Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,開いているシートで __%s を二度宣言しているものはもうありません。もう一方はすでに打ち直されたのかもしれません。
+"%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.",このシートで %s は %s になりました。どちらの行も読み方はまったく同じで、Ctrl+Z で名前は戻ります。
+"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",控えを開いている間にこのシートが変わったため、何も書き換えていません。いま何と言っているかを示します。

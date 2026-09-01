@@ -5947,3 +5947,11 @@ Yours:,La tuya:
 The new version:,La nueva version:
 "%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d archivo(s) tomaron la nueva version, %d se eliminaron, %d de los tuyos se conservaron. %d fueron antes al anillo de copias."
 "This version publishes the same conditions, actions and expressions as the one you have.","Esta version publica las mismas condiciones, acciones y expresiones que la que tienes."
+%s → %s (%d field(s) in this row),%s → %s (%d campo(s) en esta fila)
+"Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.","Dos filas de esta hoja declaran __%s, que es un archivo que Godot no analizara. La(s) %d fila(s) de abajo reciben un nombre propio. Ambas filas siguen diciendo exactamente lo mismo, y un Ctrl+Z devuelve el nombre."
+Re-mint duplicated local,Reacunar la local duplicada
+Re-mint It,Reacunar
+What will be renamed,Que se renombrara
+Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,Ya nada en la hoja abierta declara __%s dos veces: puede que la otra copia ya se haya reacunado.
+"%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","%s ahora es %s en esta hoja: ambas filas se leen exactamente igual, y Ctrl+Z devuelve el nombre."
+"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Esta hoja cambio mientras el recibo estaba abierto, asi que no se reescribio nada: esto es lo que dice ahora."

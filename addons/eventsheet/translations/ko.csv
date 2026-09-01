@@ -5947,3 +5947,11 @@ Yours:,내 것:
 The new version:,새 버전:
 "%d file(s) took the new version, %d were removed, %d of yours were kept. %d went into the backup ring first.","%d 개 파일이 새 버전을 가져왔고, %d 개가 삭제되었으며, 사용자의 %d 개가 유지되었습니다. %d 개는 먼저 백업 링에 들어갔습니다."
 "This version publishes the same conditions, actions and expressions as the one you have.","이 버전은 지금 가진 것과 같은 조건, 액션, 식을 게시합니다."
+%s → %s (%d field(s) in this row),%s → %s (이 행의 %d개 필드)
+"Two rows in this sheet declare __%s, which is a file Godot will not parse. The %d row(s) below get a name of their own. Both rows go on saying exactly what they say, and one Ctrl+Z puts the name back.","이 시트의 두 행이 모두 __%s 를 선언하고 있어 Godot 이 파싱하지 못하는 파일입니다. 아래 %d개 행이 자기만의 이름을 받습니다. 두 행 모두 하던 말을 그대로 하며, Ctrl+Z 한 번이면 이름이 되돌아갑니다."
+Re-mint duplicated local,중복된 지역 변수 다시 발급
+Re-mint It,다시 발급
+What will be renamed,이름이 바뀌는 것
+Nothing in the open sheet declares __%s twice any more - the other copy may already have been re-minted.,열린 시트에서 __%s 를 두 번 선언하는 것이 더 이상 없습니다. 다른 하나는 이미 다시 발급되었을 수 있습니다.
+"%s is now %s in this sheet - both rows read exactly as they did, and Ctrl+Z puts the name back.","이 시트에서 %s 가 이제 %s 입니다. 두 행 모두 읽히는 내용은 그대로이며, Ctrl+Z 로 이름이 되돌아갑니다."
+"This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",영수증이 열려 있는 동안 이 시트가 바뀌어 아무것도 다시 쓰지 않았습니다. 지금 내용은 다음과 같습니다.
