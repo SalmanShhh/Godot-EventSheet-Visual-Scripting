@@ -6,141 +6,46 @@ What changed in the build you have installed (v0.17.0), in the words the release
 
 ## Unreleased
 
-### The contracts, asked from a command line
+### A verb that has moved says where it went
 
-- **`tools/verify_sheets.gd` is the gate you put in front of a branch.** Four checks, each one
-  sentence of the standing contract spelled out rather than described: every file parses as valid
-  GDScript, every file round-trips byte for byte, no scope declares one baked local twice, and the
-  migration report holds no row waiting on a human. It reads, it never writes anything anywhere, and
-  it exits 0 or 1 - so it is a hook, a branch gate and a CI job without being any of them itself.
-- **A failure names the file, the line, and the place in the editor that shows the same thing.** The
-  line is printed in the shape every compiler prints one, so a terminal that turns those into links
-  does: `res://player.gd:41 [duplicate-local-token] Two rows both declare …`. Each ends by pointing
-  at the door that fixes it - the Doctor's Re-mint chip, the head band's Migrate…, the read-only
-  banner's Show the conflicts - because the fix is made there and not on a command line.
-- **The most specific reading of a broken file wins.** A file whose `_ready` declares one local twice
-  is exactly a file Godot refuses to parse, so asking the engine first would report a parse error
-  nobody can act on instead of the sentence that names the token and the chip that re-mints it. Merge
-  markers are read the same way, off the same guard that opens such a file read-only.
-- **Hand it paths and it reads exactly those.** Written the way git prints them or the way Godot
-  writes them, both being the same file - which is what makes the pre-commit hook in the guide two
-  lines long and, measured here, about a third of a second per staged file on top of the engine's
-  start. Hand it nothing and it reads the whole project. `--skip <prefix>` leaves out a folder of
-  deliberately broken fixtures, which is the one thing this gate cannot tell from a real file.
-- **The guide's team chapter, written against what actually ships.** Updates travel as commits
-  because `addons/` lives in the repository, so \"which version is everybody on\" is answered by
-  `git log`; the vocabulary record is one mergeable line of `project.godot`; a branch open for three
-  weeks merges as ordinary code, because a superseded verb keeps its template forever and no sheet is
-  ever rewritten on open or on save; and after the merge the head band counts again and offers
-  Migrate… on your schedule. This repository runs the recipe on itself in CI as the proof of it.
+- **The forwarding address, on the descriptor.** A superseded verb now carries where its newer
+  spelling lives - `.succeeded_by(\"Core::GoToState\", {\"next\": \"state\"})` on a built-in,
+  `## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` on a pack. The
+  map says three things and no more: the successor's id, what this row's parameters are called over
+  there, and a value for each parameter the old row never had - exactly enough for a rewritten row to
+  land complete. Set where the descriptor is built, never written into a cached one afterwards.
+- **Nothing about the old verb changes.** Same `ace_id`, same template, same place in the picker, and
+  every sheet already using it compiles byte for byte as it always did. This is not deprecation and
+  the two stay separate: a superseded verb can be a perfectly ordinary thing to have written, and a
+  deprecated one may have nowhere to go.
+- **Chains resolve to the end, cycles are a build error.** A verb superseded twice offers the verb a
+  reader would write today, with the renames composed through the middle. A chain that comes back on
+  itself, names a verb nobody has, renames a parameter neither side has, or leaves a successor
+  parameter unanswered fails `tools/audit_addons.gd` - which now prints `successors=N problems=N` -
+  rather than surprising anybody with a sheet open.
+- **Every address is auto-tested, like a lift entry.** One harness walks every successor map the
+  installed vocabulary carries, builds a row on the old spelling, applies the rewrite, and puts the
+  result through the real emitter and the real compiler: no unfilled slot, every renamed value
+  arrives, the same byte twice, and the compiled file carries that exact line.
+- **The first customer: the State Machine pack.** Its *Go to state* and *Current state is* now point
+  at the object-state *Go To State* and *Is In State*, each with the one parameter it renames. *Time
+  in state* and *On any state change* deliberately point nowhere - the newer family has no expression
+  twin, and a trigger for every switch cannot be forwarded to one that names a single state.
+- **In the sheet, nothing.** A row in the older spelling grows no block, no icon, no badge and no
+  amber: it is not wrong. Selecting it puts one muted line - `newer spelling: Go To State` - on the
+  help strip, with no door beside it.
 
-### The two quiet killers a merge leaves behind
+### Since 0.14, said once at the head
 
-- **A fresh token is drawn against the whole project, not just this session.** A verb whose template
-  declares a local of its own bakes an eight-digit token into the name - `__peer_a3f81c02` - and the
-  draw now excludes every token the project's own scripts already hold, not only the ones this editor
-  minted since it started. Two rows applied a year apart in two files can no longer land on the same
-  name. The point is not the collision it avoids, which was already vanishingly unlikely: it is that
-  a duplicate which does turn up cannot have come from ordinary work, so the Doctor can say what it
-  actually is. The listing is built once per session, dropped whenever the filesystem moves, and
-  never written anywhere.
-- **After a merge, a doubled token is named plainly.** Two rows declaring the same local in one
-  scope is a file Godot refuses to parse, at the worst possible moment. The Doctor now reads it off
-  the text first and says it in a sentence - *Two rows both declare `__peer_a3f81c02` in `_ready`
-  (lines 7, 10)* - and offers one chip: **Re-mint one of them**. The row that was already in the file
-  keeps the name it had, the row the merge brought in gets a name of its own across all of its baked
-  fields at once, both rows go on reading exactly as they did, and Ctrl+Z puts it back. It is an
-  ordinary undoable sheet edit, in the sheet's own history, and nothing is ever rewritten from the
-  report.
-- **A file with merge markers in it opens read-only, and totally.** Any marker line anywhere - not
-  only a well-formed region - now blocks the file: it opens so you can see it, with nothing lifted
-  into rows, Save refused, the unlock gone, and the head banner naming the marker lines. That is the
-  one banner this editor puts at the head of a sheet, and it is there because this is a state rather
-  than a finding: the file is not GDScript, so there is nothing to be quiet about. Finishing the
-  merge belongs in the tool you started it in, and the banner says so; the side-by-side reading of
-  the two versions is still one button away. The half-resolved files - a leftover `>>>>>>>`, an
-  interrupted rebase's `|||||||` - are the ones this catches that nothing caught before, and they are
-  exactly the ones that used to open as ordinary sheets and offer to save over somebody's merge.
-- **A Doctor note when git would rewrite your sheets' line endings.** Sheets are written with Unix
-  endings on every platform, which is Godot's own convention and what the byte-exact round-trip
-  assumes. A checkout with `core.autocrlf=true` and no `.gitattributes` line quietly undoes that:
-  every save becomes a whole-file diff and every merge becomes a conflict. The note says which of the
-  two it is looking at and shows the one line to commit - `*.gd text eol=lf`. This plugin never
-  writes git configuration, so that line is one a person puts in their own diff.
-
-### A pack update is a proposal
-
-- **Attaching a pack writes down what arrived.** Importing a pack from a .zip now hashes every file
-  it lands into a small `pack_manifest.json` inside the pack's own folder. A pack is copied into the
-  project on purpose - it is the project's code once it is there - and that is exactly why, a year
-  later, nothing can tell which of its files somebody edited. The content hash can. No mtimes, no
-  second copy kept somewhere, no guessing: the moment a file arrives is the only moment its arrival
-  state is knowable, so that is when it is written down.
-- **Update… shows the tri-list before a byte moves.** Point it at the new version's .zip and it
-  reads, and says: **Untouched** - the files that still hash to what arrived, which take the new
-  version and are LISTED rather than swept, because \"we replaced eleven files you never opened\" is
-  something a reader gets to see beforehand; **Yours** - every file that differs, one answer each,
-  *Keep mine* (always the default), *Take new*, or *See the diff*; and **what this version retires
-  and adds**.
-- **A line-ending difference is a difference.** A file re-saved with the other platform's line
-  endings does not hash to what arrived, so it is Yours - the honest answer to \"did this change?\" is
-  the one the bytes give. The row says *only the line endings differ* beside it, so taking the new
-  version is one click and not a mystery.
-- **A pack with no record is not a pack with no changes.** The packs that ship inside the plugin were
-  never attached, and neither was a folder somebody assembled by hand. Those put every file under
-  Yours and default every one of them to *Keep mine* - \"we do not know\" and \"you changed nothing\" are
-  different sentences, and only one of them is true.
-- **The vocabulary line is a registry diff, not prose.** The new `tools/dump_registry.gd` prints
-  every verb the project publishes as one sorted, stable text - key, type, category, params,
-  successor, template, tab separated, no timestamps and no machine paths - and the update dialog
-  derives its retires-and-adds section by diffing the two versions' dumps. Nothing is read off a
-  release note or a version number. The same tool and the same format are what the descriptor
-  identity gate compares before and after a refactor.
-- **Retiring a verb is still a forwarding address, never a deleted template.** A verb the new version
-  retires keeps its id, its template and its place in the picker, and every row written on it
-  compiles to exactly the line it always did. The row that mentions it opens the migrate dry run, one
-  click away, rather than asking for anything.
-- **The old version goes to the backup ring first.** Every file the update is about to overwrite or
-  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands, so
-  an update is as reversible as any other edit. The ring now keeps a pack's guide, icon and tables
-  too, not only its scripts.
-- **Asking writes nothing.** Reading a new version, classifying every file and diffing both
-  vocabularies leaves the pack byte for byte as it was, and the copy of the incoming version that is
-  reflected to read its verbs lives under `user://` and is removed again either way.
-
-### Renaming, with everything it touches listed before it touches any of it
-
-- **A function's own head row offers Rename…**, and the first thing it draws is not a text field with
-  an OK button - it is the list. Every row of this sheet that says the name, twice over: the words it
-  says now beside the words it would say. The button behind that list is the only place a rename
-  happens, it goes through the sheet's own undo funnel, and one Ctrl+Z takes all of it back.
-- **Every other file that calls the name is named, counted and left exactly as it is** - `enemy.gd -
-  4 row(s)` - under a heading that says why: the callers index answers BY NAME, so a file listed
-  there may be calling a different function that happens to share the spelling, and the index cannot
-  tell. Being plainly approximate about who calls something costs a reader one glance; being quietly
-  wrong about it costs them a broken game. A rename claiming \"6 rows in 3 sheets\" and touching four
-  would be worse than saying nothing.
-- **A row whose name was renamed out from under it wears the quiet amber**, and nothing else - no
-  block, no icon, no inline sentence. The words live in the help strip under the selected row and in
-  the Doctor's new Renames section: which name went out of which file, and what arrived beside it.
-- **The \"did you mean\" is evidence, never a guess.** It is offered only when the file's own last save
-  shows the old name vanishing and one name arriving - one save, one file, one swap. A near name that
-  was already in the file before the save did not arrive and is never offered; a save that brought
-  several names is answered only when exactly one of them is a near spelling; two near spellings are
-  two answers, which is none. Anything weaker is a plainly amber row with the sentence, no door, and
-  a cell the reader types into.
-- **The same rule reads a scene.** A row reaching `$Torch` after the node became `WallTorch` says so
-  the same way - \"$Torch is gone from crypt.tscn. That same save gained $WallTorch\" - and the door
-  points every row of the sheet at the new reference in one undoable step, through the token-safe
-  replace that has always known `$Torch` is not `$TorchHolder`. A `%name` still stops this happening
-  in the first place: it survives every reparent, so only the node's own name can break it.
-- **It only ever knows what it watched.** The witness starts empty each session and files nothing on
-  first sight of a file, so a rename made while the editor was closed - a branch checkout, a pull - is
-  always the plain-amber case. That is the honest answer rather than a gap: the evidence for a rename
-  is a file's identity moving once with a name going out of it, and you have to have been there.
-- **Nothing here writes anything until a person presses something.** Watching the files, deriving the
-  findings and drawing every receipt are questions. Opening a sheet full of rows pointing at names
-  nobody answers to and saving it untouched reproduces the file byte for byte.
+- **One project-level record, and not a byte in any `.gd`.** `eventsheets/project/vocabulary_version`
+  in Project Settings remembers which vocabulary this project's sheets were last edited under. One
+  line, committed, trivially mergeable, written when a sheet is saved from the editor and only when
+  it changes. Nothing about the plugin is written into a sheet's own file, which stays plain
+  GDScript.
+- **The head band is derived from the rows.** A sheet whose rows have a newer spelling grows one
+  counting line at its head - \"3 rows have a newer spelling, since 0.14.0\" - and a sheet that is up
+  to date grows nothing. A project that has never carried the record gets the same band without the
+  version: the record only ever adds the \"since\".
 
 ### Migrating a sheet onto the spelling the vocabulary uses today
 
@@ -182,6 +87,80 @@ What changed in the build you have installed (v0.17.0), in the words the release
   cleanly, 1 ask you\" - which double-clicks through to the sheet, and offers one chip: *Apply per
   sheet…*, which opens that sheet's own receipt. Nothing applies from the report.
 
+### Renaming, with everything it touches listed before it touches any of it
+
+- **A function's own head row offers Rename…**, and the first thing it draws is not a text field with
+  an OK button - it is the list. Every row of this sheet that says the name, twice over: the words it
+  says now beside the words it would say. The button behind that list is the only place a rename
+  happens, it goes through the sheet's own undo funnel, and one Ctrl+Z takes all of it back.
+- **Every other file that calls the name is named, counted and left exactly as it is** - `enemy.gd -
+  4 row(s)` - under a heading that says why: the callers index answers BY NAME, so a file listed
+  there may be calling a different function that happens to share the spelling, and the index cannot
+  tell. Being plainly approximate about who calls something costs a reader one glance; being quietly
+  wrong about it costs them a broken game. A rename claiming \"6 rows in 3 sheets\" and touching four
+  would be worse than saying nothing.
+- **A row whose name was renamed out from under it wears the quiet amber**, and nothing else - no
+  block, no icon, no inline sentence. The words live in the help strip under the selected row and in
+  the Doctor's new Renames section: which name went out of which file, and what arrived beside it.
+- **The \"did you mean\" is evidence, never a guess.** It is offered only when the file's own last save
+  shows the old name vanishing and one name arriving - one save, one file, one swap. A near name that
+  was already in the file before the save did not arrive and is never offered; a save that brought
+  several names is answered only when exactly one of them is a near spelling; two near spellings are
+  two answers, which is none. Anything weaker is a plainly amber row with the sentence, no door, and
+  a cell the reader types into.
+- **The same rule reads a scene.** A row reaching `$Torch` after the node became `WallTorch` says so
+  the same way - \"$Torch is gone from crypt.tscn. That same save gained $WallTorch\" - and the door
+  points every row of the sheet at the new reference in one undoable step, through the token-safe
+  replace that has always known `$Torch` is not `$TorchHolder`. A `%name` still stops this happening
+  in the first place: it survives every reparent, so only the node's own name can break it.
+- **It only ever knows what it watched.** The witness starts empty each session and files nothing on
+  first sight of a file, so a rename made while the editor was closed - a branch checkout, a pull - is
+  always the plain-amber case. That is the honest answer rather than a gap: the evidence for a rename
+  is a file's identity moving once with a name going out of it, and you have to have been there.
+- **Nothing here writes anything until a person presses something.** Watching the files, deriving the
+  findings and drawing every receipt are questions. Opening a sheet full of rows pointing at names
+  nobody answers to and saving it untouched reproduces the file byte for byte.
+
+### A pack update is a proposal
+
+- **Attaching a pack writes down what arrived.** Importing a pack from a .zip now hashes every file
+  it lands into a small `pack_manifest.json` inside the pack's own folder. A pack is copied into the
+  project on purpose - it is the project's code once it is there - and that is exactly why, a year
+  later, nothing can tell which of its files somebody edited. The content hash can. No mtimes, no
+  second copy kept somewhere, no guessing: the moment a file arrives is the only moment its arrival
+  state is knowable, so that is when it is written down.
+- **Update… shows the tri-list before a byte moves.** Point it at the new version's .zip and it
+  reads, and says: **Untouched** - the files that still hash to what arrived, which take the new
+  version and are LISTED rather than swept, because \"we replaced eleven files you never opened\" is
+  something a reader gets to see beforehand; **Yours** - every file that differs, one answer each,
+  *Keep mine* (always the default), *Take new*, or *See the diff*; and **what this version retires
+  and adds**.
+- **A line-ending difference is a difference.** A file re-saved with the other platform's line
+  endings does not hash to what arrived, so it is Yours - the honest answer to \"did this change?\" is
+  the one the bytes give. The row says *only the line endings differ* beside it, so taking the new
+  version is one click and not a mystery.
+- **A pack with no record is not a pack with no changes.** The packs that ship inside the plugin were
+  never attached, and neither was a folder somebody assembled by hand. Those put every file under
+  Yours and default every one of them to *Keep mine* - \"we do not know\" and \"you changed nothing\" are
+  different sentences, and only one of them is true.
+- **The vocabulary line is a registry diff, not prose.** The new `tools/dump_registry.gd` prints
+  every verb the project publishes as one sorted, stable text - key, type, category, params,
+  successor, template, tab separated, no timestamps and no machine paths - and the update dialog
+  derives its retires-and-adds section by diffing the two versions' dumps. Nothing is read off a
+  release note or a version number. The same tool and the same format are what the descriptor
+  identity gate compares before and after a refactor.
+- **Retiring a verb is still a forwarding address, never a deleted template.** A verb the new version
+  retires keeps its id, its template and its place in the picker, and every row written on it
+  compiles to exactly the line it always did. The row that mentions it opens the migrate dry run, one
+  click away, rather than asking for anything.
+- **The old version goes to the backup ring first.** Every file the update is about to overwrite or
+  remove is copied into the same per-file ring a sheet save uses, before the first new byte lands, so
+  an update is as reversible as any other edit. The ring now keeps a pack's guide, icon and tables
+  too, not only its scripts.
+- **Asking writes nothing.** Reading a new version, classifying every file and diffing both
+  vocabularies leaves the pack byte for byte as it was, and the copy of the incoming version that is
+  reflected to read its verbs lives under `user://` and is removed again either way.
+
 ### A verb the vocabulary has lost, and the honest exit for it
 
 - **A row whose verb is gone keeps its last stored reading.** The display template a row was applied
@@ -218,46 +197,105 @@ What changed in the build you have installed (v0.17.0), in the words the release
   `migration: 2 rows ask you - 12 migrate cleanly` - the question leads, the reassurance follows, and
   the two counts are over different rows. A sheet with nothing lost keeps the line it already had.
 
-### A verb that has moved says where it went
+### The two quiet killers a merge leaves behind
 
-- **The forwarding address, on the descriptor.** A superseded verb now carries where its newer
-  spelling lives - `.succeeded_by(\"Core::GoToState\", {\"next\": \"state\"})` on a built-in,
-  `## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)` on a pack. The
-  map says three things and no more: the successor's id, what this row's parameters are called over
-  there, and a value for each parameter the old row never had - exactly enough for a rewritten row to
-  land complete. Set where the descriptor is built, never written into a cached one afterwards.
-- **Nothing about the old verb changes.** Same `ace_id`, same template, same place in the picker, and
-  every sheet already using it compiles byte for byte as it always did. This is not deprecation and
-  the two stay separate: a superseded verb can be a perfectly ordinary thing to have written, and a
-  deprecated one may have nowhere to go.
-- **Chains resolve to the end, cycles are a build error.** A verb superseded twice offers the verb a
-  reader would write today, with the renames composed through the middle. A chain that comes back on
-  itself, names a verb nobody has, renames a parameter neither side has, or leaves a successor
-  parameter unanswered fails `tools/audit_addons.gd` - which now prints `successors=N problems=N` -
-  rather than surprising anybody with a sheet open.
-- **Every address is auto-tested, like a lift entry.** One harness walks every successor map the
-  installed vocabulary carries, builds a row on the old spelling, applies the rewrite, and puts the
-  result through the real emitter and the real compiler: no unfilled slot, every renamed value
-  arrives, the same byte twice, and the compiled file carries that exact line.
-- **The first customer: the State Machine pack.** Its *Go to state* and *Current state is* now point
-  at the object-state *Go To State* and *Is In State*, each with the one parameter it renames. *Time
-  in state* and *On any state change* deliberately point nowhere - the newer family has no expression
-  twin, and a trigger for every switch cannot be forwarded to one that names a single state.
-- **In the sheet, nothing.** A row in the older spelling grows no block, no icon, no badge and no
-  amber: it is not wrong. Selecting it puts one muted line - `newer spelling: Go To State` - on the
-  help strip, with no door beside it.
+- **A fresh token is drawn against the whole project, not just this session.** A verb whose template
+  declares a local of its own bakes an eight-digit token into the name - `__peer_a3f81c02` - and the
+  draw now excludes every token the project's own scripts already hold, not only the ones this editor
+  minted since it started. Two rows applied a year apart in two files can no longer land on the same
+  name. The point is not the collision it avoids, which was already vanishingly unlikely: it is that
+  a duplicate which does turn up cannot have come from ordinary work, so the Doctor can say what it
+  actually is. The listing is built once per session, dropped whenever the filesystem moves, and
+  never written anywhere.
+- **After a merge, a doubled token is named plainly.** Two rows declaring the same local in one
+  scope is a file Godot refuses to parse, at the worst possible moment. The Doctor now reads it off
+  the text first and says it in a sentence - *Two rows both declare `__peer_a3f81c02` in `_ready`
+  (lines 7, 10)* - and offers one chip: **Re-mint one of them**. The row that was already in the file
+  keeps the name it had, the row the merge brought in gets a name of its own across all of its baked
+  fields at once, both rows go on reading exactly as they did, and Ctrl+Z puts it back. It is an
+  ordinary undoable sheet edit, in the sheet's own history, and nothing is ever rewritten from the
+  report.
+- **A file with merge markers in it opens read-only, and totally.** Any marker line anywhere - not
+  only a well-formed region - now blocks the file: it opens so you can see it, with nothing lifted
+  into rows, Save refused, the unlock gone, and the head banner naming the marker lines. That is the
+  one banner this editor puts at the head of a sheet, and it is there because this is a state rather
+  than a finding: the file is not GDScript, so there is nothing to be quiet about. Finishing the
+  merge belongs in the tool you started it in, and the banner says so; the side-by-side reading of
+  the two versions is still one button away. The half-resolved files - a leftover `>>>>>>>`, an
+  interrupted rebase's `|||||||` - are the ones this catches that nothing caught before, and they are
+  exactly the ones that used to open as ordinary sheets and offer to save over somebody's merge.
+- **A Doctor note when git would rewrite your sheets' line endings.** Sheets are written with Unix
+  endings on every platform, which is Godot's own convention and what the byte-exact round-trip
+  assumes. A checkout with `core.autocrlf=true` and no `.gitattributes` line quietly undoes that:
+  every save becomes a whole-file diff and every merge becomes a conflict. The note says which of the
+  two it is looking at and shows the one line to commit - `*.gd text eol=lf`. This plugin never
+  writes git configuration, so that line is one a person puts in their own diff.
 
-### Since 0.14, said once at the head
+### The contracts, asked from a command line
 
-- **One project-level record, and not a byte in any `.gd`.** `eventsheets/project/vocabulary_version`
-  in Project Settings remembers which vocabulary this project's sheets were last edited under. One
-  line, committed, trivially mergeable, written when a sheet is saved from the editor and only when
-  it changes. Nothing about the plugin is written into a sheet's own file, which stays plain
-  GDScript.
-- **The head band is derived from the rows.** A sheet whose rows have a newer spelling grows one
-  counting line at its head - \"3 rows have a newer spelling, since 0.14.0\" - and a sheet that is up
-  to date grows nothing. A project that has never carried the record gets the same band without the
-  version: the record only ever adds the \"since\".
+- **`tools/verify_sheets.gd` is the gate you put in front of a branch.** Four checks, each one
+  sentence of the standing contract spelled out rather than described: every file parses as valid
+  GDScript, every file round-trips byte for byte, no scope declares one baked local twice, and the
+  migration report holds no row waiting on a human. It reads, it never writes anything anywhere, and
+  it exits 0 or 1 - so it is a hook, a branch gate and a CI job without being any of them itself.
+- **A failure names the file, the line, and the place in the editor that shows the same thing.** The
+  line is printed in the shape every compiler prints one, so a terminal that turns those into links
+  does: `res://player.gd:41 [duplicate-local-token] Two rows both declare …`. Each ends by pointing
+  at the door that fixes it - the Doctor's Re-mint chip, the head band's Migrate…, the read-only
+  banner's Show the conflicts - because the fix is made there and not on a command line.
+- **The most specific reading of a broken file wins.** A file whose `_ready` declares one local twice
+  is exactly a file Godot refuses to parse, so asking the engine first would report a parse error
+  nobody can act on instead of the sentence that names the token and the chip that re-mints it. Merge
+  markers are read the same way, off the same guard that opens such a file read-only.
+- **Hand it paths and it reads exactly those.** Written the way git prints them or the way Godot
+  writes them, both being the same file - which is what makes the pre-commit hook in the guide two
+  lines long and, measured here, about a third of a second per staged file on top of the engine's
+  start. Hand it nothing and it reads the whole project. `--skip <prefix>` leaves out a folder of
+  deliberately broken fixtures, which is the one thing this gate cannot tell from a real file.
+- **The guide's team chapter, written against what actually ships.** Updates travel as commits
+  because `addons/` lives in the repository, so \"which version is everybody on\" is answered by
+  `git log`; the vocabulary record is one mergeable line of `project.godot`; a branch open for three
+  weeks merges as ordinary code, because a superseded verb keeps its template forever and no sheet is
+  ever rewritten on open or on save; and after the merge the head band counts again and offers
+  Migrate… on your schedule. This repository runs the recipe on itself in CI as the proof of it.
+
+### The refactor contract, documented
+
+- **`docs/GUIDE-UPDATING-AND-REFACTORING.md` is the whole story on one page**, and it opens on the
+  three promises the rest of it rests on: a shipped game cannot break, old rows compile forever, and
+  opening a sheet never rewrites it. Then in the order a reader meets them - the quiet amber question
+  and where its words actually live, the forwarding address a moved verb carries, the Migrate receipt
+  and the two gates every rewrite passes, the project report and its frozen row shape, renaming in
+  both directions with the evidence rule, a pack update as a proposal, the honest exit for a verb
+  that is simply gone, what a merge leaves behind, the four contracts as one read-only command, and
+  the team chapter.
+- **The worked example is a real migration and it fails first, on purpose.** The State Machine pack's
+  *Go to state* and *Current state is* are shown being migrated onto the object-state family: the
+  before file, the receipt in both languages, and the after file. The first press of Migrate… rewrites
+  nothing, because the newer spelling reads a `State` enum this object has not declared yet and the
+  file gate refuses a candidate that would not parse. Declaring the states and pressing it again is
+  the rest of the example. A page whose worked example only ever succeeds teaches the wrong thing
+  about a feature whose whole design is refusing more than it accepts.
+- **Nine pictures of surfaces that had none.** The head band's counting line over rows carrying no
+  mark of any kind, the muted *newer spelling* strip, the quiet amber row with its help strip and two
+  doors, the Migrate receipt with its rewritten and left-alone cards, the Doctor's per-sheet lines and
+  the *Apply per sheet* chip, the Keep as code before-and-after, the Rename receipt with its
+  named-and-left-alone card, the outside-rename door, and the pack update's tri-list.
+- **Both directions of the map.** The concept map gains five rows - a verb the editor replaced,
+  \"do not update, it broke my project last time\", an event using a plugin you removed, renaming a
+  function and finding every event that used it, and \"is this project OK?\" before you hand it to
+  somebody - with the forwarding address and the verify command getting the full cells. The
+  existing-code reading list gains four entries: a line in a superseded spelling opening as the row it
+  is and staying there, a baked local's token being a name rather than a marker (and a doubled one
+  being read off the text rather than reported as the parse error it causes), a file with merge
+  markers not opening as a sheet at all, and a kept-as-code line reading back as a picked row the day
+  the vocabulary has the verb again.
+- **The numbers re-measured off this tree.** 1,846 verbs across 84 modules, 98 of them triggers, 2,943
+  parameters between them, and zero blank descriptions and zero blank parameter descriptions. Two
+  forwarding addresses, no problems, and pack drift at zero. The reads-itself census re-run over the
+  whole of `addons/` and `tools/`: 920 files, 918 at zero script blocks, 9 block lines, 194,637 rows,
+  89% of them in the sheet's own words. The README said 886 and 884, which was a smaller tree; the
+  nine block lines did not move and neither did the share.
 
 ### The %name is a word the sheet speaks
 

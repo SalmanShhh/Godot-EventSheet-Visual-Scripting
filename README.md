@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (20,440 CI-gated assertions across 717 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (20,791 CI-gated assertions across 725 test files, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -41,7 +41,7 @@ func _on_body_entered(body: Node) -> void:
 		health += -10
 ```
 
-Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 886 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
+Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured over this repo's own 920 hand-written files, every code line but nine opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
@@ -85,6 +85,7 @@ The deeper belief, in one line: the condition/action grid is the shape code alre
 - **114 behavior packs**, all authored as event sheets - movement and feel, AI, combat and stats, narrative, drawing and UI, lighting, shader effects, and system packs. See [docs/Addons/](docs/Addons/README.md).
 - **Your own code is vocabulary with zero setup** - the picker lists your classes and autoloads as Actions / Conditions / Expressions; curate with a project catalog or `## @ace_*` comments; the ACE Studio, Extract to Function and Teach a Verb publish your own; `EventSheets.publish_pack` ships it.
 - **The Manual, inside the editor** - Tools > Manual, F1 on anything, a reference page per object and behavior, tutorials you follow in your open sheet, and What's new.
+- **Updating never rewrites your sheets** - a superseded verb keeps its id, its line and its place in the picker forever, and carries the address of the newer spelling; migrating, renaming and taking a pack's new version are receipts you read and buttons you press, each one undo step. Four contracts check themselves from a command line. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
 - **Tooling** - Project Doctor (dock / CLI / CI), live debugging (Live Values, Watch, Event Trace, Why didn't this fire?), Save Studio, Translation Studio (nine editor languages), a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
 
 ## Current status
@@ -103,13 +104,14 @@ The latest tagged release is **`v0.17.0` - "Adopt Anything, Read Anything & Ask 
 - **Files, and what a game may trust** - `user://` vs `res://` taught at the path field, guards written into the emitted line, user content arriving as data, never code.
 - **An object's own state is a variable** - Declare states…, Is in / Go to / On entering, the live band and the Trail; the hand-written `match state:` machine opens as rows byte-exact. ([guide](docs/GUIDE-STATES.md))
 - **Scenes, in the engine's own words** - layouts on top of the running game, `%name` as a word, 3D spawning, the tree's join/leave announcements, saving what a player built behind a data-only trust check, and undoable editor-tool edits. ([guide](docs/GUIDE-SCENES.md))
+- **The refactor contract** - a moved verb carries a forwarding address, the head counts the rows that have one, and Migrate… shows every rewrite in both languages before proving each one twice. Renames list what they touch first; a pack update is a proposal with a tri-list; a merge's doubled local and half-finished file are named rather than met at runtime. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
 - **Autocomplete everywhere** - one seam, one popup, every name field; Quick add reads a whole typed sentence.
 
 **Performance, measured** - on a fabricated project ten times this one (1,000 scripts, 300 scenes, 100 shaders, every pack installed): enabling the plugin costs **270 ms**, the first sheet tab **2,310 ms**, one keystroke in a completing field **2.2 ms**, and a 4,000-line script opens in **7.4 s**; eleven such budgets are tests.
 
-**The editor reads itself** - the plugin's own source opens as event sheets: **886 files, 884 of them at zero script blocks, and 89% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
+**The editor reads itself** - the plugin's own source opens as event sheets: **920 files, 918 of them at zero script blocks, and 89% of those rows in the sheet's own words**, round-tripped byte-exact under a measured ceiling on every run.
 
-**Quality** - 20,440 assertions across 717 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
+**Quality** - 20,791 assertions across 725 test files, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules; generated code never depends on the plugin and is performance-identical to hand-written GDScript - all test-enforced. **Verified on Godot 4.7 stable.**
 
 ## Milestones
 

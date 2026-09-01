@@ -1431,6 +1431,39 @@ to the function it names, the same jump the Outline panel makes.
   way. Every other `get_tree()` connect is left alone, the crowd's own `node_removed` handler
   included: that one asks two further questions in its gate and keeps its own handler name.
 
+- **A line written in a spelling the vocabulary has since replaced opens as the row it is, and stays
+  there.** `$StateMachineBehavior.set_state("CHASING")` opens as **Go to state**, the pack's own older
+  row, because a superseded verb keeps its id, its generated line and its place in the picker
+  permanently. Nothing about opening the file consults the forwarding address: the row grows no mark,
+  the file is not touched, and saving it untouched reproduces it byte for byte. Selecting the row puts
+  one muted line on the help strip - *newer spelling: Go To State* - and the sheet's head counts how
+  many such rows there are. Rewriting them is a receipt you open from that counting line and a button
+  you press, never a thing an open does.
+
+- **A baked local's token is a name, not a marker.** A row whose generated line declares a local of
+  its own writes `var __peer_a3f81c02 = …`, and that line reads back as the row that wrote it, token
+  and all - the eight digits are part of the name, so the file round-trips exactly. Two of them in one
+  scope is the shape a merge of two parallel branches leaves behind, and it is read **off the text**
+  rather than reported as the parse error it causes: the Doctor names the token, the function and both
+  line numbers, and offers one chip, *Re-mint one of them*, which is an ordinary undoable sheet edit.
+  Opening such a file changes nothing about it.
+
+- **A file holding merge markers does not open as a sheet at all.** Any line starting `<<<<<<<`,
+  `|||||||`, `=======` or `>>>>>>>` puts the file on screen read-only with nothing lifted into rows,
+  Save refused and the marker lines named at the head - the one banner this editor puts on a sheet,
+  because a half-merged file is a state rather than a finding. That deliberately catches the untidy
+  ones nothing caught before: a leftover `>>>>>>>` somebody resolved around, an interrupted rebase's
+  `|||||||`. Those used to open as ordinary sheets, lift the marker lines as code, and offer to save
+  over the merge.
+
+- **A line kept as code is ordinary code, and reads back as a row when it can.** *Keep as code* on a
+  row whose verb the vocabulary no longer has writes the exact line the compiler would have written
+  for it - the compiler's own call, with the enclosing *With node X:* scope and behaviour host carried
+  down, so a row inside a scope keeps `$Enemy.flicker(0.4)` rather than a call on the wrong node - plus
+  an optional plain comment above it. What lands is the shape the lift tables already read, so the day
+  the vocabulary has that verb again the same line opens as a picked row, with no conversion step and
+  no record anywhere that it was ever anything else.
+
 - **A trailing `# note` is a note on that row.** `hp -= 1  # ouch` reads `Subtract 1 from hp
   💬 ouch`, muted, at the end of the row - which is where and how an event sheet writes a note about
   one step. Before this the comment rode into whichever value the lift put the end of the line in, so

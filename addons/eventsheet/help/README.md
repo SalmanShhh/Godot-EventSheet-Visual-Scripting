@@ -68,6 +68,7 @@ Every page below also ships inside the editor: open **Tools > Manual**, or press
 - [Describing Your Game](GUIDE-DESCRIBING-YOUR-GAME.md) - one description per thing you made, kept as the `##` line the file already carries; drafts composed out of the thing's own rows; the Doctor's "describe the undescribed" page and its drift note; the manual your game writes about itself; and the Project View with its search across every sheet.
 - [Sharing Events Between Scripts](GUIDE-SHARING-EVENTS-BETWEEN-SCRIPTS.md) - shared event sheets: write common events once and include them in many scripts, as a base class or as a helper.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, committing sheets, resolving a merge conflict as events, the four standing contracts as a headless command you can hang off a hook or a CI job, and what working on this as a team actually looks like.
+- [Updating and Refactoring Without Breaking Your Game](GUIDE-UPDATING-AND-REFACTORING.md) - the three promises everything else rests on (a shipped game cannot break, old rows compile forever, opening never rewrites), the quiet amber question, the forwarding address a moved verb carries, the Migrate receipt and the two gates every rewrite passes, the project report, renaming in both directions, a pack update as a proposal, the honest exit for a verb that is simply gone, what a merge leaves behind, and the four contracts as one read-only command.
 - [Autocomplete and Quick Add](GUIDE-AUTOCOMPLETE-AND-QUICK-ADD.md) - the names the editor gives back as you type: one suggestion list and one set of keys across dialogs, the value you double-click inside a row, name and type and file fields, plus typing a whole row into the Add picker ("boss fla 0.4") with the value already in place.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, lock a sheet down for a team, and the accessibility settings: reduced motion, dyslexia-friendly text, a reading font, and rows read aloud.
 - [Asking for Events in Plain Words](GUIDE-ASKING-FOR-EVENTS-IN-PLAIN-WORDS.md) - the optional Ask box: what is sent (exactly), what can come back, why the answer is rows rather than code, and how to turn it on or leave it off.
@@ -127,6 +128,7 @@ You have shipped games in another event-sheet tool, or you already write GDScrip
 4. [Glossary](REFERENCE-GLOSSARY.md)
 5. [Custom ACEs](GUIDE-CUSTOM-ACES.md)
 6. [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md)
+7. [Updating and Refactoring Without Breaking Your Game](GUIDE-UPDATING-AND-REFACTORING.md)
 
 ### Multiplayer
 
