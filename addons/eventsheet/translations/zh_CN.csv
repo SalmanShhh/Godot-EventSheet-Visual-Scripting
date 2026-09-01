@@ -5957,3 +5957,22 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",回执打开期间本表发生了变化，因此没有重写任何内容 - 以下是它现在的内容。
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",该行已不在本表中，因此未写入任何内容 - 此窗口打开期间本表发生了变化。
 "%s has changed on disk since this window read it, so nothing was written - opening what it says now.",自本窗口读取以来，%s 在磁盘上已发生变化，因此未写入任何内容 - 现在打开它当前的内容。
+Migrate These Rows,迁移这些行
+What will be rewritten,将被重写的内容
+Left exactly as they are,保持原样的内容
+Update pack,更新扩展包
+Take This Update,接受此更新
+Untouched - these take the new version,未改动 - 这些将采用新版本
+Yours - you changed these,你的 - 这些你改动过
+Dry run…,试运行…
+"Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.",打开面前这张表的迁移回执：所有将被重写的行，在任何内容被重写之前先行展示。
+What this version retires and adds,该版本淘汰与新增的内容
+Rename,重命名
+New name,新名称
+"Named and left exactly as they are - the index answers by name, so a file here may be calling something else",已列出但保持原样 - 索引按名称作答，因此这里的文件可能调用的是别的东西
+ (and %d more),（另有 %d 处）
+line %s%s,第 %s 行%s
+lines %s and %s%s,第 %s 和 %s 行%s
+"%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.",%s 在%s仍有合并冲突标记。在它们消失之前这不是 GDScript，因此这里以只读方式打开：不会提升为行，保存也已关闭。请在你开始合并的工具中完成合并，然后重新打开。
+%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s 中仍有合并冲突标记 - 保存会把本表对它们的读法覆盖到文件上。请先解决合并。
+"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s 仍有 %d 行合并冲突标记（%s）。它无法解析，在合并完成前将以只读方式打开。

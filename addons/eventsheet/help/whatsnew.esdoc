@@ -124,6 +124,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   it answered - so opening the Migrate dialog over exactly the sheet the feature is for filled the
   console with SCRIPT ERROR lines and read as a broken project. The printing is turned off around
   that one call and put back as it was found.
+- **The four new dialogs' chrome is translatable, and the gate can see it.** Their button labels,
+  titles and card headings were bare literals translated at runtime through a translation domain -
+  which the l10n coverage gate structurally cannot read, so the keys were absent from every shipped
+  table and the words stayed English in de/es/fr/it/ja/ko/ru/zh_CN under a green suite. They go
+  through `EventSheetL10n.translate()` now, which is what the gate reads, and their keys are in all
+  nine tables.
+- **The conflict guard's banner speaks the reader's language.** It is the one banner this pass
+  sanctions at the head of a sheet, and it was the only surface in the pass built as raw English
+  prose with no `translate()` at all - the banner, the save refusal, the Doctor's sentence and the
+  \"lines 12, 18 and 24\" phrase included.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.

@@ -50,9 +50,9 @@ var _on_dry_run: Callable = Callable()
 
 
 func _init() -> void:
-	title = "Update pack"
-	ok_button_text = "Take This Update"
-	add_cancel_button("Cancel")
+	title = EventSheetL10n.translate("Update pack")
+	ok_button_text = EventSheetL10n.translate("Take This Update")
+	add_cancel_button(EventSheetL10n.translate("Cancel"))
 	add_child(EventSheetPopupUI.margined(_build_body()))
 	confirmed.connect(_on_confirmed)
 
@@ -84,24 +84,24 @@ func _build_body() -> Control:
 	page.add_child(_summary)
 	_untouched_list = _list(120.0)
 	page.add_child(EventSheetPopupUI.titled_card(
-		"Untouched - these take the new version", _untouched_list))
+		EventSheetL10n.translate("Untouched - these take the new version"), _untouched_list))
 	_yours_box = VBoxContainer.new()
 	_yours_box.add_theme_constant_override("separation", 4)
 	var yours_scroll: ScrollContainer = ScrollContainer.new()
 	yours_scroll.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(140.0))
 	yours_scroll.add_child(_yours_box)
 	_yours_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_yours_card = EventSheetPopupUI.titled_card("Yours - you changed these", yours_scroll)
+	_yours_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Yours - you changed these"), yours_scroll)
 	page.add_child(_yours_card)
 	var vocabulary_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_vocabulary_list = _list(90.0)
 	vocabulary_box.add_child(_vocabulary_list)
 	_dry_run_button = Button.new()
-	_dry_run_button.text = "Dry run…"
-	_dry_run_button.tooltip_text = "Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is."
+	_dry_run_button.text = EventSheetL10n.translate("Dry run…")
+	_dry_run_button.tooltip_text = EventSheetL10n.translate("Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.")
 	_dry_run_button.pressed.connect(_on_dry_run_pressed)
 	vocabulary_box.add_child(_dry_run_button)
-	_vocabulary_card = EventSheetPopupUI.titled_card("What this version retires and adds", vocabulary_box)
+	_vocabulary_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("What this version retires and adds"), vocabulary_box)
 	page.add_child(_vocabulary_card)
 	return page
 

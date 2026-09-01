@@ -5957,3 +5957,22 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Esta hoja cambio mientras el recibo estaba abierto, asi que no se reescribio nada: esto es lo que dice ahora."
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.","Esa fila ya no esta en esta hoja, asi que no se escribio nada: la hoja cambio mientras esto estaba abierto."
 "%s has changed on disk since this window read it, so nothing was written - opening what it says now.","%s ha cambiado en disco desde que esta ventana la leyo, asi que no se escribio nada: se abre lo que dice ahora."
+Migrate These Rows,Migrar estas filas
+What will be rewritten,Que se reescribira
+Left exactly as they are,Se dejan exactamente como estan
+Update pack,Actualizar paquete
+Take This Update,Aceptar esta actualizacion
+Untouched - these take the new version,Sin tocar: estos toman la version nueva
+Yours - you changed these,Tuyos: cambiaste estos
+Dry run…,Simulacion…
+"Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.","Abre el recibo de migracion de la hoja que tienes delante: todas las filas que se reescribirian, mostradas antes de que se reescriba nada."
+What this version retires and adds,Que retira y anade esta version
+Rename,Renombrar
+New name,Nombre nuevo
+"Named and left exactly as they are - the index answers by name, so a file here may be calling something else","Nombrados y dejados exactamente como estan: el indice responde por nombre, asi que un archivo de aqui puede estar llamando a otra cosa"
+ (and %d more), (y %d mas)
+line %s%s,linea %s%s
+lines %s and %s%s,lineas %s y %s%s
+"%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.","%s todavia tiene marcadores de conflicto de fusion en %s. No es GDScript mientras esten ahi, asi que se abre aqui en solo lectura: nada se eleva a filas y Guardar esta desactivado. Termina la fusion en la herramienta donde la empezaste y vuelve a abrirlo."
+%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s todavia contiene marcadores de conflicto de fusion: guardar escribiria la lectura de la hoja encima del archivo. Resuelve la fusion primero.
+"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s todavia tiene %d linea(s) con marcadores de conflicto de fusion (%s). No se analizara y se abre en solo lectura hasta que termine la fusion.

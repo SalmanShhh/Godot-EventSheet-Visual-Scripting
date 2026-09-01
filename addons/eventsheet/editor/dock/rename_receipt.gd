@@ -236,20 +236,20 @@ func _build_dialog() -> void:
 	if _dialog != null:
 		return
 	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = "Rename"
-	_dialog.add_cancel_button("Cancel")
+	_dialog.ok_button_text = EventSheetL10n.translate("Rename")
+	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
 	_dialog.confirmed.connect(confirm)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_name_edit = LineEdit.new()
 	_name_edit.text_changed.connect(func(_text: String) -> void: _fill())
-	content.add_child(EventSheetPopupUI.form_row("New name", _name_edit))
+	content.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("New name"), _name_edit))
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	_rows_list = _list(170.0)
-	content.add_child(EventSheetPopupUI.titled_card("What will be rewritten", _rows_list))
+	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rows_list))
 	_elsewhere_list = _list(90.0)
 	_elsewhere_card = EventSheetPopupUI.titled_card(
-		"Named and left exactly as they are - the index answers by name, so a file here may be calling something else",
+		EventSheetL10n.translate("Named and left exactly as they are - the index answers by name, so a file here may be calling something else"),
 		_elsewhere_list)
 	content.add_child(_elsewhere_card)
 	_dialog.add_child(EventSheetPopupUI.margined(content))

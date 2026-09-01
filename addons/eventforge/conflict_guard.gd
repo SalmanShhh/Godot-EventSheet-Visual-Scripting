@@ -22,6 +22,12 @@
 # nothing here writes, and the read-only state is what keeps every path that could write off it.
 #
 # PURE + STATIC: no editor, no dialog, no display server, so every word below is pinned headless.
+#
+# AND THE WORDS ARE THE READER'S. This is the one banner the pass sanctions at the head of a sheet,
+# and it was the only surface in it built as raw English prose - every comparable sentence (the
+# findings, the dialogs, the status lines) goes through the editor's own catalogue. These do too now.
+# Untranslated, `translate()` hands the English back unchanged, so a headless run reads exactly as it
+# always did.
 @tool
 class_name EventSheetConflictGuard
 extends RefCounted
@@ -95,12 +101,12 @@ static func lines_phrase(numbers: PackedInt32Array) -> String:
 		shown.append(str(numbers[index]))
 	var tail: String = ""
 	if numbers.size() > NAMED_LINES:
-		tail = " (and %d more)" % (numbers.size() - NAMED_LINES)
+		tail = EventSheetL10n.translate(" (and %d more)") % (numbers.size() - NAMED_LINES)
 	if shown.size() == 1:
-		return "line %s%s" % [shown[0], tail]
+		return EventSheetL10n.translate("line %s%s") % [shown[0], tail]
 	var last: String = shown[shown.size() - 1]
 	shown.remove_at(shown.size() - 1)
-	return "lines %s and %s%s" % [", ".join(shown), last, tail]
+	return EventSheetL10n.translate("lines %s and %s%s") % [", ".join(shown), last, tail]
 
 
 ## The banner's sentence: what this file is, where the markers are, and where it gets resolved.
@@ -112,7 +118,7 @@ static func lines_phrase(numbers: PackedInt32Array) -> String:
 static func banner_text(file_name: String, numbers: PackedInt32Array) -> String:
 	if numbers.is_empty():
 		return ""
-	return "%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again." % [
+	return EventSheetL10n.translate("%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.") % [
 		file_name, lines_phrase(numbers)]
 
 
@@ -132,7 +138,7 @@ static func block(sheet: EventSheetResource, numbers: PackedInt32Array) -> Event
 ## The status line the save path answers with. Shorter than the banner and about the gesture rather
 ## than the file, because the reader has already read the banner and has just pressed Ctrl+S.
 static func save_refusal(file_name: String) -> String:
-	return "%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first." % file_name
+	return EventSheetL10n.translate("%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.") % file_name
 
 
 ## What the Doctor says about such a file. The audit reads whole projects, so it leads with the count
@@ -140,5 +146,5 @@ static func save_refusal(file_name: String) -> String:
 static func doctor_message(file_name: String, numbers: PackedInt32Array) -> String:
 	if numbers.is_empty():
 		return ""
-	return "%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished." % [
+	return EventSheetL10n.translate("%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.") % [
 		file_name, numbers.size(), lines_phrase(numbers)]

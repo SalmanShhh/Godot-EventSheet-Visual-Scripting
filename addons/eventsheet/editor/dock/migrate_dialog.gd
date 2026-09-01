@@ -175,16 +175,16 @@ func _build_dialog() -> void:
 	if _dialog != null:
 		return
 	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = "Migrate These Rows"
-	_dialog.add_cancel_button("Cancel")
+	_dialog.ok_button_text = EventSheetL10n.translate("Migrate These Rows")
+	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
 	_dialog.confirmed.connect(confirm)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	_rewrite_list = _list(180.0)
-	content.add_child(EventSheetPopupUI.titled_card("What will be rewritten", _rewrite_list))
+	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rewrite_list))
 	_left_alone_list = _list(90.0)
-	_left_alone_card = EventSheetPopupUI.titled_card("Left exactly as they are", _left_alone_list)
+	_left_alone_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Left exactly as they are"), _left_alone_list)
 	content.add_child(_left_alone_card)
 	_dialog.add_child(EventSheetPopupUI.margined(content))
 	EventSheetL10n.apply_to(_dialog)

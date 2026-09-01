@@ -5957,3 +5957,22 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.","Этот лист изменился, пока квитанция была открыта, поэтому ничего не переписано - вот что он говорит сейчас."
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.","Этой строки больше нет в листе, поэтому ничего не записано - лист изменился, пока это было открыто."
 "%s has changed on disk since this window read it, so nothing was written - opening what it says now.","Файл %s изменился на диске с тех пор, как это окно его прочитало, поэтому ничего не записано - открываем то, что в нём сейчас."
+Migrate These Rows,Мигрировать эти строки
+What will be rewritten,Что будет переписано
+Left exactly as they are,Оставлены ровно как есть
+Update pack,Обновить пакет
+Take This Update,Принять это обновление
+Untouched - these take the new version,Не тронуты - они получат новую версию
+Yours - you changed these,Ваши - вы изменили их
+Dry run…,Пробный прогон…
+"Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.","Открывает квитанцию миграции для листа перед вами: каждая строка, которая была бы переписана, показана до того, как что-либо перепишется."
+What this version retires and adds,Что эта версия выводит и что добавляет
+Rename,Переименовать
+New name,Новое имя
+"Named and left exactly as they are - the index answers by name, so a file here may be calling something else","Названы и оставлены ровно как есть - индекс отвечает по имени, так что файл отсюда может вызывать что-то другое"
+ (and %d more), (и ещё %d)
+line %s%s,строка %s%s
+lines %s and %s%s,строки %s и %s%s
+"%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.","В %s всё ещё есть маркеры конфликта слияния в %s. Пока они есть, это не GDScript, поэтому файл открыт только для чтения: ничего не поднимается в строки, а сохранение отключено. Завершите слияние в том инструменте, где начали, и откройте файл снова."
+%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,В %s всё ещё есть маркеры конфликта слияния - сохранение запишет прочтение листа поверх файла. Сначала разрешите слияние.
+"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.","В %s всё ещё %d строк(и) с маркерами конфликта слияния (%s). Файл не разберётся и открывается только для чтения, пока слияние не завершено."

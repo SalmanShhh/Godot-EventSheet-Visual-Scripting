@@ -5957,3 +5957,22 @@ Nothing in the open sheet declares __%s twice any more - the other copy may alre
 "This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now.",控えを開いている間にこのシートが変わったため、何も書き換えていません。いま何と言っているかを示します。
 "That row is no longer in this sheet, so nothing was written - the sheet changed while this was open.",その行はもうこのシートにないため、何も書き込んでいません。これを開いている間にシートが変わりました。
 "%s has changed on disk since this window read it, so nothing was written - opening what it says now.",このウィンドウが読み込んでから %s がディスク上で変わったため、何も書き込んでいません。いまの内容を開きます。
+Migrate These Rows,これらの行を移行
+What will be rewritten,書き換えられるもの
+Left exactly as they are,そのまま残されるもの
+Update pack,パックを更新
+Take This Update,この更新を取り込む
+Untouched - these take the new version,未変更 - これらは新しいバージョンになります
+Yours - you changed these,あなたのもの - これらは変更されています
+Dry run…,ドライラン…
+"Opens the migrate receipt for the sheet in front of you: every row that would be rewritten, shown before anything is.",目の前のシートの移行控えを開きます。書き換えられるすべての行が、何かが書き換えられる前に示されます。
+What this version retires and adds,このバージョンが引退させるものと追加するもの
+Rename,名前を変更
+New name,新しい名前
+"Named and left exactly as they are - the index answers by name, so a file here may be calling something else",名前を挙げて、そのまま残します。索引は名前で答えるので、ここにあるファイルは別のものを呼んでいるかもしれません
+ (and %d more),（ほか %d 件）
+line %s%s,%s 行目%s
+lines %s and %s%s,%s および %s 行目%s
+"%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.",%s には %s にまだマージ競合マーカーがあります。それが消えるまでは GDScript ではないため、ここでは読み取り専用で開いています。行への持ち上げは行われず、保存も無効です。マージを始めたツールで仕上げてから、もう一度開いてください。
+%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s にはまだマージ競合マーカーがあります。保存すると、シートの読み取り結果をファイルに上書きしてしまいます。先にマージを解決してください。
+"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s にはまだマージ競合マーカーの行が %d 行あります（%s）。解析できず、マージが終わるまで読み取り専用で開きます。

@@ -217,8 +217,8 @@ func _build_dialog() -> void:
 	if _dialog != null:
 		return
 	_dialog = AcceptDialog.new()
-	_dialog.ok_button_text = "Keep as code"
-	_dialog.add_cancel_button("Cancel")
+	_dialog.ok_button_text = EventSheetL10n.translate("Keep as code")
+	_dialog.add_cancel_button(EventSheetL10n.translate("Cancel"))
 	_dialog.confirmed.connect(confirm)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = EventSheetPopupUI.hint_label("")
@@ -228,8 +228,8 @@ func _build_dialog() -> void:
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_before_label = _column_label()
 	_after_label = _column_label()
-	for card: Control in [EventSheetPopupUI.titled_card("As it reads now", _before_label),
-			EventSheetPopupUI.titled_card("As it will be written", _after_label)]:
+	for card: Control in [EventSheetPopupUI.titled_card(EventSheetL10n.translate("As it reads now"), _before_label),
+			EventSheetPopupUI.titled_card(EventSheetL10n.translate("As it will be written"), _after_label)]:
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		columns.add_child(card)
 	content.add_child(columns)
