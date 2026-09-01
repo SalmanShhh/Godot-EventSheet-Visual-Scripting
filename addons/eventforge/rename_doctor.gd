@@ -19,6 +19,15 @@
 # step. A report that rewrote files from a list nobody was looking at would be the fatal version of
 # this feature.
 #
+# THE CORPUS IS THE SHEETS THIS SESSION WATCHED A SAVE OF, and it is derived rather than handed over.
+# A registered check receives `sheet_paths`, which lists only the project's `.tres` sheets while `.gd`
+# is the default sheet format - so a section built on it alone reads nothing in a normal project and
+# reports "0 sheet(s) read" forever while looking like it works. The Migration section beside it
+# widens with `EventSheets.project_scripts()`; this one does not need to, because the rule above
+# means a file whose save was never watched cannot earn a finding whatever is in it. So the corpus is
+# the `.tres` sheets plus exactly the files the witness has a save for, which is the smallest corpus
+# that can answer the question and the only one that answers it at all.
+#
 # It ships as an EXTENSION check, registered through the very seam a pack uses, so it lands in all
 # four runners (the panel, the headless CLI, CI and the MCP server).
 @tool
@@ -39,9 +48,28 @@ static func ensure_registered() -> void:
 
 
 ## The section itself, with the contract every registered check has: append findings, never write
-## inside res://.
+## inside res://. The Doctor's `sheet_paths` is the project's `.tres` sheets alone, so the `.gd`
+## sheets - which is nearly all of them - are added from the witness, which is where the only files
+## that can answer this question are named.
 static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(sheet_paths))
+	findings.append_array(report(corpus(sheet_paths, EventSheetRenameEvidence.watched_paths())))
+
+
+## What one run reads: the stored sheets it was handed, plus every file this session watched a save
+## of. Sorted and de-duplicated, so two machines read the same files in the same order.
+##
+## `watched` is passed in rather than fetched, so a test hands in a corpus of its own and the words
+## below are pinned without a session behind them.
+static func corpus(sheet_paths: PackedStringArray, watched: PackedStringArray) -> PackedStringArray:
+	var read: PackedStringArray = PackedStringArray()
+	for listed: PackedStringArray in [sheet_paths, watched]:
+		for path: String in listed:
+			# A scene is watched for its node names and is not a sheet; it is read THROUGH the script
+			# that runs it, which is in this list on its own.
+			if not read.has(path) and path.get_extension().to_lower() != "tscn":
+				read.append(path)
+	read.sort()
+	return read
 
 
 ## The whole section as findings, the summary first. Pure over a list of paths, so a test can hand it

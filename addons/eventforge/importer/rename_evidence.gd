@@ -210,3 +210,15 @@ static func unchanged(path: String) -> bool:
 static func clear_cache() -> void:
 	_seen.clear()
 	_saves.clear()
+
+
+## Every file this session has WATCHED A SAVE OF, in path order. The Renames section's whole corpus,
+## and the honest one: a file with no witness behind it cannot earn a finding here whatever is in it,
+## so reading a thousand of them would cost a project-wide walk to answer "nothing" a thousand times.
+## Sorted, so two machines read the same files in the same order.
+static func watched_paths() -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
+	for path: Variant in _saves.keys():
+		paths.append(str(path))
+	paths.sort()
+	return paths

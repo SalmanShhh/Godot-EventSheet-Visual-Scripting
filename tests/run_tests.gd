@@ -54,6 +54,7 @@ func _init() -> void:
 			push_error("Test %s did not return a bool from run()." % test_file)
 			passed = false
 		_sweep_stray_output()
+		_sweep_session_state()
 		_mark_finished(test_file, Time.get_ticks_msec() - started_at)
 	if passed:
 		print("All tests passed.")
@@ -68,6 +69,24 @@ func _init() -> void:
 func _sweep_stray_output() -> void:
 	if FileAccess.file_exists(STRAY_COMPILE_OUTPUT):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(STRAY_COMPILE_OUTPUT))
+
+
+## Drops the two pieces of PROCESS-STATIC SESSION STATE that one test can leave standing for the
+## next. Both are keyed on a file's identity rather than on its contents, which is exactly the shape
+## that leaks: a test that rewrites a file an earlier test already read inherits the earlier reading
+## and can earn a finding nothing in its own fixtures put there.
+##
+## It matters MORE serially than in shards, which is the trap: CI runs the whole suite in one process
+## on Linux, so a pair that never meet in a sharded run meet there and the failure looks
+## platform-specific. Swept between tests rather than inside them, so a test that deliberately seeds
+## one of these still reads its own seed all the way through its own run().
+##
+## The successor catalogue is deliberately NOT swept: it is keyed on every pack file's modified time,
+## so it invalidates itself, and rebuilding it means reflecting a hundred packs - a real cost to pay
+## after every one of two hundred tests for a leak that does not happen.
+func _sweep_session_state() -> void:
+	EventSheetRenameEvidence.clear_cache()
+	EventSheetLocalTokens.clear_index()
 
 
 # ── the crash sentinel ──────────────────────────────────────────────────────────

@@ -33,6 +33,7 @@ static func run() -> bool:
 	ok = _test_the_node_half() and ok
 	ok = _test_the_rename_receipt() and ok
 	ok = _test_the_doctor_files_the_same_words() and ok
+	ok = _test_the_doctor_reads_the_gd_sheets_too() and ok
 	return ok
 
 
@@ -278,6 +279,47 @@ static func _test_the_doctor_files_the_same_words() -> bool:
 			str(filed[0].get("message", "")), str(filed[0].get("severity", ""))],
 		[EventSheetRenameDoctor.CHECK_CALL_GONE, OLD_NAME, str(found[0].get("message", "")),
 			"warning"]) and ok
+
+
+## THE SECTION HAS TO READ `.gd` SHEETS, which is nearly all of them. A registered Doctor check is
+## handed `sheet_paths`, and that list holds only the project's `.tres` sheets - so a section built
+## on it alone reads ZERO files in a normal project and reports "Renames: 0 sheet(s) read" forever
+## while looking like it works. The corpus is widened with exactly the files the witness has a save
+## for, which is the smallest corpus that can answer this question and the only one that answers it:
+## a file whose save was never watched cannot earn a finding here whatever is in it.
+static func _test_the_doctor_reads_the_gd_sheets_too() -> bool:
+	var stored: PackedStringArray = PackedStringArray(["res://menus/options.tres"])
+	var watched: PackedStringArray = PackedStringArray([
+		"res://player.gd", "res://enemy.gd", "res://levels/one.tscn", "res://player.gd",
+	])
+	var ok: bool = _check("both halves are read, sorted and de-duplicated",
+		EventSheetRenameDoctor.corpus(stored, watched),
+		PackedStringArray(["res://enemy.gd", "res://menus/options.tres", "res://player.gd"]))
+	ok = _check("a scene is not a sheet - it is read through the script that runs it",
+		EventSheetRenameDoctor.corpus(PackedStringArray(),
+			PackedStringArray(["res://levels/one.tscn"])), PackedStringArray()) and ok
+	# And the witness names the files it watched, which is what the corpus is drawn from.
+	EventSheetRenameEvidence.clear_cache()
+	var path: String = "user://eventforge_rename_corpus_probe.gd"
+	_observe(path, "extends Node
+
+
+func %s() -> void:
+	pass
+" % OLD_NAME)
+	ok = _check("a first sight is watched but files no save, so it is not in the corpus",
+		EventSheetRenameEvidence.watched_paths(), PackedStringArray()) and ok
+	_observe(path, "extends Node
+
+
+func %s() -> void:
+	pass
+" % NEW_NAME)
+	ok = _check("and a save the session watched puts that file in it",
+		EventSheetRenameEvidence.watched_paths(), PackedStringArray([path])) and ok
+	DirAccess.remove_absolute(path)
+	EventSheetRenameEvidence.clear_cache()
+	return ok
 
 
 # ── fixtures ──────────────────────────────────────────────────────────────────────

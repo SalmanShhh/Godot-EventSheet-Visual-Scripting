@@ -92,6 +92,16 @@ What changed in the build you have installed (v0.17.0), in the words the release
   zero opened a scope - so an inner class's methods were all filed under the class body, where two of
   them each declaring one read as a duplicate that is not one. Both are read the way GDScript reads
   them now, and an inner class's scopes are named for the class they are in.
+- **The Doctor's Renames section reads the `.gd` sheets, which is nearly all of them.** A registered
+  check is handed `sheet_paths`, and that list holds only the project's `.tres` sheets - so the
+  section read zero files in a normal project and reported \"Renames: 0 sheet(s) read\" forever while
+  looking like it worked. The corpus is now those plus exactly the files this session watched a save
+  of, which is the smallest corpus that can answer the question and the only one that answers it: a
+  file whose save was never watched cannot earn a finding here whatever is in it.
+- **The suite sweeps its session state between tests.** The rename witness and the baked-local index
+  are process-static and keyed on a file's identity, so a test that rewrote a file an earlier test
+  had read inherited the earlier reading. It shows up serially and not in shards, which is how a leak
+  comes to look like a platform-specific CI failure.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.
