@@ -3,9 +3,12 @@
 # Rendered by tools/render_previews.gd, which owns the window and the shutter; this owns the picture.
 # The whole promise in one frame: the field with the new name in it, and under it the two lists that
 # make a rename readable. What will be rewritten - every row of this sheet that says the name, as the
-# words it says now beside the words it would say. And what is named and left exactly as it is -
-# the other files that call it, with the reason on the heading rather than repeated on every line.
-# Nothing has happened yet; the button behind these lists is the only place it does.
+# words it says now beside the words it would say. What is named and left exactly as it is - the
+# other files that call it, with the reason on the heading rather than repeated on every line. And
+# what is written OUTSIDE this sheet and saved: a sheet that includes this one is rewritten by the
+# button and is not covered by the Ctrl+Z the status line promises, so it gets its own heading rather
+# than a note afterwards. Nothing has happened yet; the button behind these lists is the only place
+# it does.
 @tool
 extends RefCounted
 
@@ -40,6 +43,10 @@ static func build(host: Window) -> Node:
 		{"path": "res://traps/traps.gd", "count": 2},
 	]
 	dock._rename_receipt._fill()
+	# And the files the button writes outside this sheet, staged the same way and for the same reason.
+	dock._rename_receipt.draw_includers(PackedStringArray(["res://menus/pause_menu.tres"]))
+	dock._rename_receipt._summary_label.text = EventSheetRenameReceipt.summary_text(2,
+		dock._rename_receipt._elsewhere, PackedStringArray(["res://menus/pause_menu.tres"]))
 	return dock._rename_receipt._dialog
 
 

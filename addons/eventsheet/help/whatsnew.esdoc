@@ -168,6 +168,11 @@ What changed in the build you have installed (v0.17.0), in the words the release
   half beside it walked every surface of the event. Both lanes are read, and the text an event writes
   is swept for a call to a name that went out of the file, once per name per event, matching whole
   names only.
+- **The parallel test launcher cannot print a green verdict over a test it never ran.** A fresh
+  checkout, or a rebase that brings new tests, leaves files the engine's caches have not seen - and
+  they were skipped without a word under `All tests passed.`, which is the worst thing a launcher can
+  say. It now holds `tests/*_test.gd` up against the shards' own progress trails and names any file
+  nobody started.
 - **The version-control guide says what CI actually runs**, and CI runs the guide's whole-project
   recipe as well as its explicit-list one, so the printed pre-push command is exercised rather than
   only described.

@@ -315,11 +315,7 @@ func _fill() -> void:
 			or str(_dock._current_sheet_path).is_empty() \
 		else _dock._rename.includers_of(_old_name, new_name,
 			EventSheetProjectFind.list_project_sheets())
-	_includers_list.clear()
-	for line: String in includer_lines(_includers):
-		_includers_list.add_item(line)
-		_includers_list.set_item_tooltip(_includers_list.item_count - 1, line)
-	_includers_card.visible = _includers_list.item_count > 0
+	draw_includers(_includers)
 	_summary_label.text = summary_text(lines.size(), _elsewhere, _includers)
 	# A node reference is not an identifier, so the identifier rules are not the ones that decide it:
 	# what makes that gesture legal is the evidence behind it, which was decided before the door
@@ -330,6 +326,17 @@ func _fill() -> void:
 	var problem: String = EventSheetRefactor.validate_new_name(_dock._current_sheet, _old_name,
 		new_name)
 	_dialog.get_ok_button().disabled = not problem.is_empty()
+
+
+## Draws the third card from a list of paths. Separate from the walk that finds them so the suite and
+## the preview can put a known list in front of the reader without a project behind it.
+func draw_includers(paths: PackedStringArray) -> void:
+	_includers = paths
+	_includers_list.clear()
+	for line: String in includer_lines(_includers):
+		_includers_list.add_item(line)
+		_includers_list.set_item_tooltip(_includers_list.item_count - 1, line)
+	_includers_card.visible = _includers_list.item_count > 0
 
 
 ## True while this dialog is drawing the node half of the outside-rename door - the one gesture whose

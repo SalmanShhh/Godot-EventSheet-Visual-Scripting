@@ -8,6 +8,11 @@
 # `PARALLEL_UNSAFE` constant), never by what its file is called. The verdict is the AND of every
 # process's verdict, printed as the same literal line the serial runner prints, so greps keep working.
 #
+# A TEST FILE THAT NEVER RAN FAILS THE RUN. The shards between them cover every tests/*_test.gd, so
+# one that appears in no shard's progress trail was not run at all - which is exactly what a fresh
+# checkout or a rebase that brought new tests produces, silently, under a green verdict. The folder
+# is held up against the trails at the end and any file nobody started is named.
+#
 # A RED RUN IS PRE-INVESTIGATED. When anything fails or crashes, tools/test_report.gd runs at the end
 # and prints, per failing test, the assertion with its expected and its got, the files you changed
 # that map to that test, and the line that runs it alone. A test that CRASHED prints no [FAIL] line
@@ -232,15 +237,36 @@ foreach ($job in ($jobs + @(@{ Log = $tailLog; Err = $tailErr; Name = "tail" }))
 # leaves is what turns that into a named test, so it is checked on every run, green or not.
 $crashed = @()
 $seconds = @{}
+$started = @{}
 foreach ($trail in (Get-ChildItem (Join-Path $root ".godot\test_progress") -Filter *.log -ErrorAction SilentlyContinue)) {
 	$lines = @(Get-Content $trail.FullName -ErrorAction SilentlyContinue | Where-Object { $_.Trim() })
 	if ($lines.Count -gt 0 -and $lines[-1].StartsWith("START ")) { $crashed += $lines[-1].Substring(6) }
 	# The same trail carries each test's own milliseconds on its DONE line, so the slowest-ten footer
 	# below costs one more match on a walk that was happening anyway.
-	foreach ($line in $lines) { if ($line -match "^DONE (\S+) (\d+)$") { $seconds[$matches[1]] = [int]$matches[2] / 1000 } }
+	foreach ($line in $lines) {
+		if ($line -match "^DONE (\S+) (\d+)$") { $seconds[$matches[1]] = [int]$matches[2] / 1000 }
+		if ($line.StartsWith("START ")) { $started[$line.Substring(6)] = $true }
+	}
 }
 if ($crashed.Count -gt 0) {
 	"CRASHED (started, never finished): $($crashed -join ', ')"
+	$allGreen = $false
+}
+
+# EVERY *_test.gd ON DISK HAS TO HAVE BEEN STARTED BY SOMEBODY. The shards between them cover the
+# whole listing, so a test file that appears in none of their trails was not run at all - and a green
+# verdict printed over it is a FALSE GREEN, which is the worst thing this launcher can say. It is
+# what a fresh checkout or a rebase that brought new tests produces: the engine's caches have not
+# seen the file yet and it is skipped without a word. Compared here, in the one place that can hold
+# the FOLDER up against what the processes actually did, and the files are named rather than counted
+# so the fix is obvious.
+$onDisk = @(Get-ChildItem (Join-Path $root "tests") -Filter *_test.gd -ErrorAction SilentlyContinue |
+	ForEach-Object { $_.Name })
+$missed = @($onDisk | Where-Object { -not $started.ContainsKey($_) })
+if ($missed.Count -gt 0) {
+	"NEVER RAN (on disk, in no shard's trail): $($missed -join ', ')"
+	"(import first: <godot> --headless --path . --import, plus one headless editor boot when a"
+	" class_name is new, then run this again.)"
 	$allGreen = $false
 }
 
