@@ -118,10 +118,10 @@
   one. Same call, different world, and each row's description names the other.
 - **Scene File Is Data-Only.** The question worth asking before anything builds a scene the game did
   not ship with. It reads the file's own resource table as TEXT and instantiates nothing, so asking
-  is safe on a file from anywhere: false for a script written inside the scene, false for one it
+  is safe on a file from anywhere: false for a script written inside the scene, false for a file it
   points at from anywhere but `res://`, false for a file it cannot read - because an unreadable file
-  is not a file that has been cleared. It reads the ONE file you name, and says so on the row: a
-  scene that file points at is a separate file with a table of its own.
+  is not a file that has been cleared. It reads the tags the way the engine's own parser reads them,
+  and a true answer means nothing comes in with this file that the game did not ship with.
 - **A scene built unasked is a quiet amber row and a line in the Doctor's Files section.** A row that
   builds a scene whose path is written in the line and is not under `res://`, with no data-only
   question over that same file anywhere around it, earns the amber state and nothing else in the
