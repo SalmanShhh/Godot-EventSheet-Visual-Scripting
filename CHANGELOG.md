@@ -317,6 +317,16 @@ against Godot 4.7 before it was repaired.
   of the frame - so the familiar close-then-open pair works in one frame, measured. The add's local
   is typed like every other line the pass emits, and the lift claims the row's own run beside the
   three statements people write by hand.
+- **Remove Node (Undoable) puts the node back where it was, in order.** The undo half was a plain
+  `add_child`, which re-adds as the LAST child, so Ctrl+Z on any node that was not last silently
+  reordered the scene - and sibling order is draw order for a CanvasItem and layout order inside a
+  container, which is the row's own promise ("puts it back where it was"). The index is read on the
+  way in and the undo half moves it back, the same pair the editor's own scene tree writes.
+- **Set Property (Undoable) reads its target once.** It expanded `{target}` three times, so a target
+  with a side effect - or a non-idempotent read like the very default the row beside it ships,
+  `EditorInterface.get_selection().get_selected_nodes().pop_front()` - filed the do half, the undo
+  half and the old value against three different objects. It now reads the node into a local first,
+  like both of its siblings. Both runs still lift in the hand-written spelling as well as the row's.
 - **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
   own method is how every project travels to a layout, and the call reading refused it for having a
   dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`

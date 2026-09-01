@@ -163,11 +163,18 @@ static func section_descriptions() -> Dictionary:
 ## plain Set Property row takes it, and is quoted into a StringName here because that is what the
 ## manager's own method wants; that shared spelling is what lets the Doctor offer this row as a
 ## respelling of a plain one without rewriting a single value.
+##
+## THE TARGET IS READ ONCE, into a local, exactly as both rows below it do. It arrives as whatever
+## expression the field holds, and the row beside this one ships
+## `EditorInterface.get_selection().get_selected_nodes().pop_front()` as its own default - an
+## expression that answers something DIFFERENT every time it is asked. Written three times, the do
+## half, the undo half and the old-value read would each have been filed against a different object.
 static func _set_property_undoable_template() -> String:
 	return "\n".join(PackedStringArray([
+		"var __node_{uid}: Node = {target}",
 		"var __undo_{uid} := EditorInterface.get_editor_undo_redo()",
-		"__undo_{uid}.add_do_property({target}, &\"{property}\", {value})",
-		"__undo_{uid}.add_undo_property({target}, &\"{property}\", {target}.{property})",
+		"__undo_{uid}.add_do_property(__node_{uid}, &\"{property}\", {value})",
+		"__undo_{uid}.add_undo_property(__node_{uid}, &\"{property}\", __node_{uid}.{property})",
 	]))
 
 
@@ -193,13 +200,21 @@ static func _add_node_undoable_template() -> String:
 ## way in - a node put back without one would not be saved with the scene. The reference is held by
 ## the UNDO side here, which is the mirror of the row above it: after the do half runs, the detached
 ## node belongs to nobody until the undo puts it back.
+##
+## AND THE PLACE AMONG ITS SIBLINGS IS PART OF WHERE IT WAS. `add_child` re-adds as the LAST child,
+## so an undo of a node that was not last would silently reorder the scene - and sibling order is
+## draw order for a CanvasItem and layout order inside a container. The index is read on the way in
+## and the undo half moves the node back to it, which is exactly the pair the editor's own scene tree
+## writes for this.
 static func _remove_node_undoable_template() -> String:
 	return "\n".join(PackedStringArray([
 		"var __node_{uid}: Node = {node}",
 		"var __parent_{uid}: Node = __node_{uid}.get_parent()",
+		"var __index_{uid}: int = __node_{uid}.get_index()",
 		"var __undo_{uid} := EditorInterface.get_editor_undo_redo()",
 		"__undo_{uid}.add_do_method(__parent_{uid}, \"remove_child\", __node_{uid})",
 		"__undo_{uid}.add_undo_method(__parent_{uid}, \"add_child\", __node_{uid})",
+		"__undo_{uid}.add_undo_method(__parent_{uid}, \"move_child\", __node_{uid}, __index_{uid})",
 		"__undo_{uid}.add_undo_method(__node_{uid}, \"set_owner\", EditorInterface.get_edited_scene_root())",
 		"__undo_{uid}.add_undo_reference(__node_{uid})",
 	]))

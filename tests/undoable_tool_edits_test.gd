@@ -73,10 +73,16 @@ static func _test_the_vocabulary() -> bool:
 	if by_id.has("SetPropertyUndoable"):
 		var emitted: String = CODEGEN._apply_template((by_id["SetPropertyUndoable"] as ACEDescriptor).codegen_template,
 			{"uid": "7", "target": "$Sign", "property": "text", "value": "\"Open\""})
-		ok = _check("Set Property (Undoable) emits its three lines", emitted, "\n".join(PackedStringArray([
+		# The target is read ONCE, into a local, and every line after it names that local. The field
+		# holds an expression, and an expression can answer something different every time it is
+		# asked - the removal row's own default does - so three readings would have filed the do
+		# half, the undo half and the old value against three different objects.
+		ok = _check("Set Property (Undoable) reads its target once and emits its four lines",
+			emitted, "\n".join(PackedStringArray([
+			"var __node_7: Node = $Sign",
 			"var __undo_7 := EditorInterface.get_editor_undo_redo()",
-			"__undo_7.add_do_property($Sign, &\"text\", \"Open\")",
-			"__undo_7.add_undo_property($Sign, &\"text\", $Sign.text)",
+			"__undo_7.add_do_property(__node_7, &\"text\", \"Open\")",
+			"__undo_7.add_undo_property(__node_7, &\"text\", __node_7.text)",
 		]))) and ok
 	if by_id.has("AddNodeUndoable"):
 		var emitted_add: String = CODEGEN._apply_template((by_id["AddNodeUndoable"] as ACEDescriptor).codegen_template,
@@ -94,6 +100,14 @@ static func _test_the_vocabulary() -> bool:
 			emitted_remove.contains("var __parent_9: Node = __node_9.get_parent()"), true) and ok
 		ok = _check("Remove Node (Undoable) restores the owner on the way back",
 			emitted_remove.contains("__undo_9.add_undo_method(__node_9, \"set_owner\", EditorInterface.get_edited_scene_root())"), true) and ok
+		# WHERE IT WAS INCLUDES WHICH SIBLING IT WAS. `add_child` re-adds as the LAST child, so an
+		# undo of a node that was not last would silently reorder the scene - and sibling order is
+		# draw order for a CanvasItem and layout order inside a container.
+		ok = _check("Remove Node (Undoable) reads the place among its siblings on the way in",
+			emitted_remove.contains("var __index_9: int = __node_9.get_index()"), true) and ok
+		ok = _check("and puts the node back at it, not merely back under the parent",
+			emitted_remove.contains("__undo_9.add_undo_method(__parent_9, \"move_child\", __node_9, __index_9)"),
+			true) and ok
 	return ok
 
 

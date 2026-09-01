@@ -50,12 +50,14 @@ const REMOVE_NODE: String = "RemoveNodeUndoable"
 ## compiled. A handful of substring tests that rule out every line in a project but these runs.
 const MARK: String = "EditorInterface.get_editor_undo_redo()"
 
-## How far into a run the manager local can be. Third line at the latest: the removal run reads the
-## node and then its parent before it asks for the history, which is one line deeper than the two
-## runs beside it.
-const MARK_WITHIN: int = 3
+## How far into a run the manager local can be. Fourth line at the latest: the removal run reads the
+## node, its parent and its place among its siblings before it asks for the history, which is two
+## lines deeper than the property run beside it.
+const MARK_WITHIN: int = 4
 
-## How many statements each run is.
+## How many statements each run is. Each of the two that read something into a local FIRST is claimed
+## in both spellings - with that local and without it - because the row writes one and a person
+## writing by hand usually writes the other, and both mean this row.
 const RUN_SET_PROPERTY: int = 3
 const RUN_ADD_NODE: int = 6
 const RUN_REMOVE_NODE: int = 7
@@ -126,35 +128,51 @@ static func bracket_span(lines: PackedStringArray, index: int, depth: int, gestu
 	return -1
 
 
-## Set Property (Undoable): the manager local, the do half, and the undo half that reads the value
-## still in place. The undo half is compared against the exact text those captures make rather than
-## matched again - the two halves have to name the same node and the same property for the run to be
-## this row, and comparing is how that is said without escaping a captured expression into a pattern.
+## Set Property (Undoable): the node read into a local, the manager local, the do half, and the undo
+## half that reads the value still in place. The undo half is compared against the exact text those
+## captures make rather than matched again - the two halves have to name the same node and the same
+## property for the run to be this row, and comparing is how that is said without escaping a captured
+## expression into a pattern.
+##
+## THE LOCAL IS OPTIONAL because both spellings are this row. The row itself reads the target once
+## into a local, since the expression a field holds may answer something different every time it is
+## asked; a tool written by hand usually names the node in all three places instead, and that run is
+## claimed too, with the node's own expression riding back out as the row's value.
 static func _match_set_property(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
-	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
+	var held: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:[ \\t]*Node[ \\t]*=[ \\t]*)(.+)$" % NAME).search(
 		_at(lines, index, depth))
+	var kept: int = 0 if held == null else 1
+	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
+		_at(lines, index + kept, depth))
 	if made == null:
 		return {}
 	var undo_local: String = made.get_string(2)
 	var did: RegExMatch = _regex("^%s\\.add_do_property\\((?<target>.+), &\"(?<property>%s)\", (?<value>.+)\\)$" % [
-		undo_local, NAME]).search(_at(lines, index + 1, depth))
+		undo_local, NAME]).search(_at(lines, index + 1 + kept, depth))
 	if did == null:
 		return {}
-	var target: String = did.get_string("target")
-	var property: String = did.get_string("property")
-	if _at(lines, index + 2, depth) != "%s.add_undo_property(%s, &\"%s\", %s.%s)" % [
-			undo_local, target, property, target, property]:
+	# The receiver the two halves name: the local when the run reads one, and the target expression
+	# itself when it does not. When there is a local, the do half has to be written on THAT local -
+	# a run that reads one node and then writes another is somebody else's program.
+	var receiver: String = did.get_string("target")
+	if kept == 1 and receiver != held.get_string(2):
 		return {}
-	return {
-		"ace_id": SET_PROPERTY,
-		"params": {"target": target, "property": property, "value": did.get_string("value")},
-		"template": "\n".join(PackedStringArray([
-			"%sEditorInterface.get_editor_undo_redo()" % made.get_string(1),
-			"%s.add_do_property({target}, &\"{property}\", {value})" % undo_local,
-			"%s.add_undo_property({target}, &\"{property}\", {target}.{property})" % undo_local,
-		])),
-		"consumed": RUN_SET_PROPERTY
-	}
+	var property: String = did.get_string("property")
+	if _at(lines, index + 2 + kept, depth) != "%s.add_undo_property(%s, &\"%s\", %s.%s)" % [
+			undo_local, receiver, property, receiver, property]:
+		return {}
+	var run: PackedStringArray = PackedStringArray()
+	if kept == 1:
+		run.append("%s{target}" % held.get_string(1))
+	run.append("%sEditorInterface.get_editor_undo_redo()" % made.get_string(1))
+	var named: String = receiver if kept == 1 else "{target}"
+	run.append("%s.add_do_property(%s, &\"{property}\", {value})" % [undo_local, named])
+	run.append("%s.add_undo_property(%s, &\"{property}\", %s.{property})" % [
+		undo_local, named, named])
+	var values: Dictionary = {"target": receiver if kept == 0 else held.get_string(3),
+		"property": property, "value": did.get_string("value")}
+	return {"ace_id": SET_PROPERTY, "params": values, "template": "\n".join(run),
+		"consumed": RUN_SET_PROPERTY + kept}
 
 
 ## Add Node (Undoable): the node local, the manager local, the three do halves (parent it, own it,
@@ -212,32 +230,37 @@ static func _match_remove(lines: PackedStringArray, index: int, depth: int) -> D
 	if parented == null:
 		return {}
 	var parent_local: String = parented.get_string(2)
+	# The place among its siblings, read on the way in. Optional for the same reason the property
+	# run's local is: the row writes it, and a tool written by hand may not have thought of it.
+	var placed: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:[ \\t]*int[ \\t]*=[ \\t]*)%s\\.get_index\\(\\)$" % [
+		NAME, node_local]).search(_at(lines, index + 2, depth))
+	var kept: int = 0 if placed == null else 1
 	var made: RegExMatch = _regex("^(var[ \\t]+(%s)[ \\t]*:?=[ \\t]*)EditorInterface\\.get_editor_undo_redo\\(\\)$" % NAME).search(
-		_at(lines, index + 2, depth))
+		_at(lines, index + 2 + kept, depth))
 	if made == null:
 		return {}
 	var undo_local: String = made.get_string(2)
 	var expected: PackedStringArray = PackedStringArray([
 		"%s.add_do_method(%s, \"remove_child\", %s)" % [undo_local, parent_local, node_local],
 		"%s.add_undo_method(%s, \"add_child\", %s)" % [undo_local, parent_local, node_local],
-		"%s.add_undo_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [undo_local, node_local],
-		"%s.add_undo_reference(%s)" % [undo_local, node_local],
 	])
+	if kept == 1:
+		expected.append("%s.add_undo_method(%s, \"move_child\", %s, %s)" % [
+			undo_local, parent_local, node_local, placed.get_string(2)])
+	expected.append("%s.add_undo_method(%s, \"set_owner\", EditorInterface.get_edited_scene_root())" % [
+		undo_local, node_local])
+	expected.append("%s.add_undo_reference(%s)" % [undo_local, node_local])
 	for step: int in expected.size():
-		if _at(lines, index + 3 + step, depth) != expected[step]:
+		if _at(lines, index + 3 + kept + step, depth) != expected[step]:
 			return {}
-	var template: PackedStringArray = PackedStringArray([
-		"%s{node}" % held.get_string(1),
-		"%s%s.get_parent()" % [parented.get_string(1), node_local],
-		"%sEditorInterface.get_editor_undo_redo()" % made.get_string(1),
-	])
+	var template: PackedStringArray = PackedStringArray(["%s{node}" % held.get_string(1),
+		"%s%s.get_parent()" % [parented.get_string(1), node_local]])
+	if kept == 1:
+		template.append("%s%s.get_index()" % [placed.get_string(1), node_local])
+	template.append("%sEditorInterface.get_editor_undo_redo()" % made.get_string(1))
 	template.append_array(expected)
-	return {
-		"ace_id": REMOVE_NODE,
-		"params": {"node": held.get_string(3)},
-		"template": "\n".join(template),
-		"consumed": RUN_REMOVE_NODE
-	}
+	return {"ace_id": REMOVE_NODE, "params": {"node": held.get_string(3)},
+		"template": "\n".join(template), "consumed": RUN_REMOVE_NODE + kept + kept}
 
 
 ## One line of the body at exactly `depth` tabs, or "" when the line is blank, absent, shallower, or

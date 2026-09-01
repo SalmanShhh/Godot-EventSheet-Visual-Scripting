@@ -386,9 +386,9 @@ Three rows make the same three changes through the editor's own undo manager ins
 
 | Name | What it does |
 |------|--------------|
-| Set Property (Undoable) | Changes one property of a node in the open scene, reading the value still in place for the undo half |
+| Set Property (Undoable) | Changes one property of a node in the open scene, reading the node once and the value still in place for the undo half |
 | Add Node (Undoable) | Adds a node under a parent, owner set so it is saved with the scene, and a reference held so redo puts back the same node |
-| Remove Node (Undoable) | Takes a node out, reading its parent while it still has one so the undo half knows where to put it back, and restoring its owner on the way |
+| Remove Node (Undoable) | Takes a node out, reading its parent and its place among its siblings while it still has both, so the undo half puts it back where it was, in order, with its owner restored |
 
 They compile to plain `EditorInterface.get_editor_undo_redo()` - the engine's own manager, with no
 plugin anywhere in the emitted file.
