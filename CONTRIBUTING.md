@@ -32,6 +32,7 @@ godot --headless --path . --script tests/run_perf.gd    # headless-safe gate (CI
 godot --headless --path . --script tests/run_tests.gd   # full suite
 godot --editor --headless --quit-after 170 --path .     # editor smoke (then: git checkout -- project.godot)
 godot --headless --path . --script tools/project_doctor.gd  # repo health (CI gate; -- --strict fails on warnings)
+godot --headless --path . --script tools/verify_sheets.gd -- <paths>  # standing contracts (CI gate; no paths = whole project)
 godot --headless --path . --script tools/build_help_bundle.gd  # ONLY after editing docs/*.md - see below
 ```
 

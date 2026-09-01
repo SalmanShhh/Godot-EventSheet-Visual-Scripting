@@ -791,6 +791,14 @@ static func _publish_assign_uids_in_list(rows: Array, path_prefix: String) -> vo
 		index += 1
 
 
+## Where the byte gate re-emits what it is asking about, and it is never the file the source came
+## from: naming a real path would save a question's answer over somebody's work. Named rather than
+## inlined so that a caller wanting the re-emission ITSELF (to say WHICH line would change) can
+## reproduce this exact answer instead of a similar one - the emitted path is part of what a sheet
+## emits, so a probe under a different name is a different question.
+const ROUND_TRIP_PROBE_PATH: String = "user://__eventsheets_api_roundtrip.gd"
+
+
 ## The byte gate as a service: true when importing `source` and recompiling reproduces
 ## it byte-identically - the same covenant every built-in lift must satisfy. Use it to
 ## verify a custom block kind or an emission tweak can never corrupt user files.
@@ -798,7 +806,7 @@ static func round_trips(source: String) -> bool:
 	var sheet: EventSheetResource = open_gd_as_sheet(source)
 	if sheet == null:
 		return false
-	sheet.external_source_path = "user://__eventsheets_api_roundtrip.gd"
+	sheet.external_source_path = ROUND_TRIP_PROBE_PATH
 	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
 
 

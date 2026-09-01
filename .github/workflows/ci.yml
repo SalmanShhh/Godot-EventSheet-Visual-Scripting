@@ -49,6 +49,18 @@ jobs:
       - name: Project Doctor (committed generated scripts must match their sheets)
         run: ~/godot/godot --headless --path . --script tools/project_doctor.gd
 
+      # The branch gate the guide hands to teams, run on this repository as the proof that the
+      # recipe works. A game project runs the whole-project form (no arguments after the --); this
+      # repository is not a game, and most of its .gd files are the plugin's own test harnesses and
+      # build tools, with tests/fixtures/ a folder of deliberately broken GDScript that the gate
+      # cannot tell from a real file. What IS content here is generated from sheets by the builders,
+      # which is exactly the corpus the four checks are about. Paths are passed the way git prints
+      # them, which is the same shape the pre-commit hook in the guide uses.
+      - name: The standing contracts (parse, byte-exact round trip, baked locals, migration)
+        run: |
+          ~/godot/godot --headless --path . --script tools/verify_sheets.gd -- \
+            $(git ls-files 'demo/*.gd' 'eventsheet_addons/*.gd')
+
       - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
         run: |
           ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true
