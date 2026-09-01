@@ -95,8 +95,8 @@ Three rows say exactly that:
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
-| Add Layout On Top | Puts a layout over the running game under a name you choose | three lines: load and instance, name it, `get_tree().root.add_child(…)` |
-| Remove Layout On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `queue_free()` |
+| Add Layout On Top | Puts a layout over the running game under a name you choose | the name asked about first, then load and instance, name it, `get_tree().root.add_child(…)` |
+| Remove Layout On Top | Takes it back off by that name (a name nothing is under does nothing) | `get_tree().root.get_node_or_null({layout_name})`, guarded, then `remove_child` and `queue_free()` |
 | Layout Is On Top | True while it is still there | `get_tree().root.get_node_or_null({layout_name}) != null` |
 
 **Under the tree root, not under this node.** That is the one design decision in the row, and it is
@@ -107,6 +107,14 @@ is also why the Scene Flow pack parents its fade overlay to the same root.
 **The name is the node's own name under the root.** Nothing keeps a registry of it; `get_node_or_null`
 is what answers, which is why the three rows have to agree on the spelling and why a close row is
 safe to run twice.
+
+**One name, one layout.** `add_child` will not take a name a sibling already has - it renames the
+newcomer to something like `@Node@2` - so a second add under one name would leave a copy that
+neither of the other two rows could ever find or remove, sitting under the tree root for the rest of
+the run. Add Layout On Top therefore asks the name first and loads nothing when it is already up.
+And the removal takes the node **off the tree** before freeing it, because `queue_free` frees at the
+end of the frame: a node only queued is still a child, still found by name, and still in the way.
+That is what makes the familiar pair - remove it, then add it again - work in one frame.
 
 Here it is as people actually write it, and as it reads back:
 
@@ -294,6 +302,14 @@ rather than as a copy of its insides. Both failures are answered out loud: a pac
 that is not in a tree, and a write can fail on a missing folder, a full disk or a read-only path.
 Either one prints through the debugger rather than leaving no file and no word.
 
+**The walk borrows, and gives it back.** The row's own lines remember which nodes it adopted and set
+their owner back to nothing the moment the pack is done. That is not tidiness: save the Room, then
+save the Level the Room is in, and without the give-back the Level's file comes back holding a
+*childless* Room - the props belong to the Room now, and a pack writes out only what the root owns.
+Both engine calls still answer OK and nothing is reported, which is exactly the failure the walk
+exists to prevent. Giving the ownership back also means the row leaves your running game as it found
+it: a save is a save, not an edit.
+
 **The Save To field says which place it is writing into.** Every path field in the plugin carries a
 muted lead under the box naming `user://` (the player's folder: writable, one per player, survives
 updates) or `res://` (the game's own files, read-only once exported). The export trap is visible
@@ -323,10 +339,23 @@ On load pressed
 ```
 
 It reads the file's own resource table as **text** and builds nothing, so asking is safe on a file
-from anywhere. It answers false for a scene carrying a script inside it, for one pointing at a
-script outside `res://`, and for a file it cannot read at all - an unreadable file is not a file
-that has been cleared. And it reads the **one file you name**: a scene that file points at is a
-separate file with a table of its own.
+from anywhere. It answers false for a scene carrying a script inside it, and for a scene that points
+at **anything at all** outside `res://` - a script, another scene, a `.tres`. Not only scripts,
+because a scene that names another scene names a file with a table of its own, and this reading
+opens the one file you gave it. So a true answer means *nothing comes in with this file that the
+game did not ship with*, which is a promise it can keep.
+
+It reads **tags, not lines**, because that is what Godot's own parser reads: `type = "Script"` with
+spaces around the `=` is the same tag as `type="Script"`, and a tag may run over two lines. The
+threat here is a file somebody wrote by hand, so "the editor does not write it that way" is not an
+answer - both of those spellings load the script they name. And anything it cannot read as a scene
+table - a tag that never closes, a resource with no type, a binary `.scn`, a file that is not there
+- answers false, because an unfamiliar file is not a file that has been cleared.
+
+**A question mentioned is not a question answered.** `if not <the question>` and `if debug or <the
+question>` both run the body on exactly the files the question refused, so neither counts as a guard
+- the row still wears the amber state and the Doctor still reports it. Inverting the condition row
+in the sheet reads the same way, for the same reason.
 
 ![Two events above the GDScript they compile to: a save key press running Save branch Level as scene file into the user folder, and a load key press whose scene-file-is-data-only condition guards an Add layout on top row, with the owner walk, the pack and the guarded load visible in the code panel below](images/scenes-save-branch.png)
 
@@ -357,9 +386,9 @@ Three rows make the same three changes through the editor's own undo manager ins
 
 | Name | What it does |
 |------|--------------|
-| Set Property (Undoable) | Changes one property of a node in the open scene, reading the value still in place for the undo half |
+| Set Property (Undoable) | Changes one property of a node in the open scene, reading the node once and the value still in place for the undo half |
 | Add Node (Undoable) | Adds a node under a parent, owner set so it is saved with the scene, and a reference held so redo puts back the same node |
-| Remove Node (Undoable) | Takes a node out, reading its parent while it still has one so the undo half knows where to put it back, and restoring its owner on the way |
+| Remove Node (Undoable) | Takes a node out, reading its parent and its place among its siblings while it still has both, so the undo half puts it back where it was, in order, with its owner restored |
 
 They compile to plain `EditorInterface.get_editor_undo_redo()` - the engine's own manager, with no
 plugin anywhere in the emitted file.
@@ -456,11 +485,16 @@ Drawing Canvas pack's job. This one is a live picture of the world you are alrea
   layout's own root node* to Always or When Paused.
 - **A packed scene saves what its root OWNS.** Nodes added while the game runs own nothing, so a
   plain pack writes a scene holding one node and reports success. Save Branch As Scene File does the
-  owner walk first, in lines you can read.
+  owner walk first, in lines you can read - and hands the borrowed ownership back afterwards, which
+  is what lets you save a room and then the level it is in without the second file coming back short.
 - **Ask before you build a scene you did not ship.** A `.tscn` can name a script. Scene File Is
   Data-Only reads the file's table as text and answers before anything runs.
-- **A group added after `add_child` is not there when the join is announced.** Add it before the node
-  enters the tree, or on the row that spawns it.
+- **A group joined in `_ready` is joined too late for On Node Joins Group.** `node_added` is emitted
+  before `_ready` runs, so that node is never matched by the trigger at all - not "matched later".
+  Join the group before the node enters the tree, or on the row that spawns it.
+- **Every member of a group leaves during teardown.** Freeing a branch, or quitting, announces a
+  departure for each one, so an On Node Leaves Group body runs against a tree that is being taken
+  apart. Write it so that is harmless.
 - **An editor tool that skips the undo manager costs your teammates their history.** One event is one
   gesture; there is nothing to open or commit yourself.
 - **Nothing on this page renders a warning inside the sheet.** A row with something to say about it
