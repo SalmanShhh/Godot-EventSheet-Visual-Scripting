@@ -294,6 +294,14 @@ rather than as a copy of its insides. Both failures are answered out loud: a pac
 that is not in a tree, and a write can fail on a missing folder, a full disk or a read-only path.
 Either one prints through the debugger rather than leaving no file and no word.
 
+**The walk borrows, and gives it back.** The row's own lines remember which nodes it adopted and set
+their owner back to nothing the moment the pack is done. That is not tidiness: save the Room, then
+save the Level the Room is in, and without the give-back the Level's file comes back holding a
+*childless* Room - the props belong to the Room now, and a pack writes out only what the root owns.
+Both engine calls still answer OK and nothing is reported, which is exactly the failure the walk
+exists to prevent. Giving the ownership back also means the row leaves your running game as it found
+it: a save is a save, not an edit.
+
 **The Save To field says which place it is writing into.** Every path field in the plugin carries a
 muted lead under the box naming `user://` (the player's folder: writable, one per player, survives
 updates) or `res://` (the game's own files, read-only once exported). The export trap is visible
@@ -469,7 +477,8 @@ Drawing Canvas pack's job. This one is a live picture of the world you are alrea
   layout's own root node* to Always or When Paused.
 - **A packed scene saves what its root OWNS.** Nodes added while the game runs own nothing, so a
   plain pack writes a scene holding one node and reports success. Save Branch As Scene File does the
-  owner walk first, in lines you can read.
+  owner walk first, in lines you can read - and hands the borrowed ownership back afterwards, which
+  is what lets you save a room and then the level it is in without the second file coming back short.
 - **Ask before you build a scene you did not ship.** A `.tscn` can name a script. Scene File Is
   Data-Only reads the file's table as text and answers before anything runs.
 - **A group added after `add_child` is not there when the join is announced.** Add it before the node

@@ -124,14 +124,18 @@ static func _test_descriptors() -> bool:
 
 static func _test_the_owner_walk() -> bool:
 	var writer: ACEDescriptor = ACERegistry.find_descriptor("Core", "SaveBranchAsSceneFile")
-	var ok: bool = _check("the walk, the pack and the write, in that order and no other",
+	var ok: bool = _check("the walk, the pack, the ownership given back and the write, in that order",
 		writer.codegen_template,
 		"var __branch_{uid}: Node = {branch}\n"
+		+ "var __adopted_{uid}: Array[Node] = []\n"
 		+ "for __part_{uid}: Node in __branch_{uid}.find_children(\"*\", \"\", true, false):\n"
 		+ "\tif __part_{uid}.owner == null:\n"
 		+ "\t\t__part_{uid}.owner = __branch_{uid}\n"
+		+ "\t\t__adopted_{uid}.append(__part_{uid})\n"
 		+ "var __scene_{uid} := PackedScene.new()\n"
 		+ "var __packed_{uid} := __scene_{uid}.pack(__branch_{uid})\n"
+		+ "for __lent_{uid}: Node in __adopted_{uid}:\n"
+		+ "\t__lent_{uid}.owner = null\n"
 		+ "if __packed_{uid} != OK:\n"
 		+ "\tpush_error(\"Save Branch As Scene File: %s could not be packed (error %d).\" % [__branch_{uid}.name, __packed_{uid}])\n"
 		+ "elif ResourceSaver.save(__scene_{uid}, {path}) != OK:\n"
@@ -143,6 +147,13 @@ static func _test_the_owner_walk() -> bool:
 		writer.codegen_template.contains("find_children(\"*\", \"\", true, false)"), true) and ok
 	ok = _check("and only gives an owner to a node that has none",
 		writer.codegen_template.contains(".owner == null"), true) and ok
+	# THE OWNERSHIP IS BORROWED, NOT TAKEN. Without the give-back, saving a branch and then a branch
+	# ABOVE it writes the outer file truncated - the inner branch now owns the props, and pack() saves
+	# only what the ROOT owns - with both engine calls answering OK and nothing reported anywhere.
+	ok = _check("what the walk adopted is remembered",
+		writer.codegen_template.contains("__adopted_{uid}.append(__part_{uid})"), true) and ok
+	ok = _check("and handed back once the pack is done, so the row can be run twice",
+		writer.codegen_template.contains("__lent_{uid}.owner = null"), true) and ok
 	# A scene save IS a write, so the export trap and its one-click fix can both reach the row.
 	ok = _check("the writer says which of its fields it writes to",
 		EventForgeFilePlaces.write_params_of("SaveBranchAsSceneFile"),
@@ -303,6 +314,15 @@ static func _test_the_lift() -> bool:
 		+ "var scene := PackedScene.new()\n"
 		+ "scene.pack(branch)\n"
 		+ "ResourceSaver.save(scene, {path})") and ok
+
+	var borrowed: ACEAction = _function_action(sheet, "save_the_room", 0)
+	ok = _check("the run the row writes today reads back as the row", _row_of(borrowed),
+		"SaveBranchAsSceneFile") and ok
+	ok = _check("with its own values", _params_of(borrowed),
+		{"branch": "$Level/Room", "path": "\"user://built_room.tscn\""}) and ok
+	ok = _check("and the list and the give-back riding back out in the template",
+		_template_of(borrowed).contains("__adopted_r1.append(__part_r1)")
+			and _template_of(borrowed).contains("__lent_r1.owner = null"), true) and ok
 
 	var answered: ACEAction = _function_action(sheet, "save_the_ship", 0)
 	ok = _check("the tail the row itself writes is the same row", _row_of(answered),

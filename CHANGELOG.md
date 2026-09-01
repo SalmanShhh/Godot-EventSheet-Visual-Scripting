@@ -298,6 +298,15 @@ against Godot 4.7 before it was repaired.
   the Doctor's finding and the sheet's amber state. A negated mention, and one standing beside an
   `or`, no longer count as guards - in emitted text, and on the sheet, where an inverted or
   turned-off condition row now reads the same way.
+- **The owner walk borrows now, and gives it back - saving twice at two depths truncated the outer
+  file.** Save Branch As Scene File adopted every ownerless node under the branch and left them
+  adopted. Save the Room, then save the Level the Room is in, and the Level's file came back holding
+  a childless Room: the props belonged to the Room by then, and a pack writes out only what the ROOT
+  owns. `pack()` answered OK, `ResourceSaver.save()` answered OK, and neither `push_error` fired -
+  the exact failure the walk exists to prevent, made by the walk. Measured before and after: room 2
+  descendants and level **1**, now room 2 and level **3**. The row also stopped rewriting the
+  running game's ownership behind the reader's back, because it hands every adopted owner back the
+  moment the pack is done. The lift claims the new run and the two hand-written ones alike.
 - **`get_tree().change_scene_to_file("user://…")` was invisible to the trust reader.** The tree's
   own method is how every project travels to a layout, and the call reading refused it for having a
   dot in front of it. The same reading no longer mistakes somebody's own `MyResourceLoader.load(`
